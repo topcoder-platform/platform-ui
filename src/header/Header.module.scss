@@ -1,0 +1,24 @@
+@import '../lib/styles';
+
+.header {
+    display: grid;
+    height: $header-height;
+    background-color: $tc-black;
+
+    @include ltesm {
+        grid-template-columns: 1fr;
+        justify-content: center;
+    }
+
+    @include md {
+        grid-template-columns: $left-col-width-md 1fr;
+    }
+
+    @include lg {
+        grid-template-columns: $left-col-width-lg 1fr;
+    }
+
+    @include xl {
+        grid-template-columns: $left-col-width-xl 1fr;
+    }
+}

@@ -1,10 +1,15 @@
-import './App.css'
+import { BrowserRouter } from 'react-router-dom'
 
-function App(): JSX.Element {
+// TODO: import styles from './App.scss'
+import Header from './header/Header'
+
+const App: () => JSX.Element = () => {
     return (
-        <div>
-            Hi! From, Topcoder.
-        </div>
+        <>
+            <BrowserRouter>
+                <Header />
+            </BrowserRouter>
+        </>
     )
 }
 
