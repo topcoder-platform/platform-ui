@@ -1,0 +1,17 @@
+@import '../../../../lib/styles';
+
+.profile-selector {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+
+    @include ltesm {
+        a {
+            display: none;
+
+            &:last-of-type {
+                display: inline;
+            }
+        }
+    }
+}

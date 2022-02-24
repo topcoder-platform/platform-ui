@@ -8,7 +8,7 @@ describe('<Placeholder />', () => {
     test('it should render the title prop', () => {
         const titleProp: string = 'Home'
         render(<Placeholder title={titleProp} />)
-        const home: HTMLElement = screen.getByTestId(titleProp)
+        const home: HTMLElement = screen.getByText(titleProp)
         expect(home).toBeInTheDocument()
     })
 })

@@ -1,4 +1,5 @@
 @import 'breakpoints';
+@import 'buttons';
 @import 'fonts';
 @import 'layout';
 @import 'palette';
@@ -12,4 +13,5 @@ body {
     font-size: 16px;
     line-height: 24px;
     letter-spacing: 0;
+    min-width: $xxs-max;
 }

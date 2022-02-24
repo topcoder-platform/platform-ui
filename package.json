@@ -45,6 +45,7 @@
     },
     "devDependencies": {
         "@types/react-router-dom": "^5.3.3",
+        "classnames": "^2.3.1",
         "react-router-dom": "^6.2.1",
         "sass": "^1.49.8"
     }
