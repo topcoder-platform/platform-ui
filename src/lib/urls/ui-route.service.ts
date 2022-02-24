@@ -7,6 +7,6 @@ export class UiRoute {
     readonly home: string = '/'
 
     // design lib
-    readonly designLib: string = `${this.home}'/design-lib'`
+    readonly designLib: string = `${this.home}design-lib`
     readonly designLibFonts: string = `${this.designLib}/fonts`
 }
