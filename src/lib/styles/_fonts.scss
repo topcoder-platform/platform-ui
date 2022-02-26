@@ -1,5 +1,11 @@
 @import 'palette';
 
+.medium-subtitle {
+    font-size: 14px;
+    line-height: 16px;
+    letter-spacing: .5px;
+}
+
 @mixin font-roboto {
     font-family: "Roboto", Arial, Helvetica, sans-serif;
 }

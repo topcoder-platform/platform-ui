@@ -1,17 +1,16 @@
 import { FC } from 'react'
 
+import { BaseProps } from '../../lib/interfaces'
+
 import styles from './Utilities.module.scss'
-import ProfileSelector from './UtilitySelector/ProfileSelector/ProfileSeletor'
+import ProfileSelector from './UtilitySelector/ProfileSelector/ProfileSelector'
 
-// TODO: add props
-// tslint:disable-next-line: no-empty-interface
-interface UtilitiesProps { }
+const Utilities: FC<BaseProps> = (props: BaseProps) => {
 
-const Utilities: FC<UtilitiesProps> = () => {
     return (
         <div className={styles.utilities}>
             {/* TODO: make this configurable  */}
-            <ProfileSelector />
+            <ProfileSelector initialized={props.initialized} profile={props.profile} />
         </div>
     )
 }

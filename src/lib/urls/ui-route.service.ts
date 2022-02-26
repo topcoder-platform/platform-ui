@@ -13,4 +13,8 @@ export class UiRoute {
     // profile
     readonly login: string = `https://accounts-auth0.topcoder-dev.com?retUrl=${encodeURIComponent(window.location.href.match(/[^?]*/)?.[0] || this.home)}`
     readonly signup: string = `${this.login}&regSource=tcBusiness&mode=signUp`
+
+    isHome(pathname: string): boolean {
+        return pathname === this.home
+    }
 }

@@ -1,3 +1,3 @@
+export * from './api-endpoint.service'
+export * from './external-endpoint.service'
 export * from './ui-route.service'
-
-// TODO: add other urls such as external or API

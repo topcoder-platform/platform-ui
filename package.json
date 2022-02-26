@@ -17,7 +17,7 @@
         "web-vitals": "^2.1.0"
     },
     "scripts": {
-        "start": "react-scripts start",
+        "start": "sh start-ssl.sh",
         "build": "react-scripts build",
         "eject": "react-scripts eject",
         "lint": "tslint src/**/*.{ts,tsx}",
@@ -45,8 +45,11 @@
     },
     "devDependencies": {
         "@types/react-router-dom": "^5.3.3",
+        "browser-cookies": "^1.2.0",
         "classnames": "^2.3.1",
         "react-router-dom": "^6.2.1",
-        "sass": "^1.49.8"
-    }
+        "sass": "^1.49.8",
+        "tc-auth-lib": "topcoder-platform/tc-auth-lib#1.0.3"
+    },
+    "types": "./types/index.d.ts"
 }

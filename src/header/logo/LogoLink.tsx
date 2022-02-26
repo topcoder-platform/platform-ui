@@ -16,7 +16,7 @@ const LogoLink: FC<{}> = () => {
 
     // the logo should be a link to the home page for all pages except the home page
     const routes: UiRoute = new UiRoute()
-    const isLink: boolean = useLocation().pathname === routes.home
+    const isLink: boolean = routes.isHome(useLocation().pathname)
     const logoElement: JSX.Element = isLink
         ? logo
         : (

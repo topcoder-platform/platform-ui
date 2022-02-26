@@ -9,10 +9,10 @@ describe('<Header />', () => {
     test('it should render the header', () => {
         const renderResult: RenderResult = render(
             <MemoryRouter>
-                <Header />
+                <Header initialized={true} profile={undefined} />
             </MemoryRouter>
         )
-        const headerElement: HTMLElement | null = renderResult.container.querySelector('.header')
+        const headerElement: HTMLElement | null = renderResult.container.querySelector('header')
         expect(headerElement).toBeInTheDocument()
     })
 })
