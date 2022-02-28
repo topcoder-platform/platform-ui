@@ -4,9 +4,10 @@
 .logo-link {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    align-items: center;
 
     img {
+        width: 56px;
         @extend .pad-xxl;
         padding-left: 0;
     }  
