@@ -19,7 +19,7 @@ $avatar-size: 32px;
         align-items: center;
         color: $tc-white;
         background-color: $blue-100;
-        font-weight: bold;
+        @include font-bold;
         @extend .medium-subtitle;
     }
 }

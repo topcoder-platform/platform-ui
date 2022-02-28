@@ -1,11 +1,6 @@
 @import 'palette';
 
-.medium-subtitle {
-    font-size: 14px;
-    line-height: 16px;
-    letter-spacing: .5px;
-}
-
+/* FONT-FAMILIES */
 @mixin font-roboto {
     font-family: "Roboto", Arial, Helvetica, sans-serif;
 }
@@ -16,6 +11,14 @@
 
 @mixin font-barlow {
     font-family: "Barlow", Arial, Helvetica, sans-serif;
+}
+
+/* FONT WEIGHTS */
+@mixin font-bold {
+    font-weight: 500;
+}
+@mixin font-bolder {
+    font-weight: 700;
 }
 
 

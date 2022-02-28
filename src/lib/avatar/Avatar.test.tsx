@@ -72,7 +72,7 @@ describe('<Avatar /> and there is a profile', () => {
     test('if there is NOT an avatar URL, it should NOT display the Avatar', () => {
         const newMockProfile: UserProfile = {
             ...mockProfile,
-            photoURL: undefined
+            photoURL: undefined,
         }
         const renderResult: RenderResult = render(<Avatar profile={newMockProfile} />)
         renderResult.debug()
@@ -80,4 +80,3 @@ describe('<Avatar /> and there is a profile', () => {
         expect(AvatarElement).toBeInTheDocument()
     })
 })
-
