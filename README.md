@@ -2,13 +2,13 @@
 
 # Instructions to serve locally
 
-> git clone https://github.com/topcoder-platform/platform-ui.git
+\> git clone https://github.com/topcoder-platform/platform-ui.git
 
-> cd platform-ui
+\> cd platform-ui
 
-> yarn install
+\> yarn install
 
-> yarn start
+\> yarn start
 
 go to https://local.topcoder-dev.com:3000/
 
