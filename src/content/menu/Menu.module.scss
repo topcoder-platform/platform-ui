@@ -1,0 +1,17 @@
+@import '../../lib/styles/';
+
+.menu {
+    background-color: $black-100;
+
+    .menu-selector {
+        display: block;
+        border-top: 1px solid $black-60;
+        padding: $pad-lg 0;
+        color: $tc-white;
+        font-size: 16px;
+        @include font-bold;
+
+        display: flex;
+        justify-content: space-between;
+    }
+}

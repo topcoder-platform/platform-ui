@@ -2,9 +2,13 @@
 import { Component } from 'react'
 import { Route, Routes } from 'react-router-dom'
 
+import DesignLib from './content/design-lib/Design-Lib'
+import Home from './content/home/Home'
+import Menu from './content/menu/Menu'
+import SelfService from './content/self-service/Self-Service'
+import Tool from './content/tool/Tool'
 import Header from './header/Header'
 import { AppState } from './lib/interfaces'
-import Placeholder from './lib/placeholder/Placeholder'
 import { AuthenticationService } from './lib/services'
 import { UiRoute } from './lib/urls'
 
@@ -44,12 +48,13 @@ class App extends Component<{}, AppState> {
         return (
             <>
                 <Header initialized={!!this.state.auth.initialized} profile={this.state.profile} />
+                {/* TODO: make this configurable */}
                 <Routes>
-                    <Route path={this.routes.designLibFonts} element={<Placeholder title='Design Library Fonts' />} />
-                    <Route path={this.routes.designLib} element={<Placeholder title='Design Library' />} />
-                    <Route path={this.routes.home} element={<Placeholder title='Platform UI Home' />} />
-                    <Route path={this.routes.selfService} element={<Placeholder title='Self Service' />} />
-                    <Route path={this.routes.tool} element={<Placeholder title='Tool' />} />
+                    <Route path={this.routes.designLib} element={<DesignLib profile={this.state.profile} />} />
+                    <Route path={this.routes.home} element={<Home profile={this.state.profile} />} />
+                    <Route path={this.routes.menu} element={<Menu />} />
+                    <Route path={this.routes.selfService} element={<SelfService profile={this.state.profile} />} />
+                    <Route path={this.routes.tool} element={<Tool profile={this.state.profile} />} />
                 </Routes>
             </>
         )

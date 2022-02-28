@@ -14,7 +14,7 @@ const Tools: FC<{}> = () => {
             <div className={styles.tools}>
                 {/* TODO: make this configurable */}
                 <ToolSelector name='Home' url={routes.home} />
-                <ToolSelector name='Design System' url={routes.designLib} />
+                <ToolSelector name='Design Library' url={routes.designLib} />
                 <ToolSelector name='Self Service' url={routes.selfService} />
                 <ToolSelector name='Tool' url={routes.tool} />
             </div>

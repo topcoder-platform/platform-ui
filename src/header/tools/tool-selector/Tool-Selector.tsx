@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 import '../../../lib/styles/index.scss'
 import { UiRoute } from '../../../lib/urls'
@@ -20,9 +20,9 @@ const ToolSelector: FC<ToolSelectorProps> = (props: ToolSelectorProps) => {
 
     return (
         <div className={styles['tool-selector']}>
-            <a href={props.url} className='large-tab'>
+            <Link to={props.url} className='large-tab'>
                 {props.name}
-            </a>
+            </Link>
             <div className={styles[activeIndicaterClass]}></div>
         </div>
     )

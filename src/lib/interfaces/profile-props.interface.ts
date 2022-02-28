@@ -1,6 +1,5 @@
 import { UserProfile } from './user-profile.interface'
 
-export interface BaseProps {
-    initialized: boolean
+export interface ProfileProps {
     profile?: UserProfile
 }
