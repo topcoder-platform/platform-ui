@@ -24,7 +24,6 @@ describe('<Avatar /> and there is NOT a profile', () => {
 
     test('it should NOT display the Avatar', () => {
         const renderResult: RenderResult = render(<Avatar profile={undefined} />)
-        renderResult.debug()
         const AvatarElement: HTMLElement | null = renderResult.container.querySelector('.avatar')
         expect(AvatarElement).toBeNull()
     })
@@ -40,7 +39,6 @@ describe('<Avatar /> and there is a profile', () => {
             photoURL: undefined,
         }
         const renderResult: RenderResult = render(<Avatar profile={newMockProfile} />)
-        renderResult.debug()
         const AvatarElement: HTMLElement | null = renderResult.container.querySelector('.avatar')
         expect(AvatarElement).toBeNull()
     })
@@ -53,7 +51,6 @@ describe('<Avatar /> and there is a profile', () => {
 
     test('if there is a photoURL, it should NOT display the Avatar letters', () => {
         const renderResult: RenderResult = render(<Avatar profile={mockProfile} />)
-        renderResult.debug()
         const AvatarElement: HTMLElement | null = renderResult.container.querySelector('.avatar-letters')
         expect(AvatarElement).toBeNull()
     })
@@ -64,7 +61,6 @@ describe('<Avatar /> and there is a profile', () => {
             photoURL: undefined,
         }
         const renderResult: RenderResult = render(<Avatar profile={newMockProfile} />)
-        renderResult.debug()
         const AvatarElement: HTMLElement | null = renderResult.container.querySelector('.avatar-letters')
         expect(AvatarElement).toBeInTheDocument()
     })
@@ -75,7 +71,6 @@ describe('<Avatar /> and there is a profile', () => {
             photoURL: undefined,
         }
         const renderResult: RenderResult = render(<Avatar profile={newMockProfile} />)
-        renderResult.debug()
         const AvatarElement: HTMLElement | null = renderResult.container.querySelector('.avatar-letters')
         expect(AvatarElement).toBeInTheDocument()
     })
