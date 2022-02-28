@@ -1,0 +1,8 @@
+@import '../../lib/styles';
+
+.tools {
+    display: flex;
+    align-items: center;
+    border-left: solid 1px $black-80;
+    padding-left: $pad-md;
+}

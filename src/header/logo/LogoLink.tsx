@@ -12,7 +12,7 @@ import logoImage from './topcoder-mark.png'
 
 const LogoLink: FC<{}> = () => {
 
-    const logo: JSX.Element = <img src={logoImage} alt='Topcoder logo' className='pad-xl' />
+    const logo: JSX.Element = <img src={logoImage} alt='Topcoder logo' />
 
     // the logo should be a link to the home page for all pages except the home page
     const routes: UiRoute = new UiRoute()

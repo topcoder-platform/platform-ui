@@ -6,6 +6,7 @@ import '../lib/styles/index.scss'
 
 import styles from './Header.module.scss'
 import LogoLink from './logo/LogoLink'
+import Tools from './tools/Tools'
 import Utilities from './utilities/Utilities'
 
 const Header: FC<BaseProps> = (props: BaseProps) => {
@@ -16,7 +17,7 @@ const Header: FC<BaseProps> = (props: BaseProps) => {
             </div>
             <LogoLink />
             <div className={styles.main}>
-                <div>Tools</div>
+                <Tools />
                 <Utilities initialized={props.initialized} profile={props.profile}></Utilities>
             </div>
         </header>

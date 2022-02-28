@@ -5,5 +5,9 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
+
+    img {
+        @extend .pad-xxl;
+        padding-left: 0;
+    }  
 }

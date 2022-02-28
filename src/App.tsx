@@ -48,6 +48,8 @@ class App extends Component<{}, AppState> {
                     <Route path={this.routes.designLibFonts} element={<Placeholder title='Design Library Fonts' />} />
                     <Route path={this.routes.designLib} element={<Placeholder title='Design Library' />} />
                     <Route path={this.routes.home} element={<Placeholder title='Platform UI Home' />} />
+                    <Route path={this.routes.selfService} element={<Placeholder title='Self Service' />} />
+                    <Route path={this.routes.tool} element={<Placeholder title='Tool' />} />
                 </Routes>
             </>
         )
