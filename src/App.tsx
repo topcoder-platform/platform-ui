@@ -28,6 +28,7 @@ const App: FC<{}> = () => {
             return
         }
 
+        // WARNING: this doesn't rerender
         (async () => {
             // TODO: move this to the provider
             // try to get a profile
