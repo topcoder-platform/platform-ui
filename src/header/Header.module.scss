@@ -29,6 +29,14 @@
         grid-template-columns: $left-col-width-xl 1fr;
     }
 
+    .menu {
+        display: none;
+
+        @include ltesm {
+            display: block;
+        }
+    }
+
     .main {
         display: flex;
         align-items: center;
