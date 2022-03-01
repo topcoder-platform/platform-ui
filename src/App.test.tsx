@@ -1,9 +1,14 @@
-import { render, screen } from '@testing-library/react'
+import { render, RenderResult } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 
 import App from './App'
 
-test('renders welcome text', () => {
-    render(<App />)
-    const contentElement: HTMLElement = screen.getByText('Hi! From, Topcoder.')
-    expect(contentElement).toBeInTheDocument()
+test('renders the body of the application', () => {
+    const result: RenderResult = render(
+        <MemoryRouter>
+            <App />
+        </MemoryRouter>
+    )
+    const bodyElement: HTMLBodyElement | null = result.container.querySelector('body')
+    expect(bodyElement).toBeDefined()
 })
