@@ -10,3 +10,31 @@ $left-col-width-xl: calc(1.3 * $header-height);
 /* Padding */
 $pad-xs: 4px;
 $pad-sm: calc(2 * $pad-xs);
+$pad-md: calc(3 * $pad-xs);
+$pad-lg: calc(4 * $pad-xs);
+$pad-xl: calc(5 * $pad-xs);
+$pad-xxl: calc(6 * $pad-xs);
+
+.pad-xs {
+    padding: $pad-xs;
+}
+
+.pad-sm {
+    padding: $pad-sm;
+}
+
+.pad-md {
+    padding: $pad-md;
+}
+
+.pad-lg {
+    padding: $pad-lg;
+}
+
+.pad-xl {
+    padding: $pad-xl;
+}
+
+.pad-xxl {
+    padding: $pad-xxl;
+}

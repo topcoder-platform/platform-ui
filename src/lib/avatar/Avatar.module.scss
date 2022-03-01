@@ -1,0 +1,25 @@
+@import '../../lib/styles/';
+
+$avatar-size: 32px;
+
+.avatar-container {
+    border-radius: 50%;
+    height: $avatar-size;
+    overflow: hidden;
+    width: $avatar-size;
+
+    .avatar {
+        height: $avatar-size;
+        width: $avatar-size;
+    }
+
+    .avatar-letters {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: $tc-white;
+        background-color: $blue-100;
+        @include font-bold;
+        @extend .medium-subtitle;
+    }
+}

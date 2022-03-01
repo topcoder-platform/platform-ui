@@ -1,12 +1,24 @@
+import classNames from 'classnames'
 import { FC } from 'react'
 
-import styles from './Header.module.scss'
-import LogoLink from './LogoLink/LogoLink'
+import { BaseProps } from '../lib/interfaces'
+import '../lib/styles/index.scss'
 
-const Header: FC<{}> = () => {
+import styles from './Header.module.scss'
+import LogoLink from './logo/LogoLink'
+import Utilities from './utilities/Utilities'
+
+const Header: FC<BaseProps> = (props: BaseProps) => {
     return (
-        <header className={styles.header} data-testid='header'>
+        <header className={styles.header}>
+            <div className={classNames(styles.menu, 'font-tc-white')}>
+                Menu
+            </div>
             <LogoLink />
+            <div className={styles.main}>
+                <div>Tools</div>
+                <Utilities initialized={props.initialized} profile={props.profile}></Utilities>
+            </div>
         </header>
     )
 }

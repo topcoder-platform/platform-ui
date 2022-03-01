@@ -7,7 +7,7 @@ export interface PlaceholderProps {
 }
 
 const Placeholder: FC<PlaceholderProps> = (props: PlaceholderProps) => (
-    <div className={styles.placeholder} data-testid={props.title}>
+    <div className={styles.placeholder}>
         {props.title}
     </div>
 )

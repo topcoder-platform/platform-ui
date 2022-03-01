@@ -1,5 +1,6 @@
 @import 'palette';
 
+/* FONT-FAMILIES */
 @mixin font-roboto {
     font-family: "Roboto", Arial, Helvetica, sans-serif;
 }
@@ -10,6 +11,14 @@
 
 @mixin font-barlow {
     font-family: "Barlow", Arial, Helvetica, sans-serif;
+}
+
+/* FONT WEIGHTS */
+@mixin font-bold {
+    font-weight: 500;
+}
+@mixin font-bolder {
+    font-weight: 700;
 }
 
 

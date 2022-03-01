@@ -1,12 +1,19 @@
-// disable alpha member ordering for this file
-// so we can use prior constants to form new constants
-// tslint:disable: member-ordering
+
 export class UiRoute {
 
-    // home
     readonly home: string = '/'
 
-    // design lib
-    readonly designLib: string = `${this.home}design-lib`
-    readonly designLibFonts: string = `${this.designLib}/fonts`
+    get designLib(): string { return `${this.home}design-lib` }
+    get designLibFonts(): string { return `${this.designLib}/fonts` }
+    get selfService(): string { return `${this.home}self-service` }
+    get tool(): string { return `${this.home}tool` }
+
+    isActive(currentPath: string, pathName: string): boolean {
+        return currentPath?.startsWith(pathName)
+            && (pathName !== this.home || currentPath === this.home)
+    }
+
+    isHome(pathName: string): boolean {
+        return pathName === this.home
+    }
 }

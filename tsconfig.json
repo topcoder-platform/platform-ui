@@ -11,6 +11,7 @@
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "strict": true,
+        "strictNullChecks": true,
         "forceConsistentCasingInFileNames": true,
         "noFallthroughCasesInSwitch": true,
         "module": "esnext",
@@ -18,9 +19,16 @@
         "resolveJsonModule": true,
         "isolatedModules": true,
         "noEmit": true,
-        "jsx": "react-jsx"
+        "jsx": "react-jsx",
+        "typeRoots": [
+            "./types",
+            "./node_modules/@types"
+        ]
     },
     "include": [
         "src"
+    ],
+    "exclude": [
+        "**/*.test.*"
     ]
 }

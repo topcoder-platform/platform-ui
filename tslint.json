@@ -24,6 +24,10 @@
             "check-space"
         ],
         "curly": true,
+        "cyclomatic-complexity": [
+            true,
+            7
+        ],
         "deprecation": {
             "severity": "none"
         },
@@ -86,6 +90,7 @@
             "ignore-params"
         ],
         "no-misused-new": true,
+        "no-null-keyword": true,
         "no-non-null-assertion": true,
         "no-shadowed-variable": true,
         "no-string-literal": false,
@@ -163,7 +168,6 @@
             "check-operator",
             "check-separator",
             "check-type"
-        ],
-        "no-null-keyword": true
+        ]
     }
 }

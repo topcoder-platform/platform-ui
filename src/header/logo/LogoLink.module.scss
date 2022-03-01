@@ -4,12 +4,11 @@
 .logo-link {
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-}
 
-.logo-no-link {
     img {
-        padding-bottom: $pad-xs;
-    }
+        width: 56px;
+        @extend .pad-xxl;
+        padding-left: 0;
+    }  
 }

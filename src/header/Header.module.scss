@@ -4,14 +4,21 @@
     display: grid;
     height: $header-height;
     background-color: $tc-black;
+    align-items: center;
+    padding: 0 $pad-xxl;
 
     @include ltesm {
-        grid-template-columns: 1fr;
-        justify-content: center;
+        grid-template-columns: $header-height 1fr $header-height;
+        align-items: center;
+    }
+
+    @include sm {
+        padding: 0 $pad-lg;
     }
 
     @include md {
         grid-template-columns: $left-col-width-md 1fr;
+        padding: 0 $pad-lg;
     }
 
     @include lg {
@@ -20,5 +27,29 @@
 
     @include xl {
         grid-template-columns: $left-col-width-xl 1fr;
+    }
+
+    .menu {
+        display: none;
+
+        @include ltesm {
+            display: block;
+        }
+    }
+
+    .main {
+        display: flex;
+        align-items: center;
+        @include font-tc-white;
+
+        @include ltesm {
+            div {
+                display: none;
+
+                &:last-of-type {
+                    display: grid;
+                }
+            }
+        }
     }
 }
