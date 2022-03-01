@@ -1,0 +1,12 @@
+$header-height: 80px;
+
+/* Left Col includes the header logo link and the sections container */
+$left-col-width-md: $header-height;
+$left-col-width-lg: calc(1.2 * $header-height);
+$left-col-width-xl: calc(1.3 * $header-height);
+
+/* TODO: determine which UI library to use and replace below */
+
+/* Padding */
+$pad-xs: 4px;
+$pad-sm: calc(2 * $pad-xs);
