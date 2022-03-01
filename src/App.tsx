@@ -22,20 +22,18 @@ const App: FC<{}> = () => {
     })
 
     useEffect(() => {
-        console.debug('appstate', appState)
 
         // if we have already have the profile, don't do anything else
         if (!!appState?.profile) {
             return
         }
 
-        // TODO: move this to the provider
-        // try to get a profile
-        authenticationService.authenticate(appState)
-            .then(updatedAppState => {
-                console.debug('updated', updatedAppState)
-                setAppState(updatedAppState)
-            })
+        (async () => {
+            // TODO: move this to the provider
+            // try to get a profile
+            const updatedAppState: AppState = await authenticationService.authenticate(appState)
+            setAppState(updatedAppState)
+        })()
     }, [])
 
     // TODO: make routes configurable
