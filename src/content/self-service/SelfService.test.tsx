@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 
-import SelfService from './Self-Service'
+import SelfService from './SelfService'
 
 describe('<SelfService />', () => {
 

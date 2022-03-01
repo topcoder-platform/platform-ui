@@ -2,7 +2,7 @@ import '@testing-library/jest-dom'
 import { render, RenderResult } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
-import ToolSelector from './Tool-Selector'
+import ToolSelector from './ToolSelector'
 
 describe('<ToolSelector />', () => {
 

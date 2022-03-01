@@ -4,7 +4,7 @@ import { FC } from 'react'
 import { ProfileProps } from '../interfaces'
 import '../styles/index.scss'
 
-import styles from './Content-Layout.module.scss'
+import styles from './ContentLayout.module.scss'
 
 export interface ContentLayoutProps extends ProfileProps {
     children: JSX.Element

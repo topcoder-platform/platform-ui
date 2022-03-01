@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { Link } from 'react-router-dom'
 
-import ContentLayout from '../../lib/content-layout/Content-Layout'
+import ContentLayout from '../../lib/content-layout/ContentLayout'
 import { UiRoute } from '../../lib/urls'
 
 import styles from './Menu.module.scss'

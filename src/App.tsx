@@ -2,10 +2,10 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { Route, Routes } from 'react-router-dom'
 
-import DesignLib from './content/design-lib/Design-Lib'
+import DesignLib from './content/design-lib/DesignLib'
 import Home from './content/home/Home'
 import Menu from './content/menu/Menu'
-import SelfService from './content/self-service/Self-Service'
+import SelfService from './content/self-service/SelfService'
 import Tool from './content/tool/Tool'
 import Header from './header/Header'
 import { AppState } from './lib/interfaces'
