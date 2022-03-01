@@ -1,11 +1,12 @@
 import cookies from 'browser-cookies'
 import { configureConnector, decodeToken, getFreshToken } from 'tc-auth-lib'
 
-import { CookieKeys, EnvironmentConfig } from '../config'
-import { AppState, AuthenticationData } from '../interfaces'
-import { ExternalEndpoint } from '../urls'
+import { EnvironmentConfig } from '../../../config'
+import { AppState, AuthenticationData } from '../../interfaces'
+import { ExternalEndpoint } from '../../urls'
+import { ProfileService } from '../profile-service/profile.service'
 
-import { ProfileService } from './profile.service'
+import { CookieKeys } from './cookie-keys.enum'
 
 export class AuthenticationService {
 

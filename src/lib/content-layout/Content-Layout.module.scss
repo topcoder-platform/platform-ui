@@ -2,7 +2,7 @@
 
 .content {
     height: $contentHeight;
-    padding: 24px;
+    padding: 24px 24px 24px 0;
 
     display: grid;
     @include font-roboto;
@@ -13,12 +13,13 @@
     }
 
     .sections {
-        background-color: pink;
+        background-color: $tc-white;
     }
 
     @include ltesm {
         grid-template-columns: 1fr;
         justify-content: center;
+        padding-left: 24px;
 
         .sections {
             display: none;

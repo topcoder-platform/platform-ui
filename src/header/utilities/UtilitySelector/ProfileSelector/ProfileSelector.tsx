@@ -1,6 +1,5 @@
 import classNames from 'classnames'
 import { Component } from 'react'
-import { Link } from 'react-router-dom'
 
 import { Avatar, ExternalEndpoint, HeaderProps, UiRoute } from '../../../../lib'
 import '../../../../lib/styles/index.scss'
@@ -17,14 +16,14 @@ class ProfileSelector extends Component<HeaderProps> {
         return <Avatar profile={this.props.profile} />
     }
     private get logIn(): JSX.Element {
-        return <Link to={this.externalEndpoints.login(this.routes.home)} className={this.buttonClass}>
+        return <a href={this.externalEndpoints.login(this.routes.home)} className={this.buttonClass}>
             Log In
-        </Link>
+        </a>
     }
     private get signUp(): JSX.Element {
-        return <Link to={this.externalEndpoints.signup(this.routes.home)} className={classNames(this.buttonClass, 'allWhite')}>
+        return <a href={this.externalEndpoints.signup(this.routes.home)} className={classNames(this.buttonClass, 'allWhite')}>
             Sign Up
-        </Link>
+        </a>
     }
 
     render(): JSX.Element {

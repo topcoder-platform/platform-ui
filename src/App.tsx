@@ -2,7 +2,11 @@
 import { Component } from 'react'
 import { Route, Routes } from 'react-router-dom'
 
+import Buttons from './content/design-lib/buttons/Buttons'
 import DesignLib from './content/design-lib/Design-Lib'
+import { DesignLibRoute } from './content/design-lib/design-lib-route.service'
+import Fonts from './content/design-lib/fonts/Fonts'
+import Icons from './content/design-lib/icons/Icons'
 import Home from './content/home/Home'
 import Menu from './content/menu/Menu'
 import SelfService from './content/self-service/Self-Service'
@@ -16,6 +20,7 @@ class App extends Component<{}, AppState> {
     // so we don't have to new it up every time.
     // it's not a singleton, so this is good for now.
     private readonly authenticationService: AuthenticationService = new AuthenticationService()
+    private readonly designLibRoutes: DesignLibRoute = new DesignLibRoute()
     private readonly routes: UiRoute = new UiRoute()
 
     constructor(props: {}) {
@@ -53,6 +58,10 @@ class App extends Component<{}, AppState> {
                     <Route path={this.routes.menu} element={<Menu />} />
                     <Route path={this.routes.selfService} element={<SelfService profile={this.state.profile} />} />
                     <Route path={this.routes.tool} element={<Tool profile={this.state.profile} />} />
+                    {/* TODO: figure out how to define subsections routes in the section module instead of here */}
+                    <Route path={this.designLibRoutes.buttons} element={<Buttons />} />
+                    <Route path={this.designLibRoutes.fonts} element={<Fonts />} />
+                    <Route path={this.designLibRoutes.icons} element={<Icons />} />
                 </Routes>
             </>
         )

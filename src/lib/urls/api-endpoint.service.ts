@@ -1,4 +1,4 @@
-import { EnvironmentConfig } from '../config'
+import { EnvironmentConfig } from '../../config'
 
 export class ApiEndoint {
 

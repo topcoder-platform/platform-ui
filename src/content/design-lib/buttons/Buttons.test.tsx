@@ -1,12 +1,12 @@
 import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 
-import DesignLib from './Design-Lib'
+import Buttons from './Buttons'
 
-describe('<DesignLib />', () => {
+describe('<Buttons />', () => {
 
-    test('it should render the title prop', () => {
-       /*  render(<DesignLib />)
+    test('it should render the buttons page', () => {
+       /*  render(<Buttons />)
         const titleElement: HTMLElement = screen.getByText('Design Library')
         expect(titleElement).toBeInTheDocument() */
     })

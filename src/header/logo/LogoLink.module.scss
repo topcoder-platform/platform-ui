@@ -9,7 +9,6 @@
     img {
         width: 56px;
         @extend .pad-xxl;
-        padding-left: 0;
 
         @include ltesm {
             padding: 0;

@@ -4,10 +4,6 @@ import { ContentLayout, ProfileProps } from '../../lib'
 
 import styles from './Tool.module.scss'
 
-export interface ToolProps {
-    title?: string
-}
-
 const Tool: FC<ProfileProps> = (props: ProfileProps) => (
     <ContentLayout profile={props.profile} classNames={styles.tool}>
         <>
