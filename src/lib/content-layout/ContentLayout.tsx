@@ -4,7 +4,7 @@ import { FC } from 'react'
 import { ProfileProps, SectionSelectorProps } from '../interfaces'
 import '../styles/index.scss'
 
-import styles from './Content-Layout.module.scss'
+import styles from './ContentLayout.module.scss'
 import Sections from './sections/Sections'
 
 export interface ContentLayoutProps extends ProfileProps {

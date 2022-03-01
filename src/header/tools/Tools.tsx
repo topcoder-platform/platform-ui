@@ -2,7 +2,7 @@ import { FC } from 'react'
 
 import { UiRoute } from '../../lib'
 
-import ToolSelector from './tool-selector/Tool-Selector'
+import ToolSelector from './tool-selector/ToolSelector'
 import styles from './Tools.module.scss'
 
 const Tools: FC<{}> = () => {

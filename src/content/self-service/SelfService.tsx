@@ -2,7 +2,7 @@ import { FC } from 'react'
 
 import { ContentLayout, ProfileProps } from '../../lib'
 
-import styles from './Self-Service.module.scss'
+import styles from './SelfService.module.scss'
 
 const SelfService: FC<ProfileProps> = (props: ProfileProps) => (
     <ContentLayout profile={props.profile} classNames={styles['self-service']}>

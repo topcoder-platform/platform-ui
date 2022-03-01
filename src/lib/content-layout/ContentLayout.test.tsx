@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 
-import ContentLayout from './Content-Layout'
+import ContentLayout from './ContentLayout'
 
 describe('<ContentLayout />', () => {
 

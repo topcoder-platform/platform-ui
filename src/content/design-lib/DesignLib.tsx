@@ -2,7 +2,7 @@ import { FC } from 'react'
 
 import { ContentLayout, ProfileProps } from '../../lib'
 
-import styles from './Design-Lib.module.scss'
+import styles from './DesignLib.module.scss'
 import { sections } from './sections.config'
 
 const DesignLib: FC<ProfileProps> = (props: ProfileProps) => {

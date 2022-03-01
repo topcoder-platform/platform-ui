@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { UiRoute } from '../../../lib'
 import '../../../lib/styles/index.scss'
 
-import styles from './Tool-Selector.module.scss'
+import styles from './ToolSelector.module.scss'
 
 interface ToolSelectorProps {
     name: string

@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 
-import DesignLib from './Design-Lib'
+import DesignLib from './DesignLib'
 
 describe('<DesignLib />', () => {
 

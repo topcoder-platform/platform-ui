@@ -6,7 +6,6 @@ import styles from './Utilities.module.scss'
 import ProfileSelector from './UtilitySelector/ProfileSelector/ProfileSelector'
 
 const Utilities: FC<HeaderProps> = (props: HeaderProps) => {
-
     return (
         <div className={styles.utilities}>
             {/* TODO: make this configurable  */}
