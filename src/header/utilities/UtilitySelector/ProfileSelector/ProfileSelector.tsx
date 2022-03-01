@@ -2,10 +2,8 @@ import classNames from 'classnames'
 import { Component } from 'react'
 import { Link } from 'react-router-dom'
 
-import Avatar from '../../../../lib/avatar/Avatar'
-import { HeaderProps } from '../../../../lib/interfaces'
+import { Avatar, ExternalEndpoint, HeaderProps, UiRoute } from '../../../../lib'
 import '../../../../lib/styles/index.scss'
-import { ExternalEndpoint, UiRoute } from '../../../../lib/urls'
 
 import styles from './ProfileSelector.module.scss'
 

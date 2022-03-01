@@ -1,7 +1,6 @@
 import { FC } from 'react'
 
-import ContentLayout from '../../lib/content-layout/Content-Layout'
-import { ProfileProps } from '../../lib/interfaces'
+import { ContentLayout, ProfileProps } from '../../lib'
 
 import styles from './Self-Service.module.scss'
 

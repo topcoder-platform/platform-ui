@@ -1,10 +1,8 @@
-
 export class UiRoute {
 
     readonly home: string = '/'
 
     get designLib(): string { return `${this.home}design-lib` }
-    get designLibFonts(): string { return `${this.designLib}/fonts` }
     get menu(): string { return `${this.home}menu` }
     get selfService(): string { return `${this.home}self-service` }
     get tool(): string { return `${this.home}tool` }

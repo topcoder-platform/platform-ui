@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { UiRoute } from '../../lib/urls'
+import { UiRoute } from '../../lib'
 
 import ToolSelector from './tool-selector/Tool-Selector'
 import styles from './Tools.module.scss'

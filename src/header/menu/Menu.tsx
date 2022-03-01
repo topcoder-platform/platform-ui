@@ -2,7 +2,7 @@ import classNames from 'classnames'
 import { FC } from 'react'
 import { Link, NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
 
-import { UiRoute } from '../../lib/urls'
+import { UiRoute } from '../../lib'
 
 import styles from './Menu.module.scss'
 

@@ -2,7 +2,7 @@ import '@testing-library/jest-dom'
 import { render, RenderResult, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
-import { UserProfile } from '../../../../lib/interfaces'
+import { UserProfile } from '../../../../lib'
 
 import ProfileSelector from './ProfileSelector'
 

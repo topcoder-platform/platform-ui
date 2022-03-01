@@ -8,9 +8,7 @@ import Menu from './content/menu/Menu'
 import SelfService from './content/self-service/Self-Service'
 import Tool from './content/tool/Tool'
 import Header from './header/Header'
-import { AppState } from './lib/interfaces'
-import { AuthenticationService } from './lib/services'
-import { UiRoute } from './lib/urls'
+import { AppState, AuthenticationService, UiRoute } from './lib'
 
 class App extends Component<{}, AppState> {
 

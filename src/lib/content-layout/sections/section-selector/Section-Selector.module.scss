@@ -1,0 +1,24 @@
+@import '../../../styles/';
+
+.section-selector {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 64px;
+
+    .title {
+        text-align: center;
+        /* TODO: replace below this w/a named design system font class */
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 14px;
+        letter-spacing: 0px;
+        text-transform: uppercase;
+        color: $black-60;
+
+        &.active {
+            color: $turq-120;
+        }
+    }
+}

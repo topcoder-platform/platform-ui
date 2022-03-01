@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { HeaderProps } from '../../lib/interfaces'
+import { HeaderProps } from '../../lib'
 
 import styles from './Utilities.module.scss'
 import ProfileSelector from './UtilitySelector/ProfileSelector/ProfileSelector'

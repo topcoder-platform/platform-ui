@@ -1,0 +1,8 @@
+@import '../../styles/';
+
+.sections {
+
+    @include ltesm {
+        display: none;
+    }
+}
