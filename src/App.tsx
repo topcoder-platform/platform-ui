@@ -30,14 +30,13 @@ const App: FC<{}> = () => {
             return
         }
 
-        // WARNING: this doesn't rerender
         (async () => {
             // TODO: move this to the provider
             // try to get a profile
             const updatedAppState: AppState = await authenticationService.authenticate(appState)
             setAppState(updatedAppState)
         })()
-    }, [])
+    }, [appState])
 
     // TODO: make routes configurable
     const routes: UiRoute = new UiRoute()
@@ -56,7 +55,7 @@ const App: FC<{}> = () => {
                 <Route path={designLibRoutes.buttons} element={< Buttons />} />
                 <Route path={designLibRoutes.fonts} element={< Fonts />} />
                 <Route path={designLibRoutes.icons} element={< Icons />} />
-            </Routes>
+            </Routes >
         </>
     )
 }
