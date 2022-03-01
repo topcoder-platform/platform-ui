@@ -15,6 +15,8 @@ $pad-lg: calc(4 * $pad-xs);
 $pad-xl: calc(5 * $pad-xs);
 $pad-xxl: calc(6 * $pad-xs);
 
+$contentHeight: calc(100vh - $header-height - calc(2 * $pad-xxl));
+
 .pad-xs {
     padding: $pad-xs;
 }
@@ -37,4 +39,9 @@ $pad-xxl: calc(6 * $pad-xs);
 
 .pad-xxl {
     padding: $pad-xxl;
+}
+
+#tc-accounts-iframe {
+    border: none;
+    display: none;
 }

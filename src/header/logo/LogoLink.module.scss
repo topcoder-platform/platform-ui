@@ -10,5 +10,17 @@
         width: 56px;
         @extend .pad-xxl;
         padding-left: 0;
+
+        @include ltesm {
+            padding: 0;
+        }
     }  
+}
+
+.logo-no-link {
+    height: 74.5px;
+
+    @include ltesm {
+        height: 26.5px;
+    }
 }

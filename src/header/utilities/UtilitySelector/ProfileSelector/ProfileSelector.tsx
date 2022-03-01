@@ -1,49 +1,46 @@
 import classNames from 'classnames'
-import { Component } from 'react'
+import { FC } from 'react'
 
 import Avatar from '../../../../lib/avatar/Avatar'
-import { BaseProps } from '../../../../lib/interfaces'
+import { HeaderProps } from '../../../../lib/interfaces'
 import '../../../../lib/styles/index.scss'
 import { ExternalEndpoint, UiRoute } from '../../../../lib/urls'
 
 import styles from './ProfileSelector.module.scss'
 
-class ProfileSelector extends Component<BaseProps> {
+const ProfileSelector: FC<HeaderProps> = (props: HeaderProps) => {
 
-    private readonly buttonClass: string = 'button'
-    private readonly externalEndpoints: ExternalEndpoint = new ExternalEndpoint()
-    private readonly routes: UiRoute = new UiRoute()
+    console.debug('props', props.initialized)
 
-    private get avatar(): JSX.Element {
-        return <Avatar profile={this.props.profile} />
+    // if we're not initialized, don't render anything
+    if (!props.initialized) {
+        return <></>
     }
-    private get logIn(): JSX.Element {
-        return <a href={this.externalEndpoints.login(this.routes.home)} className={this.buttonClass}>
+
+    const buttonClass: string = 'button'
+    const externalEndpoints: ExternalEndpoint = new ExternalEndpoint()
+    const routes: UiRoute = new UiRoute()
+
+    const avatar: JSX.Element = <Avatar profile={props.profile} />
+    const logIn: JSX.Element = (
+        <a href={externalEndpoints.login(routes.home)} className={buttonClass}>
             Log In
         </a>
-    }
-    private get signUp(): JSX.Element {
-        return <a href={this.externalEndpoints.signup(this.routes.home)} className={classNames(this.buttonClass, 'allWhite')}>
+    )
+    const signUp: JSX.Element = (
+        <a href={externalEndpoints.signup(routes.home)} className={classNames(buttonClass, 'allWhite')}>
             Sign Up
         </a>
-    }
+    )
 
-    render(): JSX.Element {
-
-        // if we're not initialized, don't render anything
-        if (!this.props.initialized) {
-            return <></>
-        }
-
-        const isLoggedIn: boolean = !!this.props.profile
-        return (
-            <div className={styles['profile-selector']}>
-                {!isLoggedIn && this.logIn}
-                {!isLoggedIn && this.signUp}
-                {isLoggedIn && this.avatar}
-            </div>
-        )
-    }
+    const isLoggedIn: boolean = !!props.profile
+    return (
+        <div className={styles['profile-selector']}>
+            {!isLoggedIn && logIn}
+            {!isLoggedIn && signUp}
+            {isLoggedIn && avatar}
+        </div>
+    )
 }
 
 export default ProfileSelector

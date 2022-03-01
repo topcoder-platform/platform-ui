@@ -1,0 +1,10 @@
+@import '../../lib/styles';
+
+.menu-closed,
+.menu-opened {
+    display: none;
+
+    @include ltesm {
+        display: flex;
+    }
+}
