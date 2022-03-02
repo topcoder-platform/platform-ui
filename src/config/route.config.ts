@@ -5,7 +5,7 @@ export class RouteConfig {
     get designLib(): string { return `${this.home}design-lib` }
     get selfService(): string { return `${this.home}self-service` }
     get tool(): string { return `${this.home}tool` }
-    get toolSelections(): string { return `${this.home}tool-selections` }
+    get toolSelectors(): string { return `${this.home}tool-selectors` }
 
     isActive(currentPath: string, pathName: string): boolean {
         return currentPath?.startsWith(pathName)
@@ -17,6 +17,6 @@ export class RouteConfig {
     }
 
     isToolsSelection(pathName: string): boolean {
-        return pathName === this.toolSelections
+        return pathName === this.toolSelectors
     }
 }

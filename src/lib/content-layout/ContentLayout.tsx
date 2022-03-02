@@ -5,8 +5,7 @@ import { UserProfile } from '../profile-service'
 import '../styles/index.scss'
 
 import styles from './ContentLayout.module.scss'
-import { SectionSelectorProps } from './models'
-import Sections from './sections/Sections'
+import { Sections, SectionSelectorProps } from './sections'
 
 export interface ContentLayoutProps {
     children: JSX.Element

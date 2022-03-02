@@ -1,4 +1,4 @@
-import { FetchService } from '../../fetch-service'
+import { FetchService } from '../../services'
 import { UserProfile } from '../models'
 
 import { ProfileEndpointConfig } from './config'

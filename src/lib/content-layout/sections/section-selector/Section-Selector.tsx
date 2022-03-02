@@ -3,8 +3,8 @@ import { FC } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
 import { RouteConfig } from '../../../../config'
-import { SectionSelectorProps } from '../../models'
 
+import { SectionSelectorProps } from './section-selector-props.model'
 import styles from './Section-Selector.module.scss'
 
 const SectionSelector: FC<SectionSelectorProps> = (props: SectionSelectorProps) => {

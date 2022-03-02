@@ -1,21 +1,19 @@
 import { FC } from 'react'
 
-import '../lib/styles/index.scss'
-
+import { HeaderProps } from './header-props.model'
 import styles from './Header.module.scss'
-import Logo from './logo/Logo'
-import { HeaderProps } from './models'
-import ToolSelections from './tool-selections/ToolSelections'
-import UtilitySelections from './utility-selections/UtilitySelections'
+import { Logo } from './logo'
+import { ToolSelectors } from './tool-selectors'
+import { UtilitySelectors } from './utility-selectors'
 
 const Header: FC<HeaderProps> = (props: HeaderProps) => {
     return (
         <header className={styles.header}>
-            <ToolSelections isWide={false} />
+            <ToolSelectors isWide={false} />
             <Logo />
             <div className={styles.main}>
-                <ToolSelections isWide={true} />
-                <UtilitySelections initialized={props.initialized} profile={props.profile} />
+                <ToolSelectors isWide={true} />
+                <UtilitySelectors initialized={props.initialized} profile={props.profile} />
             </div>
         </header>
     )

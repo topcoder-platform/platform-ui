@@ -1,5 +1,5 @@
 export * from './authentication-service'
-export { default as Avatar } from './avatar/Avatar'
-export * from './config'
+export * from './avatar'
 export * from './content-layout'
+export * from './global-config.model'
 export * from './profile-service'

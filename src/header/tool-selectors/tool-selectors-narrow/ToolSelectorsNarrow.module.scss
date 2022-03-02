@@ -1,0 +1,11 @@
+@import '../../../lib/styles';
+
+.tool-selectors-narrow-closed,
+.tool-selectors-narrow-opened {
+    display: none;
+    padding-left: $pad-xxl;
+
+    @include ltesm {
+        display: flex;
+    }
+}

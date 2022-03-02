@@ -1,8 +1,7 @@
 import { FC } from 'react'
 
-import { SectionsProps } from '../models'
-
 import SectionSelector from './section-selector/Section-Selector'
+import { SectionsProps } from './sections-props.interface'
 import styles from './Sections.module.scss'
 
 const Sections: FC<SectionsProps> = (props: SectionsProps) => {

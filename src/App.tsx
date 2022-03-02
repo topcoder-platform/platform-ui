@@ -49,7 +49,7 @@ const App: FC<{}> = () => {
             <Routes>
                 <Route path={routes.designLib} element={<DesignLib profile={appState.profile} />} />
                 <Route path={routes.home} element={<Home profile={appState.profile} />} />
-                <Route path={routes.toolSelections} element={<ToolSelectorNarrow />} />
+                <Route path={routes.toolSelectors} element={<ToolSelectorNarrow />} />
                 <Route path={routes.selfService} element={<SelfService profile={appState.profile} />} />
                 <Route path={routes.tool} element={<Tool profile={appState.profile} />} />
                 <Route path={designLibRoutes.buttons} element={< Buttons />} />
