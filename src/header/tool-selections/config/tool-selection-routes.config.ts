@@ -1,7 +1,7 @@
-import { UiRoute } from '../../../lib'
+import { RouteConfig } from '../../../config'
 import { ToolSelectorProps } from '../models'
 
-const routes: UiRoute = new UiRoute()
+const routes: RouteConfig = new RouteConfig()
 
 /* TODO: do not hard-code this here and have each app "register" itself somehow */
 export const toolSelectors: Array<ToolSelectorProps> = [

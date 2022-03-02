@@ -14,17 +14,17 @@
         text-align: center;
     }
 
-    .tool-active,
-    .tool-inactive {
+    .tool-selector-wide-active,
+    .tool-selector-wide-inactive {
         width: $pad-xxl;
         height: 2px;
     }
 
-    .tool-active {
+    .tool-selector-wide-active {
         background-color: $turq-120;
     }
 
-    .tool-inactive {
+    .tool-selector-wide-inactive {
         background-color: inherit;
     }
 }

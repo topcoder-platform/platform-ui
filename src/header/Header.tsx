@@ -1,10 +1,10 @@
 import { FC } from 'react'
 
-import { HeaderProps } from '../lib'
 import '../lib/styles/index.scss'
 
 import styles from './Header.module.scss'
 import Logo from './logo/Logo'
+import { HeaderProps } from './models'
 import ToolSelections from './tool-selections/ToolSelections'
 import UtilitySelections from './utility-selections/UtilitySelections'
 

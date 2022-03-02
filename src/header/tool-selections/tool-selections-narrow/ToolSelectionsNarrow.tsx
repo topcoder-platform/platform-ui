@@ -2,13 +2,13 @@ import classNames from 'classnames'
 import { FC } from 'react'
 import { Link, NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
 
-import { UiRoute } from '../../../lib'
+import { RouteConfig } from '../../../config'
 
 import styles from './ToolSelectionsNarrow.module.scss'
 
 const ToolSelectionsNarrow: FC<{}> = () => {
 
-    const routes: UiRoute = new UiRoute()
+    const routes: RouteConfig = new RouteConfig()
     const isOpened: boolean = routes.isToolsSelection(useLocation().pathname)
     const selectionStyles: string = classNames(styles[`tool-selections-narrow-${isOpened ? 'opened' : 'closed'}`], 'font-tc-white')
     const navigate: NavigateFunction = useNavigate()

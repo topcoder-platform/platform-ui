@@ -1,4 +1,4 @@
-import { ProfileProps } from './profile-props.interface'
+import { ProfileProps } from '../../lib'
 
 export interface HeaderProps extends ProfileProps {
     initialized: boolean

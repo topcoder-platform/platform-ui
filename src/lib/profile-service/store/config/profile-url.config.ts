@@ -1,6 +1,6 @@
-import { EnvironmentConfig } from '../../config'
+import { EnvironmentConfig } from '../../../../config'
 
-export class ApiEndoint {
+export class ProfileUrlConfig {
 
     profile(handle: string): string {
         return `${EnvironmentConfig.API.V5}/members/${handle}`

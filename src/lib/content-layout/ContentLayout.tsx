@@ -1,15 +1,17 @@
 import classNames from 'classnames'
 import { FC } from 'react'
 
-import { ProfileProps, SectionSelectorProps } from '../interfaces'
+import { UserProfile } from '../profile-service'
 import '../styles/index.scss'
 
 import styles from './ContentLayout.module.scss'
+import { SectionSelectorProps } from './models'
 import Sections from './sections/Sections'
 
-export interface ContentLayoutProps extends ProfileProps {
+export interface ContentLayoutProps {
     children: JSX.Element
     classNames?: string
+    profile?: UserProfile
     sections?: Array<SectionSelectorProps>
 }
 

@@ -1,8 +1,8 @@
-import { UiRoute } from '../../lib'
+import { RouteConfig } from '../../../config'
 
-export class DesignLibRoute {
+export class DesignLibRouteConfig {
 
-    readonly root: string = new UiRoute().designLib
+    readonly root: string = new RouteConfig().designLib
 
     get buttons(): string { return `${this.root}/buttons` }
     get fonts(): string { return `${this.root}/fonts` }

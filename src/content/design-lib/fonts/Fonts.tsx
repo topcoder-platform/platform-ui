@@ -1,7 +1,7 @@
 import { FC } from 'react'
 
 import { ContentLayout, ProfileProps } from '../../../lib'
-import { sections } from '../sections.config'
+import { sections } from '../config'
 
 import styles from './Fonts.module.scss'
 

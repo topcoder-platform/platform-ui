@@ -1,5 +1,7 @@
+
+import { UserProfile } from '../../profile-service/models'
+
 import { AuthenticationData } from './authentication-data.interface'
-import { UserProfile } from './user-profile.interface'
 
 export interface AppState {
     auth: AuthenticationData

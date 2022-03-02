@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { SectionsProps } from '../../interfaces'
+import { SectionsProps } from '../models'
 
 import SectionSelector from './section-selector/Section-Selector'
 import styles from './Sections.module.scss'

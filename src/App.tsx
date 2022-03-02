@@ -2,21 +2,21 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { Route, Routes } from 'react-router-dom'
 
-import Buttons from './content/design-lib/buttons/Buttons'
-import { DesignLibRoute } from './content/design-lib/design-lib-route.service'
-import DesignLib from './content/design-lib/DesignLib'
-import Fonts from './content/design-lib/fonts/Fonts'
-import Icons from './content/design-lib/icons/Icons'
-import Home from './content/home/Home'
-import SelfService from './content/self-service/SelfService'
-import Tool from './content/tool/Tool'
+import { RouteConfig } from './config'
+import {
+    Buttons,
+    DesignLib,
+    DesignLibRouteConfig,
+    Fonts,
+    Home,
+    Icons,
+    SelfService,
+    Tool
+} from './content'
 import { Header, ToolSelectorNarrow } from './header'
-import { AppState, AuthenticationService, UiRoute } from './lib'
+import { AppState, AuthenticationService } from './lib'
 
 const App: FC<{}> = () => {
-
-    // TODO: convert auth service to a provider
-    const authenticationService: AuthenticationService = new AuthenticationService()
 
     const [appState, setAppState]: [AppState, Dispatch<SetStateAction<AppState>>] = useState<AppState>({
         auth: {},
@@ -32,14 +32,16 @@ const App: FC<{}> = () => {
         (async () => {
             // TODO: move this to the provider
             // try to get a profile
-            const updatedAppState: AppState = await authenticationService.authenticate(appState)
+            const updatedAppState: AppState = await new AuthenticationService().authenticate(appState)
             setAppState(updatedAppState)
         })()
-    }, [appState])
+    }, [
+        appState,
+    ])
 
-    // TODO: make routes configurable
-    const routes: UiRoute = new UiRoute()
-    const designLibRoutes: DesignLibRoute = new DesignLibRoute()
+    // TODO: make routes configurable and defined in the content section instead of hard-coded here
+    const routes: RouteConfig = new RouteConfig()
+    const designLibRoutes: DesignLibRouteConfig = new DesignLibRouteConfig()
 
     return (
         <>
@@ -50,7 +52,6 @@ const App: FC<{}> = () => {
                 <Route path={routes.toolSelections} element={<ToolSelectorNarrow />} />
                 <Route path={routes.selfService} element={<SelfService profile={appState.profile} />} />
                 <Route path={routes.tool} element={<Tool profile={appState.profile} />} />
-                {/* TODO: figure out how to define subsections routes in the section module instead of here */}
                 <Route path={designLibRoutes.buttons} element={< Buttons />} />
                 <Route path={designLibRoutes.fonts} element={< Fonts />} />
                 <Route path={designLibRoutes.icons} element={< Icons />} />

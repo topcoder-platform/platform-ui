@@ -1,4 +1,4 @@
-export class UiRoute {
+export class RouteConfig {
 
     readonly home: string = '/'
 

@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
-import { UiRoute } from '../../lib'
+import { RouteConfig } from '../../config'
 import '../../lib/styles/index.scss'
 
 import styles from './Logo.module.scss'
@@ -15,7 +15,7 @@ const Logo: FC<{}> = () => {
     const logo: JSX.Element = <img src={logoImage} alt='Topcoder logo' />
 
     // the logo should be a link to the home page for all pages except the home page
-    const routes: UiRoute = new UiRoute()
+    const routes: RouteConfig = new RouteConfig()
     const isLink: boolean = routes.isHome(useLocation().pathname)
     const logoElement: JSX.Element = isLink
         ? logo

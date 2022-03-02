@@ -1,16 +1,16 @@
 import cookies from 'browser-cookies'
 import { configureConnector, decodeToken, getFreshToken } from 'tc-auth-lib'
 
-import { EnvironmentConfig } from '../../../config'
-import { AppState, AuthenticationData } from '../../interfaces'
-import { ExternalEndpoint } from '../../urls'
+import { EnvironmentConfig } from '../../config'
 import { ProfileService } from '../profile-service/profile.service'
 
-import { CookieKeys } from './cookie-keys.enum'
+import { AuthenticationUrlConfig } from './config'
+import { CookieKeys } from './config/cookie-keys.enum'
+import { AppState, AuthenticationData } from './models'
 
 export class AuthenticationService {
 
-    private readonly externalEndpoints: ExternalEndpoint = new ExternalEndpoint()
+    private readonly externalEndpoints: AuthenticationUrlConfig = new AuthenticationUrlConfig()
     private readonly profiles: ProfileService = new ProfileService()
 
     constructor() {
