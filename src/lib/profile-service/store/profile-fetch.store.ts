@@ -1,12 +1,12 @@
 import { FetchService } from '../../fetch-service'
 import { UserProfile } from '../models'
 
-import { ProfileUrlConfig } from './config'
+import { ProfileEndpointConfig } from './config'
 
 export class ProfileFetchStore {
 
     private fetchService: FetchService = new FetchService()
-    private urls: ProfileUrlConfig = new ProfileUrlConfig()
+    private urls: ProfileEndpointConfig = new ProfileEndpointConfig()
 
     get(userTokenV3: string, handle: string): Promise<UserProfile> {
 

@@ -1,1 +1,1 @@
-export * from './profile-url.config'
+export * from './profile-endpoint.config'
