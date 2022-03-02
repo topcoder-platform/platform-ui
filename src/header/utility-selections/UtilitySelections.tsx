@@ -2,16 +2,16 @@ import { FC } from 'react'
 
 import { HeaderProps } from '../../lib'
 
-import styles from './Utilities.module.scss'
+import styles from './UtilitySelections.module.scss'
 import ProfileSelector from './UtilitySelector/ProfileSelector/ProfileSelector'
 
-const Utilities: FC<HeaderProps> = (props: HeaderProps) => {
+const UtilitySelections: FC<HeaderProps> = (props: HeaderProps) => {
     return (
-        <div className={styles.utilities}>
+        <div className={styles['utility-selections']}>
             {/* TODO: make this configurable  */}
             <ProfileSelector initialized={props.initialized} profile={props.profile} />
         </div>
     )
 }
 
-export default Utilities
+export default UtilitySelections

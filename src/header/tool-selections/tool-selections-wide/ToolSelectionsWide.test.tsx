@@ -2,17 +2,17 @@ import '@testing-library/jest-dom'
 import { render, RenderResult } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
-import Tools from './Tools'
+import ToolSelectionsWide from './ToolSelectionsWide'
 
-describe('<Tools />', () => {
+describe('<ToolSelectionsWide />', () => {
 
-    test('it should render the tools', () => {
+    test('it should render the tool selections in wide format', () => {
         /*         const renderResult: RenderResult = render(
                     <MemoryRouter>
-                        <Tools />
+                        <ToolSelectionsWide />
                     </MemoryRouter>
                 )
-                const headerElement: HTMLElement | null = renderResult.container.querySelector('.tools')
+                const headerElement: HTMLElement | null = renderResult.container.querySelector('.tool-selections-wide')
                 expect(headerElement).toBeInTheDocument() */
     })
 })

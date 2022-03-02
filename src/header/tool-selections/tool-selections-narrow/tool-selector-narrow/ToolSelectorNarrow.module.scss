@@ -1,9 +1,9 @@
-@import '../../lib/styles/';
+@import '../../../../lib/styles';
 
-.menu {
+.tool-selector-narrow {
     background-color: $black-100;
 
-    .menu-selector {
+    .tool-selector-narrow-link {
         display: block;
         border-top: 1px solid $black-60;
         padding: $pad-lg 0;

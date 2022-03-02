@@ -2,17 +2,17 @@ import '@testing-library/jest-dom'
 import { render, RenderResult } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
-import Menu from './Menu'
+import ToolSelectorNarrow from './ToolSelectorNarrow'
 
-describe('<Menu /> is NOT open', () => {
+describe('<ToolSelectorNarrow /> is NOT open', () => {
 
-    test('it should render the menu icon', () => {
+    test('it should render the tool-selector-narrow icon', () => {
         /*         const renderResult: RenderResult = render(
                     <MemoryRouter>
-                        <Menu />
+                        <ToolSelectorNarrow />
                     </MemoryRouter>
                 )
-                const home: HTMLElement = renderResult.container.querySelector('.menu')
+                const home: HTMLElement = renderResult.container.querySelector('.tool-selector-narrow')
                 expect(home).toBeInTheDocument() */
     })
 })

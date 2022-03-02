@@ -8,10 +8,9 @@ import DesignLib from './content/design-lib/DesignLib'
 import Fonts from './content/design-lib/fonts/Fonts'
 import Icons from './content/design-lib/icons/Icons'
 import Home from './content/home/Home'
-import Menu from './content/menu/Menu'
 import SelfService from './content/self-service/SelfService'
 import Tool from './content/tool/Tool'
-import Header from './header/Header'
+import { Header, ToolSelectorNarrow } from './header'
 import { AppState, AuthenticationService, UiRoute } from './lib'
 
 const App: FC<{}> = () => {
@@ -48,7 +47,7 @@ const App: FC<{}> = () => {
             <Routes>
                 <Route path={routes.designLib} element={<DesignLib profile={appState.profile} />} />
                 <Route path={routes.home} element={<Home profile={appState.profile} />} />
-                <Route path={routes.menu} element={<Menu />} />
+                <Route path={routes.toolSelections} element={<ToolSelectorNarrow />} />
                 <Route path={routes.selfService} element={<SelfService profile={appState.profile} />} />
                 <Route path={routes.tool} element={<Tool profile={appState.profile} />} />
                 {/* TODO: figure out how to define subsections routes in the section module instead of here */}

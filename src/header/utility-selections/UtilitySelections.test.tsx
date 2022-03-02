@@ -2,17 +2,17 @@ import '@testing-library/jest-dom'
 import { render, RenderResult } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
-import Utilities from './Utilities'
+import UtilitySelections from './UtilitySelections'
 
-describe('<Utilities />', () => {
+describe('<UtilitySelections />', () => {
 
-    test('it should display the utilities', () => {
+    test('it should display the utility selections', () => {
         /*         const renderResult: RenderResult = render(
                     <MemoryRouter>
-                        <Utilities initialized={true} profile={undefined} />
+                        <UtilitySelections initialized={true} profile={undefined} />
                     </MemoryRouter>
                 )
-                const utilitiesElement: HTMLElement | null = renderResult.container.querySelector('.utilities')
+                const utilitiesElement: HTMLElement | null = renderResult.container.querySelector('.utility-selections')
                 expect(utilitiesElement).toBeInTheDocument() */
     })
 })

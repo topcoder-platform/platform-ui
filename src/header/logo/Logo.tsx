@@ -4,13 +4,13 @@ import { Link, useLocation } from 'react-router-dom'
 import { UiRoute } from '../../lib'
 import '../../lib/styles/index.scss'
 
-import styles from './LogoLink.module.scss'
+import styles from './Logo.module.scss'
 // i'm not seeing anywhere where this image gets
 // reused so am keeping it local instead of in
 // the lib
 import logoImage from './topcoder-mark.png'
 
-const LogoLink: FC<{}> = () => {
+const Logo: FC<{}> = () => {
 
     const logo: JSX.Element = <img src={logoImage} alt='Topcoder logo' />
 
@@ -38,4 +38,4 @@ const LogoLink: FC<{}> = () => {
     )
 }
 
-export default LogoLink
+export default Logo

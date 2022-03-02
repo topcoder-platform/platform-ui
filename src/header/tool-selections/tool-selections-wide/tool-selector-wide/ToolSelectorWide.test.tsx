@@ -2,14 +2,14 @@ import '@testing-library/jest-dom'
 import { render, RenderResult } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
-import ToolSelector from './ToolSelector'
+import ToolSelectorWide from './ToolSelectorWide'
 
-describe('<ToolSelector />', () => {
+describe('<ToolSelectorWide />', () => {
 
-    test('it should render the tools selector', () => {
+    test('it should render the tools selector in wide format', () => {
         /*         const renderResult: RenderResult = render(
                     <MemoryRouter>
-                        <ToolSelector name='Tools 1' url='/tools-1' />
+                        <ToolSelectorWide name='Tools 1' url='/tools-1' />
                     </MemoryRouter>
                 )
                 const toolSeletorElement: HTMLElement | null = renderResult.container.querySelector('.tool-selector')
@@ -17,12 +17,12 @@ describe('<ToolSelector />', () => {
     })
 })
 
-describe('<ToolSelector /> tool is the currently active tool', () => {
+describe('<ToolSelectorWide /> tool is the currently active tool', () => {
 
     test('it should render the tools selector active indicator', () => {
         /*         const renderResult: RenderResult = render(
                     <MemoryRouter initialEntries={['/tools']}>
-                        <ToolSelector name='Tools 1' url='/tools' />
+                        <ToolSelectorWide name='Tools 1' url='/tools' />
                     </MemoryRouter>
                 )
                 const toolSeletorElement: HTMLElement | null = renderResult.container.querySelector('.tool-active')
@@ -30,12 +30,12 @@ describe('<ToolSelector /> tool is the currently active tool', () => {
     })
 })
 
-describe('<ToolSelector /> tool is NOT the currently active tool', () => {
+describe('<ToolSelectorWide /> tool is NOT the currently active tool', () => {
 
     test('it should NOT render the tools selector active indicator', () => {
         /*         const renderResult: RenderResult = render(
                     <MemoryRouter>
-                        <ToolSelector name='Tools 1' url='/tools-1' />
+                        <ToolSelectorWide name='Tools 1' url='/tools-1' />
                     </MemoryRouter>
                 )
                 const toolSeletorElement: HTMLElement | null = renderResult.container.querySelector('.tool-inactive')
