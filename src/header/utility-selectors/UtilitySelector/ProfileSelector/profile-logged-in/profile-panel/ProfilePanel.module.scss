@@ -4,27 +4,29 @@
     position: absolute;
     z-index: 1000;
     top: calc($pad-xxxxl * 2);
-    right: $pad-sm;
+    right: calc($pad-sm + 2px);
     width: 168px;
-    background: url('./profile-panel-header.png') no-repeat top center;
-    padding-top: calc($pad-xxxl * 2);
-
     display: flex;
     flex-direction: column;
+    font-size: 14px;
+    background: url('./profile-panel-header.png') no-repeat top center;
 
-    a {
+    .handle {
+        padding: $pad-xl $pad-xl calc($pad-lg - 1px) $pad-xl;
+        color: $tc-white;
+        line-height: 22px;
+    }
+
+    .logout,
+    .profile {
         display: block;
-        padding: $pad-xs $pad-lg;
+        padding: $pad-xs $pad-xl;
         background-color: $tc-white;
         color: $black-100;
+    }
 
-        &:first-of-type {
-            padding: $pad-sm;
-        }
-
-        &:last-of-type {
-            padding-bottom: $pad-sm;
-            border-radius: 0px 0px $pad-sm $pad-sm;
-        }
+    .logout {
+        padding-bottom: $pad-sm;
+        border-radius: 0px 0px $pad-sm $pad-sm;
     }
 }
