@@ -1,9 +1,9 @@
 import { decodeToken } from 'tc-auth-lib'
 
 // TODO: add User to tc-auth-lib
-import { User } from '../../../types/tc-auth-lib'
-import { AppState, UserProfile } from '../interfaces'
-import { ApiEndoint } from '../urls'
+import { User } from '../../../../types/tc-auth-lib'
+import { AppState, UserProfile } from '../../interfaces'
+import { ApiEndoint } from '../../urls'
 
 export class ProfileService {
 

@@ -1,8 +1,8 @@
 import { FC } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
+import { UiRoute } from '../../../lib'
 import '../../../lib/styles/index.scss'
-import { UiRoute } from '../../../lib/urls'
 
 import styles from './ToolSelector.module.scss'
 

@@ -1,4 +1,4 @@
-import { GlobalConfig } from '../interfaces'
+import { GlobalConfig } from '../lib'
 
 // TODO: env-specific config
 export const EnvironmentConfig: GlobalConfig = {

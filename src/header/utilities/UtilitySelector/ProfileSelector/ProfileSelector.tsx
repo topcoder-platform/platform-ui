@@ -1,16 +1,12 @@
 import classNames from 'classnames'
 import { FC } from 'react'
 
-import Avatar from '../../../../lib/avatar/Avatar'
-import { HeaderProps } from '../../../../lib/interfaces'
+import { Avatar, ExternalEndpoint, HeaderProps, UiRoute } from '../../../../lib'
 import '../../../../lib/styles/index.scss'
-import { ExternalEndpoint, UiRoute } from '../../../../lib/urls'
 
 import styles from './ProfileSelector.module.scss'
 
 const ProfileSelector: FC<HeaderProps> = (props: HeaderProps) => {
-
-    console.debug('props', props.initialized)
 
     // if we're not initialized, don't render anything
     if (!props.initialized) {

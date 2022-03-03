@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { HeaderProps } from '../lib/interfaces'
+import { HeaderProps } from '../lib'
 import '../lib/styles/index.scss'
 
 import styles from './Header.module.scss'
