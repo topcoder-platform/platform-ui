@@ -1,3 +1,5 @@
+@import '../../../../../lib/styles';
+
 $inner: 32px;
 $border: 2px;
 $square: calc($inner + 2 * 2px);
@@ -5,7 +7,7 @@ $square: calc($inner + 2 * 2px);
 .overlay {
     position: absolute;
     z-index: 100;
-    background: rgba(255, 255, 255, 0.8);
+    background: $black-100-opacity-80;
     display: flex;
     justify-content: center;
     align-items: center;
