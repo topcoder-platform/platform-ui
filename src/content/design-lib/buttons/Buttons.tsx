@@ -1,13 +1,13 @@
 import { FC } from 'react'
 
-import { ContentLayout, ProfileProps } from '../../../lib'
+import { ContentLayout } from '../../../lib'
 import { sections } from '../config'
 
 import styles from './Buttons.module.scss'
 
-const Buttons: FC<ProfileProps> = (props: ProfileProps) => {
+const Buttons: FC<{}> = () => {
     return (
-        <ContentLayout profile={props.profile} classNames={styles['buttons']} sections={sections}>
+        <ContentLayout classNames={styles['buttons']} sections={sections}>
             <>
                 Buttons
             </>

@@ -2,7 +2,7 @@ import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 
 import { ProfileContextData } from './profile-context-data.model'
 import { ProfileService } from './profile-service'
-import ProfileContext from './profile.context'
+import ProfileContext, { defaultProfileContextData } from './profile.context'
 import { UserProfile } from './user-profile.model'
 
 export const ProfileProvider: FC<{ children: Array<JSX.Element> }> = ({ children }: { children: Array<JSX.Element> }) => {
@@ -30,7 +30,7 @@ export const ProfileProvider: FC<{ children: Array<JSX.Element> }> = ({ children
     ])
 
     return (
-        <ProfileContext.Provider value={{ initialized: false }}>
+        <ProfileContext.Provider value={defaultProfileContextData}>
             {children}
         </ProfileContext.Provider>
     )

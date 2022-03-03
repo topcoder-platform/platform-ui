@@ -2,7 +2,13 @@ import { Context, createContext } from 'react'
 
 import { ProfileContextData } from './profile-context-data.model'
 
-export const defaultContextData: ProfileContextData = {
+/* TODO: set default profile context data
+    export const defaultProfileContextData: ProfileContextData = {
+        initialized: false,
+    }
+*/
+
+export const defaultProfileContextData: ProfileContextData = {
     initialized: true,
     profile: {
         competitionCountryCode: 'string',
@@ -20,6 +26,6 @@ export const defaultContextData: ProfileContextData = {
     },
 }
 
-const ProfileContext: Context<ProfileContextData> = createContext(defaultContextData)
+const ProfileContext: Context<ProfileContextData> = createContext(defaultProfileContextData)
 
 export default ProfileContext
