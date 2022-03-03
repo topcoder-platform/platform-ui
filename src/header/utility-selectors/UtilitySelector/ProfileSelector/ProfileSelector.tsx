@@ -2,7 +2,8 @@ import classNames from 'classnames'
 import { FC } from 'react'
 
 import { RouteConfig } from '../../../../config'
-import { AuthenticationUrlConfig, Avatar } from '../../../../lib'
+import { AuthenticationUrlConfig } from '../../../../lib'
+import { Avatar } from '../../../../lib/avatar'
 import '../../../../lib/styles/index.scss'
 import { HeaderProps } from '../../../header-props.model'
 
