@@ -7,30 +7,29 @@ import { UserProfile } from './user-profile.model'
 
 export const ProfileProvider: FC<{ children: Array<JSX.Element> }> = ({ children }: { children: Array<JSX.Element> }) => {
 
-    const [profileContext, setProfileContext]: [ProfileContextData | undefined, Dispatch<SetStateAction<ProfileContextData | undefined>>] = useState<ProfileContextData | undefined>()
-
-    const getProfile: () => Promise<void> = async () => {
-        const newProfile: UserProfile | undefined = await new ProfileService().get()
-        const contextData: ProfileContextData = {
-            initialized: true,
-            ...newProfile,
-        }
-        setProfileContext(contextData)
-        console.debug('set profile', contextData)
-    }
+    const [profileContext, setProfileContext]: [ProfileContextData, Dispatch<SetStateAction<ProfileContextData>>] = useState<ProfileContextData>(defaultProfileContextData)
 
     useEffect(() => {
-        console.debug('use effect', profileContext)
-        if (!!profileContext) {
+
+        // if our profile is already initialized, no need to continue
+        if (profileContext.initialized) {
             return
         }
-        getProfile()
-    }, [
-        profileContext,
-    ])
+
+        const getAndSetProfile: () => Promise<void> = async () => {
+            const profile: UserProfile | undefined = await new ProfileService().get()
+            const contextData: ProfileContextData = {
+                initialized: true,
+                profile,
+            }
+            setProfileContext(contextData)
+        }
+
+        getAndSetProfile()
+    }, [])
 
     return (
-        <ProfileContext.Provider value={defaultProfileContextData}>
+        <ProfileContext.Provider value={profileContext}>
             {children}
         </ProfileContext.Provider>
     )

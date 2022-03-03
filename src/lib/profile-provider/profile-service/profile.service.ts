@@ -12,24 +12,24 @@ export class ProfileService {
 
     async get(): Promise<UserProfile | undefined> {
 
-        const tokenRaw: string | undefined = await this.authenticationService.authenticate()
+        const token: string | undefined = await this.authenticationService.authenticate()
 
-        // if there is no user, unset the profile and don't try to get it
-        if (!tokenRaw) {
+        // if there is no token, don't try to get a profile
+        if (!token) {
             return Promise.resolve(undefined)
         }
 
         try {
-            const { handle, tokenV3 }: {
-                handle?: string
-                tokenV3?: string
-            } = decodeToken(tokenRaw)
+            const { handle }: { handle?: string } = decodeToken(token)
 
-            if (!tokenV3 || !handle) {
+            // if we didn't find the handle, we can't get the profile
+            // TODO: this is probably an error that should be thrown in the bg
+            // b/c it means we have a corrupt token for some reason
+            if (!handle) {
                 return Promise.resolve(undefined)
             }
 
-            return this.profileFetchStore.get(tokenV3, handle)
+            return this.profileFetchStore.get(token, handle)
 
         } catch {
             // TODO: log error
