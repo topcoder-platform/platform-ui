@@ -11,8 +11,6 @@ const ProfileSelector: FC<{}> = () => {
 
     const { initialized, profile }: ProfileContextData =  useContext(ProfileContext)
 
-    console.debug('got context', initialized, profile)
-
     // if we're not initialized, don't render anything
     if (!initialized) {
         return <></>
