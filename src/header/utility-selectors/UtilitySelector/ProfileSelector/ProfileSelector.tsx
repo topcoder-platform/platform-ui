@@ -1,17 +1,20 @@
 import classNames from 'classnames'
-import { FC } from 'react'
+import { FC, useContext } from 'react'
 
 import { RouteConfig } from '../../../../config'
-import { AuthenticationUrlConfig, Avatar } from '../../../../lib'
+import { AuthenticationUrlConfig, Avatar, ProfileContext, ProfileContextData } from '../../../../lib'
 import '../../../../lib/styles/index.scss'
-import { HeaderProps } from '../../../header-props.model'
 
 import styles from './ProfileSelector.module.scss'
 
-const ProfileSelector: FC<HeaderProps> = (props: HeaderProps) => {
+const ProfileSelector: FC<{}> = () => {
+
+    const { initialized, profile }: ProfileContextData =  useContext(ProfileContext)
+
+    console.debug('got context', initialized, profile)
 
     // if we're not initialized, don't render anything
-    if (!props?.initialized) {
+    if (!initialized) {
         return <></>
     }
 
@@ -20,10 +23,10 @@ const ProfileSelector: FC<HeaderProps> = (props: HeaderProps) => {
     const routes: RouteConfig = new RouteConfig()
 
     const avatar: JSX.Element = <Avatar
-        firstName={props.profile?.firstName}
-        lastName={props.profile?.lastName}
-        handle={props.profile?.handle}
-        photoUrl={props.profile?.photoURL}
+        firstName={profile?.firstName}
+        lastName={profile?.lastName}
+        handle={profile?.handle}
+        photoUrl={profile?.photoURL}
     />
     const logIn: JSX.Element = (
         <a href={authEndpoints.login(routes.home)} className={buttonClass}>
@@ -36,7 +39,7 @@ const ProfileSelector: FC<HeaderProps> = (props: HeaderProps) => {
         </a>
     )
 
-    const isLoggedIn: boolean = !!props.profile
+    const isLoggedIn: boolean = !!profile
     return (
         <div className={styles['profile-selector']}>
             {!isLoggedIn && logIn}

@@ -1,7 +1,7 @@
 import classNames from 'classnames'
 import { FC } from 'react'
 
-import { UserProfile } from '../profile-service'
+import { UserProfile } from '../profile-provider'
 import '../styles/index.scss'
 
 import styles from './ContentLayout.module.scss'

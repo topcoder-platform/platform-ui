@@ -1,4 +1,4 @@
-import { UserProfile } from './user-profile.interface'
+import { UserProfile } from './user-profile.model'
 
 export interface ProfileProps {
     profile?: UserProfile
