@@ -1,0 +1,8 @@
+@import '../../../lib/styles/';
+
+.tool-selectors-wide {
+    display: flex;
+    align-items: center;
+    border-left: solid 1px $black-80;
+    padding-left: $pad-md;
+}
