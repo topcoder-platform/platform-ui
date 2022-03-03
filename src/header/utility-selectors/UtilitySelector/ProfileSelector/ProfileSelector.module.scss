@@ -4,14 +4,4 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-
-    @include ltesm {
-        a.button {
-            display: none;
-
-            &:last-of-type {
-                display: inline;
-            }
-        }
-    }
 }
