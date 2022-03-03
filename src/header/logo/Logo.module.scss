@@ -10,7 +10,7 @@
         width: 56px;
         @extend .pad-xxl;
 
-        @include ltesm {
+        @include ltemd {
             padding: 0;
         }
     }  
@@ -19,7 +19,7 @@
 .logo-no-link {
     height: 74.5px;
 
-    @include ltesm {
+    @include ltemd {
         height: 26.5px;
     }
 }

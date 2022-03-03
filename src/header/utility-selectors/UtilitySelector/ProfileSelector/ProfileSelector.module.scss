@@ -6,20 +6,12 @@
     align-items: center;
 
     @include ltesm {
-        a {
+        a.button {
             display: none;
 
             &:last-of-type {
                 display: inline;
             }
         }
-    }
-
-    .avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        border: 2px white solid;
-        background-color: white;
     }
 }

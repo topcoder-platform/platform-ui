@@ -26,7 +26,9 @@ export const ProfileProvider: FC<{ children: Array<JSX.Element> }> = ({ children
         }
 
         getAndSetProfile()
-    }, [])
+    }, [
+        profileContext.initialized,
+    ])
 
     return (
         <ProfileContext.Provider value={profileContext}>

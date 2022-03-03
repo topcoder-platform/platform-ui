@@ -1,0 +1,30 @@
+@import '../../../../../../lib/styles';
+
+.profile-panel {
+    position: absolute;
+    z-index: 1000;
+    top: calc($pad-xxxxl * 2);
+    right: $pad-sm;
+    width: 168px;
+    background: url('./profile-panel-header.png') no-repeat top center;
+    padding-top: calc($pad-xxxl * 2);
+
+    display: flex;
+    flex-direction: column;
+
+    a {
+        display: block;
+        padding: $pad-xs $pad-lg;
+        background-color: $tc-white;
+        color: $black-100;
+
+        &:first-of-type {
+            padding: $pad-sm;
+        }
+
+        &:last-of-type {
+            padding-bottom: $pad-sm;
+            border-radius: 0px 0px $pad-sm $pad-sm;
+        }
+    }
+}

@@ -14,6 +14,8 @@ $pad-md: calc(3 * $pad-xs);
 $pad-lg: calc(4 * $pad-xs);
 $pad-xl: calc(5 * $pad-xs);
 $pad-xxl: calc(6 * $pad-xs);
+$pad-xxxl: calc(7 * $pad-xs);
+$pad-xxxxl: calc(8 * $pad-xs);
 
 $contentHeight: calc(100vh - $header-height - calc(2 * $pad-xxl));
 
