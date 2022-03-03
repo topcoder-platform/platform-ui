@@ -10,10 +10,8 @@ const Header: FC<{}> = () => {
         <header className={styles.header}>
             <ToolSelectors isWide={false} />
             <Logo />
-            <div className={styles.main}>
-                <ToolSelectors isWide={true} />
-                <UtilitySelectors />
-            </div>
+            <ToolSelectors isWide={true} />
+            <UtilitySelectors />
         </header>
     )
 }

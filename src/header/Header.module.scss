@@ -7,7 +7,7 @@
     align-items: center;
     padding: 0 $pad-xxl 0 0;
 
-    @include ltesm {
+    @include ltemd {
         grid-template-columns: $header-height 1fr $header-height;
         align-items: center;
     }
@@ -17,39 +17,15 @@
     }
 
     @include md {
-        grid-template-columns: $left-col-width-md 1fr;
+        grid-template-columns: $left-col-width-md 1fr auto;
         padding: 0 $pad-lg 0 0;
     }
 
     @include lg {
-        grid-template-columns: $left-col-width-lg 1fr;
+        grid-template-columns: $left-col-width-lg 1fr auto;
     }
 
     @include xl {
-        grid-template-columns: $left-col-width-xl 1fr;
-    }
-
-    .menu {
-        display: none;
-
-        @include ltesm {
-            display: block;
-        }
-    }
-
-    .main {
-        display: flex;
-        align-items: center;
-        @include font-tc-white;
-
-        @include ltesm {
-            div {
-                display: none;
-
-                &:last-of-type {
-                    display: grid;
-                }
-            }
-        }
+        grid-template-columns: $left-col-width-xl 1fr auto;
     }
 }

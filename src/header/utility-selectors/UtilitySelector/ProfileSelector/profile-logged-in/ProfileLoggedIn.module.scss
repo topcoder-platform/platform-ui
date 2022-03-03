@@ -1,0 +1,18 @@
+@import '../../../../../lib/styles';
+
+$inner: 32px;
+$border: 2px;
+$square: calc($inner + 2 * 2px);
+
+.overlay {
+    position: absolute;
+    z-index: 100;
+    background: $black-100-opacity-80;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: $square;
+    width: $square;
+    margin-top: calc($square * -1);
+    border-radius: 50%;
+}

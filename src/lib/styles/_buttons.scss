@@ -19,7 +19,7 @@ a.button {
     @include font-bolder;
     
     &.secondary,
-    &.allWhite {
+    &.all-white {
         color: $turq-160;
         border: solid 1px;
     }
@@ -28,7 +28,7 @@ a.button {
         border-color: $turq-160;
     }
 
-    &.allWhite {
+    &.all-white {
         background-color: $tc-white;
         border-color: $tc-white;
         @include font-bold;
