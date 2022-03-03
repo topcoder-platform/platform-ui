@@ -1,6 +1,6 @@
 import { RouteConfig } from '../../config'
 
-export class DesignLibRoute {
+export class DesignLibRouteConfig {
 
     readonly root: string = new RouteConfig().designLib
 

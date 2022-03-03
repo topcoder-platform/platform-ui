@@ -1,15 +1,15 @@
 import { FC } from 'react'
 
-import { ContentLayout, ProfileProps } from '../../lib'
+import { ContentLayout } from '../../lib'
 
 import styles from './DesignLib.module.scss'
 import { sections } from './sections.config'
 
-const DesignLib: FC<ProfileProps> = (props: ProfileProps) => {
+const DesignLib: FC<{}> = () => {
 
     return (
         <>
-            <ContentLayout profile={props.profile} classNames={styles['design-lib']} sections={sections}>
+            <ContentLayout classNames={styles['design-lib']} sections={sections}>
                 <>
                     Design Library
                 </>

@@ -1,13 +1,13 @@
 import { FC } from 'react'
 
-import { ContentLayout, ProfileProps } from '../../../lib'
+import { ContentLayout } from '../../../lib'
 import { sections } from '../sections.config'
 
 import styles from './Fonts.module.scss'
 
-const Fonts: FC<ProfileProps> = (props: ProfileProps) => {
+const Fonts: FC<{}> = () => {
     return (
-        <ContentLayout profile={props.profile} classNames={styles['fonts']} sections={sections}>
+        <ContentLayout classNames={styles['fonts']} sections={sections}>
             <>
                 Fonts
             </>

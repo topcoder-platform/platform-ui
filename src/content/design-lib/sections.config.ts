@@ -3,9 +3,9 @@ import chatIcon from '../../lib/svg/chat.svg'
 import mailIcon from '../../lib/svg/mail.svg'
 import ticketIcon from '../../lib/svg/ticket.svg'
 
-import { DesignLibRoute } from './design-lib-route.service'
+import { DesignLibRouteConfig } from './design-lib-route.config'
 
-const routes: DesignLibRoute = new DesignLibRoute()
+const routes: DesignLibRouteConfig = new DesignLibRouteConfig()
 
 export const sections: Array<SectionSelectorProps> = [
     {
