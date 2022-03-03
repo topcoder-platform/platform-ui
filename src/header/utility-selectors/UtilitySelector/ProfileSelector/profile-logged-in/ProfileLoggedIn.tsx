@@ -9,7 +9,7 @@ const ProfileLoggedIn: FC<{}> = () => {
     const { profile }: ProfileContextData = useContext(ProfileContext)
     const [
         profilePanelOpen,
-        setprofilePanelOpen,
+        setProfilePanelOpen,
     ]: [boolean, React.Dispatch<React.SetStateAction<boolean>>] = useState<boolean>(false)
 
     if (!profile) {
@@ -18,7 +18,7 @@ const ProfileLoggedIn: FC<{}> = () => {
     }
 
     function toggleProfilePanel(): void {
-        setprofilePanelOpen(!profilePanelOpen)
+        setProfilePanelOpen(!profilePanelOpen)
     }
 
     return (
