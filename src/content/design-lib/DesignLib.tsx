@@ -2,8 +2,8 @@ import { FC } from 'react'
 
 import { ContentLayout } from '../../lib'
 
-import { sections } from './config'
 import styles from './DesignLib.module.scss'
+import { sections } from './sections.config'
 
 const DesignLib: FC<{}> = () => {
 

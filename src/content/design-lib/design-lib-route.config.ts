@@ -1,4 +1,4 @@
-import { RouteConfig } from '../../../config'
+import { RouteConfig } from '../../config'
 
 export class DesignLibRouteConfig {
 
