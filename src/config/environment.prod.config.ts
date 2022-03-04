@@ -6,7 +6,7 @@ export const EnvironmentConfig: GlobalConfig = {
         V5: 'https://api.topcoder-dev.com/v5',
     },
     REAUTH_OFFSET: 55,
-    TAG_MANAGER_ID: undefined,
+    TAG_MANAGER_ID: 'GTM-MXXQHG8',
     URL: {
         ACCOUNTS_APP_CONNECTOR: 'https://accounts-auth0.topcoder-dev.com',
     },
