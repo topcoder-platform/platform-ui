@@ -16,15 +16,16 @@ export class LoggingService {
         datadogLogs.init({
             clientToken: config.LOGGING_TOKEN,
             env: config.ENV,
-            forwardErrorsToLogs: true,
+            service: 'platform-ui',
+            silentMultipleInit: true,
         })
     }
 
-    logError(message: string, messageContext: object): void {
+    logError(message: string, messageContext?: object): void {
         datadogLogs.logger.error(message, messageContext)
     }
 
-    logInfo(message: string, messageContext: object): void {
+    logInfo(message: string, messageContext?: object): void {
         datadogLogs.logger.info(message, messageContext)
     }
 }
