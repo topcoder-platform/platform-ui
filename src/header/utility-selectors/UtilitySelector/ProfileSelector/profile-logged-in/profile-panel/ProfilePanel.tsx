@@ -14,7 +14,7 @@ const ProfilePanel: FC<{}> = () => {
     }
 
     // TODO: logout
-    // const authEndpoints: AuthenticationUrlConfig = new AuthenticationUrlConfig()
+    const authEndpoints: AuthenticationUrlConfig = new AuthenticationUrlConfig()
     const profileRoutes: ProfileRoutesConfig = new ProfileRoutesConfig()
 
     return (
@@ -26,7 +26,7 @@ const ProfilePanel: FC<{}> = () => {
                 My Profile
             </a>
             {/* TODO: logout */}
-            <a href={profileRoutes.profile} className={styles.logout}>
+            <a href={authEndpoints.logout} className={styles.logout}>
                 Log Out
             </a>
         </div>
