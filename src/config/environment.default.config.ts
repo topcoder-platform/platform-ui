@@ -1,6 +1,6 @@
 import { GlobalConfig } from '../lib'
 
-export const EnvironmentConfigBase: GlobalConfig = {
+export const EnvironmentConfigDefault: GlobalConfig = {
     API: {
         V5: '',
     },

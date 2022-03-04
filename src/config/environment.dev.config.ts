@@ -1,9 +1,9 @@
 import { GlobalConfig } from '../lib'
 
-import { EnvironmentConfigBase } from './environment.base.config'
+import { EnvironmentConfigDefault } from './environment.default.config'
 
 export const EnvironmentConfigDev: GlobalConfig = {
-    ...EnvironmentConfigBase,
+    ...EnvironmentConfigDefault,
     API: {
         V5: 'https://api.topcoder-dev.com/v5',
     },
