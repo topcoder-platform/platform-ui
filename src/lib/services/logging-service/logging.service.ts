@@ -6,17 +6,17 @@ export class LoggingService {
 
     initialize(config: GlobalConfig): void {
 
-        // if we don't have a token,
+        // if we don't have a token and service,
         // logging isn't supported in this environment,
         // so don't initialize anything
-        if (!config.LOGGING_TOKEN) {
+        if (!config.LOGGING?.PUBLIC_TOKEN || !config.LOGGING?.SERVICE) {
             return
         }
 
         datadogLogs.init({
-            clientToken: config.LOGGING_TOKEN,
+            clientToken: config.LOGGING.PUBLIC_TOKEN,
             env: config.ENV,
-            service: 'platform-ui',
+            service: config.LOGGING.SERVICE,
             silentMultipleInit: true,
         })
     }
