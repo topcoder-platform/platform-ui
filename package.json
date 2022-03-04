@@ -18,6 +18,8 @@
     "scripts": {
         "start": "sh start-ssl.sh",
         "build": "react-scripts build",
+        "build:dev": "sh build-dev.sh",
+        "build:prod": "sh build-prod.sh",
         "eject": "react-scripts eject",
         "lint": "tslint src/**/*.{ts,tsx}",
         "lint:fix": "tslint src/**/*.{ts,tsx} --fix",

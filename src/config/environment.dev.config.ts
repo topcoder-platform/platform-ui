@@ -1,6 +1,5 @@
 import { GlobalConfig } from '../lib'
 
-// TODO: env-specific config
 export const EnvironmentConfig: GlobalConfig = {
     API: {
         V5: 'https://api.topcoder-dev.com/v5',
