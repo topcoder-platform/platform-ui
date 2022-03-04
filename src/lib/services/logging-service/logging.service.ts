@@ -19,4 +19,12 @@ export class LoggingService {
             forwardErrorsToLogs: true,
         })
     }
+
+    logError(message: string, messageContext: object): void {
+        datadogLogs.logger.error(message, messageContext)
+    }
+
+    logInfo(message: string, messageContext: object): void {
+        datadogLogs.logger.info(message, messageContext)
+    }
 }
