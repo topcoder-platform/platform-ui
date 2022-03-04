@@ -15,7 +15,7 @@ import {
 import { Header, ToolSelectorNarrow } from './header'
 import { AnalyticsService, ProfileProvider } from './lib'
 
-new AnalyticsService().initializeTagManager(EnvironmentConfig)
+new AnalyticsService().initialize(EnvironmentConfig)
 
 const App: FC<{}> = () => {
 
