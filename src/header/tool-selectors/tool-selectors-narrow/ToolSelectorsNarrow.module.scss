@@ -5,7 +5,7 @@
     display: none;
     padding-left: $pad-xxl;
 
-    @include ltesm {
+    @include ltemd {
         display: flex;
     }
 }
