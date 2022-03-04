@@ -1,15 +1,15 @@
 import { GlobalConfig } from '../lib'
 
-import { EnvironmentConfig as DevConfig } from './environment.dev.config'
-import { EnvironmentConfig as ProdConfig } from './environment.prod.config'
+import { EnvironmentConfigDev } from './environment.dev.config'
+import { EnvironmentConfigProd } from './environment.prod.config'
 
 function getEnvironmentConfig(): GlobalConfig {
     switch (process.env.REACT_APP_HOST_ENV) {
         case 'dev':
         case 'local':
-            return DevConfig
+            return EnvironmentConfigDev
         case 'prod':
-            return ProdConfig
+            return EnvironmentConfigProd
         default:
             throw new Error(`Cannot start: invalid environment: ${process.env.NODE_ENV}`)
     }

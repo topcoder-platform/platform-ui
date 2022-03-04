@@ -1,13 +1,14 @@
 import { GlobalConfig } from '../lib'
 
-// TODO: env-specific config
-export const EnvironmentConfig: GlobalConfig = {
+import { EnvironmentConfigBase } from './environment.base.config'
+
+export const EnvironmentConfigProd: GlobalConfig = {
+    ...EnvironmentConfigBase,
     API: {
-        V5: 'https://api.topcoder-dev.com/v5',
+        V5: 'https://api.topcoder.com/v5',
     },
-    REAUTH_OFFSET: 55,
     TAG_MANAGER_ID: 'GTM-MXXQHG8',
     URL: {
-        ACCOUNTS_APP_CONNECTOR: 'https://accounts-auth0.topcoder-dev.com',
+        ACCOUNTS_APP_CONNECTOR: 'https://accounts-auth0.topcoder.com',
     },
 }
