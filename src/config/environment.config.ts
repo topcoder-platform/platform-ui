@@ -13,6 +13,8 @@ function getEnvironmentConfig(): GlobalConfig {
     }
 }
 
-export default {
+const enviromentConfig: GlobalConfig = {
     ...getEnvironmentConfig(),
 }
+
+export default enviromentConfig
