@@ -4,7 +4,7 @@ import { GlobalConfig } from '../../global-config.model'
 
 export class AnalyticsService {
 
-    initializeTagManager(config: GlobalConfig): void {
+    initialize(config: GlobalConfig): void {
 
         // if we don't have an ID
         // then tags aren't supported in this environment,
