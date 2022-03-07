@@ -24,7 +24,8 @@ const ToolSelectorsNarrow: FC<{}> = () => {
 
     // TODO: create the x.svg
     const openedToolSelectorsNarrow: JSX.Element = (
-        /* TODO: convert this to a button so that it doesn't require an href for accessibility */
+        // TODO: convert this to a button so that it passes "jsx-a11y/anchor-is-valid"
+        // and remove override of the rule in the the tslint config
         <a onClick={() => navigate(-1)} className={selectorsStyles}>
             <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
                 <path d='M6 18L18 6M6 6L18 18' stroke='white' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' />
