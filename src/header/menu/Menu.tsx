@@ -23,6 +23,8 @@ const Menu: FC<{}> = () => {
     )
 
     // TODO: create the x.svg
+    // TODO: convert this to a button so that it passes "jsx-a11y/anchor-is-valid"
+    // and remove override of the rule in the the tslint config
     const openedMenu: JSX.Element = (
         <a onClick={() => navigate(-1)} className={menuStyles}>
             <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
