@@ -1,21 +1,25 @@
-@import '../../lib/styles/';
+@import '../../lib/styles';
 
 $avatar-size: 32px;
 
 .avatar-container {
-    border-radius: 50%;
-    height: $avatar-size;
     overflow: hidden;
-    width: $avatar-size;
+    background-color: $tc-white;
+    border-radius: 50%;
+    height: 36px;
 
     .avatar {
         height: $avatar-size;
         width: $avatar-size;
+        background-color: $tc-white;
+        border-radius: 50%;
+        border: 2px solid $tc-white;
     }
 
     .avatar-letters {
         display: flex;
         justify-content: center;
+        text-transform: uppercase;
         align-items: center;
         color: $tc-white;
         background-color: $blue-100;
