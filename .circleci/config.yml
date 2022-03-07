@@ -125,7 +125,7 @@ workflows:
           filters:
             branches:
               only:
-                - develop
+                - dev
 
       - build-prod:
           context : org-global
@@ -141,7 +141,7 @@ workflows:
           filters: 
             branches:
               only:
-                - develop
+                - dev
 
       - deployProd:
           context : org-global
