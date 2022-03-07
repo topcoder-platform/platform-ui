@@ -4,6 +4,10 @@ $inner: 32px;
 $border: 2px;
 $square: calc($inner + 2 * 2px);
 
+a {
+    cursor: pointer;
+}
+
 .overlay {
     position: absolute;
     z-index: 100;
