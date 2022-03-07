@@ -13,9 +13,10 @@ import {
     Tool
 } from './content'
 import { Header, ToolSelectorNarrow } from './header'
-import { AnalyticsService, ProfileProvider } from './lib'
+import { AnalyticsService, LoggingService, ProfileProvider } from './lib'
 
 new AnalyticsService().initialize(EnvironmentConfig)
+new LoggingService().initialize(EnvironmentConfig)
 
 const App: FC<{}> = () => {
 

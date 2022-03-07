@@ -4,6 +4,11 @@ export const EnvironmentConfigDefault: GlobalConfig = {
     API: {
         V5: 'https://api.topcoder-dev.com/v5',
     },
+    ENV: 'default',
+    LOGGING: {
+        PUBLIC_TOKEN: 'puba0825671e469d16f940c5a30dc738f11',
+        SERVICE: 'platform-ui',
+    },
     REAUTH_OFFSET: 55,
     TAG_MANAGER_ID: undefined,
     URL: {
