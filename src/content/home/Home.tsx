@@ -1,12 +1,11 @@
 import { FC } from 'react'
 
-import ContentLayout from '../../lib/content-layout/ContentLayout'
-import { ProfileProps } from '../../lib/interfaces'
+import { ContentLayout } from '../../lib'
 
 import styles from './Home.module.scss'
 
-const Home: FC<ProfileProps> = (props: ProfileProps) => (
-    <ContentLayout profile={props.profile} classNames={styles.home}>
+const Home: FC<{}> = () => (
+    <ContentLayout classNames={styles.home} sections={[]}>
         <>
             Home
         </>

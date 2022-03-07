@@ -2,5 +2,39 @@
 
 .content {
     height: $contentHeight;
-    padding: 24px;
+    padding: $pad-xxl $pad-xxl $pad-xxl 0;
+
+    display: grid;
+    @include font-roboto;
+
+    .sections {
+        display: grid;
+        height: 200px;
+    }
+
+    .sections {
+        background-color: $tc-white;
+    }
+
+    @include ltesm {
+        grid-template-columns: 1fr;
+        justify-content: center;
+        padding-left: $pad-xxl;
+
+        .sections {
+            display: none;
+        }
+    }
+
+    @include md {
+        grid-template-columns: $left-col-width-md 1fr;
+    }
+
+    @include lg {
+        grid-template-columns: $left-col-width-lg 1fr;
+    }
+
+    @include xl {
+        grid-template-columns: $left-col-width-xl 1fr;
+    }
 }
