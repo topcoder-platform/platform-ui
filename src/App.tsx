@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { Route, Routes } from 'react-router-dom'
 
-import { RouteConfig } from './config'
+import { EnvironmentConfig, RouteConfig } from './config'
 import {
     Buttons,
     DesignLib,
@@ -13,7 +13,10 @@ import {
     Tool
 } from './content'
 import { Header } from './header'
-import { ProfileProvider } from './lib/profile-provider'
+import { AnalyticsService, LoggingService, ProfileProvider } from './lib'
+
+new AnalyticsService().initialize(EnvironmentConfig)
+new LoggingService().initialize(EnvironmentConfig)
 
 const App: FC<{}> = () => {
 

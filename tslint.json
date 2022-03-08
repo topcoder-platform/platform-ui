@@ -45,6 +45,7 @@
         ],
         "interface-over-type-literal": true,
         "label-position": true,
+        "jsx-a11y/anchor-is-valid": false,
         "max-classes-per-file": [
             true,
             1
