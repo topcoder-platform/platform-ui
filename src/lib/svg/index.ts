@@ -1,0 +1,7 @@
+export { ReactComponent as ChatIcon } from './chat.svg'
+export { ReactComponent as ChevronRightIcon } from './chevron-right.svg'
+export { ReactComponent as LogoIcon } from './logo.svg'
+export { ReactComponent as MailIcon } from './mail.svg'
+export { ReactComponent as MenuIcon } from './menu.svg'
+export { ReactComponent as TicketIcon } from './ticket.svg'
+export { ReactComponent as XIcon } from './x.svg'
