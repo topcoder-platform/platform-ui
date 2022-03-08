@@ -1,39 +1,41 @@
+import classNames from 'classnames'
 import { FC } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
-import { ContentLayout } from '../../../../lib'
+import { RouteConfig } from '../../../../config'
+import { ChevronRightIcon } from '../../../../lib'
 import { toolSelectorsRoutes } from '../../tool-selectors-routes.config'
 
 import styles from './ToolSelectorNarrow.module.scss'
 
 const ToolSelectorNarrow: FC<{}> = () => {
 
+    const activeRoute: string = useLocation().pathname
+    const baseClass: string = 'tool-selector-narrow'
+    const routes: RouteConfig = new RouteConfig()
+
     const toolSelectorElements: Array<JSX.Element> = toolSelectorsRoutes
-        .map(toolSelector => {
+        .map(selector => {
+
+            const isActive: boolean = routes.isActive(activeRoute, selector.route)
+            const activeIndicaterClass: string = `${baseClass}-${isActive ? '' : 'in'}active`
+
             return (
                 <Link
-                    className={styles['tool-selector-narrow-link']}
-                    key={toolSelector.route}
-                    to={toolSelector.route}
+                    className={classNames(styles[`${baseClass}-link`], styles[activeIndicaterClass])}
+                    key={selector.route}
+                    to={selector.route}
                 >
-                    <div>
-                        {toolSelector.title}
-                    </div>
-                    <div>
-                        {/* TODO: create an svg file */}
-                        <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
-                            <path d='M6 3.33329L10.6667 7.99996L6 12.6666' stroke='white' strokeWidth='1.13' strokeLinecap='round' strokeLinejoin='round' />
-                        </svg>
-                    </div>
+                    {selector.title}
+                    <ChevronRightIcon />
                 </Link>
             )
         })
+
     return (
-        <ContentLayout classNames='bg-black-100'>
-            <span className={styles['tool-selector-narrow']}>
-                {toolSelectorElements}
-            </span>
-        </ContentLayout>
+        <div className={styles[baseClass]}>
+            {toolSelectorElements}
+        </div>
     )
 }
 

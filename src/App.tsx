@@ -12,7 +12,7 @@ import {
     SelfService,
     Tool
 } from './content'
-import { Header, ToolSelectorNarrow } from './header'
+import { Header } from './header'
 import { AnalyticsService, LoggingService, ProfileProvider } from './lib'
 
 new AnalyticsService().initialize(EnvironmentConfig)
@@ -30,7 +30,6 @@ const App: FC<{}> = () => {
             <Routes>
                 <Route path={routes.designLib} element={<DesignLib />} />
                 <Route path={routes.home} element={<Home />} />
-                <Route path={routes.toolSelectors} element={<ToolSelectorNarrow />} />
                 <Route path={routes.selfService} element={<SelfService />} />
                 <Route path={routes.tool} element={<Tool />} />
                 <Route path={designLibRoutes.buttons} element={< Buttons />} />
