@@ -7,9 +7,9 @@ export class RouteConfig {
     get tool(): string { return `${this.home}tool` }
     get toolSelectors(): string { return `${this.home}tool-selectors` }
 
-    isActive(currentPath: string, pathName: string, routePath: string): boolean {
-        return currentPath?.startsWith(pathName)
-            && (pathName !== routePath || currentPath === routePath)
+    isActive(activePath: string, pathName: string, rootPath: string = this.home): boolean {
+        return activePath?.startsWith(pathName)
+            && (pathName !== rootPath || activePath === rootPath)
     }
 
     isHome(pathName: string): boolean {

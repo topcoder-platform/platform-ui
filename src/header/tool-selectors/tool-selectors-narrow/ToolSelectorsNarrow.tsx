@@ -1,33 +1,31 @@
 import classNames from 'classnames'
-import { FC } from 'react'
-import { Link, NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
+import { Dispatch, FC, SetStateAction, useState } from 'react'
 
-import { RouteConfig } from '../../../config'
+import { ToolSelectorNarrow } from '..'
 import { MenuIcon, XIcon } from '../../../lib'
 
 import styles from './ToolSelectorsNarrow.module.scss'
 
 const ToolSelectorsNarrow: FC<{}> = () => {
 
-    const routes: RouteConfig = new RouteConfig()
-    const isOpened: boolean = routes.isToolsSelection(useLocation().pathname)
-    const selectorsStyles: string = classNames(styles[`tool-selectors-narrow-${isOpened ? 'opened' : 'closed'}`], 'font-tc-white')
-    const navigate: NavigateFunction = useNavigate()
+    const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false as boolean)
 
-    const closedToolSelectorsNarrow: JSX.Element = (
-        <Link to={routes.toolSelectors} className={selectorsStyles}>
-            <MenuIcon />
-        </Link>
-    )
-
-    const openedToolSelectorsNarrow: JSX.Element = (
-        /* TODO: convert this to a button so that it doesn't require an href for accessibility */
-        <a onClick={() => navigate(-1)} className={selectorsStyles}>
+    const closed: JSX.Element = <MenuIcon />
+    const open: JSX.Element = (
+        <>
             <XIcon />
-        </a>
+            <ToolSelectorNarrow />
+        </>
     )
 
-    return isOpened ? openedToolSelectorsNarrow : closedToolSelectorsNarrow
+    return (
+        <div
+            className={classNames(styles['tool-selectors-narrow'], 'font-tc-white')}
+            onClick={() => setIsOpen(!isOpen)}
+        >
+            {isOpen ? open : closed}
+        </div>
+    )
 }
 
 export default ToolSelectorsNarrow
