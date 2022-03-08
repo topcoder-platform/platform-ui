@@ -7,8 +7,8 @@
     align-items: center;
 
     svg {
-        width: 56px;
-        height: 20px;
+        width: calc($pad-xxl + $pad-xxxxl);
+        height: $pad-xl;
         @extend .pad-xxl;
         fill: none;
 
