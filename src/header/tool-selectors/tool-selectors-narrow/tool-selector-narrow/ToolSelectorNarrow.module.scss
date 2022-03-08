@@ -1,17 +1,34 @@
 @import '../../../../lib/styles';
 
+$svg-size: 16px;
+
 .tool-selector-narrow {
+    height: $contentHeight;
     background-color: $black-100;
+    padding: $pad-xxl;
+
+    a:last-of-type {
+        border-bottom: 1px solid $black-60;
+    }
 
     .tool-selector-narrow-link {
-        display: block;
+        display: flex;
+        justify-content: space-between;
         border-top: 1px solid $black-60;
         padding: $pad-lg 0;
         color: $tc-white;
         font-size: 16px;
         @include font-bold;
+        background-color: $black-100;
 
-        display: flex;
-        justify-content: space-between;
+        svg {
+            width: $svg-size;
+            height: $svg-size;
+
+            path {
+                stroke-width: 1.13px;
+                fill: none;
+            }
+        }
     }
 }

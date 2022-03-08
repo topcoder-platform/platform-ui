@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { Link } from 'react-router-dom'
 
-import { ChevronRightIcon, ContentLayout } from '../../../../lib'
+import { ChevronRightIcon } from '../../../../lib'
 import { toolSelectorsRoutes } from '../../tool-selectors-routes.config'
 
 import styles from './ToolSelectorNarrow.module.scss'
@@ -26,11 +26,9 @@ const ToolSelectorNarrow: FC<{}> = () => {
             )
         })
     return (
-        <ContentLayout classNames='bg-black-100'>
-            <span className={styles['tool-selector-narrow']}>
-                {toolSelectorElements}
-            </span>
-        </ContentLayout>
+        <div className={styles['tool-selector-narrow']}>
+            {toolSelectorElements}
+        </div>
     )
 }
 

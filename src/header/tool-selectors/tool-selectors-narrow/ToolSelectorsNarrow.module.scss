@@ -1,5 +1,7 @@
 @import '../../../lib/styles';
 
+$icon-height: 24px;
+
 .tool-selectors-narrow-closed,
 .tool-selectors-narrow-opened {
     display: none;
@@ -7,5 +9,16 @@
 
     @include ltemd {
         display: flex;
+    }
+
+    svg {
+        height: $icon-height;
+        width: $icon-height;
+        fill: none;
+
+        path {
+            stroke: $tc-white;
+            stroke-width: 2px;
+        }
     }
 }

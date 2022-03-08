@@ -1,11 +1,38 @@
 @import '../../../styles/';
 
+$svg-size: 32px;
+
 .section-selector {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 64px;
+    height: calc(2 * $svg-size);
+
+    &.active {
+
+        svg {
+            path {
+                stroke: $turq-120;
+            }
+        }
+
+        .title {
+            color: $turq-120;
+        }
+    }
+
+    svg {
+        width: $svg-size;
+        height: $svg-size;
+        fill: none;
+
+        path {
+            fill: none;
+            stroke: #7F7F7F;
+            stroke-width: 2px;
+        }
+    }
 
     .title {
         text-align: center;
@@ -16,9 +43,5 @@
         letter-spacing: 0px;
         text-transform: uppercase;
         color: $black-60;
-
-        &.active {
-            color: $turq-120;
-        }
     }
 }
