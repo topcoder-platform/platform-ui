@@ -25,7 +25,6 @@ const ProfilePanel: FC<{}> = () => {
             <a href={profileRoutes.profile} className={styles.profile}>
                 My Profile
             </a>
-            {/* TODO: logout */}
             <a href={authEndpoints.logout} className={styles.logout}>
                 Log Out
             </a>

@@ -1,7 +1,5 @@
 @import '../../../../lib/styles';
 
-$svg-size: 16px;
-
 .tool-selector-narrow {
     position: absolute;
     top: $header-height;
@@ -27,8 +25,8 @@ $svg-size: 16px;
         background-color: $black-100;
 
         svg {
-            width: $svg-size;
-            height: $svg-size;
+            width: $pad-lg;
+            height: $pad-lg;
             fill: $tc-white;
 
             path {

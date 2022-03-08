@@ -1,6 +1,6 @@
 @import '../../../styles/';
 
-$svg-size: 32px;
+$svg-size: $pad-xxxxl;
 
 .section-selector {
     display: flex;
@@ -29,8 +29,8 @@ $svg-size: 32px;
 
         path {
             fill: none;
-            stroke: #7F7F7F;
-            stroke-width: 2px;
+            stroke: $black-60;
+            stroke-width: $border;
         }
     }
 
