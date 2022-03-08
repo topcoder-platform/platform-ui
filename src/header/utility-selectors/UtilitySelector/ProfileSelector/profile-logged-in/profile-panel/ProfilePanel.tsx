@@ -13,7 +13,6 @@ const ProfilePanel: FC<{}> = () => {
         return <></>
     }
 
-    // TODO: logout
     const authEndpoints: AuthenticationUrlConfig = new AuthenticationUrlConfig()
     const profileRoutes: ProfileRoutesConfig = new ProfileRoutesConfig()
 
