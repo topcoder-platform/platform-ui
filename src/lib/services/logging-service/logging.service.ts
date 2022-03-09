@@ -21,7 +21,7 @@ export class LoggingService {
         })
     }
 
-    logError(message: string, messageContext?: object): void {
+    logError(message: Error, messageContext?: object): void {
         datadogLogs.logger.error(message, messageContext)
     }
 

@@ -1,6 +1,7 @@
 import cookies from 'browser-cookies'
 import { configureConnector, decodeToken, getFreshToken } from 'tc-auth-lib'
 
+import { LoggingService } from '..'
 import { User } from '../../../../types/tc-auth-lib'
 import { EnvironmentConfig } from '../../../config'
 
@@ -15,6 +16,7 @@ interface TokenData {
 export class AuthenticationService {
 
     private readonly externalEndpoints: AuthenticationUrlConfig = new AuthenticationUrlConfig()
+    private readonly loggingService: LoggingService = new LoggingService()
 
     constructor() {
         configureConnector({
@@ -36,9 +38,7 @@ export class AuthenticationService {
                 }
             })
             .catch((error: Error) => {
-                // TODO: error handling
-                // tslint:disable-next-line: no-console
-                console.error(error)
+                this.loggingService.logError(error)
                 return {}
             })
             .then((token: TokenData) => {
