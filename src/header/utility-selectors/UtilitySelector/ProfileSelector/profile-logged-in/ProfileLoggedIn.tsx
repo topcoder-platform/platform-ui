@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction, useContext, useState } from 'react'
 
-import { Avatar, ProfileContext, ProfileContextData, XIcon } from '../../../../../lib'
+import { Avatar, LoggingService, ProfileContext, ProfileContextData, XIcon } from '../../../../../lib'
 
 import { ProfilePanel } from './profile-panel'
 import styles from './ProfileLoggedIn.module.scss'
@@ -9,9 +9,10 @@ const ProfileLoggedIn: FC<{}> = () => {
 
     const { profile }: ProfileContextData = useContext(ProfileContext)
     const [profilePanelOpen, setProfilePanelOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const logger: LoggingService = new LoggingService()
 
     if (!profile) {
-        // TODO: this should never happen b/c the parent should change to not display it
+        logger.logInfo('tried to render the logged in profile w/out a profile')
         return <></>
     }
 

@@ -3,6 +3,7 @@ import { configureConnector, decodeToken, getFreshToken } from 'tc-auth-lib'
 
 import { User } from '../../../../types/tc-auth-lib'
 import { EnvironmentConfig } from '../../../config'
+import { LoggingService } from '../logging-service'
 
 import { AuthenticationUrlConfig } from './authentication-url.config'
 import { CookieKeys } from './cookie-keys.enum'
@@ -15,6 +16,7 @@ interface TokenData {
 export class AuthenticationService {
 
     private readonly externalEndpoints: AuthenticationUrlConfig = new AuthenticationUrlConfig()
+    private readonly loggingService: LoggingService = new LoggingService()
 
     constructor() {
         configureConnector({
@@ -36,9 +38,7 @@ export class AuthenticationService {
                 }
             })
             .catch((error: Error) => {
-                // TODO: error handling
-                // tslint:disable-next-line: no-console
-                console.error(error)
+                this.loggingService.logError(error?.message || `${error}` || 'unknown error getting authentication token')
                 return {}
             })
             .then((token: TokenData) => {
