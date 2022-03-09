@@ -38,7 +38,7 @@ export class AuthenticationService {
                 }
             })
             .catch((error: Error) => {
-                this.loggingService.logError(error)
+                this.loggingService.logError(error?.message || `${error}` || 'unknown error getting authentication token')
                 return {}
             })
             .then((token: TokenData) => {
