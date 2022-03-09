@@ -6,9 +6,15 @@
     flex-direction: column;
     align-items: center;
 
-    img {
-        width: 56px;
+    svg {
+        width: calc($pad-xxl + $pad-xxxxl);
+        height: $pad-xl;
         @extend .pad-xxl;
+        fill: none;
+
+        path {
+            fill: $tc-white;
+        }
 
         @include ltemd {
             padding: 0;

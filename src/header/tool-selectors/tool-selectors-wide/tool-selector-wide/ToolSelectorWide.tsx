@@ -7,11 +7,11 @@ import { ToolSelectorRoute } from '../../tool-selector-route.model'
 
 import styles from './ToolSelectorWide.module.scss'
 
-interface ToolSelectorProps {
+interface ToolSelectorWideProps {
     toolSelectorRoute: ToolSelectorRoute
 }
 
-const ToolSelectorWide: FC<ToolSelectorProps> = (props: ToolSelectorProps) => {
+const ToolSelectorWide: FC<ToolSelectorWideProps> = (props: ToolSelectorWideProps) => {
 
     const uiRoutes: RouteConfig = new RouteConfig()
 

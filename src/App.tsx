@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { Route, Routes } from 'react-router-dom'
 
-import { RouteConfig } from './config'
+import { EnvironmentConfig, RouteConfig } from './config'
 import {
     Buttons,
     DesignLib,
@@ -12,8 +12,11 @@ import {
     SelfService,
     Tool
 } from './content'
-import { Header, ToolSelectorNarrow } from './header'
-import { ProfileProvider } from './lib/profile-provider'
+import { Header } from './header'
+import { AnalyticsService, LoggingService, ProfileProvider } from './lib'
+
+new AnalyticsService().initialize(EnvironmentConfig)
+new LoggingService().initialize(EnvironmentConfig)
 
 const App: FC<{}> = () => {
 
@@ -27,7 +30,6 @@ const App: FC<{}> = () => {
             <Routes>
                 <Route path={routes.designLib} element={<DesignLib />} />
                 <Route path={routes.home} element={<Home />} />
-                <Route path={routes.toolSelectors} element={<ToolSelectorNarrow />} />
                 <Route path={routes.selfService} element={<SelfService />} />
                 <Route path={routes.tool} element={<Tool />} />
                 <Route path={designLibRoutes.buttons} element={< Buttons />} />

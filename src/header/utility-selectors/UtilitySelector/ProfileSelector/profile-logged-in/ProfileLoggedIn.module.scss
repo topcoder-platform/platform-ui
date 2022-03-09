@@ -1,8 +1,14 @@
 @import '../../../../../lib/styles';
 
-$inner: 32px;
-$border: 2px;
-$square: calc($inner + 2 * 2px);
+$overlaySquare: calc($pad-xxxxl + 2 * $border);
+
+a {
+    cursor: pointer;
+}
+
+a {
+    cursor: pointer;
+}
 
 a {
     cursor: pointer;
@@ -15,8 +21,15 @@ a {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: $square;
-    width: $square;
-    margin-top: calc($square * -1);
+    height: $overlaySquare;
+    width: $overlaySquare;
+    margin-top: calc($overlaySquare * -1);
     border-radius: 50%;
+
+    svg {
+        stroke: $turq-160;
+        stroke-width: $border;
+        height: $pad-xxl;
+        width: $pad-xxl;
+    }
 }
