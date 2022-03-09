@@ -16,6 +16,7 @@ const Sections: FC<SectionsProps> = (props: SectionsProps) => {
             <SectionSelector
                 icon={section.icon}
                 key={section.title}
+                rootRoute={section.rootRoute}
                 route={section.route}
                 title={section.title}
             ></SectionSelector>

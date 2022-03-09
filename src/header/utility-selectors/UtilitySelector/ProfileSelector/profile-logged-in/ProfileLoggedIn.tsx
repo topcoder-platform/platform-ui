@@ -1,6 +1,6 @@
-import { FC, useContext, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useContext, useState } from 'react'
 
-import { Avatar, LoggingService, ProfileContext, ProfileContextData } from '../../../../../lib'
+import { Avatar, IconOutline, LoggingService, ProfileContext, ProfileContextData } from '../../../../../lib'
 
 import { ProfilePanel } from './profile-panel'
 import styles from './ProfileLoggedIn.module.scss'
@@ -8,10 +8,7 @@ import styles from './ProfileLoggedIn.module.scss'
 const ProfileLoggedIn: FC<{}> = () => {
 
     const { profile }: ProfileContextData = useContext(ProfileContext)
-    const [
-        profilePanelOpen,
-        setProfilePanelOpen,
-    ]: [boolean, React.Dispatch<React.SetStateAction<boolean>>] = useState<boolean>(false)
+    const [profilePanelOpen, setProfilePanelOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
     const logger: LoggingService = new LoggingService()
 
     if (!profile) {
@@ -34,10 +31,7 @@ const ProfileLoggedIn: FC<{}> = () => {
                 />
                 {profilePanelOpen && (
                     <div className={styles.overlay}>
-                        {/* TODO: import svg from library */}
-                        <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
-                            <path d='M6 18L18 6M6 6L18 18' stroke='#137D60' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' />
-                        </svg>
+                        <IconOutline.XIcon />
                     </div>
                 )}
             </a>
