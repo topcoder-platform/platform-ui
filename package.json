@@ -3,17 +3,11 @@
     "version": "0.1.0",
     "private": true,
     "dependencies": {
-        "@testing-library/jest-dom": "^5.14.1",
-        "@testing-library/react": "^12.0.0",
-        "@testing-library/user-event": "^13.2.1",
-        "@types/jest": "^27.0.1",
-        "@types/node": "^16.7.13",
-        "@types/react": "^17.0.20",
-        "@types/react-dom": "^17.0.9",
         "browser-cookies": "^1.2.0",
         "classnames": "^2.3.1",
         "react": "^17.0.2",
         "react-dom": "^17.0.2",
+        "react-gtm-module": "^2.0.11",
         "react-router-dom": "^6.2.1",
         "react-scripts": "5.0.0",
         "sass": "^1.49.8",
@@ -24,6 +18,8 @@
     "scripts": {
         "start": "sh start-ssl.sh",
         "build": "react-scripts build",
+        "build:dev": "sh build-dev.sh",
+        "build:prod": "sh build-prod.sh",
         "eject": "react-scripts eject",
         "lint": "tslint src/**/*.{ts,tsx}",
         "lint:fix": "tslint src/**/*.{ts,tsx} --fix",
@@ -49,6 +45,14 @@
         ]
     },
     "devDependencies": {
+        "@testing-library/jest-dom": "^5.14.1",
+        "@testing-library/react": "^12.0.0",
+        "@testing-library/user-event": "^13.2.1",
+        "@types/jest": "^27.0.1",
+        "@types/node": "^16.7.13",
+        "@types/react": "^17.0.20",
+        "@types/react-dom": "^17.0.9",
+        "@types/react-gtm-module": "^2.0.1",
         "@types/react-router-dom": "^5.3.3"
     },
     "types": "./types/index.d.ts"
