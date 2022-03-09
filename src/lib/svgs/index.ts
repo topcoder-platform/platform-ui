@@ -1,7 +1,8 @@
-export { ReactComponent as ChatIcon } from './chat.svg'
-export { ReactComponent as ChevronRightIcon } from './chevron-right.svg'
+// SEE https://heroicons.com/ for options
+// tslint:disable: no-submodule-imports
+import * as IconOutline from '@heroicons/react/outline'
+import * as IconSolid from '@heroicons/react/solid'
+
+export { IconOutline }
+export { IconSolid }
 export { ReactComponent as LogoIcon } from './logo.svg'
-export { ReactComponent as MailIcon } from './mail.svg'
-export { ReactComponent as MenuIcon } from './menu.svg'
-export { ReactComponent as TicketIcon } from './ticket.svg'
-export { ReactComponent as XIcon } from './x.svg'

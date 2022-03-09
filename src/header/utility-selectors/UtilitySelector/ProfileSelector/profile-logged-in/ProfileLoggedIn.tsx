@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction, useContext, useState } from 'react'
 
-import { Avatar, LoggingService, ProfileContext, ProfileContextData, XIcon } from '../../../../../lib'
+import { Avatar, IconOutline, LoggingService, ProfileContext, ProfileContextData } from '../../../../../lib'
 
 import { ProfilePanel } from './profile-panel'
 import styles from './ProfileLoggedIn.module.scss'
@@ -31,7 +31,7 @@ const ProfileLoggedIn: FC<{}> = () => {
                 />
                 {profilePanelOpen && (
                     <div className={styles.overlay}>
-                        <XIcon />
+                        <IconOutline.XIcon />
                     </div>
                 )}
             </a>
