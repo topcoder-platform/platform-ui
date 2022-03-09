@@ -1,3 +1,4 @@
+import classNames from 'classnames'
 import { FC } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
@@ -21,11 +22,11 @@ const ToolSelectorWide: FC<ToolSelectorWideProps> = (props: ToolSelectorWideProp
     const activeIndicaterClass: string = `tool-selector-wide-${isActive ? '' : 'in'}active`
 
     return (
-        <div className={styles['tool-selector-wide']}>
+        <div className={classNames(styles['tool-selector-wide'], styles[activeIndicaterClass])}>
             <Link to={route} className='large-tab'>
                 {title}
             </Link>
-            <div className={styles[activeIndicaterClass]}></div>
+            <div className={styles['active-indicator']}></div>
         </div>
     )
 }
