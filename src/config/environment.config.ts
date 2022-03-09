@@ -23,7 +23,9 @@ function getEnvironmentConfig(): GlobalConfig {
             return EnvironmentConfigProd
 
         default:
-            throw new Error(`Cannot initialize an invalid host environment: ${process.env.REACT_APP_HOST_ENV}`)
+            return EnvironmentConfigDev
+        // TODO: add this error back when the deployment is setup up
+        // throw new Error(`Cannot initialize an invalid host environment: ${process.env.REACT_APP_HOST_ENV}`)
     }
 }
 
