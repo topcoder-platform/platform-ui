@@ -20,13 +20,13 @@ It is written using React 17, Typescript 4, and Node 16.
 
 - Open a bash shell
 
-\] git clone https://github.com/topcoder-platform/platform-ui.git
+\> git clone https://github.com/topcoder-platform/platform-ui.git
 
-\] cd platform-ui
+\> cd platform-ui
 
-\] yarn install
+\> yarn install
 
-\] yarn start
+\> yarn start
 
 - go to https://local.topcoder-dev.com:3000/
 
@@ -41,7 +41,7 @@ It is written using React 17, Typescript 4, and Node 16.
 - Set the ENV variable to AppHostEnvironment.[hostnama]
 - Add the switch case for the host name to src/config/environment.config.ts
 - Prior to starting the server, set your host name:
-\] export REACT_APP_HOST_ENV=[hostname]
+\> export REACT_APP_HOST_ENV=[hostname]
 
 #### For further convenience
 
