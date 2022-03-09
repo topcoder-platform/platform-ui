@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { FC } from 'react'
+import { FC, SVGProps } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
 import { RouteConfig } from '../../../../config'
@@ -10,13 +10,15 @@ import styles from './Section-Selector.module.scss'
 const SectionSelector: FC<SectionSelectorProps> = (props: SectionSelectorProps) => {
 
     const routes: RouteConfig = new RouteConfig()
-    const isActive: boolean = routes.isActive(useLocation().pathname, props.route)
+    const isActive: boolean = routes.isActive(useLocation().pathname, props.route, props.rootRoute)
+
+    const Icon: FC<SVGProps<SVGSVGElement>> = props.icon
 
     return (
         <Link to={props.route}>
-            <div className={styles['section-selector']}>
-                <img src={props.icon} alt={props.title} />
-                <div className={classNames(styles.title, isActive ? styles.active : '')}>
+            <div className={classNames(styles['section-selector'], isActive ? styles.active : '')}>
+                <Icon />
+                <div className={styles.title}>
                     {props.title}
                 </div>
             </div>

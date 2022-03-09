@@ -1,7 +1,4 @@
-import { SectionSelectorProps } from '../../lib'
-import chatIcon from '../../lib/svg/chat.svg'
-import mailIcon from '../../lib/svg/mail.svg'
-import ticketIcon from '../../lib/svg/ticket.svg'
+import { IconOutline, SectionSelectorProps } from '../../lib'
 
 import { DesignLibRouteConfig } from './design-lib-route.config'
 
@@ -9,22 +6,26 @@ const routes: DesignLibRouteConfig = new DesignLibRouteConfig()
 
 export const sections: Array<SectionSelectorProps> = [
     {
-        icon: mailIcon,
+        icon: IconOutline.MailIcon,
+        rootRoute: routes.root,
         route: routes.root,
         title: 'Home',
     },
     {
-        icon: ticketIcon,
+        icon: IconOutline.TicketIcon,
+        rootRoute: routes.root,
         route: routes.buttons,
         title: 'Buttons',
     },
     {
-        icon: chatIcon,
+        icon: IconOutline.ChatIcon,
+        rootRoute: routes.root,
         route: routes.fonts,
         title: 'Fonts',
     },
     {
-        icon: mailIcon,
+        icon: IconOutline.EyeIcon,
+        rootRoute: routes.root,
         route: routes.icons,
         title: 'Icons',
     },

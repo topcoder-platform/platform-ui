@@ -1,11 +1,21 @@
 @import '../../../lib/styles';
 
-.tool-selectors-narrow-closed,
-.tool-selectors-narrow-opened {
+.tool-selectors-narrow {
     display: none;
     padding-left: $pad-xxl;
 
     @include ltemd {
         display: flex;
+    }
+
+    svg {
+        height: $pad-xxl;
+        width: $pad-xxl;
+        fill: none;
+
+        path {
+            stroke: $tc-white;
+            stroke-width: $border;
+        }
     }
 }
