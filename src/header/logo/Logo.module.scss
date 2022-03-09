@@ -23,5 +23,10 @@
 }
 
 .logo-no-link {
-    height: 26.5px;
+
+    height: 74.5px;
+
+    @include ltemd {
+        height: 26.5px;
+    }
 }
