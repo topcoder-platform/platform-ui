@@ -1,56 +1,40 @@
-// TODO: import styles from './App.scss'
-import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import { FC } from 'react'
 import { Route, Routes } from 'react-router-dom'
 
-import DesignLib from './content/design-lib/DesignLib'
-import Home from './content/home/Home'
-import Menu from './content/menu/Menu'
-import SelfService from './content/self-service/SelfService'
-import Tool from './content/tool/Tool'
-import Header from './header/Header'
-import { AppState } from './lib/interfaces'
-import { AuthenticationService } from './lib/services'
-import { UiRoute } from './lib/urls'
+import { RouteConfig } from './config'
+import {
+    Buttons,
+    DesignLib,
+    DesignLibRouteConfig,
+    Fonts,
+    Home,
+    Icons,
+    SelfService,
+    Tool
+} from './content'
+import { Header, ToolSelectorNarrow } from './header'
+import { ProfileProvider } from './lib/profile-provider'
 
 const App: FC<{}> = () => {
 
-    // TODO: convert auth service to a provider
-    const authenticationService: AuthenticationService = new AuthenticationService()
-
-    const [appState, setAppState]: [AppState, Dispatch<SetStateAction<AppState>>] = useState<AppState>({
-        auth: {},
-    })
-
-    useEffect(() => {
-
-        // if we have already have the profile, don't do anything else
-        if (!!appState?.profile) {
-            return
-        }
-
-        // WARNING: this doesn't rerender
-        (async () => {
-            // TODO: move this to the provider
-            // try to get a profile
-            const updatedAppState: AppState = await authenticationService.authenticate(appState)
-            setAppState(updatedAppState)
-        })()
-    }, [])
-
-    // TODO: make routes configurable
-    const routes: UiRoute = new UiRoute()
+    // TODO: make routes configurable and defined in the content section instead of hard-coded here
+    const routes: RouteConfig = new RouteConfig()
+    const designLibRoutes: DesignLibRouteConfig = new DesignLibRouteConfig()
 
     return (
-        <>
-            <Header initialized={!!appState.auth.initialized} profile={appState.profile} />
+        <ProfileProvider>
+            <Header />
             <Routes>
-                <Route path={routes.designLib} element={<DesignLib profile={appState.profile} />} />
-                <Route path={routes.home} element={<Home profile={appState.profile} />} />
-                <Route path={routes.menu} element={<Menu />} />
-                <Route path={routes.selfService} element={<SelfService profile={appState.profile} />} />
-                <Route path={routes.tool} element={<Tool profile={appState.profile} />} />
-            </Routes>
-        </>
+                <Route path={routes.designLib} element={<DesignLib />} />
+                <Route path={routes.home} element={<Home />} />
+                <Route path={routes.toolSelectors} element={<ToolSelectorNarrow />} />
+                <Route path={routes.selfService} element={<SelfService />} />
+                <Route path={routes.tool} element={<Tool />} />
+                <Route path={designLibRoutes.buttons} element={< Buttons />} />
+                <Route path={designLibRoutes.fonts} element={< Fonts />} />
+                <Route path={designLibRoutes.icons} element={< Icons />} />
+            </Routes >
+        </ProfileProvider>
     )
 }
 

@@ -1,8 +1,9 @@
 // TODO: add this User class to tc-auth-lib
 export interface User {
-    userId: string
+    exp?: number
     handle: string
     roles: Array<{ [key: string]: any }>
+    userId: string
 }
 
 export function getToken(key: any): any

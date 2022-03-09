@@ -1,6 +1,0 @@
-export * from './app-state.interface'
-export * from './authentication-data.interface'
-export * from './global-config.interface'
-export * from './header-props.interface'
-export * from './profile-props.interface'
-export * from './user-profile.interface'

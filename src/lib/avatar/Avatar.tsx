@@ -1,31 +1,30 @@
 import classNames from 'classnames'
 import { FC } from 'react'
 
-import { UserProfile } from '../interfaces'
-
 import styles from './Avatar.module.scss'
 
 interface AvatarProps {
-    profile?: UserProfile
+    firstName?: string
+    handle?: string
+    lastName?: string
+    photoUrl?: string
 }
 
 const Avatar: FC<AvatarProps> = (props: AvatarProps) => {
 
-    const profile: UserProfile | undefined = props.profile
-
     // if we don't have a profile and either a photo or an initial, just return an empty element
-    if (!profile || (!profile.photoURL && !profile.firstName && !profile.lastName)) {
+    if (!props.photoUrl && !props.firstName && !props.lastName) {
         return <></>
     }
 
-    const avatarElement: JSX.Element = !!profile.photoURL
+    const avatarElement: JSX.Element = !!props.photoUrl
         ? (
-            <img src={profile.photoURL} alt={`${profile.handle} avatar`} className={styles.avatar} />
+            <img src={props.photoUrl} alt={`${props.handle} avatar`} className={styles.avatar} />
         )
         : (
             <span className={classNames(styles.avatar, styles['avatar-letters'])}>
-                {profile.firstName?.charAt(0)}
-                {profile.lastName?.charAt(0)}
+                {props.firstName?.charAt(0)}
+                {props.lastName?.charAt(0)}
             </span>
         )
 

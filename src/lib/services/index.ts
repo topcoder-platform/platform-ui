@@ -1,2 +1,2 @@
-export * from './authentication.service'
-export * from './profile.service'
+export { AuthenticationUrlConfig } from './authentication-service'
+export * from './fetch-service'

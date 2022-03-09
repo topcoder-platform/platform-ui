@@ -1,12 +1,11 @@
 import { FC } from 'react'
 
-import ContentLayout from '../../lib/content-layout/ContentLayout'
-import { ProfileProps } from '../../lib/interfaces'
+import { ContentLayout } from '../../lib'
 
 import styles from './SelfService.module.scss'
 
-const SelfService: FC<ProfileProps> = (props: ProfileProps) => (
-    <ContentLayout profile={props.profile} classNames={styles['self-service']}>
+const SelfService: FC<{}> = () => (
+    <ContentLayout classNames={styles['self-service']}>
         <>
             <div>
                 Self Service
