@@ -19,6 +19,8 @@ export class LoggingService {
             service: config.LOGGING.SERVICE,
             silentMultipleInit: true,
         })
+
+        this.logInfo(`initialized logging for ${config.ENV}`)
     }
 
     logError(message: string, messageContext?: object): void {

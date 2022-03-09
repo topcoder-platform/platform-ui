@@ -70,7 +70,6 @@ build_steps: &build_steps
 deploy_steps: &deploy_steps
     - checkout
     - attach_workspace: *workspace_attach
-    - run: *install_dependency
     - run: *install_deploysuite
     - deploy:
         name: Running MasterScript
