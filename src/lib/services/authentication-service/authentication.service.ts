@@ -1,9 +1,9 @@
 import cookies from 'browser-cookies'
 import { configureConnector, decodeToken, getFreshToken } from 'tc-auth-lib'
 
-import { LoggingService } from '..'
 import { User } from '../../../../types/tc-auth-lib'
 import { EnvironmentConfig } from '../../../config'
+import { LoggingService } from '../logging-service'
 
 import { AuthenticationUrlConfig } from './authentication-url.config'
 import { CookieKeys } from './cookie-keys.enum'
