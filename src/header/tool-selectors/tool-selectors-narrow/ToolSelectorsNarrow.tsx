@@ -8,12 +8,11 @@ import styles from './ToolSelectorsNarrow.module.scss'
 
 const ToolSelectorsNarrow: FC<{}> = () => {
 
-    const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false as boolean)
+    const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
     const closed: JSX.Element = <IconOutline.MenuIcon />
     const open: JSX.Element = (
         <>
-            <IconOutline.XIcon />
             <ToolSelectorNarrow />
         </>
     )
