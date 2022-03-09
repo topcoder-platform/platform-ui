@@ -9,8 +9,7 @@ import styles from './Section-Selector.module.scss'
 
 const SectionSelector: FC<SectionSelectorProps> = (props: SectionSelectorProps) => {
 
-    const routes: RouteConfig = new RouteConfig()
-    const isActive: boolean = routes.isActive(useLocation().pathname, props.route, props.rootRoute)
+    const isActive: boolean = RouteConfig.isActive(useLocation().pathname, props.route, props.rootRoute)
 
     const Icon: FC<SVGProps<SVGSVGElement>> = props.icon
 

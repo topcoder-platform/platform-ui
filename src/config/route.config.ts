@@ -1,22 +1,15 @@
-export class RouteConfig {
+import { RouteConfigModel } from './route-config.model'
+import { RouteConfigService } from './route-config.service'
 
-    readonly home: string = '/'
+const service: RouteConfigService = new RouteConfigService()
 
-    get designLib(): string { return `${this.home}design-lib` }
-    get selfService(): string { return `${this.home}self-service` }
-    get tool(): string { return `${this.home}tool` }
-    get toolSelectors(): string { return `${this.home}tool-selectors` }
-
-    isActive(activePath: string, pathName: string, rootPath: string = this.home): boolean {
-        return activePath?.startsWith(pathName)
-            && (pathName !== rootPath || activePath === rootPath)
-    }
-
-    isHome(pathName: string): boolean {
-        return pathName === this.home
-    }
-
-    isToolsSelection(pathName: string): boolean {
-        return pathName === this.toolSelectors
-    }
+const routeConfig: RouteConfigModel = {
+    designLib: service.designLib,
+    home: service.home,
+    isActive: service.isActive,
+    isHome: service.isHome,
+    selfService: service.selfService,
+    tool: service.tool,
 }
+
+export default routeConfig

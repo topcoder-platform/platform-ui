@@ -21,9 +21,11 @@ const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => {
         <>
             <div className={classNames(styles.content, props.classNames)}>
                 <Sections sections={props.sections || []}></Sections>
-                {props.children}
                 <div>
-                    Logged in as: {profile?.handle || 'Not Logged In'}
+                    {props.children}
+                    <div>
+                        Logged in as: {profile?.handle || 'Not Logged In'}
+                    </div>
                 </div>
             </div>
         </>

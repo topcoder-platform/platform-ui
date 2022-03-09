@@ -1,10 +1,14 @@
-import { RouteConfig } from '../../config'
+import { DesignLibRouteConfigModel } from './design-lib-route-config.model'
+import { DesignLibRouteConfigService } from './design-lib-route-config.service'
 
-export class DesignLibRouteConfig {
+const service: DesignLibRouteConfigService = new DesignLibRouteConfigService()
 
-    readonly root: string = new RouteConfig().designLib
-
-    get buttons(): string { return `${this.root}/buttons` }
-    get fonts(): string { return `${this.root}/fonts` }
-    get icons(): string { return `${this.root}/icons` }
+const designLibRouteConfig: DesignLibRouteConfigModel = {
+    buttons: service.buttons,
+    fonts: service.fonts,
+    home: service.home,
+    icons: service.icons,
+    rooted: service.rooted,
 }
+
+export default designLibRouteConfig

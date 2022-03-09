@@ -10,12 +10,11 @@ import styles from './Logo.module.scss'
 const Logo: FC<{}> = () => {
 
     // the logo should be a link to the home page for all pages except the home page
-    const routes: RouteConfig = new RouteConfig()
-    const isLink: boolean = routes.isHome(useLocation().pathname)
+    const isLink: boolean = RouteConfig.isHome(useLocation().pathname)
 
     return (
         <div className={styles[`logo-${isLink ? 'no-' : ''}link`]}>
-            <Link to={routes.home}>
+            <Link to={RouteConfig.home}>
                 <LogoIcon />
             </Link>
         </div>

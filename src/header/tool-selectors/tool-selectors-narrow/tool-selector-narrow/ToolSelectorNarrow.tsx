@@ -12,12 +12,11 @@ const ToolSelectorNarrow: FC<{}> = () => {
 
     const activeRoute: string = useLocation().pathname
     const baseClass: string = 'tool-selector-narrow'
-    const routes: RouteConfig = new RouteConfig()
 
     const toolSelectorElements: Array<JSX.Element> = toolSelectorsRoutes
         .map(selector => {
 
-            const isActive: boolean = routes.isActive(activeRoute, selector.route)
+            const isActive: boolean = RouteConfig.isActive(activeRoute, selector.route, RouteConfig.home)
             const activeIndicaterClass: string = `${baseClass}-${isActive ? '' : 'in'}active`
 
             return (

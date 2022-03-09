@@ -14,11 +14,9 @@ interface ToolSelectorWideProps {
 
 const ToolSelectorWide: FC<ToolSelectorWideProps> = (props: ToolSelectorWideProps) => {
 
-    const uiRoutes: RouteConfig = new RouteConfig()
-
     const { route, title }: ToolSelectorRoute = props.toolSelectorRoute
 
-    const isActive: boolean = uiRoutes.isActive(useLocation().pathname, route)
+    const isActive: boolean = RouteConfig.isActive(useLocation().pathname, route, RouteConfig.home)
     const activeIndicaterClass: string = `tool-selector-wide-${isActive ? '' : 'in'}active`
 
     return (
