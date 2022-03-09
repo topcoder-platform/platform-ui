@@ -100,6 +100,11 @@ The name of a tool's directory should correlate w/the name of the tool and its u
 I.e. src/tools/<tool-name> === platform.topcoder.com/<tool-name>
 E.g. src/tools/self-service === platform.topcoder.com/self-service
 
+Tools should generally not import modules from any directories other than lib. 
+
+If it is necessary to import from outside the lib, the shared code should 
+generally be moved to lib.
+
 // TODO: how to "register" a tool and add its route
 
 ### utils
@@ -112,5 +117,10 @@ The name of a util's directory should correlate w/the name of the util and its u
 
 I.e. src/utils/<util-name> === platform.topcoder.com/<util-name>
 E.g. src/utils/profile === platform.topcoder.com/profile
+
+Utils should generally not import modules from any directories other than lib. 
+
+If it is necessary to import from outside the lib, the shared code should 
+generally be moved to lib.
 
 // TODO: how to "register" a util and add its route
