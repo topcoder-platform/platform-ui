@@ -1,19 +1,19 @@
 import classNames from 'classnames'
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
-import { ToolSelectorNarrow } from '..'
-import { MenuIcon, XIcon } from '../../../lib'
+import { IconOutline } from '../../../lib'
 
+import ToolSelectorNarrow from './tool-selector-narrow/ToolSelectorNarrow'
 import styles from './ToolSelectorsNarrow.module.scss'
 
 const ToolSelectorsNarrow: FC<{}> = () => {
 
     const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false as boolean)
 
-    const closed: JSX.Element = <MenuIcon />
+    const closed: JSX.Element = <IconOutline.MenuIcon />
     const open: JSX.Element = (
         <>
-            <XIcon />
+            <IconOutline.XIcon />
             <ToolSelectorNarrow />
         </>
     )
