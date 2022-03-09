@@ -18,6 +18,7 @@
     },
     "scripts": {
         "start": "sh start-ssl.sh",
+        "start:bsouza": "sh start-ssl-bsouza.sh",
         "build": "react-scripts build",
         "build:dev": "sh build-dev.sh",
         "build:prod": "sh build-prod.sh",
