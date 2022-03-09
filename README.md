@@ -15,8 +15,7 @@ It is written using React 17, Typescript 4, and Node 16.
 ### To Serve
 
 - Add the local topcoder domain to your hosts file
-
-    ] 127.0.0.1 		local.topcoder-dev.com
+-- 127.0.0.1 		local.topcoder-dev.com
 
 - Open a bash shell
 
@@ -68,6 +67,7 @@ Defines the entire header panel of the UI:
 - Utility Selectors
 
 // TODO: Search
+
 // TODO: make the tools and utilities configurable
 
 ### lib
@@ -97,8 +97,9 @@ The Tool Selectors correlate 1:1 to directories within the tools directory.
 
 The name of a tool's directory should correlate w/the name of the tool and its url.
 
-I.e. src/tools/[tool-name] === platform.topcoder.com/[tool-name]
-E.g. src/tools/self-service === platform.topcoder.com/self-service
+I.e. src/tools/[tool-name] == platform.topcoder.com/[tool-name]
+
+E.g. src/tools/self-service == platform.topcoder.com/self-service
 
 Tools should generally not import modules from any directories other than lib. 
 
@@ -107,7 +108,7 @@ generally be moved to lib.
 
 // TODO: how to "register" a tool and add its route
 
-### utils
+###  utils
 
 Shared utilities that are not specific to a tool.
 
@@ -115,8 +116,9 @@ The Utility Selectors correlate 1:1 to directories within the utils directory.
 
 The name of a util's directory should correlate w/the name of the util and its url.
 
-I.e. src/utils/[util-name] === platform.topcoder.com/[util-name]
-E.g. src/utils/profile === platform.topcoder.com/profile
+I.e. src/utils/[util-name] == platform.topcoder.com/[util-name]
+
+E.g. src/utils/profile == platform.topcoder.com/profile
 
 Utils should generally not import modules from any directories other than lib. 
 
