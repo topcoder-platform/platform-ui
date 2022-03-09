@@ -14,17 +14,26 @@
         text-align: center;
     }
 
-    .tool-selector-wide-active,
-    .tool-selector-wide-inactive {
+    .active-indicator {
         width: $pad-xxl;
         height: 2px;
     }
 
-    .tool-selector-wide-active {
-        background-color: $turq-120;
-    }
+    &.tool-selector-wide-active {
 
-    .tool-selector-wide-inactive {
-        background-color: inherit;
+        a {
+            cursor: default;
+        }
+
+        .active-indicator {
+            background-color: $turq-120;
+        }
+    }
+    
+    &.tool-selector-wide-inactive {
+
+        .active-indicator {
+            background-color: inherit;
+        }
     }
 }

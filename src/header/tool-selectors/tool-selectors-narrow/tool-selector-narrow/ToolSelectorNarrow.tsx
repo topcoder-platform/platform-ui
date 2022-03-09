@@ -3,7 +3,7 @@ import { FC } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
 import { RouteConfig } from '../../../../config'
-import { ChevronRightIcon } from '../../../../lib'
+import { IconOutline } from '../../../../lib'
 import { toolSelectorsRoutes } from '../../tool-selectors-routes.config'
 
 import styles from './ToolSelectorNarrow.module.scss'
@@ -27,7 +27,7 @@ const ToolSelectorNarrow: FC<{}> = () => {
                     to={selector.route}
                 >
                     {selector.title}
-                    <ChevronRightIcon />
+                    <IconOutline.ChevronRightIcon />
                 </Link>
             )
         })

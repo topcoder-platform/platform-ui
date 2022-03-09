@@ -1,19 +1,22 @@
 import { FC } from 'react'
 import { Route, Routes } from 'react-router-dom'
 
-import { RouteConfig } from './config'
+import { EnvironmentConfig, RouteConfig } from './config'
+import { Header } from './header'
+import { AnalyticsService, LoggingService, ProfileProvider } from './lib'
 import {
     Buttons,
     DesignLib,
     DesignLibRouteConfig,
     Fonts,
-    Home,
     Icons,
     SelfService,
     Tool
-} from './content'
-import { Header } from './header'
-import { ProfileProvider } from './lib/profile-provider'
+} from './tools'
+import { Home } from './utils'
+
+new AnalyticsService().initialize(EnvironmentConfig)
+new LoggingService().initialize(EnvironmentConfig)
 
 const App: FC<{}> = () => {
 

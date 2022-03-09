@@ -23,9 +23,8 @@
 }
 
 .logo-no-link {
-    height: 74.5px;
 
-    @include ltemd {
-        height: 26.5px;
+    a {
+        cursor: default;
     }
 }
