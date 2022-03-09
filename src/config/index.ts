@@ -1,3 +1,2 @@
-// TODO: other environment configs
-export * from './environment.local.config'
+export { default as EnvironmentConfig } from './environment.config'
 export * from './route.config'
