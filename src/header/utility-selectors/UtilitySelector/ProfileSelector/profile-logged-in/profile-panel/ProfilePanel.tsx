@@ -1,6 +1,11 @@
 import { FC, useContext } from 'react'
 
-import { AuthenticationUrlConfig, ProfileContext, ProfileContextData, ProfileRoutesConfig } from '../../../../../../lib'
+import {
+    AuthenticationUrlConfig,
+    ProfileContext,
+    ProfileContextData,
+    ProfileRouteConfig,
+} from '../../../../../../lib'
 
 import styles from './ProfilePanel.module.scss'
 
@@ -13,18 +18,15 @@ const ProfilePanel: FC<{}> = () => {
         return <></>
     }
 
-    const authEndpoints: AuthenticationUrlConfig = new AuthenticationUrlConfig()
-    const profileRoutes: ProfileRoutesConfig = new ProfileRoutesConfig()
-
     return (
         <div className={styles['profile-panel']}>
             <div className={styles.handle}>
                 {profile.handle}
             </div>
-            <a href={profileRoutes.profile} className={styles.profile}>
+            <a href={ProfileRouteConfig.profile} className={styles.profile}>
                 My Profile
             </a>
-            <a href={authEndpoints.logout} className={styles.logout}>
+            <a href={AuthenticationUrlConfig.logout} className={styles.logout}>
                 Log Out
             </a>
         </div>

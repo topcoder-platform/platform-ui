@@ -5,7 +5,7 @@ import { User } from '../../../../types/tc-auth-lib'
 import { EnvironmentConfig } from '../../../config'
 import { LoggingService } from '../logging-service'
 
-import { AuthenticationUrlConfig } from './authentication-url.config'
+import { default as AuthenticationUrlConfig } from './authentication-url.config'
 import { CookieKeys } from './cookie-keys.enum'
 
 interface TokenData {
@@ -15,12 +15,11 @@ interface TokenData {
 
 export class AuthenticationService {
 
-    private readonly externalEndpoints: AuthenticationUrlConfig = new AuthenticationUrlConfig()
     private readonly loggingService: LoggingService = new LoggingService()
 
     constructor() {
         configureConnector({
-            connectorUrl: this.externalEndpoints.authentication,
+            connectorUrl: AuthenticationUrlConfig.authentication,
             frameId: 'tc-accounts-iframe',
             mockMode: undefined,
             mockToken: undefined,

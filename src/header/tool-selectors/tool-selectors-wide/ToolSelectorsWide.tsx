@@ -1,14 +1,16 @@
-import { FC } from 'react'
+import { FC, useContext } from 'react'
 
-import { toolSelectorsRoutes } from '../tool-selectors-routes.config'
+import { RouteContext, RouteContextData } from '../../../lib'
 
-import ToolSelectorWide from './tool-selector-wide/ToolSelectorWide'
+import { ToolSelectorWide } from './tool-selector-wide'
 import styles from './ToolSelectorsWide.module.scss'
 
 const ToolSelectorsWide: FC<{}> = () => {
 
-    const selectors: Array<JSX.Element> = toolSelectorsRoutes
-        .map(toolSelector => <ToolSelectorWide key={toolSelector.title} toolSelectorRoute={toolSelector} />)
+    const { toolsRoutes }: RouteContextData = useContext(RouteContext)
+
+    const selectors: Array<JSX.Element> = toolsRoutes
+        .map(route => <ToolSelectorWide key={route.title} route={route} />)
 
     return (
         <>

@@ -1,18 +1,13 @@
-import { EnvironmentConfig } from '../../../config'
+import { AuthenticationUrlConfigModel } from './authentication-url-config.model'
+import { AuthenticationUrlConfigService } from './authentication-url-config.service'
 
-export class AuthenticationUrlConfig {
+const service: AuthenticationUrlConfigService = new AuthenticationUrlConfigService()
 
-    readonly authentication: string = EnvironmentConfig.URL.ACCOUNTS_APP_CONNECTOR
-
-    get logout(): string {
-        return `${this.authentication}?logout=true&retUrl=${encodeURIComponent('https://' + window.location.host)}`
-    }
-
-    login(fallback: string): string {
-        return `${this.authentication}?retUrl=${encodeURIComponent(window.location.href.match(/[^?]*/)?.[0] || fallback)}`
-    }
-
-    signup(fallback: string): string {
-        return `${this.login(fallback)}&regSource=tcBusiness&mode=signUp`
-    }
+const authenticationUrlConfig: AuthenticationUrlConfigModel = {
+    authentication: service.authentication,
+    login: service.login,
+    logout: service.logout,
+    signup: service.signup,
 }
+
+export default authenticationUrlConfig

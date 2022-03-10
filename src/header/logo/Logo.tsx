@@ -1,8 +1,7 @@
 import { FC } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
-import { RouteConfig } from '../../config'
-import { LogoIcon } from '../../lib'
+import { LogoIcon, routeIsActive, routeRoot } from '../../lib'
 import '../../lib/styles/index.scss'
 
 import styles from './Logo.module.scss'
@@ -10,12 +9,11 @@ import styles from './Logo.module.scss'
 const Logo: FC<{}> = () => {
 
     // the logo should be a link to the home page for all pages except the home page
-    const routes: RouteConfig = new RouteConfig()
-    const isLink: boolean = routes.isHome(useLocation().pathname)
+    const isLink: boolean = routeIsActive(useLocation().pathname, routeRoot)
 
     return (
         <div className={styles[`logo-${isLink ? 'no-' : ''}link`]}>
-            <Link to={routes.home}>
+            <Link to={routeRoot}>
                 <LogoIcon />
             </Link>
         </div>

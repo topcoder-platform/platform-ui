@@ -1,16 +1,21 @@
-import React from 'react'
+import { StrictMode } from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter } from 'react-router-dom'
 
-import App from './App'
+import { default as App } from './App'
 import './index.scss'
+import { RouteProvider } from './lib'
 import reportWebVitals from './reportWebVitals'
+import { ToolsRoutes } from './tools'
+import { UtilsRoutes } from './utils'
 
 ReactDOM.render(
     <BrowserRouter>
-        <React.StrictMode>
-            <App />
-        </React.StrictMode>
+        <RouteProvider toolsRoutes={[...ToolsRoutes]} utilsRoutes={[...UtilsRoutes]}>
+            <StrictMode>
+                <App />
+            </StrictMode>
+        </RouteProvider>
     </BrowserRouter>,
     document.getElementById('root')
 )

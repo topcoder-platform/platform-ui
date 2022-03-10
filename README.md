@@ -6,7 +6,7 @@ Beginning March, 2022 all future user interfaces at Topcoder will be implemented
 
 It is written using React 17, Typescript 4, and Node 16.
 
-## Instructions to serve locally
+## Serving Locally
 
 ### Dependencies
 - Node
@@ -51,7 +51,7 @@ It is written using React 17, Typescript 4, and Node 16.
 - Set the REACT_APP_HOST_ENV=[hostname]
 - Add "start:[hostname]": "sh start-ssl-[hostname].sh" to scripts in package.json
 
-## How to Develop
+## Developing
 
 The following descriptions correspond to the top-level directories within the 
 src directory.
@@ -70,7 +70,6 @@ Defines the entire header panel of the UI:
 
 // TODO: Search
 
-// TODO: make the tools and utilities configurable
 
 ### lib
 
@@ -108,7 +107,17 @@ Tools should generally not import modules from any directories other than lib.
 If it is necessary to import from outside the lib, the shared code should 
 generally be moved to lib.
 
-// TODO: how to "register" a tool and add its route
+#### Adding a Tool to the Tool Selectors
+
+All of the routes for a tool, including root, section, and subsections should be
+defined in a top-level file.
+
+I.e. [toolName]Routes in src/tools/[tool-name]/[tool-name].routes.ts
+
+E.g. selfServiceRoutes in src/tools/self-service/self-service.routes.ts
+
+These routes then need to be added to the src/tools/tools.routes.ts file,
+at which time the tool selectors should automatically be updatd.
 
 ###  utils
 
@@ -127,4 +136,14 @@ Utils should generally not import modules from any directories other than lib.
 If it is necessary to import from outside the lib, the shared code should 
 generally be moved to lib.
 
-// TODO: how to "register" a util and add its route
+#### Adding a Util to the Util Selectors
+
+All of the routes for a util, including root, section, and subsections should be
+defined in a top-level file.
+
+I.e. [utilName]Routes in src/utils/[util-name]/[util-name].routes.ts
+
+E.g. homeRoutes in src/tools/home/home.routes.ts
+
+These routes then need to be added to the src/utils/utils.routes.ts file,
+at which time the tool selectors should automatically be updated.

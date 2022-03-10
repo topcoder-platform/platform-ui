@@ -1,17 +1,30 @@
-import { FC } from 'react'
+import { FC, ReactElement, useContext } from 'react'
+import { Outlet, Route, Routes } from 'react-router-dom'
 
-import { ContentLayout } from '../../lib'
+import { ContentLayout, RouteContext, RouteContextData } from '../../lib'
 
 import styles from './DesignLib.module.scss'
-import { sections } from './sections.config'
+
+export const toolTitle: string = 'Design Library'
 
 const DesignLib: FC<{}> = () => {
 
+    const { toolsRoutes }: RouteContextData = useContext(RouteContext)
+
+    const routeElements: Array<ReactElement> = toolsRoutes
+        .find(route => route.title === toolTitle)
+        ?.children
+        .map(route => (<Route path={route.route} element={route.element} key={route.title} />))
+        || []
+
     return (
         <>
-            <ContentLayout classNames={styles['design-lib']} sections={sections}>
+            <ContentLayout classNames={styles['design-lib']} title={toolTitle}>
                 <>
-                    Design Library
+                    <Outlet />
+                    <Routes>
+                        {routeElements}
+                    </Routes>
                 </>
             </ContentLayout>
         </>
