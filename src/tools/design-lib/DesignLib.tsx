@@ -5,19 +5,21 @@ import { ContentLayout, RouteContext, RouteContextData } from '../../lib'
 
 import styles from './DesignLib.module.scss'
 
+export const toolTitle: string = 'Design Library'
+
 const DesignLib: FC<{}> = () => {
 
-    const { routes }: RouteContextData = useContext(RouteContext)
+    const { enabledRoutes }: RouteContextData = useContext(RouteContext)
 
-    const routeElements: Array<ReactElement> = routes
-        .find(route => route.title === 'Design Library' && route.enabled)
+    const routeElements: Array<ReactElement> = enabledRoutes
+        .find(route => route.title === toolTitle)
         ?.children
         .map(route => (<Route path={route.route} element={route.element} key={route.title} />))
         || []
 
     return (
         <>
-            <ContentLayout classNames={styles['design-lib']} title='Design Library'>
+            <ContentLayout classNames={styles['design-lib']} title={toolTitle}>
                 <>
                     <Outlet />
                     <Routes>

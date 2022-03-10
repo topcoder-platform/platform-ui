@@ -8,19 +8,18 @@ import styles from './ToolSelectorsNarrow.module.scss'
 
 const ToolSelectorsNarrow: FC<{}> = () => {
 
-    const { routes }: RouteContextData = useContext(RouteContext)
-    const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false as boolean)
+    const { toolRoutes }: RouteContextData = useContext(RouteContext)
+    const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
     const closed: JSX.Element = <IconOutline.MenuIcon />
-    const toolRoutes: Array<JSX.Element> = routes
-        .filter(route => route.enabled)
+    const toolSelectors: Array<JSX.Element> = toolRoutes
         .map(selector => <ToolSelectorNarrow route={selector.route} title={selector.title} key={selector.title} />)
 
     const open: JSX.Element = (
         <>
             <IconOutline.XIcon />
             <div className={styles['tool-selectors-narrow-container']}>
-                {toolRoutes}
+                {toolSelectors}
             </div>
         </>
     )

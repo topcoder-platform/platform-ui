@@ -19,16 +19,16 @@ export interface ContentLayoutProps {
 const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => {
 
     const { profile }: ProfileContextData = useContext(ProfileContext)
-    const { routes }: RouteContextData = useContext(RouteContext)
+    const { enabledRoutes }: RouteContextData = useContext(RouteContext)
 
-    const toolRoute: PlatformRoute | undefined = routes
+    const rootRoute: PlatformRoute | undefined = enabledRoutes
         .find(route => route.title === props.title && route.enabled)
 
-    const sections: Array<SectionSelectorProps> = toolRoute?.children
-        .filter(route => route.enabled)
+    const sections: Array<SectionSelectorProps> = rootRoute?.children
+        .filter(sectionRoute => sectionRoute.enabled)
         .map(sectionRoute => ({
             sectionRoute,
-            toolRoute: toolRoute.route,
+            toolRoute: rootRoute.route,
         }))
         || []
     const hideSectionsClass: string = !!sections.length ? '' : styles['hide-sections']

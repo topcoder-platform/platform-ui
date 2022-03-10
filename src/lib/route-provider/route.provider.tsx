@@ -5,6 +5,7 @@ import { routes as selfServiceRoutes } from '../../tools/self-service/self-servi
 import { routes as toolRoutes } from '../../tools/tool/tool.routes'
 import { routes as homeRoutes } from '../../utils/home/home.routes'
 
+import { PlatformRouteType } from './platform-route-type.enum'
 import { PlatformRoute } from './platform-route.model'
 import { RouteContextData } from './route-context-data.model'
 import { default as RouteContext, defaultRouteContextData } from './route.context'
@@ -23,8 +24,11 @@ export const RouteProvider: FC<{ children: ReactNode }> = ({ children }: { child
 
     useEffect(() => {
         const getAndSetRoutes: () => Promise<void> = async () => {
+            const enabledRoutes: Array<PlatformRoute> = routes.filter(route => route.enabled)
             const contextData: RouteContextData = {
-                routes,
+                enabledRoutes,
+                toolRoutes: enabledRoutes.filter(route => route.type === PlatformRouteType.tool),
+                utilRoutes: enabledRoutes.filter(route => route.type === PlatformRouteType.util),
             }
             setRouteContext(contextData)
         }

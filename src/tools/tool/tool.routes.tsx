@@ -1,6 +1,7 @@
-import { PlatformRoute } from '../../lib'
+import { PlatformRoute, PlatformRouteType } from '../../lib'
 
 import { Tool } from '.'
+import { toolTitle } from './Tool'
 
 export const routes: Array<PlatformRoute> = [
     {
@@ -8,6 +9,7 @@ export const routes: Array<PlatformRoute> = [
         element: <Tool />,
         enabled: true,
         route: 'tool',
-        title: 'Tool',
+        title: toolTitle,
+        type: PlatformRouteType.tool,
     },
 ]

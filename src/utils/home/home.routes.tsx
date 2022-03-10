@@ -1,6 +1,7 @@
-import { PlatformRoute } from '../../lib'
+import { PlatformRoute, PlatformRouteType } from '../../lib'
 
 import { Home } from '.'
+import { utilTitle } from './Home'
 
 export const routes: Array<PlatformRoute> = [
     {
@@ -8,6 +9,7 @@ export const routes: Array<PlatformRoute> = [
         element: <Home />,
         enabled: true,
         route: '/',
-        title: 'Home',
+        title: utilTitle,
+        type: PlatformRouteType.util,
     },
 ]

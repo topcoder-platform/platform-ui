@@ -1,8 +1,8 @@
-import { IconOutline, PlatformRoute } from '../../lib'
+import { IconOutline, PlatformRoute, PlatformRouteType } from '../../lib'
 
 import { Buttons } from './buttons'
 import { default as DesignLibRouteConfig } from './design-lib-route.config'
-import DesignLib from './DesignLib'
+import DesignLib, { toolTitle } from './DesignLib'
 import { Fonts } from './fonts'
 import { Home } from './home'
 import { Icons } from './icons'
@@ -17,6 +17,7 @@ export const routes: Array<PlatformRoute> = [
                 icon: IconOutline.MailIcon,
                 route: '',
                 title: 'Home',
+                type: PlatformRouteType.tool,
             },
             {
                 children: [],
@@ -25,6 +26,7 @@ export const routes: Array<PlatformRoute> = [
                 icon: IconOutline.TicketIcon,
                 route: DesignLibRouteConfig.buttons,
                 title: 'Buttons',
+                type: PlatformRouteType.tool,
             },
             {
                 children: [],
@@ -33,6 +35,7 @@ export const routes: Array<PlatformRoute> = [
                 icon: IconOutline.ChatIcon,
                 route: DesignLibRouteConfig.fonts,
                 title: 'Fonts',
+                type: PlatformRouteType.tool,
             },
             {
                 children: [],
@@ -41,11 +44,13 @@ export const routes: Array<PlatformRoute> = [
                 icon: IconOutline.EyeIcon,
                 route: DesignLibRouteConfig.icons,
                 title: 'Icons',
+                type: PlatformRouteType.tool,
             },
         ],
         element: <DesignLib />,
         enabled: true,
         route: DesignLibRouteConfig.home,
-        title: 'Design Library',
+        title: toolTitle,
+        type: PlatformRouteType.tool,
     },
 ]

@@ -1,6 +1,7 @@
-import { PlatformRoute } from '../../lib'
+import { PlatformRoute, PlatformRouteType } from '../../lib'
 
 import { SelfService } from './'
+import { toolTitle } from './SelfService'
 
 export const routes: Array<PlatformRoute> = [
     {
@@ -8,6 +9,7 @@ export const routes: Array<PlatformRoute> = [
         element: <SelfService />,
         enabled: true,
         route: 'self-service',
-        title: 'Self Service',
+        title: toolTitle,
+        type: PlatformRouteType.tool,
     },
 ]

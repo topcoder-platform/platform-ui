@@ -7,10 +7,9 @@ import styles from './ToolSelectorsWide.module.scss'
 
 const ToolSelectorsWide: FC<{}> = () => {
 
-    const { routes }: RouteContextData = useContext(RouteContext)
+    const { toolRoutes }: RouteContextData = useContext(RouteContext)
 
-    const selectors: Array<JSX.Element> = routes
-        .filter(route => route.enabled)
+    const selectors: Array<JSX.Element> = toolRoutes
         .map(route => <ToolSelectorWide key={route.title} route={route} />)
 
     return (
