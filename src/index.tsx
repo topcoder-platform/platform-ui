@@ -1,16 +1,19 @@
-import React from 'react'
+import { StrictMode } from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter } from 'react-router-dom'
 
-import App from './App'
+import { default as App } from './App'
 import './index.scss'
+import { RouteProvider } from './lib'
 import reportWebVitals from './reportWebVitals'
 
 ReactDOM.render(
     <BrowserRouter>
-        <React.StrictMode>
-            <App />
-        </React.StrictMode>
+        <RouteProvider>
+            <StrictMode>
+                <App />
+            </StrictMode>
+        </RouteProvider>
     </BrowserRouter>,
     document.getElementById('root')
 )

@@ -1,24 +1,26 @@
-import { FC } from 'react'
+import { FC, ReactElement, useContext } from 'react'
 import { Route, Routes } from 'react-router-dom'
 
-import { EnvironmentConfig, RouteConfig } from './config'
+import { EnvironmentConfig } from './config'
 import { Header } from './header'
 import { AnalyticsService, LoggingService, ProfileProvider } from './lib'
-import { DesignLib, SelfService, Tool } from './tools'
-import { Home } from './utils'
+import { RouteContext, RouteContextData } from './lib/route-provider'
 
 new AnalyticsService().initialize(EnvironmentConfig)
 new LoggingService().initialize(EnvironmentConfig)
 
 const App: FC<{}> = () => {
+
+    const { routes }: RouteContextData = useContext(RouteContext)
+
+    const routeElements: Array<ReactElement> = routes
+        .map(route => (<Route path={route.route} element={route.element} key={route.title} />))
+
     return (
         <ProfileProvider>
             <Header />
             <Routes>
-                <Route path={`${RouteConfig.designLib}/*`} element={<DesignLib />} />
-                <Route path={RouteConfig.home} element={<Home />} />
-                <Route path={RouteConfig.selfService} element={<SelfService />} />
-                <Route path={RouteConfig.tool} element={<Tool />} />
+                {routeElements}
             </Routes >
         </ProfileProvider>
     )
