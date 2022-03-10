@@ -9,9 +9,9 @@ export const toolTitle: string = 'Design Library'
 
 const DesignLib: FC<{}> = () => {
 
-    const { enabledRoutes }: RouteContextData = useContext(RouteContext)
+    const { toolsRoutes }: RouteContextData = useContext(RouteContext)
 
-    const routeElements: Array<ReactElement> = enabledRoutes
+    const routeElements: Array<ReactElement> = toolsRoutes
         .find(route => route.title === toolTitle)
         ?.children
         .map(route => (<Route path={route.route} element={route.element} key={route.title} />))

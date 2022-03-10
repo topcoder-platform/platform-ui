@@ -11,9 +11,12 @@ new LoggingService().initialize(EnvironmentConfig)
 
 const App: FC<{}> = () => {
 
-    const { enabledRoutes }: RouteContextData = useContext(RouteContext)
+    const { toolsRoutes, utilsRoutes }: RouteContextData = useContext(RouteContext)
 
-    const routeElements: Array<ReactElement> = enabledRoutes
+    const routeElements: Array<ReactElement> = [
+        ...toolsRoutes,
+        ...utilsRoutes,
+    ]
         .map(route => {
             // if the route has children, add the wildcard to the path
             const path: string = `${route.route}${!route.children ? '' : '/*'}`

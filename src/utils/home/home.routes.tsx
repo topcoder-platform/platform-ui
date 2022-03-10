@@ -1,15 +1,13 @@
-import { PlatformRoute, PlatformRouteType } from '../../lib'
+import { PlatformRoute } from '../../lib'
 
-import { Home } from '.'
-import { utilTitle } from './Home'
+import Home, { utilTitle } from './Home'
 
-export const routes: Array<PlatformRoute> = [
+export const homeRoutes: Array<PlatformRoute> = [
     {
         children: [],
         element: <Home />,
         enabled: true,
         route: '/',
         title: utilTitle,
-        type: PlatformRouteType.util,
     },
 ]

@@ -1,15 +1,13 @@
-import { PlatformRoute, PlatformRouteType } from '../../lib'
+import { PlatformRoute } from '../../lib'
 
-import { SelfService } from './'
-import { toolTitle } from './SelfService'
+import SelfService, { toolTitle } from './SelfService'
 
-export const routes: Array<PlatformRoute> = [
+export const selfServiceRoutes: Array<PlatformRoute> = [
     {
         children: [],
         element: <SelfService />,
         enabled: true,
-        route: 'self-service',
+        route: '/self-service',
         title: toolTitle,
-        type: PlatformRouteType.tool,
     },
 ]

@@ -3,9 +3,8 @@ import { Context, createContext } from 'react'
 import { RouteContextData } from './route-context-data.model'
 
 export const defaultRouteContextData: RouteContextData = {
-    enabledRoutes: [],
-    toolRoutes: [],
-    utilRoutes: [],
+    toolsRoutes: [],
+    utilsRoutes: [],
 }
 
 const RouteContext: Context<RouteContextData> = createContext(defaultRouteContextData)

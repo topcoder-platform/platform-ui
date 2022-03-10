@@ -19,9 +19,12 @@ export interface ContentLayoutProps {
 const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => {
 
     const { profile }: ProfileContextData = useContext(ProfileContext)
-    const { enabledRoutes }: RouteContextData = useContext(RouteContext)
+    const { toolsRoutes, utilsRoutes }: RouteContextData = useContext(RouteContext)
 
-    const rootRoute: PlatformRoute | undefined = enabledRoutes
+    const rootRoute: PlatformRoute | undefined = [
+        ...toolsRoutes,
+        ...utilsRoutes,
+    ]
         .find(route => route.title === props.title && route.enabled)
 
     const sections: Array<SectionSelectorProps> = rootRoute?.children

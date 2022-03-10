@@ -1,2 +1,1 @@
-export * from './self-service'
-export * from './tool'
+export { default as ToolsRoutes } from './tools.routes'
