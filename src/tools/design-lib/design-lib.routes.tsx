@@ -1,7 +1,6 @@
 import { IconOutline, PlatformRoute } from '../../lib'
 
 import { Buttons } from './buttons'
-import { default as DesignLibRouteConfig } from './design-lib-route.config'
 import DesignLib, { toolTitle } from './DesignLib'
 import { Fonts } from './fonts'
 import { Home } from './home'
@@ -23,7 +22,7 @@ export const designLibRoutes: Array<PlatformRoute> = [
                 element: <Buttons />,
                 enabled: true,
                 icon: IconOutline.TicketIcon,
-                route: DesignLibRouteConfig.buttons,
+                route: 'buttons',
                 title: 'Buttons',
             },
             {
@@ -31,7 +30,7 @@ export const designLibRoutes: Array<PlatformRoute> = [
                 element: <Fonts />,
                 enabled: true,
                 icon: IconOutline.ChatIcon,
-                route: DesignLibRouteConfig.fonts,
+                route: 'fonts',
                 title: 'Fonts',
             },
             {
@@ -39,13 +38,13 @@ export const designLibRoutes: Array<PlatformRoute> = [
                 element: <Icons />,
                 enabled: true,
                 icon: IconOutline.EyeIcon,
-                route: DesignLibRouteConfig.icons,
+                route: 'icons',
                 title: 'Icons',
             },
         ],
         element: <DesignLib />,
         enabled: true,
-        route: DesignLibRouteConfig.home,
+        route: '/design-lib',
         title: toolTitle,
     },
 ]
