@@ -31,10 +31,11 @@ const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => {
             toolRoute: toolRoute.route,
         }))
         || []
+    const hideSectionsClass: string = !!sections.length ? '' : styles['hide-sections']
 
     return (
         <>
-            <div className={classNames(styles.content, props.classNames)}>
+            <div className={classNames(styles.content, props.classNames, hideSectionsClass)}>
                 <Sections sections={sections}></Sections>
                 <div>
                     <h1>{props.title}</h1>

@@ -16,6 +16,16 @@
         background-color: $tc-white;
     }
 
+    &.hide-sections {
+        grid-template-columns: 1fr;
+        justify-content: center;
+        padding-left: $pad-xxl;
+
+        .sections {
+            display: none;
+        }        
+    }
+
     @include ltemd {
         grid-template-columns: 1fr;
         justify-content: center;
