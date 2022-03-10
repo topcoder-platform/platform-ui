@@ -1,22 +1,22 @@
 import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react'
 
-import { ToolsRoutes } from '../../tools'
-import { UtilsRoutes } from '../../utils'
-
 import { RouteContextData } from './route-context-data.model'
 import { default as RouteContext, defaultRouteContextData } from './route.context'
 
-export const RouteProvider: FC<{ children: ReactNode }> = ({ children }: { children: ReactNode }) => {
+interface RouteProviderProps extends RouteContextData {
+    children: ReactNode,
+}
+
+export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps) => {
 
     const [routeContext, setRouteContext]: [RouteContextData, Dispatch<SetStateAction<RouteContextData>>]
         = useState<RouteContextData>(defaultRouteContextData)
 
     useEffect(() => {
         const getAndSetRoutes: () => Promise<void> = async () => {
-
             const contextData: RouteContextData = {
-                toolsRoutes: ToolsRoutes.filter(route => route.enabled),
-                utilsRoutes: UtilsRoutes.filter(route => route.enabled),
+                toolsRoutes: props.toolsRoutes.filter(route => route.enabled),
+                utilsRoutes: props.utilsRoutes.filter(route => route.enabled),
             }
             setRouteContext(contextData)
         }
@@ -25,7 +25,7 @@ export const RouteProvider: FC<{ children: ReactNode }> = ({ children }: { child
 
     return (
         <RouteContext.Provider value={routeContext}>
-            {children}
+            {props.children}
         </RouteContext.Provider>
     )
 }

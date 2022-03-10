@@ -6,10 +6,12 @@ import { default as App } from './App'
 import './index.scss'
 import { RouteProvider } from './lib'
 import reportWebVitals from './reportWebVitals'
+import { ToolsRoutes } from './tools'
+import { UtilsRoutes } from './utils'
 
 ReactDOM.render(
     <BrowserRouter>
-        <RouteProvider>
+        <RouteProvider toolsRoutes={[...ToolsRoutes]} utilsRoutes={[...UtilsRoutes]}>
             <StrictMode>
                 <App />
             </StrictMode>
