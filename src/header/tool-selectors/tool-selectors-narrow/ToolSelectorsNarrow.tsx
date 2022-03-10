@@ -12,12 +12,16 @@ const ToolSelectorsNarrow: FC<{}> = () => {
     const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false as boolean)
 
     const closed: JSX.Element = <IconOutline.MenuIcon />
+    const toolRoutes: Array<JSX.Element> = routes
+        .filter(route => route.enabled)
+        .map(selector => <ToolSelectorNarrow route={selector.route} title={selector.title} key={selector.title} />)
+
     const open: JSX.Element = (
         <>
             <IconOutline.XIcon />
-            {routes
-                .filter(route => route.enabled)
-                .map(selector => <ToolSelectorNarrow route={selector.route} title={selector.title} key={selector.title} />)}
+            <div className={styles['tool-selectors-narrow-container']}>
+                {toolRoutes}
+            </div>
         </>
     )
 

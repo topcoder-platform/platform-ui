@@ -8,6 +8,6 @@ export const routes: Array<PlatformRoute> = [
         element: <Tool />,
         enabled: true,
         route: 'tool',
-        title: 'tool',
+        title: 'Tool',
     },
 ]
