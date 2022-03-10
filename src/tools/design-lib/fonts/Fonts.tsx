@@ -1,7 +1,5 @@
 import { FC } from 'react'
 
-import styles from './Fonts.module.scss'
-
 const Fonts: FC<{}> = () => {
     return (
         <h3>

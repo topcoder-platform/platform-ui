@@ -21,7 +21,10 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
             setRouteContext(contextData)
         }
         getAndSetRoutes()
-    }, [])
+    }, [
+        props.toolsRoutes,
+        props.utilsRoutes,
+    ])
 
     return (
         <RouteContext.Provider value={routeContext}>

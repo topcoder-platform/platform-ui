@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
-import { LogoIcon, routeRoot, routeIsActive } from '../../lib'
+import { LogoIcon, routeIsActive, routeRoot } from '../../lib'
 import '../../lib/styles/index.scss'
 
 import styles from './Logo.module.scss'
