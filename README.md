@@ -1,6 +1,8 @@
 # Platform UI (aka Topcoder UI)
 
-This repo will contain all new web tools moving forward. 
+The Platform UI is the official Topcoder web app to host all modern user interfaces to be used by all users.
+
+Beginning March, 2022 all future user interfaces at Topcoder will be implemented here. Pre-existing user interfaces will be ported to here over time until this is the only user interface any user sees when interacting with Topcoder.
 
 It is written using React 17, Typescript 4, and Node 16.
 
