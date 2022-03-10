@@ -22,7 +22,7 @@ const ProfileLoggedIn: FC<{}> = () => {
 
     return (
         <>
-            <a onClick={() => toggleProfilePanel()} >
+            <div onClick={() => toggleProfilePanel()} >
                 <Avatar
                     firstName={profile.firstName}
                     lastName={profile.lastName}
@@ -34,7 +34,7 @@ const ProfileLoggedIn: FC<{}> = () => {
                         <IconOutline.XIcon />
                     </div>
                 )}
-            </a>
+            </div>
             {profilePanelOpen && <ProfilePanel />}
         </>
     )
