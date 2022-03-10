@@ -1,8 +1,7 @@
 import classNames from 'classnames'
 import { FC } from 'react'
 
-import { RouteConfig } from '../../../../../config'
-import { AuthenticationUrlConfig } from '../../../../../lib'
+import { AuthenticationUrlConfig, routeRoot } from '../../../../../lib'
 import '../../../../../lib/styles/index.scss'
 
 import styles from './ProfileNotLoggedIn.module.scss'
@@ -15,13 +14,13 @@ const ProfileNotLoggedIn: FC<{}> = () => {
         <>
             <a
                 className={classNames(buttonClass, styles.login)}
-                href={AuthenticationUrlConfig.login(RouteConfig.home)}
+                href={AuthenticationUrlConfig.login(routeRoot)}
             >
                 Log In
             </a>
             <a
                 className={classNames(buttonClass, 'all-white', styles.signup)}
-                href={AuthenticationUrlConfig.signup(RouteConfig.home)}
+                href={AuthenticationUrlConfig.signup(routeRoot)}
             >
                 Sign Up
             </a>

@@ -2,8 +2,7 @@ import classNames from 'classnames'
 import { FC } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
-import { RouteConfig } from '../../../../config'
-import { IconOutline } from '../../../../lib'
+import { IconOutline, routeIsActive } from '../../../../lib'
 
 import styles from './ToolSelectorNarrow.module.scss'
 
@@ -15,7 +14,7 @@ interface ToolSelectorNarrowProps {
 const ToolSelectorNarrow: FC<ToolSelectorNarrowProps> = (props: ToolSelectorNarrowProps) => {
 
     const baseClass: string = 'tool-selector-narrow'
-    const isActive: boolean = RouteConfig.isActive(useLocation().pathname, props.route, RouteConfig.home)
+    const isActive: boolean = routeIsActive(useLocation().pathname, props.route)
     const activeIndicaterClass: string = `${baseClass}-${isActive ? '' : 'in'}active`
 
     return (

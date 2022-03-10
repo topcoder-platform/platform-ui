@@ -1,37 +1,19 @@
 import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react'
 
-import { RouteConfig } from '../../config'
-import { SelfService, Tool } from '../../tools'
 import { routes as designLibRoutes } from '../../tools/design-lib/design-lib.routes'
-import { Home } from '../../utils'
+import { routes as selfServiceRoutes } from '../../tools/self-service/self-service.routes'
+import { routes as toolRoutes } from '../../tools/tool/tool.routes'
+import { routes as homeRoutes } from '../../utils/home/home.routes'
 
 import { PlatformRoute } from './platform-route.model'
 import { RouteContextData } from './route-context-data.model'
 import { default as RouteContext, defaultRouteContextData } from './route.context'
 
 const routes: Array<PlatformRoute> = [
-    {
-        children: [],
-        element: <Home />,
-        enabled: true,
-        route: RouteConfig.home,
-        title: 'Home',
-    },
+    ...homeRoutes,
     ...designLibRoutes,
-    {
-        children: [],
-        element: <SelfService />,
-        enabled: true,
-        route: RouteConfig.selfService,
-        title: 'Self Service',
-    },
-    {
-        children: [],
-        element: <Tool />,
-        enabled: true,
-        route: RouteConfig.tool,
-        title: 'Tool',
-    },
+    ...selfServiceRoutes,
+    ...toolRoutes,
 ]
 
 export const RouteProvider: FC<{ children: ReactNode }> = ({ children }: { children: ReactNode }) => {
@@ -40,15 +22,13 @@ export const RouteProvider: FC<{ children: ReactNode }> = ({ children }: { child
         = useState<RouteContextData>(defaultRouteContextData)
 
     useEffect(() => {
-
-        const getAndSetRoute: () => Promise<void> = async () => {
+        const getAndSetRoutes: () => Promise<void> = async () => {
             const contextData: RouteContextData = {
                 routes,
             }
             setRouteContext(contextData)
         }
-
-        getAndSetRoute()
+        getAndSetRoutes()
     }, [])
 
     return (
