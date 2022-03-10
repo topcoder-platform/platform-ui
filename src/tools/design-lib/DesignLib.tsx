@@ -4,7 +4,6 @@ import { Outlet, Route, Routes } from 'react-router-dom'
 import { ContentLayout, RouteContext, RouteContextData } from '../../lib'
 
 import styles from './DesignLib.module.scss'
-import { sections } from './sections.config'
 
 const DesignLib: FC<{}> = () => {
 
@@ -18,9 +17,8 @@ const DesignLib: FC<{}> = () => {
 
     return (
         <>
-            <ContentLayout classNames={styles['design-lib']} sections={sections}>
+            <ContentLayout classNames={styles['design-lib']} title='Design Library'>
                 <>
-                    <h1>Design Library</h1>
                     <Outlet />
                     <Routes>
                         {routeElements}

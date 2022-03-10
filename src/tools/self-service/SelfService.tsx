@@ -4,14 +4,6 @@ import { ContentLayout } from '../../lib'
 
 import styles from './SelfService.module.scss'
 
-const SelfService: FC<{}> = () => (
-    <ContentLayout classNames={styles['self-service']}>
-        <>
-            <div>
-                Self Service
-            </div>
-        </>
-    </ContentLayout>
-)
+const SelfService: FC<{}> = () => <ContentLayout classNames={styles['self-service']} title='Self Service' />
 
 export default SelfService

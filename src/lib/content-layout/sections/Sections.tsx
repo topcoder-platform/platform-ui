@@ -14,11 +14,9 @@ const Sections: FC<SectionsProps> = (props: SectionsProps) => {
     const sections: Array<JSX.Element> = props.sections
         .map(section => (
             <SectionSelector
-                icon={section.icon}
-                key={section.title}
-                rootRoute={section.rootRoute}
-                route={section.route}
-                title={section.title}
+                key={section.sectionRoute.title}
+                toolRoute={section.toolRoute}
+                sectionRoute={section.sectionRoute}
             ></SectionSelector>
         ))
 
