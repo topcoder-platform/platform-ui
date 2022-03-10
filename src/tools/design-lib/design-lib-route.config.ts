@@ -3,7 +3,7 @@ import { DesignLibRouteConfigService } from './design-lib-route-config.service'
 
 const service: DesignLibRouteConfigService = new DesignLibRouteConfigService()
 
-const designLibRouteConfig: DesignLibRouteConfigModel = {
+const DesignLibRouteConfig: DesignLibRouteConfigModel = {
     buttons: service.buttons,
     fonts: service.fonts,
     home: service.home,
@@ -11,4 +11,4 @@ const designLibRouteConfig: DesignLibRouteConfigModel = {
     rooted: service.rooted,
 }
 
-export default designLibRouteConfig
+export default DesignLibRouteConfig

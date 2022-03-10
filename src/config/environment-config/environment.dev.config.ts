@@ -1,9 +1,10 @@
-import { GlobalConfig } from '../lib'
+import { GlobalConfig } from '../../lib'
 
 import { AppHostEnvironment } from './app-host-environment.enum'
 import { EnvironmentConfigDefault } from './environment.default.config'
 
-export const EnvironmentConfigBsouza: GlobalConfig = {
+export const EnvironmentConfigDev: GlobalConfig = {
     ...EnvironmentConfigDefault,
-    ENV: AppHostEnvironment.bsouza,
+    ENV: AppHostEnvironment.dev,
+    TAG_MANAGER_ID: 'GTM-W7B537Z',
 }

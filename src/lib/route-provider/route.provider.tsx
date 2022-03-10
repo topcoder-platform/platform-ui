@@ -1,7 +1,8 @@
 import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react'
 
 import { RouteConfig } from '../../config'
-import { DesignLib, SelfService, Tool } from '../../tools'
+import { SelfService, Tool } from '../../tools'
+import { routes as designLibRoutes } from '../../tools/design-lib/design-lib.routes'
 import { Home } from '../../utils'
 
 import { PlatformRoute } from './platform-route.model'
@@ -10,22 +11,24 @@ import { default as RouteContext, defaultRouteContextData } from './route.contex
 
 const routes: Array<PlatformRoute> = [
     {
+        children: [],
         element: <Home />,
+        enabled: true,
         route: RouteConfig.home,
         title: 'Home',
     },
+    ...designLibRoutes,
     {
-        element: <DesignLib />,
-        route: RouteConfig.designLib,
-        title: 'Design Library',
-    },
-    {
+        children: [],
         element: <SelfService />,
+        enabled: true,
         route: RouteConfig.selfService,
         title: 'Self Service',
     },
     {
+        children: [],
         element: <Tool />,
+        enabled: true,
         route: RouteConfig.tool,
         title: 'Tool',
     },

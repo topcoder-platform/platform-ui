@@ -4,36 +4,30 @@ import { Link, useLocation } from 'react-router-dom'
 
 import { RouteConfig } from '../../../../config'
 import { IconOutline } from '../../../../lib'
-import { toolSelectorsRoutes } from '../../tool-selectors-routes.config'
 
 import styles from './ToolSelectorNarrow.module.scss'
 
-const ToolSelectorNarrow: FC<{}> = () => {
+interface ToolSelectorNarrowProps {
+    route: string
+    title: string
+}
 
-    const activeRoute: string = useLocation().pathname
+const ToolSelectorNarrow: FC<ToolSelectorNarrowProps> = (props: ToolSelectorNarrowProps) => {
+
     const baseClass: string = 'tool-selector-narrow'
-
-    const toolSelectorElements: Array<JSX.Element> = toolSelectorsRoutes
-        .map(selector => {
-
-            const isActive: boolean = RouteConfig.isActive(activeRoute, selector.route, RouteConfig.home)
-            const activeIndicaterClass: string = `${baseClass}-${isActive ? '' : 'in'}active`
-
-            return (
-                <Link
-                    className={classNames(styles[`${baseClass}-link`], styles[activeIndicaterClass])}
-                    key={selector.route}
-                    to={selector.route}
-                >
-                    {selector.title}
-                    <IconOutline.ChevronRightIcon />
-                </Link>
-            )
-        })
+    const isActive: boolean = RouteConfig.isActive(useLocation().pathname, props.route, RouteConfig.home)
+    const activeIndicaterClass: string = `${baseClass}-${isActive ? '' : 'in'}active`
 
     return (
         <div className={styles[baseClass]}>
-            {toolSelectorElements}
+            <Link
+                className={classNames(styles[`${baseClass}-link`], styles[activeIndicaterClass])}
+                key={props.route}
+                to={props.route}
+            >
+                {props.title}
+                <IconOutline.ChevronRightIcon />
+            </Link>
         </div>
     )
 }

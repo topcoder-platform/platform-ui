@@ -14,7 +14,11 @@ const App: FC<{}> = () => {
     const { routes }: RouteContextData = useContext(RouteContext)
 
     const routeElements: Array<ReactElement> = routes
-        .map(route => (<Route path={route.route} element={route.element} key={route.title} />))
+        .map(route => {
+            // if the route has children, add the wildcard to the path
+            const path: string = `${route.route}${!route.children ? '' : '/*'}`
+            return (<Route path={path} element={route.element} key={route.title} />)
+        })
 
     return (
         <ProfileProvider>

@@ -1,17 +1,21 @@
-import { FC } from 'react'
+import { FC, ReactElement, useContext } from 'react'
 import { Outlet, Route, Routes } from 'react-router-dom'
 
-import { ContentLayout } from '../../lib'
+import { ContentLayout, RouteContext, RouteContextData } from '../../lib'
 
-import { Buttons } from './buttons'
-import { default as DesignLibRouteConfig } from './design-lib-route.config'
 import styles from './DesignLib.module.scss'
-import { Fonts } from './fonts'
-import { Home } from './home'
-import { Icons } from './icons'
 import { sections } from './sections.config'
 
 const DesignLib: FC<{}> = () => {
+
+    const { routes }: RouteContextData = useContext(RouteContext)
+
+    const routeElements: Array<ReactElement> = routes
+        .find(route => route.title === 'Design Library' && route.enabled)
+        ?.children
+        .map(route => (<Route path={route.route} element={route.element} key={route.title} />))
+        || []
+
     return (
         <>
             <ContentLayout classNames={styles['design-lib']} sections={sections}>
@@ -19,10 +23,7 @@ const DesignLib: FC<{}> = () => {
                     <h1>Design Library</h1>
                     <Outlet />
                     <Routes>
-                        <Route path={''} element={<Home />} />
-                        <Route path={DesignLibRouteConfig.buttons} element={<Buttons />} />
-                        <Route path={DesignLibRouteConfig.fonts} element={<Fonts />} />
-                        <Route path={DesignLibRouteConfig.icons} element={<Icons />} />
+                        {routeElements}
                     </Routes>
                 </>
             </ContentLayout>
