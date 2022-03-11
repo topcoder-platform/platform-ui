@@ -1,11 +1,11 @@
-import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react'
 
 import { ProfileContextData } from './profile-context-data.model'
 import { ProfileService } from './profile-service'
-import ProfileContext, { defaultProfileContextData } from './profile.context'
+import { default as ProfileContext, defaultProfileContextData } from './profile.context'
 import { UserProfile } from './user-profile.model'
 
-export const ProfileProvider: FC<{ children: Array<JSX.Element> }> = ({ children }: { children: Array<JSX.Element> }) => {
+export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { children: ReactNode }) => {
 
     const [profileContext, setProfileContext]: [ProfileContextData, Dispatch<SetStateAction<ProfileContextData>>] = useState<ProfileContextData>(defaultProfileContextData)
 

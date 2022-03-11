@@ -1,4 +1,4 @@
-import { GlobalConfig } from '../lib'
+import { GlobalConfig } from '../../lib'
 
 import { AppHostEnvironment } from './app-host-environment.enum'
 import { EnvironmentConfigBsouza } from './environment.bsouza.config'

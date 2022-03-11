@@ -4,12 +4,8 @@ import { ContentLayout } from '../../lib'
 
 import styles from './Tool.module.scss'
 
-const Tool: FC<{}> = () => (
-    <ContentLayout classNames={styles.tool}>
-        <>
-            Tool
-        </>
-    </ContentLayout>
-)
+export const toolTitle: string = 'Tool'
+
+const Tool: FC<{}> = () => <ContentLayout classNames={styles.tool} title={toolTitle} />
 
 export default Tool

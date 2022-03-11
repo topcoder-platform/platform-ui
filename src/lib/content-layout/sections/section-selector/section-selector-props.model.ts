@@ -1,8 +1,6 @@
-import { FC, SVGProps } from 'react'
+import { PlatformRoute } from '../../../route-provider'
 
 export interface SectionSelectorProps {
-    icon: FC<SVGProps<SVGSVGElement> & { title?: string | undefined }>
-    rootRoute: string
-    route: string
-    title: string
+    sectionRoute: PlatformRoute
+    toolRoute: string
 }

@@ -1,7 +1,7 @@
 import { FC } from 'react'
 
-import ToolSelectorsNarrow from './tool-selectors-narrow/ToolSelectorsNarrow'
-import ToolSelectorsWide from './tool-selectors-wide/ToolSelectorsWide'
+import { ToolSelectorsNarrow } from './tool-selectors-narrow'
+import { ToolSelectorsWide } from './tool-selectors-wide'
 
 interface ToolSelectorsProps {
     isWide: boolean

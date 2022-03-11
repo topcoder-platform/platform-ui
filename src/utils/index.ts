@@ -1,1 +1,1 @@
-export * from './home'
+export { default as UtilsRoutes } from './utils.routes'

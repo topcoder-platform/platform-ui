@@ -1,14 +1,6 @@
 @import '../../../../lib/styles';
 
 .tool-selector-narrow {
-    position: absolute;
-    top: $header-height;
-    left: 0;
-    width: calc(100% - calc(2 * $pad-xxl));
-    z-index: 100;
-    height: $content-height;
-    background-color: $black-100;
-    padding: $pad-xxl;
 
     a:last-of-type {
         border-bottom: 1px solid $black-60;
