@@ -34,17 +34,19 @@ const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => {
             toolRoute: rootRoute.route,
         }))
         || []
-    const hideSectionsClass: string = !!sections.length ? '' : styles['hide-sections']
+    const hideSectionsClass: string = !sections.length ? '' : styles['show-sections']
 
     return (
         <>
             <div className={classNames(styles.content, props.classNames, hideSectionsClass)}>
                 <Sections sections={sections}></Sections>
-                <div>
-                    <h1>{props.title}</h1>
-                    {props.children}
-                    <div>
-                        Logged in as: {profile?.handle || 'Not Logged In'}
+                <div className={styles['content-outer']}>
+                    <div className={styles['content-inner']}>
+                        <h1>{props.title}</h1>
+                        {props.children}
+                        <div>
+                            Logged in as: {profile?.handle || 'Not Logged In'}
+                        </div>
                     </div>
                 </div>
             </div>

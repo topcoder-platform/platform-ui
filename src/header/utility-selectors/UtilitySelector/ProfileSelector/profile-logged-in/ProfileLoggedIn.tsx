@@ -35,7 +35,7 @@ const ProfileLoggedIn: FC<{}> = () => {
                     </div>
                 )}
             </div>
-            {profilePanelOpen && <ProfilePanel />}
+            {profilePanelOpen && <ProfilePanel toggleProfilePanel={toggleProfilePanel} />}
         </>
     )
 }

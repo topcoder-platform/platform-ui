@@ -1,4 +1,5 @@
 import { FC, useContext } from 'react'
+import { Link } from 'react-router-dom'
 
 import {
     AuthenticationUrlConfig,
@@ -9,7 +10,11 @@ import {
 
 import styles from './ProfilePanel.module.scss'
 
-const ProfilePanel: FC<{}> = () => {
+interface ProfilePanelProps {
+    toggleProfilePanel: () => void
+}
+
+const ProfilePanel: FC<ProfilePanelProps> = (props: ProfilePanelProps) => {
 
     const { profile }: ProfileContextData = useContext(ProfileContext)
 
@@ -23,9 +28,13 @@ const ProfilePanel: FC<{}> = () => {
             <div className={styles.handle}>
                 {profile.handle}
             </div>
-            <a href={ProfileRouteConfig.profile} className={styles.profile}>
+            <Link
+                className={styles.profile}
+                onClick={() => props.toggleProfilePanel()}
+                to={ProfileRouteConfig.profile}
+            >
                 My Profile
-            </a>
+            </Link>
             <a href={AuthenticationUrlConfig.logout} className={styles.logout}>
                 Log Out
             </a>
