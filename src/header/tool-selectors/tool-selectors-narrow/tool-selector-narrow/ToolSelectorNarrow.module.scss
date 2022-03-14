@@ -9,16 +9,15 @@
     .tool-selector-narrow-link {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         border-top: 1px solid $black-60;
         padding: $pad-lg 0;
         color: $tc-white;
-        font-size: 16px;
-        @include font-bold;
+        @include font-weight-medium;
         background-color: $black-100;
 
         svg {
-            width: $pad-lg;
-            height: $pad-lg;
+            @include icon-lg;
             fill: $tc-white;
 
             path {

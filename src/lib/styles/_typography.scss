@@ -1,4 +1,5 @@
 @import "fonts";
+@import "layout";
 
 body {
     margin: 0;
@@ -9,6 +10,33 @@ body {
     line-height: 24px;
     letter-spacing: 0;
     min-width: $xxs-max;
+}
+
+h1,
+h2,
+h3 {
+    @include font-barlow-condensed;
+    color: $black-100;
+    text-transform: uppercase;
+    margin: 16px 0;
+}
+
+h1 {
+    @include font-weight-semi-bold;
+    font-size: $header-height;
+    line-height: 72px;
+}
+
+h2 {
+    @include font-weight-medium;
+    font-size: 60px;
+    line-height: 56px;
+}
+
+h3 {
+    @include font-weight-medium;
+    font-size: 48px;
+    line-height: 48px;
 }
 
 .medium-subtitle {
@@ -22,5 +50,32 @@ body {
     font-size: 20px;
     line-height: 16px;
     text-transform: uppercase;
-    @include font-bold;
+    @include font-weight-medium;
+}
+
+.body-small {
+    font-size: 14px;
+    line-height: 22px;
+    @include font-weight-less-bold;
+}
+
+.body-ultra-small,
+.body-ultra-small-medium {
+    font-size: 12px;
+    line-height: 18px;
+}
+
+.body-ultra-small {
+    @include font-weight-less-bold;
+}
+
+.body-ultra-small-medium {
+    @include font-weight-bold;
+}
+
+.ultra-small {
+    font-size: 11px;
+    line-height: 16px;
+    @include font-weight-less-bold;
+    font-style: italic;
 }
