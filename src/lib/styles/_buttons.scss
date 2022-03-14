@@ -11,12 +11,12 @@ a {
 a.button {
     color: $tc-white;
     text-transform: uppercase;
-    font-size: 12px;
-    line-height: 12px;
     padding: 10px 15px;
     border-radius: 25px;
     white-space: nowrap;
-    @include font-weight-bold;
+    // extend body ultra small medium and override it
+    @extend .body-ultra-small-medium;
+    line-height: 12px;
     
     &.secondary,
     &.all-white {

@@ -52,11 +52,12 @@ $border-xs: 1px;
 
         .label {
             top: calc(50% - $form-pad-top/2);
-            @include font-weight-medium;
-            font-size: 11px;
-            line-height: calc($pad-md - $border);
             color: $turq-160;
             margin-bottom: $pad-xs;
+            // extend ultra-small and override some properties
+            @extend .ultra-small;
+            @include font-weight-medium;
+            line-height: calc($pad-md - $border);
         }
     }
 
@@ -64,7 +65,9 @@ $border-xs: 1px;
         display: flex;
         align-items: center;
         color: $red-100;
-        font-size: 12px;
+        // extend body ultra small and override it
+        @extend .body-ultra-small;
+        line-height: 14px;
 
         svg {
             @include icon-md;

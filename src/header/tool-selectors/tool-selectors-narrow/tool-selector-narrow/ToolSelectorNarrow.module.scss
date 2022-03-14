@@ -9,10 +9,10 @@
     .tool-selector-narrow-link {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         border-top: 1px solid $black-60;
         padding: $pad-lg 0;
         color: $tc-white;
-        font-size: 16px;
         @include font-weight-medium;
         background-color: $black-100;
 

@@ -1,9 +1,7 @@
 @import '../../../styles';
 
 .form-input-text {
-    @include font-weight-less-bold;
-    font-size: 14px;
-    line-height: 22px;
+    @extend .body-small;
     color: $black-60;
     box-sizing: border-box;
     border: 0;

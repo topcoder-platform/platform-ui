@@ -52,3 +52,30 @@ h3 {
     text-transform: uppercase;
     @include font-weight-medium;
 }
+
+.body-small {
+    font-size: 14px;
+    line-height: 22px;
+    @include font-weight-less-bold;
+}
+
+.body-ultra-small,
+.body-ultra-small-medium {
+    font-size: 12px;
+    line-height: 18px;
+}
+
+.body-ultra-small {
+    @include font-weight-less-bold;
+}
+
+.body-ultra-small-medium {
+    @include font-weight-bold;
+}
+
+.ultra-small {
+    font-size: 11px;
+    line-height: 16px;
+    @include font-weight-less-bold;
+    font-style: italic;
+}
