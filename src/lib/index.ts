@@ -1,4 +1,5 @@
 export * from './avatar'
+export * from './button'
 export * from './content-layout'
 export * from './form-elements'
 export * from './global-config.model'
