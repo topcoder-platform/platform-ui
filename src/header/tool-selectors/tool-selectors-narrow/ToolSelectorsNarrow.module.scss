@@ -9,8 +9,7 @@
     }
 
     svg {
-        height: $pad-xxl;
-        width: $pad-xxl;
+        @include icon-xxl;
         fill: none;
 
         path {

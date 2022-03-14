@@ -1,7 +1,6 @@
 import classNames from 'classnames'
 import { FC, ReactNode, useContext } from 'react'
 
-import { ProfileContext, ProfileContextData } from '../profile-provider'
 import { PlatformRoute, RouteContextData } from '../route-provider'
 import RouteContext from '../route-provider/route.context' // cannot be imported from index file
 import '../styles/index.scss'
@@ -18,7 +17,6 @@ export interface ContentLayoutProps {
 
 const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => {
 
-    const { profile }: ProfileContextData = useContext(ProfileContext)
     const { toolsRoutes, utilsRoutes }: RouteContextData = useContext(RouteContext)
 
     const rootRoute: PlatformRoute | undefined = [
@@ -39,16 +37,21 @@ const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => {
     return (
         <>
             <div className={classNames(styles.content, props.classNames, hideSectionsClass)}>
+
                 <Sections sections={sections}></Sections>
+
                 <div className={styles['content-outer']}>
+
                     <div className={styles['content-inner']}>
+
                         <h1>{props.title}</h1>
+
                         {props.children}
-                        <div>
-                            Logged in as: {profile?.handle || 'Not Logged In'}
-                        </div>
+
                     </div>
+
                 </div>
+
             </div>
         </>
     )

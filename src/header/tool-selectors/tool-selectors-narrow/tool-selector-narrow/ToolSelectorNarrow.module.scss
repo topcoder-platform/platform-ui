@@ -13,12 +13,11 @@
         padding: $pad-lg 0;
         color: $tc-white;
         font-size: 16px;
-        @include font-bold;
+        @include font-weight-medium;
         background-color: $black-100;
 
         svg {
-            width: $pad-lg;
-            height: $pad-lg;
+            @include icon-lg;
             fill: $tc-white;
 
             path {

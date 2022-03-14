@@ -1,0 +1,75 @@
+@import '../../styles';
+
+$form-pad-top: calc($pad-md - $border);
+$border-xs: 1px;
+
+.form-field-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-bottom: $pad-md;
+
+    .form-field {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: $pad-sm $form-pad-top;
+        height: calc($pad-xxl * 2);
+        background: $tc-white;
+        border: $border-xs solid $black-40;
+        box-sizing: border-box;
+        border-radius: $pad-xs;
+
+        &:hover,
+        &.focus {
+            border-color: $turq-160;
+
+            &.form-field-error {
+                border-color: $red-100;
+            }
+        }
+
+        &.focus,
+        &.form-field-error {
+            border-width: $border;
+            padding: calc($pad-sm - $border-xs) calc($form-pad-top - $border-xs);
+        }
+
+        &.disabled {
+            background-color: $black-10;
+            background: $black-10;
+            border-color: $black-40;
+        }
+
+        &.form-field-error {
+            border-color: $red-100;
+
+            .label {
+                color: $red-100;
+            }
+        }
+
+        .label {
+            top: calc(50% - $form-pad-top/2);
+            @include font-weight-medium;
+            font-size: 11px;
+            line-height: calc($pad-md - $border);
+            color: $turq-160;
+            margin-bottom: $pad-xs;
+        }
+    }
+
+    .error {
+        display: flex;
+        align-items: center;
+        color: $red-100;
+        font-size: 12px;
+
+        svg {
+            @include icon-md;
+            fill: $red-100;
+            margin-right: $pad-xs;
+        }
+    }
+}

@@ -23,8 +23,7 @@ $svg-size: $pad-xxxxl;
     }
 
     svg {
-        width: $svg-size;
-        height: $svg-size;
+        @include icon-xxxxl;
         fill: none;
 
         path {

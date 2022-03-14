@@ -4,7 +4,6 @@
     @include content-height;
     padding: $pad-xxxxl $pad-content-lg;
     display: grid;
-    @include font-roboto;
     background-color: $black-10;
     grid-template-columns: 1fr;
     justify-content: center;
