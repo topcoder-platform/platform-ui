@@ -17,7 +17,7 @@ export const utilTitle: string = 'Profile'
 const Profile: FC<{}> = () => {
 
     const profileContext: ProfileContextData = useContext(ProfileContext)
-    const { profile, updateProfile }: ProfileContextData = profileContext
+    const { profile, updateProfile, updatePassword }: ProfileContextData = profileContext
 
     const [disableButton, setDisableButton]: [boolean, React.Dispatch<React.SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -29,11 +29,25 @@ const Profile: FC<{}> = () => {
         return <></>
     }
 
+    enum FieldNames {
+        confirmPassword = 'confirmPassword',
+        currentPassword = 'currentPassword',
+        email = 'email',
+        firstName = 'firstName',
+        handle = 'handle',
+        lastName = 'lastName',
+        password = 'password',
+    }
+
     const updatedProfile: UserProfileDetail = {
         ...profile,
     }
 
     // TODO: validation
+
+    function getFormValue(formValues: HTMLFormControlsCollection, fieldName: string): string {
+        return (formValues.namedItem(fieldName) as HTMLInputElement)?.value
+    }
 
     function onClick(event: MouseEvent<HTMLButtonElement>): void {
         setDisableButton(true)
@@ -44,24 +58,26 @@ const Profile: FC<{}> = () => {
         event.preventDefault()
 
         // all the profile fields on this form
-        const profileFields: Array<string> = ['email', 'firstName', 'lastName']
+        const profileFields: Array<string> = [FieldNames.email, FieldNames.firstName, FieldNames.lastName]
 
         const formValues: HTMLFormControlsCollection = (event.target as HTMLFormElement).elements
 
         Object.keys(updatedProfile)
             .filter(key => profileFields.includes(key))
-            .map(key => ({
-                input: formValues.namedItem(key) as HTMLInputElement,
-                key,
-            }))
-            .forEach(field => (updatedProfile as any)[field.key] = field.input.value)
+            .forEach(key => (updatedProfile as any)[key] = getFormValue(formValues, key))
 
         const updatedContext: ProfileContextData = {
             ...profileContext,
             profile: updatedProfile,
         }
 
+        const currentPassword: string = getFormValue(formValues, FieldNames.currentPassword)
+        const password: string = getFormValue(formValues, FieldNames.password)
+
+        // TODO: check profile is dirty
         updateProfile(updatedContext)
+            // if the pw is updated, set it
+            .then(() => !!password ? updatePassword(updatedProfile.userId, currentPassword, password) : Promise.resolve())
             .then(() => setDisableButton(false))
     }
 
@@ -77,26 +93,26 @@ const Profile: FC<{}> = () => {
                 <div className={styles.profile}>
 
                     <FormField disabled label='Username' tabIndex={-1}>
-                        <TextInput name='handle' props={{
+                        <TextInput name={FieldNames.handle} props={{
                             defaultValue: profile.handle,
                             disabled: true,
                         }} />
                     </FormField>
 
                     <FormField label='Email' tabIndex={tabIndex++}>
-                        <TextInput name='email' props={{
+                        <TextInput name={FieldNames.email} props={{
                             defaultValue: profile.email,
                         }} />
                     </FormField>
 
                     <FormField label='First Name' tabIndex={tabIndex++}>
-                        <TextInput name='firstName' props={{
+                        <TextInput name={FieldNames.firstName} props={{
                             defaultValue: profile.firstName,
                         }} />
                     </FormField>
 
                     <FormField label='Last Name' tabIndex={tabIndex++}>
-                        <TextInput name='lastName' props={{
+                        <TextInput name={FieldNames.lastName} props={{
                             defaultValue: profile.lastName,
                         }} />
                     </FormField>
@@ -108,21 +124,21 @@ const Profile: FC<{}> = () => {
                 <div className={styles.profile}>
 
                     <FormField label='Current Password' tabIndex={tabIndex++}>
-                        <TextInput name='currentPassword' props={{
+                        <TextInput name={FieldNames.currentPassword} props={{
                             autoComplete: 'off',
                             placeholder: 'type your current password',
                         }} />
                     </FormField>
 
                     <FormField label='Password' tabIndex={tabIndex++}>
-                        <TextInput name='password' props={{
+                        <TextInput name={FieldNames.password} props={{
                             autoComplete: 'off',
                             placeholder: 'type your new password',
                         }} />
                     </FormField>
 
                     <FormField label='Confirm Password' tabIndex={tabIndex++}>
-                        <TextInput name='confirmPassword' props={{
+                        <TextInput name={FieldNames.confirmPassword} props={{
                             autoComplete: 'off',
                             placeholder: 're-type your new password',
                         }} />

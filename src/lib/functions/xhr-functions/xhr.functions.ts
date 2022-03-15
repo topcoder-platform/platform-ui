@@ -33,8 +33,8 @@ export async function get<T>(url: string): Promise<T> {
     return output.data
 }
 
-export async function patch<T>(url: string, data: T): Promise<T> {
-    const output: AxiosResponse<T> = await xhrInstance.patch(url, data)
+export async function patch<T, R>(url: string, data: T): Promise<R> {
+    const output: AxiosResponse<R> = await xhrInstance.patch(url, data)
     return output.data
 }
 
