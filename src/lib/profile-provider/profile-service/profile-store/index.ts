@@ -1,1 +1,1 @@
-export * from './profile-fetch.store'
+export * from './profile-xhr.store'

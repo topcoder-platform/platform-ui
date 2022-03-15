@@ -1,1 +1,1 @@
-export * from './analytics.service'
+export { initialize as initializeAnalytics } from './analytics.service'

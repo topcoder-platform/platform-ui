@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction, useContext, useState } from 'react'
 
-import { Avatar, IconOutline, LoggingService, ProfileContext, ProfileContextData } from '../../../../../lib'
+import { Avatar, IconOutline, logInfo , ProfileContext, ProfileContextData } from '../../../../../lib'
 
 import { ProfilePanel } from './profile-panel'
 import styles from './ProfileLoggedIn.module.scss'
@@ -9,10 +9,9 @@ const ProfileLoggedIn: FC<{}> = () => {
 
     const { profile }: ProfileContextData = useContext(ProfileContext)
     const [profilePanelOpen, setProfilePanelOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
-    const logger: LoggingService = new LoggingService()
 
     if (!profile) {
-        logger.logInfo('tried to render the logged in profile w/out a profile')
+        logInfo('tried to render the logged in profile w/out a profile')
         return <></>
     }
 
@@ -22,7 +21,7 @@ const ProfileLoggedIn: FC<{}> = () => {
 
     return (
         <>
-            <div className={styles['profile-avater']} onClick={() => toggleProfilePanel()} >
+            <div className={styles['profile-avatar']} onClick={() => toggleProfilePanel()} >
                 <Avatar
                     firstName={profile.firstName}
                     lastName={profile.lastName}

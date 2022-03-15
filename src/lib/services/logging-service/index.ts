@@ -1,1 +1,5 @@
-export * from './logging.service'
+export {
+    initialize as initializeLogger,
+    logError,
+    logInfo,
+} from './logging.service'

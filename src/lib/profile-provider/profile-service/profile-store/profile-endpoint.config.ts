@@ -1,10 +1,5 @@
-import { ProfileEndpointConfigModel } from './profile-endpoint-config.model'
-import { ProfileEndpointConfigService } from './profile-endpoint-config.service'
+import { EnvironmentConfig } from '../../../../config'
 
-const service: ProfileEndpointConfigService = new ProfileEndpointConfigService()
-
-const profileEndpointConfig: ProfileEndpointConfigModel = {
-    profile: service.profile,
+export function profile(handle: string): string {
+    return `${EnvironmentConfig.API.V5}/members/${handle}`
 }
-
-export default profileEndpointConfig

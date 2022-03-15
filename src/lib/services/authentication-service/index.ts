@@ -1,2 +1,6 @@
-export { default as AuthenticationUrlConfig } from './authentication-url.config'
+export {
+    login as loginUrl,
+    logout as logoutUrl,
+    signup as signupUrl,
+} from './authentication-url.config'
 export * from './authentication.service'

@@ -1,40 +1,14 @@
-import { decodeToken } from 'tc-auth-lib'
-
-import { AuthenticationService } from '../../services/authentication-service'
-import { LoggingService } from '../../services/logging-service'
+import { get as tokenGet } from '../../services/token-service'
+import { UserProfileDetail } from '../user-profile-detail.model'
 import { UserProfile } from '../user-profile.model'
 
-import { ProfileFetchStore } from './profile-store'
+import { get as storeGet, put as storePut } from './profile-store'
 
-export class ProfileService {
+export async function get(handle?: string): Promise<UserProfileDetail | undefined> {
+    handle = handle || (await tokenGet())?.handle
+    return !handle ? Promise.resolve(undefined) : storeGet(handle)
+}
 
-    private readonly authenticationService: AuthenticationService = new AuthenticationService()
-    private readonly loggingService: LoggingService = new LoggingService()
-    private readonly profileFetchStore: ProfileFetchStore = new ProfileFetchStore()
-
-    async get(): Promise<UserProfile | undefined> {
-
-        const token: string | undefined = await this.authenticationService.authenticate()
-
-        // if there is no token, don't try to get a profile
-        if (!token) {
-            return Promise.resolve(undefined)
-        }
-
-        try {
-            const { handle }: { handle?: string } = decodeToken(token)
-
-            // if we didn't find the handle, we can't get the profile
-            if (!handle) {
-                this.loggingService.logInfo(`token did not have a handle: ${token}`)
-                return Promise.resolve(undefined)
-            }
-
-            return this.profileFetchStore.get(token, handle)
-
-        } catch (error: any) {
-            this.loggingService.logError(error)
-            return Promise.resolve(undefined)
-        }
-    }
+export async function update(handle: string, profile: UserProfile): Promise<UserProfile | undefined> {
+    return storePut(handle, profile)
 }

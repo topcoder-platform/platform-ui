@@ -1,4 +1,4 @@
 export * from './analytics-service'
-export { AuthenticationUrlConfig } from './authentication-service'
-export * from './fetch-service'
+export { loginUrl, logoutUrl, signupUrl } from './authentication-service'
 export * from './logging-service'
+export * from './xhr-service'

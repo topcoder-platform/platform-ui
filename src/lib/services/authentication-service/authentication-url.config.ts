@@ -1,13 +1,13 @@
-import { AuthenticationUrlConfigModel } from './authentication-url-config.model'
-import { AuthenticationUrlConfigService } from './authentication-url-config.service'
+import { EnvironmentConfig } from '../../../config'
 
-const service: AuthenticationUrlConfigService = new AuthenticationUrlConfigService()
+export const authentication: string = EnvironmentConfig.URL.ACCOUNTS_APP_CONNECTOR
 
-const authenticationUrlConfig: AuthenticationUrlConfigModel = {
-    authentication: service.authentication,
-    login: service.login,
-    logout: service.logout,
-    signup: service.signup,
+export function login(fallback: string): string {
+    return `${authentication}?retUrl=${encodeURIComponent(window.location.href.match(/[^?]*/)?.[0] || fallback)}`
 }
 
-export default authenticationUrlConfig
+export const logout: string = `${authentication}?logout=true&retUrl=${encodeURIComponent('https://' + window.location.host)}`
+
+export function signup(fallback: string): string {
+    return `${login(fallback)}&regSource=tcBusiness&mode=signUp`
+}
