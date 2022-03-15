@@ -3,7 +3,7 @@ import { configureConnector, decodeToken, getFreshToken } from 'tc-auth-lib'
 
 import { User } from '../../../../types/tc-auth-lib'
 import { EnvironmentConfig } from '../../../config'
-import { logError } from '../logging-service'
+import { logError } from '../logging-functions'
 
 import { authentication as authenticationUrl } from './authentication-url.config'
 import { CookieKeys } from './cookie-keys.enum'

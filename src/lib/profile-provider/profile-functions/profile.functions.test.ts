@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom'
 
-describe('Profile Service', () => {
+describe('Profile Functions', () => {
 
     test('TODO', () => {
 

@@ -1,7 +1,7 @@
 import { decodeToken } from 'tc-auth-lib'
 
-import { authenticate } from '../authentication-service'
-import { logError, logInfo } from '../logging-service'
+import { authenticate } from '../authentication-functions'
+import { logError } from '../logging-functions'
 
 import { TokenModel } from './token.model'
 

@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom'
 
-describe('Logging Service', () => {
+describe('Token Functions', () => {
 
     test('', () => { })
 })

@@ -12,7 +12,7 @@ export {
     loginUrl,
     logoutUrl,
     signupUrl,
-} from './services'
+} from './functions'
 export * from './svgs'
 
 /*

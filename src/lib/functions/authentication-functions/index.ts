@@ -3,4 +3,4 @@ export {
     logout as logoutUrl,
     signup as signupUrl,
 } from './authentication-url.config'
-export * from './authentication.service'
+export * from './authentication.functions'

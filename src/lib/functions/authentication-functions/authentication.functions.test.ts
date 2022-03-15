@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom'
 
-describe('Authentication Service', () => {
+describe('Authentication Functions', () => {
 
     test('authentication', () => { })
 })

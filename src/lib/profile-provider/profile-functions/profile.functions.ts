@@ -1,4 +1,4 @@
-import { get as tokenGet } from '../../services/token-service'
+import { get as tokenGet } from '../../functions/token-functions'
 import { UserProfileDetail } from '../user-profile-detail.model'
 import { UserProfile } from '../user-profile.model'
 

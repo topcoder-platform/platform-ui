@@ -1,7 +1,7 @@
 import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react'
 
 import { ProfileContextData } from './profile-context-data.model'
-import { get as profileGet, update as profileUpdate } from './profile-service'
+import { get as profileGet, update as profileUpdate } from './profile-functions'
 import { default as ProfileContext, defaultProfileContextData } from './profile.context'
 import { UserProfileDetail } from './user-profile-detail.model'
 import { UserProfile } from './user-profile.model'
