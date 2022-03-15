@@ -14,10 +14,16 @@
 }
 
 /* FONT WEIGHTS */
-@mixin font-bold {
+@mixin font-weight-less-bold {
+    font-weight: 400;
+}
+@mixin font-weight-medium {
     font-weight: 500;
 }
-@mixin font-bolder {
+@mixin font-weight-semi-bold {
+    font-weight: 600;
+}
+@mixin font-weight-bold {
     font-weight: 700;
 }
 

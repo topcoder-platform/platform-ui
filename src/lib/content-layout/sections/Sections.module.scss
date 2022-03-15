@@ -1,7 +1,7 @@
 @import '../../styles/';
 
 .sections {
-    height: $content-height;
+    @include content-height;
 
     @include ltemd {
         display: none;

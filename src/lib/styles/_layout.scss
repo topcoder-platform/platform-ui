@@ -17,7 +17,35 @@ $pad-xl: calc(5 * $pad-xs); // 20
 $pad-xxl: calc(6 * $pad-xs); // 24
 $pad-xxxl: calc(7 * $pad-xs); // 28
 $pad-xxxxl: calc(8 * $pad-xs); // 32
-$content-height: calc(100vh - $header-height - calc(2 * $pad-xxl));
+$pad-content-lg: calc($pad-xxl + $pad-xxxxl);
+
+@mixin content-height {
+
+    @include xxs {
+        height: calc(100vh - $header-height);
+    }
+
+    @include xs {
+        height: calc(100vh - $header-height);
+    }
+
+    @include sm {
+        height: calc(100vh - $header-height - calc(2 * $pad-xxl));
+    }
+
+    @include md {
+        height: calc(100vh - $header-height - calc(2 * $pad-xxl));
+    }
+
+    @include lg {
+        height: calc(100vh - $header-height - calc(2 * $pad-xxxxl));
+    } 
+
+    @include xl {
+        height: calc(100vh - $header-height - calc(2 *  $pad-xxxxl));
+    }
+}
+
 
 .pad-xs {
     padding: $pad-xs;
