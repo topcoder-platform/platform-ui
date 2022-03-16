@@ -23,6 +23,7 @@ const TextInput: FC<TextInputProps> = (props: TextInputProps) => {
             disabled={!!props.disabled}
             label={props.label || props.name}
             error={props.error}
+            name={props.name}
         >
             <input
                 autoComplete={!!props.preventAutocomplete ? 'off' : undefined}

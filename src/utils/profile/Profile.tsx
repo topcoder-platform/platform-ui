@@ -92,11 +92,7 @@ const Profile: FC<{}> = () => {
 
         return (
             <TextInput
-                disabled={formField.disabled}
-                error={formField.error}
-                name={formField.name}
-                placeholder={formField.placeholder}
-                preventAutocomplete={formField.preventAutocomplete}
+                {...formField}
                 tabIndex={currentTabIndex}
                 type={formField.type || 'text'}
                 value={(profile as any)[formField.name]}
@@ -109,7 +105,11 @@ const Profile: FC<{}> = () => {
     return (
         <ContentLayout title={utilTitle}>
 
-            <form action={''} onSubmit={onSubmit} onChange={onChange}>
+            <form
+                action={''}
+                onChange={onChange}
+                onSubmit={onSubmit}
+            >
 
                 <h3>Basic Information</h3>
 
@@ -131,7 +131,7 @@ const Profile: FC<{}> = () => {
                 <div>
                     <Button
                         disable={disableButton}
-                        label='Save Settings'
+                        label='Save'
                         size='xl'
                         buttonStyle='secondary'
                         type='submit' />

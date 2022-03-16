@@ -10,6 +10,7 @@ interface FormFieldWrapperProps {
     disabled: boolean
     error?: string
     label: string
+    name: string
 }
 
 const FormFieldWrapper: FC<FormFieldWrapperProps> = (props: FormFieldWrapperProps) => {
@@ -30,13 +31,13 @@ const FormFieldWrapper: FC<FormFieldWrapperProps> = (props: FormFieldWrapperProp
                 onBlur={() => setFocusStyle(undefined)}
                 onFocus={() => setFocusStyle(styles.focus)}
             >
-                <div
+                <label
                     className={styles.label}
                     role='presentation'
                 >
                     {props.label}
-                </div>
-                {props.children}
+                    {props.children}
+                </label>
             </div>
 
             {!!props.error && (

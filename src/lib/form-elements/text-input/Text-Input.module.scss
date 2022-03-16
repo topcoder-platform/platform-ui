@@ -13,9 +13,17 @@
         border: none;
         outline: none;
         color: $black-100;
+
+        &::placeholder {
+            color: $black-60;
+        }
     }
   
     &:disabled {
         background-color: $black-10;
+    }
+
+    &::placeholder {
+        opacity: 1;
     }
 }
