@@ -45,8 +45,12 @@ const Profile: FC<{}> = () => {
 
     // TODO: validation
 
+    function getFormInput(formValues: HTMLFormControlsCollection, fieldName: string): HTMLInputElement {
+        return formValues.namedItem(fieldName) as HTMLInputElement
+    }
+
     function getFormValue(formValues: HTMLFormControlsCollection, fieldName: string): string {
-        return (formValues.namedItem(fieldName) as HTMLInputElement)?.value
+        return getFormInput(formValues, fieldName).value
     }
 
     function onClick(event: MouseEvent<HTMLButtonElement>): void {
@@ -76,9 +80,13 @@ const Profile: FC<{}> = () => {
 
         // TODO: check profile is dirty
         updateProfile(updatedContext)
-            // if the pw is updated, set it
             .then(() => !!password ? updatePassword(updatedProfile.userId, currentPassword, password) : Promise.resolve())
-            .then(() => setDisableButton(false))
+            .then(() => {
+                getFormInput(formValues, FieldNames.currentPassword).value = ''
+                getFormInput(formValues, FieldNames.newPassword).value = ''
+                getFormInput(formValues, FieldNames.confirmPassword).value = ''
+                setDisableButton(false)
+            })
     }
 
     let tabIndex: number = 1
