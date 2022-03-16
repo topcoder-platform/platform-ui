@@ -1,37 +1,34 @@
 import classNames from 'classnames'
 import { Dispatch, FC, ReactNode, SetStateAction, useState } from 'react'
 
-import { IconSolid } from '../..'
+import { IconSolid } from '../../svgs'
 
-import styles from './Form-Field.module.scss'
+import styles from './Form-Field-Wrapper.module.scss'
 
-interface FormFieldProps {
+interface FormFieldWrapperProps {
     children: ReactNode
-    className?: string
-    disabled?: boolean
+    disabled: boolean
+    error?: string
     label: string
-    props?: { [attr: string]: string }
-    tabIndex: number
 }
 
-const FormField: FC<FormFieldProps> = (props: FormFieldProps) => {
+const FormFieldWrapper: FC<FormFieldWrapperProps> = (props: FormFieldWrapperProps) => {
 
     const [focusStyle, setFocusStyle]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
     const formFieldClasses: string = classNames(
         styles['form-field'],
         props.disabled ? styles.disabled : undefined,
         focusStyle,
-        props.props?.error ? styles['form-field-error'] : undefined
+        !!props.error ? styles['form-field-error'] : undefined
     )
 
     return (
-        <div className={styles['form-field-container']}>
+        <div className={styles['form-field-wrapper']}>
 
             <div
                 className={formFieldClasses}
                 onBlur={() => setFocusStyle(undefined)}
                 onFocus={() => setFocusStyle(styles.focus)}
-                {...props}
             >
                 <div
                     className={styles.label}
@@ -42,14 +39,14 @@ const FormField: FC<FormFieldProps> = (props: FormFieldProps) => {
                 {props.children}
             </div>
 
-            {!!props.props?.error && (
+            {!!props.error && (
                 <div className={styles.error}>
                     <IconSolid.ExclamationIcon />
-                    {props.props.error}
+                    {props.error}
                 </div>
             )}
         </div>
     )
 }
 
-export default FormField
+export default FormFieldWrapper
