@@ -44,7 +44,7 @@ export function requiredIfOther(value: string | undefined, formElements?: HTMLFo
         return undefined
     }
 
-    // get the label of the dependant field
+    // get the label of the dependent field
     const otherFieldLabel: string = otherField.labels?.[0].firstChild?.nodeValue || otherFieldName
 
     return `required when ${otherFieldLabel} is not blank`
