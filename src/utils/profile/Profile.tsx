@@ -1,91 +1,143 @@
-import { FC, useContext } from 'react'
+import { Dispatch, FC, FormEvent, SetStateAction, useContext, useState } from 'react'
+import { NavigateFunction, useNavigate } from 'react-router-dom'
 
 import {
+    Button,
     ContentLayout,
-    FormField,
+    FormDefinition,
+    getFormInput,
+    getFormValue,
+    loginUrl,
     ProfileContext,
     ProfileContextData,
+    routeRoot,
     TextInput,
+    TextInputModel,
+    UserProfileDetail,
+    validateAndUpdateForm,
 } from '../../lib'
 
+import { FieldNames, profileFormDef } from './profile-form.config'
 import styles from './Profile.module.scss'
 
 export const utilTitle: string = 'Profile'
 
 const Profile: FC<{}> = () => {
 
-    const { profile }: ProfileContextData = useContext(ProfileContext)
+    const profileContext: ProfileContextData = useContext(ProfileContext)
+    const { profile, updateProfile, updatePassword }: ProfileContextData = profileContext
 
-    // if we don't have a profile, we have a problem
-    // TODO: figure out how to lock down the profile
-    // so that it requires authentication
+    const [disableButton, setDisableButton]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(true)
+
+    const [profileForm, setProfileForm]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
+        = useState<FormDefinition>(profileFormDef)
+
+    const navigate: NavigateFunction = useNavigate()
+
+    // if we don't have a profile, navigate to the login page
     if (!profile) {
+        navigate(loginUrl(routeRoot))
         return <></>
     }
 
-    // TODO: validation
+    // need to define this here so the compiler
+    // knows that the profile will never be undefined
+    const updatedProfile: UserProfileDetail = {
+        ...profile,
+    }
+
+    function onChange(event: FormEvent<HTMLFormElement>): void {
+        const isValid: boolean = validateAndUpdateForm(event, profileForm, setProfileForm)
+        setDisableButton(!isValid)
+    }
+
+    function onSubmit(event: FormEvent<HTMLFormElement>): void {
+
+        event.preventDefault()
+
+        setDisableButton(true)
+
+        // all the profile fields on this form
+        const profileFields: Array<string> = [FieldNames.email, FieldNames.firstName, FieldNames.lastName]
+
+        const formValues: HTMLFormControlsCollection = (event.target as HTMLFormElement).elements
+
+        Object.keys(updatedProfile)
+            .filter(key => profileFields.includes(key))
+            .forEach(key => (updatedProfile as any)[key] = getFormValue(formValues, key))
+
+        const updatedContext: ProfileContextData = {
+            ...profileContext,
+            profile: updatedProfile,
+        }
+
+        const currentPassword: string = getFormValue(formValues, FieldNames.currentPassword)
+        const password: string = getFormValue(formValues, FieldNames.newPassword)
+
+        // TODO: check profile is dirty
+        updateProfile(updatedContext)
+            .then(() => !!password ? updatePassword(updatedProfile.userId, currentPassword, password) : Promise.resolve())
+            .then(() => {
+                getFormInput(formValues, FieldNames.currentPassword).value = ''
+                getFormInput(formValues, FieldNames.newPassword).value = ''
+                getFormInput(formValues, FieldNames.confirmPassword).value = ''
+                setDisableButton(false)
+            })
+    }
+
+    function renderFormField(fieldName: string, currentTabIndex: number): JSX.Element {
+
+        const formField: TextInputModel = (profileForm as any)[fieldName]
+
+        return (
+            <TextInput
+                {...formField}
+                tabIndex={currentTabIndex}
+                type={formField.type || 'text'}
+                value={(profile as any)[formField.name]}
+            />
+        )
+    }
 
     let tabIndex: number = 1
 
     return (
         <ContentLayout title={utilTitle}>
 
-            <h3>Basic Information</h3>
+            <form
+                action={''}
+                onChange={onChange}
+                onSubmit={onSubmit}
+            >
 
-            <div className={styles.profile}>
+                <h3>Basic Information</h3>
 
-                <FormField disabled label='Username' tabIndex={-1}>
-                    <TextInput name='username' props={{
-                        defaultValue: profile.handle,
-                        disabled: true,
-                    }} />
-                </FormField>
+                <div className={styles.profile}>
+                    {renderFormField(FieldNames.handle, -1)}
+                    {renderFormField(FieldNames.email, tabIndex++)}
+                    {renderFormField(FieldNames.firstName, tabIndex++)}
+                    {renderFormField(FieldNames.lastName, tabIndex++)}
+                </div>
 
-                <FormField label='Email' tabIndex={tabIndex++}>
-                    <TextInput name='email' props={{
-                        defaultValue: profile.email,
-                    }} />
-                </FormField>
+                <h3>Reset Password</h3>
 
-                <FormField label='First Name' tabIndex={tabIndex++}>
-                    <TextInput name='firstName' props={{
-                        defaultValue: profile.firstName,
-                    }} />
-                </FormField>
+                <div className={styles.profile}>
+                    {renderFormField(FieldNames.currentPassword, tabIndex++)}
+                    {renderFormField(FieldNames.newPassword, tabIndex++)}
+                    {renderFormField(FieldNames.confirmPassword, tabIndex++)}
+                </div>
 
-                <FormField label='Last Name' tabIndex={tabIndex++}>
-                    <TextInput name='lastName' props={{
-                        defaultValue: profile.lastName,
-                    }} />
-                </FormField>
+                <div>
+                    <Button
+                        disable={disableButton}
+                        label='Save'
+                        size='xl'
+                        buttonStyle='secondary'
+                        type='submit' />
+                </div>
 
-            </div>
-
-            <h3>Reset Password</h3>
-
-            <div className={styles.profile}>
-
-                <FormField label='Current Password' tabIndex={tabIndex++}>
-                    <TextInput name='currentPassword' props={{
-                        autoComplete: 'off',
-                        placeholder: 'type your current password',
-                    }} />
-                </FormField>
-
-                <FormField label='Password' tabIndex={tabIndex++}>
-                    <TextInput name='password' props={{
-                        autoComplete: 'off',
-                        placeholder: 'type your new password',
-                    }} />
-                </FormField>
-
-                <FormField label='Confirm Password' tabIndex={tabIndex++}>
-                    <TextInput name='confirmPassword' props={{
-                        autoComplete: 'off',
-                        placeholder: 're-type your new password',
-                    }} />
-                </FormField>
-            </div>
+            </form>
 
         </ContentLayout >
     )

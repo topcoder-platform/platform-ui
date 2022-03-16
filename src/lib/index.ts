@@ -1,13 +1,18 @@
 export * from './avatar'
+export * from './button'
 export * from './content-layout'
 export * from './form-elements'
 export * from './global-config.model'
 export * from './profile-provider'
 export {
-    AnalyticsService,
-    AuthenticationUrlConfig,
-    LoggingService,
-} from './services'
+    initializeAnalytics,
+    initializeLogger,
+    logError,
+    logInfo,
+    loginUrl,
+    logoutUrl,
+    signupUrl,
+} from './functions'
 export * from './svgs'
 
 /*

@@ -1,5 +1,6 @@
 export interface GlobalConfig {
     API: {
+        V3: string
         V5: string
     }
     ENV: string
