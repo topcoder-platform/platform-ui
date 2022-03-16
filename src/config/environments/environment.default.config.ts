@@ -4,6 +4,7 @@ import { AppHostEnvironment } from './app-host-environment.enum'
 
 export const EnvironmentConfigDefault: GlobalConfig = {
     API: {
+        V3: 'https://api.topcoder-dev.com/v3',
         V5: 'https://api.topcoder-dev.com/v5',
     },
     ENV: AppHostEnvironment.default,

@@ -6,6 +6,7 @@ import { EnvironmentConfigDefault } from './environment.default.config'
 export const EnvironmentConfigProd: GlobalConfig = {
     ...EnvironmentConfigDefault,
     API: {
+        V3: 'https://api.topcoder.com/v3',
         V5: 'https://api.topcoder.com/v5',
     },
     ENV: AppHostEnvironment.prod,
