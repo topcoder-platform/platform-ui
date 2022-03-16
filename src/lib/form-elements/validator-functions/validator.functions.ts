@@ -40,7 +40,6 @@ export function requiredIfOther(value: string | undefined, formElements?: HTMLFo
     }
 
     // if the other field doesn't have a value, then we're good
-
     if (!otherField.value) {
         return undefined
     }

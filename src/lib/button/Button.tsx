@@ -33,6 +33,8 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
         )
     }
 
+    // if there is no click handler, the button is prob a submit
+    // button, so just add a blank click handler
     const clickHandler: (event: any) => void = props.onClick || (() => undefined)
 
     return (

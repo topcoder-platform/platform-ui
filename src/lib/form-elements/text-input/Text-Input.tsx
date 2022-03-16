@@ -5,7 +5,6 @@ import { FormFieldWrapper } from '../form-field-wrapper'
 import styles from './Text-Input.module.scss'
 
 interface TextInputProps {
-    dirty?: boolean
     disabled?: boolean
     error?: string
     label?: string

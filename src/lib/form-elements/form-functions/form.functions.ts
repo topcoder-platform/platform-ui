@@ -29,7 +29,6 @@ function validateAndUpdateInput(
     const inputDef: TextInputModel = form[input.name]
     const formElements: HTMLFormControlsCollection = (input.form as HTMLFormElement).elements
 
-    inputDef.dirty = true
     inputDef.error = undefined
     inputDef.validators
         .forEach(validator => {
