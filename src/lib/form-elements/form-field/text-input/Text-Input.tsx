@@ -6,8 +6,11 @@ import styles from './Text-Input.module.scss'
 interface TextInputProps {
     defaultValue?: string
     name: string
-    props: { [attr: string]: string | boolean }
+    props: {
+        [attr: string]: string | boolean,
+     }
     styleName?: string
+    type?: 'text' | 'password'
 }
 
 const TextInput: FC<TextInputProps> = (props: TextInputProps) => {
@@ -15,7 +18,7 @@ const TextInput: FC<TextInputProps> = (props: TextInputProps) => {
         <input
             className={classNames(styles['form-input-text'], props.styleName || '')}
             name={props.name}
-            type='text'
+            type={props.type || 'text'}
             {...props.props}
         />
     )

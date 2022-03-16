@@ -58,6 +58,7 @@ $border-xs: 1px;
             @extend .ultra-small;
             @include font-weight-medium;
             line-height: calc($pad-md - $border);
+            font-style: normal;
         }
     }
 

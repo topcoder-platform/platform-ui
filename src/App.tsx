@@ -3,11 +3,11 @@ import { Route, Routes } from 'react-router-dom'
 
 import { EnvironmentConfig } from './config'
 import { Header } from './header'
-import { AnalyticsService, LoggingService, ProfileProvider } from './lib'
+import { initializeAnalytics, initializeLogger, ProfileProvider  } from './lib'
 import { RouteContext, RouteContextData } from './lib/route-provider'
 
-new AnalyticsService().initialize(EnvironmentConfig)
-new LoggingService().initialize(EnvironmentConfig)
+initializeAnalytics(EnvironmentConfig)
+initializeLogger(EnvironmentConfig)
 
 const App: FC<{}> = () => {
 
