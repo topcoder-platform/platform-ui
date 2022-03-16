@@ -31,12 +31,12 @@ const Profile: FC<{}> = () => {
 
     enum FieldNames {
         confirmPassword = 'confirmPassword',
-        currentPassword = 'currentPassword',
+        currentPassword = 'password',
         email = 'email',
         firstName = 'firstName',
         handle = 'handle',
         lastName = 'lastName',
-        password = 'password',
+        newPassword = 'newPassword',
     }
 
     const updatedProfile: UserProfileDetail = {
@@ -72,7 +72,7 @@ const Profile: FC<{}> = () => {
         }
 
         const currentPassword: string = getFormValue(formValues, FieldNames.currentPassword)
-        const password: string = getFormValue(formValues, FieldNames.password)
+        const password: string = getFormValue(formValues, FieldNames.newPassword)
 
         // TODO: check profile is dirty
         updateProfile(updatedContext)
@@ -136,7 +136,7 @@ const Profile: FC<{}> = () => {
 
                     <FormField label='Password' tabIndex={tabIndex++}>
                         <TextInput
-                            name={FieldNames.password}
+                            name={FieldNames.newPassword}
                             props={{
                                 autoComplete: 'off',
                                 placeholder: 'type your new password',
