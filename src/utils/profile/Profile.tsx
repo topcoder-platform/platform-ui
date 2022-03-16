@@ -124,24 +124,36 @@ const Profile: FC<{}> = () => {
                 <div className={styles.profile}>
 
                     <FormField label='Current Password' tabIndex={tabIndex++}>
-                        <TextInput name={FieldNames.currentPassword} props={{
-                            autoComplete: 'off',
-                            placeholder: 'type your current password',
-                        }} />
+                        <TextInput
+                            name={FieldNames.currentPassword}
+                            props={{
+                                autoComplete: 'off',
+                                placeholder: 'type your current password',
+                            }}
+                            type='password'
+                        />
                     </FormField>
 
                     <FormField label='Password' tabIndex={tabIndex++}>
-                        <TextInput name={FieldNames.password} props={{
-                            autoComplete: 'off',
-                            placeholder: 'type your new password',
-                        }} />
+                        <TextInput
+                            name={FieldNames.password}
+                            props={{
+                                autoComplete: 'off',
+                                placeholder: 'type your new password',
+                            }}
+                            type='password'
+                        />
                     </FormField>
 
                     <FormField label='Confirm Password' tabIndex={tabIndex++}>
-                        <TextInput name={FieldNames.confirmPassword} props={{
-                            autoComplete: 'off',
-                            placeholder: 're-type your new password',
-                        }} />
+                        <TextInput
+                            name={FieldNames.confirmPassword}
+                            props={{
+                                autoComplete: 'off',
+                                placeholder: 're-type your new password',
+                            }}
+                            type='password'
+                        />
                     </FormField>
                 </div>
 
