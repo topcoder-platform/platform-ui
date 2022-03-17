@@ -18,7 +18,8 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
         'button',
         props.className,
         props.buttonStyle || 'primary',
-        `button-${props.size || 'md'}`
+        `button-${props.size || 'md'}`,
+        !!props.disable ? 'disabled' : undefined
     )
 
     // if there is a url, this is a link button
@@ -40,7 +41,6 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
     return (
         <button
             className={classes}
-            disabled={!!props.disable}
             onClick={event => clickHandler(event)}
             type={props.type || 'button'}
         >

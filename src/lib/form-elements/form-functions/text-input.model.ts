@@ -1,5 +1,6 @@
 export interface TextInputModel {
     dependentFields?: Array<string>
+    dirty?: boolean
     disabled?: boolean
     error?: string
     label?: string

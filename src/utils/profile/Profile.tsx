@@ -57,6 +57,16 @@ const Profile: FC<{}> = () => {
 
         event.preventDefault()
 
+        // if there are no dirty fields, display a message and stop submitting
+        const dirty: TextInputModel | undefined = Object.keys(profileForm)
+            .map(key => profileForm[key])
+            .find(fieldDef => !!fieldDef.dirty)
+
+        if (!dirty) {
+            // TODO: show toastr
+            return
+        }
+
         setDisableButton(true)
 
         // all the profile fields on this form
@@ -83,7 +93,6 @@ const Profile: FC<{}> = () => {
                 getFormInput(formValues, FieldNames.currentPassword).value = ''
                 getFormInput(formValues, FieldNames.newPassword).value = ''
                 getFormInput(formValues, FieldNames.confirmPassword).value = ''
-                setDisableButton(false)
             })
     }
 
