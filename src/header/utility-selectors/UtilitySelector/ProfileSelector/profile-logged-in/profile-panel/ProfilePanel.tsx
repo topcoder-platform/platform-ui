@@ -2,7 +2,7 @@ import { FC, useContext } from 'react'
 import { Link } from 'react-router-dom'
 
 import {
-    logoutUrl,
+    authUrlLogout,
     ProfileContext,
     ProfileContextData,
     profileRoute,
@@ -35,7 +35,7 @@ const ProfilePanel: FC<ProfilePanelProps> = (props: ProfilePanelProps) => {
             >
                 My Profile
             </Link>
-            <a href={logoutUrl} className={styles.logout}>
+            <a href={authUrlLogout} className={styles.logout}>
                 Log Out
             </a>
         </div>

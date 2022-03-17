@@ -20,16 +20,17 @@ export function validateAndUpdate(
     return validateAndUpdateInput(input, form, callback)
 }
 
-function validateAndUpdateInput(
+export function validateAndUpdateInput(
     input: HTMLInputElement,
     form: FormDefinition,
     callback: Dispatch<SetStateAction<FormDefinition>>,
+    notDirty?: boolean,
 ): boolean {
 
     const inputDef: TextInputModel = form[input.name]
     const formElements: HTMLFormControlsCollection = (input.form as HTMLFormElement).elements
 
-    inputDef.dirty = true
+    inputDef.dirty = !notDirty
     inputDef.error = undefined
     inputDef.validators
         .forEach(validator => {
@@ -37,6 +38,7 @@ function validateAndUpdateInput(
                 inputDef.error = validator(input.value, formElements, inputDef.requiredIfField)
             }
         })
+    inputDef.value = input.value
 
     // validate the input's dependent fields as well
     // NOTE: must be VERY careful that this doesn't
