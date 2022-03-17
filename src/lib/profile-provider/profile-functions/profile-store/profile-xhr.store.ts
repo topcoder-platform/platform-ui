@@ -1,4 +1,4 @@
-import { get as xhrGet, put as xhrPut } from '../../../functions'
+import { xhrGet, xhrPut } from '../../../functions'
 import { UserProfileDetail } from '../../user-profile-detail.model'
 import { UserProfile } from '../../user-profile.model'
 

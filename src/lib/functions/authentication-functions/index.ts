@@ -3,4 +3,4 @@ export {
     logout as authUrlLogout,
     signup as authUrlSignup,
 } from './authentication-url.config'
-export * from './authentication.functions'
+export { initialize as authInitialize } from './authentication.functions'

@@ -1,4 +1,4 @@
-import { emailValidator, FormDefinition, requiredIfOtherValidator, requiredValidator } from '../../lib'
+import { validatorEmail, FormDefinition, validatorRequiredIfOther, validatorRequired } from '../../lib'
 
 export enum FieldNames {
     confirmPassword = 'confirmPassword',
@@ -18,7 +18,7 @@ export const profileFormDef: FormDefinition = {
         requiredIfField: FieldNames.newPassword,
         type: 'password',
         validators: [
-            requiredIfOtherValidator,
+            validatorRequiredIfOther,
         ],
     },
     email: {
@@ -26,8 +26,8 @@ export const profileFormDef: FormDefinition = {
         name: FieldNames.email,
         type: 'text',
         validators: [
-            requiredValidator,
-            emailValidator,
+            validatorRequired,
+            validatorEmail,
         ],
     },
     firstName: {
@@ -35,7 +35,7 @@ export const profileFormDef: FormDefinition = {
         name: FieldNames.firstName,
         type: 'text',
         validators: [
-            requiredValidator,
+            validatorRequired,
         ],
     },
     handle: {
@@ -50,7 +50,7 @@ export const profileFormDef: FormDefinition = {
         name: FieldNames.lastName,
         type: 'text',
         validators: [
-            requiredValidator,
+            validatorRequired,
         ],
     },
     newPassword: {
@@ -72,7 +72,7 @@ export const profileFormDef: FormDefinition = {
         requiredIfField: FieldNames.newPassword,
         type: 'password',
         validators: [
-            requiredIfOtherValidator,
+            validatorRequiredIfOther,
         ],
     },
 }

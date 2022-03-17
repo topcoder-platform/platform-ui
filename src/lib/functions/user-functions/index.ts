@@ -1,1 +1,1 @@
-export * from './user.functions'
+export { updatePassword as userUpdatePassword } from './user.functions'

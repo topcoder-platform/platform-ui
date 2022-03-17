@@ -1,9 +1,9 @@
 import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react'
 
-import { updatePassword as updateUserPassword } from '../functions'
+import { userUpdatePassword } from '../functions'
 
 import { ProfileContextData } from './profile-context-data.model'
-import { get as profileGet, update as profileUpdate } from './profile-functions'
+import { profileGet, profileUpdate } from './profile-functions'
 import { default as ProfileContext, defaultProfileContextData } from './profile.context'
 import { UserProfileDetail } from './user-profile-detail.model'
 import { UserProfile } from './user-profile.model'
@@ -14,7 +14,7 @@ export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { chi
         = useState<ProfileContextData>(defaultProfileContextData)
 
     function updatePassword(userId: number, currentPassword: string, password: string): Promise<void> {
-        return updateUserPassword(userId, currentPassword, password)
+        return userUpdatePassword(userId, currentPassword, password)
     }
 
     function updateProfile(updatedContext: ProfileContextData): Promise<void> {

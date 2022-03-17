@@ -1,2 +1,2 @@
 export * from './token.model'
-export * from './token.functions'
+export { get as tokenGet } from './token.functions'
