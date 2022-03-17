@@ -34,7 +34,10 @@
         "extends": [
             "react-app",
             "react-app/jest"
-        ]
+        ],
+        "rules": {
+            "no-useless-escape": 0
+        }
     },
     "browserslist": {
         "production": [

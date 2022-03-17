@@ -33,14 +33,9 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
         )
     }
 
-    // if there is no url and no click handler, we hava a prob
-    if (!props.onClick) {
-        throw new Error(`button has neither a url or a click handler`)
-    }
-
-    // create a safe click handler that isn't null so the compiler
-    // doesn't complain
-    const clickHandler: (event: any) => void = props.onClick
+    // if there is no click handler, the button is prob a submit
+    // button, so just add a blank click handler
+    const clickHandler: (event: any) => void = props.onClick || (() => undefined)
 
     return (
         <button
