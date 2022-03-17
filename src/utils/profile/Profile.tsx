@@ -19,7 +19,7 @@ import {
 } from '../../lib'
 import '../../lib/styles/index.scss'
 
-import { FieldNames as FieldName, profileFormDef } from './profile-form.config'
+import { FieldName, profileFormDef } from './profile-form.config'
 import styles from './Profile.module.scss'
 
 export const utilTitle: string = 'Profile'
