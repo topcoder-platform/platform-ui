@@ -58,13 +58,14 @@ export const profileFormDef: FormDefinition = {
             FieldNames.confirmPassword,
             FieldNames.currentPassword,
         ],
+        hint: 'At least 8 characters in length with lowercase, uppercase, and number(s)',
         label: 'New Password',
         name: FieldNames.newPassword,
         placeholder: 'type your new password',
         type: 'password',
         validators: [],
     },
-    password: {
+    [FieldNames.currentPassword]: {
         label: 'Current Password',
         name: FieldNames.currentPassword,
         placeholder: 'type your current password',

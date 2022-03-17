@@ -63,6 +63,22 @@ $error-line-height: 14px;
             @include font-weight-medium;
             line-height: calc($pad-md - $border);
             font-style: normal;
+            white-space: nowrap;
+
+            .label-and-hint {
+                display: flex;
+                justify-content: flex-start;
+                align-items: center;
+
+                .hint {
+                    color: $black-60;
+                    padding-left: $border;
+                    @include font-weight-less-bold;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+            }
         }
     }
 

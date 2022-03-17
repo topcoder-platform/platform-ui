@@ -3,6 +3,7 @@ export interface TextInputModel {
     dirty?: boolean
     disabled?: boolean
     error?: string
+    hint?: string
     label?: string
     name: string
     placeholder?: string

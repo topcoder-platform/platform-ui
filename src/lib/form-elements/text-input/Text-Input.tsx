@@ -7,6 +7,7 @@ import styles from './Text-Input.module.scss'
 interface TextInputProps {
     disabled?: boolean
     error?: string
+    hint?: string
     label?: string
     name: string
     placeholder?: string
@@ -20,8 +21,9 @@ const TextInput: FC<TextInputProps> = (props: TextInputProps) => {
     return (
         <FormFieldWrapper
             disabled={!!props.disabled}
-            label={props.label || props.name}
             error={props.error}
+            hint={ props.hint}
+            label={props.label || props.name}
             name={props.name}
         >
             <input
