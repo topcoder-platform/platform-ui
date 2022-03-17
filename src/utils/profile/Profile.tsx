@@ -16,6 +16,7 @@ import {
     UserProfileDetail,
     validateAndUpdateForm,
 } from '../../lib'
+import '../../lib/styles/index.scss'
 
 import { FieldNames, profileFormDef } from './profile-form.config'
 import styles from './Profile.module.scss'
@@ -110,25 +111,30 @@ const Profile: FC<{}> = () => {
                 onChange={onChange}
                 onSubmit={onSubmit}
             >
+                <hr />
 
-                <h3>Basic Information</h3>
+                <h6>Basic Information</h6>
 
-                <div className={styles.profile}>
-                    {renderFormField(FieldNames.handle, -1)}
-                    {renderFormField(FieldNames.email, tabIndex++)}
+                <div className={styles['profile-form-fields']}>
                     {renderFormField(FieldNames.firstName, tabIndex++)}
                     {renderFormField(FieldNames.lastName, tabIndex++)}
+                    {renderFormField(FieldNames.email, tabIndex++)}
+                    {renderFormField(FieldNames.handle, -1)}
                 </div>
 
-                <h3>Reset Password</h3>
+                <hr />
 
-                <div className={styles.profile}>
+                <h6>Reset Password</h6>
+
+                <div className={styles['profile-form-fields']}>
                     {renderFormField(FieldNames.currentPassword, tabIndex++)}
                     {renderFormField(FieldNames.newPassword, tabIndex++)}
                     {renderFormField(FieldNames.confirmPassword, tabIndex++)}
                 </div>
 
-                <div>
+                <hr />
+
+                <div className='form-button-container'>
                     <Button
                         disable={disableButton}
                         label='Save'

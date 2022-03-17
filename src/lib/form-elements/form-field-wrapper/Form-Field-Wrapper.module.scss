@@ -57,6 +57,7 @@ $error-line-height: 14px;
             top: calc(50% - $form-pad-top/2);
             color: $turq-160;
             margin-bottom: $pad-xs;
+            width: 100%;
             // extend ultra-small and override some properties
             @extend .ultra-small;
             @include font-weight-medium;
