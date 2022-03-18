@@ -1,5 +1,5 @@
 //import { xhrGet } from 'src/lib/functions'
-import { xhrGet, xhrPut } from '../../../functions'
+import { xhrGet } from '../../../functions'
 import { getMyWorkUrl } from './mywork.config'
 import { WorkList } from '../mywork-model/WorkList.model'
 
