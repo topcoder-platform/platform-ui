@@ -20,7 +20,10 @@ const ToolSelectorWide: FC<ToolSelectorWideProps> = (props: ToolSelectorWideProp
 
     return (
         <div className={classNames(styles['tool-selector-wide'], styles[activeIndicaterClass])}>
-            <Link to={route} className='large-tab'>
+            <Link
+                tabIndex={-1}
+                to={route} className='large-tab'
+            >
                 {title}
             </Link>
             <div className={styles['active-indicator']}></div>

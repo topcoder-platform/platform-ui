@@ -33,7 +33,7 @@ const ProfilePanel: FC<ProfilePanelProps> = (props: ProfilePanelProps) => {
                 onClick={() => props.toggleProfilePanel()}
                 to={profileRoute}
             >
-                My Profile
+                Settings
             </Link>
             <a href={authUrlLogout} className={styles.logout}>
                 Log Out

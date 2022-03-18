@@ -4,10 +4,10 @@ import { UserProfile } from '../../user-profile.model'
 
 import { profile as profileUrl } from './profile-endpoint.config'
 
-export async function get(handle: string): Promise<UserProfileDetail> {
+export function get(handle: string): Promise<UserProfileDetail> {
     return xhrGet<UserProfileDetail>(profileUrl(handle))
 }
 
-export async function put(handle: string, profile: UserProfile): Promise<UserProfile> {
+export function put(handle: string, profile: UserProfile): Promise<UserProfile> {
     return xhrPut<UserProfile>(profileUrl(handle), profile)
 }

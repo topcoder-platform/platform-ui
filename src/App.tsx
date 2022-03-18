@@ -12,12 +12,9 @@ logInitialize(EnvironmentConfig)
 
 const App: FC<{}> = () => {
 
-    const { toolsRoutes, utilsRoutes }: RouteContextData = useContext(RouteContext)
+    const { allRoutes }: RouteContextData = useContext(RouteContext)
 
-    const routeElements: Array<ReactElement> = [
-        ...toolsRoutes,
-        ...utilsRoutes,
-    ]
+    const routeElements: Array<ReactElement> = allRoutes
         .map(route => {
             // if the route has children, add the wildcard to the path
             const path: string = `${route.route}${!route.children ? '' : '/*'}`

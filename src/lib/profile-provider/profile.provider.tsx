@@ -2,6 +2,7 @@ import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 're
 
 import { userUpdatePassword } from '../functions'
 
+import { PasswordUpdateRequest } from './password-update-request.model'
 import { ProfileContextData } from './profile-context-data.model'
 import { profileGet, profileUpdate } from './profile-functions'
 import { default as ProfileContext, defaultProfileContextData } from './profile.context'
@@ -13,13 +14,11 @@ export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { chi
     const [profileContext, setProfileContext]: [ProfileContextData, Dispatch<SetStateAction<ProfileContextData>>]
         = useState<ProfileContextData>(defaultProfileContextData)
 
-    function updatePassword(userId: number, currentPassword: string, password: string): Promise<void> {
-        return userUpdatePassword(userId, currentPassword, password)
+    function updatePassword(userId: number, request: PasswordUpdateRequest): Promise<void> {
+        return userUpdatePassword(userId, request.password, request.newPassword)
     }
 
-    function updateProfile(updatedContext: ProfileContextData): Promise<void> {
-
-        const { profile }: ProfileContextData = updatedContext
+    function updateProfile(handle: string, profile: UserProfile): Promise<UserProfile> {
 
         if (!profile) {
             throw new Error('Cannot update an undefined profile')
@@ -31,8 +30,18 @@ export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { chi
             lastName: profile.lastName,
         }
 
-        return profileUpdate(profile.handle, updatedProfile)
-            .then(() => setProfileContext(updatedContext))
+        return profileUpdate(handle, updatedProfile)
+            .then(prof => {
+                const updatedContext: ProfileContextData = {
+                    ...profileContext,
+                    profile: {
+                        ...(profileContext.profile as UserProfileDetail),
+                        ...profile,
+                    },
+                }
+                setProfileContext(updatedContext)
+                return prof
+            })
     }
 
     useEffect(() => {

@@ -17,12 +17,9 @@ export interface ContentLayoutProps {
 
 const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => {
 
-    const { toolsRoutes, utilsRoutes }: RouteContextData = useContext(RouteContext)
+    const { allRoutes }: RouteContextData = useContext(RouteContext)
 
-    const rootRoute: PlatformRoute | undefined = [
-        ...toolsRoutes,
-        ...utilsRoutes,
-    ]
+    const rootRoute: PlatformRoute | undefined = allRoutes
         .find(route => route.title === props.title && route.enabled)
 
     const sections: Array<SectionSelectorProps> = rootRoute?.children
@@ -36,9 +33,10 @@ const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => {
 
     return (
         <>
-            <div className={classNames(styles.content, props.classNames, hideSectionsClass)}>
+            <div className={classNames(styles.content, props.classNames/* , hideSectionsClass */)}>
 
-                <Sections sections={sections}></Sections>
+                {/* TODO: update section UX when comps exist */}
+                {/* <Sections sections={sections}></Sections> */}
 
                 <div className={styles['content-outer']}>
 

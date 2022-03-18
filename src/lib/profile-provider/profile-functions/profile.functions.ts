@@ -9,6 +9,6 @@ export async function get(handle?: string): Promise<UserProfileDetail | undefine
     return !handle ? Promise.resolve(undefined) : profileStoreGet(handle)
 }
 
-export async function update(handle: string, profile: UserProfile): Promise<UserProfile | undefined> {
+export function update(handle: string, profile: UserProfile): Promise<UserProfile> {
     return profileStorePut(handle, profile)
 }

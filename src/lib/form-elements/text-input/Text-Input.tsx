@@ -14,7 +14,7 @@ interface TextInputProps {
     preventAutocomplete?: boolean
     tabIndex: number
     type: 'password' | 'text'
-    value?: string
+    value?: string | number
 }
 
 const TextInput: FC<TextInputProps> = (props: TextInputProps) => {
@@ -33,6 +33,7 @@ const TextInput: FC<TextInputProps> = (props: TextInputProps) => {
                 disabled={!!props.disabled}
                 name={props.name}
                 placeholder={props.placeholder}
+                tabIndex={props.tabIndex}
                 type={props.type || 'text'}
             />
         </FormFieldWrapper>

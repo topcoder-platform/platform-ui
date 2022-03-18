@@ -1,5 +1,8 @@
 import classNames from 'classnames'
 import { FC } from 'react'
+import { Link } from 'react-router-dom'
+
+import styles from './Button.module.scss'
 
 interface ButtonProps {
     readonly buttonStyle?: 'primary' | 'secondary' | 'tertiary' | 'text'
@@ -7,7 +10,9 @@ interface ButtonProps {
     readonly disable?: boolean
     readonly label: string
     readonly onClick?: (event?: any) => void
+    readonly route?: string
     readonly size?: 'sm' | 'md' | 'lg' | 'xl'
+    readonly tabIndex: number
     readonly type?: 'button' | 'submit'
     readonly url?: string
 }
@@ -15,11 +20,11 @@ interface ButtonProps {
 const Button: FC<ButtonProps> = (props: ButtonProps) => {
 
     const classes: string = classNames(
-        'button',
+        styles.button,
         props.className,
-        props.buttonStyle || 'primary',
-        `button-${props.size || 'md'}`,
-        !!props.disable ? 'disabled' : undefined
+        !!props.buttonStyle ? styles[props.buttonStyle] : styles.primary,
+        styles[`button-${props.size || 'md'}`],
+        !!props.disable ? styles.disabled : undefined
     )
 
     // if there is a url, this is a link button
@@ -28,20 +33,30 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
             <a
                 className={classes}
                 href={props.url}
+                tabIndex={props.tabIndex}
             >
                 {props.label}
             </a>
         )
     }
 
-    // if there is no click handler, the button is prob a submit
-    // button, so just add a blank click handler
-    const clickHandler: (event: any) => void = props.onClick || (() => undefined)
+    if (!!props.route) {
+        return (
+            <Link
+                className={classes}
+                tabIndex={props.tabIndex}
+                to={props.route}
+            >
+                {props.label}
+            </Link>
+        )
+    }
 
     return (
         <button
             className={classes}
-            onClick={event => clickHandler(event)}
+            onClick={() => (props.onClick || undefined)}
+            tabIndex={props.tabIndex}
             type={props.type || 'button'}
         >
             {props.label}
