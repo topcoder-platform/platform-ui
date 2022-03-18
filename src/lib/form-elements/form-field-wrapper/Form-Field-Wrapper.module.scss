@@ -1,0 +1,100 @@
+@import '../../styles';
+
+$form-pad-top: calc($pad-md - $border);
+$border-xs: 1px;
+$error-line-height: 14px;
+
+.form-field-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-bottom: $pad-md;
+
+    .form-field {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: $pad-sm $form-pad-top;
+        height: calc($pad-xxl * 2);
+        background: $tc-white;
+        border: $border-xs solid $black-40;
+        box-sizing: border-box;
+        border-radius: $pad-xs;
+        margin-bottom: calc($error-line-height + $pad-xs);
+
+        &:hover,
+        &.focus {
+            border-color: $turq-160;
+
+            &.form-field-error {
+                border-color: $red-100;
+            }
+        }
+
+        &.focus,
+        &.form-field-error {
+            border-width: $border;
+            padding: calc($pad-sm - $border-xs) calc($form-pad-top - $border-xs);
+        }
+
+        &.disabled {
+            background-color: $black-10;
+            background: $black-10;
+            border-color: $black-40;
+        }
+
+        &.form-field-error {
+            border-color: $red-100;
+            margin-bottom: 0;
+
+            .label {
+                color: $red-100;
+            }
+        }
+
+        .label {
+            top: calc(50% - $form-pad-top/2);
+            color: $turq-160;
+            margin-bottom: $pad-xs;
+            width: 100%;
+            // extend ultra-small and override some properties
+            @extend .ultra-small;
+            @include font-weight-medium;
+            line-height: calc($pad-md - $border);
+            font-style: normal;
+            white-space: nowrap;
+
+            .label-and-hint {
+                display: flex;
+                justify-content: flex-start;
+                align-items: center;
+
+                .hint {
+                    color: $black-60;
+                    padding-left: $border;
+                    @include font-weight-less-bold;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+            }
+        }
+    }
+
+    .error {
+        display: flex;
+        align-items: center;
+        color: $red-100;
+        // extend body ultra small and override it
+        @extend .body-ultra-small;
+        line-height: $error-line-height;
+        margin-top: $pad-xs;
+
+        svg {
+            @include icon-md;
+            fill: $red-100;
+            margin-right: $pad-xs;
+        }
+    }
+}

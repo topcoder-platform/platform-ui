@@ -7,38 +7,103 @@ a {
     text-decoration: none;
 }
 
-// TODO: are our buttons actually chips?
-a.button {
+.button {
     color: $tc-white;
     text-transform: uppercase;
-    font-size: 12px;
-    line-height: 12px;
-    padding: 10px 15px;
     border-radius: 25px;
+    border: solid $border;
     white-space: nowrap;
-    @include font-bolder;
+    cursor: pointer;
+    margin: $pad-md;
+    // extend body ultra small medium and override it
+    @extend .body-ultra-small-medium;
+    line-height: 24px;
+
+    &.button-sm {
+        padding: 0 $pad-lg;
+        font-size: 12px;
+    }
     
-    &.secondary,
-    &.all-white {
-        color: $turq-160;
-        border: solid 1px;
+    &.button-md {
+        padding: $pad-xs $pad-xl;
+        font-size: 13px;
+    }
+
+    &.button-lg {
+        padding: $pad-sm $pad-xxl;
+        font-size: 14px;
+    }
+    
+    &.button-xl {
+        padding: $pad-md $pad-xxl;
+        font-size: 16px;
+    }
+
+    &.primary {
+        color: $tc-white;
+        background-color: $turq-160;
+        border-color: $turq-160;
+
+        &:hover {
+            background-color: $turq-140;
+            border-color: $turq-140;
+        }
+
+        &:active {
+            background-color: $turq-180;
+            border-color: $turq-180;
+        }
+
+        &.disabled {
+            color: $black-60;
+            background-color: $black-5;
+            border-color: $black-5;
+        }
     }
 
     &.secondary {
-        border-color: $turq-160;
-    }
-
-    &.all-white {
+        color: $turq-160;
         background-color: $tc-white;
-        border-color: $tc-white;
-        @include font-bold;
+        border-color: $turq-160;
 
         &:hover {
+            border-color: $turq-140;
+        }
+
+        &:active {
+            border-color: $turq-180;
+        }
+
+        &.disabled {
+            color: $black-60;
+            background-color: $black-5;
+            border-color: $black-5;
+        }
+    }
+
+    &.tertiary {
+        color: $turq-160;
+        background-color: $tc-white;
+        border-color: $tc-white;
+
+        &:hover {
+            color: $turq-140;
             box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.2);
         }
 
         &:active {
+            color: $turq-180;
             box-shadow: inset 0px 1px 3px rgba(0, 0, 0, 0.5);
         }
+
+        &.disabled {
+            color: $black-60;
+            background-color: $tc-white;
+            border-color: $black-5;
+        }
+    }
+
+    &.text {
+        border-color: transparent;
     }
 }

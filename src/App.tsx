@@ -1,13 +1,14 @@
 import { FC, ReactElement, useContext } from 'react'
 import { Route, Routes } from 'react-router-dom'
+import { toast, ToastContainer } from 'react-toastify'
 
 import { EnvironmentConfig } from './config'
 import { Header } from './header'
-import { AnalyticsService, LoggingService, ProfileProvider } from './lib'
+import { analyticsInitialize, logInitialize, ProfileProvider } from './lib'
 import { RouteContext, RouteContextData } from './lib/route-provider'
 
-new AnalyticsService().initialize(EnvironmentConfig)
-new LoggingService().initialize(EnvironmentConfig)
+analyticsInitialize(EnvironmentConfig)
+logInitialize(EnvironmentConfig)
 
 const App: FC<{}> = () => {
 
@@ -29,6 +30,17 @@ const App: FC<{}> = () => {
             <Routes>
                 {routeElements}
             </Routes >
+            <ToastContainer
+                position={toast.POSITION.BOTTOM_CENTER}
+                autoClose={3000}
+                hideProgressBar
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+            />
         </ProfileProvider>
     )
 }

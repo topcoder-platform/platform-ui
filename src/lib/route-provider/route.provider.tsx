@@ -14,7 +14,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
 
     useEffect(() => {
         const getAndSetRoutes: () => Promise<void> = async () => {
-            // TODO: try to make these prop names configurable instead of hard-codded 
+            // TODO: try to make these prop names configurable instead of hard-codded
             const contextData: RouteContextData = {
                 toolsRoutes: props.toolsRoutes.filter(route => route.enabled),
                 utilsRoutes: props.utilsRoutes.filter(route => route.enabled),

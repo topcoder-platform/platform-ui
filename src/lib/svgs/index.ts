@@ -1,5 +1,4 @@
 // SEE https://heroicons.com/ for options
-// tslint:disable: no-submodule-imports
 import * as IconOutline from '@heroicons/react/outline'
 import * as IconSolid from '@heroicons/react/solid'
 
