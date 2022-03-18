@@ -14,7 +14,7 @@ export function getValue(formElements: HTMLFormControlsCollection, fieldName: st
     return getInput(formElements, fieldName).value
 }
 
-export function onSubmit<T, R>(
+export function submit<T, R>(
     event: FormEvent<HTMLFormElement>,
     formDef: FormDefinition,
     formName: string,

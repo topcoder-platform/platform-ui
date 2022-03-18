@@ -3,8 +3,8 @@ import { Dispatch, FC, FormEvent, SetStateAction, useContext, useState } from 'r
 import {
     Button,
     FormDefinition,
-    formOnSubmit,
     formRenderTextInput,
+    formSubmit,
     formValidateAndUpdate,
     PasswordUpdateRequest,
     ProfileContext,
@@ -55,7 +55,7 @@ const PasswordReset: FC<PasswordUpdateProps> = (props: PasswordUpdateProps) => {
             newPassword: passwordFormDetail.newPassword as string,
             password: passwordFormDetail.password as string,
         }
-        formOnSubmit<PasswordUpdateRequest, void>(event, passwordForm, passwordFormTitle, request, savePassword, setDisableButton, setPasswordUpdateRequest)
+        formSubmit<PasswordUpdateRequest, void>(event, passwordForm, passwordFormTitle, request, savePassword, setDisableButton, setPasswordUpdateRequest)
     }
 
     function savePassword(updatedPassword: PasswordUpdateRequest): Promise<void> {

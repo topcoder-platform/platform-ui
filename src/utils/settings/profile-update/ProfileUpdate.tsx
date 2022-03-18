@@ -3,8 +3,8 @@ import { Dispatch, FC, FormEvent, SetStateAction, useContext, useState } from 'r
 import {
     Button,
     FormDefinition,
-    formOnSubmit,
     formRenderTextInput,
+    formSubmit,
     formValidateAndUpdate,
     ProfileContext,
     ProfileContextData,
@@ -46,7 +46,7 @@ const ProfileUpdate: FC<ProfileUpdateProps> = (props: ProfileUpdateProps) => {
     }
 
     function onSubmit(event: FormEvent<HTMLFormElement>): void {
-        formOnSubmit<UserProfile, UserProfile | undefined>(event, profileForm, 'Profile', safeProfile, saveProfile, setDisableButton, setProfileForm)
+        formSubmit<UserProfile, UserProfile | undefined>(event, profileForm, 'Profile', safeProfile, saveProfile, setDisableButton, setProfileForm)
     }
 
     function saveProfile(updatedProfile: UserProfile): Promise<UserProfile> {
