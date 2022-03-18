@@ -16,6 +16,7 @@ export const passwordFormDef: FormDefinition = {
         type: 'password',
         validators: [
             validatorRequired,
+            // TODO: match validator
         ],
     },
     newPassword: {
@@ -27,6 +28,7 @@ export const passwordFormDef: FormDefinition = {
         type: 'password',
         validators: [
             validatorRequired,
+            // TODO: password validator
         ],
     },
     [PasswordFieldName.currentPassword]: {
