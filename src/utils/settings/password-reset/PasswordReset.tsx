@@ -9,7 +9,7 @@ import {
     PasswordUpdateRequest,
     ProfileContext,
     ProfileContextData,
-    UserProfileDetail,
+    UserProfile,
 } from '../../../lib'
 
 import { PasswordFieldName, passwordFormDef } from './password-reset-form.config'
@@ -40,8 +40,8 @@ const PasswordReset: FC<PasswordUpdateProps> = (props: PasswordUpdateProps) => {
         = useState<FormDefinition>(passwordFormDef)
 
     // create the copy of the profile
-    const safeProfile: UserProfileDetail = {
-        ...(profile as UserProfileDetail),
+    const safeProfile: UserProfile = {
+        ...(profile as UserProfile),
     }
     const passwordFormDetail: PasswordUpdateForm = {}
 

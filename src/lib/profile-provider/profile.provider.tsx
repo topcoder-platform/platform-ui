@@ -6,7 +6,7 @@ import { PasswordUpdateRequest } from './password-update-request.model'
 import { ProfileContextData } from './profile-context-data.model'
 import { profileGet, profileUpdate } from './profile-functions'
 import { default as ProfileContext, defaultProfileContextData } from './profile.context'
-import { UserProfileDetail } from './user-profile-detail.model'
+import { UserProfileUpdateRequest } from './user-profile-update-request.model'
 import { UserProfile } from './user-profile.model'
 
 export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { children: ReactNode }) => {
@@ -18,13 +18,13 @@ export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { chi
         return userUpdatePassword(userId, request.password, request.newPassword)
     }
 
-    function updateProfile(handle: string, profile: UserProfile): Promise<UserProfile> {
+    function updateProfile(handle: string, profile: UserProfileUpdateRequest): Promise<UserProfileUpdateRequest> {
 
         if (!profile) {
             throw new Error('Cannot update an undefined profile')
         }
 
-        const updatedProfile: UserProfile = {
+        const updatedProfile: UserProfileUpdateRequest = {
             email: profile.email,
             firstName: profile.firstName,
             lastName: profile.lastName,
@@ -35,7 +35,7 @@ export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { chi
                 const updatedContext: ProfileContextData = {
                     ...profileContext,
                     profile: {
-                        ...(profileContext.profile as UserProfileDetail),
+                        ...(profileContext.profile as UserProfile),
                         ...profile,
                     },
                 }
@@ -52,7 +52,7 @@ export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { chi
         }
 
         const getAndSetProfile: () => Promise<void> = async () => {
-            const profile: UserProfileDetail | undefined = await profileGet()
+            const profile: UserProfile | undefined = await profileGet()
             const contextData: ProfileContextData = {
                 initialized: true,
                 profile,

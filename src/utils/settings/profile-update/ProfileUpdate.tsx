@@ -9,7 +9,7 @@ import {
     ProfileContext,
     ProfileContextData,
     UserProfile,
-    UserProfileDetail,
+    UserProfileUpdateRequest,
 } from '../../../lib'
 import '../../../lib/styles/index.scss'
 import { passwordFormTitle } from '../password-reset'
@@ -36,8 +36,8 @@ const ProfileUpdate: FC<ProfileUpdateProps> = (props: ProfileUpdateProps) => {
         = useState<FormDefinition>(profileFormDef)
 
     // create the copy of the profile
-    const safeProfile: UserProfileDetail = {
-        ...(profile as UserProfileDetail),
+    const safeProfile: UserProfile = {
+        ...(profile as UserProfile),
     }
 
     function onChange(event: FormEvent<HTMLFormElement>): void {
@@ -46,10 +46,10 @@ const ProfileUpdate: FC<ProfileUpdateProps> = (props: ProfileUpdateProps) => {
     }
 
     function onSubmit(event: FormEvent<HTMLFormElement>): void {
-        formSubmit<UserProfile, UserProfile | undefined>(event, profileForm, 'Profile', safeProfile, saveProfile, setDisableButton, setProfileForm)
+        formSubmit<UserProfileUpdateRequest, UserProfileUpdateRequest | undefined>(event, profileForm, 'Profile', safeProfile, saveProfile, setDisableButton, setProfileForm)
     }
 
-    function saveProfile(updatedProfile: UserProfile): Promise<UserProfile> {
+    function saveProfile(updatedProfile: UserProfileUpdateRequest): Promise<UserProfileUpdateRequest> {
         return updateProfile(safeProfile.handle, {
             email: updatedProfile.email,
             firstName: updatedProfile.firstName,
