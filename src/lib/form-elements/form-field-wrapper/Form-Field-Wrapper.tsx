@@ -9,6 +9,7 @@ interface FormFieldWrapperProps {
     children: ReactNode
     disabled: boolean
     error?: string
+    hint?: string
     label: string
     name: string
 }
@@ -35,7 +36,17 @@ const FormFieldWrapper: FC<FormFieldWrapperProps> = (props: FormFieldWrapperProp
                     className={styles.label}
                     role='presentation'
                 >
-                    {props.label}
+                    <div className={styles['label-and-hint']}>
+                        <div>
+                            {props.label}
+                        </div>
+                        {!!props.hint && (
+                            <div className={styles.hint}>
+                                {props.hint}
+                            </div>
+                        )}
+                    </div>
+
                     {props.children}
                 </label>
             </div>

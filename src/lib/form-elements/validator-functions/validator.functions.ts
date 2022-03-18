@@ -1,4 +1,4 @@
-import { getFormInput } from '../form-functions'
+import { formGetInput } from '../form-functions'
 
 export function email(value: string | undefined): string | undefined {
 
@@ -31,7 +31,7 @@ export function requiredIfOther(value: string | undefined, formElements?: HTMLFo
     }
 
     // get the other form field
-    const otherField: HTMLInputElement = getFormInput(formElements, otherFieldName)
+    const otherField: HTMLInputElement = formGetInput(formElements, otherFieldName)
 
     // if there is no other field, we have a problem
     if (!otherField) {

@@ -1,4 +1,4 @@
-import { patchUser, UserPatchRequest } from './user-store'
+import { userPatch, UserPatchRequest } from './user-store'
 
 export async function updatePassword(userId: number, currentPassword: string, password: string): Promise<void> {
     const request: UserPatchRequest = {
@@ -9,6 +9,6 @@ export async function updatePassword(userId: number, currentPassword: string, pa
             },
         },
     }
-    return patchUser(userId, request)
+    return userPatch(userId, request)
         .then(() => undefined)
 }

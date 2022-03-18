@@ -1,6 +1,6 @@
-import { emailValidator, FormDefinition, requiredIfOtherValidator, requiredValidator } from '../../lib'
+import { FormDefinition, validatorEmail, validatorRequired, validatorRequiredIfOther } from '../../lib'
 
-export enum FieldNames {
+export enum FieldName {
     confirmPassword = 'confirmPassword',
     currentPassword = 'password',
     email = 'email',
@@ -13,65 +13,66 @@ export enum FieldNames {
 export const profileFormDef: FormDefinition = {
     confirmPassword: {
         label: 'Confirm Password',
-        name: FieldNames.confirmPassword,
+        name: FieldName.confirmPassword,
         placeholder: 're-type your new password',
-        requiredIfField: FieldNames.newPassword,
+        requiredIfField: FieldName.newPassword,
         type: 'password',
         validators: [
-            requiredIfOtherValidator,
+            validatorRequiredIfOther,
         ],
     },
     email: {
         label: 'Email',
-        name: FieldNames.email,
+        name: FieldName.email,
         type: 'text',
         validators: [
-            requiredValidator,
-            emailValidator,
+            validatorRequired,
+            validatorEmail,
         ],
     },
     firstName: {
         label: 'First Name',
-        name: FieldNames.firstName,
+        name: FieldName.firstName,
         type: 'text',
         validators: [
-            requiredValidator,
+            validatorRequired,
         ],
     },
     handle: {
         disabled: true,
         label: 'Username',
-        name: FieldNames.handle,
+        name: FieldName.handle,
         type: 'text',
         validators: [],
     },
     lastName: {
         label: 'Last Name',
-        name: FieldNames.lastName,
+        name: FieldName.lastName,
         type: 'text',
         validators: [
-            requiredValidator,
+            validatorRequired,
         ],
     },
     newPassword: {
         dependentFields: [
-            FieldNames.confirmPassword,
-            FieldNames.currentPassword,
+            FieldName.confirmPassword,
+            FieldName.currentPassword,
         ],
+        hint: 'At least 8 characters in length with lowercase, uppercase, and number(s)',
         label: 'New Password',
-        name: FieldNames.newPassword,
+        name: FieldName.newPassword,
         placeholder: 'type your new password',
         type: 'password',
         validators: [],
     },
-    password: {
+    [FieldName.currentPassword]: {
         label: 'Current Password',
-        name: FieldNames.currentPassword,
+        name: FieldName.currentPassword,
         placeholder: 'type your current password',
-        requiredIfField: FieldNames.newPassword,
+        requiredIfField: FieldName.newPassword,
         type: 'password',
         validators: [
-            requiredIfOtherValidator,
+            validatorRequiredIfOther,
         ],
     },
 }

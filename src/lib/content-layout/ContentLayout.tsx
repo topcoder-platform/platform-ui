@@ -44,7 +44,8 @@ const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => {
 
                     <div className={styles['content-inner']}>
 
-                        <h1>{props.title}</h1>
+                        {/* TODO: the title on the page should be an h1 tag, not h4 */}
+                        <h4>{props.title}</h4>
 
                         {props.children}
 

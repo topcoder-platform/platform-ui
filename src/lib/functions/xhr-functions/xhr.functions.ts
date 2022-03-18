@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios'
 
-import { get as tokenGet, TokenModel } from '../token-functions'
+import { tokenGet, TokenModel } from '../token-functions'
 
 // initialize the instance
 const xhrInstance: AxiosInstance = axios.create({

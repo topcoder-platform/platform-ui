@@ -1,1 +1,1 @@
-export { initialize as initializeAnalytics } from './analytics.functions'
+export { initialize as analyticsInitialize } from './analytics.functions'

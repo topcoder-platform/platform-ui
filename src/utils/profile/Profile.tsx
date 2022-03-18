@@ -1,23 +1,25 @@
 import { Dispatch, FC, FormEvent, SetStateAction, useContext, useState } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 import {
+    authUrlLogin,
     Button,
     ContentLayout,
     FormDefinition,
-    getFormInput,
-    getFormValue,
-    loginUrl,
+    formGetInput,
+    formValidateAndUpdate,
+    formValidateAndUpdateInput,
     ProfileContext,
     ProfileContextData,
     routeRoot,
     TextInput,
     TextInputModel,
     UserProfileDetail,
-    validateAndUpdateForm,
 } from '../../lib'
+import '../../lib/styles/index.scss'
 
-import { FieldNames, profileFormDef } from './profile-form.config'
+import { FieldName, profileFormDef } from './profile-form.config'
 import styles from './Profile.module.scss'
 
 export const utilTitle: string = 'Profile'
@@ -37,7 +39,7 @@ const Profile: FC<{}> = () => {
 
     // if we don't have a profile, navigate to the login page
     if (!profile) {
-        navigate(loginUrl(routeRoot))
+        navigate(authUrlLogin(routeRoot))
         return <></>
     }
 
@@ -48,46 +50,92 @@ const Profile: FC<{}> = () => {
     }
 
     function onChange(event: FormEvent<HTMLFormElement>): void {
-        const isValid: boolean = validateAndUpdateForm(event, profileForm, setProfileForm)
+        const isValid: boolean = formValidateAndUpdate(event, profileForm, setProfileForm)
         setDisableButton(!isValid)
     }
 
     function onSubmit(event: FormEvent<HTMLFormElement>): void {
 
         event.preventDefault()
+        setDisableButton(true) // TODO: display a spinner button instead
 
-        setDisableButton(true)
+        // make a map of the form field defs so we don't have to keep converting
+        // the dictionary to an array
+        const formFieldDefs: Array<TextInputModel> = Object.keys(profileForm)
+            .map(key => profileForm[key])
 
-        // all the profile fields on this form
-        const profileFields: Array<string> = [FieldNames.email, FieldNames.firstName, FieldNames.lastName]
+        // if there are no dirty fields, display a message and stop submitting
+        const dirty: TextInputModel | undefined = formFieldDefs.find(fieldDef => !!fieldDef.dirty)
+        if (!dirty) {
+            toast.info('No changes detected.')
+            return
+        }
 
+        // get the form values so we can validate them
         const formValues: HTMLFormControlsCollection = (event.target as HTMLFormElement).elements
 
-        Object.keys(updatedProfile)
-            .filter(key => profileFields.includes(key))
-            .forEach(key => (updatedProfile as any)[key] = getFormValue(formValues, key))
+        // if there are any validation errors, display a message and stop submitting
+        const isInvalid: boolean = formFieldDefs
+            .map(formField => formGetInput(formValues, formField.name))
+            .some(inputField => !formValidateAndUpdateInput(inputField, profileForm, setProfileForm, true))
+        if (isInvalid) {
+            toast.error('Changes could not be saved. Please resolve errors.')
+            return
+        }
 
+        /*
+            TODO: simplify this form:
+            -   make the password form a separate screen so that we don't have to do all this crazy
+                dirty checking and dependent validation for the pw fields
+            -   create a generic form component that has the onchange and onsubmit logic to be
+                shared across all forms
+         */
+
+        // all the profile fields on this form
+        const profileFields: Array<TextInputModel> = formFieldDefs
+            .filter(def => [FieldName.email, FieldName.firstName, FieldName.lastName].includes(def.name as FieldName))
+
+        // set the values for the updated profile
+        profileFields.forEach(field => (updatedProfile as any)[field.name] = field.value)
+
+        // update the context
         const updatedContext: ProfileContextData = {
             ...profileContext,
             profile: updatedProfile,
         }
 
-        const currentPassword: string = getFormValue(formValues, FieldNames.currentPassword)
-        const password: string = getFormValue(formValues, FieldNames.newPassword)
+        // don't update the profile if the form isn't dirty
+        const profileDirty: boolean = profileFields.some(f => f.dirty)
+        const profilePromise: Promise<void> = profileDirty
+            ? updateProfile(updatedContext)
+            : Promise.resolve()
 
-        // TODO: check profile is dirty
-        updateProfile(updatedContext)
-            .then(() => !!password ? updatePassword(updatedProfile.userId, currentPassword, password) : Promise.resolve())
+        // don't update the password if the form isn't complete
+        const password: string | undefined = profileFormDef[FieldName.newPassword].value
+        const currentPassword: string | undefined = profileFormDef[FieldName.currentPassword].value
+        const passwordDirty: boolean = !!password && !!currentPassword
+        const passwordPromise: Promise<void> = passwordDirty
+            ? updatePassword(updatedProfile.userId, currentPassword as string, password as string)
+            : Promise.resolve()
+
+        profilePromise
+            .then(() => passwordPromise)
             .then(() => {
-                getFormInput(formValues, FieldNames.currentPassword).value = ''
-                getFormInput(formValues, FieldNames.newPassword).value = ''
-                getFormInput(formValues, FieldNames.confirmPassword).value = ''
-                setDisableButton(false)
+                // TODO: expolicit form reset method
+                formGetInput(formValues, FieldName.currentPassword).value = ''
+                formGetInput(formValues, FieldName.newPassword).value = ''
+                formGetInput(formValues, FieldName.confirmPassword).value = ''
+                const passwordAndProfileDirty: boolean = passwordDirty && profileDirty
+                const successMessage: string = `Your ${profileDirty ? 'Profile' : ''} ${passwordAndProfileDirty ? 'and' : ''} ${passwordDirty ? 'Password' : ''} ${passwordAndProfileDirty ? 'have' : 'has '} been saved.`
+                toast.success(successMessage)
             })
+            // TODO: global error handling
+            .catch(error => toast.error(error.response?.data?.result?.content || error.message || error))
     }
 
     function renderFormField(fieldName: string, currentTabIndex: number): JSX.Element {
 
+        // TODO: make this part of a generic form renderer
         const formField: TextInputModel = (profileForm as any)[fieldName]
 
         return (
@@ -110,25 +158,30 @@ const Profile: FC<{}> = () => {
                 onChange={onChange}
                 onSubmit={onSubmit}
             >
+                <hr />
 
-                <h3>Basic Information</h3>
+                <h6>Basic Information</h6>
 
-                <div className={styles.profile}>
-                    {renderFormField(FieldNames.handle, -1)}
-                    {renderFormField(FieldNames.email, tabIndex++)}
-                    {renderFormField(FieldNames.firstName, tabIndex++)}
-                    {renderFormField(FieldNames.lastName, tabIndex++)}
+                <div className={styles['profile-form-fields']}>
+                    {renderFormField(FieldName.firstName, tabIndex++)}
+                    {renderFormField(FieldName.lastName, tabIndex++)}
+                    {renderFormField(FieldName.email, tabIndex++)}
+                    {renderFormField(FieldName.handle, -1)}
                 </div>
 
-                <h3>Reset Password</h3>
+                <hr />
 
-                <div className={styles.profile}>
-                    {renderFormField(FieldNames.currentPassword, tabIndex++)}
-                    {renderFormField(FieldNames.newPassword, tabIndex++)}
-                    {renderFormField(FieldNames.confirmPassword, tabIndex++)}
+                <h6>Reset Password</h6>
+
+                <div className={styles['profile-form-fields']}>
+                    {renderFormField(FieldName.currentPassword, tabIndex++)}
+                    {renderFormField(FieldName.newPassword, tabIndex++)}
+                    {renderFormField(FieldName.confirmPassword, tabIndex++)}
                 </div>
 
-                <div>
+                <hr />
+
+                <div className='form-button-container'>
                     <Button
                         disable={disableButton}
                         label='Save'
