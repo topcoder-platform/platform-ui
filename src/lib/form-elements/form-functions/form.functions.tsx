@@ -14,6 +14,24 @@ export function getValue(formElements: HTMLFormControlsCollection, fieldName: st
     return getInput(formElements, fieldName).value
 }
 
+export function renderTextInput(
+    formDef: FormDefinition,
+    fieldName: string,
+    formValue: any,
+): JSX.Element {
+
+    const formField: TextInputModel = formDef[fieldName]
+
+    return (
+        <TextInput
+            {...formField}
+            tabIndex={formField.tabIndex || 0}
+            type={formField.type || 'text'}
+            value={formValue[formField.name]}
+        />
+    )
+}
+
 export function submit<T, R>(
     event: FormEvent<HTMLFormElement>,
     formDef: FormDefinition,
@@ -58,24 +76,6 @@ export function submit<T, R>(
     save(formValue)
         .then(() => toast.success(`Your ${formName} has been saved.`))
         .catch(error => toast.error(error.response?.data?.result?.content || error.message || error))
-}
-
-export function renderTextInput(
-    formDef: FormDefinition,
-    fieldName: string,
-    formValue: any,
-): JSX.Element {
-
-    const formField: TextInputModel = formDef[fieldName]
-
-    return (
-        <TextInput
-            {...formField}
-            tabIndex={formField.tabIndex || 0}
-            type={formField.type || 'text'}
-            value={formValue[formField.name]}
-        />
-    )
 }
 
 export function validateAndUpdate(
