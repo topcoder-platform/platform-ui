@@ -8,13 +8,11 @@ import styles from './ToolSelectorsNarrow.module.scss'
 
 const ToolSelectorsNarrow: FC<{}> = () => {
 
-    // NOTE: we need to display all the routes in the menu,
-    // not just tools
-    const { allRoutes }: RouteContextData = useContext(RouteContext)
+    const { toolsRoutes }: RouteContextData = useContext(RouteContext)
     const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
     const closed: JSX.Element = <IconOutline.MenuIcon />
-    const toolSelectors: Array<JSX.Element> = allRoutes
+    const toolSelectors: Array<JSX.Element> = toolsRoutes
         .map(selector => <ToolSelectorNarrow route={selector.route} title={selector.title} key={selector.title} />)
 
     const open: JSX.Element = (
