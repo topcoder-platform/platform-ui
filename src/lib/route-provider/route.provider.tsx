@@ -20,18 +20,6 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
 
         let allRoutes: Array<PlatformRoute> = []
 
-        function getChildren(parent: string): Array<PlatformRoute> {
-            return allRoutes
-                .find(route => route.title === parent)
-                ?.children
-                || []
-        }
-
-        function getChildRoutes(parent: string): Array<ReactElement> {
-            return getChildren(parent)
-                .map(route => (<Route path={route.route} element={route.element} key={route.title} />))
-        }
-
         const getAndSetRoutes: () => Promise<void> = async () => {
 
             // TODO: try to make these prop names configurable instead of hard-codded
@@ -45,11 +33,29 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
                 allRoutes,
                 getChildRoutes,
                 getChildren,
+                getPath,
                 toolsRoutes,
                 utilsRoutes,
             }
             setRouteContext(contextData)
         }
+
+        function getChildren(parent: string): Array<PlatformRoute> {
+            return allRoutes
+                .find(route => route.title === parent)
+                ?.children
+                || []
+        }
+
+        function getChildRoutes(parent: string): Array<ReactElement> {
+            return getChildren(parent)
+                .map(route => (<Route path={route.route} element={route.element} key={route.title} />))
+        }
+
+        function getPath(routeTitle: string): string {
+            return allRoutes.find(route => route.title === routeTitle)?.route as string
+        }
+
         getAndSetRoutes()
     }, [
         props.toolsRoutes,

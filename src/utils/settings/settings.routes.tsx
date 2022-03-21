@@ -6,7 +6,7 @@ import Settings, { utilTitle } from './Settings'
 
 export enum SettingsPath {
     password = 'password',
-    profile = '/profile',
+    settings = '/settings',
 }
 
 export const settingsRoutes: Array<PlatformRoute> = [
@@ -21,7 +21,7 @@ export const settingsRoutes: Array<PlatformRoute> = [
             },
             {
                 children: [],
-                element: <PasswordReset profilePath={SettingsPath.profile} />,
+                element: <PasswordReset profilePath={SettingsPath.settings} />,
                 enabled: true,
                 route: SettingsPath.password,
                 title: passwordFormTitle,
@@ -29,7 +29,7 @@ export const settingsRoutes: Array<PlatformRoute> = [
         ],
         element: <Settings />,
         enabled: true,
-        route: SettingsPath.profile,
+        route: SettingsPath.settings,
         title: utilTitle,
     },
 ]

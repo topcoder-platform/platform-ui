@@ -5,7 +5,8 @@ import {
     authUrlLogout,
     ProfileContext,
     ProfileContextData,
-    profileRoute,
+    RouteContext,
+    RouteContextData,
 } from '../../../../../../lib'
 
 import styles from './ProfilePanel.module.scss'
@@ -17,11 +18,14 @@ interface ProfilePanelProps {
 const ProfilePanel: FC<ProfilePanelProps> = (props: ProfilePanelProps) => {
 
     const { profile }: ProfileContextData = useContext(ProfileContext)
+    const { getPath  }: RouteContextData = useContext(RouteContext)
 
     if (!profile) {
         // this should never happen
         return <></>
     }
+
+    const settingsTitle: string = 'Settings'
 
     return (
         <div className={styles['profile-panel']}>
@@ -31,9 +35,9 @@ const ProfilePanel: FC<ProfilePanelProps> = (props: ProfilePanelProps) => {
             <Link
                 className={styles.profile}
                 onClick={() => props.toggleProfilePanel()}
-                to={profileRoute}
+                to={getPath(settingsTitle)}
             >
-                Settings
+                {settingsTitle}
             </Link>
             <a href={authUrlLogout} className={styles.logout}>
                 Log Out
