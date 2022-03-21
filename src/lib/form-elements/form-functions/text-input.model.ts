@@ -9,6 +9,7 @@ export interface TextInputModel {
     placeholder?: string
     preventAutocomplete?: boolean
     requiredIfField?: string
+    tabIndex: number
     type: 'password' | 'text'
     validators: Array<(value: string | undefined, formValues?: HTMLFormControlsCollection, otherField?: string) => string | undefined>
     value?: string

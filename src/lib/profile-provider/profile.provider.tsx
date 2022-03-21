@@ -2,10 +2,11 @@ import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 're
 
 import { userUpdatePassword } from '../functions'
 
+import { PasswordUpdateRequest } from './password-update-request.model'
 import { ProfileContextData } from './profile-context-data.model'
 import { profileGet, profileUpdate } from './profile-functions'
 import { default as ProfileContext, defaultProfileContextData } from './profile.context'
-import { UserProfileDetail } from './user-profile-detail.model'
+import { UserProfileUpdateRequest } from './user-profile-update-request.model'
 import { UserProfile } from './user-profile.model'
 
 export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { children: ReactNode }) => {
@@ -13,26 +14,34 @@ export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { chi
     const [profileContext, setProfileContext]: [ProfileContextData, Dispatch<SetStateAction<ProfileContextData>>]
         = useState<ProfileContextData>(defaultProfileContextData)
 
-    function updatePassword(userId: number, currentPassword: string, password: string): Promise<void> {
-        return userUpdatePassword(userId, currentPassword, password)
+    function updatePassword(userId: number, request: PasswordUpdateRequest): Promise<void> {
+        return userUpdatePassword(userId, request.password, request.newPassword)
     }
 
-    function updateProfile(updatedContext: ProfileContextData): Promise<void> {
-
-        const { profile }: ProfileContextData = updatedContext
+    function updateProfile(handle: string, profile: UserProfileUpdateRequest): Promise<UserProfileUpdateRequest> {
 
         if (!profile) {
             throw new Error('Cannot update an undefined profile')
         }
 
-        const updatedProfile: UserProfile = {
+        const updatedProfile: UserProfileUpdateRequest = {
             email: profile.email,
             firstName: profile.firstName,
             lastName: profile.lastName,
         }
 
-        return profileUpdate(profile.handle, updatedProfile)
-            .then(() => setProfileContext(updatedContext))
+        return profileUpdate(handle, updatedProfile)
+            .then(prof => {
+                const updatedContext: ProfileContextData = {
+                    ...profileContext,
+                    profile: {
+                        ...(profileContext.profile as UserProfile),
+                        ...profile,
+                    },
+                }
+                setProfileContext(updatedContext)
+                return prof
+            })
     }
 
     useEffect(() => {
@@ -43,7 +52,7 @@ export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { chi
         }
 
         const getAndSetProfile: () => Promise<void> = async () => {
-            const profile: UserProfileDetail | undefined = await profileGet()
+            const profile: UserProfile | undefined = await profileGet()
             const contextData: ProfileContextData = {
                 initialized: true,
                 profile,
