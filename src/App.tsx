@@ -28,9 +28,9 @@ const App: FC<{}> = () => {
                 {routeElements}
             </Routes >
             <ToastContainer
-                position={toast.POSITION.BOTTOM_CENTER}
+                position={toast.POSITION.TOP_RIGHT}
                 autoClose={3000}
-                hideProgressBar
+                hideProgressBar={false}
                 newestOnTop
                 closeOnClick
                 rtl={false}
