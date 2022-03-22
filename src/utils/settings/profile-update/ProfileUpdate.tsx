@@ -3,7 +3,9 @@ import { Dispatch, FC, FormEvent, SetStateAction, useContext, useState } from 'r
 import {
     Button,
     FormDefinition,
+    formInitializeValues,
     formRenderTextInput,
+    formReset,
     formSubmit,
     formValidateAndUpdate,
     ProfileContext,
@@ -29,7 +31,7 @@ const ProfileUpdate: FC<ProfileUpdateProps> = (props: ProfileUpdateProps) => {
     const profileContext: ProfileContextData = useContext(ProfileContext)
     const { profile, updateProfile }: ProfileContextData = profileContext
 
-    const [disableButton, setDisableButton]: [boolean, Dispatch<SetStateAction<boolean>>]
+    const [disableSave, setDisableSave]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(true)
 
     const [profileForm, setProfileForm]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
@@ -41,12 +43,19 @@ const ProfileUpdate: FC<ProfileUpdateProps> = (props: ProfileUpdateProps) => {
     }
 
     function onChange(event: FormEvent<HTMLFormElement>): void {
-        const isValid: boolean = formValidateAndUpdate(event, profileForm, setProfileForm)
-        setDisableButton(!isValid)
+        const isValid: boolean = formValidateAndUpdate(event, profileForm)
+        setProfileForm({ ...profileForm })
+        setDisableSave(!isValid)
     }
 
-    function onSubmit(event: FormEvent<HTMLFormElement>): void {
-        formSubmit<UserProfileUpdateRequest, void>(event, profileForm, 'Profile', safeProfile, saveProfile, setDisableButton, setProfileForm)
+    async function onSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
+        await formSubmit<UserProfileUpdateRequest, void>(event, profileForm, profileFormTitle, safeProfile, saveProfile, setDisableSave)
+        setProfileForm({ ...profileForm })
+    }
+
+    function resetForm(): void {
+        formReset(profileForm)
+        setProfileForm({ ...profileForm })
     }
 
     function saveProfile(updatedProfile: UserProfileUpdateRequest): Promise<void> {
@@ -61,6 +70,8 @@ const ProfileUpdate: FC<ProfileUpdateProps> = (props: ProfileUpdateProps) => {
         })
     }
 
+    formInitializeValues(profileForm, profile)
+
     return (
         <>
             <form
@@ -73,16 +84,16 @@ const ProfileUpdate: FC<ProfileUpdateProps> = (props: ProfileUpdateProps) => {
                 <h6>{profileFormTitle}</h6>
 
                 <div className={styles['profile-form-fields']}>
-                    {formRenderTextInput(profileFormDef, ProfileFieldName.firstName, profile)}
-                    {formRenderTextInput(profileFormDef, ProfileFieldName.lastName, profile)}
-                    {formRenderTextInput(profileFormDef, ProfileFieldName.email, profile)}
-                    {formRenderTextInput(profileFormDef, ProfileFieldName.handle, profile)}
+                    {formRenderTextInput(profileForm, ProfileFieldName.firstName)}
+                    {formRenderTextInput(profileForm, ProfileFieldName.lastName)}
+                    {formRenderTextInput(profileForm, ProfileFieldName.email)}
+                    {formRenderTextInput(profileForm, ProfileFieldName.handle)}
                 </div>
 
                 <div className='form-button-container'>
                     <Button
                         buttonStyle='secondary'
-                        disable={disableButton}
+                        disable={disableSave}
                         label='Save'
                         size='xl'
                         tabIndex={4}
@@ -102,6 +113,7 @@ const ProfileUpdate: FC<ProfileUpdateProps> = (props: ProfileUpdateProps) => {
                     <Button
                         buttonStyle='tertiary'
                         label='Reset Password'
+                        onClick={resetForm}
                         route={props.passwordPath}
                         size='xl'
                         tabIndex={5}

@@ -1,6 +1,6 @@
-import { userPatch, UserPatchRequest } from './user-store'
+import { userPatchAsync, UserPatchRequest } from './user-store'
 
-export async function updatePassword(userId: number, currentPassword: string, password: string): Promise<void> {
+export async function updatePasswordAsync(userId: number, currentPassword: string, password: string): Promise<void> {
     const request: UserPatchRequest = {
         param: {
             credential: {
@@ -9,6 +9,6 @@ export async function updatePassword(userId: number, currentPassword: string, pa
             },
         },
     }
-    return userPatch(userId, request)
+    return userPatchAsync(userId, request)
         .then(() => undefined)
 }

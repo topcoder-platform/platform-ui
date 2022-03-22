@@ -5,6 +5,7 @@ import { FormFieldWrapper } from '../form-field-wrapper'
 import styles from './Text-Input.module.scss'
 
 interface TextInputProps {
+    dirty?: boolean
     disabled?: boolean
     error?: string
     hint?: string
@@ -20,9 +21,10 @@ interface TextInputProps {
 const TextInput: FC<TextInputProps> = (props: TextInputProps) => {
     return (
         <FormFieldWrapper
+            dirty={!!props.dirty}
             disabled={!!props.disabled}
             error={props.error}
-            hint={ props.hint}
+            hint={props.hint}
             label={props.label || props.name}
             name={props.name}
         >

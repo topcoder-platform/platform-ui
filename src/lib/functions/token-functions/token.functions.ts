@@ -1,13 +1,13 @@
 import { decodeToken } from 'tc-auth-lib'
 
-import { authInitialize } from '../authentication-functions'
+import { authInitializeAsync } from '../authentication-functions'
 import { logError } from '../logging-functions'
 
 import { TokenModel } from './token.model'
 
-export async function get(): Promise<TokenModel> {
+export async function getAsync(): Promise<TokenModel> {
 
-    const token: string | undefined = await authInitialize()
+    const token: string | undefined = await authInitializeAsync()
 
     // if there is no token, no need to try to get the handle
     if (!token) {
