@@ -4,6 +4,7 @@ import {
     Button,
     FormDefinition,
     formRenderTextInput,
+    formReset,
     formSubmit,
     formValidateAndUpdate,
     PasswordUpdateRequest,
@@ -33,10 +34,10 @@ const PasswordReset: FC<PasswordUpdateProps> = (props: PasswordUpdateProps) => {
     const profileContext: ProfileContextData = useContext(ProfileContext)
     const { profile, updatePassword }: ProfileContextData = profileContext
 
-    const [disableButton, setDisableButton]: [boolean, Dispatch<SetStateAction<boolean>>]
+    const [disableButton, setDisableSave]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(true)
 
-    const [passwordForm, setPasswordUpdateRequest]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
+    const [passwordForm, setPasswordForm]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>(passwordFormDef)
 
     // create the copy of the profile
@@ -46,8 +47,14 @@ const PasswordReset: FC<PasswordUpdateProps> = (props: PasswordUpdateProps) => {
     const passwordFormDetail: PasswordUpdateForm = {}
 
     function onChange(event: FormEvent<HTMLFormElement>): void {
-        const isValid: boolean = formValidateAndUpdate(event, passwordForm, setPasswordUpdateRequest)
-        setDisableButton(!isValid)
+        const isValid: boolean = formValidateAndUpdate(event, passwordForm)
+        setPasswordForm({ ...passwordForm })
+        setDisableSave(!isValid)
+    }
+
+    function onReset(): void {
+        setPasswordForm({ ...passwordForm })
+        formReset(passwordFormDef)
     }
 
     function onSubmit(event: FormEvent<HTMLFormElement>): void {
@@ -55,10 +62,11 @@ const PasswordReset: FC<PasswordUpdateProps> = (props: PasswordUpdateProps) => {
             newPassword: passwordFormDetail.newPassword as string,
             password: passwordFormDetail.password as string,
         }
-        formSubmit<PasswordUpdateRequest, void>(event, passwordForm, passwordFormTitle, request, savePassword, setDisableButton, setPasswordUpdateRequest)
+        formSubmit<PasswordUpdateRequest, void>(event, passwordForm, passwordFormTitle, request, save, setDisableSave)
+        setPasswordForm({ ...passwordForm })
     }
 
-    function savePassword(updatedPassword: PasswordUpdateRequest): Promise<void> {
+    function save(updatedPassword: PasswordUpdateRequest): Promise<void> {
         return updatePassword(safeProfile.userId, updatedPassword)
     }
 
@@ -73,17 +81,18 @@ const PasswordReset: FC<PasswordUpdateProps> = (props: PasswordUpdateProps) => {
             <h6>{passwordFormTitle}</h6>
 
             <div className={styles['password-form-fields']}>
-                {formRenderTextInput(passwordFormDef, PasswordFieldName.currentPassword, passwordFormDetail)}
-                {formRenderTextInput(passwordFormDef, PasswordFieldName.newPassword, passwordFormDetail)}
-                {formRenderTextInput(passwordFormDef, PasswordFieldName.confirmPassword, passwordFormDetail)}
+                {formRenderTextInput(passwordForm, PasswordFieldName.currentPassword)}
+                {formRenderTextInput(passwordForm, PasswordFieldName.newPassword)}
+                {formRenderTextInput(passwordForm, PasswordFieldName.confirmPassword)}
             </div>
 
             <div className='form-button-container'>
                 <Button
                     buttonStyle='tertiary'
                     label='Back'
-                    size='xl'
+                    onClick={onReset}
                     route={props.profilePath}
+                    size='xl'
                     tabIndex={-1}
                 />
                 <Button

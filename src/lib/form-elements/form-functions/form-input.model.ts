@@ -1,5 +1,5 @@
-export interface TextInputModel {
-    dependentFields?: Array<string>
+export interface FormInputModel {
+    dependentField?: string
     dirty?: boolean
     disabled?: boolean
     error?: string
@@ -8,7 +8,6 @@ export interface TextInputModel {
     name: string
     placeholder?: string
     preventAutocomplete?: boolean
-    requiredIfField?: string
     tabIndex: number
     type: 'password' | 'text'
     validators: Array<(value: string | undefined, formValues?: HTMLFormControlsCollection, otherField?: string) => string | undefined>

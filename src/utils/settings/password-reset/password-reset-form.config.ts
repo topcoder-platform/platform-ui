@@ -1,4 +1,10 @@
-import { FormDefinition, validatorRequired } from '../../../lib'
+import {
+    FormDefinition,
+    validatorDoesNotMatchOther,
+    validatorMatchOther,
+    validatorPassword,
+    validatorRequired,
+} from '../../../lib'
 
 export enum PasswordFieldName {
     confirmPassword = 'confirmPassword',
@@ -8,19 +14,19 @@ export enum PasswordFieldName {
 
 export const passwordFormDef: FormDefinition = {
     confirmPassword: {
+        dependentField: PasswordFieldName.newPassword,
         label: 'Confirm Password',
         name: PasswordFieldName.confirmPassword,
         placeholder: 're-type your new password',
-        requiredIfField: PasswordFieldName.newPassword,
         tabIndex: 3,
         type: 'password',
         validators: [
             validatorRequired,
-            // TODO: match validator
+            validatorMatchOther,
         ],
     },
     newPassword: {
-        hint: 'At least 8 characters in length with lowercase, uppercase, and number(s)',
+        dependentField: PasswordFieldName.currentPassword,
         label: 'New Password',
         name: PasswordFieldName.newPassword,
         placeholder: 'type your new password',
@@ -28,14 +34,14 @@ export const passwordFormDef: FormDefinition = {
         type: 'password',
         validators: [
             validatorRequired,
-            // TODO: password validator
+            validatorDoesNotMatchOther,
+            validatorPassword,
         ],
     },
     [PasswordFieldName.currentPassword]: {
         label: 'Current Password',
         name: PasswordFieldName.currentPassword,
         placeholder: 'type your current password',
-        requiredIfField: PasswordFieldName.newPassword,
         tabIndex: 1,
         type: 'password',
         validators: [

@@ -19,13 +19,8 @@ interface ButtonProps {
 
 const Button: FC<ButtonProps> = (props: ButtonProps) => {
 
-    const classes: string = classNames(
-        styles.button,
-        props.className,
-        !!props.buttonStyle ? styles[props.buttonStyle] : styles.primary,
-        styles[`button-${props.size || 'md'}`],
-        !!props.disable ? styles.disabled : undefined
-    )
+    const classes: string = getButtonClasses(props)
+    const clickHandler: (event?: any) => void = getClickHandler(props)
 
     // if there is a url, this is a link button
     if (!!props.url) {
@@ -33,6 +28,7 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
             <a
                 className={classes}
                 href={props.url}
+                onClick={clickHandler}
                 tabIndex={props.tabIndex}
             >
                 {props.label}
@@ -44,6 +40,7 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
         return (
             <Link
                 className={classes}
+                onClick={clickHandler}
                 tabIndex={props.tabIndex}
                 to={props.route}
             >
@@ -55,13 +52,28 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
     return (
         <button
             className={classes}
-            onClick={() => (props.onClick || undefined)}
+            onClick={clickHandler}
             tabIndex={props.tabIndex}
             type={props.type || 'button'}
         >
             {props.label}
         </button>
     )
+}
+
+function getButtonClasses(props: ButtonProps): string {
+    const classes: string = classNames(
+        styles.button,
+        props.className,
+        !!props.buttonStyle ? styles[props.buttonStyle] : styles.primary,
+        styles[`button-${props.size || 'md'}`],
+        !!props.disable ? styles.disabled : undefined
+    )
+    return classes
+}
+
+function getClickHandler(props: ButtonProps): (event?: any) => void {
+    return props.onClick || (() => undefined)
 }
 
 export default Button

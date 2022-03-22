@@ -20,7 +20,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
 
         let allRoutes: Array<PlatformRoute> = []
 
-        const getAndSetRoutes: () => Promise<void> = async () => {
+        const getAndSetRoutes: () => void = () => {
 
             // TODO: try to make these prop names configurable instead of hard-codded
             const toolsRoutes: Array<PlatformRoute> = props.toolsRoutes.filter(route => route.enabled)

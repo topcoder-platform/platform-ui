@@ -1,5 +1,5 @@
-import { TextInputModel } from './text-input.model'
+import { FormInputModel } from './form-input.model'
 
 export interface FormDefinition {
-    [input: string]: TextInputModel
+    [input: string]: FormInputModel
 }

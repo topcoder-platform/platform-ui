@@ -1,1 +1,1 @@
-export { updatePassword as userUpdatePassword } from './user.functions'
+export { updatePasswordAsync as userUpdatePasswordAsync } from './user.functions'

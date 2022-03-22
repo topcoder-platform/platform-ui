@@ -1,5 +1,5 @@
 import { User } from '../../../../../types/tc-auth-lib'
-import { xhrPatch } from '../../xhr-functions'
+import { xhrPatchAsync } from '../../xhr-functions'
 
 import { user as userEndpoint } from './user-endpoint.config'
 
@@ -12,7 +12,7 @@ export interface UserPatchRequest {
     }
 }
 
-export async function patch(userId: number, request: UserPatchRequest): Promise<User> {
+export async function patchAsync(userId: number, request: UserPatchRequest): Promise<User> {
     const url: string = userEndpoint(userId)
-    return xhrPatch(url, request)
+    return xhrPatchAsync(url, request)
 }

@@ -1,4 +1,4 @@
 export {
-    get as profileGet,
-    update as profileUpdate,
+    getAsync as profileGetAsync,
+    updateAsync as profileUpdateAsync,
 } from './profile.functions'
