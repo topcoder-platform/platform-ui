@@ -18,30 +18,22 @@ export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { chi
         return userUpdatePassword(userId, request.password, request.newPassword)
     }
 
-    function updateProfile(handle: string, profile: UserProfileUpdateRequest): Promise<UserProfileUpdateRequest> {
+    function updateProfile(updatedContext: ProfileContextData): Promise<void> {
+
+        const { profile }: ProfileContextData = updatedContext
 
         if (!profile) {
             throw new Error('Cannot update an undefined profile')
         }
 
-        const updatedProfile: UserProfileUpdateRequest = {
+        const request: UserProfileUpdateRequest = {
             email: profile.email,
             firstName: profile.firstName,
             lastName: profile.lastName,
         }
 
-        return profileUpdate(handle, updatedProfile)
-            .then(prof => {
-                const updatedContext: ProfileContextData = {
-                    ...profileContext,
-                    profile: {
-                        ...(profileContext.profile as UserProfile),
-                        ...profile,
-                    },
-                }
-                setProfileContext(updatedContext)
-                return prof
-            })
+        return profileUpdate(profile.handle, request)
+            .then(() => setProfileContext(updatedContext))
     }
 
     useEffect(() => {

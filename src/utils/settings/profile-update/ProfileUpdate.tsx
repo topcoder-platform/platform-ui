@@ -46,14 +46,18 @@ const ProfileUpdate: FC<ProfileUpdateProps> = (props: ProfileUpdateProps) => {
     }
 
     function onSubmit(event: FormEvent<HTMLFormElement>): void {
-        formSubmit<UserProfileUpdateRequest, UserProfileUpdateRequest | undefined>(event, profileForm, 'Profile', safeProfile, saveProfile, setDisableButton, setProfileForm)
+        formSubmit<UserProfileUpdateRequest, void>(event, profileForm, 'Profile', safeProfile, saveProfile, setDisableButton, setProfileForm)
     }
 
-    function saveProfile(updatedProfile: UserProfileUpdateRequest): Promise<UserProfileUpdateRequest> {
-        return updateProfile(safeProfile.handle, {
-            email: updatedProfile.email,
-            firstName: updatedProfile.firstName,
-            lastName: updatedProfile.lastName,
+    function saveProfile(updatedProfile: UserProfileUpdateRequest): Promise<void> {
+        return updateProfile({
+            ...profileContext,
+            profile: {
+                ...profileContext.profile as UserProfile,
+                email: updatedProfile.email,
+                firstName: updatedProfile.firstName,
+                lastName: updatedProfile.lastName,
+            },
         })
     }
 
