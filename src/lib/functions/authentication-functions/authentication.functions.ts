@@ -20,7 +20,11 @@ configureConnector({
     mockToken: undefined,
 })
 
+<<<<<<< HEAD
 export async function authenticate(): Promise<string | undefined> {
+=======
+export async function initializeAsync(): Promise<string | undefined> {
+>>>>>>> 8d9133682a2e4e8acdf9951b5bce491329744b22
 
     return getFreshToken()
         .then((tokenV3: string) => {
@@ -60,7 +64,11 @@ function handleRefresh(token: TokenData): number {
     if (time < Number.MAX_VALUE) {
         time = 1000 * (time - EnvironmentConfig.REAUTH_OFFSET)
         time = Math.max(0, time - Date.now())
+<<<<<<< HEAD
         setTimeout(() => authenticate(), time)
+=======
+        setTimeout(() => initializeAsync(), time)
+>>>>>>> 8d9133682a2e4e8acdf9951b5bce491329744b22
     }
 
     return time

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="8cf0c128-4477-4e7a-b890-f712b35f79d1" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/lib/button/Button.module.scss" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/button/Button.test.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/form-elements/form-field-wrapper/Form-Field-Wrapper.module.scss" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/form-elements/form-field-wrapper/Form-Field-Wrapper.test.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/form-elements/form-field-wrapper/Form-Field-Wrapper.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/form-elements/form-field-wrapper/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/form-elements/form-functions/form-definition.model.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/form-elements/form-functions/form-input.model.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/form-elements/form-functions/form.functions.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/form-elements/form-functions/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/form-elements/text-input/Text-Input.module.scss" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/form-elements/text-input/Text-Input.test.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/form-elements/text-input/Text-Input.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/form-elements/text-input/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/form-elements/validator-functions/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/form-elements/validator-functions/validator.functions.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/profile-provider/password-update-request.model.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/profile-provider/user-profile-update-request.model.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/styles/_forms.scss" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/settings/Settings.test.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/settings/Settings.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/settings/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/settings/password-reset/PasswordReset.module.scss" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/settings/password-reset/PasswordReset.test.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/settings/password-reset/PasswordReset.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/settings/password-reset/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/settings/password-reset/password-reset-form.config.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/settings/profile-update/ProfileUpdate.module.scss" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/settings/profile-update/ProfileUpdate.test.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/settings/profile-update/ProfileUpdate.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/settings/profile-update/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/settings/profile-update/profile-update-form.config.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/settings/settings.routes.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.circleci/config.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.circleci/config.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/header/logo/Logo.test.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/header/logo/Logo.test.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/header/logo/Logo.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/header/logo/Logo.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/header/tool-selectors/tool-selectors-narrow/ToolSelectorsNarrow.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/header/tool-selectors/tool-selectors-narrow/ToolSelectorsNarrow.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/header/tool-selectors/tool-selectors-wide/tool-selector-wide/ToolSelectorWide.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/header/tool-selectors/tool-selectors-wide/tool-selector-wide/ToolSelectorWide.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/header/utility-selectors/UtilitySelector/ProfileSelector/profile-logged-in/profile-panel/ProfilePanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/header/utility-selectors/UtilitySelector/ProfileSelector/profile-logged-in/profile-panel/ProfilePanel.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/header/utility-selectors/UtilitySelector/ProfileSelector/profile-not-logged-in/ProfileNotLoggedIn.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/header/utility-selectors/UtilitySelector/ProfileSelector/profile-not-logged-in/ProfileNotLoggedIn.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/button/Button.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/button/Button.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/content-layout/ContentLayout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/content-layout/ContentLayout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/form-elements/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/form-elements/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/functions/analytics-functions/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/functions/analytics-functions/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/functions/authentication-functions/authentication.functions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/functions/authentication-functions/authentication.functions.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/functions/authentication-functions/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/functions/authentication-functions/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/functions/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/functions/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/functions/logging-functions/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/functions/logging-functions/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/functions/logging-functions/logging.functions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/functions/logging-functions/logging.functions.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/functions/token-functions/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/functions/token-functions/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/functions/token-functions/token.functions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/functions/token-functions/token.functions.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/functions/user-functions/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/functions/user-functions/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/functions/user-functions/user-store/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/functions/user-functions/user-store/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/functions/user-functions/user-store/user-xhr.store.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/functions/user-functions/user-store/user-xhr.store.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/functions/user-functions/user.functions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/functions/user-functions/user.functions.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/functions/xhr-functions/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/functions/xhr-functions/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/functions/xhr-functions/xhr.functions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/functions/xhr-functions/xhr.functions.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/profile-provider/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/profile-provider/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/profile-provider/profile-context-data.model.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/profile-provider/profile-context-data.model.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/profile-provider/profile-functions/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/profile-provider/profile-functions/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/profile-provider/profile-functions/profile-store/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/profile-provider/profile-functions/profile-store/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/profile-provider/profile-functions/profile-store/profile-xhr.store.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/profile-provider/profile-functions/profile-store/profile-xhr.store.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/profile-provider/profile-functions/profile.functions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/profile-provider/profile-functions/profile.functions.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/profile-provider/profile-routes.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/profile-provider/profile-routes.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/profile-provider/profile.context.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/profile-provider/profile.context.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/profile-provider/profile.provider.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/profile-provider/profile.provider.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/route-provider/route-context-data.model.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/route-provider/route-context-data.model.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/route-provider/route.context.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/route-provider/route.context.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/route-provider/route.provider.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/route-provider/route.provider.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/styles/_buttons.scss" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/styles/_buttons.scss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/styles/_typography.scss" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/styles/_typography.scss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/styles/index.scss" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/styles/index.scss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/svgs/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/svgs/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tools/design-lib/DesignLib.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/tools/design-lib/DesignLib.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/utils.routes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/utils.routes.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tslint.json" beforeDir="false" afterPath="$PROJECT_DIR$/tslint.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/yarn.lock" beforeDir="false" afterPath="$PROJECT_DIR$/yarn.lock" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="26QKRYakc9gjt1UDbCDI6eiagme" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/lib/work-provider/work-functions/work-store" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/lib/work-provider/work-functions/work-store" />
+      <recent name="$PROJECT_DIR$/src/lib/work-provider" />
+      <recent name="$PROJECT_DIR$/src/lib" />
+      <recent name="$PROJECT_DIR$/src/tools/work" />
+    </key>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="8cf0c128-4477-4e7a-b890-f712b35f79d1" name="Changes" comment="" />
+      <created>1647350364215</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1647350364215</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

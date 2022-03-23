@@ -1,11 +1,9 @@
-@import 'palette';
-@import 'layout';
-@import 'fonts';
-
+// TODO: add reset and have it take care of this
 a {
     color: inherit;
     text-decoration: none;
 }
+<<<<<<< HEAD
 
 .button {
     color: $tc-white;
@@ -107,3 +105,5 @@ a {
         border-color: transparent;
     }
 }
+=======
+>>>>>>> 8d9133682a2e4e8acdf9951b5bce491329744b22

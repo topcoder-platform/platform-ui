@@ -18,6 +18,7 @@ export function initialize(config: GlobalConfig): void {
         silentMultipleInit: true,
     })
 
+<<<<<<< HEAD
     logInfo(`initialized logging for ${config.ENV}`)
 }
 
@@ -26,5 +27,15 @@ export function logError(message: string, messageContext?: object): void {
 }
 
 export function logInfo(message: string, messageContext?: object): void {
+=======
+    info(`initialized logging for ${config.ENV}`)
+}
+
+export function error(message: string, messageContext?: object): void {
+    datadogLogs.logger.error(message, messageContext)
+}
+
+export function info(message: string, messageContext?: object): void {
+>>>>>>> 8d9133682a2e4e8acdf9951b5bce491329744b22
     datadogLogs.logger.info(message, messageContext)
 }

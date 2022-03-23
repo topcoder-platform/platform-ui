@@ -126,8 +126,8 @@ workflows:
           context : org-global
           filters:
             branches:
-              only:
-                - dev
+              ignore:
+                - master
 
       - build-prod:
           context : org-global
