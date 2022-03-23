@@ -1,7 +1,5 @@
 import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react'
-
 import { userUpdatePassword } from '../functions'
-
 import { ProfileContextData } from './profile-context-data.model'
 import { profileGet, profileUpdate } from './profile-functions'
 import { default as ProfileContext, defaultProfileContextData } from './profile.context'

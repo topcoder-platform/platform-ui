@@ -1,3 +1,6 @@
 export { getAsync as getMyWork } from './mywork-functions/mywork.functions'
 export type { WorkItem as MyWorkItem } from './mywork-functions/mywork-model/WorkItem.model'
 export type { WorkList as MyWorkList } from './mywork-functions/mywork-model/WorkList.model'
+export { MyWorkProvider } from './mywork.provider'
+export { MyWorkContext } from './mywork.context'
+export type { MyWorkContextData } from './mywork-context-data.model'
