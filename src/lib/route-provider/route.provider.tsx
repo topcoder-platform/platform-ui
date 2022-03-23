@@ -1,10 +1,14 @@
-import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, FC, ReactElement, ReactNode, SetStateAction, useEffect, useState } from 'react'
+import { Route } from 'react-router-dom'
 
+import { PlatformRoute } from './platform-route.model'
 import { RouteContextData } from './route-context-data.model'
 import { default as RouteContext, defaultRouteContextData } from './route.context'
 
-interface RouteProviderProps extends RouteContextData {
-    children: ReactNode,
+interface RouteProviderProps {
+    children: ReactNode
+    toolsRoutes: Array<PlatformRoute>
+    utilsRoutes: Array<PlatformRoute>
 }
 
 export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps) => {
@@ -13,14 +17,45 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
         = useState<RouteContextData>(defaultRouteContextData)
 
     useEffect(() => {
-        const getAndSetRoutes: () => Promise<void> = async () => {
+
+        let allRoutes: Array<PlatformRoute> = []
+
+        const getAndSetRoutes: () => void = () => {
+
             // TODO: try to make these prop names configurable instead of hard-codded
+            const toolsRoutes: Array<PlatformRoute> = props.toolsRoutes.filter(route => route.enabled)
+            const utilsRoutes: Array<PlatformRoute> = props.utilsRoutes.filter(route => route.enabled)
+            allRoutes = [
+                ...toolsRoutes,
+                ...utilsRoutes,
+            ]
             const contextData: RouteContextData = {
-                toolsRoutes: props.toolsRoutes.filter(route => route.enabled),
-                utilsRoutes: props.utilsRoutes.filter(route => route.enabled),
+                allRoutes,
+                getChildRoutes,
+                getChildren,
+                getPath,
+                toolsRoutes,
+                utilsRoutes,
             }
             setRouteContext(contextData)
         }
+
+        function getChildren(parent: string): Array<PlatformRoute> {
+            return allRoutes
+                .find(route => route.title === parent)
+                ?.children
+                || []
+        }
+
+        function getChildRoutes(parent: string): Array<ReactElement> {
+            return getChildren(parent)
+                .map(route => (<Route path={route.route} element={route.element} key={route.title} />))
+        }
+
+        function getPath(routeTitle: string): string {
+            return allRoutes.find(route => route.title === routeTitle)?.route as string
+        }
+
         getAndSetRoutes()
     }, [
         props.toolsRoutes,

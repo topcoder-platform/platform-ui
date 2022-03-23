@@ -1,6 +1,7 @@
 import { FC } from 'react'
 
-import { Button, loginUrl, routeRoot, signupUrl } from '../../../../../lib'
+import { authUrlLogin, authUrlSignup, Button, routeRoot } from '../../../../../lib'
+
 import '../../../../../lib/styles/index.scss'
 
 import styles from './ProfileNotLoggedIn.module.scss'
@@ -10,18 +11,20 @@ const ProfileNotLoggedIn: FC<{}> = () => {
     return (
         <>
             <Button
+                buttonStyle='text'
                 className={styles.login}
                 label='Log In'
                 size='sm'
-                buttonStyle='text'
-                url={loginUrl(routeRoot)}
+                tabIndex={-1}
+                url={authUrlLogin(routeRoot)}
             />
             <Button
+                buttonStyle='tertiary'
                 className={styles.signup}
                 label='Sign Up'
                 size='sm'
-                buttonStyle='tertiary'
-                url={signupUrl(routeRoot)}
+                tabIndex={-1}
+                url={authUrlSignup(routeRoot)}
             />
         </>
     )

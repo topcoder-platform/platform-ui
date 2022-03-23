@@ -1,11 +1,11 @@
 import { PlatformRoute } from '../lib'
 
 import { homeRoutes } from './home/home.routes'
-import { profileRoutes } from './profile/Profile.routes'
+import { settingsRoutes } from './settings'
 
 const utilsRoutes: Array<PlatformRoute> = [
     ...homeRoutes,
-    ...profileRoutes,
+    ...settingsRoutes,
 ]
 
 export default utilsRoutes

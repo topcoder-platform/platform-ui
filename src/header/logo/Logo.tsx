@@ -13,7 +13,10 @@ const Logo: FC<{}> = () => {
 
     return (
         <div className={styles[`logo-${isLink ? 'no-' : ''}link`]}>
-            <Link to={routeRoot}>
+            <Link
+                tabIndex={-1}
+                to={routeRoot}
+            >
                 <LogoIcon />
             </Link>
         </div>

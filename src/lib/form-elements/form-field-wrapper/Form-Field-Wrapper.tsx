@@ -7,8 +7,10 @@ import styles from './Form-Field-Wrapper.module.scss'
 
 interface FormFieldWrapperProps {
     children: ReactNode
+    dirty?: boolean
     disabled: boolean
     error?: string
+    hint?: string
     label: string
     name: string
 }
@@ -16,11 +18,13 @@ interface FormFieldWrapperProps {
 const FormFieldWrapper: FC<FormFieldWrapperProps> = (props: FormFieldWrapperProps) => {
 
     const [focusStyle, setFocusStyle]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
+
+    const showError: boolean = !!props.error && !!props.dirty
     const formFieldClasses: string = classNames(
         styles['form-field'],
         props.disabled ? styles.disabled : undefined,
         focusStyle,
-        !!props.error ? styles['form-field-error'] : undefined
+        showError ? styles['form-field-error'] : undefined
     )
 
     return (
@@ -35,12 +39,22 @@ const FormFieldWrapper: FC<FormFieldWrapperProps> = (props: FormFieldWrapperProp
                     className={styles.label}
                     role='presentation'
                 >
-                    {props.label}
+                    <div className={styles['label-and-hint']}>
+                        <div>
+                            {props.label}
+                        </div>
+                        {!!props.hint && (
+                            <div className={styles.hint}>
+                                {props.hint}
+                            </div>
+                        )}
+                    </div>
+
                     {props.children}
                 </label>
             </div>
 
-            {!!props.error && (
+            {showError && (
                 <div className={styles.error}>
                     <IconSolid.ExclamationIcon />
                     {props.error}

@@ -1,5 +1,8 @@
 export {
-    email as emailValidator,
-    required as requiredValidator,
-    requiredIfOther as requiredIfOtherValidator,
+    doesNotMatchOther as validatorDoesNotMatchOther,
+    email as validatorEmail,
+    matchOther as validatorMatchOther,
+    password as validatorPassword,
+    required as validatorRequired,
+    requiredIfOther as validatorRequiredIfOther,
 } from './validator.functions'

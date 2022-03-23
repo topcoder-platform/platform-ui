@@ -1,7 +1,11 @@
 export * from './form-definition.model'
 export {
-    getInput as getFormInput,
-    getValue as getFormValue,
-    validateAndUpdate as validateAndUpdateForm,
+    getInput as formGetInput,
+    getValue as formGetValue,
+    initializeValues as formInitializeValues,
+    renderTextInput as formRenderTextInput,
+    reset as formReset,
+    submit as formSubmit,
+    validateAndUpdate as formValidateAndUpdate,
 } from './form.functions'
-export * from './text-input.model'
+export * from './form-input.model'

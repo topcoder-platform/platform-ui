@@ -1,1 +1,4 @@
-export * from './profile.functions'
+export {
+    getAsync as profileGetAsync,
+    updateAsync as profileUpdateAsync,
+} from './profile.functions'

@@ -5,13 +5,13 @@ export * from './form-elements'
 export * from './global-config.model'
 export * from './profile-provider'
 export {
-    initializeAnalytics,
-    initializeLogger,
+    analyticsInitialize,
+    authUrlLogin,
+    authUrlLogout,
+    authUrlSignup,
     logError,
+    logInitialize,
     logInfo,
-    loginUrl,
-    logoutUrl,
-    signupUrl,
 } from './functions'
 export * from './svgs'
 
