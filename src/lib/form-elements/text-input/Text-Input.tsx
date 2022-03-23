@@ -34,6 +34,7 @@ const TextInput: FC<TextInputProps> = (props: TextInputProps) => {
                 defaultValue={props.value}
                 disabled={!!props.disabled}
                 name={props.name}
+                placeholder={props.placeholder}
                 tabIndex={props.tabIndex}
                 type={props.type || 'text'}
             />

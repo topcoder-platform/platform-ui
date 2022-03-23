@@ -1,7 +1,6 @@
 import { FC } from 'react'
 
 import { authUrlLogin, authUrlSignup, Button, routeRoot } from '../../../../../lib'
-
 import '../../../../../lib/styles/index.scss'
 
 import styles from './ProfileNotLoggedIn.module.scss'
