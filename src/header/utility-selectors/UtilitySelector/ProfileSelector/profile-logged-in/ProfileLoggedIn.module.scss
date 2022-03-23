@@ -2,7 +2,8 @@
 
 $overlaySquare: calc($pad-xxxxl + 2 * $border);
 
-a {
+.profile-avatar,
+.overlay {
     cursor: pointer;
 }
 
@@ -21,7 +22,6 @@ a {
     svg {
         stroke: $turq-160;
         stroke-width: $border;
-        height: $pad-xxl;
-        width: $pad-xxl;
+        @include icon-xxl;
     }
 }

@@ -1,32 +1,45 @@
 import { FC, useContext } from 'react'
+import { Link } from 'react-router-dom'
 
 import {
-    AuthenticationUrlConfig,
+    authUrlLogout,
     ProfileContext,
     ProfileContextData,
-    ProfileRouteConfig,
+    RouteContext,
+    RouteContextData,
 } from '../../../../../../lib'
 
 import styles from './ProfilePanel.module.scss'
 
-const ProfilePanel: FC<{}> = () => {
+interface ProfilePanelProps {
+    toggleProfilePanel: () => void
+}
+
+const ProfilePanel: FC<ProfilePanelProps> = (props: ProfilePanelProps) => {
 
     const { profile }: ProfileContextData = useContext(ProfileContext)
+    const { getPath  }: RouteContextData = useContext(RouteContext)
 
     if (!profile) {
         // this should never happen
         return <></>
     }
 
+    const settingsTitle: string = 'Settings'
+
     return (
         <div className={styles['profile-panel']}>
             <div className={styles.handle}>
                 {profile.handle}
             </div>
-            <a href={ProfileRouteConfig.profile} className={styles.profile}>
-                My Profile
-            </a>
-            <a href={AuthenticationUrlConfig.logout} className={styles.logout}>
+            <Link
+                className={styles.profile}
+                onClick={() => props.toggleProfilePanel()}
+                to={getPath(settingsTitle)}
+            >
+                {settingsTitle}
+            </Link>
+            <a href={authUrlLogout} className={styles.logout}>
                 Log Out
             </a>
         </div>

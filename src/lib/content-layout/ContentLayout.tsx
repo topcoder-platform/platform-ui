@@ -1,13 +1,12 @@
 import classNames from 'classnames'
-import { FC, ReactNode, useContext } from 'react'
+import { FC, ReactNode, /* useContext */ } from 'react'
 
-import { ProfileContext, ProfileContextData } from '../profile-provider'
-import { PlatformRoute, RouteContextData } from '../route-provider'
-import RouteContext from '../route-provider/route.context' // cannot be imported from index file
+/* import { PlatformRoute, RouteContextData } from '../route-provider'
+import RouteContext from '../route-provider/route.context' // cannot be imported from index file */
 import '../styles/index.scss'
 
 import styles from './ContentLayout.module.scss'
-import { Sections, SectionSelectorProps } from './sections'
+import { /* Sections, */ SectionSelectorProps } from './sections'
 
 export interface ContentLayoutProps {
     children?: ReactNode
@@ -16,15 +15,12 @@ export interface ContentLayoutProps {
     title: string
 }
 
+// TODO: uncomment everything related to sections when we have the UI determined
 const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => {
 
-    const { profile }: ProfileContextData = useContext(ProfileContext)
-    const { toolsRoutes, utilsRoutes }: RouteContextData = useContext(RouteContext)
+/*     const { allRoutes }: RouteContextData = useContext(RouteContext)
 
-    const rootRoute: PlatformRoute | undefined = [
-        ...toolsRoutes,
-        ...utilsRoutes,
-    ]
+    const rootRoute: PlatformRoute | undefined = allRoutes
         .find(route => route.title === props.title && route.enabled)
 
     const sections: Array<SectionSelectorProps> = rootRoute?.children
@@ -34,19 +30,27 @@ const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => {
             toolRoute: rootRoute.route,
         }))
         || []
-    const hideSectionsClass: string = !!sections.length ? '' : styles['hide-sections']
+    const hideSectionsClass: string = !sections.length ? '' : styles['show-sections'] */
 
     return (
         <>
-            <div className={classNames(styles.content, props.classNames, hideSectionsClass)}>
-                <Sections sections={sections}></Sections>
-                <div>
-                    <h1>{props.title}</h1>
-                    {props.children}
-                    <div>
-                        Logged in as: {profile?.handle || 'Not Logged In'}
+            <div className={classNames(styles.content, props.classNames/* , hideSectionsClass */)}>
+
+                {/* <Sections sections={sections}></Sections> */}
+
+                <div className={styles['content-outer']}>
+
+                    <div className={styles['content-inner']}>
+
+                        {/* TODO: the title on the page should be an h1 tag, not h4 */}
+                        <h4>{props.title}</h4>
+
+                        {props.children}
+
                     </div>
+
                 </div>
+
             </div>
         </>
     )
