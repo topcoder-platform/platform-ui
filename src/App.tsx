@@ -4,19 +4,11 @@ import { toast, ToastContainer } from 'react-toastify'
 
 import { EnvironmentConfig } from './config'
 import { Header } from './header'
-<<<<<<< HEAD
-import { initializeAnalytics, initializeLogger, ProfileProvider  } from './lib'
-import { RouteContext, RouteContextData } from './lib/route-provider'
-
-initializeAnalytics(EnvironmentConfig)
-initializeLogger(EnvironmentConfig)
-=======
 import { analyticsInitialize, logInitialize, ProfileProvider } from './lib'
 import { RouteContext, RouteContextData } from './lib/route-provider'
 
 analyticsInitialize(EnvironmentConfig)
 logInitialize(EnvironmentConfig)
->>>>>>> 8d9133682a2e4e8acdf9951b5bce491329744b22
 
 const App: FC<{}> = () => {
 

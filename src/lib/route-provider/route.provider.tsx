@@ -17,15 +17,9 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
         = useState<RouteContextData>(defaultRouteContextData)
 
     useEffect(() => {
-<<<<<<< HEAD
-        const getAndSetRoutes: () => Promise<void> = async () => {
-            // TODO: try to make these prop names configurable instead of hard-codded
-=======
-
         let allRoutes: Array<PlatformRoute> = []
 
         const getAndSetRoutes: () => void = () => {
-
             // TODO: try to make these prop names configurable instead of hard-codded
             const toolsRoutes: Array<PlatformRoute> = props.toolsRoutes.filter(route => route.enabled)
             const utilsRoutes: Array<PlatformRoute> = props.utilsRoutes.filter(route => route.enabled)
@@ -33,7 +27,6 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
                 ...toolsRoutes,
                 ...utilsRoutes,
             ]
->>>>>>> 8d9133682a2e4e8acdf9951b5bce491329744b22
             const contextData: RouteContextData = {
                 allRoutes,
                 getChildRoutes,

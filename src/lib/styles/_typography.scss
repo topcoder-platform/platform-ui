@@ -14,23 +14,16 @@ body {
 
 h1,
 h2,
-<<<<<<< HEAD
-h3 {
-    @include font-barlow-condensed;
-=======
 h3,
 h4,
 h5,
 h6,
 h7 {
->>>>>>> 8d9133682a2e4e8acdf9951b5bce491329744b22
     color: $black-100;
     text-transform: uppercase;
     margin: 16px 0;
 }
 
-<<<<<<< HEAD
-=======
 h1,
 h2,
 h3,
@@ -38,17 +31,12 @@ h4 {
     @include font-barlow-condensed;
 }
 
->>>>>>> 8d9133682a2e4e8acdf9951b5bce491329744b22
 h1 {
     @include font-weight-semi-bold;
     font-size: $header-height;
     line-height: 72px;
 }
 
-<<<<<<< HEAD
-h2 {
-    @include font-weight-medium;
-=======
 h1,
 h2,
 h3,
@@ -57,22 +45,15 @@ h4 {
 }
 
 h2 {
->>>>>>> 8d9133682a2e4e8acdf9951b5bce491329744b22
     font-size: 60px;
     line-height: 56px;
 }
 
 h3 {
-<<<<<<< HEAD
-    @include font-weight-medium;
-=======
->>>>>>> 8d9133682a2e4e8acdf9951b5bce491329744b22
     font-size: 48px;
     line-height: 48px;
 }
 
-<<<<<<< HEAD
-=======
 h4 {
     font-size: 34px;
     line-height: 32px;
@@ -107,7 +88,6 @@ hr {
     margin: 16px 0px;
 }
 
->>>>>>> 8d9133682a2e4e8acdf9951b5bce491329744b22
 .medium-subtitle {
     font-size: 14px;
     line-height: 16px;
