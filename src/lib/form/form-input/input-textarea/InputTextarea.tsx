@@ -4,7 +4,6 @@ import { FormFieldWrapper } from '../form-field-wrapper'
 
 import styles from './InputTextarea.module.scss'
 
-
 interface InputTextareaProps {
     readonly dirty?: boolean
     readonly disabled?: boolean
