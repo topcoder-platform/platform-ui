@@ -12,9 +12,9 @@ import {
     formSubmitAsync,
     formValidateAndUpdate,
 } from './form-functions'
+import { InputText, InputTextarea } from './form-input'
 import { FormInputModel } from './form-input.model'
 import styles from './Form.module.scss'
-import { TextInput } from './text-input'
 
 interface FormProps<ValueType, RequestType> {
     readonly formDef: FormDefinition
@@ -71,15 +71,26 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         const formInputs: Array<JSX.Element> = props.formDef.inputs
             .map(input => formGetInputModel(props.formDef.inputs, input.name))
             .map((inputModel, index) => {
-                return (
-                    <TextInput
-                        {...inputModel}
-                        key={inputModel.name}
-                        tabIndex={inputModel.notTabbable ? -1 : index + 1}
-                        type={inputModel.type || 'text'}
-                        value={inputModel.value}
-                    />
-                )
+                switch (inputModel.type) {
+                    case 'textarea':
+                        return <InputTextarea
+                            {...inputModel}
+                            key={inputModel.name}
+                            tabIndex={inputModel.notTabbable ? -1 : index + 1}
+                            value={inputModel.value}
+                        />
+                    default:
+                        return (
+                            <InputText
+                                {...inputModel}
+                                key={inputModel.name}
+                                tabIndex={inputModel.notTabbable ? -1 : index + 1}
+                                type={inputModel.type || 'text'}
+                                value={inputModel.value}
+                            />
+                        )
+                }
+
             })
 
         const buttons: Array<JSX.Element> = props.formDef.buttons
