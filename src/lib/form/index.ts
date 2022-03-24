@@ -6,5 +6,5 @@ export {
     formGetInputModel,
     formReset,
 } from './form-functions'
-export { inputTextOptionalHint } from './input-text'
+export { inputOptionalHint } from './form-input'
 export * from './validator-functions'

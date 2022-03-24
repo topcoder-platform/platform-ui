@@ -1,21 +1,21 @@
-@import '../../styles';
+@import '../../../styles';
 
 $form-pad-top: calc($pad-md - $border);
 $border-xs: 1px;
 $error-line-height: 14px;
 
 .form-field-wrapper {
-    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     padding-bottom: $pad-md;
 
     .form-field {
+        flex: 1;
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        padding: $pad-sm $form-pad-top;
+        padding: $pad-sm $form-pad-top $border-xs $form-pad-top;
         height: calc($pad-xxl * 2);
         background: $tc-white;
         border: $border-xs solid $black-40;
@@ -35,7 +35,7 @@ $error-line-height: 14px;
         &.focus,
         &.form-field-error {
             border-width: $border;
-            padding: calc($pad-sm - $border-xs) calc($form-pad-top - $border-xs);
+            padding: calc($pad-sm - $border-xs) calc($form-pad-top - $border-xs) 0 calc($form-pad-top - $border-xs);
         }
 
         &.disabled {
@@ -54,6 +54,8 @@ $error-line-height: 14px;
         }
 
         .label {
+            display: flex;
+            flex-direction: column;
             top: calc(50% - $form-pad-top/2);
             color: $turq-160;
             margin-bottom: $pad-xs;

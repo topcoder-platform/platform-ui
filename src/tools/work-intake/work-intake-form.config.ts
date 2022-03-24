@@ -1,6 +1,6 @@
 import {
     FormDefinition,
-    inputTextOptionalHint,
+    inputOptionalHint,
     validatorRequired,
 } from '../../lib'
 
@@ -26,7 +26,7 @@ export const workIntakeDef: FormDefinition = {
             ],
         },
         {
-            hint: inputTextOptionalHint,
+            hint: inputOptionalHint,
             label: 'Share your data',
             name: 'data',
             placeholder: 'Paste a link',
@@ -36,7 +36,7 @@ export const workIntakeDef: FormDefinition = {
         {
             label: 'What would you like to learn?',
             name: 'description',
-            type: 'text',
+            type: 'textarea',
             validators: [
                 validatorRequired,
             ],

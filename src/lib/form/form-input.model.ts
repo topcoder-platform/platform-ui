@@ -9,7 +9,7 @@ export interface FormInputModel {
     readonly notTabbable?: boolean
     readonly placeholder?: string
     readonly preventAutocomplete?: boolean
-    readonly type: 'password' | 'text'
+    readonly type: 'password' | 'text' | 'textarea'
     readonly validators: Array<(value: string | undefined, formValues?: HTMLFormControlsCollection, otherField?: string) => string | undefined>
     value?: string
 }

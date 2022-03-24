@@ -1,9 +1,11 @@
 import classNames from 'classnames'
 import { Dispatch, FC, ReactNode, SetStateAction, useState } from 'react'
 
-import { IconSolid } from '../../svgs'
+import { IconSolid } from '../../../svgs'
 
 import styles from './FormFieldWrapper.module.scss'
+
+export const optionalHint: string = '(optional)'
 
 interface FormFieldWrapperProps {
     readonly children: ReactNode
