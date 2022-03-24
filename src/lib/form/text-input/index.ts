@@ -1,1 +1,4 @@
-export { default as TextInput } from './Text-Input'
+export {
+    default as TextInput,
+    optionalHint as textInputOptionalHint,
+} from './Text-Input'

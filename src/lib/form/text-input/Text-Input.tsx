@@ -4,6 +4,8 @@ import { FormFieldWrapper } from '../form-field-wrapper'
 
 import styles from './Text-Input.module.scss'
 
+export const optionalHint: string = '(optional)'
+
 interface TextInputProps {
     readonly dirty?: boolean
     readonly disabled?: boolean
