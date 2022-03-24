@@ -15,18 +15,30 @@ export const profileFormDef: FormDefinition = {
             buttonStyle: 'secondary',
             isSave: true,
             label: 'Save',
-            order: 1,
             size: 'xl',
-            tabIndex: 4,
             type: 'submit',
         },
     ],
     inputs: [
         {
+            label: 'First Name',
+            name: ProfileFieldName.firstName,
+            type: 'text',
+            validators: [
+                validatorRequired,
+            ],
+        },
+        {
+            label: 'Last Name',
+            name: ProfileFieldName.lastName,
+            type: 'text',
+            validators: [
+                validatorRequired,
+            ],
+        },
+        {
             label: 'Email',
             name: ProfileFieldName.email,
-            order: 3,
-            tabIndex: 3,
             type: 'text',
             validators: [
                 validatorRequired,
@@ -34,33 +46,12 @@ export const profileFormDef: FormDefinition = {
             ],
         },
         {
-            label: 'First Name',
-            name: ProfileFieldName.firstName,
-            order: 1,
-            tabIndex: 1,
-            type: 'text',
-            validators: [
-                validatorRequired,
-            ],
-        },
-        {
             disabled: true,
             label: 'Username',
             name: ProfileFieldName.handle,
-            order: 4,
-            tabIndex: -1,
+            notTabbable: true,
             type: 'text',
             validators: [],
-        },
-        {
-            label: 'Last Name',
-            name: ProfileFieldName.lastName,
-            order: 2,
-            tabIndex: 2,
-            type: 'text',
-            validators: [
-                validatorRequired,
-            ],
         },
     ],
     title: profileFormTitle,

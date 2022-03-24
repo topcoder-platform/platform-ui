@@ -1,7 +1,14 @@
-import { ButtonProps } from '../button/Button'
+import { ButtonSize, ButtonStyle, ButtonType } from '../button'
 
-export interface FormButton extends ButtonProps {
+export interface FormButton {
+    readonly buttonStyle?: ButtonStyle
     readonly isReset?: boolean
     readonly isSave?: boolean
-    readonly order: number
+    readonly label: string
+    readonly notTabble?: boolean
+    readonly onClick?: (event?: any) => void
+    route?: string
+    readonly size?: ButtonSize
+    readonly type?: ButtonType
+    readonly url?: string
 }

@@ -12,9 +12,7 @@ export const workIntakeDef: FormDefinition = {
             buttonStyle: 'secondary',
             isSave: true,
             label: 'Submit',
-            order: 1,
             size: 'xl',
-            tabIndex: 4,
             type: 'submit',
         },
     ],
@@ -22,8 +20,6 @@ export const workIntakeDef: FormDefinition = {
         {
             label: 'Project Title',
             name: 'title',
-            order: 1,
-            tabIndex: 1,
             type: 'text',
             validators: [
                 validatorRequired,
@@ -33,17 +29,13 @@ export const workIntakeDef: FormDefinition = {
             hint: textInputOptionalHint,
             label: 'Share your data',
             name: 'data',
-            order: 2,
             placeholder: 'Paste a link',
-            tabIndex: 2,
             type: 'text',
             validators: [],
         },
         {
             label: 'What would you like to learn?',
-            name: 'learn',
-            order: 3,
-            tabIndex: 3,
+            name: 'description',
             type: 'text',
             validators: [
                 validatorRequired,

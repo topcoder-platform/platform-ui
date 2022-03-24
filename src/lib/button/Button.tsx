@@ -4,16 +4,20 @@ import { Link } from 'react-router-dom'
 
 import styles from './Button.module.scss'
 
+export type ButtonSize = 'sm' | 'md' | 'lg' | 'xl'
+export type ButtonStyle = 'primary' | 'secondary' | 'tertiary' | 'text'
+export type ButtonType = 'button' | 'submit'
+
 export interface ButtonProps {
-    readonly buttonStyle?: 'primary' | 'secondary' | 'tertiary' | 'text'
+    readonly buttonStyle?: ButtonStyle
     readonly className?: string
     readonly disable?: boolean
     readonly label: string
     readonly onClick?: (event?: any) => void
     readonly route?: string
-    readonly size?: 'sm' | 'md' | 'lg' | 'xl'
+    readonly size?: ButtonSize
     readonly tabIndex: number
-    readonly type?: 'button' | 'submit'
+    readonly type?: ButtonType
     readonly url?: string
 }
 

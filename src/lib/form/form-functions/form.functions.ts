@@ -12,7 +12,7 @@ export function getInputElement(formElements: HTMLFormControlsCollection, fieldN
     return formElements.namedItem(fieldName) as HTMLInputElement
 }
 
-export function getInputModel(inputs: Array<FormInputModel>, fieldName: string): FormInputModel {
+export function getInputModel(inputs: ReadonlyArray<FormInputModel>, fieldName: string): FormInputModel {
 
     const formField: FormInputModel | undefined = inputs.find(input => input.name === fieldName)
 
@@ -24,7 +24,7 @@ export function getInputModel(inputs: Array<FormInputModel>, fieldName: string):
     return formField
 }
 
-export function initializeValues<T>(inputs: Array<FormInputModel>, formValues?: T): void {
+export function initializeValues<T>(inputs: ReadonlyArray<FormInputModel>, formValues?: T): void {
     inputs
         .filter(input => !input.dirty)
         .forEach(input => {
@@ -34,7 +34,7 @@ export function initializeValues<T>(inputs: Array<FormInputModel>, formValues?: 
         })
 }
 
-export function reset(inputs: Array<FormInputModel>, formValue?: any): void {
+export function reset(inputs: ReadonlyArray<FormInputModel>, formValue?: any): void {
     inputs
         .forEach(inputDef => {
             inputDef.dirty = false
@@ -45,7 +45,7 @@ export function reset(inputs: Array<FormInputModel>, formValue?: any): void {
 
 export async function submitAsync<T, R>(
     event: FormEvent<HTMLFormElement>,
-    inputs: Array<FormInputModel>,
+    inputs: ReadonlyArray<FormInputModel>,
     formName: string,
     formValue: T,
     save: (value: T) => Promise<R>,
@@ -68,7 +68,6 @@ export async function submitAsync<T, R>(
     // if there are any validation errors, display a message and stop submitting
     const isValid: boolean = validate(inputs, formValues, true)
     if (!isValid) {
-        console.debug(inputs)
         toast.error('Changes could not be saved. Please resolve errors.')
         return Promise.reject(ErrorMessage.submit)
     }
@@ -86,7 +85,7 @@ export async function submitAsync<T, R>(
         })
 }
 
-export function validateAndUpdate(event: FormEvent<HTMLFormElement>, inputs: Array<FormInputModel>): boolean {
+export function validateAndUpdate(event: FormEvent<HTMLFormElement>, inputs: ReadonlyArray<FormInputModel>): boolean {
 
     const input: HTMLInputElement = (event.target as HTMLInputElement)
     // set the input def info
@@ -101,8 +100,8 @@ export function validateAndUpdate(event: FormEvent<HTMLFormElement>, inputs: Arr
     return isValid
 }
 
-function validate(inputs: Array<FormInputModel>, formElements: HTMLFormControlsCollection, formDirty?: boolean): boolean {
-    const errors: Array<FormInputModel> = inputs
+function validate(inputs: ReadonlyArray<FormInputModel>, formElements: HTMLFormControlsCollection, formDirty?: boolean): boolean {
+    const errors: ReadonlyArray<FormInputModel> = inputs
         .filter(formInputDef => {
             formInputDef.error = undefined
             formInputDef.dirty = formInputDef.dirty || !!formDirty

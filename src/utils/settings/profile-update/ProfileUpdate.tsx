@@ -29,7 +29,7 @@ const ProfileUpdate: FC<ProfileUpdateProps> = (props: ProfileUpdateProps) => {
     const [profileForm]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>(profileFormDef)
 
-    function requestGenerator(inputs: Array<FormInputModel>): UserProfileUpdateRequest {
+    function requestGenerator(inputs: ReadonlyArray<FormInputModel>): UserProfileUpdateRequest {
         const email: string = formGetInputModel(inputs, ProfileFieldName.email).value as string
         const firstName: string = formGetInputModel(inputs, ProfileFieldName.firstName).value as string
         const lastName: string = formGetInputModel(inputs, ProfileFieldName.lastName).value as string
@@ -76,7 +76,7 @@ const ProfileUpdate: FC<ProfileUpdateProps> = (props: ProfileUpdateProps) => {
                         onClick={() => formReset(profileForm.inputs)}
                         route={props.passwordPath}
                         size='xl'
-                        tabIndex={5}
+                        tabIndex={-1}
                     />
                 </div>
 

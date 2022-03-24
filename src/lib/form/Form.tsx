@@ -19,7 +19,7 @@ import { TextInput } from './text-input'
 interface FormProps<ValueType, RequestType> {
     readonly formDef: FormDefinition
     readonly formValues?: ValueType
-    readonly requestGenerator: (inputs: Array<FormInputModel>) => RequestType
+    readonly requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => RequestType
     readonly resetOnError: boolean
     readonly save: (value: RequestType) => Promise<void>
 }
@@ -69,14 +69,13 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         formInitializeValues(formDef.inputs, props.formValues)
 
         const formInputs: Array<JSX.Element> = props.formDef.inputs
-            .sort((a, b) => a.order - b.order)
             .map(input => formGetInputModel(props.formDef.inputs, input.name))
-            .map(inputModel => {
+            .map((inputModel, index) => {
                 return (
                     <TextInput
                         {...inputModel}
                         key={inputModel.name}
-                        tabIndex={inputModel.tabIndex}
+                        tabIndex={inputModel.notTabbable ? -1 : index + 1}
                         type={inputModel.type || 'text'}
                         value={inputModel.value}
                     />
@@ -84,8 +83,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             })
 
         const buttons: Array<JSX.Element> = props.formDef.buttons
-            .sort((a, b) => a.order - b.order)
-            .map(button => {
+            .map((button, index) => {
                 // if this is a reset button, set its onclick to reset
                 if (!!button.isReset) {
                     button = {
@@ -98,6 +96,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                         {...button}
                         disable={button.isSave && disableSave}
                         key={button.label}
+                        tabIndex={button.notTabble ? -1 : index + props.formDef.inputs.length}
                     />
                 )
             })

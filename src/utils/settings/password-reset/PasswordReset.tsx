@@ -26,14 +26,10 @@ const PasswordReset: FC<PasswordUpdateProps> = (props: PasswordUpdateProps) => {
         = useState<FormDefinition>(passwordFormDef)
 
     // set the profile path on the button
-    const backButtonIndex: number = passwordForm.buttons.findIndex(b => b.label === 'Back')
-    passwordForm.buttons[backButtonIndex] = {
-        ...passwordForm.buttons[backButtonIndex],
-        route: props.profilePath,
-    }
+    passwordForm.buttons[0].route = props.profilePath
 
-    function requestGenerator(inputs: Array<FormInputModel>): PasswordUpdateRequest {
-        const password: string =  formGetInputModel(inputs, PasswordFieldName.currentPassword).value as string
+    function requestGenerator(inputs: ReadonlyArray<FormInputModel>): PasswordUpdateRequest {
+        const password: string = formGetInputModel(inputs, PasswordFieldName.currentPassword).value as string
         const newPassword: string = formGetInputModel(inputs, PasswordFieldName.newPassword).value as string
         return {
             newPassword,
