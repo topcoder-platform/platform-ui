@@ -14,7 +14,7 @@ import {
 } from './form-functions'
 import { FormInputModel } from './form-input.model'
 import styles from './Form.module.scss'
-import { TextInput } from './text-input'
+import { InputText } from './input-text'
 
 interface FormProps<ValueType, RequestType> {
     readonly formDef: FormDefinition
@@ -72,7 +72,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             .map(input => formGetInputModel(props.formDef.inputs, input.name))
             .map((inputModel, index) => {
                 return (
-                    <TextInput
+                    <InputText
                         {...inputModel}
                         key={inputModel.name}
                         tabIndex={inputModel.notTabbable ? -1 : index + 1}

@@ -3,7 +3,7 @@ import { Dispatch, FC, ReactNode, SetStateAction, useState } from 'react'
 
 import { IconSolid } from '../../svgs'
 
-import styles from './Form-Field-Wrapper.module.scss'
+import styles from './FormFieldWrapper.module.scss'
 
 interface FormFieldWrapperProps {
     readonly children: ReactNode

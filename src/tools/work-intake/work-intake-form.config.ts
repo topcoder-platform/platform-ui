@@ -1,6 +1,6 @@
 import {
     FormDefinition,
-    textInputOptionalHint,
+    inputTextOptionalHint,
     validatorRequired,
 } from '../../lib'
 
@@ -26,7 +26,7 @@ export const workIntakeDef: FormDefinition = {
             ],
         },
         {
-            hint: textInputOptionalHint,
+            hint: inputTextOptionalHint,
             label: 'Share your data',
             name: 'data',
             placeholder: 'Paste a link',

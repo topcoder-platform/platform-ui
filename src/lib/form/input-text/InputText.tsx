@@ -2,11 +2,11 @@ import { FC } from 'react'
 
 import { FormFieldWrapper } from '../form-field-wrapper'
 
-import styles from './Text-Input.module.scss'
+import styles from './InputText.module.scss'
 
 export const optionalHint: string = '(optional)'
 
-interface TextInputProps {
+interface InputTextProps {
     readonly dirty?: boolean
     readonly disabled?: boolean
     readonly error?: string
@@ -20,7 +20,7 @@ interface TextInputProps {
     readonly value?: string | number
 }
 
-const TextInput: FC<TextInputProps> = (props: TextInputProps) => {
+const InputText: FC<InputTextProps> = (props: InputTextProps) => {
     return (
         <FormFieldWrapper
             dirty={!!props.dirty}
@@ -44,4 +44,4 @@ const TextInput: FC<TextInputProps> = (props: TextInputProps) => {
     )
 }
 
-export default TextInput
+export default InputText
