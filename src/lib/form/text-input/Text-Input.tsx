@@ -5,17 +5,17 @@ import { FormFieldWrapper } from '../form-field-wrapper'
 import styles from './Text-Input.module.scss'
 
 interface TextInputProps {
-    dirty?: boolean
-    disabled?: boolean
-    error?: string
-    hint?: string
-    label?: string
-    name: string
-    placeholder?: string
-    preventAutocomplete?: boolean
-    tabIndex: number
-    type: 'password' | 'text'
-    value?: string | number
+    readonly dirty?: boolean
+    readonly disabled?: boolean
+    readonly error?: string
+    readonly hint?: string
+    readonly label?: string
+    readonly name: string
+    readonly placeholder?: string
+    readonly preventAutocomplete?: boolean
+    readonly tabIndex: number
+    readonly type: 'password' | 'text'
+    readonly value?: string | number
 }
 
 const TextInput: FC<TextInputProps> = (props: TextInputProps) => {

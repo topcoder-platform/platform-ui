@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 import {
     authUrlLogout,
-    ProfileContext,
+    profileContext,
     ProfileContextData,
     RouteContext,
     RouteContextData,
@@ -17,7 +17,7 @@ interface ProfilePanelProps {
 
 const ProfilePanel: FC<ProfilePanelProps> = (props: ProfilePanelProps) => {
 
-    const { profile }: ProfileContextData = useContext(ProfileContext)
+    const { profile }: ProfileContextData = useContext(profileContext)
     const { getPath  }: RouteContextData = useContext(RouteContext)
 
     if (!profile) {

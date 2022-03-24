@@ -1,44 +1,36 @@
 import { Dispatch, FormEvent, SetStateAction } from 'react'
 import { toast } from 'react-toastify'
 
-import { TextInput } from '../text-input'
+import { FormInputModel } from '../form-input.model'
 
-import { FormDefinition } from './form-definition.model'
-import { FormInputModel } from './form-input.model'
-
-export function getInput(formElements: HTMLFormControlsCollection, fieldName: string): HTMLInputElement {
+export function getInputElement(formElements: HTMLFormControlsCollection, fieldName: string): HTMLInputElement {
     return formElements.namedItem(fieldName) as HTMLInputElement
 }
 
-export function getValue(formElements: HTMLFormControlsCollection, fieldName: string): string {
-    return getInput(formElements, fieldName).value
+export function getInputModel(inputs: Array<FormInputModel>, fieldName: string): FormInputModel {
+
+    const formField: FormInputModel | undefined = inputs.find(input => input.name === fieldName)
+
+    // if we can't find the input we have a problem
+    if (!formField) {
+        throw new Error(`There is no input definition for the ${fieldName} field`)
+    }
+
+    return formField
 }
 
-export function initializeValues(formDef: FormDefinition, formValues: any): void {
-    getInputArray(formDef)
+export function initializeValues<T>(inputs: Array<FormInputModel>, formValues?: T): void {
+    inputs
         .filter(input => !input.dirty)
-        .forEach(input => input.value = formValues[input.name])
+        .forEach(input => {
+            input.value = !!(formValues as any)?.hasOwnProperty(input.name)
+                ? (formValues as any)[input.name]
+                : undefined
+        })
 }
 
-export function renderTextInput(
-    formDef: FormDefinition,
-    fieldName: string,
-): JSX.Element {
-
-    const formField: FormInputModel = formDef[fieldName]
-
-    return (
-        <TextInput
-            {...formField}
-            tabIndex={formField.tabIndex || 0}
-            type={formField.type || 'text'}
-            value={formField.value}
-        />
-    )
-}
-
-export function reset(formDef: FormDefinition, formValue?: any): void {
-    getInputArray(formDef)
+export function reset(inputs: Array<FormInputModel>, formValue?: any): void {
+    inputs
         .forEach(inputDef => {
             inputDef.dirty = false
             inputDef.error = undefined
@@ -46,9 +38,9 @@ export function reset(formDef: FormDefinition, formValue?: any): void {
         })
 }
 
-export async function submit<T, R>(
+export async function submitAsync<T, R>(
     event: FormEvent<HTMLFormElement>,
-    formDef: FormDefinition,
+    inputs: Array<FormInputModel>,
     formName: string,
     formValue: T,
     save: (value: T) => Promise<R>,
@@ -58,10 +50,8 @@ export async function submit<T, R>(
     event.preventDefault()
     setDisableButton(true)
 
-    const formFieldDefs: Array<FormInputModel> = getInputArray(formDef)
-
     // if there are no dirty fields, display a message and stop submitting
-    const dirty: FormInputModel | undefined = formFieldDefs.find(fieldDef => !!fieldDef.dirty)
+    const dirty: FormInputModel | undefined = inputs.find(fieldDef => !!fieldDef.dirty)
     if (!dirty) {
         toast.info('No changes detected.')
         return
@@ -71,51 +61,42 @@ export async function submit<T, R>(
     const formValues: HTMLFormControlsCollection = (event.target as HTMLFormElement).elements
 
     // if there are any validation errors, display a message and stop submitting
-    const isValid: boolean = validate(formDef, formValues, true)
+    const isValid: boolean = validate(inputs, formValues, true)
     if (!isValid) {
         toast.error('Changes could not be saved. Please resolve errors.')
-        return
+        return Promise.reject()
     }
 
     // set the values for the updated value
-    formFieldDefs.forEach(field => (formValue as any)[field.name] = field.value)
+    inputs.forEach(field => (formValue as any)[field.name] = field.value)
 
     return save(formValue)
         .then(() => {
             toast.success(`Your ${formName} has been saved.`)
-            reset(formDef, formValue)
         })
         .catch(error => {
             toast.error(error.response?.data?.result?.content || error.message || error)
+            return Promise.reject()
         })
 }
 
-export function validateAndUpdate(
-    event: FormEvent<HTMLFormElement>,
-    formDef: FormDefinition,
-): boolean {
+export function validateAndUpdate(event: FormEvent<HTMLFormElement>, inputs: Array<FormInputModel>): boolean {
 
     const input: HTMLInputElement = (event.target as HTMLInputElement)
     // set the input def info
-    const inputDef: FormInputModel = formDef[input.name]
+    const inputDef: FormInputModel = getInputModel(inputs, input.name)
     inputDef.dirty = true
     inputDef.value = input.value
 
     // validate the form
     const formElements: HTMLFormControlsCollection = (input.form as HTMLFormElement).elements
-    const isValid: boolean = validate(formDef, formElements)
+    const isValid: boolean = validate(inputs, formElements)
 
-    formDef[input.name] = inputDef
     return isValid
 }
 
-function getInputArray(formDef: FormDefinition): Array<FormInputModel> {
-    return Object.keys(formDef)
-        .map(key => formDef[key])
-}
-
-function validate(formDef: FormDefinition, formElements: HTMLFormControlsCollection, formDirty?: boolean): boolean {
-    const errors: Array<FormInputModel> = getInputArray(formDef)
+function validate(inputs: Array<FormInputModel>, formElements: HTMLFormControlsCollection, formDirty?: boolean): boolean {
+    const errors: Array<FormInputModel> = inputs
         .filter(formInputDef => {
             formInputDef.error = undefined
             formInputDef.dirty = formInputDef.dirty || !!formDirty

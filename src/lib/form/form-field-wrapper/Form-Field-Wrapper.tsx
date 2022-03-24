@@ -6,13 +6,13 @@ import { IconSolid } from '../../svgs'
 import styles from './Form-Field-Wrapper.module.scss'
 
 interface FormFieldWrapperProps {
-    children: ReactNode
-    dirty?: boolean
-    disabled: boolean
-    error?: string
-    hint?: string
-    label: string
-    name: string
+    readonly children: ReactNode
+    readonly dirty?: boolean
+    readonly disabled: boolean
+    readonly error?: string
+    readonly hint?: string
+    readonly label: string
+    readonly name: string
 }
 
 const FormFieldWrapper: FC<FormFieldWrapperProps> = (props: FormFieldWrapperProps) => {

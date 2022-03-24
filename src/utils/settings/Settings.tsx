@@ -1,10 +1,10 @@
 import { FC, useContext } from 'react'
-import { NavigateFunction, Outlet, Routes, useNavigate } from 'react-router-dom'
+import { Outlet, Routes } from 'react-router-dom'
 
 import {
     authUrlLogin,
     ContentLayout,
-    ProfileContext,
+    profileContext,
     ProfileContextData,
     RouteContext,
     RouteContextData,
@@ -16,16 +16,18 @@ export const utilTitle: string = 'Settings'
 
 const Settings: FC<{}> = () => {
 
-    const profileContext: ProfileContextData = useContext(ProfileContext)
-    const { profile }: ProfileContextData = profileContext
+    const profileContextData: ProfileContextData = useContext(profileContext)
+    const { profile, initialized }: ProfileContextData = profileContextData
 
     const { getChildRoutes }: RouteContextData = useContext(RouteContext)
 
-    const navigate: NavigateFunction = useNavigate()
-
-    // if we don't have a profile, navigate to the login page
+    // TODO: create an auth provider
+    // if we don't have a profile, don't show the page until it's initialized
     if (!profile) {
-        navigate(authUrlLogin(routeRoot))
+        // if we're already initialized, navigate to the login page
+        if (initialized) {
+            window.location.href = authUrlLogin(routeRoot)
+        }
         return <></>
     }
 

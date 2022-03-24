@@ -1,1 +1,2 @@
-export { default as PasswordReset, passwordFormTitle } from './PasswordReset'
+export { default as PasswordReset } from './PasswordReset'
+export { passwordFormTitle } from './password-reset-form.config'
