@@ -5,6 +5,7 @@ import '../styles/index.scss'
 
 import { FormDefinition } from './form-definition.model'
 import {
+    FormErrorMessage,
     formGetInputModel,
     formInitializeValues,
     formReset,
@@ -55,11 +56,13 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                     formReset(formDef.inputs, props.formValues)
                     setFormDef({ ...formDef })
                 })
-                .catch(() => {
-                    if (props.resetOnError) {
+                .catch((error: FormErrorMessage) => {
+                    // only reset on save errors
+                    if (props.resetOnError && error === FormErrorMessage.save) {
                         formReset(formDef.inputs, props.formValues)
                         setFormKey(Date.now())
                     }
+                    setFormDef({ ...formDef })
                 })
         }
 

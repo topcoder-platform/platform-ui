@@ -1,4 +1,5 @@
 export {
+    ErrorMessage as FormErrorMessage,
     getInputElement as formGetInput,
     getInputModel as formGetInputModel,
     initializeValues as formInitializeValues,

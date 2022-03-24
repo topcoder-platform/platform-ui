@@ -3,6 +3,11 @@ import { toast } from 'react-toastify'
 
 import { FormInputModel } from '../form-input.model'
 
+export enum ErrorMessage {
+    save = 'Error on save',
+    submit = 'Error on submit',
+}
+
 export function getInputElement(formElements: HTMLFormControlsCollection, fieldName: string): HTMLInputElement {
     return formElements.namedItem(fieldName) as HTMLInputElement
 }
@@ -63,8 +68,9 @@ export async function submitAsync<T, R>(
     // if there are any validation errors, display a message and stop submitting
     const isValid: boolean = validate(inputs, formValues, true)
     if (!isValid) {
+        console.debug(inputs)
         toast.error('Changes could not be saved. Please resolve errors.')
-        return Promise.reject()
+        return Promise.reject(ErrorMessage.submit)
     }
 
     // set the values for the updated value
@@ -76,7 +82,7 @@ export async function submitAsync<T, R>(
         })
         .catch(error => {
             toast.error(error.response?.data?.result?.content || error.message || error)
-            return Promise.reject()
+            return Promise.reject(ErrorMessage.save)
         })
 }
 
