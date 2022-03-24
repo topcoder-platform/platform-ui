@@ -27,6 +27,7 @@ export const passwordFormDef: FormDefinition = {
         },
         {
             buttonStyle: 'secondary',
+            isSave: true,
             label: 'Save',
             order: 2,
             size: 'xl',

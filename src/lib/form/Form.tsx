@@ -96,7 +96,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                 return (
                     <Button
                         {...button}
-                        disable={disableSave}
+                        disable={button.isSave && disableSave}
                         key={button.label}
                     />
                 )

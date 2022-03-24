@@ -13,6 +13,7 @@ export const profileFormDef: FormDefinition = {
     buttons: [
         {
             buttonStyle: 'secondary',
+            isSave: true,
             label: 'Save',
             order: 1,
             size: 'xl',

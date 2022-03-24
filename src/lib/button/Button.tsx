@@ -10,7 +10,7 @@ export interface ButtonProps {
     readonly disable?: boolean
     readonly label: string
     readonly onClick?: (event?: any) => void
-    route?: string
+    readonly route?: string
     readonly size?: 'sm' | 'md' | 'lg' | 'xl'
     readonly tabIndex: number
     readonly type?: 'button' | 'submit'

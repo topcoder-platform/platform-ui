@@ -10,6 +10,7 @@ export const workIntakeDef: FormDefinition = {
     buttons: [
         {
             buttonStyle: 'secondary',
+            isSave: true,
             label: 'Submit',
             order: 1,
             size: 'xl',
