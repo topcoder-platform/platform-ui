@@ -6,6 +6,8 @@ import {
     validatorRequired,
 } from '../../../lib'
 
+export const passwordFormTitle: string = 'Reset Password'
+
 export enum PasswordFieldName {
     confirmPassword = 'confirmPassword',
     currentPassword = 'password',
@@ -13,39 +15,55 @@ export enum PasswordFieldName {
 }
 
 export const passwordFormDef: FormDefinition = {
-    confirmPassword: {
-        dependentField: PasswordFieldName.newPassword,
-        label: 'Confirm Password',
-        name: PasswordFieldName.confirmPassword,
-        placeholder: 're-type your new password',
-        tabIndex: 3,
-        type: 'password',
-        validators: [
-            validatorRequired,
-            validatorMatchOther,
-        ],
-    },
-    newPassword: {
-        dependentField: PasswordFieldName.currentPassword,
-        label: 'New Password',
-        name: PasswordFieldName.newPassword,
-        placeholder: 'type your new password',
-        tabIndex: 2,
-        type: 'password',
-        validators: [
-            validatorRequired,
-            validatorDoesNotMatchOther,
-            validatorPassword,
-        ],
-    },
-    [PasswordFieldName.currentPassword]: {
-        label: 'Current Password',
-        name: PasswordFieldName.currentPassword,
-        placeholder: 'type your current password',
-        tabIndex: 1,
-        type: 'password',
-        validators: [
-            validatorRequired,
-        ],
-    },
+    buttons: [
+        {
+            buttonStyle: 'tertiary',
+            isReset: true,
+            label: 'Back',
+            notTabble: true,
+            size: 'xl',
+        },
+        {
+            buttonStyle: 'secondary',
+            isSave: true,
+            label: 'Save',
+            size: 'xl',
+            type: 'submit',
+        },
+    ],
+    inputs: [
+        {
+            label: 'Current Password',
+            name: PasswordFieldName.currentPassword,
+            placeholder: 'type your current password',
+            type: 'password',
+            validators: [
+                validatorRequired,
+            ],
+        },
+        {
+            dependentField: PasswordFieldName.currentPassword,
+            label: 'New Password',
+            name: PasswordFieldName.newPassword,
+            placeholder: 'type your new password',
+            type: 'password',
+            validators: [
+                validatorRequired,
+                validatorDoesNotMatchOther,
+                validatorPassword,
+            ],
+        },
+        {
+            dependentField: PasswordFieldName.newPassword,
+            label: 'Confirm Password',
+            name: PasswordFieldName.confirmPassword,
+            placeholder: 're-type your new password',
+            type: 'password',
+            validators: [
+                validatorRequired,
+                validatorMatchOther,
+            ],
+        },
+    ],
+    title: passwordFormTitle,
 }

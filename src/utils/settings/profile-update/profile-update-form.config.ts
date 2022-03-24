@@ -1,5 +1,7 @@
 import { FormDefinition, validatorEmail, validatorRequired } from '../../../lib'
 
+export const profileFormTitle: string = 'Profile'
+
 export enum ProfileFieldName {
     email = 'email',
     firstName = 'firstName',
@@ -8,40 +10,49 @@ export enum ProfileFieldName {
 }
 
 export const profileFormDef: FormDefinition = {
-    email: {
-        label: 'Email',
-        name: ProfileFieldName.email,
-        tabIndex: 3,
-        type: 'text',
-        validators: [
-            validatorRequired,
-            validatorEmail,
-        ],
-    },
-    firstName: {
-        label: 'First Name',
-        name: ProfileFieldName.firstName,
-        tabIndex: 1,
-        type: 'text',
-        validators: [
-            validatorRequired,
-        ],
-    },
-    handle: {
-        disabled: true,
-        label: 'Username',
-        name: ProfileFieldName.handle,
-        tabIndex: -1,
-        type: 'text',
-        validators: [],
-    },
-    lastName: {
-        label: 'Last Name',
-        name: ProfileFieldName.lastName,
-        tabIndex: 2,
-        type: 'text',
-        validators: [
-            validatorRequired,
-        ],
-    },
+    buttons: [
+        {
+            buttonStyle: 'secondary',
+            isSave: true,
+            label: 'Save',
+            size: 'xl',
+            type: 'submit',
+        },
+    ],
+    inputs: [
+        {
+            label: 'First Name',
+            name: ProfileFieldName.firstName,
+            type: 'text',
+            validators: [
+                validatorRequired,
+            ],
+        },
+        {
+            label: 'Last Name',
+            name: ProfileFieldName.lastName,
+            type: 'text',
+            validators: [
+                validatorRequired,
+            ],
+        },
+        {
+            label: 'Email',
+            name: ProfileFieldName.email,
+            type: 'text',
+            validators: [
+                validatorRequired,
+                validatorEmail,
+            ],
+        },
+        {
+            disabled: true,
+            label: 'Username',
+            name: ProfileFieldName.handle,
+            notTabbable: true,
+            type: 'text',
+            validators: [],
+        },
+    ],
+    title: profileFormTitle,
 }
