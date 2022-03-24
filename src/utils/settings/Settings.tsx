@@ -6,7 +6,7 @@ import {
     ContentLayout,
     profileContext,
     ProfileContextData,
-    RouteContext,
+    routeContext,
     RouteContextData,
     routeRoot,
 } from '../../lib'
@@ -19,7 +19,7 @@ const Settings: FC<{}> = () => {
     const profileContextData: ProfileContextData = useContext(profileContext)
     const { profile, initialized }: ProfileContextData = profileContextData
 
-    const { getChildRoutes }: RouteContextData = useContext(RouteContext)
+    const { getChildRoutes }: RouteContextData = useContext(routeContext)
 
     // TODO: create an auth provider
     // if we don't have a profile, don't show the page until it's initialized

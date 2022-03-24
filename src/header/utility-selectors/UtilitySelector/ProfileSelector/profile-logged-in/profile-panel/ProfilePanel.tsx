@@ -5,7 +5,7 @@ import {
     authUrlLogout,
     profileContext,
     ProfileContextData,
-    RouteContext,
+    routeContext,
     RouteContextData,
 } from '../../../../../../lib'
 
@@ -18,7 +18,7 @@ interface ProfilePanelProps {
 const ProfilePanel: FC<ProfilePanelProps> = (props: ProfilePanelProps) => {
 
     const { profile }: ProfileContextData = useContext(profileContext)
-    const { getPath  }: RouteContextData = useContext(RouteContext)
+    const { getPath  }: RouteContextData = useContext(routeContext)
 
     if (!profile) {
         // this should never happen
