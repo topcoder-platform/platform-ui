@@ -90,6 +90,20 @@ export function requiredIfOther(value: string | undefined, formElements?: HTMLFo
     return `required when ${getOtherFieldLabel(otherField, otherFieldName)} is not blank`
 }
 
+export function url(value: string | undefined): string | undefined {
+
+    // if there's no value, there's nothing to check
+    if (!value) {
+        return undefined
+    }
+
+    const urlRegex: RegExp = /\b(https?|ftp|file):\/\/[\-A-Za-z0-9+&@#\/%?=~_|!:,.;]*[\-A-Za-z0-9+&@#\/%=~_|]/
+    return !urlRegex.test(value) ? 'invalid url' : undefined
+}
+
+export type ValidatorFn = Array<(value: string | undefined, formValues?: HTMLFormControlsCollection, otherField?: string)
+     => string | undefined | Promise<string | undefined>>
+
 function getOtherField(formElements?: HTMLFormControlsCollection, otherFieldName?: string): HTMLInputElement {
 
     // if there are no form values or an other field name, we have a problem

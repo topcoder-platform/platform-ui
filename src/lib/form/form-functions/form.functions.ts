@@ -26,7 +26,7 @@ export function getInputModel(inputs: ReadonlyArray<FormInputModel>, fieldName: 
 
 export function initializeValues<T>(inputs: ReadonlyArray<FormInputModel>, formValues?: T): void {
     inputs
-        .filter(input => !input.dirty)
+        .filter(input => !input.dirtyOrTouched)
         .forEach(input => {
             input.value = !!(formValues as any)?.hasOwnProperty(input.name)
                 ? (formValues as any)[input.name]
@@ -37,7 +37,7 @@ export function initializeValues<T>(inputs: ReadonlyArray<FormInputModel>, formV
 export function reset(inputs: ReadonlyArray<FormInputModel>, formValue?: any): void {
     inputs
         .forEach(inputDef => {
-            inputDef.dirty = false
+            inputDef.dirtyOrTouched = false
             inputDef.error = undefined
             inputDef.value = formValue?.[inputDef.name]
         })
@@ -56,7 +56,7 @@ export async function submitAsync<T, R>(
     setDisableButton(true)
 
     // if there are no dirty fields, display a message and stop submitting
-    const dirty: FormInputModel | undefined = inputs.find(fieldDef => !!fieldDef.dirty)
+    const dirty: FormInputModel | undefined = inputs.find(fieldDef => !!fieldDef.dirtyOrTouched)
     if (!dirty) {
         toast.info('No changes detected.')
         return
@@ -90,7 +90,7 @@ export function validateAndUpdate(event: FormEvent<HTMLFormElement>, inputs: Rea
     const input: HTMLInputElement = (event.target as HTMLInputElement)
     // set the input def info
     const inputDef: FormInputModel = getInputModel(inputs, input.name)
-    inputDef.dirty = true
+    inputDef.dirtyOrTouched = true
     inputDef.value = input.value
 
     // validate the form
@@ -104,9 +104,9 @@ function validate(inputs: ReadonlyArray<FormInputModel>, formElements: HTMLFormC
     const errors: ReadonlyArray<FormInputModel> = inputs
         .filter(formInputDef => {
             formInputDef.error = undefined
-            formInputDef.dirty = formInputDef.dirty || !!formDirty
-            formInputDef.validators
-                .forEach(validator => {
+            formInputDef.dirtyOrTouched = formInputDef.dirtyOrTouched || !!formDirty
+            formInputDef.validateOnChange
+                ?.forEach(validator => {
                     if (!formInputDef.error) {
                         formInputDef.error = validator(formInputDef.value, formElements, formInputDef.dependentField)
                     }

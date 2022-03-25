@@ -9,7 +9,7 @@ export const optionalHint: string = '(optional)'
 
 interface FormFieldWrapperProps {
     readonly children: ReactNode
-    readonly dirty?: boolean
+    readonly dirtyOrTouched?: boolean
     readonly disabled: boolean
     readonly error?: string
     readonly hint?: string
@@ -21,7 +21,7 @@ const FormFieldWrapper: FC<FormFieldWrapperProps> = (props: FormFieldWrapperProp
 
     const [focusStyle, setFocusStyle]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
 
-    const showError: boolean = !!props.error && !!props.dirty
+    const showError: boolean = !!props.error && !!props.dirtyOrTouched
     const formFieldClasses: string = classNames(
         styles['form-field'],
         props.disabled ? styles.disabled : undefined,

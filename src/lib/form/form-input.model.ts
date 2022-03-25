@@ -1,6 +1,8 @@
+import { ValidatorFn } from './validator-functions'
+
 export interface FormInputModel {
     readonly dependentField?: string
-    dirty?: boolean
+    dirtyOrTouched?: boolean
     disabled?: boolean
     error?: string
     readonly hint?: string
@@ -10,6 +12,7 @@ export interface FormInputModel {
     readonly placeholder?: string
     readonly preventAutocomplete?: boolean
     readonly type: 'password' | 'text' | 'textarea'
-    readonly validators: Array<(value: string | undefined, formValues?: HTMLFormControlsCollection, otherField?: string) => string | undefined>
+    readonly validateOnBlur?: ValidatorFn
+    readonly validateOnChange?: Array<(value: string | undefined, formValues?: HTMLFormControlsCollection, otherField?: string) => string | undefined>
     value?: string
 }
