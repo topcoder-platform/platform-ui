@@ -5,7 +5,7 @@ export {
     password as validatorPassword,
     required as validatorRequired,
     requiredIfOther as validatorRequiredIfOther,
-    url as validatorUrl,
+    sslUrl as validatorSslUrl,
 } from './validator.functions'
 export
     // tslint:disable-next-line: no-unused-expression
