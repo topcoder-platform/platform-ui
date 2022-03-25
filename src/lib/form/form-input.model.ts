@@ -13,6 +13,6 @@ export interface FormInputModel {
     readonly preventAutocomplete?: boolean
     readonly type: 'password' | 'text' | 'textarea'
     readonly validateOnBlur?: ValidatorFn
-    readonly validateOnChange?: Array<(value: string | undefined, formValues?: HTMLFormControlsCollection, otherField?: string) => string | undefined>
+    readonly validateOnChange?: ValidatorFn
     value?: string
 }

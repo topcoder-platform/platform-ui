@@ -10,7 +10,7 @@ import {
     formInitializeValues,
     formReset,
     formSubmitAsync,
-    formValidateAndUpdate,
+    formValidateAndUpdateAsync,
 } from './form-functions'
 import { InputText, InputTextarea } from './form-input'
 import { FormInputModel } from './form-input.model'
@@ -47,8 +47,8 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                 })
         }
 
-        function onChange(event: FormEvent<HTMLFormElement>): void {
-            const isValid: boolean = formValidateAndUpdate(event, formDef.inputs)
+        async function onChange(event: FormEvent<HTMLFormElement>): Promise<void> {
+            const isValid: boolean = await formValidateAndUpdateAsync(event, formDef.inputs)
             setFormDef({ ...formDef })
             setDisableSave(!isValid)
         }
