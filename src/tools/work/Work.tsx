@@ -1,11 +1,14 @@
-import { FC } from 'react'
-
-import { ContentLayout } from '../../lib'
-
-import styles from './Work.module.scss'
-
+import { useEffect } from 'react'
+import WorkList from './WorkList'
 export const toolTitle: string = 'Work'
 
-const MyWork: FC<{}> = () => <ContentLayout classNames={styles['mywork']} title={toolTitle} />
+const Work = () => {
+    return (
+        <>
+            <div><a>hello</a></div>
+            <WorkList/>
+        </>
+      );
+}
 
-export default MyWork
+export default Work

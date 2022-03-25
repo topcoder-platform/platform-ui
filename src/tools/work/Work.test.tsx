@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom'
 
-describe('<SelfService />', () => {
+describe('<Work />', () => {
 
     test('it should render the title prop', () => {})
 })
