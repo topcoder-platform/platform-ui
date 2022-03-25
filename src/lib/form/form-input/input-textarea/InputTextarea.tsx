@@ -6,7 +6,7 @@ import { FormFieldWrapper } from '../form-field-wrapper'
 import styles from './InputTextarea.module.scss'
 
 interface InputTextareaProps {
-    readonly dirty?: boolean
+    readonly dirtyOrTouched?: boolean
     readonly disabled?: boolean
     readonly error?: string
     readonly hint?: string
@@ -24,7 +24,7 @@ interface InputTextareaProps {
 const InputTextarea: FC<InputTextareaProps> = (props: InputTextareaProps) => {
     return (
         <FormFieldWrapper
-            dirtyOrTouched={!!props.dirty}
+            dirtyOrTouched={!!props.dirtyOrTouched}
             disabled={!!props.disabled}
             error={props.error}
             hint={props.hint}

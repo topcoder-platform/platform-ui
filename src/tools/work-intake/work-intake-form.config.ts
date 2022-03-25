@@ -2,7 +2,7 @@ import {
     FormDefinition,
     inputOptionalHint,
     validatorRequired,
-    validatorUrl,
+    validatorSslUrl,
 } from '../../lib'
 
 export const workIntakeTitle: string = 'Define your work'
@@ -30,10 +30,10 @@ export const workIntakeDef: FormDefinition = {
             hint: inputOptionalHint,
             label: 'Share your data',
             name: 'data',
-            placeholder: 'Paste a link',
+            placeholder: 'https://...',
             type: 'text',
             validateOnChange: [
-                validatorUrl,
+                validatorSslUrl,
             ],
         },
         {
