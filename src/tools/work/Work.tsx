@@ -2,10 +2,10 @@ import { FC } from 'react'
 
 import { ContentLayout } from '../../lib'
 
-import styles from './SelfService.module.scss'
+import styles from './Work.module.scss'
 
-export const toolTitle: string = 'Self Service'
+export const toolTitle: string = 'Work'
 
-const SelfService: FC<{}> = () => <ContentLayout classNames={styles['self-service']} title={toolTitle} />
+const MyWork: FC<{}> = () => <ContentLayout classNames={styles['mywork']} title={toolTitle} />
 
-export default SelfService
+export default MyWork
