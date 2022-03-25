@@ -37,7 +37,7 @@ export const passwordFormDef: FormDefinition = {
             name: PasswordFieldName.currentPassword,
             placeholder: 'type your current password',
             type: 'password',
-            validators: [
+            validateOnChange: [
                 validatorRequired,
             ],
         },
@@ -47,7 +47,7 @@ export const passwordFormDef: FormDefinition = {
             name: PasswordFieldName.newPassword,
             placeholder: 'type your new password',
             type: 'password',
-            validators: [
+            validateOnChange: [
                 validatorRequired,
                 validatorDoesNotMatchOther,
                 validatorPassword,
@@ -59,7 +59,7 @@ export const passwordFormDef: FormDefinition = {
             name: PasswordFieldName.confirmPassword,
             placeholder: 're-type your new password',
             type: 'password',
-            validators: [
+            validateOnChange: [
                 validatorRequired,
                 validatorMatchOther,
             ],

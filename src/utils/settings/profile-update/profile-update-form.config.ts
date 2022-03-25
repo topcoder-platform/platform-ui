@@ -24,7 +24,7 @@ export const profileFormDef: FormDefinition = {
             label: 'First Name',
             name: ProfileFieldName.firstName,
             type: 'text',
-            validators: [
+            validateOnChange: [
                 validatorRequired,
             ],
         },
@@ -32,7 +32,7 @@ export const profileFormDef: FormDefinition = {
             label: 'Last Name',
             name: ProfileFieldName.lastName,
             type: 'text',
-            validators: [
+            validateOnChange: [
                 validatorRequired,
             ],
         },
@@ -40,7 +40,7 @@ export const profileFormDef: FormDefinition = {
             label: 'Email',
             name: ProfileFieldName.email,
             type: 'text',
-            validators: [
+            validateOnChange: [
                 validatorRequired,
                 validatorEmail,
             ],
@@ -51,7 +51,6 @@ export const profileFormDef: FormDefinition = {
             name: ProfileFieldName.handle,
             notTabbable: true,
             type: 'text',
-            validators: [],
         },
     ],
     title: profileFormTitle,

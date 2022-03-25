@@ -5,5 +5,5 @@ export {
     initializeValues as formInitializeValues,
     reset as formReset,
     submitAsync as formSubmitAsync,
-    validateAndUpdate as formValidateAndUpdate,
+    validateAndUpdateAsync as formValidateAndUpdateAsync,
 } from './form.functions'

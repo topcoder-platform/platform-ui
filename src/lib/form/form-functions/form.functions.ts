@@ -26,7 +26,7 @@ export function getInputModel(inputs: ReadonlyArray<FormInputModel>, fieldName: 
 
 export function initializeValues<T>(inputs: ReadonlyArray<FormInputModel>, formValues?: T): void {
     inputs
-        .filter(input => !input.dirty)
+        .filter(input => !input.dirtyOrTouched)
         .forEach(input => {
             input.value = !!(formValues as any)?.hasOwnProperty(input.name)
                 ? (formValues as any)[input.name]
@@ -37,7 +37,7 @@ export function initializeValues<T>(inputs: ReadonlyArray<FormInputModel>, formV
 export function reset(inputs: ReadonlyArray<FormInputModel>, formValue?: any): void {
     inputs
         .forEach(inputDef => {
-            inputDef.dirty = false
+            inputDef.dirtyOrTouched = false
             inputDef.error = undefined
             inputDef.value = formValue?.[inputDef.name]
         })
@@ -56,7 +56,7 @@ export async function submitAsync<T, R>(
     setDisableButton(true)
 
     // if there are no dirty fields, display a message and stop submitting
-    const dirty: FormInputModel | undefined = inputs.find(fieldDef => !!fieldDef.dirty)
+    const dirty: FormInputModel | undefined = inputs.find(fieldDef => !!fieldDef.dirtyOrTouched)
     if (!dirty) {
         toast.info('No changes detected.')
         return
@@ -66,7 +66,7 @@ export async function submitAsync<T, R>(
     const formValues: HTMLFormControlsCollection = (event.target as HTMLFormElement).elements
 
     // if there are any validation errors, display a message and stop submitting
-    const isValid: boolean = validate(inputs, formValues, true)
+    const isValid: boolean = await validateAsync(inputs, formValues, true)
     if (!isValid) {
         toast.error('Changes could not be saved. Please resolve errors.')
         return Promise.reject(ErrorMessage.submit)
@@ -85,30 +85,30 @@ export async function submitAsync<T, R>(
         })
 }
 
-export function validateAndUpdate(event: FormEvent<HTMLFormElement>, inputs: ReadonlyArray<FormInputModel>): boolean {
+export async function validateAndUpdateAsync(event: FormEvent<HTMLFormElement>, inputs: ReadonlyArray<FormInputModel>): Promise<boolean> {
 
     const input: HTMLInputElement = (event.target as HTMLInputElement)
     // set the input def info
     const inputDef: FormInputModel = getInputModel(inputs, input.name)
-    inputDef.dirty = true
+    inputDef.dirtyOrTouched = true
     inputDef.value = input.value
 
     // validate the form
     const formElements: HTMLFormControlsCollection = (input.form as HTMLFormElement).elements
-    const isValid: boolean = validate(inputs, formElements)
+    const isValid: boolean = await validateAsync(inputs, formElements)
 
     return isValid
 }
 
-function validate(inputs: ReadonlyArray<FormInputModel>, formElements: HTMLFormControlsCollection, formDirty?: boolean): boolean {
+async function validateAsync(inputs: ReadonlyArray<FormInputModel>, formElements: HTMLFormControlsCollection, formDirty?: boolean): Promise<boolean> {
     const errors: ReadonlyArray<FormInputModel> = inputs
         .filter(formInputDef => {
             formInputDef.error = undefined
-            formInputDef.dirty = formInputDef.dirty || !!formDirty
-            formInputDef.validators
-                .forEach(validator => {
+            formInputDef.dirtyOrTouched = formInputDef.dirtyOrTouched || !!formDirty
+            formInputDef.validateOnChange
+                ?.forEach(async validator => {
                     if (!formInputDef.error) {
-                        formInputDef.error = validator(formInputDef.value, formElements, formInputDef.dependentField)
+                        formInputDef.error = await validator(formInputDef.value, formElements, formInputDef.dependentField)
                     }
                 })
             return !!formInputDef.error

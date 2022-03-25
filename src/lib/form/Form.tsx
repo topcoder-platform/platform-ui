@@ -1,4 +1,4 @@
-import { Dispatch, FormEvent, SetStateAction, useState } from 'react'
+import { Dispatch, FocusEvent, FormEvent, SetStateAction, useState } from 'react'
 
 import { Button } from '../button'
 import '../styles/index.scss'
@@ -10,7 +10,7 @@ import {
     formInitializeValues,
     formReset,
     formSubmitAsync,
-    formValidateAndUpdate,
+    formValidateAndUpdateAsync,
 } from './form-functions'
 import { InputText, InputTextarea } from './form-input'
 import { FormInputModel } from './form-input.model'
@@ -36,10 +36,27 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         const [formKey, setFormKey]: [number, Dispatch<SetStateAction<number>>]
             = useState<number>(Date.now())
 
-        function onChange(event: FormEvent<HTMLFormElement>): void {
-            const isValid: boolean = formValidateAndUpdate(event, formDef.inputs)
+        async function onBlur(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>): Promise<void> {
+            const inputDef: FormInputModel = formGetInputModel(props.formDef.inputs, event.target.name)
+            inputDef.validateOnBlur
+                ?.forEach(async validator => {
+                    if (!inputDef.error) {
+                        inputDef.error = await validator(event.target.value, event.target.form?.elements, inputDef.dependentField)
+                        setFormDef({ ...formDef })
+                    }
+                })
+        }
+
+        async function onChange(event: FormEvent<HTMLFormElement>): Promise<void> {
+            const isValid: boolean = await formValidateAndUpdateAsync(event, formDef.inputs)
             setFormDef({ ...formDef })
             setDisableSave(!isValid)
+        }
+
+        function onFocus(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>): void {
+            const inputDef: FormInputModel = formGetInputModel(props.formDef.inputs, event.target.name)
+            inputDef.dirtyOrTouched = true
+            setFormDef({ ...formDef })
         }
 
         function onReset(): void {
@@ -73,17 +90,23 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             .map((inputModel, index) => {
                 switch (inputModel.type) {
                     case 'textarea':
-                        return <InputTextarea
-                            {...inputModel}
-                            key={inputModel.name}
-                            tabIndex={inputModel.notTabbable ? -1 : index + 1}
-                            value={inputModel.value}
-                        />
+                        return (
+                            <InputTextarea
+                                {...inputModel}
+                                key={inputModel.name}
+                                onBlur={onBlur}
+                                onFocus={onFocus}
+                                tabIndex={inputModel.notTabbable ? -1 : index + 1}
+                                value={inputModel.value}
+                            />
+                        )
                     default:
                         return (
                             <InputText
                                 {...inputModel}
                                 key={inputModel.name}
+                                onBlur={onBlur}
+                                onFocus={onFocus}
                                 tabIndex={inputModel.notTabbable ? -1 : index + 1}
                                 type={inputModel.type || 'text'}
                                 value={inputModel.value}

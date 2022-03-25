@@ -2,6 +2,7 @@ import {
     FormDefinition,
     inputOptionalHint,
     validatorRequired,
+    validatorUrl,
 } from '../../lib'
 
 export const workIntakeTitle: string = 'Define your work'
@@ -21,7 +22,7 @@ export const workIntakeDef: FormDefinition = {
             label: 'Project Title',
             name: 'title',
             type: 'text',
-            validators: [
+            validateOnChange: [
                 validatorRequired,
             ],
         },
@@ -31,13 +32,15 @@ export const workIntakeDef: FormDefinition = {
             name: 'data',
             placeholder: 'Paste a link',
             type: 'text',
-            validators: [],
+            validateOnChange: [
+                validatorUrl,
+            ],
         },
         {
             label: 'What would you like to learn?',
             name: 'description',
             type: 'textarea',
-            validators: [
+            validateOnChange: [
                 validatorRequired,
             ],
         },
