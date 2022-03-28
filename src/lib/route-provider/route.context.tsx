@@ -11,6 +11,6 @@ export const defaultRouteContextData: RouteContextData = {
     utilsRoutes: [],
 }
 
-const RouteContext: Context<RouteContextData> = createContext(defaultRouteContextData)
+const routeContext: Context<RouteContextData> = createContext(defaultRouteContextData)
 
-export default RouteContext
+export default routeContext

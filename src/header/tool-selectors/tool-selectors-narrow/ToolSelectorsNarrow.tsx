@@ -1,14 +1,14 @@
 import classNames from 'classnames'
 import { Dispatch, FC, SetStateAction, useContext, useState } from 'react'
 
-import { IconOutline, RouteContext, RouteContextData } from '../../../lib'
+import { IconOutline, routeContext, RouteContextData } from '../../../lib'
 
 import { ToolSelectorNarrow } from './tool-selector-narrow'
 import styles from './ToolSelectorsNarrow.module.scss'
 
 const ToolSelectorsNarrow: FC<{}> = () => {
 
-    const { toolsRoutes }: RouteContextData = useContext(RouteContext)
+    const { toolsRoutes }: RouteContextData = useContext(routeContext)
     const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
     const closed: JSX.Element = <IconOutline.MenuIcon />

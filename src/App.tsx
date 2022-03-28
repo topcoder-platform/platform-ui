@@ -5,14 +5,14 @@ import { toast, ToastContainer } from 'react-toastify'
 import { EnvironmentConfig } from './config'
 import { Header } from './header'
 import { analyticsInitialize, logInitialize, ProfileProvider } from './lib'
-import { RouteContext, RouteContextData } from './lib/route-provider'
+import { routeContext, RouteContextData } from './lib/route-provider'
 
 analyticsInitialize(EnvironmentConfig)
 logInitialize(EnvironmentConfig)
 
 const App: FC<{}> = () => {
 
-    const { allRoutes }: RouteContextData = useContext(RouteContext)
+    const { allRoutes }: RouteContextData = useContext(routeContext)
 
     const routeElements: Array<ReactElement> = allRoutes
         .map(route => {

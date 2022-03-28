@@ -5,13 +5,13 @@ import { userUpdatePasswordAsync } from '../functions'
 import { PasswordUpdateRequest } from './password-update-request.model'
 import { ProfileContextData } from './profile-context-data.model'
 import { profileGetAsync, profileUpdateAsync } from './profile-functions'
-import { default as ProfileContext, defaultProfileContextData } from './profile.context'
+import { default as profileContext, defaultProfileContextData } from './profile.context'
 import { UserProfileUpdateRequest } from './user-profile-update-request.model'
 import { UserProfile } from './user-profile.model'
 
 export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { children: ReactNode }) => {
 
-    const [profileContext, setProfileContext]: [ProfileContextData, Dispatch<SetStateAction<ProfileContextData>>]
+    const [profileContextData, setProfileContextData]: [ProfileContextData, Dispatch<SetStateAction<ProfileContextData>>]
         = useState<ProfileContextData>(defaultProfileContextData)
 
     function updatePassword(userId: number, request: PasswordUpdateRequest): Promise<void> {
@@ -33,13 +33,13 @@ export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { chi
         }
 
         return profileUpdateAsync(profile.handle, request)
-            .then(() => setProfileContext(updatedContext))
+            .then(() => setProfileContextData(updatedContext))
     }
 
     useEffect(() => {
 
         // if our profile is already initialized, no need to continue
-        if (profileContext.initialized) {
+        if (profileContextData.initialized) {
             return
         }
 
@@ -51,15 +51,15 @@ export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { chi
                 updatePassword,
                 updateProfile,
             }
-            setProfileContext(contextData)
+            setProfileContextData(contextData)
         }
 
         getAndSetProfileAsync()
     })
 
     return (
-        <ProfileContext.Provider value={profileContext}>
+        <profileContext.Provider value={profileContextData}>
             {children}
-        </ProfileContext.Provider>
+        </profileContext.Provider>
     )
 }
