@@ -18,40 +18,6 @@ export interface WorkItemProps {
 const WorkItem: FC<WorkItemProps> = (props: WorkItemProps) => {
     return (
         <>
-            <div className="work-item-outer-content">
-                <div className="work-item-inner-content">
-                    <div className="work-item-status-bar">
-                        <div className="work-item-status-draft">
-                            <div className="work-item-status-text-draft">{props.challengeStatus}</div>
-                        </div>
-                        <div className="work-item-created-date-frame">
-                            <div className="work-item-created-date-text">{props.created}</div>
-                        </div>
-                        <div className="work-item-menu-more">
-                            ...
-                        </div>
-                    </div>
-                    <div className="work-item-detail">
-                        <div className="work-item-detail-title">{props.name}</div>
-                        <div className="work-item-detail">
-                            <div className="work-item-detail">Web Design</div>
-                        </div>
-                    </div>
-                    <div className="work-item-metadata-frame">
-                        <div className="work-item-metadata-work-id">WORK ID: #{props.id}</div>
-                        <div className="work-item-metadata-participants">PARTICIPANTS: {props.numOfRegistrants}</div>
-                        {props.messagesCount > 0 &&
-                            <div className="work-item-metadata-unread-frame">
-                                <div className="work-item-metadata-unread-text">UNREAD MESSAGES</div>
-                                <div className="work-item-metadata-unread-icon-frame">
-                                    <div className="work-item-metadata-unread-icon-ellipse"/>
-                                    <div className="work-item-metadata-unread-icon-text">{props.messagesCount}</div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
-            </div>
         </>
     )
 }
