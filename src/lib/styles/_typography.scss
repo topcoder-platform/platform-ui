@@ -15,10 +15,7 @@ body {
 h1,
 h2,
 h3,
-h4,
-h5,
-h6,
-h7 {
+h4 {
     color: $black-100;
     text-transform: uppercase;
     margin: 16px 0;
@@ -29,15 +26,16 @@ h2,
 h3,
 h4 {
     @include font-barlow-condensed;
+    text-transform: uppercase;
+    letter-spacing: 0;
 }
 
 h1 {
     @include font-weight-semi-bold;
-    font-size: $header-height;
-    line-height: 72px;
+    font-size: 34;
+    line-height: 32px;
 }
 
-h1,
 h2,
 h3,
 h4 {
@@ -45,40 +43,18 @@ h4 {
 }
 
 h2 {
-    font-size: 60px;
-    line-height: 56px;
+    font-size: 28px;
+    line-height: 28px;
 }
 
 h3 {
-    font-size: 48px;
-    line-height: 48px;
-}
-
-h4 {
-    font-size: 34px;
-    line-height: 32px;
-}
-
-h5,
-h6,
-h7 {
-    @include font-barlow;
-    @include font-weight-semi-bold;
-}
-
-h5 {
     font-size: 24px;
     line-height: 24px;
 }
 
-h6 {
+h4 {
     font-size: 20px;
     line-height: 20px;
-}
-
-h7 {
-    font-size: 16px;
-    line-height: 16px;
 }
 
 hr {

@@ -2,9 +2,9 @@ import { FC } from 'react'
 
 const Fonts: FC<{}> = () => {
     return (
-        <h3>
+        <h2>
             Fonts
-        </h3>
+        </h2>
     )
 }
 
