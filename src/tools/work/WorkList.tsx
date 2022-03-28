@@ -11,7 +11,7 @@ const WorkList = () => {
 
     return (
         <>
-            {myWork?.workItems.forEach ((value: MyWorkContextData,) => {
+            {myWork?.workItems?.forEach ((value: MyWorkContextData,) => {
                 return (<WorkItem
                     challengeStatus="active"
                     created="12/22/21"
