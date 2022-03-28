@@ -1,13 +1,19 @@
 import { Dispatch, FC, SetStateAction, useContext, useState } from 'react'
 
-import { Avatar, IconOutline, logInfo , ProfileContext, ProfileContextData } from '../../../../../lib'
+import {
+    Avatar,
+    IconOutline,
+    logInfo,
+    profileContext,
+    ProfileContextData,
+} from '../../../../../lib'
 
 import { ProfilePanel } from './profile-panel'
 import styles from './ProfileLoggedIn.module.scss'
 
 const ProfileLoggedIn: FC<{}> = () => {
 
-    const { profile }: ProfileContextData = useContext(ProfileContext)
+    const { profile }: ProfileContextData = useContext(profileContext)
     const [profilePanelOpen, setProfilePanelOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
     if (!profile) {

@@ -23,7 +23,7 @@ const ToolSelectorWide: FC<ToolSelectorWideProps> = (props: ToolSelectorWideProp
             <Link
                 className='large-tab'
                 tabIndex={-1}
-                to={route} 
+                to={route}
             >
                 {title}
             </Link>

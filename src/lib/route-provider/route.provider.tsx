@@ -3,7 +3,7 @@ import { Route } from 'react-router-dom'
 
 import { PlatformRoute } from './platform-route.model'
 import { RouteContextData } from './route-context-data.model'
-import { default as RouteContext, defaultRouteContextData } from './route.context'
+import { default as routeContext, defaultRouteContextData } from './route.context'
 
 interface RouteProviderProps {
     children: ReactNode
@@ -13,7 +13,7 @@ interface RouteProviderProps {
 
 export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps) => {
 
-    const [routeContext, setRouteContext]: [RouteContextData, Dispatch<SetStateAction<RouteContextData>>]
+    const [routeContextData, setRouteContextData]: [RouteContextData, Dispatch<SetStateAction<RouteContextData>>]
         = useState<RouteContextData>(defaultRouteContextData)
 
     useEffect(() => {
@@ -37,7 +37,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
                 toolsRoutes,
                 utilsRoutes,
             }
-            setRouteContext(contextData)
+            setRouteContextData(contextData)
         }
 
         function getChildren(parent: string): Array<PlatformRoute> {
@@ -63,8 +63,8 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
     ])
 
     return (
-        <RouteContext.Provider value={routeContext}>
+        <routeContext.Provider value={routeContextData}>
             {props.children}
-        </RouteContext.Provider>
+        </routeContext.Provider>
     )
 }

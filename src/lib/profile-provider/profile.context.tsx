@@ -8,6 +8,6 @@ export const defaultProfileContextData: ProfileContextData = {
     updateProfile: () => Promise.resolve(undefined),
 }
 
-const ProfileContext: Context<ProfileContextData> = createContext(defaultProfileContextData)
+const profileContext: Context<ProfileContextData> = createContext(defaultProfileContextData)
 
-export default ProfileContext
+export default profileContext

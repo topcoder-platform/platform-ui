@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom'
 
-describe('<Tool />', () => {
+describe('<WorkIntake />', () => {
 
     test('it should render the title prop', () => {})
 })

@@ -1,6 +1,6 @@
 import { FC, useContext } from 'react'
 
-import { ProfileContext, ProfileContextData } from '../../../../lib'
+import { profileContext, ProfileContextData } from '../../../../lib'
 import '../../../../lib/styles/index.scss'
 
 import { ProfileLoggedIn } from './profile-logged-in'
@@ -12,7 +12,7 @@ const ProfileSelector: FC<{}> = () => {
     const {
         initialized,
         profile,
-    }: ProfileContextData = useContext(ProfileContext)
+    }: ProfileContextData = useContext(profileContext)
 
     // if we're not initialized, don't render anything
     if (!initialized) {
