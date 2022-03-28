@@ -9,6 +9,7 @@ export const MyWorkProvider: FC<{ children: ReactNode }> = ({ children }: { chil
         = useState<MyWorkContextData>(defaultMyWorkContextData)
 
     useEffect(() => {
+        console.log("********** getting my work!")
         if (myWorkContext.initialized) {
             return
         }

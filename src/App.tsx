@@ -4,7 +4,7 @@ import { toast, ToastContainer } from 'react-toastify'
 
 import { EnvironmentConfig } from './config'
 import { Header } from './header'
-import { analyticsInitialize, logInitialize, ProfileProvider } from './lib'
+import { analyticsInitialize, logInitialize, ProfileProvider, MyWorkProvider } from './lib'
 import { RouteContext, RouteContextData } from './lib/route-provider'
 
 analyticsInitialize(EnvironmentConfig)
@@ -24,9 +24,11 @@ const App: FC<{}> = () => {
     return (
         <ProfileProvider>
             <Header />
-            <Routes>
-                {routeElements}
-            </Routes >
+            <MyWorkProvider>
+                <Routes>
+                    {routeElements}
+                </Routes >
+            </MyWorkProvider>
             <ToastContainer
                 position={toast.POSITION.TOP_RIGHT}
                 autoClose={3000}

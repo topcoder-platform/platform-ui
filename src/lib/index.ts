@@ -4,6 +4,7 @@ export * from './content-layout'
 export * from './form-elements'
 export * from './global-config.model'
 export * from './profile-provider'
+export * from './mywork-provider'
 export {
     analyticsInitialize,
     authUrlLogin,
