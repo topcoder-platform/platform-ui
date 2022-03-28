@@ -1,5 +1,4 @@
-import { Dispatch, FC, FormEvent, SetStateAction, useContext, useState } from 'react'
-import styles from './Work.module.scss'
+import { FC } from 'react'
 import PT from "prop-types";
 
 export interface WorkItemProps {

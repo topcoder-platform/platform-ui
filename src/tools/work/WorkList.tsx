@@ -1,8 +1,6 @@
-import { useEffect, useState, Dispatch, SetStateAction, useContext } from 'react'
+import { useContext } from 'react'
 import WorkItem from './WorkItem'
-import { ContentLayout } from '../../lib'
-import styles from './Work.module.scss'
-import { MyWorkContext, MyWorkContextData, getMyWork } from '../../lib/mywork-provider'
+import { MyWorkContext, MyWorkContextData } from '../../lib/mywork-provider'
 
 const WorkList = () => {
 
