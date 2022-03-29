@@ -10,3 +10,13 @@
 .avatar-container {
     margin: -108px 32px;
 }
+
+.page-container {
+    margin-top: 120px;
+
+    .page-content {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        column-gap: 24px;
+    }
+}
