@@ -1,6 +1,7 @@
 import classNames from 'classnames'
 import { FC, useContext } from 'react'
 
+import { SETTINGS_TITLE } from '../../config'
 import {
     authUrlLogin,
     Avatar,
@@ -12,8 +13,6 @@ import {
 import '../../lib/styles/index.scss'
 
 import styles from './Settings.module.scss'
-
-export const utilTitle: string = 'Settings'
 
 const Settings: FC<{}> = () => {
 
@@ -32,9 +31,10 @@ const Settings: FC<{}> = () => {
 
     return (
         <ContentLayout
-            title={utilTitle}
+            title={SETTINGS_TITLE}
             titleClass={classNames('font-tc-white', styles['page-header'])}
         >
+
             <Avatar
                 containerClass={styles['avatar-container']}
                 firstName={profile.firstName}
@@ -43,6 +43,28 @@ const Settings: FC<{}> = () => {
                 photoUrl={profile.photoURL}
                 size='xl'
             />
+
+            <div className={styles['page-container']}>
+
+                <h2>Edit your Personal Information and Security</h2>
+
+                <div className={styles['page-content']}>
+
+                    <div className='card'>
+                        <span className='card-title'>
+                        Basic Information
+                        </span>
+                    </div>
+
+                    <div className='card'>
+                        <span className='card-title'>
+                        Reset Password
+                        </span>
+                    </div>
+
+                </div>
+            </div>
+
         </ContentLayout>
     )
 }
