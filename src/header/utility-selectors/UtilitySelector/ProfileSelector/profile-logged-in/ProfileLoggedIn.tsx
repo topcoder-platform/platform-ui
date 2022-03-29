@@ -33,6 +33,7 @@ const ProfileLoggedIn: FC<{}> = () => {
                     lastName={profile.lastName}
                     handle={profile.handle}
                     photoUrl={profile.photoURL}
+                    size='sm'
                 />
                 {profilePanelOpen && (
                     <div className={styles.overlay}>

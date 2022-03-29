@@ -1,16 +1,17 @@
+import classNames from 'classnames'
 import { FC, useContext } from 'react'
-import { Outlet, Routes } from 'react-router-dom'
 
 import {
     authUrlLogin,
+    Avatar,
     ContentLayout,
     profileContext,
     ProfileContextData,
-    routeContext,
-    RouteContextData,
     routeRoot,
 } from '../../lib'
 import '../../lib/styles/index.scss'
+
+import styles from './Settings.module.scss'
 
 export const utilTitle: string = 'Settings'
 
@@ -18,8 +19,6 @@ const Settings: FC<{}> = () => {
 
     const profileContextData: ProfileContextData = useContext(profileContext)
     const { profile, initialized }: ProfileContextData = profileContextData
-
-    const { getChildRoutes }: RouteContextData = useContext(routeContext)
 
     // TODO: create an auth provider
     // if we don't have a profile, don't show the page until it's initialized
@@ -34,14 +33,16 @@ const Settings: FC<{}> = () => {
     return (
         <ContentLayout
             title={utilTitle}
-            titleClass='tc-grad6-bg font-tc-white'
+            titleClass={classNames('font-tc-white', styles['page-header'])}
         >
-            <>
-                <Outlet />
-                <Routes>
-                    {getChildRoutes(utilTitle)}
-                </Routes>
-            </>
+            <Avatar
+                containerClass={styles['avatar-container']}
+                firstName={profile.firstName}
+                lastName={profile.lastName}
+                handle={profile.handle}
+                photoUrl={profile.photoURL}
+                size='xl'
+            />
         </ContentLayout>
     )
 }
