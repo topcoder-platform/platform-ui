@@ -32,7 +32,10 @@ const Settings: FC<{}> = () => {
     }
 
     return (
-        <ContentLayout title={utilTitle}>
+        <ContentLayout
+            title={utilTitle}
+            titleClass='tc-grad6-bg font-tc-white'
+        >
             <>
                 <Outlet />
                 <Routes>

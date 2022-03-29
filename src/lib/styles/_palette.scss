@@ -150,6 +150,13 @@ $tc-grad12: linear-gradient(90deg, #652385 0%, #8C384C 100%);
 $tc-grad13: linear-gradient(90deg, #219174 0%, #B98F31 100%);
 $tc-grad14: linear-gradient(0deg, #880152 0%, #BE4A1D 100%);
 
+@mixin tc-grad6-bg {
+    background: $tc-grad6;
+}
+.tc-grad6-bg {
+    @include tc-grad6-bg;
+}
+
 
 /*  OPACITY */
 $black-100-opacity-80: rgba(255, 255, 255, 0.8)

@@ -2,19 +2,11 @@
 
 .content {
     @include content-height;
-    padding: $pad-xxxxl $pad-content-lg;
+    padding: 0;
     display: grid;
-    background-color: $black-10;
+    background-color: $tc-white;
     grid-template-columns: 1fr;
     justify-content: center;
-
-    @include md {
-        padding: $pad-xxl;
-    }
-
-    @include ltesm {
-        padding: 0;
-    }
 
     .content-outer {
         display: flex;
@@ -23,9 +15,8 @@
         .content-inner {
             flex: 1;
             background-color: $tc-white;
-            border-radius: $pad-sm;
             max-width: $xl-max-content;
-            padding: $pad-xxl;
+            padding: 0;
         }
     }
 }

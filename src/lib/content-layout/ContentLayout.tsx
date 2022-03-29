@@ -7,20 +7,24 @@ import styles from './ContentLayout.module.scss'
 
 export interface ContentLayoutProps {
     children?: ReactNode
-    classNames?: string
     title: string
+    titleClass?: string
 }
 
 const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => {
 
     return (
-        <div className={classNames(styles.content, props.classNames)}>
+        <div className={classNames(styles.content)}>
 
             <div className={styles['content-outer']}>
 
                 <div className={styles['content-inner']}>
 
-                    <h1>{props.title}</h1>
+                    <div className={classNames(styles['page-header'], props.titleClass)}>
+
+                        <h1>{props.title}</h1>
+
+                    </div>
 
                     {props.children}
 

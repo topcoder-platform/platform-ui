@@ -16,24 +16,17 @@ h1,
 h2,
 h3,
 h4 {
-    color: $black-100;
-    text-transform: uppercase;
-    margin: 16px 0;
-}
-
-h1,
-h2,
-h3,
-h4 {
     @include font-barlow-condensed;
     text-transform: uppercase;
+    margin: 0;
     letter-spacing: 0;
 }
 
 h1 {
     @include font-weight-semi-bold;
-    font-size: 34;
+    font-size: 34px;
     line-height: 32px;
+    padding: 24px;
 }
 
 h2,
