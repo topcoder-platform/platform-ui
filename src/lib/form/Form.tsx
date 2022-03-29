@@ -143,7 +143,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                 onSubmit={onSubmit}
             >
 
-                <h6>{props.formDef.title}</h6>
+                <h2>{props.formDef.title}</h2>
 
                 <div className={styles['form-fields']}>
                     {formInputs}

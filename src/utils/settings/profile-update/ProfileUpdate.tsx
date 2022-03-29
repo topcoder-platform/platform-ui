@@ -65,7 +65,7 @@ const ProfileUpdate: FC<ProfileUpdateProps> = (props: ProfileUpdateProps) => {
 
             <hr />
 
-            <h6>Password</h6>
+            <h2>Password</h2>
 
             <div className={styles['profile-form-fields']}>
 
