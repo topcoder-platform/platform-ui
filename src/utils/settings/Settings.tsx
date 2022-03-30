@@ -5,7 +5,9 @@ import { SETTINGS_TITLE } from '../../config'
 import {
     authUrlLogin,
     Avatar,
+    Button,
     ContentLayout,
+    IconOutline,
     profileContext,
     ProfileContextData,
     routeRoot,
@@ -52,15 +54,37 @@ const Settings: FC<{}> = () => {
                 <div className={styles['page-content']}>
 
                     <div className='card'>
+
                         <div className='card-title'>
-                            Basic Information
+                            <div>
+                                Basic Information
+                            </div>
+                            <IconOutline.UserIcon />
                         </div>
+
+                        <Button
+                            label='edit'
+                            tabIndex={1}
+                            buttonStyle='link'
+                        />
+
                     </div>
 
                     <div className='card'>
+
                         <div className='card-title'>
-                            Reset Password
+                            <div>
+                                Reset Password
+                            </div>
+                            <IconOutline.LockClosedIcon />
                         </div>
+
+                        <Button
+                            label='edit'
+                            tabIndex={2}
+                            buttonStyle='link'
+                        />
+
                     </div>
 
                 </div>

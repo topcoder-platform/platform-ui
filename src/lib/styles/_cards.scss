@@ -11,5 +11,14 @@
         @include font-weight-semi-bold;
         @include font-barlow;
         text-transform: uppercase;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: $pad-xl;
+
+        svg {
+            height: $pad-xl;
+            width: $pad-xl;
+            stroke: $purple-100;
+        }
     }
 }
