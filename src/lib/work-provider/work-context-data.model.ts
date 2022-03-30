@@ -4,4 +4,3 @@ export interface WorkContextData {
     initialized: boolean
     work?: WorkList
 }
-

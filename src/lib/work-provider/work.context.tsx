@@ -6,4 +6,3 @@ export const defaultWorkContextData: WorkContextData = {
 }
 
 export const WorkContext: Context<WorkContextData> = createContext(defaultWorkContextData)
-
