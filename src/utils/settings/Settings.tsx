@@ -1,25 +1,23 @@
+import classNames from 'classnames'
 import { FC, useContext } from 'react'
-import { Outlet, Routes } from 'react-router-dom'
 
+import { SETTINGS_TITLE } from '../../config'
 import {
     authUrlLogin,
+    Avatar,
     ContentLayout,
     profileContext,
     ProfileContextData,
-    routeContext,
-    RouteContextData,
     routeRoot,
 } from '../../lib'
 import '../../lib/styles/index.scss'
 
-export const utilTitle: string = 'Settings'
+import styles from './Settings.module.scss'
 
 const Settings: FC<{}> = () => {
 
     const profileContextData: ProfileContextData = useContext(profileContext)
     const { profile, initialized }: ProfileContextData = profileContextData
-
-    const { getChildRoutes }: RouteContextData = useContext(routeContext)
 
     // TODO: create an auth provider
     // if we don't have a profile, don't show the page until it's initialized
@@ -32,13 +30,42 @@ const Settings: FC<{}> = () => {
     }
 
     return (
-        <ContentLayout title={utilTitle}>
-            <>
-                <Outlet />
-                <Routes>
-                    {getChildRoutes(utilTitle)}
-                </Routes>
-            </>
+        <ContentLayout
+            contentClass={styles.content}
+            title={SETTINGS_TITLE}
+            titleClass={classNames('font-tc-white', styles['page-header'])}
+        >
+
+            <Avatar
+                containerClass={styles['avatar-container']}
+                firstName={profile.firstName}
+                lastName={profile.lastName}
+                handle={profile.handle}
+                photoUrl={profile.photoURL}
+                size='xl'
+            />
+
+            <div className={styles['page-container']}>
+
+                <h2>Edit your Personal Information and Security</h2>
+
+                <div className={styles['page-content']}>
+
+                    <div className='card'>
+                        <div className='card-title'>
+                            Basic Information
+                        </div>
+                    </div>
+
+                    <div className='card'>
+                        <div className='card-title'>
+                            Reset Password
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
         </ContentLayout>
     )
 }

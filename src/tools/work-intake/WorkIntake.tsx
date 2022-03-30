@@ -3,7 +3,6 @@ import { FC } from 'react'
 import { ContentLayout, Form } from '../../lib'
 
 import { workIntakeDef } from './work-intake-form.config'
-import styles from './WorkIntake.module.scss'
 
 export const toolTitle: string = 'Work'
 
@@ -18,7 +17,7 @@ const WorkIntake: FC<{}> = () => {
     }
 
     return (
-        <ContentLayout classNames={styles['work-intake']} title={toolTitle}>
+        <ContentLayout title={toolTitle}>
             <Form
                 formDef={workIntakeDef}
                 requestGenerator={requestGenerator}

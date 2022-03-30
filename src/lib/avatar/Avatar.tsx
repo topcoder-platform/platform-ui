@@ -4,10 +4,12 @@ import { FC } from 'react'
 import styles from './Avatar.module.scss'
 
 interface AvatarProps {
+    containerClass?: string
     firstName?: string
     handle?: string
     lastName?: string
     photoUrl?: string
+    size: 'sm' | 'xl'
 }
 
 const Avatar: FC<AvatarProps> = (props: AvatarProps) => {
@@ -19,17 +21,21 @@ const Avatar: FC<AvatarProps> = (props: AvatarProps) => {
 
     const avatarElement: JSX.Element = !!props.photoUrl
         ? (
-            <img src={props.photoUrl} alt={`${props.handle} avatar`} className={styles.avatar} />
+            <img
+                alt={`${props.handle} avatar`}
+                className={classNames(styles.avatar, styles[props.size])}
+                src={props.photoUrl}
+            />
         )
         : (
-            <span className={classNames(styles.avatar, styles['avatar-letters'])}>
+            <span className={classNames(styles.avatar, styles['avatar-letters'], styles[props.size])}>
                 {props.firstName?.charAt(0)}
                 {props.lastName?.charAt(0)}
             </span>
         )
 
     return (
-        <div className={styles['avatar-container']}>
+        <div className={classNames(styles['avatar-container'], styles[props.size], props.containerClass)}>
             {avatarElement}
         </div>
     )
