@@ -2,10 +2,22 @@
 
 .content {
     @include content-height;
-    padding: 0;
+    padding: 0 $pad-content-lg;
     display: grid;
     grid-template-columns: 1fr;
     justify-content: center;
+
+    @include xxl {
+        padding: 0;
+    }
+
+    @include md {
+        padding: 0 $pad-xxl;
+    }
+
+    @include ltesm {
+        padding: 0;
+    }
 
     .content-outer {
         display: flex;
@@ -13,8 +25,10 @@
 
         .content-inner {
             flex: 1;
-            max-width: $xl-max-content;
+            max-width: $xl-max;
             padding: 0;
+            display: flex;
+            flex-direction: column;
         }
     }
 }

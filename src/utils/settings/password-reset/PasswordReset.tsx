@@ -14,7 +14,7 @@ import {
 import { PasswordFieldName, passwordFormDef } from './password-reset-form.config'
 
 interface PasswordUpdateProps {
-    readonly profilePath: string
+    readonly onClose: () => void
 }
 
 const PasswordReset: FC<PasswordUpdateProps> = (props: PasswordUpdateProps) => {
@@ -24,9 +24,6 @@ const PasswordReset: FC<PasswordUpdateProps> = (props: PasswordUpdateProps) => {
 
     const [passwordForm]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>(passwordFormDef)
-
-    // set the profile path on the button
-    passwordForm.buttons[0].route = props.profilePath
 
     function requestGenerator(inputs: ReadonlyArray<FormInputModel>): PasswordUpdateRequest {
         const password: string = formGetInputModel(inputs, PasswordFieldName.currentPassword).value as string
@@ -39,6 +36,9 @@ const PasswordReset: FC<PasswordUpdateProps> = (props: PasswordUpdateProps) => {
 
     function save(updatedPassword: PasswordUpdateRequest): Promise<void> {
         return updatePassword((profile as UserProfile).userId, updatedPassword)
+            .then(() => {
+                props.onClose()
+            })
     }
 
     return (
@@ -47,6 +47,7 @@ const PasswordReset: FC<PasswordUpdateProps> = (props: PasswordUpdateProps) => {
             requestGenerator={requestGenerator}
             resetOnError={true}
             save={save}
+            succeeded={props.onClose}
         />
     )
 }

@@ -1,6 +1,6 @@
 import { FormDefinition, validatorEmail, validatorRequired } from '../../../lib'
 
-export const profileFormTitle: string = 'Profile'
+export const profileFormTitle: string = 'Basic Information'
 
 export enum ProfileFieldName {
     email = 'email',
@@ -15,7 +15,7 @@ export const profileFormDef: FormDefinition = {
             buttonStyle: 'secondary',
             isSave: true,
             label: 'Save',
-            size: 'xl',
+            size: 'lg',
             type: 'submit',
         },
     ],
@@ -53,5 +53,6 @@ export const profileFormDef: FormDefinition = {
             type: 'text',
         },
     ],
+    tabIndexStart: 3,
     title: profileFormTitle,
 }
