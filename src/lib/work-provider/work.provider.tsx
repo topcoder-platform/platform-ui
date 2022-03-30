@@ -15,7 +15,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
 
         // need pages
         const getAndSetWork: () => Promise<void> = async () => {
-            const work: WorkList | undefined = await getWork()
+            const work: workList | undefined = await getWork()
             const contextData: WorkContextData = {
                 initialized: true,
                 work,

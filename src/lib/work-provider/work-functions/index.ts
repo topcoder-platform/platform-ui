@@ -1,3 +1,5 @@
-export { getAsync } from './work.functions'
-export type { WorkItem } from './work-model'
-export type { WorkList } from './work-model'
+export { workGetAsync } from './work.functions'
+/* eslint-disable */
+export type { WorkItem } from './work-functions'
+export type { WorkList } from './work-functions'
+/* eslint-enable */

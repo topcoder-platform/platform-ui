@@ -1,8 +1,8 @@
 import { Context, createContext } from 'react'
 import { WorkContextData } from './work-context-data.model'
 
-export const defaultWorkContextData: WorkContextData = {
+export const defaultMyWorkContextData: MyWorkContextData = {
     initialized: false,
 }
 
-export const WorkContext: Context<WorkContextData> = createContext(defaultWorkContextData)
+export const workContext: Context<WorkContextData> = createContext(defaultWorkContextData)

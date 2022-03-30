@@ -1,8 +1,8 @@
 export interface WorkItem {
-    initialized: boolean
     challengeStatus: string,
     created: string,
     id: string,
+    initialized: boolean
     messagesCount: number,
     messagesHasNew: boolean,
     name: string,
