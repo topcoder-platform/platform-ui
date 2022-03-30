@@ -6,7 +6,7 @@ import { FormFieldWrapper } from '../form-field-wrapper'
 import styles from './InputTextarea.module.scss'
 
 interface InputTextareaProps {
-    readonly dirtyOrTouched?: boolean
+    readonly dirty?: boolean
     readonly disabled?: boolean
     readonly error?: string
     readonly hint?: string
@@ -17,6 +17,7 @@ interface InputTextareaProps {
     readonly placeholder?: string
     readonly preventAutocomplete?: boolean
     readonly tabIndex: number
+    readonly touched?: boolean
     readonly validateOnBlur?: ValidatorFn
     readonly value?: string | number
 }
@@ -24,12 +25,13 @@ interface InputTextareaProps {
 const InputTextarea: FC<InputTextareaProps> = (props: InputTextareaProps) => {
     return (
         <FormFieldWrapper
-            dirtyOrTouched={!!props.dirtyOrTouched}
+            dirty={!!props.dirty}
             disabled={!!props.disabled}
             error={props.error}
             hint={props.hint}
             label={props.label || props.name}
             name={props.name}
+            touched={!!props.touched}
         >
             <textarea
                 autoComplete={!!props.preventAutocomplete ? 'off' : undefined}

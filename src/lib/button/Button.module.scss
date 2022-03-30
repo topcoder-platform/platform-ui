@@ -13,12 +13,12 @@
     line-height: 24px;
     
     &:focus {
-        outline: 2px solid $turq-140;
+        outline: $border solid $turq-140;
     }
 
     &.button-sm {
         padding: 0 $pad-lg;
-        font-size: 12px;
+        font-size: 1$border;
     }
     
     &.button-md {
@@ -104,12 +104,16 @@
         display: flex;
         align-items: center;
         font-size: 16px;
-
         color: $turq-160;
         background-color: $tc-white;
         border: none;
         outline: none;
+        border-radius: 0;
 
+        &:focus {
+            outline: $border solid $turq-140;
+        }
+        
         &:hover {
             color: $turq-120;
         }

@@ -1,10 +1,20 @@
+@import '../../lib/styles';
+
 .content {
-    background: url('./profile-settings-background.svg');
+    background: url('./profile-settings-background.svg') no-repeat;
     background-size: 100% 100%;
+
+    @include ltemd {
+        background-image: url('./profile-settings-background-md.svg');
+    }
 }
 
 .page-header {
     padding: 48px 180px;
+
+    @include ltemd {
+        padding: 24px
+    }
 
     h1 {
         padding: 0;
@@ -24,12 +34,12 @@
     .page-content {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        column-gap: 24px;
-    }
+        column-gap: $pad-xxl;
 
-    .button-container {
-        flex: 1;
-        display: flex;
-        align-items: flex-end;
+        @include ltemd {
+            display: flex;
+            flex-direction: column;
+            row-gap: $pad-xxl;
+        }
     }
 }

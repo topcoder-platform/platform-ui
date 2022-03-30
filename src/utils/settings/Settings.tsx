@@ -1,5 +1,7 @@
 import classNames from 'classnames'
-import { FC, useContext } from 'react'
+import { Dispatch, FC, SetStateAction, useContext, useState } from 'react'
+import Modal from 'react-responsive-modal'
+import { NavigateFunction, useNavigate } from 'react-router-dom'
 
 import { SETTINGS_TITLE } from '../../config'
 import {
@@ -14,12 +16,19 @@ import {
 } from '../../lib'
 import '../../lib/styles/index.scss'
 
+import { PasswordReset } from './password-reset'
+import { ProfileUpdate } from './profile-update'
 import styles from './Settings.module.scss'
 
 const Settings: FC<{}> = () => {
 
     const profileContextData: ProfileContextData = useContext(profileContext)
     const { profile, initialized }: ProfileContextData = profileContextData
+
+    const [editProfileOpen, setEditProfileOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [resetPasswordOpen, setResetPasswordOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+
+    const navigate: NavigateFunction = useNavigate()
 
     // TODO: create an auth provider
     // if we don't have a profile, don't show the page until it's initialized
@@ -31,12 +40,16 @@ const Settings: FC<{}> = () => {
         return <></>
     }
 
-    function editProfile(): void {
-        console.debug('edting profile')
+    function navigateBack(): void {
+        navigate(-1)
     }
 
-    function resetPassword(): void {
-        console.debug('resetting password')
+    function toggleEditProfile(): void {
+        setEditProfileOpen(!editProfileOpen)
+    }
+
+    function toggleResetPassword(): void {
+        setResetPasswordOpen(!resetPasswordOpen)
     }
 
     return (
@@ -72,12 +85,20 @@ const Settings: FC<{}> = () => {
 
                         <Button
                             label='edit'
-                            onClick={editProfile}
+                            onClick={toggleEditProfile}
                             tabIndex={1}
                             buttonStyle='link'
                         />
 
                     </div>
+
+                    <Modal
+                        center
+                        open={editProfileOpen}
+                        onClose={toggleEditProfile}
+                    >
+                        <ProfileUpdate onClose={toggleEditProfile} />
+                    </Modal>
 
                     <div className='card'>
 
@@ -90,14 +111,34 @@ const Settings: FC<{}> = () => {
 
                         <Button
                             label='edit'
-                            onClick={resetPassword}
+                            onClick={toggleResetPassword}
                             tabIndex={2}
                             buttonStyle='link'
                         />
 
                     </div>
 
+                    <Modal
+                        center
+                        open={resetPasswordOpen}
+                        onClose={toggleResetPassword}
+                    >
+                        <PasswordReset onClose={toggleResetPassword} />
+                    </Modal>
+
                 </div>
+
+                <div className='button-container-outer'>
+                    <div className='button-container-inner'>
+                        <Button
+                            buttonStyle='secondary'
+                            label='Back'
+                            onClick={navigateBack}
+                            tabIndex={3}
+                        />
+                    </div>
+                </div>
+
             </div>
 
         </ContentLayout>
