@@ -1,6 +1,7 @@
 import classNames from 'classnames'
 import { FC } from 'react'
 import { Link } from 'react-router-dom'
+
 import { IconOutline } from '../svgs'
 
 import styles from './Button.module.scss'
@@ -62,7 +63,7 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
             type={props.type || 'button'}
         >
             {props.label}
-            {props.buttonStyle === 'link' && <IconOutline.ArrowRightIcon/>}
+            {props.buttonStyle === 'link' && <IconOutline.ArrowRightIcon />}
         </button>
     )
 }
