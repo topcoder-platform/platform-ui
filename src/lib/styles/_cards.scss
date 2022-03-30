@@ -9,6 +9,7 @@
 
     .card-title {
         @include font-weight-semi-bold;
+        @include font-barlow;
         text-transform: uppercase;
     }
 }

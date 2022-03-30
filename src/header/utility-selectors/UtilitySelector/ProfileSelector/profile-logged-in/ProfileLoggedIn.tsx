@@ -11,7 +11,11 @@ import {
 import { ProfilePanel } from './profile-panel'
 import styles from './ProfileLoggedIn.module.scss'
 
-const ProfileLoggedIn: FC<{}> = () => {
+interface ProfileLoggedInProps {
+    settingsTitle: string
+}
+
+const ProfileLoggedIn: FC<ProfileLoggedInProps> = (props: ProfileLoggedInProps) => {
 
     const { profile }: ProfileContextData = useContext(profileContext)
     const [profilePanelOpen, setProfilePanelOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
@@ -41,7 +45,12 @@ const ProfileLoggedIn: FC<{}> = () => {
                     </div>
                 )}
             </div>
-            {profilePanelOpen && <ProfilePanel toggleProfilePanel={toggleProfilePanel} />}
+            {profilePanelOpen && (
+                <ProfilePanel
+                    settingsTitle={props.settingsTitle}
+                    toggleProfilePanel={toggleProfilePanel}
+                />
+            )}
         </>
     )
 }

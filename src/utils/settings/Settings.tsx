@@ -31,6 +31,7 @@ const Settings: FC<{}> = () => {
 
     return (
         <ContentLayout
+            contentClass={styles.content}
             title={SETTINGS_TITLE}
             titleClass={classNames('font-tc-white', styles['page-header'])}
         >
@@ -51,15 +52,15 @@ const Settings: FC<{}> = () => {
                 <div className={styles['page-content']}>
 
                     <div className='card'>
-                        <span className='card-title'>
-                        Basic Information
-                        </span>
+                        <div className='card-title'>
+                            Basic Information
+                        </div>
                     </div>
 
                     <div className='card'>
-                        <span className='card-title'>
-                        Reset Password
-                        </span>
+                        <div className='card-title'>
+                            Reset Password
+                        </div>
                     </div>
 
                 </div>

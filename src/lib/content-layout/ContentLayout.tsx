@@ -7,6 +7,7 @@ import styles from './ContentLayout.module.scss'
 
 export interface ContentLayoutProps {
     children?: ReactNode
+    contentClass?: string
     title: string
     titleClass?: string
 }
@@ -14,7 +15,7 @@ export interface ContentLayoutProps {
 const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => {
 
     return (
-        <div className={classNames(styles.content)}>
+        <div className={classNames(styles.content, props.contentClass)}>
 
             <div className={styles['content-outer']}>
 
