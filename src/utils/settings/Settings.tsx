@@ -31,6 +31,14 @@ const Settings: FC<{}> = () => {
         return <></>
     }
 
+    function editProfile(): void {
+        console.debug('edting profile')
+    }
+
+    function resetPassword(): void {
+        console.debug('resetting password')
+    }
+
     return (
         <ContentLayout
             contentClass={styles.content}
@@ -64,6 +72,7 @@ const Settings: FC<{}> = () => {
 
                         <Button
                             label='edit'
+                            onClick={editProfile}
                             tabIndex={1}
                             buttonStyle='link'
                         />
@@ -81,6 +90,7 @@ const Settings: FC<{}> = () => {
 
                         <Button
                             label='edit'
+                            onClick={resetPassword}
                             tabIndex={2}
                             buttonStyle='link'
                         />
