@@ -13,7 +13,11 @@ export {
     logError,
     logInitialize,
     logInfo,
+    useHideClickOutside,
 } from './functions'
+export
+    // tslint:disable-next-line: no-unused-expression
+type { ComponentVisible } from './functions'
 export * from './svgs'
 
 /*

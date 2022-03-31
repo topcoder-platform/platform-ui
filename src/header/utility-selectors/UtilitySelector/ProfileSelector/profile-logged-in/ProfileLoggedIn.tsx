@@ -2,10 +2,12 @@ import { Dispatch, FC, SetStateAction, useContext, useState } from 'react'
 
 import {
     Avatar,
+    ComponentVisible,
     IconOutline,
     logInfo,
     profileContext,
     ProfileContextData,
+    useHideClickOutside,
 } from '../../../../../lib'
 
 import { ProfilePanel } from './profile-panel'
@@ -20,18 +22,33 @@ const ProfileLoggedIn: FC<ProfileLoggedInProps> = (props: ProfileLoggedInProps) 
     const { profile }: ProfileContextData = useContext(profileContext)
     const [profilePanelOpen, setProfilePanelOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
+    const {
+        isComponentVisible,
+        ref,
+        setIsComponentVisible,
+    }: ComponentVisible = useHideClickOutside(false)
+
     if (!profile) {
         logInfo('tried to render the logged in profile w/out a profile')
         return <></>
     }
 
     function toggleProfilePanel(): void {
-        setProfilePanelOpen(!profilePanelOpen)
+        const toggleTo: boolean = !profilePanelOpen
+        setProfilePanelOpen(toggleTo)
+        setIsComponentVisible(toggleTo)
+    }
+
+    if (!isComponentVisible && profilePanelOpen) {
+        setProfilePanelOpen(isComponentVisible)
     }
 
     return (
         <>
-            <div className={styles['profile-avatar']} onClick={() => toggleProfilePanel()} >
+            <div
+                className={styles['profile-avatar']}
+                onClick={toggleProfilePanel}
+            >
                 <Avatar
                     firstName={profile.firstName}
                     lastName={profile.lastName}
@@ -47,6 +64,7 @@ const ProfileLoggedIn: FC<ProfileLoggedInProps> = (props: ProfileLoggedInProps) 
             </div>
             {profilePanelOpen && (
                 <ProfilePanel
+                    refObject={ref}
                     settingsTitle={props.settingsTitle}
                     toggleProfilePanel={toggleProfilePanel}
                 />
