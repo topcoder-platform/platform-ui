@@ -1,13 +1,13 @@
 import classNames from 'classnames'
 import { Dispatch, FC, ReactNode, SetStateAction, useState } from 'react'
 
-import { IconSolid } from '../../../svgs'
+import { IconSolid } from '../../../../svgs'
 
-import styles from './FormFieldWrapper.module.scss'
+import styles from './InputWrapper.module.scss'
 
-export const optionalHint: string = '(optional)'
+export const optional: string = '(optional)'
 
-interface FormFieldWrapperProps {
+interface InputWrapperProps {
     readonly children: ReactNode
     readonly dirty?: boolean
     readonly disabled: boolean
@@ -18,20 +18,20 @@ interface FormFieldWrapperProps {
     readonly touched?: boolean
 }
 
-const FormFieldWrapper: FC<FormFieldWrapperProps> = (props: FormFieldWrapperProps) => {
+const InputWrapper: FC<InputWrapperProps> = (props: InputWrapperProps) => {
 
     const [focusStyle, setFocusStyle]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
 
     const showError: boolean = !!props.error && (!!props.dirty || !!props.touched)
     const formFieldClasses: string = classNames(
-        styles['form-field'],
+        styles.input,
         props.disabled ? styles.disabled : undefined,
         focusStyle,
-        showError ? styles['form-field-error'] : undefined
+        showError ? styles['input-error'] : undefined
     )
 
     return (
-        <div className={styles['form-field-wrapper']}>
+        <div className={styles['input-wrapper']}>
 
             <div
                 className={formFieldClasses}
@@ -67,4 +67,4 @@ const FormFieldWrapper: FC<FormFieldWrapperProps> = (props: FormFieldWrapperProp
     )
 }
 
-export default FormFieldWrapper
+export default InputWrapper

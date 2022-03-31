@@ -5,5 +5,5 @@ export interface FormDefinition {
     readonly buttons: ReadonlyArray<FormButton>
     readonly inputs: ReadonlyArray<FormInputModel>
     readonly tabIndexStart?: number
-    readonly title: string
+    readonly title?: string
 }

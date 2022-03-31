@@ -1,11 +1,9 @@
 import {
     FormDefinition,
-    inputOptionalHint,
+    inputOptional,
     validatorRequired,
     validatorSslUrl,
 } from '../../lib'
-
-export const workIntakeTitle: string = 'Define your work'
 
 export const workIntakeDef: FormDefinition = {
     buttons: [
@@ -19,31 +17,38 @@ export const workIntakeDef: FormDefinition = {
     ],
     inputs: [
         {
+            instructions: 'Give your project a descriptive title. This is what the engineers will see when looking for your work.',
             label: 'Project Title',
             name: 'title',
+            placeholder: 'Enter a descriptive title',
+            title: 'Project Title',
             type: 'text',
             validateOnChange: [
                 validatorRequired,
             ],
         },
         {
-            hint: inputOptionalHint,
-            label: 'Share your data',
+            instructions: `Add links (separate multiple links with commas) or upload your data files here. Not ready or able to share? No problem, we'll work with you on that later.`,
+            label: 'Shareable URL Link(s)',
             name: 'data',
-            placeholder: 'https://...',
+            placeholder: 'https://www.example.com/share/link',
+            title: `Share your data ${inputOptional}`,
             type: 'text',
             validateOnChange: [
-                validatorSslUrl,
+                validatorSslUrl, // TODO: permit multiple
             ],
         },
+        // TODO: upload data files
         {
-            label: 'What would you like to learn?',
+            instructions: 'Describe your data and what you would like to learn about it. If you have a formal problem statement, please share it.',
+            label: 'Goals & Data Description',
             name: 'description',
+            placeholder: 'Enter your goals and descriptions here',
+            title: 'What would you like to learn',
             type: 'textarea',
             validateOnChange: [
                 validatorRequired,
             ],
         },
     ],
-    title: workIntakeTitle,
 }

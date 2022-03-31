@@ -1,30 +1,32 @@
 import { FC, FocusEvent } from 'react'
 
-import { ValidatorFn } from '../../validator-functions'
-import { FormFieldWrapper } from '../form-field-wrapper'
+import { ValidatorFn } from '../../../validator-functions'
+import { InputWrapper } from '../input-wrapper'
 
-import styles from './InputTextarea.module.scss'
+import styles from './InputText.module.scss'
 
-interface InputTextareaProps {
+interface InputTextProps {
     readonly dirty?: boolean
     readonly disabled?: boolean
     readonly error?: string
     readonly hint?: string
     readonly label?: string
     readonly name: string
-    readonly onBlur: (event: FocusEvent<HTMLTextAreaElement>) => void
-    readonly onFocus: (event: FocusEvent<HTMLTextAreaElement>) => void
+    readonly onBlur: (event: FocusEvent<HTMLInputElement>) => void
+    readonly onFocus: (event: FocusEvent<HTMLInputElement>) => void
     readonly placeholder?: string
     readonly preventAutocomplete?: boolean
     readonly tabIndex: number
     readonly touched?: boolean
+    readonly type: 'password' | 'text'
     readonly validateOnBlur?: ValidatorFn
     readonly value?: string | number
 }
 
-const InputTextarea: FC<InputTextareaProps> = (props: InputTextareaProps) => {
+const InputText: FC<InputTextProps> = (props: InputTextProps) => {
+
     return (
-        <FormFieldWrapper
+        <InputWrapper
             dirty={!!props.dirty}
             disabled={!!props.disabled}
             error={props.error}
@@ -33,19 +35,20 @@ const InputTextarea: FC<InputTextareaProps> = (props: InputTextareaProps) => {
             name={props.name}
             touched={!!props.touched}
         >
-            <textarea
+            <input
                 autoComplete={!!props.preventAutocomplete ? 'off' : undefined}
-                className={styles['form-input-textarea']}
+                className={styles['form-input-text']}
                 defaultValue={props.value}
                 disabled={!!props.disabled}
-                name={props.name}
                 onBlur={props.onBlur}
                 onFocus={props.onFocus}
+                name={props.name}
                 placeholder={props.placeholder}
                 tabIndex={props.tabIndex}
+                type={props.type || 'text'}
             />
-        </FormFieldWrapper>
+        </InputWrapper>
     )
 }
 
-export default InputTextarea
+export default InputText
