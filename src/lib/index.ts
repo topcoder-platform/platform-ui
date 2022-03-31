@@ -1,5 +1,6 @@
 export * from './avatar'
 export * from './button'
+export * from './card'
 export * from './content-layout'
 export * from './form'
 export * from './global-config.model'
