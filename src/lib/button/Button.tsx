@@ -2,10 +2,12 @@ import classNames from 'classnames'
 import { FC } from 'react'
 import { Link } from 'react-router-dom'
 
+import { IconOutline } from '../svgs'
+
 import styles from './Button.module.scss'
 
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'xl'
-export type ButtonStyle = 'primary' | 'secondary' | 'tertiary' | 'text'
+export type ButtonStyle = 'link' | 'primary' | 'secondary' | 'tertiary' | 'text'
 export type ButtonType = 'button' | 'submit'
 
 export interface ButtonProps {
@@ -61,6 +63,7 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
             type={props.type || 'button'}
         >
             {props.label}
+            {props.buttonStyle === 'link' && <IconOutline.ArrowRightIcon />}
         </button>
     )
 }

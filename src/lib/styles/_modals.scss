@@ -1,0 +1,26 @@
+@import '~react-responsive-modal/styles.css';
+
+.react-responsive-modal-container {
+    display: flex;
+    justify-content: center;
+
+    .react-responsive-modal-modal {
+        min-width: 450px;
+        min-height: 60%;
+        border-radius: $pad-sm;
+        display: flex;
+        flex-direction: column;
+        margin: 116px 0;
+    
+        h2 {
+            padding: 0;
+        }
+
+        .react-responsive-modal-closeButton {
+            
+            &:focus {
+                outline: 2px solid $turq-140;
+            }
+        }
+    }
+}

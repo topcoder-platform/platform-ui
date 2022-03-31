@@ -8,7 +8,7 @@ import styles from './InputText.module.scss'
 export const optionalHint: string = '(optional)'
 
 interface InputTextProps {
-    readonly dirtyOrTouched?: boolean
+    readonly dirty?: boolean
     readonly disabled?: boolean
     readonly error?: string
     readonly hint?: string
@@ -19,6 +19,7 @@ interface InputTextProps {
     readonly placeholder?: string
     readonly preventAutocomplete?: boolean
     readonly tabIndex: number
+    readonly touched?: boolean
     readonly type: 'password' | 'text'
     readonly validateOnBlur?: ValidatorFn
     readonly value?: string | number
@@ -28,12 +29,13 @@ const InputText: FC<InputTextProps> = (props: InputTextProps) => {
 
     return (
         <FormFieldWrapper
-            dirtyOrTouched={!!props.dirtyOrTouched}
+            dirty={!!props.dirty}
             disabled={!!props.disabled}
             error={props.error}
             hint={props.hint}
             label={props.label || props.name}
             name={props.name}
+            touched={!!props.touched}
         >
             <input
                 autoComplete={!!props.preventAutocomplete ? 'off' : undefined}

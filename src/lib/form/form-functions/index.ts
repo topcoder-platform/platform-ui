@@ -3,7 +3,7 @@ export {
     getInputElement as formGetInput,
     getInputModel as formGetInputModel,
     initializeValues as formInitializeValues,
+    onChange as formOnChange,
     reset as formReset,
     submitAsync as formSubmitAsync,
-    validateAndUpdateAsync as formValidateAndUpdateAsync,
 } from './form.functions'
