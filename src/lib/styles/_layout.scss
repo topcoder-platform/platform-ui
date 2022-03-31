@@ -8,6 +8,7 @@ $left-col-width-xl: calc(1.3 * $header-height);
 /* TODO: determine which UI library to use and replace below */
 
 /* Padding */
+$border-xs: 1px;
 $border: 2px;
 $pad-xs: calc(2 * $border); // 4
 $pad-sm: calc(2 * $pad-xs); // 8
