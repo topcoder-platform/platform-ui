@@ -8,6 +8,7 @@ $left-col-width-xl: calc(1.3 * $header-height);
 /* TODO: determine which UI library to use and replace below */
 
 /* Padding */
+$border-xs: 1px;
 $border: 2px;
 $pad-xs: calc(2 * $border); // 4
 $pad-sm: calc(2 * $pad-xs); // 8
@@ -20,30 +21,7 @@ $pad-xxxxl: calc(8 * $pad-xs); // 32
 $pad-content-lg: calc($pad-xxl + $pad-xxxxl);
 
 @mixin content-height {
-
-    @include xxs {
-        height: calc(100vh - $header-height);
-    }
-
-    @include xs {
-        height: calc(100vh - $header-height);
-    }
-
-    @include sm {
-        height: calc(100vh - $header-height - calc(2 * $pad-xxl));
-    }
-
-    @include md {
-        height: calc(100vh - $header-height - calc(2 * $pad-xxl));
-    }
-
-    @include lg {
-        height: calc(100vh - $header-height - calc(2 * $pad-xxxxl));
-    } 
-
-    @include xl {
-        height: calc(100vh - $header-height - calc(2 *  $pad-xxxxl));
-    }
+    height: calc(100vh - $header-height);
 }
 
 

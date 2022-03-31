@@ -2,40 +2,13 @@
 
 .content {
     @include content-height;
-    padding: $pad-xxxxl $pad-content-lg;
+    padding: 0 $pad-content-lg;
     display: grid;
-    background-color: $black-10;
     grid-template-columns: 1fr;
     justify-content: center;
 
-    .sections {
-        display: none;
-        height: 200px;
-        background-color: $tc-white;
-    }
-
-    &.show-sections {
-        padding-left: 0;
-
-        .sections {
-            display: grid;
-        }
-
-        @include md {
-            padding-left: $pad-xxl;
-        }
-
-        @include lg {
-            grid-template-columns: $left-col-width-lg 1fr;
-        }
-    
-        @include xl {
-            grid-template-columns: $left-col-width-xl 1fr;
-        }
-    }
-
     @include md {
-        padding: $pad-xxl;
+        padding: 0 $pad-xxl;
     }
 
     @include ltesm {
@@ -48,10 +21,10 @@
 
         .content-inner {
             flex: 1;
-            background-color: $tc-white;
-            border-radius: $pad-sm;
-            max-width: $xl-max-content;
-            padding: $pad-xxl;
+            max-width: $xl-max;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
         }
     }
 }

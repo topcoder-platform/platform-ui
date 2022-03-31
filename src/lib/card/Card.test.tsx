@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom'
 
-describe('<Button />', () => {
+describe('<Card />', () => {
 
     test('it should render the content', () => { })
 })

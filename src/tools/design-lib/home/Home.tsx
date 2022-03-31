@@ -2,9 +2,9 @@ import { FC } from 'react'
 
 const Home: FC<{}> = () => {
     return (
-        <h3>
+        <h2>
             Home
-        </h3>
+        </h2>
     )
 }
 

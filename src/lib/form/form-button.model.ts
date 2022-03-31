@@ -7,7 +7,7 @@ export interface FormButton {
     readonly label: string
     readonly notTabble?: boolean
     readonly onClick?: (event?: any) => void
-    route?: string
+    readonly route?: string
     readonly size?: ButtonSize
     readonly type?: ButtonType
     readonly url?: string
