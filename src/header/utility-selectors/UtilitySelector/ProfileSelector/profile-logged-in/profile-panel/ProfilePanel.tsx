@@ -1,4 +1,4 @@
-import { FC, useContext } from 'react'
+import { FC, MutableRefObject, useContext } from 'react'
 import { Link } from 'react-router-dom'
 
 import {
@@ -12,6 +12,7 @@ import {
 import styles from './ProfilePanel.module.scss'
 
 interface ProfilePanelProps {
+    refObject: MutableRefObject<any>
     settingsTitle: string
     toggleProfilePanel: () => void
 }
@@ -27,7 +28,10 @@ const ProfilePanel: FC<ProfilePanelProps> = (props: ProfilePanelProps) => {
     }
 
     return (
-        <div className={styles['profile-panel']}>
+        <div
+            className={styles['profile-panel']}
+            ref={props.refObject}
+        >
             <div className={styles.handle}>
                 {profile.handle}
             </div>

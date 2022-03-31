@@ -1,10 +1,9 @@
-@import './palette';
-@import './typography';
+@import '../styles';
 
 .card {
-    padding: 16px 16px 32px 16px;
-    border: solid 1px $black-10;
-    border-radius: 8px;
+    padding: $pad-lg $pad-lg $pad-xxxxl $pad-lg;
+    border: solid $border-xs $black-10;
+    border-radius: $pad-sm;
 
     .card-title {
         @include font-weight-semi-bold;

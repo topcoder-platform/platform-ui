@@ -8,6 +8,7 @@ import {
     authUrlLogin,
     Avatar,
     Button,
+    Card,
     ContentLayout,
     IconOutline,
     profileContext,
@@ -74,52 +75,38 @@ const Settings: FC<{}> = () => {
 
                 <div className={styles['page-content']}>
 
-                    <div className='card'>
-
-                        <div className='card-title'>
-                            <div>
-                                Basic Information
-                            </div>
-                            <IconOutline.UserIcon />
-                        </div>
-
+                    <Card
+                        icon={IconOutline.UserIcon}
+                        title='Basic Information'
+                    >
                         <Button
                             label='edit'
                             onClick={toggleEditProfile}
                             tabIndex={1}
                             buttonStyle='link'
                         />
-
-                    </div>
+                    </Card>
 
                     <Modal
-                        center
                         open={editProfileOpen}
                         onClose={toggleEditProfile}
                     >
                         <ProfileUpdate onClose={toggleEditProfile} />
                     </Modal>
 
-                    <div className='card'>
-
-                        <div className='card-title'>
-                            <div>
-                                Reset Password
-                            </div>
-                            <IconOutline.LockClosedIcon />
-                        </div>
-
+                    <Card
+                        icon={IconOutline.LockClosedIcon}
+                        title='Reset Password'
+                    >
                         <Button
                             label='edit'
                             onClick={toggleResetPassword}
                             tabIndex={2}
                             buttonStyle='link'
                         />
-
-                    </div>
+                    </Card>
 
                     <Modal
-                        center
                         open={resetPasswordOpen}
                         onClose={toggleResetPassword}
                     >

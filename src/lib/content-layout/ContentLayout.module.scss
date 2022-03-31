@@ -7,10 +7,6 @@
     grid-template-columns: 1fr;
     justify-content: center;
 
-    @include xxl {
-        padding: 0;
-    }
-
     @include md {
         padding: 0 $pad-xxl;
     }
