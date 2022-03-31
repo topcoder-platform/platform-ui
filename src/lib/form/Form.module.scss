@@ -1,13 +1,5 @@
-@import '../../lib/styles';
-
-form {
+.form {
     flex: 1;
     display: flex;
     flex-direction: column;
-
-    .form-fields {
-        display: grid;
-        grid-template-columns: 1fr;
-        justify-content: center;
-    }
 }
