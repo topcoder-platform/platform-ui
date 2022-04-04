@@ -1,6 +1,6 @@
 import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react'
-import { getWork, WorkList } from './'
-import { defaultWorkContextData, WorkContext } from './work.context'
+import { getWork, workList } from './'
+import { defaultWorkContextData, workContext } from './work.context'
 import { WorkContextData } from './work-context-data.model'
 
 export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { children: ReactNode }) => {
@@ -15,7 +15,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
 
         // need pages
         const getAndSetWork: () => Promise<void> = async () => {
-            const work: workList | undefined = await getWork()
+            const work: workList | undefined = await getWork("jay_peg", 1, 100)
             const contextData: WorkContextData = {
                 initialized: true,
                 work,
@@ -26,8 +26,9 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
     })
 
     return (
-        <WorkContext.Provider value={workContext}>
-            {children}
-        </WorkContext.Provider>
+        <></>
+        //<workContext.Provider value={workContext}>
+        //    {children}
+        //</workContext.Provider>
     )
 }

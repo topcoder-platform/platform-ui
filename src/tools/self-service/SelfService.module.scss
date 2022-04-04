@@ -1,5 +1,208 @@
 @import '../../lib/styles';
 
-.self-service {
+.self-service-item-table {
+  width: 100%;
+  table-layout: fixed;
+}
 
+.self-service-cell-icon {
+    width: 8%;
+}
+
+.self-service-cell-title {
+    width: 25%;
+    padding: 4px;
+}
+
+.self-service-cell-title-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0px;
+    flex: none;
+    order: 1;
+    flex-grow: 1;
+    margin: 0px 16px;
+}
+
+.self-service-title {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    text-transform: capitalize;
+    color: $black-100;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 6px 0px;
+}
+
+.self-service-description {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 18px;
+    color: $black-80;
+    flex: none;
+    order: 1;
+    align-self: stretch;
+    flex-grow: 0;
+    margin: 6px 0px;
+}
+
+.self-service-cell-status {
+    width: 10%;
+    padding: 4px;
+}
+
+.self-service-status-chip {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 4px 8px;
+    background: $black-80;
+    border-radius: 10px;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 0px 0px;
+}
+
+.self-service-status-text {
+    font-family: 'Barlow';
+    font-style: normal;
+    font-weight: 600;
+    font-size: 10px;
+    line-height: 8px;
+    text-transform: uppercase;
+    color: $tc-white;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 0px 0px;
+}
+
+.self-service-cell-type {
+    width: 10%;
+    padding: 4px;
+}
+
+.self-service-type-text {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    text-transform: capitalize;
+    color: $black-80;
+    flex: none;
+    order: 1;
+    flex-grow: 0;
+    margin: 0px 8px;
+}
+
+.self-service-cell-created {
+    width: 10%;
+    padding: 4px;
+}
+
+.self-service-created-text {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    text-transform: capitalize;
+    color: $black-80;
+    flex: none;
+    order: 2;
+    flex-grow: 0;
+    margin: 0px 8px;
+}
+
+.self-service-cell-solutions {
+    width: 10%;
+    padding: 4px;
+}
+
+.self-service-solutions-text {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    text-transform: capitalize;
+    color: $black-100;
+    flex: none;
+    order: 3;
+    flex-grow: 0;
+    margin: 0px 8px;
+}
+
+.self-service-cell-cost {
+    width: 10%;
+    padding: 4px;
+}
+
+.self-service-cost-text {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    text-align: center;
+    letter-spacing: 0.5px;
+    text-transform: capitalize;
+    color: $black-100;
+    flex: none;
+    order: 4;
+    flex-grow: 0;
+    margin: 0px 8px;
+}
+
+.self-service-cell-messages {
+    width: 10%;
+    padding: 4px;
+}
+
+.self-service-messages-chip {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0px 8px;
+    background: $red-100;
+    border-radius: 50px;
+    flex: none;
+    order: 1;
+    flex-grow: 0;
+    margin: 10px 0px;
+}
+
+.self-service-messages-text {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    text-transform: capitalize;
+    color: $tc-white;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 0px 0px;
+}
+
+.self-service-cell-delete {
+    width: 7%;
+    padding: 4px;
 }

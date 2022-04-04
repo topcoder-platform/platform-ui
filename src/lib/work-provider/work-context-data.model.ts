@@ -1,4 +1,4 @@
-import { WorkList } from './work-model'
+import { workList } from './work-functions'
 
 export interface WorkContextData {
     initialized: boolean
