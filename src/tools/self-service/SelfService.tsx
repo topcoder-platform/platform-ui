@@ -1,12 +1,25 @@
 import { FC } from 'react'
-
 import { ContentLayout } from '../../lib'
-
 import styles from './SelfService.module.scss'
+import { WorkItem } from '../../lib/work-provider'
 
 export const toolTitle: string = 'Self Service'
 
 const SelfService: FC<{}> = () => {
+
+    const workItem: WorkItem = {
+        challengeStatus: "DRAFT",
+        created: "April 8, 2022",
+        id: "1234567890",
+        initialized: true,
+        messagesCount: 9,
+        messagesHasNew: true,
+        name: "Dog Walking Service Website Development",
+        numOfRegistrants: 50,
+        rating: 1,
+        status: "DRAFT",
+        workStatus: "n/a",
+    }
 
     return (
         <ContentLayout classNames={styles['self-service']} title={toolTitle}>
@@ -27,7 +40,7 @@ const SelfService: FC<{}> = () => {
                     </td>
                     <td>
                         <div className="self-service-cell-title-inner">
-                            <div className="self-service-title">Dog Walking Service Website Development</div>
+                            <div className="self-service-title">{workItem.name}</div>
                             <br/>
                             <div className="self-service-description">
                                 A dog walking website that allows visitors to select dog walkers and
@@ -38,17 +51,17 @@ const SelfService: FC<{}> = () => {
                     <td>
                         <div className="self-service-status-chip">
                             <div className="self-service-status-text">
-                                DRAFT
+                                {workItem.status}
                             </div>
                         </div>
                     </td>
                     <td>
                         <div className="self-service-type-text">
-                            Website Development
+                            {workItem.workStatus}
                         </div>
                     </td>
                     <td>
-                        <div className="self-service-created-text">April 8, 2022</div>
+                        <div className="self-service-created-text">{workItem.created}</div>
                     </td>
                     <td>
                         <div className="self-service-solutions-text">April 28, 2022</div>
@@ -57,11 +70,20 @@ const SelfService: FC<{}> = () => {
                         <div className="self-service-cost-text">$12,000</div>
                     </td>
                     <td>
-                        <div className="self-service-messages-chip">
-                            <div className="self-service-messages-text">
-                                3
+                        {workItem.messagesHasNew &&
+                            <div className="self-service-messages-chip-red">
+                                <div className="self-service-messages-text">
+                                    {workItem.messagesCount}
+                                </div>
                             </div>
-                        </div>
+                        }
+                        {!workItem.messagesHasNew &&
+                            <div className="self-service-messages-chip-gray">
+                                <div className="self-service-messages-text">
+                                    {workItem.messagesCount}
+                                </div>
+                            </div>
+                        }
                     </td>
                     <td>
                         <img/>

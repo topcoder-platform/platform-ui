@@ -173,13 +173,27 @@
     padding: 4px;
 }
 
-.self-service-messages-chip {
+.self-service-messages-chip-red {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     padding: 0px 8px;
     background: $red-100;
+    border-radius: 50px;
+    flex: none;
+    order: 1;
+    flex-grow: 0;
+    margin: 10px 0px;
+}
+
+.self-service-messages-chip-gray {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0px 8px;
+    background: $black-100;
     border-radius: 50px;
     flex: none;
     order: 1;
