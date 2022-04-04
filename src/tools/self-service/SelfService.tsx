@@ -94,6 +94,4 @@ const SelfService: FC<{}> = () => {
     )
 }
 
-//<ContentLayout classNames={styles['self-service']} title={toolTitle} />
-
 export default SelfService
