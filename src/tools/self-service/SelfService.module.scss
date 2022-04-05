@@ -1,5 +1,69 @@
 @import '../../lib/styles';
 
+.self-service-header-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.self-service-header-frame {
+    width: 100%;
+    background: $blue-15;//#EAF6FD;
+    border-radius: 4px 4px 0px 0px;
+}
+
+.self-service-visible-category {
+    position: static;
+    width: 6px;
+    height: 6px;
+    left: 0px;
+    top: 0px;
+    background: $red-100;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 0px 0px;
+}
+
+.self-service-header-draft-text {
+    font-family: 'Barlow';
+    font-style: normal;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 16px;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    text-transform: uppercase;
+    color: $black-60;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 0px 2px;
+}
+
+.self-service-header-draft-count-bg {
+    background: $blue-100;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 0px 0px;
+}
+
+.self-service-header-draft-count-text {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    text-transform: capitalize;
+    color: $tc-white;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 0px 0px;
+}
+
 .self-service-item-table {
   width: 100%;
   table-layout: fixed;

@@ -7,3 +7,5 @@ export const defaultWorkContextData: WorkContextData = {
 
 export const workContext: Context<WorkContextData> = createContext(defaultWorkContextData)
 
+export default workContext
+

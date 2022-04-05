@@ -1,15 +1,16 @@
 import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react'
 import { getWork, workList } from './'
-import { defaultWorkContextData, workContext } from './work.context'
+import { default as workContext, defaultWorkContextData } from './work.context'
 import { WorkContextData } from './work-context-data.model'
 
 export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { children: ReactNode }) => {
 
-    const [workContext, setWorkContext]: [WorkContextData, Dispatch<SetStateAction<WorkContextData>>]
+    const [workContextData, setWorkContextData]: [WorkContextData, Dispatch<SetStateAction<WorkContextData>>]
         = useState<WorkContextData>(defaultWorkContextData)
 
     useEffect(() => {
-        if (workContext.initialized) {
+        console.log("******** getting my work")
+        if (workContextData.initialized) {
             return
         }
 
@@ -20,15 +21,14 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
                 initialized: true,
                 work,
             }
-            setWorkContext(contextData)
+            setWorkContextData(contextData)
         }
         getAndSetWork()
     })
 
     return (
-        <></>
-        //<workContext.Provider value={workContext}>
-        //    {children}
-        //</workContext.Provider>
+        <workContext.Provider value={workContextData}>
+            {children}
+        </workContext.Provider>
     )
 }
