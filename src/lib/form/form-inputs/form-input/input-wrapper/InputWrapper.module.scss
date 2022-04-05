@@ -1,15 +1,15 @@
-@import '../../../styles';
+@import '../../../../styles';
 
 $form-pad-top: calc($pad-md - $border);
 $error-line-height: 14px;
 
-.form-field-wrapper {
+.input-wrapper {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     padding-bottom: $pad-md;
 
-    .form-field {
+    .input {
         flex: 1;
         display: flex;
         flex-direction: column;
@@ -26,13 +26,13 @@ $error-line-height: 14px;
         &.focus {
             border-color: $turq-160;
 
-            &.form-field-error {
+            &.input-error {
                 border-color: $red-100;
             }
         }
 
         &.focus,
-        &.form-field-error {
+        &.input-error {
             border-width: $border;
             padding: calc($pad-sm - $border-xs) calc($form-pad-top - $border-xs) 0 calc($form-pad-top - $border-xs);
         }
@@ -43,7 +43,7 @@ $error-line-height: 14px;
             border-color: $black-40;
         }
 
-        &.form-field-error {
+        &.input-error {
             border-color: $red-100;
             margin-bottom: 0;
 

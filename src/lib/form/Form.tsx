@@ -12,8 +12,8 @@ import {
     formReset,
     formSubmitAsync,
 } from './form-functions'
-import { InputText, InputTextarea } from './form-input'
 import { FormInputModel } from './form-input.model'
+import { FormInputs } from './form-inputs'
 import styles from './Form.module.scss'
 
 interface FormProps<ValueType, RequestType> {
@@ -37,12 +37,12 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         const [formKey, setFormKey]: [number, Dispatch<SetStateAction<number>>]
             = useState<number>(Date.now())
 
-        async function onBlur(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>): Promise<void> {
+        function onBlur(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>): void {
             const inputDef: FormInputModel = formGetInputModel(props.formDef.inputs, event.target.name)
             inputDef.validateOnBlur
-                ?.forEach(async validator => {
+                ?.forEach(validator => {
                     if (!inputDef.error) {
-                        inputDef.error = await validator(event.target.value, event.target.form?.elements, inputDef.dependentField)
+                        inputDef.error = validator(event.target.value, event.target.form?.elements, inputDef.dependentField)
                         setFormDef({ ...formDef })
                     }
                 })
@@ -68,7 +68,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         async function onSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
             const values: RequestType = props.requestGenerator(formDef.inputs)
-            formSubmitAsync<RequestType, void>(event, formDef.inputs, props.formDef.title, values, props.save, setDisableSave, props.succeeded)
+            formSubmitAsync<RequestType, void>(event, formDef.inputs, props.formDef.title || 'data', values, props.save, setDisableSave, props.succeeded)
                 .then(() => {
                     setFormKey(Date.now())
                     formReset(formDef.inputs, props.formValues)
@@ -85,38 +85,6 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         }
 
         formInitializeValues(formDef.inputs, props.formValues)
-
-        const formInputs: Array<JSX.Element> = formDef.inputs
-            .map(input => formGetInputModel(formDef.inputs, input.name))
-            .map((inputModel, index) => {
-                const tabIndex: number = inputModel.notTabbable ? -1 : index + 1 + (formDef.tabIndexStart || 0)
-                switch (inputModel.type) {
-                    case 'textarea':
-                        return (
-                            <InputTextarea
-                                {...inputModel}
-                                key={inputModel.name}
-                                onBlur={onBlur}
-                                onFocus={onFocus}
-                                tabIndex={tabIndex}
-                                value={inputModel.value}
-                            />
-                        )
-                    default:
-                        return (
-                            <InputText
-                                {...inputModel}
-                                key={inputModel.name}
-                                onBlur={onBlur}
-                                onFocus={onFocus}
-                                tabIndex={tabIndex}
-                                type={inputModel.type || 'text'}
-                                value={inputModel.value}
-                            />
-                        )
-                }
-
-            })
 
         const buttons: Array<JSX.Element> = formDef.buttons
             .map((button, index) => {
@@ -140,18 +108,24 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         return (
             <form
                 action={''}
+                className={styles.form}
                 key={formKey}
                 onChange={onChange}
                 onSubmit={onSubmit}
             >
 
-                <h2>{props.formDef.title}</h2>
+                {!!props.formDef.title && (
+                    <>
+                        <h2>{props.formDef.title}</h2>
+                        <hr />
+                    </>
+                )}
 
-                <hr />
-
-                <div className={styles['form-fields']}>
-                    {formInputs}
-                </div>
+                <FormInputs
+                    formDef={formDef}
+                    onBlur={onBlur}
+                    onFocus={onFocus}
+                />
 
                 <div className='button-container-outer'>
                     <div className='button-container-inner'>

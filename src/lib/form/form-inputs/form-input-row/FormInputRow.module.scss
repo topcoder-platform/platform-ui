@@ -1,0 +1,16 @@
+@import '../../../../lib/styles';
+
+h4 {
+    border-top: $border-xs solid $black-10;
+
+    &.input-title-0 {
+        border: none;
+    }
+}
+
+
+.input-row {
+    display: grid;
+    grid-template-columns: repeat(2, .5fr);
+    column-gap: $pad-xxl;
+}

@@ -38,6 +38,9 @@
 @mixin font-black-60 {
     color: $black-100;
 }
+@mixin font-black-40 {
+    color: $black-40;
+}
 @mixin font-tc-white {
     color: $tc-white;
 }
@@ -49,6 +52,9 @@
 }
 .font-black-60 {
     @include font-black-60;
+}
+.font-black-40 {
+    @include font-black-40;
 }
 .font-tc-white {
     @include font-tc-white;
