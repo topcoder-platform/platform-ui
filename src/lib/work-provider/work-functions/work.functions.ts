@@ -1,4 +1,4 @@
-import { workGetAsync as getAsync } from './work-store'
+import { workStoreGetAsync as getAsync } from './work-store'
 import { tokenGetAsync } from '../../functions/token-functions'
 import { WorkList } from './work-store'
 

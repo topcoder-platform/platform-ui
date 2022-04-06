@@ -1,5 +1,5 @@
 import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react'
-import { getWork, workList } from './'
+import { workGetAsync, WorkList } from './'
 import { default as workContext, defaultWorkContextData } from './work.context'
 import { WorkContextData } from './work-context-data.model'
 
@@ -16,7 +16,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
 
         // need pages
         const getAndSetWork: () => Promise<void> = async () => {
-            const work: workList | undefined = await getWork("jay_peg", 1, 100)
+            const work: WorkList | undefined = await workGetAsync("jay_peg", 1, 100)
             const contextData: WorkContextData = {
                 initialized: true,
                 work,
