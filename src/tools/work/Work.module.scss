@@ -1,17 +1,17 @@
 @import '../../lib/styles';
 
-.self-service-header-table {
+.work-header-table {
   width: 100%;
   table-layout: fixed;
 }
 
-.self-service-header-frame {
+.work-header-frame {
     width: 100%;
     background: $blue-15;//#EAF6FD;
     border-radius: 4px 4px 0px 0px;
 }
 
-.self-service-header-cell {
+.work-header-cell {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -25,7 +25,7 @@
     margin: 0px 0px;
 }
 
-.self-service-visible-category {
+.work-visible-category {
     position: static;
     width: 6px;
     height: 6px;
@@ -38,7 +38,7 @@
     margin: 0px 0px;
 }
 
-.self-service-header-draft-text {
+.work-header-draft-text {
     font-family: 'Barlow';
     font-style: normal;
     font-weight: 600;
@@ -55,7 +55,7 @@
     margin: 0px 2px;
 }
 
-.self-service-header-draft-count-bg {
+.work-header-draft-count-bg {
     background: $blue-100;
     flex: none;
     order: 0;
@@ -63,7 +63,7 @@
     margin: 0px 0px;
 }
 
-.self-service-header-draft-count-text {
+.work-header-draft-count-text {
     font-family: 'Roboto';
     font-style: normal;
     font-weight: 500;
@@ -78,21 +78,21 @@
     margin: 0px 0px;
 }
 
-.self-service-item-table {
+.work-item-table {
   width: 100%;
   table-layout: fixed;
 }
 
-.self-service-cell-icon {
+.work-cell-icon {
     width: 8%;
 }
 
-.self-service-cell-title {
+.work-cell-title {
     width: 25%;
     padding: 4px;
 }
 
-.self-service-cell-title-inner {
+.work-cell-title-inner {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -103,7 +103,7 @@
     margin: 0px 16px;
 }
 
-.self-service-title {
+.work-title {
     font-family: 'Roboto';
     font-style: normal;
     font-weight: 500;
@@ -118,7 +118,7 @@
     margin: 6px 0px;
 }
 
-.self-service-description {
+.work-description {
     font-family: 'Roboto';
     font-style: normal;
     font-weight: 400;
@@ -132,12 +132,12 @@
     margin: 6px 0px;
 }
 
-.self-service-cell-status {
+.work-cell-status {
     width: 10%;
     padding: 4px;
 }
 
-.self-service-status-circle {
+.work-status-circle {
     background: $tc-white;
     box-sizing: border-box;
     flex: none;
@@ -146,17 +146,17 @@
     margin: 0px 4px;
 }
 
-.self-service-status-circle-draft {
-    @extend .self-service-status-cirlce !optional;
+.work-status-circle-draft {
+    @extend .work-status-cirlce !optional;
     border: 2px solid $black-80;
 }
 
-.self-service-status-circle-active {
-    @extend .self-service-status-circle !optional;
+.work-status-circle-active {
+    @extend .work-status-circle !optional;
     border: 2px solid $turq-120;
 }
 
-.self-service-status-text {
+.work-status-text {
     position: static;
     width: 36px;
     height: 8px;
@@ -177,12 +177,12 @@
     margin: 0px 4px;
 }
 
-.self-service-cell-type {
+.work-cell-type {
     width: 10%;
     padding: 4px;
 }
 
-.self-service-type-text {
+.work-type-text {
     font-family: 'Roboto';
     font-style: normal;
     font-weight: 400;
@@ -197,12 +197,12 @@
     margin: 0px 8px;
 }
 
-.self-service-cell-created {
+.work-cell-created {
     width: 10%;
     padding: 4px;
 }
 
-.self-service-created-text {
+.work-created-text {
     font-family: 'Roboto';
     font-style: normal;
     font-weight: 400;
@@ -217,12 +217,12 @@
     margin: 0px 8px;
 }
 
-.self-service-cell-solutions {
+.work-cell-solutions {
     width: 10%;
     padding: 4px;
 }
 
-.self-service-solutions-text {
+.work-solutions-text {
 
 
 position: static;
@@ -240,12 +240,12 @@ position: static;
     margin: 0px 8px;
 }
 
-.self-service-cell-cost {
+.work-cell-cost {
     width: 10%;
     padding: 4px;
 }
 
-.self-service-cost-text {
+.work-cost-text {
     font-family: 'Roboto';
     font-style: normal;
     font-weight: 400;
@@ -260,12 +260,12 @@ position: static;
     margin: 0px 8px;
 }
 
-.self-service-cell-messages {
+.work-cell-messages {
     width: 10%;
     padding: 4px;
 }
 
-.self-service-messages-chip-red {
+.work-messages-chip-red {
     position: static;
     width: 24px;
     height: 16px;
@@ -284,7 +284,7 @@ position: static;
     margin: 10px 0px;
 }
 
-.self-service-messages-chip-gray {
+.work-messages-chip-gray {
     position: static;
     width: 24px;
     height: 16px;
@@ -303,7 +303,7 @@ position: static;
     margin: 10px 0px;
 }
 
-.self-service-messages-text {
+.work-messages-text {
     position: static;
     width: 8px;
     height: 16px;
@@ -323,7 +323,7 @@ position: static;
     margin: 0px 0px;
 }
 
-.self-service-cell-delete {
+.work-cell-delete {
     width: 7%;
     padding: 4px;
 }

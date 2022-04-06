@@ -1,10 +1,10 @@
 import { FC } from 'react'
 import { ContentLayout } from '../../lib'
-import styles from './SelfService.module.scss'
+import styles from './Work.module.scss'
 import { WorkItem } from '../../lib/work-provider'
 import { DataScienceIcon, DesignIcon, DevelopmentIcon } from '../../lib'
 
-export const toolTitle: string = 'Self Service'
+export const toolTitle: string = 'Work'
 
 const SelfService: FC<{}> = () => {
 
@@ -51,137 +51,137 @@ const SelfService: FC<{}> = () => {
     const allClicked = () => { alert("show all");}
 
     return (
-        <ContentLayout classNames={styles['self-service']} title={toolTitle}>
-            <div className={styles["self-service-header-frame"]}>
-                <table className={styles["self-service-header-table"]}>
+        <ContentLayout classNames={styles['work']} title={toolTitle}>
+            <div className={styles["work-header-frame"]}>
+                <table className={styles["work-header-table"]}>
                     <colgroup>
-                        <col className={styles["self-service-icon"]} />
-                        <col className={styles["self-service-title"]} />
-                        <col className={styles["self-service-status"]} />
-                        <col className={styles["self-service-type"]} />
-                        <col className={styles["self-service-created"]} />
-                        <col className={styles["self-service-solutions"]} />
-                        <col className={styles["self-service-cost"]} />
-                        <col className={styles["self-service-messages"]} />
-                        <col className={styles["self-service-delete"]} />
+                        <col className={styles["work-icon"]} />
+                        <col className={styles["work-title"]} />
+                        <col className={styles["work-status"]} />
+                        <col className={styles["work-type"]} />
+                        <col className={styles["work-created"]} />
+                        <col className={styles["work-solutions"]} />
+                        <col className={styles["work-cost"]} />
+                        <col className={styles["work-messages"]} />
+                        <col className={styles["work-delete"]} />
                     </colgroup>
                     <tbody>
                         <tr>
                             <td>
-                                <div className={styles["self-service-header-cell"]}>
-                                    <div className={styles["self-service-header-cell-draft-text"]}>
+                                <div className={styles["work-header-cell"]}>
+                                    <div className={styles["work-header-cell-draft-text"]}>
                                         <p onClick={() => draftClicked()}>{workStatuses[0]}</p>
                                     </div>
                                     {showingStatus === 0 &&
-                                        <div className={styles["self-service-header-visible-category"]} />
+                                        <div className={styles["work-header-visible-category"]} />
                                     }
-                                    <div className={styles["self-service-header-cell-draft-count-bg"]}>
-                                        <div className={styles["self-service-header-cell-draft-count-text"]}>
+                                    <div className={styles["work-header-cell-draft-count-bg"]}>
+                                        <div className={styles["work-header-cell-draft-count-text"]}>
                                             {draftCount}
                                         </div>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <div className={styles["self-service-header-cell"]}>
-                                    <div className={styles["self-service-header-cell-active-text"]}>
+                                <div className={styles["work-header-cell"]}>
+                                    <div className={styles["work-header-cell-active-text"]}>
                                         <p onClick={() => activeClicked()}>{workStatuses[1]}</p>
                                     </div>
                                     {showingStatus == 1 &&
-                                        <div className={styles["self-service-header-visible-category"]} />
+                                        <div className={styles["work-header-visible-category"]} />
                                     }
-                                    <div className={styles["self-service-header-cell-active-count-bg"]}>
-                                        <div className={styles["self-service-header-cell-active-count-text"]}>
+                                    <div className={styles["work-header-cell-active-count-bg"]}>
+                                        <div className={styles["work-header-cell-active-count-text"]}>
                                             {activeCount}
                                         </div>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <div className={styles["self-service-header-cell"]}>
-                                    <div className={styles["self-service-header-cell-submitted-text"]}>
+                                <div className={styles["work-header-cell"]}>
+                                    <div className={styles["work-header-cell-submitted-text"]}>
                                         <p onClick={() => readyClicked()}>{workStatuses[2]}</p>
                                     </div>
                                     {showingStatus === 2 &&
-                                        <div className={styles["self-service-header-visible-category"]} />
+                                        <div className={styles["work-header-visible-category"]} />
                                     }
-                                    <div className={styles["self-service-header-cell-submitted-count-bg"]}>
-                                        <div className={styles["self-service-header-cell-submitted-count-text"]}>
+                                    <div className={styles["work-header-cell-submitted-count-bg"]}>
+                                        <div className={styles["work-header-cell-submitted-count-text"]}>
                                             {readyCount}
                                         </div>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <div className={styles["self-service-header-cell"]}>
-                                    <div className={styles["self-service-header-cell-in-review-text"]}>
+                                <div className={styles["work-header-cell"]}>
+                                    <div className={styles["work-header-cell-in-review-text"]}>
                                         <p onClick={() => redirectedClicked()}>{workStatuses[3]}</p>
                                     </div>
                                     {showingStatus === 3 &&
-                                        <div className={styles["self-service-header-visible-category"]} />
+                                        <div className={styles["work-header-visible-category"]} />
                                     }
-                                    <div className={styles["self-service-header-cell-in-review-count-bg"]}>
-                                        <div className={styles["self-service-header-cell-in-review-count-text"]}>
+                                    <div className={styles["work-header-cell-in-review-count-bg"]}>
+                                        <div className={styles["work-header-cell-in-review-count-text"]}>
                                             {redirectedCount}
                                         </div>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <div className={styles["self-service-header-cell"]}>
-                                    <div className={styles["self-service-header-cell-redirected-text"]}>
+                                <div className={styles["work-header-cell"]}>
+                                    <div className={styles["work-header-cell-redirected-text"]}>
                                         <p onClick={() => doneClicked()}>{workStatuses[4]}</p>
                                     </div>
                                     {showingStatus === 4 &&
-                                        <div className={styles["self-service-header-visible-category"]} />
+                                        <div className={styles["work-header-visible-category"]} />
                                     }
-                                    <div className={styles["self-service-header-cell-redirected-count-bg"]}>
-                                        <div className={styles["self-service-header-cell-redirected-count-text"]}>
+                                    <div className={styles["work-header-cell-redirected-count-bg"]}>
+                                        <div className={styles["work-header-cell-redirected-count-text"]}>
                                             {doneCount}
                                         </div>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <div className={styles["self-service-header-cell"]}>
-                                    <div className={styles["self-service-header-cell-cancelled-text"]}>
+                                <div className={styles["work-header-cell"]}>
+                                    <div className={styles["work-header-cell-cancelled-text"]}>
                                         <p onClick={() => cancelledClicked()}>{workStatuses[5]}</p>
                                     </div>
                                     {showingStatus === 5 &&
-                                        <div className={styles["self-service-header-visible-category"]} />
+                                        <div className={styles["work-header-visible-category"]} />
                                     }
-                                    <div className={styles["self-service-header-cell-cancelled-count-bg"]}>
-                                        <div className={styles["self-service-header-cell-cancelled-count-text"]}>
+                                    <div className={styles["work-header-cell-cancelled-count-bg"]}>
+                                        <div className={styles["work-header-cell-cancelled-count-text"]}>
                                             {cancelledCount}
                                         </div>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <div className={styles["self-service-header-cell"]}>
-                                    <div className={styles["self-service-header-cell-complete-text"]}>
+                                <div className={styles["work-header-cell"]}>
+                                    <div className={styles["work-header-cell-complete-text"]}>
                                         <p onClick={() => allClicked()}>{workStatuses[6]}</p>
                                     </div>
                                     {showingStatus === 6 &&
-                                        <div className={styles["self-service-header-visible-category"]} />
+                                        <div className={styles["work-header-visible-category"]} />
                                     }
-                                    <div className={styles["self-service-header-cell-complete-count-bg"]}>
-                                        <div className={styles["self-service-header-cell-complete-count-text"]}>
+                                    <div className={styles["work-header-cell-complete-count-bg"]}>
+                                        <div className={styles["work-header-cell-complete-count-text"]}>
                                             {allCount}
                                         </div>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <div className={styles["self-service-header-cell"]}>
-                                    <div className={styles["self-service-header-cell-all-text"]}>
+                                <div className={styles["work-header-cell"]}>
+                                    <div className={styles["work-header-cell-all-text"]}>
                                         <p onClick={() => allClicked()}>{workStatuses[7]}</p>
                                     </div>
                                     {showingStatus === 7 &&
-                                        <div className={styles["self-service-header-visible-category"]} />
+                                        <div className={styles["work-header-visible-category"]} />
                                     }
-                                    <div className={styles["self-service-header-cell-all-count-bg"]}>
-                                        <div className={styles["self-service-header-cell-all-count-text"]}>
+                                    <div className={styles["work-header-cell-all-count-bg"]}>
+                                        <div className={styles["work-header-cell-all-count-text"]}>
                                             {allCount}
                                         </div>
                                     </div>
@@ -191,17 +191,17 @@ const SelfService: FC<{}> = () => {
                     </tbody>
                 </table>
             </div>
-            <table className={styles["self-service-item-table"]}>
+            <table className={styles["work-item-table"]}>
                 <colgroup>
-                    <col className={styles["self-service-icon"]} />
-                    <col className={styles["self-service-title"]} />
-                    <col className={styles["self-service-status"]} />
-                    <col className={styles["self-service-type"]} />
-                    <col className={styles["self-service-created"]} />
-                    <col className={styles["self-service-solutions"]} />
-                    <col className={styles["self-service-cost"]} />
-                    <col className={styles["self-service-messages"]} />
-                    <col className={styles["self-service-delete"]} />
+                    <col className={styles["work-icon"]} />
+                    <col className={styles["work-title"]} />
+                    <col className={styles["work-status"]} />
+                    <col className={styles["work-type"]} />
+                    <col className={styles["work-created"]} />
+                    <col className={styles["work-solutions"]} />
+                    <col className={styles["work-cost"]} />
+                    <col className={styles["work-messages"]} />
+                    <col className={styles["work-delete"]} />
                 </colgroup>
                 <tbody>
                     <tr>
@@ -211,10 +211,10 @@ const SelfService: FC<{}> = () => {
                             {workItemType === 2 && <DataScienceIcon/>}
                         </td>
                         <td>
-                            <div className={styles["self-service-cell-title-inner"]}>
-                                <div className={styles["self-service-title"]}>{workItem.name}</div>
+                            <div className={styles["work-cell-title-inner"]}>
+                                <div className={styles["work-title"]}>{workItem.name}</div>
                                 <br/>
-                                <div className={styles["self-service-description"]}>
+                                <div className={styles["work-description"]}>
                                     A dog walking website that allows visitors to select dog walkers and
                                     schedule dog walking appointments
                                 </div>
@@ -222,55 +222,55 @@ const SelfService: FC<{}> = () => {
                         </td>
                         <td>
                             {workItemStatus === 0 &&
-                                <div className={styles["self-service-status-circle-draft"]}/>
+                                <div className={styles["work-status-circle-draft"]}/>
                             }
                             {workItemStatus === 1 &&
-                                <div className={styles["self-service-status-circle-active"]}/>
+                                <div className={styles["work-status-circle-active"]}/>
                             }
                             {workItemStatus === 2 &&
-                                <div className={styles["self-service-status-circle-submitted"]}/>
+                                <div className={styles["work-status-circle-submitted"]}/>
                             }
                             {workItemStatus === 3 &&
-                                <div className={styles["self-service-status-circle-in-review"]}/>
+                                <div className={styles["work-status-circle-in-review"]}/>
                             }
                             {workItemStatus === 4 &&
-                                <div className={styles["self-service-status-circle-redirected"]}/>
+                                <div className={styles["work-status-circle-redirected"]}/>
                             }
                             {workItemStatus === 5 &&
-                                <div className={styles["self-service-status-circle-cancelled"]}/>
+                                <div className={styles["work-status-circle-cancelled"]}/>
                             }
                             {workItemStatus === 6 &&
-                                <div className={styles["self-service-status-circle-complete"]}/>
+                                <div className={styles["work-status-circle-complete"]}/>
                             }
-                            <div className={styles["self-service-status-text"]}>
+                            <div className={styles["work-status-text"]}>
                                 {workStatuses[workItemStatus]}
                             </div>
                         </td>
                         <td>
-                            <div className={styles["self-service-type-text"]}>
+                            <div className={styles["work-type-text"]}>
                                 {workTypes[workItemType]}
                             </div>
                         </td>
                         <td>
-                            <div className={styles["self-service-created-text"]}>{workItem.created}</div>
+                            <div className={styles["work-created-text"]}>{workItem.created}</div>
                         </td>
                         <td>
-                            <div className={styles["self-service-solutions-text"]}>April 28, 2022</div>
+                            <div className={styles["work-solutions-text"]}>April 28, 2022</div>
                         </td>
                         <td>
-                            <div className={styles["self-service-cost-text"]}>$12,000</div>
+                            <div className={styles["work-cost-text"]}>$12,000</div>
                         </td>
                         <td>
                             {workItem.messagesHasNew &&
-                                <div className={styles["self-service-messages-chip-red"]}>
-                                    <div className={styles["self-service-messages-text"]}>
+                                <div className={styles["work-messages-chip-red"]}>
+                                    <div className={styles["work-messages-text"]}>
                                         {workItem.messagesCount}
                                     </div>
                                 </div>
                             }
                             {!workItem.messagesHasNew &&
-                                <div className={styles["self-service-messages-chip-gray"]}>
-                                    <div className={styles["self-service-messages-text"]}>
+                                <div className={styles["work-messages-chip-gray"]}>
+                                    <div className={styles["work-messages-text"]}>
                                         {workItem.messagesCount}
                                     </div>
                                 </div>
