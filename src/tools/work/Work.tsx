@@ -51,7 +51,7 @@ const SelfService: FC<{}> = () => {
     const allClicked = () => { alert("show all");}
 
     return (
-        <ContentLayout classNames={styles['work']} title={toolTitle}>
+        <ContentLayout title={toolTitle}>
             <div className={styles["work-header-frame"]}>
                 <table className={styles["work-header-table"]}>
                     <colgroup>

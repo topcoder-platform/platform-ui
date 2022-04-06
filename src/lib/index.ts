@@ -1,5 +1,6 @@
 export * from './avatar'
 export * from './button'
+export * from './card'
 export * from './content-layout'
 export * from './form'
 export * from './global-config.model'
@@ -12,7 +13,11 @@ export {
     logError,
     logInitialize,
     logInfo,
+    useHideClickOutside,
 } from './functions'
+export
+    // tslint:disable-next-line: no-unused-expression
+type { ComponentVisible } from './functions'
 export * from './svgs'
 
 /*

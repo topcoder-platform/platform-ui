@@ -1,9 +1,0 @@
-@import '../../styles/';
-
-.sections {
-    @include content-height;
-
-    @include ltemd {
-        display: none;
-    }
-}

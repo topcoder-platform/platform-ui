@@ -28,4 +28,8 @@
     @include xl {
         grid-template-columns: $left-col-width-xl 1fr auto;
     }
+
+    @include xxl {
+        grid-template-columns: $left-col-width-xl 1fr auto;
+    }
 }

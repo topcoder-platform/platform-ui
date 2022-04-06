@@ -8,12 +8,12 @@ import {
     FormErrorMessage,
     formGetInputModel,
     formInitializeValues,
+    formOnChange,
     formReset,
     formSubmitAsync,
-    formValidateAndUpdateAsync,
 } from './form-functions'
-import { InputText, InputTextarea } from './form-input'
 import { FormInputModel } from './form-input.model'
+import { FormInputs } from './form-inputs'
 import styles from './Form.module.scss'
 
 interface FormProps<ValueType, RequestType> {
@@ -22,13 +22,14 @@ interface FormProps<ValueType, RequestType> {
     readonly requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => RequestType
     readonly resetOnError: boolean
     readonly save: (value: RequestType) => Promise<void>
+    readonly succeeded?: () => void
 }
 
 const Form: <ValueType extends any, RequestType extends any>(props: FormProps<ValueType, RequestType>) => JSX.Element
     = <ValueType extends any, RequestType extends any>(props: FormProps<ValueType, RequestType>) => {
 
         const [disableSave, setDisableSave]: [boolean, Dispatch<SetStateAction<boolean>>]
-            = useState<boolean>(true)
+            = useState<boolean>(false)
 
         const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
             = useState<FormDefinition>({ ...props.formDef })
@@ -36,26 +37,26 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         const [formKey, setFormKey]: [number, Dispatch<SetStateAction<number>>]
             = useState<number>(Date.now())
 
-        async function onBlur(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>): Promise<void> {
+        function onBlur(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>): void {
             const inputDef: FormInputModel = formGetInputModel(props.formDef.inputs, event.target.name)
             inputDef.validateOnBlur
-                ?.forEach(async validator => {
+                ?.forEach(validator => {
                     if (!inputDef.error) {
-                        inputDef.error = await validator(event.target.value, event.target.form?.elements, inputDef.dependentField)
+                        inputDef.error = validator(event.target.value, event.target.form?.elements, inputDef.dependentField)
                         setFormDef({ ...formDef })
                     }
                 })
         }
 
         async function onChange(event: FormEvent<HTMLFormElement>): Promise<void> {
-            const isValid: boolean = await formValidateAndUpdateAsync(event, formDef.inputs)
+            const isValid: boolean = await formOnChange(event, formDef.inputs)
             setFormDef({ ...formDef })
             setDisableSave(!isValid)
         }
 
         function onFocus(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>): void {
             const inputDef: FormInputModel = formGetInputModel(props.formDef.inputs, event.target.name)
-            inputDef.dirtyOrTouched = true
+            inputDef.touched = true
             setFormDef({ ...formDef })
         }
 
@@ -67,7 +68,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         async function onSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
             const values: RequestType = props.requestGenerator(formDef.inputs)
-            formSubmitAsync<RequestType, void>(event, formDef.inputs, props.formDef.title, values, props.save, setDisableSave)
+            formSubmitAsync<RequestType, void>(event, formDef.inputs, props.formDef.title || 'data', values, props.save, setDisableSave, props.succeeded)
                 .then(() => {
                     setFormKey(Date.now())
                     formReset(formDef.inputs, props.formValues)
@@ -85,38 +86,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         formInitializeValues(formDef.inputs, props.formValues)
 
-        const formInputs: Array<JSX.Element> = props.formDef.inputs
-            .map(input => formGetInputModel(props.formDef.inputs, input.name))
-            .map((inputModel, index) => {
-                switch (inputModel.type) {
-                    case 'textarea':
-                        return (
-                            <InputTextarea
-                                {...inputModel}
-                                key={inputModel.name}
-                                onBlur={onBlur}
-                                onFocus={onFocus}
-                                tabIndex={inputModel.notTabbable ? -1 : index + 1}
-                                value={inputModel.value}
-                            />
-                        )
-                    default:
-                        return (
-                            <InputText
-                                {...inputModel}
-                                key={inputModel.name}
-                                onBlur={onBlur}
-                                onFocus={onFocus}
-                                tabIndex={inputModel.notTabbable ? -1 : index + 1}
-                                type={inputModel.type || 'text'}
-                                value={inputModel.value}
-                            />
-                        )
-                }
-
-            })
-
-        const buttons: Array<JSX.Element> = props.formDef.buttons
+        const buttons: Array<JSX.Element> = formDef.buttons
             .map((button, index) => {
                 // if this is a reset button, set its onclick to reset
                 if (!!button.isReset) {
@@ -130,7 +100,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                         {...button}
                         disable={button.isSave && disableSave}
                         key={button.label}
-                        tabIndex={button.notTabble ? -1 : index + props.formDef.inputs.length}
+                        tabIndex={button.notTabble ? -1 : index + formDef.inputs.length + (formDef.tabIndexStart || 0)}
                     />
                 )
             })
@@ -138,19 +108,29 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         return (
             <form
                 action={''}
+                className={styles.form}
                 key={formKey}
                 onChange={onChange}
                 onSubmit={onSubmit}
             >
 
-                <h6>{props.formDef.title}</h6>
+                {!!props.formDef.title && (
+                    <>
+                        <h2>{props.formDef.title}</h2>
+                        <hr />
+                    </>
+                )}
 
-                <div className={styles['form-fields']}>
-                    {formInputs}
-                </div>
+                <FormInputs
+                    formDef={formDef}
+                    onBlur={onBlur}
+                    onFocus={onFocus}
+                />
 
-                <div className='button-container'>
-                    {buttons}
+                <div className='button-container-outer'>
+                    <div className='button-container-inner'>
+                        {buttons}
+                    </div>
                 </div>
 
             </form>

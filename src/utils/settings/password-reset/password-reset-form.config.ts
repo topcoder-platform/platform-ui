@@ -17,13 +17,6 @@ export enum PasswordFieldName {
 export const passwordFormDef: FormDefinition = {
     buttons: [
         {
-            buttonStyle: 'tertiary',
-            isReset: true,
-            label: 'Back',
-            notTabble: true,
-            size: 'xl',
-        },
-        {
             buttonStyle: 'secondary',
             isSave: true,
             label: 'Save',
@@ -65,5 +58,6 @@ export const passwordFormDef: FormDefinition = {
             ],
         },
     ],
+    tabIndexStart: 3,
     title: passwordFormTitle,
 }

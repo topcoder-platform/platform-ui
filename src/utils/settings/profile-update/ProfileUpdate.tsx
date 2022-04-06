@@ -1,12 +1,10 @@
 import { Dispatch, FC, SetStateAction, useContext, useState } from 'react'
 
 import {
-    Button,
     Form,
     FormDefinition,
     formGetInputModel,
     FormInputModel,
-    formReset,
     profileContext,
     ProfileContextData,
     UserProfile,
@@ -15,10 +13,9 @@ import {
 import '../../../lib/styles/index.scss'
 
 import { ProfileFieldName, profileFormDef } from './profile-update-form.config'
-import styles from './ProfileUpdate.module.scss'
 
 interface ProfileUpdateProps {
-    readonly passwordPath: string
+    onClose: () => void
 }
 
 const ProfileUpdate: FC<ProfileUpdateProps> = (props: ProfileUpdateProps) => {
@@ -50,38 +47,19 @@ const ProfileUpdate: FC<ProfileUpdateProps> = (props: ProfileUpdateProps) => {
                 lastName: updatedProfile.lastName,
             },
         })
+        .then(() => {
+            props.onClose()
+        })
     }
 
     return (
-        <>
-            <hr />
-
-            <Form
-                formDef={profileForm}
-                formValues={profile}
-                requestGenerator={requestGenerator}
-                resetOnError={false}
-                save={saveProfile} />
-
-            <hr />
-
-            <h6>Password</h6>
-
-            <div className={styles['profile-form-fields']}>
-
-                <div className='button-container'>
-                    <Button
-                        buttonStyle='tertiary'
-                        label='Reset Password'
-                        onClick={() => formReset(profileForm.inputs)}
-                        route={props.passwordPath}
-                        size='xl'
-                        tabIndex={-1}
-                    />
-                </div>
-
-            </div>
-        </>
+        <Form
+            formDef={profileForm}
+            formValues={profile}
+            requestGenerator={requestGenerator}
+            resetOnError={false}
+            save={saveProfile}
+            succeeded={props.onClose} />
     )
 }
 
