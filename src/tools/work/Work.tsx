@@ -55,9 +55,9 @@ const SelfService: FC<{}> = () => {
     const cancelledCount = 2;
     const allCount = 11;
 
-    const activeClicked = () => { alert(indexedWork[1].length); showingStatus = 1;
-        //this.forceUpdate();
-    }
+    const activeClicked = () => { alert(indexedWork[1].length); showingStatus = 1; }
+    //this.forceUpdate();
+    
     const draftClicked = () => { alert(indexedWork[0].length); showingStatus = 0; }
     const redirectedClicked = () => { alert("show redir"); showingStatus = 4; }
     const doneClicked = () => { alert("show complete"); showingStatus = 6; }
