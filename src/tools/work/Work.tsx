@@ -6,10 +6,7 @@ import { DataScienceIcon, DesignIcon, DevelopmentIcon } from '../../lib'
 
 export const toolTitle: string = 'Work'
 
-const SelfService: FC<{}> = () => {
-
-    const workStatuses: Array<string> = ['DRAFT', 'ACTIVE', 'SUBMITTED', 'IN REVIEW', 'REDIRECTED', 'CANCELLED', 'COMPLETE', 'ALL'];
-    const workTypes: Array<string> = ['Website Design', 'Website Development', 'Data Exploration'];
+const Work: FC<{}> = () => {
 
     const workItem: WorkItem = {
         challengeStatus: "DRAFT",
@@ -25,7 +22,73 @@ const SelfService: FC<{}> = () => {
         workStatus: "DRAFT",
     };
 
+    const filterTextStyles: Array<string> = [
+        "work-header-cell-draft-text",
+        "work-header-cell-active-text",
+        "work-header-cell-submitted-text",
+        "work-header-cell-in-review-text",
+        "work-header-cell-redirected-text",
+        "work-header-cell-cancelled-text",
+        "work-header-cell-complete-text",
+        "work-header-cell-all-text",
+    ]
+
+    const filterCountBgStyles: Array<string> = [
+        "work-header-cell-draft-count-bg",
+        "work-header-cell-active-count-bg",
+        "work-header-cell-submitted-count-bg",
+        "work-header-cell-in-review-count-bg",
+        "work-header-cell-redirected-count-bg",
+        "work-header-cell-cancelled-count-bg",
+        "work-header-cell-complete-count-bg",
+        "work-header-cell-all-count-bg",
+    ]
+
+    const filterCountTextStyles: Array<string> = [
+        "work-header-cell-draft-count-text",
+        "work-header-cell-active-count-text",
+        "work-header-cell-submitted-count-text",
+        "work-header-cell-in-review-count-text",
+        "work-header-cell-redirected-count-text",
+        "work-header-cell-cancelled-count-text",
+        "work-header-cell-complete-count-text",
+        "work-header-cell-all-count-text",
+    ]
+
+    const workStatuses: Array<string> = ['DRAFT', 'ACTIVE', 'SUBMITTED', 'IN REVIEW', 'REDIRECTED', 'CANCELLED', 'COMPLETE', 'ALL'];
+    const workTypes: Array<string> = ['Website Design', 'Website Development', 'Data Exploration'];
+    const sortedColumns: Array<number> = [-1, -1, -1, -1, -1];
+    const sortedDirection: Array<Array<number>> = [
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+    ];
+    const categorizedWork: Array<Array<WorkItem>> = [[]];
     var allWork: Array<WorkItem> = [workItem, workItem];
+
+    function createTabs() {
+        allWork.forEach((work: WorkItem) => {
+           categorizedWork[work.rating].push(work);
+        })
+    }
+
+//    function sortColumnAscending(column: number, work: Array<WorkItem>) {
+//        work.sort((a: WorkItem, b: WorkItem) => {
+//            // based on column
+//            if (sortedDirection)
+//            if (column === 0) { return (a.challengeStatus.localeCompare(b.challengeStatus)); }
+//            if (column === 1) { return (a.workStatus.localeCompare(b.workStatus)); }
+//            if (column === 2) { return (a. created.localeCompare(b.created)); }
+//            // where is solutions ready if (column === 3) { return (a.challengeStatus.localCompare(b.challengeStatus); }
+//            // no cost yet if (column === 4) { return (a.challengeStatus.localCompare(b.challengeStatus); }
+//        } )
+//    }
+
 
     function isDraft(workItem: WorkItem) { return (workItem.rating === 0); }
     function isActive(workItem: WorkItem) { return (workItem.rating === 1); }
@@ -35,35 +98,15 @@ const SelfService: FC<{}> = () => {
     function isCancelled(workItem: WorkItem) { return (workItem.rating === 5); }
     function isComplete(workItem: WorkItem) { return (workItem.rating === 6); }
 
-    var draftWork = allWork.filter(isDraft);
-    var activeWork = allWork.filter(isActive);
-    var submittedWork = allWork.filter(isDraft);
-    var inReviewWork = allWork.filter(isDraft);
-    var redirectedWork = allWork.filter(isDraft);
-    var cancelledWork = allWork.filter(isDraft);
-    var completeWork = allWork.filter(isDraft);
-    var indexedWork: Array<Array<WorkItem>> = [draftWork, activeWork, submittedWork, inReviewWork, redirectedWork, cancelledWork, completeWork];
     let showingStatus = 0;
-    let workItemStatus = workItem.numOfRegistrants;
-    let workItemType = workItem.rating;
 
-    const activeCount = 1;
-    const draftCount = 2;
-    const readyCount = 1;
-    const doneCount = 4;
-    const redirectedCount = 1;
-    const cancelledCount = 2;
-    const allCount = 11;
+    const filterClicked = (filter: number) => {
+        alert(filter);
+        showingStatus = filter;
+    }
 
-    const activeClicked = () => { alert(indexedWork[1].length); showingStatus = 1; }
-    //this.forceUpdate();
-    
-    const draftClicked = () => { alert(indexedWork[0].length); showingStatus = 0; }
-    const redirectedClicked = () => { alert("show redir"); showingStatus = 4; }
-    const doneClicked = () => { alert("show complete"); showingStatus = 6; }
-    const readyClicked = () => { alert("show ready");}
-    const cancelledClicked = () => { alert("show cancelled");}
-    const allClicked = () => { alert("show all");}
+    createTabs();
+    showingStatus = 0;
 
     return (
         <ContentLayout title={toolTitle}>
@@ -82,126 +125,25 @@ const SelfService: FC<{}> = () => {
                     </colgroup>
                     <tbody>
                         <tr>
-                            <td>
-                                <div className={styles["work-header-cell"]}>
-                                    <div className={styles["work-header-cell-draft-text"]}>
-                                        <p onClick={() => draftClicked()}>{workStatuses[0]}</p>
-                                    </div>
-                                    {showingStatus === 0 &&
-                                        <div className={styles["work-header-visible-category"]} />
-                                    }
-                                    <div className={styles["work-header-cell-draft-count-bg"]}>
-                                        <div className={styles["work-header-cell-draft-count-text"]}>
-                                            {draftCount}
+                            {[0,1,2,3,4,5,6,7].map(filter => {
+                                return (
+                                    <td>
+                                        <div className={styles["work-header-cell"]}>
+                                            <div className={styles[filterTextStyles[filter]]}>
+                                                <p onClick={() => filterClicked(filter)}>{workStatuses[filter]}</p>
+                                            </div>
+                                            {showingStatus === filter &&
+                                                <div className={styles["work-header-visible-category"]} />
+                                            }
+                                            <div className={styles[filterCountBgStyles[filter]]}>
+                                                <div className={styles[filterCountTextStyles[filter]]}>
+                                                    {categorizedWork[filter]?.length}
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div className={styles["work-header-cell"]}>
-                                    <div className={styles["work-header-cell-active-text"]}>
-                                        <p onClick={() => activeClicked()}>{workStatuses[1]}</p>
-                                    </div>
-                                    {showingStatus === 1 &&
-                                        <div className={styles["work-header-visible-category"]} />
-                                    }
-                                    <div className={styles["work-header-cell-active-count-bg"]}>
-                                        <div className={styles["work-header-cell-active-count-text"]}>
-                                            {activeCount}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div className={styles["work-header-cell"]}>
-                                    <div className={styles["work-header-cell-submitted-text"]}>
-                                        <p onClick={() => readyClicked()}>{workStatuses[2]}</p>
-                                    </div>
-                                    {showingStatus === 2 &&
-                                        <div className={styles["work-header-visible-category"]} />
-                                    }
-                                    <div className={styles["work-header-cell-submitted-count-bg"]}>
-                                        <div className={styles["work-header-cell-submitted-count-text"]}>
-                                            {readyCount}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div className={styles["work-header-cell"]}>
-                                    <div className={styles["work-header-cell-in-review-text"]}>
-                                        <p onClick={() => redirectedClicked()}>{workStatuses[3]}</p>
-                                    </div>
-                                    {showingStatus === 3 &&
-                                        <div className={styles["work-header-visible-category"]} />
-                                    }
-                                    <div className={styles["work-header-cell-in-review-count-bg"]}>
-                                        <div className={styles["work-header-cell-in-review-count-text"]}>
-                                            {redirectedCount}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div className={styles["work-header-cell"]}>
-                                    <div className={styles["work-header-cell-redirected-text"]}>
-                                        <p onClick={() => doneClicked()}>{workStatuses[4]}</p>
-                                    </div>
-                                    {showingStatus === 4 &&
-                                        <div className={styles["work-header-visible-category"]} />
-                                    }
-                                    <div className={styles["work-header-cell-redirected-count-bg"]}>
-                                        <div className={styles["work-header-cell-redirected-count-text"]}>
-                                            {doneCount}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div className={styles["work-header-cell"]}>
-                                    <div className={styles["work-header-cell-cancelled-text"]}>
-                                        <p onClick={() => cancelledClicked()}>{workStatuses[5]}</p>
-                                    </div>
-                                    {showingStatus === 5 &&
-                                        <div className={styles["work-header-visible-category"]} />
-                                    }
-                                    <div className={styles["work-header-cell-cancelled-count-bg"]}>
-                                        <div className={styles["work-header-cell-cancelled-count-text"]}>
-                                            {cancelledCount}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div className={styles["work-header-cell"]}>
-                                    <div className={styles["work-header-cell-complete-text"]}>
-                                        <p onClick={() => allClicked()}>{workStatuses[6]}</p>
-                                    </div>
-                                    {showingStatus === 6 &&
-                                        <div className={styles["work-header-visible-category"]} />
-                                    }
-                                    <div className={styles["work-header-cell-complete-count-bg"]}>
-                                        <div className={styles["work-header-cell-complete-count-text"]}>
-                                            {allCount}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div className={styles["work-header-cell"]}>
-                                    <div className={styles["work-header-cell-all-text"]}>
-                                        <p onClick={() => allClicked()}>{workStatuses[7]}</p>
-                                    </div>
-                                    {showingStatus === 7 &&
-                                        <div className={styles["work-header-visible-category"]} />
-                                    }
-                                    <div className={styles["work-header-cell-all-count-bg"]}>
-                                        <div className={styles["work-header-cell-all-count-text"]}>
-                                            {allCount}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
+                                    </td>
+                                )
+                            })}
                         </tr>
                     </tbody>
                 </table>
@@ -242,7 +184,7 @@ const SelfService: FC<{}> = () => {
                         </td>
                         <td/>
                     </tr>
-                    {indexedWork[showingStatus].map(workItem => {
+                    {categorizedWork[showingStatus].map(workItem => {
                         return (
                             <tr>
                                 <td>
@@ -327,4 +269,4 @@ const SelfService: FC<{}> = () => {
     )
 }
 
-export default SelfService
+export default Work
