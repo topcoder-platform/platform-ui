@@ -11,6 +11,20 @@
     border-radius: 4px 4px 0px 0px;
 }
 
+.self-service-header-cell {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 12px 16px 10px;
+    background: $blue-15;
+    box-shadow: 0px 1px 0px #D4D4D4;
+    border-radius: 4px 0px 0px 0px;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 0px 0px;
+}
+
 .self-service-visible-category {
     position: static;
     width: 6px;
@@ -123,32 +137,44 @@
     padding: 4px;
 }
 
-.self-service-status-chip {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    padding: 4px 8px;
-    background: $black-80;
-    border-radius: 10px;
+.self-service-status-circle {
+    background: $tc-white;
+    box-sizing: border-box;
     flex: none;
     order: 0;
     flex-grow: 0;
-    margin: 0px 0px;
+    margin: 0px 4px;
+}
+
+.self-service-status-circle-draft {
+    @extend .self-service-status-cirlce !optional;
+    border: 2px solid $black-80;
+}
+
+.self-service-status-circle-active {
+    @extend .self-service-status-circle !optional;
+    border: 2px solid $turq-120;
 }
 
 .self-service-status-text {
+    position: static;
+    width: 36px;
+    height: 8px;
+    left: 14px;
+    top: 4px;
     font-family: 'Barlow';
     font-style: normal;
     font-weight: 600;
-    font-size: 10px;
+    font-size: 11px;
     line-height: 8px;
+    display: flex;
+    align-items: center;
     text-transform: uppercase;
-    color: $tc-white;
+    color: $black-80;
     flex: none;
-    order: 0;
+    order: 1;
     flex-grow: 0;
-    margin: 0px 0px;
+    margin: 0px 4px;
 }
 
 .self-service-cell-type {
@@ -159,12 +185,12 @@
 .self-service-type-text {
     font-family: 'Roboto';
     font-style: normal;
-    font-weight: 500;
+    font-weight: 400;
     font-size: 14px;
     line-height: 16px;
     letter-spacing: 0.5px;
     text-transform: capitalize;
-    color: $black-80;
+    color: $black-100;
     flex: none;
     order: 1;
     flex-grow: 0;
@@ -179,12 +205,12 @@
 .self-service-created-text {
     font-family: 'Roboto';
     font-style: normal;
-    font-weight: 500;
+    font-weight: 400;
     font-size: 14px;
     line-height: 16px;
     letter-spacing: 0.5px;
     text-transform: capitalize;
-    color: $black-80;
+    color: $black-100;
     flex: none;
     order: 2;
     flex-grow: 0;
@@ -197,9 +223,12 @@
 }
 
 .self-service-solutions-text {
+
+
+position: static;
     font-family: 'Roboto';
     font-style: normal;
-    font-weight: 500;
+    font-weight: 400;
     font-size: 14px;
     line-height: 16px;
     letter-spacing: 0.5px;
@@ -219,10 +248,9 @@
 .self-service-cost-text {
     font-family: 'Roboto';
     font-style: normal;
-    font-weight: 500;
+    font-weight: 400;
     font-size: 14px;
     line-height: 16px;
-    text-align: center;
     letter-spacing: 0.5px;
     text-transform: capitalize;
     color: $black-100;
@@ -238,6 +266,11 @@
 }
 
 .self-service-messages-chip-red {
+    position: static;
+    width: 24px;
+    height: 16px;
+    left: 48.5px;
+    top: 0px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -252,6 +285,11 @@
 }
 
 .self-service-messages-chip-gray {
+    position: static;
+    width: 24px;
+    height: 16px;
+    left: 48.5px;
+    top: 0px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -266,6 +304,11 @@
 }
 
 .self-service-messages-text {
+    position: static;
+    width: 8px;
+    height: 16px;
+    left: 8px;
+    top: 0px;
     font-family: 'Roboto';
     font-style: normal;
     font-weight: 500;
