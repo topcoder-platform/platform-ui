@@ -1,6 +1,4 @@
-import { workStoreGetAsync as getAsync } from './work-store'
-import { tokenGetAsync } from '../../functions/token-functions'
-import { WorkList } from './work-store'
+import { WorkList, workStoreGetAsync as getAsync } from './work-store'
 
 export async function workGetAsync(handle: string, page?: number, perPage?: number): Promise<WorkList | undefined> {
     page = page || 1
