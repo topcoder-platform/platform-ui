@@ -55,7 +55,7 @@ const SelfService: FC<{}> = () => {
     const cancelledCount = 2;
     const allCount = 11;
 
-    const activeClicked = () => { alert("show active"); showingStatus = 1;
+    const activeClicked = () => { alert(indexedWork[1].length); showingStatus = 1;
         //this.forceUpdate();
     }
     const draftClicked = () => { alert(indexedWork[0].length); showingStatus = 0; }
@@ -242,7 +242,7 @@ const SelfService: FC<{}> = () => {
                         </td>
                         <td/>
                     </tr>
-                    {indexedWork[showingStatus].forEach(workItem => {
+                    {indexedWork[showingStatus].map(workItem => {
                         return (
                             <tr>
                                 <td>
