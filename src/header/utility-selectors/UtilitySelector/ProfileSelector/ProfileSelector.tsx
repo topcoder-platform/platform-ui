@@ -1,6 +1,6 @@
 import { FC, useContext } from 'react'
 
-import { SETTINGS_TITLE } from '../../../../config'
+import { ToolTitle } from '../../../../config'
 import { profileContext, ProfileContextData } from '../../../../lib'
 import '../../../../lib/styles/index.scss'
 
@@ -24,7 +24,7 @@ const ProfileSelector: FC<{}> = () => {
     return (
         <div className={styles['profile-selector']}>
             {!isLoggedIn && <ProfileNotLoggedIn />}
-            {isLoggedIn && <ProfileLoggedIn settingsTitle={SETTINGS_TITLE} />}
+            {isLoggedIn && <ProfileLoggedIn settingsTitle={ToolTitle.settings} />}
         </div>
     )
 }

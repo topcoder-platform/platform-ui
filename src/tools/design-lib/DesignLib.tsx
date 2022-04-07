@@ -1,9 +1,10 @@
 import { FC, useContext } from 'react'
 import { Outlet, Routes } from 'react-router-dom'
 
+import { ToolTitle } from '../../config'
 import { ContentLayout, routeContext, RouteContextData } from '../../lib'
 
-export const toolTitle: string = 'Design Library'
+export const toolTitle: string = ToolTitle.designLib
 
 const DesignLib: FC<{}> = () => {
 

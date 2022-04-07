@@ -3,7 +3,7 @@ import { Dispatch, FC, SetStateAction, useContext, useState } from 'react'
 import Modal from 'react-responsive-modal'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 
-import { SETTINGS_TITLE } from '../../config'
+import { ToolTitle } from '../../config'
 import {
     authUrlLogin,
     Avatar,
@@ -20,6 +20,8 @@ import '../../lib/styles/index.scss'
 import { PasswordReset } from './password-reset'
 import { ProfileUpdate } from './profile-update'
 import styles from './Settings.module.scss'
+
+export const settingsTitle: string = ToolTitle.settings
 
 const Settings: FC<{}> = () => {
 
@@ -56,7 +58,7 @@ const Settings: FC<{}> = () => {
     return (
         <ContentLayout
             contentClass={styles.content}
-            title={SETTINGS_TITLE}
+            title={ToolTitle.settings}
             titleClass={classNames('font-tc-white', styles['page-header'])}
         >
 

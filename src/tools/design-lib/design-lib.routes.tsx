@@ -1,3 +1,4 @@
+import { EnvironmentConfig } from '../../config'
 import { IconOutline, PlatformRoute } from '../../lib'
 
 import { Buttons } from './buttons'
@@ -43,7 +44,7 @@ export const designLibRoutes: Array<PlatformRoute> = [
             },
         ],
         element: <DesignLib />,
-        enabled: true,
+        enabled: !EnvironmentConfig.DISABLED_FEATURES?.includes(toolTitle),
         route: '/design-lib',
         title: toolTitle,
     },
