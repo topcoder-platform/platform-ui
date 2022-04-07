@@ -1,12 +1,15 @@
 import { Dispatch, FC, ReactElement, ReactNode, SetStateAction, useEffect, useState } from 'react'
 import { Route } from 'react-router-dom'
 
+import { GlobalConfig } from '../global-config.model'
+
 import { PlatformRoute } from './platform-route.model'
 import { RouteContextData } from './route-context-data.model'
 import { default as routeContext, defaultRouteContextData } from './route.context'
 
 interface RouteProviderProps {
     children: ReactNode
+    config: GlobalConfig
     toolsRoutes: Array<PlatformRoute>
     utilsRoutes: Array<PlatformRoute>
 }
@@ -22,9 +25,13 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
 
         const getAndSetRoutes: () => void = () => {
 
+            function routeDisabled(route: PlatformRoute): boolean {
+                return !route.enabled || !!props.config.DISABLED_FEATURES?.includes(route.title)
+            }
+
             // TODO: try to make these prop names configurable instead of hard-codded
-            const toolsRoutes: Array<PlatformRoute> = props.toolsRoutes.filter(route => route.enabled)
-            const utilsRoutes: Array<PlatformRoute> = props.utilsRoutes.filter(route => route.enabled)
+            const toolsRoutes: Array<PlatformRoute> = props.toolsRoutes.filter(route => routeDisabled(route))
+            const utilsRoutes: Array<PlatformRoute> = props.utilsRoutes.filter(route => routeDisabled(route))
             allRoutes = [
                 ...toolsRoutes,
                 ...utilsRoutes,
