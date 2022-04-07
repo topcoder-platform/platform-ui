@@ -30,8 +30,8 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
             }
 
             // TODO: try to make these prop names configurable instead of hard-codded
-            const toolsRoutes: Array<PlatformRoute> = props.toolsRoutes.filter(route => routeDisabled(route))
-            const utilsRoutes: Array<PlatformRoute> = props.utilsRoutes.filter(route => routeDisabled(route))
+            const toolsRoutes: Array<PlatformRoute> = props.toolsRoutes.filter(route => !routeDisabled(route))
+            const utilsRoutes: Array<PlatformRoute> = props.utilsRoutes.filter(route => !routeDisabled(route))
             allRoutes = [
                 ...toolsRoutes,
                 ...utilsRoutes,
