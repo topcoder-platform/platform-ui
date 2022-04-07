@@ -30,41 +30,41 @@ const Work: FC<{}> = () => {
 
     // TODO: simplify these styles
     const filterTextStyles: Array<string> = [
-        "work-header-cell-draft-text",
-        "work-header-cell-active-text",
-        "work-header-cell-submitted-text",
-        "work-header-cell-in-review-text",
-        "work-header-cell-redirected-text",
-        "work-header-cell-cancelled-text",
-        "work-header-cell-complete-text",
-        "work-header-cell-all-text",
+        'work-header-cell-draft-text',
+        'work-header-cell-active-text',
+        'work-header-cell-submitted-text',
+        'work-header-cell-in-review-text',
+        'work-header-cell-redirected-text',
+        'work-header-cell-cancelled-text',
+        'work-header-cell-complete-text',
+        'work-header-cell-all-text',
     ]
 
     const filterCountBgStyles: Array<string> = [
-        "work-header-cell-draft-count-bg",
-        "work-header-cell-active-count-bg",
-        "work-header-cell-submitted-count-bg",
-        "work-header-cell-in-review-count-bg",
-        "work-header-cell-redirected-count-bg",
-        "work-header-cell-cancelled-count-bg",
-        "work-header-cell-complete-count-bg",
-        "work-header-cell-all-count-bg",
+        'work-header-cell-draft-count-bg',
+        'work-header-cell-active-count-bg',
+        'work-header-cell-submitted-count-bg',
+        'work-header-cell-in-review-count-bg',
+        'work-header-cell-redirected-count-bg',
+        'work-header-cell-cancelled-count-bg',
+        'work-header-cell-complete-count-bg',
+        'work-header-cell-all-count-bg',
     ]
 
     const filterCountTextStyles: Array<string> = [
-        "work-header-cell-draft-count-text",
-        "work-header-cell-active-count-text",
-        "work-header-cell-submitted-count-text",
-        "work-header-cell-in-review-count-text",
-        "work-header-cell-redirected-count-text",
-        "work-header-cell-cancelled-count-text",
-        "work-header-cell-complete-count-text",
-        "work-header-cell-all-count-text",
+        'work-header-cell-draft-count-text',
+        'work-header-cell-active-count-text',
+        'work-header-cell-submitted-count-text',
+        'work-header-cell-in-review-count-text',
+        'work-header-cell-redirected-count-text',
+        'work-header-cell-cancelled-count-text',
+        'work-header-cell-complete-count-text',
+        'work-header-cell-all-count-text',
     ]
 
-    const workStatuses: Array<string> = ['DRAFT', 'ACTIVE', 'SUBMITTED', 'IN REVIEW', 'REDIRECTED', 'CANCELLED', 'COMPLETE', 'ALL'];
-    const workTypes: Array<string> = ['Website Design', 'Website Development', 'Data Exploration'];
-    const sortedColumns: Array<number> = [-1, -1, -1, -1, -1];
+    const workStatuses: Array<string> = ['DRAFT', 'ACTIVE', 'SUBMITTED', 'IN REVIEW', 'REDIRECTED', 'CANCELLED', 'COMPLETE', 'ALL']
+    const workTypes: Array<string> = ['Website Design', 'Website Development', 'Data Exploration']
+    const sortedColumns: Array<number> = [-1, -1, -1, -1, -1]
     const sortedDirection: Array<Array<number>> = [
         [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0],
@@ -74,12 +74,12 @@ const Work: FC<{}> = () => {
         [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0],
-    ];
-    const categorizedWork: Array<Array<WorkItem>> = [[]];
+    ]
+    const categorizedWork: Array<Array<WorkItem>> = [[]]
 
     function createTabs() {
         allWork.forEach((work: WorkItem) => {
-           categorizedWork[work.rating].push(work);
+           categorizedWork[work.rating].push(work)
         })
     }
 
@@ -95,24 +95,23 @@ const Work: FC<{}> = () => {
 //        } )
 //    }
 
+    function isDraft(workItem: WorkItem) { return (workItem.rating === 0) }
+    function isActive(workItem: WorkItem) { return (workItem.rating === 1) }
+    function isSubmitted(workItem: WorkItem) { return (workItem.rating === 2) }
+    function isInReview(workItem: WorkItem) { return (workItem.rating === 3) }
+    function isRedirected(workItem: WorkItem) { return (workItem.rating === 4) }
+    function isCancelled(workItem: WorkItem) { return (workItem.rating === 5) }
+    function isComplete(workItem: WorkItem) { return (workItem.rating === 6) }
 
-    function isDraft(workItem: WorkItem) { return (workItem.rating === 0); }
-    function isActive(workItem: WorkItem) { return (workItem.rating === 1); }
-    function isSubmitted(workItem: WorkItem) { return (workItem.rating === 2); }
-    function isInReview(workItem: WorkItem) { return (workItem.rating === 3); }
-    function isRedirected(workItem: WorkItem) { return (workItem.rating === 4); }
-    function isCancelled(workItem: WorkItem) { return (workItem.rating === 5); }
-    function isComplete(workItem: WorkItem) { return (workItem.rating === 6); }
-
-    let showingStatus = 0;
+    let showingStatus = 0
 
     const filterClicked = (filter: number) => {
-        alert(filter);
-        showingStatus = filter;
+        alert(filter)
+        showingStatus = filter
     }
 
-    createTabs();
-    showingStatus = 0;
+    createTabs()
+    showingStatus = 0
 
     // TODO: remove mock data (description, solution ready date)
     // TODO: reduce divs through loops and combining styles
@@ -134,15 +133,15 @@ const Work: FC<{}> = () => {
                     </colgroup>
                     <tbody>
                         <tr>
-                            {[0,1,2,3,4,5,6,7].map(filter => {
+                            {[0, 1, 2, 3, 4, 5, 6, 7].map(filter => {
                                 return (
                                     <td>
-                                        <div className={styles["work-header-cell"]}>
+                                        <div className={styles['work-header-cell']}>
                                             <div className={styles[filterTextStyles[filter]]}>
                                                 <p onClick={() => filterClicked(filter)}>{workStatuses[filter]}</p>
                                             </div>
                                             {showingStatus === filter &&
-                                                <div className={styles["work-header-visible-category"]} />
+                                                <div className={styles['work-header-visible-category']} />
                                             }
                                             <div className={styles[filterCountBgStyles[filter]]}>
                                                 <div className={styles[filterCountTextStyles[filter]]}>
