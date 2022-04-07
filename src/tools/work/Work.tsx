@@ -183,7 +183,7 @@ const Work: FC<{}> = () => {
                         </td>
                         <td />
                     </tr>
-                    {categorizedWork[showingStatus].map(workItem: WorkItem => {
+                    {categorizedWork[showingStatus].map(workItem => {
                         return (
                             <tr>
                                 <td>
@@ -199,7 +199,7 @@ const Work: FC<{}> = () => {
                                     </div>
                                 </td>
                                 <td>
-                                    <div className={styles[workStatusCircleStyles[workItem.rating]} />
+                                    <div className={styles[workStatusCircleStyles[workItem.rating]]} />
                                     <div className={styles['work-status-text']}>
                                         {workStatuses[workItem.rating]}
                                     </div>
