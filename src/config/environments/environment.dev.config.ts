@@ -6,7 +6,7 @@ import { EnvironmentConfigDefault } from './environment.default.config'
 
 export const EnvironmentConfigDev: GlobalConfig = {
     ...EnvironmentConfigDefault,
-    DISABLED_FEATURES: [
+    DISABLED_TOOLS: [
         ToolTitle.designLib,
     ],
     ENV: AppHostEnvironment.dev,

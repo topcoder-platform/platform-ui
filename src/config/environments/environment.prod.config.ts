@@ -10,7 +10,7 @@ export const EnvironmentConfigProd: GlobalConfig = {
         V3: 'https://api.topcoder.com/v3',
         V5: 'https://api.topcoder.com/v5',
     },
-    DISABLED_FEATURES: [
+    DISABLED_TOOLS: [
         ToolTitle.designLib,
     ],
     ENV: AppHostEnvironment.prod,

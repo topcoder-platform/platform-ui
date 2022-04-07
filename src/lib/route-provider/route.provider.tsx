@@ -26,7 +26,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
         const getAndSetRoutes: () => void = () => {
 
             function routeDisabled(route: PlatformRoute): boolean {
-                return !route.enabled || !!props.config.DISABLED_FEATURES?.includes(route.title)
+                return !route.enabled || !!props.config.DISABLED_TOOLS?.includes(route.title)
             }
 
             // TODO: try to make these prop names configurable instead of hard-codded

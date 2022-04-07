@@ -25,7 +25,7 @@ export const workRoutes: Array<PlatformRoute> = [
             },
         ],
         element: <Work />,
-        enabled: !EnvironmentConfig.DISABLED_FEATURES?.includes(toolTitle),
+        enabled: !EnvironmentConfig.DISABLED_TOOLS?.includes(toolTitle),
         route: '/work',
         title: toolTitle,
     },
