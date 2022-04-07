@@ -183,14 +183,14 @@ const Work: FC<{}> = () => {
                         </td>
                         <td />
                     </tr>
-                    {categorizedWork[showingStatus].map(workItem => {
+                    {categorizedWork[showingStatus].map(currentWorkItem => {
                         return (
                             <tr>
                                 <td>
                                 </td>
                                 <td>
                                     <div className={styles['work-cell-title-inner']}>
-                                        <div className={styles['work-title']}>{workItem.name}</div>
+                                        <div className={styles['work-title']}>{currentWorkItem.name}</div>
                                         <br />
                                         <div className={styles['work-description']}>
                                             A dog walking website that allows visitors to select dog walkers and
@@ -199,18 +199,18 @@ const Work: FC<{}> = () => {
                                     </div>
                                 </td>
                                 <td>
-                                    <div className={styles[workStatusCircleStyles[workItem.rating]]} />
+                                    <div className={styles[workStatusCircleStyles[currentWorkItem.rating]]} />
                                     <div className={styles['work-status-text']}>
-                                        {workStatuses[workItem.rating]}
+                                        {workStatuses[currentWorkItem.rating]}
                                     </div>
                                 </td>
                                 <td>
                                     <div className={styles['work-type-text']}>
-                                        {workTypes[workItem.numOfRegistrants]}
+                                        {workTypes[currentWorkItem.numOfRegistrants]}
                                     </div>
                                 </td>
                                 <td>
-                                    <div className={styles['work-created-text']}>{workItem.created}</div>
+                                    <div className={styles['work-created-text']}>{currentWorkItem.created}</div>
                                 </td>
                                 <td>
                                     <div className={styles['work-solutions-text']}>April 28, 2022</div>
@@ -219,17 +219,17 @@ const Work: FC<{}> = () => {
                                     <div className={styles['work-cost-text']}>$12,000</div>
                                 </td>
                                 <td>
-                                    {workItem.messagesHasNew &&
+                                    {currentWorkItem.messagesHasNew &&
                                         <div className={styles['work-messages-chip-red']}>
                                             <div className={styles['work-messages-text']}>
-                                                {workItem.messagesCount}
+                                                {currentWorkItem.messagesCount}
                                             </div>
                                         </div>
                                     }
-                                    {!workItem.messagesHasNew &&
+                                    {!currentWorkItem.messagesHasNew &&
                                         <div className={styles['work-messages-chip-gray']}>
                                             <div className={styles['work-messages-text']}>
-                                                {workItem.messagesCount}
+                                                {currentWorkItem.messagesCount}
                                             </div>
                                         </div>
                                     }
