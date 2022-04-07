@@ -65,8 +65,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
 
         getAndSetRoutes()
     }, [
-        props.toolsRoutes,
-        props.utilsRoutes,
+        props,
     ])
 
     return (
