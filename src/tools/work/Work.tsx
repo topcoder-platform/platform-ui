@@ -4,9 +4,9 @@ import { Outlet, Routes } from 'react-router-dom'
 import { ToolTitle } from '../../config'
 import { ContentLayout, routeContext, RouteContextData } from '../../lib'
 
-export const toolTitle: string = ToolTitle.designLib
+export const toolTitle: string = ToolTitle.work
 
-const DesignLib: FC<{}> = () => {
+const Work: FC<{}> = () => {
 
     const { getChildRoutes }: RouteContextData = useContext(routeContext)
 
@@ -22,4 +22,4 @@ const DesignLib: FC<{}> = () => {
     )
 }
 
-export default DesignLib
+export default Work
