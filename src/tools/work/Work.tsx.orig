@@ -3,14 +3,12 @@ import { FC } from 'react'
 import { ContentLayout, DataScienceIcon, DesignIcon, DevelopmentIcon } from '../../lib'
 import { WorkItem } from '../../lib/work-provider'
 
-// TODO: reduce number of classes, remove hwtls, mixins for colors, mixins for fonts, table cell widths.
 import styles from './Work.module.scss'
 
 export const toolTitle: string = 'Work'
 
 const Work: FC<{}> = () => {
 
-    // TODO: remove mock data
     const workItem: WorkItem = {
         challengeStatus: 'DRAFT',
         created: 'April 8, 2022',
@@ -25,10 +23,8 @@ const Work: FC<{}> = () => {
         workStatus: 'DRAFT',
     }
 
-    // TODO: remove mock data
     const allWork: Array<WorkItem> = [workItem, workItem]
 
-    // TODO: simplify these styles
     const filterTextStyles: Array<string> = [
         "work-header-cell-draft-text",
         "work-header-cell-active-text",
@@ -114,9 +110,6 @@ const Work: FC<{}> = () => {
     createTabs();
     showingStatus = 0;
 
-    // TODO: remove mock data (description, solution ready date)
-    // TODO: reduce divs through loops and combining styles
-    // TODO: Make filters not a table.
     return (
         <ContentLayout title={toolTitle}>
             <div className={styles['work-header-frame']}>
