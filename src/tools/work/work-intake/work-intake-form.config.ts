@@ -3,7 +3,7 @@ import {
     inputOptional,
     validatorRequired,
     validatorSslUrl,
-} from '../../lib'
+} from '../../../lib'
 
 export const workIntakeDef: FormDefinition = {
     buttons: [

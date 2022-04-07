@@ -1,8 +1,6 @@
-export const routeRoot: string = '/'
+export const routeRoot: string = '/work'
 
-export const routeIsActive: (activePath: string, pathName: string, rootPath?: string) => boolean
-    = (activePath: string, pathName: string, rootPath: string = routeRoot) => {
-
-        return activePath?.startsWith(pathName)
-            && (pathName !== rootPath || activePath === rootPath)
-    }
+export function routeIsActive(activePath: string, pathName: string, rootPath?: string): boolean {
+    return activePath?.startsWith(pathName)
+        && (pathName !== rootPath || activePath === rootPath)
+}
