@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { ContentLayout, DataScienceIcon, DesignIcon, DevelopmentIcon } from '../../lib'
+import { ContentLayout } from '../../lib'
 import { WorkItem } from '../../lib/work-provider'
 
 // TODO: reduce number of classes, remove hwtls, mixins for colors, mixins for fonts, table cell widths.
@@ -62,22 +62,21 @@ const Work: FC<{}> = () => {
         'work-header-cell-all-count-text',
     ]
 
+    const workStatusCircleStyles: Array<string> = [
+        'work-status-circle-draft',
+        'work-status-circle-active',
+        'work-status-circle-submitted',
+        'work-status-circle-in-review',
+        'work-status-circle-redirected',
+        'work-status-circle-cancelled',
+        'work-status-circle-complete',
+    ]
+
     const workStatuses: Array<string> = ['DRAFT', 'ACTIVE', 'SUBMITTED', 'IN REVIEW', 'REDIRECTED', 'CANCELLED', 'COMPLETE', 'ALL']
     const workTypes: Array<string> = ['Website Design', 'Website Development', 'Data Exploration']
-    const sortedColumns: Array<number> = [-1, -1, -1, -1, -1]
-    const sortedDirection: Array<Array<number>> = [
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-    ]
     const categorizedWork: Array<Array<WorkItem>> = [[]]
 
-    function createTabs() {
+    function createTabs(): void {
         allWork.forEach((work: WorkItem) => {
            categorizedWork[work.rating].push(work)
         })
@@ -95,19 +94,11 @@ const Work: FC<{}> = () => {
 //        } )
 //    }
 
-    function isDraft(workItem: WorkItem) { return (workItem.rating === 0) }
-    function isActive(workItem: WorkItem) { return (workItem.rating === 1) }
-    function isSubmitted(workItem: WorkItem) { return (workItem.rating === 2) }
-    function isInReview(workItem: WorkItem) { return (workItem.rating === 3) }
-    function isRedirected(workItem: WorkItem) { return (workItem.rating === 4) }
-    function isCancelled(workItem: WorkItem) { return (workItem.rating === 5) }
-    function isComplete(workItem: WorkItem) { return (workItem.rating === 6) }
+    let showingStatus: number = 0
 
-    let showingStatus = 0
-
-    const filterClicked = (filter: number) => {
-        alert(filter)
+    function filterClicked(filter: number): void {
         showingStatus = filter
+        // TODO: force refresh for dev testing
     }
 
     createTabs()
@@ -192,13 +183,10 @@ const Work: FC<{}> = () => {
                         </td>
                         <td />
                     </tr>
-                    {categorizedWork[showingStatus].map(workItem => {
+                    {categorizedWork[showingStatus].map(workItem: WorkItem => {
                         return (
                             <tr>
                                 <td>
-                                    {workItem.numOfRegistrants === 0 && <DesignIcon />}
-                                    {workItem.numOfRegistrants === 1 && <DevelopmentIcon />}
-                                    {workItem.numOfRegistrants === 2 && <DataScienceIcon />}
                                 </td>
                                 <td>
                                     <div className={styles['work-cell-title-inner']}>
@@ -211,27 +199,7 @@ const Work: FC<{}> = () => {
                                     </div>
                                 </td>
                                 <td>
-                                    {workItem.rating === 0 &&
-                                        <div className={styles['work-status-circle-draft']} />
-                                    }
-                                    {workItem.rating === 1 &&
-                                        <div className={styles['work-status-circle-active']} />
-                                    }
-                                    {workItem.rating === 2 &&
-                                        <div className={styles['work-status-circle-submitted']} />
-                                    }
-                                    {workItem.rating === 3 &&
-                                        <div className={styles['work-status-circle-in-review']} />
-                                    }
-                                    {workItem.rating === 4 &&
-                                        <div className={styles['work-status-circle-redirected']} />
-                                    }
-                                    {workItem.rating === 5 &&
-                                        <div className={styles['work-status-circle-cancelled']} />
-                                    }
-                                    {workItem.rating === 6 &&
-                                        <div className={styles['work-status-circle-complete']} />
-                                    }
+                                    <div className={styles[workStatusCircleStyles[workItem.rating]} />
                                     <div className={styles['work-status-text']}>
                                         {workStatuses[workItem.rating]}
                                     </div>

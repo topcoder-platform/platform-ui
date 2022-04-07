@@ -13,7 +13,6 @@ interface Page {
 }
 
 interface Sort {
-    fieldName: string
     direction: 'asc' | 'desc'
+    fieldName: string
 }
-
