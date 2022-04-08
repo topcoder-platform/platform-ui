@@ -1,6 +1,5 @@
 import { WorkItem } from '../../lib/work-provider'
 
-// TO-DO add WorkSortDefinitions to WorkFilter so it remembers per column sorts
 export interface WorkSortDefinition {
     column: number
     order: 'asc' | 'desc'
