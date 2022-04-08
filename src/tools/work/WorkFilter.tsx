@@ -11,7 +11,8 @@ export function setAllWork(work: Array<WorkItem>): void {
     allWork.push(...work)
     allWork.forEach((workItem: WorkItem) => {
         // TO-DO get correct field into WorkItem and update API call
-       categorizedWork[workItem.rating].push(workItem)
+        categorizedWork[workItem.rating] = []
+        categorizedWork[workItem.rating].push(workItem)
     })
 }
 
