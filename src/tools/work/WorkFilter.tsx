@@ -20,12 +20,8 @@ export function getFilteredWork(filter: number): Array<WorkItem> {
 }
 
 export function setSortColumnForFilter(filter: number, sort: WorkSortDefinition): void {
-    const def: WorkSortDefinition = {
-        column: sort.column,
-        order: sort.order,
-    }
-    applySort(categorizedWork[filter], def)
-    sortDefinitions[filter] = def
+    sortDefinitions[filter] = { ...sort }
+    applySort(categorizedWork[filter], sortDefinitions[filter])
 }
 
 export function getSortDefinitionForFilter(filter: number): WorkSortDefinition {
