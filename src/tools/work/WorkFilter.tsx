@@ -1,22 +1,10 @@
-// TO-DO: uncomment this line and delete the duplicate interface when work provider is in same branch
-// import { WorkItem } from '../../lib/work-provider'
+import { WorkItem } from '../../lib/work-provider'
 
-interface WorkItem {
-    challengeStatus: string,
-    created: string,
-    id: string,
-    initialized: boolean
-    messagesCount: number,
-    messagesHasNew: boolean,
-    name: string,
-    numOfRegistrants: number,
-    rating: number,
-    status: string,
-    workStatus: string,
-}
+import { applySort, WorkSortDefinition } from './WorkSorter'
 
 const allWork: Array<WorkItem> = []
 const categorizedWork: Array<Array<WorkItem>> = [[]]
+const sortDefinitions: Array<WorkSortDefinition> = []
 
 export function setAllWork(work: Array<WorkItem>): void {
     allWork.length = 0
@@ -31,6 +19,11 @@ export function getFilteredWork(filter: number): Array<WorkItem> {
     return categorizedWork[filter]
 }
 
-export function setSortColumnForFilter(filter: number, column: number, dir: 'asc' | 'desc'): void {
-    // TO-DO sort ticket PROD-1414
+export function setSortColumnForFilter(filter: number, sort: WorkSortDefinition): void {
+    sortDefinitions[filter] = { ...sort }
+    applySort(categorizedWork[filter], sortDefinitions[filter])
+}
+
+export function getSortDefinitionForFilter(filter: number): WorkSortDefinition {
+    return sortDefinitions[filter]
 }

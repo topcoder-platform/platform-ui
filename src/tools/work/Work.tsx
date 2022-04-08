@@ -5,6 +5,8 @@ import { WorkItem } from '../../lib/work-provider'
 
 // TODO: reduce number of classes, remove hwtls, mixins for colors, mixins for fonts, table cell widths.
 import styles from './Work.module.scss'
+import { getFilteredWork, getSortDefinitionForFilter, setAllWork, setSortColumnForFilter } from './WorkFilter'
+import { WorkSortDefinition } from './WorkSorter'
 
 export const toolTitle: string = 'Work'
 
@@ -24,9 +26,6 @@ const Work: FC<{}> = () => {
         status: 'DRAFT',
         workStatus: 'DRAFT',
     }
-
-    // TODO: remove mock data
-    const allWork: Array<WorkItem> = [workItem, workItem]
 
     // TODO: simplify these styles
     const filterTextStyles: Array<string> = [
@@ -73,24 +72,36 @@ const Work: FC<{}> = () => {
     ]
 
     const workStatuses: Array<string> = ['DRAFT', 'ACTIVE', 'SUBMITTED', 'IN REVIEW', 'REDIRECTED', 'CANCELLED', 'COMPLETE', 'ALL']
+    const sortLabels: Array<string> = ['STATUS', 'TYPE', 'CREATED', 'SOLUTIONS READY', 'COST']
     const workTypes: Array<string> = ['Website Design', 'Website Development', 'Data Exploration']
-    const categorizedWork: Array<Array<WorkItem>> = [[]]
-
-    function createTabs(): void {
-        allWork.forEach((work: WorkItem) => {
-           categorizedWork[work.rating].push(work)
-        })
-    }
-
-    let showingStatus: number = 0
+    let visibleFilter: number = 0
+    let currWork: Array<WorkItem> = []
+    // default sort is by title, ascending
+    let currSort: WorkSortDefinition = { column: 0, order: 'asc' }
 
     function filterClicked(filter: number): void {
-        showingStatus = filter
+        visibleFilter = filter
+        currWork = getFilteredWork(filter)
+        currSort = getSortDefinitionForFilter(filter)
         // TODO: force refresh for dev testing
     }
 
-    createTabs()
-    showingStatus = 0
+    function sortClicked(column: number): void {
+        const newSort: WorkSortDefinition = {
+            column,
+            order: 'asc',
+        }
+        if (column === currSort.column) {
+            newSort.order = (currSort.order === 'asc') ? 'desc' : 'asc'
+        }
+        setSortColumnForFilter(visibleFilter, newSort)
+        currWork = getFilteredWork(visibleFilter)
+        currSort = getSortDefinitionForFilter(visibleFilter)
+    }
+
+    const allWorkMock: Array<WorkItem> = [workItem, workItem, workItem]
+    allWorkMock[1].rating = 1
+    setAllWork(allWorkMock)
 
     // TODO: remove mock data (description, solution ready date)
     // TODO: reduce divs through loops and combining styles
@@ -119,12 +130,12 @@ const Work: FC<{}> = () => {
                                             <div className={styles[filterTextStyles[filter]]}>
                                                 <p onClick={() => filterClicked(filter)}>{workStatuses[filter]}</p>
                                             </div>
-                                            {showingStatus === filter &&
+                                            {visibleFilter === filter &&
                                                 <div className={styles['work-header-visible-category']} />
                                             }
                                             <div className={styles[filterCountBgStyles[filter]]}>
                                                 <div className={styles[filterCountTextStyles[filter]]}>
-                                                    {categorizedWork[filter]?.length}
+                                                    {currWork.length}
                                                 </div>
                                             </div>
                                         </div>
@@ -151,27 +162,16 @@ const Work: FC<{}> = () => {
                     <tr>
                         <td />
                         <td />
-                        <td>
-                            <div className={styles['work-sort-by-text']}>STATUS</div>
-                        </td>
-                        <td>
-                            <div className={styles['work-sort-by-text']}>TYPE</div>
-                        </td>
-                        <td>
-                            <div className={styles['work-sort-by-text']}>CREATED</div>
-                        </td>
-                        <td>
-                            <div className={styles['work-sort-by-text']}>SOLUTIONS READY</div>
-                        </td>
-                        <td>
-                            <div className={styles['work-sort-by-text']}>COST</div>
-                        </td>
-                        <td>
-                            <div className={styles['work-sort-by-text']}>MESSAGES</div>
-                        </td>
+                            {[0, 1, 2, 3, 4].map(sortField => {
+                                return (
+                                    <td>
+                                        <div className={styles['work-sort-by-text']} onClick={() => sortClicked(sortField)}>{sortLabels[sortField]}</div>
+                                    </td>
+                                )})}
+                        <td />
                         <td />
                     </tr>
-                    {categorizedWork[showingStatus].map(currentWorkItem => {
+                    {currWork.map(currentWorkItem => {
                         return (
                             <tr>
                                 <td>
