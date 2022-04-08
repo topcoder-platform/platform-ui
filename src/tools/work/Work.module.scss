@@ -1,0 +1,344 @@
+@import '../../lib/styles';
+
+.work-header-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.work-header-frame {
+    width: 100%;
+    background: $blue-15;//#EAF6FD;
+    border-radius: 4px 4px 0px 0px;
+}
+
+.work-header-cell {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 12px 16px 10px;
+    background: $blue-15;
+    box-shadow: 0px 1px 0px #D4D4D4;
+    border-radius: 4px 0px 0px 0px;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 0px 0px;
+}
+
+.work-visible-category {
+    position: static;
+    width: 6px;
+    height: 6px;
+    left: 0px;
+    top: 0px;
+    background: $red-100;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 0px 0px;
+}
+
+.work-header-draft-text {
+    font-family: 'Barlow';
+    font-style: normal;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 16px;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    text-transform: uppercase;
+    color: $black-60;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 0px 2px;
+}
+
+.work-header-draft-count-bg {
+    background: $blue-100;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 0px 0px;
+}
+
+.work-header-draft-count-text {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    text-transform: capitalize;
+    color: $tc-white;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 0px 0px;
+}
+
+.work-item-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.work-sort-by-text {
+    font-family: 'Barlow';
+    font-style: normal;
+    font-weight: 600;
+    font-size: 11px;
+    line-height: 14px;
+    display: flex;
+    align-items: center;
+    text-transform: uppercase;
+    color: $black-40;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 0px 4px;
+}
+
+.work-cell-icon {
+    width: 8%;
+}
+
+.work-cell-title {
+    width: 25%;
+    padding: 4px;
+}
+
+.work-cell-title-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0px;
+    flex: none;
+    order: 1;
+    flex-grow: 1;
+    margin: 0px 16px;
+}
+
+.work-title {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    text-transform: capitalize;
+    color: $black-100;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 6px 0px;
+}
+
+.work-description {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 18px;
+    color: $black-80;
+    flex: none;
+    order: 1;
+    align-self: stretch;
+    flex-grow: 0;
+    margin: 6px 0px;
+}
+
+.work-cell-status {
+    width: 10%;
+    padding: 4px;
+}
+
+.work-status-circle {
+    background: $tc-white;
+    box-sizing: border-box;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 0px 4px;
+}
+
+.work-status-circle-draft {
+    @extend .work-status-cirlce !optional;
+    border: 2px solid $black-80;
+}
+
+.work-status-circle-active {
+    @extend .work-status-circle !optional;
+    border: 2px solid $turq-120;
+}
+
+.work-status-text {
+    position: static;
+    width: 36px;
+    height: 8px;
+    left: 14px;
+    top: 4px;
+    font-family: 'Barlow';
+    font-style: normal;
+    font-weight: 600;
+    font-size: 11px;
+    line-height: 8px;
+    display: flex;
+    align-items: center;
+    text-transform: uppercase;
+    color: $black-80;
+    flex: none;
+    order: 1;
+    flex-grow: 0;
+    margin: 0px 4px;
+}
+
+.work-cell-type {
+    width: 10%;
+    padding: 4px;
+}
+
+.work-type-text {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    text-transform: capitalize;
+    color: $black-100;
+    flex: none;
+    order: 1;
+    flex-grow: 0;
+    margin: 0px 8px;
+}
+
+.work-cell-created {
+    width: 10%;
+    padding: 4px;
+}
+
+.work-created-text {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    text-transform: capitalize;
+    color: $black-100;
+    flex: none;
+    order: 2;
+    flex-grow: 0;
+    margin: 0px 8px;
+}
+
+.work-cell-solutions {
+    width: 10%;
+    padding: 4px;
+}
+
+.work-solutions-text {
+
+position: static;
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    text-transform: capitalize;
+    color: $black-100;
+    flex: none;
+    order: 3;
+    flex-grow: 0;
+    margin: 0px 8px;
+}
+
+.work-cell-cost {
+    width: 10%;
+    padding: 4px;
+}
+
+.work-cost-text {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    text-transform: capitalize;
+    color: $black-100;
+    flex: none;
+    order: 4;
+    flex-grow: 0;
+    margin: 0px 8px;
+}
+
+.work-cell-messages {
+    width: 10%;
+    padding: 4px;
+}
+
+.work-messages-chip-red {
+    position: static;
+    width: 24px;
+    height: 16px;
+    left: 48.5px;
+    top: 0px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0px 8px;
+    background: $red-100;
+    border-radius: 50px;
+    flex: none;
+    order: 1;
+    flex-grow: 0;
+    margin: 10px 0px;
+}
+
+.work-messages-chip-gray {
+    position: static;
+    width: 24px;
+    height: 16px;
+    left: 48.5px;
+    top: 0px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0px 8px;
+    background: $black-100;
+    border-radius: 50px;
+    flex: none;
+    order: 1;
+    flex-grow: 0;
+    margin: 10px 0px;
+}
+
+.work-messages-text {
+    position: static;
+    width: 8px;
+    height: 16px;
+    left: 8px;
+    top: 0px;
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    text-transform: capitalize;
+    color: $tc-white;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin: 0px 0px;
+}
+
+.work-cell-delete {
+    width: 7%;
+    padding: 4px;
+}
