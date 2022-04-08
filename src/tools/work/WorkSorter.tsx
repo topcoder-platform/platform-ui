@@ -16,7 +16,7 @@ export function applySort(list: Array<WorkItem>, definition: WorkSortDefinition)
                 result = a.workStatus.localeCompare(b.workStatus)
             }
             if (definition.column === 2) {
-                result = a. created.localeCompare(b.created)
+                result = a.created.localeCompare(b.created)
             }
             // TO-DO where is solutions ready
             // TO-DO no cost yet

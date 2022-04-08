@@ -72,6 +72,7 @@ const Work: FC<{}> = () => {
     ]
 
     const workStatuses: Array<string> = ['DRAFT', 'ACTIVE', 'SUBMITTED', 'IN REVIEW', 'REDIRECTED', 'CANCELLED', 'COMPLETE', 'ALL']
+    const sortLabels: Array<string> = ['STATUS', 'TYPE', 'CREATED', 'SOLUTIONS READY', 'COST']
     const workTypes: Array<string> = ['Website Design', 'Website Development', 'Data Exploration']
     let visibleFilter: number = 0
     let currWork: Array<WorkItem> = []
@@ -100,6 +101,7 @@ const Work: FC<{}> = () => {
 
     const allWorkMock: Array<WorkItem> = [workItem, workItem, workItem]
     allWorkMock[1].rating = 1
+    setAllWork(allWorkMock)
 
     // TODO: remove mock data (description, solution ready date)
     // TODO: reduce divs through loops and combining styles
@@ -160,24 +162,13 @@ const Work: FC<{}> = () => {
                     <tr>
                         <td />
                         <td />
-                        <td>
-                            <div className={styles['work-sort-by-text']}>STATUS</div>
-                        </td>
-                        <td>
-                            <div className={styles['work-sort-by-text']}>TYPE</div>
-                        </td>
-                        <td>
-                            <div className={styles['work-sort-by-text']}>CREATED</div>
-                        </td>
-                        <td>
-                            <div className={styles['work-sort-by-text']}>SOLUTIONS READY</div>
-                        </td>
-                        <td>
-                            <div className={styles['work-sort-by-text']}>COST</div>
-                        </td>
-                        <td>
-                            <div className={styles['work-sort-by-text']}>MESSAGES</div>
-                        </td>
+                            {[0, 1, 2, 3, 4].map(sortField => {
+                                return (
+                                    <td>
+                                        <div className={styles['work-sort-by-text']} onClick={() => sortClicked(sortField)}>{sortLabels[sortField]}</div>
+                                    </td>
+                                )})}
+                        <td />
                         <td />
                     </tr>
                     {currWork.map(currentWorkItem => {
