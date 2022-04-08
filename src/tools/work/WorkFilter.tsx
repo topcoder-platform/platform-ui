@@ -1,4 +1,5 @@
 import { WorkItem } from '../../lib/work-provider'
+
 import { applySort, WorkSortDefinition } from './WorkSorter'
 
 const allWork: Array<WorkItem> = []
@@ -18,11 +19,15 @@ export function getFilteredWork(filter: number): Array<WorkItem> {
     return categorizedWork[filter]
 }
 
-export function setSortColumnForFilter(filter: number, col: number, dir: 'asc' | 'desc'): void {
+export function setSortColumnForFilter(filter: number, column: number, order: 'asc' | 'desc'): void {
     const def: WorkSortDefinition = {
-        column: col,
-        order: dir,
+        column,
+        order,
     }
     applySort(categorizedWork[filter], def)
     sortDefinitions[filter] = def
+}
+
+export function getSortDefinitionForFilter(filter: number): WorkSortDefinition {
+    return sortDefinitions[filter]
 }
