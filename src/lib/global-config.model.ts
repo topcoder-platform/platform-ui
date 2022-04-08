@@ -3,6 +3,7 @@ export interface GlobalConfig {
         V3: string
         V5: string
     }
+    DISABLED_TOOLS?: Array<string>
     ENV: string
     LOGGING: {
         PUBLIC_TOKEN: string

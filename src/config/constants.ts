@@ -1,1 +1,5 @@
-export const SETTINGS_TITLE: string = 'Profile Settings'
+export enum ToolTitle {
+    designLib = 'Design Library',
+    settings = 'Profile Settings',
+    work = 'Work',
+}

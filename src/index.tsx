@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom'
 import { BrowserRouter } from 'react-router-dom'
 
 import { default as App } from './App'
+import { EnvironmentConfig } from './config'
 import './index.scss'
 import { RouteProvider } from './lib'
 import reportWebVitals from './reportWebVitals'
@@ -11,7 +12,11 @@ import { UtilsRoutes } from './utils'
 
 ReactDOM.render(
     <BrowserRouter>
-        <RouteProvider toolsRoutes={[...ToolsRoutes]} utilsRoutes={[...UtilsRoutes]}>
+        <RouteProvider
+            config={EnvironmentConfig}
+            toolsRoutes={[...ToolsRoutes]}
+            utilsRoutes={[...UtilsRoutes]}
+        >
             <StrictMode>
                 <App />
             </StrictMode>

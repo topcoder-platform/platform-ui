@@ -1,7 +1,6 @@
-import { SETTINGS_TITLE } from '../../config'
 import { PlatformRoute } from '../../lib'
 
-import Settings from './Settings'
+import Settings, { settingsTitle } from './Settings'
 
 export const settingsRoutes: Array<PlatformRoute> = [
     {
@@ -9,6 +8,6 @@ export const settingsRoutes: Array<PlatformRoute> = [
         element: <Settings />,
         enabled: true,
         route: '/settings',
-        title: SETTINGS_TITLE,
+        title: settingsTitle,
     },
 ]
