@@ -1,3 +1,3 @@
 export * from './WorkItem.model'
 export * from './WorkList.model'
-export * from './work-store.functions'
+export { getAsync as workStoreGetAsync } from './work-store.functions'
