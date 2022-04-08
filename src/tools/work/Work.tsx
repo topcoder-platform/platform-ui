@@ -93,7 +93,7 @@ const Work: FC<{}> = () => {
         if (column === currSort.column) {
             newSort.order = (currSort.order === 'asc') ? 'desc' : 'asc'
         }
-        setSortColumnForFilter(visibleFilter, newSort.column, newSort.order)
+        setSortColumnForFilter(visibleFilter, newSort)
         currWork = getFilteredWork(visibleFilter)
         currSort = getSortDefinitionForFilter(visibleFilter)
     }
