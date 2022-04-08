@@ -1,4 +1,4 @@
-// TO-DO: uncomment this line and delete the duplicate interface when work proviode is in same branch
+// TO-DO: uncomment this line and delete the duplicate interface when work provider is in same branch
 // import { WorkItem } from '../../lib/work-provider'
 
 interface WorkItem {
