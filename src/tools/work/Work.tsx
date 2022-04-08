@@ -82,18 +82,6 @@ const Work: FC<{}> = () => {
         })
     }
 
-//    function sortColumnAscending(column: number, work: Array<WorkItem>) {
-//        work.sort((a: WorkItem, b: WorkItem) => {
-//            // based on column
-//            if (sortedDirection)
-//            if (column === 0) { return (a.challengeStatus.localeCompare(b.challengeStatus)); }
-//            if (column === 1) { return (a.workStatus.localeCompare(b.workStatus)); }
-//            if (column === 2) { return (a. created.localeCompare(b.created)); }
-//            // where is solutions ready if (column === 3) { return (a.challengeStatus.localCompare(b.challengeStatus); }
-//            // no cost yet if (column === 4) { return (a.challengeStatus.localCompare(b.challengeStatus); }
-//        } )
-//    }
-
     let showingStatus: number = 0
 
     function filterClicked(filter: number): void {
