@@ -1,15 +1,14 @@
-@import '../../../lib/styles';
+@import '../../../lib/styles/includes';
 
 .tool-selectors-narrow {
     display: none;
-    padding-left: $pad-xxl;
 
     @include ltemd {
         display: flex;
     }
 
     svg {
-        @include icon-xxl;
+        @include icon-xxxxl;
         fill: none;
 
         path {
@@ -22,10 +21,11 @@
         position: absolute;
         top: $header-height;
         left: 0;
+        bottom: 0;
+        height: $content-height;
         width: calc(100% - calc(2 * $pad-xxl));
         z-index: 100;
         background-color: $black-100;
         padding: $pad-xxl;
-        @include content-height;
     }
 }

@@ -1,52 +1,26 @@
-$header-height: 80px;
+@import 'variables';
+@import 'mixins';
 
-/* Left Col includes the header logo link and the sections container */
-$left-col-width-md: $header-height;
-$left-col-width-lg: calc(1.2 * $header-height);
-$left-col-width-xl: calc(1.3 * $header-height);
+html {
+    --header-height: 80px;
+    --footer-height: 51px;
 
-/* TODO: determine which UI library to use and replace below */
+    @include ltemd {
+        --header-height: 64px;
+    }
 
-/* Padding */
-$border-xs: 1px;
-$border: 2px;
-$pad-xs: calc(2 * $border); // 4
-$pad-sm: calc(2 * $pad-xs); // 8
-$pad-md: calc(3 * $pad-xs); // 12
-$pad-lg: calc(4 * $pad-xs); // 16
-$pad-xl: calc(5 * $pad-xs); // 20
-$pad-xxl: calc(6 * $pad-xs); // 24
-$pad-xxxl: calc(7 * $pad-xs); // 28
-$pad-xxxxl: calc(8 * $pad-xs); // 32
-$pad-content-lg: calc($pad-xxl + $pad-xxxxl);
-
-@mixin content-height {
-    height: calc(100vh - $header-height);
+    @include ltesm {
+        --header-height: 48px;
+        --footer-height: 101px;
+    }
 }
 
-
-.pad-xs {
-    padding: $pad-xs;
-}
-
-.pad-sm {
-    padding: $pad-sm;
-}
-
-.pad-md {
-    padding: $pad-md;
-}
-
-.pad-lg {
-    padding: $pad-lg;
-}
-
-.pad-xl {
-    padding: $pad-xl;
-}
-
-.pad-xxl {
-    padding: $pad-xxl;
+hr {
+    color: $black-10;
+    border: 1px solid;
+    border-radius: 1px;
+    margin: 16px 0px;
+    width: 100%;
 }
 
 #tc-accounts-iframe {

@@ -1,0 +1,124 @@
+*, *::before, *:after {
+  box-sizing: inherit;
+}
+
+html {
+  box-sizing: border-box;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input:-ms-input-placeholder, textarea:-ms-input-placeholder {
+  color: #a0aec0;
+}
+
+input::-ms-input-placeholder, textarea::-ms-input-placeholder {
+  color: #a0aec0;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #a0aec0;
+}
+
+button,
+[role="button"] {
+  cursor: pointer;
+  border: 0 none;
+  background: none;
+  outline: none;
+  appearance: none;
+}
+
+label {
+  cursor: inherit;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: inherit;
+  font-weight: inherit;
+  margin: 0;
+}
+
+/**
+* Reset links to optimize for opt-in styling instead of
+* opt-out.
+*/
+
+a, a:hover {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+/**
+* Reset form element properties that are easy to forget to
+* style explicitly so you don't inadvertently introduce
+* styles that deviate from your design system. These styles
+* supplement a partial reset that is already applied by
+* normalize.css.
+*/
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  padding: 0;
+  line-height: inherit;
+  color: inherit;
+}
+
+/**
+* Make replaced elements display: block by default as that's
+* the behavior you want almost all of the time. Inspired by
+* CSS Remedy, with svg added as well.
+*
+* https://github.com/mozdevs/cssremedy/issues/14
+*/
+
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+  display: block;
+  vertical-align: middle;
+}
+
+/**
+* Constrain images and videos to the parent width and preserve
+* their instrinsic aspect ratio.
+*
+* https://github.com/mozdevs/cssremedy/issues/14
+*/
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  &.list {
+    list-style: disc;
+    padding-left: 24px;
+  }
+}

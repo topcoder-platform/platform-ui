@@ -1,27 +1,33 @@
 export * from './avatar'
+export * from './breadcrumb'
 export * from './button'
 export * from './card'
+export * from './contact-support-form'
 export * from './content-layout'
 export * from './form'
 export * from './global-config.model'
-export * from './profile-provider'
 export {
     analyticsInitialize,
     authUrlLogin,
     authUrlLogout,
     authUrlSignup,
-    logError,
-    logInitialize,
     logInfo,
-    useHideClickOutside,
+    logInitialize,
+    textFormatDateLocaleShortString,
+    textFormatMoneyLocaleString,
+    useClickOutside,
+    useOnHoverElement,
+    xhrDeleteAsync,
+    xhrGetAsync,
 } from './functions'
-export
-    // tslint:disable-next-line: no-unused-expression
-type { ComponentVisible } from './functions'
-export * from './svgs'
-
-/*
-   NOTE: this module is dependant on the svgs
-   and therefore must come _after_ the svgs export
-*/
+export * from './loading-spinner'
+export * from './modals'
+export * from './page-footer'
+export * from './pagination'
+export * from './portal'
+export * from './profile-provider'
 export * from './route-provider'
+export * from './svgs'
+export * from './table'
+export * from './tabs-navbar'
+export * from './tooltip'

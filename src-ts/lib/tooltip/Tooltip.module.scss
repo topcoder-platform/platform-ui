@@ -1,0 +1,68 @@
+@use '../styles/typography';
+@import '../styles/includes';
+
+.tooltip-portal {
+    position: absolute;
+    top: -100vh;
+    left: -100vw;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.tooltip {
+    display: inline-block;
+    position: relative;
+
+    &-icon {
+        cursor: pointer;
+    }
+
+    &-content {
+        @extend .body-small;
+        @include font-roboto;
+        text-transform: none;
+        white-space: nowrap;
+    }
+}
+
+.tooltip-open {
+    position: absolute;
+    z-index: 100;
+    background-color: $black-100;
+    border-radius: 8px;
+    color: $tc-white;
+    padding: $pad-sm;
+    pointer-events: none;
+    min-width: 62px;
+    text-align: center;
+
+    .tooltip-arrow {
+        position: absolute;
+        display: flex;
+    }
+
+    &:global(.posy-end) {
+        top: calc(100% + 11px);
+
+        .tooltip-arrow {
+            top: -9px;
+        }
+    }
+
+    &:global(.posx-end) {
+        right: -24px;
+
+        .tooltip-arrow {
+            right: 11px;
+        }
+    }
+
+    &:global(.posx-middle) {
+        left: 50%;
+        transform: translateX(-50%);
+
+        .tooltip-arrow {
+            right: calc(50% - 18px);
+        }
+    }
+}

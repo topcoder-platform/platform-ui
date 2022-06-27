@@ -1,13 +1,24 @@
+import { ToolTitle } from '../../config'
 import { PlatformRoute } from '../../lib'
 
-import Settings, { settingsTitle } from './Settings'
+import { Account } from './account'
+import Settings from './Settings'
 
 export const settingsRoutes: Array<PlatformRoute> = [
     {
-        children: [],
+        children: [
+            {
+                children: [],
+                element: <Account />,
+                enabled: true,
+                route: '',
+                title: ToolTitle.settings,
+            },
+        ],
         element: <Settings />,
         enabled: true,
-        route: '/settings',
-        title: settingsTitle,
+        requireAuth: true,
+        route: '/account',
+        title: ToolTitle.settings,
     },
 ]

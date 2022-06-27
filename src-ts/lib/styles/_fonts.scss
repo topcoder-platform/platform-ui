@@ -1,49 +1,6 @@
-@import 'palette';
-
-/* FONT-FAMILIES */
-@mixin font-roboto {
-    font-family: "Roboto", Arial, Helvetica, sans-serif;
-}
-
-@mixin font-barlow-condensed {
-    font-family: "Barlow Condensed", Arial, Helvetica, sans-serif;
-}
-
-@mixin font-barlow {
-    font-family: "Barlow", Arial, Helvetica, sans-serif;
-}
-
-/* FONT WEIGHTS */
-@mixin font-weight-less-bold {
-    font-weight: 400;
-}
-@mixin font-weight-medium {
-    font-weight: 500;
-}
-@mixin font-weight-semi-bold {
-    font-weight: 600;
-}
-@mixin font-weight-bold {
-    font-weight: 700;
-}
-
+@import 'mixins/fonts.mixins';
 
 /* BLACK FONTS */
-@mixin font-black-100 {
-    color: $black-100;
-}
-@mixin font-black-80 {
-    color: $black-100;
-}
-@mixin font-black-60 {
-    color: $black-100;
-}
-@mixin font-black-40 {
-    color: $black-40;
-}
-@mixin font-tc-white {
-    color: $tc-white;
-}
 .font-black-100 {
     @include font-black-100;
 }
@@ -65,39 +22,27 @@
 
 
 /* RED FONTS */
-@mixin font-red-120 {
-    color: $red-120;
+.font-red-120 {
+    @include font-red-120;
 }
-@mixin font-red-140 {
-    color: $red-140;
+.font-red-140 {
+    @include font-red-140;
 }
 
 
 /* TURQUOISE FONTS */
-@mixin font-turq-160 {
-    color: $turq-160;
-}
 .font-turq-160 {
     @include font-turq-160;
 }
 
 
 /* TEAL FONTS */
-@mixin font-teal-140 {
-    color: $teal-140;
-}
 .font-teal-140 {
     @include font-teal-140();
 }
 
 
 /* BLUE FONTS */
-@mixin font-blue-140 {
-    color: $blue-140;
-}
-@mixin font-link-blue-dark {
-    color: $link-blue-dark;
-}
 .font-blue-140 {
     @include font-blue-140;
 }
@@ -107,15 +52,6 @@
 
 
 /* PURPLE FONTS */
-@mixin font-purple-100 {
-    color: $purple-100;
-}
-@mixin font-purple-120 {
-    color: $purple-120;
-}
-@mixin font-purple-140 {
-    color: $purple-140;
-}
 .font-purple-100 {
     @include font-purple-100;
 }

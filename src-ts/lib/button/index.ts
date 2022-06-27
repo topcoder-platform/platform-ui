@@ -1,4 +1,5 @@
 export { default as Button } from './Button'
+export { type ButtonProps } from './Button'
 export
 // tslint:disable-next-line: no-unused-expression
 type { ButtonSize } from './Button'

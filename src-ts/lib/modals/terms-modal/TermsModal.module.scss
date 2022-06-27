@@ -1,0 +1,36 @@
+@import "../../styles/includes";
+
+.container {
+    line-height: 20px;
+
+    ol {
+        padding: 0;
+    }
+
+    h4 {
+        margin-top: 20px;
+    }
+
+    p {
+        margin-bottom: 20px;
+
+        &.sm {
+            font-size: 14px;
+        }
+    }
+
+    ul.a {
+        list-style-type: circle;
+        list-style: circle;
+
+        li {
+            padding-left: 0;
+            margin-left: 20px;
+        }
+    }
+
+    a {
+        text-decoration: underline;
+        color: $link-blue-light;
+    }
+}

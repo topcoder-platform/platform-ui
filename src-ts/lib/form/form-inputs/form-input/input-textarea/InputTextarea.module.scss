@@ -1,4 +1,5 @@
-@import '../../../../styles';
+@use '../../../../styles/typography';
+@import '../../../../styles/includes';
 
 .form-input-textarea {
     @include font-roboto;
@@ -8,5 +9,7 @@
     border: none;
     outline: none;
     resize: vertical;
-    margin-left: calc(-1 * $border)
+    margin-left: calc(-1 * $border);
+    overflow: hidden;
+    padding: $border;
 }
