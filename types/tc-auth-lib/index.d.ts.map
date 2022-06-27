@@ -3,7 +3,7 @@
     "file": "index.d.ts",
     "sourceRoot": "",
     "sources": [
-        "../src-ts/index.ts"
+        "../src/index.ts"
     ],
     "names": [],
     "mappings": "AAAA,cAAc,qBAAqB,CAAA;AACnC,cAAc,UAAU,CAAA;AACxB,cAAc,SAAS,CAAA"
