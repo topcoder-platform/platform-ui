@@ -1,0 +1,123 @@
+@import "styles/include";
+
+.basicInfoForm {
+  .title {
+    font-weight: 600;
+    color: $grey-text;
+    font-size: 20px;
+    line-height: 20px;
+    text-transform: uppercase;
+  }
+
+  .remove-website {
+    color: $green1;
+    cursor: pointer;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: flex-end;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .addWebsiteButton {
+    background-color: white;
+    border: 0px;
+    color: #229174;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    
+    svg {
+      width: 13.33px;
+      height: 13.33px;
+      margin-right: 2px;
+    }
+  }
+
+  .description {
+    @include font-roboto;
+    font-size: 16px;
+    line-height: 26px;
+    margin-top: 24px;
+    color: $grey-text;
+  }
+
+  .form-row {
+    align-items: flex-start;
+  }
+
+  .text-area {
+    height: 117px !important;
+  }
+
+  .formFieldWrapper {
+    margin-top: 48px;
+    @include mobile {
+      margin-top: 24px;
+    }
+  }
+}
+
+.helpText {
+  color: $green1;
+  display: flex;
+}
+
+.assets {
+  margin-top: 12px;
+  p {
+    @include font-roboto;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.8px;
+    line-height: 12px;
+    color: $black;
+    margin-bottom: 8px;
+  }
+}
+
+.list {
+  list-style-type: disc;
+  padding-left: 20px;
+}
+
+.color-picker,
+.style-picker {
+  @include mobile {
+    padding: 29px;
+  }
+  width: 100% !important;
+  padding-right: inherit !important;
+  border: 2px solid $divider-color;
+  border-radius: 20px;
+  padding: 20px;
+
+  .colors,
+  .styles {
+    padding: 20px;
+    @include mobile {
+      margin-bottom: -30px;
+      padding: 0px;
+    }
+  }
+
+  .formFieldWrapper {
+    padding-right: 20px;
+    margin-top: 0;
+    @include mobile {
+      padding-right: 30px;
+    }
+  }
+}
+
+.label {
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 26px;
+  @include mobile {
+    font-size: 16px;
+  }
+}

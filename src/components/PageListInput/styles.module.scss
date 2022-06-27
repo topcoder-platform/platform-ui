@@ -1,0 +1,27 @@
+@import "styles/include";
+
+.page-list-input {
+  .add-listinput-item-button {
+    color: $green1;
+    display: flex;
+    align-items: center;
+    font-weight: 430;
+    width: 100%;
+
+    & > * {
+      cursor: pointer;
+      align-items: center;
+      display: flex;
+    }
+
+    .pageText {
+      @include font-roboto;
+      font-weight: 700;
+      font-size: 14px;
+      color: $black;
+      letter-spacing: 0.8px;
+      line-height: 12px;
+      margin-bottom: 8px;
+    }
+  }
+}
