@@ -9,8 +9,8 @@
         "build:dev": "sh build-dev.sh",
         "build:prod": "sh build-prod.sh",
         "eject": "react-scripts eject",
-        "lint": "tslint src/**/*.{ts,tsx}",
-        "lint:fix": "tslint src/**/*.{ts,tsx} --fix",
+        "lint": "tslint src-ts/**/*.{ts,tsx}",
+        "lint:fix": "tslint src-ts/**/*.{ts,tsx} --fix",
         "test": "react-scripts test",
         "test:no-watch": "npm test -- --watchAll=false"
     },

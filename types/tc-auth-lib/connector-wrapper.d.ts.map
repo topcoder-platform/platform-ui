@@ -1,1 +1,10 @@
-{"version":3,"file":"connector-wrapper.d.ts","sourceRoot":"","sources":["../src/connector-wrapper.js"],"names":[],"mappings":"AASA;;;;;SAiBC;AAgDD,qCAWC"}
+{
+    "version": 3,
+    "file": "connector-wrapper.d.ts",
+    "sourceRoot": "",
+    "sources": [
+        "../src-ts/connector-wrapper.js"
+    ],
+    "names": [],
+    "mappings": "AASA;;;;;SAiBC;AAgDD,qCAWC"
+}
