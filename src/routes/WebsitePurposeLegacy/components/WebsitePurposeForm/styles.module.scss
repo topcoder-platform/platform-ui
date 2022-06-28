@@ -1,0 +1,31 @@
+@import "styles/include";
+
+.websitePurposeForm {
+  .title {
+    font-weight: 600;
+    color: $grey-text;
+    font-size: 20px;
+    line-height: 20px;
+    text-transform: uppercase;
+  }
+
+  .description {
+    @include font-roboto;
+    font-size: 16px;
+    line-height: 26px;
+    margin-top: 24px;
+    color: $grey-text;
+  }
+
+  .form-row {
+    align-items: flex-start;
+  }
+
+  .formFieldWrapper {
+    margin-top: 48px;
+  }
+
+  .text-area {
+    height: 150px !important;
+  }
+}

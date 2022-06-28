@@ -1,0 +1,60 @@
+@import "styles/include";
+
+.app-slider {
+  flex-direction: column-reverse !important;
+  margin: 0 -1rem;
+  width: calc(100% + 2rem) !important;
+
+  @include mobile {
+    margin: 0 -8px;
+    width: calc(100% + 1rem) !important;
+  }
+
+  .item-container {
+    padding: 1rem;
+    max-width: 100%;
+
+    @include mobile {
+      padding: 8px;
+    }
+  }
+
+  .rec-slider-container {
+    margin: 0;
+  }
+
+  .rec-pagination {
+    margin: 0;
+    align-self: flex-end;
+
+    @include mobile {
+      padding: 4px 0;
+    }
+  }
+
+  .rec-dot {
+    position: relative;
+    width: 24px;
+    height: 16px;
+    box-shadow: none !important;
+    background: none;
+
+    &:after {
+      content: "";
+      background: #d4d4d4;
+      width: 24px;
+      height: 4px;
+      border-radius: 12px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    &_active {
+      &:after {
+        background: #7f7f7f;
+      }
+    }
+  }
+}

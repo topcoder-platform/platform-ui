@@ -35,12 +35,12 @@ It is written using React 17, Typescript 4, and Node 16.
 
 ### To create a personal config in order to track logs to your local environment
 
-- Add [hostname] to src/config/app-host-environment.enum.ts
-- Copy an existing config from src/config/environment.*.config.ts
+- Add [hostname] to src-ts/config/app-host-environment.enum.ts
+- Copy an existing config from src-ts/config/environment.*.config.ts
 - Rename new config environment.[hostname].config.ts
 - Rename config variable to EnvironmentConfig[HostName]
 - Set the ENV variable to AppHostEnvironment.[hostnama]
-- Add the switch case for the host name to src/config/environment.config.ts
+- Add the switch case for the host name to src-ts/config/environment.config.ts
 - Prior to starting the server, set your host name:
 \> export REACT_APP_HOST_ENV=[hostname]
 
@@ -54,7 +54,7 @@ It is written using React 17, Typescript 4, and Node 16.
 ## Developing
 
 The following descriptions correspond to the top-level directories within the 
-src directory.
+src-ts directory.
 
 ### config
 
@@ -98,9 +98,9 @@ The Tool Selectors correlate 1:1 to directories within the tools directory.
 
 The name of a tool's directory should correlate w/the name of the tool and its url.
 
-I.e. src/tools/[tool-name] == platform.topcoder.com/[tool-name]
+I.e. src-ts/tools/[tool-name] == platform.topcoder.com/[tool-name]
 
-E.g. src/tools/self-service == platform.topcoder.com/self-service
+E.g. src-ts/tools/self-service == platform.topcoder.com/self-service
 
 Tools should generally not import modules from any directories other than lib. 
 
@@ -112,11 +112,11 @@ generally be moved to lib.
 All of the routes for a tool, including root, section, and subsections should be
 defined in a top-level file.
 
-I.e. [toolName]Routes in src/tools/[tool-name]/[tool-name].routes.ts
+I.e. [toolName]Routes in src-ts/tools/[tool-name]/[tool-name].routes.ts
 
-E.g. selfServiceRoutes in src/tools/self-service/self-service.routes.ts
+E.g. selfServiceRoutes in src-ts/tools/self-service/self-service.routes.ts
 
-These routes then need to be added to the src/tools/tools.routes.ts file,
+These routes then need to be added to the src-ts/tools/tools.routes.ts file,
 at which time the tool selectors should automatically be updatd.
 
 ###  utils
@@ -127,9 +127,9 @@ The Utility Selectors correlate 1:1 to directories within the utils directory.
 
 The name of a util's directory should correlate w/the name of the util and its url.
 
-I.e. src/utils/[util-name] == platform.topcoder.com/[util-name]
+I.e. src-ts/utils/[util-name] == platform.topcoder.com/[util-name]
 
-E.g. src/utils/profile == platform.topcoder.com/profile
+E.g. src-ts/utils/profile == platform.topcoder.com/profile
 
 Utils should generally not import modules from any directories other than lib. 
 
@@ -141,9 +141,9 @@ generally be moved to lib.
 All of the routes for a util, including root, section, and subsections should be
 defined in a top-level file.
 
-I.e. [utilName]Routes in src/utils/[util-name]/[util-name].routes.ts
+I.e. [utilName]Routes in src-ts/utils/[util-name]/[util-name].routes.ts
 
-E.g. homeRoutes in src/tools/home/home.routes.ts
+E.g. homeRoutes in src-ts/tools/home/home.routes.ts
 
-These routes then need to be added to the src/utils/utils.routes.ts file,
+These routes then need to be added to the src-ts/utils/utils.routes.ts file,
 at which time the tool selectors should automatically be updated.

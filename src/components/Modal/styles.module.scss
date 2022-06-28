@@ -1,0 +1,91 @@
+@import 'styles/include';
+
+.modalContainer {
+  @include font-barlow;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1000;
+
+  .modalContent {
+    width: 80%;
+    max-width: 350px;
+    min-height: 300px;
+    max-height: calc(100vh - 100px);
+    margin: 50px auto 0;
+    background: white;
+    position: relative;
+    border-radius: 5px;
+    padding: 26px;
+    overflow: auto;
+    font-size: 15px;
+    line-height: 1.3em;
+    @include mobile {
+      overflow: hidden;
+    }
+
+    .stickyHeader {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .titleContainer {
+      display: flex;
+      justify-content: center;
+      color: $blue1;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+      font-weight: bold;
+    }
+
+    form {
+      margin-top: 30px;
+
+      .modalButtonContainer {
+        display: flex;
+        justify-content: center;
+      }
+    }
+  }
+  
+  .full-width {
+    max-width: 100%;
+  }
+
+  .half-width {
+    max-width: 50%;
+    @include mobile {
+      max-width: 100%;
+    }
+  }
+
+  .modalBackground {
+    background: #00000055;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: -1;
+  }
+
+  .modalCloseBtn {
+    position: absolute;
+    top: 23px;
+    right: 20px;
+    cursor: pointer;
+    height: 27px;
+    width: 27px;
+    padding: 6px;
+    border-radius: 100%;
+    background: white;
+  }
+
+  .modalCloseBtn * {
+    stroke-width: 1px !important;
+  }
+}
