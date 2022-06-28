@@ -9,7 +9,7 @@
  *
  * if `href` is set, then button is rendered as a link `<a>`
  */
-import { Link } from "@reach/router";
+import { Link } from "react-router-dom";
 import cn from "classnames";
 import PT from "prop-types";
 import React from "react";

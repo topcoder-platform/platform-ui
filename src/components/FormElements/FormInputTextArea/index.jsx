@@ -13,7 +13,7 @@ const FormInputTextArea = ({ styleName, ...props }) => {
       className={cn(styles["form-input-textarea"], !!styleName ? styles[styleName] : undefined)}
       {...props}
       cols={10}
-      value={!!props.value || ''}
+      value={props.value || ''}
     />
   );
 };

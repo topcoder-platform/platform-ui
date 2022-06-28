@@ -1,4 +1,4 @@
-import { Router } from "@reach/router";
+import { Route, Routes } from "react-router-dom";
 import React from "react";
 
 import { WorkType } from "../../../../src-ts";
@@ -22,45 +22,59 @@ export default function FindMeData({ isLoggedIn }) {
     findMeData;
 
   return (
-    <Router>
-      <BasicInfo
+    <Routes>
+
+      <Route
+        element={<BasicInfo
+          isLoggedIn={isLoggedIn}
+          workItemConfig={findMeData}
+          breadcrumb={findMeData.breadcrumbs.basic}
+        />}
         path="/basic-info"
-        isLoggedIn={isLoggedIn}
-        workItemConfig={findMeData}
-        breadcrumb={findMeData.breadcrumbs.basic}
       />
-      <LoginPrompt
+
+      <Route
+        element={<LoginPrompt
+          isLoggedIn={isLoggedIn}
+          previousPageUrl="/self-service/work/new/find-me-data/basic-info"
+          nextPageUrl="/self-service/work/new/find-me-data/review"
+        />}
         path="/login-prompt"
-        isLoggedIn={isLoggedIn}
-        previousPageUrl="/self-service/work/new/find-me-data/basic-info"
-        nextPageUrl="/self-service/work/new/find-me-data/review"
       />
-      <Review
-        banner={
-          <FeaturedWorkTypeBanner
-            title="REVIEW & PAYMENT"
-            subTitle={title}
-            workType={WorkType.findData}
-          />
-        }
-        secondaryBanner={
-          <HelpBanner defaultOpen title={helperBannerTitle} styles={["gray"]}>
-            {helperBannerContent}
-          </HelpBanner>
-        }
+
+      <Route
+        element={<Review
+          banner={
+            <FeaturedWorkTypeBanner
+              title="REVIEW & PAYMENT"
+              subTitle={title}
+              workType={WorkType.findData}
+            />
+          }
+          secondaryBanner={
+            <HelpBanner defaultOpen title={helperBannerTitle} styles={["gray"]}>
+              {helperBannerContent}
+            </HelpBanner>
+          }
+          previousPageUrl="/self-service/work/new/find-me-data/basic-info"
+          nextPageUrl={
+            isLoggedIn
+              ? "/self-service/work/new/find-me-data/thank-you"
+              : config.SIGN_IN_URL
+          }
+          icon={<FindMeDataIcon />}
+          showIcon
+          workItemConfig={findMeData}
+          breadcrumb={findMeData.breadcrumbs.review}
+        />}
         path="/review"
-        previousPageUrl="/self-service/work/new/find-me-data/basic-info"
-        nextPageUrl={
-          isLoggedIn
-            ? "/self-service/work/new/find-me-data/thank-you"
-            : config.SIGN_IN_URL
-        }
-        icon={<FindMeDataIcon />}
-        showIcon
-        workItemConfig={findMeData}
-        breadcrumb={findMeData.breadcrumbs.review}
       />
-      <ThankYou path="/thank-you" />
-    </Router>
+
+      <Route
+        element={<ThankYou />}
+        path="/thank-you"
+      />
+
+    </Routes>
   );
 }

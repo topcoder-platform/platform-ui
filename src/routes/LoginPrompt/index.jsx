@@ -1,4 +1,4 @@
-import { navigate } from "@reach/router";
+import { useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
 
@@ -26,6 +26,7 @@ const LoginPrompt = ({
   nextPageUrl,
 }) => {
   const [isLoading] = useState(false);
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (isLoggedIn) {

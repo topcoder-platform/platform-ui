@@ -1,4 +1,4 @@
-import { Router } from "@reach/router";
+import { Routes, Route } from "react-router-dom";
 import React from "react";
 
 import { WorkType } from "../../../../src-ts";
@@ -22,45 +22,59 @@ export default function DataExploration({ isLoggedIn }) {
     dataExploration;
 
   return (
-    <Router>
-      <BasicInfo
+    <Routes>
+
+      <Route
+        element={<BasicInfo
+          isLoggedIn={isLoggedIn}
+          workItemConfig={dataExploration}
+          breadcrumb={dataExploration.breadcrumbs.basic}
+        />}
         path="/basic-info"
-        isLoggedIn={isLoggedIn}
-        workItemConfig={dataExploration}
-        breadcrumb={dataExploration.breadcrumbs.basic}
       />
-      <LoginPrompt
+
+      <Route
+        element={<LoginPrompt
+          isLoggedIn={isLoggedIn}
+          previousPageUrl="/self-service/work/new/data-exploration/basic-info"
+          nextPageUrl="/self-service/work/new/data-exploration/review"
+        />}
         path="/login-prompt"
-        isLoggedIn={isLoggedIn}
-        previousPageUrl="/self-service/work/new/data-exploration/basic-info"
-        nextPageUrl="/self-service/work/new/data-exploration/review"
       />
-      <Review
-        banner={
-          <FeaturedWorkTypeBanner
-            title="REVIEW & PAYMENT"
-            subTitle={title}
-            workType={WorkType.data}
-          />
-        }
-        secondaryBanner={
-          <HelpBanner defaultOpen title={helperBannerTitle} styles={["gray"]}>
-            {helperBannerContent}
-          </HelpBanner>
-        }
+
+      <Route
+        element={<Review
+          banner={
+            <FeaturedWorkTypeBanner
+              title="REVIEW & PAYMENT"
+              subTitle={title}
+              workType={WorkType.data}
+            />
+          }
+          secondaryBanner={
+            <HelpBanner defaultOpen title={helperBannerTitle} styles={["gray"]}>
+              {helperBannerContent}
+            </HelpBanner>
+          }
+          previousPageUrl="/self-service/work/new/data-exploration/basic-info"
+          nextPageUrl={
+            isLoggedIn
+              ? "/self-service/work/new/data-exploration/thank-you"
+              : config.SIGN_IN_URL
+          }
+          icon={<DataExplorationIcon />}
+          showIcon
+          workItemConfig={dataExploration}
+          breadcrumb={dataExploration.breadcrumbs.review}
+        />}
         path="/review"
-        previousPageUrl="/self-service/work/new/data-exploration/basic-info"
-        nextPageUrl={
-          isLoggedIn
-            ? "/self-service/work/new/data-exploration/thank-you"
-            : config.SIGN_IN_URL
-        }
-        icon={<DataExplorationIcon />}
-        showIcon
-        workItemConfig={dataExploration}
-        breadcrumb={dataExploration.breadcrumbs.review}
       />
-      <ThankYou path="/thank-you" />
-    </Router>
+
+      <Route
+        element={<ThankYou />}
+        path="/thank-you"
+      />
+
+    </Routes>
   );
 }

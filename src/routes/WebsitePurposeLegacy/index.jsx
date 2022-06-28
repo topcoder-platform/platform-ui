@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { connect, useSelector, useDispatch } from "react-redux";
-import { navigate, redirectTo } from "@reach/router";
+import { useNavigate } from "react-router-dom";
 
 import Button from "../../components/Button";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -27,6 +27,9 @@ import { Breadcrumb } from "../../../src-ts";
  * Website Purpose Page
  */
 const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem }) => {
+
+  const navigate = useNavigate()
+
   const [isLoading] = useState(false);
   const [formData, setFormData] = useState({
     industry: { title: "Your Industry", option: "", value: null },
@@ -69,7 +72,7 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem }) => {
     setProgressItem(3);
 
     if (currentStep === 0) {
-      redirectTo("/self-service");
+      navigate("/self-service");
     }
 
     if (websitePurpose) {

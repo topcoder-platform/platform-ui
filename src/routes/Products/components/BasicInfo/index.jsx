@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { connect, useSelector, useDispatch } from "react-redux";
-import { navigate } from "@reach/router";
+import { useNavigate } from "react-router-dom";
 import _ from "lodash";
 
 import {
@@ -91,6 +91,8 @@ const BasicInfo = ({
     ],
     sampleData: { title: "Sample Data", option: "", value: "" },
   };
+
+  const navigate = useNavigate()
 
   const [formData, setFormData] = useState(defaultFormData);
   const isFindMeData = workItemConfig.type === WorkType.findData;

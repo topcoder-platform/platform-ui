@@ -1,4 +1,4 @@
-import { navigate } from "@reach/router";
+import { useNavigate } from "react-router-dom";
 
 import React, { useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
@@ -85,9 +85,10 @@ const WorkTypeCardWide = ({
   svgIcon: SvgIcon = "",
   ctaButtonOnClick,
 }) => {
+
   return (
     <div
-    className={classNames(styles.workTypeCard, styles.workTypeCardWide, className)}
+      className={classNames(styles.workTypeCard, styles.workTypeCardWide, className)}
       style={{ backgroundImage: `url(${bgImage})` }}
     >
       {!!SvgIcon ? <SvgIcon /> : !!icon && <img src={icon} alt="" />}
@@ -123,6 +124,7 @@ const SelectWorkType = ({
   const [isLoading] = useState(false);
   const showSupportModal = useSelector((state) => state.form.showSupportModal);
   const challenge = useSelector((state) => state.challenge);
+  const navigate = useNavigate()
 
   const allWorkTypes = [...workTypes, ...webWorkTypes];
   const featuredWorkTypes = allWorkTypes.filter((wt) => wt.featured);

@@ -1,4 +1,4 @@
-import { navigate, redirectTo } from "@reach/router";
+import { useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
 
@@ -28,6 +28,8 @@ import styles from "./styles.module.scss";
  * Page Details Page
  */
 const PageDetailsLegacy = ({ savePageDetails, setProgressItem }) => {
+
+  const navigate = useNavigate()
   const [isLoading] = useState(false);
   const [listInputs, setListInputs] = useState({
     pages: [
@@ -57,7 +59,7 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem }) => {
     setProgressItem(4);
 
     if (currentStep === 0) {
-      redirectTo("/self-service/wizard");
+      navigate("/self-service/wizard");
     }
 
     if (pageDetails) {

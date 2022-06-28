@@ -1,4 +1,4 @@
-import { navigate, Router } from "@reach/router";
+import { useNavigate, Route, Routes } from "react-router-dom";
 import _ from "lodash";
 import React, { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -34,6 +34,7 @@ export default function IntakeForm() {
 
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate()
 
   const {
     isLoggedIn,
@@ -161,37 +162,43 @@ export default function IntakeForm() {
     <div>
       <LoadingSpinner show={isLoading} />
       {!isLoading && (
-        <Router>
+        <Routes>
           {/* Data Exploration */}
-          <DataExploration
+          <Route
+            element={<DataExploration isLoggedIn={isLoggedIn} />}
             path="/work/new/data-exploration/*"
-            isLoggedIn={isLoggedIn}
           />
 
           {/* Data Advisory */}
-          <DataAdvisory
+          <Route
+            element={<DataAdvisory isLoggedIn={isLoggedIn} />}
             path="/work/new/data-advisory/*"
-            isLoggedIn={isLoggedIn}
+
           />
 
           {/* Find Me Data */}
-          <FindMeData path="/work/new/find-me-data/*" isLoggedIn={isLoggedIn} />
+          <Route
+            element={<FindMeData isLoggedIn={isLoggedIn} />}
+            path="/work/new/find-me-data/*"
+          />
 
           {/* Web Design (NEW) */}
-          <WebsiteDesign
+          <Route
+            element={<WebsiteDesign isLoggedIn={isLoggedIn} />}
             path="/work/new/website-design-new/*"
-            isLoggedIn={isLoggedIn}
           />
 
           {/* Web Design (Legacy) */}
-          <WebsiteDesignLegacy
+          <Route
+            element={<WebsiteDesignLegacy isLoggedIn={isLoggedIn} />}
             path="/work/new/website-design/*"
-            isLoggedIn={isLoggedIn}
           />
 
-          <SelectWorkType path="/wizard" />
-          {/* <Redirect noThrow from="/*" to="/self-service/wizard" /> */}
-        </Router>
+          <Route
+            element={<SelectWorkType />}
+            path="/wizard"
+          />
+        </Routes>
       )}
     </div>
   );

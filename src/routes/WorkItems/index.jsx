@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import _ from "lodash";
 import PT from "prop-types";
-import { navigate } from "@reach/router";
+import { useNavigate, useParams } from "react-router-dom";
 import { connect } from "react-redux";
 
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -50,7 +50,6 @@ import styles from "./styles.module.scss";
  * Work Item Page
  */
 const WorkItem = ({
-  workItemId,
   work,
   workItem,
   isLoadingWork,
@@ -68,9 +67,12 @@ const WorkItem = ({
   getForumNotifications,
 }) => {
 
+  const { workItemId } = useParams()
+
   const [selectedTab, setSelectedTab] = useState("summary");
   const [showSurvey, setShowSurvey] = useState(false);
   const { profile } = useContext(profileContext)
+  const navigate = useNavigate()
 
   const workContextData = useContext(workContext);
   const workStatus = !!work
@@ -302,7 +304,6 @@ const WorkItem = ({
 };
 
 WorkItem.propTypes = {
-  workItemId: PT.string,
   work: PT.shape(),
   workItem: PT.shape(),
   isLoadingWork: PT.bool,

@@ -1,4 +1,4 @@
-import { navigate } from "@reach/router";
+import { useNavigate } from "react-router-dom";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { connect, useDispatch } from "react-redux";
 
@@ -23,6 +23,7 @@ const Home = () => {
 
   const [isLoading, setLoading] = useState(true);
   const { initialized, isLoggedIn } = useContext(profileContext)
+  const navigate = useNavigate()
 
   const dispatch = useDispatch();
 

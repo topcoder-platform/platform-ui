@@ -1,4 +1,3 @@
-import { createHistory, LocationProvider } from "@reach/router";
 import React, { StrictMode } from "react";
 import ReactDOM from 'react-dom'
 import { Provider } from "react-redux";
@@ -21,14 +20,13 @@ import store from "./store";
 
 import "./styles/main.vendor.scss";
 
-const history = createHistory(window);
-
 ReactDOM.render(
   <div className="root-container">
     <Provider store={store}>
       <ProfileProvider>
 
         <BrowserRouter>
+
           <RouteProvider
             rootLoggedIn={routeRootLoggedIn}
             rootLoggedOut={routeRootLoggedOut}
@@ -39,9 +37,7 @@ ReactDOM.render(
               <AppNextGen />
             </StrictMode>
           </RouteProvider>
-        </BrowserRouter>
 
-        <LocationProvider history={history}>
           <App />
           <ReduxToastr
             timeOut={3000}
@@ -54,7 +50,8 @@ ReactDOM.render(
             progressBar
             closeOnToastrClick
           />
-        </LocationProvider>
+
+        </BrowserRouter>
 
         <PageFooter />
 

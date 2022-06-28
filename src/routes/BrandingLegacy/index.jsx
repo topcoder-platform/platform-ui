@@ -1,4 +1,4 @@
-import { navigate, redirectTo } from "@reach/router";
+import { useNavigate } from "react-router-dom";
 import React, { useContext, useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
 
@@ -27,6 +27,8 @@ import styles from "./styles.module.scss";
  * Branding Page
  */
 const BrandingLegacy = ({ saveBranding, setProgressItem }) => {
+
+  const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
     theme: { title: "Style & Theme", option: "", value: null },
@@ -77,7 +79,7 @@ const BrandingLegacy = ({ saveBranding, setProgressItem }) => {
     setProgressItem(5);
 
     if (currentStep === 0) {
-      redirectTo("/self-service/wizard");
+      navigate("/self-service/wizard");
     }
 
     if (branding) {

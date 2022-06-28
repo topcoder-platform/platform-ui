@@ -3,12 +3,12 @@
  *
  * Three dots Progress Popup
  */
-import { useNavigate } from "@reach/router";
+import { useNavigate } from "react-router-dom";
 import cn from "classnames";
 import PT from "prop-types";
 import React, { useEffect, useRef } from "react";
-import { ReactComponent as IconCheck} from "../../assets/images/icon-check-thin.svg";
-import { ReactComponent as IconCross} from "../../assets/images/icon-cross.svg";
+import { ReactComponent as IconCheck } from "../../assets/images/icon-check-thin.svg";
+import { ReactComponent as IconCross } from "../../assets/images/icon-cross.svg";
 import styles from "./styles.module.scss";
 
 const ProgressPopup = ({

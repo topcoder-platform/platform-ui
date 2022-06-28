@@ -1,4 +1,4 @@
-import { navigate } from "@reach/router";
+import { useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { useDispatch, connect } from "react-redux";
 
@@ -17,8 +17,10 @@ import styles from "./styles.module.scss";
  * Thank You Page
  */
 const ThankYou = () => {
+
   const dispatch = useDispatch();
   const [isLoading] = useState(false);
+  const navigate = useNavigate()
 
   useEffect(() => {
     clearPreviousForm();

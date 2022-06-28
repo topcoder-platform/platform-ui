@@ -1,4 +1,4 @@
-import { Redirect, Router } from "@reach/router";
+import { Navigate, Route, Routes } from "react-router-dom";
 import React, { useContext, useLayoutEffect } from "react";
 import TagManager from "react-gtm-module";
 import "react-responsive-modal/styles.css";
@@ -8,8 +8,7 @@ import { EnvironmentConfig, logInitialize, profileContext } from "../src-ts";
 import { UNDER_MAINTENANCE, GA_ID } from "./constants";
 import IntakeForm from "./IntakeForm";
 import Home from "./routes/Home";
-import WorkItems from "./routes/WorkItems";
-import Layout from "./components/Layout";
+import WorkItem from "./routes/WorkItems";
 import { ScrollToTop } from "./ScrollToTop";
 import styles from "./styles/main.module.scss";
 import UnderMaintenance from "./routes/UnderMaintenance";
@@ -49,22 +48,31 @@ const App = () => {
 
   return (
     <div className={styles["topcoder-mfe-customer-work"]}>
-      <Router primary={false}>
-        <ScrollToTop path="/">
-          <IntakeForm path="/self-service/*" />
+      <ScrollToTop path="/">
+        <Routes>
+          <Route
+            element={<IntakeForm />}
+            path="/self-service/*"
+          />
           {isLoggedIn && (
             <>
-              <Layout
+              <Route
+                element={<WorkItem />}
                 path="/self-service/work-items/:workItemId"
-                PageComponent={WorkItems}
               />
-              <Redirect noThrow from="/self-service/*" to="/self-service" />
+              <Route
+                element={<Navigate noThrow from="/self-service/*" to="/self-service" />}
+                path="/self-service/*"
+              />
             </>
           )}
-          <Home path="/self-service" />
-        </ScrollToTop>
-      </Router>
-    </div>
+          <Route
+            element={<Home />}
+            path="/self-service"
+          />
+        </Routes>
+      </ScrollToTop>
+    </div >
   );
 };
 

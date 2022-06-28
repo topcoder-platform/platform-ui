@@ -1,4 +1,4 @@
-import { navigate, redirectTo } from "@reach/router";
+import { useNavigate } from "react-router-dom";
 import { Elements, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { toastr } from "react-redux-toastr";
@@ -72,6 +72,7 @@ const Review = ({
     zipCode: null,
     checked: false, // value to toggle terms and conditions checkbox
   });
+  const navigate = useNavigate()
 
   const currentStep = useSelector((state) => state?.progress.currentStep);
   const workType = useSelector((state) => state.form.workType);
@@ -109,7 +110,7 @@ const Review = ({
     setProgressItem(7);
 
     if (currentStep === 0) {
-      redirectTo("/self-service");
+      navigate("/self-service");
     }
 
     setFirstMounted(false);
@@ -126,7 +127,7 @@ const Review = ({
     }
 
     if (currentStep === 0) {
-      redirectTo("/self-service");
+      navigate("/self-service");
     }
 
     setAnotherFirstMounted(false);

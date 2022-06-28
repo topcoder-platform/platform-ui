@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
-import { navigate, redirectTo } from "@reach/router";
+import { useNavigate } from "react-router-dom";
 import { toastr } from "react-redux-toastr";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, useElements, useStripe } from "@stripe/react-stripe-js";
@@ -60,6 +60,7 @@ const ReviewLegacy = ({
   enableEdit = true,
   secondaryBanner,
 }) => {
+
   const dispatch = useDispatch();
   const [paymentFailed, setPaymentFailed] = useState(false);
   const [isLoading, setLoading] = useState(false);
@@ -73,6 +74,7 @@ const ReviewLegacy = ({
     zipCode: null,
     checked: false, // value to toggle terms and conditions checkbox
   });
+  const navigate = useNavigate()
 
   const currentStep = useSelector((state) => state?.progress.currentStep);
   const workType = useSelector((state) => state.form.workType);
@@ -93,7 +95,7 @@ const ReviewLegacy = ({
     setProgressItem(7);
 
     if (currentStep === 0) {
-      redirectTo("/self-service");
+      navigate("/self-service");
     }
 
     setFirstMounted(false);
@@ -110,7 +112,7 @@ const ReviewLegacy = ({
     }
 
     if (currentStep === 0) {
-      redirectTo("/self-service");
+      navigate("/self-service");
     }
 
     setAnotherFirstMounted(false);
