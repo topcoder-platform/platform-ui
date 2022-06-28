@@ -1,4 +1,4 @@
-@import '../../../../lib/styles';
+@import '../../../../lib/styles/includes';
 
 .tool-selector-narrow {
 
@@ -13,7 +13,7 @@
         border-top: 1px solid $black-60;
         padding: $pad-lg 0;
         color: $tc-white;
-        @include font-weight-medium;
+        font-weight: $font-weight-medium;
         background-color: $black-100;
 
         svg {

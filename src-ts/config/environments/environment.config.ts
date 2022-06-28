@@ -8,7 +8,7 @@ import { EnvironmentConfigProd } from './environment.prod.config'
 
 function getEnvironmentConfig(): GlobalConfig {
 
-    switch (process.env.REACT_APP_HOST_ENV) {
+    switch (process.env.APPENV) {
 
         case AppHostEnvironment.bsouza:
             return EnvironmentConfigBsouza
@@ -23,7 +23,7 @@ function getEnvironmentConfig(): GlobalConfig {
             return EnvironmentConfigProd
 
         default:
-            throw new Error(`Cannot initialize an invalid host environment: ${process.env.REACT_APP_HOST_ENV}`)
+            return EnvironmentConfigDefault
     }
 }
 

@@ -1,5 +1,7 @@
 export interface GlobalConfig {
     API: {
+        FORUM_ACCESS_TOKEN: string
+        FORUM_V2: string
         V3: string
         V5: string
     }

@@ -1,9 +1,9 @@
-import { PasswordUpdateRequest } from './password-update-request.model'
+import { ChangePasswordRequest } from './change-password-request.model'
 import { UserProfile } from './user-profile.model'
 
 export interface ProfileContextData {
+    changePassword: (userId: number, request: ChangePasswordRequest) => Promise<void>
     initialized: boolean
     profile?: UserProfile
-    updatePassword: (userId: number, request: PasswordUpdateRequest) => Promise<void>
     updateProfile: (updatedProfileContext: ProfileContextData) => Promise<void>
 }

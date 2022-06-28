@@ -1,21 +1,21 @@
-import { FocusEvent } from 'react'
+import { ChangeEvent, FocusEvent } from 'react'
 
 import { FormDefinition } from '../form-definition.model'
 import { formGetInputModel } from '../form-functions'
 
-import { InputText, InputTextarea } from './form-input'
+import { InputRating, InputText, InputTextarea } from './form-input'
 import { FormInputRow } from './form-input-row'
 import styles from './FormInputs.module.scss'
 
 interface FormInputsProps {
     formDef: FormDefinition
     onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void
-    onFocus: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void
+    onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
 }
 
 const FormInputs: (props: FormInputsProps) => JSX.Element = (props: FormInputsProps) => {
 
-    const { formDef, onBlur, onFocus }: FormInputsProps = props
+    const { formDef, onBlur, onChange }: FormInputsProps = props
 
     const formInputs: Array<JSX.Element> = formDef.inputs
         .map(input => formGetInputModel(formDef.inputs, input.name))
@@ -26,12 +26,23 @@ const FormInputs: (props: FormInputsProps) => JSX.Element = (props: FormInputsPr
             let inputElement: JSX.Element
             switch (inputModel.type) {
 
+                case 'rating':
+                    inputElement = (
+                        <InputRating
+                            {...inputModel}
+                            onChange={onChange}
+                            tabIndex={tabIndex}
+                            value={inputModel.value}
+                        />
+                    )
+                    break
+
                 case 'textarea':
                     inputElement = (
                         <InputTextarea
                             {...inputModel}
                             onBlur={onBlur}
-                            onFocus={onFocus}
+                            onChange={onChange}
                             tabIndex={tabIndex}
                             value={inputModel.value}
                         />
@@ -43,7 +54,7 @@ const FormInputs: (props: FormInputsProps) => JSX.Element = (props: FormInputsPr
                         <InputText
                             {...inputModel}
                             onBlur={onBlur}
-                            onFocus={onFocus}
+                            onChange={onChange}
                             tabIndex={tabIndex}
                             type={inputModel.type || 'text'}
                             value={inputModel.value}

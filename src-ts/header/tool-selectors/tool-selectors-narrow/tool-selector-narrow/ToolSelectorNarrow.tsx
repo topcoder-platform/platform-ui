@@ -1,31 +1,40 @@
 import classNames from 'classnames'
-import { FC } from 'react'
+import { FC, useContext } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
-import { IconOutline, routeIsActive } from '../../../../lib'
+import { IconOutline, PlatformRoute, routeContext, RouteContextData } from '../../../../lib'
 
 import styles from './ToolSelectorNarrow.module.scss'
 
 interface ToolSelectorNarrowProps {
-    route: string
-    title: string
+    route: PlatformRoute
 }
+
+const isParamRoute: (route: string) => boolean = (route: string) => !!route.match(/^:[^/]+$/)
 
 const ToolSelectorNarrow: FC<ToolSelectorNarrowProps> = (props: ToolSelectorNarrowProps) => {
 
+    const {
+        getPathFromRoute,
+        isActiveRoute,
+    }: RouteContextData = useContext(routeContext)
+    const toolRoute: PlatformRoute = props.route
+    const toolPath: string = getPathFromRoute(toolRoute)
+
     const baseClass: string = 'tool-selector-narrow'
-    const isActive: boolean = routeIsActive(useLocation().pathname, props.route)
+    const isActive: boolean = isActiveRoute(useLocation().pathname, toolPath)
     const activeIndicaterClass: string = `${baseClass}-${isActive ? '' : 'in'}active`
+    const hasChildren: boolean = !!toolRoute.children.some(child => !!child.route && !isParamRoute(child.route))
 
     return (
         <div className={styles[baseClass]}>
             <Link
                 className={classNames(styles[`${baseClass}-link`], styles[activeIndicaterClass])}
-                key={props.route}
-                to={props.route}
+                key={toolPath}
+                to={toolPath}
             >
-                {props.title}
-                <IconOutline.ChevronRightIcon />
+                {toolRoute.title}
+                {hasChildren && <IconOutline.ChevronRightIcon />}
             </Link>
         </div>
     )

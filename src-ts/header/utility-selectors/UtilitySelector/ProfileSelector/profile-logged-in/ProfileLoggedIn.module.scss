@@ -1,6 +1,6 @@
-@import '../../../../../lib/styles';
+@import '../../../../../lib/styles/includes';
 
-$overlaySquare: calc($pad-xxxxl + 2 * $border);
+$overlaySquare: $pad-xxxxl;
 
 .profile-avatar,
 .overlay {
@@ -9,14 +9,15 @@ $overlaySquare: calc($pad-xxxxl + 2 * $border);
 
 .overlay {
     position: absolute;
+    top: 0;
+    left: 0;
     z-index: 100;
     background: $black-100-opacity-80;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: $overlaySquare;
-    width: $overlaySquare;
-    margin-top: calc($overlaySquare * -1);
+    height: 100%;
+    width: 100%;
     border-radius: 50%;
 
     svg {
@@ -24,4 +25,8 @@ $overlaySquare: calc($pad-xxxxl + 2 * $border);
         stroke-width: $border;
         @include icon-xxl;
     }
+}
+
+.profile-avatar {
+    position: relative;
 }

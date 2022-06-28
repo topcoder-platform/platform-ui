@@ -16,7 +16,7 @@ export function doesNotMatchOther(value: string | undefined, formElements?: HTML
         return undefined
     }
 
-    return `cannot match the ${getOtherFieldLabel(otherField, otherFieldName)} value`
+    return `Cannot match the ${getOtherFieldLabel(otherField, otherFieldName)} value`
 }
 
 export function email(value: string | undefined): string | undefined {
@@ -30,7 +30,7 @@ export function email(value: string | undefined): string | undefined {
 
     const emailRegex: RegExp = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
 
-    return !emailRegex.test(value) ? 'invalid email' : undefined
+    return !emailRegex.test(value) ? 'Invalid email' : undefined
 }
 
 export function password(value: string | undefined): string | undefined {
@@ -48,7 +48,7 @@ export function password(value: string | undefined): string | undefined {
     // - at least 1 symbol or number
     const passwordRegex: RegExp = /^(?=.*[a-zA-Z])(?=.*[#$^+=!*()@%&\d]).{8,}$/g
 
-    return !passwordRegex.test(value) ? 'password must contain >= 8 characters, >= 1 letter, and >= 1 number or symbol' : undefined
+    return !passwordRegex.test(value) ? 'Password rules: 8+ characters, 1+ letter, and 1+ number or symbol' : undefined
 }
 
 export function matchOther(value: string | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
@@ -67,11 +67,11 @@ export function matchOther(value: string | undefined, formElements?: HTMLFormCon
         return undefined
     }
 
-    return `does not match the ${getOtherFieldLabel(otherField, otherFieldName)} value`
+    return `Does not match the ${getOtherFieldLabel(otherField, otherFieldName)}`
 }
 
 export function required(value: string | undefined): string | undefined {
-    return !value ? 'required' : undefined
+    return !value ? 'Required' : undefined
 }
 
 export function requiredIfOther(value: string | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
@@ -87,7 +87,7 @@ export function requiredIfOther(value: string | undefined, formElements?: HTMLFo
         return undefined
     }
 
-    return `required when ${getOtherFieldLabel(otherField, otherFieldName)} is not blank`
+    return `Required`
 }
 
 export function sslUrl(value: string | undefined): string | undefined {
@@ -103,18 +103,14 @@ export function sslUrl(value: string | undefined): string | undefined {
         return new URL(value).protocol !== 'https:' ? 'links must start with https' : undefined
 
     } catch {
-        return 'invalid url'
+        return 'Invalid URL'
     }
 }
 
-export type ValidatorFn = Array<
-    (
-        value: string | undefined,
-        formValues?: HTMLFormControlsCollection,
-        otherField?: string,
-    )
-        => string | undefined
->
+export interface ValidatorFn {
+    dependentField?: string,
+    validator: (value: string | undefined, formValues?: HTMLFormControlsCollection, otherField?: string) => string | undefined
+}
 
 function getOtherField(formElements?: HTMLFormControlsCollection, otherFieldName?: string): HTMLInputElement {
 
@@ -135,5 +131,5 @@ function getOtherField(formElements?: HTMLFormControlsCollection, otherFieldName
 }
 
 function getOtherFieldLabel(otherField: HTMLInputElement, otherFieldName?: string): string {
-    return otherField.labels?.[0].firstChild?.nodeValue || otherFieldName as string
+    return (otherField.labels?.[0].firstChild as any)?.innerText || otherFieldName as string
 }

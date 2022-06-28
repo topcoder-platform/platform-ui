@@ -1,10 +1,10 @@
 import { PlatformRoute } from '../lib'
 
-import { homeRoutes } from './home/home.routes'
+import { contactSupportRoutes } from './contact-support'
 import { settingsRoutes } from './settings'
 
 const utilsRoutes: Array<PlatformRoute> = [
-    ...homeRoutes,
+    ...contactSupportRoutes,
     ...settingsRoutes,
 ]
 

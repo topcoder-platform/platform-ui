@@ -7,7 +7,14 @@ export const defaultRouteContextData: RouteContextData = {
     getChildRoutes: () => [],
     getChildren: () => [],
     getPath: () => '',
+    getPathFromRoute: () => '',
+    getRouteElement: () => <></>,
+    isActiveRoute: () => false,
+    isRootRoute: () => false,
+    rootLoggedInRoute: '',
+    rootLoggedOutRoute: '',
     toolsRoutes: [],
+    toolsRoutesForNav: [],
     utilsRoutes: [],
 }
 
