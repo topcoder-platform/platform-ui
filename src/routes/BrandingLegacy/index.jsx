@@ -91,7 +91,7 @@ const BrandingLegacy = ({ saveBranding, setProgressItem }) => {
     return () => {
       dispatch(triggerAutoSave(true));
     };
-  }, [currentStep, branding, dispatch, setProgressItem, firstMounted]);
+  }, [currentStep, branding, dispatch, setProgressItem, firstMounted, navigate]);
 
   const isFormValid =
     formData?.theme?.value &&

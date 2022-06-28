@@ -118,7 +118,7 @@ const Review = ({
     return () => {
       dispatch(triggerAutoSave(true));
     };
-  }, [currentStep, formData, dispatch, setProgressItem, firstMounted]);
+  }, [currentStep, formData, dispatch, setProgressItem, firstMounted, navigate]);
 
   const [anotherFirstMounted, setAnotherFirstMounted] = useState(true);
   useEffect(() => {
@@ -131,7 +131,7 @@ const Review = ({
     }
 
     setAnotherFirstMounted(false);
-  }, [currentStep, anotherFirstMounted]);
+  }, [currentStep, anotherFirstMounted, navigate]);
 
   const onBack = () => {
     navigate(previousPageUrl || "/self-service/branding");

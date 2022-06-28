@@ -35,7 +35,7 @@ const Home = () => {
         setLoading(false);
       }
     }
-  }, [isLoggedIn, initialized]);
+  }, [isLoggedIn, initialized, navigate]);
 
   const handleClick = useCallback(() => {
     clearCachedChallengeId();

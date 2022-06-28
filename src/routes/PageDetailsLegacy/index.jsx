@@ -71,7 +71,7 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem }) => {
     return () => {
       dispatch(triggerAutoSave(true));
     };
-  }, [currentStep, pageDetails, dispatch, setProgressItem, firstMounted]);
+  }, [currentStep, pageDetails, dispatch, setProgressItem, firstMounted, navigate]);
 
   const onNext = () => {
     navigate("/self-service/work/new/website-design/login-prompt");

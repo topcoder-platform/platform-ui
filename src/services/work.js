@@ -172,14 +172,8 @@ export const getSolutions = async (workId) => {
 
 export const downloadSolution = async (solutionId) => {
   const submissionId = solutionId;
-  const response = await xhrGetBlobAsync({
-    url: `${config.API.V5}/submissions/${submissionId}/download`,
-    method: "GET",
-    responseType: "blob",
-  });
-
-  const blob = response;
-  triggerDownload(`submission-${solutionId}.zip`, blob);
+  const response = await xhrGetBlobAsync(`${config.API.V5}/submissions/${submissionId}/download`);
+  triggerDownload(`submission-${solutionId}.zip`, response);
 };
 
 export const saveSurvey = async (workId, metadata) => {
