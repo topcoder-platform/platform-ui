@@ -1,8 +1,8 @@
 import cookies from 'browser-cookies'
 import { configureConnector, decodeToken, getFreshToken } from 'tc-auth-lib'
 
-import { User } from '../../../../types/tc-auth-lib'
 import { EnvironmentConfig } from '../../../config'
+import { User } from '../../../types/tc-auth-lib'
 import { logError } from '../logging-functions'
 
 import { authentication as authenticationUrl } from './authentication-url.config'
@@ -21,7 +21,6 @@ configureConnector({
 })
 
 export async function initializeAsync(): Promise<string | undefined> {
-
     return getFreshToken()
         .then((tokenV3: string) => {
             const tokenV2: string | null = cookies.get(CookieKeys.tcjwt)

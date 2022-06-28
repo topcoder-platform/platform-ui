@@ -1,0 +1,24 @@
+@import '../../../../styles/includes';
+
+.rating-input-wrapper {
+    &.rating-input-wrapper {
+        padding: 0;
+        border: 0 none;
+    }
+    > label {
+        margin-bottom: 0;
+    }
+}
+
+.ratings-container {
+    display: flex;
+    justify-content: space-between;
+
+    :global(.button) {
+        padding: 4px 4px 2px;
+        margin: -4px 0;
+        &:hover {
+            color: $orange-100;
+        }
+    }
+}

@@ -1,0 +1,92 @@
+@import '../variables/breakpoints';
+// Usage:
+// .example {
+//   width: 1000px;
+//   @include sm {
+//     width: 500px;
+//   }
+// }
+
+@mixin xxs {
+    @media (max-width: #{$xxs-max}) {
+        @content;
+    }
+}
+
+@mixin ltexs {
+    @media (max-width: #{$xs-max}) {
+        @content;
+    }
+}
+
+@mixin xs {
+    @media (min-width: #{$xs-min}) and (max-width: #{$xs-max}) {
+        @content;
+    }
+}
+
+@mixin ltesm {
+    @media (max-width: #{$sm-max}) {
+        @content;
+    }
+}
+
+@mixin sm {
+    @media (min-width: #{$sm-min}) and (max-width: #{$sm-max}){
+        @content;
+    }
+}
+
+@mixin smlg {
+    @media (min-width: #{$sm-min}) and (max-width: #{$lg-max}){
+        @content;
+    }
+}
+
+@mixin gtesm {
+    @media (min-width: #{$sm-min}) {
+        @content;
+    }
+}
+
+@mixin ltemd {
+    @media (max-width: #{$md-max}) {
+        @content;
+    }
+}
+
+@mixin md {
+    @media (min-width: #{$md-min}) and (max-width: #{$md-max}){
+        @content;
+    }
+}
+
+@mixin gtemd {
+    @media (min-width: #{$md-min}) {
+        @content;
+    }
+}
+
+@mixin lg {
+    @media (min-width: #{$lg-min}) and (max-width: #{$lg-max}){
+        @content;
+    }
+}
+
+@mixin gtelg {
+    @media (min-width: #{$lg-min}) {
+        @content;
+    }
+}
+
+@mixin xl {
+    @media (min-width: #{$xl-min}) and (max-width: #{$xl-max}){
+        @content;
+    }
+}
+
+@mixin xxl {
+    @media (min-width: #{$xxl-min}){
+        @content;
+    }
+}

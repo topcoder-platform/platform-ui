@@ -23,7 +23,7 @@ const Avatar: FC<AvatarProps> = (props: AvatarProps) => {
         ? (
             <img
                 alt={`${props.handle} avatar`}
-                className={classNames(styles.avatar, styles[props.size])}
+                className={classNames(styles.avatar, styles[props.size], styles['avatar-img'])}
                 src={props.photoUrl}
             />
         )

@@ -1,4 +1,4 @@
-@import '../../../../lib/styles/';
+@import '../../../../lib/styles/includes';
 
 .tool-selector-wide {
     padding-right: 0;
@@ -17,6 +17,13 @@
     .active-indicator {
         width: $pad-xxl;
         height: 2px;
+    }
+
+    &.tool-selector-wide-is-link {
+
+        a {
+            cursor: pointer !important;
+        }
     }
 
     &.tool-selector-wide-active {

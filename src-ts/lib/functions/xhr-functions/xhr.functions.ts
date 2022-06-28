@@ -28,6 +28,11 @@ xhrInstance.interceptors.response.use((config) => config,
     }
 )
 
+export async function deleteAsync<T>(url: string): Promise<T> {
+    const output: AxiosResponse<T> = await xhrInstance.delete(url)
+    return output.data
+}
+
 export async function getAsync<T>(url: string): Promise<T> {
     const output: AxiosResponse<T> = await xhrInstance.get(url)
     return output.data
@@ -35,6 +40,11 @@ export async function getAsync<T>(url: string): Promise<T> {
 
 export async function patchAsync<T, R>(url: string, data: T): Promise<R> {
     const output: AxiosResponse<R> = await xhrInstance.patch(url, data)
+    return output.data
+}
+
+export async function postAsync<T, R>(url: string, data: T): Promise<R> {
+    const output: AxiosResponse<R> = await xhrInstance.post(url, data)
     return output.data
 }
 

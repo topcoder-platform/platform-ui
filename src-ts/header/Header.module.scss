@@ -1,35 +1,27 @@
-@import '../lib/styles';
+@import '../lib/styles/includes';
+
+.header-wrap {
+    display: block;
+    background-color: $tc-black;
+}
 
 .header {
     display: grid;
     height: $header-height;
-    background-color: $tc-black;
     align-items: center;
-    padding: 0 $pad-xxl 0 0;
+    width: 100%;
+    margin: 0 auto;
+    max-width: $xxl-min;
+    @include pagePaddings;
+    grid-template-columns: 78px 1fr auto;
 
     @include ltemd {
         grid-template-columns: $header-height 1fr $header-height;
         align-items: center;
     }
+}
 
-    @include sm {
-        padding: 0 $pad-lg 0 0;
-    }
-
-    @include md {
-        grid-template-columns: $left-col-width-md 1fr auto;
-        padding: 0 $pad-lg 0 0;
-    }
-
-    @include lg {
-        grid-template-columns: $left-col-width-lg 1fr auto;
-    }
-
-    @include xl {
-        grid-template-columns: $left-col-width-xl 1fr auto;
-    }
-
-    @include xxl {
-        grid-template-columns: $left-col-width-xl 1fr auto;
-    }
+.subheader {
+    width: 100%;
+    position: relative;
 }

@@ -1,30 +1,39 @@
-@import '../styles/';
+@import '../styles/includes';
 
 .content {
-    @include content-height;
-    padding: 0 $pad-content-lg;
-    display: grid;
-    grid-template-columns: 1fr;
-    justify-content: center;
+    padding-top: 0;
+    padding-bottom: $pad-lg;
 
-    @include md {
-        padding: 0 $pad-xxl;
-    }
-
-    @include ltesm {
-        padding: 0;
-    }
+    flex: 99 1 auto;
+    display: flex;
 
     .content-outer {
+        max-width: $xxl-min;
+        @include pagePaddings;
+        margin: 0 auto;
+        width: 100%;
         display: flex;
-        justify-content: center;
 
         .content-inner {
+            margin: 0 auto;
             flex: 1;
-            max-width: $xl-max;
-            padding: 0;
+            max-width: $xxl-min;
             display: flex;
             flex-direction: column;
+            overflow: auto;
+
+            .page-header {
+                display: flex;
+                align-items: center;
+                border-bottom: $border solid $black-5;
+                margin-top: $pad-sm;
+                padding: $pad-xxl 0;
+
+                h1 {
+                    flex: 1;
+                    color: $black-100;
+                }
+            }
         }
     }
 }

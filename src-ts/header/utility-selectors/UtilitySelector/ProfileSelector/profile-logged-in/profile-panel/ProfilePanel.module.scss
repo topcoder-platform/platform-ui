@@ -1,32 +1,59 @@
-@import '../../../../../../lib/styles';
+@use '../../../../../../lib/styles/typography';
+@import '../../../../../../lib/styles/includes';
+
+$arrowTipIconHeight: 9px;
 
 .profile-panel {
-    @extend .body-small;
+    @extend .body-ultra-small;
     position: absolute;
     z-index: 1000;
-    top: calc($pad-xxxxl * 2);
-    right: calc($pad-sm + 2px);
+    top: calc($pad-xxxxl + 4px + $arrowTipIconHeight);
+    right: calc(-1 * $pad-xxxxl / 2);
     width: 168px;
     display: flex;
     flex-direction: column;
-    background: url('./profile-panel-header.png') no-repeat top center;
     filter: drop-shadow(0px 1px 5px rgba(0, 0, 0, 0.2));
 
+    background-color: $tc-white;
+    color: $black-100;
+    border-radius: $pad-sm;
+
+    padding: $pad-sm $pad-lg $pad-lg;
+
+    .arrow-tip {
+        display: flex;
+        position: absolute;
+        top: -1 * $arrowTipIconHeight;
+        right: 15px;
+        svg {
+            path {
+                fill: $tc-white;
+            }
+        }
+    }
+    
     .handle {
-        padding: $pad-xl $pad-xl calc($pad-lg - 1px) $pad-xl;
-        color: $tc-white;
+        @extend .medium-subtitle;
     }
 
-    .logout,
-    .profile {
-        display: block;
-        padding: $pad-xs $pad-xl;
-        background-color: $tc-white;
-        color: $black-100;
+    hr {
+        margin: $pad-sm 0;
     }
 
-    .logout {
-        padding-bottom: $pad-sm;
-        border-radius: 0px 0px $pad-sm $pad-sm;
+    .nav-item {
+        display: flex;
+        cursor: pointer;
+        align-items: center;
+        gap: 4px;
+        + .nav-item {
+            margin-top: $pad-sm;
+        }
+
+        .icon {
+            display: flex;
+            svg {
+                @include icon-lg;
+            }
+        }
     }
 }

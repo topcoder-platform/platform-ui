@@ -1,4 +1,5 @@
-@import '../../lib/styles';
+@use '../../lib/styles/typography';
+@import '../../lib/styles/includes';
 
 $avatar-size-sm: 32px;
 $border-size-sm: $border;
@@ -11,13 +12,13 @@ $border-size-xl: $pad-xs;
     border-radius: 50%;
 
     &.sm {
-        height: calc($avatar-size-sm + 2 * $border-size-sm);
-        width: calc($avatar-size-sm + 2 * $border-size-sm);
+        height: $avatar-size-sm;
+        width: $avatar-size-sm;
     }
 
     &.xl {
-        height: calc($avatar-size-xl + 2 * $border-size-xl);
-        width: calc($avatar-size-xl + 2 * $border-size-xl);
+        height: $avatar-size-xl;
+        width: $avatar-size-xl;
     }
 
     .avatar {
@@ -36,6 +37,10 @@ $border-size-xl: $pad-xs;
             height: $avatar-size-xl;
             width: $avatar-size-xl;
         }
+
+        &.avatar-img {
+            border: 0 none;
+        }
     }
 
     .avatar-letters {
@@ -45,7 +50,7 @@ $border-size-xl: $pad-xs;
         align-items: center;
         color: $tc-white;
         background-color: $blue-100;
-        @include font-weight-medium;
+        font-weight: $font-weight-medium;
 
         &.sm {
             @extend .medium-subtitle;

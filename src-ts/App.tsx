@@ -1,28 +1,23 @@
 import { FC, ReactElement, useContext } from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Routes } from 'react-router-dom'
 import { toast, ToastContainer } from 'react-toastify'
 
 import { EnvironmentConfig } from './config'
 import { Header } from './header'
-import { analyticsInitialize, logInitialize, ProfileProvider } from './lib'
-import { routeContext, RouteContextData } from './lib/route-provider'
+import { analyticsInitialize, logInitialize, routeContext, RouteContextData } from './lib'
 
 analyticsInitialize(EnvironmentConfig)
 logInitialize(EnvironmentConfig)
 
 const App: FC<{}> = () => {
 
-    const { allRoutes }: RouteContextData = useContext(routeContext)
+    const { allRoutes, getRouteElement }: RouteContextData = useContext(routeContext)
 
     const routeElements: Array<ReactElement> = allRoutes
-        .map(route => {
-            // if the route has children, add the wildcard to the path
-            const path: string = `${route.route}${!route.children ? '' : '/*'}`
-            return (<Route path={path} element={route.element} key={route.title} />)
-        })
+        .map(route => getRouteElement(route))
 
     return (
-        <ProfileProvider>
+        <>
             <Header />
             <Routes>
                 {routeElements}
@@ -38,7 +33,7 @@ const App: FC<{}> = () => {
                 draggable
                 pauseOnHover
             />
-        </ProfileProvider>
+        </>
     )
 }
 

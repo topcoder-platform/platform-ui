@@ -1,32 +1,52 @@
-import { EnvironmentConfig } from '../../config'
-import { IconOutline, PlatformRoute } from '../../lib'
+import { Navigate } from 'react-router-dom'
 
-import { Dashboard } from './dashboard'
-import { default as Work, toolTitle } from './Work'
-import { WorkIntake } from './work-intake'
+import { PlatformRoute } from '../../lib'
+
+import Work, { toolTitle } from './Work'
+import { WorkTable } from './work-table'
+
+export const selfServiceRootRoute: string = '/self-service'
+export const selfServiceStartRoute: string = `${selfServiceRootRoute}/wizard`
+
+export function workDetailRoute(workId: string, tab?: string): string {
+    return `${selfServiceRootRoute}/work-items/${workId}${!!tab ? `\?tab=${tab}` : ''}`
+}
+
+export const workRootRoute: string = '/work/dashboard'
 
 export const workRoutes: Array<PlatformRoute> = [
     {
         children: [
             {
                 children: [],
-                element: <Dashboard />,
+                element: <WorkTable />,
                 enabled: true,
-                icon: IconOutline.MailIcon,
                 route: '',
-                title: 'Home',
+                title: toolTitle,
             },
+            // there doesn't seem to be support for optional path params
+            // in react-router-dom v6, so duplicating route
+            // https://reactrouter.com/docs/en/v6/getting-started/overview
             {
                 children: [],
-                element: <WorkIntake />,
+                element: <WorkTable />,
                 enabled: true,
-                route: '/create',
+                route: ':statusKey',
                 title: toolTitle,
             },
         ],
         element: <Work />,
-        enabled: !EnvironmentConfig.DISABLED_TOOLS?.includes(toolTitle),
-        route: '/work',
+        enabled: true,
+        requireAuth: true,
+        route: workRootRoute,
         title: toolTitle,
+    },
+    {
+        children: [],
+        element: <Navigate to={workRootRoute} />,
+        enabled: true,
+        hide: true,
+        route: `${selfServiceRootRoute}/dashboard`,
+        title: 'Obsolete Self Service Dashboard',
     },
 ]

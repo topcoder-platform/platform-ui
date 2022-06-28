@@ -3,8 +3,8 @@ import { Context, createContext } from 'react'
 import { ProfileContextData } from './profile-context-data.model'
 
 export const defaultProfileContextData: ProfileContextData = {
+    changePassword: () => Promise.resolve(),
     initialized: false,
-    updatePassword: () => Promise.resolve(),
     updateProfile: () => Promise.resolve(undefined),
 }
 

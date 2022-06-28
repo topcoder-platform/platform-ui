@@ -1,11 +1,12 @@
-@import "fonts";
-@import "layout";
+@import 'variables/breakpoints';
+@import 'variables/fonts';
+@import 'variables/palette';
 
 body {
     margin: 0;
     padding: 0;
-    @include font-roboto;
-    @include font-black-100;
+    font-family: $font-roboto;
+    color: $black-100;
     font-size: 16px;
     line-height: 24px;
     letter-spacing: 0;
@@ -16,85 +17,187 @@ h1,
 h2,
 h3,
 h4 {
-    @include font-barlow-condensed;
+    font-family: $font-barlow-condensed;
+    font-weight: $font-weight-semibold;
     text-transform: uppercase;
-    margin: 0;
     letter-spacing: 0;
-    padding: 24px 0;
+    margin: 0;
+    padding: 0;
+    border: 0 none;
+
+    &.details {
+        font-family: $font-barlow;
+    }
 }
 
 h1 {
-    @include font-weight-semi-bold;
+    font-family: $font-barlow-condensed;
     font-size: 34px;
     line-height: 32px;
-}
 
-h2,
-h3,
-h4 {
-    @include font-weight-medium;
+    &.details {
+        font-family: $font-barlow;
+    }
 }
 
 h2 {
-    font-size: 28px;
+    font-size: 24px;
     line-height: 28px;
 }
 
 h3 {
-    font-size: 24px;
-    line-height: 24px;
+    font-size: 22px;
+    line-height: 26px;
 }
 
 h4 {
+    font-size: 18px;
+    line-height: 22px;
+}
+
+/* Tabs */
+.large-tab {
+    font-family: $font-barlow-condensed; 
+    font-weight: $font-weight-medium;
     font-size: 20px;
+    line-height: 16px;
+    text-transform: uppercase;
+}
+
+.medium-tab {
+    font-family: $font-barlow; 
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    font-size: 14px;
     line-height: 20px;
 }
 
-hr {
-    color: $black-10;
-    background-color: $black-10;
-    border-radius: 1px;
-    margin: 16px 0px;
-    width: 100%;
+.small-tab {
+    font-family: $font-barlow; 
+    font-weight: $font-weight-medium;
+    font-size: 11px;
+    line-height: 14px;
+}
+
+/* Subtitles */
+.large-subtitle,
+.large-subtitle-bold {
+    font-size: 16px;
+    line-height: 20px;
+}
+
+.large-subtitle {
+    font-weight: $font-weight-medium;
+}
+
+.large-subtitle-bold {
+    font-weight: $font-weight-bold;
 }
 
 .medium-subtitle {
+    font-weight: $font-weight-medium;
     font-size: 14px;
     line-height: 16px;
     letter-spacing: .5px;
 }
 
 .large-tab {
-    @include font-barlow-condensed;
+    font-family: $font-barlow-condensed;
     font-size: 20px;
     line-height: 16px;
     text-transform: uppercase;
-    @include font-weight-medium;
+    font-weight: $font-weight-medium;
+}
+
+/* Body Text */
+
+.body-main {
+    font-family: $font-roboto;
+    font-size: 16px;
+    line-height: 24px;
+}
+
+.body-large {
+    font-family: $font-roboto;
+    font-size: 24px;
+    line-height: 32px;
+}
+
+.body-large-medium {
+    font-weight: $font-weight-medium;
+    font-size: 24px;
+    line-height: 32px;
+    text-align: center;
+}
+
+.body-medium-medium {
+    font-weight: $font-weight-semibold;
+    font-size: 20px;
+    line-height: 26px;
+}
+
+.body-medium-bold {
+    font-weight: $font-weight-bold;
+    font-family: $font-barlow;
+    padding: 0;
+    font-size: 20px;
+    line-height: 22px;
 }
 
 .body-small {
-    font-size: 14px;
-    line-height: 22px;
-    @include font-weight-less-bold;
+    font-size: 14px !important;
+    line-height: 22px !important;
+    font-weight: $font-weight-normal;
+}
+
+.body-small-medium {
+    @extend .body-small;
+    font-weight: $font-weight-medium;
+    letter-spacing: 0;
 }
 
 .body-ultra-small,
 .body-ultra-small-medium {
     font-size: 12px;
     line-height: 18px;
-}
-
-.body-ultra-small {
-    @include font-weight-less-bold;
+    font-weight: $font-weight-normal;
 }
 
 .body-ultra-small-medium {
-    @include font-weight-bold;
+    font-weight: $font-weight-bold;
+}
+
+/* Ultra small */
+.ultra-small,
+.ultra-small-medium,
+.ultra-small-bold {
+    font-family: $font-roboto; 
+    font-size: 11px;
+    line-height: 16px;
 }
 
 .ultra-small {
-    font-size: 11px;
+    font-weight: $font-weight-normal;
+}
+
+.ultra-small-medium {
+    font-weight: $font-weight-medium;
+}
+
+.ultra-small-bold {
+    font-weight: $font-weight-bold;
+}
+
+.overline {
+    font-size: 12px;
+    font-weight: $font-weight-bold;
     line-height: 16px;
-    @include font-weight-less-bold;
-    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.label {
+    font-weight: $font-weight-semibold;
+    font-size: 11px;
+    line-height: 14px;
 }
