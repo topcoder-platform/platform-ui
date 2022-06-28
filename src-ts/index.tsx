@@ -3,19 +3,23 @@ import ReactDOM from 'react-dom'
 import { BrowserRouter } from 'react-router-dom'
 
 import { default as App } from './App'
-import { EnvironmentConfig } from './config'
 import './index.scss'
 import { RouteProvider } from './lib'
 import reportWebVitals from './reportWebVitals'
-import { ToolsRoutes } from './tools'
+import {
+    routeRootLoggedIn,
+    routeRootLoggedOut,
+    ToolsRoutes,
+} from './tools'
 import { UtilsRoutes } from './utils'
 
 ReactDOM.render(
     <BrowserRouter>
         <RouteProvider
-            config={EnvironmentConfig}
             toolsRoutes={[...ToolsRoutes]}
             utilsRoutes={[...UtilsRoutes]}
+            rootLoggedIn={routeRootLoggedIn}
+            rootLoggedOut={routeRootLoggedOut}
         >
             <StrictMode>
                 <App />

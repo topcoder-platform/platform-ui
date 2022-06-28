@@ -1,17 +1,15 @@
-@import "styles/include";
+@import "../../styles/include";
 
 .container {
   display: flex;
   justify-content: space-between;
   max-width: 1920px;
   margin: 32px;
-  background: linear-gradient(
-      90deg,
+  background: linear-gradient(90deg,
       #02225d 0%,
       #002341 50.52%,
       #002538 73.59%,
-      #002740 100%
-    ),
+      #002740 100%),
     #ffffff;
   border-radius: 8px;
 
@@ -23,6 +21,7 @@
 
   .leftContent {
     padding: 71px 32px 60px 0;
+
     .welcomeImage {
       max-height: 646px;
 

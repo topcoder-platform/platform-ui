@@ -1,10 +1,12 @@
-import PageH2 from "components/PageElements/PageH2";
-import PageP from "components/PageElements/PageP";
 import React from "react";
-import "./styles.module.scss";
+
+import PageH2 from "../../../components/PageElements/PageH2";
+import PageP from "../../../components/PageElements/PageP";
+
+import styles from "./styles.module.scss";
 
 const PolicyContent = () => (
-  <div styleName="container">
+  <div className={styles["container"]}>
     <PageH2>STOCK ARTWORK POLICY</PageH2>
     <PageP>
       Your submission CANNOT contain any stock art, clipart, icons, or “free”
@@ -35,32 +37,32 @@ const PolicyContent = () => (
         You are only allowed to use Stock Artwork from the provided websites:
         <ul>
           <li>
-            <a href="http://www.istockphoto.com/" target="_blank">
+            <a href="http://www.istockphoto.com/" target="_blank" rel="noreferrer">
               iStockPhoto.com
             </a>
           </li>
           <li>
-            <a href="https://stock.adobe.com/" target="_blank">
+            <a href="https://stock.adobe.com/" target="_blank" rel="noreferrer">
               Adobe Stock
             </a>
           </li>
           <li>
-            <a href="http://www.shutterstock.com/" target="_blank">
+            <a href="http://www.shutterstock.com/" target="_blank" rel="noreferrer">
               Shutterstock
             </a>
           </li>
           <li>
-            <a href="http://publicdomainarchive.com/" target="_blank">
+            <a href="http://publicdomainarchive.com/" target="_blank" rel="noreferrer">
               Public Domain Archive
             </a>
           </li>
           <li>
-            <a href="https://unsplash.com/" target="_blank">
+            <a href="https://unsplash.com/" target="_blank" rel="noreferrer">
               Unsplash
             </a>
           </li>
           <li>
-            <a href="https://www.pexels.com/" target="_blank">
+            <a href="https://www.pexels.com/" target="_blank" rel="noreferrer">
               Pexels
             </a>
           </li>
@@ -147,21 +149,21 @@ const PolicyContent = () => (
     <PageH2>APPROVED FONT SITES</PageH2>
     <a
       href="https://typekit.com/fonts?collection=trial&purpose=desktop"
-      target="_blank"
+      target="_blank" rel="noreferrer"
     >
       Typekit
     </a>
     &nbsp;(Limited Library)
     <br />
     <br />
-    <a href="https://fonts.google.com/" target="_blank">
+    <a href="https://fonts.google.com/" target="_blank" rel="noreferrer">
       Google Fonts
     </a>
     <br />
     <br />
     <a
       href="https://www.w3schools.com/cssref/css_websafe_fonts.asp"
-      target="_blank"
+      target="_blank" rel="noreferrer"
     >
       Web Safe Fonts
     </a>
@@ -233,42 +235,42 @@ const PolicyContent = () => (
     <ul>
       <li>
         <PageP>
-          <a href="https://iconmonstr.com/" target="_blank">
+          <a href="https://iconmonstr.com/" target="_blank" rel="noreferrer">
             Iconmonstr
           </a>
         </PageP>
       </li>
       <li>
         <PageP>
-          <a href="https://thenounproject.com/" target="_blank">
+          <a href="https://thenounproject.com/" target="_blank" rel="noreferrer">
             The Noun Project
           </a>
         </PageP>
       </li>
       <li>
         <PageP>
-          <a href="https://feathericons.com/" target="_blank">
+          <a href="https://feathericons.com/" target="_blank" rel="noreferrer">
             Feather Icons
           </a>
         </PageP>
       </li>
       <li>
         <PageP>
-          <a href="https://material.io/icons/" target="_blank">
+          <a href="https://material.io/icons/" target="_blank" rel="noreferrer">
             Material Icons
           </a>
         </PageP>
       </li>
       <li>
         <PageP>
-          <a href="https://useiconic.com/open" target="_blank">
+          <a href="https://useiconic.com/open" target="_blank" rel="noreferrer">
             Open Iconic
           </a>
         </PageP>
       </li>
       <li>
         <PageP>
-          <a href="https://www.flaticon.com/" target="_blank">
+          <a href="https://www.flaticon.com/" target="_blank" rel="noreferrer">
             FlatIcon
           </a>
         </PageP>

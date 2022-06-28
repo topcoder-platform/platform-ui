@@ -23,6 +23,7 @@ import {
 } from "../../constants/";
 
 import styles from "./styles.module.scss";
+import classNames from "classnames";
 
 const WorkTypeCard = ({
   className = "",
@@ -35,9 +36,7 @@ const WorkTypeCard = ({
 }) => {
   return (
     <div
-      className={`${styles.workTypeCard} ${styles.workTypeCardSmall}${
-        className ? ` ${className}` : ""
-      }`}
+      className={classNames(styles.workTypeCard, styles.workTypeCardSmall, className)}
       style={{ backgroundImage: `url(${bgImage})` }}
       onClick={ctaButtonOnClick}
     >
@@ -88,9 +87,7 @@ const WorkTypeCardWide = ({
 }) => {
   return (
     <div
-      className={`${styles.workTypeCard} ${styles.workTypeCardWide}${
-        className ? ` ${className}` : ""
-      }`}
+    className={classNames(styles.workTypeCard, styles.workTypeCardWide, className)}
       style={{ backgroundImage: `url(${bgImage})` }}
     >
       {!!SvgIcon ? <SvgIcon /> : !!icon && <img src={icon} alt="" />}
@@ -121,8 +118,10 @@ const SelectWorkType = ({
   setProgressItem,
   toggleSupportModal,
 }) => {
+
+  console.debug('selecting')
   const dispatch = useDispatch();
-  const [isLoading, setLoading] = useState(false);
+  const [isLoading] = useState(false);
   const showSupportModal = useSelector((state) => state.form.showSupportModal);
   const challenge = useSelector((state) => state.challenge);
 
@@ -143,13 +142,6 @@ const SelectWorkType = ({
     });
     setProgressItem(2);
     navigate(selectedItem.startRoute);
-    dispatch(triggerAutoSave(true));
-  };
-
-  const onBack = () => {
-    navigate(`/self-service`);
-    setProgressItem(1);
-    saveWorkType({ workTypeStep: 0 });
     dispatch(triggerAutoSave(true));
   };
 
@@ -177,7 +169,7 @@ const SelectWorkType = ({
       />
       <Breadcrumb items={breadcrumb} />
       <Page>
-        <PageContent className={styles.pageContent}>
+        <PageContent styleName="pageContent">
           <PageH2 className={styles.pageHeading}>Start work</PageH2>
 
           <PageDivider />
@@ -188,12 +180,11 @@ const SelectWorkType = ({
                 title={featuredWorkType.title}
                 subHeading={featuredWorkType.shortDescription}
                 subHeadingMobile={featuredWorkType.shortDescriptionMobile}
-                className={`${styles.heroBackgroundContainer} ${
-                  styles[workTypeClassName(featuredWorkType.title)]
-                }`}
+                className={`${styles.heroBackgroundContainer} ${styles[workTypeClassName(featuredWorkType.title)]}`}
                 bgImage={featuredWorkType.bgImage}
                 ctaButtonOnClick={() => handleClick(featuredWorkType)}
                 content={featuredWorkType.description}
+                key={featuredWorkType.title}
               />
             ))}
           </Slider>

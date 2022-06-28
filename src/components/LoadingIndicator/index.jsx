@@ -6,11 +6,11 @@
 import React from "react";
 import _ from "lodash";
 import PT from "prop-types";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 
 const LoadingIndicator = ({ error }) => {
   return (
-    <div styleName="loading-indicator">
+    <div className={styles["loading-indicator"]}>
       {!error
         ? "Loading..."
         : _.get(error, "response.data.message", error.toString())}

@@ -6,13 +6,17 @@
 import React from "react";
 import PT from "prop-types";
 import cn from "classnames";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 import PuffLoader from "react-spinners/PuffLoader";
 
 const LoadingSpinner = ({ show = false, styleName }) => {
   return (
     <div
-      styleName={cn("loading-spinner", show ? "show" : "hide", styleName || "")}
+      className={cn(
+        styles["loading-spinner"],
+        styles[show ? "show" : "hide"],
+        !!styleName ? styles[styleName] : undefined
+      )}
     >
       <PuffLoader color={"#2196f3"} loading={true} size={100} />
     </div>

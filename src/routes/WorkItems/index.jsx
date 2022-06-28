@@ -8,12 +8,13 @@ import React, {
 import _ from "lodash";
 import PT from "prop-types";
 import { navigate } from "@reach/router";
-import { connect, useSelector, useDispatch } from "react-redux";
-import LoadingSpinner from "components/LoadingSpinner";
-import Page from "components/Page";
-import PageContent from "components/PageContent";
-import { ROUTES } from "constants/";
-import workUtil from "utils/work";
+import { connect } from "react-redux";
+
+import LoadingSpinner from "../../components/LoadingSpinner";
+import Page from "../../components/Page";
+import PageContent from "../../components/PageContent";
+import { ROUTES } from "../../constants/";
+import workUtil from "../../utils/work";
 import Forum from "../Forum";
 
 import {
@@ -28,9 +29,6 @@ import {
   getForumNotifications,
 } from "../../actions/work";
 import { toggleSupportModal } from "../../actions/form";
-import { getUserProfile } from "../../thunks/profile";
-import { getProfile } from "../../selectors/profile";
-import ReviewTable from "../Review/components/ReviewTable";
 
 import {
   Breadcrumb,
@@ -43,9 +41,10 @@ import {
   WorkFeedback,
   WorkStatusItem,
   WorkDetailSolutions,
+  profileContext,
 } from "../../../src-ts";
 
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 
 /**
  * Work Item Page
@@ -68,10 +67,10 @@ const WorkItem = ({
   setIsSavingSurveyDone,
   getForumNotifications,
 }) => {
-  const dispatch = useDispatch();
+
   const [selectedTab, setSelectedTab] = useState("summary");
   const [showSurvey, setShowSurvey] = useState(false);
-  const profileData = useSelector(getProfile);
+  const { profile } = useContext(profileContext)
 
   const workContextData = useContext(workContext);
   const workStatus = !!work
@@ -98,8 +97,8 @@ const WorkItem = ({
       return;
     }
 
-    if (profileData) {
-      if (work.createdBy !== profileData.handle) {
+    if (profile) {
+      if (work.createdBy !== profile.handle) {
         navigate(ROUTES.HOME_PAGE);
       }
     }
@@ -120,6 +119,7 @@ const WorkItem = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     work,
+    profile,
     selectedTab,
     summary,
     solutions,
@@ -135,10 +135,15 @@ const WorkItem = ({
       return;
     }
 
-    if (work || selectedTab === "messaging") {
-      getForumNotifications(work.id);
+    if (selectedTab === "messaging") {
+      getForumNotifications(work.id, profile);
     }
-  }, [work, selectedTab, getForumNotifications]);
+  }, [
+    work,
+    selectedTab,
+    getForumNotifications,
+    profile,
+  ]);
 
   useEffect(() => {
     if (!work) {
@@ -156,10 +161,6 @@ const WorkItem = ({
       setIsSavingSurveyDone(false);
     }
   }, [work, isSavingSurveyDone, setIsSavingSurveyDone, getSummary]);
-
-  useEffect(() => {
-    dispatch(getUserProfile());
-  }, [dispatch]);
 
   // TODO: get routes from a provider
   const breadcrumb = [
@@ -179,29 +180,34 @@ const WorkItem = ({
         { id: "summary", title: "Summary" },
         { id: "details", title: "Details" },
         work &&
-          !workUtil.isMessagesDisabled(work) && {
-            id: "messaging",
-            title: "Messages",
-            badges: [
-              forumNotifications?.unreadNotifications && {
-                count: +forumNotifications?.unreadNotifications,
-                type: "info",
-              },
-            ].filter(Boolean),
-          },
+        !workUtil.isMessagesDisabled(work) && {
+          id: "messaging",
+          title: "Messages",
+          badges: [
+            forumNotifications?.unreadNotifications && {
+              count: +forumNotifications?.unreadNotifications,
+              type: "info",
+            },
+          ].filter(Boolean),
+        },
         {
           id: "solutions",
           title: "Solutions",
           badges: [
             isReviewPhaseEnded &&
-              !!solutionsCount && {
-                count: solutionsCount,
-                type: "info",
-              },
+            !!solutionsCount && {
+              count: solutionsCount,
+              type: "info",
+            },
           ].filter(Boolean),
         },
       ].filter(Boolean),
-    [work, solutionsCount, isReviewPhaseEnded]
+    [
+      work,
+      solutionsCount,
+      isReviewPhaseEnded,
+      forumNotifications,
+    ]
   );
 
   const onTabChange = useCallback((tabId) => {
@@ -226,7 +232,7 @@ const WorkItem = ({
   return (
     <>
       <LoadingSpinner show={isLoadingWork || isLoadingSolutions} />
-      <Page styleName="page">
+      <Page className={styles["page"]}>
         <PageContent styleName="pageContent">
           <Breadcrumb items={breadcrumb} />
           <WorkDetailHeader
@@ -235,9 +241,9 @@ const WorkItem = ({
           />
 
           {work && (
-            <div styleName="status-line">
+            <div className={styles["status-line"]}>
               {work.tags[0] && (
-                <div styleName="status-label">{work.tags[0]}</div>
+                <div className={styles["status-label"]}>{work.tags[0]}</div>
               )}
               <WorkStatusItem workStatus={workStatus} />
             </div>
@@ -249,7 +255,7 @@ const WorkItem = ({
             onChange={onTabChange}
           />
 
-          <div styleName="tabs-contents">
+          <div className={styles["tabs-contents"]}>
             {selectedTab === "summary" && (
               <div>
                 {summary && (

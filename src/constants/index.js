@@ -15,15 +15,15 @@ import {
 } from '../../src-ts/tools/work'
 import WebsiteDesignPdf1 from "../assets/pdf/WebDesign-1.pdf";
 import WebsiteDesignPdf2 from "../assets/pdf/WebDesign-2.pdf";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 
-import MyWorkActiveIcon from "../assets/images/icon-my-work-active.svg";
+import { ReactComponent as MyWorkActiveIcon} from "../assets/images/icon-my-work-active.svg";
 import exampleImage1 from "../assets/images/design-example-image1.png";
 import exampleImage2 from "../assets/images/design-example-image2.png";
-import MyWorkIcon from "../assets/images/icon-my-work.svg";
+import { ReactComponent as MyWorkIcon} from "../assets/images/icon-my-work.svg";
 import PageUl from "../components/PageElements/PageUl";
 import PageP from "../components/PageElements/PageP";
-import copyFileIcon from "../assets/images/icon-copy-file.svg";
+import { ReactComponent as copyFileIcon} from "../assets/images/icon-copy-file.svg";
 import workUtil from "../utils/work";
 
 import * as dataExplorationConfigs from "./products/DataExploration";
@@ -302,20 +302,20 @@ export const webWorkTypes = [
     helperBannerContent: (
       <>
         <br />
-        <div styleName="helpBanner">
+        <div className={styles["helpBanner"]}>
           <PageP>
             You will receive up to five unique visual designs for the main page
             of your website, in an industry-standard format. Visual designs are
             the first step in creating a functional website. Topcoder can help
             you with launching your website once you have approved your design.
           </PageP>
-          <div styleName="sampleImages">
-            <a href={WebsiteDesignPdf1} target="_blank">
-              <img styleName="imgBanner" src={exampleImage1} />
+          <div className={styles["sampleImages"]}>
+            <a href={WebsiteDesignPdf1} target="_blank" rel="noreferrer">
+              <img className={styles["imgBanner"]} src={exampleImage1} alt="Example 1"/>
             </a>
             &nbsp;
-            <a href={WebsiteDesignPdf2} target="_blank">
-              <img src={exampleImage2} />
+            <a href={WebsiteDesignPdf2} target="_blank" rel="noreferrer">
+              <img src={exampleImage2} alt="Example2"/>
             </a>
           </div>
         </div>

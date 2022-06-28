@@ -1,4 +1,4 @@
-@import "styles/include";
+@import "../../../styles/include";
 
 .form-input-checkbox {
   display: flex;
@@ -53,6 +53,7 @@
 
 .inline {
   display: inline-block;
+
   .span {
     color: $link-blue;
     text-decoration: underline;

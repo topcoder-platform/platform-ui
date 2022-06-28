@@ -1,20 +1,22 @@
 import _ from "lodash";
 import moment from "moment";
+
 import config from "../../config";
-import { axiosInstance as axios } from "./requestInterceptor";
-import { WORK_TIMELINE, CHALLENGE_STATUS, WORK_STATUSES } from "constants";
-import workUtil from "utils/work";
-import { triggerDownload } from "utils";
+import { xhrGetAsync, xhrGetBlobAsync, xhrPatchAsync } from "../../src-ts";
+import { WORK_TIMELINE, CHALLENGE_STATUS, WORK_STATUSES } from "../constants";
+import workUtil from "../utils/work";
+import { triggerDownload } from "../utils";
+
 import { getChallengeDetails } from "./challenge";
 
 export const getWork = async (id) => {
   const challengeId = id;
 
-  const response = await axios.get(
+  const response = await xhrGetAsync(
     `${config.API.V5}/challenges/${challengeId}`
   );
 
-  const data = response.data;
+  const data = response;
   if (data.status.startsWith("Cancelled")) {
     data.status = CHALLENGE_STATUS.CANCELLED;
   }
@@ -128,10 +130,10 @@ export const getDetails = (work) => {
 };
 
 export const getSolutionsCount = async (workId) => {
-  const response = await axios.get(
+  const response = await xhrGetAsync(
     `${config.API.V5}/submissions?challengeId=${workId}&perPage=500`
   );
-  const submissions = response.data;
+  const submissions = response;
   return submissions.length;
 
   // const response = await axios.head(
@@ -143,19 +145,19 @@ export const getSolutionsCount = async (workId) => {
 export const getSolutions = async (workId) => {
   const challenge = await getChallengeDetails(workId);
   if (!challenge?.winners || challenge?.winners?.length === 0) return [];
-  const response = await axios.get(
+  const response = await xhrGetAsync(
     `${config.API.V5}/submissions?challengeId=${workId}&perPage=500`
   );
 
-  const submissions = response.data;
+  const submissions = response;
   const res = [];
 
   for (const winner of challenge.winners) {
     try {
-      const memberRes = await axios.get(
+      const memberRes = await xhrGetAsync(
         `${config.API.V5}/members/${winner.handle}`
       );
-      const { userId } = memberRes.data;
+      const { userId } = memberRes;
       res.push({
         ..._.find(
           submissions,
@@ -170,13 +172,13 @@ export const getSolutions = async (workId) => {
 
 export const downloadSolution = async (solutionId) => {
   const submissionId = solutionId;
-  const response = await axios({
+  const response = await xhrGetBlobAsync({
     url: `${config.API.V5}/submissions/${submissionId}/download`,
     method: "GET",
     responseType: "blob",
   });
 
-  const blob = response.data;
+  const blob = response;
   triggerDownload(`submission-${solutionId}.zip`, blob);
 };
 
@@ -184,15 +186,15 @@ export const saveSurvey = async (workId, metadata) => {
   const challengeId = workId;
   const body = { metadata };
 
-  const response = await axios.patch(
+  const response = await xhrPatchAsync(
     `${config.API.V5}/challenges/${challengeId}`,
     JSON.stringify(body)
   );
 
-  return response.data;
+  return response;
 };
 
-export default {
+const output = {
   getWork,
   getSummary,
   getDetails,
@@ -201,3 +203,5 @@ export default {
   downloadSolution,
   saveSurvey,
 };
+
+export default output

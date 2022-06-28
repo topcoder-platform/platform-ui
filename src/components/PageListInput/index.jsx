@@ -4,12 +4,13 @@
  * A List Of grouped Inputs, used in build my profile page
  */
 import cn from "classnames";
-import Button from "components/Button";
-import { BUTTON_SIZE, BUTTON_TYPE } from "constants/";
 import PT from "prop-types";
 import React from "react";
-import { currencyFormat } from "utils/";
-import "./styles.module.scss";
+
+import Button from "../../components/Button";
+import { BUTTON_SIZE, BUTTON_TYPE } from "../../constants/";
+import { currencyFormat } from "../../utils/";
+import styles from "./styles.module.scss";
 
 const PageListInput = ({
   name,
@@ -20,10 +21,10 @@ const PageListInput = ({
   pageCost,
 }) => {
   return (
-    <div styleName={cn("page-list-input", styleName || "")}>
+    <div className={cn(styles["page-list-input"], !!styleName ? styles[styleName] : undefined)}>
       <div>
         <div>{children}</div>
-        <div styleName="add-listinput-item-button">
+        <div className={styles["add-listinput-item-button"]}>
           <div
             role="button"
             tabIndex={0}
@@ -31,7 +32,7 @@ const PageListInput = ({
           >
             {canAdd && (
               <div>
-                <p styleName="pageText">NEED ANOTHER PAGE?</p>
+                <p className={styles["pageText"]}>NEED ANOTHER PAGE?</p>
                 <Button type={BUTTON_TYPE.SECONDARY} size={BUTTON_SIZE.MEDIUM}>
                   ADD PAGE: +{currencyFormat(pageCost)}
                 </Button>

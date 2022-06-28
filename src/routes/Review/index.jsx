@@ -1,45 +1,44 @@
 import { navigate, redirectTo } from "@reach/router";
-import Button from "components/Button";
-import LoadingSpinner from "components/LoadingSpinner";
-import config from "../../../config";
 import { Elements, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import Page from "components/Page";
-import PageContent from "components/PageContent";
-import PageDivider from "components/PageDivider";
-import PageFoot from "components/PageElements/PageFoot";
-import { resetIntakeForm } from "../../actions/form";
 import { toastr } from "react-redux-toastr";
-import Progress from "components/Progress";
-import { BUTTON_SIZE, BUTTON_TYPE, MAX_COMPLETED_STEP } from "constants/";
 import React, { useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
+import _ from "lodash";
+
+import { Breadcrumb, OrderContractModal, WorkType } from "../../../src-ts";
+import Button from "../../components/Button";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import config from "../../../config";
+import Page from "../../components/Page";
+import PageContent from "../../components/PageContent";
+import PageDivider from "../../components/PageDivider";
+import PageFoot from "../../components/PageElements/PageFoot";
+import { resetIntakeForm } from "../../actions/form";
+import { BUTTON_SIZE, BUTTON_TYPE, MAX_COMPLETED_STEP } from "../../constants/";
 import PaymentForm from "./components/PaymentForm";
 import { triggerAutoSave, triggerCookieClear } from "../../actions/autoSave";
 import { setProgressItem } from "../../actions/progress";
-import BackIcon from "../../assets/images/icon-back-arrow.svg";
+import { ReactComponent as BackIcon } from "../../assets/images/icon-back-arrow.svg";
 import ReviewTable from "./components/ReviewTable";
-import withAuthentication from "../../hoc/withAuthentication";
-import ServicePrice from "components/ServicePrice";
+import ServicePrice from "../../components/ServicePrice";
 import * as services from "../../services/payment";
-import { getUserProfile } from "../../thunks/profile";
 import { activateChallenge } from "../../services/challenge";
-import "./styles.module.scss";
 import {
   getWebsiteDesignPriceAndTimelineEstimate,
   getDataExplorationPriceAndTimelineEstimate,
   getFindMeDataPriceAndTimelineEstimate,
   getDataAdvisoryPriceAndTimelineEstimate,
   currencyFormat,
-} from "utils/";
-import _ from "lodash";
+} from "../../utils/";
 import {
   loadChallengeId,
   setCookie,
   clearCachedChallengeId,
 } from "../../autoSaveBeforeLogin";
-import { Breadcrumb, OrderContractModal, WorkType } from "../../../src-ts";
+
 import AboutYourProject from "./components/AboutYourProject";
+import styles from "./styles.module.scss";
 
 const stripePromise = loadStripe(config.STRIPE.API_KEY, {
   apiVersion: config.STRIPE.API_VERSION,
@@ -152,13 +151,6 @@ const Review = ({
     setLoading(true);
     setPaymentFailed(false);
 
-    const numOfPages = _.get(fullState, "form.pageDetails.pages.length", 1);
-    const numOfDevices = _.get(
-      fullState,
-      "form.basicInfo.selectedDevice.option.length",
-      1
-    );
-
     const description = `Work Item #${challengeId}\n${_.get(
       fullState,
       "form.basicInfo.projectTitle.value",
@@ -189,10 +181,6 @@ const Review = ({
         setLoading(false);
       });
   };
-
-  useEffect(() => {
-    dispatch(getUserProfile());
-  }, [dispatch]);
 
   const isFormValid =
     formData.cardName &&
@@ -235,34 +223,34 @@ const Review = ({
             stickerPrice={estimate?.stickerPrice}
             serviceType={workType?.selectedWorkTypeDetail}
           />
-          <br styleName="mobileHidden" />
-          <br styleName="mobileHidden" />
+          <br className={styles["mobileHidden"]} />
+          <br className={styles["mobileHidden"]} />
           {secondaryBanner}
-          {introText && <div styleName="infoAlert">{introText}</div>}
-          <div styleName="splitView">
-            <div styleName="reviewContainer">
+          {introText && <div className={styles["infoAlert"]}>{introText}</div>}
+          <div className={styles["splitView"]}>
+            <div className={styles["reviewContainer"]}>
               <ReviewTable
                 workItemConfig={workItemConfig}
                 formData={intakeFormData}
               />
-              <div styleName="hideMobile">
+              <div className={styles["hideMobile"]}>
                 <AboutYourProject />
               </div>
             </div>
-            <div styleName="paymentWrapper">
-              <div styleName="paymentBox">
-                <div styleName="total">
+            <div className={styles["paymentWrapper"]}>
+              <div className={styles["paymentBox"]}>
+                <div className={styles["total"]}>
                   {estimate.stickerPrice && (
-                    <span styleName="originalPrice">
+                    <span className={styles["originalPrice"]}>
                       {currencyFormat(estimate.stickerPrice)}
                     </span>
                   )}
                   {currencyFormat(estimate.total)}
                 </div>
 
-                <div styleName="totalInfo">Total Payment</div>
+                <div className={styles["totalInfo"]}>Total Payment</div>
 
-                <PageDivider styleName="pageDivider" />
+                <PageDivider className={styles["pageDivider"]} />
 
                 <PaymentForm
                   formData={formData}
@@ -270,38 +258,38 @@ const Review = ({
                   onOpenContractModal={setIsOrderContractModalOpen}
                 />
                 {paymentFailed && (
-                  <div styleName="error">
+                  <div className={styles["error"]}>
                     Your card was declined. Please try a different card.
                   </div>
                 )}
 
-                <div styleName="paymentButtonContainer">
+                <div className={styles["paymentButtonContainer"]}>
                   <Button
                     disabled={!isFormValid || isLoading}
                     size={BUTTON_SIZE.MEDIUM}
                     onClick={onNext}
-                    styleName="wideButton"
+                    className={styles["wideButton"]}
                   >
                     PAY ${estimate.total}
                   </Button>
                 </div>
               </div>
             </div>
-            <div styleName="showOnlyMobile">
+            <div className={styles["showOnlyMobile"]}>
               <AboutYourProject />
             </div>
           </div>
           <PageDivider />
 
           <PageFoot>
-            <div styleName="footerContent">
+            <div className={styles["footerContent"]}>
               <div>
                 <Button
                   size={BUTTON_SIZE.MEDIUM}
                   type={BUTTON_TYPE.SECONDARY}
                   onClick={onBack}
                 >
-                  <div styleName="backButtonWrapper">
+                  <div className={styles["backButtonWrapper"]}>
                     <BackIcon />
                   </div>
                 </Button>
@@ -331,4 +319,4 @@ const mapDispatchToProps = {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withAuthentication(ReviewWrapper));
+)(ReviewWrapper);

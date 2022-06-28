@@ -158,8 +158,8 @@ const PaymentForm = ({ formData, setFormData, onOpenContractModal }) => {
           ></FormInputText>
         </div>
       </FormField>
-      <div styleName="contract">
-        <div styleName="checkbox">
+      <div className={styles["contract"]}>
+        <div className={styles["checkbox"]}>
           <FormInputCheckbox
             label=""
             checked={formData.checked}
@@ -172,7 +172,7 @@ const PaymentForm = ({ formData, setFormData, onOpenContractModal }) => {
           <span
             role="button"
             tabIndex={0}
-            styleName="link"
+            className={styles["link"]}
             onClick={() => onOpenContractModal(true)}
           >
             Order Contract
@@ -180,8 +180,8 @@ const PaymentForm = ({ formData, setFormData, onOpenContractModal }) => {
         </div>
       </div>
 
-      <div styleName="infoBox">
-        <div styleName="confirmationBox">
+      <div className={styles["infoBox"]}>
+        <div className={styles["confirmationBox"]}>
           A hold will be placed on your card for the full amount of the project.
           Once your work is live on the Topcoder platform, you will be charged.
         </div>

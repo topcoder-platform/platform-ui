@@ -4,8 +4,8 @@
 import PageRow from "../PageElements/PageRow";
 import PT from "prop-types";
 import React from "react";
-import "./styles.module.scss";
-import WebsiteDesignIcon from "../../assets/images/website-design.svg";
+import styles from "./styles.module.scss";
+import { ReactComponent as WebsiteDesignIcon} from "../../assets/images/website-design.svg";
 import HelpIcon from "../HelpIcon";
 import { currencyFormat } from "../../utils/";
 
@@ -19,22 +19,22 @@ const ServicePrice = ({
   hideTitle = false,
 }) => {
   return (
-    <div styleName="container">
-      <PageRow styleName="inline">
-        <div styleName="iconWrapper">{showIcon && icon && <>{icon}</>}</div>
+    <div className={styles["container"]}>
+      <PageRow className={styles["inline"]}>
+        <div className={styles["iconWrapper"]}>{showIcon && icon && <>{icon}</>}</div>
         {showIcon && !icon && <WebsiteDesignIcon />}
         <div>
-          {!hideTitle && <p styleName="serviceTitle">{serviceType}</p>}
-          <div styleName="priceAndDuration">
+          {!hideTitle && <p className={styles["serviceTitle"]}>{serviceType}</p>}
+          <div className={styles["priceAndDuration"]}>
             {stickerPrice && (
-              <span styleName="stickerPrice">
+              <span className={styles["stickerPrice"]}>
                 {currencyFormat(stickerPrice)}
               </span>
             )}
-            <span styleName="discount">{currencyFormat(price)}</span>
-            <span styleName="separator" />
-            <span styleName="days">{duration}&nbsp;Days</span>
-            <div styleName="filler" />
+            <span className={styles["discount"]}>{currencyFormat(price)}</span>
+            <span className={styles["separator"]} />
+            <span className={styles["days"]}>{duration}&nbsp;Days</span>
+            <div className={styles["filler"]} />
             <HelpIcon>
               The price and project length is dynamic and dependent on the
               variables selected as you define your work.

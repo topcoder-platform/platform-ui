@@ -1,5 +1,5 @@
 import { ACTIONS } from "../constants";
-import { createChallenge } from "services/challenge";
+import { createChallenge } from "../services/challenge";
 import { cacheChallengeId } from "../autoSaveBeforeLogin";
 
 export const getChallenge = (challenge) => ({

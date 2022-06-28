@@ -1,32 +1,39 @@
-@import "styles/include";
+@import "../../../styles/include";
 
 .page-row {
   display: flex;
   align-items: center;
+
   @include desktop {
     &.page-row-half {
-      & > div {
+      &>div {
         width: 50%;
       }
-      & > div:nth-child(1) {
+
+      &>div:nth-child(1) {
         margin-right: 20px;
       }
-      & > div:nth-child(2) {
+
+      &>div:nth-child(2) {
         margin-left: 20px;
       }
     }
-    &.page-row-normal > div:nth-child(1) {
+
+    &.page-row-normal>div:nth-child(1) {
       width: 40%;
       padding-right: 100px;
       min-width: 500px;
     }
-    &.page-row-normal > div:nth-child(2) {
+
+    &.page-row-normal>div:nth-child(2) {
       width: 60%;
     }
   }
+
   @include mobile {
     flex-direction: column;
-    & > div {
+
+    &>div {
       width: 100%;
     }
   }

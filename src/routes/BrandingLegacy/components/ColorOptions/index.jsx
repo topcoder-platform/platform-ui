@@ -5,18 +5,17 @@ import classNames from "classnames";
 import PT from "prop-types";
 import React from "react";
 import _ from "lodash";
-import { v4 as uuidV4 } from "uuid";
-import CheckIcon from "../../../../assets/images/check.svg";
-import "./styles.module.scss";
+import { ReactComponent as CheckIcon } from "../../../../assets/images/check.svg";
+import styles from "./styles.module.scss";
 
 const ColorOptions = ({ colors, selectedColor, onSelect }) => {
   const anyColor = colors.find((x) => x.isAny);
   return (
-    <div styleName="colorOptions">
+    <div className={styles["colorOptions"]}>
       {colors.map((color, index) => (
         <div
-          styleName="colorWrapper"
-          key={uuidV4}
+          className={styles["colorWrapper"]}
+          key={index}
           role="button"
           tabIndex={0}
           onClick={() => {
@@ -45,15 +44,15 @@ const ColorOptions = ({ colors, selectedColor, onSelect }) => {
           }}
         >
           <div
-            styleName={classNames(
-              "color",
-              color.className,
-              _.includes(selectedColor.value, color.name) ? "selected" : null
+            className={classNames(
+              styles["color"],
+              styles[color.className],
+              _.includes(selectedColor.value, color.name) ? styles["selected"] : null
             )}
           >
             <CheckIcon />
           </div>
-          <div styleName="colorName">{color.name}</div>
+          <div className={styles["colorName"]}>{color.name}</div>
         </div>
       ))}
     </div>
@@ -66,7 +65,7 @@ ColorOptions.defaultProps = {
 
 ColorOptions.propTypes = {
   colors: PT.arrayOf(PT.shape()),
-  selectedColor: PT.number,
+  selectedColor: PT.object,
   onSelect: PT.func,
 };
 

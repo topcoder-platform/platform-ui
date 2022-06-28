@@ -2,7 +2,7 @@
  * `progress` reducer
  */
 
-import { ACTIONS } from "constants/";
+import { ACTIONS } from "../constants/";
 
 const initialState = {
   triggered: false,

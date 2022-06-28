@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useRef } from "react";
 import PT from "prop-types";
 import Carousel from "react-elastic-carousel";
 
-import ImgArrowRight from "../../assets/images/arrow-right.svg";
+import { ReactComponent as ImgArrowRight} from "../../assets/images/arrow-right.svg";
 
 import styles from "./styles.module.scss";
 import "./styles.scss";

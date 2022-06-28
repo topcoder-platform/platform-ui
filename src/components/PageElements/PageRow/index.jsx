@@ -6,15 +6,15 @@
 import React from "react";
 import PT from "prop-types";
 import cn from "classnames";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 
-const PageRow = ({ children, half = false, styleName, ...props }) => {
+const PageRow = ({ children, half = false, className, ...props }) => {
   return (
     <div
-      styleName={cn(
-        "page-row",
-        half ? "page-row-half" : "page-row-normal",
-        styleName || ""
+      className={cn(
+        styles["page-row"],
+        styles[half ? "page-row-half" : "page-row-normal"],
+        className,
       )}
       {...props}
     >

@@ -4,15 +4,16 @@
 import classNames from "classnames";
 import PT from "prop-types";
 import React, { useEffect, useState } from "react";
-import { currencyFormat } from "utils/";
-import { v4 as uuidv4 } from "uuid";
-import ComputerIconActive from "../../../../assets/images/icon-device-computer-active.svg";
-import ComputerIcon from "../../../../assets/images/icon-device-computer.svg";
-import PhoneIconActive from "../../../../assets/images/icon-device-phone-active.svg";
-import PhoneIcon from "../../../../assets/images/icon-device-phone.svg";
-import TabletIconActive from "../../../../assets/images/icon-device-tablet-active.svg";
-import TabletIcon from "../../../../assets/images/icon-device-tablet.svg";
-import "./styles.module.scss";
+
+import { currencyFormat } from "../../../../utils/";
+import { ReactComponent as ComputerIconActive } from "../../../../assets/images/icon-device-computer-active.svg";
+import { ReactComponent as ComputerIcon } from "../../../../assets/images/icon-device-computer.svg";
+import { ReactComponent as PhoneIconActive } from "../../../../assets/images/icon-device-phone-active.svg";
+import { ReactComponent as PhoneIcon } from "../../../../assets/images/icon-device-phone.svg";
+import { ReactComponent as TabletIconActive } from "../../../../assets/images/icon-device-tablet-active.svg";
+import { ReactComponent as TabletIcon } from "../../../../assets/images/icon-device-tablet.svg";
+
+import styles from "./styles.module.scss";
 
 const DeviceTypes = ({ numOfPages, selectedOptions, onSelect }) => {
   const [selectedIndexes, setSelectedIndexes] = useState([]);
@@ -79,26 +80,26 @@ const DeviceTypes = ({ numOfPages, selectedOptions, onSelect }) => {
   };
 
   return (
-    <div styleName="device-types">
+    <div className={styles["device-types"]}>
       {types.map((type, index) => {
         const isActive = selectedIndexes.includes(index) || type.included;
         return (
           <div
-            styleName="device"
-            key={uuidv4()}
+            className={styles["device"]}
+            key={index}
             role="button"
             tabIndex={0}
             onClick={() => handleDeviceSelection(index, type)}
           >
             <div
-              styleName={classNames("iconWrapper", isActive ? "active" : null)}
+              className={classNames(styles["iconWrapper"], isActive ? styles["active"] : null)}
             >
               {isActive ? type.iconActive : type.icon}
             </div>
-            <div styleName="title">{type.title}</div>
-            <div styleName="subTitle">{type.description}</div>
+            <div className={styles["title"]}>{type.title}</div>
+            <div className={styles["subTitle"]}>{type.description}</div>
             {type.subDescription && (
-              <div styleName="subDescription">{type.subDescription}</div>
+              <div className={styles["subDescription"]}>{type.subDescription}</div>
             )}
           </div>
         );

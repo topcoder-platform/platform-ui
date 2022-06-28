@@ -1,4 +1,4 @@
-@import "styles/include";
+@import "../../../../styles/include";
 
 .styleOptions {
 
@@ -7,9 +7,11 @@
   gap: 24px;
   margin-bottom: 34px;
   justify-content: center;
+
   @include mobile {
     display: inline-block;
   }
+
   .styleWrapper {
     .style {
       position: relative;
@@ -48,42 +50,49 @@
           background-size: cover;
         }
       }
+
       &.light-airy {
         .preview {
           background: url('../../../../assets/images/products/website-design/light-airy.png');
           background-size: cover;
         }
       }
+
       &.fun-playful {
         .preview {
           background: url('../../../../assets/images/products/website-design/fun-playful.png');
           background-size: cover;
         }
       }
+
       &.mature-serious {
         .preview {
           background: url('../../../../assets/images/products/website-design/mature-serious.png');
           background-size: cover;
         }
       }
+
       &.simple-minimalist {
         .preview {
           background: url('../../../../assets/images/products/website-design/simple-minimalist.png');
           background-size: cover;
         }
       }
+
       &.vibrant-colorful {
         .preview {
           background: url('../../../../assets/images/products/website-design/vibrant-colorful.png');
           background-size: cover;
         }
       }
+
       &.soft-organic {
         .preview {
           background: url('../../../../assets/images/products/website-design/soft-organic.png');
           background-size: cover;
         }
       }
+
       &.bold-rugged {
         .preview {
           background: url('../../../../assets/images/products/website-design/bold-ragged.png');
@@ -94,6 +103,7 @@
 
     .liked {
       fill: $green1;
+
       * {
         fill: $green1;
       }
@@ -101,6 +111,7 @@
 
     .disliked {
       fill: $green1;
+
       * {
         fill: $green1;
       }

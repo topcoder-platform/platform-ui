@@ -15,19 +15,19 @@ const WorkDetailSolutions: FC<WorkDetailSolutionsProps> = (props: WorkDetailSolu
 
     const workContextData: WorkContextData = useContext(workContext)
 
-    if (!props.challenge) {
-        return <></>
-    }
-
-    const work: Work = workContextData.createFromChallenge(props.challenge)
+    const work: Work | undefined = !!props.challenge ? workContextData.createFromChallenge(props.challenge) :   undefined
 
     const isSolutionsReady: boolean = useMemo(() => {
-        const activeStepName: string = work.progress.steps[work.progress.activeStepIndex]?.name
+        const activeStepName: string | undefined = work?.progress.steps[work?.progress.activeStepIndex]?.name
         return (activeStepName === WorkStatus.ready || activeStepName === WorkStatus.done)
     }, [
         work,
         props.solutions,
     ])
+
+    if (!props.challenge) {
+        return <></>
+    }
 
     return (
         <div className={styles.wrap}>
@@ -45,7 +45,7 @@ const WorkDetailSolutions: FC<WorkDetailSolutionsProps> = (props: WorkDetailSolu
                 isSolutionsReady={isSolutionsReady}
                 onDownload={props.onDownload}
                 solutions={props.solutions}
-                work={work}
+                work={work as Work}
             />
         </div>
     )

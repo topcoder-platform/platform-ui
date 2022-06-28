@@ -47,6 +47,7 @@ export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { chi
             const contextData: ProfileContextData = {
                 changePassword,
                 initialized: true,
+                isLoggedIn: !!profile,
                 profile,
                 updateProfile,
             }

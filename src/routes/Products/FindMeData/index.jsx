@@ -1,22 +1,24 @@
 import { Router } from "@reach/router";
 import React from "react";
+
+import { WorkType } from "../../../../src-ts";
+
 import Review from "../../Review";
 import ThankYou from "../../ThankYou";
 import LoginPrompt from "../../LoginPrompt";
 import BasicInfo from "../components/BasicInfo";
 import config from "../../../../config";
-import FindMeDataIcon from "../../../assets/images/find-me-data-icon.svg";
-import HelpBanner from "components/HelpBanner";
+import { ReactComponent as FindMeDataIcon } from "../../../assets/images/find-me-data-icon.svg";
+import HelpBanner from "../../../components/HelpBanner";
 import { webWorkTypes } from "../../../constants/index";
 import FeaturedWorkTypeBanner from "../../../components/Banners/FeaturedWorkTypeBanner";
-import { WorkType } from "../../../../src-ts";
 
 export default function FindMeData({ isLoggedIn }) {
   const findMeData = webWorkTypes.find(
     (workType) => workType.type === WorkType.findData
   );
 
-  const { title, subTitle, helperBannerTitle, helperBannerContent } =
+  const { title, helperBannerTitle, helperBannerContent } =
     findMeData;
 
   return (

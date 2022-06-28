@@ -1,4 +1,4 @@
-@import "styles/include";
+@import "../../../../styles/include";
 
 .colorOptions {
 
@@ -6,20 +6,24 @@
   flex-wrap: wrap;
   gap: 24px;
   margin-bottom: 34px;
+
   @include mobile {
     justify-content: flex-start;
     //margin-left: -6px;
   }
+
   .colorWrapper {
     .color {
       position: relative;
       width: 120px;
       height: 80px;
       padding: 16px;
+
       @include mobile {
         width: 74px;
         height: 64px;
       }
+
       cursor: pointer;
 
       border: 1px solid $gui-kit-gray-90;
@@ -42,33 +46,43 @@
       &.blues {
         background: linear-gradient(180deg, #2492EB 0%, #104378 100%);
       }
+
       &.aquas {
         background: linear-gradient(180deg, #4BB7C2 0%, #215563 100%);
       }
+
       &.greens {
         background: linear-gradient(180deg, #98C739 0%, #435B1D 100%);
       }
+
       &.purples {
         background: linear-gradient(180deg, #6D78B0 0%, #31375B 100%);
       }
+
       &.pinks {
         background: linear-gradient(180deg, #E16CA0 0%, #643353 100%);
       }
+
       &.reds {
         background: linear-gradient(180deg, #CC4645 0%, #5B2024 100%);
       }
+
       &.oranges {
         background: linear-gradient(180deg, #F47E58 0%, #6E3A2C 100%);
       }
+
       &.yellows {
         background: linear-gradient(180deg, #F5C257 0%, #6C5A2C 100%);
       }
+
       &.lightGrays {
         background: linear-gradient(180deg, #C3C5CA 0%, #828692 100%);
       }
+
       &.darkGrays {
         background: linear-gradient(180deg, #555962 0%, #18191B 100%);
       }
+
       &.angularGradient {
         background: conic-gradient(from 180deg at 50% 50%, #2492EB 0deg, #4BB7C2 56.25deg, #98C739 106.88deg, #6D78B0 159.38deg, #E16CA0 208.13deg, #CC4645 258.75deg, #F47E58 309.38deg, #F5C257 360deg);
       }
@@ -82,6 +96,7 @@
       line-height: 26px;
       text-align: center;
       margin-top: 8px;
+
       @include mobile {
         font-size: 14px;
       }

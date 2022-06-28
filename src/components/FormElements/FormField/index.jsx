@@ -6,7 +6,7 @@
 import cn from "classnames";
 import PT from "prop-types";
 import React from "react";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 
 const FormField = ({
   children,
@@ -26,25 +26,27 @@ const FormField = ({
   };
   return (
     <div
-      className={cn("form-field-wrapper", className || "")}
-      styleName={cn(
-        "form-field-wrapper",
-        styleName || "",
-        helperText ? "helper" : null
+      className={cn(
+        styles["form-field-wrapper"],
+        className || "",
+        !!styleName ? styles[styleName] : undefined,
+        helperText ? styles["helper"] : null
       )}
     >
       <div
-        className={cn("form-field")}
-        styleName={cn(
-          "form-field",
-          disabled ? "disabled" : null,
-          props.formTitleStyle ? props.formTitleStyle : null
+        className={cn(
+          styles["form-field"],
+          disabled ? styles["disabled"] : null,
+          props.formTitleStyle ? styles[props.formTitleStyle] : null
         )}
         {...props}
       >
         <div
-          className={cn(props.labelStyle)}
-          styleName={cn("label", props.labelStyle ? props.labelStyle : null)}
+          className={cn(
+            styles["label"],
+            props.labelStyle ? styles[props.labelStyle ]: null,
+            props.labelStyle,
+          )}
           onClick={handleClick}
           role="presentation"
         >
@@ -52,9 +54,9 @@ const FormField = ({
         </div>
         {children}
       </div>
-      {helperText && <div styleName="helperText">{helperText}</div>}
+      {helperText && <div className={styles["helperText"]}>{helperText}</div>}
 
-      <div className="error" styleName="error">
+      <div className={cn(styles["error"], "error")}>
         {props.error}
       </div>
     </div>

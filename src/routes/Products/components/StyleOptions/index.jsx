@@ -5,12 +5,11 @@ import classNames from "classnames";
 import PT from "prop-types";
 import React from "react";
 import _ from "lodash";
-import { v4 as uuidV4 } from "uuid";
-import LikeIcon from "../../../../assets/images/thumbsup.svg";
-import DislikeIcon from "../../../../assets/images/thumbsdown.svg";
+import { ReactComponent as LikeIcon } from "../../../../assets/images/thumbsup.svg";
+import { ReactComponent as DislikeIcon } from "../../../../assets/images/thumbsdown.svg";
 import styles from "../../../../assets/data/website-design-styles.json";
 import HelpIcon from "../../../../components/HelpIcon";
-import "./styles.module.scss";
+import moduleStyles from "./styles.module.scss";
 
 const StyleOptions = ({
   likes = [],
@@ -19,12 +18,13 @@ const StyleOptions = ({
   onDislike,
   onSelect,
 }) => {
+  console.debug(styles, moduleStyles[styles[0].className])
   return (
-    <div styleName="styleOptions">
+    <div className={moduleStyles["styleOptions"]}>
       {styles.map((style, index) => (
-        <div styleName="styleWrapper" key={uuidV4}>
-          <div styleName={classNames("style", style.className)}>
-            <div styleName="name">
+        <div className={moduleStyles["styleWrapper"]} key={index}>
+          <div className={classNames(moduleStyles["style"], moduleStyles[style.className])}>
+            <div className={moduleStyles["name"]}>
               <span>{style.name}</span> &nbsp;
               <HelpIcon
                 textColor="#f4f4f4"
@@ -35,13 +35,13 @@ const StyleOptions = ({
                 {style.description}
               </HelpIcon>
             </div>
-            <div styleName="box">
+            <div className={moduleStyles["box"]}>
               <div
-                styleName="preview"
+                className={moduleStyles["preview"]}
                 role="button"
                 onClick={() => onSelect(style)}
               />
-              <div styleName="actions">
+              <div className={moduleStyles["actions"]}>
                 <LikeIcon
                   role="button"
                   onClick={() => {
@@ -54,7 +54,7 @@ const StyleOptions = ({
                       }
                     }
                   }}
-                  styleName={_.includes(likes, style.name) ? "liked" : null}
+                  className={_.includes(likes, style.name) ? moduleStyles["liked"] : null}
                 />
                 <DislikeIcon
                   role="button"
@@ -68,8 +68,8 @@ const StyleOptions = ({
                       }
                     }
                   }}
-                  styleName={
-                    _.includes(dislikes, style.name) ? "disliked" : null
+                  className={
+                    _.includes(dislikes, style.name) ? moduleStyles["disliked"] : null
                   }
                 />
               </div>

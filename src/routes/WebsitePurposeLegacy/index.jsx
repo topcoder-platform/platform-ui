@@ -1,31 +1,33 @@
-import { navigate, redirectTo } from "@reach/router";
-import Button from "components/Button";
-import LoadingSpinner from "components/LoadingSpinner";
-import Page from "components/Page";
-import PageContent from "components/PageContent";
-import PageDivider from "components/PageDivider";
-import PageFoot from "components/PageElements/PageFoot";
-import PageH2 from "components/PageElements/PageH2";
-import Progress from "components/Progress";
-import { BUTTON_SIZE, BUTTON_TYPE } from "constants/";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { connect, useSelector, useDispatch } from "react-redux";
-import { getDynamicPriceAndTimelineEstimate } from "utils/";
+import { navigate, redirectTo } from "@reach/router";
+
+import Button from "../../components/Button";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import Page from "../../components/Page";
+import PageContent from "../../components/PageContent";
+import PageDivider from "../../components/PageDivider";
+import PageFoot from "../../components/PageElements/PageFoot";
+import PageH2 from "../../components/PageElements/PageH2";
+import Progress from "../../components/Progress";
+import { BUTTON_SIZE, BUTTON_TYPE, ROUTES } from "../../constants/";
+import { getDynamicPriceAndTimelineEstimate } from "../../utils/";
 import { triggerAutoSave } from "../../actions/autoSave";
 import { resetIntakeForm, saveWebsitePurpose } from "../../actions/form";
 import { setProgressItem } from "../../actions/progress";
-import BackIcon from "../../assets/images/icon-back-arrow.svg";
-import WebsitePurposeForm from "./components/WebsitePurposeForm";
+import { ReactComponent as BackIcon } from "../../assets/images/icon-back-arrow.svg";
 import { WebsiteDesignBannerLegacy } from "../../components/Banners/WebsiteDesignBannerLegacy";
-import "./styles.module.scss";
+
+import WebsitePurposeForm from "./components/WebsitePurposeForm";
+import styles from "./styles.module.scss";
+
 import { Breadcrumb } from "../../../src-ts";
-import { ROUTES } from "../../constants";
 
 /**
  * Website Purpose Page
  */
 const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem }) => {
-  const [isLoading, setLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [formData, setFormData] = useState({
     industry: { title: "Your Industry", option: "", value: null },
     description: { title: "Description", option: "", value: "" },
@@ -114,19 +116,19 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem }) => {
 
           <PageDivider />
           <PageFoot>
-            <div styleName="footerContent">
+            <div className={styles["footerContent"]}>
               <div>
                 <Button
                   size={BUTTON_SIZE.MEDIUM}
                   type={BUTTON_TYPE.SECONDARY}
                   onClick={onBack}
                 >
-                  <div styleName="backButtonWrapper">
+                  <div className={styles["backButtonWrapper"]}>
                     <BackIcon />
                   </div>
                 </Button>
               </div>
-              <div styleName="footer-right">
+              <div className={styles["footer-right"]}>
                 <Button
                   disabled={!isFormValid}
                   size={BUTTON_SIZE.MEDIUM}

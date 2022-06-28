@@ -1,15 +1,17 @@
-import { ACTIONS, AUTO_SAVE_FORM, CACHED_CHALLENGE_ID } from "constants/index";
 import CryptoJS from "crypto-js";
 import _ from "lodash";
 import moment from "moment";
 import "moment-timezone";
+
 import config from "../config";
+
 import {
   autoSaveCookieCleared,
   sendAutoSavedPatch,
   storeAutoSavedCookie,
 } from "./actions/autoSave";
 import { createNewChallenge } from "./actions/challenge";
+import { ACTIONS, AUTO_SAVE_FORM, CACHED_CHALLENGE_ID } from "./constants";
 
 let CREATION_IN_PROGRESS = false;
 
@@ -165,12 +167,12 @@ export function getCookie(name) {
 
 function getHostDomain() {
   let hostDomain = "";
-  if (location.hostname !== "localhost") {
+  if (window.location.hostname !== "localhost") {
     hostDomain =
       ";domain=." +
-      location.hostname.split(".").reverse()[1] +
+      window.location.hostname.split(".").reverse()[1] +
       "." +
-      location.hostname.split(".").reverse()[0];
+      window.location.hostname.split(".").reverse()[0];
   }
   return hostDomain;
 }

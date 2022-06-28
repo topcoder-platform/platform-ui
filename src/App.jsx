@@ -1,23 +1,18 @@
 import { Redirect, Router } from "@reach/router";
-import {
-  getAuthUserTokens,
-  disableNavigationForRoute,
-} from "@topcoder/mfe-header";
-import React, { useLayoutEffect, useState } from "react";
+import React, { useContext, useLayoutEffect } from "react";
+import TagManager from "react-gtm-module";
+import "react-responsive-modal/styles.css";
+
+import { EnvironmentConfig, logInitialize, profileContext } from "../src-ts";
+
 import { UNDER_MAINTENANCE, GA_ID } from "./constants";
 import IntakeForm from "./IntakeForm";
 import Home from "./routes/Home";
 import WorkItems from "./routes/WorkItems";
-import Layout from "components/Layout";
-import TagManager from "react-gtm-module";
+import Layout from "./components/Layout";
 import { ScrollToTop } from "./ScrollToTop";
-
-import "react-responsive-modal/styles.css";
-
 import styles from "./styles/main.module.scss";
 import UnderMaintenance from "./routes/UnderMaintenance";
-
-import { EnvironmentConfig, logInitialize } from "../src-ts";
 
 logInitialize(EnvironmentConfig);
 
@@ -28,15 +23,10 @@ if (process.env.APPMODE === "production") {
 }
 
 const App = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(null);
+
+  const { initialized, isLoggedIn } = useContext(profileContext)
 
   useLayoutEffect(() => {
-    const checkIsLoggedIn = async () => {
-      const { tokenV3 } = await getAuthUserTokens();
-      setIsLoggedIn(!!tokenV3);
-    };
-    disableNavigationForRoute("/self-service/*");
-    checkIsLoggedIn();
     document.documentElement.style.setProperty("--navbarHeight", "80px");
     return () => {
       // --navbarHeight must be set to its default value,
@@ -45,7 +35,7 @@ const App = () => {
     };
   }, []);
 
-  if (isLoggedIn == null) {
+  if (!initialized) {
     return null;
   }
 

@@ -25,7 +25,7 @@ const TermsModal: FC<TermsModal> = ({ isOpen, onClose }: TermsModal) => (
                         This User Agreement (the "<strong>Agreement</strong>") is a contract
                         between you (referred to herein as "User") and Topcoder LLC.
                         ("Topcoder") and applies to User's use and viewing of
-                        <a href='https://www.topcoder.com/' target='_blank'>
+                        <a href='https://www.topcoder.com/' target='_blank' rel='noreferrer'>
                             {' '}
                             topcoder.com
                         </a>
@@ -59,7 +59,7 @@ const TermsModal: FC<TermsModal> = ({ isOpen, onClose }: TermsModal) => (
                             <li>
                                 User agrees to comply with all terms of the Topcoder Privacy
                                 Policy available at
-                                <a href='https://www.topcoder.com/policy/privacy-policy/' target='_blank'>
+                                <a href='https://www.topcoder.com/policy/privacy-policy/' target='_blank' rel='noreferrer'>
                                     {' '}
                                     https://www.topcoder.com/policy/privacy-policy/
                                 </a>

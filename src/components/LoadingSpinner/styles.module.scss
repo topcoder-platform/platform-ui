@@ -1,4 +1,4 @@
-@import "styles/include";
+@import "../../styles/include";
 
 .loading-spinner {
   position: fixed;
@@ -14,10 +14,12 @@
   align-items: center;
   transition: opacity 1s ease;
   opacity: 1;
+
   &.hide {
     opacity: 0;
     pointer-events: none;
   }
+
   &.show {
     opacity: 1;
   }

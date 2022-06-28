@@ -4,8 +4,8 @@ import _ from "lodash";
 import classNames from "classnames";
 import PageDivider from "../../../../components/PageDivider";
 import { PROGRESS_LEVELS } from "../../../../constants/products/WebsiteDesignLegacy";
-import ArrowIcon from "../../../../assets/images/icon-arrow.svg";
-import "./styles.module.scss";
+import { ReactComponent as ArrowIcon } from "../../../../assets/images/icon-arrow.svg";
+import styles from "./styles.module.scss";
 
 /**
  * Review Table Component
@@ -38,11 +38,11 @@ const ReviewTableLegacy = ({ formData, enableEdit = true }) => {
     return (
       <div>
         {option.option && (
-          <div styleName="detail">
-            <div styleName="itemWrapper">
-              <p styleName="item">{option.title || title}</p>
+          <div className={styles["detail"]}>
+            <div className={styles["itemWrapper"]}>
+              <p className={styles["item"]}>{option.title || title}</p>
             </div>
-            <p styleName="key">{formatOption(option.option)}</p>
+            <p className={styles["key"]}>{formatOption(option.option)}</p>
           </div>
         )}
       </div>
@@ -64,13 +64,13 @@ const ReviewTableLegacy = ({ formData, enableEdit = true }) => {
     return Object.keys(items).map((key) => {
       if (_.isArray(items[key]))
         return _.map(items[key], (item, i) => (
-          <div styleName="detail" key={i}>
-            <div styleName="itemWrapper">
-              <p styleName="item">
+          <div className={styles["detail"]} key={i}>
+            <div className={styles["itemWrapper"]}>
+              <p className={styles["item"]}>
                 {key} {i + 1}
               </p>
             </div>
-            <p styleName="key">
+            <p className={styles["key"]}>
               {Object.keys(item).map((subKey) =>
                 renderOption(item[subKey], subKey)
               )}
@@ -89,19 +89,19 @@ const ReviewTableLegacy = ({ formData, enableEdit = true }) => {
       return (
         <div>
           {page?.pageName && (
-            <div styleName="detail">
-              <div styleName="itemWrapper">
-                <p styleName="item">Page {index + 1} Name</p>
+            <div className={styles["detail"]}>
+              <div className={styles["itemWrapper"]}>
+                <p className={styles["item"]}>Page {index + 1} Name</p>
               </div>
-              <p styleName="key">{page?.pageName}</p>
+              <p className={styles["key"]}>{page?.pageName}</p>
             </div>
           )}
           {page?.pageDetails && (
-            <div styleName="detail">
-              <div styleName="itemWrapper">
-                <p styleName="item">Page {index + 1} Requirements</p>
+            <div className={styles["detail"]}>
+              <div className={styles["itemWrapper"]}>
+                <p className={styles["item"]}>Page {index + 1} Requirements</p>
               </div>
-              <p styleName="key">{page?.pageDetails}</p>
+              <p className={styles["key"]}>{page?.pageDetails}</p>
             </div>
           )}
         </div>
@@ -124,21 +124,21 @@ const ReviewTableLegacy = ({ formData, enableEdit = true }) => {
           return (
             <>
               <div
-                styleName="header"
+                className={styles["header"]}
                 role="button"
                 tabIndex={0}
                 onClick={() => setStepToggler(index)}
               >
-                <p styleName="stepLabel">
+                <p className={styles["stepLabel"]}>
                   {step.label}
                   {enableEdit && (
-                    <Link styleName="link" to={redirectPage.url}>
+                    <Link className={styles["link"]} to={redirectPage.url}>
                       edit
                     </Link>
                   )}
                 </p>
                 <div
-                  styleName={classNames("icon", step.isOpen ? "open" : null)}
+                  className={classNames(styles["icon"], step.isOpen ? styles["open"] : null)}
                 >
                   <ArrowIcon />
                 </div>

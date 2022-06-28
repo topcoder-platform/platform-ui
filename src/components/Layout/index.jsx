@@ -15,7 +15,7 @@ const Layout = ({ PageComponent, ...routeProps }) => {
 };
 
 Layout.propTypes = {
-  PageComponent: PT.func,
+  PageComponent: PT.object,
   path: PT.string,
 };
 

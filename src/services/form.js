@@ -1,6 +1,5 @@
 import config from "../../config";
-
-import { axiosInstance as axios } from "./requestInterceptor";
+import { xhrPostAsync } from "../../src-ts";
 
 /**
  * Submit work to challenge API
@@ -22,6 +21,6 @@ export async function createSupportTicket(request, challengeId, isSelfService) {
   };
   const body = JSON.stringify(supportRequest);
   const url = `${config.API.V5}/challenges/support-requests`;
-  const response = await axios.post(url, body);
-  return response?.data;
+  const response = await xhrPostAsync(url, body);
+  return response;
 }

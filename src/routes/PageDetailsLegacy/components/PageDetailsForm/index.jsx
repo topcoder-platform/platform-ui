@@ -1,19 +1,20 @@
+import PT from "prop-types";
+import React from "react";
 /**
  * Page Details Form component
  */
-import FormField from "components/FormElements/FormField";
-import FormInputText from "components/FormElements/FormInputText";
-import FormInputTextArea from "components/FormElements/FormInputTextArea";
-import HelpBanner from "components/HelpBanner";
-import PageDivider from "components/PageDivider";
-import PageH3 from "components/PageElements/PageH3";
-import PageP from "components/PageElements/PageP";
-import PageRow from "components/PageElements/PageRow";
-import PageListInput from "components/PageListInput";
-import ServicePrice from "components/ServicePrice";
-import PT from "prop-types";
-import React from "react";
-import "./styles.module.scss";
+import FormField from "../../../../components/FormElements/FormField";
+import FormInputText from "../../../../components/FormElements/FormInputText";
+import FormInputTextArea from "../../../../components/FormElements/FormInputTextArea";
+import HelpBanner from "../../../../components/HelpBanner";
+import PageDivider from "../../../../components/PageDivider";
+import PageH3 from "../../../../components/PageElements/PageH3";
+import PageP from "../../../../components/PageElements/PageP";
+import PageRow from "../../../../components/PageElements/PageRow";
+import PageListInput from "../../../../components/PageListInput";
+import ServicePrice from "../../../../components/ServicePrice";
+
+import styles from "./styles.module.scss";
 
 const PageDetailsForm = ({
   savePageDetails,
@@ -55,7 +56,7 @@ const PageDetailsForm = ({
 
   // remove an item from list input
   const removeListInputItem = (listInputName, index) => {
-    if (!confirm("Are you sure you want to delete this item?")) return;
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
     setListInputs((listInputs) => {
       let listInput = listInputs[listInputName];
       let newListInput = listInput.filter((item, i) => {
@@ -68,7 +69,7 @@ const PageDetailsForm = ({
   };
 
   return (
-    <div styleName="pageDetailsForm">
+    <div className={styles["pageDetailsForm"]}>
       <ServicePrice
         price={estimate.total}
         duration={estimate.totalDuration}
@@ -76,15 +77,15 @@ const PageDetailsForm = ({
         serviceType={serviceType}
       />
       <PageDivider />
-      <PageRow styleName="form-row">
+      <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">Describe each page</PageP>
-          <PageP styleName="description">
+          <PageP className={styles["title"]}>Describe each page</PageP>
+          <PageP className={styles["description"]}>
             <PageP>
               For each page (or screen) required in your design project, please
               provide:
             </PageP>
-            <ol styleName="list">
+            <ol className={styles["list"]}>
               <li>A descriptive page name (e.g. Homepage).</li>
               <li>The primary purpose of the page.</li>
               <li>
@@ -135,7 +136,7 @@ const PageDetailsForm = ({
               <PageP>
                 On the home screen I would also like to see included: Our
                 TrustPilot Rating -{" "}
-                <a target="_blank" href="https://www.trustpilot.com/">
+                <a target="_blank" href="https://www.trustpilot.com/" rel="noreferrer">
                   {" "}
                   https://www.trustpilot.com/{" "}
                 </a>{" "}
@@ -159,7 +160,7 @@ const PageDetailsForm = ({
           </PageP>
         </div>
 
-        <div styleName="formFieldWrapper">
+        <div className={styles["formFieldWrapper"]}>
           <PageListInput
             pageCost={estimate.costPerAdditionalPage}
             listInput={listInputs.pages}
@@ -168,14 +169,14 @@ const PageDetailsForm = ({
             addListInputItem={addListInputItem}
           >
             {listInputs.pages.map((page, index) => (
-              <div styleName="page">
-                <div styleName="page-header">
-                  <div styleName="page-title">Page {index + 1}</div>
+              <div className={styles["page"]}>
+                <div className={styles["page-header"]}>
+                  <div className={styles["page-title"]}>Page {index + 1}</div>
                   {index ? (
                     <div
                       role="button"
                       tabIndex="0"
-                      styleName="remove-page"
+                      className={styles["remove-page"]}
                       onClick={() => removeListInputItem("pages", index)}
                     >
                       Remove Page

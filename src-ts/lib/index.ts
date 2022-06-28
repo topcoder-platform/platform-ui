@@ -19,6 +19,9 @@ export {
     useOnHoverElement,
     xhrDeleteAsync,
     xhrGetAsync,
+    xhrGetBlobAsync,
+    xhrPatchAsync,
+    xhrPostAsync,
 } from './functions'
 export * from './loading-spinner'
 export * from './modals'

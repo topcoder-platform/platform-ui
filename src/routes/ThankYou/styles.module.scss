@@ -1,4 +1,4 @@
-@import "styles/include";
+@import "../../styles/include";
 
 .container {
   display: flex;
@@ -11,7 +11,7 @@
     line-height: 26px;
 
     .content-container {
-      
+
       p {
         padding: 24px;
       }

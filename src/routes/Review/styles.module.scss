@@ -1,4 +1,4 @@
-@import "styles/include";
+@import "../../styles/include";
 
 .footerContent {
   display: flex;
@@ -11,6 +11,7 @@
     gap: 16px;
   }
 }
+
 .mobileHidden {
   @include mobile {
     display: none;
@@ -136,6 +137,7 @@
   color: $link-blue;
   text-decoration: underline;
   cursor: pointer;
+
   @include mobile {
     flex: none;
   }

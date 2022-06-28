@@ -6,12 +6,12 @@
 import React from "react";
 import PT from "prop-types";
 import cn from "classnames";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 
 const PageFoot = ({ children, align = "right", styleName, ...props }) => {
   return (
     <div
-      styleName={cn("page-foot", `align-${align}`, styleName || "")}
+      className={cn(styles["page-foot"], styles[`align-${align}`], !!styleName ? styles[styleName] : undefined)}
       {...props}
     >
       {children}

@@ -1,21 +1,21 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/**
- * Basic Info Form component
- */
-import FormField from "components/FormElements/FormField";
-import FormInputText from "components/FormElements/FormInputText";
-import HelpBanner from "components/HelpBanner";
-import PageDivider from "components/PageDivider";
-import PageP from "components/PageElements/PageP";
-import PageRow from "components/PageElements/PageRow";
-import RadioButton from "components/RadioButton";
-import ServicePrice from "components/ServicePrice";
-import { HELP_BANNER } from "constants/";
 import PT from "prop-types";
 import _ from "lodash";
 import React from "react";
+/**
+ * Basic Info Form component
+ */
+import FormField from "../../../../components/FormElements/FormField";
+import FormInputText from "../../../../components/FormElements/FormInputText";
+import HelpBanner from "../../../../components/HelpBanner";
+import PageDivider from "../../../../components/PageDivider";
+import PageP from "../../../../components/PageElements/PageP";
+import PageRow from "../../../../components/PageElements/PageRow";
+import RadioButton from "../../../../components/RadioButton";
+import ServicePrice from "../../../../components/ServicePrice";
+import { HELP_BANNER } from "../../../../constants/";
 import DeviceTypes from "../DeviceTypes";
-import "./styles.module.scss";
+
+import styles from "./styles.module.scss";
 
 const BasicInfoFormLegacy = ({
   formData,
@@ -32,14 +32,14 @@ const BasicInfoFormLegacy = ({
   };
 
   return (
-    <div styleName="basicInfoForm">
+    <div className={styles["basicInfoForm"]}>
       <ServicePrice
         stickerPrice={estimate?.stickerPrice}
         price={estimate?.total}
         duration={estimate?.totalDuration}
         serviceType={serviceType}
       />
-      <div styleName="infoAlert">
+      <div className={styles["infoAlert"]}>
         Your Website Design project includes up to 5 unique Visual Design
         solutions. Each solution will match your specified scope and device
         types. You will receive industry-standard source files to take forward
@@ -48,16 +48,16 @@ const BasicInfoFormLegacy = ({
       </div>
 
       <PageDivider />
-      <PageRow styleName="form-row">
+      <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">PROJECT TITLE</PageP>
-          <PageP styleName="description">
+          <PageP className={styles["title"]}>PROJECT TITLE</PageP>
+          <PageP className={styles["description"]}>
             Give your project a descriptive title. This is what the designers
             will see when looking for your work.
           </PageP>
         </div>
 
-        <div styleName="formFieldWrapper">
+        <div className={styles["formFieldWrapper"]}>
           <FormField label={"Project Title"}>
             <FormInputText
               placeholder={"Enter a descriptive title"}
@@ -72,15 +72,15 @@ const BasicInfoFormLegacy = ({
       </PageRow>
 
       <PageDivider />
-      <PageRow styleName="form-row">
+      <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">How many pages?</PageP>
-          <PageP styleName="description">
+          <PageP className={styles["title"]}>How many pages?</PageP>
+          <PageP className={styles["description"]}>
             How many pages (individual screens) would you like designed?
           </PageP>
         </div>
 
-        <div styleName="formFieldWrapper">
+        <div className={styles["formFieldWrapper"]}>
           <RadioButton
             onChange={(items, i) => {
               const newNumOfPages = _.findIndex(items, (i) => i.value);
@@ -93,17 +93,17 @@ const BasicInfoFormLegacy = ({
       </PageRow>
 
       <PageDivider />
-      <PageRow styleName="form-row">
+      <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">Device Types</PageP>
-          <PageP styleName="description">
+          <PageP className={styles["title"]}>Device Types</PageP>
+          <PageP className={styles["description"]}>
             Your project includes designs for computers. You can add tablet and/
             or mobile device sizes as well. Designing for multiple devices,
             sizes or types is referred to as Responsive Design.
           </PageP>
         </div>
 
-        <div styleName="formFieldWrapper">
+        <div className={styles["formFieldWrapper"]}>
           <DeviceTypes
             numOfPages={numOfPages}
             selectedOptions={formData?.selectedDevice?.value}

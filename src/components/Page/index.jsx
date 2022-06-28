@@ -7,11 +7,11 @@
 import cn from "classnames";
 import PT from "prop-types";
 import React from "react";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 
 const Page = ({ children, styleName, ...props }) => {
   return (
-    <div styleName={cn("page", styleName || "")} {...props}>
+    <div className={cn(styles["page"], !!styleName ? styles[styleName] : undefined)} {...props}>
       {children}
     </div>
   );

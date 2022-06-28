@@ -1,22 +1,24 @@
 import { Router } from "@reach/router";
 import React from "react";
+
+import { WorkType } from "../../../../src-ts";
+
 import Review from "../../Review";
 import ThankYou from "../../ThankYou";
 import LoginPrompt from "../../LoginPrompt";
 import BasicInfo from "../components/BasicInfo";
 import config from "../../../../config";
-import DataExplorationIcon from "../../../assets/images/data-exploration-icon.svg";
-import HelpBanner from "components/HelpBanner";
+import { ReactComponent as DataExplorationIcon } from "../../../assets/images/data-exploration-icon.svg";
+import HelpBanner from "../../../components/HelpBanner";
 import FeaturedWorkTypeBanner from "../../../components/Banners/FeaturedWorkTypeBanner";
 import { webWorkTypes } from "../../../constants/index";
-import { WorkType } from "../../../../src-ts";
 
 export default function WebsiteDesign({ isLoggedIn }) {
   const websiteDesign = webWorkTypes.find(
     (workType) => workType.type === WorkType.design
   );
 
-  const { title, subTitle, helperBannerTitle, helperBannerContent } =
+  const { title, helperBannerTitle, helperBannerContent } =
     websiteDesign;
 
   return (

@@ -18,17 +18,18 @@ import { HELP_BANNER } from "../../../../constants/";
 import PT from "prop-types";
 import _ from "lodash";
 import React, { useEffect, useState } from "react";
-import DataExplorationIcon from "../../../../assets/images/data-exploration-icon.svg";
-import FindMeDataIcon from "../../../../assets/images/find-me-data-icon.svg";
-import AddWebsiteIcon from "../../../../assets/images/add-website-icon.svg";
+import { ReactComponent as DataExplorationIcon } from "../../../../assets/images/data-exploration-icon.svg";
+import { ReactComponent as FindMeDataIcon } from "../../../../assets/images/find-me-data-icon.svg";
+import { ReactComponent as AddWebsiteIcon } from "../../../../assets/images/add-website-icon.svg";
 import StylesOptionsModal from "../StyleOptionsModal";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 import {
   PrimaryDataChallengeOptions,
   ColorOptionsItems,
 } from "../../../../constants";
 import StyleOptions from "../StyleOptions";
 import { WorkType, WorkTypeCategoryDesignIcon } from "../../../../../src-ts";
+import classNames from "classnames";
 
 const BasicInfoForm = ({
   formData,
@@ -159,7 +160,7 @@ const BasicInfoForm = ({
   }
 
   return (
-    <div styleName="basicInfoForm">
+    <div className={styles["basicInfoForm"]}>
       <ServicePrice
         price={estimate?.total}
         stickerPrice={estimate?.stickerPrice}
@@ -179,24 +180,24 @@ const BasicInfoForm = ({
 
       <PageDivider />
 
-      <PageRow styleName="form-row">
+      <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">PROJECT TITLE</PageP>
+          <PageP className={styles["title"]}>PROJECT TITLE</PageP>
           {isWebsiteDesign && (
-            <PageP styleName="description">
+            <PageP className={styles["description"]}>
               Give your project a descriptive title. This is the name designers
               will see when looking for your work.
             </PageP>
           )}
           {(isDataExploration || isFindMeData || isDataAdvisory) && (
-            <PageP styleName="description">
+            <PageP className={styles["description"]}>
               Give your project a descriptive title. This is what the data
               scientists will see when looking for your work.
             </PageP>
           )}
         </div>
 
-        <div styleName="formFieldWrapper">
+        <div className={styles["formFieldWrapper"]}>
           <FormField label={"Project Title"}>
             <FormInputText
               placeholder={"Enter a descriptive title"}
@@ -215,18 +216,18 @@ const BasicInfoForm = ({
 
       {isDataExploration && (
         <>
-          <PageRow styleName="form-row">
+          <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">Share Your Data (optional)</PageP>
-              <PageP styleName="description">
+              <PageP className={styles["title"]}>Share Your Data (optional)</PageP>
+              <PageP className={styles["description"]}>
                 Add links (separate multiple links with commas) or upload your
                 data files here. Not ready or able to share? No problem, we'll
                 work with you on that later.
               </PageP>
             </div>
 
-            <div styleName="formFieldWrapper">
-              <div styleName="assets">
+            <div className={styles["formFieldWrapper"]}>
+              <div className={styles["assets"]}>
                 <FormField label={"Shareable URL Link(s)"}>
                   <FormInputText
                     placeholder={"www.example-share-link.com"}
@@ -247,10 +248,10 @@ const BasicInfoForm = ({
 
           <PageDivider />
 
-          <PageRow styleName="form-row">
+          <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">{"what would you like to learn?"}</PageP>
-              <PageP styleName="description">
+              <PageP className={styles["title"]}>{"what would you like to learn?"}</PageP>
+              <PageP className={styles["description"]}>
                 Describe your data and what you would like to learn about it. If
                 you have a formal problem statement, please share it.
               </PageP>
@@ -268,7 +269,7 @@ const BasicInfoForm = ({
               </HelpBanner>
             </div>
 
-            <div styleName="formFieldWrapper">
+            <div className={styles["formFieldWrapper"]}>
               <FormField label={"Goals & Data Description"}>
                 <FormInputTextArea
                   value={formData?.goals?.value}
@@ -279,7 +280,7 @@ const BasicInfoForm = ({
                       e.target.value
                     )
                   }
-                  styleName={"text-area"}
+                  styleName={styles["text-area"]}
                   name="goals"
                   placeholder={"Enter your goals and descriptions here"}
                 />
@@ -291,10 +292,10 @@ const BasicInfoForm = ({
 
       {isFindMeData && (
         <>
-          <PageRow styleName="form-row">
+          <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">{"What Data Do You Need?"}</PageP>
-              <PageP styleName="description">
+              <PageP className={styles["title"]}>{"What Data Do You Need?"}</PageP>
+              <PageP className={styles["description"]}>
                 Briefly describe the analysis you want to do, and the type of
                 data you're looking for to do it. Be sure to include any
                 critical data requirements, such as specific geographies,
@@ -312,12 +313,12 @@ const BasicInfoForm = ({
                   growth compared to state and national averages, and the trends
                   of renter-occupied households compared to homeowners. I think
                   there's data on sites like{" "}
-                  <a target="_blank" href="https://www.zillow.com/">
+                  <a target="_blank" href="https://www.zillow.com/" rel="noreferrer">
                     {" "}
                     zillow.com
                   </a>{" "}
                   and{" "}
-                  <a target="_blank" href="https://www.hotpads.com/">
+                  <a target="_blank" href="https://www.hotpads.com/" rel="noreferrer">
                     {" "}
                     hotpads.com
                   </a>
@@ -326,7 +327,7 @@ const BasicInfoForm = ({
                 <br />
                 <PageP>
                   Not sure what data you need? Consider{" "}
-                  <a target="_blank" href="https://topcoder.com">
+                  <a target="_blank" href="https://topcoder.com" rel="noreferrer">
                     {" "}
                     Problem Statement & Data Advisory
                   </a>{" "}
@@ -335,7 +336,7 @@ const BasicInfoForm = ({
               </HelpBanner>
             </div>
 
-            <div styleName="formFieldWrapper">
+            <div className={styles["formFieldWrapper"]}>
               <FormField label={"Analysis & Data Description"}>
                 <FormInputTextArea
                   value={formData?.analysis?.value}
@@ -346,7 +347,7 @@ const BasicInfoForm = ({
                       e.target.value
                     )
                   }
-                  styleName={"text-area"}
+                  styleName={styles["text-area"]}
                   name="analysis"
                   placeholder={
                     "Describe your analysis goal and data requirements"
@@ -358,15 +359,15 @@ const BasicInfoForm = ({
 
           <PageDivider />
 
-          <PageRow styleName="form-row">
+          <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">{"Primary Data Challenge"}</PageP>
-              <PageP styleName="description">
+              <PageP className={styles["title"]}>{"Primary Data Challenge"}</PageP>
+              <PageP className={styles["description"]}>
                 Select the primary data challenge you're facing.
               </PageP>
             </div>
 
-            <div styleName="formFieldWrapper">
+            <div className={styles["formFieldWrapper"]}>
               <RadioButton
                 onChange={(items) => {
                   const selectedOption = items.findIndex((item) => item.value);
@@ -404,10 +405,10 @@ const BasicInfoForm = ({
 
           <PageDivider />
 
-          <PageRow styleName="form-row">
+          <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">Sample Data</PageP>
-              <PageP styleName="description">
+              <PageP className={styles["title"]}>Sample Data</PageP>
+              <PageP className={styles["description"]}>
                 Sample data helps us understand your data needs. Often this is a
                 simple CSV/Excel table that shows the data labels (usually the
                 title of each column or row) and two or more rows of example
@@ -416,8 +417,8 @@ const BasicInfoForm = ({
               </PageP>
             </div>
 
-            <div styleName="formFieldWrapper">
-              <div styleName="assets">
+            <div className={styles["formFieldWrapper"]}>
+              <div className={styles["assets"]}>
                 <FormField label={"Shareable URL Link(s)"}>
                   <FormInputText
                     placeholder={"www.example-share-link.com"}
@@ -440,10 +441,10 @@ const BasicInfoForm = ({
 
       {isDataAdvisory && (
         <>
-          <PageRow styleName="form-row">
+          <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">{"what’s your goal?"}</PageP>
-              <PageP styleName="description">
+              <PageP className={styles["title"]}>{"what’s your goal?"}</PageP>
+              <PageP className={styles["description"]}>
                 Describe what you want to do or learn with the help of data
                 science. What will this information or ability help improve?
                 Keep in mind that data science typically answers a question.
@@ -467,7 +468,7 @@ const BasicInfoForm = ({
               </HelpBanner>
             </div>
 
-            <div styleName="formFieldWrapper">
+            <div className={styles["formFieldWrapper"]}>
               <FormField label={"Your Goal"}>
                 <FormInputTextArea
                   value={formData?.goals?.value}
@@ -478,7 +479,7 @@ const BasicInfoForm = ({
                       e.target.value
                     )
                   }
-                  styleName={"text-area"}
+                  styleName={styles["text-area"]}
                   name="goals"
                   placeholder={"Describe your goal"}
                 />
@@ -488,24 +489,24 @@ const BasicInfoForm = ({
 
           <PageDivider />
 
-          <PageRow styleName="form-row">
+          <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">What data do you have?</PageP>
-              <PageP styleName="description">
+              <PageP className={styles["title"]}>What data do you have?</PageP>
+              <PageP className={styles["description"]}>
                 The data you have available helps determine your data science
                 approach. Briefly describe the data you have in mind for your
                 project. What is it and how do you use it today? How much do you
                 have, and how/how often do you get more? Once you've described
                 the data, please upload a sample.
                 <br />
-                <div styleName="helpText">
+                <div className={styles["helpText"]}>
                   No data?&nbsp;
                   <HelpIcon>
                     No problem. Based on your goals we'll recommend the type(s)
                     of data you need.
                   </HelpIcon>
                 </div>
-                <div styleName="helpText">
+                <div className={styles["helpText"]}>
                   Can't share/upload?&nbsp;
                   <HelpIcon>
                     Try sharing a sample. Samples can be just the headers,
@@ -517,8 +518,8 @@ const BasicInfoForm = ({
               </PageP>
             </div>
 
-            <div styleName="formFieldWrapper">
-              <div styleName="assets">
+            <div className={styles["formFieldWrapper"]}>
+              <div className={styles["assets"]}>
                 <FormField label={"Shareable URL Link(s)"}>
                   <FormInputText
                     placeholder={"www.example-share-link.com"}
@@ -544,7 +545,7 @@ const BasicInfoForm = ({
                       e.target.value
                     )
                   }
-                  styleName={"text-area"}
+                  styleName={styles["text-area"]}
                   name="assetsDescription"
                   placeholder={"Describe your data"}
                 />
@@ -556,10 +557,10 @@ const BasicInfoForm = ({
 
       {isWebsiteDesign && (
         <>
-          <PageRow styleName="form-row">
+          <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">{"Description"}</PageP>
-              <PageP styleName="description">
+              <PageP className={styles["title"]}>{"Description"}</PageP>
+              <PageP className={styles["description"]}>
                 What is the purpose of your website? What do you want visitors
                 to be able to do, e.g., see your work? Contact you? You should
                 include a general description as well as goals of the website.
@@ -619,7 +620,7 @@ const BasicInfoForm = ({
               </HelpBanner>
             </div>
 
-            <div styleName="formFieldWrapper">
+            <div className={styles["formFieldWrapper"]}>
               <FormField label={"Description"}>
                 <FormInputTextArea
                   value={formData?.analysis?.value}
@@ -630,7 +631,7 @@ const BasicInfoForm = ({
                       e.target.value
                     )
                   }
-                  styleName={"text-area"}
+                  styleName={styles["text-area"]}
                   name="analysis"
                   placeholder={"Describe your website"}
                 />
@@ -640,10 +641,10 @@ const BasicInfoForm = ({
 
           <PageDivider />
 
-          <PageRow styleName="form-row">
+          <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">Your industry</PageP>
-              <PageP styleName="description">
+              <PageP className={styles["title"]}>Your industry</PageP>
+              <PageP className={styles["description"]}>
                 Knowing your industry will help our designers understand you and
                 your audience. For example, some common industries are: Business
                 & Consulting, Construction, Entertainment & Arts, Healthcare,
@@ -651,7 +652,7 @@ const BasicInfoForm = ({
               </PageP>
             </div>
 
-            <div styleName="formFieldWrapper">
+            <div className={styles["formFieldWrapper"]}>
               <div>
                 <FormField label={"Your Industry"}>
                   <FormInputText
@@ -673,24 +674,24 @@ const BasicInfoForm = ({
 
           <PageDivider />
 
-          <PageRow styleName="form-row">
+          <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">inspiration</PageP>
-              <PageP styleName="description">
+              <PageP className={styles["title"]}>inspiration</PageP>
+              <PageP className={styles["description"]}>
                 Are there websites that you love, from which our designers may
                 draw inspiration? Share the website URLs and tell us what you
                 like about them.
               </PageP>
             </div>
 
-            <div styleName="formFieldWrapper">
+            <div className={styles["formFieldWrapper"]}>
               {_.map(_.get(formData, "inspiration", []), (entry, index) => (
                 <div key={index}>
                   {index ? (
                     <div
                       role="button"
                       tabIndex="0"
-                      styleName="remove-website"
+                      className={styles["remove-website"]}
                       onClick={() => removeWebsite(index)}
                     >
                       Remove Website
@@ -722,14 +723,14 @@ const BasicInfoForm = ({
                           e.target.value
                         )
                       }
-                      styleName={"text-area"}
+                      styleName={styles["text-area"]}
                       name="feedback"
                       placeholder={"Describe what you like about this website"}
                     />
                   </FormField>
                 </div>
               ))}
-              <button styleName="addWebsiteButton" onClick={addWebsite}>
+              <button className={styles["addWebsiteButton"]} onClick={addWebsite}>
                 {" "}
                 <AddWebsiteIcon />
                 Add Another Website
@@ -739,16 +740,16 @@ const BasicInfoForm = ({
 
           <PageDivider />
 
-          <PageRow styleName="form-row">
-            <PageP styleName="title">STYLE &amp; THEME</PageP>
+          <PageRow className={styles["form-row"]}>
+            <PageP className={styles["title"]}>STYLE &amp; THEME</PageP>
           </PageRow>
 
-          <PageRow styleName="form-row">
-            <div styleName="formFieldWrapper style-picker">
-              <PageP styleName="label">
+          <PageRow className={styles["form-row"]}>
+            <div className={classNames(styles["formFieldWrapper"], styles["style-picker"])}>
+              <PageP className={styles["label"]}>
                 Let us know the visual styles you like or dislike (optional):
               </PageP>
-              <div styleName="styles">
+              <div className={styles["styles"]}>
                 <StyleOptions
                   likes={formData?.likedStyles?.value}
                   dislikes={formData?.dislikedStyles?.value}
@@ -761,20 +762,20 @@ const BasicInfoForm = ({
                   }}
                 />
               </div>
-              <PageRow styleName="form-row">
+              <PageRow className={styles["form-row"]}>
                 <div>
-                  <PageP styleName="label">
+                  <PageP className={styles["label"]}>
                     Additional details about your look & feel preferences:
                   </PageP>
                 </div>
-                <div styleName="formFieldWrapper">
+                <div className={styles["formFieldWrapper"]}>
                   <FormField label={`Style Preferences (optional)`}>
                     <FormInputTextArea
                       value={formData?.stylePreferences?.value}
                       onChange={(e) =>
                         handleInputChange(e.target.name, e.target.value)
                       }
-                      styleName={"text-area"}
+                      styleName={styles["text-area"]}
                       name="stylePreferences"
                       placeholder={"Describe your ideal look & feel"}
                     />
@@ -799,13 +800,13 @@ const BasicInfoForm = ({
             />
           )}
 
-          <PageRow styleName="form-row">
-            <div styleName="formFieldWrapper color-picker">
-              <PageP styleName="label">
+          <PageRow className={styles["form-row"]}>
+            <div className={classNames(styles["formFieldWrapper"], styles["color-picker"])}>
+              <PageP className={styles["label"]}>
                 Choose colors you would like our designers to use in your site
                 design:
               </PageP>
-              <div styleName="colors">
+              <div className={styles["colors"]}>
                 <ColorOptions
                   colors={ColorOptionsItems}
                   selectedColor={selectedColor}
@@ -814,24 +815,23 @@ const BasicInfoForm = ({
                   }}
                 />
               </div>
-              <PageRow styleName="form-row">
+              <PageRow className={styles["form-row"]}>
                 <div>
-                  <PageP styleName="label">
+                  <PageP className={styles["label"]}>
                     List any specific colors you would like used in your design:
                   </PageP>
                 </div>
-                <div styleName="formFieldWrapper">
+                <div className={styles["formFieldWrapper"]}>
                   <FormField
-                    label={`List Specific Colors ${
-                      selectedColor?.value?.length > 0 ? "(optional)" : ""
-                    }`}
+                    label={`List Specific Colors ${selectedColor?.value?.length > 0 ? "(optional)" : ""
+                      }`}
                   >
                     <FormInputTextArea
                       value={formData?.specificColor?.value}
                       onChange={(e) =>
                         handleInputChange(e.target.name, e.target.value)
                       }
-                      styleName={"text-area"}
+                      styleName={styles["text-area"]}
                       name="specificColor"
                       placeholder={
                         "Specify colors using their value in RGB, CMYK, or Hex"
@@ -845,15 +845,15 @@ const BasicInfoForm = ({
 
           <PageDivider />
 
-          <PageRow styleName="form-row">
+          <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">share your brand or style assets</PageP>
-              <PageP styleName="description">
+              <PageP className={styles["title"]}>share your brand or style assets</PageP>
+              <PageP className={styles["description"]}>
                 If you have them, gather and upload any assets that you think
                 might be helpful for our designers. Let us know if there is
                 anything you would like to communicate about these items. <br />
                 Assets could be:
-                <ul styleName="list">
+                <ul className={styles["list"]}>
                   <li>your logo</li>
                   <li>your brand guide</li>
                   <li>mood boards</li>
@@ -863,8 +863,8 @@ const BasicInfoForm = ({
               </PageP>
             </div>
 
-            <div styleName="formFieldWrapper">
-              <div styleName="assets">
+            <div className={styles["formFieldWrapper"]}>
+              <div className={styles["assets"]}>
                 <FormField label={"Shareable URL Link(s)"}>
                   <FormInputText
                     placeholder={"www.example-share-link.com"}
@@ -889,7 +889,7 @@ const BasicInfoForm = ({
                         e.target.value
                       )
                     }
-                    styleName={"text-area"}
+                    styleName={styles["text-area"]}
                     name="assetsDescription"
                     placeholder={"Describe what you would like us to know"}
                   />

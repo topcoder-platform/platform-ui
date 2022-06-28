@@ -1,22 +1,24 @@
 import { navigate } from "@reach/router";
-import Button from "components/Button";
-import LoadingSpinner from "components/LoadingSpinner";
-import Page from "components/Page";
-import PageContent from "components/PageContent";
-import PageH2 from "components/PageElements/PageH2";
-import { BUTTON_SIZE, MAX_COMPLETED_STEP } from "constants/";
 import React, { useEffect, useState } from "react";
 import { useDispatch, connect } from "react-redux";
-import "./styles.module.scss";
+
+import Button from "../../components/Button";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import Page from "../../components/Page";
+import PageContent from "../../components/PageContent";
+import PageH2 from "../../components/PageElements/PageH2";
+import { BUTTON_SIZE, MAX_COMPLETED_STEP } from "../../constants/";
 import { setCookie } from "../../autoSaveBeforeLogin";
 import { resetIntakeForm } from "../../actions/form";
+
+import styles from "./styles.module.scss";
 
 /**
  * Thank You Page
  */
 const ThankYou = () => {
   const dispatch = useDispatch();
-  const [isLoading, setLoading] = useState(false);
+  const [isLoading] = useState(false);
 
   useEffect(() => {
     clearPreviousForm();
@@ -37,11 +39,11 @@ const ThankYou = () => {
       <LoadingSpinner show={isLoading} />
       <Page>
         <PageContent>
-          <div styleName="container">
-            <div styleName="content">
+          <div className={["container"]}>
+            <div className={styles["content"]}>
               <PageH2>THANK YOU</PageH2>
 
-              <div styleName="content-container">
+              <div className={styles["content-container"]}>
                 <p>Your payment has been processed successfully.</p>
 
                 <p>
@@ -55,7 +57,7 @@ const ThankYou = () => {
                 </p>
               </div>
 
-              <div styleName="btn">
+              <div className={styles["btn"]}>
                 <Button size={BUTTON_SIZE.MEDIUM} onClick={onDone}>
                   Go to Dashboard
                 </Button>

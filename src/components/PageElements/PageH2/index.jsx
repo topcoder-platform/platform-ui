@@ -6,11 +6,11 @@
 import React from "react";
 import PT from "prop-types";
 import cn from "classnames";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 
 const PageH2 = ({ children, styleName, ...props }) => {
   return (
-    <h2 styleName={cn("page-h2", styleName || "")} {...props}>
+    <h2 className={cn(styles["page-h2"], !!styleName ? styles[styleName] : undefined)} {...props}>
       {children}
     </h2>
   );

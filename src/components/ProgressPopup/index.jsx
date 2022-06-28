@@ -7,9 +7,9 @@ import { useNavigate } from "@reach/router";
 import cn from "classnames";
 import PT from "prop-types";
 import React, { useEffect, useRef } from "react";
-import IconCheck from "../../assets/images/icon-check-thin.svg";
-import IconCross from "../../assets/images/icon-cross.svg";
-import "./styles.module.scss";
+import { ReactComponent as IconCheck} from "../../assets/images/icon-check-thin.svg";
+import { ReactComponent as IconCross} from "../../assets/images/icon-cross.svg";
+import styles from "./styles.module.scss";
 
 const ProgressPopup = ({
   level,
@@ -44,23 +44,23 @@ const ProgressPopup = ({
     return curLevel.trueIndex === level
       ? "current"
       : curLevel.trueIndex < maxStep
-      ? "done"
-      : "";
+        ? "done"
+        : "";
   };
   return (
     <>
       {open && (
         <div
           ref={wrapperRef}
-          styleName={cn("progress-popup", styleName || "")}
+          className={cn(styles["progress-popup"], !!styleName ? styles[styleName] : undefined)}
           {...props}
         >
-          <IconCross styleName="close-btn" onClick={(e) => handleClose(e)} />
+          <IconCross className={styles["close-btn"]} onClick={(e) => handleClose(e)} />
           <div>
             {levels.map((level, levelIndex) => (
               <div
                 key={levelIndex}
-                styleName={cn("level", getLevelClass(level))}
+                className={cn(styles["level"], getLevelClass(level))}
                 onClick={() => {
                   if (getLevelClass(level) !== "") {
                     setStep(level.trueIndex);
@@ -70,9 +70,9 @@ const ProgressPopup = ({
                 role="tab"
                 tabIndex={0}
               >
-                <div styleName={cn("level-check-icon", getLevelClass(level))}>
+                <div className={cn(styles["level-check-icon"], getLevelClass(level))}>
                   {getLevelClass(level) === "done" && (
-                    <IconCheck styleName={"icon-check"} />
+                    <IconCheck className={styles["icon-check"]} />
                   )}
                 </div>
                 {level.label}

@@ -1,31 +1,34 @@
 import { navigate, redirectTo } from "@reach/router";
-import Button from "components/Button";
-import LoadingSpinner from "components/LoadingSpinner";
-import Page from "components/Page";
-import PageContent from "components/PageContent";
-import PageDivider from "components/PageDivider";
-import PageFoot from "components/PageElements/PageFoot";
-import PageH2 from "components/PageElements/PageH2";
-import Progress from "components/Progress";
-import { BUTTON_SIZE, BUTTON_TYPE } from "constants/";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
-import { getDynamicPriceAndTimelineEstimate } from "utils/";
+
+import { Breadcrumb } from "../../../src-ts";
+
+import Button from "../../components/Button";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import Page from "../../components/Page";
+import PageContent from "../../components/PageContent";
+import PageDivider from "../../components/PageDivider";
+import PageFoot from "../../components/PageElements/PageFoot";
+import PageH2 from "../../components/PageElements/PageH2";
+import Progress from "../../components/Progress";
+import { BUTTON_SIZE, BUTTON_TYPE } from "../../constants/";
+import { getDynamicPriceAndTimelineEstimate } from "../../utils/";
 import { triggerAutoSave } from "../../actions/autoSave";
 import { resetIntakeForm, savePageDetails } from "../../actions/form";
 import { setProgressItem } from "../../actions/progress";
-import BackIcon from "../../assets/images/icon-back-arrow.svg";
-import PageDetailsForm from "./components/PageDetailsForm";
+import { ReactComponent as BackIcon } from "../../assets/images/icon-back-arrow.svg";
 import { WebsiteDesignBannerLegacy } from "../../components/Banners/WebsiteDesignBannerLegacy";
-import "./styles.module.scss";
 import { ROUTES } from "../../constants";
-import { Breadcrumb } from "../../../src-ts";
+
+import PageDetailsForm from "./components/PageDetailsForm";
+import styles from "./styles.module.scss";
 
 /**
  * Page Details Page
  */
 const PageDetailsLegacy = ({ savePageDetails, setProgressItem }) => {
-  const [isLoading, setLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [listInputs, setListInputs] = useState({
     pages: [
       {
@@ -118,19 +121,19 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem }) => {
 
           <PageDivider />
           <PageFoot>
-            <div styleName="footerContent">
+            <div className={styles["footerContent"]}>
               <div>
                 <Button
                   size={BUTTON_SIZE.MEDIUM}
                   type={BUTTON_TYPE.SECONDARY}
                   onClick={onBack}
                 >
-                  <div styleName="backButtonWrapper">
+                  <div className={styles["backButtonWrapper"]}>
                     <BackIcon />
                   </div>
                 </Button>
               </div>
-              <div styleName="footer-right">
+              <div className={styles["footer-right"]}>
                 <Button
                   disabled={!isFormValid()}
                   size={BUTTON_SIZE.MEDIUM}

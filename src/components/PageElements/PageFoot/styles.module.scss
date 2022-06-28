@@ -1,4 +1,4 @@
-@import "styles/include";
+@import "../../../styles/include";
 
 .page-foot {
   margin: 30px 0 0 0;
@@ -12,14 +12,17 @@
   &.page-foot.align-between {
     justify-content: space-between;
   }
+
   @include mobile {
     flex-direction: column;
     justify-content: center !important;
     align-items: center !important;
-    & > * {
+
+    &>* {
       margin-bottom: 20px;
     }
   }
+
   a {
     text-decoration: none;
   }

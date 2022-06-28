@@ -1,4 +1,4 @@
-@import "styles/include";
+@import "../../../../styles/include";
 
 .header {
   display: flex;
@@ -16,6 +16,7 @@
       svg {
         margin-top: 0 !important;
       }
+
       transform: rotate(-180deg);
     }
   }

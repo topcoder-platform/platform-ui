@@ -1,19 +1,20 @@
 import { navigate } from "@reach/router";
-import Button from "components/Button";
-import LoadingSpinner from "components/LoadingSpinner";
-import Page from "components/Page";
-import PageContent from "components/PageContent";
-import PageH2 from "components/PageElements/PageH2";
-import { BUTTON_SIZE, BUTTON_TYPE } from "constants/";
 import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
-import { setProgressItem } from "actions/progress";
+
+import Button from "../../components/Button";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import Page from "../../components/Page";
+import PageContent from "../../components/PageContent";
+import PageH2 from "../../components/PageElements/PageH2";
+import { BUTTON_SIZE, BUTTON_TYPE, ROUTES } from "../../constants/";
+import { setProgressItem } from "../../actions/progress";
 import config from "../../../config";
-import "./styles.module.scss";
-import PageFoot from "components/PageElements/PageFoot";
-import PageDivider from "components/PageDivider";
-import BackIcon from "../../assets/images/icon-back-arrow.svg";
-import { ROUTES } from "../../constants";
+import PageFoot from "../../components/PageElements/PageFoot";
+import PageDivider from "../../components/PageDivider";
+import { ReactComponent as BackIcon } from "../../assets/images/icon-back-arrow.svg";
+
+import styles from "./styles.module.scss";
 
 /**
  * Log in Page
@@ -24,7 +25,7 @@ const LoginPrompt = ({
   previousPageUrl,
   nextPageUrl,
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -53,9 +54,9 @@ const LoginPrompt = ({
       <LoadingSpinner show={isLoading} />
       <Page>
         <PageContent>
-          <div styleName="container">
-            <div styleName="content">
-              <PageH2 styleName="loginTitle">
+          <div className={styles["container"]}>
+            <div className={styles["content"]}>
+              <PageH2 className={styles["loginTitle"]}>
                 Log in or create an account
               </PageH2>
               <p>
@@ -63,11 +64,11 @@ const LoginPrompt = ({
                 security, please log in or create an account.
               </p>
 
-              <div styleName="btn">
+              <div className={styles["btn"]}>
                 <Button size={BUTTON_SIZE.MEDIUM} onClick={onLogin}>
                   LOG IN
                 </Button>
-                <span styleName="separator">OR</span>
+                <span className={styles["separator"]}>OR</span>
                 <Button size={BUTTON_SIZE.MEDIUM} onClick={onSingUp}>
                   SIGN UP
                 </Button>
@@ -77,14 +78,14 @@ const LoginPrompt = ({
 
           <PageDivider />
           <PageFoot align="between">
-            <div styleName="footerContent">
+            <div className={styles["footerContent"]}>
               <div>
                 <Button
                   size={BUTTON_SIZE.MEDIUM}
                   type={BUTTON_TYPE.SECONDARY}
                   onClick={onBack}
                 >
-                  <div styleName="backButtonWrapper">
+                  <div className={styles["backButtonWrapper"]}>
                     <BackIcon />
                   </div>
                 </Button>

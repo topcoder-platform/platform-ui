@@ -2,18 +2,25 @@ import React, { useEffect, useState } from "react";
 import { connect, useSelector, useDispatch } from "react-redux";
 import { navigate } from "@reach/router";
 import _ from "lodash";
-import Button from "components/Button";
-import LoadingSpinner from "components/LoadingSpinner";
-import Page from "components/Page";
-import PageContent from "components/PageContent";
-import PageDivider from "components/PageDivider";
-import PageFoot from "components/PageElements/PageFoot";
+
+import {
+  Breadcrumb,
+  ContactSupportModal,
+  WorkType,
+} from "../../../../../src-ts";
+
+import Button from "../../../../components/Button";
+import LoadingSpinner from "../../../../components/LoadingSpinner";
+import Page from "../../../../components/Page";
+import PageContent from "../../../../components/PageContent";
+import PageDivider from "../../../../components/PageDivider";
+import PageFoot from "../../../../components/PageElements/PageFoot";
 import {
   BUTTON_SIZE,
   BUTTON_TYPE,
   PageOptions,
   PrimaryDataChallengeOptions,
-} from "constants/";
+} from "../../../../constants/";
 import {
   saveBasicInfo,
   toggleSupportModal,
@@ -23,12 +30,10 @@ import {
 } from "../../../../actions/form";
 import { triggerAutoSave, triggerCookieClear } from "../../../../actions/autoSave";
 import { setProgressItem } from "../../../../actions/progress";
-import BackIcon from "../../../../assets/images/icon-back-arrow.svg";
-import SaveForLaterIcon from "../../../../assets/images/save-for-later-icon.svg";
-import { getUserProfile } from "../../../../thunks/profile";
+import { ReactComponent as BackIcon } from "../../../../assets/images/icon-back-arrow.svg";
+import { ReactComponent as SaveForLaterIcon } from "../../../../assets/images/save-for-later-icon.svg";
 
 import BasicInfoForm from "../BasicInfoForm";
-import "./styles.module.scss";
 import {
   getDynamicPriceAndTimeline,
   getDataAdvisoryPriceAndTimelineEstimate,
@@ -36,14 +41,10 @@ import {
   getDataExplorationPriceAndTimelineEstimate,
   getFindMeDataPriceAndTimelineEstimate,
   getWebsiteDesignPriceAndTimelineEstimate,
-} from "utils/";
+} from "../../../../utils/";
 import FeaturedWorkTypeBanner from "../../../../components/Banners/FeaturedWorkTypeBanner";
 
-import {
-  Breadcrumb,
-  ContactSupportModal,
-  WorkType,
-} from "../../../../../src-ts";
+import styles from "./styles.module.scss";
 
 /**
  * Basic Info Page
@@ -58,6 +59,7 @@ const BasicInfo = ({
   triggerCookieClear,
   breadcrumb = [],
 }) => {
+
   const defaultFormData = {
     projectTitle: { title: "Project Title", option: "", value: "" },
     description: { title: "Description", option: "", value: "" },
@@ -123,7 +125,7 @@ const BasicInfo = ({
   }
 
   const dispatch = useDispatch();
-  const [isLoading, setLoading] = useState(false);
+  const [isLoading] = useState(false);
   const workType = useSelector((state) => state.form.workType);
   const basicInfo = useSelector((state) => state.form.basicInfo);
   const currentStep = useSelector((state) => state.progress.currentStep);
@@ -135,10 +137,10 @@ const BasicInfo = ({
     workType?.selectedWorkType === WorkType.design
       ? getWebsiteDesignPriceAndTimelineEstimate()
       : isDataExploration
-      ? getDataExplorationPriceAndTimelineEstimate()
-      : isDataAdvisory
-      ? getDataAdvisoryPriceAndTimelineEstimate()
-      : getFindMeDataPriceAndTimelineEstimate();
+        ? getDataExplorationPriceAndTimelineEstimate()
+        : isDataAdvisory
+          ? getDataAdvisoryPriceAndTimelineEstimate()
+          : getFindMeDataPriceAndTimelineEstimate();
 
   const onBack = () => {
     dispatch(triggerCookieClear());
@@ -192,7 +194,7 @@ const BasicInfo = ({
       setFormData({
         ...formData,
         primaryDataChallengeOther: {
-          ...formData["primaryDataChallengeOther"],
+          ...formData.primaryDataChallengeOther,
           option: "",
           value: "",
         },
@@ -210,10 +212,6 @@ const BasicInfo = ({
   const onHideSupportModal = () => {
     toggleSupportModal(false);
   };
-
-  useEffect(() => {
-    dispatch(getUserProfile());
-  }, [dispatch]);
 
   const saveForm = (autoSave) => {
     saveBasicInfo(formData);
@@ -249,7 +247,7 @@ const BasicInfo = ({
           subTitle={workItemConfig.subTitle}
           workType={workItemConfig.type}
         />
-        <PageContent styleName="container">
+        <PageContent styleName={styles["container"]}>
           <BasicInfoForm
             pageListOptions={_.map(PageOptions, (o, i) => ({
               ...o,
@@ -273,22 +271,22 @@ const BasicInfo = ({
 
           <PageDivider />
           <PageFoot>
-            <div styleName="footerContent">
+            <div className={styles["footerContent"]}>
               <div>
                 <Button
                   size={BUTTON_SIZE.MEDIUM}
                   type={BUTTON_TYPE.SECONDARY}
                   onClick={onBack}
                 >
-                  <div styleName="backButtonWrapper">
+                  <div className={styles["backButtonWrapper"]}>
                     <BackIcon />
                   </div>
                 </Button>
               </div>
-              <div styleName="footer-right">
+              <div className={styles["footer-right"]}>
                 {isLoggedIn && (
                   <Button
-                    styleName="saveForLater"
+                    className={styles["saveForLater"]}
                     disabled={!isFormValid}
                     size={BUTTON_SIZE.MEDIUM}
                     type={BUTTON_TYPE.SECONDARY}
@@ -299,13 +297,13 @@ const BasicInfo = ({
                   </Button>
                 )}
                 <Button
-                  styleName="reviewAndSubmit"
+                  className={styles["reviewAndSubmit"]}
                   disabled={!isFormValid}
                   size={BUTTON_SIZE.MEDIUM}
                   onClick={onNext}
                 >
                   <span>
-                    <span styleName="desktop">REVIEW &amp;</span> SUBMIT
+                    <span className={styles["desktop"]}>REVIEW &amp;</span> SUBMIT
                   </span>
                 </Button>
               </div>

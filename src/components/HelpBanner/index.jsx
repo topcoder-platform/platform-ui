@@ -3,8 +3,8 @@
  */
 import React, { useState } from "react";
 import cn from "classnames";
-import ArrowIcon from "../../assets/images/icon-arrow.svg";
-import "./styles.module.scss";
+import { ReactComponent as ArrowIcon} from "../../assets/images/icon-arrow.svg";
+import moduleStyles from "./styles.module.scss";
 import Button from "../Button";
 
 const HelpBanner = ({
@@ -16,27 +16,28 @@ const HelpBanner = ({
   defaultOpen = false,
 }) => {
   const [open, setOpen] = useState(defaultOpen);
+  const moduleStyleStyles = styles.map(style => moduleStyles[style])
   return (
-    <div styleName={cn("banner", ...styles)}>
+    <div className={cn(moduleStyles["banner"], ...moduleStyleStyles)}>
       <div
-        styleName="title"
+        className={moduleStyles["title"]}
         onClick={() => setOpen(!open)}
         role="button"
         tabIndex={0}
       >
         <span>{title}</span>
 
-        <div styleName={cn("arrowIcon", open ? "up" : null)}>
+        <div className={cn(moduleStyles["arrowIcon"], open ? moduleStyles["up"] : undefined)}>
           <ArrowIcon />
         </div>
       </div>
 
       {open && title !== description && (
-        <p styleName="description">{description}</p>
+        <p className={moduleStyles["description"]}>{description}</p>
       )}
-      {open && children && <p styleName="description">{children}</p>}
+      {open && children && <div className={moduleStyles["description"]}>{children}</div>}
       {open && contactSupport && (
-        <p styleName="supportButton">
+        <p className={moduleStyles["supportButton"]}>
           <Button onClick={contactSupport}>Contact support</Button>
         </p>
       )}

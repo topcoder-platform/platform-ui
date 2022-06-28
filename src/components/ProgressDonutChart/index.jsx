@@ -6,12 +6,12 @@
 import React, { useState } from "react";
 import PT from "prop-types";
 import cn from "classnames";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 import Chart from "react-apexcharts";
 
 const ProgressDonutChart = ({ progress, styleName, ...props }) => {
   // chart options to display donut chart
-  const [chartOptions, setChartOptions] = useState({
+  const [chartOptions] = useState({
     chart: {
       height: 150,
       width: 120,
@@ -40,7 +40,7 @@ const ProgressDonutChart = ({ progress, styleName, ...props }) => {
     },
   });
   return (
-    <div styleName={cn("progress-donut-chart", styleName || "")} {...props}>
+    <div className={cn(styles["progress-donut-chart"], !!styleName ? styles[styleName] : undefined)} {...props}>
       <div id="chart">
         <Chart
           options={chartOptions}

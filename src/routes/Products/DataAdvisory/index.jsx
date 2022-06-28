@@ -1,22 +1,24 @@
 import { Router } from "@reach/router";
 import React from "react";
+
+import { WorkType } from "../../../../src-ts";
+
 import Review from "../../Review";
 import ThankYou from "../../ThankYou";
 import LoginPrompt from "../../LoginPrompt";
 import BasicInfo from "../components/BasicInfo";
 import config from "../../../../config";
-import DataAdvisoryIcon from "../../../assets/images/data-advisory-icon.svg";
-import HelpBanner from "components/HelpBanner";
+import { ReactComponent as DataAdvisoryIcon } from "../../../assets/images/data-advisory-icon.svg";
+import HelpBanner from "../../../components/HelpBanner";
 import FeaturedWorkTypeBanner from "../../../components/Banners/FeaturedWorkTypeBanner";
-import { ROUTES, webWorkTypes } from "../../../constants/index";
-import { WorkType } from "../../../../src-ts";
+import { webWorkTypes } from "../../../constants/index";
 
 export default function DataAdvisory({ isLoggedIn }) {
   const dataAdvisory = webWorkTypes.find(
     (workType) => workType.type === WorkType.problem
   );
 
-  const { title, subTitle, helperBannerTitle, helperBannerContent } =
+  const { title, helperBannerTitle, helperBannerContent } =
     dataAdvisory;
 
   return (

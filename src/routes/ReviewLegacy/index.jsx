@@ -24,14 +24,12 @@ import {
 import PaymentForm from "../Review/components/PaymentForm";
 import { triggerAutoSave } from "../../actions/autoSave";
 import { setProgressItem } from "../../actions/progress";
-import BackIcon from "../../assets/images/icon-back-arrow.svg";
+import { ReactComponent as BackIcon } from "../../assets/images/icon-back-arrow.svg";
 import ReviewTableLegacy from "./components/ReviewTableLegacy";
-import withAuthentication from "../../hoc/withAuthentication";
 import ServicePrice from "../../components/ServicePrice";
 import * as services from "../../services/payment";
-import { getUserProfile } from "../../thunks/profile";
 import { activateChallenge } from "../../services/challenge";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 import {
   getDynamicPriceAndTimelineEstimate,
   currencyFormat,
@@ -179,10 +177,6 @@ const ReviewLegacy = ({
       });
   };
 
-  useEffect(() => {
-    dispatch(getUserProfile());
-  }, [dispatch]);
-
   const isFormValid =
     formData.cardName &&
     formData.cardNumber &&
@@ -231,32 +225,32 @@ const ReviewLegacy = ({
             serviceType={workType?.selectedWorkTypeDetail}
           />
           {secondaryBanner}
-          {introText && <div styleName="infoAlert">{introText}</div>}
+          {introText && <div className={["infoAlert"]}>{introText}</div>}
           <PageDivider />
-          <div styleName="splitView">
-            <div styleName="reviewContainer">
+          <div className={["splitView"]}>
+            <div className={["reviewContainer"]}>
               <ReviewTableLegacy
                 formData={intakeFormData}
                 enableEdit={enableEdit}
               />
-              <div styleName="hideMobile">
+              <div className={["hideMobile"]}>
                 <AboutYourProject />
               </div>
             </div>
-            <div styleName="paymentWrapper">
-              <div styleName="paymentBox">
-                <div styleName="total">
+            <div className={["paymentWrapper"]}>
+              <div className={["paymentBox"]}>
+                <div className={["total"]}>
                   {estimate.stickerPrice && (
-                    <span styleName="originalPrice">
+                    <span className={["originalPrice"]}>
                       {currencyFormat(estimate.stickerPrice)}
                     </span>
                   )}
                   {currencyFormat(estimate.total)}
                 </div>
 
-                <div styleName="totalInfo">Total Payment</div>
+                <div className={styles["totalInfo"]}>Total Payment</div>
 
-                <PageDivider styleName="pageDivider" />
+                <PageDivider className={styles["pageDivider"]} />
 
                 <PaymentForm
                   formData={formData}
@@ -264,37 +258,37 @@ const ReviewLegacy = ({
                   onOpenContractModal={setIsOrderContractModalOpen}
                 />
                 {paymentFailed && (
-                  <div styleName="error">
+                  <div className={styles["error"]}>
                     Your card was declined. Please try a different card.
                   </div>
                 )}
 
-                <div styleName="paymentButtonContainer">
+                <div className={styles["paymentButtonContainer"]}>
                   <Button
                     disabled={!isFormValid || isLoading}
                     size={BUTTON_SIZE.MEDIUM}
                     onClick={onNext}
-                    styleName="wideButton"
+                    className={styles["wideButton"]}
                   >
                     PAY ${estimate.total}
                   </Button>
                 </div>
               </div>
             </div>
-            <div styleName="showOnlyMobile">
+            <div className={styles["showOnlyMobile"]}>
               <AboutYourProject />
             </div>
           </div>
 
           <PageFoot>
-            <div styleName="footerContent">
+            <div className={styles["footerContent"]}>
               <div>
                 <Button
                   size={BUTTON_SIZE.MEDIUM}
                   type={BUTTON_TYPE.SECONDARY}
                   onClick={onBack}
                 >
-                  <div styleName="backButtonWrapper">
+                  <div className={styles["backButtonWrapper"]}>
                     <BackIcon />
                   </div>
                 </Button>
@@ -325,4 +319,4 @@ const mapDispatchToProps = {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withAuthentication(ReviewWrapper));
+)(ReviewWrapper);

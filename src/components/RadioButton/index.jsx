@@ -6,7 +6,8 @@
 import PT from "prop-types";
 import _ from "lodash";
 import React, { useEffect, useState } from "react";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
+import classNames from "classnames";
 
 function RadioButton({ options, onChange, size, errorMsg }) {
   const [internalOptions, setInternalOptions] = useState(
@@ -48,12 +49,11 @@ function RadioButton({ options, onChange, size, errorMsg }) {
   return (
     <React.Fragment>
       <div
-        className="radioButtonContainer"
-        styleName={`radioButtonContainer ${sizeStyle}`}
+        className={classNames("radioButtonContainer", styles['radioButtonContainer'], styles[sizeStyle])}
       >
         {internalOptions.map((o) => (
-          <div key={o.key} styleName="radioButton" className="radioButton">
-            <label styleName="container">
+          <div key={o.key} className={classNames(styles["radioButton"], "radioButton")}>
+            <label className={styles["container"]}>
               <input
                 type="radio"
                 checked={o.value}
@@ -66,19 +66,19 @@ function RadioButton({ options, onChange, size, errorMsg }) {
                   onChange(newOptions);
                 }}
               />
-              <span styleName={`checkmark ${errorMsg ? "hasError" : ""}`} />
+              <span className={classNames(styles["checkmark"], !!errorMsg ? styles["hasError"] : "")} />
             </label>
-            {o.label ? <span styleName="label">{o.label}</span> : null}
+            {o.label ? <span className={styles["label"]}>{o.label}</span> : null}
           </div>
         ))}
       </div>
-      {errorMsg ? <span styleName="errorMessage">{errorMsg}</span> : null}
+      {errorMsg ? <span className={styles["errorMessage"]}>{errorMsg}</span> : null}
     </React.Fragment>
   );
 }
 
 RadioButton.defaultProps = {
-  onChange: () => {},
+  onChange: () => { },
   size: "sm",
   errorMsg: "",
 };

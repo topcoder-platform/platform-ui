@@ -1,25 +1,25 @@
-import config from "../../config";
-import { axiosInstance as axios } from "./requestInterceptor";
-import { getAuthUserProfile } from "@topcoder/mfe-header";
 import _ from "lodash";
 import moment from "moment";
+
+import config from "../../config";
 import * as websiteDesignUtilsLegacy from "../utils/products/WebDesignLegacy";
-import { WorkType } from "../../src-ts";
+import { WorkType, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from "../../src-ts";
 import {
   formatChallengeCreationBody,
   formatChallengeUpdateBody,
 } from "../utils/products";
+
 
 /**
  * Get Challenge challenge details
  * @param {String} challengeId challenge id
  */
 export async function getChallengeDetails(challengeId) {
-  const response = await axios.get(
+  const response = await xhrGetAsync(
     `${config.API.V5}/challenges/${challengeId}`
   );
 
-  return response?.data;
+  return response;
 }
 
 /**
@@ -29,9 +29,9 @@ export async function getChallengeDetails(challengeId) {
 export async function getIntakeFormChallenges(userHandle, challengeId) {
   let url = `${config.API.V5}/challenges?createdBy=${userHandle}&selfService=true&status=New`;
   url += challengeId ? `&id=${challengeId}` : "";
-  const response = await axios.get(url);
+  const response = await xhrGetAsync(url);
 
-  return response?.data;
+  return response;
 }
 
 /**
@@ -43,12 +43,12 @@ export async function createChallenge(workType) {
       ? websiteDesignUtilsLegacy.formatChallengeCreationBody()
       : formatChallengeCreationBody(workType);
 
-  const response = await axios.post(
+  const response = await xhrPostAsync(
     `${config.API.V5}/challenges`,
     JSON.stringify(body)
   );
 
-  return response?.data;
+  return response;
 }
 
 /**
@@ -62,12 +62,12 @@ export async function patchChallenge(intakeForm, challengeId) {
       ? websiteDesignUtilsLegacy.formatChallengeUpdateBodyLegacy(intakeForm)
       : formatChallengeUpdateBody(intakeForm, workType);
 
-  const response = await axios.patch(
+  const response = await xhrPatchAsync(
     `${config.API.V5}/challenges/${challengeId}`,
     JSON.stringify(body)
   );
 
-  return response?.data;
+  return response;
 }
 
 /**
@@ -106,27 +106,21 @@ export async function activateChallenge(challengeId) {
     discussions: [...newDiscussions],
     startDate: moment().add(daysToAdd, "days").format(),
   };
-  const response = await axios.patch(
+  const response = await xhrPatchAsync(
     `${config.API.V5}/challenges/${challengeId}`,
     JSON.stringify(body)
   );
 
-  return response?.data;
+  return response;
 }
 
 /**
  * Get Forum notifications
  * @param {String} challengeId challenge id
  */
-export async function getForumNotifications(challengeId) {
-  const profile = await getAuthUserProfile();
-  const response = await fetch(
-    `${config.VANILLA_FORUM_API}/groups/${challengeId}/member/${profile.handle}?access_token=${config.VANILLA_ACCESS_TOKEN}`,
-    {
-      header: {
-        "Content-Type": "application/json",
-      },
-    }
+export async function getForumNotifications(challengeId, profile) {
+  const response = await xhrGetAsync(
+    `${config.VANILLA_FORUM_API}/groups/${challengeId}/member/${profile.handle}?access_token=${config.VANILLA_ACCESS_TOKEN}`
   );
 
   const res = await response.json();
@@ -136,10 +130,12 @@ export async function getForumNotifications(challengeId) {
   };
 }
 
-export default {
+const output = {
   getChallengeDetails,
   getIntakeFormChallenges,
   createChallenge,
   patchChallenge,
   getForumNotifications,
 };
+
+export default output

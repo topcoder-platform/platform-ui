@@ -1,4 +1,4 @@
-@import "styles/include";
+@import "../../styles/include";
 
 .progress-popup {
   position: absolute;
@@ -14,6 +14,7 @@
     margin: 20px 0;
     display: flex;
     align-items: center;
+
     &.done,
     &.current {
       cursor: pointer;
@@ -26,18 +27,22 @@
     background: #f4f4f4;
     border-radius: 50%;
     margin-right: 10px;
+
     &.done {
       background: #06d6a0;
       display: flex;
       align-items: center;
       justify-content: center;
+
       .icon-check {
         height: 14px;
+
         * {
           fill: #ffffff;
         }
       }
     }
+
     &.current {
       border: 2px solid #06d6a0;
       background: #ffffff;
@@ -51,6 +56,7 @@
     cursor: pointer;
     height: 15px;
     width: 15px;
+
     * {
       stroke-width: 1px !important;
     }

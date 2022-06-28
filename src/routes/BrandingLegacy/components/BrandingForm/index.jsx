@@ -1,31 +1,32 @@
+import _ from "lodash";
+import PT from "prop-types";
+import React, { useEffect, useState } from "react";
 /**
  * Tab element
  */
-import Button from "components/Button";
-import FormField from "components/FormElements/FormField";
-import FormInputText from "components/FormElements/FormInputText";
-import FormInputTextArea from "components/FormElements/FormInputTextArea";
-import PageDivider from "components/PageDivider";
-import PageP from "components/PageElements/PageP";
-import PageRow from "components/PageElements/PageRow";
-import RadioButton from "components/RadioButton";
-import ServicePrice from "components/ServicePrice";
+import Button from "../../../../components/Button";
+import FormField from "../../../../components/FormElements/FormField";
+import FormInputText from "../../../../components/FormElements/FormInputText";
+import FormInputTextArea from "../../../../components/FormElements/FormInputTextArea";
+import PageDivider from "../../../../components/PageDivider";
+import PageP from "../../../../components/PageElements/PageP";
+import PageRow from "../../../../components/PageElements/PageRow";
+import RadioButton from "../../../../components/RadioButton";
+import ServicePrice from "../../../../components/ServicePrice";
 import {
   BUTTON_SIZE,
   BUTTON_TYPE,
   ColorOptionsItems,
   DeliverablesOptions,
   AllowStockOptions,
-} from "constants/";
-import PT from "prop-types";
-import React, { useEffect, useState } from "react";
+} from "../../../../constants/";
 import ColorOptions from "../ColorOptions";
 import FontOptions from "../FontOptions";
-import "./styles.module.scss";
-import _ from "lodash";
-import Modal from "components/Modal";
+import Modal from "../../../../components/Modal";
 import PolicyContent from "../../../../components/Modal/PolicyContent";
-import PageH3 from "components/PageElements/PageH3";
+import PageH3 from "../../../../components/PageElements/PageH3";
+
+import styles from "./styles.module.scss";
 
 const BrandingForm = ({
   serviceType,
@@ -142,7 +143,7 @@ const BrandingForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.selectedDeliverableOption, formData.allowStockOption]);
   return (
-    <div styleName="brandingForm">
+    <div className={styles["brandingForm"]}>
       <Modal
         fullWidth
         show={isPolicyModalOpen}
@@ -160,10 +161,10 @@ const BrandingForm = ({
       />
 
       <PageDivider />
-      <PageRow styleName="form-row">
+      <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">{"STYLE & THEME"}</PageP>
-          <PageP styleName="description">
+          <PageP className={styles["title"]}>{"STYLE & THEME"}</PageP>
+          <PageP className={styles["description"]}>
             What ideas do you have for the overall style and theme of your
             website? For example, modern and minimalist, bold and colorful, or
             muted and masculine. Describe the vibe and personality you have in
@@ -172,12 +173,12 @@ const BrandingForm = ({
           </PageP>
         </div>
 
-        <div styleName="formFieldWrapper">
+        <div className={styles["formFieldWrapper"]}>
           <FormField label={"Style & Theme"}>
             <FormInputTextArea
               value={formData?.theme?.value}
               onChange={(e) => handleInputChange(e.target.name, e.target.value)}
-              styleName={"text-area"}
+              styleName={styles["text-area"]}
               name="theme"
               placeholder={"Be as descriptive as possible"}
             />
@@ -186,24 +187,24 @@ const BrandingForm = ({
       </PageRow>
 
       <PageDivider />
-      <PageRow styleName="form-row">
+      <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">Inspiration</PageP>
-          <PageP styleName="description">
+          <PageP className={styles["title"]}>Inspiration</PageP>
+          <PageP className={styles["description"]}>
             Are there other websites you would like our designers to draw
             inspiration from? List websites you like and describe what you like
             about them.
           </PageP>
         </div>
 
-        <div styleName="formFieldWrapper">
+        <div className={styles["formFieldWrapper"]}>
           {_.map(_.get(formData, "inspiration", []), (entry, index) => (
             <div key={index}>
               {index ? (
                 <div
                   role="button"
                   tabIndex="0"
-                  styleName="remove-website"
+                  className={styles["remove-website"]}
                   onClick={() => removeWebsite(index)}
                 >
                   Remove Website
@@ -235,7 +236,7 @@ const BrandingForm = ({
                       e.target.value
                     )
                   }
-                  styleName={"text-area"}
+                  styleName={styles["text-area"]}
                   name="feedback"
                   placeholder={"Describe what you like about this website"}
                 />
@@ -253,16 +254,16 @@ const BrandingForm = ({
       </PageRow>
 
       <PageDivider />
-      <PageRow styleName="form-row">
+      <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">COLORS</PageP>
-          <PageP styleName="description">
+          <PageP className={styles["title"]}>COLORS</PageP>
+          <PageP className={styles["description"]}>
             Pick up to three colors you'd like our designers to use. You can
             also include your specific brand colors.
           </PageP>
         </div>
 
-        <div styleName="formFieldWrapper">
+        <div className={styles["formFieldWrapper"]}>
           <ColorOptions
             colors={ColorOptionsItems}
             selectedColor={selectedColor}
@@ -272,9 +273,8 @@ const BrandingForm = ({
             }}
           />
           <FormField
-            label={`I Have Specific Colors ${
-              selectedColor?.value?.length > 0 ? "(optional)" : ""
-            }`}
+            label={`I Have Specific Colors ${selectedColor?.value?.length > 0 ? "(optional)" : ""
+              }`}
           >
             <FormInputTextArea
               placeholder={
@@ -282,7 +282,7 @@ const BrandingForm = ({
               }
               value={formData?.specificColor?.value}
               onChange={(e) => handleInputChange(e.target.name, e.target.value)}
-              styleName={"text-area"}
+              styleName={styles["text-area"]}
               name="specificColor"
             />
           </FormField>
@@ -290,16 +290,16 @@ const BrandingForm = ({
       </PageRow>
 
       <PageDivider />
-      <PageRow styleName="form-row">
+      <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">FONTS</PageP>
-          <PageP styleName="description">
+          <PageP className={styles["title"]}>FONTS</PageP>
+          <PageP className={styles["description"]}>
             Choose your general font style preference. If you have specific
             fonts that should be used, please share them.
           </PageP>
         </div>
 
-        <div styleName="formFieldWrapper">
+        <div className={styles["formFieldWrapper"]}>
           <FontOptions
             selectedFont={selectedFont}
             onSelect={(index, fontName) => {
@@ -312,7 +312,7 @@ const BrandingForm = ({
             }}
           />
 
-          <div styleName="uploadFonts">
+          <div className={styles["uploadFonts"]}>
             <p>
               I have specific fonts I want to use.
               <br />
@@ -320,9 +320,8 @@ const BrandingForm = ({
               etc.
             </p>
             <FormField
-              label={`Shareable Font URL ${
-                _.isNull(selectedFont) ? "" : "(Optional)"
-              }`}
+              label={`Shareable Font URL ${_.isNull(selectedFont) ? "" : "(Optional)"
+                }`}
             >
               <FormInputText
                 placeholder={"www.example-share-link.com"}
@@ -334,16 +333,15 @@ const BrandingForm = ({
               />
             </FormField>
             <FormField
-              label={`How to Use Your Fonts ${
-                _.isNull(selectedFont) ? "" : "(Optional)"
-              }`}
+              label={`How to Use Your Fonts ${_.isNull(selectedFont) ? "" : "(Optional)"
+                }`}
             >
               <FormInputTextArea
                 placeholder={
                   "Describe in detail how you would like our designers to use your fonts"
                 }
                 value={formData?.fontUsageDescription?.value}
-                styleName={"text-area"}
+                styleName={styles["text-area"]}
                 name="fontUsageDescription"
                 onChange={(e) =>
                   handleInputChange(e.target.name, e.target.value)
@@ -355,18 +353,18 @@ const BrandingForm = ({
       </PageRow>
 
       <PageDivider />
-      <PageRow styleName="form-row">
+      <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">Other Assets (optional)</PageP>
-          <PageP styleName="description">
+          <PageP className={styles["title"]}>Other Assets (optional)</PageP>
+          <PageP className={styles["description"]}>
             Do you have any additional assets that would be helpful to our
             designers? For example, your current logo, branding direction,
             photos, illustrations, content, layout ideas, etc.
           </PageP>
         </div>
 
-        <div styleName="formFieldWrapper">
-          <div styleName="assets">
+        <div className={styles["formFieldWrapper"]}>
+          <div className={styles["assets"]}>
             <p>
               Share a link to your publicly accessible assets via drive,
               dropbox, etc.
@@ -386,21 +384,21 @@ const BrandingForm = ({
       </PageRow>
 
       <PageDivider />
-      <PageRow styleName="form-row">
+      <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">Anything to avoid? (optional)</PageP>
-          <PageP styleName="description">
+          <PageP className={styles["title"]}>Anything to avoid? (optional)</PageP>
+          <PageP className={styles["description"]}>
             If there are any themes, ideas, or specific directions our designers
             should avoid, please let us know. Be as descriptive as possible.
           </PageP>
         </div>
 
-        <div styleName="formFieldWrapper">
+        <div className={styles["formFieldWrapper"]}>
           <FormField label={"Anything To Avoid? (Optional)"}>
             <FormInputTextArea
               value={formData?.anythingToAvoid?.value}
               onChange={(e) => handleInputChange(e.target.name, e.target.value)}
-              styleName={"text-area"}
+              styleName={styles["text-area"]}
               name="anythingToAvoid"
               placeholder={"Describe themes or ideas to avoid"}
             />
@@ -409,17 +407,17 @@ const BrandingForm = ({
       </PageRow>
 
       <PageDivider />
-      <PageRow styleName="form-row">
+      <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">Allow Stock Photos?</PageP>
-          <PageP styleName="description">
-            ​​There may be additional costs for designs that use stock images.
+          <PageP className={styles["title"]}>Allow Stock Photos?</PageP>
+          <PageP className={styles["description"]}>
+            There may be additional costs for designs that use stock images.
             Our designers will include details for any stock images used, so you
             can buy them at the end of the project.{" "}
             <span
               role="button"
               tabIndex={0}
-              styleName="link"
+              className={styles["link"]}
               onClick={() => setIsPolicyModalOpen(true)}
             >
               Learn more about our stock photo policy
@@ -428,7 +426,7 @@ const BrandingForm = ({
           </PageP>
         </div>
 
-        <div styleName="formFieldWrapper">
+        <div className={styles["formFieldWrapper"]}>
           <RadioButton
             onChange={(items) => {
               const selectedOption = items.findIndex((item) => item.value);
@@ -446,16 +444,16 @@ const BrandingForm = ({
       </PageRow>
 
       <PageDivider />
-      <PageRow styleName="form-row">
+      <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">Final Deliverable SOURCE FILES</PageP>
-          <PageP styleName="description">
+          <PageP className={styles["title"]}>Final Deliverable SOURCE FILES</PageP>
+          <PageP className={styles["description"]}>
             If you want your final deliverables created with a specific design
             software, please specify.{" "}
           </PageP>
         </div>
 
-        <div styleName="formFieldWrapper">
+        <div className={styles["formFieldWrapper"]}>
           <RadioButton
             onChange={(items) => {
               const selectedOption = items.findIndex((item) => item.value);
@@ -471,7 +469,7 @@ const BrandingForm = ({
           />
 
           {formData.selectedDeliverableOption?.value === 4 && (
-            <div styleName="customDeliverable">
+            <div className={styles["customDeliverable"]}>
               <FormField label={"Desired Deliverable Format"}>
                 <FormInputText
                   placeholder={"Describe your desired deliverable format file"}
