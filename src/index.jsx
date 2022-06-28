@@ -7,13 +7,13 @@ import ReduxToastr from "react-redux-toastr";
 
 import {
   AppNextGen,
+  PageFooter,
+  ProfileProvider,
   RouteProvider,
   routeRootLoggedIn,
   routeRootLoggedOut,
   ToolsRoutes,
   UtilsRoutes,
-  PageFooter,
-  ProfileProvider,
 } from "../src-ts";
 
 import App from "./App";
@@ -24,38 +24,43 @@ import "./styles/main.vendor.scss";
 const history = createHistory(window);
 
 ReactDOM.render(
-  <Provider store={store}>
-    <ProfileProvider>
-      <BrowserRouter>
-        <RouteProvider
-          rootLoggedIn={routeRootLoggedIn}
-          rootLoggedOut={routeRootLoggedOut}
-          toolsRoutes={[...ToolsRoutes]}
-          utilsRoutes={[...UtilsRoutes]}
-        >
-          <StrictMode>
-            <AppNextGen />
-          </StrictMode>
-        </RouteProvider>
-      </BrowserRouter>
+  <div className="root-container">
+    <Provider store={store}>
+      <ProfileProvider>
 
-      <LocationProvider history={history}>
-        <App />
-        <ReduxToastr
-          timeOut={3000}
-          newestOnTop={false}
-          preventDuplicates
-          position="top-right"
-          getState={(state) => state.toastr}
-          transitionIn="fadeIn"
-          transitionOut="fadeOut"
-          progressBar
-          closeOnToastrClick
-        />
-      </LocationProvider>
+        <BrowserRouter>
+          <RouteProvider
+            rootLoggedIn={routeRootLoggedIn}
+            rootLoggedOut={routeRootLoggedOut}
+            toolsRoutes={[...ToolsRoutes]}
+            utilsRoutes={[...UtilsRoutes]}
+          >
+            <StrictMode>
+              <AppNextGen />
+            </StrictMode>
+          </RouteProvider>
+        </BrowserRouter>
 
-      <PageFooter />
-    </ProfileProvider>
-  </Provider>,
+        <LocationProvider history={history}>
+          <App />
+          <ReduxToastr
+            timeOut={3000}
+            newestOnTop={false}
+            preventDuplicates
+            position="top-right"
+            getState={(state) => state.toastr}
+            transitionIn="fadeIn"
+            transitionOut="fadeOut"
+            progressBar
+            closeOnToastrClick
+          />
+        </LocationProvider>
+
+        <PageFooter />
+
+      </ProfileProvider>
+    </Provider>
+  </div>
+  ,
   document.getElementById('root')
 )

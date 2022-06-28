@@ -119,7 +119,6 @@ const SelectWorkType = ({
   toggleSupportModal,
 }) => {
 
-  console.debug('selecting')
   const dispatch = useDispatch();
   const [isLoading] = useState(false);
   const showSupportModal = useSelector((state) => state.form.showSupportModal);

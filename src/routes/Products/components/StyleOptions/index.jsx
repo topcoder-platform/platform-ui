@@ -18,7 +18,6 @@ const StyleOptions = ({
   onDislike,
   onSelect,
 }) => {
-  console.debug(styles, moduleStyles[styles[0].className])
   return (
     <div className={moduleStyles["styleOptions"]}>
       {styles.map((style, index) => (
