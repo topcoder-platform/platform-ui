@@ -1,0 +1,452 @@
+@import "styles/include";
+
+.heroContainer {
+  position: static;
+  min-width: 610px;
+  left: 0px;
+  top: 0px;
+  margin: 16px 0px;
+
+  display: grid;
+  grid-template-columns: 1fr 359px;
+
+  background: linear-gradient(263.22deg, #038664 2.65%, #075f96 98.14%), #ffffff;
+  border-radius: 8px;
+
+  &.website-design,
+  &.website-design-new {
+    background: linear-gradient(263.22deg, #038664 2.65%, #075f96 98.14%),
+      #ffffff;
+  }
+
+  &.data-exploration {
+    background: linear-gradient(263.22deg, #038664 2.65%, #075f96 98.14%),
+      #ffffff;
+  }
+
+  &.find-me-data {
+    background: linear-gradient(84.92deg, #723390 2.08%, #8c384f 97.43%);
+  }
+
+  .heroBackgroundContainer {
+    position: static;
+    width: 359px;
+    left: 793px;
+    top: 0px;
+    margin: 0px;
+
+    flex: none;
+    order: 1;
+    align-self: stretch;
+    flex-grow: 0;
+
+    border-radius: 0 8px 8px 0;
+
+    &.website-design {
+      background: url("../../assets/images/website-design.png");
+      background-size: cover;
+    }
+
+    &.data-exploration {
+      background: url("../../assets/images/data-exploration.png");
+      background-size: cover;
+    }
+
+    &.find-me-data {
+      background: url("../../assets/images/find-me-data.png");
+      background-size: cover;
+    }
+  }
+
+  .heroContent {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 32px 0px;
+
+    color: $black-0;
+
+    position: static;
+    left: 32px;
+    top: 0px;
+
+    /* Inside auto layout */
+    flex: none;
+    order: 0;
+    flex-grow: 1;
+    margin: 0px 24px;
+
+    .heroHeader {
+      /* Auto layout */
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      padding: 0px;
+
+      position: static;
+      height: 48px;
+      left: 0px;
+      top: 0px;
+
+      /* Inside auto layout */
+      flex: none;
+      order: 0;
+      align-self: stretch;
+      flex-grow: 0;
+
+      .heroIconContainer {
+        /* Auto layout */
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        padding: 4px 0px 0px;
+        margin-right: 16px;
+
+        position: static;
+        width: 40px;
+        height: 44px;
+        left: 0px;
+        top: 0px;
+      }
+
+      .heroHeaderContent {
+        /* Auto layout */
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        row-gap: 16px;
+        padding: 0px;
+
+        position: static;
+        height: 48px;
+        left: 56px;
+        top: 0px;
+
+        /* Inside auto layout */
+        flex: none;
+        order: 1;
+        flex-grow: 1;
+
+        text-transform: uppercase;
+        font-size: 24px;
+        font-weight: 400;
+
+        .heroHeaderSubtitle {
+          font-size: 16px;
+
+          .strikeThrough {
+            text-decoration: line-through;
+          }
+
+          .priceChip {
+            background-color: $black-0;
+            color: $gui-kit-gray-90;
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 0 8px;
+            margin: 0 8px;
+          }
+
+          .separator {
+            margin: 0 16px 0 8px;
+          }
+        }
+      }
+    }
+
+    .heroText {
+      position: static;
+      // height: 96px;
+      left: 0px;
+      top: 64px;
+      max-width: 713px;
+
+      /* desktop/body-large */
+      font-family: Roboto;
+      font-style: normal;
+      font-weight: normal;
+      font-size: 24px;
+      line-height: 32px;
+      /* or 133% */
+
+      /* gray/white */
+      color: #ffffff;
+
+      /* Inside auto layout */
+      order: 1;
+      margin: 16px 0px;
+      flex: none;
+      align-self: stretch;
+      flex-grow: 0;
+    }
+
+    .heroButtonContainer {
+      /* Auto layout */
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 0px;
+
+      position: static;
+      height: 40px;
+      left: 0px;
+      top: 216px;
+
+      /* Inside auto layout */
+      flex: none;
+      order: 1;
+      align-self: stretch;
+      flex-grow: 0;
+      margin: 12px 0px;
+    }
+  }
+}
+
+.cardContainer {
+  display: flex;
+  column-gap: 8px;
+  justify-content: space-around;
+  margin-top: 1rem;
+
+  @include mobile {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    row-gap: 8px;
+  }
+
+  .card {
+    /* Auto layout */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    row-gap: 8px;
+    padding: 32px;
+
+    position: static;
+    width: 500px;
+    max-width: 100%;
+    height: 100%;
+    min-height: 172px;
+    margin-top: 1rem;
+
+    /* gray/white */
+    background: $black-0;
+    /* Button hover shadow */
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+
+    .title,
+    .smallHeader {
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .smallHeader {
+      font-size: 12px;
+    }
+
+    .title {
+      font-size: 24px;
+    }
+
+    .text {
+      font-size: 16px;
+      line-height: 26px;
+      text-align: center;
+    }
+  }
+}
+
+.backButtonContainer {
+  @include backButtonContainer;
+
+  .backButtonWrapper {
+    @include backButtonWrapper;
+  }
+}
+
+.pageContent {
+  margin-top: 0;
+  padding-right: 0;
+  padding-left: 0;
+  padding-top: 28px;
+}
+
+.pageHeading {
+  margin-bottom: 0;
+  margin-top: 0;
+  font-weight: 600;
+  color: #2a2a2a;
+
+  @include mobile {
+    font-size: 28px;
+  }
+}
+
+.workTypeCard {
+  max-width: 100%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  border-radius: 8px;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.workTypeCardContentContainer {
+  border-radius: inherit;
+}
+
+.workTypeCardSubHeading {
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  margin: 0;
+
+  @include mobile {
+    font-size: 10px;
+  }
+}
+
+.workTypeCardHeading {
+  font-weight: 600;
+  font-size: 24px;
+  text-transform: uppercase;
+  margin: 0;
+
+  @include mobile {
+    font-size: 20px;
+  }
+}
+
+.workTypeCardSmall {
+  position: relative;
+  width: 435px;
+  height: 362px;
+  text-align: left;
+  padding-bottom: 90px;
+
+  @include mobile {
+    height: 380px;
+  }
+}
+
+.workTypeCardSmall .workTypeCardSubHeading {
+  letter-spacing: 1px;
+}
+
+.workTypeCardCtaButton {
+  border-color: #fff !important;
+}
+
+.workTypeCardContent {
+  padding-bottom: 48px;
+  @include font-roboto;
+
+  @include mobile {
+    font-weight: 500;
+    font-size: 12px;
+  }
+}
+
+.workTypeCardSmall .workTypeCardContent {
+  padding-bottom: 48px;
+
+  @include desktop {
+    opacity: 0;
+    transition: opacity 240ms ease-in-out;
+  }
+}
+
+.workTypeCardSmall .workTypeCardCtaButton {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+
+  @include desktop {
+    opacity: 0;
+    transform: translateY(1rem);
+    transition: opacity 240ms ease-in-out, transform 400ms ease-in-out;
+  }
+}
+
+.workTypeCardSmall .workTypeCardContentContainer {
+  background: linear-gradient(180deg, #2a2a2a 0%, rgba(42, 42, 42, 0) 78.12%),
+    linear-gradient(180deg, #2a2a2a 0%, rgba(42, 42, 42, 0) 100%);
+}
+
+.workTypeCardSmall .workTypeCardContentContainer {
+  padding: 24px;
+}
+
+.workTypeCardSmall .workTypeCardContent {
+  margin-top: 1rem;
+}
+
+.workTypeCardSmall:hover .workTypeCardContent {
+  opacity: 1;
+}
+
+.workTypeCardSmall:hover .workTypeCardCtaButton {
+  @include desktop {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.workTypeCardWide {
+  display: flex;
+  padding: 24px;
+  gap: 24px;
+
+  @include mobile {
+    flex-direction: column;
+  }
+}
+
+.workTypeCardWide svg {
+  min-width: fit-content;
+}
+
+.workTypeCardWide .workTypeCardSubHeading,
+.workTypeCardWide .workTypeCardCtaButton {
+  margin-top: 1rem !important;
+}
+
+.workTypeCardWide::before {
+  content: "";
+  position: absolute;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.workTypeCardWide .workTypeCardHeading {
+  @include font-barlow;
+}
+
+.workTypeCardWide .workTypeCardSubHeading {
+  @include font-roboto;
+  font-weight: 500;
+  font-size: 16px;
+
+  @include mobile {
+    font-size: 14px;
+  }
+}
+
+.workTypeSlider {
+  margin-bottom: 1rem;
+}
+
+.hideOnDesktop {
+  @include desktop {
+    display: none;
+  }
+}
+
+.hideOnMobile {
+  @include mobile {
+    display: none;
+  }
+}

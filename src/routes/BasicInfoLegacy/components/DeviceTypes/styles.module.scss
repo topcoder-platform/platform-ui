@@ -1,0 +1,60 @@
+@import "styles/include";
+
+.device-types {
+
+  display: flex;
+  gap: 32px;
+
+  .device {
+    cursor: pointer;
+
+    .iconWrapper {
+      display: flex;
+      justify-content: center;
+      width: 112px;
+      height: 112px;
+      border-radius: 4px;
+
+      outline: 1px solid $grey-text;
+
+      svg {
+        align-self: center;
+      }
+
+      &.active {
+        background-color: $green1;
+        outline: 0;
+      }
+    }
+
+
+    .title {
+      @include font-roboto;
+      text-align: center;
+      margin-top: 8px;
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 26px;
+      color: $black;
+    }
+
+    .subTitle {
+      @include font-roboto;
+      text-align: center;
+      color: $black;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 26px;
+    }
+
+    .subDescription {
+      @include font-roboto;
+      text-align: center;
+      color: $black;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 20px;
+    }
+  }
+
+}

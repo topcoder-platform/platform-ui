@@ -1,0 +1,10 @@
+@import "styles/include";
+
+.page-h1 {
+  margin: 30px 0 20px 0;
+  @include font-barlow;
+  font-size: 44px;
+  font-weight: 410;
+  line-height: 40px;
+  text-transform: uppercase;
+}

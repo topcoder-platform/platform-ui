@@ -1,0 +1,11 @@
+@import "styles/include";
+
+.page-h3 {
+  margin: 15px 0;
+  @include font-barlow;
+  font-weight: normal;
+  font-size: 22px;
+  font-weight: 420;
+  line-height: 30px;
+  text-transform: uppercase;
+}

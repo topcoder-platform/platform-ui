@@ -1,0 +1,15 @@
+.container {
+  display: flex;
+  align-items: center;
+
+  > svg {
+    flex: 0 0 auto;
+    width: auto;
+    height: 16px;
+    // margin-left: 10px;
+
+    &:first-child {
+      margin-left: 0;
+    }
+  }
+}

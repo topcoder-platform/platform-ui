@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="4px" viewBox="0 0 16 4" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+        <path d="M8,0 C9.105,0 10,0.895 10,2 C10,3.105 9.105,4 8,4 C6.895,4 6,3.105 6,2 C6,0.895 6.895,0 8,0 Z M2,0 C3.105,0 4,0.895 4,2 C4,3.105 3.105,4 2,4 C0.895,4 0,3.105 0,2 C0,0.895 0.895,0 2,0 Z M14,0 C15.105,0 16,0.895 16,2 C16,3.105 15.105,4 14,4 C12.895,4 12,3.105 12,2 C12,0.895 12.895,0 14,0 Z" id="path-1"></path>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="01B-My-Teams" transform="translate(-599.000000, -204.000000)">
+            <g id="My-team-card" transform="translate(305.000000, 182.000000)">
+                <g id="UI-Kit/Icons/ui/dots-horizontal" transform="translate(294.000000, 22.000000)">
+                    <mask id="mask-2" fill="white">
+                        <use xlink:href="#path-1"></use>
+                    </mask>
+                    <use id="icon-color" fill="#2A2A2A" xlink:href="#path-1"></use>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

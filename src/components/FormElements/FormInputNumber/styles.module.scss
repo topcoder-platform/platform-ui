@@ -1,0 +1,25 @@
+@import "styles/include";
+
+.form-input-number {
+  background-color: #ffffff !important;
+  box-sizing: border-box !important;
+  color: #444 !important;
+  font-size: 18px !important;
+  height: 32px !important;
+  outline: none !important;
+  border: 0 !important;
+  padding: 0 15px !important;
+  width: 100% !important;
+  &::placeholder {
+    color: #aaaaaa !important;
+    font-size: 18px !important;
+    text-transform: none !important;
+  }
+  &:focus {
+    box-shadow: none !important;
+  }
+
+  &:disabled {
+    background-color: $grey-bg !important;
+  }
+}

@@ -1,0 +1,68 @@
+@import "styles/include";
+
+.pageDetailsForm {
+  .title {
+    font-weight: 600;
+    color: $grey-text;
+    font-size: 20px;
+    line-height: 20px;
+    text-transform: uppercase;
+  }
+
+  .description {
+    @include font-roboto;
+    font-size: 16px;
+    line-height: 26px;
+    margin-top: 24px;
+    color: $grey-text;
+  }
+
+  .form-row {
+    align-items: flex-start;
+  }
+
+  .formFieldWrapper {
+    margin-top: 18px;
+  }
+
+  .list {
+    list-style-type: decimal;
+    list-style-position: outside;
+    margin-left: 15px;
+  }
+
+  .link {
+    cursor: pointer;
+    color: $link-blue;
+    text-decoration: underline;
+    margin-top: 20px;
+  }
+
+  .page{
+    margin-top: 38px;
+  }
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+
+    .page-title {
+      font-size: 16px;
+      line-height: 20px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: $black;
+      margin-bottom: 16px;
+    }
+
+    .remove-page {
+      color: $green1;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+}

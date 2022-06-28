@@ -1,0 +1,40 @@
+@import "styles/include";
+
+.container {
+  line-height: 20px;
+
+  p {
+    @include font-roboto;
+    font-weight: 400;
+    color: #404041;
+    font-size: 15px;
+    color: #2a2a2a;
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+
+  li {
+    margin-bottom: 10px;
+  }
+
+  a {
+    text-decoration: underline;
+    color: $link-blue;
+  }
+
+  ol {
+    list-style: decimal;
+    list-style-type: decimal;
+    padding-left: 30px;
+
+    ul {
+      margin-top: 10px;
+    }
+  }
+
+  ul {
+    list-style: disc;
+    list-style-type: disc;
+    padding-left: 30px;
+  }
+}
