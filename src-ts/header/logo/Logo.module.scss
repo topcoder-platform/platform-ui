@@ -1,0 +1,33 @@
+@import '../../lib/styles/includes';
+
+.logo-no-link,
+.logo-link {
+    display: flex;
+
+    a {
+        display: flex;
+    }
+
+    svg {
+        width: calc($pad-xxl + $pad-xxxxl);
+        height: $pad-xl;
+        fill: none;
+
+        path {
+            fill: $tc-white;
+        }
+
+        @include ltemd {
+            padding: 0;
+        }
+    }  
+    @include ltemd {
+        margin: 0 auto;
+    }
+}
+
+.logo-no-link {
+    a {
+        cursor: default;
+    }
+}

@@ -1,0 +1,38 @@
+@import "../../styles/include";
+
+.onboard-progress {
+  position: absolute;
+  right: 30px;
+  top: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.level-container {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  color: $black;
+
+  .level {
+    margin-bottom: 8px;
+
+    .level-num {
+      font-weight: bold;
+    }
+
+    .muted {
+      color: #ddd;
+    }
+  }
+}
+
+.progress-donut-chart {}
+
+.progress-popup-toggle {
+  cursor: pointer;
+
+  * {
+    fill: $green1;
+  }
+}

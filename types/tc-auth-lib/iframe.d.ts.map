@@ -1,1 +1,10 @@
-{"version":3,"file":"iframe.d.ts","sourceRoot":"","sources":["../src/iframe.js"],"names":[],"mappings":"AAAA,kEAYC"}
+{
+    "version": 3,
+    "file": "iframe.d.ts",
+    "sourceRoot": "",
+    "sources": [
+        "../src/iframe.js"
+    ],
+    "names": [],
+    "mappings": "AAAA,kEAYC"
+}

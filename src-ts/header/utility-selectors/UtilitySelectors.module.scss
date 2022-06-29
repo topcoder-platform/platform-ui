@@ -1,0 +1,7 @@
+@import '../../lib/styles/includes';
+
+.utility-selectors {
+    display: flex;
+    justify-content: flex-end;
+    min-width: calc($pad-xxl + $pad-xxxxl);
+}

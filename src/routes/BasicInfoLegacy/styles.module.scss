@@ -1,0 +1,22 @@
+@import "../../styles/include";
+
+.footerContent {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+
+  .footer-right {
+    display: flex;
+    gap: 16px;
+  }
+}
+
+.container {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.backButtonWrapper {
+  @include backButtonWrapper;
+}

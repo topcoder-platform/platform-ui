@@ -1,0 +1,61 @@
+@import '../styles/includes';
+@import '../styles/typography';
+
+.footer-wrap {
+    height: $footer-height;
+    border-top: $border-xs solid $black-10;
+}
+
+.footer-inner {
+    display: flex;
+
+    align-items: center;
+    padding: $pad-lg 0;
+    max-width: $xxl-min;
+    margin: 0 auto;
+
+    @include pagePaddings;
+
+    @extend .body-ultra-small;
+    color: $black-100;
+
+    @include ltesm {
+        flex-direction: column;
+        gap: $pad-sm;
+    }
+}
+
+.utils {
+    display: flex;
+    align-items: center;
+    gap: $pad-lg;
+
+    > div > * + * {
+        margin-left: $pad-lg;
+    }
+
+    @include ltesm {
+        flex-direction: column;
+        gap: $pad-sm;
+        
+        > div > * + * {
+            margin-left: $pad-sm;
+        }
+    }
+}
+
+.social {
+    display: flex;
+    align-items: center;
+    gap: $pad-xs;
+    color: $black-60;
+
+    margin-left: auto;
+
+    a {
+        display: flex;
+    }
+    @include ltesm {
+        margin-right: auto;
+    }
+}

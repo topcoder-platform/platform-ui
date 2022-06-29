@@ -1,0 +1,64 @@
+@use '../../lib/styles/typography';
+@import '../../lib/styles/includes';
+
+$avatar-size-sm: 32px;
+$border-size-sm: $border;
+$avatar-size-xl: 120px;
+$border-size-xl: $pad-xs;
+
+.avatar-container {
+    overflow: hidden;
+    background-color: $tc-white;
+    border-radius: 50%;
+
+    &.sm {
+        height: $avatar-size-sm;
+        width: $avatar-size-sm;
+    }
+
+    &.xl {
+        height: $avatar-size-xl;
+        width: $avatar-size-xl;
+    }
+
+    .avatar {
+        background-color: $tc-white;
+        border-radius: 50%;
+        border: solid $tc-white;
+
+        &.sm {
+            border-width: $border-size-sm;
+            height: $avatar-size-sm;
+            width: $avatar-size-sm;
+        }
+
+        &.xl {
+            border-width: $border-size-xl;
+            height: $avatar-size-xl;
+            width: $avatar-size-xl;
+        }
+
+        &.avatar-img {
+            border: 0 none;
+        }
+    }
+
+    .avatar-letters {
+        display: flex;
+        justify-content: center;
+        text-transform: uppercase;
+        align-items: center;
+        color: $tc-white;
+        background-color: $blue-100;
+        font-weight: $font-weight-medium;
+
+        &.sm {
+            @extend .medium-subtitle;
+        }
+
+        &.xl {
+            @extend h1;
+            padding: 0;
+        }
+    }
+}

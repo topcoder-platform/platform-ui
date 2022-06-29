@@ -1,0 +1,59 @@
+@use '../../../../../../lib/styles/typography';
+@import '../../../../../../lib/styles/includes';
+
+$arrowTipIconHeight: 9px;
+
+.profile-panel {
+    @extend .body-ultra-small;
+    position: absolute;
+    z-index: 1000;
+    top: calc($pad-xxxxl + 4px + $arrowTipIconHeight);
+    right: calc(-1 * $pad-xxxxl / 2);
+    width: 168px;
+    display: flex;
+    flex-direction: column;
+    filter: drop-shadow(0px 1px 5px rgba(0, 0, 0, 0.2));
+
+    background-color: $tc-white;
+    color: $black-100;
+    border-radius: $pad-sm;
+
+    padding: $pad-sm $pad-lg $pad-lg;
+
+    .arrow-tip {
+        display: flex;
+        position: absolute;
+        top: -1 * $arrowTipIconHeight;
+        right: 15px;
+        svg {
+            path {
+                fill: $tc-white;
+            }
+        }
+    }
+    
+    .handle {
+        @extend .medium-subtitle;
+    }
+
+    hr {
+        margin: $pad-sm 0;
+    }
+
+    .nav-item {
+        display: flex;
+        cursor: pointer;
+        align-items: center;
+        gap: 4px;
+        + .nav-item {
+            margin-top: $pad-sm;
+        }
+
+        .icon {
+            display: flex;
+            svg {
+                @include icon-lg;
+            }
+        }
+    }
+}

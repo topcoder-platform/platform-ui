@@ -1,0 +1,12 @@
+@import '../../../../../lib/styles/includes';
+
+@include ltemd {
+    .login,
+    .signup {
+        display: none;
+
+        &:last-of-type {
+            display: inline;
+        }
+    }
+}

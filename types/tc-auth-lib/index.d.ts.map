@@ -1,1 +1,10 @@
-{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../src/index.ts"],"names":[],"mappings":"AAAA,cAAc,qBAAqB,CAAA;AACnC,cAAc,UAAU,CAAA;AACxB,cAAc,SAAS,CAAA"}
+{
+    "version": 3,
+    "file": "index.d.ts",
+    "sourceRoot": "",
+    "sources": [
+        "../src/index.ts"
+    ],
+    "names": [],
+    "mappings": "AAAA,cAAc,qBAAqB,CAAA;AACnC,cAAc,UAAU,CAAA;AACxB,cAAc,SAAS,CAAA"
+}

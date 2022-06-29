@@ -1,0 +1,33 @@
+@import '../../../../lib/styles/includes';
+
+.tool-selector-narrow {
+
+    a:last-of-type {
+        border-bottom: 1px solid $black-60;
+    }
+
+    .tool-selector-narrow-link {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid $black-60;
+        padding: $pad-lg 0;
+        color: $tc-white;
+        font-weight: $font-weight-medium;
+        background-color: $black-100;
+
+        svg {
+            @include icon-lg;
+            fill: $tc-white;
+
+            path {
+                stroke-width: 1.13px;
+                fill: none;
+            }
+        }
+
+        &.tool-selector-narrow-active {
+            color: $turq-100;
+        }
+    }
+}
