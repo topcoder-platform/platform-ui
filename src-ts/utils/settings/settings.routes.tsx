@@ -10,13 +10,11 @@ export const settingsRoutes: Array<PlatformRoute> = [
             {
                 children: [],
                 element: <Account />,
-                enabled: true,
                 route: '',
                 title: ToolTitle.settings,
             },
         ],
         element: <Settings />,
-        enabled: true,
         requireAuth: true,
         route: '/account',
         title: ToolTitle.settings,
