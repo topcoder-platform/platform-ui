@@ -20,7 +20,6 @@ export const workRoutes: Array<PlatformRoute> = [
             {
                 children: [],
                 element: <WorkTable />,
-                enabled: true,
                 route: '',
                 title: toolTitle,
             },
@@ -30,13 +29,11 @@ export const workRoutes: Array<PlatformRoute> = [
             {
                 children: [],
                 element: <WorkTable />,
-                enabled: true,
                 route: ':statusKey',
                 title: toolTitle,
             },
         ],
         element: <Work />,
-        enabled: true,
         requireAuth: true,
         route: workRootRoute,
         title: toolTitle,
@@ -44,7 +41,6 @@ export const workRoutes: Array<PlatformRoute> = [
     {
         children: [],
         element: <Navigate to={workRootRoute} />,
-        enabled: true,
         hide: true,
         route: `${selfServiceRootRoute}/dashboard`,
         title: 'Obsolete Self Service Dashboard',
