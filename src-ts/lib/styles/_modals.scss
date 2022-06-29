@@ -1,0 +1,57 @@
+@import '~react-responsive-modal/styles.css';
+@import 'mixins/breakpoints.mixins';
+@import 'variables/palette';
+@import 'variables/spacing';
+
+.react-responsive-modal-container {
+    display: flex;
+
+    .react-responsive-modal-modal {
+        display: flex;
+        flex-direction: column;
+        width: 100vw;
+        height: 100vh;
+        margin: auto;
+        border-radius: 0;
+        padding: $pad-xxl $pad-xxxxl $pad-xxxxl;
+
+        &.modal-md {
+            width: 450px;
+        }
+
+        &.modal-lg {
+            width: 700px;
+        }
+
+        @include ltemd {
+            max-width: 450px;
+        }
+
+        @include gtemd {
+            width: auto;
+            height: auto;
+            border-radius: $pad-sm;
+            max-height: 93vh;
+            min-width: 450px;
+        }
+
+        .react-responsive-modal-closeButton {
+            top: $pad-xl;
+            padding: $pad-xs;
+            border-radius: 50%;
+
+            svg {
+                fill: $turq-160;
+
+                @include gtemd {
+                    fill: $black-100;
+                }
+            }
+
+            &:focus {
+                background-color: $black-10;
+                outline: 0;
+            }
+        }
+    }
+}

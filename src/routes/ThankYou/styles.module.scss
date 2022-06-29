@@ -1,0 +1,26 @@
+@import "../../styles/include";
+
+.container {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+
+  .content {
+    color: $black;
+    font-size: 16px;
+    line-height: 26px;
+
+    .content-container {
+
+      p {
+        padding: 24px;
+      }
+    }
+  }
+
+  .btn {
+    display: flex;
+    justify-content: center;
+    margin-top: 76px;
+  }
+}

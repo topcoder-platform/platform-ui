@@ -1,0 +1,20 @@
+@import "../../../../lib/styles/includes";
+
+.wrap {
+    margin-bottom: calc($pad-lg + $pad-xxl);
+    padding: $pad-lg $pad-xxl $pad-xxl;
+    border-radius: $pad-sm;
+    @extend .bg-black-5;
+    color: $black-100;
+
+    h3 {
+        margin-bottom: $pad-lg;
+        color: $black-100;
+    }
+}
+
+.line {
+    + .line {
+        margin-top: $pad-lg;
+    }
+}

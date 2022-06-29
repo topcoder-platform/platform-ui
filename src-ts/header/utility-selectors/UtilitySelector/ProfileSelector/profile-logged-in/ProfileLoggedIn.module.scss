@@ -1,0 +1,32 @@
+@import '../../../../../lib/styles/includes';
+
+$overlaySquare: $pad-xxxxl;
+
+.profile-avatar,
+.overlay {
+    cursor: pointer;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    background: $black-100-opacity-80;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    border-radius: 50%;
+
+    svg {
+        stroke: $turq-160;
+        stroke-width: $border;
+        @include icon-xxl;
+    }
+}
+
+.profile-avatar {
+    position: relative;
+}

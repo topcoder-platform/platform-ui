@@ -1,0 +1,39 @@
+@import '../../../../../lib/styles';
+
+.wrap {
+  counter-increment: solutionListItem;
+
+  @extend .body-main;
+  @include font-black-100;
+  
+  display: flex;
+  align-items: center;
+  gap: $pad-lg;
+
+  position: relative;
+  padding: $pad-lg 0;
+  border-top: $border-xs solid $black-10;
+
+  &:last-child {
+    border-bottom: $border-xs solid $black-10;
+  }
+
+  &::before {
+    content: counter(solutionListItem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    font-weight: 700;
+    background-color: $orange-100;
+    border-radius: 50%;
+  }
+
+  .name {
+    margin-right: auto;
+    span + span {
+      margin-left: $pad-xs;
+    }
+  }
+}

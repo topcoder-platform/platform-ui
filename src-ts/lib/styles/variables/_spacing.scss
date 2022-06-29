@@ -1,0 +1,20 @@
+@import './layouts';
+
+/* Left Col includes the header logo link and the sections container */
+$left-col-width-md: $header-height;
+$left-col-width-lg: calc(1.2 * $header-height);
+$left-col-width-xl: calc(1.3 * $header-height);
+
+/* TODO: determine which UI library to use and replace below */
+
+/* Padding */
+$border-xs: 1px;
+$border: 2px;
+$pad-xs: calc(2 * $border); // 4
+$pad-sm: calc(2 * $pad-xs); // 8
+$pad-md: calc(3 * $pad-xs); // 12
+$pad-lg: calc(4 * $pad-xs); // 16
+$pad-xl: calc(5 * $pad-xs); // 20
+$pad-xxl: calc(6 * $pad-xs); // 24
+$pad-xxxl: calc(7 * $pad-xs); // 28
+$pad-xxxxl: calc(8 * $pad-xs); // 32
