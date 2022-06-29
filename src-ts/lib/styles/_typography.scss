@@ -34,10 +34,6 @@ h1 {
     font-family: $font-barlow-condensed;
     font-size: 34px;
     line-height: 32px;
-
-    &.details {
-        font-family: $font-barlow;
-    }
 }
 
 h2 {
@@ -77,6 +73,10 @@ h4 {
     font-weight: $font-weight-medium;
     font-size: 11px;
     line-height: 14px;
+    &-bold {
+        @extend .small-tab;
+        font-weight: $font-weight-bold;
+    }
 }
 
 /* Subtitles */
@@ -115,6 +115,10 @@ h4 {
     font-family: $font-roboto;
     font-size: 16px;
     line-height: 24px;
+    &-bold {
+        @extend .body-main;
+        font-weight: $font-weight-bold;
+    }
 }
 
 .body-large {
@@ -136,6 +140,12 @@ h4 {
     line-height: 26px;
 }
 
+.body-medium-normal {
+    font-weight: $font-weight-normal;
+    font-size: 20px;
+    line-height: 26px;
+}
+
 .body-medium-bold {
     font-weight: $font-weight-bold;
     font-family: $font-barlow;
@@ -145,14 +155,20 @@ h4 {
 }
 
 .body-small {
-    font-size: 14px !important;
-    line-height: 22px !important;
+    font-size: 14px;
+    line-height: 22px;
     font-weight: $font-weight-normal;
 }
 
 .body-small-medium {
     @extend .body-small;
     font-weight: $font-weight-medium;
+    letter-spacing: 0;
+}
+
+.body-small-bold {
+    @extend .body-small;
+    font-weight: $font-weight-bold;
     letter-spacing: 0;
 }
 
@@ -194,6 +210,14 @@ h4 {
     line-height: 16px;
     text-transform: uppercase;
     letter-spacing: 1px;
+}
+
+.quote-small {
+    font-size: 14px;
+    line-height: 22px;
+    font-family: $font-roboto;
+    font-weight: $font-weight-normal;
+    font-style: revert;
 }
 
 .label {
