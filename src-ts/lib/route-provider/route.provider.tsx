@@ -85,7 +85,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
             )
 
         // if the route has children, add the wildcard to the path
-        const path: string = `${route.route}${!route.children ? '' : '/*'}`
+        const path: string = `${route.route}${!route.children?.length ? '' : '/*'}`
 
         // return the route
         return (
