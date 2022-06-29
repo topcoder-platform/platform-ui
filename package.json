@@ -5,17 +5,14 @@
     "scripts": {
         "start": "sh start-ssl.sh",
         "start:bsouza": "sh start-ssl-bsouza.sh",
-        "start:mfe": "cross-env webpack-dev-server --port 8519 --host 0.0.0.0",
-        "build": "react-scripts build",
-        "build:dev": "sh build-dev.sh",
+        "build": "sh build-dev.sh",
         "build:prod": "sh build-prod.sh",
-        "eject": "react-scripts eject",
         "lint": "tslint 'src-ts/**/*.{ts,tsx}'",
         "lint:fix": "tslint 'src-ts/**/*.{ts,tsx}' --fix",
         "eslint": "eslint 'src/**/*.{js,jsx}'",
         "eslint:fix": "eslint 'src/**/*.{js,jsx}' --fix",
-        "test": "react-scripts test",
-        "test:no-watch": "npm test -- --watchAll=false"
+        "test": "react-scripts test --watchAll",
+        "test:no-watch": "react-scripts test --watchAll=false --passWithNoTests"
     },
     "dependencies": {
         "@datadog/browser-logs": "^4.5.0",
@@ -106,7 +103,6 @@
         "resolve-url-loader": "^3.1.2",
         "sass": "^1.48.0",
         "sass-loader": "^10.0.5",
-        "single-spa-react": "^2.14.0",
         "style-loader": "^2.0.0",
         "systemjs-webpack-interop": "^2.1.2",
         "webpack": "^4.41.2",
