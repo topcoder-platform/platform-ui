@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { connect, useSelector, useDispatch } from "react-redux";
-import { navigate } from "@reach/router";
 import _ from "lodash";
 import Button from "../../components/Button";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -26,9 +25,9 @@ import {
 } from "../../actions/form";
 import { triggerAutoSave } from "../../actions/autoSave";
 import { setProgressItem } from "../../actions/progress";
-import BackIcon from "../../assets/images/icon-back-arrow.svg";
+import { ReactComponent as BackIcon } from "../../assets/images/icon-back-arrow.svg";
 import BasicInfoFormLegacy from "./components/BasicInfoFormLegacy";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 import {
   getDynamicPriceAndTimeline,
   getDynamicPriceAndTimelineEstimate,
@@ -36,6 +35,7 @@ import {
 } from "../../utils/";
 
 import { Breadcrumb, ContactSupportModal } from "../../../src-ts";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Basic Info Page
@@ -58,7 +58,8 @@ const BasicInfoLegacy = ({
   });
   const isFormValid = formData?.projectTitle?.value.length;
   const dispatch = useDispatch();
-  const [isLoading, setLoading] = useState(false);
+  const navigate = useNavigate()
+  const [isLoading] = useState(false);
   const workType = useSelector((state) => state.form.workType);
   const basicInfo = useSelector((state) => state.form.basicInfo);
   const currentStep = useSelector((state) => state.progress.currentStep);
@@ -197,19 +198,19 @@ const BasicInfoLegacy = ({
 
           <PageDivider />
           <PageFoot>
-            <div styleName="footerContent">
+            <div className={styles["footerContent"]}>
               <div>
                 <Button
                   size={BUTTON_SIZE.MEDIUM}
                   type={BUTTON_TYPE.SECONDARY}
                   onClick={onBack}
                 >
-                  <div styleName="backButtonWrapper">
+                  <div className={styles["backButtonWrapper"]}>
                     <BackIcon />
                   </div>
                 </Button>
               </div>
-              <div styleName="footer-right">
+              <div className={styles["footer-right"]}>
                 <Button
                   disabled={!isFormValid}
                   size={BUTTON_SIZE.MEDIUM}

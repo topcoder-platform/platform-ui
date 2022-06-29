@@ -21,7 +21,7 @@ const App: FC<{}> = () => {
             <Header />
             <Routes>
                 {routeElements}
-            </Routes >
+            </Routes>
             <ToastContainer
                 position={toast.POSITION.TOP_RIGHT}
                 autoClose={3000}

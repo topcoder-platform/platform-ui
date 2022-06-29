@@ -1,4 +1,4 @@
-import { patchChallenge } from "services/challenge";
+import { patchChallenge } from "../services/challenge";
 import { getChallenge } from "../actions/challenge";
 import { autoSaveCookie } from "../autoSaveBeforeLogin";
 import { ACTIONS } from "../constants";

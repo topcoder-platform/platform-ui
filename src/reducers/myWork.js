@@ -1,4 +1,4 @@
-import { ACTIONS as ALL_ACTIONS } from "constants/index.js";
+import { ACTIONS as ALL_ACTIONS } from "../constants";
 
 const ACTIONS = ALL_ACTIONS.MY_WORK;
 

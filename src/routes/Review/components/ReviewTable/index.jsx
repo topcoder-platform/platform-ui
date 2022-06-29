@@ -1,5 +1,5 @@
 import React from "react";
-import { WorkType, WorkDetailDetailsPane } from "../../../../../src-ts";
+import { WorkDetailDetailsPane } from "../../../../../src-ts";
 
 /**
  * Review Table Component

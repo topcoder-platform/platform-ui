@@ -1,6 +1,3 @@
-// tslint:disable-next-line: no-implicit-dependencies // TODO: create types
-import { updateUserProfile } from '@topcoder/mfe-header'
-
 import { tokenGetAsync } from '../../functions/token-functions'
 import { EditNameRequest } from '../edit-name-request.model'
 import { UserProfile } from '../user-profile.model'
@@ -14,7 +11,4 @@ export async function getAsync(handle?: string): Promise<UserProfile | undefined
 
 export async function editNameAsync(handle: string, profile: EditNameRequest): Promise<any> {
     return profileStorePatchName(handle, profile)
-        .then(result => {
-            updateUserProfile(result.firstName, result.lastName)
-        })
 }

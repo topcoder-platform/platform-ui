@@ -8,7 +8,7 @@ import React from "react";
 import PT from "prop-types";
 
 import styles from "./styles.module.scss";
-import IconCross from "../../assets/images/icon-cross.svg";
+import { ReactComponent as  IconCross} from "../../assets/images/icon-cross.svg";
 
 const Modal = ({
   children,
@@ -21,26 +21,26 @@ const Modal = ({
 }) => {
   return (
     show && (
-      <div styleName="modalContainer">
+      <div className={styles["modalContainer"]}>
         <div
-          styleName="modalBackground"
+          className={styles["modalBackground"]}
           onClick={(e) => handleClose(e)}
           role="button"
           tabIndex={0}
         ></div>
 
         <div
-          styleName={cn(
-            "modalContent",
-            fullWidth ? "full-width" : "",
-            halfWidth ? "half-width" : ""
+          className={cn(
+            styles["modalContent"],
+            fullWidth ? styles["full-width"] : "",
+            halfWidth ? styles["half-width"] : ""
           )}
         >
-          <div styleName="stickyHeader">
+          <div className={styles["stickyHeader"]}>
             <div className={styles.titleContainer}>{title}</div>
             {!hideClose && (
               <IconCross
-                styleName="modalCloseBtn"
+                className={styles["modalCloseBtn"]}
                 onClick={(e) => handleClose(e)}
               />
             )}

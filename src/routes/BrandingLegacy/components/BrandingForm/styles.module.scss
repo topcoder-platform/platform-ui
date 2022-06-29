@@ -1,4 +1,4 @@
-@import "styles/include";
+@import "../../../../styles/include";
 
 .brandingForm {
   .remove-website {
@@ -64,6 +64,7 @@
 
   .assets {
     margin-top: 12px;
+
     p {
       @include font-roboto;
       font-weight: 700;
@@ -79,4 +80,3 @@
     margin-top: 32px;
   }
 }
-

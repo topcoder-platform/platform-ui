@@ -1,7 +1,7 @@
 /**
  * Work item reducer
  */
-import { ACTIONS } from "constants";
+import { ACTIONS } from "../constants";
 
 const initialState = {
   work: null,

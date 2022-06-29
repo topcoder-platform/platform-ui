@@ -1,10 +1,9 @@
-import { navigate, Router, Redirect } from "@reach/router";
-import { getAuthUserTokens } from "@topcoder/mfe-header";
-import LoadingSpinner from "components/LoadingSpinner";
+import { useNavigate, Route, Routes } from "react-router-dom";
 import _ from "lodash";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { decodeToken } from "tc-auth-lib";
+
+import LoadingSpinner from "./components/LoadingSpinner";
 import { autoSaveInitErrored, triggerAutoSave } from "./actions/autoSave";
 import { getChallenge } from "./actions/challenge";
 import { saveForm } from "./actions/form";
@@ -21,11 +20,7 @@ import { INTAKE_FORM_ROUTES as FIND_ME_DATA_INTAKE_FORM_ROUTES } from "./constan
 import { INTAKE_FORM_ROUTES as DATA_ADVISORY_INTAKE_FORM_ROUTES } from "./constants/products/DataAdvisory";
 import { INTAKE_FORM_ROUTES as WEBSITE_DESIGN_INTAKE_FORM_ROUTES } from "./constants/products/WebsiteDesign";
 import { INTAKE_FORM_ROUTES as WEBSITE_DESIGN_LEGACY_INTAKE_FORM_ROUTES } from "./constants/products/WebsiteDesignLegacy";
-import {
-  authUserError,
-  authUserSuccess,
-} from "./hoc/withAuthentication/actions";
-import { getIntakeFormChallenges } from "services/challenge";
+import { getIntakeFormChallenges } from "./services/challenge";
 import SelectWorkType from "./routes/SelectWorkType";
 import DataExploration from "./routes/Products/DataExploration";
 import FindMeData from "./routes/Products/FindMeData";
@@ -33,25 +28,24 @@ import WebsiteDesign from "./routes/Products/WebsiteDesign";
 import DataAdvisory from "./routes/Products/DataAdvisory";
 import WebsiteDesignLegacy from "./routes/Products/WebsiteDesignLegacy";
 
-import { WorkType } from "../src-ts";
+import { profileContext, WorkType } from "../src-ts";
 
 export default function IntakeForm() {
+
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate()
+
+  const {
+    isLoggedIn,
+    profile,
+  } = useContext(profileContext)
 
   const onReload = (event) => {
-    getAuthUserTokens()
-      .then((auth) => {
-        if (auth?.tokenV3) {
-          event.preventDefault();
-          event.returnValue = "";
-        }
-      })
-      .catch((error) => {
-        setCookie(MAX_COMPLETED_STEP, "", -1);
-        authUserError(error);
-      });
+    if (isLoggedIn) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
     dispatch(triggerAutoSave(true));
   };
 
@@ -98,10 +92,8 @@ export default function IntakeForm() {
   };
 
   const setUpAutoSave = async () => {
-    const { handle } = await getAuth();
-    if (handle) {
-      await handleAutoSaveLoggedIn(handle);
-      setIsLoggedIn(true);
+    if (!!profile) {
+      await handleAutoSaveLoggedIn(profile.handle);
     } else {
       handleAutoSavedLoggedOut();
     }
@@ -166,57 +158,47 @@ export default function IntakeForm() {
     syncSavedData(savedFormCookie);
   };
 
-  const getAuth = async () => {
-    let auth = {};
-    try {
-      const { tokenV3 } = await getAuthUserTokens();
-      if (!!tokenV3) {
-        const tokenData = decodeToken(tokenV3);
-        const authProps = ["userId", "handle", "roles"];
-        dispatch(authUserSuccess(_.pick(tokenData, authProps)));
-        auth = tokenData;
-      }
-    } catch (err) {
-      dispatch(authUserError(err));
-    }
-    return auth;
-  };
-
   return (
     <div>
       <LoadingSpinner show={isLoading} />
       {!isLoading && (
-        <Router>
+        <Routes>
           {/* Data Exploration */}
-          <DataExploration
+          <Route
+            element={<DataExploration isLoggedIn={isLoggedIn} />}
             path="/work/new/data-exploration/*"
-            isLoggedIn={isLoggedIn}
           />
 
           {/* Data Advisory */}
-          <DataAdvisory
+          <Route
+            element={<DataAdvisory isLoggedIn={isLoggedIn} />}
             path="/work/new/data-advisory/*"
-            isLoggedIn={isLoggedIn}
+
           />
 
           {/* Find Me Data */}
-          <FindMeData path="/work/new/find-me-data/*" isLoggedIn={isLoggedIn} />
+          <Route
+            element={<FindMeData isLoggedIn={isLoggedIn} />}
+            path="/work/new/find-me-data/*"
+          />
 
           {/* Web Design (NEW) */}
-          <WebsiteDesign
+          <Route
+            element={<WebsiteDesign isLoggedIn={isLoggedIn} />}
             path="/work/new/website-design-new/*"
-            isLoggedIn={isLoggedIn}
           />
 
           {/* Web Design (Legacy) */}
-          <WebsiteDesignLegacy
+          <Route
+            element={<WebsiteDesignLegacy isLoggedIn={isLoggedIn} />}
             path="/work/new/website-design/*"
-            isLoggedIn={isLoggedIn}
           />
 
-          <SelectWorkType path="/wizard" />
-          {/* <Redirect noThrow from="/*" to="/self-service/wizard" /> */}
-        </Router>
+          <Route
+            element={<SelectWorkType />}
+            path="/wizard"
+          />
+        </Routes>
       )}
     </div>
   );

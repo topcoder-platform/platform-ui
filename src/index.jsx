@@ -1,18 +1,18 @@
-import { createHistory, LocationProvider } from "@reach/router";
 import React, { StrictMode } from "react";
+import ReactDOM from 'react-dom'
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import ReduxToastr from "react-redux-toastr";
 
 import {
   AppNextGen,
+  PageFooter,
+  ProfileProvider,
   RouteProvider,
   routeRootLoggedIn,
   routeRootLoggedOut,
   ToolsRoutes,
   UtilsRoutes,
-  PageFooter,
-  ProfileProvider,
 } from "../src-ts";
 
 import App from "./App";
@@ -20,13 +20,13 @@ import store from "./store";
 
 import "./styles/main.vendor.scss";
 
-const history = createHistory(window);
-
-export default function Root() {
-  return (
+ReactDOM.render(
+  <div className="root-container">
     <Provider store={store}>
       <ProfileProvider>
+
         <BrowserRouter>
+
           <RouteProvider
             rootLoggedIn={routeRootLoggedIn}
             rootLoggedOut={routeRootLoggedOut}
@@ -37,9 +37,7 @@ export default function Root() {
               <AppNextGen />
             </StrictMode>
           </RouteProvider>
-        </BrowserRouter>
 
-        <LocationProvider history={history}>
           <App />
           <ReduxToastr
             timeOut={3000}
@@ -52,10 +50,14 @@ export default function Root() {
             progressBar
             closeOnToastrClick
           />
-        </LocationProvider>
+
+        </BrowserRouter>
 
         <PageFooter />
+
       </ProfileProvider>
     </Provider>
-  );
-}
+  </div>
+  ,
+  document.getElementById('root')
+)

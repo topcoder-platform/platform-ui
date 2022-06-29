@@ -4,7 +4,7 @@
 import PT from "prop-types";
 import React, { useEffect } from "react";
 import config from "../../../config";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 
 const Forum = ({ challengeId }) => {
   useEffect(() => {
@@ -23,7 +23,7 @@ const Forum = ({ challengeId }) => {
   }, [challengeId]);
 
   return (
-    <div styleName="forumWrapper">
+    <div className={styles["forumWrapper"]}>
       <div id="vanilla-comments"></div>
     </div>
   );

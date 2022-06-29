@@ -59,9 +59,9 @@ export const setIsSavingSurveyDone = (value) => {
   };
 };
 
-export const getForumNotifications = (workId) => {
+export const getForumNotifications = (workId, profile) => {
   return {
     type: ACTIONS.WORK.GET_FORUM_NOTIFICATIONS,
-    payload: challengeService.getForumNotifications(workId),
+    payload: challengeService.getForumNotifications(workId, profile),
   };
 };

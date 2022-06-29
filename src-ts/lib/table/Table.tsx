@@ -72,13 +72,16 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
         }
 
         const headerRow: Array<JSX.Element> = props.columns
-            .map(col => {
+            .map((col, index) => {
                 const isSortable: boolean = !!col.propertyName
                 const isCurrentlySorted: boolean = isSortable && col.propertyName === sort?.fieldName
                 const colorClass: string = isCurrentlySorted ? 'black-100' : 'black-60'
                 const sortableClass: string | undefined = isSortable ? styles.sortable : undefined
                 return (
-                    <th className={styles.th}>
+                    <th
+                        className={styles.th}
+                        key={index}
+                    >
                         <div className={classNames(styles['header-container'], styles[col.type], colorClass, sortableClass)}>
                             {col.label}
                             {!!col.tooltip && (
@@ -113,12 +116,13 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
 
                 // get the cells in the row
                 const cells: Array<JSX.Element> = props.columns
-                    .map(col => {
+                    .map((col, colIndex) => {
                         return (
                             <TableCell
                                 {...col}
                                 data={data}
                                 index={index}
+                                key={`${index}${colIndex}`}
                             />
                         )
                     })
@@ -139,10 +143,14 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
             /* TODO: sticky header */
             <div className={styles['table-wrap']}>
                 <table className={styles.table}>
-                    <tr className={styles.tr}>
-                        {headerRow}
-                    </tr>
-                    {rowCells}
+                    <thead>
+                        <tr className={styles.tr}>
+                            {headerRow}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {rowCells}
+                    </tbody>
                 </table>
             </div>
         )

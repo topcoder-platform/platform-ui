@@ -4,11 +4,10 @@
 import classNames from "classnames";
 import PT from "prop-types";
 import React from "react";
-import { v4 as uuidV4 } from "uuid";
 import SansSerifIcon from "../../../../assets/images/icon-sans-serif-font.png";
 import SerifIcon from "../../../../assets/images/icon-serif-font.png";
 import AnyFont from "../../../../assets/images/icon-any-font.png";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 
 const FontOptions = ({ selectedFont, onSelect }) => {
   const fontOptions = [
@@ -18,26 +17,26 @@ const FontOptions = ({ selectedFont, onSelect }) => {
   ];
 
   return (
-    <div styleName="fontOptions">
+    <div className={styles["fontOptions"]}>
       {fontOptions.map((item, index) => (
         <div
-          styleName="fontWrapper"
-          key={uuidV4}
+          className={styles["fontWrapper"]}
+          key={index}
           role="button"
           tabIndex={0}
           onClick={() => onSelect(index, item.name)}
         >
           <div
-            styleName={classNames(
-              "image",
-              index === selectedFont ? "active" : null
+            className={classNames(
+              styles["image"],
+              index === selectedFont ? styles["active"] : null
             )}
-            key={uuidV4}
+            key={index}
           >
             <img src={item.image} alt="serif icon" />
           </div>
 
-          <p styleName="name">{item.name}</p>
+          <p className={styles["name"]}>{item.name}</p>
         </div>
       ))}
     </div>

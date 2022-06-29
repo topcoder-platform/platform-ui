@@ -6,7 +6,7 @@
 import React from "react";
 import PT from "prop-types";
 import Select from "react-select";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 
 const ReactSelect = (props) => {
   const customStyles = {
@@ -18,8 +18,8 @@ const ReactSelect = (props) => {
       boxShadow: props.style2
         ? "none"
         : state.isFocused
-        ? "0 0 2px 1px #cee6ff"
-        : provided.boxShadow,
+          ? "0 0 2px 1px #cee6ff"
+          : provided.boxShadow,
     }),
     menu: (provided) => ({
       ...provided,
@@ -81,13 +81,13 @@ const ReactSelect = (props) => {
   };
 
   return (
-    <div styleName="select-wrapper">
+    <div className={styles["select-wrapper"]}>
       <Select
         value={props.value}
         styles={customStyles}
         onChange={props.onChange}
         options={props.options}
-        styleName={props.error ? "error" : ""}
+        className={props.error ? styles["error"] : ""}
         isMulti={props.isMulti}
         onBlur={props.onBlur}
         onFocus={props.onFocus}

@@ -4,8 +4,9 @@
 import moment from "moment";
 import "moment-timezone";
 import _ from "lodash";
+
 import config from "../../config";
-import { ACTIONS } from "constants/";
+import { ACTIONS } from "../constants";
 
 const initialState = {
   pagePrice: 0,

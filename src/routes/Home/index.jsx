@@ -1,45 +1,41 @@
-import { navigate } from "@reach/router";
-import Button from "components/Button";
-import LoadingSpinner from "components/LoadingSpinner";
-import { BUTTON_SIZE, BUTTON_TYPE, ROUTES } from "constants/";
-import {
-  getIsLoggedIn,
-  getIsLoggingIn,
-} from "hoc/withAuthentication/selectors";
-import { checkIfLoggedIn } from "hoc/withAuthentication/thunks";
-import React, { useCallback, useEffect, useState } from "react";
-import { connect, useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import React, { useCallback, useContext, useEffect, useState } from "react";
+import { connect, useDispatch } from "react-redux";
+
+import { profileContext } from '../../../src-ts'
+
+import Button from "../../components/Button";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import { BUTTON_SIZE, BUTTON_TYPE, ROUTES } from "../../constants/";
 import WelcomeImage from "../../assets/images/welcome.png";
-import "./styles.module.scss";
 import {
   clearAutoSavedForm,
   clearCachedChallengeId,
-  setCookie,
-} from "../../../src/autoSaveBeforeLogin";
-import { resetIntakeForm } from "../../../src/actions/form";
+} from "../../autoSaveBeforeLogin";
+import { resetIntakeForm } from "../../actions/form";
+
+import styles from "./styles.module.scss";
 
 /**
  * Home Page
  */
 const Home = () => {
-  const [isLoading, setLoading] = useState(true);
-  const isLoggedIn = useSelector(getIsLoggedIn);
-  const isLoggingIn = useSelector(getIsLoggingIn);
-  const dispatch = useDispatch();
 
-  useEffect(() => {
-    dispatch(checkIfLoggedIn());
-  }, [dispatch]);
+  const [isLoading, setLoading] = useState(true);
+  const { initialized, isLoggedIn } = useContext(profileContext)
+  const navigate = useNavigate()
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (isLoggedIn) {
       navigate(ROUTES.DASHBOARD_PAGE);
     } else {
-      if (!isLoggingIn) {
+      if (!initialized) {
         setLoading(false);
       }
     }
-  }, [isLoggedIn, isLoggingIn]);
+  }, [isLoggedIn, initialized, navigate]);
 
   const handleClick = useCallback(() => {
     clearCachedChallengeId();
@@ -53,21 +49,21 @@ const Home = () => {
     <>
       <LoadingSpinner show={isLoading} />
       {!isLoading && (
-        <div styleName="container">
-          <div styleName="leftContent">
-            <img styleName="welcomeImage" src={WelcomeImage} alt="welcome" />
+        <div className={styles["container"]}>
+          <div className={styles["leftContent"]}>
+            <img className={styles["welcomeImage"]} src={WelcomeImage} alt="welcome" />
           </div>
 
-          <div styleName="rightContent">
-            <h2 styleName="title">put our great talent to work for you</h2>
-            <p styleName="description">
+          <div className={styles["rightContent"]}>
+            <h2 className={styles["title"]}>put our great talent to work for you</h2>
+            <p className={styles["description"]}>
               Amazing talent. Passionate people.
               <br />
               Start something great today.
             </p>
 
             <Button
-              styleName="createWorkButton"
+              className={styles["createWorkButton"]}
               type={BUTTON_TYPE.SECONDARY}
               size={BUTTON_SIZE.MEDIUM}
               onClick={handleClick}

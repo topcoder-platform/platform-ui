@@ -7,14 +7,16 @@ import _ from "lodash";
 import PT from "prop-types";
 import React, { useState } from "react";
 import cn from "classnames";
-import ProgressDonutChart from "components/ProgressDonutChart";
-import ProgressPopup from "components/ProgressPopup";
+
+import ProgressDonutChart from "../../components/ProgressDonutChart";
+import ProgressPopup from "../../components/ProgressPopup";
 import config from "../../../config";
-import { MAX_COMPLETED_STEP } from "constants";
+import { MAX_COMPLETED_STEP } from "../../constants";
 import { PROGRESS_LEVELS as originalLevels } from "../../constants/products/WebsiteDesignLegacy";
 import { setCookie, getCookie } from "../../autoSaveBeforeLogin";
-import IconThreeDots from "../../assets/images/icon-three-dots-vertical.svg";
-import "./styles.module.scss";
+import { ReactComponent as IconThreeDots} from "../../assets/images/icon-three-dots-vertical.svg";
+
+import styles from "./styles.module.scss";
 
 const Progress = ({ level, styleName, setStep, ...props }) => {
   const [progressPopupOpen, setProgressPopupOpen] = useState(false);
@@ -33,20 +35,20 @@ const Progress = ({ level, styleName, setStep, ...props }) => {
   const trueLevel = _.find(levels, (l) => l.trueIndex === level);
 
   return (
-    <div styleName={cn("onboard-progress", styleName || "")} {...props}>
-      <div styleName="level-container">
-        <div styleName="level">
-          <span styleName="level-num">STEP {trueLevel.showIndex} </span>
-          <span styleName="muted">/ {levels.length}</span>
+    <div className={cn(styles["onboard-progress"], !!styleName ? styles[styleName] : undefined)} {...props}>
+      <div className={styles["level-container"]}>
+        <div className={styles["level"]}>
+          <span className={styles["level-num"]}>STEP {trueLevel.showIndex} </span>
+          <span className={styles["muted"]}>/ {levels.length}</span>
         </div>
         <div>{trueLevel.label}</div>
       </div>
       <ProgressDonutChart
-        styleName="progress-donut-chart"
+        className={styles["progress-donut-chart"]}
         progress={100 * (trueLevel.showIndex / levels.length)}
       />
       <div
-        styleName="progress-popup-toggle"
+        className={styles["progress-popup-toggle"]}
         onClick={(e) => setProgressPopupOpen((o) => !o)}
         role="tab"
         tabIndex={0}

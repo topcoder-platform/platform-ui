@@ -9,12 +9,14 @@
  *
  * if `href` is set, then button is rendered as a link `<a>`
  */
-import { Link } from "@reach/router";
+import { Link } from "react-router-dom";
 import cn from "classnames";
-import { BUTTON_SIZE, BUTTON_TYPE } from "constants";
 import PT from "prop-types";
 import React from "react";
-import "./styles.module.scss";
+
+import { BUTTON_SIZE, BUTTON_TYPE } from "../../constants";
+
+import styles from "./styles.module.scss";
 
 const Button = ({
   children,
@@ -34,9 +36,8 @@ const Button = ({
       <a
         href={href}
         target={target}
-        styleName={cn("button", `type-${type}`, `size-${size}`)}
+        className={cn(styles["button"], styles[`type-${type}`], styles[`size-${size}`], className)}
         onClick={onClick}
-        className={className}
         ref={innerRef}
       >
         {children}
@@ -45,9 +46,8 @@ const Button = ({
   } else {
     const button = (
       <button
-        styleName={cn("button", `type-${type}`, `size-${size}`)}
+        className={cn(styles["button"], styles[`type-${type}`], styles[`size-${size}`], className)}
         onClick={onClick}
-        className={className}
         ref={innerRef}
         disabled={disabled}
         type={isSubmit ? "submit" : "button"}

@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 import { WorkType, workFactoryMapFormData } from "../../../src-ts";
 import {
   getFindMeDataPriceAndTimelineEstimate,

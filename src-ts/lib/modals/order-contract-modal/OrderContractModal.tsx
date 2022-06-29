@@ -27,6 +27,7 @@ const OrderContractModal: FC<OrderContractModal> = ({ isOpen, onClose }: OrderCo
                     target='_blank'
                     className={styles.topCoderLink}
                     href='https://www.topcoder.com/'
+                    rel='noreferrer'
                 >
                     https://www.topcoder.com/{' '}
                 </a>{' '}

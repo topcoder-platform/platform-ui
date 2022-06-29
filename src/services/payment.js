@@ -1,8 +1,8 @@
 import { CardNumberElement } from "@stripe/react-stripe-js";
 import _ from "lodash";
 import config from "../../config";
+import { xhrPatchAsync, xhrPostAsync } from "../../src-ts";
 import challengeService from "./challenge";
-import { axiosInstance as axios } from "./requestInterceptor";
 
 /**
  * Initiates payment process
@@ -46,18 +46,18 @@ export async function processPayment(
       description,
     });
     const url = `${config.API.V5}/customer-payments`;
-    let response = await axios.post(url, body);
+    let response = await xhrPostAsync(url, body);
 
     const customerPayment = response.data;
     if (customerPayment.status === "requires_action") {
       await stripe.handleCardAction(customerPayment.clientSecret);
-      response = await axios.patch(
+      response = await xhrPatchAsync(
         `${config.API.V5}/customer-payments/${customerPayment.id}/confirm`,
         JSON.stringify({})
       );
     }
 
-    return response?.data;
+    return response;
   } catch (e) {
     // TODO: Show error
     throw e;

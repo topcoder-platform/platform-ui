@@ -1,9 +1,8 @@
 import { Dispatch, FC, MouseEvent, SetStateAction, useState } from 'react'
 
-import { FooterSocialConfig } from '../../config'
 import { ContactSupportModal, OrderContractModal, PrivacyPolicyModal, TermsModal } from '../modals'
 import { ProfileProvider } from '../profile-provider'
-import { SocialLink, SocialLinkIcons } from '../social-links'
+import { Facebook, Instagram, LinkedIn, Twitter, Youtube } from '../social-links'
 
 import styles from './PageFooter.module.scss'
 
@@ -71,9 +70,11 @@ const PageFooter: FC<{}> = () => {
                     </div>
                 </div>
                 <div className={styles.social}>
-                    {Object.entries(FooterSocialConfig).map(([platform, url]: [string, string]) => (
-                        <SocialLink icon={platform as keyof typeof SocialLinkIcons} url={url} />
-                    ))}
+                    <Facebook />
+                    <Youtube />
+                    <LinkedIn />
+                    <Twitter />
+                    <Instagram />
                 </div>
             </div>
         </div>

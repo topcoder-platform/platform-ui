@@ -2,7 +2,7 @@
  * `profile` reducer
  */
 
-import { ACTIONS } from "constants/";
+import { ACTIONS } from "../constants/";
 
 const initialState = {
   email: "",
@@ -12,7 +12,7 @@ const initialState = {
   isLoading: true,
 };
 
-const progressReducer = (state = initialState, action) => {
+const profileReducer = (state = initialState, action) => {
   switch (action.type) {
     case ACTIONS.PROFILE.GET_PROFILE:
       return {
@@ -42,4 +42,4 @@ const progressReducer = (state = initialState, action) => {
   }
 };
 
-export default progressReducer;
+export default profileReducer;

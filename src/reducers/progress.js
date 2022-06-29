@@ -1,9 +1,9 @@
+import _ from "lodash";
+
 /**
  * `progress` reducer
  */
-
-import { ACTIONS } from "constants/";
-import _ from "lodash";
+import { ACTIONS } from "../constants/";
 const initialState = {
   currentStep: 0,
 };

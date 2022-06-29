@@ -10,10 +10,15 @@ export {
      OrderContractModal,
      PageFooter,
      PrivacyPolicyModal,
+     profileContext,
      ProfileProvider,
      RouteProvider,
      TabsNavbar,
      TermsModal,
+     xhrGetAsync,
+     xhrGetBlobAsync,
+     xhrPatchAsync,
+     xhrPostAsync,
 } from './lib'
 export * from './tools'
 export * from './utils'

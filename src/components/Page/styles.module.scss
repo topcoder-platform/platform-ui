@@ -1,6 +1,8 @@
-@import "styles/include";
+@import "../../styles/include";
+
 .page {
   padding: 0 32px 32px;
+
   @include mobile {
     padding: 0px;
   }

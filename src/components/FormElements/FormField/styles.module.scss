@@ -1,4 +1,4 @@
-@import "styles/include";
+@import "../../../styles/include";
 
 .form-field-wrapper {
   position: relative;
@@ -6,6 +6,7 @@
   flex-direction: column;
   justify-content: flex-start;
   margin-bottom: 18px;
+
   @include mobile {
     margin-bottom: 0px;
   }
@@ -22,7 +23,7 @@
     margin-bottom: 10px;
 
     &.disabled {
-      background-color: $grey-bg !important;
+      background-color: $grey-bg  !important;
     }
 
     .label {
@@ -33,10 +34,11 @@
       font-size: 13px;
     }
 
-    > div {
+    >div {
       border-radius: 4px;
     }
   }
+
   .error {
     color: $red;
   }

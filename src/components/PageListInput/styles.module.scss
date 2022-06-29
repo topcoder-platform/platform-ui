@@ -1,4 +1,4 @@
-@import "styles/include";
+@import "../../styles/include";
 
 .page-list-input {
   .add-listinput-item-button {
@@ -8,7 +8,7 @@
     font-weight: 430;
     width: 100%;
 
-    & > * {
+    &>* {
       cursor: pointer;
       align-items: center;
       display: flex;

@@ -5,13 +5,13 @@
  */
 import cn from "classnames";
 import React from "react";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 
 const FormInputText = ({ styleName, ...props }) => {
   return (
     <input
       type="text"
-      styleName={cn("form-input-text", styleName || "")}
+      className={cn(styles["form-input-text"], !!styleName ? styles[styleName] : undefined)}
       {...props}
     />
   );

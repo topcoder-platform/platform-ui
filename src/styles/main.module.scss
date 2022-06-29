@@ -1,6 +1,6 @@
 // This file should contain global styles for the microapp
 
-@import "styles/include";
+@import "include";
 @import "reset";
 
 .topcoder-mfe-customer-work {
@@ -13,12 +13,13 @@
 }
 
 :global {
-  #single-spa-main {
+  #root {
     margin: 0 auto;
     height: 100vh;
 
     display: flex;
-    > * {
+
+    .root-container {
       width: 100%;
       display: flex;
       flex-direction: column;

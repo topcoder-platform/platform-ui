@@ -1,4 +1,4 @@
-import { WORK_STATUS_ORDER, WORK_STATUSES, CHALLENGE_STATUS } from "constants";
+import { WORK_STATUS_ORDER, WORK_STATUSES, CHALLENGE_STATUS } from "../constants";
 import _ from "lodash";
 import moment from "moment";
 
@@ -52,10 +52,12 @@ export const isMessagesDisabled = (work) => {
   );
 };
 
-export default {
+const output = {
   getStatus,
   isReviewPhaseEnded,
   phaseEndDate,
   phaseStartDate,
   isMessagesDisabled,
 };
+
+export default output

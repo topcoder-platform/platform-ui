@@ -1,32 +1,35 @@
-import { navigate, redirectTo } from "@reach/router";
-import Button from "components/Button";
-import LoadingSpinner from "components/LoadingSpinner";
-import Page from "components/Page";
-import PageContent from "components/PageContent";
-import PageDivider from "components/PageDivider";
-import PageFoot from "components/PageElements/PageFoot";
-import PageH2 from "components/PageElements/PageH2";
-import Progress from "components/Progress";
-import { BUTTON_SIZE, BUTTON_TYPE } from "constants/";
-import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
-import withAuthentication from "hoc/withAuthentication";
+
+import { Breadcrumb, profileContext } from "../../../src-ts";
+
 import { triggerAutoSave } from "../../actions/autoSave";
 import { resetIntakeForm, saveBranding } from "../../actions/form";
 import { setProgressItem } from "../../actions/progress";
-import BackIcon from "../../assets/images/icon-back-arrow.svg";
-import BrandingForm from "./components/BrandingForm";
-import "./styles.module.scss";
-import { getDynamicPriceAndTimelineEstimate } from "utils/";
+import { ReactComponent as BackIcon } from "../../assets/images/icon-back-arrow.svg";
 import { WebsiteDesignBannerLegacy } from "../../components/Banners/WebsiteDesignBannerLegacy";
-import { ROUTES } from "../../constants";
-import { Breadcrumb } from "../../../src-ts";
+import Button from "../../components/Button";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import Page from "../../components/Page";
+import PageContent from "../../components/PageContent";
+import PageDivider from "../../components/PageDivider";
+import PageFoot from "../../components/PageElements/PageFoot";
+import PageH2 from "../../components/PageElements/PageH2";
+import Progress from "../../components/Progress";
+import { BUTTON_SIZE, BUTTON_TYPE, ROUTES } from "../../constants/";
+import { getDynamicPriceAndTimelineEstimate } from "../../utils/";
+
+import BrandingForm from "./components/BrandingForm";
+import styles from "./styles.module.scss";
 
 /**
  * Branding Page
  */
 const BrandingLegacy = ({ saveBranding, setProgressItem }) => {
-  const [isLoading, setLoading] = useState(false);
+
+  const navigate = useNavigate()
+
   const [formData, setFormData] = useState({
     theme: { title: "Style & Theme", option: "", value: null },
     inspiration: [
@@ -59,6 +62,8 @@ const BrandingLegacy = ({ saveBranding, setProgressItem }) => {
     customDeliverable: { title: "Custom Deliverable", option: "", value: "" },
   });
 
+  const { initialized } = useContext(profileContext)
+
   const dispatch = useDispatch();
   const workType = useSelector((state) => state.form.workType);
   const branding = useSelector((state) => state.form.branding);
@@ -74,7 +79,7 @@ const BrandingLegacy = ({ saveBranding, setProgressItem }) => {
     setProgressItem(5);
 
     if (currentStep === 0) {
-      redirectTo("/self-service/wizard");
+      navigate("/self-service/wizard");
     }
 
     if (branding) {
@@ -86,7 +91,7 @@ const BrandingLegacy = ({ saveBranding, setProgressItem }) => {
     return () => {
       dispatch(triggerAutoSave(true));
     };
-  }, [currentStep, branding, dispatch, setProgressItem, firstMounted]);
+  }, [currentStep, branding, dispatch, setProgressItem, firstMounted, navigate]);
 
   const isFormValid =
     formData?.theme?.value &&
@@ -125,7 +130,7 @@ const BrandingLegacy = ({ saveBranding, setProgressItem }) => {
 
   return (
     <>
-      <LoadingSpinner show={isLoading} />
+      <LoadingSpinner show={!initialized} />
       <Page>
         <Breadcrumb items={breadcrumbs} />
         <WebsiteDesignBannerLegacy />
@@ -142,19 +147,19 @@ const BrandingLegacy = ({ saveBranding, setProgressItem }) => {
           />
 
           <PageFoot>
-            <div styleName="footerContent">
+            <div className={styles["footerContent"]}>
               <div>
                 <Button
                   size={BUTTON_SIZE.MEDIUM}
                   type={BUTTON_TYPE.SECONDARY}
                   onClick={onBack}
                 >
-                  <div styleName="backButtonWrapper">
+                  <div className={styles["backButtonWrapper"]}>
                     <BackIcon />
                   </div>
                 </Button>
               </div>
-              <div styleName="footer-right">
+              <div className={styles["footer-right"]}>
                 <Button
                   disabled={!isFormValid}
                   size={BUTTON_SIZE.MEDIUM}
@@ -183,4 +188,4 @@ const mapDispatchToProps = {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withAuthentication(BrandingLegacy));
+)(BrandingLegacy);

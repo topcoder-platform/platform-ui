@@ -1,9 +1,7 @@
-/* global process */
 /**
  * Configure Redux Store
  */
 import { applyMiddleware, createStore } from "redux";
-import { createLogger } from "redux-logger";
 import { createPromise } from "redux-promise-middleware";
 import thunk from "redux-thunk";
 import { saveUpdatesMiddleware } from "./autoSaveBeforeLogin";

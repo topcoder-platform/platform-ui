@@ -22,7 +22,6 @@ module.exports = (webpackConfigEnv) => {
   return webpackMerge.smart(defaultConfig, {
     // to reduce size of bundle
     externals: {
-      "@topcoder/mfe-header": "@topcoder/mfe-header",
       "react": "react",
       "react-dom": "react-dom",
     },

@@ -1,19 +1,22 @@
-import Page from "components/Page";
-import PageContent from "components/PageContent";
-import PageH2 from "components/PageElements/PageH2";
 import React from "react";
-import "./styles.module.scss";
+
+import Page from "../../components/Page";
+import PageContent from "../../components/PageContent";
+import PageH2 from "../../components/PageElements/PageH2";
+
+import styles from "./styles.module.scss";
 
 /**
  * Under Maintenance Page
  */
 const UnderMaintenance = () => {
+  const contentStyle = styles.content
   return (
     <>
       <Page>
         <PageContent>
-          <div styleName="container">
-            <div styleName="content">
+          <div className={["container"]}>
+            <div className={contentStyle}>
               <PageH2>UNDER MAINTENANCE</PageH2>
               <p>
                 The application is under maintenance. Please contact{" "}

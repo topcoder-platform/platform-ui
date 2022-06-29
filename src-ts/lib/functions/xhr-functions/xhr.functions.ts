@@ -38,6 +38,11 @@ export async function getAsync<T>(url: string): Promise<T> {
     return output.data
 }
 
+export async function getBlobAsync<T>(url: string): Promise<T> {
+    const output: AxiosResponse<T> = await xhrInstance.get(url, { responseType: 'blob' })
+    return output.data
+}
+
 export async function patchAsync<T, R>(url: string, data: T): Promise<R> {
     const output: AxiosResponse<R> = await xhrInstance.patch(url, data)
     return output.data

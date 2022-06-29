@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 // TODO: we don't currently support this breakpoint. Either remove this hook
 // or fix breakpoint so it's one we support.

@@ -1,4 +1,4 @@
-@import "styles/include";
+@import "../../styles/include";
 
 .container {
   display: flex;
@@ -28,6 +28,7 @@
       margin-right: 16px;
     }
   }
+
   .footerContent {
     width: 100%;
     flex-direction: row;

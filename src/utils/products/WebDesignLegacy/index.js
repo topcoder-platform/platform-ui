@@ -4,7 +4,7 @@ import {
   DEVICE_TYPE_DETAILS,
   DEFAULT_TIMELINE,
 } from "../../../constants/products/WebsiteDesignLegacy";
-import { getDynamicPriceAndTimeline } from "utils/";
+import { getDynamicPriceAndTimeline } from "../../../utils";
 import templateDataLegacy from "../../../assets/data/spec-templates/website-design-legacy.json";
 
 export function formatChallengeCreationBody() {

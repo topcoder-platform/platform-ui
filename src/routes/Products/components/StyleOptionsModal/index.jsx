@@ -5,12 +5,14 @@ import classNames from "classnames";
 import PT from "prop-types";
 import React from "react";
 import _ from "lodash";
-import LikeIcon from "../../../../assets/images/thumbsup.svg";
-import DislikeIcon from "../../../../assets/images/thumbsdown.svg";
+
+import { ReactComponent as LikeIcon } from "../../../../assets/images/thumbsup.svg";
+import { ReactComponent as DislikeIcon } from "../../../../assets/images/thumbsdown.svg";
 import PageDivider from "../../../../components/PageDivider";
-import "./styles.module.scss";
-import Modal from "components/Modal";
+import Modal from "../../../../components/Modal";
 import useCheckMobileScreen from "../../../../hooks/useCheckMobileScreen";
+
+import styles from "./styles.module.scss";
 
 const StylesOptionsModal = ({
   onDismiss,
@@ -24,18 +26,18 @@ const StylesOptionsModal = ({
   const modalWidth = isMobile ? { fullWidth: true } : { halfWidth: true };
   return (
     <Modal show={true} {...modalWidth} handleClose={onDismiss}>
-      <div styleName="styleWrapper">
-        <div styleName={classNames("style", style.className)}>
-          <div styleName="name">
+      <div className={styles["styleOptions"]}>
+        <div className={classNames(styles["style"], styles[style.className])}>
+          <div className={styles["name"]}>
             <span>{style.name}</span> &nbsp;
           </div>
           <PageDivider />
-          <div styleName="description">
+          <div className={styles["description"]}>
             <span>{style.description}</span>
           </div>
-          <div styleName="box">
-            <div styleName="preview" />
-            <div styleName="actions">
+          <div className={styles["box"]}>
+            <div className={styles["preview"]} />
+            <div className={styles["actions"]}>
               <LikeIcon
                 role="button"
                 onClick={() => {
@@ -48,7 +50,7 @@ const StylesOptionsModal = ({
                     }
                   }
                 }}
-                styleName={_.includes(likes, style.name) ? "liked" : null}
+                className={_.includes(likes, style.name) ? styles["liked"] : null}
               />
               <DislikeIcon
                 role="button"
@@ -62,7 +64,7 @@ const StylesOptionsModal = ({
                     }
                   }
                 }}
-                styleName={_.includes(dislikes, style.name) ? "disliked" : null}
+                className={_.includes(dislikes, style.name) ? styles["disliked"] : null}
               />
             </div>
           </div>
