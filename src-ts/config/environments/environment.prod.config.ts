@@ -13,6 +13,7 @@ export const EnvironmentConfigProd: GlobalConfig = {
     },
     DISABLED_TOOLS: [ ],
     ENV: AppHostEnvironment.prod,
+    LEARN_SRC: 'https://fcc.topcoder.com:4431',
     TAG_MANAGER_ID: 'GTM-MXXQHG8',
     URL: {
         ACCOUNTS_APP_CONNECTOR: 'https://accounts-auth0.topcoder.com',
