@@ -104,7 +104,7 @@ const ReviewLegacy = ({
     return () => {
       dispatch(triggerAutoSave(true, isLoggedIn));
     };
-  }, [currentStep, formData, dispatch, setProgressItem, firstMounted, navigate]);
+  }, [currentStep, formData, dispatch, setProgressItem, firstMounted, navigate, isLoggedIn]);
 
   const [anotherFirstMounted, setAnotherFirstMounted] = useState(true);
   useEffect(() => {

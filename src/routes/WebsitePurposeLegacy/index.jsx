@@ -84,7 +84,7 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem, isLoggedIn 
     return () => {
       dispatch(triggerAutoSave(true, isLoggedIn));
     };
-  }, [currentStep, websitePurpose, dispatch, setProgressItem, firstMounted, navigate]);
+  }, [currentStep, websitePurpose, dispatch, setProgressItem, firstMounted, navigate, isLoggedIn]);
 
   const breadcrumbs = [
     { url: ROUTES.DASHBOARD_PAGE, name: "My work" },
