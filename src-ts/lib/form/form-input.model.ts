@@ -1,3 +1,4 @@
+import { InputEvent } from './form-input.event'
 import { FormInputAutocompleteOption } from './form-inputs'
 import { ValidatorFn } from './validator-functions'
 
@@ -19,4 +20,5 @@ export interface FormInputModel {
     readonly type: 'password' | 'rating' | 'text' | 'textarea'
     readonly validators?: ReadonlyArray<ValidatorFn>
     value?: string
+    readonly events?: ReadonlyArray<InputEvent>
 }
