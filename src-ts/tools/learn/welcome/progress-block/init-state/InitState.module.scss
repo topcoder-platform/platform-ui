@@ -1,0 +1,16 @@
+@use '../../../../../lib/styles/typography';
+@import '../../../../../lib/styles/includes';
+
+.wrap {
+    gap: $pad-lg;
+    display: flex;
+}
+
+.content {
+    color: $black-100;
+}
+
+.content-text {
+    @extend .body-medium-normal;
+    margin-top: $pad-sm;
+}

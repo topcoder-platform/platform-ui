@@ -7,6 +7,7 @@ export interface GlobalConfig {
     }
     DISABLED_TOOLS?: Array<string>
     ENV: string
+    LEARN_SRC: string,
     LOGGING: {
         PUBLIC_TOKEN: string
         SERVICE: string

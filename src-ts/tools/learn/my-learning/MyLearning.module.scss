@@ -1,0 +1,37 @@
+@import '../../../lib/styles/includes';
+
+.content-layout {
+    background: $black-5;
+}
+
+.wrap {
+    &:global(.content-block) {
+        max-width: 475px;
+    }
+}
+
+.title-line {
+    display: flex;
+    align-items: center;
+
+    margin-bottom: $pad-lg;
+
+    svg {
+        @include icon-size(60);
+        margin-right: $pad-sm;
+    }
+}
+
+.courses-area {
+    padding: $pad-xxxxl 0;
+}
+
+.cards-wrap {
+    display: flex;
+    gap: $pad-xxl;
+    flex-wrap: wrap;
+
+    > * {
+        flex: 0 1 calc(50% - calc($pad-xxl / 2));
+    }
+}
