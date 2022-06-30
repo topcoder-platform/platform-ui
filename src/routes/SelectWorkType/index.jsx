@@ -170,7 +170,7 @@ const SelectWorkType = ({
       />
       <Breadcrumb items={breadcrumb} />
       <Page>
-        <PageContent styleName="pageContent">
+        <PageContent styleName={styles["pageContent"]}>
           <PageH2 className={styles.pageHeading}>Start work</PageH2>
 
           <PageDivider />

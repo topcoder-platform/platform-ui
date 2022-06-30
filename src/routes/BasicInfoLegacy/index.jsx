@@ -172,7 +172,7 @@ const BasicInfoLegacy = ({
       <Page>
         <Breadcrumb items={breadcrumbs} />
         <WebsiteDesignBannerLegacy />
-        <PageContent styleName="container">
+        <PageContent styleName={styles["container"]}>
           <PageH2>BASIC INFO</PageH2>
           <PageDivider />
 

@@ -214,7 +214,7 @@ const ReviewLegacy = ({
       <Page>
         <Breadcrumb items={breadcrumbs} />
         {banner}
-        <PageContent styleName="container">
+        <PageContent styleName={styles["container"]}>
           <PageH2>REVIEW & PAYMENT</PageH2>
           <PageDivider />
           <ServicePrice

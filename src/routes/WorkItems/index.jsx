@@ -235,7 +235,7 @@ const WorkItem = ({
     <>
       <LoadingSpinner show={isLoadingWork || isLoadingSolutions} />
       <Page className={styles["page"]}>
-        <PageContent styleName="pageContent">
+        <PageContent styleName={styles["pageContent"]}>
           <Breadcrumb items={breadcrumb} />
           <WorkDetailHeader
             challenge={work}
