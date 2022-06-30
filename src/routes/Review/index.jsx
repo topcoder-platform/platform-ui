@@ -58,6 +58,7 @@ const Review = ({
   secondaryBanner,
   workItemConfig,
   breadcrumb,
+  isLoggedIn
 }) => {
   const dispatch = useDispatch();
   const [paymentFailed, setPaymentFailed] = useState(false);
@@ -116,7 +117,7 @@ const Review = ({
     setFirstMounted(false);
 
     return () => {
-      dispatch(triggerAutoSave(true));
+      dispatch(triggerAutoSave(true, isLoggedIn));
     };
   }, [currentStep, formData, dispatch, setProgressItem, firstMounted, navigate]);
 

@@ -18,6 +18,7 @@ const autoSaveReducer = (state = initialState, action) => {
         ...state,
         triggered: action.payload.isTriggered,
         forced: action.payload.isForced,
+        isLoggedIn: action.payload.isLoggedIn,
       };
     case ACTIONS.AUTO_SAVE.COOKIE_CLEARED:
       return {

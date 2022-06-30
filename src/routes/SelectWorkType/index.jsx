@@ -118,6 +118,7 @@ const SelectWorkType = ({
   saveWorkType,
   setProgressItem,
   toggleSupportModal,
+  isLoggedIn,
 }) => {
 
   const dispatch = useDispatch();
@@ -131,7 +132,7 @@ const SelectWorkType = ({
 
   useEffect(() => {
     return () => {
-      dispatch(triggerAutoSave(true));
+      dispatch(triggerAutoSave(true, isLoggedIn));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -143,7 +144,7 @@ const SelectWorkType = ({
     });
     setProgressItem(2);
     navigate(selectedItem.startRoute);
-    dispatch(triggerAutoSave(true));
+    dispatch(triggerAutoSave(true, isLoggedIn));
   };
 
   const onShowSupportModal = () => {

@@ -26,7 +26,7 @@ import styles from "./styles.module.scss";
 /**
  * Branding Page
  */
-const BrandingLegacy = ({ saveBranding, setProgressItem }) => {
+const BrandingLegacy = ({ saveBranding, setProgressItem, isLoggedIn }) => {
 
   const navigate = useNavigate()
 
@@ -89,7 +89,7 @@ const BrandingLegacy = ({ saveBranding, setProgressItem }) => {
     setFirstMounted(false);
 
     return () => {
-      dispatch(triggerAutoSave(true));
+      dispatch(triggerAutoSave(true, isLoggedIn));
     };
   }, [currentStep, branding, dispatch, setProgressItem, firstMounted, navigate]);
 

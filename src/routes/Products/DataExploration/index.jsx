@@ -66,6 +66,7 @@ export default function DataExploration({ isLoggedIn }) {
           showIcon
           workItemConfig={dataExploration}
           breadcrumb={dataExploration.breadcrumbs.review}
+          isLoggedIn={isLoggedIn}
         />}
         path="/review"
       />

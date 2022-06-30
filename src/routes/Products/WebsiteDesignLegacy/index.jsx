@@ -14,17 +14,17 @@ export default function WebsiteDesignLegacy({ isLoggedIn }) {
     <Routes>
 
       <Route
-        element={<BasicInfoLegacy />}
+        element={<BasicInfoLegacy isLoggedIn={isLoggedIn} />}
         path="/basic-info"
       />
 
       <Route
-        element={<WebsitePurposeLegacy />}
+        element={<WebsitePurposeLegacy isLoggedIn={isLoggedIn} />}
         path="/website-purpose"
       />
 
       <Route
-        element={<PageDetailsLegacy />}
+        element={<PageDetailsLegacy isLoggedIn={isLoggedIn} />}
         path="/page-details"
       />
 
@@ -37,7 +37,7 @@ export default function WebsiteDesignLegacy({ isLoggedIn }) {
       />
 
       <Route
-        element={<BrandingLegacy />}
+        element={<BrandingLegacy isLoggedIn={isLoggedIn} />}
         path="/branding"
       />
 
@@ -48,6 +48,7 @@ export default function WebsiteDesignLegacy({ isLoggedIn }) {
             introText="Your Website Design project includes up to 5 unique Visual Design solutions. Each solution will match your specified scope and device types. You will receive industry-standard source files to take take forward to further design and/or development. Design deliverables will NOT include functional code."
             banner={<WebsiteDesignBannerLegacy />}
             showProgress
+            isLoggedIn={isLoggedIn}
           />
         }
         path="/review"

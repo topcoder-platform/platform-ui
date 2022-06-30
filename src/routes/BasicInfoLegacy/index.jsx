@@ -46,6 +46,7 @@ const BasicInfoLegacy = ({
   savePageDetails,
   toggleSupportModal,
   saveWorkType,
+  isLoggedIn,
 }) => {
   const [formData, setFormData] = useState({
     projectTitle: { title: "Project Title", option: "", value: "" },
@@ -121,7 +122,7 @@ const BasicInfoLegacy = ({
         selectedWorkType: "Website Design",
         selectedWorkTypeDetail: "Website Design",
       });
-      dispatch(triggerAutoSave(true));
+      dispatch(triggerAutoSave(true, isLoggedIn));
     }
 
     if (basicInfo && basicInfo?.projectTitle?.value.length > 0) {
@@ -131,7 +132,7 @@ const BasicInfoLegacy = ({
     setFirstMounted(false);
 
     return () => {
-      dispatch(triggerAutoSave(true));
+      dispatch(triggerAutoSave(true, isLoggedIn));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [basicInfo, currentStep, dispatch, setProgressItem, firstMounted]);

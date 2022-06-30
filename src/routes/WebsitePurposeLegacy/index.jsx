@@ -26,7 +26,7 @@ import { Breadcrumb } from "../../../src-ts";
 /**
  * Website Purpose Page
  */
-const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem }) => {
+const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem, isLoggedIn }) => {
 
   const navigate = useNavigate()
 
@@ -82,7 +82,7 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem }) => {
     setFirstMounted(false);
 
     return () => {
-      dispatch(triggerAutoSave(true));
+      dispatch(triggerAutoSave(true, isLoggedIn));
     };
   }, [currentStep, websitePurpose, dispatch, setProgressItem, firstMounted, navigate]);
 

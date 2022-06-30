@@ -27,7 +27,7 @@ import styles from "./styles.module.scss";
 /**
  * Page Details Page
  */
-const PageDetailsLegacy = ({ savePageDetails, setProgressItem }) => {
+const PageDetailsLegacy = ({ savePageDetails, setProgressItem, isLoggedIn }) => {
 
   const navigate = useNavigate()
   const [isLoading] = useState(false);
@@ -69,7 +69,7 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem }) => {
     setFirstMounted(false);
 
     return () => {
-      dispatch(triggerAutoSave(true));
+      dispatch(triggerAutoSave(true, isLoggedIn));
     };
   }, [currentStep, pageDetails, dispatch, setProgressItem, firstMounted, navigate]);
 
