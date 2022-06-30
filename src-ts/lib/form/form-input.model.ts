@@ -21,4 +21,5 @@ export interface FormInputModel {
     readonly validators?: ReadonlyArray<ValidatorFn>
     value?: string
     readonly events?: ReadonlyArray<InputEvent>
+    readonly className?: string
 }

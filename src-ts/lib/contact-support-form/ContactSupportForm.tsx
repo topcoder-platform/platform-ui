@@ -18,11 +18,11 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
 
     const { profile }: ProfileContextData = useContext(profileContext)
 
-    function generateRequest(inputs: ReadonlyArray<FormInputModel>): ContactSupportRequest {
-        const firstName: string = formGetInputModel(inputs, ContactSupportFormField.first).value as string
-        const lastName: string = formGetInputModel(inputs, ContactSupportFormField.last).value as string
-        const email: string = formGetInputModel(inputs, ContactSupportFormField.email).value as string
-        const question: string = formGetInputModel(inputs, ContactSupportFormField.question).value as string
+    function generateRequest(inputs?: ReadonlyArray<FormInputModel>): ContactSupportRequest {
+        const firstName: string = formGetInputModel(ContactSupportFormField.first, inputs).value as string
+        const lastName: string = formGetInputModel(ContactSupportFormField.last, inputs).value as string
+        const email: string = formGetInputModel(ContactSupportFormField.email, inputs).value as string
+        const question: string = formGetInputModel(ContactSupportFormField.question, inputs).value as string
         return {
             challengeId: props.workId,
             email,

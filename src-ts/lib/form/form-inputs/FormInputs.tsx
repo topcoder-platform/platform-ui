@@ -17,8 +17,8 @@ const FormInputs: (props: FormInputsProps) => JSX.Element = (props: FormInputsPr
 
     const { formDef, onBlur, onChange }: FormInputsProps = props
 
-    const formInputs: Array<JSX.Element> = formDef.inputs
-        .map(input => formGetInputModel(formDef.inputs, input.name))
+    const formInputs: Array<JSX.Element> = formDef.inputs && formDef.inputs
+        .map(input => formGetInputModel(input.name, formDef.inputs))
         .map((inputModel, index) => {
 
             const tabIndex: number = inputModel.notTabbable ? -1 : index + 1 + (formDef.tabIndexStart || 0)
@@ -72,7 +72,7 @@ const FormInputs: (props: FormInputsProps) => JSX.Element = (props: FormInputsPr
                     {inputElement}
                 </FormInputRow>
             )
-        })
+        }) || [];
 
     return (
         <div className={styles['form-inputs']}>

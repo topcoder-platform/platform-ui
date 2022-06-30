@@ -8,9 +8,9 @@ export function getInputElement(formElements: HTMLFormControlsCollection, fieldN
     return formElements.namedItem(fieldName) as HTMLInputElement
 }
 
-export function getInputModel(inputs: ReadonlyArray<FormInputModel>, fieldName: string): FormInputModel {
+export function getInputModel(fieldName: string, inputs?: ReadonlyArray<FormInputModel>): FormInputModel {
 
-    const formField: FormInputModel | undefined = inputs.find(input => input.name === fieldName)
+    const formField: FormInputModel | undefined = inputs && inputs.find(input => input.name === fieldName)
 
     // if we can't find the input we have a problem
     if (!formField) {
@@ -20,8 +20,8 @@ export function getInputModel(inputs: ReadonlyArray<FormInputModel>, fieldName: 
     return formField
 }
 
-export function initializeValues<T>(inputs: ReadonlyArray<FormInputModel>, formValues?: T): void {
-    inputs
+export function initializeValues<T>(inputs?: ReadonlyArray<FormInputModel>, formValues?: T): void {
+    inputs && inputs
         .filter(input => !input.dirty && !input.touched)
         .forEach(input => {
             input.value = !!(formValues as any)?.hasOwnProperty(input.name)
@@ -30,16 +30,16 @@ export function initializeValues<T>(inputs: ReadonlyArray<FormInputModel>, formV
         })
 }
 
-export function onBlur<T>(event: FormEvent<HTMLInputElement | HTMLTextAreaElement>, inputs: ReadonlyArray<FormInputModel>, formValues?: T): void {
-    handleFieldEvent<T>(event.target as HTMLInputElement | HTMLTextAreaElement, inputs, 'blur', formValues)
+export function onBlur<T>(event: FormEvent<HTMLInputElement | HTMLTextAreaElement>, inputs?: ReadonlyArray<FormInputModel>, formValues?: T): void {
+    handleFieldEvent<T>(event.target as HTMLInputElement | HTMLTextAreaElement, 'blur', formValues, inputs)
 }
 
-export function onChange<T>(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, inputs: ReadonlyArray<FormInputModel>, formValues?: T): void {
-    handleFieldEvent<T>(event.target as HTMLInputElement | HTMLTextAreaElement, inputs, 'change', formValues)
+export function onChange<T>(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, inputs?: ReadonlyArray<FormInputModel>, formValues?: T): void {
+    handleFieldEvent<T>(event.target as HTMLInputElement | HTMLTextAreaElement, 'change', formValues, inputs)
 }
 
-export function onReset(inputs: ReadonlyArray<FormInputModel>, formValue?: any): void {
-    inputs
+export function onReset(formValue?: any, inputs?: ReadonlyArray<FormInputModel>): void {
+    inputs && inputs
         .forEach(inputDef => {
             inputDef.dirty = false
             inputDef.touched = false
@@ -61,20 +61,20 @@ export async function onSubmitAsync<T>(
     const { inputs, shortName, successMessage }: FormDefinition = formDef
 
     // get the dirty fields before we validate b/c validation marks them dirty on submit
-    const dirty: FormInputModel | undefined = inputs.find(fieldDef => !!fieldDef.dirty)
+    const dirty: FormInputModel | undefined = inputs && inputs.find(fieldDef => !!fieldDef.dirty)
 
     // if there are any validation errors, display a message and stop submitting
     // NOTE: need to check this before we check if the form is dirty bc you
     // could have a form that's not dirty but has errors and you wouldn't
     // want to have it look like the submit succeeded
     const formValues: HTMLFormControlsCollection = (event.target as HTMLFormElement).elements
-    const isValid: boolean = validateForm(inputs, formValues, 'submit')
+    const isValid: boolean = validateForm(formValues, 'submit', inputs)
     if (!isValid) {
         return Promise.reject()
     }
 
     // set the properties for the updated T value
-    inputs.forEach(field => (formValue as any)[field.name] = field.value)
+    inputs && inputs.forEach(field => (formValue as any)[field.name] = field.value)
 
     // if there are no dirty fields, don't actually perform the save
     const savePromise: Promise<void> = !dirty ? Promise.resolve() : save(formValue)
@@ -92,12 +92,12 @@ export async function onSubmitAsync<T>(
         })
 }
 
-function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, inputs: ReadonlyArray<FormInputModel>, event: 'blur' | 'change', formValues?: T): void {
+function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, event: 'blur' | 'change', formValues?: T, inputs?: ReadonlyArray<FormInputModel>): void {
 
     // set the dirty and touched flags on the field
     const originalValue: string | undefined = (formValues as any)?.[input.name]
 
-    const inputDef: FormInputModel = getInputModel(inputs, input.name)
+    const inputDef: FormInputModel = getInputModel(input.name, inputs)
     if (event === 'change') {
         inputDef.dirty = input.value !== originalValue
     }
@@ -117,7 +117,7 @@ function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, inpu
 
     inputDef.dependentFields
         .forEach(dependentField => {
-            const dependentFieldDef: FormInputModel = getInputModel(inputs, dependentField)
+            const dependentFieldDef: FormInputModel = getInputModel(dependentField, inputs)
             validateField(dependentFieldDef, formElements, event)
         })
 }
@@ -154,12 +154,12 @@ function validateField(formInputDef: FormInputModel, formElements: HTMLFormContr
         })
 }
 
-function validateForm(inputs: ReadonlyArray<FormInputModel>, formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit'): boolean {
-    const errors: ReadonlyArray<FormInputModel> = inputs
+function validateForm(formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit', inputs?: ReadonlyArray<FormInputModel>): boolean {
+    const errors: ReadonlyArray<FormInputModel> = inputs && inputs
         .filter(formInputDef => {
             formInputDef.dirty = formInputDef.dirty || event === 'submit'
             validateField(formInputDef, formElements, event)
             return !!formInputDef.error
-        })
+        }) || [];
     return !errors.length
 }

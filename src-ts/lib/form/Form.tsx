@@ -31,7 +31,7 @@ interface FormProps<ValueType, RequestType> {
     readonly formDef: FormDefinition
     readonly formValues?: ValueType
     readonly onSuccess?: () => void
-    readonly requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => RequestType
+    readonly requestGenerator: (inputs?: ReadonlyArray<FormInputModel>) => RequestType
     readonly save: (value: RequestType) => Promise<void>
 }
 
@@ -61,7 +61,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         }
 
         function onReset(): void {
-            formOnReset(formDef.inputs, props.formValues)
+            formOnReset(props.formValues, formDef.inputs)
             setFormDef({ ...formDef })
             setFormKey(Date.now())
         }
@@ -71,7 +71,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             formOnSubmitAsync<RequestType>(event, formDef, values, props.save, props.onSuccess)
                 .then(() => {
                     setFormKey(Date.now())
-                    formOnReset(formDef.inputs, props.formValues)
+                    formOnReset(props.formValues, formDef.inputs)
                     setFormDef({ ...formDef })
                 })
                 .catch((error: string | undefined) => {
@@ -82,7 +82,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         formInitializeValues(formDef.inputs, props.formValues)
 
-        const buttons: Array<JSX.Element> = formDef.buttons
+        const buttons: Array<JSX.Element> = formDef.buttons ? formDef.buttons
             .map((button, index) => {
                 // if this is a reset button, set its onclick to reset
                 if (!!button.isReset) {
@@ -95,10 +95,10 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                     <Button
                         {...button}
                         key={button.label}
-                        tabIndex={button.notTabble ? -1 : index + formDef.inputs.length + (formDef.tabIndexStart || 0)}
+                        tabIndex={button.notTabble ? -1 : index + (formDef.inputs ? formDef.inputs.length : 0) + (formDef.tabIndexStart || 0)}
                     />
                 )
-            })
+            }) : [];
 
         // set the max width of the form error so that it doesn't push the width of the form wider
         const errorsRef: RefObject<HTMLDivElement> = createRef<HTMLDivElement>()

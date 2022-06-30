@@ -1,8 +1,4 @@
-export enum EventName {
-  ON_BLUR = 'ON_BLUR',
-  ON_CHANGE = 'ON_CHANGE',
-  ON_FOCUS = 'ON_FOCUS',
-}
+export type EventName = 'OnBlur' | 'OnChange' | 'OnFocus'
 
 export interface InputEvent {
   readonly name: EventName

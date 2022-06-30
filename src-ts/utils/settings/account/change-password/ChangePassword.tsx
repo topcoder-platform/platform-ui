@@ -25,9 +25,9 @@ const ChangePassword: FC<ChangePasswordProps> = (props: ChangePasswordProps) => 
     const [passwordForm]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>(changePasswordFormDef)
 
-    function requestGenerator(inputs: ReadonlyArray<FormInputModel>): ChangePasswordRequest {
-        const password: string = formGetInputModel(inputs, ChangePasswordFieldName.currentPassword).value as string
-        const newPassword: string = formGetInputModel(inputs, ChangePasswordFieldName.newPassword).value as string
+    function requestGenerator(inputs?: ReadonlyArray<FormInputModel>): ChangePasswordRequest {
+        const password: string = formGetInputModel(ChangePasswordFieldName.currentPassword, inputs).value as string
+        const newPassword: string = formGetInputModel(ChangePasswordFieldName.newPassword, inputs).value as string
         return {
             newPassword,
             password,
