@@ -3,7 +3,7 @@
     "file": "iframe.d.ts",
     "sourceRoot": "",
     "sources": [
-        "../src-ts/iframe.js"
+        "../src/iframe.js"
     ],
     "names": [],
     "mappings": "AAAA,kEAYC"

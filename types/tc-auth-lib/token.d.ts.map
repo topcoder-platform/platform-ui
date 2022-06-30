@@ -3,7 +3,7 @@
     "file": "token.d.ts",
     "sourceRoot": "",
     "sources": [
-        "../src-ts/token.js"
+        "../src/token.js"
     ],
     "names": [],
     "mappings": "AAGA,wCAEC;AAGD,6CA4BC;AAED,4EASC"

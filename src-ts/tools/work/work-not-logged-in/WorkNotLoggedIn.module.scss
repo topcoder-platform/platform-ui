@@ -1,0 +1,96 @@
+@import '../../../lib/styles/includes';
+
+/* TODO: this needs to be updated to use the paddings,
+typography, etc from the /lib */
+
+.container {
+    display: flex;
+    justify-content: space-between;
+    margin: 32px 0;
+    background: linear-gradient(90deg,
+            #02225d 0%,
+            #002341 50.52%,
+            #002538 73.59%,
+            #002740 100%),
+        #ffffff;
+    border-radius: 8px;
+
+    @include ltemd {
+        flex-direction: column;
+        align-items: center;
+        margin: 32px 12px;
+    }
+
+    .leftContent {
+        padding: 71px 32px 60px 0;
+
+        .welcomeImage {
+            max-height: 646px;
+
+            @include ltemd {
+                max-width: 90vw;
+            }
+        }
+
+        @include ltemd {
+            padding: 12px 0px;
+        }
+    }
+
+    .rightContent {
+        padding-left: 20px;
+
+        @include ltemd {
+            text-align: center;
+            padding: 0;
+            margin-top: 32px;
+        }
+
+        .title {
+            @include font-barlow-condensed;
+            font-weight: 500;
+            font-size: 60px;
+            line-height: 56px;
+            padding-top: 80px;
+            text-transform: uppercase;
+            background: linear-gradient(270deg, #0ab88a 0%, #63f963 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            word-wrap: break-word;
+            padding-right: 60px;
+
+            @include ltemd {
+                font-size: 24px;
+                line-height: 26px;
+                padding: 0;
+            }
+        }
+
+        .description {
+            @include font-roboto;
+            font-weight: 300;
+            font-size: 24px;
+            line-height: 32px;
+            color: $tc-white;
+            margin-top: 16px;
+            margin-left: 3px;
+            padding-right: 32px;
+
+            @include ltemd {
+                font-size: 14px;
+                line-height: 18px;
+                padding-right: 0;
+            }
+        }
+
+        .createWorkButton {
+            margin-top: 24px;
+            margin-left: 2px;
+
+            @include ltemd {
+                margin: 32px auto;
+            }
+        }
+    }
+}

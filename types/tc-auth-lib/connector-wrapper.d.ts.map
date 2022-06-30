@@ -3,7 +3,7 @@
     "file": "connector-wrapper.d.ts",
     "sourceRoot": "",
     "sources": [
-        "../src-ts/connector-wrapper.js"
+        "../src/connector-wrapper.js"
     ],
     "names": [],
     "mappings": "AASA;;;;;SAiBC;AAgDD,qCAWC"
