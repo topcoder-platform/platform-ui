@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { FC, useContext, useMemo } from 'react'
 import { Params, useParams } from 'react-router-dom'
 
 import {
@@ -7,6 +7,8 @@ import {
     ContentLayout,
     IconOutline,
     LoadingSpinner,
+    profileContext,
+    ProfileContextData,
 } from '../../../lib'
 import {
     CoursesProviderData,
@@ -25,18 +27,19 @@ interface CourseDetailsPageProps {
 
 const CourseDetailsPage: FC<CourseDetailsPageProps> = (props: CourseDetailsPageProps) => {
     const routeParams: Params<string> = useParams()
+    const { profile }: ProfileContextData = useContext(profileContext)
 
     const {
         course,
         ready,
-    }: CoursesProviderData = useCoursesProvider(routeParams.certification)
+    }: CoursesProviderData = useCoursesProvider(routeParams.provider ?? '', routeParams.certification)
 
-    const { progress }: MyCertificationProgressProviderData = useMyCertificationProgress(routeParams.certification)
+    const { certificateProgress: progress }: MyCertificationProgressProviderData = useMyCertificationProgress(profile?.userId, routeParams.provider, routeParams.certification)
 
     const breadcrumb: Array<BreadcrumbItemModel> = useMemo(() => [
         { url: '/learn', name: 'Topcoder Academy' },
-        { url: `/learn/${course?.certification}`, name: course?.title ?? '' },
-    ], [course?.certification])
+        { url: `/learn/${routeParams.provider}/${routeParams.certification}`, name: course?.title ?? '' },
+    ], [routeParams, course])
 
     return (
         <ContentLayout>

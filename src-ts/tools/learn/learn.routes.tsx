@@ -1,29 +1,30 @@
 
 import { PlatformRoute } from '../../lib'
+import { CourseCompletedPage } from './course-completed'
 
 import { CourseDetailsPage } from './course-details'
 import { FreeCodeCamp } from './free-code-camp'
 import Learn, { toolTitle } from './Learn'
+import { MyCertificate } from './my-certificate'
 import { MyLearning } from './my-learning'
 import { WelcomePage } from './welcome'
 
-interface IGetFccLessonPathParams {
-    course: string
-    lesson: string
-    module: string
+export function getCoursePath(provider: string, certification: string): string {
+    return `/learn/${provider}/${certification}`
 }
 
-export const getCoursePath: (certification: string) => string = (certification: string) => {
-    return `/learn/${certification}`
+export function getFccLessonPath(
+    provider: string,
+    certification: string,
+    module: string,
+    lesson: string,
+): string {
+    return `/learn/${provider}/${certification}/${module}/${lesson}`
 }
-
-export const getFccLessonPath: (params: IGetFccLessonPathParams) => string = (params: IGetFccLessonPathParams) => (
-    `/learn/fcc?course=${params.course}&module=${params.module}&lesson=${params.lesson}`
-)
 
 export enum LEARN_PATHS {
+    myCertificate = '/learn/my-certificate',
     myLearning = '/learn/my-learning',
-    fcc = '/learn/fcc',
 }
 
 export const learnRoutes: Array<PlatformRoute> = [
@@ -40,14 +41,28 @@ export const learnRoutes: Array<PlatformRoute> = [
                 children: [],
                 element: <CourseDetailsPage />,
                 enabled: true,
-                route: ':certification',
+                route: ':provider/:certification',
+                title: toolTitle,
+            },
+            {
+                children: [],
+                element: <CourseCompletedPage />,
+                enabled: true,
+                route: ':provider/:certification/completed',
+                title: toolTitle,
+            },
+            {
+                children: [],
+                element: <MyCertificate />,
+                enabled: true,
+                route: ':provider/:certification/certificate',
                 title: toolTitle,
             },
             {
                 children: [],
                 element: <FreeCodeCamp />,
                 enabled: true,
-                route: 'fcc',
+                route: ':provider/:certification/:module/:lesson',
                 title: toolTitle,
             },
             {

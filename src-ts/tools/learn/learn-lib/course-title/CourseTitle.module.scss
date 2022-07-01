@@ -16,6 +16,11 @@
     color: $black-100;
     h1 {
         text-transform: none;
+        &:global(.xl) {
+            font-size: 34px;
+            line-height: 34px;
+            text-transform: uppercase;
+        }
     }
     :global(.quote-small) {
         color: #767676;
@@ -33,6 +38,11 @@
     &:global(.lg) {
         svg {
             @include icon-size(72);
+        }
+    }
+    &:global(.xl) {
+        svg {
+            @include icon-size(140);
         }
     }
 }

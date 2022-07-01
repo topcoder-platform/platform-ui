@@ -1,7 +1,8 @@
-import { FC, ReactNode } from 'react'
+import { FC, ReactNode, useContext, useMemo } from 'react'
 
-import { Button } from '../../../../lib'
+import { Button, profileContext, ProfileContextData } from '../../../../lib'
 import {
+    LearnCertification,
     LearningHat,
     MyCertificationsProviderData,
     MyCourseCompletedCard,
@@ -14,11 +15,21 @@ import InitState from './init-state/InitState'
 import styles from './ProgressBlock.module.scss'
 
 interface ProgressBlockProps {
+    certificates: Array<LearnCertification>
 }
 
 const ProgressBlock: FC<ProgressBlockProps> = (props: ProgressBlockProps) => {
-    const { completed, inProgress }: MyCertificationsProviderData = useMyCertifications()
+    const { profile }: ProfileContextData = useContext(profileContext)
+
+    const { completed, inProgress }: MyCertificationsProviderData = useMyCertifications(profile?.userId)
     const isInit: boolean = !inProgress.length && !completed.length
+
+    const certificatesById: {[key: string]: LearnCertification} = useMemo(() => (
+        props.certificates.reduce((certifs, certificate) => {
+            certifs[certificate.id] = certificate
+            return certifs
+}, {} as unknown as {[key: string]: LearnCertification})
+    ), [props.certificates])
 
     const allMyLearningsLink: ReactNode = (
         <span className={styles['title-link']}>
@@ -41,12 +52,13 @@ const ProgressBlock: FC<ProgressBlockProps> = (props: ProgressBlockProps) => {
                             {allMyLearningsLink}
                         </div>
                     )}
-                    {inProgress.map((certif) => (
+                    {inProgress.map((certifProgress) => (
                         <MyCourseInProgressCard
-                            certification={certif}
-                            key={certif.key}
-                            progress={certif.progress}
+                            certification={certificatesById[certifProgress.certificationId]}
+                            key={certifProgress.certificationId}
+                            completedPercentage={certifProgress.completedPercentage}
                             theme='minimum'
+                            currentLesson={certifProgress.currentLesson}
                         />
                     ))}
                     {!!completed.length && (
@@ -58,9 +70,9 @@ const ProgressBlock: FC<ProgressBlockProps> = (props: ProgressBlockProps) => {
                     )}
                     {completed.map((certif) => (
                         <MyCourseCompletedCard
-                            certification={certif}
-                            key={certif.key}
-                            completed={certif.progress.completedDate!}
+                            certification={certificatesById[certif.certificationId]}
+                            key={certif.certificationId}
+                            completed={certif.completedDate!}
                         />
                     ))}
                 </>

@@ -1,9 +1,17 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
-import { getCertificationsAsync } from './certifications-functions'
+import { getCertificationsAsync, LearnCertification } from './certifications-functions'
 import { CertificationsProviderData } from './certifications-provider-data.model'
 
-export const useCertificationsProvider: () => CertificationsProviderData = (): CertificationsProviderData => {
+interface CertificationsProviderOptions {
+    enabled?: boolean
+}
+
+export function useCertificationsProvider(
+    provider?: string,
+    certificationId?: string,
+    options?: CertificationsProviderOptions
+): CertificationsProviderData {
     const [state, setState]: [CertificationsProviderData, Dispatch<SetStateAction<CertificationsProviderData>>] = useState<CertificationsProviderData>({
         certifications: [],
         certificationsCount: 0,
@@ -17,16 +25,22 @@ export const useCertificationsProvider: () => CertificationsProviderData = (): C
             loading: true,
         }))
 
-        getCertificationsAsync().then((certifications) => {
+        if (options?.enabled === false) {
+            return
+        }
+
+        getCertificationsAsync(provider, certificationId).then((certifications) => {
             setState((prevState) => ({
                 ...prevState,
-                certifications: [...certifications],
+                ...(certificationId ? {certification: certifications as unknown as LearnCertification} : {
+                    certifications: [...certifications],
+                }),
                 certificationsCount: certifications.length,
                 loading: false,
                 ready: true,
             }))
         })
-    }, [])
+    }, [provider, certificationId, options?.enabled])
 
     return state
 }

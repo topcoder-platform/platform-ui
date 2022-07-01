@@ -1,6 +1,8 @@
 export interface LearnLessonMeta {
     course: {
         certification: string
+        certificationId: string
+        id: string
         title: string
     }
     dashedName: string

@@ -10,8 +10,7 @@ import {
 import {
     CoursesProviderData,
     CourseTitle,
-    LearnMyCertification,
-    LearnMyCertificationProgress,
+    LearnCertification,
     useCoursesProvider,
 } from '../../../learn-lib'
 import { getCoursePath, getFccLessonPath } from '../../../learn.routes'
@@ -20,8 +19,10 @@ import { CurriculumSummary } from '../../curriculum-summary'
 import styles from './InProgress.module.scss'
 
 interface InProgressProps {
-    certification: LearnMyCertification
-    progress: LearnMyCertificationProgress
+    certification?: LearnCertification
+    completedPercentage: number
+    currentLesson?: string
+    startDate?: string
     theme: 'detailed'|'minimum'
 }
 
@@ -30,21 +31,23 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
     const isDetailed: boolean = props.theme === 'detailed'
     const isMinimum: boolean = props.theme === 'minimum'
 
-    const certification: string = props.certification.certification
-    const {course}: CoursesProviderData = useCoursesProvider(props.certification.certification)
+    const certification: string = props.certification?.certification ?? ''
+    const provider: string = props.certification?.providerName ?? ''
+    const {course}: CoursesProviderData = useCoursesProvider(provider, certification)
 
     const resumeCourse: () => void = () => {
-        if (!props.progress.currentLesson) {
+        if (!props.currentLesson) {
             return
         }
 
-        const [module, lesson]: Array<string> = (props.progress.currentLesson ?? '').split('/')
+        const [module, lesson]: Array<string> = (props.currentLesson ?? '').split('/')
 
-        const coursePath: string = getFccLessonPath({
-            course: certification,
-            lesson,
+        const coursePath: string = getFccLessonPath(
+            provider,
+            certification,
             module,
-        })
+            lesson,
+        )
         navigate(coursePath)
     }
 
@@ -53,9 +56,9 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
             <div className={styles['inner']}>
                 <div className={styles['line']}>
                     <CourseTitle
-                        title={props.certification.title}
-                        type={props.certification.category}
-                        credits={props.certification.providerName}
+                        title={props.certification?.title ?? ''}
+                        type={props.certification?.category ?? ''}
+                        credits={props.certification?.providerName}
                     >
                         {isDetailed && (
                             <div className={styles['status']}>In Progress</div>
@@ -71,7 +74,7 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
                     )}
                 </div>
 
-                <ProgressBar progress={props.progress.completed} />
+                <ProgressBar progress={props.completedPercentage} />
 
                 {isDetailed && (
                     <div className={styles['summary']}>
@@ -94,15 +97,17 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
                 <div className={styles['details']}>
                     <div className={styles['details-inner']}>
                         <p dangerouslySetInnerHTML={{ __html: course?.introCopy.join('<br /><br />') ?? '' }}></p>
-                        <div className={styles['started-date']}>
-                            <span>Started </span>
-                            {textFormatDateLocaleShortString(new Date(props.progress.startedDate))}
-                        </div>
+                        {props.startDate && (
+                            <div className={styles['started-date']}>
+                                <span>Started </span>
+                                {textFormatDateLocaleShortString(new Date(props.startDate))}
+                            </div>
+                        )}
                         <Button
                             size='xs'
                             buttonStyle='secondary'
                             label='View Course'
-                            route={getCoursePath(certification)}
+                            route={getCoursePath(props.certification?.providerName ?? '', certification)}
                         />
                     </div>
                 </div>
