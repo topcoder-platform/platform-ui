@@ -1,5 +1,6 @@
 import { Dispatch, FC, ReactElement, ReactNode, SetStateAction, useEffect, useState } from 'react'
 import { Route } from 'react-router-dom'
+import { PathsMap } from '../../config'
 
 import { authUrlLogin } from '../functions'
 
@@ -112,8 +113,12 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
 }
 
 function isActivePath(activePath: string, pathName: string, rootPath?: string): boolean {
-    return activePath?.startsWith(pathName)
+    return activePath?.indexOf(pathName) > -1
         && (pathName !== rootPath || activePath === rootPath)
+}
+
+function getMatchedPath(path: string): string {
+    return PathsMap[path];
 }
 
 function isActiveRoute(rootLoggedIn: string, rootLoggedOut: string):
@@ -121,7 +126,8 @@ function isActiveRoute(rootLoggedIn: string, rootLoggedOut: string):
 
     return (activePath: string, pathName: string, rootPath?: string) => {
 
-        let isActive: boolean = isActivePath(activePath, pathName, rootPath)
+        const matchedPath: string = getMatchedPath(rootLoggedOut);
+        let isActive: boolean = isActivePath(activePath, matchedPath, rootPath)
 
         // if this is the root logged in route,
         // also check the root logged out route

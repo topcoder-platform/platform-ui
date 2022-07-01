@@ -19,6 +19,7 @@ const ToolSelectorWide: FC<ToolSelectorWideProps> = (props: ToolSelectorWideProp
 
     const {
         getPathFromRoute,
+        getPossiblePaths,
         isActiveRoute,
         isRootRoute,
     }: RouteContextData = useContext(routeContext)
