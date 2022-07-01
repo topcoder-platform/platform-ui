@@ -1,0 +1,35 @@
+@use '../../../../../lib/styles/typography';
+@import '../../../../../lib/styles/includes';
+
+.wrap {
+    background: $tc-white;
+    padding: $pad-xxl;
+    border-radius: $pad-sm;
+}
+
+.line {
+    display: flex;
+    align-items: flex-start;
+
+    margin-bottom: $pad-lg;
+}
+
+.completed-status {
+    @extend .body-main-bold;
+    color: $blue-140;
+
+    &:before {
+        content: "";
+        display: inline-block;
+        margin: 2px $pad-sm -2px;
+        width: 1px;
+        height: 16px;
+        background: $black-60;
+    }
+}
+
+.buttons-wrap {
+    display: flex;
+    align-items: center;
+    gap: $pad-sm;
+}

@@ -1,0 +1,94 @@
+@use '../../../../../lib/styles/typography';
+@import '../../../../../lib/styles/includes';
+
+.wrap {
+    color: $black-10;
+}
+
+.title-row {
+    display: flex;
+    align-items: flex-start;
+    gap: calc($pad-sm + $border);
+    cursor: pointer;
+
+    > span {
+        @extend .body-small-bold;
+        line-height: 24px;
+    }
+
+    :global(.status-checkbox) {
+        margin-top: 0;
+        width: $pad-xxl;
+        height: $pad-xxl;
+    }
+}
+
+.title-tag {
+    color: $blue-140;
+    background: $tc-white;
+    padding: calc($border + $border-xs) $pad-xs;
+    border-radius: $border;
+    text-transform: uppercase;
+    line-height: 10px;
+    margin-top: $pad-xs;
+}
+
+.chevron {
+    margin-left: auto;
+    width: $pad-xxl;
+    flex: 0 0 auto;
+    svg {
+        @include icon-xxl;
+    }
+
+    
+    .wrap:global(.collapsed) & svg {
+        transform: rotate(180deg);
+    }
+}
+
+.content {
+    margin-left: 34px;
+}
+
+
+.short-desc {
+    margin-top: $pad-sm;
+}
+
+.summary {
+    display: flex;
+    color: $tc-white;
+    margin-top: $border-xs;
+    
+    > * + * {
+        &:before {
+            content: "";
+            display: block;
+            width: 1px;
+            height: 14px;
+            background: $tc-white;
+            margin: 0 calc($pad-sm + $border);
+        }
+    }
+
+    &-item {
+        @extend .body-small;
+        display: flex;
+        align-items: center;
+
+        svg {
+            width: 14px;
+            height: 14px;
+            margin-right: calc($pad-xs + $border);
+        }
+    }
+}
+
+.list {
+    display: flex;
+    gap: $pad-xs $pad-sm;
+    flex-wrap: wrap;
+
+    margin-top: $pad-sm;
+}
