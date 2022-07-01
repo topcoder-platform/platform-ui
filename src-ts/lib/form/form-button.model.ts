@@ -1,3 +1,4 @@
+import { FC, SVGProps } from 'react'
 import { ButtonSize, ButtonStyle, ButtonType } from '../button'
 
 export interface FormButton {
@@ -11,4 +12,5 @@ export interface FormButton {
     readonly size?: ButtonSize
     readonly type?: ButtonType
     readonly url?: string
+    readonly icon?: FC<SVGProps<SVGSVGElement>>
 }

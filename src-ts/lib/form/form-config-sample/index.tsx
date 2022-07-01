@@ -1,10 +1,11 @@
 import { FormDefinition } from "..";
-
+import { ReactComponent as BackIcon } from "../../../../src/assets/images/icon-back-arrow.svg";
 export const FormConfig: FormDefinition = {
   leftButtons: [
     {
       type: 'button',
       buttonStyle: 'icon',
+      icon: BackIcon,
       onClick: () => console.log('on click'),
     }
   ],
@@ -117,13 +118,16 @@ export const FormConfig: FormDefinition = {
         {
           name: 'delivery-type',
           type: 'checkbox',
+          onChange: () => console.log('on option changed'),
           options: [
             {
               checked: false,
+              id: 'github',
               children: () => (<div>Option 1</div>),
             },
             {
               checked: false,
+              id: 'gitlab',
               children: () => (<div>Option 2</div>),
             }
           ],
