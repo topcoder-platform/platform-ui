@@ -258,10 +258,6 @@ function findPhase(challenge: Challenge, phases: Array<string>): ChallengePhase 
 // tslint:disable-next-line: cyclomatic-complexity
 function getCost(challenge: Challenge, type: WorkType): number | undefined {
 
-    function getCountFromString(raw: string | undefined): number {
-        return Number(raw?.split(' ')?.[0] || '0')
-    }
-
     const priceConfig: WorkPrice = WorkPrices[type]
     switch (type) {
 
