@@ -126,7 +126,7 @@ function isActiveRoute(rootLoggedIn: string, rootLoggedOut: string):
 
     return (activePath: string, pathName: string, rootPath?: string) => {
 
-        const matchedPath: string = getMatchedPath(rootLoggedOut);
+        const matchedPath: string = getMatchedPath(pathName)
         let isActive: boolean = isActivePath(activePath, matchedPath, rootPath)
 
         // if this is the root logged in route,
