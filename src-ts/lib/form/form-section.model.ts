@@ -6,8 +6,9 @@ export type RenderingRule = {
   width: 'full' | 'half'
 };
 
-export interface Section {
+export interface FormSectionModel {
   readonly renderingRule: RenderingRule
+  readonly type: 'section'
   readonly description?: string
   readonly title?: string
   readonly className?: string

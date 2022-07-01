@@ -1,6 +1,7 @@
 import { FormButton } from './form-button.model'
+import { FormFieldModel } from './form-field.model'
 import { FormInputModel } from './form-input.model'
-import { Section } from './form-section.model'
+import { FormSectionModel } from './form-section.model'
 
 export interface FormDefinition {
     // Making the buttons for now optional. When the Bug hunt form is done and once the other places 
@@ -15,7 +16,7 @@ export interface FormDefinition {
     readonly inputs?: ReadonlyArray<FormInputModel>
 
     // This will be used to display the sections and inputs will be part of this
-    readonly sections?: Array<Section>
+    readonly fields?: Array<FormSectionModel | FormFieldModel>
     readonly shortName?: string
     readonly subtitle?: string
     readonly successMessage?: string

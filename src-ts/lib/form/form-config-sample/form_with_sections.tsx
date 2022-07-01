@@ -23,11 +23,12 @@ export const FormConfig: FormDefinition = {
       onClick: () => console.log('on click'),
     }
   ],
-  sections: [
+  fields: [
     {
       renderingRule: {
         width: 'half',
       },
+      type: 'section',
       title: 'Project Title',
       description: 'Enter a title for your website bug hunt project.',
       fields: [
@@ -49,6 +50,7 @@ export const FormConfig: FormDefinition = {
       renderingRule: {
         width: 'half',
       },
+      type: 'section',
       title: 'Website URL',
       description: 'Enter a title for your website bug hunt project.',
       fields: [
@@ -70,6 +72,7 @@ export const FormConfig: FormDefinition = {
       renderingRule: {
         width: 'half',
       },
+      type: 'section',
       title: 'Bug Hunt Goals',
       description: 'Do you have any specific goals for your website bug hunt? For example: find bugs in my online shopping experience',
       fields: [
@@ -91,6 +94,7 @@ export const FormConfig: FormDefinition = {
       renderingRule: {
         width: 'half',
       },
+      type: 'section',
       title: 'Features to test',
       description: 'Are there specific features we should focus on testing? For example: [An example not used above]',
       fields: [
@@ -112,6 +116,7 @@ export const FormConfig: FormDefinition = {
       renderingRule: {
         width: 'half',
       },
+      type: 'section',
       title: 'Bug Delivery',
       description: 'How do you want your bugs delivered?',
       fields: [
