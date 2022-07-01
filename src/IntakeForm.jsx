@@ -46,7 +46,7 @@ export default function IntakeForm() {
       event.preventDefault();
       event.returnValue = "";
     }
-    dispatch(triggerAutoSave(true));
+    dispatch(triggerAutoSave(true, isLoggedIn));
   };
 
   useEffect(() => {
@@ -195,7 +195,7 @@ export default function IntakeForm() {
           />
 
           <Route
-            element={<SelectWorkType />}
+            element={<SelectWorkType isLoggedIn={isLoggedIn} />}
             path="/wizard"
           />
         </Routes>

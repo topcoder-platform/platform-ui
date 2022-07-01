@@ -59,6 +59,7 @@ const ReviewLegacy = ({
   showIcon,
   enableEdit = true,
   secondaryBanner,
+  isLoggedIn,
 }) => {
 
   const dispatch = useDispatch();
@@ -101,9 +102,9 @@ const ReviewLegacy = ({
     setFirstMounted(false);
 
     return () => {
-      dispatch(triggerAutoSave(true));
+      dispatch(triggerAutoSave(true, isLoggedIn));
     };
-  }, [currentStep, formData, dispatch, setProgressItem, firstMounted, navigate]);
+  }, [currentStep, formData, dispatch, setProgressItem, firstMounted, navigate, isLoggedIn]);
 
   const [anotherFirstMounted, setAnotherFirstMounted] = useState(true);
   useEffect(() => {
@@ -214,7 +215,7 @@ const ReviewLegacy = ({
       <Page>
         <Breadcrumb items={breadcrumbs} />
         {banner}
-        <PageContent styleName="container">
+        <PageContent styleName={styles["container"]}>
           <PageH2>REVIEW & PAYMENT</PageH2>
           <PageDivider />
           <ServicePrice

@@ -117,7 +117,7 @@ export function getDataExplorationPriceAndTimelineEstimate() {
   };
 }
 
-export function getWebsiteDesignPriceAndTimelineEstimate() {  
+export function getWebsiteDesignPriceAndTimelineEstimate() {
   const total = workPriceDesign.getPrice(workPriceDesign);
   return {
     total,
@@ -187,8 +187,8 @@ export function getFindMeDataPriceAndTimelineEstimate() {
 }
 
 export function getDynamicPriceAndTimelineEstimate(formData) {
-  const numOfPages = formData?.pageDetails?.pages?.length || 1
-  const numOfDevices = formData?.basicInfo?.selectedDevice.option.length || 1
+  const numOfPages = formData?.form?.pageDetails?.pages?.length || 1
+  const numOfDevices = formData?.form?.basicInfo?.selectedDevice.option.length || 1
   return getDynamicPriceAndTimeline(numOfPages, numOfDevices);
 }
 

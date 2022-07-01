@@ -17,14 +17,14 @@ let CREATION_IN_PROGRESS = false;
 
 export const saveUpdatesMiddleware = ({ dispatch, getState }) => {
   const handleAutoSave = () => {
-    const { progress, form, authUser, challenge, autoSave } = getState();
+    const { progress, form, challenge, autoSave } = getState();
     const isEmptyForm = !form?.workType?.selectedWorkType;
     if (isEmptyForm) return;
 
     let challengeId = loadChallengeId() || challenge?.id;
     const dataToSave = { progress, form };
     const currentStep = _.get(dataToSave, "progress.currentStep", 1);
-    if (authUser?.isLoggedIn && (autoSave.forced || currentStep >= 3)) {
+    if (autoSave.isLoggedIn && (autoSave.forced || currentStep >= 3)) {
       const triggerSave = () => {
         challengeId = loadChallengeId() || challenge?.id;
         if (!challengeId) {

@@ -5,15 +5,14 @@ import {
   CardNumberElement,
 } from "@stripe/react-stripe-js";
 import PT from "prop-types";
-import React, { useState } from "react";
-import { useSelector } from "react-redux";
+import React, { useState, useContext } from "react";
 
 import FormField from "../../../../components/FormElements/FormField";
 import FormInputText from "../../../../components/FormElements/FormInputText";
 import ReactSelect from "../../../../components/ReactSelect";
 import { COUNTRY_OPTIONS } from "../../../../constants";
-import { getProfile } from "../../../../selectors/profile";
 import FormInputCheckbox from "../../../../components/FormElements/FormInputCheckbox";
+import { profileContext } from "../../../../../src-ts";
 
 import styles from "./styles.module.scss";
 
@@ -27,7 +26,8 @@ const PaymentForm = ({ formData, setFormData, onOpenContractModal }) => {
   const [cardNumberError, setCardNumberError] = useState("");
   const [cardExpiryError, setCardExpiryError] = useState("");
   const [cvcError, setCvcError] = useState("");
-  const { email } = useSelector(getProfile);
+  const { profile } = useContext(profileContext);
+  const email = profile?.email;
 
   // set the email, if it exists
   if (formData && !formData.email && email) {

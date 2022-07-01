@@ -155,7 +155,7 @@ const BasicInfo = ({
   const onNext = () => {
     setProgressItem(isLoggedIn ? 7 : 5);
     saveBasicInfo(formData);
-    dispatch(triggerAutoSave(true, true));
+    dispatch(triggerAutoSave(true, isLoggedIn, true));
     navigate(isLoggedIn ? `${baseUrl}/review` : `${baseUrl}/login-prompt`);
   };
 
@@ -173,7 +173,7 @@ const BasicInfo = ({
         selectedWorkType: workItemConfig.type,
         selectedWorkTypeDetail: workItemConfig.title,
       });
-      dispatch(triggerAutoSave(true));
+      dispatch(triggerAutoSave(true, isLoggedIn));
     }
 
     if (!!basicInfo?.projectTitle?.value?.length) {
@@ -183,7 +183,7 @@ const BasicInfo = ({
     setFirstMounted(false);
 
     return () => {
-      dispatch(triggerAutoSave(true, false));
+      dispatch(triggerAutoSave(true, isLoggedIn, false));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [basicInfo, currentStep, dispatch, setProgressItem, firstMounted]);
@@ -217,7 +217,7 @@ const BasicInfo = ({
 
   const saveForm = (autoSave) => {
     saveBasicInfo(formData);
-    dispatch(triggerAutoSave(autoSave, true));
+    dispatch(triggerAutoSave(autoSave, isLoggedIn, true));
     if (autoSave) navigate("/self-service");
   };
 

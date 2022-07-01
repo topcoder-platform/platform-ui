@@ -66,6 +66,7 @@ export default function DataAdvisory({ isLoggedIn }) {
           showIcon
           workItemConfig={dataAdvisory}
           breadcrumb={dataAdvisory.breadcrumbs.review}
+          isLoggedIn={isLoggedIn}
         />}
         path="/review"
       />
