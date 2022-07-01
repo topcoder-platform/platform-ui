@@ -1,4 +1,4 @@
-export type EventName = 'OnBlur' | 'OnChange' | 'OnFocus'
+export type EventName = 'onBlur' | 'onChange' | 'onFocus'
 
 export interface InputEvent {
   readonly name: EventName

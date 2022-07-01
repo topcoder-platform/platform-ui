@@ -38,7 +38,7 @@ export const FormConfig: FormDefinition = {
           type: 'text',
           events: [
             {
-              name: 'OnBlur',
+              name: 'onBlur',
               event: () => console.log('on blur')
             }
           ],
@@ -60,7 +60,7 @@ export const FormConfig: FormDefinition = {
           type: 'text',
           events: [
             {
-              name: 'OnBlur',
+              name: 'onBlur',
               event: () => console.log('on blur')
             }
           ],
