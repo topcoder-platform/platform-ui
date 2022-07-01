@@ -2,7 +2,9 @@ import { LearnModule } from '../../lesson-provider'
 
 export interface LearnCourse {
     certification: string
+    certificationId: string
     completionHours: number
+    id: string
     introCopy: Array<string>
     key: string
     keyPoints: Array<string>

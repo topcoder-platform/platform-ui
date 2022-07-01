@@ -1,0 +1,39 @@
+@import '../../../lib/styles/includes';
+
+.wrap {
+    padding-top: $pad-xxxxl;
+    padding-bottom: calc($pad-xxxxl + $pad-xs);
+    flex: 99 1 auto;
+    display: flex;
+    justify-content: center;
+
+    background: $tc-grad15;
+}
+
+.content-wrap {
+    display: flex;
+    justify-content: center;
+
+    gap: $pad-xxxxl;
+}
+
+.btns-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: $pad-sm;
+
+    &:last-child {
+        margin-top: auto;
+    }
+}
+
+.certificate-wrap {
+    aspect-ratio: 1.25715;
+    width: 880px;
+
+    background: #fff;
+
+    box-shadow: 0 20px 36px rgba($tc-black, 0.22);
+}

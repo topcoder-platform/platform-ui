@@ -6,11 +6,12 @@ import { LearnLesson } from './learn-lesson.model'
 import { LearnModule } from './learn-module.model'
 import { LessonProviderData } from './lesson-provider-data.model'
 
-export const useLessonProvider: (
+export function useLessonProvider(
+    provider: string,
     course?: string,
     module?: string,
     lesson?: string,
-) => LessonProviderData = (course?: string, module?: string, lesson?: string): LessonProviderData => {
+): LessonProviderData {
     const [state, setState]: [LessonProviderData, Dispatch<SetStateAction<LessonProviderData>>] = useState<LessonProviderData>({
         loading: false,
         ready: false,
@@ -32,7 +33,7 @@ export const useLessonProvider: (
             loading: true,
         }))
 
-        getCourseAsync(course).then((courseData) => {
+        getCourseAsync(provider, course).then((courseData) => {
             const moduleData: LearnModule|undefined = courseData?.modules.find(m => m.key === module)
             const lessonData: LearnLesson|undefined = moduleData?.lessons.find(l => l.dashedName === lesson)
 
@@ -49,6 +50,8 @@ export const useLessonProvider: (
                     ...lessonData,
                     course: {
                         certification: courseData?.certification ?? '',
+                        certificationId: courseData?.certificationId ?? '',
+                        id: courseData?.id ?? '',
                         title: courseData?.title ?? '',
                     },
                     lessonUrl,
@@ -61,7 +64,7 @@ export const useLessonProvider: (
                 ready: true,
             }))
         })
-    }, [course, module, lesson])
+    }, [provider, course, module, lesson])
 
     return state
 }

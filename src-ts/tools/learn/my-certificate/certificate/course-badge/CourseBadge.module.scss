@@ -1,0 +1,22 @@
+.wrap {
+    &:global(.theme-dev) svg {
+        :global(.circle-bg) {
+            fill: url(#dev-track-lin-bg);
+        }
+    }
+    &:global(.theme-design) svg {
+        :global(.circle-bg) {
+            fill: url(#design-track-lin-bg);
+        }
+    }
+    &:global(.theme-qa) svg {
+        :global(.circle-bg) {
+            fill: url(#qa-track-lin-bg);
+        }
+    }
+    &:global(.theme-datascience) svg {
+        :global(.circle-bg) {
+            fill: url(#datascience-track-lin-bg);
+        }
+    }
+}

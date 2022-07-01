@@ -1,0 +1,26 @@
+@import '../includes';
+
+@mixin wave-bg-pattern($grad) {
+    background: url('./wave-bg.png') 0 0 no-repeat,
+        url('./pattern-bg.png') bottom right no-repeat,
+        $grad;
+    background-size: 12px 100%, 220% 100%, 100% 100%;
+}
+
+.wrap {
+    width: 100%;
+    height: 100%;
+
+    &:global(.theme-dev) {
+        @include wave-bg-pattern($tc-dev-grad);
+    }
+    &:global(.theme-design) {
+        @include wave-bg-pattern($tc-design-grad);
+    }
+    &:global(.theme-qa) {
+        @include wave-bg-pattern($tc-qa-grad);
+    }
+    &:global(.theme-datascience) {
+        @include wave-bg-pattern($tc-datascience-grad);
+    }
+}

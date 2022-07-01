@@ -32,7 +32,7 @@ const Completed: FC<CompletedProps> = (props: CompletedProps) => {
                     size='xs'
                     buttonStyle='secondary'
                     label='View Course'
-                    route={getCoursePath(props.certification.certification)}
+                    route={getCoursePath(props.certification.providerName, props.certification.certification)}
                 />
                 <Button size='xs' buttonStyle='secondary' label='View certificate' />
             </div>

@@ -7,15 +7,17 @@ import styles from './CurriculumSummary.module.scss'
 
 interface CurriculumSummaryProps {
     completed?: boolean
+    completedDate?: string
+    completedPercentage?: number
     course: LearnCourse
+    inProgress?: boolean
     onClickCertificateBtn?: () => void
     onClickMainBtn: () => void
-    progress?: number
 }
 
 const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryProps) => {
-    const progress: number|undefined = props.progress
-    const inProgress: boolean = !!progress
+    const progress: number|undefined = props.completedPercentage
+    const inProgress: boolean|undefined = props.inProgress
     const completed: boolean|undefined = props.completed
 
     return (
@@ -23,11 +25,11 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
             {(inProgress || completed) && (
                 <>
                     <div className={styles['title']}>
-                        {completed ? (
+                        {completed && props.completedDate ? (
                             <>
                                 <span>
                                     Completed{' '}
-                                    {textFormatDateLocaleShortString(new Date('2022-06-24'))}
+                                    {textFormatDateLocaleShortString(new Date(props.completedDate))}
                                 </span>
                                 <Button
                                     buttonStyle='secondary'

@@ -1,0 +1,11 @@
+$tc-dev-grad: linear-gradient(84.92deg, #048467 2.08%, #064871 97.43%);
+$tc-design-grad: linear-gradient(84.92deg, #065D6E 2.08%, #06596E 2.09%, #3E3B91 97.43%);
+$tc-qa-grad: linear-gradient(84.92deg, #363D8C 2.08%, #723390 97.43%);
+$tc-datascience-grad: linear-gradient(84.92deg, #723390 2.08%, #8C384F 97.43%);
+
+@mixin grad-text-color($grad) {
+    background: $grad;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}

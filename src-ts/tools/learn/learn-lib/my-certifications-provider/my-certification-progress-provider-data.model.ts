@@ -1,7 +1,8 @@
-import { LearnMyCertificationProgress } from './learn-my-certification-progress.model'
+import { LearnMyCertificationProgress } from './my-certifications-functions'
 
 export interface MyCertificationProgressProviderData {
+    certificateProgress?: LearnMyCertificationProgress
     loading: boolean
-    progress?: LearnMyCertificationProgress
     ready: boolean
+    setCertificateProgress: (progess: LearnMyCertificationProgress) => void,
 }
