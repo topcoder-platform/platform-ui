@@ -71,7 +71,15 @@ You will need to add the following line to your hosts file. The hosts file is no
 
 3. Go to https://local.topcoder-dev.com:3000/
 
-**NOTE:** SSL is required for authentication, so you must accept the invalid cert.
+### Local SSL
+
+SSL is required for authentication to work properly. 
+
+The `yarn start` command serves the site using the cert and key in the /ssl directory.
+
+For easier development, it is recommended that you add this certificate to your trusted root authorities and as a trused cert in your browser. 
+
+Otherwise, you will need to override the exception each time you load the site. Firefox users may need to user an incognito browser in order to override the exception.
 
 ### Personal Config
 
