@@ -3,6 +3,7 @@ import { FormInputAutocompleteOption } from './form-inputs'
 import { ValidatorFn } from './validator-functions'
 
 export interface FormInputModel {
+    readonly id?: string
     readonly autocomplete?: FormInputAutocompleteOption
     readonly dependentFields?: Array<string>
     dirty?: boolean

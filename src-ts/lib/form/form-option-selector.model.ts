@@ -5,8 +5,9 @@ export interface OptionSelectorOption {
 }
 
 export interface FormOptionSelectorModel {
-  type: 'radio' | 'checkbox'
+  readonly type: 'radio' | 'checkbox'
+  readonly name?: string 
   options: Array<OptionSelectorOption>
-  onChange: (checked: boolean) => void
+  onChange?: (checked: boolean) => void
   readonly className?: string
 }
