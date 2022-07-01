@@ -6,7 +6,6 @@ export {
     ChallengeMetadataName,
     dashboardRoute as routeRootLoggedIn,
     rootRoute as routeRootLoggedOut,
-    workBugHuntConfig,
     workContext,
     WorkDetailDetails,
     WorkDetailDetailsPane,
@@ -25,4 +24,5 @@ export {
     WorkTypeCategoryDataIcon,
     WorkTypeCategoryDesignIcon,
     WorkTypeCategoryUnknownIcon,
+    WorkTypeConfigs,
 } from './work'

@@ -24,11 +24,13 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
                 a detailed report of bugs which have steps to reproduce, screenshots / videos if applicable, 
                 details of the bug, and severity of the issue.`,
         shortDescription: 'Find bugs quickly and vigorously',
+        startRoute: WorkIntakeFormRoutes[WorkType.bugHunt][1],
         subtitle: `Conduct a time based testing bug hunt where Topcoder experts scramble to find bugs or issues on your website`,
         timeline: WorkTimelines[WorkType.bugHunt],
         timelineTemplateId: "7ebf1c69-f62f-4d3a-bdfb-fe9ddb56861c",
         title: WorkType.bugHunt,
         trackId: "c0f5d461-8219-4c14-878a-c3a3f356466d",
+        type: WorkType.bugHunt,
         typeId: "927abff4-7af9-4145-8ba1-577c16e64e2e",
         ...workPriceBugHunt
         // TODO: do we need to include breadcrumbs here?

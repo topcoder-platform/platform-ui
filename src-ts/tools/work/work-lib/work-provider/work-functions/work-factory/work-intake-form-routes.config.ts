@@ -1,7 +1,8 @@
 import { WorkType } from "./work-type.enum"
 
 export const WorkIntakeFormRoutes: { [workType: string]: ReadonlyArray<string> } = {
-    // TODO: determine URL for Bug Hunt
+    // TODO: determine URL for Bug Hunt and if the following "/self-service" routes
+    // can be deleted. Not sure if they correspond to the currentStep
     [WorkType.bugHunt]: [
         "/self-service/wizard",
         "/self-service/work/new/bug-hunt/basic-info",

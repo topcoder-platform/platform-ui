@@ -15,6 +15,7 @@ export {
     WorkStatus,
     WorkType,
     WorkTypeCategory,
+    WorkTypeConfigs,
 } from './work-factory'
 export {
     type Challenge,
