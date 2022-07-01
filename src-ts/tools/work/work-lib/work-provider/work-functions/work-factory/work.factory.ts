@@ -269,7 +269,7 @@ function getCost(challenge: Challenge, type: WorkType): number | undefined {
 
             // get the device and page count from the intake form from the metadata
             const intakeForm: ChallengeMetadata | undefined = findMetadata(challenge, ChallengeMetadataName.intakeForm)
-            const form: IntakeForm = !!intakeForm?.value ? JSON.parse(intakeForm.value) : undefined
+            const form: IntakeForm = !!intakeForm?.value ? JSON.parse(intakeForm.value)?.form : undefined
             const legacyPageCount: number | undefined = form?.pageDetails?.pages?.length || 1
             const legacyDeviceCount: number | undefined = form?.basicInfo?.selectedDevice?.option?.length
             return priceConfig.getPrice(priceConfig, legacyPageCount, legacyDeviceCount)
