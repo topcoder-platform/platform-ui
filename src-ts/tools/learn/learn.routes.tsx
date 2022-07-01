@@ -14,17 +14,20 @@ interface IGetFccLessonPathParams {
 }
 
 export const getCoursePath: (certification: string) => string = (certification: string) => {
-    return `/learn/${certification}`
+    return `${LEARN_PATHS.root}/${certification}`
 }
 
 export const getFccLessonPath: (params: IGetFccLessonPathParams) => string = (params: IGetFccLessonPathParams) => (
-    `/learn/fcc?course=${params.course}&module=${params.module}&lesson=${params.lesson}`
+    `${LEARN_PATHS.root}/fcc?course=${params.course}&module=${params.module}&lesson=${params.lesson}`
 )
 
 export enum LEARN_PATHS {
     myLearning = '/learn/my-learning',
     fcc = '/learn/fcc',
+    root = '/learn',
 }
+
+export const rootRoute: string = LEARN_PATHS.root
 
 export const learnRoutes: Array<PlatformRoute> = [
     {
@@ -32,36 +35,31 @@ export const learnRoutes: Array<PlatformRoute> = [
             {
                 children: [],
                 element: <WelcomePage />,
-                enabled: true,
                 route: '',
                 title: toolTitle,
             },
             {
                 children: [],
                 element: <CourseDetailsPage />,
-                enabled: true,
                 route: ':certification',
                 title: toolTitle,
             },
             {
                 children: [],
                 element: <FreeCodeCamp />,
-                enabled: true,
                 route: 'fcc',
                 title: toolTitle,
             },
             {
                 children: [],
                 element: <MyLearning />,
-                enabled: true,
                 route: 'my-learning',
                 title: toolTitle,
             },
         ],
         element: <Learn />,
-        enabled: true,
         memberOnly: true,
-        route: '/learn',
+        route: LEARN_PATHS.root,
         title: toolTitle,
     },
 ]

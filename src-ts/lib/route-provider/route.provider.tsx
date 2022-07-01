@@ -1,7 +1,17 @@
-import { Dispatch, FC, ReactElement, ReactNode, SetStateAction, useEffect, useState } from 'react'
+import {
+    Dispatch,
+    FC,
+    ReactElement,
+    ReactNode,
+    SetStateAction,
+    useContext,
+    useEffect,
+    useState,
+} from 'react'
 import { Route } from 'react-router-dom'
 
 import { authUrlLogin } from '../functions'
+import { profileContext, ProfileContextData } from '../profile-provider'
 
 import { PlatformRoute } from './platform-route.model'
 import { RequireAuthProvider } from './require-auth-provider'
@@ -10,29 +20,40 @@ import { default as routeContext, defaultRouteContextData } from './route.contex
 
 interface RouteProviderProps {
     children: ReactNode
-    rootLoggedIn: string
+    rootCustomer: string
     rootLoggedOut: string
+    rootMember: string
     toolsRoutes: Array<PlatformRoute>
     utilsRoutes: Array<PlatformRoute>
 }
 
 export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps) => {
 
+    const { profile }: ProfileContextData = useContext<ProfileContextData>(profileContext)
+
     const [routeContextData, setRouteContextData]: [RouteContextData, Dispatch<SetStateAction<RouteContextData>>]
         = useState<RouteContextData>(defaultRouteContextData)
 
     let allRoutes: Array<PlatformRoute> = []
 
-    const getAndSetRoutes: () => void = () => {
+    function getAndSetRoutes(): void {
 
         // TODO: try to make these prop names configurable instead of hard-codded
         const toolsRoutes: Array<PlatformRoute> = props.toolsRoutes.filter(route => !route.disabled)
-        const toolsRoutesForNav: Array<PlatformRoute> = toolsRoutes.filter(route => !route.hide)
+        const toolsRoutesForNav: Array<PlatformRoute> = toolsRoutes
+            .filter(route =>
+                !route.hide
+                && (!route.customerOnly || !!profile?.isCustomer)
+                && (!route.memberOnly || !!profile?.isMember)
+                // TODO || tool is active PROD-2390
+            )
         const utilsRoutes: Array<PlatformRoute> = props.utilsRoutes.filter(route => !route.disabled)
         allRoutes = [
             ...toolsRoutes,
             ...utilsRoutes,
         ]
+        // TODO: support additional roles and landing pages
+        const loggedInRoot: string = !!profile?.isCustomer ? props.rootCustomer : props.rootMember
         const contextData: RouteContextData = {
             allRoutes,
             getChildRoutes,
@@ -40,9 +61,9 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
             getPath,
             getPathFromRoute,
             getRouteElement,
-            isActiveRoute: isActiveRoute(props.rootLoggedIn, props.rootLoggedOut),
-            isRootRoute: isRootRoute(props.rootLoggedIn, props.rootLoggedOut),
-            rootLoggedInRoute: props.rootLoggedIn,
+            isActiveRoute: isActiveRoute(loggedInRoot, props.rootLoggedOut),
+            isRootRoute: isRootRoute(loggedInRoot, props.rootLoggedOut),
+            rootLoggedInRoute: loggedInRoot,
             rootLoggedOutRoute: props.rootLoggedOut,
             toolsRoutes,
             toolsRoutesForNav,
@@ -79,7 +100,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
         const routeElement: JSX.Element = !route.requireAuth
             ? route.element
             : (
-                <RequireAuthProvider loginUrl={authUrlLogin(props.rootLoggedIn)}>
+                <RequireAuthProvider loginUrl={authUrlLogin}>
                     {route.element}
                 </RequireAuthProvider>
             )
@@ -100,6 +121,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
     useEffect(() => {
         getAndSetRoutes()
     }, [
+        profile,
         props.toolsRoutes,
         props.utilsRoutes,
     ])
