@@ -69,7 +69,7 @@ You will need to add the following line to your hosts file. The hosts file is no
 
 >% yarn start
 
-3. Go to https://local.topcoder-dev.com:3000/
+3. Go to https://local.topcoder-dev.com:3003/
 
 ### Local SSL
 
