@@ -1,5 +1,6 @@
 export {
     type Work,
+    workBugHuntConfig,
     workFactoryCreate,
     workFactoryGetStatus,
     workFactoryMapFormData,

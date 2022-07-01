@@ -6,6 +6,7 @@ export {
     ChallengeMetadataName,
     dashboardRoute as routeRootLoggedIn,
     rootRoute as routeRootLoggedOut,
+    workBugHuntConfig,
     workContext,
     WorkDetailDetails,
     WorkDetailDetailsPane,

@@ -11,7 +11,7 @@ export * from './work-progress-step.model'
 export * from './work-status.enum'
 export * from './work-solution.model'
 export * from './work-type-category.enum'
-export { bugHuntConfig } from './work-type.config'
+export { bugHuntConfig as workBugHuntConfig } from './work-type.config'
 export * from './work-type.enum'
 export {
     create as workFactoryCreate,
