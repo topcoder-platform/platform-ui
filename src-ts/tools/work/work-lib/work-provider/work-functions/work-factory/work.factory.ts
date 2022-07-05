@@ -274,11 +274,6 @@ function getCost(challenge: Challenge, type: WorkType): number | undefined {
             const legacyDeviceCount: number | undefined = form?.basicInfo?.selectedDevice?.option?.length
             return priceConfig.getPrice(priceConfig, legacyPageCount, legacyDeviceCount)
 
-        case WorkType.design:
-            const pageCount: number = getCountFromString(findMetadata(challenge, ChallengeMetadataName.pageCount)?.value)
-            const deviceCount: number = getCountFromString(findMetadata(challenge, ChallengeMetadataName.deviceCount)?.value)
-            return priceConfig.getPrice(priceConfig, pageCount, deviceCount)
-
         default:
             return priceConfig.getPrice(priceConfig)
     }

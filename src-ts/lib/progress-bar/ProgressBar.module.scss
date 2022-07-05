@@ -1,0 +1,16 @@
+@import '../styles/includes';
+
+.wrap {
+    background: $black-10;
+    border-radius: $pad-xs;
+    height: $pad-sm;
+    width: 100%;
+
+    display: flex;
+
+    :global(.progress) {
+        background: $turq-75;
+        border-radius: inherit;
+        width: calc(var(--progress, 0) * 100%);
+    }
+}

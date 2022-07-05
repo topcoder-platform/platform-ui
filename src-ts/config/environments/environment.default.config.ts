@@ -10,6 +10,7 @@ export const EnvironmentConfigDefault: GlobalConfig = {
         V5: 'https://api.topcoder-dev.com/v5',
     },
     ENV: AppHostEnvironment.default,
+    LEARN_SRC: 'https://fcc.topcoder-dev.com:4431',
     LOGGING: {
         PUBLIC_TOKEN: 'puba0825671e469d16f940c5a30dc738f11',
         SERVICE: 'platform-ui',

@@ -1,0 +1,54 @@
+@use '../../../lib/styles/typography';
+@import '../../../lib/styles/includes';
+
+.wrap {
+    padding: $pad-mx 0 $pad-xxxxl;
+    display: flex;
+    gap: $pad-xxxxl;
+    position: relative;
+    flex: 1;
+}
+
+.main {
+    flex: 1 1 auto;
+}
+
+.aside {
+    flex: 0 0 auto;
+    width: 560px;
+}
+
+.description {
+    .text {
+        @extend .body-main;
+        margin-top: $pad-xxl;
+    }
+    
+    h3 {
+        margin-top: $pad-xxxxl;
+    }
+    p {
+        margin: $pad-sm 0;
+    }
+}
+
+.coming-soon {
+    margin-top: $pad-xxxxl;
+}
+
+.credits-link {
+    padding-bottom: $pad-xxl;
+
+    a {
+        @extend .quote-small;
+        color: $link-blue-dark;
+        font-style: italic;
+
+        display: inline-flex;
+        align-items: center;
+    }
+    svg {
+        @include icon-md;
+        margin-left: $pad-xs;
+    }
+}

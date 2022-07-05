@@ -1,0 +1,17 @@
+@import '../../../lib/styles/includes';
+
+.courses {
+    &-section {
+        padding: $pad-xxxxl 0;
+        position: relative;
+    }
+
+
+    &-list {
+        margin-top: $pad-lg;
+
+        display: flex;
+        flex-wrap: wrap;
+        gap: $pad-lg;
+    }
+}
