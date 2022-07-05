@@ -4,6 +4,7 @@ import { UserProfile } from '../../user-profile.model'
 import { UserRole } from './user-role.enum'
 
 export function create(profile: UserProfile, token: TokenModel): UserProfile {
+    // TODO: create the profile full name property
     // Currently, the "Self-Service Customer" role is being set when a user is created
     // during the self-service workflow. There are no other roles being set to distinguish
     // between Customers and Members.
