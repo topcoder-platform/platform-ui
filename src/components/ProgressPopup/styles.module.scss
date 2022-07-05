@@ -19,33 +19,33 @@
     &.current {
       cursor: pointer;
     }
-  }
 
-  .level-check-icon {
-    width: 24px;
-    height: 24px;
-    background: #f4f4f4;
-    border-radius: 50%;
-    margin-right: 10px;
-
-    &.done {
-      background: #06d6a0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      .icon-check {
-        height: 14px;
-
-        * {
-          fill: #ffffff;
+    .level-check-icon {
+      width: 24px;
+      height: 24px;
+      background: #f4f4f4;
+      border-radius: 50%;
+      margin-right: 10px;
+  
+      &.done {
+        background: #06d6a0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+  
+        .icon-check {
+          height: 14px;
+  
+          * {
+            fill: #ffffff;
+          }
         }
       }
-    }
-
-    &.current {
-      border: 2px solid #06d6a0;
-      background: #ffffff;
+  
+      &.current {
+        border: 2px solid #06d6a0;
+        background: #ffffff;
+      }
     }
   }
 
