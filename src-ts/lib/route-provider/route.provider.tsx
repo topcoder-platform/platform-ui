@@ -111,7 +111,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
     )
 }
 
-function isActivePath(activePath: string, toolRoute: PlatformRoute): boolean {
+function isActiveRoute(activePath: string, toolRoute: PlatformRoute): boolean {
     let isPathActive = false;
 
     toolRoute.alternativePaths?.forEach(path => {
@@ -120,11 +120,6 @@ function isActivePath(activePath: string, toolRoute: PlatformRoute): boolean {
         }
     })
     return isPathActive
-}
-
-
-function isActiveRoute(activePath: string, toolRoute: PlatformRoute): boolean {
-    return isActivePath(activePath, toolRoute)
 }
 
 function isRootRoute(rootLoggedIn: string, rootLoggedOut: string):
