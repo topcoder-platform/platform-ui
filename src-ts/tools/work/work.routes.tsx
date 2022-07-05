@@ -17,13 +17,6 @@ export function workDetailRoute(workId: string, tab?: string): string {
 
 export const workRoutes: Array<PlatformRoute> = [
     {
-        children: [],
-        element: <Navigate to={rootRoute} />,
-        hide: true,
-        route: '',
-        title: 'Redirect the base path to the logged out landing',
-    },
-    {
         element: <WorkNotLoggedIn />,
         hide: true,
         route: rootRoute,
@@ -45,6 +38,7 @@ export const workRoutes: Array<PlatformRoute> = [
                 title: toolTitle,
             },
         ],
+        customerOnly: true,
         element: <Work />,
         requireAuth: true,
         route: dashboardRoute,

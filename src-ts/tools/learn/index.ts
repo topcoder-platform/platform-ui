@@ -1,1 +1,4 @@
-export * from './learn.routes'
+export {
+    learnRoutes,
+    rootRoute as learnRootRoute,
+} from './learn.routes'

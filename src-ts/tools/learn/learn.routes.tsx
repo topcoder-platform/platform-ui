@@ -1,4 +1,3 @@
-
 import { PlatformRoute } from '../../lib'
 
 import { CourseCompletedPage } from './course-completed'
@@ -10,7 +9,7 @@ import { MyLearning } from './my-learning'
 import { WelcomePage } from './welcome'
 
 export function getCoursePath(provider: string, certification: string): string {
-    return `/learn/${provider}/${certification}`
+    return `${rootRoute}/${provider}/${certification}`
 }
 
 export function getFccLessonPath(
@@ -19,13 +18,17 @@ export function getFccLessonPath(
     module: string,
     lesson: string,
 ): string {
-    return `/learn/${provider}/${certification}/${module}/${lesson}`
+    return `${getCoursePath(provider, certification)}/${module}/${lesson}`
 }
 
 export enum LEARN_PATHS {
     myCertificate = '/learn/my-certificate',
     myLearning = '/learn/my-learning',
+    fcc = '/learn/fcc',
+    root = '/learn',
 }
+
+export const rootRoute: string = LEARN_PATHS.root
 
 export const learnRoutes: Array<PlatformRoute> = [
     {
@@ -33,50 +36,43 @@ export const learnRoutes: Array<PlatformRoute> = [
             {
                 children: [],
                 element: <WelcomePage />,
-                enabled: true,
                 route: '',
-                title: toolTitle,
+                title: 'Welcome to Topcoder Academy',
             },
             {
                 children: [],
                 element: <CourseDetailsPage />,
-                enabled: true,
                 route: ':provider/:certification',
-                title: toolTitle,
+                title: 'Course Details',
             },
             {
                 children: [],
                 element: <CourseCompletedPage />,
-                enabled: true,
                 route: ':provider/:certification/completed',
-                title: toolTitle,
+                title: 'Course Completed',
             },
             {
                 children: [],
                 element: <MyCertificate />,
-                enabled: true,
                 route: ':provider/:certification/certificate',
-                title: toolTitle,
+                title: 'My Certificate',
             },
             {
                 children: [],
                 element: <FreeCodeCamp />,
-                enabled: true,
                 route: ':provider/:certification/:module/:lesson',
-                title: toolTitle,
+                title: 'FreeCodeCamp',
             },
             {
                 children: [],
                 element: <MyLearning />,
-                enabled: true,
                 route: 'my-learning',
-                title: toolTitle,
+                title: 'My Learning',
             },
         ],
         element: <Learn />,
-        enabled: true,
         memberOnly: true,
-        route: '/learn',
+        route: rootRoute,
         title: toolTitle,
     },
 ]

@@ -6,6 +6,8 @@ export interface UserProfile {
     handle: string
     handleLower: string
     homeCountryCode: string
+    isCustomer?: boolean
+    isMember?: boolean
     lastName: string
     photoURL?: string
     status: string
