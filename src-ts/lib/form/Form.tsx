@@ -82,7 +82,25 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         formInitializeValues(formDef.inputs, props.formValues)
 
-        const buttons: Array<JSX.Element> = formDef.buttons ? formDef.buttons
+        const leftButtons: Array<JSX.Element> = formDef.leftButtons ? formDef.leftButtons
+            .map((button, index) => {
+                // if this is a reset button, set its onclick to reset
+                if (!!button.isReset) {
+                    button = {
+                        ...button,
+                        onClick: onReset,
+                    }
+                }
+                return (
+                    <Button
+                        {...button}
+                        key={button.label}
+                        tabIndex={button.notTabble ? -1 : index + (formDef.inputs ? formDef.inputs.length : 0) + (formDef.tabIndexStart || 0)}
+                    />
+                )
+            }) : [];
+
+        const rightButtons: Array<JSX.Element> = formDef.rightButtons ? formDef.rightButtons
             .map((button, index) => {
                 // if this is a reset button, set its onclick to reset
                 if (!!button.isReset) {
@@ -148,7 +166,12 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                         </div>
                     )}
                     <div className={styles['button-container']}>
-                        {buttons}
+                        <div className={styles['left-container']}>
+                            {leftButtons}
+                        </div>
+                        <div className={styles['right-container']}>
+                            {rightButtons}
+                        </div>
                     </div>
                 </div>
 

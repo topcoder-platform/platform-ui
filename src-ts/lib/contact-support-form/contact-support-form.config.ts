@@ -8,13 +8,70 @@ export enum ContactSupportFormField {
 }
 
 export const contactSupportFormDef: FormDefinition = {
-    buttons: [
+    rightButtons: [
         {
             buttonStyle: 'secondary',
             isSave: true,
             label: 'Submit',
             size: 'lg',
             type: 'submit',
+        },
+    ],
+    elements: [
+        {
+            field: {
+                label: 'First Name',
+                name: ContactSupportFormField.first,
+                type: 'text',
+                validators: [
+                    {
+                        validator: validatorRequired,
+                    },
+                ],
+            },
+            type: 'field',
+        },
+        {
+            field: {
+                label: 'Last Name',
+                name: ContactSupportFormField.last,
+                type: 'text',
+                validators: [
+                    {
+                        validator: validatorRequired,
+                    },
+                ],
+            },
+            type: 'field',
+        },
+        {
+            field: {
+                label: 'Email',
+                name: ContactSupportFormField.email,
+                type: 'text',
+                validators: [
+                    {
+                        validator: validatorEmail,
+                    },
+                    {
+                        validator: validatorRequired,
+                    },
+                ],
+            },
+            type: 'field',
+        },
+        {
+            field: {
+                label: 'How can we help you?',
+                name: ContactSupportFormField.question,
+                type: 'textarea',
+                validators: [
+                    {
+                        validator: validatorRequired,
+                    },
+                ],
+            },
+            type: 'field',
         },
     ],
     inputs: [

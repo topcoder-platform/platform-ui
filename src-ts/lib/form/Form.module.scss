@@ -32,6 +32,17 @@
         .button-container {
             display: flex;
             justify-content: flex-end;
+            .right-container {
+                display: flex;
+                flex: 1;
+                justify-content: flex-end;
+            }
+
+            .left-container {
+                display: flex;
+                flex: 1;
+                justify-content: flex-start;
+            }
         }
 
         .form-error {
