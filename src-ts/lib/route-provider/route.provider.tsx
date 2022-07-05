@@ -40,7 +40,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
             getPath,
             getPathFromRoute,
             getRouteElement,
-            isActiveRoute: isActiveRoute(),
+            isActiveRoute: isActiveRoute,
             isRootRoute: isRootRoute(props.rootLoggedIn, props.rootLoggedOut),
             rootLoggedInRoute: props.rootLoggedIn,
             rootLoggedOutRoute: props.rootLoggedOut,
@@ -123,11 +123,8 @@ function isActivePath(activePath: string, toolRoute: PlatformRoute): boolean {
 }
 
 
-function isActiveRoute():
-    (activePath: string, toolRoute: PlatformRoute) => boolean {
-    return (activePath: string, toolRoute: PlatformRoute) => {
-        return isActivePath(activePath, toolRoute)
-    }
+function isActiveRoute(activePath: string, toolRoute: PlatformRoute): boolean {
+    return isActivePath(activePath, toolRoute)
 }
 
 function isRootRoute(rootLoggedIn: string, rootLoggedOut: string):
