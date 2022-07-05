@@ -6,11 +6,11 @@ import {
     ChallengeMetadataName,
     ChallengePhase,
     ChallengePhaseName,
+    WorkPrice,
+    WorkPrices
 } from '../work-store'
 
 import { ChallengeStatus } from './challenge-status.enum'
-import { WorkPrice } from './work-price.model'
-import { WorkPrices } from './work-prices.config'
 import { WorkProgressStep } from './work-progress-step.model'
 import { WorkProgress } from './work-progress.model'
 import { WorkStatus } from './work-status.enum'

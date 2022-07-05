@@ -1,5 +1,6 @@
+import { WorkType } from '../work-factory'
+
 import { WorkPrice } from './work-price.model'
-import { WorkType } from './work-type.enum'
 
 export const WorkPrices: { [workType: string]: WorkPrice } = {
     // TODO: get real values for bug hunt

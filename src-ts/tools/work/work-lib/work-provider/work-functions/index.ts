@@ -1,26 +1,26 @@
 export {
     type Work,
-    workBugHuntConfig,
     workFactoryCreate,
     workFactoryGetStatus,
     workFactoryMapFormData,
-    workPriceData,
-    workPriceDesign,
-    workPriceDesignLegacy,
-    workPriceFindData,
-    workPriceProblem,
     type WorkProgress,
     type WorkProgressStep,
     type WorkSolution,
     WorkStatus,
     WorkType,
     WorkTypeCategory,
-    WorkTypeConfigs,
 } from './work-factory'
 export {
     type Challenge,
     ChallengeMetadataName,
+    workBugHuntConfig,
+    workPriceData,
+    workPriceDesign,
+    workPriceDesignLegacy,
+    workPriceFindData,
+    workPriceProblem,
     WorkStatusFilter,
+    WorkTypeConfigs,
 } from './work-store'
 export * from './work-by-status.model'
 export {

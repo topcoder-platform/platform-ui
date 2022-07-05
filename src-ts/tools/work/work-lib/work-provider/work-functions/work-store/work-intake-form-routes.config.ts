@@ -1,4 +1,4 @@
-import { WorkType } from './work-type.enum'
+import { WorkType } from '../work-factory'
 
 export const WorkIntakeFormRoutes: { [workType: string]: ReadonlyArray<string> } = {
     // TODO: determine URL for Bug Hunt and if the following "/self-service" routes
