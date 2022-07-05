@@ -216,7 +216,10 @@ const ReviewLegacy = ({
         <Breadcrumb items={breadcrumbs} />
         {banner}
         <PageContent styleName={styles["container"]}>
-          <PageH2>REVIEW & PAYMENT</PageH2>
+          <div className={styles["title-wrapper"]}>
+            <PageH2>REVIEW & PAYMENT</PageH2>
+          </div>
+          {showProgress && <Progress level={6} setStep={setProgressItem} />}
           <PageDivider />
           <ServicePrice
             hideTitle
@@ -298,7 +301,6 @@ const ReviewLegacy = ({
               </div>
             </div>
           </PageFoot>
-          {showProgress && <Progress level={6} setStep={setProgressItem} />}
         </PageContent>
       </Page>
     </>
