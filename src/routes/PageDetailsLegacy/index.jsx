@@ -47,7 +47,7 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem, isLoggedIn }) => 
   const estimate = getDynamicPriceAndTimelineEstimate(fullState);
 
   const onBack = () => {
-    navigate("/self-service/work/new/website-design/website-purpose");
+    navigate("/self-service/work/new/website-design-legacy/website-purpose");
   };
 
   const [firstMounted, setFirstMounted] = useState(true);
@@ -74,7 +74,7 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem, isLoggedIn }) => 
   }, [currentStep, pageDetails, dispatch, setProgressItem, firstMounted, navigate, isLoggedIn]);
 
   const onNext = () => {
-    navigate("/self-service/work/new/website-design/login-prompt");
+    navigate("/self-service/work/new/website-design-legacy/login-prompt");
     savePageDetails(listInputs);
     setProgressItem(5);
   };

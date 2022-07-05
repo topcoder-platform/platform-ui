@@ -104,11 +104,11 @@ const BrandingLegacy = ({ saveBranding, setProgressItem, isLoggedIn }) => {
       formData?.fontUrl.value.trim() !== "");
 
   const onBack = () => {
-    navigate("/self-service/work/new/website-design/page-details");
+    navigate("/self-service/work/new/website-design-legacy/page-details");
   };
 
   const onNext = () => {
-    navigate("/self-service/work/new/website-design/review");
+    navigate("/self-service/work/new/website-design-legacy/review");
     saveBranding(formData);
     setProgressItem(6);
   };

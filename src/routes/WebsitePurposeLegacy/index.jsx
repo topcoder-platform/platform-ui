@@ -54,12 +54,12 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem, isLoggedIn 
     formData?.userStory?.value.length;
 
   const onBack = () => {
-    navigate("/self-service/work/new/website-design/basic-info");
+    navigate("/self-service/work/new/website-design-legacy/basic-info");
   };
 
   const onNext = () => {
     saveWebsitePurpose(formData);
-    navigate("/self-service/work/new/website-design/page-details");
+    navigate("/self-service/work/new/website-design-legacy/page-details");
     setProgressItem(4);
   };
 

@@ -120,7 +120,7 @@ const ReviewLegacy = ({
   }, [currentStep, anotherFirstMounted, navigate]);
 
   const onBack = () => {
-    navigate("/self-service/work/new/website-design/branding");
+    navigate("/self-service/work/new/website-design-legacy/branding");
   };
 
   const clearPreviousForm = () => {
@@ -167,7 +167,7 @@ const ReviewLegacy = ({
       .then((res) => {
         activateChallenge(challengeId);
         clearPreviousForm();
-        navigate("/self-service/work/new/website-design/thank-you");
+        navigate("/self-service/work/new/website-design-legacy/thank-you");
         setProgressItem(8);
         setPaymentFailed(false);
       })
