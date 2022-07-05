@@ -1,7 +1,6 @@
 import { FC, useContext, useEffect } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 
-import { getCoursePath } from '..'
 import { IconOutline, LoadingSpinner, profileContext, ProfileContextData } from '../../../lib'
 import {
     CoursesProviderData,
@@ -10,6 +9,7 @@ import {
     useCoursesProvider,
     useMyCertificationProgress,
 } from '../learn-lib'
+import { getCoursePath } from '../learn.routes'
 
 import { ActionButton } from './action-button'
 import { Certificate } from './certificate'
