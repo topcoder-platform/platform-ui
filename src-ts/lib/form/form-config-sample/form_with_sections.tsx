@@ -23,7 +23,7 @@ export const FormConfig: FormDefinition = {
       onClick: () => console.log('on click'),
     }
   ],
-  fields: [
+  elements: [
     {
       renderingRule: {
         width: 'half',

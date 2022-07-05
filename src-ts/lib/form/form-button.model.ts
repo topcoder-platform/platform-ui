@@ -3,6 +3,7 @@ import { ButtonSize, ButtonStyle, ButtonType } from '../button'
 
 export interface FormButton {
     readonly buttonStyle?: ButtonStyle
+    readonly icon?: FC<SVGProps<SVGSVGElement>>
     readonly isReset?: boolean
     readonly isSave?: boolean
     readonly label?: string
@@ -12,5 +13,4 @@ export interface FormButton {
     readonly size?: ButtonSize
     readonly type?: ButtonType
     readonly url?: string
-    readonly icon?: FC<SVGProps<SVGSVGElement>>
 }

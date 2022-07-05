@@ -1,14 +1,14 @@
 export interface OptionSelectorOption {
-  children: React.FC
-  id: string
   checked: boolean
+  children: React.FC
   readonly className?: string
+  id: string
 }
 
 export interface FormOptionSelectorModel {
-  readonly type: 'radio' | 'checkbox'
-  readonly name?: string 
-  options: Array<OptionSelectorOption>
-  onChange?: (optionId: string, checked: boolean) => void
   readonly className?: string
+  readonly name?: string
+  onChange?: (optionId: string, checked: boolean) => void
+  options: Array<OptionSelectorOption>
+  readonly type: 'radio' | 'checkbox'
 }

@@ -1,9 +1,9 @@
 export interface FormBannerModel {
-  readonly id?: string
-  readonly type: 'banner'
-  readonly name?: string
-  readonly description: string
-  readonly title: string
   readonly backgroundColor: string
+  readonly description: string
+  readonly id?: string
+  readonly name?: string
   open: boolean
+  readonly title: string
+  readonly type: 'banner'
 }
