@@ -30,6 +30,7 @@ export const workRoutes: Array<PlatformRoute> = [
         title: 'Logged Out Landing',
     },
     {
+        alternativePaths: ['/self-service', '/work'],
         children: [
             {
                 element: <WorkTable />,
@@ -49,7 +50,6 @@ export const workRoutes: Array<PlatformRoute> = [
         requireAuth: true,
         route: dashboardRoute,
         title: toolTitle,
-        alternativePaths: ['/self-service', '/work'],
     },
     {
         element: <Navigate to={rootRoute} />,

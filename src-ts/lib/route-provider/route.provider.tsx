@@ -40,7 +40,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
             getPath,
             getPathFromRoute,
             getRouteElement,
-            isActiveRoute: isActiveRoute,
+            isActiveRoute,
             isRootRoute: isRootRoute(props.rootLoggedIn, props.rootLoggedOut),
             rootLoggedInRoute: props.rootLoggedIn,
             rootLoggedOutRoute: props.rootLoggedOut,
@@ -112,7 +112,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
 }
 
 function isActiveRoute(activePath: string, toolRoute: PlatformRoute): boolean {
-    let isPathActive = false;
+    let isPathActive: boolean = false
 
     toolRoute.alternativePaths?.forEach(path => {
         if (activePath.indexOf(path) > -1) {
