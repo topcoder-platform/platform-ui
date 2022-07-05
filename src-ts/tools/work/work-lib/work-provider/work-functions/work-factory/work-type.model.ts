@@ -1,6 +1,6 @@
-import { WorkPrice } from "./work-price.model"
-import { WorkTimeline } from "./work-timeline.model"
-import { WorkType } from "./work-type.enum"
+import { WorkPrice } from './work-price.model'
+import { WorkTimeline } from './work-timeline.model'
+import { WorkType } from './work-type.enum'
 
 export interface WorkTypeConfig extends WorkPrice {
     about: string,

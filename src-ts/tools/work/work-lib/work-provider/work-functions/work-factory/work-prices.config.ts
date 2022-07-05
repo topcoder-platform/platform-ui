@@ -14,7 +14,7 @@ export const WorkPrices: { [workType: string]: WorkPrice } = {
             promo: {
                 prizes: [0.348, 0.29, 0.174],
                 reviewers: [0.058, 0.058],
-            }
+            },
         },
         promo: 1,
         usePromo: true,
