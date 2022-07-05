@@ -1,6 +1,6 @@
+import html2canvas from 'html2canvas'
 import { FC, MutableRefObject, useContext, useEffect, useRef } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
-import html2canvas from 'html2canvas'
 
 import { IconOutline, LoadingSpinner, profileContext, ProfileContextData } from '../../../lib'
 import {
@@ -14,8 +14,8 @@ import { getCoursePath } from '../learn.routes'
 
 import { ActionButton } from './action-button'
 import { Certificate } from './certificate'
-import { cavasToFileObject, downloadCanvasAsFile } from './utility.functions'
 import styles from './MyCertificate.module.scss'
+import { cavasToFileObject, downloadCanvasAsFile } from './utility.functions'
 
 const MyCertificate: FC<{}> = () => {
 
@@ -50,50 +50,65 @@ const MyCertificate: FC<{}> = () => {
         navigate(-1)
     }
 
-    function getCertificateCanvas(): Promise<HTMLCanvasElement> {
-        return html2canvas(certificateElRef.current!, {
-            // use the same (ideal) window size when rendering the certificate
-            windowWidth: 1024,
-            windowHeight: 700,
-            // scale (pixelRatio) doesn't matter for the final ceriticate, use 1
-            scale: 1,
+    async function getCertificateCanvas(): Promise<HTMLCanvasElement|void> {
+        if (!certificateElRef.current) {
+            return
+        }
+
+        return html2canvas(certificateElRef.current, {
+            // when canvas iframe is ready, remove text gradients as they're not supported in html2canvas
             onclone: (doc: Document) => {
-                // remove text gradients as they're not supported in html2canvas
                 [].forEach.call(doc.querySelectorAll('.grad'), (el: HTMLDivElement) => {
                     el.classList.remove('grad')
                 })
-            }
+            },
+            // scale (pixelRatio) doesn't matter for the final ceriticate, use 1
+            scale: 1,
+            // use the same (ideal) window size when rendering the certificate
+            windowHeight: 700,
+            windowWidth: 1024,
         })
     }
-    
+
     async function handleDownload(): Promise<void> {
-        const canvas: HTMLCanvasElement = await getCertificateCanvas()
+        const canvas: HTMLCanvasElement|void = await getCertificateCanvas()
+        if (!canvas) {
+            return
+        }
         downloadCanvasAsFile(canvas, `${certificationTitle}.png`)
     }
 
     async function handlePrint(): Promise<void> {
-        const canvas: HTMLCanvasElement = await getCertificateCanvas()
-        const printWindow: Window = window.open('')!;
-  
-        printWindow.document.body.appendChild(canvas);
+        const canvas: HTMLCanvasElement|void = await getCertificateCanvas()
+        if (!canvas) {
+            return
+        }
+        const printWindow: Window|null = window.open('')
+
+        if (!printWindow) {
+            return
+        }
+
+        printWindow.document.body.appendChild(canvas)
         printWindow.document.title = certificationTitle
-        printWindow.focus();
-        printWindow.print();
+        printWindow.focus()
+        printWindow.print()
     }
 
     async function handleShare(): Promise<void> {
-        const canvas: HTMLCanvasElement = await getCertificateCanvas()
+        const canvas: HTMLCanvasElement|void = await getCertificateCanvas()
+        if (!canvas) {
+            return
+        }
         const sharedImg: File = await cavasToFileObject(canvas, `${certificationTitle}.png`)
-        
+
         if (navigator.canShare?.({ files: [sharedImg] })) {
             try {
                 await navigator.share({
                     files: [sharedImg],
                     title: certificationTitle,
                 })
-            } catch (error) {
-                console.log(error);
-            }
+            } catch (error) {}
         }
     }
 
@@ -107,7 +122,7 @@ const MyCertificate: FC<{}> = () => {
         navigate,
         ready,
     ])
-  
+
     return (
         <>
             {!ready && <LoadingSpinner />}

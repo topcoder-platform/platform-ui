@@ -12,8 +12,8 @@ import { ReactComponent as FccLogoSvg } from './vendor-fcc-logo.svg'
 interface CertificateProps {
     completedDate?: string
     course?: string
-    provider?: string
     elRef?: MutableRefObject<HTMLElement|any>
+    provider?: string
     tcHandle?: string
     userName?: string
 }

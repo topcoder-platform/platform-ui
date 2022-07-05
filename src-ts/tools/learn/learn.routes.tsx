@@ -72,7 +72,7 @@ export const learnRoutes: Array<PlatformRoute> = [
             },
         ],
         element: <Learn />,
-        memberOnly: true,
+        requireAuth: true,
         route: '/learn',
         title: toolTitle,
     },
