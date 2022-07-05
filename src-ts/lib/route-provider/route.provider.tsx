@@ -1,6 +1,5 @@
 import { Dispatch, FC, ReactElement, ReactNode, SetStateAction, useEffect, useState } from 'react'
 import { Route } from 'react-router-dom'
-import { PathsMap } from '../../config'
 
 import { authUrlLogin } from '../functions'
 
