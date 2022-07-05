@@ -13,6 +13,10 @@ export function getCoursePath(provider: string, certification: string): string {
     return `/learn/${provider}/${certification}`
 }
 
+export function getCertificatePath(provider: string, certification: string): string {
+    return `/learn/${provider}/${certification}/certificate`
+}
+
 export function getFccLessonPath(
     provider: string,
     certification: string,
@@ -33,48 +37,41 @@ export const learnRoutes: Array<PlatformRoute> = [
             {
                 children: [],
                 element: <WelcomePage />,
-                enabled: true,
                 route: '',
                 title: toolTitle,
             },
             {
                 children: [],
                 element: <CourseDetailsPage />,
-                enabled: true,
                 route: ':provider/:certification',
                 title: toolTitle,
             },
             {
                 children: [],
                 element: <CourseCompletedPage />,
-                enabled: true,
                 route: ':provider/:certification/completed',
                 title: toolTitle,
             },
             {
                 children: [],
                 element: <MyCertificate />,
-                enabled: true,
                 route: ':provider/:certification/certificate',
                 title: toolTitle,
             },
             {
                 children: [],
                 element: <FreeCodeCamp />,
-                enabled: true,
                 route: ':provider/:certification/:module/:lesson',
                 title: toolTitle,
             },
             {
                 children: [],
                 element: <MyLearning />,
-                enabled: true,
                 route: 'my-learning',
                 title: toolTitle,
             },
         ],
         element: <Learn />,
-        enabled: true,
         memberOnly: true,
         route: '/learn',
         title: toolTitle,

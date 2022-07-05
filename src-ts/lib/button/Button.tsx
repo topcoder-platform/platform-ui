@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import '../styles/index.scss'
 import { IconOutline } from '../svgs'
 
-export type ButtonSize = 'sm' | 'md' | 'lg' | 'xl'
+export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 export type ButtonStyle = 'icon' | 'link' | 'primary' | 'secondary' | 'tertiary' | 'text'
 export type ButtonType = 'button' | 'submit'
 

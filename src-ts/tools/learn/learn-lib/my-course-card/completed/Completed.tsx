@@ -2,7 +2,7 @@ import { FC } from 'react'
 
 import { Button, textFormatDateLocaleShortString } from '../../../../../lib'
 import { CourseTitle, LearnCertification } from '../../../learn-lib'
-import { getCoursePath } from '../../../learn.routes'
+import { getCertificatePath, getCoursePath } from '../../../learn.routes'
 
 import styles from './Completed.module.scss'
 
@@ -34,7 +34,12 @@ const Completed: FC<CompletedProps> = (props: CompletedProps) => {
                     label='View Course'
                     route={getCoursePath(props.certification.providerName, props.certification.certification)}
                 />
-                <Button size='xs' buttonStyle='secondary' label='View certificate' />
+                <Button
+                    size='xs'
+                    buttonStyle='secondary'
+                    label='View certificate'
+                    route={getCertificatePath(props.certification.providerName, props.certification.certification)}
+                />
             </div>
         </div>
     )

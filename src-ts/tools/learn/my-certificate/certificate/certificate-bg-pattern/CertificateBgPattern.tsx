@@ -10,7 +10,10 @@ interface CertificateBgPatternProps {
 const CertificateBgPattern: FC<CertificateBgPatternProps> = (props: CertificateBgPatternProps) => {
 
     return (
-        <div className={classNames(styles['wrap'], `theme-${props.type.toLowerCase()}`)} />
+        <div className={classNames(styles['wrap'], `theme-${props.type.toLowerCase()}`)}>
+            <div className="pattern-bg"></div>
+            <div className="wave-bg"></div>
+        </div>
     )
 }
 

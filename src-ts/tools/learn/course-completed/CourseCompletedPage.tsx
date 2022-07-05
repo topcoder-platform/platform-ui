@@ -21,7 +21,7 @@ import {
     useCoursesProvider,
     useMyCertificationProgress
 } from '../learn-lib'
-import { getCoursePath } from '../learn.routes'
+import { getCertificatePath, getCoursePath } from '../learn.routes'
 
 import { ReactComponent as StarsSvg } from './stars.svg'
 import styles from './CourseCompletedPage.module.scss'
@@ -72,7 +72,7 @@ const CourseCompletedPage: FC<CourseCompletedPageProps> = (props: CourseComplete
       if (ready && progress?.status !== MyCertificationProgressStatus.completed) {
         navigate(coursePath)
       }
-    }, [ready, progress, coursePath]);
+    }, [ready, navigate, progress, coursePath]);
 
     return (
         <>
@@ -116,7 +116,12 @@ const CourseCompletedPage: FC<CourseCompletedPageProps> = (props: CourseComplete
                                     To view other courses, press the "Start a new course" button below.
                                 </p>
                                 <div className={styles['btns-wrap']}>
-                                    <Button size='sm' buttonStyle='secondary' label='View certificate' route={`/learn/${courseData.certification}/certificate`} />
+                                    <Button
+                                        size='sm'
+                                        buttonStyle='secondary'
+                                        label='View certificate'
+                                        route={getCertificatePath(courseData.provider, courseData.certification)}
+                                    />
                                     <Button
                                         size='sm'
                                         buttonStyle='primary'
