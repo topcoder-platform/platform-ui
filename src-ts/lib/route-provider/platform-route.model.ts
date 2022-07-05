@@ -8,4 +8,5 @@ export interface PlatformRoute {
     requireAuth?: boolean
     route: string
     title: string
+    alternativePaths?: Array<string>
 }

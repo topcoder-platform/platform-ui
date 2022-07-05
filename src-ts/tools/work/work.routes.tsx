@@ -49,6 +49,7 @@ export const workRoutes: Array<PlatformRoute> = [
         requireAuth: true,
         route: dashboardRoute,
         title: toolTitle,
+        alternativePaths: ['/self-service', '/work'],
     },
     {
         element: <Navigate to={rootRoute} />,

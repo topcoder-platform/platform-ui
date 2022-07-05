@@ -41,7 +41,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
             getPath,
             getPathFromRoute,
             getRouteElement,
-            isActiveRoute: isActiveRoute(props.rootLoggedIn, props.rootLoggedOut),
+            isActiveRoute: isActiveRoute(),
             isRootRoute: isRootRoute(props.rootLoggedIn, props.rootLoggedOut),
             rootLoggedInRoute: props.rootLoggedIn,
             rootLoggedOutRoute: props.rootLoggedOut,
@@ -112,30 +112,22 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
     )
 }
 
-function isActivePath(activePath: string, pathName: string, rootPath?: string): boolean {
-    return activePath?.indexOf(pathName) > -1
-        && (pathName !== rootPath || activePath === rootPath)
-}
+function isActivePath(activePath: string, toolRoute: PlatformRoute): boolean {
+    let isPathActive = false;
 
-function getMatchedPath(path: string): string {
-    return PathsMap[path];
-}
-
-function isActiveRoute(rootLoggedIn: string, rootLoggedOut: string):
-    (activePath: string, pathName: string, rootPath?: string) => boolean {
-
-    return (activePath: string, pathName: string, rootPath?: string) => {
-
-        const matchedPath: string = getMatchedPath(pathName)
-        let isActive: boolean = isActivePath(activePath, matchedPath, rootPath)
-
-        // if this is the root logged in route,
-        // also check the root logged out route
-        if (!isActive && pathName.startsWith(rootLoggedIn)) {
-            isActive = isActivePath(activePath, rootLoggedOut)
+    toolRoute.alternativePaths?.forEach(path => {
+        if (activePath.indexOf(path) > -1) {
+            isPathActive = true
         }
+    })
+    return isPathActive
+}
 
-        return isActive
+
+function isActiveRoute():
+    (activePath: string, toolRoute: PlatformRoute) => boolean {
+    return (activePath: string, toolRoute: PlatformRoute) => {
+        return isActivePath(activePath, toolRoute)
     }
 }
 
