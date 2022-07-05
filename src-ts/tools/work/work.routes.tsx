@@ -30,7 +30,7 @@ export const workRoutes: Array<PlatformRoute> = [
         title: 'Logged Out Landing',
     },
     {
-        alternativePaths: ['/self-service'],
+        alternativePaths: [selfServiceRootRoute],
         children: [
             {
                 element: <WorkTable />,
