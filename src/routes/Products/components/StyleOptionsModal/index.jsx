@@ -26,7 +26,7 @@ const StylesOptionsModal = ({
   const modalWidth = isMobile ? { fullWidth: true } : { halfWidth: true };
   return (
     <Modal show={true} {...modalWidth} handleClose={onDismiss}>
-      <div className={styles["styleOptions"]}>
+      <div className={styles["styleWrapper"]}>
         <div className={classNames(styles["style"], styles[style.className])}>
           <div className={styles["name"]}>
             <span>{style.name}</span> &nbsp;

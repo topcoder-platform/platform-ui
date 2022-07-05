@@ -8,10 +8,11 @@ export const autoSaveInitErrored = (error) => ({
   payload: error,
 });
 
-export const triggerAutoSave = (isTriggered, isForced) => ({
+export const triggerAutoSave = (isTriggered, isLoggedIn, isForced) => ({
   type: ACTIONS.AUTO_SAVE.TRIGGER_AUTO_SAVE,
   payload: {
     isTriggered,
+    isLoggedIn,
     isForced,
   },
 });
@@ -30,7 +31,7 @@ export const sendAutoSavedPatch = (dataToSave, challengeId) => (dispatch) => {
     .then((patched) => {
       dispatch(getChallenge(patched));
     })
-    .catch((e) => {});
+    .catch((e) => { });
 };
 
 export const storeAutoSavedCookie = (dataToSave) => (dispatch) => {

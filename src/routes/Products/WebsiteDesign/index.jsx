@@ -66,6 +66,7 @@ export default function WebsiteDesign({ isLoggedIn }) {
           showIcon
           workItemConfig={websiteDesign}
           breadcrumb={websiteDesign.breadcrumbs.review}
+          isLoggedIn={isLoggedIn}
         />}
         path="/review"
       />
