@@ -112,14 +112,8 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
 }
 
 function isActiveRoute(activePath: string, toolRoute: PlatformRoute): boolean {
-    let isPathActive: boolean = false
-
-    toolRoute.alternativePaths?.forEach(path => {
-        if (activePath.indexOf(path) > -1) {
-            isPathActive = true
-        }
-    })
-    return isPathActive
+    return !!(activePath?.startsWith(toolRoute.route)
+    || toolRoute.alternativePaths?.some(path => activePath?.startsWith(path)))
 }
 
 function isRootRoute(rootLoggedIn: string, rootLoggedOut: string):
