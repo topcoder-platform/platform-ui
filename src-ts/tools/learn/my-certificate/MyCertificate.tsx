@@ -2,7 +2,7 @@ import html2canvas from 'html2canvas'
 import { FC, MutableRefObject, useContext, useEffect, useRef } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 
-import { IconOutline, LoadingSpinner, profileContext, ProfileContextData } from '../../../lib'
+import { fileCreateFromCanvas, fileDownloadCanvasAsImage, IconOutline, LoadingSpinner, profileContext, ProfileContextData } from '../../../lib'
 import {
     CoursesProviderData,
     MyCertificationProgressProviderData,
@@ -15,7 +15,6 @@ import { getCoursePath } from '../learn.routes'
 import { ActionButton } from './action-button'
 import { Certificate } from './certificate'
 import styles from './MyCertificate.module.scss'
-import { cavasToFileObject, downloadCanvasAsFile } from './utility.functions'
 
 const MyCertificate: FC<{}> = () => {
 
@@ -75,7 +74,7 @@ const MyCertificate: FC<{}> = () => {
         if (!canvas) {
             return
         }
-        downloadCanvasAsFile(canvas, `${certificationTitle}.png`)
+        fileDownloadCanvasAsImage(canvas, `${certificationTitle}.png`)
     }
 
     async function handlePrint(): Promise<void> {
@@ -100,7 +99,7 @@ const MyCertificate: FC<{}> = () => {
         if (!canvas) {
             return
         }
-        const sharedImg: File = await cavasToFileObject(canvas, `${certificationTitle}.png`)
+        const sharedImg: File = await fileCreateFromCanvas(canvas, `${certificationTitle}.png`)
 
         if (navigator.canShare?.({ files: [sharedImg] })) {
             try {

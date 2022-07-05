@@ -1,4 +1,4 @@
-export function downloadBlobAsFile(content: Blob, fileName: string): void {
+export function fileDownloadBlob(content: Blob, fileName: string): void {
     // create a tag to downlad file.
     const link: HTMLAnchorElement = document.createElement('a')
     link.setAttribute('href', window.URL.createObjectURL(content))
@@ -9,17 +9,17 @@ export function downloadBlobAsFile(content: Blob, fileName: string): void {
     link.remove()
 }
 
-export function downloadCanvasAsFile(canvas: HTMLCanvasElement, fileName: string): void {
+export function fileDownloadCanvasAsImage(canvas: HTMLCanvasElement, fileName: string, fileType: string = 'image/png'): void {
     canvas.style.display = 'none'
     document.body.append(canvas)
     canvas.toBlob((blob) => {
         if (blob) {
-            downloadBlobAsFile(blob, fileName)
+            fileDownloadBlob(blob, fileName)
         }
-    }, 'image/png')
+    }, fileType)
 }
 
-export function cavasToFileObject(canvas: HTMLCanvasElement, fileName: string): Promise<File> {
+export function fileCreateFromCanvas(canvas: HTMLCanvasElement, fileName: string): Promise<File> {
     return new Promise((resolve, reject) => {
         canvas.toBlob(async (blob) => {
             if (!blob) {
