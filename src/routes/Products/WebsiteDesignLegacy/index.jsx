@@ -31,7 +31,7 @@ export default function WebsiteDesignLegacy({ isLoggedIn }) {
       <Route
         element={<LoginPrompt
           isLoggedIn={isLoggedIn}
-          nextPageUrl="/self-service/work/new/website-design/branding"
+          nextPageUrl="/self-service/work/new/website-design-legacy/branding"
         />}
         path="/login-prompt"
       />

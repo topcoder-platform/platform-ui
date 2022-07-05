@@ -18,7 +18,7 @@ export const WebsiteDesignBannerLegacy = () => {
               <div className={styles["heroIconContainer"]}>
                 <IconWebsiteTools />
               </div>
-              WEBSITE DESIGN
+              WEBSITE DESIGN LEGACY
             </div>
             <div className={styles["heroHeaderSubtitle"]}>
               Create a beautiful custom visual design for your website. and

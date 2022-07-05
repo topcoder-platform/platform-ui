@@ -78,7 +78,7 @@ const BasicInfoLegacy = ({
   const onNext = () => {
     setProgressItem(3);
     saveBasicInfo(formData);
-    navigate("/self-service/work/new/website-design/website-purpose");
+    navigate("/self-service/work/new/website-design-legacy/website-purpose");
   };
 
   const updateNumOfPages = (newNumOfPages) => {
@@ -119,8 +119,8 @@ const BasicInfoLegacy = ({
 
     if (currentStep === 0) {
       saveWorkType({
-        selectedWorkType: "Website Design",
-        selectedWorkTypeDetail: "Website Design",
+        selectedWorkType: "Website Design Legacy",
+        selectedWorkTypeDetail: "Website Design Legacy",
       });
       dispatch(triggerAutoSave(true, isLoggedIn));
     }
