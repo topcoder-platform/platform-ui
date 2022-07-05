@@ -8,9 +8,9 @@ interface ProgressBarProps {
 
 const ProgressBar: FC<ProgressBarProps> = (props: ProgressBarProps) => {
 
-    const progressProps: React.CSSProperties = {
+    const progressProps: React.CSSProperties & {'--progress': number} = {
         '--progress': props.progress,
-    } as unknown as React.CSSProperties
+    }
 
     return (
         <div className={styles['wrap']}>
