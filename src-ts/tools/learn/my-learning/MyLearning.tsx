@@ -1,11 +1,14 @@
-import { FC } from 'react'
+import { FC, useContext, useMemo } from 'react'
 
-import { ContentLayout, Portal } from '../../../lib'
+import { ContentLayout, Portal, profileContext, ProfileContextData } from '../../../lib'
 import {
+    CertificationsProviderData,
+    LearnCertification,
     LearningHat,
     MyCertificationsProviderData,
     MyCourseCompletedCard,
     MyCourseInProgressCard,
+    useCertificationsProvider,
     useMyCertifications,
     WaveHero
 } from '../learn-lib'
@@ -13,11 +16,25 @@ import {
 import { HeroCard } from './hero-card'
 import styles from './MyLearning.module.scss'
 
-interface MyLearningProps {
+interface CertificatesByIdType {
+    [key: string]: LearnCertification
 }
 
-const MyLearning: FC<MyLearningProps> = (props: MyLearningProps) => {
-    const { completed, inProgress }: MyCertificationsProviderData = useMyCertifications()
+const MyLearning: FC<{}> = () => {
+
+    const { profile }: ProfileContextData = useContext(profileContext)
+    const { completed, inProgress }: MyCertificationsProviderData = useMyCertifications(profile?.userId)
+
+    const {
+        certifications,
+    }: CertificationsProviderData = useCertificationsProvider()
+
+    const certificatesById: CertificatesByIdType = useMemo(() => (
+        certifications.reduce((certifs, certificate) => {
+            certifs[certificate.id] = certificate
+            return certifs
+}, {} as unknown as CertificatesByIdType)
+    ), [certifications])
 
     return (
         <ContentLayout contentClass={styles['content-layout']}>
@@ -37,10 +54,12 @@ const MyLearning: FC<MyLearningProps> = (props: MyLearningProps) => {
                 <div className={styles['courses-area']}>
                     {inProgress.map((certif) => (
                         <MyCourseInProgressCard
-                            certification={certif}
-                            key={certif.key}
-                            progress={certif.progress}
+                            certification={certificatesById[certif.certificationId]}
+                            key={certif.certificationId}
                             theme='detailed'
+                            currentLesson={certif.currentLesson}
+                            completedPercentage={certif.completedPercentage}
+                            startDate={certif.startDate}
                         />
                     ))}
                 </div>
@@ -56,9 +75,9 @@ const MyLearning: FC<MyLearningProps> = (props: MyLearningProps) => {
                     <div className={styles['cards-wrap']}>
                         {completed.map((certif) => (
                             <MyCourseCompletedCard
-                                certification={certif}
-                                key={certif.key}
-                                completed={certif.progress.completedDate!}
+                                certification={certificatesById[certif.certificationId]}
+                                key={certif.certificationId}
+                                completed={certif.completedDate}
                             />
                         ))}
                     </div>

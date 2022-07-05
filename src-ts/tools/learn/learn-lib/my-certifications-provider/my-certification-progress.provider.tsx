@@ -1,16 +1,19 @@
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react'
 
-import { LearnMyCertification } from './learn-my-certification.model'
 import { MyCertificationProgressProviderData } from './my-certification-progress-provider-data.model'
-import myCertificationsJSON from './my-certifications-functions/my-certifications.json'
+import { getMyCertificationsProgressAsync, LearnMyCertificationProgress } from './my-certifications-functions'
+import { decorateCompletedPercentage, mapCompletedPercentage } from './my-certifications-functions/certificate-progress.decorators'
 
-const myCertifications: Array<LearnMyCertification> = [...myCertificationsJSON.certifications] as Array<LearnMyCertification>
+export function useMyCertificationProgress(userId?: number, provider?: string, certification?: string): MyCertificationProgressProviderData {
+    function setCertificateProgress(progress: LearnMyCertificationProgress): void {
+        setState((prevState) => ({...prevState, certificateProgress: decorateCompletedPercentage(progress)}))
+    }
 
-export const useMyCertificationProgress: (certification?: string) => MyCertificationProgressProviderData = (certification?: string): MyCertificationProgressProviderData => {
     const [state, setState]: [MyCertificationProgressProviderData, Dispatch<SetStateAction<MyCertificationProgressProviderData>>] = useState<MyCertificationProgressProviderData>({
+        certificateProgress: undefined,
         loading: false,
-        progress: undefined,
         ready: false,
+        setCertificateProgress,
     })
 
     useEffect(() => {
@@ -19,17 +22,19 @@ export const useMyCertificationProgress: (certification?: string) => MyCertifica
             loading: true,
         }))
 
-        const t: ReturnType<typeof setTimeout> = setTimeout(() => {
+        if (!userId) {
+            return
+        }
+
+        getMyCertificationsProgressAsync(userId, provider, certification).then(mapCompletedPercentage).then((myCertifications) => {
             setState((prevState) => ({
                 ...prevState,
+                certificateProgress: myCertifications.find(c => c.certification === certification),
                 loading: false,
-                progress: myCertifications.find(c => c.certification === certification)?.progress,
                 ready: true,
             }))
-        }, 350)
-
-        return () => clearTimeout(t)
-    }, [])
+        })
+    }, [userId, provider, certification])
 
     return state
 }

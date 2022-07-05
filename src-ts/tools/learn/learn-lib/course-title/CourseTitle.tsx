@@ -7,21 +7,21 @@ import { ReactComponent as LearnChallengeBadgeIcon } from './learn-challenge-bad
 interface CourseTitleProps {
     children?: ReactNode
     credits?: string
-    size?: 'md'|'lg'
+    size?: 'md'|'lg'|'xl'
     title: string
     type: string
 }
 
 const CourseTitle: FC<CourseTitleProps> = (props: CourseTitleProps) => {
 
-    const title: ReactNode = props.size === 'lg' ? (
-        <h1 className='details'>
-            {props.title}
-        </h1>
-    ) : (
+    const title: ReactNode = (!props.size || props.size === 'md') ? (
         <div className='body-main-bold'>
             {props.title}
         </div>
+    ) : (
+        <h1 className={classNames(props.size === 'lg' ? 'details' : '', props.size)}>
+            {props.title}
+        </h1>
     )
 
     return (

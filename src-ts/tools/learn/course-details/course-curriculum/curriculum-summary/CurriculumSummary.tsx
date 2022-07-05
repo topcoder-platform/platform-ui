@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, ReactNode, useMemo } from 'react'
 
 import { Button, ProgressBar, textFormatDateLocaleShortString } from '../../../../../lib'
 import { CurriculumSummary as CurriculumSummaryStats, LearnCourse } from '../../../learn-lib'
@@ -7,38 +7,48 @@ import styles from './CurriculumSummary.module.scss'
 
 interface CurriculumSummaryProps {
     completed?: boolean
+    completedDate?: string
+    completedPercentage?: number
     course: LearnCourse
+    inProgress?: boolean
     onClickCertificateBtn?: () => void
     onClickMainBtn: () => void
-    progress?: number
 }
 
 const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryProps) => {
-    const progress: number|undefined = props.progress
-    const inProgress: boolean = !!progress
+    const progress: number|undefined = props.completedPercentage
+    const inProgress: boolean|undefined = props.inProgress
     const completed: boolean|undefined = props.completed
+
+    const title: ReactNode = useMemo(() => {
+        if (!completed || !props.completedDate) {
+            return 'In Progress'
+        }
+
+        return (
+            <>
+                <span>
+                    Completed{' '}
+                    {textFormatDateLocaleShortString(new Date(props.completedDate))}
+                </span>
+                <Button
+                    buttonStyle='secondary'
+                    size='xs'
+                    label='Get your certificate'
+                    onClick={props.onClickCertificateBtn}
+                />
+            </>
+        )
+    }, [completed, props.completedDate, props.onClickCertificateBtn])
 
     return (
         <div className={styles['wrap']}>
             {(inProgress || completed) && (
                 <>
                     <div className={styles['title']}>
-                        {completed ? (
-                            <>
-                                <span>
-                                    Completed{' '}
-                                    {textFormatDateLocaleShortString(new Date('2022-06-24'))}
-                                </span>
-                                <Button
-                                    buttonStyle='secondary'
-                                    size='xs'
-                                    label='Get your certificate'
-                                    onClick={props.onClickCertificateBtn}
-                                />
-                            </>
-                        ) : ('In Progress')}
+                        {title}
                     </div>
-                    <ProgressBar progress={completed ? 1 : (progress ?? 0)} />
+                    <ProgressBar progress={progress ?? 0} />
                 </>
             )}
 

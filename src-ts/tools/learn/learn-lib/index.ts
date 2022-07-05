@@ -1,4 +1,5 @@
 export * from './certifications-provider'
+export * from './collapsible-pane'
 export * from './courses-provider'
 export * from './curriculum-summary'
 export * from './lesson-provider'

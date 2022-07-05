@@ -8,10 +8,7 @@ import { CoursesCard } from './courses-card'
 import { ProgressBlock } from './progress-block'
 import styles from './WelcomePage.module.scss'
 
-interface WelcomePageProps {
-}
-
-const WelcomePage: FC<WelcomePageProps> = (props: WelcomePageProps) => {
+const WelcomePage: FC<{}> = () => {
     const {
         certifications,
         ready,
@@ -37,7 +34,7 @@ const WelcomePage: FC<WelcomePageProps> = (props: WelcomePageProps) => {
                         `}
                         theme='light'
                     >
-                        <ProgressBlock />
+                        <ProgressBlock certificates={certifications} />
                     </WaveHero>
                 </Portal>
 
@@ -53,7 +50,7 @@ const WelcomePage: FC<WelcomePageProps> = (props: WelcomePageProps) => {
                                 <CoursesCard
                                     title={certification.title}
                                     type={certification.category}
-                                    link={certification.state === 'active' ? getCoursePath(certification.certification) : undefined}
+                                    link={certification.state === 'active' ? getCoursePath(certification.providerName, certification.certification) : undefined}
                                     credits={certification.providerName}
                                     key={certification.key}
                                 />

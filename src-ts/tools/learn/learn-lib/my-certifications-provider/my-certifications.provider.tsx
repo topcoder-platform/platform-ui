@@ -1,14 +1,11 @@
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react'
+import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
-import { LearnMyCertification } from './learn-my-certification.model'
-import myCertificationsJSON from './my-certifications-functions/my-certifications.json'
+import { getMyCertificationsProgressAsync, MyCertificationProgressStatus } from './my-certifications-functions'
+import { mapCompletedPercentage } from './my-certifications-functions/certificate-progress.decorators'
 import { MyCertificationsProviderData } from './my-certifications-provider-data.model'
 
-const myCertifications: Array<LearnMyCertification> = [...myCertificationsJSON.certifications] as Array<LearnMyCertification>
-
-export const useMyCertifications: () => MyCertificationsProviderData = (): MyCertificationsProviderData => {
+export function useMyCertifications(userId?: number): MyCertificationsProviderData {
     const [state, setState]: [MyCertificationsProviderData, Dispatch<SetStateAction<MyCertificationsProviderData>>] = useState<MyCertificationsProviderData>({
-        certifications: [],
         completed: [],
         inProgress: [],
         loading: false,
@@ -21,19 +18,20 @@ export const useMyCertifications: () => MyCertificationsProviderData = (): MyCer
             loading: true,
         }))
 
-        const t: ReturnType<typeof setTimeout> = setTimeout(() => {
+        if (!userId) {
+            return
+        }
+
+        getMyCertificationsProgressAsync(userId).then(mapCompletedPercentage).then((myCertifications) => {
             setState((prevState) => ({
                 ...prevState,
-                certifications: [...myCertifications],
-                completed: myCertifications.filter(c => c.progress.status === 'completed'),
-                inProgress: myCertifications.filter(c => c.progress.status === 'in-progress'),
+                completed: myCertifications.filter(c => c.status === MyCertificationProgressStatus.completed),
+                inProgress: myCertifications.filter(c => c.status === MyCertificationProgressStatus.inProgress),
                 loading: false,
                 ready: true,
             }))
-        }, 350)
-
-        return () => clearTimeout(t)
-    }, [])
+        })
+    }, [userId])
 
     return state
 }

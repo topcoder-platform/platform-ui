@@ -4,10 +4,7 @@ import { Button } from '../../../../lib'
 
 import styles from './HeroCard.module.scss'
 
-interface HeroCardProps {
-}
-
-const HeroCard: FC<HeroCardProps> = (props: HeroCardProps) => {
+const HeroCard: FC<{}> = () => {
 
     return (
         <div className={styles['wrap']}>

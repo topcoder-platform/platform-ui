@@ -4,10 +4,7 @@ import { LearningHat } from '../../../learn-lib'
 
 import styles from './InitState.module.scss'
 
-interface InitStateProps {
-}
-
-const InitState: FC<InitStateProps> = (props: InitStateProps) => {
+const InitState: FC<{}> = () => {
     return (
         <div className={styles['wrap']}>
             <div className={styles['icon']}>

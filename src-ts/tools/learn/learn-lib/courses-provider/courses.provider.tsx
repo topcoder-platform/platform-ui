@@ -3,7 +3,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { getCourseAsync } from './courses-functions'
 import { CoursesProviderData } from './courses-provider-data.model'
 
-export const useCoursesProvider: (certification?: string) => CoursesProviderData = (certification?: string): CoursesProviderData => {
+export function useCoursesProvider(provider: string, certification?: string): CoursesProviderData {
     const [state, setState]: [CoursesProviderData, Dispatch<SetStateAction<CoursesProviderData>>] = useState<CoursesProviderData>({
         loading: false,
         ready: false,
@@ -25,7 +25,7 @@ export const useCoursesProvider: (certification?: string) => CoursesProviderData
             loading: true,
         }))
 
-        getCourseAsync(certification).then((course) => {
+        getCourseAsync(provider, certification).then((course) => {
             setState((prevState) => ({
                 ...prevState,
                 course,
@@ -33,7 +33,7 @@ export const useCoursesProvider: (certification?: string) => CoursesProviderData
                 ready: true,
             }))
         })
-    }, [certification])
+    }, [provider, certification])
 
     return state
 }
