@@ -23,19 +23,13 @@ interface CourseOutlineProps {
 const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
 
     const lessonPath: (course: LearnCourse, module: LearnModule, lesson: LearnLesson) => string = useCallback((course: LearnCourse, module: LearnModule, lesson: LearnLesson) => {
-        const path: string = [
-            course && `course=${encodeURIComponent(course.certification)}`,
-            module && `module=${encodeURIComponent(module.key)}`,
-            lesson && `lesson=${encodeURIComponent(lesson.dashedName)}`,
-        ].filter(Boolean).join('&')
-
         return getFccLessonPath(
             course.provider,
             course.certification,
             module.key,
             lesson.dashedName,
         )
-    }, [props.course])
+    }, [])
 
     return (
         <div className={classNames(styles['wrap'], 'course-outline-wrap')}>
@@ -52,7 +46,7 @@ const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
                             items={module.lessons}
                             key={module.key}
                             lessonsCount={module.lessons.length}
-                            path={(it: any) => lessonPath(props.course!, module, it)}
+                            path={(it: any) => props.course ? lessonPath(props.course, module, it) : ''}
                             progress={props.progress?.modules}
                             shortDescription={module.meta.introCopy}
                             title={module.meta.name}

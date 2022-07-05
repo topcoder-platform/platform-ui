@@ -89,7 +89,14 @@ const FreeCodeCamp: FC<{}> = () => {
             nextStep.dashedName,
         )
         navigate(lessonPath)
-    }, [providerParam, currentStepIndex, currentModuleData, certificationParam, moduleParam])
+    }, [
+        certificationParam,
+        currentModuleData,
+        currentStepIndex,
+        moduleParam,
+        navigate,
+        providerParam,
+    ])
 
     function updatePath(lessonPath: string, modulePath: string, coursePath: string): void {
         if (coursePath !== certificationParam) { setCourseParam(coursePath) }
@@ -116,11 +123,19 @@ const FreeCodeCamp: FC<{}> = () => {
             module: modulePath,
         }
 
+        if (
+            !profile?.userId ||
+            !lesson?.course.certificationId ||
+            !lesson?.course.id
+        ) {
+            return
+        }
+
         if (!certificateProgress) {
             startMyCertificationsProgressAsync(
-                profile?.userId!,
-                lesson?.course.certificationId!,
-                lesson?.course.id!,
+                profile.userId,
+                lesson.course.certificationId,
+                lesson.course.id,
                 currentLesson
             ).then(setCertificateProgress)
         } else {

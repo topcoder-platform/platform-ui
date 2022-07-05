@@ -1,7 +1,7 @@
 
 import { PlatformRoute } from '../../lib'
-import { CourseCompletedPage } from './course-completed'
 
+import { CourseCompletedPage } from './course-completed'
 import { CourseDetailsPage } from './course-details'
 import { FreeCodeCamp } from './free-code-camp'
 import Learn, { toolTitle } from './Learn'

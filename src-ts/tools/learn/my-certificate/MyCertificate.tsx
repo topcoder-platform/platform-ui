@@ -1,7 +1,7 @@
 import { FC, useContext, useEffect } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
-import { getCoursePath } from '..'
 
+import { getCoursePath } from '..'
 import { IconOutline, LoadingSpinner, profileContext, ProfileContextData } from '../../../lib'
 import {
     CoursesProviderData,
@@ -15,17 +15,14 @@ import { ActionButton } from './action-button'
 import { Certificate } from './certificate'
 import styles from './MyCertificate.module.scss'
 
-interface MyCertificateProps {
-}
+const MyCertificate: FC<{}> = () => {
 
-const MyCertificate: FC<MyCertificateProps> = (props: MyCertificateProps) => {
-    
     const { profile }: ProfileContextData = useContext(profileContext)
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
     const providerParam: string = routeParams.provider ?? ''
     const certificationParam: string = routeParams.certification ?? ''
-    const coursePath = getCoursePath(providerParam, certificationParam)
+    const coursePath: string = getCoursePath(providerParam, certificationParam)
 
     const {
         course,
@@ -52,7 +49,7 @@ const MyCertificate: FC<MyCertificateProps> = (props: MyCertificateProps) => {
           navigate(coursePath)
         }
       }, [ready, certificateProgress, coursePath])
-  
+
     return (
         <>
             {!ready && <LoadingSpinner />}

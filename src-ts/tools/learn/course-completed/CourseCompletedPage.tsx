@@ -23,20 +23,17 @@ import {
 } from '../learn-lib'
 import { getCoursePath } from '../learn.routes'
 
-import { ReactComponent as StarsSvg } from './stars.svg'
 import styles from './CourseCompletedPage.module.scss'
+import { ReactComponent as StarsSvg } from './stars.svg'
 
-interface CourseCompletedPageProps {
-}
-
-const CourseCompletedPage: FC<CourseCompletedPageProps> = (props: CourseCompletedPageProps) => {
+const CourseCompletedPage: FC<{}> = () => {
 
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
     const { profile }: ProfileContextData = useContext(profileContext)
     const providerParam: string = routeParams.provider ?? ''
     const certificationParam: string = routeParams.certification ?? ''
-    const coursePath = getCoursePath(providerParam, certificationParam)
+    const coursePath: string = getCoursePath(providerParam, certificationParam)
 
     const {
         course: courseData,
@@ -51,16 +48,15 @@ const CourseCompletedPage: FC<CourseCompletedPageProps> = (props: CourseComplete
         routeParams.provider,
         routeParams.certification
     )
-    
+
     const {
         certification,
         ready: certifReady,
     }: CertificationsProviderData = useCertificationsProvider(providerParam, progress?.certificationId, {
-        enabled: progressReady && !!progress
+        enabled: progressReady && !!progress,
     })
 
-
-    const ready = progressReady && courseDataReady && certifReady
+    const ready: boolean = progressReady && courseDataReady && certifReady
 
     const breadcrumb: Array<BreadcrumbItemModel> = useMemo(() => [
         { url: '/learn', name: 'Topcoder Academy' },
@@ -72,7 +68,12 @@ const CourseCompletedPage: FC<CourseCompletedPageProps> = (props: CourseComplete
       if (ready && progress?.status !== MyCertificationProgressStatus.completed) {
         navigate(coursePath)
       }
-    }, [ready, progress, coursePath]);
+    }, [
+        coursePath,
+        navigate,
+        progress,
+        ready,
+    ])
 
     return (
         <>
@@ -97,17 +98,22 @@ const CourseCompletedPage: FC<CourseCompletedPageProps> = (props: CourseComplete
                                 </div>
                             </CollapsiblePane>
                         </div>
-        
+
                         <div className={styles['course-frame']}>
                             <div className={styles['content-wrap']}>
                                 <h1>Congratulations!</h1>
                                 <hr />
-                                <div className="body-large">
+                                <div className='body-large'>
                                     You have successfully completed all Assessments for:
                                 </div>
                                 <div className={styles['course-title']}>
                                     <StarsSvg />
-                                    <CourseTitle size='xl' title={courseData.title} credits={courseData.provider} type={certification?.category ?? ''} />
+                                    <CourseTitle
+                                        size='xl'
+                                        title={courseData.title}
+                                        credits={courseData.provider}
+                                        type={certification?.category ?? ''}
+                                    />
                                 </div>
                                 <hr />
                                 <p>
@@ -116,7 +122,12 @@ const CourseCompletedPage: FC<CourseCompletedPageProps> = (props: CourseComplete
                                     To view other courses, press the "Start a new course" button below.
                                 </p>
                                 <div className={styles['btns-wrap']}>
-                                    <Button size='sm' buttonStyle='secondary' label='View certificate' route={`/learn/${courseData.certification}/certificate`} />
+                                    <Button
+                                        size='sm'
+                                        buttonStyle='secondary'
+                                        label='View certificate'
+                                        route={`/learn/${courseData.certification}/certificate`}
+                                    />
                                     <Button
                                         size='sm'
                                         buttonStyle='primary'

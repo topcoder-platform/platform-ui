@@ -22,10 +22,8 @@ import { CourseCurriculum } from './course-curriculum'
 import styles from './CourseDetailsPage.module.scss'
 import { PromoCourse } from './promo-course'
 
-interface CourseDetailsPageProps {
-}
+const CourseDetailsPage: FC<{}> = () => {
 
-const CourseDetailsPage: FC<CourseDetailsPageProps> = (props: CourseDetailsPageProps) => {
     const routeParams: Params<string> = useParams()
     const { profile }: ProfileContextData = useContext(profileContext)
 
