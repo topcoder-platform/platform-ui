@@ -72,7 +72,7 @@ const ProgressBlock: FC<ProgressBlockProps> = (props: ProgressBlockProps) => {
                         <MyCourseCompletedCard
                             certification={certificatesById[certif.certificationId]}
                             key={certif.certificationId}
-                            completed={certif.completedDate!}
+                            completed={certif.completedDate}
                         />
                     ))}
                 </>

@@ -17,11 +17,8 @@ import { Certificate } from './certificate'
 import { cavasToFileObject, downloadCanvasAsFile } from './utility.functions'
 import styles from './MyCertificate.module.scss'
 
-interface MyCertificateProps {
-}
+const MyCertificate: FC<{}> = () => {
 
-const MyCertificate: FC<MyCertificateProps> = (props: MyCertificateProps) => {
-    
     const { profile }: ProfileContextData = useContext(profileContext)
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
@@ -100,11 +97,16 @@ const MyCertificate: FC<MyCertificateProps> = (props: MyCertificateProps) => {
         }
     }
 
-    // useEffect(() => {
-    //     if (ready && certificateProgress?.status !== MyCertificationProgressStatus.completed) {
-    //       navigate(coursePath)
-    //     }
-    //   }, [ready, navigate, certificateProgress, coursePath])
+    useEffect(() => {
+        if (ready && certificateProgress?.status !== MyCertificationProgressStatus.completed) {
+          navigate(coursePath)
+        }
+      }, [
+        certificateProgress,
+        coursePath,
+        navigate,
+        ready,
+    ])
   
     return (
         <>

@@ -1,5 +1,6 @@
 import classNames from 'classnames'
 import { Dispatch, FC, ReactNode, SetStateAction, useCallback, useState } from 'react'
+
 import { IconSolid } from '../../../../lib'
 
 import styles from './CollapsiblePane.module.scss'

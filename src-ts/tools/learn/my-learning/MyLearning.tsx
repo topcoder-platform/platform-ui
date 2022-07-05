@@ -16,20 +16,17 @@ import {
 import { HeroCard } from './hero-card'
 import styles from './MyLearning.module.scss'
 
-interface MyLearningProps {
-}
-
 interface CertificatesByIdType {
     [key: string]: LearnCertification
 }
 
-const MyLearning: FC<MyLearningProps> = (props: MyLearningProps) => {
+const MyLearning: FC<{}> = () => {
+
     const { profile }: ProfileContextData = useContext(profileContext)
     const { completed, inProgress }: MyCertificationsProviderData = useMyCertifications(profile?.userId)
 
     const {
         certifications,
-        ready,
     }: CertificationsProviderData = useCertificationsProvider()
 
     const certificatesById: CertificatesByIdType = useMemo(() => (
@@ -60,9 +57,9 @@ const MyLearning: FC<MyLearningProps> = (props: MyLearningProps) => {
                             certification={certificatesById[certif.certificationId]}
                             key={certif.certificationId}
                             theme='detailed'
-                            currentLesson={certif.currentLesson!}
+                            currentLesson={certif.currentLesson}
                             completedPercentage={certif.completedPercentage}
-                            startDate={certif.startDate!}
+                            startDate={certif.startDate}
                         />
                     ))}
                 </div>
@@ -80,7 +77,7 @@ const MyLearning: FC<MyLearningProps> = (props: MyLearningProps) => {
                             <MyCourseCompletedCard
                                 certification={certificatesById[certif.certificationId]}
                                 key={certif.certificationId}
-                                completed={certif.completedDate!}
+                                completed={certif.completedDate}
                             />
                         ))}
                     </div>

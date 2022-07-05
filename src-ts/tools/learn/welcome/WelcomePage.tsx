@@ -8,10 +8,7 @@ import { CoursesCard } from './courses-card'
 import { ProgressBlock } from './progress-block'
 import styles from './WelcomePage.module.scss'
 
-interface WelcomePageProps {
-}
-
-const WelcomePage: FC<WelcomePageProps> = (props: WelcomePageProps) => {
+const WelcomePage: FC<{}> = () => {
     const {
         certifications,
         ready,
