@@ -7,9 +7,16 @@
         background-size: 1440px 40px, auto;
         overflow: hidden;
         padding-bottom: 40px;
+        @include ltelg {
+            background-size: 100vw $pad-lg, auto;
+            padding-bottom: $pad-lg;
+        }
         &:global(.light) {
             background: url('./learn-welcome-bg-curve-white.png') repeat-x center bottom , $tc-grad15;
             background-size: 1440px 40px, auto;
+            @include ltelg {
+                background-size: 100vw $pad-lg, auto;
+            }
         }
     }
     
@@ -19,6 +26,10 @@
 
         @include ltelg {
             padding-bottom: $pad-mx;
+        }
+        @include ltemd {
+            padding-top: $pad-xxl;
+            padding-bottom: $pad-xxl;
         }
     }
 
@@ -31,6 +42,9 @@
         @include ltelg {
             gap: $pad-mx;
             flex-direction: column;
+        }
+        @include ltemd {
+            gap: $pad-xxl;
         }
     }
     

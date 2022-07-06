@@ -1,3 +1,4 @@
+@import 'mixins/breakpoints.mixins';
 @import 'variables/breakpoints';
 @import 'variables/fonts';
 @import 'variables/palette';
@@ -34,6 +35,10 @@ h1 {
     font-family: $font-barlow-condensed;
     font-size: 34px;
     line-height: 32px;
+
+    @include ltemd {
+        font-size: 28px;
+    }
 }
 
 h2 {
@@ -44,11 +49,21 @@ h2 {
 h3 {
     font-size: 22px;
     line-height: 26px;
+    
+    @include ltemd {
+        font-size: 18px;
+        line-height: 20px;
+    }
 }
 
 h4 {
     font-size: 18px;
     line-height: 22px;
+
+    @include ltemd {
+        font-size: 16px;
+        line-height: 18px;
+    }
 }
 
 /* Tabs */
@@ -138,12 +153,22 @@ h4 {
     font-weight: $font-weight-semibold;
     font-size: 20px;
     line-height: 26px;
+    
+    @include ltemd {
+        font-size: 14px;
+        line-height: 20px;
+    }
 }
 
 .body-medium-normal {
     font-weight: $font-weight-normal;
     font-size: 20px;
     line-height: 26px;
+    
+    @include ltemd {
+        font-size: 14px;
+        line-height: 20px;
+    }
 }
 
 .body-medium-bold {

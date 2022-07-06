@@ -11,6 +11,10 @@
     flex-direction: column;
     gap: $pad-lg;
     width: 100%;
+    
+    @include ltemd {
+        padding: $pad-lg;
+    }
 }
 
 .title-line {
