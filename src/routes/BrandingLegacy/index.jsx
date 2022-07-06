@@ -135,7 +135,10 @@ const BrandingLegacy = ({ saveBranding, setProgressItem, isLoggedIn }) => {
         <Breadcrumb items={breadcrumbs} />
         <WebsiteDesignBannerLegacy />
         <PageContent>
-          <PageH2>BRANDING</PageH2>
+          <div className={styles["title-wrapper"]}>
+            <PageH2>BRANDING</PageH2>
+          </div>
+          <Progress level={5} setStep={setProgressItem} />
           <PageDivider />
 
           <BrandingForm
@@ -170,8 +173,6 @@ const BrandingLegacy = ({ saveBranding, setProgressItem, isLoggedIn }) => {
               </div>
             </div>
           </PageFoot>
-
-          <Progress level={5} setStep={setProgressItem} />
         </PageContent>
       </Page>
     </>

@@ -106,7 +106,10 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem, isLoggedIn 
         <Breadcrumb items={breadcrumbs} />
         <WebsiteDesignBannerLegacy />
         <PageContent>
-          <PageH2>WEBSITE PURPOSE</PageH2>
+          <div className={styles["title-wrapper"]}>
+            <PageH2>WEBSITE PURPOSE</PageH2>
+          </div>
+          <Progress level={3} setStep={setProgressItem} />
           <PageDivider />
 
           <WebsitePurposeForm
@@ -142,8 +145,6 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem, isLoggedIn 
               </div>
             </div>
           </PageFoot>
-
-          <Progress level={3} setStep={setProgressItem} />
         </PageContent>
       </Page>
     </>
