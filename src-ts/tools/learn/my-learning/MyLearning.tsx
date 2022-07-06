@@ -48,7 +48,7 @@ const MyLearning: FC<{}> = () => {
                                 From here you can resume your courses in progress or review past accomplishments.
                             `}
                         >
-                            <HeroCard />
+                            <HeroCard userHandle={profile?.handle} />
                         </WaveHero>
                     </div>
                 </Portal>

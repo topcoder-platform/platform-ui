@@ -4,6 +4,8 @@ import { ToolTitle } from '../constants'
 import { AppHostEnvironment } from './app-host-environment.enum'
 import { EnvironmentConfigDefault } from './environment.default.config'
 
+const COMMUNITY_WEBSITE: string = 'https://www.topcoder.com'
+
 export const EnvironmentConfigProd: GlobalConfig = {
     ...EnvironmentConfigDefault,
     API: {
@@ -17,5 +19,10 @@ export const EnvironmentConfigProd: GlobalConfig = {
     TAG_MANAGER_ID: 'GTM-MXXQHG8',
     URL: {
         ACCOUNTS_APP_CONNECTOR: 'https://accounts-auth0.topcoder.com',
+    },
+    TOPCODER_URLS: {
+        USER_PROFILE: `${COMMUNITY_WEBSITE}/members`,
+        CHALLENGES_PAGE: `${COMMUNITY_WEBSITE}/challenges`,
+        GIGS_PAGE: `${COMMUNITY_WEBSITE}/gigs`,
     },
 }

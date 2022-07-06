@@ -24,6 +24,7 @@ export interface ButtonProps {
     readonly title?: string
     readonly type?: ButtonType
     readonly url?: string
+    readonly target?: string
 }
 
 const Button: FC<ButtonProps> = (props: ButtonProps) => {
@@ -42,6 +43,7 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
                 onClick={clickHandler}
                 tabIndex={props.tabIndex}
                 title={props.title}
+                target={props.target}
             >
                 {content}
             </a>
