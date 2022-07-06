@@ -1,9 +1,9 @@
 /* global process */
 
 module.exports = (() => {
-  const env = process.env.APPENV || "dev";
+  const env = process.env.REACT_APP_HOST_ENV || "dev";
 
-  console.info(`APPENV: "${env}"`);
+  console.info(`REACT_APP_HOST_ENV: "${env}"`);
 
   // for security reason don't let to require any arbitrary file defined in process.env
   if (["prod", "dev"].indexOf(env) < 0) {
