@@ -2,7 +2,7 @@ import { GlobalConfig } from '../../lib'
 
 import { AppHostEnvironment } from './app-host-environment.enum'
 
-const COMMUNITY_WEBSITE: string = 'https://www.topcoder.com'
+const COMMUNITY_WEBSITE: string = 'https://www.topcoder-dev.com'
 
 export const EnvironmentConfigDefault: GlobalConfig = {
     API: {
