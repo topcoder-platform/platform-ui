@@ -119,6 +119,7 @@ module.exports = (webpackConfigEnv) => {
       new webpack.DefinePlugin({
         "process.env": {
           ..._.mapValues(config, (value) => JSON.stringify(value)),
+          APPENV: JSON.stringify(process.env.REACT_APP_HOST_ENV),
           REACT_APP_HOST_ENV: JSON.stringify(process.env.REACT_APP_HOST_ENV),
           APPMODE: JSON.stringify(process.env.APPMODE),
         },
