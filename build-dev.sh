@@ -1,2 +1,2 @@
 export REACT_APP_HOST_ENV=dev
-yarn react-scripts build
+yarn react-app-rewired build

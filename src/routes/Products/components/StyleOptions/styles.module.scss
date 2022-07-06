@@ -1,0 +1,136 @@
+@import "../../../../styles/include";
+
+.styleOptions {
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-bottom: 34px;
+  justify-content: center;
+
+  @include mobile {
+    display: inline-block;
+  }
+
+  .styleWrapper {
+    .style {
+      position: relative;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+
+      .box {
+        border: 1px solid $black-20;
+        border-radius: 4px;
+        .preview {
+          width: 240px;
+          height: 200px;
+          cursor: pointer;
+        }
+  
+        .actions {
+          display: flex;
+          justify-content: center;
+          padding: 20px;
+  
+          svg {
+            width: 25px;
+            height: 25px;
+            margin-left: 10px;
+            margin-right: 10px;
+          }
+
+          .liked {
+            fill: $green1;
+      
+            * {
+              fill: $green1;
+            }
+          }
+      
+          .disliked {
+            fill: $green1;
+      
+            * {
+              fill: $green1;
+            }
+          }
+        }
+      }
+
+      &.dark-saturated {
+        .preview {
+          background: url('../../../../assets/images/products/website-design/dark-saturated.png');
+          background-size: cover;
+        }
+      }
+
+      &.light-airy {
+        .preview {
+          background: url('../../../../assets/images/products/website-design/light-airy.png');
+          background-size: cover;
+        }
+      }
+
+      &.fun-playful {
+        .preview {
+          background: url('../../../../assets/images/products/website-design/fun-playful.png');
+          background-size: cover;
+        }
+      }
+
+      &.mature-serious {
+        .preview {
+          background: url('../../../../assets/images/products/website-design/mature-serious.png');
+          background-size: cover;
+        }
+      }
+
+      &.simple-minimalist {
+        .preview {
+          background: url('../../../../assets/images/products/website-design/simple-minimalist.png');
+          background-size: cover;
+        }
+      }
+
+      &.vibrant-colorful {
+        .preview {
+          background: url('../../../../assets/images/products/website-design/vibrant-colorful.png');
+          background-size: cover;
+        }
+      }
+
+      &.soft-organic {
+        .preview {
+          background: url('../../../../assets/images/products/website-design/soft-organic.png');
+          background-size: cover;
+        }
+      }
+
+      &.bold-rugged {
+        .preview {
+          background: url('../../../../assets/images/products/website-design/bold-ragged.png');
+          background-size: cover;
+        }
+      }
+    }
+
+    .name {
+      @include font-roboto;
+      display: flex;
+      justify-content: center;
+      style: $black;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 26px;
+      text-align: center;
+      margin-top: 8px;
+      margin-bottom: 8px;
+
+      .toolTip {
+        margin-left: 2px;
+      }
+    }
+  }
+}

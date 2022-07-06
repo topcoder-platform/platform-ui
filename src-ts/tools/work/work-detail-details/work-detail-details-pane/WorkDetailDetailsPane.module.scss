@@ -1,0 +1,45 @@
+@import '../../../../lib/styles';
+
+.header {
+    display: flex;
+    align-items: flex-end;
+    cursor: pointer;
+    margin: $pad-xxl 0 $pad-xxxl 0;
+
+    .title {
+        @include font-black-100;
+        @include font-barlow;
+    }
+
+    .link {
+        color: $link-blue-dark;
+        cursor: pointer;
+        margin-left: 10px;
+        margin-top: 4px;
+        text-transform: none;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+.detail {
+    margin-bottom: $pad-xxl;
+    white-space: pre-wrap;
+    @include font-black-100;
+
+    .title {
+        @include font-barlow;
+        display: flex;
+        padding-bottom: $pad-sm;
+    }
+
+    .content {
+        @extend .body-main;
+
+        .no-info {
+            @include font-black-60;
+        }
+    }
+}

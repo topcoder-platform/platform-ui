@@ -1,0 +1,29 @@
+@import 'variables';
+@import 'mixins';
+
+html {
+    --header-height: 80px;
+    --footer-height: 51px;
+
+    @include ltemd {
+        --header-height: 64px;
+    }
+
+    @include ltesm {
+        --header-height: 48px;
+        --footer-height: 101px;
+    }
+}
+
+hr {
+    color: $black-10;
+    border: 1px solid;
+    border-radius: 1px;
+    margin: 16px 0px;
+    width: 100%;
+}
+
+#tc-accounts-iframe {
+    border: none;
+    display: none;
+}

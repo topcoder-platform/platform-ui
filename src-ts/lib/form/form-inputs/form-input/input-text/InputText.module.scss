@@ -1,0 +1,31 @@
+@use '../../../../styles/typography';
+@import '../../../../styles/includes';
+
+.form-input-text {
+    @extend .body-small;
+    color: $black-60 !important;
+    box-sizing: border-box !important;
+    border: 0 !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: auto !important;
+    border-radius: 0 !important;
+
+    &:focus {
+        box-shadow: none !important;
+        border: none !important;
+        outline: none !important;
+        color: $black-100 !important;
+    }
+  
+    &:disabled {
+        background-color: $black-10 !important;
+    }
+
+    &::placeholder {
+        color: $black-60 !important;
+        opacity: 1 !important;
+        text-transform: none !important;
+    }
+}

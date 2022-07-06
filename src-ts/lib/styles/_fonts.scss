@@ -1,0 +1,63 @@
+@import 'mixins/fonts.mixins';
+
+/* BLACK FONTS */
+.font-black-100 {
+    @include font-black-100;
+}
+.font-black-80 {
+    @include font-black-80;
+}
+.font-black-60 {
+    @include font-black-60;
+}
+.font-black-40 {
+    @include font-black-40;
+}
+.font-tc-white {
+    @include font-tc-white;
+}
+.bg-black-100 {
+    background-color: $black-100;
+}
+
+
+/* RED FONTS */
+.font-red-120 {
+    @include font-red-120;
+}
+.font-red-140 {
+    @include font-red-140;
+}
+
+
+/* TURQUOISE FONTS */
+.font-turq-160 {
+    @include font-turq-160;
+}
+
+
+/* TEAL FONTS */
+.font-teal-140 {
+    @include font-teal-140();
+}
+
+
+/* BLUE FONTS */
+.font-blue-140 {
+    @include font-blue-140;
+}
+.font-link-blue-dark {
+    @include font-link-blue-dark;
+}
+
+
+/* PURPLE FONTS */
+.font-purple-100 {
+    @include font-purple-100;
+}
+.font-purple-120 {
+    @include font-purple-120;
+}
+.font-purple-140 {
+    @include font-purple-140;
+}

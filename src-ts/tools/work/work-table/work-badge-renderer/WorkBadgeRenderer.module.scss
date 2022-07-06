@@ -1,0 +1,26 @@
+@use '../../../../lib/styles/typography';
+@import '../../../../lib/styles/includes';
+
+.badge {
+    @extend .medium-subtitle;
+    display: inline-flex;
+    padding: 0 $border;
+    border-radius: $pad-sm;
+    color: $tc-white;
+    min-width: 24px;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+
+    &.unread-messages{
+        background-color: $red-100;
+    }
+
+    &.no-unread-messages{
+        background-color: $black-80;
+    }
+
+    &.items {
+        background-color: $blue-100;
+    }
+}

@@ -1,0 +1,26 @@
+@import '../../styles/includes';
+@import '../../styles/typography';
+
+.modal-header {
+    padding: 5px 0 0;
+}
+
+.spacer {
+    margin: 24px 0;
+}
+
+.modal-body {
+    flex: 1 1 auto;
+    overflow: auto;
+    margin: 0 -1*$pad-xxxxl -1*$pad-xxxxl;
+    padding: 0 $pad-xxxxl $pad-xxxxl;
+
+    @extend .body-main;
+    & :global(.button-container) {
+        display: flex;
+        justify-content: flex-end;
+        gap: 16px;
+        align-items: center;
+        margin-top: 24px;
+    }
+}

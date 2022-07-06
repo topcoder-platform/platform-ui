@@ -1,0 +1,82 @@
+@import "../../../../styles/include";
+
+.brandingForm {
+  .remove-website {
+    color: $green1;
+    cursor: pointer;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: flex-end;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .title {
+    font-weight: 600;
+    color: $grey-text;
+    font-size: 20px;
+    line-height: 20px;
+    text-transform: uppercase;
+  }
+
+  .description {
+    @include font-roboto;
+    font-size: 16px;
+    line-height: 26px;
+    margin-top: 24px;
+    color: $grey-text;
+
+    .link {
+      cursor: pointer;
+      color: $link-blue;
+      text-decoration: underline;
+      margin-top: 20px;
+    }
+  }
+
+  .form-row {
+    align-items: flex-start;
+  }
+
+  .formFieldWrapper {
+    margin-top: 48px;
+  }
+
+  .text-area {
+    height: 117px !important;
+  }
+
+  .uploadFonts {
+    margin-top: 32px;
+
+    p {
+      @include font-roboto;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.8px;
+      line-height: 16px;
+      color: $black;
+      margin-bottom: 8px;
+    }
+  }
+
+  .assets {
+    margin-top: 12px;
+
+    p {
+      @include font-roboto;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.8px;
+      line-height: 12px;
+      color: $black;
+      margin-bottom: 8px;
+    }
+  }
+
+  .customDeliverable {
+    margin-top: 32px;
+  }
+}

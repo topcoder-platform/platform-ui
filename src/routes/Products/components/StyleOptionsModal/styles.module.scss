@@ -1,0 +1,157 @@
+@import "../../../../styles/include";
+@import '../../../../../src-ts/lib/styles';
+
+.styleWrapper {
+  min-width: 500px;
+
+  .style {
+    position: relative;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 22px;
+
+    @include mobile {
+      width: 250px;
+      padding: 0px;
+    }
+
+    .box {
+      border: 1px solid $black-20;
+      border-radius: 4px;
+      .preview {
+        width: 100%;
+        height: 450px;
+        max-height: calc(100vh - 450px);
+  
+        @include ltemd {
+          max-height: calc(100vh - 550px);
+        }
+      }
+
+      .actions {
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+  
+        .liked {
+          fill: $green1;
+      
+          * {
+            fill: $green1;
+          }
+        }
+      
+        .disliked {
+          fill: $green1;
+      
+          * {
+            fill: $green1;
+          }
+        }
+        svg {
+          width: 25px;
+          height: 25px;
+          margin-left: 10px;
+          margin-right: 10px;
+        }
+      }
+    }
+
+    &.dark-saturated {
+      .preview {
+        background: url('../../../../assets/images/products/website-design/dark-saturated.png');
+        background-size: cover;
+      }
+    }
+
+    &.light-airy {
+      .preview {
+        background: url('../../../../assets/images/products/website-design/light-airy.png');
+        background-size: cover;
+      }
+    }
+
+    &.fun-playful {
+      .preview {
+        background: url('../../../../assets/images/products/website-design/fun-playful.png');
+        background-size: cover;
+      }
+    }
+
+    &.mature-serious {
+      .preview {
+        background: url('../../../../assets/images/products/website-design/mature-serious.png');
+        background-size: cover;
+      }
+    }
+
+    &.simple-minimalist {
+      .preview {
+        background: url('../../../../assets/images/products/website-design/simple-minimalist.png');
+        background-size: cover;
+      }
+    }
+
+    &.vibrant-colorful {
+      .preview {
+        background: url('../../../../assets/images/products/website-design/vibrant-colorful.png');
+        background-size: cover;
+      }
+    }
+
+    &.soft-organic {
+      .preview {
+        background: url('../../../../assets/images/products/website-design/soft-organic.png');
+        background-size: cover;
+      }
+    }
+
+    &.bold-rugged {
+      .preview {
+        background: url('../../../../assets/images/products/website-design/bold-ragged.png');
+        background-size: cover;
+      }
+    }
+  }
+
+  .liked {
+    fill: $green1;
+
+    * {
+      fill: $green1;
+    }
+  }
+
+  .disliked {
+    fill: $green1;
+
+    * {
+      fill: $green1;
+    }
+  }
+
+  .name {
+    @include font-roboto;
+    display: flex;
+    justify-content: flex-start;
+    style: $black;
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 26px;
+    text-align: left;
+    margin-top: -10px;
+    margin-bottom: 8px;
+
+    .toolTip {
+      margin-left: 2px;
+    }
+  }
+
+  .description {
+    font-size: 16px;
+    line-height: 24px;
+    margin-bottom: 10px;
+  }
+}
