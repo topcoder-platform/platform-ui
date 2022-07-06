@@ -65,7 +65,7 @@ const WorkNotLoggedIn: FC<{}> = () => {
                 <div className={styles.rightContent}>
 
                     <h2 className={styles.title}>
-                        put our great talent to work for you
+                        TOPCODER put our great talent to work for you
                     </h2>
 
                     <p className={styles.description}>
