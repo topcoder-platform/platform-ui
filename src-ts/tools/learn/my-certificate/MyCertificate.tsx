@@ -21,6 +21,7 @@ import { getCoursePath } from '../learn.routes'
 
 import { ActionButton } from './action-button'
 import { Certificate } from './certificate'
+import { useCertificateScaling } from './my-certificate.functions'
 import styles from './MyCertificate.module.scss'
 
 const MyCertificate: FC<{}> = () => {
@@ -32,6 +33,7 @@ const MyCertificate: FC<{}> = () => {
     const certificationParam: string = routeParams.certification ?? ''
     const coursePath: string = getCoursePath(providerParam, certificationParam)
     const certificateElRef: MutableRefObject<HTMLElement|any> = useRef()
+    const certificateWrapRef: MutableRefObject<HTMLElement|any> = useRef()
     const userName: string = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ')
 
     const {
@@ -51,6 +53,8 @@ const MyCertificate: FC<{}> = () => {
     )
 
     const ready: boolean = courseReady && progressReady
+
+    useCertificateScaling(ready ? certificateWrapRef : undefined)
 
     function handleBackBtnClick(): void {
         navigate(-1)
@@ -142,7 +146,7 @@ const MyCertificate: FC<{}> = () => {
                                 onClick={handleBackBtnClick}
                             />
                         </div>
-                        <div className={styles['certificate-wrap']}>
+                        <div className={styles['certificate-wrap']} ref={certificateWrapRef}>
                             <Certificate
                                 course={course?.title}
                                 userName={userName}
