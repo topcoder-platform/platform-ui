@@ -140,3 +140,9 @@
     display: block;
   }
 }
+
+.title-wrapper {
+  @include mobile {
+    display: none;
+  }
+}

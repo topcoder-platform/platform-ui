@@ -54,12 +54,12 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem, isLoggedIn 
     formData?.userStory?.value.length;
 
   const onBack = () => {
-    navigate("/self-service/work/new/website-design/basic-info");
+    navigate("/self-service/work/new/website-design-legacy/basic-info");
   };
 
   const onNext = () => {
     saveWebsitePurpose(formData);
-    navigate("/self-service/work/new/website-design/page-details");
+    navigate("/self-service/work/new/website-design-legacy/page-details");
     setProgressItem(4);
   };
 
@@ -106,7 +106,10 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem, isLoggedIn 
         <Breadcrumb items={breadcrumbs} />
         <WebsiteDesignBannerLegacy />
         <PageContent>
-          <PageH2>WEBSITE PURPOSE</PageH2>
+          <div className={styles["title-wrapper"]}>
+            <PageH2>WEBSITE PURPOSE</PageH2>
+          </div>
+          <Progress level={3} setStep={setProgressItem} />
           <PageDivider />
 
           <WebsitePurposeForm
@@ -142,8 +145,6 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem, isLoggedIn 
               </div>
             </div>
           </PageFoot>
-
-          <Progress level={3} setStep={setProgressItem} />
         </PageContent>
       </Page>
     </>

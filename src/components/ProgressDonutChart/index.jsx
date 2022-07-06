@@ -42,13 +42,25 @@ const ProgressDonutChart = ({ progress, styleName, ...props }) => {
   return (
     <div className={cn(styles["progress-donut-chart"], !!styleName ? styles[styleName] : undefined)} {...props}>
       <div id="chart">
-        <Chart
-          options={chartOptions}
-          series={[progress]}
-          type="radialBar"
-          height={150}
-          width={120}
-        />
+        <div className={styles["mobile-chart"]}>
+          <Chart
+            options={chartOptions}
+            series={[progress]}
+            type="radialBar"
+            height={100}
+            width={80}
+          />
+        </div>
+
+        <div className={styles["desktop-chart"]}>
+          <Chart
+            options={chartOptions}
+            series={[progress]}
+            type="radialBar"
+            height={150}
+            width={120}
+          />
+        </div>
       </div>
     </div>
   );
