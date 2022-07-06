@@ -13,50 +13,62 @@ interface InfoCardProps {
     title?: string,
 }
 
-// tslint:disable-next-line: cyclomatic-complexity
 const InfoCard: FC<InfoCardProps> = ({
+    children,
     color = 'gray',
     isCollapsible = false,
     isOpen = true,
-    ...props
+    title,
 }: InfoCardProps) => {
 
     const [open, setOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(isOpen)
-    const showArrowUp: string = open ? styles.up : undefined
-    const showCollapsible: string = isCollapsible ? styles.collapsible : styles.notCollapsible
-    const showCollapsibleTitle: boolean = isCollapsible ? styles.collapsible : undefined
-    const showSpacing: boolean = open && !!props.title && !!props.children
+    const collapsibleClass: string = isCollapsible ? styles.collapsible : styles.notCollapsible
+    const showSpacing: boolean = open && !!title && !!children
 
     return (
-        <div className={classNames(styles.card, styles[color], showCollapsible)}>
-            {isCollapsible && (
-                <div
-                    className={classNames(styles.title, showCollapsibleTitle)}
-                    onClick={() => setOpen(!open)}
-                    role='button'
-                    tabIndex={0}
-                >
-                    <span>{props.title}</span>
-
-                    <div className={classNames(styles.arrowIcon, showArrowUp)}>
-                        <ArrowIcon />
-                    </div>
-                </div>
-            )}
-
-            {!isCollapsible && (
-                <div className={styles.title}>
-                    <span>{props.title}</span>
-                </div>
-            )}
+        <div className={classNames(styles.card, styles[color], collapsibleClass)}>
+            {renderHeader(isCollapsible, open, setOpen, title || '')}
 
             {showSpacing && (
                 <div className={styles.spacing}></div>
             )}
 
             {open &&
-                <div className={styles.content}>{props.children}</div>
+                <div className={styles.content}>{children}</div>
             }
+        </div>
+    )
+}
+
+function renderHeader(
+    isCollapsible: boolean,
+    open: boolean,
+    setOpen: Dispatch<SetStateAction<boolean>>,
+    title: string
+): JSX.Element {
+
+    const arrowClass: string = open ? styles.up : undefined
+
+    if (isCollapsible) {
+        return (
+            <div
+                className={classNames(styles.title, styles.collapsible)}
+                onClick={() => setOpen(!open)}
+                role='button'
+                tabIndex={0}
+            >
+                <span>{title}</span>
+
+                <div className={classNames(styles.arrowIcon, arrowClass)}>
+                    <ArrowIcon />
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <div className={styles.title}>
+            <span>{title}</span>
         </div>
     )
 }
