@@ -30,7 +30,6 @@ import {
 import StyleOptions from "../StyleOptions";
 import { WorkType, WorkTypeCategoryDesignIcon } from "../../../../../src-ts";
 import classNames from "classnames";
-import { InfoCard } from "../../../../../src-ts/lib/info-card";
 
 const BasicInfoForm = ({
   formData,
@@ -171,26 +170,13 @@ const BasicInfoForm = ({
         showIcon
         icon={servicePriceIcon}
       />
-      {/* <HelpBanner defaultOpen title={helperBannerTitle} styles={["gray"]}>
+      <HelpBanner defaultOpen title={helperBannerTitle} styles={["gray"]}>
         {helperBannerContent}
-      </HelpBanner> */}
-      <InfoCard
-        title={helperBannerTitle}
-      >
-        {helperBannerContent}
-      </InfoCard>
+      </HelpBanner>
 
-      {/* <HelpBanner title={aboutBannerTitle} styles={["turqoise"]}>
+      <HelpBanner title={aboutBannerTitle} styles={["turqoise"]}>
         {aboutBannerContent}
-      </HelpBanner> */}
-      <InfoCard
-        color="turquoise"
-        isCollapsible
-        isOpen={false}
-        title={aboutBannerTitle}
-      >
-        {aboutBannerContent}
-      </InfoCard>
+      </HelpBanner>
 
       <PageDivider />
 
