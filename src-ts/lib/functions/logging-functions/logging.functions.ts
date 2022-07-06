@@ -4,8 +4,6 @@ import { GlobalConfig } from '../../global-config.model'
 
 export function initialize(config: GlobalConfig): void {
 
-    console.debug('init logging', config.LOGGING)
-
     // if we don't have a token and service,
     // logging isn't supported in this environment,
     // so don't initialize anything
@@ -13,7 +11,6 @@ export function initialize(config: GlobalConfig): void {
         return
     }
 
-    console.debug('logging env', config.ENV)
     datadogLogs.init({
         clientToken: config.LOGGING.PUBLIC_TOKEN,
         env: config.ENV,
@@ -21,7 +18,7 @@ export function initialize(config: GlobalConfig): void {
         silentMultipleInit: true,
     })
 
-    info(`initialized logging for ${config.ENV} test`)
+    info(`initialized logging for ${config.ENV}`)
 }
 
 export function error(message: string, messageContext?: object): void {
