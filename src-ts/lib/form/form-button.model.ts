@@ -1,4 +1,5 @@
 import { FC, SVGProps } from 'react'
+
 import { ButtonSize, ButtonStyle, ButtonType } from '../button'
 
 export interface FormButton {

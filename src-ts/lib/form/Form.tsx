@@ -16,6 +16,7 @@ import '../styles/index.scss'
 import { IconOutline } from '../svgs'
 
 import { FormDefinition } from './form-definition.model'
+import { Field, NonStaticField } from './form-field.model'
 import {
     formInitializeValues,
     formOnBlur,
@@ -23,6 +24,7 @@ import {
     formOnReset,
     formOnSubmitAsync,
 } from './form-functions'
+import { getFormInputFields, isInputField, isStaticField } from './form-functions/form.functions'
 import { FormInputModel } from './form-input.model'
 import { FormInputs } from './form-inputs'
 import styles from './Form.module.scss'
@@ -31,7 +33,7 @@ interface FormProps<ValueType, RequestType> {
     readonly formDef: FormDefinition
     readonly formValues?: ValueType
     readonly onSuccess?: () => void
-    readonly requestGenerator: (inputs?: ReadonlyArray<FormInputModel>) => RequestType
+    readonly requestGenerator: (inputs: ReadonlyArray<NonStaticField>) => RequestType
     readonly save: (value: RequestType) => Promise<void>
 }
 
@@ -50,28 +52,31 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         const [formRef]: [RefObject<HTMLFormElement>, Dispatch<SetStateAction<RefObject<HTMLFormElement>>>]
             = useState<RefObject<HTMLFormElement>>(createRef<HTMLFormElement>())
 
+        // This will hold all the inputs that are not static fields
+        const inputs: Array<NonStaticField> = getFormInputFields(formDef.elements).filter(input => isStaticField(input)) as Array<NonStaticField>
+
         function onBlur(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>): void {
-            formOnBlur(event, formDef.inputs, props.formValues)
+            formOnBlur(event, inputs, props.formValues)
             setFormDef({ ...formDef })
         }
 
         function onChange(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void {
-            formOnChange(event, formDef.inputs, props.formValues)
+            formOnChange(event, inputs, props.formValues)
             setFormDef({ ...formDef })
         }
 
         function onReset(): void {
-            formOnReset(props.formValues, formDef.inputs)
+            formOnReset(inputs, props.formValues)
             setFormDef({ ...formDef })
             setFormKey(Date.now())
         }
 
         async function onSubmitAsync(event: FormEvent<HTMLFormElement>): Promise<void> {
-            const values: RequestType = props.requestGenerator(formDef.inputs)
+            const values: RequestType = props.requestGenerator(inputs)
             formOnSubmitAsync<RequestType>(event, formDef, values, props.save, props.onSuccess)
                 .then(() => {
                     setFormKey(Date.now())
-                    formOnReset(props.formValues, formDef.inputs)
+                    formOnReset(inputs, props.formValues)
                     setFormDef({ ...formDef })
                 })
                 .catch((error: string | undefined) => {
@@ -80,7 +85,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                 })
         }
 
-        formInitializeValues(formDef.inputs, props.formValues)
+        formInitializeValues(inputs, props.formValues)
 
         const leftButtons: Array<JSX.Element> = formDef.leftButtons ? formDef.leftButtons
             .map((button, index) => {
@@ -95,10 +100,10 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                     <Button
                         {...button}
                         key={button.label}
-                        tabIndex={button.notTabble ? -1 : index + (formDef.inputs ? formDef.inputs.length : 0) + (formDef.tabIndexStart || 0)}
+                        tabIndex={button.notTabble ? -1 : index + (inputs ? inputs.length : 0) + (formDef.tabIndexStart || 0)}
                     />
                 )
-            }) : [];
+            }) : []
 
         const rightButtons: Array<JSX.Element> = formDef.rightButtons ? formDef.rightButtons
             .map((button, index) => {
@@ -113,10 +118,10 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                     <Button
                         {...button}
                         key={button.label}
-                        tabIndex={button.notTabble ? -1 : index + (formDef.inputs ? formDef.inputs.length : 0) + (formDef.tabIndexStart || 0)}
+                        tabIndex={button.notTabble ? -1 : index + (inputs ? inputs.length : 0) + (formDef.tabIndexStart || 0)}
                     />
                 )
-            }) : [];
+            }) : []
 
         // set the max width of the form error so that it doesn't push the width of the form wider
         const errorsRef: RefObject<HTMLDivElement> = createRef<HTMLDivElement>()
@@ -150,6 +155,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                 )}
 
                 <FormInputs
+                    inputs={inputs}
                     formDef={formDef}
                     onBlur={onBlur}
                     onChange={onChange}

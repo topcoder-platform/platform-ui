@@ -1,155 +1,157 @@
-import { FormDefinition } from "..";
-import { ReactComponent as BackIcon } from "../../../../src/assets/images/icon-back-arrow.svg";
+import { FormDefinition } from '..'
+import { ReactComponent as BackIcon } from '../../../../src/assets/images/icon-back-arrow.svg'
 export const FormConfig: FormDefinition = {
-  leftButtons: [
-    {
-      type: 'button',
-      buttonStyle: 'icon',
-      icon: BackIcon,
-      onClick: () => console.log('on click'),
-    }
-  ],
-  rightButtons: [
-    {
-      type: 'button',
-      buttonStyle: 'secondary',
-      label: 'Save for later',
-      onClick: () => console.log('on click'),
-    },
-    {
-      type: 'button',
-      buttonStyle: 'primary',
-      label: 'Complete and pay',
-      onClick: () => console.log('on click'),
-    }
-  ],
   elements: [
     {
+      description: 'Enter a title for your website bug hunt project.',
+      fields: [
+        {
+          events: [
+            {
+              event: () => {},
+              name: 'onBlur',
+            },
+          ],
+          label: 'Project title',
+          name: 'Project title',
+          placeholder: 'Enter a descriptive title',
+          type: 'text',
+        },
+      ],
       renderingRule: {
         width: 'half',
       },
-      type: 'section',
       title: 'Project Title',
+      type: 'section',
+    },
+    {
       description: 'Enter a title for your website bug hunt project.',
       fields: [
         {
-          name: 'Project title',
-          label: 'Project title',
-          placeholder: 'Enter a descriptive title',
-          type: 'text',
           events: [
             {
+              event: () => {},
               name: 'onBlur',
-              event: () => console.log('on blur')
-            }
+            },
           ],
-        }
+          label: 'Project title',
+          name: 'Project title',
+          placeholder: 'Enter a descriptive title',
+          type: 'text',
+        },
       ],
-    },
-    {
       renderingRule: {
         width: 'half',
       },
-      type: 'section',
       title: 'Website URL',
-      description: 'Enter a title for your website bug hunt project.',
-      fields: [
-        {
-          name: 'Project title',
-          label: 'Project title',
-          placeholder: 'Enter a descriptive title',
-          type: 'text',
-          events: [
-            {
-              name: 'onBlur',
-              event: () => console.log('on blur')
-            }
-          ],
-        }
-      ],
+      type: 'section',
     },
     {
-      renderingRule: {
-        width: 'half',
-      },
-      type: 'section',
-      title: 'Bug Hunt Goals',
       description: 'Do you have any specific goals for your website bug hunt? For example: find bugs in my online shopping experience',
       fields: [
         {
-          name: 'bug-hunt-goals',
-          label: 'Project title',
-          placeholder: 'Describe your goal',
-          type: 'textarea',
           events: [
             {
+              event: () => {},
               name: 'onBlur',
-              event: () => console.log('on blur')
-            }
+            },
           ],
-        }
+          label: 'Project title',
+          name: 'bug-hunt-goals',
+          placeholder: 'Describe your goal',
+          type: 'textarea',
+        },
       ],
-    },
-    {
       renderingRule: {
         width: 'half',
       },
+      title: 'Bug Hunt Goals',
       type: 'section',
-      title: 'Features to test',
+    },
+    {
       description: 'Are there specific features we should focus on testing? For example: [An example not used above]',
       fields: [
         {
-          name: 'bug-hunt-goals',
-          label: 'Features to test (optional)',
-          placeholder: 'List the sepcific features',
-          type: 'textarea',
           events: [
             {
+              event: () => {},
               name: 'onBlur',
-              event: () => console.log('on blur')
-            }
+            },
           ],
-        }
+          label: 'Features to test (optional)',
+          name: 'bug-hunt-goals',
+          placeholder: 'List the sepcific features',
+          type: 'textarea',
+        },
       ],
-    },
-    {
       renderingRule: {
         width: 'half',
       },
+      title: 'Features to test',
       type: 'section',
-      title: 'Bug Delivery',
+    },
+    {
       description: 'How do you want your bugs delivered?',
       fields: [
         {
           name: 'delivery-type',
-          type: 'checkbox',
-          onChange: () => console.log('on option changed'),
+          notTabbable: false,
+          onChange: () => {},
           options: [
             {
               checked: false,
-              id: 'github',
               children: () => (<div>Option 1</div>),
+              id: 'github',
             },
             {
               checked: false,
-              id: 'gitlab',
               children: () => (<div>Option 2</div>),
-            }
+              id: 'gitlab',
+            },
           ],
+          type: 'checkbox',
+          value: true,
         },
         {
-          name: 'repository-link',
-          label: 'Repository Link (Optional)',
-          placeholder: 'www.example-share-link.com',
-          type: 'text',
           events: [
             {
+              event: () => {},
               name: 'onBlur',
-              event: () => console.log('on blur')
-            }
+            },
           ],
-        }
+          label: 'Repository Link (Optional)',
+          name: 'repository-link',
+          placeholder: 'www.example-share-link.com',
+          type: 'text',
+        },
       ],
-    }
+      renderingRule: {
+        width: 'half',
+      },
+      title: 'Bug Delivery',
+      type: 'section',
+    },
   ],
-};
+  leftButtons: [
+    {
+      buttonStyle: 'icon',
+      icon: BackIcon,
+      onClick: () => {},
+      type: 'button',
+    },
+  ],
+  rightButtons: [
+    {
+      buttonStyle: 'secondary',
+      label: 'Save for later',
+      onClick: () => {},
+      type: 'button',
+    },
+    {
+      buttonStyle: 'primary',
+      label: 'Complete and pay',
+      onClick: () => {},
+      type: 'button',
+    },
+  ],
+}

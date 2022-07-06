@@ -19,12 +19,12 @@ export function doesNotMatchOther(value: string | undefined, formElements?: HTML
     return `Cannot match the ${getOtherFieldLabel(otherField, otherFieldName)} value`
 }
 
-export function email(value: string | undefined): string | undefined {
+export function email(value: string | boolean | undefined): string | undefined {
 
-    // if there is no value, do not set the error
+    // if there is no value and if the value is boolean, do not set the error
     // b/c this is an email validator, not a required
     // validator
-    if (!value) {
+    if (!value || typeof value === 'boolean') {
         return undefined
     }
 
@@ -70,7 +70,7 @@ export function matchOther(value: string | undefined, formElements?: HTMLFormCon
     return `Does not match the ${getOtherFieldLabel(otherField, otherFieldName)}`
 }
 
-export function required(value: string | undefined): string | undefined {
+export function required(value: string | boolean | undefined): string | undefined {
     return !value ? 'Required' : undefined
 }
 
@@ -109,7 +109,7 @@ export function sslUrl(value: string | undefined): string | undefined {
 
 export interface ValidatorFn {
     dependentField?: string,
-    validator: (value: string | undefined, formValues?: HTMLFormControlsCollection, otherField?: string) => string | undefined
+    validator: (value: string | boolean | undefined, formValues?: HTMLFormControlsCollection, otherField?: string) => string | undefined
 }
 
 function getOtherField(formElements?: HTMLFormControlsCollection, otherFieldName?: string): HTMLInputElement {

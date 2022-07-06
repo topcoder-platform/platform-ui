@@ -8,15 +8,6 @@ export enum ContactSupportFormField {
 }
 
 export const contactSupportFormDef: FormDefinition = {
-    rightButtons: [
-        {
-            buttonStyle: 'secondary',
-            isSave: true,
-            label: 'Submit',
-            size: 'lg',
-            type: 'submit',
-        },
-    ],
     elements: [
         {
             field: {
@@ -74,49 +65,13 @@ export const contactSupportFormDef: FormDefinition = {
             type: 'field',
         },
     ],
-    inputs: [
+    rightButtons: [
         {
-            label: 'First Name',
-            name: ContactSupportFormField.first,
-            type: 'text',
-            validators: [
-                {
-                    validator: validatorRequired,
-                },
-            ],
-        },
-        {
-            label: 'Last Name',
-            name: ContactSupportFormField.last,
-            type: 'text',
-            validators: [
-                {
-                    validator: validatorRequired,
-                },
-            ],
-        },
-        {
-            label: 'Email',
-            name: ContactSupportFormField.email,
-            type: 'text',
-            validators: [
-                {
-                    validator: validatorEmail,
-                },
-                {
-                    validator: validatorRequired,
-                },
-            ],
-        },
-        {
-            label: 'How can we help you?',
-            name: ContactSupportFormField.question,
-            type: 'textarea',
-            validators: [
-                {
-                    validator: validatorRequired,
-                },
-            ],
+            buttonStyle: 'secondary',
+            isSave: true,
+            label: 'Submit',
+            size: 'lg',
+            type: 'submit',
         },
     ],
     successMessage: 'Your request has been submitted.',

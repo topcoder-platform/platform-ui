@@ -13,6 +13,7 @@ export interface FormInputModel {
     readonly hint?: string
     readonly id?: string
     readonly instructions?: string
+    readonly isStatic?: boolean
     readonly label?: string
     readonly name: string
     readonly notTabbable?: boolean

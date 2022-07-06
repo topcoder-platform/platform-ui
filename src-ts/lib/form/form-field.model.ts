@@ -1,8 +1,14 @@
-import { FormInputModel } from ".";
-import { FormBannerModel } from "./form-banner.model";
-import { FormOptionSelectorModel } from "./form-option-selector.model";
+import { FormInputModel } from '.'
+import { FormBannerModel } from './form-banner.model'
+import { FormOptionSelectorModel } from './form-option-selector.model'
+
+export type StaticField = FormBannerModel
+
+export type NonStaticField = FormInputModel | FormOptionSelectorModel
+
+export type Field = NonStaticField | StaticField
 
 export interface FormFieldModel {
-  field: FormInputModel | FormOptionSelectorModel | FormBannerModel
+  field: Field
   readonly type: 'field'
 }

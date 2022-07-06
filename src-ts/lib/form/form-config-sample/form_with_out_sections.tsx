@@ -1,50 +1,50 @@
-import { FormDefinition } from "..";
+import { FormDefinition } from '..'
 
 export const FormConfig: FormDefinition = {
-  rightButtons: [
-    {
-      type: 'button',
-      buttonStyle: 'secondary',
-      label: 'Save for later',
-      onClick: () => console.log('on click'),
-    },
-    {
-      type: 'button',
-      buttonStyle: 'primary',
-      label: 'Complete and pay',
-      onClick: () => console.log('on click'),
-    }
-  ],
   elements: [
     {
-      type: 'field',
       field: {
-        name: 'Project title',
-        label: 'Project title',
-        placeholder: 'Enter a descriptive title',
-        type: 'text',
         events: [
           {
+            event: () => {},
             name: 'onBlur',
-            event: () => console.log('on blur')
-          }
+          },
         ],
+        label: 'Project title',
+        name: 'Project title',
+        placeholder: 'Enter a descriptive title',
+        type: 'text',
       },
+      type: 'field',
     },
     {
-      type: 'field',
       field: {
-        name: 'Project title',
-        label: 'Project title',
-        placeholder: 'Enter a descriptive title',
-        type: 'text',
         events: [
           {
+            event: () => {},
             name: 'onBlur',
-            event: () => console.log('on blur')
-          }
+          },
         ],
+        label: 'Project title',
+        name: 'Project title',
+        placeholder: 'Enter a descriptive title',
+        type: 'text',
       },
+      type: 'field',
     },
   ],
-};
+  rightButtons: [
+    {
+      buttonStyle: 'secondary',
+      label: 'Save for later',
+      onClick: () => {},
+      type: 'button',
+    },
+    {
+      buttonStyle: 'primary',
+      label: 'Complete and pay',
+      onClick: () => {},
+      type: 'button',
+    },
+  ],
+}
