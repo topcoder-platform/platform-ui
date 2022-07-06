@@ -9,7 +9,7 @@ interface InfoCardProps {
     children: ReactNode,
     color: 'gray' | 'turquoise' | 'yellow',
     isCollapsible: boolean,
-    isOpen: boolean,
+    open: boolean,
     title?: string,
 }
 
@@ -17,23 +17,23 @@ const InfoCard: FC<InfoCardProps> = ({
     children,
     color = 'gray',
     isCollapsible = false,
-    isOpen = true,
+    open = true,
     title,
 }: InfoCardProps) => {
 
-    const [open, setOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(isOpen)
+    const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(open)
     const collapsibleClass: string = isCollapsible ? styles.collapsible : styles.notCollapsible
-    const showSpacing: boolean = open && !!title && !!children
+    const showSpacing: boolean = isOpen && !!title && !!children
 
     return (
         <div className={classNames(styles.card, styles[color], collapsibleClass)}>
-            {renderHeader(isCollapsible, open, setOpen, title || '')}
+            {renderHeader(isCollapsible, isOpen, setIsOpen, title || '')}
 
             {showSpacing && (
                 <div className={styles.spacing}></div>
             )}
 
-            {open &&
+            {isOpen &&
                 <div className={styles.content}>{children}</div>
             }
         </div>
@@ -42,18 +42,18 @@ const InfoCard: FC<InfoCardProps> = ({
 
 function renderHeader(
     isCollapsible: boolean,
-    open: boolean,
-    setOpen: Dispatch<SetStateAction<boolean>>,
+    isOpen: boolean,
+    setIsOpen: Dispatch<SetStateAction<boolean>>,
     title: string
 ): JSX.Element {
 
-    const arrowClass: string = open ? styles.up : undefined
+    const arrowClass: string = isOpen ? styles.up : undefined
 
     if (isCollapsible) {
         return (
             <div
                 className={classNames(styles.title, styles.collapsible)}
-                onClick={() => setOpen(!open)}
+                onClick={() => setIsOpen(!isOpen)}
                 role='button'
                 tabIndex={0}
             >
