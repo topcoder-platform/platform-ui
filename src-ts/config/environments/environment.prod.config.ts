@@ -17,12 +17,12 @@ export const EnvironmentConfigProd: GlobalConfig = {
     ENV: AppHostEnvironment.prod,
     LEARN_SRC: 'https://fcc.topcoder.com:4431',
     TAG_MANAGER_ID: 'GTM-MXXQHG8',
-    URL: {
-        ACCOUNTS_APP_CONNECTOR: 'https://accounts-auth0.topcoder.com',
-    },
     TOPCODER_URLS: {
-        USER_PROFILE: `${COMMUNITY_WEBSITE}/members`,
         CHALLENGES_PAGE: `${COMMUNITY_WEBSITE}/challenges`,
         GIGS_PAGE: `${COMMUNITY_WEBSITE}/gigs`,
+        USER_PROFILE: `${COMMUNITY_WEBSITE}/members`,
+    },
+    URL: {
+        ACCOUNTS_APP_CONNECTOR: 'https://accounts-auth0.topcoder.com',
     },
 }

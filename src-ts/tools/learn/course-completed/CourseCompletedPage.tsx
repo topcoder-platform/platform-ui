@@ -1,7 +1,7 @@
 import { FC, useContext, useEffect, useMemo } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
-import { EnvironmentConfig } from '../../../config'
 
+import { EnvironmentConfig } from '../../../config'
 import {
     Breadcrumb,
     BreadcrumbItemModel,
@@ -146,7 +146,7 @@ const CourseCompletedPage: FC<{}> = () => {
                                         buttonStyle='link'
                                         label='See your updated profile'
                                         url={`${EnvironmentConfig.TOPCODER_URLS.USER_PROFILE}/${profile?.handle}`}
-                                        target="_blank"
+                                        target='_blank'
                                     />
                                 </div>
                             </div>
