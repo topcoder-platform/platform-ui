@@ -10,6 +10,12 @@
     }
 }
 
+.hero-wrap {
+    :global(.hero-card-col) {
+            max-width: 475px;
+    }
+}
+
 .title-line {
     display: flex;
     align-items: center;

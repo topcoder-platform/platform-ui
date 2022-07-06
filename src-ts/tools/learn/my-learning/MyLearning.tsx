@@ -40,15 +40,17 @@ const MyLearning: FC<{}> = () => {
         <ContentLayout contentClass={styles['content-layout']}>
             <div className={styles['wrap']}>
                 <Portal portalId='page-subheader-portal-el'>
-                    <WaveHero
-                        title='my learning'
-                        text={`
-                            This is your very own page to keep track of your professional education and skill building.
-                            From here you can resume your courses in progress or review past accomplishments.
-                        `}
-                    >
-                        <HeroCard />
-                    </WaveHero>
+                    <div className={styles['hero-wrap']}>
+                        <WaveHero
+                            title='my learning'
+                            text={`
+                                This is your very own page to keep track of your professional education and skill building.
+                                From here you can resume your courses in progress or review past accomplishments.
+                            `}
+                        >
+                            <HeroCard />
+                        </WaveHero>
+                    </div>
                 </Portal>
 
                 <div className={styles['courses-area']}>
