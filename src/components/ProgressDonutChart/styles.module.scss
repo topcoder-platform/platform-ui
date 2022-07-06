@@ -1,3 +1,15 @@
 @import "../../styles/include";
 
 .progress-donut-chart {}
+
+.desktop-chart {
+  @include mobile {
+    display: none;
+  }
+}
+
+.mobile-chart {
+  @include desktop {
+    display: none;
+  }
+}

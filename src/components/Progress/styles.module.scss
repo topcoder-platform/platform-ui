@@ -6,6 +6,12 @@
   top: 20px;
   display: flex;
   align-items: center;
+
+  @include mobile {
+    position: relative;
+    right: auto;
+    top: auto;
+  }
 }
 
 .level-container {
@@ -13,6 +19,11 @@
   align-items: flex-end;
   flex-direction: column;
   color: $black;
+
+  @include mobile {
+    flex: 1;
+    align-items: flex-start;
+  }
 
   .level {
     margin-bottom: 8px;
@@ -23,6 +34,15 @@
 
     .muted {
       color: #ddd;
+    }
+  }
+
+  .label {
+    @include mobile {
+      @include font-barlow;
+      line-height: 20px;
+      text-transform: uppercase;
+      font-weight: 600;
     }
   }
 }

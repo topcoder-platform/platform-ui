@@ -15,3 +15,9 @@
 .backButtonWrapper {
   @include backButtonWrapper;
 }
+
+.title-wrapper {
+  @include mobile {
+    display: none;
+  }
+}
