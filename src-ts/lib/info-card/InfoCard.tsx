@@ -3,25 +3,26 @@ import { Dispatch, FC, ReactNode, SetStateAction, useState } from 'react'
 
 import { ArrowIcon } from '../svgs'
 
+import { InfoCardColor } from './InfoCard.enum'
 import styles from './InfoCard.module.scss'
 
 interface InfoCardProps {
     children: ReactNode,
-    color: 'gray' | 'turquoise' | 'yellow',
+    color: InfoCardColor
+    defaultOpen: boolean,
     isCollapsible: boolean,
-    open: boolean,
     title?: string,
 }
 
 const InfoCard: FC<InfoCardProps> = ({
     children,
-    color = 'gray',
+    color = InfoCardColor.gray,
+    defaultOpen = true,
     isCollapsible = false,
-    open = true,
     title,
 }: InfoCardProps) => {
 
-    const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(open)
+    const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(defaultOpen)
     const collapsibleClass: string = isCollapsible ? styles.collapsible : styles.notCollapsible
     const showSpacing: boolean = isOpen && !!title && !!children
 
