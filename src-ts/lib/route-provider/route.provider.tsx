@@ -8,7 +8,7 @@ import {
     useEffect,
     useState,
 } from 'react'
-import { Route } from 'react-router-dom'
+import { Location, Route, useLocation } from 'react-router-dom'
 
 import { authUrlLogin } from '../functions'
 import { profileContext, ProfileContextData } from '../profile-provider'
@@ -34,18 +34,32 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
     const [routeContextData, setRouteContextData]: [RouteContextData, Dispatch<SetStateAction<RouteContextData>>]
         = useState<RouteContextData>(defaultRouteContextData)
 
+    const location: Location = useLocation()
+
     let allRoutes: Array<PlatformRoute> = []
 
     function getAndSetRoutes(): void {
 
         // TODO: try to make these prop names configurable instead of hard-codded
         const toolsRoutes: Array<PlatformRoute> = props.toolsRoutes.filter(route => !route.disabled)
+
+        // display a tool in the nav if the following conditions are met:
+        // 1. the tool isn't hidden (if the tool is hidden, it should never appear in the nav)
+        // AND
+        // 2. the tool is one of the following:
+        //    a. for customers and the user is a customer
+        //    b. for members and the user is a member
+        //    c. the active tool in the app (in case someone deep-links to it)
         const toolsRoutesForNav: Array<PlatformRoute> = toolsRoutes
             .filter(route =>
                 !route.hide
-                && (!route.customerOnly || !!profile?.isCustomer)
-                && (!route.memberOnly || !!profile?.isMember)
-                // TODO || tool is active PROD-2390
+                && (
+                    (
+                        (!route.customerOnly || !!profile?.isCustomer)
+                        && (!route.memberOnly || !!profile?.isMember)
+                    )
+                    || isActiveTool(location.pathname, route)
+                )
             )
         const utilsRoutes: Array<PlatformRoute> = props.utilsRoutes.filter(route => !route.disabled)
         allRoutes = [
@@ -61,7 +75,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
             getPath,
             getPathFromRoute,
             getRouteElement,
-            isActiveRoute: isActiveRoute(loggedInRoot, props.rootLoggedOut),
+            isActiveTool,
             isRootRoute: isRootRoute(loggedInRoot, props.rootLoggedOut),
             rootLoggedInRoute: loggedInRoot,
             rootLoggedOutRoute: props.rootLoggedOut,
@@ -133,26 +147,11 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
     )
 }
 
-function isActivePath(activePath: string, pathName: string, rootPath?: string): boolean {
-    return activePath?.startsWith(pathName)
-        && (pathName !== rootPath || activePath === rootPath)
-}
-
-function isActiveRoute(rootLoggedIn: string, rootLoggedOut: string):
-    (activePath: string, pathName: string, rootPath?: string) => boolean {
-
-    return (activePath: string, pathName: string, rootPath?: string) => {
-
-        let isActive: boolean = isActivePath(activePath, pathName, rootPath)
-
-        // if this is the root logged in route,
-        // also check the root logged out route
-        if (!isActive && pathName.startsWith(rootLoggedIn)) {
-            isActive = isActivePath(activePath, rootLoggedOut)
-        }
-
-        return isActive
-    }
+function isActiveTool(activePath: string, toolRoute: PlatformRoute): boolean {
+    return !!(
+        activePath.startsWith(toolRoute.route)
+        || toolRoute.alternativePaths?.some(path => activePath.startsWith(path))
+    )
 }
 
 function isRootRoute(rootLoggedIn: string, rootLoggedOut: string):

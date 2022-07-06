@@ -16,15 +16,15 @@ const ToolSelectorNarrow: FC<ToolSelectorNarrowProps> = (props: ToolSelectorNarr
 
     const {
         getPathFromRoute,
-        isActiveRoute,
+        isActiveTool,
     }: RouteContextData = useContext(routeContext)
+
     const toolRoute: PlatformRoute = props.route
     const toolPath: string = getPathFromRoute(toolRoute)
-
     const baseClass: string = 'tool-selector-narrow'
-    const isActive: boolean = isActiveRoute(useLocation().pathname, toolPath)
+    const isActive: boolean = isActiveTool(useLocation().pathname, toolRoute)
     const activeIndicaterClass: string = `${baseClass}-${isActive ? '' : 'in'}active`
-    const hasChildren: boolean = !!toolRoute.children.some(child => !!child.route && !isParamRoute(child.route))
+    const hasChildren: boolean = !!toolRoute.children?.some(child => !!child.route && !isParamRoute(child.route))
 
     return (
         <div className={styles[baseClass]}>

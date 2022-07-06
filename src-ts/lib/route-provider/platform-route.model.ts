@@ -1,4 +1,5 @@
 export interface PlatformRoute {
+    alternativePaths?: Array<string>
     children?: Array<PlatformRoute>
     customerOnly?: boolean
     disabled?: boolean
