@@ -110,7 +110,10 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem, isLoggedIn }) => 
         <Breadcrumb items={breadcrumbs} />
         <WebsiteDesignBannerLegacy />
         <PageContent>
-          <PageH2>PAGE DETAILS</PageH2>
+          <div className={styles["title-wrapper"]}>
+            <PageH2>PAGE DETAILS</PageH2>
+          </div>
+          <Progress level={4} setStep={setProgressItem} />
           <PageDivider />
 
           <PageDetailsForm
@@ -146,8 +149,6 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem, isLoggedIn }) => 
               </div>
             </div>
           </PageFoot>
-
-          <Progress level={4} setStep={setProgressItem} />
         </PageContent>
       </Page>
     </>

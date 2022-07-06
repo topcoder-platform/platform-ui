@@ -26,7 +26,7 @@ const ToolSelectorWide: FC<ToolSelectorWideProps> = (props: ToolSelectorWideProp
     const toolRoute: PlatformRoute = props.route
     const toolPath: string = getPathFromRoute(toolRoute)
 
-    const isActive: boolean = isActiveRoute(activePath, toolPath)
+    const isActive: boolean = isActiveRoute(activePath, toolRoute)
 
     const activeIndicatorClass: string = `tool-selector-wide-${isActive ? '' : 'in'}active`
 

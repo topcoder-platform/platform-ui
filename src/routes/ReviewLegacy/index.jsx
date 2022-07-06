@@ -216,7 +216,10 @@ const ReviewLegacy = ({
         <Breadcrumb items={breadcrumbs} />
         {banner}
         <PageContent styleName={styles["container"]}>
-          <PageH2>REVIEW & PAYMENT</PageH2>
+          <div className={styles["title-wrapper"]}>
+            <PageH2>REVIEW & PAYMENT</PageH2>
+          </div>
+          {showProgress && <Progress level={6} setStep={setProgressItem} />}
           <PageDivider />
           <ServicePrice
             hideTitle
@@ -228,23 +231,23 @@ const ReviewLegacy = ({
             serviceType={workType?.selectedWorkTypeDetail}
           />
           {secondaryBanner}
-          {introText && <div className={["infoAlert"]}>{introText}</div>}
+          {introText && <div className={styles["infoAlert"]}>{introText}</div>}
           <PageDivider />
-          <div className={["splitView"]}>
-            <div className={["reviewContainer"]}>
+          <div className={styles["splitView"]}>
+            <div className={styles["reviewContainer"]}>
               <ReviewTableLegacy
                 formData={intakeFormData}
                 enableEdit={enableEdit}
               />
-              <div className={["hideMobile"]}>
+              <div className={styles["hideMobile"]}>
                 <AboutYourProject />
               </div>
             </div>
-            <div className={["paymentWrapper"]}>
-              <div className={["paymentBox"]}>
-                <div className={["total"]}>
+            <div className={styles["paymentWrapper"]}>
+              <div className={styles["paymentBox"]}>
+                <div className={styles["total"]}>
                   {estimate.stickerPrice && (
-                    <span className={["originalPrice"]}>
+                    <span className={styles["originalPrice"]}>
                       {currencyFormat(estimate.stickerPrice)}
                     </span>
                   )}
@@ -298,7 +301,6 @@ const ReviewLegacy = ({
               </div>
             </div>
           </PageFoot>
-          {showProgress && <Progress level={6} setStep={setProgressItem} />}
         </PageContent>
       </Page>
     </>

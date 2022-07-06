@@ -174,7 +174,10 @@ const BasicInfoLegacy = ({
         <Breadcrumb items={breadcrumbs} />
         <WebsiteDesignBannerLegacy />
         <PageContent styleName={styles["container"]}>
-          <PageH2>BASIC INFO</PageH2>
+          <div className={styles["title-wrapper"]}>
+            <PageH2>BASIC INFO</PageH2>
+          </div>
+          <Progress level={2} setStep={setProgressItem} />
           <PageDivider />
 
           <BasicInfoFormLegacy
@@ -222,8 +225,6 @@ const BasicInfoLegacy = ({
               </div>
             </div>
           </PageFoot>
-
-          <Progress level={2} setStep={setProgressItem} />
         </PageContent>
       </Page>
     </>
