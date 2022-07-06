@@ -17,13 +17,13 @@ import WebsiteDesignPdf1 from "../assets/pdf/WebDesign-1.pdf";
 import WebsiteDesignPdf2 from "../assets/pdf/WebDesign-2.pdf";
 import styles from "./styles.module.scss";
 
-import { ReactComponent as MyWorkActiveIcon} from "../assets/images/icon-my-work-active.svg";
+import { ReactComponent as MyWorkActiveIcon } from "../assets/images/icon-my-work-active.svg";
 import exampleImage1 from "../assets/images/design-example-image1.png";
 import exampleImage2 from "../assets/images/design-example-image2.png";
-import { ReactComponent as MyWorkIcon} from "../assets/images/icon-my-work.svg";
+import { ReactComponent as MyWorkIcon } from "../assets/images/icon-my-work.svg";
 import PageUl from "../components/PageElements/PageUl";
 import PageP from "../components/PageElements/PageP";
-import { ReactComponent as copyFileIcon} from "../assets/images/icon-copy-file.svg";
+import { ReactComponent as copyFileIcon } from "../assets/images/icon-copy-file.svg";
 import workUtil from "../utils/work";
 
 import * as dataExplorationConfigs from "./products/DataExploration";
@@ -47,21 +47,21 @@ export const ROUTES = {
   INTAKE_FORM: "/self-service/wizard",
   HOME_PAGE: "/self-service",
   DASHBOARD_PAGE: "/work/dashboard",
-  WEBSITE_DESIGN: "/self-service/work/new/website-design-new/basic-info",
-  WEBSITE_DESIGN_REVIEW: "/self-service/work/new/website-design-new/review",
+  WEBSITE_DESIGN: "/self-service/work/new/website-design/basic-info",
+  WEBSITE_DESIGN_REVIEW: "/self-service/work/new/website-design/review",
   DATA_EXPLORATION: "/self-service/work/new/data-exploration/basic-info",
   DATA_EXPLORATION_REVIEW: "/self-service/work/new/data-exploration/review",
   PROBLEM_STATEMENT: "/self-service/work/new/data-advisory/basic-info",
   PROBLEM_STATEMENT_REVIEW: "/self-service/work/new/data-advisory/review",
   FIND_ME_DATA: "/self-service/work/new/find-me-data/basic-info",
   FIND_ME_DATA_REVIEW: "/self-service/work/new/find-me-data/review",
-  WEBSITE_DESIGN_LEGACY: "/self-service/work/new/website-design/basic-info",
+  WEBSITE_DESIGN_LEGACY: "/self-service/work/new/website-design-legacy/basic-info",
   WEBSITE_DESIGN_PURPOSE_LEGACY:
-    "/self-service/work/new/website-design/website-purpose",
+    "/self-service/work/new/website-design-legacy/website-purpose",
   WEBSITE_DESIGN_PAGE_DETAILS_LEGACY:
-    "/self-service/work/new/website-design/page-details",
+    "/self-service/work/new/website-design-legacy/page-details",
   WEBSITE_DESIGN_BRANDING_LEGACY:
-    "/self-service/work/new/website-design/branding",
+    "/self-service/work/new/website-design-legacy/branding",
 };
 
 /**
@@ -267,7 +267,7 @@ export const projectAndProfessionalWork = {
 export const webWorkTypes = [
   {
     type: WorkType.designLegacy,
-    title: "Website Design",
+    title: "Website Design (Legacy)",
     duration: `${webDesignLegacyConfigs.DEFAULT_DURATION} Days`,
     description:
       "Create a beautiful custom visual design for your website. Specify the scope and device types, your vision, and receive up to 5 modern designs.",
@@ -277,14 +277,14 @@ export const webWorkTypes = [
       "​​Create a beautiful custom visual design for your website. Specify the scope and device types, your vision, and receive up to 5 modern designs.",
     price: workPriceDesignLegacy.getPrice(workPriceDesignLegacy),
     stickerPrice: workPriceDesignLegacy.base,
-    featured: true,
-    startRoute: "/self-service/work/new/website-design/basic-info",
-    basePath: "website-design",
+    featured: false,
+    startRoute: "/self-service/work/new/website-design-legacy/basic-info",
+    basePath: "website-design-legacy",
     bgImage: imgProductWebsiteDesign,
   },
   {
     type: WorkType.design,
-    title: "Website Design (NEW)",
+    title: "Website Design",
     subTitle:
       "Create a beautiful custom visual design for your website. Specify the scope and device types, your vision, and receive up to 5 modern designs.",
     shortDescription: "Create Custom Website Designs that Wow",
@@ -295,8 +295,8 @@ export const webWorkTypes = [
     // stickerPrice: workPriceDesign.base,
     duration: `${webDesignConfigs.DEFAULT_DURATION} Days`,
     featured: true,
-    startRoute: "/self-service/work/new/website-design-new/basic-info",
-    basePath: "website-design-new",
+    startRoute: "/self-service/work/new/website-design/basic-info",
+    basePath: "website-design",
     helperBannerTitle: "WHAT WILL I RECEIVE?",
     bgImage: imgProductWebsiteDesign,
     helperBannerContent: (
@@ -311,11 +311,11 @@ export const webWorkTypes = [
           </PageP>
           <div className={styles["sampleImages"]}>
             <a href={WebsiteDesignPdf1} target="_blank" rel="noreferrer">
-              <img className={styles["imgBanner"]} src={exampleImage1} alt="Example 1"/>
+              <img className={styles["imgBanner"]} src={exampleImage1} alt="Example 1" />
             </a>
             &nbsp;
             <a href={WebsiteDesignPdf2} target="_blank" rel="noreferrer">
-              <img src={exampleImage2} alt="Example2"/>
+              <img src={exampleImage2} alt="Example2" />
             </a>
           </div>
         </div>

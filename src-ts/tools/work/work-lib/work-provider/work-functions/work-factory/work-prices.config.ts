@@ -10,17 +10,17 @@ export const WorkPrices: { [workType: string]: WorkPrice } = {
     },
     [WorkType.design]: {
         base: 499,
-        getPrice: getPriceDesign,
+        getPrice: getPriceDefault,
         perPage: 99,
         promo: 299,
         usePromo: false,
     },
     [WorkType.designLegacy]: {
         base: 398,
-        getPrice: getPriceDesign,
+        getPrice: getPriceDesignLegacy,
         perPage: 99,
         promo: 100,
-        usePromo: false,
+        usePromo: true,
     },
     [WorkType.findData]: {
         base: 399,
@@ -51,10 +51,11 @@ function getPriceDefault(price: WorkPrice): number {
     return price.usePromo && price.promo ? price.promo : price.base
 }
 
-function getPriceDesign(price: WorkPrice, pageCount?: number, deviceCount?: number): number {
+function getPriceDesignLegacy(price: WorkPrice, pageCount?: number, deviceCount?: number): number {
     const safePageCount: number = pageCount || 1
     const safeDeviceCount: number = deviceCount || 1
-    return (price.promo || 1)
+    const basePrice: number = getPriceDefault(price)
+    return (basePrice || 1)
         + (safePageCount * (price.perPage || 1))
         + (safePageCount * (safeDeviceCount - 1) * (price.perPage || 1))
 }

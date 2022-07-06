@@ -46,6 +46,7 @@ const BasicInfoLegacy = ({
   savePageDetails,
   toggleSupportModal,
   saveWorkType,
+  isLoggedIn,
 }) => {
   const [formData, setFormData] = useState({
     projectTitle: { title: "Project Title", option: "", value: "" },
@@ -77,7 +78,7 @@ const BasicInfoLegacy = ({
   const onNext = () => {
     setProgressItem(3);
     saveBasicInfo(formData);
-    navigate("/self-service/work/new/website-design/website-purpose");
+    navigate("/self-service/work/new/website-design-legacy/website-purpose");
   };
 
   const updateNumOfPages = (newNumOfPages) => {
@@ -118,10 +119,10 @@ const BasicInfoLegacy = ({
 
     if (currentStep === 0) {
       saveWorkType({
-        selectedWorkType: "Website Design",
-        selectedWorkTypeDetail: "Website Design",
+        selectedWorkType: "Website Design Legacy",
+        selectedWorkTypeDetail: "Website Design Legacy",
       });
-      dispatch(triggerAutoSave(true));
+      dispatch(triggerAutoSave(true, isLoggedIn));
     }
 
     if (basicInfo && basicInfo?.projectTitle?.value.length > 0) {
@@ -131,7 +132,7 @@ const BasicInfoLegacy = ({
     setFirstMounted(false);
 
     return () => {
-      dispatch(triggerAutoSave(true));
+      dispatch(triggerAutoSave(true, isLoggedIn));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [basicInfo, currentStep, dispatch, setProgressItem, firstMounted]);
@@ -172,8 +173,11 @@ const BasicInfoLegacy = ({
       <Page>
         <Breadcrumb items={breadcrumbs} />
         <WebsiteDesignBannerLegacy />
-        <PageContent styleName="container">
-          <PageH2>BASIC INFO</PageH2>
+        <PageContent styleName={styles["container"]}>
+          <div className={styles["title-wrapper"]}>
+            <PageH2>BASIC INFO</PageH2>
+          </div>
+          <Progress level={2} setStep={setProgressItem} />
           <PageDivider />
 
           <BasicInfoFormLegacy
@@ -221,8 +225,6 @@ const BasicInfoLegacy = ({
               </div>
             </div>
           </PageFoot>
-
-          <Progress level={2} setStep={setProgressItem} />
         </PageContent>
       </Page>
     </>

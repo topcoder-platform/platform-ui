@@ -26,7 +26,7 @@ import { Breadcrumb } from "../../../src-ts";
 /**
  * Website Purpose Page
  */
-const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem }) => {
+const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem, isLoggedIn }) => {
 
   const navigate = useNavigate()
 
@@ -54,12 +54,12 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem }) => {
     formData?.userStory?.value.length;
 
   const onBack = () => {
-    navigate("/self-service/work/new/website-design/basic-info");
+    navigate("/self-service/work/new/website-design-legacy/basic-info");
   };
 
   const onNext = () => {
     saveWebsitePurpose(formData);
-    navigate("/self-service/work/new/website-design/page-details");
+    navigate("/self-service/work/new/website-design-legacy/page-details");
     setProgressItem(4);
   };
 
@@ -82,9 +82,9 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem }) => {
     setFirstMounted(false);
 
     return () => {
-      dispatch(triggerAutoSave(true));
+      dispatch(triggerAutoSave(true, isLoggedIn));
     };
-  }, [currentStep, websitePurpose, dispatch, setProgressItem, firstMounted, navigate]);
+  }, [currentStep, websitePurpose, dispatch, setProgressItem, firstMounted, navigate, isLoggedIn]);
 
   const breadcrumbs = [
     { url: ROUTES.DASHBOARD_PAGE, name: "My work" },
@@ -106,7 +106,10 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem }) => {
         <Breadcrumb items={breadcrumbs} />
         <WebsiteDesignBannerLegacy />
         <PageContent>
-          <PageH2>WEBSITE PURPOSE</PageH2>
+          <div className={styles["title-wrapper"]}>
+            <PageH2>WEBSITE PURPOSE</PageH2>
+          </div>
+          <Progress level={3} setStep={setProgressItem} />
           <PageDivider />
 
           <WebsitePurposeForm
@@ -142,8 +145,6 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem }) => {
               </div>
             </div>
           </PageFoot>
-
-          <Progress level={3} setStep={setProgressItem} />
         </PageContent>
       </Page>
     </>

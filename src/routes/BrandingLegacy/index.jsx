@@ -26,7 +26,7 @@ import styles from "./styles.module.scss";
 /**
  * Branding Page
  */
-const BrandingLegacy = ({ saveBranding, setProgressItem }) => {
+const BrandingLegacy = ({ saveBranding, setProgressItem, isLoggedIn }) => {
 
   const navigate = useNavigate()
 
@@ -89,9 +89,9 @@ const BrandingLegacy = ({ saveBranding, setProgressItem }) => {
     setFirstMounted(false);
 
     return () => {
-      dispatch(triggerAutoSave(true));
+      dispatch(triggerAutoSave(true, isLoggedIn));
     };
-  }, [currentStep, branding, dispatch, setProgressItem, firstMounted, navigate]);
+  }, [currentStep, branding, dispatch, setProgressItem, firstMounted, navigate, isLoggedIn]);
 
   const isFormValid =
     formData?.theme?.value &&
@@ -104,11 +104,11 @@ const BrandingLegacy = ({ saveBranding, setProgressItem }) => {
       formData?.fontUrl.value.trim() !== "");
 
   const onBack = () => {
-    navigate("/self-service/work/new/website-design/page-details");
+    navigate("/self-service/work/new/website-design-legacy/page-details");
   };
 
   const onNext = () => {
-    navigate("/self-service/work/new/website-design/review");
+    navigate("/self-service/work/new/website-design-legacy/review");
     saveBranding(formData);
     setProgressItem(6);
   };
@@ -135,7 +135,10 @@ const BrandingLegacy = ({ saveBranding, setProgressItem }) => {
         <Breadcrumb items={breadcrumbs} />
         <WebsiteDesignBannerLegacy />
         <PageContent>
-          <PageH2>BRANDING</PageH2>
+          <div className={styles["title-wrapper"]}>
+            <PageH2>BRANDING</PageH2>
+          </div>
+          <Progress level={5} setStep={setProgressItem} />
           <PageDivider />
 
           <BrandingForm
@@ -170,8 +173,6 @@ const BrandingLegacy = ({ saveBranding, setProgressItem }) => {
               </div>
             </div>
           </PageFoot>
-
-          <Progress level={5} setStep={setProgressItem} />
         </PageContent>
       </Page>
     </>

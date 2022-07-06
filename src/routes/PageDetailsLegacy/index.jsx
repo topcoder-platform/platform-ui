@@ -27,7 +27,7 @@ import styles from "./styles.module.scss";
 /**
  * Page Details Page
  */
-const PageDetailsLegacy = ({ savePageDetails, setProgressItem }) => {
+const PageDetailsLegacy = ({ savePageDetails, setProgressItem, isLoggedIn }) => {
 
   const navigate = useNavigate()
   const [isLoading] = useState(false);
@@ -47,7 +47,7 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem }) => {
   const estimate = getDynamicPriceAndTimelineEstimate(fullState);
 
   const onBack = () => {
-    navigate("/self-service/work/new/website-design/website-purpose");
+    navigate("/self-service/work/new/website-design-legacy/website-purpose");
   };
 
   const [firstMounted, setFirstMounted] = useState(true);
@@ -69,12 +69,12 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem }) => {
     setFirstMounted(false);
 
     return () => {
-      dispatch(triggerAutoSave(true));
+      dispatch(triggerAutoSave(true, isLoggedIn));
     };
-  }, [currentStep, pageDetails, dispatch, setProgressItem, firstMounted, navigate]);
+  }, [currentStep, pageDetails, dispatch, setProgressItem, firstMounted, navigate, isLoggedIn]);
 
   const onNext = () => {
-    navigate("/self-service/work/new/website-design/login-prompt");
+    navigate("/self-service/work/new/website-design-legacy/login-prompt");
     savePageDetails(listInputs);
     setProgressItem(5);
   };
@@ -110,7 +110,10 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem }) => {
         <Breadcrumb items={breadcrumbs} />
         <WebsiteDesignBannerLegacy />
         <PageContent>
-          <PageH2>PAGE DETAILS</PageH2>
+          <div className={styles["title-wrapper"]}>
+            <PageH2>PAGE DETAILS</PageH2>
+          </div>
+          <Progress level={4} setStep={setProgressItem} />
           <PageDivider />
 
           <PageDetailsForm
@@ -146,8 +149,6 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem }) => {
               </div>
             </div>
           </PageFoot>
-
-          <Progress level={4} setStep={setProgressItem} />
         </PageContent>
       </Page>
     </>

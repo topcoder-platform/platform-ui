@@ -46,7 +46,7 @@ export default function IntakeForm() {
       event.preventDefault();
       event.returnValue = "";
     }
-    dispatch(triggerAutoSave(true));
+    dispatch(triggerAutoSave(true, isLoggedIn));
   };
 
   useEffect(() => {
@@ -182,20 +182,20 @@ export default function IntakeForm() {
             path="/work/new/find-me-data/*"
           />
 
-          {/* Web Design (NEW) */}
+          {/* Web Design*/}
           <Route
             element={<WebsiteDesign isLoggedIn={isLoggedIn} />}
-            path="/work/new/website-design-new/*"
+            path="/work/new/website-design/*"
           />
 
           {/* Web Design (Legacy) */}
           <Route
             element={<WebsiteDesignLegacy isLoggedIn={isLoggedIn} />}
-            path="/work/new/website-design/*"
+            path="/work/new/website-design-legacy/*"
           />
 
           <Route
-            element={<SelectWorkType />}
+            element={<SelectWorkType isLoggedIn={isLoggedIn} />}
             path="/wizard"
           />
         </Routes>

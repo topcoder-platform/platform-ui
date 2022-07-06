@@ -36,8 +36,8 @@ export default function WebsiteDesign({ isLoggedIn }) {
       <Route
         element={<LoginPrompt
           isLoggedIn={isLoggedIn}
-          previousPageUrl="/self-service/work/new/website-design-new/basic-info"
-          nextPageUrl="/self-service/work/new/website-design-new/review"
+          previousPageUrl="/self-service/work/new/website-design/basic-info"
+          nextPageUrl="/self-service/work/new/website-design/review"
         />}
         path="/login-prompt"
       />
@@ -56,16 +56,17 @@ export default function WebsiteDesign({ isLoggedIn }) {
               {helperBannerContent}
             </HelpBanner>
           }
-          previousPageUrl="/self-service/work/new/website-design-new/basic-info"
+          previousPageUrl="/self-service/work/new/website-design/basic-info"
           nextPageUrl={
             isLoggedIn
-              ? "/self-service/work/new/website-design-new/thank-you"
+              ? "/self-service/work/new/website-design/thank-you"
               : config.SIGN_IN_URL
           }
           icon={<DataExplorationIcon />}
           showIcon
           workItemConfig={websiteDesign}
           breadcrumb={websiteDesign.breadcrumbs.review}
+          isLoggedIn={isLoggedIn}
         />}
         path="/review"
       />

@@ -37,16 +37,16 @@ const LoginPrompt = ({
   }, [isLoggedIn]);
 
   const onLogin = () => {
-    navigate(config.SIGN_IN_URL);
+    window.location.href = config.SIGN_IN_URL
   };
 
-  const onSingUp = () => {
-    navigate(config.SIGN_UP_URL);
+  const onSignUp = () => {
+    window.location.href = config.SIGN_UP_URL
   };
 
   const onBack = () => {
     navigate(
-      previousPageUrl || "/self-service/work/new/website-design/page-details"
+      previousPageUrl || "/self-service/work/new/website-design-legacy/page-details"
     );
   };
 
@@ -70,7 +70,7 @@ const LoginPrompt = ({
                   LOG IN
                 </Button>
                 <span className={styles["separator"]}>OR</span>
-                <Button size={BUTTON_SIZE.MEDIUM} onClick={onSingUp}>
+                <Button size={BUTTON_SIZE.MEDIUM} onClick={onSignUp}>
                   SIGN UP
                 </Button>
               </div>

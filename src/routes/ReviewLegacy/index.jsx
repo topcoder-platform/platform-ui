@@ -59,6 +59,7 @@ const ReviewLegacy = ({
   showIcon,
   enableEdit = true,
   secondaryBanner,
+  isLoggedIn,
 }) => {
 
   const dispatch = useDispatch();
@@ -101,9 +102,9 @@ const ReviewLegacy = ({
     setFirstMounted(false);
 
     return () => {
-      dispatch(triggerAutoSave(true));
+      dispatch(triggerAutoSave(true, isLoggedIn));
     };
-  }, [currentStep, formData, dispatch, setProgressItem, firstMounted, navigate]);
+  }, [currentStep, formData, dispatch, setProgressItem, firstMounted, navigate, isLoggedIn]);
 
   const [anotherFirstMounted, setAnotherFirstMounted] = useState(true);
   useEffect(() => {
@@ -119,7 +120,7 @@ const ReviewLegacy = ({
   }, [currentStep, anotherFirstMounted, navigate]);
 
   const onBack = () => {
-    navigate("/self-service/work/new/website-design/branding");
+    navigate("/self-service/work/new/website-design-legacy/branding");
   };
 
   const clearPreviousForm = () => {
@@ -166,7 +167,7 @@ const ReviewLegacy = ({
       .then((res) => {
         activateChallenge(challengeId);
         clearPreviousForm();
-        navigate("/self-service/work/new/website-design/thank-you");
+        navigate("/self-service/work/new/website-design-legacy/thank-you");
         setProgressItem(8);
         setPaymentFailed(false);
       })
@@ -214,8 +215,11 @@ const ReviewLegacy = ({
       <Page>
         <Breadcrumb items={breadcrumbs} />
         {banner}
-        <PageContent styleName="container">
-          <PageH2>REVIEW & PAYMENT</PageH2>
+        <PageContent styleName={styles["container"]}>
+          <div className={styles["title-wrapper"]}>
+            <PageH2>REVIEW & PAYMENT</PageH2>
+          </div>
+          {showProgress && <Progress level={6} setStep={setProgressItem} />}
           <PageDivider />
           <ServicePrice
             hideTitle
@@ -227,23 +231,23 @@ const ReviewLegacy = ({
             serviceType={workType?.selectedWorkTypeDetail}
           />
           {secondaryBanner}
-          {introText && <div className={["infoAlert"]}>{introText}</div>}
+          {introText && <div className={styles["infoAlert"]}>{introText}</div>}
           <PageDivider />
-          <div className={["splitView"]}>
-            <div className={["reviewContainer"]}>
+          <div className={styles["splitView"]}>
+            <div className={styles["reviewContainer"]}>
               <ReviewTableLegacy
                 formData={intakeFormData}
                 enableEdit={enableEdit}
               />
-              <div className={["hideMobile"]}>
+              <div className={styles["hideMobile"]}>
                 <AboutYourProject />
               </div>
             </div>
-            <div className={["paymentWrapper"]}>
-              <div className={["paymentBox"]}>
-                <div className={["total"]}>
+            <div className={styles["paymentWrapper"]}>
+              <div className={styles["paymentBox"]}>
+                <div className={styles["total"]}>
                   {estimate.stickerPrice && (
-                    <span className={["originalPrice"]}>
+                    <span className={styles["originalPrice"]}>
                       {currencyFormat(estimate.stickerPrice)}
                     </span>
                   )}
@@ -297,7 +301,6 @@ const ReviewLegacy = ({
               </div>
             </div>
           </PageFoot>
-          {showProgress && <Progress level={6} setStep={setProgressItem} />}
         </PageContent>
       </Page>
     </>
