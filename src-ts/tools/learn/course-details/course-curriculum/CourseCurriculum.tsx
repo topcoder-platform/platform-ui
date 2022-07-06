@@ -11,7 +11,7 @@ import {
     LearnMyCertificationProgress,
     MyCertificationProgressStatus
 } from '../../learn-lib'
-import { getFccLessonPath } from '../../learn.routes'
+import { getFccLessonPath, LEARN_PATHS } from '../../learn.routes'
 
 import styles from './CourseCurriculum.module.scss'
 import { CurriculumSummary } from './curriculum-summary'
@@ -78,6 +78,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
                     <Button
                         buttonStyle='link'
                         label='See all my learning'
+                        route={LEARN_PATHS.myLearning}
                     />
                 </div>
             )}
