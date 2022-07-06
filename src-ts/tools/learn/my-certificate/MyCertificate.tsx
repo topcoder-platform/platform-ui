@@ -21,8 +21,8 @@ import { getCoursePath } from '../learn.routes'
 
 import { ActionButton } from './action-button'
 import { Certificate } from './certificate'
-import { useCertificateScaling } from './use-certificate-scaling.hook'
 import styles from './MyCertificate.module.scss'
+import { useCertificateScaling } from './use-certificate-scaling.hook'
 
 const MyCertificate: FC<{}> = () => {
 

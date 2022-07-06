@@ -1,9 +1,9 @@
 import {
-    MouseEventHandler,
     MouseEvent as RMouseEvent,
+    MouseEventHandler,
     MutableRefObject,
-    useRef,
-    useCallback
+    useCallback,
+    useRef
 } from 'react'
 
 export interface UseHoverElementValue {
