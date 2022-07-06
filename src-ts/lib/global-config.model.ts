@@ -16,5 +16,10 @@ export interface GlobalConfig {
     TAG_MANAGER_ID?: string
     URL: {
         ACCOUNTS_APP_CONNECTOR: string
+    },
+    TOPCODER_URLS: {
+        USER_PROFILE: string,
+        CHALLENGES_PAGE: string,
+        GIGS_PAGE: string,
     }
 }

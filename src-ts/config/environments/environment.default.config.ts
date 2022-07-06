@@ -2,6 +2,8 @@ import { GlobalConfig } from '../../lib'
 
 import { AppHostEnvironment } from './app-host-environment.enum'
 
+const COMMUNITY_WEBSITE: string = 'https://www.topcoder.com'
+
 export const EnvironmentConfigDefault: GlobalConfig = {
     API: {
         FORUM_ACCESS_TOKEN: 'va.JApNvUOx3549h20I6tnl1kOQDc75NDIp.0jG3dA.EE3gZgV',
@@ -20,4 +22,9 @@ export const EnvironmentConfigDefault: GlobalConfig = {
     URL: {
         ACCOUNTS_APP_CONNECTOR: 'https://accounts-auth0.topcoder-dev.com',
     },
+    TOPCODER_URLS: {
+        USER_PROFILE: `${COMMUNITY_WEBSITE}/members`,
+        CHALLENGES_PAGE: `${COMMUNITY_WEBSITE}/challenges`,
+        GIGS_PAGE: `${COMMUNITY_WEBSITE}/gigs`,
+    }
 }
