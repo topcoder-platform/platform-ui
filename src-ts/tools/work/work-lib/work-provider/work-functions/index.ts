@@ -19,9 +19,11 @@ export {
     workPriceDesignLegacy,
     workPriceFindData,
     workPriceProblem,
+    WorkPrices,
     WorkStatusFilter,
     WorkTypeConfigs,
 } from './work-store'
+export type { WorkPricesType } from './work-store'
 export * from './work-by-status.model'
 export {
     deleteAsync as workDeleteAsync,

@@ -59,6 +59,8 @@ export const WorkPrices: { [workType: string]: WorkPrice } = {
     },
 }
 
+export type WorkPricesType = typeof WorkPrices
+
 export const bugHunt: WorkPrice = WorkPrices[WorkType.bugHunt]
 export const data: WorkPrice = WorkPrices[WorkType.data]
 export const design: WorkPrice = WorkPrices[WorkType.design]
