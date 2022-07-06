@@ -19,12 +19,12 @@ export const EnvironmentConfigDefault: GlobalConfig = {
     },
     REAUTH_OFFSET: 55,
     TAG_MANAGER_ID: undefined,
+    TOPCODER_URLS: {
+        CHALLENGES_PAGE: `${COMMUNITY_WEBSITE}/challenges`,
+        GIGS_PAGE: `${COMMUNITY_WEBSITE}/gigs`,
+        USER_PROFILE: `${COMMUNITY_WEBSITE}/members`,
+    },
     URL: {
         ACCOUNTS_APP_CONNECTOR: 'https://accounts-auth0.topcoder-dev.com',
     },
-    TOPCODER_URLS: {
-        USER_PROFILE: `${COMMUNITY_WEBSITE}/members`,
-        CHALLENGES_PAGE: `${COMMUNITY_WEBSITE}/challenges`,
-        GIGS_PAGE: `${COMMUNITY_WEBSITE}/gigs`,
-    }
 }

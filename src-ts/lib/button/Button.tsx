@@ -21,10 +21,10 @@ export interface ButtonProps {
     readonly route?: string
     readonly size?: ButtonSize
     readonly tabIndex?: number
+    readonly target?: string
     readonly title?: string
     readonly type?: ButtonType
     readonly url?: string
-    readonly target?: string
 }
 
 const Button: FC<ButtonProps> = (props: ButtonProps) => {
