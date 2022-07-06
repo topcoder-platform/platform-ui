@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { FC } from 'react'
+import { FC, MutableRefObject } from 'react'
 
 import { CertificateBgPattern } from './certificate-bg-pattern'
 import { CertificateTrackType } from './certificate-track-type.enum'
@@ -12,6 +12,7 @@ import { ReactComponent as FccLogoSvg } from './vendor-fcc-logo.svg'
 interface CertificateProps {
     completedDate?: string
     course?: string
+    elRef?: MutableRefObject<HTMLElement|any>
     provider?: string
     tcHandle?: string
     userName?: string
@@ -21,11 +22,11 @@ const Certificate: FC<CertificateProps> = (props: CertificateProps) => {
     const certificateType: CertificateTrackType = 'DEV'
 
     return (
-        <div className={styles['wrap']}>
+        <div className={styles['wrap']} ref={props.elRef}>
             <div className={classNames(styles['details'], `theme-${certificateType.toLowerCase()}`)}>
-                <h2 className='details'>Topcoder Academy</h2>
+                <h2 className='details grad'>Topcoder Academy</h2>
                 <h3>Certificate of Course Completion</h3>
-                <h1 className={styles['username']}>
+                <h1 className={classNames(styles['username'], 'grad')}>
                     {props.userName}
                 </h1>
                 <div className={classNames('large-subtitle', styles['tc-handle'])}>

@@ -21,7 +21,7 @@ import {
     useCoursesProvider,
     useMyCertificationProgress
 } from '../learn-lib'
-import { getCoursePath } from '../learn.routes'
+import { getCertificatePath, getCoursePath } from '../learn.routes'
 
 import styles from './CourseCompletedPage.module.scss'
 import { ReactComponent as StarsSvg } from './stars.svg'
@@ -126,7 +126,7 @@ const CourseCompletedPage: FC<{}> = () => {
                                         size='sm'
                                         buttonStyle='secondary'
                                         label='View certificate'
-                                        route={`/learn/${courseData.certification}/certificate`}
+                                        route={getCertificatePath(courseData.provider, courseData.certification)}
                                     />
                                     <Button
                                         size='sm'

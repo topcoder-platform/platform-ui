@@ -12,6 +12,10 @@ export function getCoursePath(provider: string, certification: string): string {
     return `${rootRoute}/${provider}/${certification}`
 }
 
+export function getCertificatePath(provider: string, certification: string): string {
+    return `/learn/${provider}/${certification}/certificate`
+}
+
 export function getFccLessonPath(
     provider: string,
     certification: string,
