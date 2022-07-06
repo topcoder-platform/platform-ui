@@ -2,4 +2,4 @@ export {
     fileCreateFromCanvas,
     fileDownloadBlob,
     fileDownloadCanvasAsImage,
-} from './file.functions';
+} from './file.functions'

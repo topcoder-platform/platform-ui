@@ -15,7 +15,8 @@
 
 .aside {
     flex: 0 0 auto;
-    width: 560px;
+    max-width: 560px;
+    width: 40%;
 }
 
 .description {

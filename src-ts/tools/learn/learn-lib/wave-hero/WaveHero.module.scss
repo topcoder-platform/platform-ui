@@ -16,17 +16,26 @@
     &-inner {
         padding: calc($pad-xxxxl + $pad-sm) 0 $pad-lg;
         @include contentWidth;
+
+        @include ltelg {
+            padding-bottom: $pad-mx;
+        }
     }
 
     &-content {
         display: flex;
-        gap: 80px;
+        gap: calc($pad-mx * 2);
 
         color: $tc-white;
+
+        @include ltelg {
+            gap: $pad-mx;
+            flex-direction: column;
+        }
     }
     
-    &-col {
-        flex: 1 1 auto;
+    &-card-col {
+        flex: 0 0 auto;
     }
     
     &-text {

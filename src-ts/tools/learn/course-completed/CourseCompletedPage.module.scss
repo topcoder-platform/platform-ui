@@ -47,6 +47,7 @@
     padding: $pad-mx 0 $pad-xxxxl;
     position: relative;
     flex: 1;
+    @include contentWidth;
     max-width: 1000px;
     margin: 0 auto;
     

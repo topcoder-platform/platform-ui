@@ -16,14 +16,14 @@ const WaveHero: FC<WaveHeroProps> = (props: WaveHeroProps) => {
         <div className={classNames(styles['hero-wrap'], props.theme)}>
             <div className={styles['hero-inner']}>
                 <div className={styles['hero-content']}>
-                    <div className={styles['hero-col']}>
+                    <div className={styles['hero-text-col']}>
                         <h1>{props.title}</h1>
                         <p className={styles['hero-text']}>
                             {props.text}
                         </p>
                     </div>
                     {props.children && (
-                        <div className={styles['hero-col']}>
+                        <div className={classNames(styles['hero-card-col'], 'hero-card-col')}>
                             {props.children}
                         </div>
                     )}

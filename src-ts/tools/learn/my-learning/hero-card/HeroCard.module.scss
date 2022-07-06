@@ -10,7 +10,11 @@
     display: flex;
     flex-direction: column;
     gap: $pad-sm;
-    width: 475px;
+    width: 100%;
+
+    :global(.button.link) {
+        white-space: initial;
+    }
 }
 
 .line {

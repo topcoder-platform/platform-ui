@@ -24,6 +24,7 @@
 }
 
 .title-tag {
+    display: inline-block;
     color: $blue-140;
     background: $tc-white;
     padding: calc($border + $border-xs) $pad-xs;
@@ -31,6 +32,8 @@
     text-transform: uppercase;
     line-height: 10px;
     margin-top: $pad-xs;
+    margin-right: calc($pad-sm + $border);
+
 }
 
 .chevron {

@@ -1,8 +1,13 @@
 import classNames from 'classnames'
 import { Dispatch, FC, MutableRefObject, ReactNode, SetStateAction, useCallback, useEffect, useRef, useState } from 'react'
 
-import { useClickOutside, UseHoverElementValue, useOnHoverElement } from '../functions'
-import { useWindowSize, WindowSize } from '../hooks/use-window-size.hook'
+import {
+    useClickOutside,
+    UseHoverElementValue,
+    useOnHoverElement,
+    useWindowSize,
+    WindowSize
+} from '../hooks'
 import { Portal } from '../portal'
 import { TooltipArrowIcon } from '../svgs'
 

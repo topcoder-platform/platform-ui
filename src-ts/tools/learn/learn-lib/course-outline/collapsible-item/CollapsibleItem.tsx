@@ -64,12 +64,12 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
         <div className={classNames(styles['wrap'], isOpen ? 'is-open' : 'collapsed')}>
             <div className={styles['title-row']} onClick={toggle}>
                 <StatusIcon completed={isCompleted} partial={isPartial} />
-                {isAssessment && (
-                    <div className={classNames(styles['title-tag'], 'label')}>
-                        assessment
-                    </div>
-                )}
                 <span className={styles['title']}>
+                    {isAssessment && (
+                        <div className={classNames(styles['title-tag'], 'label')}>
+                            assessment
+                        </div>
+                    )}
                     {props.title}
                 </span>
                 <span className={styles['chevron']}>

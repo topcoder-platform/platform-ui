@@ -1,17 +1,41 @@
 @import '../../../lib/styles/includes';
 
-.courses {
-    &-section {
-        padding: $pad-xxxxl 0;
-        position: relative;
+.hero-wrap {
+    :global(.hero-card-col) {
+        width: 43.5%;
+        max-width: 600px;
+        
+        @include ltelg {
+            width: 100%;
+            max-width: none;
+        }
+    }
+}
+
+.courses-section {
+    padding: $pad-xxxxl 0;
+    position: relative;
+}
+
+.courses-list {
+    margin-top: $pad-lg;
+
+    flex-wrap: wrap;
+    gap: $pad-lg;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+
+    // NOTE: these are not app defined breakpoints
+    // but they are required for the grid to look at it's best
+    @media (max-width: 1200px) {
+        grid-template-columns: repeat(3, 1fr);
     }
 
-
-    &-list {
-        margin-top: $pad-lg;
-
-        display: flex;
-        flex-wrap: wrap;
-        gap: $pad-lg;
+    @include ltelg {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    @media (max-width: 576px) {
+        grid-template-columns: repeat(1, 1fr);
     }
 }

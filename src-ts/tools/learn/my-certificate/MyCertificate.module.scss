@@ -5,16 +5,23 @@
     padding-bottom: calc($pad-xxxxl + $pad-xs);
     flex: 99 1 auto;
     display: flex;
-    justify-content: center;
 
     background: $tc-grad15;
 }
 
 .content-wrap {
     display: flex;
+    @include pagePaddings;
+    margin: auto;
+    width: 100%;
     justify-content: center;
 
     gap: $pad-xxxxl;
+
+    @include ltemd {
+        flex-direction: column;
+        margin: 0 auto auto;
+    }
 }
 
 .btns-wrap {
@@ -26,6 +33,13 @@
 
     &:last-child {
         margin-top: auto;
+    }
+
+    @include ltemd {
+        flex-direction: row;
+        &:last-child {
+            justify-content: center;
+        }
     }
 }
 

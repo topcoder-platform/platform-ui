@@ -18,24 +18,26 @@ const WelcomePage: FC<{}> = () => {
         <ContentLayout>
             <div className={styles.wrap}>
                 <Portal portalId='page-subheader-portal-el'>
-                    <WaveHero
-                        title='Welcome to Topcoder ACADEMY'
-                        text={`
-                            Thank you for visiting the Topcoder Academy.
-                            The Topcoder Academy will provide enhanced learning
-                            opportunities to you, our Topcoder community.
-                            These learning opportunities will take form as guided learning paths
-                            where you will have the opportunity to learn new skills.
-                            With these newly learned skills, you will be better prepared to be
-                            successful in competing in challenges and Topcoder matches,
-                            you will have greater opportunities for gig work placement and will
-                            improve your overall opportunity to earn on the Topcoder platform.
-                            Welcome to the Topcoder Academy, we look forward to learning with you!
-                        `}
-                        theme='light'
-                    >
-                        <ProgressBlock certificates={certifications} />
-                    </WaveHero>
+                    <div className={styles['hero-wrap']}>
+                        <WaveHero
+                            title='Welcome to Topcoder ACADEMY'
+                            text={`
+                                Thank you for visiting the Topcoder Academy.
+                                The Topcoder Academy will provide enhanced learning
+                                opportunities to you, our Topcoder community.
+                                These learning opportunities will take form as guided learning paths
+                                where you will have the opportunity to learn new skills.
+                                With these newly learned skills, you will be better prepared to be
+                                successful in competing in challenges and Topcoder matches,
+                                you will have greater opportunities for gig work placement and will
+                                improve your overall opportunity to earn on the Topcoder platform.
+                                Welcome to the Topcoder Academy, we look forward to learning with you!
+                            `}
+                            theme='light'
+                        >
+                            <ProgressBlock certificates={certifications} />
+                        </WaveHero>
+                    </div>
                 </Portal>
 
                 <div className={styles['courses-section']}>

@@ -21,7 +21,9 @@ const PromoCourse: FC<{}> = () => {
                     on the Topcoder platform.
                 </div>
             </div>
-            <LearnGetCertified />
+            <div className={styles['course-path-steps']}>
+                <LearnGetCertified />
+            </div>
         </div>
     )
 }
