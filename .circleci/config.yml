@@ -75,7 +75,7 @@ lint_steps: &lint_steps
     - checkout
     - setup_remote_docker
     - run: *running_yarn_eslint
-    - run: *running_yarn_tslint
+    - run: *running_yarn_lint
 
 build_steps: &build_steps
     # Initialization.
