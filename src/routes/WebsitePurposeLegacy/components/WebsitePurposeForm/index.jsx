@@ -45,8 +45,8 @@ const WebsitePurposeForm = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP className={styles["title"]}>Your industry</PageP>
-          <PageP className={styles["description"]}>
+          <PageP styleName="title">Your industry</PageP>
+          <PageP styleName="description">
             Knowing your industry will help our designers understand your
             audience, and the basic visual direction and overall tone to take
             for your website design.
@@ -71,14 +71,14 @@ const WebsitePurposeForm = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP className={styles["title"]}>DESCRIPTION</PageP>
-          <PageP className={styles["description"]}>
+          <PageP styleName="title">DESCRIPTION</PageP>
+          <PageP styleName="description">
             What is the purpose of your website? What do you want visitors to be
             able to do, e.g., see your work? Contact you? You can include a
             general description as well as goals of the website.{" "}
           </PageP>
           <br />
-          <PageP className={styles["description"]}>
+          <PageP styleName="description">
             <strong>Example:</strong> <br />A dog walking website that allows
             visitors to select dog walkers and schedule dog walking appointments
           </PageP>
@@ -89,7 +89,6 @@ const WebsitePurposeForm = ({
             <FormInputTextArea
               value={formData?.description?.value}
               onChange={(e) => handleInputChange(e.target.name, e.target.value)}
-              styleName={styles["text-area"]}
               name="description"
               placeholder={"Describe your website"}
             />
@@ -100,15 +99,15 @@ const WebsitePurposeForm = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP className={styles["title"]}>USERS</PageP>
-          <PageP className={styles["description"]}>
+          <PageP styleName="title">USERS</PageP>
+          <PageP styleName="description">
             Describe your target audience—are they pharmaceutical reps?
             Middle-aged mechanical engineers? Beekeepers? Write their user
             story, using the format, “As a &lt;type of users&gt;, I want
             &lt;some goal&gt;, so that &lt;some reason&gt;.”
           </PageP>
           <br />
-          <PageP className={styles["description"]}>
+          <PageP styleName="description">
             <strong>Example:</strong> <br />
             “As a dog owner, I want someone trustworthy to walk my dog, so that
             he feels loved when I'm at work.“
@@ -120,7 +119,6 @@ const WebsitePurposeForm = ({
             <FormInputTextArea
               value={formData?.userStory?.value}
               onChange={(e) => handleInputChange(e.target.name, e.target.value)}
-              styleName={styles["text-area"]}
               name="userStory"
               placeholder={"Enter your user story"}
             />
@@ -131,8 +129,8 @@ const WebsitePurposeForm = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP className={styles["title"]}>EXISTING WEBSITE?</PageP>
-          <PageP className={styles["description"]}>
+          <PageP styleName="title">EXISTING WEBSITE?</PageP>
+          <PageP styleName="description">
             If you have an existing website, please enter it here. Are we
             designing additional pages for your existing website? Or are we
             redesigning your current website? Please add additional information
@@ -153,7 +151,6 @@ const WebsitePurposeForm = ({
             <FormInputTextArea
               value={formData?.existingWebsiteInfo?.value}
               onChange={(e) => handleInputChange(e.target.name, e.target.value)}
-              styleName={styles["text-area"]}
               name="existingWebsiteInfo"
               placeholder={
                 "Anything we should know about your existing website"
