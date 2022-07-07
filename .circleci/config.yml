@@ -90,7 +90,7 @@ jobs:
     environment:
       DEPLOY_ENV: "DEV"
       LOGICAL_ENV: "dev"
-      APPNAME: "platform-ui"
+      APPNAME: "platform-ui-mvp"
     steps: *build_steps
 
   build-prod:
@@ -98,7 +98,7 @@ jobs:
     environment:
       DEPLOY_ENV: "PROD"
       LOGICAL_ENV: "prod"
-      APPNAME: "platform-ui"
+      APPNAME: "platform-ui-mvp"
     steps: *build_steps
 
   # Just tests commited code.
@@ -108,7 +108,7 @@ jobs:
       DEPLOY_ENV: "DEV"
       LOGICAL_ENV: "dev"
       ENABLE_CACHE: false
-      APPNAME: "platform-ui"
+      APPNAME: "platform-ui-mvp"
     steps: *deploy_steps
 
   deployProd:
@@ -117,7 +117,7 @@ jobs:
       DEPLOY_ENV: "PROD"
       LOGICAL_ENV: "prod"
       ENABLE_CACHE: true
-      APPNAME: "platform-ui"
+      APPNAME: "platform-ui-mvp"
     steps: *deploy_steps
 
 workflows:
