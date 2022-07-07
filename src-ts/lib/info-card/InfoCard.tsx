@@ -3,12 +3,11 @@ import { Dispatch, FC, ReactNode, SetStateAction, useState } from 'react'
 
 import { ArrowIcon } from '../svgs'
 
-import { InfoCardColor } from './InfoCard.enum'
 import styles from './InfoCard.module.scss'
 
 interface InfoCardProps {
     children: ReactNode,
-    color: InfoCardColor
+    color: 'info' | 'success' | 'warn',
     defaultOpen: boolean,
     isCollapsible: boolean,
     title?: string,
@@ -16,7 +15,7 @@ interface InfoCardProps {
 
 const InfoCard: FC<InfoCardProps> = ({
     children,
-    color = InfoCardColor.gray,
+    color = 'info',
     defaultOpen = true,
     isCollapsible = false,
     title,
