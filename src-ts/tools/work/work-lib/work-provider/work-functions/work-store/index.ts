@@ -13,6 +13,7 @@ export {
     problem as workPriceProblem,
     WorkPrices
 } from './work-prices.config'
+export type { WorkPricesType } from './work-prices.config'
 export * from './work-status-filter.enum'
 export {
     deleteAsync as workStoreDeleteAsync,

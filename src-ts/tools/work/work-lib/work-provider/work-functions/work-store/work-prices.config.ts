@@ -3,7 +3,7 @@ import { WorkType } from '../work-factory'
 import { WorkPrice } from './work-price.model'
 
 export const WorkPrices: { [workType: string]: WorkPrice } = {
-    // TODO: get real values for bug hunt
+    // TODO: modify payments specific to bug hunt
     [WorkType.bugHunt]: {
         base: 2,
         getPrice: getPriceDefault,
