@@ -215,7 +215,7 @@ const Review = ({
           }))}
         />
         {banner}
-        <PageContent styleName={styles["container"]}>
+        <PageContent styleName={"container"}>
           <ServicePrice
             hideTitle
             showIcon={showIcon}
@@ -225,8 +225,6 @@ const Review = ({
             stickerPrice={estimate?.stickerPrice}
             serviceType={workType?.selectedWorkTypeDetail}
           />
-          <br className={styles["mobileHidden"]} />
-          <br className={styles["mobileHidden"]} />
           {secondaryBanner}
           {introText && <div className={styles["infoAlert"]}>{introText}</div>}
           <div className={styles["splitView"]}>
