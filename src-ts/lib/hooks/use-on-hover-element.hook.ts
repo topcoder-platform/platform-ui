@@ -16,7 +16,11 @@ export interface UseHoverElementValue {
  * @param el Html element to register the event handlers for
  * @param cb Callback function to be called on hover in/hover out of provided element
  */
-export function useOnHoverElement(el: HTMLElement | null, cb: (isVisible: boolean) => void): UseHoverElementValue {
+export function useOnHoverElement(
+    el: HTMLElement | null,
+    cb: (isVisible: boolean) => void,
+    enabled: boolean = true
+): UseHoverElementValue | {} {
     const counter: MutableRefObject<number> = useRef(0)
 
     const handleHover: (ev: RMouseEvent<Element, MouseEvent>) => void = useCallback((ev: RMouseEvent<Element, MouseEvent>) => {
@@ -27,8 +31,8 @@ export function useOnHoverElement(el: HTMLElement | null, cb: (isVisible: boolea
         counter.current = nextVal
     }, [cb, el])
 
-    return {
+    return enabled ? {
         onMouseEnter: handleHover,
         onMouseLeave: handleHover,
-    }
+    } : {}
 }
