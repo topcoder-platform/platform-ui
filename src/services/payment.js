@@ -48,11 +48,10 @@ export async function processPayment(
     const url = `${config.API.V5}/customer-payments`;
     let response = await xhrPostAsync(url, body);
 
-    const customerPayment = response.data;
-    if (customerPayment.status === "requires_action") {
-      await stripe.handleCardAction(customerPayment.clientSecret);
+    if (response.status === "requires_action") {
+      await stripe.handleCardAction(response.clientSecret);
       response = await xhrPatchAsync(
-        `${config.API.V5}/customer-payments/${customerPayment.id}/confirm`,
+        `${config.API.V5}/customer-payments/${response.id}/confirm`,
         JSON.stringify({})
       );
     }

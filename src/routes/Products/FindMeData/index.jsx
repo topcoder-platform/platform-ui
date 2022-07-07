@@ -66,6 +66,7 @@ export default function FindMeData({ isLoggedIn }) {
           showIcon
           workItemConfig={findMeData}
           breadcrumb={findMeData.breadcrumbs.review}
+          isLoggedIn={isLoggedIn}
         />}
         path="/review"
       />

@@ -10,7 +10,7 @@ export interface ContentLayoutProps {
     buttonConfig?: ButtonProps
     children?: ReactNode
     contentClass?: string
-    title: string
+    title?: string
     titleClass?: string
 }
 
@@ -22,21 +22,25 @@ const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => {
 
                 <div className={styles['content-inner']}>
 
-                    <div className={classNames(styles['page-header'], props.titleClass)}>
+                    {!!props.title && (
+                        <div className={classNames(styles['page-header'], props.titleClass)}>
 
-                        <h1>{props.title}</h1>
+                            <h1>
+                                {props.title}
+                            </h1>
 
-                        {!!props.buttonConfig && (
-                            <div>
-                                <Button
-                                    {...props.buttonConfig}
-                                    buttonStyle='primary'
-                                    size='lg'
-                                />
-                            </div>
-                        )}
+                            {!!props.buttonConfig && (
+                                <div>
+                                    <Button
+                                        {...props.buttonConfig}
+                                        buttonStyle='primary'
+                                        size='lg'
+                                    />
+                                </div>
+                            )}
 
-                    </div>
+                        </div>
+                    )}
 
                     {props.children}
 

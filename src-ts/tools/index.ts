@@ -4,7 +4,8 @@
 export { default as ToolsRoutes, } from './tools.routes'
 export {
     ChallengeMetadataName,
-    selfServiceRootRoute as routeRootLoggedOut,
+    dashboardRoute as routeRootLoggedIn,
+    rootRoute as routeRootLoggedOut,
     workContext,
     WorkDetailDetails,
     WorkDetailDetailsPane,
@@ -18,7 +19,6 @@ export {
     workPriceDesignLegacy,
     workPriceFindData,
     workPriceProblem,
-    workRootRoute as routeRootLoggedIn,
     WorkStatusItem,
     WorkType,
     WorkTypeCategoryDataIcon,

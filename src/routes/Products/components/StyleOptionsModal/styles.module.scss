@@ -20,28 +20,42 @@
     .box {
       border: 1px solid $black-20;
       border-radius: 4px;
-    }
-
-    .preview {
-      width: 100%;
-      height: 450px;
-      max-height: calc(100vh - 450px);
-
-      @include ltemd {
-        max-height: calc(100vh - 550px);
+      .preview {
+        width: 100%;
+        height: 450px;
+        max-height: calc(100vh - 450px);
+  
+        @include ltemd {
+          max-height: calc(100vh - 550px);
+        }
       }
-    }
 
-    .actions {
-      display: flex;
-      justify-content: center;
-      padding: 20px;
-
-      svg {
-        width: 25px;
-        height: 25px;
-        margin-left: 10px;
-        margin-right: 10px;
+      .actions {
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+  
+        .liked {
+          fill: $green1;
+      
+          * {
+            fill: $green1;
+          }
+        }
+      
+        .disliked {
+          fill: $green1;
+      
+          * {
+            fill: $green1;
+          }
+        }
+        svg {
+          width: 25px;
+          height: 25px;
+          margin-left: 10px;
+          margin-right: 10px;
+        }
       }
     }
 
