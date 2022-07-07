@@ -21,7 +21,7 @@ export function useClickOutside(
         if (!enabled) {
             return
         }
-        
+
         if (!el) {
             document.removeEventListener('click', handleClick)
             return

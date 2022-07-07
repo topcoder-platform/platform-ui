@@ -28,7 +28,7 @@ const ProfileLoggedIn: FC<ProfileLoggedInProps> = (props: ProfileLoggedInProps) 
     }, [])
 
     useClickOutside(triggerRef.current, () => setProfilePanelOpen(false))
-    
+
     if (!profile) {
         logInfo('tried to render the logged in profile w/out a profile')
         return <></>

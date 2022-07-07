@@ -59,7 +59,7 @@ const Tooltip: FC<TooltipProps> = ({
 
     const evHandlers: ClickHandlersValue & UseHoverElementValue | {} = {
         ...useClickHandlers(triggerRef, toggleOpen, triggerOn === 'click'),
-        ...useOnHoverElement(triggerRef.current, toggleOpen, triggerOn === 'hover')
+        ...useOnHoverElement(triggerRef.current, toggleOpen, triggerOn === 'hover'),
     }
 
     useEffect(() => {
