@@ -41,7 +41,7 @@ const ThankYou = () => {
       <LoadingSpinner show={isLoading} />
       <Page>
         <PageContent>
-          <div className={["container"]}>
+          <div className={styles["container"]}>
             <div className={styles["content"]}>
               <PageH2>THANK YOU</PageH2>
 
