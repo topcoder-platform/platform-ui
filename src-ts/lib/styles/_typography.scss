@@ -44,6 +44,10 @@ h1 {
 h2 {
     font-size: 24px;
     line-height: 28px;
+    @include ltemd {
+        font-size: 20px;
+        line-height: 22px;
+    }
 }
 
 h3 {
@@ -133,6 +137,13 @@ h4 {
     &-bold {
         @extend .body-main;
         font-weight: $font-weight-bold;
+    }
+
+    @include ltemd {
+        &, &-bold {
+            font-size: 14px;
+            line-height: 20px;
+        }
     }
 }
 

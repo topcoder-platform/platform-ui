@@ -21,6 +21,7 @@
 .completed-status {
     @extend .body-main-bold;
     color: $blue-140;
+    white-space: nowrap;
 
     &:before {
         content: "";
@@ -29,7 +30,7 @@
         width: 1px;
         height: 16px;
         background: $black-60;
-        @include ltelg {
+        @include ltemd {
             content: none;
         }
     }
