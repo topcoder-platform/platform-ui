@@ -70,7 +70,7 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
                             buttonStyle='primary'
                             label='resume'
                             onClick={resumeCourse}
-                            className="mobile-hide"
+                            className='mobile-hide'
                         />
                     )}
                 </div>
@@ -82,7 +82,7 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
                         buttonStyle='primary'
                         label='resume'
                         onClick={resumeCourse}
-                        className="desktop-hide"
+                        className='desktop-hide'
                     />
                 )}
 
