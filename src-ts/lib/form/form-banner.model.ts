@@ -1,3 +1,7 @@
+export enum FormBannerType {
+  banner = 'banner',
+}
+
 export interface FormBannerModel {
   readonly backgroundColor: string
   readonly description: string
@@ -8,5 +12,5 @@ export interface FormBannerModel {
   open: boolean
   readonly title: string
   touched?: boolean
-  readonly type: 'banner'
+  readonly type: keyof typeof FormBannerType
 }

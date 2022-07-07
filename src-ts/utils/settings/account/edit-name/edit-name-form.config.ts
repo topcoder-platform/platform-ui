@@ -1,4 +1,5 @@
-import { FormDefinition, FormInputAutocompleteOption, validatorRequired } from '../../../../lib'
+import { FormDefinition, FormInputAutocompleteOption, FormInputTypes, validatorRequired } from '../../../../lib'
+import { FormFieldType } from '../../../../lib/form/form-field.model'
 
 export const editNameFormTitle: string = 'Edit Name'
 
@@ -14,28 +15,28 @@ export const editNameFormDef: FormDefinition = {
                 autocomplete: FormInputAutocompleteOption.off,
                 label: 'First Name',
                 name: EditNameFieldName.firstName,
-                type: 'text',
+                type: FormInputTypes.text,
                 validators: [
                     {
                         validator: validatorRequired,
                     },
                 ],
             },
-            type: 'field',
+            type: FormFieldType.field,
         },
         {
             field: {
                 autocomplete: FormInputAutocompleteOption.off,
                 label: 'Last Name',
                 name: EditNameFieldName.lastName,
-                type: 'text',
+                type: FormInputTypes.text,
                 validators: [
                     {
                         validator: validatorRequired,
                     },
                 ],
             },
-            type: 'field',
+            type: FormFieldType.field,
         },
     ],
     rightButtons: [

@@ -1,4 +1,5 @@
-import { FormDefinition, inputOptional, validatorRequired } from '../../../../lib'
+import { FormDefinition, FormInputTypes, inputOptional, validatorRequired } from '../../../../lib'
+import { FormFieldType } from '../../../../lib/form/form-field.model'
 
 export const workFeedbackFormDef: FormDefinition = {
     elements: [
@@ -6,40 +7,40 @@ export const workFeedbackFormDef: FormDefinition = {
             field: {
                 instructions: 'How happy are you with the quality of work?',
                 name: 'question-1',
-                type: 'rating',
+                type: FormInputTypes.rating,
                 validators: [
                     {
                         validator: validatorRequired,
                     },
                 ],
             },
-            type: 'field',
+            type: FormFieldType.field,
         },
         {
             field: {
                 instructions: 'How easy was the platform to use?',
                 name: 'question-2',
-                type: 'rating',
+                type: FormInputTypes.rating,
                 validators: [
                     {
                         validator: validatorRequired,
                     },
                 ],
             },
-            type: 'field',
+            type: FormFieldType.field,
         },
         {
             field: {
                 instructions: 'How likely are you to recommend Topcoder?',
                 name: 'question-3',
-                type: 'rating',
+                type: FormInputTypes.rating,
                 validators: [
                     {
                         validator: validatorRequired,
                     },
                 ],
             },
-            type: 'field',
+            type: FormFieldType.field,
         },
         {
             field: {
@@ -48,9 +49,9 @@ export const workFeedbackFormDef: FormDefinition = {
                 name: 'question-4',
                 placeholder: 'Add your comments here...',
                 spellCheck: true,
-                type: 'textarea',
+                type: FormInputTypes.textarea,
             },
-            type: 'field',
+            type: FormFieldType.field,
         },
     ],
     rightButtons: [

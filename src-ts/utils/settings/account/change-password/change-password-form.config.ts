@@ -1,12 +1,14 @@
 import {
     FormDefinition,
     FormInputAutocompleteOption,
+    FormInputTypes,
     validatorDoesNotMatchOther,
     validatorMatchOther,
     validatorPassword,
     validatorRequired,
     validatorRequiredIfOther,
 } from '../../../../lib'
+import { FormFieldType } from '../../../../lib/form/form-field.model'
 
 export const changePasswordFormTitle: string = 'Change Password'
 
@@ -27,14 +29,14 @@ export const changePasswordFormDef: FormDefinition = {
                 label: 'Current Password',
                 name: ChangePasswordFieldName.currentPassword,
                 placeholder: 'Enter your current password',
-                type: 'password',
+                type: FormInputTypes.password,
                 validators: [
                     {
                         validator: validatorRequired,
                     },
                 ],
             },
-            type: 'field',
+            type: FormFieldType.field,
         },
         {
             field: {
@@ -46,7 +48,7 @@ export const changePasswordFormDef: FormDefinition = {
                 label: 'New Password',
                 name: ChangePasswordFieldName.newPassword,
                 placeholder: 'Enter your new password',
-                type: 'password',
+                type: FormInputTypes.password,
                 validators: [
                     {
                         validator: validatorRequired,
@@ -60,7 +62,7 @@ export const changePasswordFormDef: FormDefinition = {
                     },
                 ],
             },
-            type: 'field',
+            type: FormFieldType.field,
         },
         {
             field: {
@@ -71,7 +73,7 @@ export const changePasswordFormDef: FormDefinition = {
                 label: 'Confirm Password',
                 name: ChangePasswordFieldName.confirmPassword,
                 placeholder: 'Re-enter your new password',
-                type: 'password',
+                type: FormInputTypes.password,
                 validators: [
                     {
                         dependentField: ChangePasswordFieldName.newPassword,
@@ -83,7 +85,7 @@ export const changePasswordFormDef: FormDefinition = {
                     },
                 ],
             },
-            type: 'field',
+            type: FormFieldType.field,
         },
     ],
     rightButtons: [

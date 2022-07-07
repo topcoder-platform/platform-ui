@@ -7,6 +7,11 @@ export interface OptionSelectorOption {
   id: string
 }
 
+export enum FormOptionSelectionTypes {
+  radio = 'radio',
+  checkbox = 'checkbox',
+}
+
 export interface FormOptionSelectorModel {
   readonly className?: string
   readonly dependentFields?: Array<string>
@@ -18,7 +23,7 @@ export interface FormOptionSelectorModel {
   onChange?: (optionId: string, checked: boolean) => void
   options: Array<OptionSelectorOption>
   touched?: boolean
-  readonly type: 'radio' | 'checkbox'
+  readonly type: keyof typeof FormOptionSelectionTypes
   readonly validators?: ReadonlyArray<ValidatorFn>
   value: boolean
 }

@@ -1,4 +1,5 @@
-import { FormDefinition, validatorEmail, validatorRequired } from '../form'
+import { FormDefinition, FormInputTypes, validatorEmail, validatorRequired } from '../form'
+import { FormFieldType } from '../form/form-field.model'
 
 export enum ContactSupportFormField {
     email = 'email',
@@ -14,35 +15,35 @@ export const contactSupportFormDef: FormDefinition = {
                 isStatic: false,
                 label: 'First Name',
                 name: ContactSupportFormField.first,
-                type: 'text',
+                type: FormInputTypes.text,
                 validators: [
                     {
                         validator: validatorRequired,
                     },
                 ],
             },
-            type: 'field',
+            type: FormFieldType.field,
         },
         {
             field: {
                 isStatic: false,
                 label: 'Last Name',
                 name: ContactSupportFormField.last,
-                type: 'text',
+                type: FormInputTypes.text,
                 validators: [
                     {
                         validator: validatorRequired,
                     },
                 ],
             },
-            type: 'field',
+            type: FormFieldType.field,
         },
         {
             field: {
                 isStatic: false,
                 label: 'Email',
                 name: ContactSupportFormField.email,
-                type: 'text',
+                type: FormInputTypes.text,
                 validators: [
                     {
                         validator: validatorEmail,
@@ -52,21 +53,21 @@ export const contactSupportFormDef: FormDefinition = {
                     },
                 ],
             },
-            type: 'field',
+            type: FormFieldType.field,
         },
         {
             field: {
                 isStatic: false,
                 label: 'How can we help you?',
                 name: ContactSupportFormField.question,
-                type: 'textarea',
+                type: FormInputTypes.textarea,
                 validators: [
                     {
                         validator: validatorRequired,
                     },
                 ],
             },
-            type: 'field',
+            type: FormFieldType.field,
         },
     ],
     rightButtons: [

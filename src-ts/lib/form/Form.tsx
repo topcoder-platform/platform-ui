@@ -24,7 +24,7 @@ import {
     formOnReset,
     formOnSubmitAsync,
 } from './form-functions'
-import { getFormInputFields, isNonStaticField } from './form-functions/form.functions'
+import { getFormInputFields, getNonStaticInputFields, isNonStaticField } from './form-functions/form.functions'
 import { FormInputs } from './form-inputs'
 import styles from './Form.module.scss'
 
@@ -50,11 +50,6 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         const [formRef]: [RefObject<HTMLFormElement>, Dispatch<SetStateAction<RefObject<HTMLFormElement>>>]
             = useState<RefObject<HTMLFormElement>>(createRef<HTMLFormElement>())
-
-        // This function returns the list of non static input elements
-        const getNonStaticInputFields: (elements: Array<Element>) => Array<NonStaticField> = (elements) => {
-            return getFormInputFields(elements).filter(input => isNonStaticField(input)) as Array<NonStaticField>
-        }
 
         // This will hold all the inputs that are not static fields
         const [inputs, setInputs]: [Array<NonStaticField>, Dispatch<SetStateAction<Array<NonStaticField>>>] = useState<Array<NonStaticField>>(getNonStaticInputFields(formDef.elements))

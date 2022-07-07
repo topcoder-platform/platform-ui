@@ -4,6 +4,8 @@ export * from './form-definition.model'
 export {
     formGetInputModel,
     formOnReset,
+    formGetInputFields,
+    formGetNonStaticInputFields,
 } from './form-functions'
 export * from './form-input.model'
 export { inputOptional, FormInputAutocompleteOption } from './form-inputs'

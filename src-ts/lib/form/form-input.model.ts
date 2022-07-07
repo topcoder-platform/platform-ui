@@ -2,6 +2,13 @@ import { InputEvent } from './form-input.event'
 import { FormInputAutocompleteOption } from './form-inputs'
 import { ValidatorFn } from './validator-functions'
 
+export enum FormInputTypes {
+    password = 'password',
+    rating = 'rating',
+    text = 'text',
+    textarea = 'textarea',
+}
+
 export interface FormInputModel {
     readonly autocomplete?: FormInputAutocompleteOption
     readonly className?: string
@@ -21,7 +28,7 @@ export interface FormInputModel {
     readonly spellCheck?: boolean
     readonly title?: string
     touched?: boolean
-    readonly type: 'password' | 'rating' | 'text' | 'textarea'
+    readonly type: keyof typeof FormInputTypes
     readonly validators?: ReadonlyArray<ValidatorFn>
     value?: string
 }

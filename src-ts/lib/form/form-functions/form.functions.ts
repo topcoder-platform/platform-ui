@@ -33,6 +33,11 @@ export function getFormInputFields(fields: ReadonlyArray<Element>): Array<Field>
     return formFields.map((item: FormFieldModel) => item.field)
 }
 
+// This function returns the list of non static input elements
+export function getNonStaticInputFields(elements: ReadonlyArray<Element>): Array<NonStaticField> {
+    return getFormInputFields(elements).filter(input => isNonStaticField(input)) as Array<NonStaticField>
+}
+
 export function getInputModel(fieldName: string, fields: ReadonlyArray<NonStaticField>): NonStaticField {
 
     const formField: NonStaticField | undefined = fields && fields.find(input => input.name === fieldName)

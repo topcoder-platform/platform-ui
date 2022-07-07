@@ -4,10 +4,13 @@ import Modal from 'react-responsive-modal'
 import {
     Button,
     Card,
+    formGetInputFields,
+    formGetNonStaticInputFields,
     formOnReset,
     profileContext,
     ProfileContextData,
 } from '../../../lib'
+import { NonStaticField } from '../../../lib/form/form-field.model'
 
 import styles from './Account.module.scss'
 import { ChangePassword, changePasswordFormDef } from './change-password'
@@ -27,12 +30,14 @@ const Account: FC<{}> = () => {
     }
 
     function toggleEditName(): void {
-        formOnReset(editNameFormDef.inputs)
+        const fields: Array<NonStaticField> = formGetNonStaticInputFields(editNameFormDef.elements);
+        formOnReset(fields)
         setEditNameOpen(!editProfileOpen)
     }
 
     function toggleChangePassword(): void {
-        formOnReset(changePasswordFormDef.inputs)
+        const fields: Array<NonStaticField> = formGetNonStaticInputFields(editNameFormDef.elements);
+        formOnReset(fields)
         setChangePasswordOpen(!changePasswordOpen)
     }
 
