@@ -1,6 +1,6 @@
 import { formGetInput } from '../form-functions'
 
-export function doesNotMatchOther(value: string | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
+export function doesNotMatchOther(value: string | boolean | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
 
     // if there is no value, there's no need to check the other input
     // bc this is a match validator not a required validator
@@ -33,12 +33,12 @@ export function email(value: string | boolean | undefined): string | undefined {
     return !emailRegex.test(value) ? 'Invalid email' : undefined
 }
 
-export function password(value: string | undefined): string | undefined {
+export function password(value: string | boolean | undefined): string | undefined {
 
     // if there is no value, do not set the error
     // b/c this is an email validator, not a required
     // validator
-    if (!value) {
+    if (!value || typeof value === 'boolean') {
         return undefined
     }
 
@@ -51,7 +51,7 @@ export function password(value: string | undefined): string | undefined {
     return !passwordRegex.test(value) ? 'Password rules: 8+ characters, 1+ letter, and 1+ number or symbol' : undefined
 }
 
-export function matchOther(value: string | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
+export function matchOther(value: string | boolean | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
 
     // if there is no value, there's no need to check the other input
     // bc this is a match validator not a required validator
@@ -74,7 +74,7 @@ export function required(value: string | boolean | undefined): string | undefine
     return !value ? 'Required' : undefined
 }
 
-export function requiredIfOther(value: string | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
+export function requiredIfOther(value: string | boolean | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
 
     // if there is a value, there's no need to check the other input
     if (!!value) {

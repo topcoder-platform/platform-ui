@@ -15,8 +15,8 @@ import { Button } from '../button'
 import '../styles/index.scss'
 import { IconOutline } from '../svgs'
 
-import { FormDefinition } from './form-definition.model'
-import { Field, NonStaticField } from './form-field.model'
+import { Element, FormDefinition } from './form-definition.model'
+import { NonStaticField } from './form-field.model'
 import {
     formInitializeValues,
     formOnBlur,
@@ -24,8 +24,7 @@ import {
     formOnReset,
     formOnSubmitAsync,
 } from './form-functions'
-import { getFormInputFields, isInputField, isStaticField } from './form-functions/form.functions'
-import { FormInputModel } from './form-input.model'
+import { getFormInputFields, isNonStaticField } from './form-functions/form.functions'
 import { FormInputs } from './form-inputs'
 import styles from './Form.module.scss'
 
@@ -52,22 +51,30 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         const [formRef]: [RefObject<HTMLFormElement>, Dispatch<SetStateAction<RefObject<HTMLFormElement>>>]
             = useState<RefObject<HTMLFormElement>>(createRef<HTMLFormElement>())
 
+        // This function returns the list of non static input elements
+        const getNonStaticInputFields: (elements: Array<Element>) => Array<NonStaticField> = (elements) => {
+            return getFormInputFields(elements).filter(input => isNonStaticField(input)) as Array<NonStaticField>
+        }
+
         // This will hold all the inputs that are not static fields
-        const inputs: Array<NonStaticField> = getFormInputFields(formDef.elements).filter(input => isStaticField(input)) as Array<NonStaticField>
+        const [inputs, setInputs]: [Array<NonStaticField>, Dispatch<SetStateAction<Array<NonStaticField>>>] = useState<Array<NonStaticField>>(getNonStaticInputFields(formDef.elements))
 
         function onBlur(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>): void {
             formOnBlur(event, inputs, props.formValues)
             setFormDef({ ...formDef })
+            setInputs(getNonStaticInputFields(formDef.elements))
         }
 
         function onChange(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void {
             formOnChange(event, inputs, props.formValues)
+            setInputs(getNonStaticInputFields(formDef.elements))
             setFormDef({ ...formDef })
         }
 
         function onReset(): void {
             formOnReset(inputs, props.formValues)
             setFormDef({ ...formDef })
+            setInputs(getNonStaticInputFields(formDef.elements))
             setFormKey(Date.now())
         }
 
@@ -78,10 +85,12 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                     setFormKey(Date.now())
                     formOnReset(inputs, props.formValues)
                     setFormDef({ ...formDef })
+                    setInputs(getNonStaticInputFields(formDef.elements))
                 })
                 .catch((error: string | undefined) => {
                     setFormError(error)
                     setFormDef({ ...formDef })
+                    setInputs(getNonStaticInputFields(formDef.elements))
                 })
         }
 

@@ -8,37 +8,43 @@ export enum EditNameFieldName {
 }
 
 export const editNameFormDef: FormDefinition = {
-    buttons: [
+    elements: [
+        {
+            field: {
+                autocomplete: FormInputAutocompleteOption.off,
+                label: 'First Name',
+                name: EditNameFieldName.firstName,
+                type: 'text',
+                validators: [
+                    {
+                        validator: validatorRequired,
+                    },
+                ],
+            },
+            type: 'field',
+        },
+        {
+            field: {
+                autocomplete: FormInputAutocompleteOption.off,
+                label: 'Last Name',
+                name: EditNameFieldName.lastName,
+                type: 'text',
+                validators: [
+                    {
+                        validator: validatorRequired,
+                    },
+                ],
+            },
+            type: 'field',
+        },
+    ],
+    rightButtons: [
         {
             buttonStyle: 'secondary',
             isSave: true,
             label: 'Save',
             size: 'lg',
             type: 'submit',
-        },
-    ],
-    inputs: [
-        {
-            autocomplete: FormInputAutocompleteOption.off,
-            label: 'First Name',
-            name: EditNameFieldName.firstName,
-            type: 'text',
-            validators: [
-                {
-                    validator: validatorRequired,
-                },
-            ],
-        },
-        {
-            autocomplete: FormInputAutocompleteOption.off,
-            label: 'Last Name',
-            name: EditNameFieldName.lastName,
-            type: 'text',
-            validators: [
-                {
-                    validator: validatorRequired,
-                },
-            ],
         },
     ],
     shortName: 'Name',

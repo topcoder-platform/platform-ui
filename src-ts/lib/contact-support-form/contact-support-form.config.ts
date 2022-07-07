@@ -11,6 +11,7 @@ export const contactSupportFormDef: FormDefinition = {
     elements: [
         {
             field: {
+                isStatic: false,
                 label: 'First Name',
                 name: ContactSupportFormField.first,
                 type: 'text',
@@ -24,6 +25,7 @@ export const contactSupportFormDef: FormDefinition = {
         },
         {
             field: {
+                isStatic: false,
                 label: 'Last Name',
                 name: ContactSupportFormField.last,
                 type: 'text',
@@ -37,6 +39,7 @@ export const contactSupportFormDef: FormDefinition = {
         },
         {
             field: {
+                isStatic: false,
                 label: 'Email',
                 name: ContactSupportFormField.email,
                 type: 'text',
@@ -53,6 +56,7 @@ export const contactSupportFormDef: FormDefinition = {
         },
         {
             field: {
+                isStatic: false,
                 label: 'How can we help you?',
                 name: ContactSupportFormField.question,
                 type: 'textarea',

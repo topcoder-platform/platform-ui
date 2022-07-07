@@ -22,8 +22,8 @@ export function isBannerField({type}: Field): boolean {
     return type === 'banner'
 }
 
-export function isStaticField({isStatic}: Field): boolean {
-    return !!isStatic
+export function isNonStaticField({isStatic}: Field): boolean {
+    return !!!isStatic
 }
 
 export function getFormInputFields(fields: ReadonlyArray<Element>): Array<Field> {
@@ -48,7 +48,7 @@ export function getInputModel(fieldName: string, fields: ReadonlyArray<NonStatic
 export function initializeValues<T>(fields: Array<NonStaticField>, formValues?: T): void {
 
     fields && fields
-        .filter(input => !input.isStatic || (isInputField(input) && !input.dirty && !input.touched))
+        .filter(input =>  isInputField(input) && !input.dirty && !input.touched && isNonStaticField(input))
         .forEach(input => {
             if (isInputField(input)) {
                 const typeCastedInput: FormInputModel = input as FormInputModel
@@ -135,6 +135,7 @@ function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, even
     const originalValue: string | undefined = (formValues as any)?.[input.name]
 
     const inputDef: NonStaticField = getInputModel(input.name, fields)
+
     if (event === 'change') {
         inputDef.dirty = input.value !== originalValue
     }
@@ -145,11 +146,11 @@ function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, even
 
     // now let's validate the field
     const formElements: HTMLFormControlsCollection = (input.form as HTMLFormElement).elements
-    validateField(inputDef, formElements, event)
+    // validateField(inputDef, formElements, event)
 
     // if the input doesn't have any dependent fields, we're done
     if (!inputDef.dependentFields?.length) {
-        return
+        return 
     }
 
     inputDef.dependentFields
