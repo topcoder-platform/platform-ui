@@ -79,8 +79,8 @@ const PageDetailsForm = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP className={styles["title"]}>Describe each page</PageP>
-          <PageP className={styles["description"]}>
+          <PageP styleName="title">Describe each page</PageP>
+          <PageP styleName="description">
             <PageP>
               For each page (or screen) required in your design project, please
               provide:
