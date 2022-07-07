@@ -2,6 +2,7 @@ import moment from 'moment'
 
 import {
     Challenge,
+    ChallengeCreate,
     ChallengeMetadata,
     ChallengeMetadataName,
     ChallengePhase,
@@ -59,6 +60,28 @@ export function create(challenge: Challenge): Work {
         title: challenge.name,
         type,
         typeCategory: getTypeCategory(type),
+    }
+}
+
+export function buildCreateBody(type: string): ChallengeCreate {
+    // TODO: once configs are merged, use type and config to fetch the necessary fields
+    return {
+        description: 'Information not provided',
+        discussions: [
+            {
+                name: 'new-self-service-project',
+                provider: 'vanilla',
+                type: 'challenge',
+            },
+        ],
+        legacy: {
+            selfService: true,
+        },
+        name: 'new-self-service-project',
+        tags: ['test'],
+        timelineTemplateId: 'challengeFieldValues.timelineTemplateId',
+        trackId: 'challengeFieldValues.trackId',
+        typeId: 'challengeFieldValues.typeId',
     }
 }
 

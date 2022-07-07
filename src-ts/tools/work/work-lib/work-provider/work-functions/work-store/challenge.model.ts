@@ -14,3 +14,14 @@ export interface Challenge {
     tags: Array<string>
     updated?: string
 }
+
+export interface ChallengeCreate {
+    description: string,
+    discussions: Array<{ [key: string]: string }>,
+    legacy: { [key: string]: any },
+    name: string,
+    tags: Array<string>
+    timelineTemplateId: string,
+    trackId: string,
+    typeId: string,
+}

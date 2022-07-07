@@ -1,9 +1,13 @@
-import { Page, xhrDeleteAsync, xhrGetAsync  } from '../../../../../../lib'
+import { Page, xhrDeleteAsync, xhrGetAsync, xhrPostAsync } from '../../../../../../lib'
 import { Work, WorkStatus } from '../work-factory'
 
-import { Challenge } from './challenge.model'
+import { Challenge, ChallengeCreate } from './challenge.model'
 import { WorkStatusFilter } from './work-status-filter.enum'
-import { deleteUrl, getUrl } from './work-url.config'
+import { createUrl, deleteUrl, getUrl } from './work-url.config'
+
+export async function createAsync(body: ChallengeCreate): Promise<void> {
+    return xhrPostAsync(createUrl(), JSON.stringify(body))
+}
 
 export async function deleteAsync(workId: string): Promise<void> {
     return xhrDeleteAsync(deleteUrl(workId))
