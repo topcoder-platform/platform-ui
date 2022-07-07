@@ -30,13 +30,13 @@ const Account: FC<{}> = () => {
     }
 
     function toggleEditName(): void {
-        const fields: Array<NonStaticField> = formGetNonStaticInputFields(editNameFormDef.elements);
+        const fields: Array<NonStaticField> = formGetNonStaticInputFields(editNameFormDef.elements)
         formOnReset(fields)
         setEditNameOpen(!editProfileOpen)
     }
 
     function toggleChangePassword(): void {
-        const fields: Array<NonStaticField> = formGetNonStaticInputFields(editNameFormDef.elements);
+        const fields: Array<NonStaticField> = formGetNonStaticInputFields(editNameFormDef.elements)
         formOnReset(fields)
         setChangePasswordOpen(!changePasswordOpen)
     }
