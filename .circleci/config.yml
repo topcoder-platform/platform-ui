@@ -149,6 +149,13 @@ workflows:
   version: 2
   build:
     jobs:
+      - lint-dev:
+          context : org-global
+          filters:
+            branches:
+              ignore:
+                - master
+
       - build-dev:
           context : org-global
           filters:
