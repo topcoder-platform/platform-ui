@@ -16,6 +16,7 @@ logInitialize(EnvironmentConfig);
 
 const App = () => {
 
+  let fun = 'fun'
   const { initialized } = useContext(profileContext)
 
   useLayoutEffect(() => {

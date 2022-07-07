@@ -42,6 +42,8 @@ running_yarn_build: &running_yarn_build
     command: |
       source buildenvvar
       yarn install
+      yarn eslint
+      yarn lint
       yarn build
 
 workspace_persist: &workspace_persist
@@ -88,7 +90,7 @@ jobs:
     environment:
       DEPLOY_ENV: "DEV"
       LOGICAL_ENV: "dev"
-      APPNAME: "platform-ui-mvp"
+      APPNAME: "platform-ui"
     steps: *build_steps
 
   build-prod:
@@ -96,7 +98,7 @@ jobs:
     environment:
       DEPLOY_ENV: "PROD"
       LOGICAL_ENV: "prod"
-      APPNAME: "platform-ui-mvp"
+      APPNAME: "platform-ui"
     steps: *build_steps
 
   # Just tests commited code.
@@ -106,7 +108,7 @@ jobs:
       DEPLOY_ENV: "DEV"
       LOGICAL_ENV: "dev"
       ENABLE_CACHE: false
-      APPNAME: "platform-ui-mvp"
+      APPNAME: "platform-ui"
     steps: *deploy_steps
 
   deployProd:
@@ -115,7 +117,7 @@ jobs:
       DEPLOY_ENV: "PROD"
       LOGICAL_ENV: "prod"
       ENABLE_CACHE: true
-      APPNAME: "platform-ui-mvp"
+      APPNAME: "platform-ui"
     steps: *deploy_steps
 
 workflows:
