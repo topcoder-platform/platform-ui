@@ -132,9 +132,5 @@
             "last 1 safari version"
         ]
     },
-    "types": "./types/index.d.ts",
-    "lint-staged": {
-        "*.js": "eslint --cache --fix",
-        "*.ts": "tslint --cache --fix"
-    }
+    "types": "./types/index.d.ts"
 }
