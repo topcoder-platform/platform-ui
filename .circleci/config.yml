@@ -37,17 +37,12 @@ save_cache_settings: &save_cache_settings
     paths:
       - node_modules
 
-running_yarn_lint: &running_yarn_lint
+running_yarn_tslint: &running_yarn_tslint
     name: Running Yarn tslint
     command: |
+      source buildenvvar
       yarn add tslint -g
       yarn tslint
-
-running_yarn_eslint: &running_yarn_eslint
-    name: Running Yarn eslint
-    command: |
-      yarn add eslint -g
-      yarn eslint
 
 running_yarn_build: &running_yarn_build
     name: Running Yarn Build
@@ -74,8 +69,7 @@ lint_steps: &lint_steps
     # Initialization.
     - checkout
     - setup_remote_docker
-    - run: *running_yarn_eslint
-    - run: *running_yarn_lint
+    - run: *running_yarn_tslint
 
 build_steps: &build_steps
     # Initialization.
