@@ -52,6 +52,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
 
         } catch (error: any) {
             const contextData: WorkContextData = {
+                // TODO: Why do we need to include these functions as the context data?
                 createFromChallenge: workFactoryCreate,
                 deleteWorkAsync,
                 error: error.response?.data?.result?.content || error.message || error,

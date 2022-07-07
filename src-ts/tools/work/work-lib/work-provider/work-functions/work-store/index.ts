@@ -5,6 +5,7 @@ export * from './challenge-phase-name.enum'
 export * from './challenge.model'
 export * from './work-status-filter.enum'
 export {
+    createAsync as workStoreCreateAsync,
     deleteAsync as workStoreDeleteAsync,
     getAsync as workStoreGetAsync,
     getFilteredByStatus as workStoreGetFilteredByStatus,

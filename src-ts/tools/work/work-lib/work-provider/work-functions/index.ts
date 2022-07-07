@@ -22,6 +22,7 @@ export {
 } from './work-store'
 export * from './work-by-status.model'
 export {
+    createAsync as workCreateAsync,
     deleteAsync as workDeleteAsync,
     getAsync as workGetAsync,
     getGroupedByStatus as workGetGroupedByStatus,
