@@ -269,9 +269,15 @@
 
 .pageContent {
   margin-top: 0;
-  padding-right: 0;
-  padding-left: 0;
-  padding-top: 28px;
+  padding: 40px 0;
+
+  @include mobile {
+    padding: 20px;
+  }
+
+  background: white;
+  border-radius: 8px;
+  position: relative;
 }
 
 .pageHeading {
