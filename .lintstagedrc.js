@@ -3,4 +3,7 @@ module.exports = {
         "tslint",
         "eslint"
     ],
+    "src/**/*": [
+        "eslint"
+    ],
 };
