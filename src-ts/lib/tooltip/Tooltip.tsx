@@ -26,12 +26,16 @@ interface ClickHandlersValue {
     onClick: (ev: any) => void
 }
 
-function useClickHandlers(trigger: MutableRefObject<any>, toggle: (ev: any) => void): ClickHandlersValue {
-    useClickOutside(trigger.current, () => toggle(false))
+function useClickHandlers(
+    trigger: MutableRefObject<any>,
+    toggle: (ev: any) => void,
+    enabled: boolean = true
+): ClickHandlersValue | {} {
+    useClickOutside(trigger.current, () => toggle(false), enabled)
 
-    return {
+    return enabled ? {
         onClick: toggle,
-    }
+    } : {}
 }
 
 const Tooltip: FC<TooltipProps> = ({
@@ -43,11 +47,6 @@ const Tooltip: FC<TooltipProps> = ({
     positionY = 'end',
 }: TooltipProps) => {
 
-    // if we didn't get a tooltip, just return an empty fragment
-    if (!content) {
-        return <></>
-    }
-
     const portalRef: MutableRefObject<any> = useRef(undefined)
     const triggerRef: MutableRefObject<any> = useRef(undefined)
     const tooltipRef: MutableRefObject<any> = useRef(undefined)
@@ -58,9 +57,10 @@ const Tooltip: FC<TooltipProps> = ({
         setTooltipOpen(currentTooltipOpen => typeof toggleValue === 'boolean' ? toggleValue : !currentTooltipOpen)
     }, [])
 
-    const revealHandlers: ClickHandlersValue | UseHoverElementValue = triggerOn === 'click'
-        ? useClickHandlers(triggerRef, toggleOpen)
-        : useOnHoverElement(triggerRef.current, toggleOpen)
+    const evHandlers: ClickHandlersValue & UseHoverElementValue | {} = {
+        ...useClickHandlers(triggerRef, toggleOpen, triggerOn === 'click'),
+        ...useOnHoverElement(triggerRef.current, toggleOpen, triggerOn === 'hover')
+    }
 
     useEffect(() => {
 
@@ -84,12 +84,17 @@ const Tooltip: FC<TooltipProps> = ({
         windowHeight,
     ])
 
+    // if we didn't get a tooltip, just return an empty fragment
+    if (!content) {
+        return <></>
+    }
+
     return (
         <div className={styles.tooltip}>
             <div
                 className={classNames('tooltip-icon', styles['tooltip-icon'])}
                 ref={triggerRef}
-                {...revealHandlers}
+                {...evHandlers}
             >
                 {trigger}
             </div>
