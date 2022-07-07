@@ -150,7 +150,7 @@ function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, even
 
     // if the input doesn't have any dependent fields, we're done
     if (!inputDef.dependentFields?.length) {
-        return 
+        return
     }
 
     inputDef.dependentFields
