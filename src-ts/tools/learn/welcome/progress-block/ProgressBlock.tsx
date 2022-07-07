@@ -80,7 +80,7 @@ const ProgressBlock: FC<ProgressBlockProps> = (props: ProgressBlockProps) => {
                         <MyCourseCompletedCard
                             certification={certificatesById[certif.certificationId]}
                             key={certif.certificationId}
-                            completed={'2022-04-27'}
+                            completed={certif.completedDate}
                         />
                     ))}
                     <span className="desktop-hide">
