@@ -49,7 +49,7 @@ const ProgressBlock: FC<ProgressBlockProps> = (props: ProgressBlockProps) => {
                     {!!inProgress.length && (
                         <div className={styles['title-line']}>
                             <h4 className='details'>In progress</h4>
-                            <span className="mobile-hide">
+                            <span className='mobile-hide'>
                                 {allMyLearningsLink}
                             </span>
                         </div>
@@ -70,7 +70,7 @@ const ProgressBlock: FC<ProgressBlockProps> = (props: ProgressBlockProps) => {
                                 <h4 className='details'>Congratulations!</h4>
                             </div>
                             {!inProgress.length && (
-                                <span className="mobile-hide">
+                                <span className='mobile-hide'>
                                     {allMyLearningsLink}
                                 </span>
                             )}
@@ -80,10 +80,10 @@ const ProgressBlock: FC<ProgressBlockProps> = (props: ProgressBlockProps) => {
                         <MyCourseCompletedCard
                             certification={certificatesById[certif.certificationId]}
                             key={certif.certificationId}
-                            completed={'2022-04-27'}
+                            completed={certif.completedDate}
                         />
                     ))}
-                    <span className="desktop-hide">
+                    <span className='desktop-hide'>
                         {allMyLearningsLink}
                     </span>
                 </>
