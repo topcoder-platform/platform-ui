@@ -49,7 +49,7 @@
         "redux-thunk": "^2.4.1",
         "sass": "^1.49.8",
         "styled-components": "^5.3.5",
-        "tc-auth-lib": "topcoder-platform/tc-auth-lib#1.0.4",
+        "tc-auth-lib": "topcoder-platform/tc-auth-lib#1.0.3",
         "typescript": "^4.6.3",
         "uuid": "^8.3.2"
     },

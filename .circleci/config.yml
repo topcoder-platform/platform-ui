@@ -43,6 +43,7 @@ running_yarn_build: &running_yarn_build
       source buildenvvar
       yarn install
       yarn eslint
+      yarn add tslint -g
       yarn lint
       yarn build
 
