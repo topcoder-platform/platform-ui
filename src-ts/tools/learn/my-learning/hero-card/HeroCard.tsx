@@ -1,6 +1,6 @@
 import { FC } from 'react'
-import { EnvironmentConfig } from '../../../../config'
 
+import { EnvironmentConfig } from '../../../../config'
 import { Button } from '../../../../lib'
 
 import styles from './HeroCard.module.scss'
@@ -19,7 +19,7 @@ const HeroCard: FC<HeroCardProps> = (props: HeroCardProps) => {
                     buttonStyle='link'
                     label='check out your profile'
                     url={`${EnvironmentConfig.TOPCODER_URLS.USER_PROFILE}/${props.userHandle}`}
-                    target="_blank"
+                    target='_blank'
                 />
             </div>
             <div className={styles['line']}>
@@ -28,7 +28,7 @@ const HeroCard: FC<HeroCardProps> = (props: HeroCardProps) => {
                     buttonStyle='link'
                     label='compete in a challenge'
                     url={EnvironmentConfig.TOPCODER_URLS.CHALLENGES_PAGE}
-                    target="_blank"
+                    target='_blank'
                 />
             </div>
             <div className={styles['line']}>
@@ -37,7 +37,7 @@ const HeroCard: FC<HeroCardProps> = (props: HeroCardProps) => {
                     buttonStyle='link'
                     label='see gig opportunities'
                     url={EnvironmentConfig.TOPCODER_URLS.GIGS_PAGE}
-                    target="_blank"
+                    target='_blank'
                 />
             </div>
 

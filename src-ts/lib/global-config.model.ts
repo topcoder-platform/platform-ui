@@ -14,12 +14,12 @@ export interface GlobalConfig {
     }
     REAUTH_OFFSET: number
     TAG_MANAGER_ID?: string
+    TOPCODER_URLS: {
+        CHALLENGES_PAGE: string,
+        GIGS_PAGE: string,
+        USER_PROFILE: string,
+    }
     URL: {
         ACCOUNTS_APP_CONNECTOR: string
     },
-    TOPCODER_URLS: {
-        USER_PROFILE: string,
-        CHALLENGES_PAGE: string,
-        GIGS_PAGE: string,
-    }
 }
