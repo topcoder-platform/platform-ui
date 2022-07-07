@@ -40,7 +40,6 @@ save_cache_settings: &save_cache_settings
 running_yarn_tslint: &running_yarn_tslint
     name: Running Yarn tslint
     command: |
-      source buildenvvar
       yarn add tslint -g
       yarn tslint
 
