@@ -139,11 +139,16 @@ const FreeCodeCamp: FC<{}> = () => {
                 currentLesson
             ).then(setCertificateProgress)
         } else {
-            updateMyCertificationsProgressAsync(
-                certificateProgress.id,
-                UpdateMyCertificateProgressActions.currentLesson,
-                currentLesson
-            ).then(setCertificateProgress)
+            // TODO: remove this delay!!
+            // TEMP_FIX: delay this api call to allow for previous "completeLesson" call to write in the api
+            setTimeout(() => {
+                updateMyCertificationsProgressAsync(
+                        certificateProgress.id,
+                        UpdateMyCertificateProgressActions.currentLesson,
+                        currentLesson
+                    )
+                    .then(setCertificateProgress)
+            }, 500)
         }
     }
 
