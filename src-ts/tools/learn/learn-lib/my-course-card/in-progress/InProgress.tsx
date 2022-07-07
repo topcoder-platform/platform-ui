@@ -70,11 +70,21 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
                             buttonStyle='primary'
                             label='resume'
                             onClick={resumeCourse}
+                            className="mobile-hide"
                         />
                     )}
                 </div>
 
                 <ProgressBar progress={props.completedPercentage} />
+                {isMinimum && (
+                    <Button
+                        size='md'
+                        buttonStyle='primary'
+                        label='resume'
+                        onClick={resumeCourse}
+                        className="desktop-hide"
+                    />
+                )}
 
                 {isDetailed && (
                     <div className={styles['summary']}>

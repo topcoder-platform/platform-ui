@@ -20,6 +20,9 @@
 .title-line {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: $pad-lg;
 
     svg {
         @include icon-mx;
@@ -27,6 +30,8 @@
     }
 }
 
-.title-link {
-    margin-left: auto;
+.title {
+    display: flex;
+    align-items: center;
+    gap: $pad-md;
 }

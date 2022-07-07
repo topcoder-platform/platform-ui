@@ -5,11 +5,15 @@
     background: $tc-white;
     padding: $pad-xxl;
     border-radius: $pad-sm;
+    @include ltelg {
+        padding: $pad-lg;
+    }
 }
 
 .line {
     display: flex;
     align-items: flex-start;
+    flex-wrap: wrap;
 
     margin-bottom: $pad-lg;
 }
@@ -25,6 +29,9 @@
         width: 1px;
         height: 16px;
         background: $black-60;
+        @include ltelg {
+            content: none;
+        }
     }
 }
 
@@ -32,4 +39,9 @@
     display: flex;
     align-items: center;
     gap: $pad-sm;
+    flex-wrap: wrap;
+
+    @include ltemd {
+        gap: $pad-lg;
+    }
 }

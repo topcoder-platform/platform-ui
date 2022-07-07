@@ -41,10 +41,10 @@
 
         @include ltelg {
             gap: $pad-mx;
-            flex-direction: column;
         }
         @include ltemd {
             gap: $pad-xxl;
+            flex-direction: column;
         }
     }
     
