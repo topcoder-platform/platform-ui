@@ -96,7 +96,7 @@ const DeviceTypes = ({ numOfPages, selectedOptions, onSelect }) => {
             >
               {isActive ? type.iconActive : type.icon}
             </div>
-            <div className={styles["title"]}>{type.title}</div>
+            <div styleName="title">{type.title}</div>
             <div className={styles["subTitle"]}>{type.description}</div>
             {type.subDescription && (
               <div className={styles["subDescription"]}>{type.subDescription}</div>

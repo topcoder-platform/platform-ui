@@ -12,12 +12,6 @@
   }
 }
 
-.mobileHidden {
-  @include mobile {
-    display: none;
-  }
-}
-
 .splitView {
   display: grid;
   grid-template-columns: 1fr 562px;
@@ -32,11 +26,6 @@
     display: flex;
     flex-direction: column;
   }
-}
-
-.container {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
 }
 
 .paymentWrapper {
