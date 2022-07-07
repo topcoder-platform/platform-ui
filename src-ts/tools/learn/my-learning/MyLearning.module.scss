@@ -4,15 +4,15 @@
     background: $black-5;
 }
 
-.wrap {
-    &:global(.content-block) {
-        max-width: 475px;
-    }
-}
-
 .hero-wrap {
     :global(.hero-card-col) {
-            max-width: 475px;
+        max-width: 475px;
+    }
+
+    @include ltelg {
+        :global(.hero-card-col) {
+            max-width: none;
+        }
     }
 }
 
@@ -20,16 +20,27 @@
     display: flex;
     align-items: center;
 
-    margin-bottom: $pad-lg;
-
     svg {
         @include icon-size(60);
         margin-right: $pad-sm;
+        @include ltemd {
+            @include icon-size(38);
+        }
     }
 }
 
 .courses-area {
     padding: $pad-xxxxl 0;
+    gap: $pad-lg;
+    display: flex;
+    flex-direction: column;
+    &:empty {
+        display: none;
+    }
+
+    @include ltemd {
+        gap: $pad-xxl;
+    }
 }
 
 .cards-wrap {
@@ -39,5 +50,11 @@
 
     > * {
         flex: 0 1 calc(50% - calc($pad-xxl / 2));
+    }
+
+    @include ltemd {
+        > * {
+            flex: 1 1 0;
+        }
     }
 }

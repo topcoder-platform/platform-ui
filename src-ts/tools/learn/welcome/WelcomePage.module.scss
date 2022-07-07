@@ -5,7 +5,7 @@
         width: 43.5%;
         max-width: 600px;
         
-        @include ltelg {
+        @include ltemd {
             width: 100%;
             max-width: none;
         }
@@ -15,6 +15,10 @@
 .courses-section {
     padding: $pad-xxxxl 0;
     position: relative;
+    
+    @include ltemd {
+        padding-top: $pad-xxl;
+    }
 }
 
 .courses-list {
@@ -37,5 +41,9 @@
     
     @media (max-width: 576px) {
         grid-template-columns: repeat(1, 1fr);
+    }
+    
+    @include ltemd {
+        margin-top: $pad-xxl;
     }
 }

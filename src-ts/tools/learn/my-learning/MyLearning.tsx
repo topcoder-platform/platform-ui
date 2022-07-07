@@ -66,24 +66,24 @@ const MyLearning: FC<{}> = () => {
                     ))}
                 </div>
 
-                <div className={styles['courses-area']}>
-                    {!!completed.length && (
+                {!!completed.length && (
+                    <div className={styles['courses-area']}>
                         <div className={styles['title-line']}>
                             <LearningHat />
                             <h2 className='details'>Completed Courses</h2>
                         </div>
-                    )}
 
-                    <div className={styles['cards-wrap']}>
-                        {completed.map((certif) => (
-                            <MyCourseCompletedCard
-                                certification={certificatesById[certif.certificationId]}
-                                key={certif.certificationId}
-                                completed={certif.completedDate}
-                            />
-                        ))}
+                        <div className={styles['cards-wrap']}>
+                            {completed.map((certif) => (
+                                <MyCourseCompletedCard
+                                    certification={certificatesById[certif.certificationId]}
+                                    key={certif.certificationId}
+                                    completed={certif.completedDate}
+                                />
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </ContentLayout>
     )

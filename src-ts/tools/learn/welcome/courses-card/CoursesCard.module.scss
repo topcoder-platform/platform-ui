@@ -20,6 +20,9 @@
             opacity: 0.5;
         }
     }
+    @include ltemd {
+        padding: $pad-lg;
+    }
 }
 
 .text {

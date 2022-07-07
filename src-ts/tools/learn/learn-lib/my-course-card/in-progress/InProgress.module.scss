@@ -11,22 +11,42 @@
     &.large {
         padding: $pad-xxxxl;
     }
+
+    @include ltelg {
+        &, &.large {
+            padding: $pad-lg;
+        }
+    }
+
+    @include ltemd {
+        &.large {
+            flex-direction: column;
+        }
+    }
 }
 
 .inner {
     flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $pad-lg;
 }
 
 .line {
     display: flex;
     align-items: center;
     justify-content: space-between;
-
-    margin-bottom: $pad-lg;
+    width: 100%;
+    @include ltelg {
+        flex-wrap: wrap;
+        gap: $pad-lg;
+    }
 }
 
 .status {
     @extend .body-main-bold;
+    white-space: nowrap;
     color: $blue-140;
 
     &:before {
@@ -36,6 +56,9 @@
         width: 1px;
         height: 16px;
         background: $black-60;
+        @include ltemd {
+            content: none;
+        }
     }
 }
 
@@ -43,10 +66,14 @@
     display: flex;
     align-items: center;
     margin-top: $pad-lg;
-}
-
-.button {
-    margin-left: auto;
+    width: 100%;
+    justify-content: space-between;
+    gap: $pad-lg;
+    @include ltemd {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-top: 0;
+    }
 }
 
 .details {
@@ -75,12 +102,25 @@
             overflow: hidden;
         }
 
-        button {
+        :global(.button) {
             margin-top: $pad-sm;
+        }
+    }
+
+    @include ltemd {
+        flex-direction: column;
+        &:before {
+            margin: $pad-xxl 0;
+            width: 100%;
+            height: 1px;
         }
     }
 }
 
 .started-date {
     font-weight: bold;
+    
+    @include ltemd {
+        order: -1;
+    }
 }

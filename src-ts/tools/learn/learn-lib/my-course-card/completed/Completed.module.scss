@@ -5,11 +5,15 @@
     background: $tc-white;
     padding: $pad-xxl;
     border-radius: $pad-sm;
+    @include ltelg {
+        padding: $pad-lg;
+    }
 }
 
 .line {
     display: flex;
     align-items: flex-start;
+    flex-wrap: wrap;
 
     margin-bottom: $pad-lg;
 }
@@ -17,6 +21,7 @@
 .completed-status {
     @extend .body-main-bold;
     color: $blue-140;
+    white-space: nowrap;
 
     &:before {
         content: "";
@@ -25,6 +30,9 @@
         width: 1px;
         height: 16px;
         background: $black-60;
+        @include ltemd {
+            content: none;
+        }
     }
 }
 
@@ -32,4 +40,9 @@
     display: flex;
     align-items: center;
     gap: $pad-sm;
+    flex-wrap: wrap;
+
+    @include ltemd {
+        gap: $pad-lg;
+    }
 }

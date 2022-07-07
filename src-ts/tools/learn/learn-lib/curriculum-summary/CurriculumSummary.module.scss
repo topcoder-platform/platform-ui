@@ -11,8 +11,10 @@
 .icon {
     color: $black-60;
     svg {
-        width: 26px;
-        height: 26px;
+        @include icon-size(26);
+        @include ltemd {
+            @include icon-size(20);
+        }
     }
 }
 
@@ -21,6 +23,11 @@
     font-size: 48px;
     line-height: 40px;
     @include font-weight-medium;
+
+    @include ltemd {
+        font-size: 27px;
+        line-height: 28px;
+    }
 }
 
 .count-label {

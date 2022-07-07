@@ -32,13 +32,18 @@ const CourseTitle: FC<CourseTitleProps> = (props: CourseTitleProps) => {
             <div className={styles['text']}>
                 <div className={styles['title-row']}>
                     {title}
-                    {props.children}
+                    <span className='mobile-hide'>
+                        {props.children}
+                    </span>
                 </div>
                 {props.credits && (
                     <em className={classNames('quote-small', props.size)}>
                         by {props.credits}
                     </em>
                 )}
+                <span className='desktop-hide'>
+                    {props.children}
+                </span>
             </div>
         </div>
     )

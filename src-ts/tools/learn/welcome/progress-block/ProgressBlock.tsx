@@ -49,7 +49,9 @@ const ProgressBlock: FC<ProgressBlockProps> = (props: ProgressBlockProps) => {
                     {!!inProgress.length && (
                         <div className={styles['title-line']}>
                             <h4 className='details'>In progress</h4>
-                            {allMyLearningsLink}
+                            <span className="mobile-hide">
+                                {allMyLearningsLink}
+                            </span>
                         </div>
                     )}
                     {inProgress.map((certifProgress) => (
@@ -63,18 +65,27 @@ const ProgressBlock: FC<ProgressBlockProps> = (props: ProgressBlockProps) => {
                     ))}
                     {!!completed.length && (
                         <div className={styles['title-line']}>
-                            <LearningHat />
-                            <h4 className='details'>Congratulations!</h4>
-                            {!inProgress.length && allMyLearningsLink}
+                            <div className={styles['title']}>
+                                <LearningHat />
+                                <h4 className='details'>Congratulations!</h4>
+                            </div>
+                            {!inProgress.length && (
+                                <span className="mobile-hide">
+                                    {allMyLearningsLink}
+                                </span>
+                            )}
                         </div>
                     )}
                     {completed.map((certif) => (
                         <MyCourseCompletedCard
                             certification={certificatesById[certif.certificationId]}
                             key={certif.certificationId}
-                            completed={certif.completedDate}
+                            completed={'2022-04-27'}
                         />
                     ))}
+                    <span className="desktop-hide">
+                        {allMyLearningsLink}
+                    </span>
                 </>
             )}
         </div>
