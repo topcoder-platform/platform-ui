@@ -11,6 +11,28 @@
   font-weight: 800;
 }
 
+.title {
+  font-weight: 600;
+  color: $grey-text;
+  font-size: 20px;
+  line-height: 20px;
+  text-transform: uppercase;
+}
+
 .description {
-  margin-top: 0;
+  @include font-roboto;
+  font-size: 16px;
+  line-height: 26px;
+  margin-top: 24px;
+  color: $grey-text;
+}
+
+.label {
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 26px;
+
+  @include mobile {
+    font-size: 16px;
+  }
 }

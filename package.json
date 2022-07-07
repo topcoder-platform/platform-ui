@@ -5,8 +5,7 @@
     "scripts": {
         "start": "sh start-ssl.sh",
         "start:bsouza": "sh start-ssl-bsouza.sh",
-        "build": "sh build-dev.sh",
-        "build:prod": "sh build-prod.sh",
+        "build": "yarn react-app-rewired build",
         "lint": "tslint 'src-ts/**/*.{ts,tsx}'",
         "lint:fix": "tslint 'src-ts/**/*.{ts,tsx}' --fix",
         "eslint": "eslint 'src/**/*.{js,jsx}'",

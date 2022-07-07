@@ -249,7 +249,7 @@ const BasicInfo = ({
           subTitle={workItemConfig.subTitle}
           workType={workItemConfig.type}
         />
-        <PageContent styleName={styles["container"]}>
+        <PageContent styleName={"container"}>
           <BasicInfoForm
             pageListOptions={_.map(PageOptions, (o, i) => ({
               ...o,
