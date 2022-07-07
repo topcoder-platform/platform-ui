@@ -46,8 +46,7 @@ export function getInputModel(fieldName: string, fields: ReadonlyArray<NonStatic
 }
 
 export function initializeValues<T>(fields: Array<NonStaticField>, formValues?: T): void {
-
-    fields && fields
+    fields
         .filter(input =>  isInputField(input) && !input.dirty && !input.touched && isNonStaticField(input))
         .forEach(input => {
             if (isInputField(input)) {
@@ -68,7 +67,7 @@ export function onChange<T>(event: ChangeEvent<HTMLInputElement | HTMLTextAreaEl
 }
 
 export function onReset(inputs: ReadonlyArray<NonStaticField>, formValue?: any): void {
-    inputs && inputs
+    inputs
         .forEach(inputDef => {
             if (isInputField(inputDef)) {
                 const typeCastedInput: FormInputModel = inputDef as FormInputModel
@@ -107,11 +106,11 @@ export async function onSubmitAsync<T>(
     }
 
     // set the properties for the updated T value
-    inputs && inputs
-    .filter(field => isInputField(field)).forEach((field) => {
-        const casted: FormInputModel | FormOptionSelectorModel = field as FormInputModel | FormOptionSelectorModel
-        (formValue as any)[casted.name] = casted.value
-    })
+    inputs
+        .filter(field => isInputField(field)).forEach((field) => {
+            const casted: FormInputModel | FormOptionSelectorModel = field as FormInputModel | FormOptionSelectorModel
+            (formValue as any)[casted.name] = casted.value
+        })
 
     // if there are no dirty fields, don't actually perform the save
     const savePromise: Promise<void> = !dirty ? Promise.resolve() : save(formValue)
