@@ -43,6 +43,8 @@ running_yarn_tslint: &running_yarn_tslint
       yarn add tslint -g
       pwd
       ls
+      ls src-ts
+      tslint 'src-ts/**/*.{ts,tsx}'
       yarn tslint
 
 running_yarn_build: &running_yarn_build
