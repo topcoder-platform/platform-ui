@@ -23,6 +23,7 @@ export {
     xhrPatchAsync,
     xhrPostAsync,
 } from './functions'
+export * from './info-card'
 export * from './loading-spinner'
 export * from './modals'
 export * from './page-footer'
