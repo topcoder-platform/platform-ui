@@ -1,4 +1,5 @@
 import { ChangeEvent, FocusEvent } from 'react'
+import { FormInputTypes } from '..'
 
 import { FormDefinition } from '../form-definition.model'
 import { FormFieldModel, NonStaticField } from '../form-field.model'
@@ -8,6 +9,7 @@ import { FormSectionModel } from '../form-section.model'
 
 import { InputRating, InputText, InputTextarea } from './form-input'
 import { FormInputRow } from './form-input-row'
+import { InputTextTypes } from './form-input/input-text/InputText'
 import styles from './FormInputs.module.scss'
 
 interface FormInputsProps {
@@ -38,7 +40,7 @@ const FormInputs: (props: FormInputsProps) => JSX.Element = (props: FormInputsPr
         let inputElement: JSX.Element
         switch (input.type) {
 
-            case 'rating':
+            case FormInputTypes.rating:
                 inputElement = (
                     <InputRating
                         {...input}
@@ -49,7 +51,7 @@ const FormInputs: (props: FormInputsProps) => JSX.Element = (props: FormInputsPr
                 )
                 break
 
-            case 'textarea':
+            case FormInputTypes.textarea:
                 inputElement = (
                     <InputTextarea
                         {...input}
@@ -68,7 +70,7 @@ const FormInputs: (props: FormInputsProps) => JSX.Element = (props: FormInputsPr
                         onBlur={onBlur}
                         onChange={onChange}
                         tabIndex={tabIndex}
-                        type={input.type || 'text'}
+                        type={input.type as InputTextTypes || 'text'}
                         value={input.value}
                     />
                 )
