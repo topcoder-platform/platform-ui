@@ -1,4 +1,4 @@
-import imgBugHunt from '../../../work-images/bug-hunt-main.jpeg'
+import imgBugHunt from '../../../work-images/bug-hunt-tile.jpeg'
 import { WorkType } from '../work-factory'
 
 import { WorkIntakeFormRoutes } from './work-intake-form-routes.config'
