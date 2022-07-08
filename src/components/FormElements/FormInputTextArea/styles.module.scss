@@ -10,15 +10,16 @@
   border: 0 !important;
   padding: 0 15px !important;
   width: 100% !important;
-  height: 70px;
+  height: 117px !important;
   resize: none;
+  @include font-roboto;
+
 
   &::placeholder {
     color: #aaaaaa !important;
     font-size: 18px !important;
     text-transform: none !important;
     font-weight: 400;
-    @include font-barlow;
   }
 
   &:focus {
