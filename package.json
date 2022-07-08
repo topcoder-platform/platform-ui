@@ -11,7 +11,7 @@
         "eslint": "eslint 'src/**/*.{js,jsx}'",
         "eslint:fix": "eslint 'src/**/*.{js,jsx}' --fix",
         "test": "react-scripts test --watchAll",
-        "test:no-watch": "react-scripts test --watchAll=false --passWithNoTests"\
+        "test:no-watch": "react-scripts test --watchAll=false --passWithNoTests"
     },
     "dependencies": {
         "@datadog/browser-logs": "^4.7.1",
