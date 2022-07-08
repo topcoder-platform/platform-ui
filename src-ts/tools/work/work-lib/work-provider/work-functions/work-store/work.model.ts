@@ -1,4 +1,3 @@
-
 import { WorkProgress } from './work-progress.model'
 import { WorkStatus } from './work-status.enum'
 import { WorkTypeCategory } from './work-type-category.enum'
