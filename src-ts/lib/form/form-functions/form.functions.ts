@@ -40,7 +40,7 @@ export function getNonStaticInputFields(elements: ReadonlyArray<Element>): Array
 
 export function getInputModel(fieldName: string, fields: ReadonlyArray<NonStaticField>): NonStaticField {
 
-    const formField: NonStaticField | undefined = fields && fields.find(input => input.name === fieldName)
+    const formField: NonStaticField | undefined = fields.find(input => input.name === fieldName)
 
     // if we can't find the input we have a problem
     if (!formField) {
@@ -98,7 +98,7 @@ export async function onSubmitAsync<T>(
     const inputs: Array<Field> = getFormInputFields(elements)
 
     // get the dirty fields before we validate b/c validation marks them dirty on submit
-    const dirty: Field | undefined = inputs && inputs.find(fieldDef => !!fieldDef.dirty)
+    const dirty: Field | undefined = inputs?.find(fieldDef => !!fieldDef.dirty)
 
     // if there are any validation errors, display a message and stop submitting
     // NOTE: need to check this before we check if the form is dirty bc you
@@ -197,8 +197,7 @@ function validateField(formInputDef: NonStaticField, formElements: HTMLFormContr
 }
 
 function validateForm(formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit', inputs?: ReadonlyArray<NonStaticField>): boolean {
-    const errors: ReadonlyArray<NonStaticField> = inputs && inputs
-        .filter(formInputDef => {
+    const errors: ReadonlyArray<NonStaticField> = inputs?.filter(formInputDef => {
             formInputDef.dirty = formInputDef.dirty || event === 'submit'
             validateField(formInputDef, formElements, event)
             return !!formInputDef.error
