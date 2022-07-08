@@ -11,7 +11,7 @@
   grid-template-columns: 1fr 359px;
 
   &.website-design,
-  &.website-design-new,
+  &.website-design-legacy,
   &.data-exploration,
   &.review--payment {
     background: linear-gradient(84.92deg, #065D6E 2.08%, #06596E 2.09%, #3E3B91 97.43%);
@@ -61,6 +61,7 @@
     &.data-exploration {
       background: url("../../../assets/images/data-exploration.png");
       background-size: cover;
+
       @include mobile {
         background: url("../../../assets/images/data-exploration-mobile.png");
         background-size: cover;
@@ -71,6 +72,7 @@
     &.find-me-data {
       background: url("../../../assets/images/find-me-data.png");
       background-size: cover;
+
       @include mobile {
         background: url("../../../assets/images/find-me-data-mobile.png");
         background-size: cover;
@@ -81,6 +83,7 @@
     &.problem-statement--data-advisory {
       background: url("../../../assets/images/problem-statement.png");
       background-size: cover;
+
       @include mobile {
         background: url("../../../assets/images/problem-statement-mobile.png");
         background-size: cover;
@@ -89,7 +92,7 @@
     }
 
     &.website-design,
-    &.website-design-new {
+    &.website-design-legacy {
       background: url("../../../assets/images/website-design-v2.png");
       background-size: cover;
 

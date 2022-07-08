@@ -46,7 +46,7 @@ const LoginPrompt = ({
 
   const onBack = () => {
     navigate(
-      previousPageUrl || "/self-service/work/new/website-design/page-details"
+      previousPageUrl || "/self-service/work/new/website-design-legacy/page-details"
     );
   };
 

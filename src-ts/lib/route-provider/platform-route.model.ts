@@ -1,6 +1,7 @@
 import { FC, SVGProps } from 'react'
 
 export interface PlatformRoute {
+    alternativePaths?: Array<string>
     children?: Array<PlatformRoute>
     disabled?: boolean
     element: JSX.Element

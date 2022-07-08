@@ -78,7 +78,7 @@ const BasicInfoLegacy = ({
   const onNext = () => {
     setProgressItem(3);
     saveBasicInfo(formData);
-    navigate("/self-service/work/new/website-design/website-purpose");
+    navigate("/self-service/work/new/website-design-legacy/website-purpose");
   };
 
   const updateNumOfPages = (newNumOfPages) => {
@@ -119,8 +119,8 @@ const BasicInfoLegacy = ({
 
     if (currentStep === 0) {
       saveWorkType({
-        selectedWorkType: "Website Design",
-        selectedWorkTypeDetail: "Website Design",
+        selectedWorkType: "Website Design Legacy",
+        selectedWorkTypeDetail: "Website Design Legacy",
       });
       dispatch(triggerAutoSave(true, isLoggedIn));
     }
@@ -173,8 +173,11 @@ const BasicInfoLegacy = ({
       <Page>
         <Breadcrumb items={breadcrumbs} />
         <WebsiteDesignBannerLegacy />
-        <PageContent styleName={styles["container"]}>
-          <PageH2>BASIC INFO</PageH2>
+        <PageContent styleName={"container"}>
+          <div className={styles["title-wrapper"]}>
+            <PageH2>BASIC INFO</PageH2>
+          </div>
+          <Progress level={2} setStep={setProgressItem} />
           <PageDivider />
 
           <BasicInfoFormLegacy
@@ -222,8 +225,6 @@ const BasicInfoLegacy = ({
               </div>
             </div>
           </PageFoot>
-
-          <Progress level={2} setStep={setProgressItem} />
         </PageContent>
       </Page>
     </>

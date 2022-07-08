@@ -14,7 +14,7 @@
   border-radius: 8px;
 
   &.website-design,
-  &.website-design-new {
+  &.website-design-legacy {
     background: linear-gradient(263.22deg, #038664 2.65%, #075f96 98.14%),
       #ffffff;
   }
@@ -269,9 +269,15 @@
 
 .pageContent {
   margin-top: 0;
-  padding-right: 0;
-  padding-left: 0;
-  padding-top: 28px;
+  padding: 40px 0;
+
+  @include mobile {
+    padding: 20px;
+  }
+
+  background: white;
+  border-radius: 8px;
+  position: relative;
 }
 
 .pageHeading {
@@ -279,6 +285,8 @@
   margin-top: 0;
   font-weight: 600;
   color: #2a2a2a;
+  font-size: 34px;
+  line-height: 32px;
 
   @include mobile {
     font-size: 28px;

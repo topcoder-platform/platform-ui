@@ -41,7 +41,7 @@ const Progress = ({ level, styleName, setStep, ...props }) => {
           <span className={styles["level-num"]}>STEP {trueLevel.showIndex} </span>
           <span className={styles["muted"]}>/ {levels.length}</span>
         </div>
-        <div>{trueLevel.label}</div>
+        <div className={styles["label"]}>{trueLevel.label}</div>
       </div>
       <ProgressDonutChart
         className={styles["progress-donut-chart"]}

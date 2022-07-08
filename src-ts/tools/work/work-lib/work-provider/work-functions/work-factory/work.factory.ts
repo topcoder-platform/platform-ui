@@ -6,11 +6,11 @@ import {
     ChallengeMetadataName,
     ChallengePhase,
     ChallengePhaseName,
+    WorkPrice,
+    WorkPricesType,
 } from '../work-store'
 
 import { ChallengeStatus } from './challenge-status.enum'
-import { WorkPrice } from './work-price.model'
-import { WorkPrices } from './work-prices.config'
 import { WorkProgressStep } from './work-progress-step.model'
 import { WorkProgress } from './work-progress.model'
 import { WorkStatus } from './work-status.enum'
@@ -38,14 +38,15 @@ interface IntakeForm {
     }
 }
 
-export function create(challenge: Challenge): Work {
+export function create(challenge: Challenge, workPrices: WorkPricesType): Work {
 
     const status: WorkStatus = getStatus(challenge)
     const submittedDate: Date | undefined = getSubmittedDate(challenge)
     const type: WorkType = getType(challenge)
+    const priceConfig: WorkPrice = workPrices[type]
 
     return {
-        cost: getCost(challenge, type),
+        cost: getCost(challenge, priceConfig, type),
         created: submittedDate,
         description: getDescription(challenge, type),
         id: challenge.id,
@@ -254,15 +255,8 @@ function findPhase(challenge: Challenge, phases: Array<string>): ChallengePhase 
     return phase
 }
 
-// the switch statement shouldn't count against cyclomatic complexity
-// tslint:disable-next-line: cyclomatic-complexity
-function getCost(challenge: Challenge, type: WorkType): number | undefined {
+function getCost(challenge: Challenge, priceConfig: WorkPrice, type: WorkType): number | undefined {
 
-    function getCountFromString(raw: string | undefined): number {
-        return Number(raw?.split(' ')?.[0] || '0')
-    }
-
-    const priceConfig: WorkPrice = WorkPrices[type]
     switch (type) {
 
         case WorkType.designLegacy:
