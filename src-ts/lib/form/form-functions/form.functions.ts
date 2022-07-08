@@ -5,6 +5,7 @@ import { Element, FormDefinition } from '../form-definition.model'
 import { Field, FormFieldModel, NonStaticField } from '../form-field.model'
 import { FormInputModel } from '../form-input.model'
 import { FormOptionSelectorModel } from '../form-option-selector.model'
+import { FormSectionModel } from '../form-section.model'
 
 export function getInputElement(formElements: HTMLFormControlsCollection, fieldName: string): HTMLInputElement {
     return formElements.namedItem(fieldName) as HTMLInputElement
@@ -29,8 +30,12 @@ export function isNonStaticField({isStatic}: Field): boolean {
 export function getFormInputFields(fields: ReadonlyArray<Element>): Array<Field> {
     const formFields: Array<FormFieldModel> = fields
         .filter((item: Element) => item.type === 'field') as Array<FormFieldModel>
+    const formSectionFields: Array<FormSectionModel> = fields.filter((item: Element) => item.type === 'section') as Array<FormSectionModel>
 
-    return formFields.map((item: FormFieldModel) => item.field)
+    const inputFields: Array<Field> = formFields.map((item: FormFieldModel) => item.field)
+    const sectionFields: Array<Field> = formSectionFields.map(item => item.fields).reduce((prev: Array<Field>, current: Array<Field>) => ([...prev, ...current]), [])
+    const allFields: Array<Field> = [...inputFields, ...sectionFields]
+    return allFields
 }
 
 // This function returns the list of non static input elements
@@ -72,8 +77,7 @@ export function onChange<T>(event: ChangeEvent<HTMLInputElement | HTMLTextAreaEl
 }
 
 export function onReset(inputs: ReadonlyArray<NonStaticField>, formValue?: any): void {
-    inputs
-        .forEach(inputDef => {
+    inputs?.forEach(inputDef => {
             if (isInputField(inputDef)) {
                 const typeCastedInput: FormInputModel = inputDef as FormInputModel
                 typeCastedInput.dirty = false

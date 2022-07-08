@@ -15,7 +15,8 @@ import { Button } from '../button'
 import '../styles/index.scss'
 import { IconOutline } from '../svgs'
 
-import { Element, FormDefinition } from './form-definition.model'
+import { FormDefinition } from './form-definition.model'
+import { FormElements } from './form-elements'
 import { NonStaticField } from './form-field.model'
 import {
     formInitializeValues,
@@ -24,8 +25,7 @@ import {
     formOnReset,
     formOnSubmitAsync,
 } from './form-functions'
-import { getFormInputFields, getNonStaticInputFields, isNonStaticField } from './form-functions/form.functions'
-import { FormInputs } from './form-inputs'
+import { getNonStaticInputFields } from './form-functions/form.functions'
 import styles from './Form.module.scss'
 
 interface FormProps<ValueType, RequestType> {
@@ -158,7 +158,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                     </div>
                 )}
 
-                <FormInputs
+                <FormElements
                     inputs={inputs}
                     formDef={formDef}
                     onBlur={onBlur}

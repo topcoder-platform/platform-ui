@@ -1,0 +1,31 @@
+@import "../../../styles/includes";
+
+.form-section {
+  margin-top: 32px;
+  .title {
+    @include font-barlow;
+    font-weight: 600;
+    font-size: 22px;
+    line-height: 26px;
+    text-transform: uppercase;
+  }
+
+  .section-content {
+    display: flex;
+    flex: 1;
+    margin-top: 24px;
+    .left {
+      flex: 1;
+      .section-description {
+        @include font-roboto;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 24px;
+      }
+    }
+
+    .right {
+      flex: 1;
+    }
+  }
+}

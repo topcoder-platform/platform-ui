@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom'
 
 import { PlatformRoute } from '../../lib'
+import FormWrapper from '../../lib/form/form-config-sample'
 
 import Work, { toolTitle } from './Work'
 import { WorkNotLoggedIn } from './work-not-logged-in'
@@ -24,7 +25,7 @@ export const workRoutes: Array<PlatformRoute> = [
         title: 'Redirect the base path to the logged out landing',
     },
     {
-        element: <WorkNotLoggedIn />,
+        element: <FormWrapper />,
         hide: true,
         route: rootRoute,
         title: 'Logged Out Landing',

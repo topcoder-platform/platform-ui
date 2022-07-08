@@ -1,5 +1,5 @@
+import { FormInputAutocompleteOption } from './form-elements'
 import { InputEvent } from './form-input.event'
-import { FormInputAutocompleteOption } from './form-inputs'
 import { ValidatorFn } from './validator-functions'
 
 export enum FormInputTypes {

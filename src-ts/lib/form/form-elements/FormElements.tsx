@@ -1,34 +1,35 @@
 import { ChangeEvent, FocusEvent } from 'react'
-import { FormInputTypes } from '..'
 
 import { FormDefinition } from '../form-definition.model'
 import { FormFieldModel, NonStaticField } from '../form-field.model'
 import { formGetInputModel } from '../form-functions'
-import { FormInputModel } from '../form-input.model'
+import { FormInputModel, FormInputTypes } from '../form-input.model'
 import { FormSectionModel } from '../form-section.model'
 
 import { InputRating, InputText, InputTextarea } from './form-input'
 import { FormInputRow } from './form-input-row'
 import { InputTextTypes } from './form-input/input-text/InputText'
-import styles from './FormInputs.module.scss'
+import FromSection from './form-section'
+import styles from './FormElements.module.scss'
 
-interface FormInputsProps {
+interface FormElementsProps {
     formDef: FormDefinition
     inputs: Array<NonStaticField>
     onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void
     onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
 }
 
-const FormInputs: (props: FormInputsProps) => JSX.Element = (props: FormInputsProps) => {
+const FormElements: (props: FormElementsProps) => JSX.Element = (props: FormElementsProps) => {
 
-    const { formDef, onBlur, onChange }: FormInputsProps = props
+    const { formDef, onBlur, onChange }: FormElementsProps = props
 
-    const formInputElements: Array<JSX.Element | undefined> = formDef.elements?.map((element: FormSectionModel | FormFieldModel) => {
-        if (element.type === 'field') {
-            return formGetInputModel(element.field.name, props.inputs)
-        }
-    })
-    .map((inputModel, index) => {
+    const formInputElements: Array<FormFieldModel> = formDef
+        .elements?.filter(element => element.type === 'field') as Array<FormFieldModel>
+
+    const formInputSections: Array<FormSectionModel> = formDef
+        .elements?.filter(element => element.type === 'section') as Array<FormSectionModel>
+
+    const renderInputField: (inputModel: NonStaticField, index: number) => JSX.Element | undefined = (inputModel, index) => {
 
         if (!inputModel) {
             return
@@ -86,13 +87,23 @@ const FormInputs: (props: FormInputsProps) => JSX.Element = (props: FormInputsPr
                 {inputElement}
             </FormInputRow>
         )
-    }) || []
+    }
+
+    const formSections: Array<JSX.Element | undefined> = formInputSections.map((element: FormSectionModel) => {
+        return <FromSection section={element} renderFormInput={renderInputField} />
+    })
+
+    const formInputs: Array<JSX.Element | undefined> = formInputElements.map((element: FormFieldModel) => {
+            return formGetInputModel(element.field.name, props.inputs)
+        })
+        .map(renderInputField) || []
 
     return (
         <div className={styles['form-inputs']}>
-            {formInputElements}
+            {formInputs}
+            {formSections}
         </div>
     )
 }
 
-export default FormInputs
+export default FormElements

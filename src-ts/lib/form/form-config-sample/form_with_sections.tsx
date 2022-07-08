@@ -47,7 +47,10 @@ export const FormConfig: FormDefinition = {
       type: 'section',
     },
     {
-      description: 'Do you have any specific goals for your website bug hunt? For example: find bugs in my online shopping experience',
+      description: `
+          Do you have any specific goals for your website bug hunt? </br>
+		  For example: find bugs in my online shopping experience
+		`,
       fields: [
         {
           events: [
@@ -69,7 +72,10 @@ export const FormConfig: FormDefinition = {
       type: 'section',
     },
     {
-      description: 'Are there specific features we should focus on testing? For example: [An example not used above]',
+      description: `
+	  	Are there specific features we should focus on testing? </br>
+		For example: [An example not used above]
+		`,
       fields: [
         {
           events: [
