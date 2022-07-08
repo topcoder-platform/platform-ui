@@ -41,8 +41,6 @@ running_yarn_tslint: &running_yarn_tslint
     name: Running Yarn tslint
     command: |
       yarn add tslint -g
-      tslint -v
-      tslint "src-ts/**/*.{ts,tsx}"
       yarn lint
 
 running_yarn_build: &running_yarn_build
