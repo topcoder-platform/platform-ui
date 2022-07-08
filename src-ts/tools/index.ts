@@ -25,4 +25,5 @@ export {
     WorkTypeCategoryDesignIcon,
     WorkTypeCategoryUnknownIcon,
     WorkTypeConfigs,
+    BugHuntIntakeForm,
 } from './work'
