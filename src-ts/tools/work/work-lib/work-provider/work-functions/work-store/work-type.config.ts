@@ -15,7 +15,7 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
                 registration period, where experienced quality assurance engineers signup to register for the bug hunt. After the registration
                 period completes, we will run the bug hunt for the time which meets the option you choose below.`,
         bgImage: imgBugHunt,
-        description: 'This is Bug Hunt description',
+        description: 'Conduct a time based testing bug hunt where Topcoder experts scramble to find bugs or issues in the system',
         // TODO: The duration will be based on the package the user selects
         duration: 2,
         featured: true,
