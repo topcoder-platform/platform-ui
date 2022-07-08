@@ -34,10 +34,10 @@ import {
   Breadcrumb,
   ChallengeMetadataName,
   TabsNavbar,
-  workContext,
   WorkDetailDetails,
   WorkDetailHeader,
   WorkDetailSummary,
+  workFactoryGetStatus,
   WorkFeedback,
   WorkStatusItem,
   WorkDetailSolutions,
@@ -74,9 +74,8 @@ const WorkItem = ({
   const { profile } = useContext(profileContext)
   const navigate = useNavigate()
 
-  const workContextData = useContext(workContext);
   const workStatus = !!work
-    ? workContextData.getStatusFromChallenge(work)
+    ? workFactoryGetStatus(work)
     : undefined;
 
   useEffect(() => {
