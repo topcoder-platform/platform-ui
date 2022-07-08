@@ -2,7 +2,7 @@ import moment from 'moment'
 
 import {
     Challenge,
-    ChallengeCreate,
+    ChallengeCreateBody,
     ChallengeMetadata,
     ChallengeMetadataName,
     ChallengePhase,
@@ -64,7 +64,7 @@ export function create(challenge: Challenge, workPrices: WorkPricesType): Work {
     }
 }
 
-export function buildCreateBody(type: string): ChallengeCreate {
+export function buildCreateBody(type: string): ChallengeCreateBody {
     // TODO: once configs are merged, use type and config to fetch the necessary fields
     return {
         description: 'Information not provided',

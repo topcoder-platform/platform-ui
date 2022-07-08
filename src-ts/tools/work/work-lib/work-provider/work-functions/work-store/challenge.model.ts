@@ -1,5 +1,6 @@
 import { ChallengeMetadata } from './challenge-metadata.model'
 import { ChallengePhase } from './challenge-phase'
+import { WorkTimeline } from './work-timeline.model'
 
 export interface Challenge {
     created: string
@@ -15,7 +16,7 @@ export interface Challenge {
     updated?: string
 }
 
-export interface ChallengeCreate {
+export interface ChallengeCreateBody {
     description: string,
     discussions: Array<{ [key: string]: string }>,
     legacy: { [key: string]: any },
@@ -24,4 +25,18 @@ export interface ChallengeCreate {
     timelineTemplateId: string,
     trackId: string,
     typeId: string,
+}
+
+interface PrizeSetsType {
+    type: 'USD',
+    value: number,
+}
+
+export interface ChallengeUpdateBody {
+    description: string,
+    id: string, // Maria do we include id here?
+    metadata: Array<ChallengeMetadata>
+    name: string,
+    phases: ReadonlyArray<WorkTimeline>
+    prizeSets: Array<PrizeSetsType>
 }
