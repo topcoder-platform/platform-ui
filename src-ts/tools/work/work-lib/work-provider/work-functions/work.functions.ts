@@ -3,7 +3,7 @@ import { Page } from '../../../../../lib'
 
 import { WorkByStatus } from './work-by-status.model'
 import { Work, workFactoryBuildCreateBody, workFactoryCreate, WorkStatus, WorkType } from './work-factory'
-import { Challenge, ChallengeCreate, WorkStatusFilter, workStoreCreateAsync, workStoreDeleteAsync, workStoreGetAsync, workStoreGetFilteredByStatus } from './work-store'
+import { Challenge, ChallengeCreate, WorkPrices, WorkStatusFilter, workStoreCreateAsync, workStoreDeleteAsync, workStoreGetAsync, workStoreGetFilteredByStatus } from './work-store'
 
 export async function createAsync(type: WorkType): Promise<void> {
     const body: ChallengeCreate = workFactoryBuildCreateBody(type)
@@ -21,7 +21,7 @@ export async function getAsync(handle: string, page: Page): Promise<Array<Work>>
 
     // run it through the factory and filter out deleted and non-self-service
     const workItems: Array<Work> = challenges
-        .map(challenge => workFactoryCreate(challenge))
+        .map(challenge => workFactoryCreate(challenge, WorkPrices))
         .filter(work => work.status !== WorkStatus.deleted && work.type !== WorkType.unknown)
 
     return workItems

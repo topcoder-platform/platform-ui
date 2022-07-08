@@ -1,10 +1,3 @@
-export {
-    data as workPriceData,
-    design as workPriceDesign,
-    designLegacy as workPriceDesignLegacy,
-    findData as workPriceFindData,
-    problem as workPriceProblem,
-} from './work-prices.config'
 export * from './work-progress.model'
 export * from './work-progress-step.model'
 export * from './work-status.enum'
