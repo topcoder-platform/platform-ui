@@ -13,6 +13,7 @@ export {
     WorkDetailSummary,
     WorkDetailSolutions,
     workFactoryMapFormData,
+    workFactoryGetStatus,
     WorkFeedback,
     workPriceData,
     workPriceDesign,

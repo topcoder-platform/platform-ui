@@ -1,6 +1,5 @@
-import { WorkType } from '../work-factory'
-
 import { WorkTimeline } from './work-timeline.model'
+import { WorkType } from './work-type.enum'
 
 export const WorkTimelines: { [workType: string]: ReadonlyArray<WorkTimeline> } = {
     // TODO: Determine actual timeline for Bug Hunt

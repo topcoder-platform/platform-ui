@@ -1,9 +1,10 @@
-import { Page, xhrDeleteAsync, xhrGetAsync  } from '../../../../../../lib'
-import { Work, WorkStatus } from '../work-factory'
+import { Page, xhrDeleteAsync, xhrGetAsync } from '../../../../../../lib'
 
 import { Challenge } from './challenge.model'
 import { WorkStatusFilter } from './work-status-filter.enum'
+import { WorkStatus } from './work-status.enum'
 import { deleteUrl, getUrl } from './work-url.config'
+import { Work } from './work.model'
 
 export async function deleteAsync(workId: string): Promise<void> {
     return xhrDeleteAsync(deleteUrl(workId))

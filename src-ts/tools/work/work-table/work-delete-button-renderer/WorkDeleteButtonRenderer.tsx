@@ -8,13 +8,11 @@ import {
     Tooltip,
 } from '../../../../lib'
 import '../../../../lib/styles/index.scss'
-import { Work, workContext, WorkContextData, WorkStatus } from '../../work-lib'
+import { Work, workContext, WorkContextData, workDeleteAsync, WorkStatus } from '../../work-lib'
 
 function WorkDeleteButtonRenderer(work: Work): JSX.Element | undefined {
 
     const workContextData: WorkContextData = useContext(workContext)
-    const { deleteWorkAsync }: WorkContextData = workContextData
-
     const [confirmationOpen, setConfirmationOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
     // if the item is in draft status, don't display anything
@@ -24,7 +22,8 @@ function WorkDeleteButtonRenderer(work: Work): JSX.Element | undefined {
 
     async function deleteWork(): Promise<void> {
         toggleConfirmation()
-        await deleteWorkAsync(work.id)
+        await workDeleteAsync(work.id)
+        await workContextData.refresh()
         toast.success('Your draft work has been deleted.')
     }
 

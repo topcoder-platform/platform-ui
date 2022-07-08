@@ -1,6 +1,6 @@
-import { FC, useContext, useMemo } from 'react'
+import { FC, useMemo } from 'react'
 
-import { Work, workContext, WorkContextData, WorkSolution, WorkStatus } from '../work-lib'
+import { Work, workCreateFromChallenge, WorkSolution, WorkStatus } from '../work-lib'
 
 import { WorkSolutionsList } from './work-solutions-list'
 import styles from './WorkDetailSolutions.module.scss'
@@ -13,17 +13,12 @@ interface WorkDetailSolutionsProps {
 
 const WorkDetailSolutions: FC<WorkDetailSolutionsProps> = (props: WorkDetailSolutionsProps) => {
 
-    const workContextData: WorkContextData = useContext(workContext)
-
-    const work: Work | undefined = !!props.challenge ? workContextData.createFromChallenge(props.challenge) :   undefined
+    const work: Work | undefined = !!props.challenge ? workCreateFromChallenge(props.challenge) : undefined
 
     const isSolutionsReady: boolean = useMemo(() => {
         const activeStepName: string | undefined = work?.progress.steps[work?.progress.activeStepIndex]?.name
         return (activeStepName === WorkStatus.ready || activeStepName === WorkStatus.done)
-    }, [
-        work,
-        props.solutions,
-    ])
+    }, [work])
 
     if (!props.challenge) {
         return <></>
