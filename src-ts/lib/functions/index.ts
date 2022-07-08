@@ -4,7 +4,7 @@ export {
     authUrlLogout,
     authUrlSignup,
 } from './authentication-functions'
-export * from './component-visible-functions'
+export * from './file-functions'
 export * from './logging-functions'
 export * from './text-format-functions'
 export * from './user-functions'
