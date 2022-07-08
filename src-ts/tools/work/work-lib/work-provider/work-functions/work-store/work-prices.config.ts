@@ -1,7 +1,25 @@
+import { WorkType } from '../work-factory'
+
 import { WorkPrice } from './work-price.model'
-import { WorkType } from './work-type.enum'
 
 export const WorkPrices: { [workType: string]: WorkPrice } = {
+    // TODO: modify payments specific to bug hunt
+    [WorkType.bugHunt]: {
+        base: 2,
+        getPrice: getPriceDefault,
+        payments: {
+            base: {
+                prizes: [0.2609, 0.2174, 0.1304],
+                reviewers: [0.0435, 0.0435],
+            },
+            promo: {
+                prizes: [0.348, 0.29, 0.174],
+                reviewers: [0.058, 0.058],
+            },
+        },
+        promo: 1,
+        usePromo: true,
+    },
     [WorkType.data]: {
         base: 799,
         getPrice: getPriceDefault,
@@ -41,6 +59,9 @@ export const WorkPrices: { [workType: string]: WorkPrice } = {
     },
 }
 
+export type WorkPricesType = typeof WorkPrices
+
+export const bugHunt: WorkPrice = WorkPrices[WorkType.bugHunt]
 export const data: WorkPrice = WorkPrices[WorkType.data]
 export const design: WorkPrice = WorkPrices[WorkType.design]
 export const designLegacy: WorkPrice = WorkPrices[WorkType.designLegacy]

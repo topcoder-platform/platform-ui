@@ -1,4 +1,5 @@
 export enum WorkType {
+    bugHunt = 'Website Bug Hunt',
     data = 'Data Exploration',
     design = 'Website Design',
     designLegacy = 'Website Design Legacy',

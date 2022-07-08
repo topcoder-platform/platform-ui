@@ -24,4 +24,5 @@ export {
     WorkTypeCategoryDataIcon,
     WorkTypeCategoryDesignIcon,
     WorkTypeCategoryUnknownIcon,
+    WorkTypeConfigs,
 } from './work'
