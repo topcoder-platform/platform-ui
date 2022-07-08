@@ -6,6 +6,7 @@ export * from './challenge.model'
 export * from './work-price.model'
 export * from './work-prices-type.model'
 export {
+    bugHunt as workPriceBugHunt,
     data as workPriceData,
     design as workPriceDesign,
     designLegacy as workPriceDesignLegacy,
