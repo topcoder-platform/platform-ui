@@ -16,6 +16,8 @@ logInitialize(EnvironmentConfig);
 
 const App = () => {
 
+  // TODO: fix lint error
+  let fun = 'fun'
   const { initialized } = useContext(profileContext)
 
   useLayoutEffect(() => {
