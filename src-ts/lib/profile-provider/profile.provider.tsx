@@ -18,6 +18,18 @@ export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { chi
         return userUpdatePasswordAsync(userId, request.password, request.newPassword)
     }
 
+    async function getAndSetProfileAsync(): Promise<void> {
+        const profile: UserProfile | undefined = await profileGetAsync()
+        const contextData: ProfileContextData = {
+            changePassword,
+            initialized: true,
+            isLoggedIn: !!profile,
+            profile,
+            updateProfile,
+        }
+        setProfileContextData(contextData)
+    }
+
     function updateProfile(updatedContext: ProfileContextData): Promise<void> {
 
         const { profile }: ProfileContextData = updatedContext
@@ -40,18 +52,6 @@ export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { chi
         // if our profile is already initialized, no need to continue
         if (profileContextData.initialized) {
             return
-        }
-
-        const getAndSetProfileAsync: () => Promise<void> = async () => {
-            const profile: UserProfile | undefined = await profileGetAsync()
-            const contextData: ProfileContextData = {
-                changePassword,
-                initialized: true,
-                isLoggedIn: !!profile,
-                profile,
-                updateProfile,
-            }
-            setProfileContextData(contextData)
         }
 
         getAndSetProfileAsync()

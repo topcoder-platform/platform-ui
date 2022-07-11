@@ -19,6 +19,66 @@ interface FormElementsProps {
     onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
 }
 
+export const renderInputField: (inputModel: NonStaticField, index: number, formDef: FormDefinition, onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void, onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void) => JSX.Element | undefined = (inputModel, index, formDef, onChange, onBlur) => {
+
+    if (!inputModel) {
+        return
+    }
+
+    const input: FormInputModel = inputModel as FormInputModel
+    const tabIndex: number = inputModel.notTabbable ? -1 : index + 1 + (formDef.tabIndexStart || 0)
+
+    let inputElement: JSX.Element
+    switch (input.type) {
+
+        case FormInputTypes.rating:
+            inputElement = (
+                <InputRating
+                    {...input}
+                    onChange={onChange}
+                    tabIndex={tabIndex}
+                    value={input.value}
+                />
+            )
+            break
+
+        case FormInputTypes.textarea:
+            inputElement = (
+                <InputTextarea
+                    {...input}
+                    onBlur={onBlur}
+                    onChange={onChange}
+                    tabIndex={tabIndex}
+                    value={input.value}
+                />
+            )
+            break
+
+        default:
+            inputElement = (
+                <InputText
+                    {...input}
+                    onBlur={onBlur}
+                    onChange={onChange}
+                    tabIndex={tabIndex}
+                    type={input.type as InputTextTypes || 'text'}
+                    value={input.value}
+                />
+            )
+            break
+    }
+
+    return (
+        <FormInputRow
+            key={inputModel.name}
+            index={index}
+            input={input}
+        >
+            {inputElement}
+        </FormInputRow>
+    )
+}
+
 const FormElements: (props: FormElementsProps) => JSX.Element = (props: FormElementsProps) => {
 
     const { formDef, onBlur, onChange }: FormElementsProps = props
@@ -29,74 +89,14 @@ const FormElements: (props: FormElementsProps) => JSX.Element = (props: FormElem
     const formInputSections: Array<FormSectionModel> = formDef
         .elements?.filter(element => element.type === 'section') as Array<FormSectionModel>
 
-    const renderInputField: (inputModel: NonStaticField, index: number) => JSX.Element | undefined = (inputModel, index) => {
-
-        if (!inputModel) {
-            return
-        }
-
-        const input: FormInputModel = inputModel as FormInputModel
-        const tabIndex: number = inputModel.notTabbable ? -1 : index + 1 + (formDef.tabIndexStart || 0)
-
-        let inputElement: JSX.Element
-        switch (input.type) {
-
-            case FormInputTypes.rating:
-                inputElement = (
-                    <InputRating
-                        {...input}
-                        onChange={onChange}
-                        tabIndex={tabIndex}
-                        value={input.value}
-                    />
-                )
-                break
-
-            case FormInputTypes.textarea:
-                inputElement = (
-                    <InputTextarea
-                        {...input}
-                        onBlur={onBlur}
-                        onChange={onChange}
-                        tabIndex={tabIndex}
-                        value={input.value}
-                    />
-                )
-                break
-
-            default:
-                inputElement = (
-                    <InputText
-                        {...input}
-                        onBlur={onBlur}
-                        onChange={onChange}
-                        tabIndex={tabIndex}
-                        type={input.type as InputTextTypes || 'text'}
-                        value={input.value}
-                    />
-                )
-                break
-        }
-
-        return (
-            <FormInputRow
-                key={inputModel.name}
-                index={index}
-                input={input}
-            >
-                {inputElement}
-            </FormInputRow>
-        )
-    }
-
     const formSections: Array<JSX.Element | undefined> = formInputSections.map((element: FormSectionModel) => {
-        return <FromSection section={element} renderFormInput={renderInputField} />
+        return <FromSection section={element} renderFormInput={(field: NonStaticField, index: number) => renderInputField(field, index, formDef, onChange, onBlur)} />
     })
 
     const formInputs: Array<JSX.Element | undefined> = formInputElements.map((element: FormFieldModel) => {
             return formGetInputModel(element.field.name, props.inputs)
         })
-        .map(renderInputField) || []
+        .map((model, index) => renderInputField(model, index, formDef, onChange, onBlur)) || []
 
     return (
         <div className={styles['form-inputs']}>

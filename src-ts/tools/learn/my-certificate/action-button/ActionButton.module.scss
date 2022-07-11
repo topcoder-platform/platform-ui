@@ -1,0 +1,18 @@
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+
+    color: $tc-white;
+    border: $border solid $tc-white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 8px;
+
+    cursor: pointer;
+}

@@ -1,0 +1,27 @@
+@use '../../../../lib/styles/typography';
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    display: flex;
+    flex-direction: column;
+    gap: $pad-lg;
+
+    position: relative;
+
+    :global(.loading-spinner) {
+        background: transparent;
+    }
+}
+
+.content {
+    flex: 1 1 auto;
+    overflow: auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: $pad-lg;
+
+    @include scrollbar;
+    padding-right: 5px;
+    margin-right: -5px;
+}

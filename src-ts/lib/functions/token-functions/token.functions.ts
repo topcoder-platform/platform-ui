@@ -15,7 +15,10 @@ export async function getAsync(): Promise<TokenModel> {
     }
 
     try {
-        const { handle }: { handle?: string } = decodeToken(token)
+        const { handle, roles }: {
+            handle?: string
+            roles?: Array<string>
+        } = decodeToken(token)
 
         // if we didn't find the handle, we have a bad token
         if (!handle) {
@@ -23,7 +26,7 @@ export async function getAsync(): Promise<TokenModel> {
             return Promise.resolve({})
         }
 
-        return Promise.resolve({ handle, token })
+        return Promise.resolve({ handle, roles, token })
 
     } catch (error: any) {
         logError(error)

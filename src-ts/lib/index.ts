@@ -11,12 +11,13 @@ export {
     authUrlLogin,
     authUrlLogout,
     authUrlSignup,
+    fileCreateFromCanvas,
+    fileDownloadBlob,
+    fileDownloadCanvasAsImage,
     logInfo,
     logInitialize,
     textFormatDateLocaleShortString,
     textFormatMoneyLocaleString,
-    useClickOutside,
-    useOnHoverElement,
     xhrDeleteAsync,
     xhrGetAsync,
     xhrGetBlobAsync,
@@ -24,12 +25,14 @@ export {
     xhrPostAsync,
 } from './functions'
 export * from './info-card'
+export * from './hooks'
 export * from './loading-spinner'
 export * from './modals'
 export * from './page-footer'
 export * from './pagination'
 export * from './portal'
 export * from './profile-provider'
+export * from './progress-bar'
 export * from './route-provider'
 export * from './svgs'
 export * from './table'

@@ -10,7 +10,7 @@ interface FormSection {
     section: FormSectionModel
 }
 
-const FromSection: React.FC<FormSection> = ({section, renderFormInput}: FormSection) => {
+const FormSection: React.FC<FormSection> = ({section, renderFormInput}: FormSection) => {
     const { description, title, fields }: FormSectionModel = section
 
     const inputFields: Array<JSX.Element | undefined> = fields.map((field: Field, index: number) => renderFormInput(field as NonStaticField, index))
@@ -30,4 +30,4 @@ const FromSection: React.FC<FormSection> = ({section, renderFormInput}: FormSect
     )
 }
 
-export default FromSection
+export default FormSection
