@@ -1,5 +1,4 @@
-import { FormDefinition, FormInputAutocompleteOption, FormInputTypes, validatorRequired } from '../../../../lib'
-import { FormFieldType } from '../../../../lib/form/form-field.model'
+import { FormDefinition, FormFieldType, FormInputAutocompleteOption, FormInputTypes, validatorRequired } from '../../../../lib'
 
 export const editNameFormTitle: string = 'Edit Name'
 

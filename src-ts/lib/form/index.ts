@@ -8,5 +8,8 @@ export {
     formGetNonStaticInputFields,
 } from './form-functions'
 export * from './form-input.model'
+export * from './form-field.model'
+export * from './form-banner.model'
+export * from './form-option-selector.model'
 export { inputOptional, FormInputAutocompleteOption } from './form-elements'
 export * from './validator-functions'

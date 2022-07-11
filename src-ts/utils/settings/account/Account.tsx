@@ -4,13 +4,12 @@ import Modal from 'react-responsive-modal'
 import {
     Button,
     Card,
-    formGetInputFields,
     formGetNonStaticInputFields,
     formOnReset,
+    NonStaticField,
     profileContext,
     ProfileContextData,
 } from '../../../lib'
-import { NonStaticField } from '../../../lib/form/form-field.model'
 
 import styles from './Account.module.scss'
 import { ChangePassword, changePasswordFormDef } from './change-password'

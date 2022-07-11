@@ -1,7 +1,6 @@
 import { FC, useContext } from 'react'
 
-import { Element, Form, FormDefinition, formGetInputModel, FormInputModel } from '../form'
-import { NonStaticField } from '../form/form-field.model'
+import { Form, FormDefinition, formGetInputModel, NonStaticField } from '../form'
 import { profileContext, ProfileContextData } from '../profile-provider'
 
 import { ContactSupportFormField } from './contact-support-form.config'

@@ -9,10 +9,10 @@ export type NonStaticField = FormInputModel | FormOptionSelectorModel
 export type Field = NonStaticField | StaticField
 
 export enum FormFieldType {
-  field = 'field',
+    field = 'field',
 }
 
 export interface FormFieldModel {
-  field: Field
-  readonly type: keyof typeof FormFieldType
+    field: Field
+    readonly type: keyof typeof FormFieldType
 }

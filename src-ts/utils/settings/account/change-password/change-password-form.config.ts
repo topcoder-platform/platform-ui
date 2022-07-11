@@ -1,5 +1,6 @@
 import {
     FormDefinition,
+    FormFieldType,
     FormInputAutocompleteOption,
     FormInputTypes,
     validatorDoesNotMatchOther,
@@ -8,7 +9,6 @@ import {
     validatorRequired,
     validatorRequiredIfOther,
 } from '../../../../lib'
-import { FormFieldType } from '../../../../lib/form/form-field.model'
 
 export const changePasswordFormTitle: string = 'Change Password'
 

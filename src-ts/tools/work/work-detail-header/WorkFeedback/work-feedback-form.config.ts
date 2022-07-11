@@ -1,5 +1,4 @@
-import { FormDefinition, FormInputTypes, inputOptional, validatorRequired } from '../../../../lib'
-import { FormFieldType } from '../../../../lib/form/form-field.model'
+import { FormDefinition, FormFieldType, FormInputTypes, inputOptional, validatorRequired } from '../../../../lib'
 
 export const workFeedbackFormDef: FormDefinition = {
     elements: [

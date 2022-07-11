@@ -154,7 +154,7 @@ function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, even
 
     // now let's validate the field
     const formElements: HTMLFormControlsCollection = (input.form as HTMLFormElement).elements
-    // validateField(inputDef, formElements, event)
+    validateField(inputDef, formElements, event)
 
     // if the input doesn't have any dependent fields, we're done
     if (!inputDef.dependentFields?.length) {
@@ -200,11 +200,11 @@ function validateField(formInputDef: NonStaticField, formElements: HTMLFormContr
         })
 }
 
-function validateForm(formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit', inputs?: ReadonlyArray<NonStaticField>): boolean {
+function validateForm(formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit', inputs: ReadonlyArray<NonStaticField>): boolean {
     const errors: ReadonlyArray<NonStaticField> = inputs?.filter(formInputDef => {
             formInputDef.dirty = formInputDef.dirty || event === 'submit'
             validateField(formInputDef, formElements, event)
             return !!formInputDef.error
-        }) || []
+        })
     return !errors.length
 }
