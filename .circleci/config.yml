@@ -37,6 +37,12 @@ save_cache_settings: &save_cache_settings
     paths:
       - node_modules
 
+running_yarn_tslint: &running_yarn_tslint
+    name: Running Yarn tslint
+    command: |
+      yarn add tslint -g
+      yarn lint
+
 running_yarn_build: &running_yarn_build
     name: Running Yarn Build
     command: |
@@ -57,6 +63,12 @@ build_configuration_fetch: &build_configuration_fetch
     command: |
       ./awsconfiguration.sh $DEPLOY_ENV
       ./buildenv.sh -e $DEPLOY_ENV -b ${LOGICAL_ENV}-${APPNAME}-buildvar
+
+lint_steps: &lint_steps
+    # Initialization.
+    - checkout
+    - setup_remote_docker
+    - run: *running_yarn_tslint
 
 build_steps: &build_steps
     # Initialization.
@@ -83,6 +95,22 @@ deploy_steps: &deploy_steps
           ./master_deploy.sh -d CFRONT -e $DEPLOY_ENV -c $ENABLE_CACHE
 
 jobs:
+  lint-dev:
+    <<: *defaults
+    environment:
+      DEPLOY_ENV: "DEV"
+      LOGICAL_ENV: "dev"
+      APPNAME: "platform-ui-mvp"
+    steps: *lint_steps
+
+  lint-prod:
+    <<: *defaults
+    environment:
+      DEPLOY_ENV: "PROD"
+      LOGICAL_ENV: "prod"
+      APPNAME: "platform-ui-mvp"
+    steps: *lint_steps
+    
   build-dev:
     <<: *defaults
     environment:
@@ -122,6 +150,20 @@ workflows:
   version: 2
   build:
     jobs:
+      - lint-dev:
+          context : org-global
+          filters:
+            branches:
+              ignore:
+                - master
+
+      - lint-prod:
+          context : org-global
+          filters:
+            branches:
+              only:
+                - master
+
       - build-dev:
           context : org-global
           filters:

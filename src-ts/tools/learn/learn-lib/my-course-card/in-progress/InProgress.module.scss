@@ -1,0 +1,126 @@
+@use '../../../../../lib/styles/typography';
+@import '../../../../../lib/styles/includes';
+
+.wrap {
+    background: $tc-white;
+    padding: $pad-lg $pad-xxl;
+    border-radius: $pad-sm;
+
+    display: flex;
+
+    &.large {
+        padding: $pad-xxxxl;
+    }
+
+    @include ltelg {
+        &, &.large {
+            padding: $pad-lg;
+        }
+    }
+
+    @include ltemd {
+        &.large {
+            flex-direction: column;
+        }
+    }
+}
+
+.inner {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $pad-lg;
+}
+
+.line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    @include ltelg {
+        flex-wrap: wrap;
+        gap: $pad-lg;
+    }
+}
+
+.status {
+    @extend .body-main-bold;
+    white-space: nowrap;
+    color: $blue-140;
+
+    &:before {
+        content: "";
+        display: inline-block;
+        margin: 2px $pad-sm -2px;
+        width: 1px;
+        height: 16px;
+        background: $black-60;
+        @include ltemd {
+            content: none;
+        }
+    }
+}
+
+.summary {
+    display: flex;
+    align-items: center;
+    margin-top: $pad-lg;
+    width: 100%;
+    justify-content: space-between;
+    gap: $pad-lg;
+    @include ltemd {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-top: 0;
+    }
+}
+
+.details {
+    display: flex;
+    align-items: flex-start;
+    flex: 1 1 0;
+    &:before {
+        content: "";
+        display: block;
+        height: 100%;
+        width: 1px;
+        background: $black-10;
+        margin: 0 calc($pad-mx + $pad-sm);
+    }
+
+    &-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: $pad-sm;
+
+        p {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        :global(.button) {
+            margin-top: $pad-sm;
+        }
+    }
+
+    @include ltemd {
+        flex-direction: column;
+        &:before {
+            margin: $pad-xxl 0;
+            width: 100%;
+            height: 1px;
+        }
+    }
+}
+
+.started-date {
+    font-weight: bold;
+    
+    @include ltemd {
+        order: -1;
+    }
+}

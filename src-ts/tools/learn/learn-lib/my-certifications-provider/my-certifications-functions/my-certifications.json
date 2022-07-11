@@ -1,0 +1,53 @@
+{
+    "certifications": [
+        {
+            "id": "abcd-1234-e0987-6543",
+            "key": "responsive-web-design-certification",
+            "providerId": "561add10cb82ac38a17513bc",
+            "providerName": "freeCodeCamp",
+            "title": "Responsive Web Design",
+            "certification": "responsive-web-design",
+            "category": "Web Development",
+            "state": "active",
+            "progress": {
+                "status": "in-progress",
+                "completed": 0.15,
+                "currentLesson": "learn-html-by-building-a-cat-photo-app/step-4",
+                "startedDate": "2022-05-03T00:00:00.000Z",
+                "modules": [{
+                    "module": "learn-html-by-building-a-cat-photo-app",
+                    "lessonCount": 67,
+                    "completedLessons": [
+                        {
+                            "dashedName": "step-1",
+                            "completedDate": "2022-06-24T00:00:00.000Z"
+                        },
+                        {
+                            "dashedName": "step-2",
+                            "completedDate": "2022-06-24T00:00:00.000Z"
+                        },
+                        {
+                            "dashedName": "step-3",
+                            "completedDate": "2022-06-24T00:00:00.000Z"
+                        }
+                    ]
+                }]
+            }
+        },
+        {
+            "id": "abcd-1234-e0987-6543",
+            "key": "web-design-certification",
+            "providerId": "561add10cb82ac38a17513bc",
+            "providerName": "freeCodeCamp",
+            "title": "Web Design",
+            "certification": "web-design",
+            "category": "Web Development",
+            "state": "active",
+            "progress": {
+                "status": "completed",
+                "completedDate": "2022-06-24T00:00:00.000Z",
+                "completed": 1
+            }
+        }
+    ]
+}
