@@ -67,12 +67,6 @@
     }
 }
 
-@mixin ltelg {
-    @media (max-width: #{$lg-max}) {
-        @content;
-    }
-}
-
 @mixin lg {
     @media (min-width: #{$lg-min}) and (max-width: #{$lg-max}){
         @content;
