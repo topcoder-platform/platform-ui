@@ -40,10 +40,10 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
             current[1] || lesson.dashedName,
         )
         navigate(lessonPath)
-    }, [props.course, props.progress])
+    }, [props.course, props.progress, navigate])
 
     const status: string = props.progress?.status ?? 'init'
-    const completedPercentage: number = props.progress?.completedPercentage ?? 0
+    const completedPercentage: number = (props.progress?.courseProgressPercentage ?? 0) / 100
     const inProgress: boolean = status === MyCertificationProgressStatus.inProgress || !!props.progress?.currentLesson
     const isCompleted: boolean = status === MyCertificationProgressStatus.completed
 

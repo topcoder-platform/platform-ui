@@ -169,7 +169,7 @@ const FreeCodeCamp: FC<{}> = () => {
     useEffect(() => {
       if (
         certificateProgress &&
-        certificateProgress.completedPercentage === 1 &&
+        certificateProgress.courseProgressPercentage === 100 &&
         certificateProgress.status === MyCertificationProgressStatus.inProgress
     ) {
         updateMyCertificationsProgressAsync(
@@ -178,7 +178,7 @@ const FreeCodeCamp: FC<{}> = () => {
             {}
         ).then(setCertificateProgress)
       }
-    }, [certificateProgress])
+    }, [certificateProgress, setCertificateProgress])
 
     useEffect(() => {
         const certificationPath: string = routeParams.certification ?? ''
