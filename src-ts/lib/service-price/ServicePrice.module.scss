@@ -1,4 +1,5 @@
-@import "../../styles/include";
+@import '../../lib/styles/mixins';
+@import '../../lib/styles/variables';
 
 .container {
 
@@ -43,17 +44,20 @@
   margin-top: 16px;
   @include font-barlow;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 18px;
+  text-align: center;
   text-transform: uppercase;
 }
 
 .priceAndDuration {
   @include font-barlow;
   margin-top: 8px;
-  font-size: 20px;
+  font-size: 18px;
   line-height: 20px;
-  color: $black;
+  color: $tc-black;
   display: flex;
+  text-align: center;
+  text-transform: uppercase;
 
   @include mobile {
     justify-content: space-between;
@@ -61,11 +65,11 @@
 
 
   .discount {
-    color: $discount-green;
+    color: $green-50;
   }
 
   .stickerPrice {
-    color: $gray-80;
+    color: $black-80;
     text-decoration: line-through;
     margin-right: 4px;
   }

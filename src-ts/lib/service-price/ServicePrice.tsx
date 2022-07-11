@@ -3,7 +3,7 @@ import { FC } from 'react'
 import { currencyFormat } from '../../utils'
 import HelpIcon from '../help-icon/HelpIcon'
 
-import styles from './styles.module.scss'
+import styles from './ServicePrice.module.scss'
 
 export interface ServicePriceProps {
   duration: number,

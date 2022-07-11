@@ -1,4 +1,5 @@
-@import "../../styles/include";
+@import '../../lib/styles/mixins';
+@import '../../lib/styles/variables';
 
 .help-icon {
   .tooltip {
@@ -9,15 +10,15 @@
     line-height: 20px;
     max-width: 30ch;
     padding: 8px;
-    background-color: $grey-bg;
-    color: $black;
+    background-color: $black-5;
+    color: $tc-black;
     border-radius: 8px;
     opacity: 1 !important;
-    box-shadow: 0 1px 5px $tips-shadow;
+    box-shadow: 0 1px 6px 1px rgba(0, 0, 0, 0.2);
 
     &.inverted {
-      background-color: $black;
-      color: $grey-bg;
+      background-color: $tc-black;
+      color: $black-5;
     }
   }
 }
