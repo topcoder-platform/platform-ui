@@ -1,0 +1,48 @@
+@use '../../../lib/styles/typography';
+@import '../../../lib/styles/includes';
+
+.wrap {
+    margin: 0 -32px;
+}
+
+.main-wrap {
+    height: calc($content-height - $breadcrumb-height);
+    width: 100%;
+    margin-bottom: -$pad-lg;
+    background: $tc-white;
+
+    display: flex;
+
+    position: relative;
+}
+
+.course-frame {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+
+    padding-left: $pad-xxxxl;
+
+    hr {
+        margin-left: $pad-xxxxl;
+        margin-right: $pad-xxxxl;
+        width: calc(100% - 2 * $pad-xxxxl);
+    }
+}
+
+.course-outline-pane {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.course-outline-wrap {
+    width: 406px;
+}
+
+.course-outline-title {
+    @extend .body-main-bold;
+    flex: 0 0 auto;
+    margin-bottom: $pad-xl;
+}

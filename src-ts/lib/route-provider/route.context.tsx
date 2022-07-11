@@ -9,7 +9,7 @@ export const defaultRouteContextData: RouteContextData = {
     getPath: () => '',
     getPathFromRoute: () => '',
     getRouteElement: () => <></>,
-    isActiveRoute: () => false,
+    isActiveTool: () => false,
     isRootRoute: () => false,
     rootLoggedInRoute: '',
     rootLoggedOutRoute: '',

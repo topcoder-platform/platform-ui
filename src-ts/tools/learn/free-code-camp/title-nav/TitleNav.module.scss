@@ -1,0 +1,44 @@
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    display: flex;
+    align-items: center;
+    padding: $pad-lg $pad-xxxxl 0;
+}
+
+.nav-wrap {
+    margin-left: auto;
+
+    color: rgba($tc-black, 0.5);
+
+    display: flex;
+    align-items: center;
+    gap: $pad-sm;
+
+    :global(.overline) {
+        white-space: nowrap;
+    }
+}
+
+.current {
+    color: $tc-black;
+}
+
+.nav-btns {
+    display: flex;
+    align-items: center;
+}
+
+.nav-btn {
+    display: block;
+    color: $turq-160;
+    cursor: pointer;
+
+    &:hover {
+        color: $turq-140;
+    }
+
+    svg {
+        @include icon-xxl;
+    }
+}
