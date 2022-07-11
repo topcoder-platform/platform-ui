@@ -2,9 +2,8 @@ import { FC, MutableRefObject, useRef } from 'react'
 import ReactTooltip from 'react-tooltip'
 import { v4 as uuidv4 } from 'uuid'
 
-
+import styles from './HelpIcon.module.scss'
 import { ReactComponent as  HintIcon} from './icon-hint-green.svg'
-import styles from'./HelpIcon.module.scss'
 
 export interface HelpIconProps {
   arrowColor?: string,
@@ -16,7 +15,7 @@ export interface HelpIconProps {
 
 const HelpIcon: FC<HelpIconProps> = (props: HelpIconProps) => {
   const { arrowColor, backgroundColor, children, inverted, textColor }: HelpIconProps = props
-  const tooltipId:MutableRefObject<string> = useRef(uuidv4())
+  const tooltipId: MutableRefObject<string> = useRef(uuidv4())
 
   return (
     <div className={styles['help-icon']}>

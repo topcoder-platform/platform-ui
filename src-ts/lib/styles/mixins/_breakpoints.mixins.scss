@@ -67,6 +67,12 @@
     }
 }
 
+@mixin ltelg {
+    @media (max-width: #{$lg-max}) {
+        @content;
+    }
+}
+
 @mixin lg {
     @media (min-width: #{$lg-min}) and (max-width: #{$lg-max}){
         @content;
@@ -88,11 +94,5 @@
 @mixin xxl {
     @media (min-width: #{$xxl-min}){
         @content;
-    }
-}
-
-@mixin mobile {
-    @media (max-width: 1199px) {
-      @content;
     }
 }
