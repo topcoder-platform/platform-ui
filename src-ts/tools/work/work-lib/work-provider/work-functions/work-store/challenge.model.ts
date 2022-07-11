@@ -1,6 +1,7 @@
 import { ChallengeMetadata } from './challenge-metadata.model'
 import { ChallengePhase } from './challenge-phase'
-import { WorkTimeline } from './work-timeline.model'
+import { WorkPrize } from './work-prize.model'
+import { WorkTimelinePhase } from './work-timeline-phase.model'
 
 export interface Challenge {
     created: string
@@ -27,16 +28,11 @@ export interface ChallengeCreateBody {
     typeId: string,
 }
 
-interface PrizeSetsType {
-    type: 'USD',
-    value: number,
-}
-
 export interface ChallengeUpdateBody {
     description: string,
-    id: string, // Maria do we include id here?
+    id?: string, // Maria do we include id here?
     metadata: Array<ChallengeMetadata>
     name: string,
-    phases: ReadonlyArray<WorkTimeline>
-    prizeSets: Array<PrizeSetsType>
+    phases: ReadonlyArray<WorkTimelinePhase>
+    prizeSets: Array<WorkPrize>
 }

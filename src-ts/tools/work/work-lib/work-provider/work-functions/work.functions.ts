@@ -16,6 +16,7 @@ import {
     workStoreDeleteAsync,
     workStoreGetAsync,
     workStoreGetFilteredByStatus,
+    workStoreUpdateAsync,
     WorkType,
 } from './work-store'
 

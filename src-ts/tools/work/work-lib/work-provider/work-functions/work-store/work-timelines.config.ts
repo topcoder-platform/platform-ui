@@ -1,7 +1,7 @@
 import { WorkTimeline } from './work-timeline.model'
 import { WorkType } from './work-type.enum'
 
-export const WorkTimelines: { [workType: string]: ReadonlyArray<WorkTimeline> } = {
+export const WorkTimelines: WorkTimeline = {
     // TODO: Determine actual timeline for Bug Hunt
     [WorkType.bugHunt]: [
         {

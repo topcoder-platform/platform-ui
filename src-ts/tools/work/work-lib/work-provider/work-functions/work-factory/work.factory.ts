@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import moment from 'moment'
 
 import {
@@ -7,14 +8,18 @@ import {
     ChallengeMetadataName,
     ChallengePhase,
     ChallengePhaseName,
+    ChallengeUpdateBody,
     Work,
     WorkPrice,
+    WorkPriceBreakdown,
     WorkPricesType,
+    WorkPrize,
     WorkProgress,
     WorkProgressStep,
     WorkStatus,
     WorkType,
     WorkTypeCategory,
+    WorkTypeConfig,
 } from '../work-store'
 
 import { ChallengeStatus } from './challenge-status.enum'
@@ -64,7 +69,7 @@ export function create(challenge: Challenge, workPrices: WorkPricesType): Work {
     }
 }
 
-export function buildCreateBody(type: string): ChallengeCreateBody {
+export function buildCreateBody(type: WorkType): ChallengeCreateBody {
     // TODO: once configs are merged, use type and config to fetch the necessary fields
     return {
         description: 'Information not provided',
@@ -84,6 +89,54 @@ export function buildCreateBody(type: string): ChallengeCreateBody {
         trackId: 'challengeFieldValues.trackId',
         typeId: 'challengeFieldValues.typeId',
     }
+}
+
+export function buildUpdateBody(workTypeConfig: WorkTypeConfig, intakeForm: any): ChallengeUpdateBody {
+    const type: WorkType = workTypeConfig.type
+    const form: any = JSON.parse(intakeForm)?.form
+
+    const data: ReadonlyArray<FormDetail> = mapFormData(
+        type,
+        form?.basicInfo
+    )
+
+    const intakeMetadata: Array<ChallengeMetadata> = [
+        {
+            name: ChallengeMetadataName.intakeForm,
+            value: intakeForm,
+        },
+    ]
+
+    // This is the Markdown string that gets displayed in Work Manager app and others
+    const templateString: Array<string> = []
+
+    data.forEach((formDetail) => {
+        if (Object.keys(formDetail).length <= 0) { return }
+
+        const formattedValue: string = formatFormDataOption(formDetail.value)
+
+        intakeMetadata.push({
+            name: ChallengeMetadataName[formDetail.key as keyof typeof ChallengeMetadataName],
+            value: formattedValue,
+        })
+        templateString.push(`### ${formDetail.title}\n\n${formattedValue}\n\n`)
+    })
+
+    if (getTypeCategory(type) === WorkTypeCategory.data) {
+        templateString.push(
+            '## Final Submission Guidelines \n\n Please submit a zip file containing your analysis/solution.'
+        )
+    }
+
+    const body: ChallengeUpdateBody = {
+        description: templateString.join(''),
+        metadata: intakeMetadata,
+        name: form?.basicInfo?.projectTitle?.value,
+        phases: workTypeConfig.timeline,
+        prizeSets: getPrizes(workTypeConfig),
+    }
+
+    return body
 }
 
 export function getStatus(challenge: Challenge): WorkStatus {
@@ -241,6 +294,17 @@ function buildFormDataProblem(formData: any): ReadonlyArray<FormDetail> {
     ]
 }
 
+function checkFormDataOptionEmpty(detail: any): boolean {
+    return (
+        !detail ||
+        (typeof detail === 'string' && detail.trim().length === 0) ||
+        (Array.isArray(detail) && detail.length === 0) ||
+        (typeof detail === 'object' &&
+            Object.values(detail).filter((val: any) => val && val.trim().length !== 0)
+                .length === 0)
+    )
+}
+
 function findMetadata(challenge: Challenge, metadataName: ChallengeMetadataName): ChallengeMetadata | undefined {
     return challenge.metadata?.find((item: ChallengeMetadata) => item.name === metadataName)
 }
@@ -278,6 +342,27 @@ function findPhase(challenge: Challenge, phases: Array<string>): ChallengePhase 
     return phase
 }
 
+function formatFormDataOption(detail: Array<string> | { [key: string]: any }): string {
+    const noInfoProvidedText: string = 'Not provided'
+    const isEmpty: boolean = checkFormDataOptionEmpty(detail)
+
+    if (isEmpty) {
+        return noInfoProvidedText
+    }
+    if (Array.isArray(detail)) {
+        return detail.join('\n\n')
+    }
+    if (typeof detail === 'object') {
+        return Object.keys(detail)
+            .map((key: string) => {
+                const value: string = detail[key] || noInfoProvidedText
+                return `${key}: ${value}`
+            })
+            .join('\n\n')
+    }
+    return detail
+}
+
 function getCost(challenge: Challenge, priceConfig: WorkPrice, type: WorkType): number | undefined {
 
     switch (type) {
@@ -307,6 +392,33 @@ function getDescription(challenge: Challenge, type: WorkType): string | undefine
         case WorkType.designLegacy:
             return findMetadata(challenge, ChallengeMetadataName.description)?.value
     }
+}
+
+function getPrizes(workTypeConfig: WorkTypeConfig): Array<WorkPrize> {
+    const priceConfig: WorkPriceBreakdown =
+        workTypeConfig.usePromo && workTypeConfig.promo
+            ? workTypeConfig.promo
+            : workTypeConfig.base
+
+    return [
+        {
+            description: 'Challenge Prizes',
+            prizes: priceConfig.placementDistributions.map((percentage) => ({
+                type: 'USD',
+                value: _.round(percentage * priceConfig.price),
+            })),
+            type: 'placement',
+        },
+        {
+            description: 'Reviewer Payment',
+            prizes:
+                priceConfig.reviewerDistributions.map((percentage) => ({
+                    type: 'USD',
+                    value: _.round(percentage * priceConfig.price),
+                })),
+            type: 'reviewer',
+        },
+    ]
 }
 
 function getProgress(challenge: Challenge, workStatus: WorkStatus): WorkProgress {

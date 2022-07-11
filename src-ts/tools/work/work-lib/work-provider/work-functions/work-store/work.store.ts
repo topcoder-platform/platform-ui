@@ -1,6 +1,6 @@
 import { Page, xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '../../../../../../lib'
 
-import { Challenge, ChallengeCreateBody } from './challenge.model'
+import { Challenge, ChallengeCreateBody, ChallengeUpdateBody } from './challenge.model'
 import { WorkStatusFilter } from './work-status-filter.enum'
 import { WorkStatus } from './work-status.enum'
 import { createUrl, deleteUrl, getUrl, updateUrl } from './work-url.config'
@@ -29,6 +29,6 @@ export function getFilteredByStatus(work: ReadonlyArray<Work>, workStatusFilter?
                 || w.status === WorkStatus[workStatusFilter as keyof typeof WorkStatus]))
 }
 
-export async function patchAsync(body: ChallengeCreate): Promise<void> {
-    return xhrPatchAsync(updateUrl(body.id), JSON.stringify(body))
+export async function updateAsync(body: ChallengeUpdateBody): Promise<void> {
+    return xhrPatchAsync(updateUrl(body?.id || ''), JSON.stringify(body))
 }

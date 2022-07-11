@@ -1,5 +1,5 @@
 import { WorkPrice } from './work-price.model'
-import { WorkTimeline } from './work-timeline.model'
+import { WorkTimelinePhase } from './work-timeline-phase.model'
 import { WorkType } from './work-type.enum'
 
 export interface WorkTypeConfig extends WorkPrice {
@@ -13,7 +13,7 @@ export interface WorkTypeConfig extends WorkPrice {
     shortDescription: string,
     startRoute: string,
     subtitle: string,
-    timeline: ReadonlyArray<WorkTimeline>
+    timeline: ReadonlyArray<WorkTimelinePhase>
     timelineTemplateId: string,
     title: string,
     trackId: string,
