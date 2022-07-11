@@ -1,0 +1,151 @@
+@import '../../../../lib/styles/includes';
+@import './includes';
+
+.wrap {
+    display: flex;
+    height: 100%;
+}
+
+.details {
+    width: 55%;
+    padding: calc($pad-mx + $pad-lg);
+    display: flex;
+    flex-direction: column;
+
+    h2 {
+        color: $blue-160;
+        &:global(.grad) {
+            @include grad-text-color($tc-grad15);
+        }
+    }
+
+    h3 {
+        font-size: 48px;
+        line-height: 50px;
+        color: $tc-black;
+        margin-top: $pad-sm;
+    }
+
+    h1 {
+        font-size: 80px;
+        line-height: 72px;
+    }
+    
+    &:global(.theme-dev) {
+        .username {
+            color: $tc-dev-track-color;
+        }
+        .username:global(.grad) {
+            @include grad-text-color($tc-dev-grad);
+        }
+        .tc-handle {
+            color: $turq-140;
+        }
+    }
+    &:global(.theme-design) {
+        .username {
+            color: $tc-design-track-color;
+        }
+        .username:global(.grad) {
+            @include grad-text-color($tc-design-grad);
+        }
+        .tc-handle {
+            color: $blue-140;
+        }
+    }
+    &:global(.theme-qa) {
+        .username {
+            color: $tc-qa-track-color;
+        }
+        .username:global(.grad) {
+            @include grad-text-color($tc-qa-grad);
+        }
+        .tc-handle {
+            color: $purple-120;
+        }
+    }
+    &:global(.theme-datascience) {
+        .username {
+            color: $tc-datascience-track-color;
+        }
+        .username:global(.grad) {
+            @include grad-text-color($tc-datascience-grad);
+        }
+        .tc-handle {
+            color: $red-140;
+        }
+    }
+}
+
+.username {
+    margin-top: calc($pad-mx + $pad-sm);
+}
+
+.tc-handle {
+    color: $turq-140;
+
+    margin-top: $pad-xl;
+}
+
+.badges {
+    width: 45%;
+    position: relative;
+    z-index: 1;
+
+    padding: 56px;
+    padding-left: 80px;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.course-card {
+    margin: auto;
+}
+
+.pattern-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+}
+
+.logos {
+    margin-top: auto;
+    display: flex;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    height: 52px;
+
+    svg {
+        width: auto;
+        height: 100%;
+    }
+}
+
+.divider {
+    width: $border;
+    background: $black-10;
+    margin: 0 $pad-xxxxl;
+}
+
+.vendor {
+    color: $tc-white;
+    text-align: right;
+}
+
+.vendor-logo {
+    margin-top: $pad-sm;
+    display: flex;
+    justify-content: flex-end;
+    
+    svg {
+        display: block;
+        height: 16px;
+    }
+}

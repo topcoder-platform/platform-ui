@@ -91,7 +91,6 @@
     }
 }
 
-
 @mixin mobile {
     @media (max-width: 1199px) {
       @content;
