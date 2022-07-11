@@ -6,7 +6,7 @@ import { LearnCourse } from '../courses-provider'
 import styles from './CurriculumSummary.module.scss'
 
 interface CurriculumSummaryProps {
-    completionHours?: number
+    completionHours?: LearnCourse['estimatedCompletionTime']
     moduleCount?: number
 }
 
@@ -32,10 +32,10 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
                 </div>
                 <div className='sub'>
                     <h3 className={styles['count']}>
-                        {props.completionHours ?? 0}
+                        {props.completionHours?.value ?? 0}
                     </h3>
                     <div className={styles['count-label']}>
-                        Hours
+                        {props.completionHours?.units ?? 'Hours'}
                     </div>
                 </div>
             </div>

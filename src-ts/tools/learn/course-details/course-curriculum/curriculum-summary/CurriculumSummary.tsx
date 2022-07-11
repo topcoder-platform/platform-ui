@@ -55,7 +55,7 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
             <div className={styles['summary']}>
                 <CurriculumSummaryStats
                     moduleCount={props.course.modules.length}
-                    completionHours={props.course.completionHours}
+                    completionHours={props.course.estimatedCompletionTime}
                 />
 
                 <div className={styles['button']}>
