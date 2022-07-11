@@ -17,17 +17,14 @@ const FromSection: React.FC<FormSection> = ({section, renderFormInput}: FormSect
 
     return (
         <div className={styles['form-section']}>
-            <div className={styles['title']}>
-                {title}
+            <div className={styles['left']}>
+                <div className={styles['title']}>
+                    {title}
+                </div>
+                <div className={styles['section-description']} dangerouslySetInnerHTML={{__html: description || ''}}/>
             </div>
-            <div className={styles['section-content']}>
-                <div className={styles['left']}>
-                    <div className={styles['section-description']} dangerouslySetInnerHTML={{__html: description || ''}}/>
-                </div>
-
-                <div className={styles['right']}>
-                    {inputFields}
-                </div>
+            <div className={styles['right']}>
+                {inputFields}
             </div>
         </div>
     )

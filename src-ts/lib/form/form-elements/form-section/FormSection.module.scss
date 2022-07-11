@@ -1,37 +1,40 @@
 @import "../../../styles/includes";
 
 .form-section {
-    padding-top: 32px;
-    padding-bottom: 14px;
+    padding: 32px 0;
     border-bottom: 2px solid rgba(#858585, 0.2);
+    display: flex;
+    @include ltemd {
+        flex-direction: column;
+        padding: 24px 0 6px 0;
+    }
     &:last-child {
         border-bottom: none;
         padding-bottom: 0;
     }
-    .title {
-        @include font-barlow;
-        font-weight: 600;
-        font-size: 22px;
-        line-height: 26px;
-        text-transform: uppercase;
-    }
 
-    .section-content {
-        display: flex;
+    .left {
         flex: 1;
-        margin-top: 24px;
-        .left {
-            flex: 1;
-            .section-description {
+        .title {
+            @include font-barlow;
+            font-weight: 600;
+            font-size: 22px;
+            line-height: 26px;
+            text-transform: uppercase;
+        }
+        .section-description {
             @include font-roboto;
             font-weight: 400;
             font-size: 16px;
             line-height: 24px;
-            }
+            margin-top: 24px;
         }
-
-        .right {
-            flex: 1;
+    }
+    .right {
+        flex: 1;
+        margin-top: 46px;
+        @include ltemd {
+            margin-top: 24px;
         }
     }
 }
