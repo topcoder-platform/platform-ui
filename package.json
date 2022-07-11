@@ -75,6 +75,7 @@
         "@types/react-redux-toastr": "^7.6.2",
         "@types/react-router-dom": "^5.3.3",
         "@types/systemjs": "^6.1.0",
+        "@types/uuid": "^8.3.4",
         "autoprefixer": "^9.8.6",
         "babel-eslint": "^11.0.0-beta.2",
         "babel-jest": "^24.9.0",
