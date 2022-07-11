@@ -5,7 +5,8 @@ import { EnvironmentConfigDefault } from './environment.default.config'
 
 export const EnvironmentConfigDev: GlobalConfig = {
     ...EnvironmentConfigDefault,
-    DISABLED_TOOLS: [ ],
+    DISABLED_TOOLS: [],
     ENV: AppHostEnvironment.dev,
+    LEARN_SRC: 'https://freecodecamp-mfe.topcoder-dev.com/',
     TAG_MANAGER_ID: 'GTM-W7B537Z',
 }
