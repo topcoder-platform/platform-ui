@@ -3,7 +3,11 @@
 .form-section {
     padding-top: 32px;
     padding-bottom: 14px;
-    border-bottom: 2px solid #ccc;
+    border-bottom: 2px solid rgba(#858585, 0.2);
+    &:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
     .title {
         @include font-barlow;
         font-weight: 600;
