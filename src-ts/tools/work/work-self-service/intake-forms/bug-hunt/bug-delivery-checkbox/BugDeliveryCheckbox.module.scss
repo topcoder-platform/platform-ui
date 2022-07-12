@@ -8,6 +8,14 @@
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    cursor: pointer;
+    &.selected {
+        background-color: $turq-160;
+        border: 1px solid $turq-160;
+        .name {
+            color: $tc-white;
+        }
+    }
     .name {
         @include font-roboto;
         font-size: 20px;

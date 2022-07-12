@@ -1,13 +1,15 @@
 import React from 'react'
 
-import { Form } from '../../../../../lib'
+import { Form, FormInputModel } from '../../../../../lib'
 
 import { BugHuntFormConfig } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
 
 const BugHuntIntakeForm: React.FC = () => {
 
-    const requestGenerator: () => void = () => {}
+    const requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => void = () => {
+        return {}
+    }
 
     const onSave: (val: any) => Promise<void> = (val: any) => new Promise(() => {}).then(() => {})
 

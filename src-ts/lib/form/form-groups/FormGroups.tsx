@@ -1,6 +1,6 @@
 import { ChangeEvent, FocusEvent } from 'react'
 
-import { Field, FormDefinition, FormGroup,  FormInputModel, FormInputTypes, FormRadioButtonTypes } from '..'
+import { FormDefinition, FormGroup,  FormInputModel } from '..'
 
 import FormGroupItem from './form-group-item'
 import { InputRating, InputText, InputTextarea } from './form-input'
@@ -11,7 +11,7 @@ import styles from './FormGroups.module.scss'
 
 interface FormGroupsProps {
     formDef: FormDefinition
-    inputs: Array<Field>
+    inputs: Array<FormInputModel>
     onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void
     onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
 }
@@ -20,14 +20,14 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
 
     const { formDef, onBlur, onChange }: FormGroupsProps = props
 
-    const render: (inputModel: Field, index: number) => JSX.Element | undefined = (inputModel, index) => {
-        const input: Field = inputModel
-        const tabIndex: number = inputModel.notTabbable ? -1 : index + 1 + (formDef.tabIndexStart || 0)
+    const render: (inputModel: FormInputModel, index: number) => JSX.Element | undefined = (input, index) => {
+
+        const tabIndex: number = input.notTabbable ? -1 : index + 1 + (formDef.tabIndexStart || 0)
 
         let inputElement: JSX.Element
         switch (input.type) {
 
-            case FormInputTypes.rating:
+            case 'rating':
                 inputElement = (
                     <InputRating
                         {...input}
@@ -38,7 +38,7 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                 )
                 break
 
-            case FormInputTypes.textarea:
+            case 'textarea':
                 inputElement = (
                     <InputTextarea
                         {...input}
@@ -49,8 +49,8 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                     />
                 )
                 break
-            case FormRadioButtonTypes.checkbox:
-            case FormRadioButtonTypes.radio:
+            case 'checkbox':
+            case 'radio':
                 inputElement = (
                     <FormRadio
                         {...input}
@@ -75,7 +75,7 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
 
         return (
             <FormInputRow
-                key={inputModel.name}
+                key={input.name}
                 index={index}
                 input={input}
             >
@@ -84,7 +84,7 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
         )
     }
 
-    const renderInputField: (inputModel: Field, index: number) => JSX.Element | undefined = (inputModel, index) => {
+    const renderInputField: (inputModel: FormInputModel, index: number) => JSX.Element | undefined = (inputModel, index) => {
 
         if (!inputModel) {
             return

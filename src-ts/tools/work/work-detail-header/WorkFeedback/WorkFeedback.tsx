@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
-import { BaseModal, Field, Form, FormDefinition, formGetInputFields, FormInputModel, formOnReset } from '../../../../lib'
+import { BaseModal, Form, FormDefinition, formGetInputFields, FormInputModel, formOnReset } from '../../../../lib'
 import { Challenge } from '../../work-lib'
 
 import { workFeedbackFormDef } from './work-feedback-form.config'
@@ -22,10 +22,9 @@ const WorkFeedback: FC<WorkFeedbackProps> = (props: WorkFeedbackProps) => {
 
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>] = useState<FormDefinition>({ ...workFeedbackFormDef })
 
-    function requestGenerator(fields: ReadonlyArray<Field>): Array<Feedback> {
+    function requestGenerator(fields: ReadonlyArray<FormInputModel>): Array<Feedback> {
         return fields
-            .map((field: Field) => {
-                const input: FormInputModel = field as FormInputModel
+            .map((input: FormInputModel) => {
                 return {
                     name: input.instructions || input.label as string,
                     value: input.value,

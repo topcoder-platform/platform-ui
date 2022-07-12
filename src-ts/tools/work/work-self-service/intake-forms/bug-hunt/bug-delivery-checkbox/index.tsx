@@ -1,20 +1,36 @@
+import cn from 'classnames'
 import React from 'react'
 
-import { GithubIcon, GitlabIcon } from '../../../../../../lib'
+import { GithubIcon, GithubSelectedIcon, GitlabIcon, GitlabSelectedIcon } from '../../../../../../lib'
 
 import styles from './BugDeliveryCheckbox.module.scss'
 
 interface BugDeliveryCheckboxProps {
     name: string
+    selected?: boolean
 }
 
-const BugDeliveryCheckbox: React.FC<BugDeliveryCheckboxProps> = ({ name }: BugDeliveryCheckboxProps) => {
+const BugDeliveryCheckbox: React.FC<BugDeliveryCheckboxProps> = ({ name, selected }: BugDeliveryCheckboxProps) => {
     const getOptionIcon: () => JSX.Element = () => {
-        return name === 'GitHub' ? <GitlabIcon /> : <GithubIcon />
+        switch (name) {
+            case 'GitHub':
+                if (selected) {
+                    return <GithubSelectedIcon />
+                } else {
+                    return <GithubIcon />
+                }
+            case 'GitLab':
+            default:
+                if (selected) {
+                    return <GitlabSelectedIcon />
+                } else {
+                    return <GitlabIcon />
+                }
+        }
     }
 
     return (
-        <div className={styles['bug-delivery-checkbox']}>
+        <div className={cn(styles['bug-delivery-checkbox'], selected && styles['selected'])}>
             {getOptionIcon()}
             <div className={styles['name']}>{name}</div>
         </div>

@@ -1,6 +1,6 @@
 import { FC, useContext } from 'react'
 
-import { Field, Form, FormDefinition, formGetInputModel } from '../form'
+import { Form, FormDefinition, formGetInputModel, FormInputModel } from '../form'
 import { profileContext, ProfileContextData } from '../profile-provider'
 
 import { ContactSupportFormField } from './contact-support-form.config'
@@ -18,7 +18,7 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
 
     const { profile }: ProfileContextData = useContext(profileContext)
 
-    function generateRequest(inputs: ReadonlyArray<Field>): ContactSupportRequest {
+    function generateRequest(inputs: ReadonlyArray<FormInputModel>): ContactSupportRequest {
         const firstName: string = formGetInputModel(inputs, ContactSupportFormField.first).value as string
         const lastName: string = formGetInputModel(inputs, ContactSupportFormField.last).value as string
         const email: string = formGetInputModel(inputs, ContactSupportFormField.email).value as string

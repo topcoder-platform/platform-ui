@@ -15,7 +15,7 @@ import { Button } from '../button'
 import '../styles/index.scss'
 import { IconOutline } from '../svgs'
 
-import { Field, FormDefinition } from '.'
+import { FormDefinition, FormInputModel } from '.'
 import {
     formGetInputFields,
     formInitializeValues,
@@ -31,7 +31,7 @@ interface FormProps<ValueType, RequestType> {
     readonly formDef: FormDefinition
     readonly formValues?: ValueType
     readonly onSuccess?: () => void
-    readonly requestGenerator: (inputs: ReadonlyArray<Field>) => RequestType
+    readonly requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => RequestType
     readonly save: (value: RequestType) => Promise<void>
 }
 
@@ -51,7 +51,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             = useState<RefObject<HTMLFormElement>>(createRef<HTMLFormElement>())
 
         // This will hold all the inputs that are not static fields
-        const [inputs, setInputs]: [Array<Field>, Dispatch<SetStateAction<Array<Field>>>] = useState<Array<Field>>(formGetInputFields(formDef.groups || []))
+        const [inputs, setInputs]: [Array<FormInputModel>, Dispatch<SetStateAction<Array<FormInputModel>>>] = useState<Array<FormInputModel>>(formGetInputFields(formDef.groups || []))
 
         function onBlur(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>): void {
             formOnBlur(event, inputs, props.formValues)
@@ -90,7 +90,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         formInitializeValues(inputs, props.formValues)
 
-        const leftButtons: Array<JSX.Element> = formDef.buttons.left ? formDef.buttons.left
+        const secondaryGroupButtons: Array<JSX.Element> = formDef.buttons.secondaryGroup ? formDef.buttons.secondaryGroup
             .map((button, index) => {
                 // if this is a reset button, set its onclick to reset
                 if (!!button.isReset) {
@@ -108,7 +108,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                 )
             }) : []
 
-        const rightButtons: Array<JSX.Element> = formDef.buttons.right ? formDef.buttons.right
+        const primaryGroupButtons: Array<JSX.Element> = formDef.buttons.primaryGroup
             .map((button, index) => {
                 // if this is a reset button, set its onclick to reset
                 if (!!button.isReset) {
@@ -124,7 +124,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                         tabIndex={button.notTabble ? -1 : index + (inputs ? inputs.length : 0) + (formDef.tabIndexStart || 0)}
                     />
                 )
-            }) : []
+            })
 
         // set the max width of the form error so that it doesn't push the width of the form wider
         const errorsRef: RefObject<HTMLDivElement> = createRef<HTMLDivElement>()
@@ -176,10 +176,10 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                     )}
                     <div className={styles['button-container']}>
                         <div className={styles['left-container']}>
-                            {leftButtons}
+                            {secondaryGroupButtons}
                         </div>
                         <div className={styles['right-container']}>
-                            {rightButtons}
+                            {primaryGroupButtons}
                         </div>
                     </div>
                 </div>

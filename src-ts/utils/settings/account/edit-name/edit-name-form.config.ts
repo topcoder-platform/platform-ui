@@ -1,4 +1,4 @@
-import { FormDefinition, FormInputAutocompleteOption, FormInputTypes, validatorRequired } from '../../../../lib'
+import { FormDefinition, FormInputAutocompleteOption, validatorRequired } from '../../../../lib'
 
 export const editNameFormTitle: string = 'Edit Name'
 
@@ -9,8 +9,7 @@ export enum EditNameFieldName {
 
 export const editNameFormDef: FormDefinition = {
     buttons: {
-        left: [],
-        right: [
+        primaryGroup: [
             {
                 buttonStyle: 'secondary',
                 isSave: true,
@@ -19,6 +18,7 @@ export const editNameFormDef: FormDefinition = {
                 type: 'submit',
             },
         ],
+        secondaryGroup: [],
     },
     groups: [
         {
@@ -27,7 +27,7 @@ export const editNameFormDef: FormDefinition = {
                     autocomplete: FormInputAutocompleteOption.off,
                     label: 'First Name',
                     name: EditNameFieldName.firstName,
-                    type: FormInputTypes.text,
+                    type: 'text',
                     validators: [
                         {
                             validator: validatorRequired,
@@ -42,7 +42,7 @@ export const editNameFormDef: FormDefinition = {
                     autocomplete: FormInputAutocompleteOption.off,
                     label: 'Last Name',
                     name: EditNameFieldName.lastName,
-                    type: FormInputTypes.text,
+                    type: 'text',
                     validators: [
                         {
                             validator: validatorRequired,

@@ -1,10 +1,8 @@
-import { FormButton, FormGroup, FormInputModel, FormRadioButtonModel } from '.'
-
-export type Field = FormInputModel | FormRadioButtonModel
+import { FormButton, FormGroup } from '.'
 
 export interface FormButtons {
-    left: ReadonlyArray<FormButton>
-    right: ReadonlyArray<FormButton>
+    primaryGroup: ReadonlyArray<FormButton>
+    secondaryGroup?: ReadonlyArray<FormButton>
 }
 
 export interface FormDefinition {

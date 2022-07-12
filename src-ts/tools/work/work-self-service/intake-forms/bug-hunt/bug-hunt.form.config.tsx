@@ -1,19 +1,12 @@
 
 import { ReactComponent as BackIcon } from '../../../../../../src/assets/images/icon-back-arrow.svg'
 import { FormDefinition } from '../../../../../lib'
+
 import BugDeliveryCheckbox from './bug-delivery-checkbox'
 
 export const BugHuntFormConfig: FormDefinition = {
     buttons: {
-        left: [
-            {
-                buttonStyle: 'icon',
-                icon: BackIcon,
-                onClick: () => {},
-                type: 'button',
-            },
-        ],
-        right: [
+        primaryGroup: [
             {
                 buttonStyle: 'secondary',
                 label: 'Save for later',
@@ -23,6 +16,14 @@ export const BugHuntFormConfig: FormDefinition = {
             {
                 buttonStyle: 'primary',
                 label: 'Complete and pay',
+                onClick: () => {},
+                type: 'submit',
+            },
+        ],
+        secondaryGroup: [
+            {
+                buttonStyle: 'icon',
+                icon: BackIcon,
                 onClick: () => {},
                 type: 'button',
             },
@@ -112,7 +113,6 @@ export const BugHuntFormConfig: FormDefinition = {
                 {
                     name: 'delivery-type',
                     notTabbable: false,
-                    onChange: () => {},
                     options: [
                         {
                             checked: false,
@@ -125,8 +125,8 @@ export const BugHuntFormConfig: FormDefinition = {
                             id: 'gitlab',
                         },
                     ],
-                    type: 'radio',
-                    value: true,
+                    type: 'checkbox',
+                    value: 'gitlab',
                 },
                 {
                     events: [

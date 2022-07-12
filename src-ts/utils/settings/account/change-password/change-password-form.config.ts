@@ -1,7 +1,6 @@
 import {
     FormDefinition,
     FormInputAutocompleteOption,
-    FormInputTypes,
     validatorDoesNotMatchOther,
     validatorMatchOther,
     validatorPassword,
@@ -19,8 +18,7 @@ export enum ChangePasswordFieldName {
 
 export const changePasswordFormDef: FormDefinition = {
     buttons: {
-        left: [],
-        right: [
+        primaryGroup: [
             {
                 buttonStyle: 'secondary',
                 isSave: true,
@@ -41,7 +39,7 @@ export const changePasswordFormDef: FormDefinition = {
                     label: 'Current Password',
                     name: ChangePasswordFieldName.currentPassword,
                     placeholder: 'Enter your current password',
-                    type: FormInputTypes.password,
+                    type: 'password',
                     validators: [
                         {
                             validator: validatorRequired,
@@ -61,7 +59,7 @@ export const changePasswordFormDef: FormDefinition = {
                     label: 'New Password',
                     name: ChangePasswordFieldName.newPassword,
                     placeholder: 'Enter your new password',
-                    type: FormInputTypes.password,
+                    type: 'password',
                     validators: [
                         {
                             validator: validatorRequired,
@@ -87,7 +85,7 @@ export const changePasswordFormDef: FormDefinition = {
                     label: 'Confirm Password',
                     name: ChangePasswordFieldName.confirmPassword,
                     placeholder: 'Re-enter your new password',
-                    type: FormInputTypes.password,
+                    type: 'password',
                     validators: [
                         {
                             dependentField: ChangePasswordFieldName.newPassword,
