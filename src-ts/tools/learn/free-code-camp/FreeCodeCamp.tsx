@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import {
@@ -25,7 +25,7 @@ import {
     useLessonProvider,
     useMyCertificationProgress,
 } from '../learn-lib'
-import { getFccLessonPath } from '../learn.routes'
+import { getCoursePath, getFccLessonPath } from '../learn.routes'
 
 import { FccFrame } from './fcc-frame'
 import styles from './FreeCodeCamp.module.scss'
@@ -42,19 +42,25 @@ const FreeCodeCamp: FC<{}> = () => {
     const [moduleParam, setModuleParam]: [string, Dispatch<SetStateAction<string>>] = useState(routeParams.module ?? '')
     const [lessonParam, setLessonParam]: [string, Dispatch<SetStateAction<string>>] = useState(routeParams.lesson ?? '')
 
-    const { certificateProgress, setCertificateProgress }: MyCertificationProgressProviderData = useMyCertificationProgress(profile?.userId, routeParams.provider, certificationParam)
+    const {
+        certificateProgress,
+        setCertificateProgress,
+        ready: progressReady,
+    }: MyCertificationProgressProviderData = useMyCertificationProgress(profile?.userId, routeParams.provider, certificationParam)
 
     const {
         course: courseData,
         ready: courseDataReady,
     }: CoursesProviderData = useCoursesProvider(providerParam, certificationParam)
 
-    const { lesson, ready }: LessonProviderData = useLessonProvider(
+    const { lesson, ready: lessonReady }: LessonProviderData = useLessonProvider(
         providerParam,
         certificationParam,
         moduleParam,
         lessonParam,
     )
+
+    const ready: boolean = courseDataReady && lessonReady && progressReady
 
     const breadcrumb: Array<BreadcrumbItemModel> = useMemo(() => [
         { url: '/learn', name: 'Topcoder Academy' },
@@ -169,7 +175,7 @@ const FreeCodeCamp: FC<{}> = () => {
     useEffect(() => {
       if (
         certificateProgress &&
-        certificateProgress.completedPercentage === 1 &&
+        certificateProgress.courseProgressPercentage === 100 &&
         certificateProgress.status === MyCertificationProgressStatus.inProgress
     ) {
         updateMyCertificationsProgressAsync(
@@ -178,7 +184,7 @@ const FreeCodeCamp: FC<{}> = () => {
             {}
         ).then(setCertificateProgress)
       }
-    }, [certificateProgress])
+    }, [certificateProgress, setCertificateProgress])
 
     useEffect(() => {
         const certificationPath: string = routeParams.certification ?? ''
@@ -189,6 +195,20 @@ const FreeCodeCamp: FC<{}> = () => {
         if (modulePath !== moduleParam) { setModuleParam(modulePath) }
         if (lessonPath !== lessonParam) { setLessonParam(lessonPath) }
     }, [routeParams])
+
+    /**
+     * Check if the user accepted the academic honesty policy
+     * if not, redirect user to course details page to accept the policy
+     */
+    useLayoutEffect(() => {
+        if (ready && !certificateProgress?.academicHonestyPolicyAcceptedAt) {
+            const coursePath: string = getCoursePath(
+                providerParam,
+                certificationParam
+            )
+            navigate(coursePath)
+        }
+    }, [ready, certificateProgress, providerParam, certificationParam, navigate])
 
     return (
         <>

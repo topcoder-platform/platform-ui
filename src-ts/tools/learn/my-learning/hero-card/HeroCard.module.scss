@@ -15,6 +15,9 @@
     :global(.button.link) {
         white-space: initial;
     }
+    @include ltelg {
+        padding: $pad-lg;
+    }
 }
 
 .line {

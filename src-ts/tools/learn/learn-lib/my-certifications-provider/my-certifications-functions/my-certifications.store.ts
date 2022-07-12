@@ -4,6 +4,7 @@ import { getPath } from '../../learn-url.config'
 import { LearnMyCertificationProgress } from './learn-my-certification-progress.model'
 
 export enum UpdateMyCertificateProgressActions {
+    acceptHonestyPolicy = 'honesty-policy',
     currentLesson = 'current-lesson',
     completeLesson = 'complete-lesson',
     completeCertificate = 'complete-certification',
