@@ -99,7 +99,7 @@ const CourseDetailsPage: FC<{}> = () => {
                     </div>
                     {course?.provider === 'freeCodeCamp' && (
                         <div className={styles['credits-link']}>
-                            <a href='https://freecodecamp.org/' target='_blank' referrerPolicy='no-referrer' rel="noreferrer">
+                            <a href='https://freecodecamp.org/' target='_blank' referrerPolicy='no-referrer' rel='noreferrer'>
                                 This course was created by the freeCodeCamp.org community.
                                 <IconOutline.ExternalLinkIcon />
                             </a>

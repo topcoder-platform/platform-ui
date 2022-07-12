@@ -58,7 +58,7 @@ const ProgressBlock: FC<ProgressBlockProps> = (props: ProgressBlockProps) => {
                         <MyCourseInProgressCard
                             certification={certificatesById[certifProgress.certificationId]}
                             key={certifProgress.certificationId}
-                            completedPercentage={certifProgress.courseProgressPercentage/100}
+                            completedPercentage={certifProgress.courseProgressPercentage / 100}
                             theme='minimum'
                             currentLesson={certifProgress.currentLesson}
                         />

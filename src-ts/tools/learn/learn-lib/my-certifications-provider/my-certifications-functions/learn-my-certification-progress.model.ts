@@ -6,9 +6,9 @@ export interface LearnMyCertificationProgress {
     certification: string
     certificationId: string
     completedDate?: string
-    courseProgressPercentage: number
     courseId: string
     courseKey: string
+    courseProgressPercentage: number
     currentLesson?: string
     id: string
     modules: Array<LearnMyModuleProgress>

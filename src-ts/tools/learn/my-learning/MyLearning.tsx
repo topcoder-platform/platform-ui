@@ -67,7 +67,7 @@ const MyLearning: FC<{}> = () => {
                             key={certif.certificationId}
                             theme='detailed'
                             currentLesson={certif.currentLesson}
-                            completedPercentage={certif.courseProgressPercentage/100}
+                            completedPercentage={certif.courseProgressPercentage / 100}
                             startDate={certif.startDate}
                         />
                     ))}

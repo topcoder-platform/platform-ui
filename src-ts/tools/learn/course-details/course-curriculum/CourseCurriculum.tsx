@@ -22,8 +22,8 @@ import { TcAcademyPolicyModal } from './tc-academy-policy-modal'
 
 interface CourseCurriculumProps {
     course: LearnCourse
-    progress?: LearnMyCertificationProgress
     profileUserId?: number
+    progress?: LearnMyCertificationProgress
 }
 
 const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProps) => {
@@ -40,7 +40,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
      * Redirect user to the currentLesson if there's already some progress recorded
      * otherwise redirect to first module > first lesson
      */
-     const handleStartCourse: () => void = useCallback(() => {
+    const handleStartCourse: () => void = useCallback(() => {
         const current: Array<string> = (props.progress?.currentLesson ?? '').split('/')
         const course: LearnCourse = props.course
         const module: LearnModule = course.modules[0]
@@ -67,7 +67,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
       }
 
       setIsTcAcademyPolicyModal(true)
-    }, [handleStartCourse, props.progress?.academicHonestyPolicyAcceptedAt]);
+    }, [handleStartCourse, props.progress?.academicHonestyPolicyAcceptedAt])
 
     /**
      * When user clicks accept inside the policy modal,
@@ -78,15 +78,15 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         if (!props.profileUserId) {
             return
         }
-        
+
         if (!props.progress?.id) {
             await startMyCertificationsProgressAsync(
                 props.profileUserId,
                 props.course.certificationId,
                 props.course.id,
                 {
+                    lesson: props.course.modules[0].lessons[0].dashedName,
                     module: props.course.modules[0].meta.dashedName,
-                    lesson: props.course.modules[0].lessons[0].dashedName
                 }
             )
         } else {

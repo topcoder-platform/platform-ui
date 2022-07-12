@@ -45,7 +45,7 @@ const FreeCodeCamp: FC<{}> = () => {
     const {
         certificateProgress,
         setCertificateProgress,
-        ready: progressReady
+        ready: progressReady,
     }: MyCertificationProgressProviderData = useMyCertificationProgress(profile?.userId, routeParams.provider, certificationParam)
 
     const {
