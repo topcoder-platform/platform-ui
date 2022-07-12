@@ -1,6 +1,6 @@
-import { FormButton, FormGroup, FormInputModel, FormOptionSelectorModel } from '.'
+import { FormButton, FormGroup, FormInputModel, FormRadioButtonModel } from '.'
 
-export type Field = FormInputModel | FormOptionSelectorModel
+export type Field = FormInputModel | FormRadioButtonModel
 
 export interface FormButtons {
     left: ReadonlyArray<FormButton>

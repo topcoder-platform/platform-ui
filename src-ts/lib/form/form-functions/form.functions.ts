@@ -1,7 +1,7 @@
 import { ChangeEvent, FormEvent } from 'react'
 import { toast } from 'react-toastify'
 
-import { Field, FormDefinition, FormGroup, FormInputModel, FormOptionSelectorModel, } from '..'
+import { Field, FormDefinition, FormGroup, FormInputModel } from '..'
 
 export function getInputElement(formElements: HTMLFormControlsCollection, fieldName: string): HTMLInputElement {
     return formElements.namedItem(fieldName) as HTMLInputElement
