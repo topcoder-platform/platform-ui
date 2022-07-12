@@ -11,10 +11,6 @@ export function isInputField({type}: Field): boolean {
     return type === 'text' || type === 'password' || type === 'rating' || type === 'textarea'
 }
 
-export function isSelectOptionField({type}: Field): boolean {
-    return type === 'checkbox' || type === 'radio'
-}
-
 export function getFormInputFields(groups: ReadonlyArray<FormGroup>): Array<Field> {
     const formFields: Array<Field> = groups.reduce((current: Array<Field>, previous: FormGroup) => {
         const formGroupFields: Array<Field> = previous.fields || []
@@ -23,7 +19,7 @@ export function getFormInputFields(groups: ReadonlyArray<FormGroup>): Array<Fiel
     return formFields
 }
 
-export function getInputModel(fieldName: string, fields: ReadonlyArray<Field>): Field {
+export function getInputModel(fields: ReadonlyArray<Field>, fieldName: string): Field {
 
     const formField: Field | undefined = fields.find(input => input.name === fieldName)
 
@@ -49,11 +45,11 @@ export function initializeValues<T>(fields: Array<Field>, formValues?: T): void 
 }
 
 export function onBlur<T>(event: FormEvent<HTMLInputElement | HTMLTextAreaElement>, inputs: ReadonlyArray<Field>, formValues?: T): void {
-    handleFieldEvent<T>(event.target as HTMLInputElement | HTMLTextAreaElement, 'blur', inputs, formValues)
+    handleFieldEvent<T>(event.target as HTMLInputElement | HTMLTextAreaElement, inputs, 'blur', formValues)
 }
 
 export function onChange<T>(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, inputs: ReadonlyArray<Field>, formValues?: T): void {
-    handleFieldEvent<T>(event.target as HTMLInputElement | HTMLTextAreaElement, 'change', inputs, formValues)
+    handleFieldEvent<T>(event.target as HTMLInputElement | HTMLTextAreaElement, inputs, 'change', formValues)
 }
 
 export function onReset(inputs: ReadonlyArray<Field>, formValue?: any): void {
@@ -89,7 +85,7 @@ export async function onSubmitAsync<T>(
     // could have a form that's not dirty but has errors and you wouldn't
     // want to have it look like the submit succeeded
     const formValues: HTMLFormControlsCollection = (event.target as HTMLFormElement).elements
-    const isValid: boolean = validateForm(formValues, 'submit', inputs as ReadonlyArray<Field>)
+    const isValid: boolean = validateForm(formValues, 'submit', inputs)
     if (!isValid) {
         return Promise.reject()
     }
@@ -97,8 +93,7 @@ export async function onSubmitAsync<T>(
     // set the properties for the updated T value
     inputs
         .filter(field => isInputField(field)).forEach((field) => {
-            const casted: FormInputModel | FormOptionSelectorModel = field as FormInputModel | FormOptionSelectorModel
-            (formValue as any)[casted.name] = casted.value
+            (formValue as any)[field.name] = field.value
         })
 
     // if there are no dirty fields, don't actually perform the save
@@ -117,12 +112,12 @@ export async function onSubmitAsync<T>(
         })
 }
 
-function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, event: 'blur' | 'change', fields: ReadonlyArray<Field>, formValues?: T): void {
+function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, fields: ReadonlyArray<Field>, event: 'blur' | 'change', formValues?: T): void {
 
     // set the dirty and touched flags on the field
     const originalValue: string | undefined = (formValues as any)?.[input.name]
 
-    const inputDef: Field = getInputModel(input.name, fields)
+    const inputDef: Field = getInputModel(fields, input.name)
 
     if (event === 'change') {
         inputDef.dirty = input.value !== originalValue
@@ -143,7 +138,7 @@ function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, even
 
     inputDef.dependentFields
         .forEach(dependentField => {
-            const dependentFieldDef: Field = getInputModel(dependentField, fields)
+            const dependentFieldDef: Field = getInputModel(fields, dependentField)
             validateField(dependentFieldDef, formElements, event)
         })
 }
