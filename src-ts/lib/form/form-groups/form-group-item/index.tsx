@@ -11,11 +11,11 @@ interface FormGroupItemProps {
 }
 
 const FromGroupItem: React.FC<FormGroupItemProps> = ({group, renderFormInput}: FormGroupItemProps) => {
-    const { description, title, fields }: FormGroup = group
+    const { instructions, title, fields }: FormGroup = group
 
     const inputFields: Array<JSX.Element | undefined> = fields?.map((field: Field, index: number) => renderFormInput(field as Field, index)) || []
 
-    const isMultiFieldGroup: boolean = !!(title || description)
+    const isMultiFieldGroup: boolean = !!(title || instructions)
 
     return (
         <div className={cn(styles['form-group-item'], !isMultiFieldGroup && styles['single-field'])}>
@@ -25,7 +25,7 @@ const FromGroupItem: React.FC<FormGroupItemProps> = ({group, renderFormInput}: F
                         <div className={styles['title']}>
                             {title}
                         </div>
-                        <div className={styles['group-item-description']} dangerouslySetInnerHTML={{__html: description || ''}}/>
+                        <div className={styles['group-item-instruction']} dangerouslySetInnerHTML={{__html: instructions || ''}}/>
                     </div>
                 )
             }

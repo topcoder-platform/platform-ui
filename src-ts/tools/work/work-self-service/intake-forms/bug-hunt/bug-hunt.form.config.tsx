@@ -29,7 +29,6 @@ export const BugHuntFormConfig: FormDefinition = {
     },
     groups: [
         {
-            description: 'Enter a title for your website bug hunt project.',
             fields: [
                 {
                     events: [
@@ -44,10 +43,10 @@ export const BugHuntFormConfig: FormDefinition = {
                     type: 'text',
                 },
             ],
+            instructions: 'Enter a title for your website bug hunt project.',
             title: 'Project Title',
         },
         {
-            description: 'Enter a title for your website bug hunt project.',
             fields: [
                 {
                     events: [
@@ -62,13 +61,10 @@ export const BugHuntFormConfig: FormDefinition = {
                     type: 'text',
                 },
             ],
+            instructions: 'Enter a title for your website bug hunt project.',
             title: 'Website URL',
         },
         {
-            description: `
-                Do you have any specific goals for your website bug hunt? </br>
-                For example: find bugs in my online shopping experience
-            `,
             fields: [
                 {
                     events: [
@@ -83,13 +79,13 @@ export const BugHuntFormConfig: FormDefinition = {
                     type: 'textarea',
                 },
             ],
+            instructions: `
+                Do you have any specific goals for your website bug hunt? </br>
+                For example: find bugs in my online shopping experience
+            `,
             title: 'Bug Hunt Goals',
         },
         {
-            description: `
-                Are there specific features we should focus on testing? </br>
-                For example: [An example not used above]
-            `,
             fields: [
                 {
                     events: [
@@ -104,10 +100,13 @@ export const BugHuntFormConfig: FormDefinition = {
                     type: 'textarea',
                 },
             ],
+            instructions: `
+                Are there specific features we should focus on testing? </br>
+                For example: [An example not used above]
+            `,
             title: 'Features to test',
         },
         {
-            description: 'How do you want your bugs delivered?',
             fields: [
                 {
                     name: 'delivery-type',
@@ -141,6 +140,7 @@ export const BugHuntFormConfig: FormDefinition = {
                     type: 'text',
                 },
             ],
+            instructions: 'How do you want your bugs delivered?',
             title: 'Bug Delivery',
         },
     ],
