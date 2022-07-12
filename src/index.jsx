@@ -9,10 +9,11 @@ import {
   PageFooter,
   ProfileProvider,
   RouteProvider,
-  routeRootLoggedIn,
+  routeRootCustomer,
   routeRootLoggedOut,
-  ToolsRoutes,
-  UtilsRoutes,
+  routeRootMember,
+  toolsRoutes,
+  utilsRoutes,
 } from "../src-ts";
 
 import App from "./App";
@@ -28,10 +29,11 @@ ReactDOM.render(
         <BrowserRouter>
 
           <RouteProvider
-            rootLoggedIn={routeRootLoggedIn}
+            rootCustomer={routeRootCustomer}
             rootLoggedOut={routeRootLoggedOut}
-            toolsRoutes={[...ToolsRoutes]}
-            utilsRoutes={[...UtilsRoutes]}
+            rootMember={routeRootMember}
+            toolsRoutes={[...toolsRoutes]}
+            utilsRoutes={[...utilsRoutes]}
           >
             <StrictMode>
               <AppNextGen />

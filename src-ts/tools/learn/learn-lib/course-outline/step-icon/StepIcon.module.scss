@@ -1,0 +1,25 @@
+@import '../../../../../lib/styles/includes';
+
+.step-wrap {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    color: $blue-140;
+
+    background: $black-40;
+
+    &:global(.completed) {
+        background: $turq-75;
+    }
+
+    &:global(.active) {
+        background: $tc-white;
+    }
+}

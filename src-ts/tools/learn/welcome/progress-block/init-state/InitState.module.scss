@@ -1,0 +1,38 @@
+@use '../../../../../lib/styles/typography';
+@import '../../../../../lib/styles/includes';
+
+.wrap {
+    gap: $pad-lg;
+    display: grid;
+    color: $black-100;
+    grid-template-areas: 'icon title' 'icon text';
+
+    h2 {
+        grid-area: title;
+        align-self: center;
+        @include ltemd {
+            font-size: 16px;
+            line-height: 18px;
+        }
+    }
+
+    @include ltemd {
+        grid-template-areas: 'icon title' 'text text';
+        grid-template-columns: auto 1fr;
+    }
+}
+
+.icon {
+    grid-area: icon;
+    @include ltemd {
+        svg {
+            @include icon-size(38);
+        }
+    }
+}
+
+.content-text {
+    @extend .body-medium-normal;
+    margin-top: -1*$pad-sm;
+    grid-area: text;
+}
