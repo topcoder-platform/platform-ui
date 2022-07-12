@@ -15,9 +15,6 @@ export interface ServicePriceProps {
   stickerPrice: number
 }
 
-// TODO
-// - right icon should be right aligned on mobile
-
 const ServicePrice: FC<ServicePriceProps> = (props: ServicePriceProps) => {
   const { icon, showIcon, hideTitle = false, serviceType, stickerPrice, price = 0, duration }: ServicePriceProps = props
 

@@ -72,13 +72,5 @@
   .help {
     margin-left: 6px;
     color: $turq-160;
-
-    svg {
-      @include ltemd {
-        width: 20px;
-        height: 20px;
-      }
-    }
-
   }
 }
