@@ -69,8 +69,7 @@ export function create(challenge: Challenge, workPrices: WorkPricesType): Work {
     }
 }
 
-export function buildCreateBody(type: WorkType): ChallengeCreateBody {
-    // TODO: once configs are merged, use type and config to fetch the necessary fields
+export function buildCreateBody(workTypeConfig: WorkTypeConfig): ChallengeCreateBody {
     return {
         description: 'Information not provided',
         discussions: [
@@ -84,10 +83,10 @@ export function buildCreateBody(type: WorkType): ChallengeCreateBody {
             selfService: true,
         },
         name: 'new-self-service-project',
-        tags: ['test'],
-        timelineTemplateId: 'challengeFieldValues.timelineTemplateId',
-        trackId: 'challengeFieldValues.trackId',
-        typeId: 'challengeFieldValues.typeId',
+        tags: workTypeConfig.tags,
+        timelineTemplateId: workTypeConfig.timelineTemplateId,
+        trackId: workTypeConfig.trackId,
+        typeId: workTypeConfig.typeId,
     }
 }
 

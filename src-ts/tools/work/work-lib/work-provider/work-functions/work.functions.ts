@@ -18,10 +18,13 @@ import {
     workStoreGetFilteredByStatus,
     workStoreUpdateAsync,
     WorkType,
+    WorkTypeConfig,
+    WorkTypeConfigs,
 } from './work-store'
 
 export async function createAsync(type: WorkType): Promise<void> {
-    const body: ChallengeCreateBody = workFactoryBuildCreateBody(type)
+    const workConfig: WorkTypeConfig = WorkTypeConfigs[WorkType.bugHunt]
+    const body: ChallengeCreateBody = workFactoryBuildCreateBody(workConfig)
     return workStoreCreateAsync(body)
 }
 
