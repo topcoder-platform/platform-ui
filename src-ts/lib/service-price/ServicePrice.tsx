@@ -1,7 +1,7 @@
 import { FC } from 'react'
 
-import { currencyFormat } from '../../utils'
-import HelpIcon from '../help-icon/HelpIcon'
+import { IconOutline, textFormatMoneyLocaleString } from '../index'
+import { Tooltip } from '../tooltip'
 
 import styles from './ServicePrice.module.scss'
 
@@ -15,39 +15,44 @@ export interface ServicePriceProps {
   stickerPrice: number
 }
 
+// TODO
+// - right icon should be right aligned on mobile
+
 const ServicePrice: FC<ServicePriceProps> = (props: ServicePriceProps) => {
-  const { icon, showIcon, hideTitle, serviceType, stickerPrice, price, duration }: ServicePriceProps = props
+  const { icon, showIcon, hideTitle = false, serviceType, stickerPrice, price = 0, duration }: ServicePriceProps = props
 
   return (
     <div className={styles['container']}>
       <div className={styles['inline']}>
         <div className={styles['iconWrapper']}>{showIcon && icon && <>{icon}</>}</div>
         <div>
-          {!hideTitle && <p className={styles['serviceTitle']}>{serviceType}</p>}
-          <div className={styles['priceAndDuration']}>
-            {stickerPrice && (
-              <span className={styles['stickerPrice']}>
-                {currencyFormat(stickerPrice)}
+          {!hideTitle && <p><h3 className={styles['serviceTitle']}>{serviceType}</h3></p>}
+          <h3>
+            <div className={styles['priceAndDuration']}>
+              {stickerPrice && (
+                <span className={styles['stickerPrice']}>
+                  {textFormatMoneyLocaleString(stickerPrice)}
+                </span>
+              )}
+              <span className={styles['discount']}>{textFormatMoneyLocaleString(price)}</span>
+              <span className={styles['separator']}>|</span>
+              <span className={styles['days']}>{duration}&nbsp;Days</span>
+              <span className={styles['help']}>
+                <Tooltip
+                  content='The price and project length is dynamic and dependent on the
+                  variables selected as you define your work.'
+                  triggerOn='hover'
+                  trigger={(
+                    <IconOutline.QuestionMarkCircleIcon width={14} height={14} />
+                  )}
+                />
               </span>
-            )}
-            <span className={styles['discount']}>{currencyFormat(price)}</span>
-            <span className={styles['separator']} />
-            <span className={styles['days']}>{duration}&nbsp;Days</span>
-            <div className={styles['filler']} />
-            <HelpIcon>
-              The price and project length is dynamic and dependent on the
-              variables selected as you define your work.
-            </HelpIcon>
-          </div>
+            </div>
+          </h3>
         </div>
       </div>
     </div>
   )
-}
-
-ServicePrice.defaultProps = {
-  hideTitle: false,
-  price: 0,
 }
 
 export default ServicePrice

@@ -1,5 +1,4 @@
-@import '../../lib/styles/mixins';
-@import '../../lib/styles/variables';
+@import '../../lib/styles/includes';
 
 .container {
 
@@ -20,6 +19,7 @@
   .inline {
     display: flex;
     flex-direction: row;
+    width:100%;
 
     @include ltemd {
       width: 100%;
@@ -32,37 +32,21 @@
   }
 }
 
-.filler {
-  display: flex;
-
-  @include ltemd {
-    flex: 1;
-  }
-}
-
 .serviceTitle {
-  margin-top: 16px;
-  @include font-barlow;
-  font-weight: 600;
-  font-size: 18px;
   text-align: center;
   text-transform: uppercase;
 }
 
 .priceAndDuration {
-  @include font-barlow;
-  margin-top: 8px;
-  font-size: 18px;
-  line-height: 20px;
   color: $tc-black;
   display: flex;
   text-align: center;
   text-transform: uppercase;
+  line-height: 48px;
 
   @include ltemd {
     justify-content: space-between;
   }
-
 
   .discount {
     color: $green-50;
@@ -75,25 +59,26 @@
   }
 
   .separator {
+    height: 26px;
     width: 2px;
-    height: 20px;
-    background: #D4D4D4;
-    border-radius: 1px;
+    color: $black-10;
     margin: 0px 16px;
-    padding: 1px;
   }
 
   .days {
     display: inline;
   }
 
-  svg {
-    margin-left: 9px;
+  .help {
+    margin-left: 6px;
+    color: $turq-160;
 
-    @include ltemd {
-      margin-left: 84px;
-      width: 20px;
-      height: 20px;
+    svg {
+      @include ltemd {
+        width: 20px;
+        height: 20px;
+      }
     }
+
   }
 }
