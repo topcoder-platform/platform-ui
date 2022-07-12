@@ -1,6 +1,7 @@
 
 import { ReactComponent as BackIcon } from '../../../../../../src/assets/images/icon-back-arrow.svg'
 import { FormDefinition } from '../../../../../lib'
+import BugDeliveryCheckbox from './bug-delivery-checkbox'
 
 export const BugHuntFormConfig: FormDefinition = {
     buttons: {
@@ -115,16 +116,16 @@ export const BugHuntFormConfig: FormDefinition = {
                     options: [
                         {
                             checked: false,
-                            children: () => (<div>Option 1</div>),
+                            children: <BugDeliveryCheckbox name={'GitHub'} />,
                             id: 'github',
                         },
                         {
                             checked: false,
-                            children: () => (<div>Option 2</div>),
+                            children: <BugDeliveryCheckbox name={'GitLab'} />,
                             id: 'gitlab',
                         },
                     ],
-                    type: 'checkbox',
+                    type: 'radio',
                     value: true,
                 },
                 {

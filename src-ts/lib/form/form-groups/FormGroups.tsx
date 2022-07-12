@@ -1,11 +1,12 @@
 import { ChangeEvent, FocusEvent } from 'react'
 
-import { Field, FormDefinition, FormGroup,  FormInputModel, FormInputTypes } from '..'
+import { Field, FormDefinition, FormGroup,  FormInputModel, FormInputTypes, FormRadioButtonTypes } from '..'
 
 import FormGroupItem from './form-group-item'
 import { InputRating, InputText, InputTextarea } from './form-input'
 import { FormInputRow } from './form-input-row'
 import { InputTextTypes } from './form-input/input-text/InputText'
+import FormRadio from './form-radio'
 import styles from './FormGroups.module.scss'
 
 interface FormGroupsProps {
@@ -19,13 +20,8 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
 
     const { formDef, onBlur, onChange }: FormGroupsProps = props
 
-    const renderInputField: (inputModel: Field, index: number) => JSX.Element | undefined = (inputModel, index) => {
-
-        if (!inputModel) {
-            return
-        }
-
-        const input: FormInputModel = inputModel as FormInputModel
+    const render: (inputModel: Field, index: number) => JSX.Element | undefined = (inputModel, index) => {
+        const input: Field = inputModel
         const tabIndex: number = inputModel.notTabbable ? -1 : index + 1 + (formDef.tabIndexStart || 0)
 
         let inputElement: JSX.Element
@@ -53,7 +49,16 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                     />
                 )
                 break
-
+            case FormRadioButtonTypes.checkbox:
+            case FormRadioButtonTypes.radio:
+                inputElement = (
+                    <FormRadio
+                        {...input}
+                        onChange={onChange}
+                        value={input.value}
+                    />
+                )
+                break
             default:
                 inputElement = (
                     <InputText
@@ -77,6 +82,15 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                 {inputElement}
             </FormInputRow>
         )
+    }
+
+    const renderInputField: (inputModel: Field, index: number) => JSX.Element | undefined = (inputModel, index) => {
+
+        if (!inputModel) {
+            return
+        }
+
+        return render(inputModel, index)
     }
 
     const formGroups: Array<JSX.Element | undefined> = formDef?.groups?.map((element: FormGroup) => {

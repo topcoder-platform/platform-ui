@@ -1,8 +1,10 @@
+import { ChangeEvent } from 'react'
+
 import { ValidatorFn } from './validator-functions'
 
 export interface FormRadioButtonOption {
   checked: boolean
-  children: React.FC
+  children: JSX.Element
   readonly className?: string
   id: string
 }
@@ -19,7 +21,7 @@ export interface FormRadioButtonModel {
   error?: string
   readonly name: string
   readonly notTabbable: boolean
-  onChange?: (optionId: string, checked: boolean) => void
+  onChange?: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
   options: Array<FormRadioButtonOption>
   touched?: boolean
   readonly type: keyof typeof FormRadioButtonTypes

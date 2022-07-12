@@ -1,0 +1,17 @@
+@import '../../../../../../lib/styles/includes';
+
+.bug-delivery-checkbox {
+    border: 1px solid $black-100;
+    border-radius: 4px;
+    padding: 17px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    .name {
+        @include font-roboto;
+        font-size: 20px;
+        font-weight: 700;
+        margin-top: 8px;
+    }    
+}
