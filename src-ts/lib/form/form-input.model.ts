@@ -2,12 +2,11 @@ import { FormInputAutocompleteOption } from './form-groups'
 import { InputEvent } from './form-input.event'
 import { ValidatorFn } from './validator-functions'
 
-export enum FormInputTypes {
-    password = 'password',
-    rating = 'rating',
-    text = 'text',
-    textarea = 'textarea',
-}
+export interface FormRadioButtonOption {
+    checked: boolean
+    children: JSX.Element
+    id: string
+  }
 
 export interface FormInputModel {
     readonly autocomplete?: FormInputAutocompleteOption
@@ -23,11 +22,12 @@ export interface FormInputModel {
     readonly label?: string
     readonly name: string
     readonly notTabbable?: boolean
+    options?: Array<FormRadioButtonOption>
     readonly placeholder?: string
     readonly spellCheck?: boolean
     readonly title?: string
     touched?: boolean
-    readonly type: keyof typeof FormInputTypes
+    readonly type: 'password' | 'rating' | 'text' | 'textarea' | 'radio' | 'checkbox'
     readonly validators?: ReadonlyArray<ValidatorFn>
     value?: string
 }

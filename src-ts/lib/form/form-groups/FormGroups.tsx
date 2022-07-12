@@ -1,6 +1,6 @@
 import { ChangeEvent, FocusEvent } from 'react'
 
-import { Field, FormDefinition, FormGroup,  FormInputModel, FormInputTypes } from '..'
+import { FormDefinition, FormGroup,  FormInputModel } from '..'
 
 import FormGroupItem from './form-group-item'
 import { InputRating, InputText, InputTextarea } from './form-input'
@@ -10,7 +10,7 @@ import styles from './FormGroups.module.scss'
 
 interface FormGroupsProps {
     formDef: FormDefinition
-    inputs: Array<Field>
+    inputs: Array<FormInputModel>
     onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void
     onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
 }
@@ -19,7 +19,7 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
 
     const { formDef, onBlur, onChange }: FormGroupsProps = props
 
-    const renderInputField: (inputModel: Field, index: number) => JSX.Element | undefined = (inputModel, index) => {
+    const renderInputField: (inputModel: FormInputModel, index: number) => JSX.Element | undefined = (inputModel, index) => {
 
         if (!inputModel) {
             return
@@ -31,7 +31,7 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
         let inputElement: JSX.Element
         switch (input.type) {
 
-            case FormInputTypes.rating:
+            case 'rating':
                 inputElement = (
                     <InputRating
                         {...input}
@@ -42,7 +42,7 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                 )
                 break
 
-            case FormInputTypes.textarea:
+            case 'textarea':
                 inputElement = (
                     <InputTextarea
                         {...input}

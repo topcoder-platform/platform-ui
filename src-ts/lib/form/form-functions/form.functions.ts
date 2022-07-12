@@ -1,27 +1,27 @@
 import { ChangeEvent, FormEvent } from 'react'
 import { toast } from 'react-toastify'
 
-import { Field, FormDefinition, FormGroup, FormInputModel } from '..'
+import { FormDefinition, FormGroup, FormInputModel } from '..'
 
 export function getInputElement(formElements: HTMLFormControlsCollection, fieldName: string): HTMLInputElement {
     return formElements.namedItem(fieldName) as HTMLInputElement
 }
 
-export function isInputField({type}: Field): boolean {
+export function isInputField({type}: FormInputModel): boolean {
     return type === 'text' || type === 'password' || type === 'rating' || type === 'textarea'
 }
 
-export function getFormInputFields(groups: ReadonlyArray<FormGroup>): Array<Field> {
-    const formFields: Array<Field> = groups.reduce((current: Array<Field>, previous: FormGroup) => {
-        const formGroupFields: Array<Field> = previous.fields || []
+export function getFormInputFields(groups: ReadonlyArray<FormGroup>): Array<FormInputModel> {
+    const formFields: Array<FormInputModel> = groups.reduce((current: Array<FormInputModel>, previous: FormGroup) => {
+        const formGroupFields: Array<FormInputModel> = previous.fields || []
         return [...current, ...formGroupFields]
-    }, []) as Array<Field>
+    }, []) as Array<FormInputModel>
     return formFields
 }
 
-export function getInputModel(fields: ReadonlyArray<Field>, fieldName: string): Field {
+export function getInputModel(fields: ReadonlyArray<FormInputModel>, fieldName: string): FormInputModel {
 
-    const formField: Field | undefined = fields.find(input => input.name === fieldName)
+    const formField: FormInputModel | undefined = fields.find(input => input.name === fieldName)
 
     // if we can't find the input we have a problem
     if (!formField) {
@@ -31,7 +31,7 @@ export function getInputModel(fields: ReadonlyArray<Field>, fieldName: string): 
     return formField
 }
 
-export function initializeValues<T>(fields: Array<Field>, formValues?: T): void {
+export function initializeValues<T>(fields: Array<FormInputModel>, formValues?: T): void {
     fields
         .filter(input =>  isInputField(input) && !input.dirty && !input.touched)
         .forEach(input => {
@@ -44,15 +44,15 @@ export function initializeValues<T>(fields: Array<Field>, formValues?: T): void 
         })
 }
 
-export function onBlur<T>(event: FormEvent<HTMLInputElement | HTMLTextAreaElement>, inputs: ReadonlyArray<Field>, formValues?: T): void {
+export function onBlur<T>(event: FormEvent<HTMLInputElement | HTMLTextAreaElement>, inputs: ReadonlyArray<FormInputModel>, formValues?: T): void {
     handleFieldEvent<T>(event.target as HTMLInputElement | HTMLTextAreaElement, inputs, 'blur', formValues)
 }
 
-export function onChange<T>(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, inputs: ReadonlyArray<Field>, formValues?: T): void {
+export function onChange<T>(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, inputs: ReadonlyArray<FormInputModel>, formValues?: T): void {
     handleFieldEvent<T>(event.target as HTMLInputElement | HTMLTextAreaElement, inputs, 'change', formValues)
 }
 
-export function onReset(inputs: ReadonlyArray<Field>, formValue?: any): void {
+export function onReset(inputs: ReadonlyArray<FormInputModel>, formValue?: any): void {
     inputs?.forEach(inputDef => {
             if (isInputField(inputDef)) {
                 const typeCastedInput: FormInputModel = inputDef as FormInputModel
@@ -75,10 +75,10 @@ export async function onSubmitAsync<T>(
     event.preventDefault()
 
     const { groups, shortName, successMessage }: FormDefinition = formDef
-    const inputs: Array<Field> = getFormInputFields(groups || [])
+    const inputs: Array<FormInputModel> = getFormInputFields(groups || [])
 
     // get the dirty fields before we validate b/c validation marks them dirty on submit
-    const dirty: Field | undefined = inputs?.find(fieldDef => !!fieldDef.dirty)
+    const dirty: FormInputModel | undefined = inputs?.find(fieldDef => !!fieldDef.dirty)
 
     // if there are any validation errors, display a message and stop submitting
     // NOTE: need to check this before we check if the form is dirty bc you
@@ -112,12 +112,12 @@ export async function onSubmitAsync<T>(
         })
 }
 
-function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, fields: ReadonlyArray<Field>, event: 'blur' | 'change', formValues?: T): void {
+function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, fields: ReadonlyArray<FormInputModel>, event: 'blur' | 'change', formValues?: T): void {
 
     // set the dirty and touched flags on the field
     const originalValue: string | undefined = (formValues as any)?.[input.name]
 
-    const inputDef: Field = getInputModel(fields, input.name)
+    const inputDef: FormInputModel = getInputModel(fields, input.name)
 
     if (event === 'change') {
         inputDef.dirty = input.value !== originalValue
@@ -138,12 +138,12 @@ function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, fiel
 
     inputDef.dependentFields
         .forEach(dependentField => {
-            const dependentFieldDef: Field = getInputModel(fields, dependentField)
+            const dependentFieldDef: FormInputModel = getInputModel(fields, dependentField)
             validateField(dependentFieldDef, formElements, event)
         })
 }
 
-function validateField(formInputDef: Field, formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit'): void {
+function validateField(formInputDef: FormInputModel, formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit'): void {
 
     // this is the error the field had before the event took place
     const previousError: string | undefined = formInputDef.error
@@ -175,8 +175,8 @@ function validateField(formInputDef: Field, formElements: HTMLFormControlsCollec
         })
 }
 
-function validateForm(formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit', inputs: ReadonlyArray<Field>): boolean {
-    const errors: ReadonlyArray<Field> = inputs?.filter(formInputDef => {
+function validateForm(formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit', inputs: ReadonlyArray<FormInputModel>): boolean {
+    const errors: ReadonlyArray<FormInputModel> = inputs?.filter(formInputDef => {
             formInputDef.dirty = formInputDef.dirty || event === 'submit'
             validateField(formInputDef, formElements, event)
             return !!formInputDef.error

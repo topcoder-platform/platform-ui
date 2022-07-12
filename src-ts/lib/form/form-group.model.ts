@@ -1,8 +1,8 @@
-import { Field } from '.'
+import { FormInputModel } from '.'
 
 export interface FormGroup {
   readonly element?: JSX.Element
-  fields?: Array<Field>
+  fields?: Array<FormInputModel>
   readonly instructions?: string
   readonly title?: string
 }

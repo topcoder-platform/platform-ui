@@ -4,8 +4,8 @@ import Modal from 'react-responsive-modal'
 import {
     Button,
     Card,
-    Field,
     formGetInputFields,
+    FormInputModel,
     formOnReset,
     profileContext,
     ProfileContextData,
@@ -29,13 +29,13 @@ const Account: FC<{}> = () => {
     }
 
     function toggleEditName(): void {
-        const fields: Array<Field> = formGetInputFields(editNameFormDef.groups || [])
+        const fields: Array<FormInputModel> = formGetInputFields(editNameFormDef.groups || [])
         formOnReset(fields)
         setEditNameOpen(!editProfileOpen)
     }
 
     function toggleChangePassword(): void {
-        const fields: Array<Field> = formGetInputFields(editNameFormDef.groups || [])
+        const fields: Array<FormInputModel> = formGetInputFields(editNameFormDef.groups || [])
         formOnReset(fields)
         setChangePasswordOpen(!changePasswordOpen)
     }

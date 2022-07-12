@@ -1,19 +1,19 @@
 import cn from 'classnames'
 import React from 'react'
 
-import { Field, FormGroup } from '../..'
+import { FormGroup, FormInputModel } from '../..'
 
 import styles from './FormGroupItem.module.scss'
 
 interface FormGroupItemProps {
     group: FormGroup
-    renderFormInput: (input: Field, index: number) => JSX.Element | undefined
+    renderFormInput: (input: FormInputModel, index: number) => JSX.Element | undefined
 }
 
 const FromGroupItem: React.FC<FormGroupItemProps> = ({group, renderFormInput}: FormGroupItemProps) => {
     const { instructions, title, fields }: FormGroup = group
 
-    const inputFields: Array<JSX.Element | undefined> = fields?.map((field: Field, index: number) => renderFormInput(field as Field, index)) || []
+    const inputFields: Array<JSX.Element | undefined> = fields?.map((field: FormInputModel, index: number) => renderFormInput(field as FormInputModel, index)) || []
 
     const isMultiFieldGroup: boolean = !!(title || instructions)
 
