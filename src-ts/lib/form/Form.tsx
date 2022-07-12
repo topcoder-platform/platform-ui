@@ -15,24 +15,23 @@ import { Button } from '../button'
 import '../styles/index.scss'
 import { IconOutline } from '../svgs'
 
-import { FormDefinition } from './form-definition.model'
-import { FormElements } from './form-elements'
-import { NonStaticField } from './form-field.model'
+import { Field, FormDefinition } from '.'
 import {
+    formGetInputFields,
     formInitializeValues,
     formOnBlur,
     formOnChange,
     formOnReset,
     formOnSubmitAsync,
 } from './form-functions'
-import { getNonStaticInputFields } from './form-functions/form.functions'
+import { FormGroups } from './form-groups'
 import styles from './Form.module.scss'
 
 interface FormProps<ValueType, RequestType> {
     readonly formDef: FormDefinition
     readonly formValues?: ValueType
     readonly onSuccess?: () => void
-    readonly requestGenerator: (inputs: ReadonlyArray<NonStaticField>) => RequestType
+    readonly requestGenerator: (inputs: ReadonlyArray<Field>) => RequestType
     readonly save: (value: RequestType) => Promise<void>
 }
 
@@ -52,24 +51,24 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             = useState<RefObject<HTMLFormElement>>(createRef<HTMLFormElement>())
 
         // This will hold all the inputs that are not static fields
-        const [inputs, setInputs]: [Array<NonStaticField>, Dispatch<SetStateAction<Array<NonStaticField>>>] = useState<Array<NonStaticField>>(getNonStaticInputFields(formDef.elements))
+        const [inputs, setInputs]: [Array<Field>, Dispatch<SetStateAction<Array<Field>>>] = useState<Array<Field>>(formGetInputFields(formDef.groups || []))
 
         function onBlur(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>): void {
             formOnBlur(event, inputs, props.formValues)
             setFormDef({ ...formDef })
-            setInputs(getNonStaticInputFields(formDef.elements))
+            setInputs(formGetInputFields(formDef.groups || []))
         }
 
         function onChange(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void {
             formOnChange(event, inputs, props.formValues)
-            setInputs(getNonStaticInputFields(formDef.elements))
+            setInputs(formGetInputFields(formDef.groups || []))
             setFormDef({ ...formDef })
         }
 
         function onReset(): void {
             formOnReset(inputs, props.formValues)
             setFormDef({ ...formDef })
-            setInputs(getNonStaticInputFields(formDef.elements))
+            setInputs(formGetInputFields(formDef.groups || []))
             setFormKey(Date.now())
         }
 
@@ -80,18 +79,18 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                     setFormKey(Date.now())
                     formOnReset(inputs, props.formValues)
                     setFormDef({ ...formDef })
-                    setInputs(getNonStaticInputFields(formDef.elements))
+                    setInputs(formGetInputFields(formDef.groups || []))
                 })
                 .catch((error: string | undefined) => {
                     setFormError(error)
                     setFormDef({ ...formDef })
-                    setInputs(getNonStaticInputFields(formDef.elements))
+                    setInputs(formGetInputFields(formDef.groups || []))
                 })
         }
 
         formInitializeValues(inputs, props.formValues)
 
-        const leftButtons: Array<JSX.Element> = formDef.leftButtons ? formDef.leftButtons
+        const leftButtons: Array<JSX.Element> = formDef.buttons.left ? formDef.buttons.left
             .map((button, index) => {
                 // if this is a reset button, set its onclick to reset
                 if (!!button.isReset) {
@@ -109,7 +108,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                 )
             }) : []
 
-        const rightButtons: Array<JSX.Element> = formDef.rightButtons ? formDef.rightButtons
+        const rightButtons: Array<JSX.Element> = formDef.buttons.right ? formDef.buttons.right
             .map((button, index) => {
                 // if this is a reset button, set its onclick to reset
                 if (!!button.isReset) {
@@ -158,7 +157,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                     </div>
                 )}
 
-                <FormElements
+                <FormGroups
                     inputs={inputs}
                     formDef={formDef}
                     onBlur={onBlur}

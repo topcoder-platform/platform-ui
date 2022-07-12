@@ -1,4 +1,4 @@
-import { FormInputAutocompleteOption } from './form-elements'
+import { FormInputAutocompleteOption } from './form-groups'
 import { InputEvent } from './form-input.event'
 import { ValidatorFn } from './validator-functions'
 

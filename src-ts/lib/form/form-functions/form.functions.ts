@@ -1,11 +1,7 @@
 import { ChangeEvent, FormEvent } from 'react'
 import { toast } from 'react-toastify'
 
-import { Element, FormDefinition } from '../form-definition.model'
-import { Field, FormFieldModel, NonStaticField } from '../form-field.model'
-import { FormInputModel } from '../form-input.model'
-import { FormOptionSelectorModel } from '../form-option-selector.model'
-import { FormSectionModel } from '../form-section.model'
+import { Field, FormDefinition, FormGroup, FormInputModel, FormOptionSelectorModel, } from '..'
 
 export function getInputElement(formElements: HTMLFormControlsCollection, fieldName: string): HTMLInputElement {
     return formElements.namedItem(fieldName) as HTMLInputElement
@@ -19,33 +15,17 @@ export function isSelectOptionField({type}: Field): boolean {
     return type === 'checkbox' || type === 'radio'
 }
 
-export function isBannerField({type}: Field): boolean {
-    return type === 'banner'
+export function getFormInputFields(groups: ReadonlyArray<FormGroup>): Array<Field> {
+    const formFields: Array<Field> = groups.reduce((current: Array<Field>, previous: FormGroup) => {
+        const formGroupFields: Array<Field> = previous.fields || []
+        return [...current, ...formGroupFields]
+    }, []) as Array<Field>
+    return formFields
 }
 
-export function isNonStaticField({isStatic}: Field): boolean {
-    return !!!isStatic
-}
+export function getInputModel(fieldName: string, fields: ReadonlyArray<Field>): Field {
 
-export function getFormInputFields(fields: ReadonlyArray<Element>): Array<Field> {
-    const formFields: Array<FormFieldModel> = fields
-        .filter((item: Element) => item.type === 'field') as Array<FormFieldModel>
-    const formSectionFields: Array<FormSectionModel> = fields.filter((item: Element) => item.type === 'section') as Array<FormSectionModel>
-
-    const inputFields: Array<Field> = formFields.map((item: FormFieldModel) => item.field)
-    const sectionFields: Array<Field> = formSectionFields.map(item => item.fields).reduce((prev: Array<Field>, current: Array<Field>) => ([...prev, ...current]), [])
-    const allFields: Array<Field> = [...inputFields, ...sectionFields]
-    return allFields
-}
-
-// This function returns the list of non static input elements
-export function getNonStaticInputFields(elements: ReadonlyArray<Element>): Array<NonStaticField> {
-    return getFormInputFields(elements).filter(input => isNonStaticField(input)) as Array<NonStaticField>
-}
-
-export function getInputModel(fieldName: string, fields: ReadonlyArray<NonStaticField>): NonStaticField {
-
-    const formField: NonStaticField | undefined = fields.find(input => input.name === fieldName)
+    const formField: Field | undefined = fields.find(input => input.name === fieldName)
 
     // if we can't find the input we have a problem
     if (!formField) {
@@ -55,9 +35,9 @@ export function getInputModel(fieldName: string, fields: ReadonlyArray<NonStatic
     return formField
 }
 
-export function initializeValues<T>(fields: Array<NonStaticField>, formValues?: T): void {
+export function initializeValues<T>(fields: Array<Field>, formValues?: T): void {
     fields
-        .filter(input =>  isInputField(input) && !input.dirty && !input.touched && isNonStaticField(input))
+        .filter(input =>  isInputField(input) && !input.dirty && !input.touched)
         .forEach(input => {
             if (isInputField(input)) {
                 const typeCastedInput: FormInputModel = input as FormInputModel
@@ -68,15 +48,15 @@ export function initializeValues<T>(fields: Array<NonStaticField>, formValues?: 
         })
 }
 
-export function onBlur<T>(event: FormEvent<HTMLInputElement | HTMLTextAreaElement>, inputs: ReadonlyArray<NonStaticField>, formValues?: T): void {
+export function onBlur<T>(event: FormEvent<HTMLInputElement | HTMLTextAreaElement>, inputs: ReadonlyArray<Field>, formValues?: T): void {
     handleFieldEvent<T>(event.target as HTMLInputElement | HTMLTextAreaElement, 'blur', inputs, formValues)
 }
 
-export function onChange<T>(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, inputs: ReadonlyArray<NonStaticField>, formValues?: T): void {
+export function onChange<T>(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, inputs: ReadonlyArray<Field>, formValues?: T): void {
     handleFieldEvent<T>(event.target as HTMLInputElement | HTMLTextAreaElement, 'change', inputs, formValues)
 }
 
-export function onReset(inputs: ReadonlyArray<NonStaticField>, formValue?: any): void {
+export function onReset(inputs: ReadonlyArray<Field>, formValue?: any): void {
     inputs?.forEach(inputDef => {
             if (isInputField(inputDef)) {
                 const typeCastedInput: FormInputModel = inputDef as FormInputModel
@@ -98,8 +78,8 @@ export async function onSubmitAsync<T>(
 
     event.preventDefault()
 
-    const { elements, shortName, successMessage }: FormDefinition = formDef
-    const inputs: Array<Field> = getFormInputFields(elements)
+    const { groups, shortName, successMessage }: FormDefinition = formDef
+    const inputs: Array<Field> = getFormInputFields(groups || [])
 
     // get the dirty fields before we validate b/c validation marks them dirty on submit
     const dirty: Field | undefined = inputs?.find(fieldDef => !!fieldDef.dirty)
@@ -109,7 +89,7 @@ export async function onSubmitAsync<T>(
     // could have a form that's not dirty but has errors and you wouldn't
     // want to have it look like the submit succeeded
     const formValues: HTMLFormControlsCollection = (event.target as HTMLFormElement).elements
-    const isValid: boolean = validateForm(formValues, 'submit', inputs as ReadonlyArray<NonStaticField>)
+    const isValid: boolean = validateForm(formValues, 'submit', inputs as ReadonlyArray<Field>)
     if (!isValid) {
         return Promise.reject()
     }
@@ -137,12 +117,12 @@ export async function onSubmitAsync<T>(
         })
 }
 
-function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, event: 'blur' | 'change', fields: ReadonlyArray<NonStaticField>, formValues?: T): void {
+function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, event: 'blur' | 'change', fields: ReadonlyArray<Field>, formValues?: T): void {
 
     // set the dirty and touched flags on the field
     const originalValue: string | undefined = (formValues as any)?.[input.name]
 
-    const inputDef: NonStaticField = getInputModel(input.name, fields)
+    const inputDef: Field = getInputModel(input.name, fields)
 
     if (event === 'change') {
         inputDef.dirty = input.value !== originalValue
@@ -163,12 +143,12 @@ function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, even
 
     inputDef.dependentFields
         .forEach(dependentField => {
-            const dependentFieldDef: NonStaticField = getInputModel(dependentField, fields)
+            const dependentFieldDef: Field = getInputModel(dependentField, fields)
             validateField(dependentFieldDef, formElements, event)
         })
 }
 
-function validateField(formInputDef: NonStaticField, formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit'): void {
+function validateField(formInputDef: Field, formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit'): void {
 
     // this is the error the field had before the event took place
     const previousError: string | undefined = formInputDef.error
@@ -200,8 +180,8 @@ function validateField(formInputDef: NonStaticField, formElements: HTMLFormContr
         })
 }
 
-function validateForm(formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit', inputs: ReadonlyArray<NonStaticField>): boolean {
-    const errors: ReadonlyArray<NonStaticField> = inputs?.filter(formInputDef => {
+function validateForm(formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit', inputs: ReadonlyArray<Field>): boolean {
+    const errors: ReadonlyArray<Field> = inputs?.filter(formInputDef => {
             formInputDef.dirty = formInputDef.dirty || event === 'submit'
             validateField(formInputDef, formElements, event)
             return !!formInputDef.error

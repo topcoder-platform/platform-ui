@@ -1,35 +1,25 @@
 import { ChangeEvent, FocusEvent } from 'react'
 
-import { FormDefinition } from '../form-definition.model'
-import { FormFieldModel, NonStaticField } from '../form-field.model'
-import { formGetInputModel } from '../form-functions'
-import { FormInputModel, FormInputTypes } from '../form-input.model'
-import { FormSectionModel } from '../form-section.model'
+import { Field, FormDefinition, FormGroup,  FormInputModel, FormInputTypes } from '..'
 
+import FormGroupItem from './form-group-item'
 import { InputRating, InputText, InputTextarea } from './form-input'
 import { FormInputRow } from './form-input-row'
 import { InputTextTypes } from './form-input/input-text/InputText'
-import FromSection from './form-section'
-import styles from './FormElements.module.scss'
+import styles from './FormGroups.module.scss'
 
-interface FormElementsProps {
+interface FormGroupsProps {
     formDef: FormDefinition
-    inputs: Array<NonStaticField>
+    inputs: Array<Field>
     onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void
     onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
 }
 
-const FormElements: (props: FormElementsProps) => JSX.Element = (props: FormElementsProps) => {
+const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsProps) => {
 
-    const { formDef, onBlur, onChange }: FormElementsProps = props
+    const { formDef, onBlur, onChange }: FormGroupsProps = props
 
-    const formInputElements: Array<FormFieldModel> = formDef
-        .elements?.filter(element => element.type === 'field') as Array<FormFieldModel>
-
-    const formInputSections: Array<FormSectionModel> = formDef
-        .elements?.filter(element => element.type === 'section') as Array<FormSectionModel>
-
-    const renderInputField: (inputModel: NonStaticField, index: number) => JSX.Element | undefined = (inputModel, index) => {
+    const renderInputField: (inputModel: Field, index: number) => JSX.Element | undefined = (inputModel, index) => {
 
         if (!inputModel) {
             return
@@ -89,21 +79,15 @@ const FormElements: (props: FormElementsProps) => JSX.Element = (props: FormElem
         )
     }
 
-    const formSections: Array<JSX.Element | undefined> = formInputSections.map((element: FormSectionModel) => {
-        return <FromSection section={element} renderFormInput={renderInputField} />
-    })
-
-    const formInputs: Array<JSX.Element | undefined> = formInputElements.map((element: FormFieldModel) => {
-            return formGetInputModel(element.field.name, props.inputs)
-        })
-        .map(renderInputField) || []
+    const formGroups: Array<JSX.Element | undefined> = formDef?.groups?.map((element: FormGroup) => {
+        return <FormGroupItem group={element} renderFormInput={renderInputField} />
+    }) || []
 
     return (
-        <div className={styles['form-inputs']}>
-            {formInputs}
-            {formSections}
+        <div className={styles['form-groups']}>
+            {formGroups}
         </div>
     )
 }
 
-export default FormElements
+export default FormGroups

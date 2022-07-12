@@ -1,4 +1,4 @@
-import { FormDefinition, FormFieldType, FormInputAutocompleteOption, FormInputTypes, validatorRequired } from '../../../../lib'
+import { FormDefinition, FormInputAutocompleteOption, FormInputTypes, validatorRequired } from '../../../../lib'
 
 export const editNameFormTitle: string = 'Edit Name'
 
@@ -8,43 +8,48 @@ export enum EditNameFieldName {
 }
 
 export const editNameFormDef: FormDefinition = {
-    elements: [
-        {
-            field: {
-                autocomplete: FormInputAutocompleteOption.off,
-                label: 'First Name',
-                name: EditNameFieldName.firstName,
-                type: FormInputTypes.text,
-                validators: [
-                    {
-                        validator: validatorRequired,
-                    },
-                ],
+    buttons: {
+        left: [],
+        right: [
+            {
+                buttonStyle: 'secondary',
+                isSave: true,
+                label: 'Save',
+                size: 'lg',
+                type: 'submit',
             },
-            type: FormFieldType.field,
+        ],
+    },
+    groups: [
+        {
+            fields: [
+                {
+                    autocomplete: FormInputAutocompleteOption.off,
+                    label: 'First Name',
+                    name: EditNameFieldName.firstName,
+                    type: FormInputTypes.text,
+                    validators: [
+                        {
+                            validator: validatorRequired,
+                        },
+                    ],
+                },
+            ],
         },
         {
-            field: {
-                autocomplete: FormInputAutocompleteOption.off,
-                label: 'Last Name',
-                name: EditNameFieldName.lastName,
-                type: FormInputTypes.text,
-                validators: [
-                    {
-                        validator: validatorRequired,
-                    },
-                ],
-            },
-            type: FormFieldType.field,
-        },
-    ],
-    rightButtons: [
-        {
-            buttonStyle: 'secondary',
-            isSave: true,
-            label: 'Save',
-            size: 'lg',
-            type: 'submit',
+            fields: [
+                {
+                    autocomplete: FormInputAutocompleteOption.off,
+                    label: 'Last Name',
+                    name: EditNameFieldName.lastName,
+                    type: FormInputTypes.text,
+                    validators: [
+                        {
+                            validator: validatorRequired,
+                        },
+                    ],
+                },
+            ],
         },
     ],
     shortName: 'Name',
