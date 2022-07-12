@@ -11,9 +11,7 @@ import PageP from "../../../../components/PageElements/PageP";
 import PageRow from "../../../../components/PageElements/PageRow";
 import RadioButton from "../../../../components/RadioButton";
 import FormInputTextArea from "../../../../components/FormElements/FormInputTextArea";
-
-//import ServicePrice from "../../../../components/ServicePrice";
-import { ServicePrice } from "../../../../../src-ts/lib/service-price";
+import ServicePrice from "../../../../components/ServicePrice";
 
 // TODO: Move this component to /components
 import ColorOptions from "../../../BrandingLegacy/components/ColorOptions";
