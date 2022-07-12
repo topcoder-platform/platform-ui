@@ -1,9 +1,16 @@
 @import "../../../styles/includes";
 
-.form-section {
+.form-group-item {
     padding: 32px 0;
     border-bottom: 2px solid rgba(#858585, 0.2);
     display: flex;
+    &.single-field {
+        border-bottom: none;
+        padding: 0;
+        .right {
+            margin-top: 0;
+        }
+    }
     @include ltemd {
         flex-direction: column;
         padding: 24px 0 6px 0;
@@ -22,7 +29,7 @@
             line-height: 26px;
             text-transform: uppercase;
         }
-        .section-description {
+        .group-item-instructions {
             @include font-roboto;
             font-weight: 400;
             font-size: 16px;

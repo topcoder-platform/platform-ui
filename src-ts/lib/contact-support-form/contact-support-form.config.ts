@@ -1,4 +1,4 @@
-import { FormDefinition, FormFieldType, FormInputTypes, validatorEmail, validatorRequired } from '../form'
+import { FormDefinition, FormInputTypes, validatorEmail, validatorRequired } from '../form'
 
 export enum ContactSupportFormField {
     email = 'email',
@@ -8,74 +8,77 @@ export enum ContactSupportFormField {
 }
 
 export const contactSupportFormDef: FormDefinition = {
-    elements: [
-        {
-            field: {
-                isStatic: false,
-                label: 'First Name',
-                name: ContactSupportFormField.first,
-                type: FormInputTypes.text,
-                validators: [
-                    {
-                        validator: validatorRequired,
-                    },
-                ],
+    buttons: {
+        left: [],
+        right: [
+            {
+                buttonStyle: 'secondary',
+                isSave: true,
+                label: 'Submit',
+                size: 'lg',
+                type: 'submit',
             },
-            type: FormFieldType.field,
+        ],
+    },
+    groups: [
+        {
+            fields: [
+                {
+                    label: 'First Name',
+                    name: ContactSupportFormField.first,
+                    type: FormInputTypes.text,
+                    validators: [
+                        {
+                            validator: validatorRequired,
+                        },
+                    ],
+                },
+            ],
         },
         {
-            field: {
-                isStatic: false,
-                label: 'Last Name',
-                name: ContactSupportFormField.last,
-                type: FormInputTypes.text,
-                validators: [
-                    {
-                        validator: validatorRequired,
-                    },
-                ],
-            },
-            type: FormFieldType.field,
+            fields: [
+                {
+                    label: 'Last Name',
+                    name: ContactSupportFormField.last,
+                    type: FormInputTypes.text,
+                    validators: [
+                        {
+                            validator: validatorRequired,
+                        },
+                    ],
+                },
+            ],
         },
         {
-            field: {
-                isStatic: false,
-                label: 'Email',
-                name: ContactSupportFormField.email,
-                type: FormInputTypes.text,
-                validators: [
-                    {
-                        validator: validatorEmail,
-                    },
-                    {
-                        validator: validatorRequired,
-                    },
-                ],
-            },
-            type: FormFieldType.field,
+            fields: [
+                {
+                    label: 'Email',
+                    name: ContactSupportFormField.email,
+                    type: FormInputTypes.text,
+                    validators: [
+                        {
+                            validator: validatorEmail,
+                        },
+                        {
+                            validator: validatorRequired,
+                        },
+                    ],
+                },
+            ],
         },
         {
-            field: {
-                isStatic: false,
-                label: 'How can we help you?',
-                name: ContactSupportFormField.question,
-                type: FormInputTypes.textarea,
-                validators: [
-                    {
-                        validator: validatorRequired,
-                    },
-                ],
-            },
-            type: FormFieldType.field,
-        },
-    ],
-    rightButtons: [
-        {
-            buttonStyle: 'secondary',
-            isSave: true,
-            label: 'Submit',
-            size: 'lg',
-            type: 'submit',
+            fields: [
+                {
+                    label: 'How can we help you?',
+                    name: ContactSupportFormField.question,
+                    type: FormInputTypes.textarea,
+                    validators: [
+                        {
+                            validator: validatorRequired,
+                        },
+                    ],
+                },
+            ],
         },
     ],
     successMessage: 'Your request has been submitted.',

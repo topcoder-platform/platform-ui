@@ -1,4 +1,4 @@
-import { FormInputAutocompleteOption } from './form-elements'
+import { FormInputAutocompleteOption } from './form-groups'
 import { InputEvent } from './form-input.event'
 import { ValidatorFn } from './validator-functions'
 
@@ -20,7 +20,6 @@ export interface FormInputModel {
     readonly hint?: string
     readonly id?: string
     readonly instructions?: string
-    readonly isStatic?: boolean
     readonly label?: string
     readonly name: string
     readonly notTabbable?: boolean

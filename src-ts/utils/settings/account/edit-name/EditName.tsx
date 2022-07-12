@@ -2,10 +2,10 @@ import { Dispatch, FC, SetStateAction, useContext, useState } from 'react'
 
 import {
     EditNameRequest,
+    Field,
     Form,
     FormDefinition,
     formGetInputModel,
-    FormInputModel,
     profileContext,
     ProfileContextData,
     UserProfile,
@@ -26,9 +26,9 @@ const EditName: FC<EditNameProps> = (props: EditNameProps) => {
     const [profileForm]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>(editNameFormDef)
 
-    function requestGenerator(inputs?: ReadonlyArray<FormInputModel>): EditNameRequest {
-        const firstName: string = formGetInputModel(EditNameFieldName.firstName, inputs).value as string
-        const lastName: string = formGetInputModel(EditNameFieldName.lastName, inputs).value as string
+    function requestGenerator(inputs: ReadonlyArray<Field>): EditNameRequest {
+        const firstName: string = formGetInputModel(inputs, EditNameFieldName.firstName).value as string
+        const lastName: string = formGetInputModel(inputs, EditNameFieldName.lastName).value as string
         return {
             firstName,
             lastName,

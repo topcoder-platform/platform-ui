@@ -1,17 +1,15 @@
-import { FormButton } from './form-button.model'
-import { FormFieldModel } from './form-field.model'
-import { FormInputModel } from './form-input.model'
-import { FormSectionModel } from './form-section.model'
+import { FormButton, FormGroup, FormInputModel, FormRadioButtonModel } from '.'
 
-export type Element = FormSectionModel | FormFieldModel
+export type Field = FormInputModel | FormRadioButtonModel
+
+export interface FormButtons {
+    left: ReadonlyArray<FormButton>
+    right: ReadonlyArray<FormButton>
+}
 
 export interface FormDefinition {
-    // This will be used to display the sections and inputs will be part of this
-    readonly elements: Array<Element>
-    // These are buttons which are segragated between the left and right sections in the UI
-    readonly leftButtons?: ReadonlyArray<FormButton>
-    readonly rightButtons?: ReadonlyArray<FormButton>
-
+    readonly buttons: FormButtons
+    readonly groups?: Array<FormGroup>
     readonly shortName?: string
     readonly subtitle?: string
     readonly successMessage?: string
