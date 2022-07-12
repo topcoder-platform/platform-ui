@@ -54,7 +54,7 @@ const TcAcademyPolicyModal: FC<TcAcademyPolicyModal> = ({ isOpen, onClose, onCon
                 and we will investigate.
             </p>
         </div>
-
+        <hr />
         <div className='button-container'>
             <Button
                 buttonStyle='primary'
