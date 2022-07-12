@@ -27,3 +27,20 @@ hr {
     border: none;
     display: none;
 }
+
+
+.mobile-hide {
+    &.mobile-hide.mobile-hide { // increase specificity without using !important
+        @include ltemd {
+            display: none;
+        }
+    }
+}
+
+.desktop-hide {
+    &.desktop-hide.desktop-hide { // increase specificity without using !important
+        @include gtelg {
+            display: none;
+        }
+    }
+}
