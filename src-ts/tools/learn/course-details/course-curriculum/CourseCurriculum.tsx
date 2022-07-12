@@ -1,3 +1,4 @@
+import classNames from 'classnames'
 import { Dispatch, FC, SetStateAction, useCallback, useState } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 
@@ -74,7 +75,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
                 </div>
             </div>
             {isCompleted && (
-                <div className={styles['bottom-link']}>
+                <div className={classNames('mobile-hide', styles['bottom-link'])}>
                     <Button
                         buttonStyle='link'
                         label='See all my learning'

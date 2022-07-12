@@ -1,6 +1,9 @@
+import classNames from 'classnames'
 import { FC } from 'react'
 
 import { ReactComponent as LearnGetCertified } from './learn-get-certified.svg'
+import { ReactComponent as MobileLearnGetCertified2 } from './mobile-get-certified-2.svg'
+import { ReactComponent as MobileLearnGetCertified } from './mobile-get-certified.svg'
 import styles from './PromoCourse.module.scss'
 
 const PromoCourse: FC<{}> = () => {
@@ -21,8 +24,12 @@ const PromoCourse: FC<{}> = () => {
                     on the Topcoder platform.
                 </div>
             </div>
-            <div className={styles['course-path-steps']}>
+            <div className={classNames('mobile-hide', styles['course-path-steps'])}>
                 <LearnGetCertified />
+            </div>
+            <div className={classNames('desktop-hide', styles['course-path-steps'])}>
+                <MobileLearnGetCertified />
+                <MobileLearnGetCertified2 />
             </div>
         </div>
     )

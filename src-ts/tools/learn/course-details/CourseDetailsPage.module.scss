@@ -3,31 +3,51 @@
 
 .wrap {
     padding: $pad-mx 0 $pad-xxxxl;
-    display: flex;
     gap: $pad-xxxxl;
     position: relative;
     flex: 1;
-}
 
-.main {
-    flex: 1 1 auto;
+    display: grid;
+    grid-template-areas:
+        'intro-copy aside'
+        'description aside';
+    grid-template-columns: 1fr 40%;
+    grid-template-rows: auto 1fr;
+
+    @include ltemd {
+        grid-template-areas: 'intro-copy' 'aside' 'description';
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr;
+    }
 }
 
 .aside {
     flex: 0 0 auto;
     max-width: 560px;
-    width: 40%;
+    width: 100%;
+    grid-area: aside;
+    @include ltemd {
+        max-width: none;
+    }
+}
+
+.intro-copy {
+    grid-area: intro-copy;
+    flex: 1 1 auto;
+    .text {
+        @extend .body-main;
+        margin-top: $pad-xxl;
+    }
 }
 
 .description {
+    grid-area: description;
+    flex: 1 1 auto;
     .text {
         @extend .body-main;
         margin-top: $pad-xxl;
     }
     
-    h3 {
-        margin-top: $pad-xxxxl;
-    }
     p {
         margin: $pad-sm 0;
     }
@@ -51,5 +71,6 @@
     svg {
         @include icon-md;
         margin-left: $pad-xs;
+        flex: 0 0 auto;
     }
 }
