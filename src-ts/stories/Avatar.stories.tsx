@@ -14,13 +14,13 @@ const Template: ComponentStory<typeof Avatar> = (args) => (<Avatar {...args} />)
 export const Small: ComponentStory<typeof Avatar> = Template.bind({})
 
 Small.args = {
-  lastName: 'Name',
-  size: 'sm',
+    lastName: 'Name',
+    size: 'sm',
 }
 
 export const ExtraLarge: ComponentStory<typeof Avatar> = Template.bind({})
 
 ExtraLarge.args = {
-  lastName: 'Name',
-  size: 'xl',
+    lastName: 'Name',
+    size: 'xl',
 }
