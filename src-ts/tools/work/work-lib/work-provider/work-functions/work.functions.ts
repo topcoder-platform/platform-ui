@@ -5,7 +5,7 @@ import { WorkByStatus } from './work-by-status.model'
 import { workFactoryBuildCreateBody, workFactoryCreate } from './work-factory'
 import {
     Challenge,
-    ChallengeCreate,
+    ChallengeCreateBody,
     Work,
     workGetPricesConfig,
     WorkPricesType,
@@ -16,10 +16,13 @@ import {
     workStoreGetAsync,
     workStoreGetFilteredByStatus,
     WorkType,
+    WorkTypeConfig,
+    WorkTypeConfigs,
 } from './work-store'
 
 export async function createAsync(type: WorkType): Promise<void> {
-    const body: ChallengeCreate = workFactoryBuildCreateBody(type)
+    const workConfig: WorkTypeConfig = WorkTypeConfigs[WorkType.bugHunt]
+    const body: ChallengeCreateBody = workFactoryBuildCreateBody(workConfig)
     return workStoreCreateAsync(body)
 }
 

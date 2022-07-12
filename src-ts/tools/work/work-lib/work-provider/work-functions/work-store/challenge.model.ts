@@ -1,5 +1,6 @@
 import { ChallengeMetadata } from './challenge-metadata.model'
 import { ChallengePhase } from './challenge-phase'
+import { ChallengeTag } from './challenge-tag.enum'
 
 export interface Challenge {
     created: string
@@ -11,16 +12,16 @@ export interface Challenge {
     numOfSubmissions?: number
     phases: Array<ChallengePhase>
     status: string
-    tags: Array<string>
+    tags: Array<ChallengeTag>
     updated?: string
 }
 
-export interface ChallengeCreate {
+export interface ChallengeCreateBody {
     description: string,
     discussions: Array<{ [key: string]: string }>,
     legacy: { [key: string]: any },
     name: string,
-    tags: Array<string>
+    tags: Array<ChallengeTag>
     timelineTemplateId: string,
     trackId: string,
     typeId: string,

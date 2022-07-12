@@ -1,12 +1,12 @@
 import { Page, xhrDeleteAsync, xhrGetAsync, xhrPostAsync } from '../../../../../../lib'
 
-import { Challenge, ChallengeCreate } from './challenge.model'
+import { Challenge, ChallengeCreateBody } from './challenge.model'
 import { WorkStatusFilter } from './work-status-filter.enum'
 import { WorkStatus } from './work-status.enum'
 import { createUrl, deleteUrl, getUrl } from './work-url.config'
 import { Work } from './work.model'
 
-export async function createAsync(body: ChallengeCreate): Promise<void> {
+export async function createAsync(body: ChallengeCreateBody): Promise<void> {
     return xhrPostAsync(createUrl(), JSON.stringify(body))
 }
 

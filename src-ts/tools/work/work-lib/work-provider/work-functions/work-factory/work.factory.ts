@@ -2,7 +2,7 @@ import moment from 'moment'
 
 import {
     Challenge,
-    ChallengeCreate,
+    ChallengeCreateBody,
     ChallengeMetadata,
     ChallengeMetadataName,
     ChallengePhase,
@@ -15,6 +15,7 @@ import {
     WorkStatus,
     WorkType,
     WorkTypeCategory,
+    WorkTypeConfig,
 } from '../work-store'
 
 import { ChallengeStatus } from './challenge-status.enum'
@@ -64,8 +65,7 @@ export function create(challenge: Challenge, workPrices: WorkPricesType): Work {
     }
 }
 
-export function buildCreateBody(type: string): ChallengeCreate {
-    // TODO: once configs are merged, use type and config to fetch the necessary fields
+export function buildCreateBody(workTypeConfig: WorkTypeConfig): ChallengeCreateBody {
     return {
         description: 'Information not provided',
         discussions: [
@@ -79,10 +79,10 @@ export function buildCreateBody(type: string): ChallengeCreate {
             selfService: true,
         },
         name: 'new-self-service-project',
-        tags: ['test'],
-        timelineTemplateId: 'challengeFieldValues.timelineTemplateId',
-        trackId: 'challengeFieldValues.trackId',
-        typeId: 'challengeFieldValues.typeId',
+        tags: workTypeConfig.tags,
+        timelineTemplateId: workTypeConfig.timelineTemplateId,
+        trackId: workTypeConfig.trackId,
+        typeId: workTypeConfig.typeId,
     }
 }
 
