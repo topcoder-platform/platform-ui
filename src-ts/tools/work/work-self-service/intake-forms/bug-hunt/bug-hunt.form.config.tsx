@@ -4,15 +4,7 @@ import { FormDefinition } from '../../../../../lib'
 
 export const BugHuntFormConfig: FormDefinition = {
     buttons: {
-        left: [
-            {
-                buttonStyle: 'icon',
-                icon: BackIcon,
-                onClick: () => {},
-                type: 'button',
-            },
-        ],
-        right: [
+        primaryGroup: [
             {
                 buttonStyle: 'secondary',
                 label: 'Save for later',
@@ -22,6 +14,14 @@ export const BugHuntFormConfig: FormDefinition = {
             {
                 buttonStyle: 'primary',
                 label: 'Complete and pay',
+                onClick: () => {},
+                type: 'button',
+            },
+        ],
+        secondaryGroup: [
+            {
+                buttonStyle: 'icon',
+                icon: BackIcon,
                 onClick: () => {},
                 type: 'button',
             },
@@ -111,21 +111,20 @@ export const BugHuntFormConfig: FormDefinition = {
                 {
                     name: 'delivery-type',
                     notTabbable: false,
-                    onChange: () => {},
                     options: [
                         {
                             checked: false,
-                            children: () => (<div>Option 1</div>),
+                            children: <div>Option 1</div>,
                             id: 'github',
                         },
                         {
                             checked: false,
-                            children: () => (<div>Option 2</div>),
+                            children: <div>Option 2</div>,
                             id: 'gitlab',
                         },
                     ],
                     type: 'checkbox',
-                    value: true,
+                    value: 'github',
                 },
                 {
                     events: [

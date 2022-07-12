@@ -1,9 +1,8 @@
-import { FormDefinition, FormInputTypes, inputOptional, validatorRequired } from '../../../../lib'
+import { FormDefinition, inputOptional, validatorRequired } from '../../../../lib'
 
 export const workFeedbackFormDef: FormDefinition = {
     buttons: {
-        left: [],
-        right: [
+        primaryGroup: [
             {
                 buttonStyle: 'primary',
                 isSave: true,
@@ -19,7 +18,7 @@ export const workFeedbackFormDef: FormDefinition = {
                 {
                     instructions: 'How happy are you with the quality of work?',
                     name: 'question-1',
-                    type: FormInputTypes.rating,
+                    type: 'rating',
                     validators: [
                         {
                             validator: validatorRequired,
@@ -33,7 +32,7 @@ export const workFeedbackFormDef: FormDefinition = {
                 {
                     instructions: 'How easy was the platform to use?',
                     name: 'question-2',
-                    type: FormInputTypes.rating,
+                    type: 'rating',
                     validators: [
                         {
                             validator: validatorRequired,
@@ -47,7 +46,7 @@ export const workFeedbackFormDef: FormDefinition = {
                 {
                     instructions: 'How likely are you to recommend Topcoder?',
                     name: 'question-3',
-                    type: FormInputTypes.rating,
+                    type: 'rating',
                     validators: [
                         {
                             validator: validatorRequired,
@@ -64,7 +63,7 @@ export const workFeedbackFormDef: FormDefinition = {
                     name: 'question-4',
                     placeholder: 'Add your comments here...',
                     spellCheck: true,
-                    type: FormInputTypes.textarea,
+                    type: 'textarea',
                 },
             ],
         },

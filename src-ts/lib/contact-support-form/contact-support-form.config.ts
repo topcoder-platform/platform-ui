@@ -1,4 +1,4 @@
-import { FormDefinition, FormInputTypes, validatorEmail, validatorRequired } from '../form'
+import { FormDefinition, validatorEmail, validatorRequired } from '../form'
 
 export enum ContactSupportFormField {
     email = 'email',
@@ -9,8 +9,7 @@ export enum ContactSupportFormField {
 
 export const contactSupportFormDef: FormDefinition = {
     buttons: {
-        left: [],
-        right: [
+        primaryGroup: [
             {
                 buttonStyle: 'secondary',
                 isSave: true,
@@ -26,7 +25,7 @@ export const contactSupportFormDef: FormDefinition = {
                 {
                     label: 'First Name',
                     name: ContactSupportFormField.first,
-                    type: FormInputTypes.text,
+                    type: 'text',
                     validators: [
                         {
                             validator: validatorRequired,
@@ -40,7 +39,7 @@ export const contactSupportFormDef: FormDefinition = {
                 {
                     label: 'Last Name',
                     name: ContactSupportFormField.last,
-                    type: FormInputTypes.text,
+                    type: 'text',
                     validators: [
                         {
                             validator: validatorRequired,
@@ -54,7 +53,7 @@ export const contactSupportFormDef: FormDefinition = {
                 {
                     label: 'Email',
                     name: ContactSupportFormField.email,
-                    type: FormInputTypes.text,
+                    type: 'text',
                     validators: [
                         {
                             validator: validatorEmail,
@@ -71,7 +70,7 @@ export const contactSupportFormDef: FormDefinition = {
                 {
                     label: 'How can we help you?',
                     name: ContactSupportFormField.question,
-                    type: FormInputTypes.textarea,
+                    type: 'textarea',
                     validators: [
                         {
                             validator: validatorRequired,
