@@ -9,7 +9,10 @@ import {
     LearnLesson,
     LearnModule,
     LearnMyCertificationProgress,
-    MyCertificationProgressStatus
+    MyCertificationProgressStatus,
+    startMyCertificationsProgressAsync,
+    UpdateMyCertificateProgressActions,
+    updateMyCertificationsProgressAsync
 } from '../../learn-lib'
 import { getFccLessonPath, LEARN_PATHS } from '../../learn.routes'
 
@@ -20,6 +23,7 @@ import { TcAcademyPolicyModal } from './tc-academy-policy-modal'
 interface CourseCurriculumProps {
     course: LearnCourse
     progress?: LearnMyCertificationProgress
+    profileUserId?: number
 }
 
 const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProps) => {
@@ -27,7 +31,16 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
 
     const [isTcAcademyPolicyModal, setIsTcAcademyPolicyModal]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
-    const handleStartCourse: () => void = useCallback(() => {
+    const status: string = props.progress?.status ?? 'init'
+    const completedPercentage: number = (props.progress?.courseProgressPercentage ?? 0) / 100
+    const inProgress: boolean = status === MyCertificationProgressStatus.inProgress || !!props.progress?.currentLesson
+    const isCompleted: boolean = status === MyCertificationProgressStatus.completed
+
+    /**
+     * Redirect user to the currentLesson if there's already some progress recorded
+     * otherwise redirect to first module > first lesson
+     */
+     const handleStartCourse: () => void = useCallback(() => {
         const current: Array<string> = (props.progress?.currentLesson ?? '').split('/')
         const course: LearnCourse = props.course
         const module: LearnModule = course.modules[0]
@@ -42,10 +55,57 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         navigate(lessonPath)
     }, [props.course, props.progress, navigate])
 
-    const status: string = props.progress?.status ?? 'init'
-    const completedPercentage: number = (props.progress?.courseProgressPercentage ?? 0) / 100
-    const inProgress: boolean = status === MyCertificationProgressStatus.inProgress || !!props.progress?.currentLesson
-    const isCompleted: boolean = status === MyCertificationProgressStatus.completed
+    /**
+     * Check if user accepted policy when user clicks start course
+     * If not, show the policy modal
+     * otherwise resume(or start) the course
+     */
+    const handleStartCourseClick: () => void = useCallback(() => {
+      if (props.progress?.academicHonestyPolicyAcceptedAt) {
+        handleStartCourse()
+        return
+      }
+
+      setIsTcAcademyPolicyModal(true)
+    }, [handleStartCourse, props.progress?.academicHonestyPolicyAcceptedAt]);
+
+    /**
+     * When user clicks accept inside the policy modal,
+     * if there's no progress on the course yet, create the progress (this will also mark policy as accepted)
+     * otherwise send a PUT request to expressly accept the policy
+     */
+    const handlePolicyAccept: () => void = useCallback(async () => {
+        if (!props.profileUserId) {
+            return
+        }
+        
+        if (!props.progress?.id) {
+            await startMyCertificationsProgressAsync(
+                props.profileUserId,
+                props.course.certificationId,
+                props.course.id,
+                {
+                    module: props.course.modules[0].meta.dashedName,
+                    lesson: props.course.modules[0].lessons[0].dashedName
+                }
+            )
+        } else {
+            await updateMyCertificationsProgressAsync(
+                props.progress.id,
+                UpdateMyCertificateProgressActions.acceptHonestyPolicy,
+                {}
+            )
+        }
+
+        handleStartCourse()
+    }, [
+        handleStartCourse,
+        props.course.certificationId,
+        props.course.id,
+        props.course.modules,
+        props.profileUserId,
+        props.progress,
+    ])
 
     return (
         <>
@@ -62,7 +122,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
 
                 <CurriculumSummary
                     course={props.course}
-                    onClickMainBtn={() => (inProgress || isCompleted) ? handleStartCourse() : setIsTcAcademyPolicyModal(true)}
+                    onClickMainBtn={handleStartCourseClick}
                     inProgress={inProgress}
                     completedPercentage={completedPercentage}
                     completed={isCompleted}
@@ -86,7 +146,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
             <TcAcademyPolicyModal
                 isOpen={isTcAcademyPolicyModal}
                 onClose={() => setIsTcAcademyPolicyModal(false)}
-                onConfirm={handleStartCourse}
+                onConfirm={handlePolicyAccept}
             />
         </>
     )
