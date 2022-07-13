@@ -1,6 +1,6 @@
 import React, { FocusEvent } from 'react'
 
-import { FormInputModel, FormRadioButtonOption } from '../..'
+import { FormInputModel, FormRadioButtonOption } from '../../form-input.model'
 
 import styles from './FormRadio.module.scss'
 

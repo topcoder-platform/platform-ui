@@ -2,7 +2,7 @@
 import { ReactComponent as BackIcon } from '../../../../../../src/assets/images/icon-back-arrow.svg'
 import { FormDefinition } from '../../../../../lib'
 
-import BugDeliveryCheckbox from './bug-delivery-checkbox'
+import { BugDeliveryRadioButton } from './bug-delivery-radio-button'
 
 export enum FormInputNames {
     projectTitle = 'projectTitle',
@@ -125,12 +125,12 @@ export const BugHuntFormConfig: FormDefinition = {
                     options: [
                         {
                             checked: false,
-                            children: <BugDeliveryCheckbox name={'GitHub'} />,
+                            children: <BugDeliveryRadioButton name={'GitHub'} />,
                             id: 'github',
                         },
                         {
                             checked: false,
-                            children: <BugDeliveryCheckbox name={'GitLab'} />,
+                            children: <BugDeliveryRadioButton name={'GitLab'} />,
                             id: 'gitlab',
                         },
                     ],

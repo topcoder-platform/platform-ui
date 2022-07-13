@@ -3,14 +3,14 @@ import React from 'react'
 
 import { GithubIcon, GithubSelectedIcon, GitlabIcon, GitlabSelectedIcon } from '../../../../../../lib'
 
-import styles from './BugDeliveryCheckbox.module.scss'
+import styles from './BugDeliveryRadioButton.module.scss'
 
-interface BugDeliveryCheckboxProps {
+interface BugDeliveryRadioProps {
     name: string
     selected?: boolean
 }
 
-const BugDeliveryCheckbox: React.FC<BugDeliveryCheckboxProps> = ({ name, selected }: BugDeliveryCheckboxProps) => {
+const BugDeliveryRadio: React.FC<BugDeliveryRadioProps> = ({ name, selected }: BugDeliveryRadioProps) => {
     const getOptionIcon: () => JSX.Element = () => {
         switch (name) {
             case 'GitHub':
@@ -30,11 +30,11 @@ const BugDeliveryCheckbox: React.FC<BugDeliveryCheckboxProps> = ({ name, selecte
     }
 
     return (
-        <div className={cn(styles['bug-delivery-checkbox'], selected && styles['selected'])}>
+        <div className={cn(styles['bug-delivery-radio'], selected && styles['selected'])}>
             {getOptionIcon()}
             <div className={styles['name']}>{name}</div>
         </div>
     )
 }
 
-export default BugDeliveryCheckbox
+export default BugDeliveryRadio
