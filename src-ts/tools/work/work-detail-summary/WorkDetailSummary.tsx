@@ -1,6 +1,6 @@
-import { FC, useContext } from 'react'
+import { FC } from 'react'
 
-import { Work, workContext, WorkContextData, WorkStatus } from '../work-lib'
+import { Work, workCreateFromChallenge, WorkStatus } from '../work-lib'
 
 import { WorkDetailHighlights } from './WorkDetailHighlights'
 import { WorkDetailProgress } from './WorkDetailProgress'
@@ -13,13 +13,11 @@ interface WorkDetailSummaryProps {
 
 const WorkDetailSummary: FC<WorkDetailSummaryProps> = (props: WorkDetailSummaryProps) => {
 
-    const workContextData: WorkContextData = useContext(workContext)
-
     if (!props.challenge) {
         return <></>
     }
 
-    const work: Work = workContextData.createFromChallenge(props.challenge)
+    const work: Work = workCreateFromChallenge(props.challenge)
 
     const progressElement: JSX.Element = props.status === WorkStatus.transferred
         ? <WorkTransferredStatus />

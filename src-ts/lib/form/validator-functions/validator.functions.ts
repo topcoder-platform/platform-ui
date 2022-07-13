@@ -1,6 +1,14 @@
 import { formGetInput } from '../form-functions'
 
-export function doesNotMatchOther(value: string | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
+function checkForBooleanValueAndThrowError(value: string | boolean | undefined): void {
+    if (typeof value === 'boolean') {
+        throw new Error(`The value for the email validator cannot be a boolean`)
+    }
+}
+
+export function doesNotMatchOther(value: string | boolean | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
+
+    checkForBooleanValueAndThrowError(value)
 
     // if there is no value, there's no need to check the other input
     // bc this is a match validator not a required validator
@@ -19,12 +27,16 @@ export function doesNotMatchOther(value: string | undefined, formElements?: HTML
     return `Cannot match the ${getOtherFieldLabel(otherField, otherFieldName)} value`
 }
 
-export function email(value: string | undefined): string | undefined {
+export function email(value: string | boolean | undefined): string | undefined {
+
+    checkForBooleanValueAndThrowError(value)
 
     // if there is no value, do not set the error
     // b/c this is an email validator, not a required
     // validator
-    if (!value) {
+    // Have to retain the boolean check to satisfy typescript else .test
+    // method will show typescript error
+    if (!value || typeof value === 'boolean') {
         return undefined
     }
 
@@ -33,12 +45,16 @@ export function email(value: string | undefined): string | undefined {
     return !emailRegex.test(value) ? 'Invalid email' : undefined
 }
 
-export function password(value: string | undefined): string | undefined {
+export function password(value: string | boolean | undefined): string | undefined {
+
+    checkForBooleanValueAndThrowError(value)
 
     // if there is no value, do not set the error
     // b/c this is an email validator, not a required
     // validator
-    if (!value) {
+    // Have to retain the boolean check to satisfy typescript else .test
+    // method will show typescript error
+    if (!value || typeof value === 'boolean') {
         return undefined
     }
 
@@ -51,7 +67,9 @@ export function password(value: string | undefined): string | undefined {
     return !passwordRegex.test(value) ? 'Password rules: 8+ characters, 1+ letter, and 1+ number or symbol' : undefined
 }
 
-export function matchOther(value: string | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
+export function matchOther(value: string | boolean | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
+
+    checkForBooleanValueAndThrowError(value)
 
     // if there is no value, there's no need to check the other input
     // bc this is a match validator not a required validator
@@ -70,20 +88,22 @@ export function matchOther(value: string | undefined, formElements?: HTMLFormCon
     return `Does not match the ${getOtherFieldLabel(otherField, otherFieldName)}`
 }
 
-export function required(value: string | undefined): string | undefined {
-    return !value ? 'Required' : undefined
+export function required(value: string | boolean | undefined): string | undefined {
+    return value === undefined ? 'Required' : undefined
 }
 
-export function requiredIfOther(value: string | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
+export function requiredIfOther(value: string | boolean | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
 
     // if there is a value, there's no need to check the other input
-    if (!!value) {
+    if (typeof value === 'string' && !!value) {
         return undefined
     }
 
     // if the other field doesn't have a value, then we're good
     const otherField: HTMLInputElement = getOtherField(formElements, otherFieldName)
-    if (!otherField.value) {
+    if (typeof value === 'string' && !otherField.value) {
+        return undefined
+    } else if (typeof value === 'boolean' && otherField.value !== undefined) {
         return undefined
     }
 
@@ -109,7 +129,7 @@ export function sslUrl(value: string | undefined): string | undefined {
 
 export interface ValidatorFn {
     dependentField?: string,
-    validator: (value: string | undefined, formValues?: HTMLFormControlsCollection, otherField?: string) => string | undefined
+    validator: (value: string | boolean | undefined, formValues?: HTMLFormControlsCollection, otherField?: string) => string | undefined
 }
 
 function getOtherField(formElements?: HTMLFormControlsCollection, otherFieldName?: string): HTMLInputElement {
