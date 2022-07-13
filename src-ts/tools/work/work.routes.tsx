@@ -4,6 +4,7 @@ import { PlatformRoute } from '../../lib'
 
 import Work, { toolTitle } from './Work'
 import { WorkNotLoggedIn } from './work-not-logged-in'
+import { BugHuntIntakeForm } from './work-self-service'
 import { WorkTable } from './work-table'
 
 export const rootRoute: string = '/work'
@@ -50,6 +51,11 @@ export const workRoutes: Array<PlatformRoute> = [
         hide: true,
         route: selfServiceRootRoute,
         title: 'Obsolete Self Service Logged Out Landing',
+    },
+    {
+        element: <BugHuntIntakeForm />,
+        route: `/${selfServiceRootRoute}/work/new/bug-hunt/basic-info`,
+        title: toolTitle,
     },
     {
         element: <Navigate to={dashboardRoute} />,
