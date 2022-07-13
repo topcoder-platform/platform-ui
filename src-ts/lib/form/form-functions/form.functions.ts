@@ -121,8 +121,6 @@ function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, inpu
     // set the def value
     inputDef.value = input.value
 
-    console.log(inputDef, input.value, input.name)
-
     // now let's validate the field
     const formElements: HTMLFormControlsCollection = (input.form as HTMLFormElement).elements
     validateField(inputDef, formElements, event)
