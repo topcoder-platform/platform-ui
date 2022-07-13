@@ -6,17 +6,17 @@ import {
     ChallengeMetadataName,
     ChallengePhase,
     ChallengePhaseName,
+    Work,
     WorkPrice,
     WorkPricesType,
+    WorkProgress,
+    WorkProgressStep,
+    WorkStatus,
+    WorkType,
+    WorkTypeCategory,
 } from '../work-store'
 
 import { ChallengeStatus } from './challenge-status.enum'
-import { WorkProgressStep } from './work-progress-step.model'
-import { WorkProgress } from './work-progress.model'
-import { WorkStatus } from './work-status.enum'
-import { WorkTypeCategory } from './work-type-category.enum'
-import { WorkType } from './work-type.enum'
-import { Work } from './work.model'
 
 interface FormDetail {
     key: string,

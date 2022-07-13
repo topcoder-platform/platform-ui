@@ -28,7 +28,7 @@ import WebsiteDesign from "./routes/Products/WebsiteDesign";
 import DataAdvisory from "./routes/Products/DataAdvisory";
 import WebsiteDesignLegacy from "./routes/Products/WebsiteDesignLegacy";
 
-import { profileContext, WorkType, BugHuntIntakeForm } from "../src-ts";
+import { profileContext, WorkType } from "../src-ts";
 
 export default function IntakeForm() {
 
@@ -186,12 +186,6 @@ export default function IntakeForm() {
           <Route
             element={<WebsiteDesign isLoggedIn={isLoggedIn} />}
             path="/work/new/website-design/*"
-          />
-
-          {/* Bug hunt */}
-          <Route
-            element={<BugHuntIntakeForm isLoggedIn={isLoggedIn} />}
-            path="/work/new/bug-hunt/*"
           />
 
           {/* Web Design (Legacy) */}

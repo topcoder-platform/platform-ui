@@ -1,4 +1,4 @@
-import { Work } from './work-factory'
+import { Work } from './work-store'
 
 export interface WorkByStatus {
     count: number

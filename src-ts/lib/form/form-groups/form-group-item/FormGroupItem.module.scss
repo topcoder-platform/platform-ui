@@ -1,8 +1,9 @@
+@use '../../../styles/typography';
 @import "../../../styles/includes";
 
 .form-group-item {
-    padding: 32px 0;
-    border-bottom: 2px solid rgba(#858585, 0.2);
+    padding: $pad-xxxxl 0;
+    border-bottom: $border solid $black-10;
     display: flex;
     &.single-field {
         border-bottom: none;
@@ -13,7 +14,7 @@
     }
     @include ltemd {
         flex-direction: column;
-        padding: 24px 0 6px 0;
+        padding: $pad-xxl 0 $pad-sm 0;
     }
     &:last-child {
         border-bottom: none;
@@ -23,25 +24,20 @@
     .left {
         flex: 1;
         .title {
-            @include font-barlow;
-            font-weight: 600;
-            font-size: 22px;
-            line-height: 26px;
+            @extend .body-medium-bold;
             text-transform: uppercase;
         }
         .group-item-instructions {
+            @extend .body-small;
             @include font-roboto;
-            font-weight: 400;
-            font-size: 16px;
-            line-height: 24px;
-            margin-top: 24px;
+            margin-top: $pad-xxl;
         }
     }
     .right {
         flex: 1;
         margin-top: 46px;
         @include ltemd {
-            margin-top: 24px;
+            margin-top: $pad-xxl;
         }
     }
 }

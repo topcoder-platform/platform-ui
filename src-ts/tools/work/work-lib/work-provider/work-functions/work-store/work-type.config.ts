@@ -1,9 +1,9 @@
 import imgBugHunt from '../../../work-images/bug-hunt-tile.jpeg'
-import { WorkType } from '../work-factory'
 
 import { WorkIntakeFormRoutes } from './work-intake-form-routes.config'
-import { bugHunt as workPriceBugHunt } from './work-prices.config'
+import { bugHunt as workPriceBugHunt } from './work-prices.store'
 import { WorkTimelines } from './work-timelines.config'
+import { WorkType } from './work-type.enum'
 import { WorkTypeConfig } from './work-type.model'
 
 export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {

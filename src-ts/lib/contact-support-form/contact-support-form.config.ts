@@ -21,7 +21,7 @@ export const contactSupportFormDef: FormDefinition = {
     },
     groups: [
         {
-            fields: [
+            inputs: [
                 {
                     label: 'First Name',
                     name: ContactSupportFormField.first,
@@ -35,7 +35,7 @@ export const contactSupportFormDef: FormDefinition = {
             ],
         },
         {
-            fields: [
+            inputs: [
                 {
                     label: 'Last Name',
                     name: ContactSupportFormField.last,
@@ -49,7 +49,7 @@ export const contactSupportFormDef: FormDefinition = {
             ],
         },
         {
-            fields: [
+            inputs: [
                 {
                     label: 'Email',
                     name: ContactSupportFormField.email,
@@ -66,7 +66,7 @@ export const contactSupportFormDef: FormDefinition = {
             ],
         },
         {
-            fields: [
+            inputs: [
                 {
                     label: 'How can we help you?',
                     name: ContactSupportFormField.question,

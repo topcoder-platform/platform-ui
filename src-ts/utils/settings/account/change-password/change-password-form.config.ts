@@ -30,7 +30,7 @@ export const changePasswordFormDef: FormDefinition = {
     },
     groups: [
         {
-            fields: [
+            inputs: [
                 {
                     autocomplete: FormInputAutocompleteOption.current,
                     dependentFields: [
@@ -49,7 +49,7 @@ export const changePasswordFormDef: FormDefinition = {
             ],
         },
         {
-            fields: [
+            inputs: [
                 {
                     autocomplete: FormInputAutocompleteOption.new,
                     dependentFields: [
@@ -76,7 +76,7 @@ export const changePasswordFormDef: FormDefinition = {
             ],
         },
         {
-            fields: [
+            inputs: [
                 {
                     autocomplete: FormInputAutocompleteOption.off,
                     dependentFields: [

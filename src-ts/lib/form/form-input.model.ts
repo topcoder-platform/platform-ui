@@ -22,12 +22,12 @@ export interface FormInputModel {
     readonly label?: string
     readonly name: string
     readonly notTabbable?: boolean
-    options?: Array<FormRadioButtonOption>
+    options?: ReadonlyArray<FormRadioButtonOption>
     readonly placeholder?: string
     readonly spellCheck?: boolean
     readonly title?: string
     touched?: boolean
-    readonly type: 'password' | 'rating' | 'text' | 'textarea' | 'radio' | 'checkbox'
+    readonly type: 'checkbox' | 'password' | 'radio' | 'rating' | 'text' | 'textarea'
     readonly validators?: ReadonlyArray<ValidatorFn>
     value?: string
 }

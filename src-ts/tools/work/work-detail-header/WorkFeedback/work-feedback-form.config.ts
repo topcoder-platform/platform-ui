@@ -14,7 +14,7 @@ export const workFeedbackFormDef: FormDefinition = {
     },
     groups: [
         {
-            fields: [
+            inputs: [
                 {
                     instructions: 'How happy are you with the quality of work?',
                     name: 'question-1',
@@ -28,7 +28,7 @@ export const workFeedbackFormDef: FormDefinition = {
             ],
         },
         {
-            fields: [
+            inputs: [
                 {
                     instructions: 'How easy was the platform to use?',
                     name: 'question-2',
@@ -42,7 +42,7 @@ export const workFeedbackFormDef: FormDefinition = {
             ],
         },
         {
-            fields: [
+            inputs: [
                 {
                     instructions: 'How likely are you to recommend Topcoder?',
                     name: 'question-3',
@@ -56,7 +56,7 @@ export const workFeedbackFormDef: FormDefinition = {
             ],
         },
         {
-            fields: [
+            inputs: [
                 {
                     hint: inputOptional,
                     label: 'What can we do to make your experience better?',

@@ -1,0 +1,73 @@
+@import '../../../lib/styles/includes';
+
+.container {
+
+  .iconWrapper {
+    & {
+      @include icon-mx;
+      margin-right: $pad-lg;
+    }
+  }
+
+  svg {
+    margin-right: $pad-lg;
+  }
+
+  .inline {
+    display: flex;
+    flex-direction: row;
+    width:100%;
+
+    @include ltemd {
+      width: 100%;
+    }
+  }
+
+  @include ltemd {
+    display: flex;
+    flex-direction: row;
+  }
+}
+
+.serviceTitle {
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.priceAndDuration {
+  color: $tc-black;
+  display: flex;
+  text-align: center;
+  text-transform: uppercase;
+  line-height: 48px;
+
+  @include ltemd {
+    justify-content: space-between;
+  }
+
+  .discount {
+    color: $green-50;
+  }
+
+  .stickerPrice {
+    color: $black-80;
+    text-decoration: line-through;
+    margin-right: $pad-xs;
+  }
+
+  .separator {
+    height: 26px;
+    width: $border;
+    color: $black-10;
+    margin: 0px 16px;
+  }
+
+  .days {
+    display: inline;
+  }
+
+  .help {
+    margin-left: $pad-sm;
+    color: $turq-160;
+  }
+}
