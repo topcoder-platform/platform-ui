@@ -79,13 +79,18 @@
     :global(.body-large) {
         margin-bottom: $pad-xxl;
     }
+
+    @include ltemd {
+        padding-top: 0;
+    }
 }
 
 .btns-wrap {
     display: flex;
     align-items: center;
-    gap: $pad-sm;
+    gap: $pad-lg $pad-sm;
     margin-top: $pad-xxl;
+    flex-wrap: wrap;
 }
 
 .course-title {
