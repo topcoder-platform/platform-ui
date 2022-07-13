@@ -11,7 +11,7 @@ export function getInputElement(formElements: HTMLFormControlsCollection, fieldN
 
 export function getFormInputFields(groups: ReadonlyArray<FormGroup>): Array<FormInputModel> {
     const formInputs: Array<FormInputModel> = groups.reduce((current: Array<FormInputModel>, previous: FormGroup) => {
-        const formGroupInputs: Array<FormInputModel> = previous.inputs || []
+        const formGroupInputs: ReadonlyArray<FormInputModel> = previous.inputs || []
         return [...current, ...formGroupInputs]
     }, []) as Array<FormInputModel>
     return formInputs
