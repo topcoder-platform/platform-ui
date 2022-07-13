@@ -15,6 +15,9 @@ import {
   toolsRoutes,
   utilsRoutes,
 } from "../src-ts";
+// WARNING: this has to be imported from its specific directory bc it
+// causes circular or missing references when added to the barrel files
+import { WorkNotLoggedIn } from '../src-ts/tools/work/work-not-logged-in'
 
 import App from "./App";
 import store from "./store";
@@ -31,6 +34,7 @@ ReactDOM.render(
           <RouteProvider
             rootCustomer={routeRootCustomer}
             rootLoggedOut={routeRootLoggedOut}
+            rootLoggedOutFC={WorkNotLoggedIn}
             rootMember={routeRootMember}
             toolsRoutes={[...toolsRoutes]}
             utilsRoutes={[...utilsRoutes]}

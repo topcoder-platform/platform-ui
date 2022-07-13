@@ -23,7 +23,7 @@ const ProfileNotLoggedIn: FC<{}> = () => {
                 label='Sign Up'
                 size='md'
                 tabIndex={-1}
-                url={authUrlSignup()}
+                url={authUrlSignup}
             />
         </>
     )

@@ -1,4 +1,4 @@
-import { ReactElement } from 'react'
+import { FC, ReactElement } from 'react'
 
 import { PlatformRoute } from './platform-route.model'
 
@@ -9,10 +9,11 @@ export interface RouteContextData {
     getPath: (routeTitle: string) => string
     getPathFromRoute: (route: PlatformRoute) => string
     getRouteElement: (route: PlatformRoute) => JSX.Element
+    initialized: boolean
     isActiveTool: (activePath: string, toolRoute: PlatformRoute) => boolean
     isRootRoute: (activePath: string) => boolean
     rootLoggedInRoute: string
-    rootLoggedOutRoute: string
+    rootLoggedOutFC: FC<{}>
     toolsRoutes: Array<PlatformRoute>
     toolsRoutesForNav: Array<PlatformRoute>
     utilsRoutes: Array<PlatformRoute>

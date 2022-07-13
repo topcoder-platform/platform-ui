@@ -22,6 +22,7 @@ interface RouteProviderProps {
     children: ReactNode
     rootCustomer: string
     rootLoggedOut: string
+    rootLoggedOutFC: FC<{}>
     rootMember: string
     toolsRoutes: Array<PlatformRoute>
     utilsRoutes: Array<PlatformRoute>
@@ -29,7 +30,7 @@ interface RouteProviderProps {
 
 export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps) => {
 
-    const { profile }: ProfileContextData = useContext<ProfileContextData>(profileContext)
+    const { initialized, profile }: ProfileContextData = useContext<ProfileContextData>(profileContext)
 
     const [routeContextData, setRouteContextData]: [RouteContextData, Dispatch<SetStateAction<RouteContextData>>]
         = useState<RouteContextData>(defaultRouteContextData)
@@ -67,7 +68,11 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
             ...utilsRoutes,
         ]
         // TODO: support additional roles and landing pages
-        const loggedInRoot: string = !!profile?.isCustomer ? props.rootCustomer : props.rootMember
+        const loggedInRoot: string = !profile
+            ? ''
+            : profile.isCustomer
+                ? props.rootCustomer
+                : props.rootMember
         const contextData: RouteContextData = {
             allRoutes,
             getChildRoutes,
@@ -75,10 +80,11 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
             getPath,
             getPathFromRoute,
             getRouteElement,
+            initialized,
             isActiveTool,
             isRootRoute: isRootRoute(loggedInRoot, props.rootLoggedOut),
             rootLoggedInRoute: loggedInRoot,
-            rootLoggedOutRoute: props.rootLoggedOut,
+            rootLoggedOutFC: props.rootLoggedOutFC,
             toolsRoutes,
             toolsRoutesForNav,
             utilsRoutes,
@@ -134,7 +140,10 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
 
     useEffect(() => {
         getAndSetRoutes()
+        // THIS WILL BE FIXED IN https://github.com/topcoder-platform/platform-ui/tree/PROD-2321_bug-hunt-intake-form
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
+        initialized,
         profile,
         props.toolsRoutes,
         props.utilsRoutes,
@@ -154,10 +163,8 @@ function isActiveTool(activePath: string, toolRoute: PlatformRoute): boolean {
     )
 }
 
-function isRootRoute(rootLoggedIn: string, rootLoggedOut: string):
-    (activePath: string) => boolean {
-
+function isRootRoute(rootLoggedIn: string | undefined, rootLoggedOut: string): (activePath: string) => boolean {
     return (activePath: string) => {
-        return [rootLoggedIn, rootLoggedOut].some(route => activePath === route)
+        return [rootLoggedOut, rootLoggedIn].some(route => activePath === route)
     }
 }
