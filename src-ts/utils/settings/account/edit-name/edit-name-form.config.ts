@@ -18,7 +18,6 @@ export const editNameFormDef: FormDefinition = {
                 type: 'submit',
             },
         ],
-        secondaryGroup: [],
     },
     groups: [
         {
