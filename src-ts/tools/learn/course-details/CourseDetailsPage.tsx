@@ -50,52 +50,56 @@ const CourseDetailsPage: FC<{}> = () => {
             {ready && course && (
                 <>
                     <div className={styles['wrap']}>
-                        <div className={styles['main']}>
-                            <div className={styles['description']}>
-                                <CourseTitle size='lg' title={course.title} credits={course?.provider} type='webdev' />
+                        <div className={styles['intro-copy']}>
+                            <CourseTitle size='lg' title={course.title} credits={course?.provider} type='webdev' />
 
-                                <div
-                                    className={styles['text']}
-                                    dangerouslySetInnerHTML={{ __html: course.introCopy.join('<br /><br />') }}
-                                ></div>
+                            <div
+                                className={styles['text']}
+                                dangerouslySetInnerHTML={{ __html: course.introCopy.join('<br /><br />') }}
+                            ></div>
+                        </div>
 
-                                {progress?.status === 'completed' ? (
+                        <div className={styles['description']}>
+                            {progress?.status === 'completed' ? (
+                                <>
+                                    <h3 className='details'>Suggested next steps</h3>
+
+                                    <div className={styles['text']}>
+                                        <p>
+                                            Now that you have completed the {course.title},
+                                            we'd recommend you enroll in another course to continue your learning.
+                                            You can view our other courses from the Topcoder Academy course page.
+                                        </p>
+                                    </div>
+                                </>
+                            ) : (
+                                course.keyPoints && (
                                     <>
-                                        <h3 className='details'>Suggested next steps</h3>
+                                        <h3 className='details'>Why should you complete this course?</h3>
 
-                                        <div className={styles['text']}>
-                                            <p>
-                                                Now that you have completed the {course.title},
-                                                we'd recommend you enroll in another course to continue your learning.
-                                                You can view our other courses from the Topcoder Academy course page.
-                                            </p>
-                                        </div>
+                                        <div
+                                            className={styles['text']}
+                                            dangerouslySetInnerHTML={{ __html: (course.keyPoints ?? []).join('<br /><br />') }}
+                                        ></div>
                                     </>
-                                ) : (
-                                    course.keyPoints && (
-                                        <>
-                                            <h3 className='details'>Why should you complete this course?</h3>
-
-                                            <div
-                                                className={styles['text']}
-                                                dangerouslySetInnerHTML={{ __html: (course.keyPoints ?? []).join('<br /><br />') }}
-                                            ></div>
-                                        </>
-                                    )
-                                )}
-                            </div>
-
+                                )
+                            )}
                             <div className={styles['coming-soon']}>
                                 <PromoCourse />
                             </div>
                         </div>
+
                         <div className={styles['aside']}>
-                            <CourseCurriculum course={course} progress={progress} />
+                            <CourseCurriculum
+                                course={course}
+                                progress={progress}
+                                profileUserId={profile?.userId}
+                            />
                         </div>
                     </div>
                     {course?.provider === 'freeCodeCamp' && (
                         <div className={styles['credits-link']}>
-                            <a href='https://freecodecamp.org/' target='_blank' referrerPolicy='no-referrer'>
+                            <a href='https://freecodecamp.org/' target='_blank' referrerPolicy='no-referrer' rel='noreferrer'>
                                 This course was created by the freeCodeCamp.org community.
                                 <IconOutline.ExternalLinkIcon />
                             </a>

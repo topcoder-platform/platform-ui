@@ -3,7 +3,10 @@ import { LearnModule } from '../../lesson-provider'
 export interface LearnCourse {
     certification: string
     certificationId: string
-    completionHours: number
+    estimatedCompletionTime: {
+        units: string
+        value: number
+    }
     id: string
     introCopy: Array<string>
     key: string

@@ -1,7 +1,11 @@
 @import '../../../../../lib/styles/includes';
 
 .container {
-
+    flex: 1 1 auto;
+    overflow: auto;
+    margin: 0 -15px;
+    padding: 0 15px;
+    
     ol {
         padding: 0;
     }

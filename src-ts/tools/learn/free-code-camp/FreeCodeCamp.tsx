@@ -1,11 +1,10 @@
-import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { NavigateFunction, Params, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 
 import {
     Breadcrumb,
     BreadcrumbItemModel,
     LoadingSpinner,
-    Portal,
     profileContext,
     ProfileContextData,
 } from '../../../lib'
@@ -25,7 +24,7 @@ import {
     useLessonProvider,
     useMyCertificationProgress,
 } from '../learn-lib'
-import { getFccLessonPath } from '../learn.routes'
+import { getCoursePath, getFccLessonPath } from '../learn.routes'
 
 import { FccFrame } from './fcc-frame'
 import styles from './FreeCodeCamp.module.scss'
@@ -42,19 +41,25 @@ const FreeCodeCamp: FC<{}> = () => {
     const [moduleParam, setModuleParam]: [string, Dispatch<SetStateAction<string>>] = useState(routeParams.module ?? '')
     const [lessonParam, setLessonParam]: [string, Dispatch<SetStateAction<string>>] = useState(routeParams.lesson ?? '')
 
-    const { certificateProgress, setCertificateProgress }: MyCertificationProgressProviderData = useMyCertificationProgress(profile?.userId, routeParams.provider, certificationParam)
+    const {
+        certificateProgress,
+        setCertificateProgress,
+        ready: progressReady,
+    }: MyCertificationProgressProviderData = useMyCertificationProgress(profile?.userId, routeParams.provider, certificationParam)
 
     const {
         course: courseData,
         ready: courseDataReady,
     }: CoursesProviderData = useCoursesProvider(providerParam, certificationParam)
 
-    const { lesson, ready }: LessonProviderData = useLessonProvider(
+    const { lesson, ready: lessonReady }: LessonProviderData = useLessonProvider(
         providerParam,
         certificationParam,
         moduleParam,
         lessonParam,
     )
+
+    const ready: boolean = courseDataReady && lessonReady && progressReady
 
     const breadcrumb: Array<BreadcrumbItemModel> = useMemo(() => [
         { url: '/learn', name: 'Topcoder Academy' },
@@ -169,7 +174,7 @@ const FreeCodeCamp: FC<{}> = () => {
     useEffect(() => {
       if (
         certificateProgress &&
-        certificateProgress.completedPercentage === 1 &&
+        certificateProgress.courseProgressPercentage === 100 &&
         certificateProgress.status === MyCertificationProgressStatus.inProgress
     ) {
         updateMyCertificationsProgressAsync(
@@ -178,7 +183,7 @@ const FreeCodeCamp: FC<{}> = () => {
             {}
         ).then(setCertificateProgress)
       }
-    }, [certificateProgress])
+    }, [certificateProgress, setCertificateProgress])
 
     useEffect(() => {
         const certificationPath: string = routeParams.certification ?? ''
@@ -190,46 +195,58 @@ const FreeCodeCamp: FC<{}> = () => {
         if (lessonPath !== lessonParam) { setLessonParam(lessonPath) }
     }, [routeParams])
 
+    /**
+     * Check if the user accepted the academic honesty policy
+     * if not, redirect user to course details page to accept the policy
+     */
+    useLayoutEffect(() => {
+        if (ready && !certificateProgress?.academicHonestyPolicyAcceptedAt) {
+            const coursePath: string = getCoursePath(
+                providerParam,
+                certificationParam
+            )
+            navigate(coursePath)
+        }
+    }, [ready, certificateProgress, providerParam, certificationParam, navigate])
+
     return (
         <>
             {!ready && <LoadingSpinner />}
             <Breadcrumb items={breadcrumb} />
 
             {lesson && (
-                <Portal portalId='page-subheader-portal-el'>
-                    <div className={styles['main-wrap']}>
-                        <div className={styles['course-outline-pane']}>
-                            <CollapsiblePane title='Course Outline'>
-                                <div className={styles['course-outline-wrap']}>
-                                    <div className={styles['course-outline-title']}>
-                                        {courseData?.title}
-                                    </div>
-                                    <CourseOutline
-                                        course={courseData}
-                                        ready={courseDataReady}
-                                        currentStep={`${moduleParam}/${lessonParam}`}
-                                        progress={certificateProgress}
-                                    />
+                <div className={styles['main-wrap']}>
+                    <div className={styles['course-outline-pane']}>
+                        <CollapsiblePane title='Course Outline'>
+                            <div className={styles['course-outline-wrap']}>
+                                <div className={styles['course-outline-title']}>
+                                    {courseData?.title}
                                 </div>
-                            </CollapsiblePane>
-                        </div>
-
-                        <div className={styles['course-frame']}>
-                            <TitleNav
-                                title={currentModuleData?.meta.name}
-                                currentStep={currentStepIndex}
-                                maxStep={currentModuleData?.lessons.length ?? 0}
-                                onNavigate={handleNavigate}
-                            />
-                            <hr />
-                            <FccFrame
-                                lesson={lesson}
-                                onFccLessonChange={handleFccLessonReady}
-                                onFccLessonComplete={handleFccLessonComplete}
-                            />
-                        </div>
+                                <CourseOutline
+                                    course={courseData}
+                                    ready={courseDataReady}
+                                    currentStep={`${moduleParam}/${lessonParam}`}
+                                    progress={certificateProgress}
+                                />
+                            </div>
+                        </CollapsiblePane>
                     </div>
-                </Portal>
+
+                    <div className={styles['course-frame']}>
+                        <TitleNav
+                            title={currentModuleData?.meta.name}
+                            currentStep={currentStepIndex}
+                            maxStep={currentModuleData?.lessons.length ?? 0}
+                            onNavigate={handleNavigate}
+                        />
+                        <hr />
+                        <FccFrame
+                            lesson={lesson}
+                            onFccLessonChange={handleFccLessonReady}
+                            onFccLessonComplete={handleFccLessonComplete}
+                        />
+                    </div>
+                </div>
             )}
         </>
     )
