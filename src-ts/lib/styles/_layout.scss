@@ -4,9 +4,11 @@
 html {
     --header-height: 80px;
     --footer-height: 51px;
+    --breadcrumb-height: 64px;
 
     @include ltemd {
         --header-height: 64px;
+        --breadcrumb-height: 48px;
     }
 
     @include ltesm {

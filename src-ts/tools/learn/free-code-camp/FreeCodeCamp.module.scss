@@ -19,6 +19,8 @@
         flex-direction: column;
         gap: $pad-lg;
         height: auto;
+        flex: 99 1 auto;
+        margin-bottom: 0;
     }
 }
 
@@ -37,6 +39,7 @@
 
     @include ltemd {
         padding-left: 0;
+        flex: 1 1 auto;
     }
 }
 
@@ -51,6 +54,7 @@
         top: auto;
         left: auto;
         bottom: auto;
+        flex: 0 0 auto;
     }
 }
 
