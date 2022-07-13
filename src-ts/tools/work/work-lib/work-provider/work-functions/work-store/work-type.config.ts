@@ -15,14 +15,14 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
                 registration period, where experienced quality assurance engineers signup to register for the bug hunt. After the registration
                 period completes, we will run the bug hunt for the time which meets the option you choose below.`,
         bgImage: imgBugHunt,
+        deliverablesDescription: `You will receive thorough testing of your website, and at the conclusion will be provided
+        a detailed report of bugs which have steps to reproduce, screenshots / videos if applicable,
+        details of the bug, and severity of the issue.`,
         description: 'Conduct a time based testing bug hunt where Topcoder experts scramble to find bugs or issues in the system',
         // TODO: The duration will be based on the package the user selects
         duration: 2,
         featured: true,
         intakeFormRoutes: WorkIntakeFormRoutes[WorkType.bugHunt],
-        results: `You will receive thorough testing of your website, and at the conclusion will be provided
-                a detailed report of bugs which have steps to reproduce, screenshots / videos if applicable,
-                details of the bug, and severity of the issue.`,
         shortDescription: 'Find bugs quickly and vigorously',
         startRoute: WorkIntakeFormRoutes[WorkType.bugHunt][1],
         subtitle: `Conduct a time based testing bug hunt where Topcoder experts scramble to find bugs or issues in the system`,

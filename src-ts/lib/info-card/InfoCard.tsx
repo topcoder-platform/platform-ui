@@ -6,10 +6,10 @@ import { ArrowIcon } from '../svgs'
 import styles from './InfoCard.module.scss'
 
 interface InfoCardProps {
-    children: ReactNode,
-    color: 'info' | 'success' | 'warn',
-    defaultOpen: boolean,
-    isCollapsible: boolean,
+    children?: ReactNode,
+    color?: 'info' | 'success' | 'warn',
+    defaultOpen?: boolean,
+    isCollapsible?: boolean,
     title?: string,
 }
 

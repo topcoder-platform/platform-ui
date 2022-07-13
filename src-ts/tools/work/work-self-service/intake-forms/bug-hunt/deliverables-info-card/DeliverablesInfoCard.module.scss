@@ -1,0 +1,22 @@
+@import '../../../../../../lib/styles/includes';
+
+.row {
+    display: flex
+}
+
+.column {
+    flex: 50%;
+    padding-right: 48px;
+}
+
+.exampleImg {
+    max-height: 130px;
+}
+
+.title {
+    font-size: 18px;
+    line-height: 22px;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding-bottom: $pad-sm;
+}
