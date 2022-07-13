@@ -1,8 +1,10 @@
 import { ChangeEvent, FocusEvent } from 'react'
 
-import { FormDefinition, FormGroup,  FormInputModel } from '..'
+import { FormDefinition } from '../form-definition.model'
+import { FormGroup } from '../form-group.model'
+import { FormInputModel } from '../form-input.model'
 
-import FormGroupItem from './form-group-item'
+import FormGroupItem from './form-group-item/FormGroupItem'
 import { InputRating, InputText, InputTextarea } from './form-input'
 import { FormInputRow } from './form-input-row'
 import { InputTextTypes } from './form-input/input-text/InputText'

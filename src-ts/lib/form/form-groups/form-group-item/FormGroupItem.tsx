@@ -1,7 +1,8 @@
 import cn from 'classnames'
 import React from 'react'
 
-import { FormGroup, FormInputModel } from '../..'
+import { FormGroup } from '../../form-group.model'
+import { FormInputModel } from '../../form-input.model'
 
 import styles from './FormGroupItem.module.scss'
 
@@ -11,9 +12,9 @@ interface FormGroupItemProps {
 }
 
 const FromGroupItem: React.FC<FormGroupItemProps> = ({group, renderFormInput}: FormGroupItemProps) => {
-    const { instructions, title, fields }: FormGroup = group
+    const { instructions, title, inputs }: FormGroup = group
 
-    const inputFields: Array<JSX.Element | undefined> = fields?.map((field: FormInputModel, index: number) => renderFormInput(field as FormInputModel, index)) || []
+    const formInputs: Array<JSX.Element | undefined> = inputs?.map((field: FormInputModel, index: number) => renderFormInput(field as FormInputModel, index)) || []
 
     const isMultiFieldGroup: boolean = !!(title || instructions)
 
@@ -22,15 +23,15 @@ const FromGroupItem: React.FC<FormGroupItemProps> = ({group, renderFormInput}: F
             {
                 isMultiFieldGroup && (
                     <div className={styles['left']}>
-                        <div className={styles['title']}>
+                        <div className={cn(styles['title'])}>
                             {title}
                         </div>
-                        <div className={styles['group-item-instruction']} dangerouslySetInnerHTML={{__html: instructions || ''}}/>
+                        <div className={styles['group-item-instructions']} dangerouslySetInnerHTML={{__html: instructions || ''}}/>
                     </div>
                 )
             }
             <div className={cn(styles['right'])}>
-                {inputFields}
+                {formInputs}
             </div>
         </div>
     )

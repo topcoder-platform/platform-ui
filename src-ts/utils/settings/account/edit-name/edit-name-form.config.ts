@@ -21,7 +21,7 @@ export const editNameFormDef: FormDefinition = {
     },
     groups: [
         {
-            fields: [
+            inputs: [
                 {
                     autocomplete: FormInputAutocompleteOption.off,
                     label: 'First Name',
@@ -36,7 +36,7 @@ export const editNameFormDef: FormDefinition = {
             ],
         },
         {
-            fields: [
+            inputs: [
                 {
                     autocomplete: FormInputAutocompleteOption.off,
                     label: 'Last Name',

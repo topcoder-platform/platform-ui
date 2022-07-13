@@ -29,14 +29,14 @@ const Account: FC<{}> = () => {
     }
 
     function toggleEditName(): void {
-        const fields: Array<FormInputModel> = formGetInputFields(editNameFormDef.groups || [])
-        formOnReset(fields)
+        const inputs: Array<FormInputModel> = formGetInputFields(editNameFormDef.groups || [])
+        formOnReset(inputs)
         setEditNameOpen(!editProfileOpen)
     }
 
     function toggleChangePassword(): void {
-        const fields: Array<FormInputModel> = formGetInputFields(editNameFormDef.groups || [])
-        formOnReset(fields)
+        const inputs: Array<FormInputModel> = formGetInputFields(editNameFormDef.groups || [])
+        formOnReset(inputs)
         setChangePasswordOpen(!changePasswordOpen)
     }
 

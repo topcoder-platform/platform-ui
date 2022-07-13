@@ -29,7 +29,7 @@ export const BugHuntFormConfig: FormDefinition = {
     },
     groups: [
         {
-            fields: [
+            inputs: [
                 {
                     events: [
                     {
@@ -47,7 +47,7 @@ export const BugHuntFormConfig: FormDefinition = {
             title: 'Project Title',
         },
         {
-            fields: [
+            inputs: [
                 {
                     events: [
                         {
@@ -65,7 +65,7 @@ export const BugHuntFormConfig: FormDefinition = {
             title: 'Website URL',
         },
         {
-            fields: [
+            inputs: [
                 {
                     events: [
                         {
@@ -86,7 +86,7 @@ export const BugHuntFormConfig: FormDefinition = {
             title: 'Bug Hunt Goals',
         },
         {
-            fields: [
+            inputs: [
                 {
                     events: [
                     {
@@ -107,7 +107,7 @@ export const BugHuntFormConfig: FormDefinition = {
             title: 'Features to test',
         },
         {
-            fields: [
+            inputs: [
                 {
                     name: 'delivery-type',
                     notTabbable: false,

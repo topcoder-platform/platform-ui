@@ -22,8 +22,8 @@ const WorkFeedback: FC<WorkFeedbackProps> = (props: WorkFeedbackProps) => {
 
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>] = useState<FormDefinition>({ ...workFeedbackFormDef })
 
-    function requestGenerator(fields: ReadonlyArray<FormInputModel>): Array<Feedback> {
-        return fields
+    function requestGenerator(inputs: ReadonlyArray<FormInputModel>): Array<Feedback> {
+        return inputs
             .map((input: FormInputModel) => {
                 return {
                     name: input.instructions || input.label as string,

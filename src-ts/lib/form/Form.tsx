@@ -15,7 +15,7 @@ import { Button } from '../button'
 import '../styles/index.scss'
 import { IconOutline } from '../svgs'
 
-import { FormDefinition, FormInputModel } from '.'
+import { FormButton, FormDefinition, FormInputModel } from '.'
 import {
     formGetInputFields,
     formInitializeValues,
@@ -50,7 +50,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         const [formRef]: [RefObject<HTMLFormElement>, Dispatch<SetStateAction<RefObject<HTMLFormElement>>>]
             = useState<RefObject<HTMLFormElement>>(createRef<HTMLFormElement>())
 
-        // This will hold all the inputs that are not static fields
+        // This will hold all the inputs
         const [inputs, setInputs]: [Array<FormInputModel>, Dispatch<SetStateAction<Array<FormInputModel>>>] = useState<Array<FormInputModel>>(formGetInputFields(formDef.groups || []))
 
         function onBlur(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>): void {
@@ -90,26 +90,8 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         formInitializeValues(inputs, props.formValues)
 
-        const secondaryGroupButtons: Array<JSX.Element> = formDef.buttons.secondaryGroup ? formDef.buttons.secondaryGroup
-            .map((button, index) => {
-                // if this is a reset button, set its onclick to reset
-                if (!!button.isReset) {
-                    button = {
-                        ...button,
-                        onClick: onReset,
-                    }
-                }
-                return (
-                    <Button
-                        {...button}
-                        key={button.label}
-                        tabIndex={button.notTabble ? -1 : index + (inputs ? inputs.length : 0) + (formDef.tabIndexStart || 0)}
-                    />
-                )
-            }) : []
-
-        const primaryGroupButtons: Array<JSX.Element> = formDef.buttons.primaryGroup
-            .map((button, index) => {
+        const createButtonGroup: (groups: ReadonlyArray<FormButton>) => Array<JSX.Element> = (groups) => {
+            return groups.map((button, index) => {
                 // if this is a reset button, set its onclick to reset
                 if (!!button.isReset) {
                     button = {
@@ -125,6 +107,11 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                     />
                 )
             })
+        }
+
+        const secondaryGroupButtons: Array<JSX.Element> = createButtonGroup(formDef.buttons.secondaryGroup || [])
+
+        const primaryGroupButtons: Array<JSX.Element> = createButtonGroup(formDef.buttons.primaryGroup)
 
         // set the max width of the form error so that it doesn't push the width of the form wider
         const errorsRef: RefObject<HTMLDivElement> = createRef<HTMLDivElement>()
