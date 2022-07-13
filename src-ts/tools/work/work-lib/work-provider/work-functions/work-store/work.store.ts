@@ -29,6 +29,6 @@ export function getFilteredByStatus(work: ReadonlyArray<Work>, workStatusFilter?
                 || w.status === WorkStatus[workStatusFilter as keyof typeof WorkStatus]))
 }
 
-export async function updateAsync(body: ChallengeUpdateBody): Promise<void> {
-    return xhrPatchAsync(updateUrl(body?.id || ''), JSON.stringify(body))
+export async function updateAsync(workId: string, body: ChallengeUpdateBody): Promise<void> {
+    return xhrPatchAsync(updateUrl(workId), JSON.stringify(body))
 }

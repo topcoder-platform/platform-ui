@@ -26,4 +26,5 @@ export {
     getGroupedByStatus as workGetGroupedByStatus,
     getPricesConfig as workGetPricesConfig,
     getStatusFilter as workGetStatusFilter,
+    updateAsync as workUpdateAsync,
 } from './work.functions'

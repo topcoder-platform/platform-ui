@@ -2,7 +2,7 @@
 import { Page, UserProfile } from '../../../../../lib'
 
 import { WorkByStatus } from './work-by-status.model'
-import { workFactoryBuildCreateBody, workFactoryCreate } from './work-factory'
+import { workFactoryBuildCreateBody, workFactoryBuildUpdateBody, workFactoryCreate } from './work-factory'
 import {
     Challenge,
     ChallengeCreateBody,
@@ -23,7 +23,7 @@ import {
 } from './work-store'
 
 export async function createAsync(type: WorkType): Promise<void> {
-    const workConfig: WorkTypeConfig = WorkTypeConfigs[WorkType.bugHunt]
+    const workConfig: WorkTypeConfig = WorkTypeConfigs[type]
     const body: ChallengeCreateBody = workFactoryBuildCreateBody(workConfig)
     return workStoreCreateAsync(body)
 }
@@ -93,6 +93,12 @@ export function getStatusFilter(filterKey?: string): WorkStatusFilter | undefine
     // if the passed in key doesn't match any filter, return undefined;
     // otherwise, return the filter defined by the key
     return !workStatusFilter ? undefined : WorkStatusFilter[workStatusFilter]
+}
+
+export async function updateAsync(type: WorkType, workId: string, intakeForm: any): Promise<void> {
+    const workConfig: WorkTypeConfig = WorkTypeConfigs[type]
+    const body: ChallengeUpdateBody = workFactoryBuildUpdateBody(workConfig, intakeForm)
+    return workStoreUpdateAsync(workId, body)
 }
 
 async function getPageAsync(handle: string, page: Page): Promise<Array<Work>> {
