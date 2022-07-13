@@ -117,7 +117,7 @@ const CourseCompletedPage: FC<{}> = () => {
                                     />
                                 </div>
                                 <hr />
-                                <p>
+                                <p className='body-main'>
                                     Now that you have completed the {courseData.title},
                                     take a look at our other Topcoder Academy courses.
                                     To view other courses, press the "Start a new course" button below.
@@ -136,7 +136,7 @@ const CourseCompletedPage: FC<{}> = () => {
                                         route='/learn'
                                     />
                                 </div>
-                                <p>
+                                <p className='body-main'>
                                     Completed courses in the Academy will reflect on your Topcoder profile.
                                     This will make your Topcoder profile more attractive to potential employers via Gig work,
                                     and shows the community how well you've progressed in completing learning courses.

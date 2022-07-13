@@ -14,6 +14,9 @@
     overflow: auto;
     margin: 0 -1*$pad-xxxxl -1*$pad-xxxxl;
     padding: 0 $pad-xxxxl $pad-xxxxl;
+    
+    display: flex;
+    flex-direction: column;
 
     @extend .body-main;
     & :global(.button-container) {
@@ -22,5 +25,15 @@
         gap: 16px;
         align-items: center;
         margin-top: 24px;
+        flex: 0 0 auto;
+    }
+
+    @include ltemd {
+        margin: 0 -1*$pad-lg -1*$pad-lg;
+        padding: 0 $pad-lg $pad-lg;
+    }
+
+    :global(.button-container)  {
+        margin-top: $pad-sm;
     }
 }
