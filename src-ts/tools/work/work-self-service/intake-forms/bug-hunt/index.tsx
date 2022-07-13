@@ -27,7 +27,6 @@ const BugHuntIntakeForm: React.FC = () => {
     }
 
     const onSave: (val: any) => Promise<void> = (val: any) => {
-        // const 
         return new Promise(() => {}).then(() => {})
     }
 
