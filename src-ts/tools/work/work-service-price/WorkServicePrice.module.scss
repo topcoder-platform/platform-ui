@@ -1,19 +1,16 @@
-@import '../../lib/styles/includes';
+@import '../../../lib/styles/includes';
 
 .container {
 
   .iconWrapper {
     & {
-      width: 48px !important;
-      height: 48px;
-      margin-right: 16px;
-      min-width: auto !important;
-      padding-right: 0 !important;
+      @include icon-mx;
+      margin-right: $pad-lg;
     }
   }
 
   svg {
-    margin-right: 16px;
+    margin-right: $pad-lg;
   }
 
   .inline {
@@ -55,12 +52,12 @@
   .stickerPrice {
     color: $black-80;
     text-decoration: line-through;
-    margin-right: 4px;
+    margin-right: $pad-xs;
   }
 
   .separator {
     height: 26px;
-    width: 2px;
+    width: $border;
     color: $black-10;
     margin: 0px 16px;
   }
@@ -70,7 +67,7 @@
   }
 
   .help {
-    margin-left: 6px;
+    margin-left: $pad-sm;
     color: $turq-160;
   }
 }
