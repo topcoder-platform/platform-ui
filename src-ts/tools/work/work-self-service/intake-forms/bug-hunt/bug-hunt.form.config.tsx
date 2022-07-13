@@ -4,6 +4,15 @@ import { FormDefinition } from '../../../../../lib'
 
 import BugDeliveryCheckbox from './bug-delivery-checkbox'
 
+export enum FormInputNames {
+    projectTitle = 'projectTitle',
+    featuresToTest = 'featuresToTest',
+    bugHuntGoals = 'bugHuntGoals',
+    deliveryType = 'deliveryType',
+    repositoryLink = 'repositoryLink',
+    websiteURL = 'websiteURL',
+}
+
 export const BugHuntFormConfig: FormDefinition = {
     buttons: {
         primaryGroup: [
@@ -40,7 +49,7 @@ export const BugHuntFormConfig: FormDefinition = {
                     },
                     ],
                     label: 'Project title',
-                    name: 'Project title',
+                    name: FormInputNames.projectTitle,
                     placeholder: 'Enter a descriptive title',
                     type: 'text',
                 },
@@ -57,8 +66,8 @@ export const BugHuntFormConfig: FormDefinition = {
                             name: 'onBlur',
                         },
                     ],
-                    label: 'Project title',
-                    name: 'Project title',
+                    label: 'Website URL',
+                    name: FormInputNames.websiteURL,
                     placeholder: 'Enter a descriptive title',
                     type: 'text',
                 },
@@ -76,7 +85,7 @@ export const BugHuntFormConfig: FormDefinition = {
                         },
                     ],
                     label: 'Project title',
-                    name: 'bug-hunt-goals',
+                    name: FormInputNames.bugHuntGoals,
                     placeholder: 'Describe your goal',
                     type: 'textarea',
                 },
@@ -97,7 +106,7 @@ export const BugHuntFormConfig: FormDefinition = {
                     },
                     ],
                     label: 'Features to test (optional)',
-                    name: 'bug-hunt-goals',
+                    name: FormInputNames.featuresToTest,
                     placeholder: 'List the sepcific features',
                     type: 'textarea',
                 },
@@ -111,7 +120,7 @@ export const BugHuntFormConfig: FormDefinition = {
         {
             fields: [
                 {
-                    name: 'delivery-type',
+                    name: FormInputNames.deliveryType,
                     notTabbable: false,
                     options: [
                         {
@@ -125,7 +134,7 @@ export const BugHuntFormConfig: FormDefinition = {
                             id: 'gitlab',
                         },
                     ],
-                    type: 'checkbox',
+                    type: 'radio',
                     value: 'gitlab',
                 },
                 {
@@ -136,7 +145,7 @@ export const BugHuntFormConfig: FormDefinition = {
                         },
                     ],
                     label: 'Repository Link (Optional)',
-                    name: 'repository-link',
+                    name: FormInputNames.repositoryLink,
                     placeholder: 'www.example-share-link.com',
                     type: 'text',
                 },
