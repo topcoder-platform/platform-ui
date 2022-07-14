@@ -1,5 +1,4 @@
-@import '../../../lib/styles/mixins';
-@import '../../../lib/styles/variables';
+@import '../../../lib/styles/includes';
 
 .heroContainer {
   display: flex;
@@ -12,11 +11,12 @@
   height: 104px;
 
   background: linear-gradient(84.92deg, #363D8C 2.08%, #723390 97.43%);
+
   border-radius: 0px;
 
   /* Inside auto layout */
   flex: none;
-  order: 2;
+
   align-self: stretch;
   flex-grow: 0;
 
@@ -37,7 +37,6 @@
     background: linear-gradient(84.92deg, #363D8C 2.08%, #723390 97.43%);
   }
 
-  margin-bottom: -35px;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 

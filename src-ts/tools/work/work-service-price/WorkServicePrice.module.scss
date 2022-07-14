@@ -2,16 +2,21 @@
 
 .container {
 
-  .iconWrapper {
-    & {
-      @include icon-mx;
-      margin-right: $pad-lg;
-    }
-  }
+  margin-top: $pad-xl;
 
-  svg {
-    margin-right: $pad-lg;
-  }
+  .iconWrapper {
+      height: 48;
+      width: 48;
+      margin: 0 $pad-lg $pad-lg $pad-lg;
+      background: linear-gradient(84.92deg, #363D8C 2.08%, #723390 97.43%);
+      border-radius: 24px;
+      
+      svg {
+        @include icon-xl;
+        margin: $pad-md;
+        color: $tc-white;
+      }
+    }
 
   .inline {
     display: flex;
@@ -43,10 +48,6 @@
 
   @include ltemd {
     justify-content: space-between;
-  }
-
-  .discount {
-    color: $green-50;
   }
 
   .stickerPrice {
