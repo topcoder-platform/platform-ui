@@ -1,4 +1,4 @@
-import imgBugHunt from '../../../work-images/bug-hunt-tile.jpeg'
+import { bugHuntTileImg } from '../../../work-images'
 
 import { WorkIntakeFormRoutes } from './work-intake-form-routes.config'
 import { bugHunt as workPriceBugHunt } from './work-prices.store'
@@ -14,7 +14,7 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
                 and we typically find a significant number bugs which helps improve quality of your site. The Bug Hunt will start with a
                 registration period, where experienced quality assurance engineers signup to register for the bug hunt. After the registration
                 period completes, we will run the bug hunt for the time which meets the option you choose below.`,
-        bgImage: imgBugHunt,
+        bgImage: bugHuntTileImg,
         deliverablesDescription: `You will receive thorough testing of your website, and at the conclusion will be provided
         a detailed report of bugs which have steps to reproduce, screenshots / videos if applicable,
         details of the bug, and severity of the issue.`,
