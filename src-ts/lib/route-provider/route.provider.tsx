@@ -165,6 +165,6 @@ function isActiveTool(activePath: string, toolRoute: PlatformRoute): boolean {
 
 function isRootRoute(rootLoggedIn: string | undefined, rootLoggedOut: string): (activePath: string) => boolean {
     return (activePath: string) => {
-        return [rootLoggedOut, rootLoggedIn].some(route => activePath === route)
+        return [rootLoggedIn, rootLoggedOut].some(route => activePath === route)
     }
 }
