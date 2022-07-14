@@ -1,3 +1,4 @@
+@use '../styles/typography';
 @import '../styles/includes';
 
 .bug-delivery-radio {
@@ -27,9 +28,7 @@
         }
     }
     .name {
-        @include font-roboto;
-        font-size: 20px;
-        font-weight: 700;
+        @extend .body-large-bold;
         margin-top: $pad-sm;
     }
 }
