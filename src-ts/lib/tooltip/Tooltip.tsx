@@ -1,12 +1,20 @@
 import classNames from 'classnames'
-import { Dispatch, FC, MutableRefObject, ReactNode, SetStateAction, useCallback, useEffect, useRef, useState } from 'react'
+import {
+    FC,
+    MutableRefObject,
+    ReactNode,
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+} from 'react'
 
 import {
     useClickOutside,
     UseHoverElementValue,
     useOnHoverElement,
     useWindowSize,
-    WindowSize
+    WindowSize,
 } from '../hooks'
 import { Portal } from '../portal'
 import { TooltipArrowIcon } from '../svgs'
@@ -29,8 +37,8 @@ interface ClickHandlersValue {
 function useClickHandlers(
     trigger: MutableRefObject<any>,
     toggle: (ev: any) => void,
-    enabled: boolean = true
-): ClickHandlersValue | {} {
+    enabled = true,
+): ClickHandlersValue | Record<string, unknown> {
     useClickOutside(trigger.current, () => toggle(false), enabled)
 
     return enabled ? {
@@ -46,31 +54,34 @@ const Tooltip: FC<TooltipProps> = ({
     positionX = 'middle',
     positionY = 'end',
 }: TooltipProps) => {
-
-    const portalRef: MutableRefObject<any> = useRef(undefined)
-    const triggerRef: MutableRefObject<any> = useRef(undefined)
-    const tooltipRef: MutableRefObject<any> = useRef(undefined)
-    const [tooltipOpen, setTooltipOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const portalRef = useRef<any>(undefined)
+    const triggerRef = useRef<any>(undefined)
+    const tooltipRef = useRef<any>(undefined)
+    const [tooltipOpen, setTooltipOpen] = useState<boolean>(false)
     const { width: windowWidth, height: windowHeight }: WindowSize = useWindowSize()
 
     const toggleOpen: (toggleValue?: boolean) => void = useCallback((toggleValue?: boolean) => {
-        setTooltipOpen(currentTooltipOpen => typeof toggleValue === 'boolean' ? toggleValue : !currentTooltipOpen)
+        setTooltipOpen((currentTooltipOpen) => (typeof toggleValue === 'boolean' ? toggleValue : !currentTooltipOpen))
     }, [])
 
-    const evHandlers: ClickHandlersValue & UseHoverElementValue | {} = {
+    const evHandlers: ClickHandlersValue & UseHoverElementValue | Record<string, unknown> = {
         ...useClickHandlers(triggerRef, toggleOpen, triggerOn === 'click'),
         ...useOnHoverElement(triggerRef.current, toggleOpen, triggerOn === 'hover'),
     }
 
     useEffect(() => {
-
         if (!tooltipOpen || !portalRef?.current || !tooltipRef?.current) {
             return
         }
 
         const triggerEl: HTMLElement = triggerRef.current
         const box: DOMRect = triggerEl.getBoundingClientRect()
-        const left: number = Math.max(box.left, windowWidth - (box.left + tooltipRef.current.getBoundingClientRect().width))
+        const left: number = Math.max(
+            box.left,
+            windowWidth - (
+                box.left + tooltipRef.current.getBoundingClientRect().width
+            ),
+        )
 
         Object.assign(portalRef.current.style, {
             height: `${box.width}px`,
@@ -86,7 +97,7 @@ const Tooltip: FC<TooltipProps> = ({
 
     // if we didn't get a tooltip, just return an empty fragment
     if (!content) {
-        return <></>
+        return null
     }
 
     return (
