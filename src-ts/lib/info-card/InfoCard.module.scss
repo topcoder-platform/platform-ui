@@ -13,6 +13,10 @@
         border-radius: 8px;
     }
 
+    &.noMargin {
+        margin: 0 !important;
+    }
+
     .title {
         display: flex;
         justify-content: space-between;

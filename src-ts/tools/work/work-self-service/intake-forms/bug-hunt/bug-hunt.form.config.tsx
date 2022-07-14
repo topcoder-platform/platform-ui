@@ -1,6 +1,7 @@
 
 import { ReactComponent as BackIcon } from '../../../../../../src/assets/images/icon-back-arrow.svg'
 import { FormDefinition } from '../../../../../lib'
+import { SupportInfoCard } from '../support-info-card'
 
 export const BugHuntFormConfig: FormDefinition = {
     buttons: {
@@ -8,13 +9,13 @@ export const BugHuntFormConfig: FormDefinition = {
             {
                 buttonStyle: 'secondary',
                 label: 'Save for later',
-                onClick: () => {},
+                onClick: () => { },
                 type: 'button',
             },
             {
                 buttonStyle: 'primary',
                 label: 'Complete and pay',
-                onClick: () => {},
+                onClick: () => { },
                 type: 'button',
             },
         ],
@@ -22,7 +23,7 @@ export const BugHuntFormConfig: FormDefinition = {
             {
                 buttonStyle: 'icon',
                 icon: BackIcon,
-                onClick: () => {},
+                onClick: () => { },
                 type: 'button',
             },
         ],
@@ -32,10 +33,10 @@ export const BugHuntFormConfig: FormDefinition = {
             inputs: [
                 {
                     events: [
-                    {
-                        event: () => {},
-                        name: 'onBlur',
-                    },
+                        {
+                            event: () => { },
+                            name: 'onBlur',
+                        },
                     ],
                     label: 'Project title',
                     name: 'Project title',
@@ -51,7 +52,7 @@ export const BugHuntFormConfig: FormDefinition = {
                 {
                     events: [
                         {
-                            event: () => {},
+                            event: () => { },
                             name: 'onBlur',
                         },
                     ],
@@ -69,7 +70,7 @@ export const BugHuntFormConfig: FormDefinition = {
                 {
                     events: [
                         {
-                            event: () => {},
+                            event: () => { },
                             name: 'onBlur',
                         },
                     ],
@@ -89,10 +90,10 @@ export const BugHuntFormConfig: FormDefinition = {
             inputs: [
                 {
                     events: [
-                    {
-                        event: () => {},
-                        name: 'onBlur',
-                    },
+                        {
+                            event: () => { },
+                            name: 'onBlur',
+                        },
                     ],
                     label: 'Features to test (optional)',
                     name: 'bug-hunt-goals',
@@ -129,7 +130,7 @@ export const BugHuntFormConfig: FormDefinition = {
                 {
                     events: [
                         {
-                            event: () => {},
+                            event: () => { },
                             name: 'onBlur',
                         },
                     ],
@@ -141,6 +142,9 @@ export const BugHuntFormConfig: FormDefinition = {
             ],
             instructions: 'How do you want your bugs delivered?',
             title: 'Bug Delivery',
+        },
+        {
+            element: <SupportInfoCard />,
         },
     ],
 }

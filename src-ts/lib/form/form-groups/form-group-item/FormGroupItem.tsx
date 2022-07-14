@@ -13,7 +13,7 @@ interface FormGroupItemProps {
 }
 
 const FromGroupItem: React.FC<FormGroupItemProps> = ({ group, renderFormInput }: FormGroupItemProps) => {
-    const { instructions, title, inputs }: FormGroup = group
+    const { instructions, title, inputs, element }: FormGroup = group
 
     const formInputs: Array<JSX.Element | undefined> = inputs?.map((field: FormInputModel, index: number) => renderFormInput(field as FormInputModel, index)) || []
 
@@ -32,6 +32,7 @@ const FromGroupItem: React.FC<FormGroupItemProps> = ({ group, renderFormInput }:
                         </div>
                     )
                 }
+                {element}
                 <div className={cn(styles['right'])}>
                     {formInputs}
                 </div>

@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { Form, IconOutline, InfoCard, PageDivider } from '../../../../../lib'
+import { useCheckIsMobile } from '../../../../../lib/hooks'
 import { workBugHuntConfig } from '../../../work-lib'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
@@ -10,6 +11,8 @@ import styles from './BugHunt.module.scss'
 import { DeliverablesInfoCard } from './deliverables-info-card'
 
 const BugHuntIntakeForm: React.FC = () => {
+
+    const isMobile: boolean = useCheckIsMobile()
 
     const requestGenerator: () => void = () => { }
 
@@ -31,9 +34,10 @@ const BugHuntIntakeForm: React.FC = () => {
                 showIcon
             />
             <div className={styles['bug-hunt-wrapper']}>
-                <DeliverablesInfoCard />
+                <DeliverablesInfoCard isMobile={isMobile} />
                 <InfoCard
                     color='success'
+                    defaultOpen={!isMobile}
                     isCollapsible
                     title={`About ${workBugHuntConfig.type}`}
                 >

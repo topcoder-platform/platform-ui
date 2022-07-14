@@ -5,4 +5,8 @@
     border-bottom: $border solid $black-10;
     margin: $pad-xxxxl 0;
     width: 100%;
+
+    @include ltemd {
+        margin: $pad-xxl 0;
+    }
 }
