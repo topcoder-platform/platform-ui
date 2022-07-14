@@ -6,10 +6,12 @@
         "start": "sh start-ssl.sh",
         "start:bsouza": "sh start-ssl-bsouza.sh",
         "build": "yarn react-app-rewired build",
-        "lint": "tslint 'src-ts/**/*.{ts,tsx}'",
-        "lint:fix": "tslint 'src-ts/**/*.{ts,tsx}' --fix",
-        "eslint": "eslint 'src/**/*.{js,jsx}'",
-        "eslint:fix": "eslint 'src/**/*.{js,jsx}' --fix",
+        "lint:ts": "eslint -c ./src-ts/.eslintrc.js 'src-ts/**/*.{ts,tsx}'",
+        "lint:ts:fix": "eslint -c ./src-ts/.eslintrc.js 'src-ts/**/*.{ts,tsx}' --fix",
+        "lint:js": "eslint -c ./src/.eslintrc.js 'src/**/*.{js,jsx}'",
+        "lint:js:fix": "eslint -c ./src/.eslintrc.js 'src/**/*.{js,jsx}' --fix",
+        "lint": "npm run lint:js && npm run lint:ts",
+        "lint:fix": "npm run lint:js:fix && npm run lint:ts:fix",
         "test": "react-scripts test --watchAll",
         "test:no-watch": "react-scripts test --watchAll=false --passWithNoTests"
     },
@@ -77,6 +79,8 @@
         "@types/react-redux-toastr": "^7.6.2",
         "@types/react-router-dom": "^5.3.3",
         "@types/systemjs": "^6.1.0",
+        "@typescript-eslint/eslint-plugin": "^5.30.6",
+        "@typescript-eslint/parser": "^5.30.6",
         "autoprefixer": "^9.8.6",
         "babel-eslint": "^11.0.0-beta.2",
         "babel-jest": "^24.9.0",
@@ -86,11 +90,14 @@
         "concurrently": "^5.0.1",
         "config": "^3.3.6",
         "cross-env": "^7.0.2",
-        "eslint": "^8.18.0",
-        "eslint-config-prettier": "^6.7.0",
+        "eslint": "^7.32.0 || ^8.2.0",
+        "eslint-config-airbnb": "^19.0.4",
         "eslint-config-react-app": "^7.0.1",
-        "eslint-config-react-important-stuff": "^2.0.0",
-        "eslint-plugin-prettier": "^3.1.1",
+        "eslint-import-resolver-typescript": "^3.2.5",
+        "eslint-plugin-import": "^2.25.3",
+        "eslint-plugin-jsx-a11y": "^6.5.1",
+        "eslint-plugin-react": "^7.28.0",
+        "eslint-plugin-react-hooks": "^4.3.0",
         "file-loader": "^6.2.0",
         "husky": "^8.0.0",
         "identity-obj-proxy": "^3.0.0",
@@ -110,15 +117,6 @@
         "webpack-config-single-spa-react": "^1.0.3",
         "webpack-dev-server": "^3.9.0",
         "webpack-merge": "^4.2.2"
-    },
-    "eslintConfig": {
-        "extends": [
-            "react-app",
-            "react-app/jest"
-        ],
-        "rules": {
-            "no-useless-escape": 0
-        }
     },
     "browserslist": {
         "production": [
