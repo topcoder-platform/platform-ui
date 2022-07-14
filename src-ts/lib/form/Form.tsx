@@ -12,6 +12,7 @@ import {
 } from 'react'
 
 import { Button } from '../button'
+import { PageDivider } from '../page-divider'
 import '../styles/index.scss'
 import { IconOutline } from '../svgs'
 
@@ -150,6 +151,8 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                     onBlur={onBlur}
                     onChange={onChange}
                 />
+
+                <PageDivider />
 
                 <div className={classNames(styles['form-footer'], 'form-footer')}>
                     {!!formError && (
