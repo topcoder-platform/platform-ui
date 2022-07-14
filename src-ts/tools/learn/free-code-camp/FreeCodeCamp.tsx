@@ -1,11 +1,10 @@
 import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { NavigateFunction, Params, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 
 import {
     Breadcrumb,
     BreadcrumbItemModel,
     LoadingSpinner,
-    Portal,
     profileContext,
     ProfileContextData,
 } from '../../../lib'
@@ -216,40 +215,38 @@ const FreeCodeCamp: FC<{}> = () => {
             <Breadcrumb items={breadcrumb} />
 
             {lesson && (
-                <Portal portalId='page-subheader-portal-el'>
-                    <div className={styles['main-wrap']}>
-                        <div className={styles['course-outline-pane']}>
-                            <CollapsiblePane title='Course Outline'>
-                                <div className={styles['course-outline-wrap']}>
-                                    <div className={styles['course-outline-title']}>
-                                        {courseData?.title}
-                                    </div>
-                                    <CourseOutline
-                                        course={courseData}
-                                        ready={courseDataReady}
-                                        currentStep={`${moduleParam}/${lessonParam}`}
-                                        progress={certificateProgress}
-                                    />
+                <div className={styles['main-wrap']}>
+                    <div className={styles['course-outline-pane']}>
+                        <CollapsiblePane title='Course Outline'>
+                            <div className={styles['course-outline-wrap']}>
+                                <div className={styles['course-outline-title']}>
+                                    {courseData?.title}
                                 </div>
-                            </CollapsiblePane>
-                        </div>
-
-                        <div className={styles['course-frame']}>
-                            <TitleNav
-                                title={currentModuleData?.meta.name}
-                                currentStep={currentStepIndex}
-                                maxStep={currentModuleData?.lessons.length ?? 0}
-                                onNavigate={handleNavigate}
-                            />
-                            <hr />
-                            <FccFrame
-                                lesson={lesson}
-                                onFccLessonChange={handleFccLessonReady}
-                                onFccLessonComplete={handleFccLessonComplete}
-                            />
-                        </div>
+                                <CourseOutline
+                                    course={courseData}
+                                    ready={courseDataReady}
+                                    currentStep={`${moduleParam}/${lessonParam}`}
+                                    progress={certificateProgress}
+                                />
+                            </div>
+                        </CollapsiblePane>
                     </div>
-                </Portal>
+
+                    <div className={styles['course-frame']}>
+                        <TitleNav
+                            title={currentModuleData?.meta.name}
+                            currentStep={currentStepIndex}
+                            maxStep={currentModuleData?.lessons.length ?? 0}
+                            onNavigate={handleNavigate}
+                        />
+                        <hr />
+                        <FccFrame
+                            lesson={lesson}
+                            onFccLessonChange={handleFccLessonReady}
+                            onFccLessonComplete={handleFccLessonComplete}
+                        />
+                    </div>
+                </div>
             )}
         </>
     )

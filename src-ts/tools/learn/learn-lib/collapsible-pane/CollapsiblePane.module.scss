@@ -16,6 +16,12 @@
             display: none;
         }
     }
+
+    @include ltemd {
+        &:global(.to-left) {
+            flex-direction: column-reverse;
+        }
+    }
 }
 
 .pane-outline {
@@ -24,9 +30,6 @@
     border-radius: 0 $pad-lg $pad-lg 0;
     padding: $pad-lg 0;
     background: $blue-140;
-
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
 
     display: flex;
     align-items: center;
@@ -41,6 +44,23 @@
 
     svg {
         @include icon-lg;
+    }
+
+    @include gtelg {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+    }
+    
+    @include ltemd {
+        width: 100%;
+        height: auto;
+        padding: $pad-sm $pad-lg;
+        border-radius: 0 0 $pad-lg $pad-lg;
+        margin-top: -1px;
+
+        svg {
+            transform: rotate(90deg);
+        }
     }
 }
 

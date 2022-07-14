@@ -61,6 +61,11 @@
 
 .content {
     margin-left: 34px;
+    padding-right: $pad-xxxxl;
+
+    @include ltemd {
+        padding-right: $pad-xxl;
+    }
 }
 
 
