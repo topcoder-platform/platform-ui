@@ -14,8 +14,6 @@ const BugHuntIntakeForm: React.FC = () => {
 
     const onSave: (val: any) => Promise<void> = (val: any) => new Promise(() => {}).then(() => {})
 
-    // TODO - Put icon in WorkServicePrice
-
     return (
         <>
             <WorkTypeBanner
