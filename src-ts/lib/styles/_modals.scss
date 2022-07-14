@@ -25,6 +25,7 @@
 
         @include ltemd {
             max-width: 450px;
+            padding: $pad-xxl $pad-lg;
         }
 
         @include gtemd {

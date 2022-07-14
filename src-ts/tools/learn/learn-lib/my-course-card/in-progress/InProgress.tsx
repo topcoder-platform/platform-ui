@@ -90,7 +90,7 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
                     <div className={styles['summary']}>
                         <CurriculumSummary
                             moduleCount={course?.modules.length ?? 0}
-                            completionHours={course?.completionHours ?? 0}
+                            completionHours={course?.estimatedCompletionTime}
                         />
                         <div className={styles['button']}>
                             <Button
