@@ -7,7 +7,8 @@ module.exports = {
     extends: [
         'plugin:react/recommended',
         'airbnb',
-        "plugin:@typescript-eslint/recommended"
+        'plugin:@typescript-eslint/recommended',
+        'prettier'
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
@@ -32,21 +33,22 @@ module.exports = {
         }
     },
     rules: {
-        "@typescript-eslint/explicit-function-return-type": "off",
-        "@typescript-eslint/no-shadow": "error",
-        "import/extensions": "off",
-        "import/prefer-default-export": "off",
-        "indent": [2, 4],
-        "no-shadow": "off",
-        "react-hooks/exhaustive-deps": "warn",
-        "react-hooks/rules-of-hooks": "error",
-        "react/function-component-definition": [2, { "namedComponents": "arrow-function" }],
-        "react/jsx-filename-extension": [1, { "extensions": [".tsx", ".jsx"] }],
-        "react/jsx-indent-props": [2, 4],
-        "react/jsx-indent": [2, 4],
-        "react/jsx-props-no-spreading": [2, {html: "ignore"}],
-        "react/react-in-jsx-scope": "off",
-        "react/require-default-props": "off",
-        "semi": ["error", "never"],
+        '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/no-shadow': 'error',
+        'import/extensions': 'off',
+        'import/prefer-default-export': 'off',
+        'indent': [2, 4, {SwitchCase: 1}],
+        'no-shadow': 'off',
+        'react-hooks/exhaustive-deps': 'warn',
+        'react-hooks/rules-of-hooks': 'error',
+        'react/function-component-definition': [2, { 'namedComponents': 'arrow-function' }],
+        'react/jsx-filename-extension': [1, { 'extensions': ['.tsx', '.jsx'] }],
+        'react/jsx-indent-props': [2, 4],
+        'react/jsx-indent': [2, 4],
+        'react/jsx-props-no-spreading': [2, {html: 'ignore'}],
+        'react/react-in-jsx-scope': 'off',
+        'react/require-default-props': 'off',
+        'semi': ['error', 'never'],
+        'no-use-before-define': ['error', { 'functions': false }],
     },
 };
