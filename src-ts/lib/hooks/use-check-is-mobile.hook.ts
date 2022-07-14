@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
 function checkIsMobile(): boolean {
-    return window.innerWidth <= 744
+    return window.innerWidth <= 744  // ltemd
 }
 
 export function useCheckIsMobile(): boolean {
