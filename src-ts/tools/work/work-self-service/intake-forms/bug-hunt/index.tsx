@@ -10,12 +10,12 @@ const BugHuntIntakeForm: React.FC = () => {
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
     const requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => void = (inputs) => {
-        const projectTitle: string = formGetInputModel(inputs, FormInputNames.projectTitle).value as string
-        const featuresToTest: string = formGetInputModel(inputs, FormInputNames.featuresToTest).value as string
+        const projectTitle: string = formGetInputModel(inputs, FormInputNames.title).value as string
+        const featuresToTest: string = formGetInputModel(inputs, FormInputNames.features).value as string
         const deliveryType: string = formGetInputModel(inputs, FormInputNames.deliveryType).value as string
         const repositoryLink: string = formGetInputModel(inputs, FormInputNames.repositoryLink).value as string
         const websiteURL: string = formGetInputModel(inputs, FormInputNames.websiteURL).value as string
-        const bugHuntGoals: string = formGetInputModel(inputs, FormInputNames.bugHuntGoals).value as string
+        const bugHuntGoals: string = formGetInputModel(inputs, FormInputNames.goals).value as string
         return {
             bugHuntGoals,
             deliveryType,

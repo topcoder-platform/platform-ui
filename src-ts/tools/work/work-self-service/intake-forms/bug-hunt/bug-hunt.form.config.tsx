@@ -1,13 +1,11 @@
 
 import { ReactComponent as BackIcon } from '../../../../../../src/assets/images/icon-back-arrow.svg'
-import { FormDefinition } from '../../../../../lib'
-
-import { BugDeliveryRadioButton } from './bug-delivery-radio-button'
+import { FormDefinition, GithubIcon, GitlabIcon, RadioButton } from '../../../../../lib'
 
 export enum FormInputNames {
-    projectTitle = 'projectTitle',
-    featuresToTest = 'featuresToTest',
-    bugHuntGoals = 'bugHuntGoals',
+    title = 'projectTitle',
+    features = 'featuresToTest',
+    goals = 'bugHuntGoals',
     deliveryType = 'deliveryType',
     repositoryLink = 'repositoryLink',
     websiteURL = 'websiteURL',
@@ -49,7 +47,7 @@ export const BugHuntFormConfig: FormDefinition = {
                     },
                     ],
                     label: 'Project title',
-                    name: FormInputNames.projectTitle,
+                    name: FormInputNames.title,
                     placeholder: 'Enter a descriptive title',
                     type: 'text',
                 },
@@ -85,7 +83,7 @@ export const BugHuntFormConfig: FormDefinition = {
                         },
                     ],
                     label: 'Project title',
-                    name: FormInputNames.bugHuntGoals,
+                    name: FormInputNames.goals,
                     placeholder: 'Describe your goal',
                     type: 'textarea',
                 },
@@ -106,7 +104,7 @@ export const BugHuntFormConfig: FormDefinition = {
                     },
                     ],
                     label: 'Features to test (optional)',
-                    name: FormInputNames.featuresToTest,
+                    name: FormInputNames.features,
                     placeholder: 'List the sepcific features',
                     type: 'textarea',
                 },
@@ -125,17 +123,16 @@ export const BugHuntFormConfig: FormDefinition = {
                     options: [
                         {
                             checked: false,
-                            children: <BugDeliveryRadioButton name={'GitHub'} />,
+                            children: <RadioButton name={'GitHub'} icon={<GithubIcon />} />,
                             id: 'github',
                         },
                         {
                             checked: false,
-                            children: <BugDeliveryRadioButton name={'GitLab'} />,
+                            children: <RadioButton name={'GitLab'} icon={<GitlabIcon />} />,
                             id: 'gitlab',
                         },
                     ],
                     type: 'radio',
-                    value: 'gitlab',
                 },
                 {
                     events: [

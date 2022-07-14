@@ -1,4 +1,4 @@
-@import '../../../../../../lib/styles/includes';
+@import '../styles/includes';
 
 .bug-delivery-radio {
     border: 1px solid $black-100;
@@ -9,9 +9,19 @@
     align-items: center;
     flex-direction: column;
     cursor: pointer;
+    svg {
+        path {
+            fill: $tc-black;
+        }
+    }
     &.selected {
         background-color: $turq-160;
         border: 1px solid $turq-160;
+        svg {
+            path {
+                fill: $tc-white;
+            }
+        }
         .name {
             color: $tc-white;
         }
@@ -21,5 +31,5 @@
         font-size: 20px;
         font-weight: 700;
         margin-top: $pad-sm;
-    }    
+    }
 }

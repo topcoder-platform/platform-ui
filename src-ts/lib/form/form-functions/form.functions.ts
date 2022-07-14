@@ -33,9 +33,8 @@ export function initializeValues<T>(inputs: Array<FormInputModel>, formValues?: 
     inputs
         .filter(input =>  !input.dirty && !input.touched)
         .forEach(input => {
-            const typeCastedInput: FormInputModel = input as FormInputModel
-            typeCastedInput.value = !!(formValues as any)?.hasOwnProperty(typeCastedInput.name)
-            ? (formValues as any)[typeCastedInput.name]
+            input.value = !!(formValues as any)?.hasOwnProperty(input.name)
+            ? (formValues as any)[input.name]
             : undefined
         })
 }
