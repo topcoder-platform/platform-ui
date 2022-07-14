@@ -49,14 +49,21 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         const [formRef]: [RefObject<HTMLFormElement>, Dispatch<SetStateAction<RefObject<HTMLFormElement>>>]
             = useState<RefObject<HTMLFormElement>>(createRef<HTMLFormElement>())
+        const [isFormValid, setFormValid] = useState<boolean>(false)
 
         // This will hold all the inputs
         const [inputs, setInputs]: [Array<FormInputModel>, Dispatch<SetStateAction<Array<FormInputModel>>>] = useState<Array<FormInputModel>>(formGetInputFields(formDef.groups || []))
 
+        function checkIfFormIsValid(formInputFields: Array<FormInputModel>): void {
+            setFormValid(formInputFields.filter(item => !!item.error).length > 0)
+        }
+
         function onBlur(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>): void {
             formOnBlur(event, inputs, props.formValues)
             setFormDef({ ...formDef })
-            setInputs(formGetInputFields(formDef.groups || []))
+            const formInputFields: Array<FormInputModel> = formGetInputFields(formDef.groups || [])
+            setInputs(formInputFields)
+            checkIfFormIsValid(formInputFields)
         }
 
         function onChange(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void {
@@ -90,7 +97,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         formInitializeValues(inputs, props.formValues)
 
-        const createButtonGroup: (groups: ReadonlyArray<FormButton>) => Array<JSX.Element> = (groups) => {
+        const createButtonGroup: (groups: ReadonlyArray<FormButton>, isPrimaryGroup: boolean) => Array<JSX.Element> = (groups, isPrimaryGroup) => {
             return groups.map((button, index) => {
                 // if this is a reset button, set its onclick to reset
                 if (!!button.isReset) {
@@ -99,19 +106,21 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                         onClick: onReset,
                     }
                 }
+                console.log(isFormValid, 'isFormValid')
                 return (
                     <Button
                         {...button}
                         key={button.label}
+                        disable={isPrimaryGroup && isFormValid}
                         tabIndex={button.notTabble ? -1 : index + (inputs ? inputs.length : 0) + (formDef.tabIndexStart || 0)}
                     />
                 )
             })
         }
 
-        const secondaryGroupButtons: Array<JSX.Element> = createButtonGroup(formDef.buttons.secondaryGroup || [])
+        const secondaryGroupButtons: Array<JSX.Element> = createButtonGroup(formDef.buttons.secondaryGroup || [], false)
 
-        const primaryGroupButtons: Array<JSX.Element> = createButtonGroup(formDef.buttons.primaryGroup)
+        const primaryGroupButtons: Array<JSX.Element> = createButtonGroup(formDef.buttons.primaryGroup, true)
 
         // set the max width of the form error so that it doesn't push the width of the form wider
         const errorsRef: RefObject<HTMLDivElement> = createRef<HTMLDivElement>()

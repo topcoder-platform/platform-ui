@@ -13,6 +13,7 @@ interface InputWrapperProps {
     readonly dirty?: boolean
     readonly disabled: boolean
     readonly error?: string
+    readonly hideInlineErrors?: boolean
     readonly hint?: string
     readonly label: string
     readonly tabIndex: number
@@ -23,7 +24,8 @@ const InputWrapper: FC<InputWrapperProps> = (props: InputWrapperProps) => {
 
     const [focusStyle, setFocusStyle]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
 
-    const showError: boolean = !!props.error && !!props.dirty
+    const isShowError: () => boolean = () => !!props.error && !!props.dirty && !!!props.hideInlineErrors
+    const showError: boolean = isShowError()
     const formFieldClasses: string = classNames(
         styles.input,
         styles[props.type],
