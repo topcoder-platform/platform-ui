@@ -1,6 +1,7 @@
 import React from 'react'
 
-import { Form } from '../../../../../lib'
+import { Form, InfoCard, PageDivider } from '../../../../../lib'
+import { workBugHuntConfig } from '../../../work-lib'
 
 import { BugHuntFormConfig } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
@@ -15,6 +16,14 @@ const BugHuntIntakeForm: React.FC = () => {
     return (
         <div className={styles['bug-hunt-wrapper']}>
             <DeliverablesInfoCard />
+            <InfoCard
+                color='success'
+                isCollapsible
+                title={`About ${workBugHuntConfig.type}`}
+            >
+                {workBugHuntConfig.about}
+            </InfoCard>
+            <PageDivider />
             <Form formDef={BugHuntFormConfig} requestGenerator={requestGenerator} save={onSave} />
         </div>
     )

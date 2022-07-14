@@ -2,20 +2,22 @@
 @import "../../../styles/includes";
 
 .form-group-item {
-    padding: $pad-xxxxl 0;
-    border-bottom: $border solid $black-10;
     display: flex;
+
     &.single-field {
         border-bottom: none;
         padding: 0;
+
         .right {
             margin-top: 0;
         }
     }
+
     @include ltemd {
         flex-direction: column;
         padding: $pad-xxl 0 $pad-sm 0;
     }
+
     &:last-child {
         border-bottom: none;
         padding-bottom: 0;
@@ -23,19 +25,23 @@
 
     .left {
         flex: 1;
+
         .title {
             @extend .body-medium-bold;
             text-transform: uppercase;
         }
+
         .group-item-instructions {
             @extend .body-small;
             @include font-roboto;
             margin-top: $pad-xxl;
         }
     }
+
     .right {
         flex: 1;
         margin-top: 46px;
+
         @include ltemd {
             margin-top: $pad-xxl;
         }
