@@ -55,12 +55,14 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         const [inputs, setInputs]: [Array<FormInputModel>, Dispatch<SetStateAction<Array<FormInputModel>>>] = useState<Array<FormInputModel>>(formGetInputFields(formDef.groups || []))
         const [isFormInvalid, setFormInvalid]: [boolean, Dispatch<boolean>] = useState<boolean>(inputs.filter(item => !!item.error).length > 0)
 
-        function initializeFormValidation(): void {
-            // if (!formRef.current?.elements) {
-            //     return
-            // }
+        useEffect(() => {
+            if (!formRef.current?.elements) {
+                return
+            }
             validateForm(formRef.current?.elements, 'initial', inputs)
-        }
+            checkIfFormIsValid(inputs)
+        }, [])
+
         function checkIfFormIsValid(formInputFields: Array<FormInputModel>): void {
             setFormInvalid(formInputFields.filter(item => !!item.error).length > 0)
         }
@@ -105,7 +107,6 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         }
 
         formInitializeValues(inputs, props.formValues)
-        initializeFormValidation()
 
         const createButtonGroup: (groups: ReadonlyArray<FormButton>, isPrimaryGroup: boolean) => Array<JSX.Element> = (groups, isPrimaryGroup) => {
             return groups.map((button, index) => {
