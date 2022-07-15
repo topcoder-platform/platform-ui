@@ -11,7 +11,7 @@ export function getInputElement(formElements: HTMLFormControlsCollection, fieldN
 
 export function getFormInputFields(groups: ReadonlyArray<FormGroup>): Array<FormInputModel> {
     const formInputs: Array<FormInputModel> = groups.reduce((current: Array<FormInputModel>, previous: FormGroup) => {
-        const formGroupInputs: Array<FormInputModel> = previous.inputs || []
+        const formGroupInputs: ReadonlyArray<FormInputModel> = previous.inputs || []
         return [...current, ...formGroupInputs]
     }, []) as Array<FormInputModel>
     return formInputs
@@ -33,9 +33,8 @@ export function initializeValues<T>(inputs: Array<FormInputModel>, formValues?: 
     inputs
         .filter(input =>  !input.dirty && !input.touched)
         .forEach(input => {
-            const typeCastedInput: FormInputModel = input as FormInputModel
-            typeCastedInput.value = !!(formValues as any)?.hasOwnProperty(typeCastedInput.name)
-            ? (formValues as any)[typeCastedInput.name]
+            input.value = !!(formValues as any)?.hasOwnProperty(input.name)
+            ? (formValues as any)[input.name]
             : undefined
         })
 }

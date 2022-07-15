@@ -1,7 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import React from "react";
 import ReviewLegacy from "../../ReviewLegacy";
-import ThankYou from "../../ThankYou";
 import LoginPrompt from "../../LoginPrompt";
 import BasicInfoLegacy from "../../BasicInfoLegacy";
 import BrandingLegacy from "../../BrandingLegacy";
@@ -52,11 +51,6 @@ export default function WebsiteDesignLegacy({ isLoggedIn }) {
           />
         }
         path="/review"
-      />
-
-      <Route
-        element={<ThankYou />}
-        path="/thank-you"
       />
 
     </Routes>

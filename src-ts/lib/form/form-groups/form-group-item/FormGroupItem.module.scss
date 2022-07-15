@@ -24,7 +24,6 @@
     .left {
         flex: 1;
         .title {
-            @extend .body-medium-bold;
             text-transform: uppercase;
         }
         .group-item-instructions {
