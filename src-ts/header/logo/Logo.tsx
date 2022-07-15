@@ -3,8 +3,6 @@ import { Link, useLocation } from 'react-router-dom'
 
 import {
     LogoIcon,
-    profileContext,
-    ProfileContextData,
     routeContext,
     RouteContextData,
 } from '../../lib'
@@ -14,16 +12,11 @@ import styles from './Logo.module.scss'
 
 const Logo: FC<{}> = () => {
 
-    const { isLoggedIn }: ProfileContextData = useContext<ProfileContextData>(profileContext)
-    const {
-        isRootRoute,
-        rootLoggedInRoute,
-        rootLoggedOutRoute,
-    }: RouteContextData = useContext(routeContext)
+    const routeContextData: RouteContextData = useContext(routeContext)
 
     // the logo should be a link to the home page for all pages except the home page
-    const isLink: boolean = !isRootRoute(useLocation().pathname)
-    const rootRoute: string = isLoggedIn ? rootLoggedInRoute : rootLoggedOutRoute
+    const isLink: boolean = !routeContextData.isRootRoute(useLocation().pathname)
+    const rootRoute: string = routeContextData.rootLoggedInRoute || ''
 
     return (
         <div className={styles[`logo-${!isLink ? 'no-' : ''}link`]}>

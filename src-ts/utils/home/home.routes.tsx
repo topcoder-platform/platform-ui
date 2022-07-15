@@ -2,11 +2,13 @@ import { PlatformRoute } from '../../lib'
 
 import { default as Home } from './Home'
 
+export const homeRoute: string = ''
+
 export const homeRoutes: Array<PlatformRoute> = [
     {
         element: <Home />,
         hide: true,
-        route: '',
+        route: homeRoute,
         title: 'Home page',
     },
 ]

@@ -1,2 +1,2 @@
 export { default as ContactSupportForm } from './ContactSupportForm'
-export { contactSupportFormDef } from './contact-support-form.config'
+export { contactSupportFormDef, contactSupportPath } from './contact-support-form.config'

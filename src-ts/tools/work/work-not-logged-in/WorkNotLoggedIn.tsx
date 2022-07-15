@@ -31,11 +31,10 @@ const WorkNotLoggedIn: FC<{}> = () => {
     const navigate: NavigateFunction = useNavigate()
 
     useEffect(() => {
-        if (initialized) {
-            setLoading(false)
-        }
         if (isLoggedIn) {
             navigate(dashboardRoute)
+        } else if (initialized) {
+            setLoading(false)
         }
     }, [isLoggedIn, initialized, navigate])
 

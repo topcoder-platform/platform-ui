@@ -64,3 +64,5 @@ export const contactSupportFormDef: FormDefinition = {
     ],
     successMessage: 'Your request has been submitted.',
 }
+
+export const contactSupportPath: string = '/support'
