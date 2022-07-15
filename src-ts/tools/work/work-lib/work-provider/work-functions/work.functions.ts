@@ -21,7 +21,7 @@ import {
 } from './work-store'
 
 export async function createAsync(type: WorkType): Promise<void> {
-    const workConfig: WorkTypeConfig = WorkTypeConfigs[WorkType.bugHunt]
+    const workConfig: WorkTypeConfig = WorkTypeConfigs[type]
     const body: ChallengeCreateBody = workFactoryBuildCreateBody(workConfig)
     return workStoreCreateAsync(body)
 }

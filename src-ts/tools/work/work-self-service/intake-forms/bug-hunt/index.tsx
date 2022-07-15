@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
 import { Form, IconOutline } from '../../../../../lib'
+import { Challenge, workCreateAsync, WorkType } from '../../../work-lib'
 import { bugHuntConfig } from '../../../work-lib/work-provider/work-functions/work-store/work-type.config'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
@@ -8,11 +9,31 @@ import { WorkTypeBanner } from '../../../work-type-banner'
 import { BugHuntFormConfig } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
 
-const BugHuntIntakeForm: React.FC = () => {
+interface BugHuntIntakeFormProps {
+    workId?: string
+}
 
-    const requestGenerator: () => void = () => {}
+const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
 
-    const onSave: (val: any) => Promise<void> = (val: any) => new Promise(() => {}).then(() => {})
+    const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
+
+    useEffect(() => {
+        const useEffectAsync: () => Promise<void> = async () => {
+            if (!workId) {
+                // create challenge
+                const response: any = await workCreateAsync(WorkType.bugHunt)
+                setChallenge(response)
+            } else {
+                // TODO: fetch challenge using workId
+            }
+        }
+
+        useEffectAsync()
+    }, [workId])
+
+    const requestGenerator: () => void = () => { }
+
+    const onSave: (val: any) => Promise<void> = (val: any) => new Promise(() => { }).then(() => { })
 
     return (
         <>
