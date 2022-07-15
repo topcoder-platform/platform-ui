@@ -7,6 +7,6 @@ export const EnvironmentConfigDev: GlobalConfig = {
     ...EnvironmentConfigDefault,
     DISABLED_TOOLS: [],
     ENV: AppHostEnvironment.dev,
-    LEARN_SRC: 'https://freecodecamp.topcoder-dev.com/',
+    LEARN_SRC: 'https://freecodecamp.topcoder-dev.com',
     TAG_MANAGER_ID: 'GTM-W7B537Z',
 }
