@@ -157,6 +157,11 @@ h4 {
     }
 }
 
+.body-large-bold {
+    @extend .body-large;
+    font-weight: $font-weight-bold;
+}
+
 .body-large-medium {
     font-weight: $font-weight-medium;
     font-size: 24px;

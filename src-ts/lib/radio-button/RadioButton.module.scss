@@ -1,0 +1,34 @@
+@use '../styles/typography';
+@import '../styles/includes';
+
+.bug-delivery-radio {
+    border: 1px solid $black-100;
+    border-radius: 4px;
+    padding: $pad-lg 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    cursor: pointer;
+    svg {
+        path {
+            fill: $tc-black;
+        }
+    }
+    &.selected {
+        background-color: $turq-160;
+        border: 1px solid $turq-160;
+        svg {
+            path {
+                fill: $tc-white;
+            }
+        }
+        .name {
+            color: $tc-white;
+        }
+    }
+    .name {
+        @extend .body-large-bold;
+        margin-top: $pad-sm;
+    }
+}
