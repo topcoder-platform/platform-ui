@@ -1,6 +1,7 @@
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 
 import { Button } from '../../../lib'
+import { selfServiceRootRoute } from '../work.routes'
 
 import styles from './WorkThankYou.module.scss'
 
@@ -13,7 +14,7 @@ const WorkThankYou: () => JSX.Element = () => {
   }
 
   const onDone: () => Promise<void> = async () => {
-    navigate('/self-service')
+    navigate(selfServiceRootRoute)
   }
 
   clearPreviousForm()

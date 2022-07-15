@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import React from "react";
 import ReviewLegacy from "../../ReviewLegacy";
-import ThankYou from "../../ThankYou";
+import { WorkThankYou } from "../../../../src-ts/tools/work/work-thank-you";
 import LoginPrompt from "../../LoginPrompt";
 import BasicInfoLegacy from "../../BasicInfoLegacy";
 import BrandingLegacy from "../../BrandingLegacy";
@@ -55,7 +55,7 @@ export default function WebsiteDesignLegacy({ isLoggedIn }) {
       />
 
       <Route
-        element={<ThankYou />}
+        element={<WorkThankYou />}
         path="/thank-you"
       />
 
