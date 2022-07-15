@@ -61,8 +61,8 @@ export const workRoutes: Array<PlatformRoute> = [
     {
         element: <WorkThankYou />,
         hide: true,
-        route: `/${selfServiceRootRoute}/work/thank-you`,
-        title: toolTitle,
+        route: `/${selfServiceRootRoute}${rootRoute}/new/:workType/thank-you`,
+        title: `${toolTitle} Thank You`,
     },
     {
         element: <Navigate to={dashboardRoute} />,

@@ -7,45 +7,45 @@ import styles from './WorkThankYou.module.scss'
 
 const WorkThankYou: () => JSX.Element = () => {
 
-  const navigate: NavigateFunction = useNavigate()
+    const navigate: NavigateFunction = useNavigate()
 
-  const clearPreviousForm: () => void = () => {
-    // TODO in PROD-2441 - Whichever form clearing mechanism is coded in PROD-2441 should be called here.
-  }
+    const clearPreviousForm: () => void = () => {
+        // TODO in PROD-2441 - Whichever form clearing mechanism is coded in PROD-2441 should be called here.
+    }
 
-  const onDone: () => Promise<void> = async () => {
-    navigate(selfServiceRootRoute)
-  }
+    const onDone: () => Promise<void> = async () => {
+        navigate(selfServiceRootRoute)
+    }
 
-  clearPreviousForm()
+    clearPreviousForm()
 
-  return (
-    <>
-      <div className={styles.container}>
-        <div className='body-main'>
-          <h2>THANK YOU</h2>
+    return (
+        <>
+            <div className={styles.container}>
+                <div className='body-main'>
+                    <h2>THANK YOU</h2>
 
-          <div className={styles.contentContainer}>
-            <p>Your payment has been processed successfully.</p>
+                    <div className={styles.contentContainer}>
+                        <p>Your payment has been processed successfully.</p>
 
-            <p>
-              You can now go to the Dashboard to manage the work you've
-              submitted.
-            </p>
+                        <p>
+                            You can now go to the Dashboard to manage the work you've
+                            submitted.
+                        </p>
 
-            <p>
-              If your changes do not appear immediately, please reload the
-              page.
-            </p>
-          </div>
-          <Button
-            label='Go to Dashboard'
-            onClick={onDone}
-          />
-        </div>
-      </div>
-    </>
-  )
+                        <p>
+                            If your changes do not appear immediately, please reload the
+                            page.
+                        </p>
+                    </div>
+                    <Button
+                        label='Go to Dashboard'
+                        onClick={onDone}
+                    />
+                </div>
+            </div>
+        </>
+    )
 }
 
 export default WorkThankYou
