@@ -1,22 +1,22 @@
-@import '../../../lib/styles/mixins';
-@import '../../../lib/styles/variables';
+@import '../../../lib/styles/includes';
 
 .heroContainer {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   padding: 0px 0px 0px 0px;
-  gap: 24px;
+  gap: $pad-xxl;
 
 
   height: 104px;
 
   background: linear-gradient(84.92deg, #363D8C 2.08%, #723390 97.43%);
+
   border-radius: 0px;
 
   /* Inside auto layout */
   flex: none;
-  order: 2;
+
   align-self: stretch;
   flex-grow: 0;
 
@@ -34,15 +34,14 @@
   }
 
   &.website-bug-hunt {
-    background: linear-gradient(84.92deg, #363D8C 2.08%, #723390 97.43%);
+    background: $tc-grad12;
   }
 
-  margin-bottom: -35px;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 
 
-  @include ltelg {
+  @include ltemd {
     height: 283px;
     overflow: hidden;
     flex-direction: column;
@@ -68,7 +67,7 @@
 
     border-radius: 0 8px 8px 0;
 
-    @include ltelg {
+    @include ltemd {
       width: 100%;
       height: 156px;
       order: 0;
@@ -78,7 +77,7 @@
       background: url("./images/bug-hunt.png");
       background-size: cover;
 
-      @include ltelg {
+      @include ltemd {
         background: url("./images/bug-hunt-mobile.png");
         background-size: cover;
         background-position: bottom;
@@ -89,7 +88,7 @@
       background: url("./images/data-exploration.png");
       background-size: cover;
 
-      @include ltelg {
+      @include ltemd {
         background: url("./images/data-exploration-mobile.png");
         background-size: cover;
         background-position: bottom;
@@ -100,7 +99,7 @@
       background: url("./images/find-me-data.png");
       background-size: cover;
 
-      @include ltelg {
+      @include ltemd {
         background: url("./images/find-me-data-mobile.png");
         background-size: cover;
         background-position: bottom;
@@ -111,7 +110,7 @@
       background: url("./images/problem-statement.png");
       background-size: cover;
 
-      @include ltelg {
+      @include ltemd {
         background: url("./images/problem-statement-mobile.png");
         background-size: cover;
         background-position: bottom;
@@ -123,7 +122,7 @@
       background: url("./images/website-design-v2.png");
       background-size: cover;
 
-      @include ltelg {
+      @include ltemd {
         background: url("./images/website-design-banner-mobile.png");
         background-size: cover;
         background-position: bottom;
@@ -135,22 +134,22 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    padding: 16px 0px;
+    padding: $pad-lg 0px;
     color: $tc-white;
 
     position: static;
-    left: 32px;
+    left: $pad-xxxxl;
     top: 0px;
 
     /* Inside auto layout */
     flex: none;
     order: 0;
     flex-grow: 1;
-    margin: 0px 24px;
+    margin: 0px $pad-xxxl;
 
-    @include ltelg {
-      margin: 0px 16px;
-      padding: 8px 0px;
+    @include ltemd {
+      margin: 0px $pad-lg;
+      padding: $pad-sm 0px;
     }
 
     .heroHeader {
@@ -175,10 +174,10 @@
         display: flex;
         flex-direction: row;
         align-items: flex-start;
-        margin-right: 16px;
+        margin-right: $pad-lg;
 
         position: static;
-        width: 40px;
+        width: $pad-mx;
         left: 0px;
         top: 0px;
       }
@@ -188,7 +187,7 @@
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        row-gap: 16px;
+        row-gap: $pad-lg;
         padding: 0px;
 
         position: static;
@@ -203,17 +202,17 @@
         font-size: 42px;
         font-weight: 400;
 
-        @include ltelg {
+        @include ltemd {
           flex: auto;
         }
 
         .heroHeaderTitle {
-          height: 32px;
+          height: $pad-xxxxl;
           font-family: 'Barlow Condensed';
           font-style: normal;
           font-weight: 600;
           font-size: 34px;
-          line-height: 32px;
+          line-height: $pad-xxxxl;
           text-transform: uppercase;
           color: #FFFFFF;
 
@@ -223,20 +222,20 @@
           align-self: stretch;
           flex-grow: 0;
 
-          @include ltelg {
+          @include ltemd {
             font-size: 28px;
-            line-height: 32px;
+            line-height: $pad-xxxxl;
             width: 288px;
           }
         }
 
         .heroHeaderSubtitle {
-          height: 24px;          
+          height: $pad-xxl;          
           font-family: 'Roboto';
           font-style: normal;
           font-weight: 700;
           font-size: 16px;
-          line-height: 24px;          
+          line-height: $pad-xxl;          
           color: #FFFFFF;
 
           /* Inside auto layout */
@@ -245,9 +244,9 @@
      			align-self: stretch;
           flex-grow: 0;
 
-          @include ltelg {
+          @include ltemd {
             font-size: 14px;
-            line-height: 20px;
+            line-height: $pad-xl;
             width: 288px;
             height: 60px;
           }
@@ -267,7 +266,7 @@
       font-style: normal;
       font-weight: normal;
       font-size: 24px;
-      line-height: 32px;
+      line-height: $pad-xxxxl;
       /* or 133% */
 
       /* gray/white */
@@ -275,7 +274,7 @@
 
       /* Inside auto layout */
       order: 1;
-      margin: 16px 0px;
+      margin: $pad-lg 0px;
       flex: none;
       align-self: stretch;
       flex-grow: 0;
@@ -288,7 +287,7 @@
   column-gap: 8px;
   justify-content: space-around;
 
-  @include ltelg {
+  @include ltemd {
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;

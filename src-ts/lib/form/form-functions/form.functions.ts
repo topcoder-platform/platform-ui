@@ -2,10 +2,19 @@ import { ChangeEvent, FormEvent } from 'react'
 import { toast } from 'react-toastify'
 
 import { FormDefinition } from '../form-definition.model'
+import { FormGroup } from '../form-group.model'
 import { FormInputModel } from '../form-input.model'
 
 export function getInputElement(formElements: HTMLFormControlsCollection, fieldName: string): HTMLInputElement {
     return formElements.namedItem(fieldName) as HTMLInputElement
+}
+
+export function getFormInputFields(groups: ReadonlyArray<FormGroup>): Array<FormInputModel> {
+    const formInputs: Array<FormInputModel> = groups.reduce((current: Array<FormInputModel>, previous: FormGroup) => {
+        const formGroupInputs: Array<FormInputModel> = previous.inputs || []
+        return [...current, ...formGroupInputs]
+    }, []) as Array<FormInputModel>
+    return formInputs
 }
 
 export function getInputModel(inputs: ReadonlyArray<FormInputModel>, fieldName: string): FormInputModel {
@@ -20,13 +29,14 @@ export function getInputModel(inputs: ReadonlyArray<FormInputModel>, fieldName: 
     return formField
 }
 
-export function initializeValues<T>(inputs: ReadonlyArray<FormInputModel>, formValues?: T): void {
+export function initializeValues<T>(inputs: Array<FormInputModel>, formValues?: T): void {
     inputs
-        .filter(input => !input.dirty && !input.touched)
+        .filter(input =>  !input.dirty && !input.touched)
         .forEach(input => {
-            input.value = !!(formValues as any)?.hasOwnProperty(input.name)
-                ? (formValues as any)[input.name]
-                : undefined
+            const typeCastedInput: FormInputModel = input as FormInputModel
+            typeCastedInput.value = !!(formValues as any)?.hasOwnProperty(typeCastedInput.name)
+            ? (formValues as any)[typeCastedInput.name]
+            : undefined
         })
 }
 
@@ -39,13 +49,13 @@ export function onChange<T>(event: ChangeEvent<HTMLInputElement | HTMLTextAreaEl
 }
 
 export function onReset(inputs: ReadonlyArray<FormInputModel>, formValue?: any): void {
-    inputs
-        .forEach(inputDef => {
-            inputDef.dirty = false
-            inputDef.touched = false
-            inputDef.error = undefined
-            inputDef.value = formValue?.[inputDef.name]
-        })
+    inputs?.forEach(inputDef => {
+        const typeCastedInput: FormInputModel = inputDef as FormInputModel
+        typeCastedInput.dirty = false
+        typeCastedInput.touched = false
+        typeCastedInput.error = undefined
+        typeCastedInput.value = formValue?.[inputDef.name]
+    })
 }
 
 export async function onSubmitAsync<T>(
@@ -58,23 +68,27 @@ export async function onSubmitAsync<T>(
 
     event.preventDefault()
 
-    const { inputs, shortName, successMessage }: FormDefinition = formDef
+    const { groups, shortName, successMessage }: FormDefinition = formDef
+    const inputs: Array<FormInputModel> = getFormInputFields(groups || [])
 
     // get the dirty fields before we validate b/c validation marks them dirty on submit
-    const dirty: FormInputModel | undefined = inputs.find(fieldDef => !!fieldDef.dirty)
+    const dirty: FormInputModel | undefined = inputs?.find(fieldDef => !!fieldDef.dirty)
 
     // if there are any validation errors, display a message and stop submitting
     // NOTE: need to check this before we check if the form is dirty bc you
     // could have a form that's not dirty but has errors and you wouldn't
     // want to have it look like the submit succeeded
     const formValues: HTMLFormControlsCollection = (event.target as HTMLFormElement).elements
-    const isValid: boolean = validateForm(inputs, formValues, 'submit')
+    const isValid: boolean = validateForm(formValues, 'submit', inputs)
     if (!isValid) {
         return Promise.reject()
     }
 
     // set the properties for the updated T value
-    inputs.forEach(field => (formValue as any)[field.name] = field.value)
+    inputs
+        .forEach((field) => {
+            (formValue as any)[field.name] = field.value
+        })
 
     // if there are no dirty fields, don't actually perform the save
     const savePromise: Promise<void> = !dirty ? Promise.resolve() : save(formValue)
@@ -98,6 +112,7 @@ function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, inpu
     const originalValue: string | undefined = (formValues as any)?.[input.name]
 
     const inputDef: FormInputModel = getInputModel(inputs, input.name)
+
     if (event === 'change') {
         inputDef.dirty = input.value !== originalValue
     }
@@ -154,9 +169,8 @@ function validateField(formInputDef: FormInputModel, formElements: HTMLFormContr
         })
 }
 
-function validateForm(inputs: ReadonlyArray<FormInputModel>, formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit'): boolean {
-    const errors: ReadonlyArray<FormInputModel> = inputs
-        .filter(formInputDef => {
+function validateForm(formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit', inputs: ReadonlyArray<FormInputModel>): boolean {
+    const errors: ReadonlyArray<FormInputModel> = inputs?.filter(formInputDef => {
             formInputDef.dirty = formInputDef.dirty || event === 'submit'
             validateField(formInputDef, formElements, event)
             return !!formInputDef.error

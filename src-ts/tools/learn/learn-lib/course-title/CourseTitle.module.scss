@@ -8,6 +8,14 @@
     @include ltelg {
         gap: $pad-sm;
     }
+
+    @include ltemd {
+        &:global(.xl) {
+            flex-direction: column;
+            text-align: center;
+            gap: $pad-lg;
+        }
+    }
 }
 
 .title-row {
@@ -29,6 +37,12 @@
         color: #767676;
         display: block;
         &:global(.lg) {
+            margin-top: $pad-sm;
+        }
+    }
+
+    @include ltemd {
+        :global(.quote-small.xl) {
             margin-top: $pad-sm;
         }
     }

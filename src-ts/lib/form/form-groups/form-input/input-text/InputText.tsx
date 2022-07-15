@@ -5,6 +5,8 @@ import { InputWrapper } from '../input-wrapper'
 
 import styles from './InputText.module.scss'
 
+export type InputTextTypes = 'password' | 'text'
+
 interface InputTextProps {
     readonly autocomplete?: FormInputAutocompleteOption
     readonly dirty?: boolean
@@ -18,7 +20,7 @@ interface InputTextProps {
     readonly placeholder?: string
     readonly spellCheck?: boolean
     readonly tabIndex: number
-    readonly type: 'password' | 'text'
+    readonly type: InputTextTypes
     readonly value?: string | number
 }
 
