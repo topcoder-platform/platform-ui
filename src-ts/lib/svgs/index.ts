@@ -3,9 +3,7 @@ import * as IconOutline from '@heroicons/react/outline'
 import * as IconSolid from '@heroicons/react/solid'
 
 import { ReactComponent as ActiveTabTipIcon } from './activetab-tip-icon.svg'
-import { ReactComponent as GithubSelectedIcon } from './github-selected.svg'
 import { ReactComponent as GithubIcon } from './github.svg'
-import { ReactComponent as GitlabSelectedIcon } from './gitlab-selected.svg'
 import { ReactComponent as GitlabIcon } from './gitlab.svg'
 import { ReactComponent as ArrowIcon } from './icon-arrow.svg'
 import { ReactComponent as LogoIcon } from './logo.svg'
@@ -28,6 +26,4 @@ export { SocialIconTwitter }
 export { SocialIconYoutube }
 export { TooltipArrowIcon }
 export { GitlabIcon }
-export { GitlabSelectedIcon }
-export { GithubSelectedIcon }
 export { GithubIcon }

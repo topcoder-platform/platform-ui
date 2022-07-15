@@ -12,7 +12,7 @@ export interface WorkServicePriceProps {
   price: number,
   serviceType: string,
   showIcon?: boolean,
-  stickerPrice: number
+  stickerPrice?: number
 }
 
 const ServicePrice: FC<WorkServicePriceProps> = (props: WorkServicePriceProps) => {

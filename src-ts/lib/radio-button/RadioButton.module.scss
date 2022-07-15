@@ -1,4 +1,5 @@
-@import '../../../../../../lib/styles/includes';
+@use '../styles/typography';
+@import '../styles/includes';
 
 .bug-delivery-radio {
     border: 1px solid $black-100;
@@ -9,17 +10,25 @@
     align-items: center;
     flex-direction: column;
     cursor: pointer;
+    svg {
+        path {
+            fill: $tc-black;
+        }
+    }
     &.selected {
         background-color: $turq-160;
         border: 1px solid $turq-160;
+        svg {
+            path {
+                fill: $tc-white;
+            }
+        }
         .name {
             color: $tc-white;
         }
     }
     .name {
-        @include font-roboto;
-        font-size: 20px;
-        font-weight: 700;
+        @extend .body-large-bold;
         margin-top: $pad-sm;
-    }    
+    }
 }

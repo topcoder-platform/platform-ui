@@ -24,6 +24,7 @@ import {
     formOnReset,
     formOnSubmitAsync,
 } from './form-functions'
+import { validateForm } from './form-functions/form.functions'
 import { FormGroups } from './form-groups'
 import styles from './Form.module.scss'
 
@@ -49,13 +50,19 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         const [formRef]: [RefObject<HTMLFormElement>, Dispatch<SetStateAction<RefObject<HTMLFormElement>>>]
             = useState<RefObject<HTMLFormElement>>(createRef<HTMLFormElement>())
-        const [isFormValid, setFormValid] = useState<boolean>(false)
 
         // This will hold all the inputs
         const [inputs, setInputs]: [Array<FormInputModel>, Dispatch<SetStateAction<Array<FormInputModel>>>] = useState<Array<FormInputModel>>(formGetInputFields(formDef.groups || []))
+        const [isFormInvalid, setFormInvalid]: [boolean, Dispatch<boolean>] = useState<boolean>(inputs.filter(item => !!item.error).length > 0)
 
+        function initializeFormValidation(): void {
+            // if (!formRef.current?.elements) {
+            //     return
+            // }
+            validateForm(formRef.current?.elements, 'initial', inputs)
+        }
         function checkIfFormIsValid(formInputFields: Array<FormInputModel>): void {
-            setFormValid(formInputFields.filter(item => !!item.error).length > 0)
+            setFormInvalid(formInputFields.filter(item => !!item.error).length > 0)
         }
 
         function onBlur(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>): void {
@@ -68,8 +75,10 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         function onChange(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void {
             formOnChange(event, inputs, props.formValues)
-            setInputs(formGetInputFields(formDef.groups || []))
+            const formInputFields: Array<FormInputModel> = formGetInputFields(formDef.groups || [])
+            setInputs(formInputFields)
             setFormDef({ ...formDef })
+            checkIfFormIsValid(formInputFields)
         }
 
         function onReset(): void {
@@ -96,6 +105,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         }
 
         formInitializeValues(inputs, props.formValues)
+        initializeFormValidation()
 
         const createButtonGroup: (groups: ReadonlyArray<FormButton>, isPrimaryGroup: boolean) => Array<JSX.Element> = (groups, isPrimaryGroup) => {
             return groups.map((button, index) => {
@@ -106,12 +116,12 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                         onClick: onReset,
                     }
                 }
-                console.log(isFormValid, 'isFormValid')
+
                 return (
                     <Button
                         {...button}
                         key={button.label}
-                        disable={isPrimaryGroup && isFormValid}
+                        disable={isPrimaryGroup && isFormInvalid}
                         tabIndex={button.notTabble ? -1 : index + (inputs ? inputs.length : 0) + (formDef.tabIndexStart || 0)}
                     />
                 )

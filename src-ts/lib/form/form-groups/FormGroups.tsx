@@ -22,8 +22,7 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
 
     const { formDef, onBlur, onChange }: FormGroupsProps = props
 
-    const renderField: (inputModel: FormInputModel, index: number) => JSX.Element | undefined = (input, index) => {
-
+    const renderInputField: (input: FormInputModel, index: number) => JSX.Element | undefined = (input, index) => {
         const tabIndex: number = input.notTabbable ? -1 : index + 1 + (formDef.tabIndexStart || 0)
 
         let inputElement: JSX.Element
@@ -84,15 +83,6 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                 {inputElement}
             </FormInputRow>
         )
-    }
-
-    const renderInputField: (inputModel: FormInputModel, index: number) => JSX.Element | undefined = (inputModel, index) => {
-
-        if (!inputModel) {
-            return
-        }
-
-        return renderField(inputModel, index)
     }
 
     const formGroups: Array<JSX.Element | undefined> = formDef?.groups?.map((element: FormGroup) => {
