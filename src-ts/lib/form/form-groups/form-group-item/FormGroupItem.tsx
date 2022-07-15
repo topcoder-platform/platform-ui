@@ -25,9 +25,9 @@ const FromGroupItem: React.FC<FormGroupItemProps> = ({ group, renderFormInput }:
                 {
                     isMultiFieldGroup && (
                         <div className={styles['left']}>
-                            <div className={cn(styles['title'])}>
+                            <h3 className={cn(styles['title'])}>
                                 {title}
-                            </div>
+                            </h3>
                             <div className={styles['group-item-instructions']} dangerouslySetInnerHTML={{ __html: instructions || '' }} />
                         </div>
                     )

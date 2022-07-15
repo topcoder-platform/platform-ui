@@ -4,7 +4,6 @@ import React from "react";
 import { WorkType } from "../../../../src-ts";
 
 import Review from "../../Review";
-import ThankYou from "../../ThankYou";
 import LoginPrompt from "../../LoginPrompt";
 import BasicInfo from "../components/BasicInfo";
 import config from "../../../../config";
@@ -69,11 +68,6 @@ export default function FindMeData({ isLoggedIn }) {
           isLoggedIn={isLoggedIn}
         />}
         path="/review"
-      />
-
-      <Route
-        element={<ThankYou />}
-        path="/thank-you"
       />
 
     </Routes>

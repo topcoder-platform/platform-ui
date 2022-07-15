@@ -8,6 +8,7 @@ import FormGroupItem from './form-group-item/FormGroupItem'
 import { InputRating, InputText, InputTextarea } from './form-input'
 import { FormInputRow } from './form-input-row'
 import { InputTextTypes } from './form-input/input-text/InputText'
+import FormRadio from './form-radio'
 import styles from './FormGroups.module.scss'
 
 interface FormGroupsProps {
@@ -21,14 +22,8 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
 
     const { formDef, onBlur, onChange }: FormGroupsProps = props
 
-    const renderInputField: (inputModel: FormInputModel, index: number) => JSX.Element | undefined = (inputModel, index) => {
-
-        if (!inputModel) {
-            return
-        }
-
-        const input: FormInputModel = inputModel as FormInputModel
-        const tabIndex: number = inputModel.notTabbable ? -1 : index + 1 + (formDef.tabIndexStart || 0)
+    const renderInputField: (input: FormInputModel, index: number) => JSX.Element | undefined = (input, index) => {
+        const tabIndex: number = input.notTabbable ? -1 : index + 1 + (formDef.tabIndexStart || 0)
 
         let inputElement: JSX.Element
         switch (input.type) {
@@ -55,7 +50,16 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                     />
                 )
                 break
-
+            case 'checkbox':
+            case 'radio':
+                inputElement = (
+                    <FormRadio
+                        {...input}
+                        onChange={onChange}
+                        value={input.value}
+                    />
+                )
+                break
             default:
                 inputElement = (
                     <InputText
@@ -72,7 +76,7 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
 
         return (
             <FormInputRow
-                key={inputModel.name}
+                key={input.name}
                 index={index}
                 input={input}
             >

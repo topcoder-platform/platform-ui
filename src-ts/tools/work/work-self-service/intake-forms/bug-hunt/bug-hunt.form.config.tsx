@@ -1,7 +1,16 @@
 
 import { ReactComponent as BackIcon } from '../../../../../../src/assets/images/icon-back-arrow.svg'
-import { FormDefinition } from '../../../../../lib'
+import { FormDefinition, GithubIcon, GitlabIcon, RadioButton } from '../../../../../lib'
 import { SupportInfoCard } from '../support-info-card'
+
+export enum FormInputNames {
+    title = 'projectTitle',
+    features = 'featuresToTest',
+    goals = 'bugHuntGoals',
+    deliveryType = 'deliveryType',
+    repositoryLink = 'repositoryLink',
+    websiteURL = 'websiteURL',
+}
 
 export const BugHuntFormConfig: FormDefinition = {
     buttons: {
@@ -16,7 +25,7 @@ export const BugHuntFormConfig: FormDefinition = {
                 buttonStyle: 'primary',
                 label: 'Complete and pay',
                 onClick: () => { },
-                type: 'button',
+                type: 'submit',
             },
         ],
         secondaryGroup: [
@@ -39,7 +48,7 @@ export const BugHuntFormConfig: FormDefinition = {
                         },
                     ],
                     label: 'Project title',
-                    name: 'Project title',
+                    name: FormInputNames.title,
                     placeholder: 'Enter a descriptive title',
                     type: 'text',
                 },
@@ -56,8 +65,8 @@ export const BugHuntFormConfig: FormDefinition = {
                             name: 'onBlur',
                         },
                     ],
-                    label: 'Project title',
-                    name: 'Project title',
+                    label: 'Website URL',
+                    name: FormInputNames.websiteURL,
                     placeholder: 'Enter a descriptive title',
                     type: 'text',
                 },
@@ -75,7 +84,7 @@ export const BugHuntFormConfig: FormDefinition = {
                         },
                     ],
                     label: 'Project title',
-                    name: 'bug-hunt-goals',
+                    name: FormInputNames.goals,
                     placeholder: 'Describe your goal',
                     type: 'textarea',
                 },
@@ -96,7 +105,7 @@ export const BugHuntFormConfig: FormDefinition = {
                         },
                     ],
                     label: 'Features to test (optional)',
-                    name: 'bug-hunt-goals',
+                    name: FormInputNames.features,
                     placeholder: 'List the sepcific features',
                     type: 'textarea',
                 },
@@ -110,22 +119,21 @@ export const BugHuntFormConfig: FormDefinition = {
         {
             inputs: [
                 {
-                    name: 'delivery-type',
+                    name: FormInputNames.deliveryType,
                     notTabbable: false,
                     options: [
                         {
                             checked: false,
-                            children: <div>Option 1</div>,
+                            children: <RadioButton name={'GitHub'} icon={<GithubIcon />} />,
                             id: 'github',
                         },
                         {
                             checked: false,
-                            children: <div>Option 2</div>,
+                            children: <RadioButton name={'GitLab'} icon={<GitlabIcon />} />,
                             id: 'gitlab',
                         },
                     ],
-                    type: 'checkbox',
-                    value: 'github',
+                    type: 'radio',
                 },
                 {
                     events: [
@@ -135,7 +143,7 @@ export const BugHuntFormConfig: FormDefinition = {
                         },
                     ],
                     label: 'Repository Link (Optional)',
-                    name: 'repository-link',
+                    name: FormInputNames.repositoryLink,
                     placeholder: 'www.example-share-link.com',
                     type: 'text',
                 },
