@@ -56,7 +56,6 @@ export const workRoutes: Array<PlatformRoute> = [
     {
         element: <Review />,
         route: `/${selfServiceRootRoute}/work/new/bug-hunt/basic-info/review`,
-        title: toolTitle,
     },
     {
         element: <WorkThankYou />,
