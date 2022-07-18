@@ -55,7 +55,7 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
 
         return workUpdateAsync(WorkType.bugHunt, challenge, val)
             .then(() => {
-                console.log('Updated successfully')
+                // TODO: Navigate to a different page (review, back to dashboard, etc)
             })
     }
 

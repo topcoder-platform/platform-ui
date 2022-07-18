@@ -8,13 +8,13 @@ export const WorkPricesConfig: WorkPricesType = {
     [WorkType.bugHunt]: {
         base: {
             placementDistributions: [0.2609, 0.2174, 0.1304],
-            price: 2,
+            price: 1599,
             reviewerDistributions: [0.0435, 0.0435],
         },
         getPrice: getPriceDefault,
         promo: {
             placementDistributions: [0.348, 0.29, 0.174],
-            price: 1,
+            price: 1599,
             reviewerDistributions: [0.058, 0.058],
         },
         usePromo: true,
