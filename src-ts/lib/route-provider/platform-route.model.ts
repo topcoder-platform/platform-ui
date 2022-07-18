@@ -8,5 +8,5 @@ export interface PlatformRoute {
     memberOnly?: boolean
     requireAuth?: boolean
     route: string
-    title: string
+    title?: string
 }
