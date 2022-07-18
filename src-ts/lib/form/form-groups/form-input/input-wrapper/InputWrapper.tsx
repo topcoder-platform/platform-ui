@@ -24,7 +24,7 @@ const InputWrapper: FC<InputWrapperProps> = (props: InputWrapperProps) => {
 
     const [focusStyle, setFocusStyle]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
 
-    const isShowError: () => boolean = () => !!props.error && !!props.dirty && !!!props.hideInlineErrors
+    const isShowError: () => boolean = () => !!props.error && !!props.dirty && !props.hideInlineErrors
     const showError: boolean = isShowError()
     const formFieldClasses: string = classNames(
         styles.input,
