@@ -4,7 +4,6 @@ import { reviewConfig } from '../../../work-lib/work-provider/work-functions/wor
 import { WorkTypeBanner } from '../../../work-type-banner'
 
 const Review: React.FC = () => {
-    console.log(reviewConfig.type)
     return (
         <div>
             <WorkTypeBanner

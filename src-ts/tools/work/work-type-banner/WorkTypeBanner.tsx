@@ -17,8 +17,6 @@ export const WorkTypeBanner: FC<WorkTypeBannerProps> = (props: WorkTypeBannerPro
     .split('&')
     .join('')
 
-  console.log(styleType, 'styleType')
-
   return (
     <div className={`${styles.heroContainer} ${styles[styleType]}`}>
       <div
