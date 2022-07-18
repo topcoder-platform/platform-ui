@@ -4,6 +4,7 @@ import { FormDefinition } from '../form-definition.model'
 import { FormGroup } from '../form-group.model'
 import { FormInputModel } from '../form-input.model'
 
+import FormCardSet from './form-card-set'
 import FormGroupItem from './form-group-item/FormGroupItem'
 import { InputRating, InputText, InputTextarea } from './form-input'
 import { FormInputRow } from './form-input-row'
@@ -54,6 +55,15 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
             case 'radio':
                 inputElement = (
                     <FormRadio
+                        {...input}
+                        onChange={onChange}
+                        value={input.value}
+                    />
+                )
+                break
+            case 'card-set':
+                inputElement = (
+                    <FormCardSet
                         {...input}
                         onChange={onChange}
                         value={input.value}

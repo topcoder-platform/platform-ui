@@ -1,0 +1,81 @@
+@import '../../../styles/includes';
+
+.form-card-set {
+    display: flex;
+    flex: 1;
+    margin-bottom: $pad-xxl;
+    @include ltemd {
+        flex-direction: column;
+        margin-bottom: $pad-lg;
+    }
+
+    input[type=radio] {
+        position: absolute;
+        opacity: 0;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+    }
+
+    .card {
+        flex: 1;
+        margin-right: $pad-xl;
+        position: relative;
+        border: solid 1px $black-80;
+        border-radius: $pad-xs;
+        padding: $pad-lg;
+        cursor: pointer;
+
+        &.selected {
+            background-color: $turq-160;
+            border: 1px solid $turq-160;
+            color: $tc-white;
+            svg {
+                path {
+                    color: $tc-white;
+                }
+            }
+        }
+
+        @include ltemd {
+            margin-right: 0;
+            margin-bottom: $pad-lg;
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+        &:last-child {
+            margin-right: 0;
+        }
+
+        .card-header {
+            text-align: center;
+        }
+
+        .card-section {
+            margin: $pad-lg 0;
+
+            .card-row {
+                display: flex;
+
+                .card-row-col {
+                    align-content: center;
+                    align-items: center;
+                    width: 50%;
+                    flex-wrap: wrap;
+                    flex-grow: 1;
+                }
+            }
+        }
+    }
+
+    svg.card-row-icon{
+        height: 14px;
+        width: 14px;
+        display: inline;
+        margin-right: 6px;
+    }
+}
+
+
