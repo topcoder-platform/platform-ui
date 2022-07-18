@@ -9,12 +9,13 @@ export interface Challenge {
     description: string
     discussions?: Array<{ [key: string]: string }>
     id: string
-    legacy?: { [key: string]: any },
+    legacy?: { [key: string]: any }
     metadata: Array<ChallengeMetadata>
     name: string
     numOfRegistrants?: number
     numOfSubmissions?: number
     phases: Array<ChallengePhase>
+    prizeSets?: Array<WorkPrize>
     status: string
     tags: Array<ChallengeTag>
     timelineTemplateId?: string
@@ -36,11 +37,13 @@ export type ChallengeCreateBody = Pick<
     'typeId'
 >
 
-export interface ChallengeUpdateBody {
-    description: string,
-    id?: string, // Maria do we include id here?
-    metadata: Array<ChallengeMetadata>
-    name: string,
+export type ChallengeUpdateBody = Pick<
+    Challenge,
+    'description' |
+    'id' |
+    'metadata' |
+    'name' |
+    'prizeSets'
+> & {
     phases: ReadonlyArray<WorkTimelinePhase>
-    prizeSets: Array<WorkPrize>
 }

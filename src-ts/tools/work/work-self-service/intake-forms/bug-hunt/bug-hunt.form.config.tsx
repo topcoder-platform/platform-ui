@@ -6,7 +6,7 @@ export enum FormInputNames {
     additionalInformation = 'additionalInformation',
     title = 'projectTitle',
     features = 'featuresToTest',
-    goals = 'bugHuntGoals',
+    goals = 'goals',
     deliveryType = 'deliveryType',
     repositoryLink = 'repositoryLink',
     websiteURL = 'websiteURL',
@@ -18,13 +18,13 @@ export const BugHuntFormConfig: FormDefinition = {
             {
                 buttonStyle: 'secondary',
                 label: 'Save for later',
-                onClick: () => {},
+                onClick: () => { },
                 type: 'button',
             },
             {
                 buttonStyle: 'primary',
                 label: 'Complete and pay',
-                onClick: () => {},
+                onClick: () => { },
                 type: 'submit',
             },
         ],
@@ -32,7 +32,7 @@ export const BugHuntFormConfig: FormDefinition = {
             {
                 buttonStyle: 'icon',
                 icon: BackIcon,
-                onClick: () => {},
+                onClick: () => { },
                 type: 'button',
             },
         ],
@@ -120,12 +120,12 @@ export const BugHuntFormConfig: FormDefinition = {
                         {
                             checked: false,
                             children: <RadioButton name={'GitHub'} icon={<GithubIcon />} />,
-                            id: 'github',
+                            id: 'GitHub',
                         },
                         {
                             checked: false,
                             children: <RadioButton name={'GitLab'} icon={<GitlabIcon />} />,
-                            id: 'gitlab',
+                            id: 'GitLab',
                         },
                     ],
                     type: 'radio',

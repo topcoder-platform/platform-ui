@@ -95,10 +95,10 @@ export function getStatusFilter(filterKey?: string): WorkStatusFilter | undefine
     return !workStatusFilter ? undefined : WorkStatusFilter[workStatusFilter]
 }
 
-export async function updateAsync(type: WorkType, workId: string, intakeForm: any): Promise<void> {
+export async function updateAsync(type: WorkType, challenge: Challenge, intakeForm: any): Promise<void> {
     const workConfig: WorkTypeConfig = WorkTypeConfigs[type]
-    const body: ChallengeUpdateBody = workFactoryBuildUpdateBody(workConfig, intakeForm)
-    return workStoreUpdateAsync(workId, body)
+    const body: ChallengeUpdateBody = workFactoryBuildUpdateBody(workConfig, challenge, intakeForm)
+    return workStoreUpdateAsync(body)
 }
 
 async function getPageAsync(handle: string, page: Page): Promise<Array<Work>> {

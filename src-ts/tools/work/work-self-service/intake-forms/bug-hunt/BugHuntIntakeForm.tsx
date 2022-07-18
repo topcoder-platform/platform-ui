@@ -1,7 +1,7 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
 import { Form, FormDefinition, formGetInputModel, FormInputModel, IconOutline } from '../../../../../lib'
-import { Challenge, workCreateAsync, WorkType } from '../../../work-lib'
+import { Challenge, workCreateAsync, WorkType, workUpdateAsync } from '../../../work-lib'
 import { bugHuntConfig } from '../../../work-lib/work-provider/work-functions/work-store/work-type.config'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
@@ -39,11 +39,11 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
         const deliveryType: string = formGetInputModel(inputs, FormInputNames.deliveryType).value as string
         const repositoryLink: string = formGetInputModel(inputs, FormInputNames.repositoryLink).value as string
         const websiteURL: string = formGetInputModel(inputs, FormInputNames.websiteURL).value as string
-        const bugHuntGoals: string = formGetInputModel(inputs, FormInputNames.goals).value as string
+        const goals: string = formGetInputModel(inputs, FormInputNames.goals).value as string
         return {
-            bugHuntGoals,
             deliveryType,
             featuresToTest,
+            goals,
             projectTitle,
             repositoryLink,
             websiteURL,
@@ -51,7 +51,12 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
     }
 
     const onSave: (val: any) => Promise<void> = (val: any) => {
-        return new Promise(() => { }).then(() => { })
+        if (!challenge) { return Promise.resolve() }
+
+        return workUpdateAsync(WorkType.bugHunt, challenge, val)
+            .then(() => {
+                console.log('Updated successfully')
+            })
     }
 
     return (

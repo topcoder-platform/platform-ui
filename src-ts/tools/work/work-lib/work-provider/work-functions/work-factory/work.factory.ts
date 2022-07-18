@@ -101,24 +101,28 @@ export function buildCreateBody(workTypeConfig: WorkTypeConfig): ChallengeCreate
     }
 }
 
-export function buildUpdateBody(workTypeConfig: WorkTypeConfig, intakeForm: any): ChallengeUpdateBody {
-    const type: WorkType = workTypeConfig.type
-    const form: any = JSON.parse(intakeForm)?.form
+export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Challenge, formData: any): ChallengeUpdateBody {
 
-    const data: ReadonlyArray<FormDetail> = mapFormData(
-        type,
-        form?.basicInfo
-    )
+    const type: WorkType = workTypeConfig.type
+
+    const intakeForm: ChallengeMetadata | undefined = findMetadata(challenge, ChallengeMetadataName.intakeForm) || undefined
+    const form: IntakeForm = !!intakeForm?.value ? JSON.parse(intakeForm.value)?.form : {}
+    form.basicInfo = formData
 
     const intakeMetadata: Array<ChallengeMetadata> = [
         {
             name: ChallengeMetadataName.intakeForm,
-            value: intakeForm,
+            value: JSON.stringify({ form }),
         },
     ]
 
     // This is the Markdown string that gets displayed in Work Manager app and others
     const templateString: Array<string> = []
+
+    const data: ReadonlyArray<FormDetail> = mapFormData(
+        type,
+        formData
+    )
 
     data.forEach((formDetail) => {
         if (Object.keys(formDetail).length <= 0) { return }
@@ -140,8 +144,9 @@ export function buildUpdateBody(workTypeConfig: WorkTypeConfig, intakeForm: any)
 
     const body: ChallengeUpdateBody = {
         description: templateString.join(''),
+        id: challenge.id,
         metadata: intakeMetadata,
-        name: form?.basicInfo?.projectTitle?.value,
+        name: formData.projectTitle,
         phases: workTypeConfig.timeline,
         prizeSets: getPrizes(workTypeConfig),
     }
@@ -186,9 +191,45 @@ export function mapFormData(type: string, formData: any): ReadonlyArray<FormDeta
             return buildFormDataFindData(formData)
         case (WorkType.design):
             return buildFormDataDesign(formData)
+        case (WorkType.bugHunt):
+            return buildFormDataBugHunt(formData)
         default:
             return formData
     }
+}
+function buildFormDataBugHunt(formData: any): ReadonlyArray<FormDetail> {
+    return [
+        {
+            key: 'projectTitle',
+            title: 'Project Title',
+            value: formData.projectTitle,
+        },
+        {
+            key: 'websiteURL',
+            title: 'Website URL',
+            value: formData.websiteURL,
+        },
+        {
+            key: 'goals',
+            title: 'Bug Hunt Goals',
+            value: formData.goals,
+        },
+        {
+            key: 'featuresToTest',
+            title: 'Features to Test',
+            value: formData.featuresToTest,
+        },
+        {
+            key: 'deliveryType',
+            title: 'Bug Delivery',
+            value: `${formData.deliveryType}${formData.repositoryLink ? ': ' + formData.repositoryLink : ''}`,
+        },
+        {
+            key: 'additionalInformation',
+            title: 'Additional Information',
+            value: formData.additionalInformation,
+        },
+    ]
 }
 
 function buildFormDataData(formData: any): ReadonlyArray<FormDetail> {
