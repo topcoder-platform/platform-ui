@@ -16,6 +16,7 @@ export interface FormInputModel {
     disabled?: boolean
     error?: string
     readonly events?: ReadonlyArray<InputEvent>
+    readonly hideInlineErrors?: boolean
     readonly hint?: string
     readonly id?: string
     readonly instructions?: string

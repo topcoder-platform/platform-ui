@@ -12,6 +12,7 @@ interface InputTextProps {
     readonly dirty?: boolean
     readonly disabled?: boolean
     readonly error?: string
+    readonly hideInlineErrors?: boolean
     readonly hint?: string
     readonly label?: string
     readonly name: string
@@ -32,6 +33,7 @@ const InputText: FC<InputTextProps> = (props: InputTextProps) => {
             dirty={!!props.dirty}
             disabled={!!props.disabled}
             label={props.label || props.name}
+            hideInlineErrors={props.hideInlineErrors}
         >
             <input
                 autoComplete={props.autocomplete}

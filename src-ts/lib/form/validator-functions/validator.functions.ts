@@ -89,7 +89,7 @@ export function matchOther(value: string | boolean | undefined, formElements?: H
 }
 
 export function required(value: string | boolean | undefined): string | undefined {
-    return value === undefined ? 'Required' : undefined
+    return (value === undefined || value === '') ? 'Required' : undefined
 }
 
 export function requiredIfOther(value: string | boolean | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {

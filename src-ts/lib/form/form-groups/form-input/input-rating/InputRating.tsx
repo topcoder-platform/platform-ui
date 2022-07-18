@@ -22,6 +22,7 @@ interface InputRatingProps {
     readonly dirty?: boolean
     readonly disabled?: boolean
     readonly error?: string
+    readonly hideInlineErrors?: boolean
     readonly name: string
     readonly onChange: (event: ChangeEvent<HTMLInputElement>) => void
     readonly tabIndex: number
@@ -72,6 +73,7 @@ const InputRating: FC<InputRatingProps> = (props: InputRatingProps) => {
             label={''}
             type='rating'
             className={styles['rating-input-wrapper']}
+            hideInlineErrors={props.hideInlineErrors}
         >
             <div className={styles['ratings-container']}>
                 {stars}
