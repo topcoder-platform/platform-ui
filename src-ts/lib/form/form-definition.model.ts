@@ -1,9 +1,13 @@
-import { FormButton } from './form-button.model'
-import { FormInputModel } from './form-input.model'
+import { FormButton, FormGroup } from '.'
+
+export interface FormButtons {
+    primaryGroup: ReadonlyArray<FormButton>
+    secondaryGroup?: ReadonlyArray<FormButton>
+}
 
 export interface FormDefinition {
-    readonly buttons: ReadonlyArray<FormButton>
-    readonly inputs: ReadonlyArray<FormInputModel>
+    readonly buttons: FormButtons
+    readonly groups?: Array<FormGroup>
     readonly shortName?: string
     readonly subtitle?: string
     readonly successMessage?: string

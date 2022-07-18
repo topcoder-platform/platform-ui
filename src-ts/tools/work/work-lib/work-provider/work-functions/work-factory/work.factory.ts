@@ -70,6 +70,13 @@ export function create(challenge: Challenge, workPrices: WorkPricesType): Work {
 }
 
 export function buildCreateBody(workTypeConfig: WorkTypeConfig): ChallengeCreateBody {
+
+    const form: IntakeForm = {
+        workType: {
+            selectedWorkType: workTypeConfig.type,
+        },
+    }
+
     return {
         description: 'Information not provided',
         discussions: [
@@ -82,6 +89,10 @@ export function buildCreateBody(workTypeConfig: WorkTypeConfig): ChallengeCreate
         legacy: {
             selfService: true,
         },
+        metadata: [{
+            name: ChallengeMetadataName.intakeForm,
+            value: JSON.stringify({ form }),
+        }],
         name: 'new-self-service-project',
         tags: workTypeConfig.tags,
         timelineTemplateId: workTypeConfig.timelineTemplateId,
@@ -535,7 +546,7 @@ function getType(challenge: Challenge): WorkType {
     // parse the form
     const form: { form: IntakeForm } = JSON.parse(intakeForm.value)
     const workTypeKey: (keyof typeof WorkType) | undefined = Object.entries(WorkType)
-        .find(([key, value]) => value === form.form.workType?.selectedWorkType)
+        .find(([key, value]) => value === form.form?.workType?.selectedWorkType)
         ?.[0] as keyof typeof WorkType
 
     const output: WorkType = !!workTypeKey ? WorkType[workTypeKey] : WorkType.unknown

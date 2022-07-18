@@ -5,7 +5,6 @@ export * from './card'
 export * from './contact-support-form'
 export * from './content-layout'
 export * from './form'
-export * from './global-config.model'
 export {
     analyticsInitialize,
     authUrlLogin,
@@ -24,6 +23,7 @@ export {
     xhrPatchAsync,
     xhrPostAsync,
 } from './functions'
+export * from './global-config.model'
 export * from './hooks'
 export * from './info-card'
 export * from './loading-spinner'
@@ -38,3 +38,4 @@ export * from './svgs'
 export * from './table'
 export * from './tabs-navbar'
 export * from './tooltip'
+export * from './radio-button'

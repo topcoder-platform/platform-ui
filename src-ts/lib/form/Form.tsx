@@ -15,16 +15,17 @@ import { Button } from '../button'
 import '../styles/index.scss'
 import { IconOutline } from '../svgs'
 
-import { FormDefinition } from './form-definition.model'
+import { FormButton, FormDefinition, FormInputModel } from '.'
 import {
+    formGetInputFields,
     formInitializeValues,
     formOnBlur,
     formOnChange,
     formOnReset,
     formOnSubmitAsync,
 } from './form-functions'
-import { FormInputModel } from './form-input.model'
-import { FormInputs } from './form-inputs'
+import { validateForm } from './form-functions/form.functions'
+import { FormGroups } from './form-groups'
 import styles from './Form.module.scss'
 
 interface FormProps<ValueType, RequestType> {
@@ -50,40 +51,65 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         const [formRef]: [RefObject<HTMLFormElement>, Dispatch<SetStateAction<RefObject<HTMLFormElement>>>]
             = useState<RefObject<HTMLFormElement>>(createRef<HTMLFormElement>())
 
+        // This will hold all the inputs
+        const [inputs, setInputs]: [Array<FormInputModel>, Dispatch<SetStateAction<Array<FormInputModel>>>] = useState<Array<FormInputModel>>(formGetInputFields(formDef.groups || []))
+        const [isFormInvalid, setFormInvalid]: [boolean, Dispatch<boolean>] = useState<boolean>(inputs.filter(item => !!item.error).length > 0)
+
+        useEffect(() => {
+            if (!formRef.current?.elements) {
+                return
+            }
+            validateForm(formRef.current?.elements, 'initial', inputs)
+            checkIfFormIsValid(inputs)
+        }, [])
+
+        function checkIfFormIsValid(formInputFields: Array<FormInputModel>): void {
+            setFormInvalid(formInputFields.filter(item => !!item.error).length > 0)
+        }
+
         function onBlur(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>): void {
-            formOnBlur(event, formDef.inputs, props.formValues)
+            formOnBlur(event, inputs, props.formValues)
             setFormDef({ ...formDef })
+            const formInputFields: Array<FormInputModel> = formGetInputFields(formDef.groups || [])
+            setInputs(formInputFields)
+            checkIfFormIsValid(formInputFields)
         }
 
         function onChange(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void {
-            formOnChange(event, formDef.inputs, props.formValues)
+            formOnChange(event, inputs, props.formValues)
+            const formInputFields: Array<FormInputModel> = formGetInputFields(formDef.groups || [])
+            setInputs(formInputFields)
             setFormDef({ ...formDef })
+            checkIfFormIsValid(formInputFields)
         }
 
         function onReset(): void {
-            formOnReset(formDef.inputs, props.formValues)
+            formOnReset(inputs, props.formValues)
             setFormDef({ ...formDef })
+            setInputs(formGetInputFields(formDef.groups || []))
             setFormKey(Date.now())
         }
 
         async function onSubmitAsync(event: FormEvent<HTMLFormElement>): Promise<void> {
-            const values: RequestType = props.requestGenerator(formDef.inputs)
+            const values: RequestType = props.requestGenerator(inputs)
             formOnSubmitAsync<RequestType>(event, formDef, values, props.save, props.onSuccess)
                 .then(() => {
                     setFormKey(Date.now())
-                    formOnReset(formDef.inputs, props.formValues)
+                    formOnReset(inputs, props.formValues)
                     setFormDef({ ...formDef })
+                    setInputs(formGetInputFields(formDef.groups || []))
                 })
                 .catch((error: string | undefined) => {
                     setFormError(error)
                     setFormDef({ ...formDef })
+                    setInputs(formGetInputFields(formDef.groups || []))
                 })
         }
 
-        formInitializeValues(formDef.inputs, props.formValues)
+        formInitializeValues(inputs, props.formValues)
 
-        const buttons: Array<JSX.Element> = formDef.buttons
-            .map((button, index) => {
+        const createButtonGroup: (groups: ReadonlyArray<FormButton>, isPrimaryGroup: boolean) => Array<JSX.Element> = (groups, isPrimaryGroup) => {
+            return groups.map((button, index) => {
                 // if this is a reset button, set its onclick to reset
                 if (!!button.isReset) {
                     button = {
@@ -91,14 +117,21 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                         onClick: onReset,
                     }
                 }
+
                 return (
                     <Button
                         {...button}
                         key={button.label}
-                        tabIndex={button.notTabble ? -1 : index + formDef.inputs.length + (formDef.tabIndexStart || 0)}
+                        disable={isPrimaryGroup && isFormInvalid}
+                        tabIndex={button.notTabble ? -1 : index + (inputs ? inputs.length : 0) + (formDef.tabIndexStart || 0)}
                     />
                 )
             })
+        }
+
+        const secondaryGroupButtons: Array<JSX.Element> = createButtonGroup(formDef.buttons.secondaryGroup || [], false)
+
+        const primaryGroupButtons: Array<JSX.Element> = createButtonGroup(formDef.buttons.primaryGroup, true)
 
         // set the max width of the form error so that it doesn't push the width of the form wider
         const errorsRef: RefObject<HTMLDivElement> = createRef<HTMLDivElement>()
@@ -131,7 +164,8 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                     </div>
                 )}
 
-                <FormInputs
+                <FormGroups
+                    inputs={inputs}
                     formDef={formDef}
                     onBlur={onBlur}
                     onChange={onChange}
@@ -148,7 +182,12 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                         </div>
                     )}
                     <div className={styles['button-container']}>
-                        {buttons}
+                        <div className={styles['left-container']}>
+                            {secondaryGroupButtons}
+                        </div>
+                        <div className={styles['right-container']}>
+                            {primaryGroupButtons}
+                        </div>
                     </div>
                 </div>
 

@@ -32,6 +32,29 @@
         .button-container {
             display: flex;
             justify-content: flex-end;
+            .right-container {
+                display: flex;
+                flex: 1;
+                justify-content: flex-end;
+                button {
+                    margin-right: 16px;
+                    &:last-child {
+                        margin-right: 0;
+                    }
+                }
+            }
+
+            .left-container {
+                display: flex;
+                flex: 1;
+                justify-content: flex-start;
+                button {
+                    margin-right: 16px;
+                    &:last-child {
+                        margin-right: 0;
+                    }
+                }
+            }
         }
 
         .form-error {

@@ -7,7 +7,9 @@ import { WorkTimelinePhase } from './work-timeline-phase.model'
 export interface Challenge {
     created: string
     description: string
+    discussions?: Array<{ [key: string]: string }>
     id: string
+    legacy?: { [key: string]: any },
     metadata: Array<ChallengeMetadata>
     name: string
     numOfRegistrants?: number
@@ -15,19 +17,24 @@ export interface Challenge {
     phases: Array<ChallengePhase>
     status: string
     tags: Array<ChallengeTag>
+    timelineTemplateId?: string
+    trackId?: string
+    typeId?: string
     updated?: string
 }
 
-export interface ChallengeCreateBody {
-    description: string,
-    discussions: Array<{ [key: string]: string }>,
-    legacy: { [key: string]: any },
-    name: string,
-    tags: Array<ChallengeTag>
-    timelineTemplateId: string,
-    trackId: string,
-    typeId: string,
-}
+export type ChallengeCreateBody = Pick<
+    Challenge,
+    'description' |
+    'discussions' |
+    'legacy' |
+    'metadata' |
+    'name' |
+    'tags' |
+    'timelineTemplateId' |
+    'trackId' |
+    'typeId'
+>
 
 export interface ChallengeUpdateBody {
     description: string,
