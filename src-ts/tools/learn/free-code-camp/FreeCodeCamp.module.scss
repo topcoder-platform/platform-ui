@@ -40,6 +40,12 @@
     @include ltemd {
         padding-left: 0;
         flex: 1 1 auto;
+
+        hr {
+            margin-left: $pad-lg;
+            margin-right: $pad-lg;
+            width: calc(100% - 2 * $pad-lg);
+        }
     }
 }
 
