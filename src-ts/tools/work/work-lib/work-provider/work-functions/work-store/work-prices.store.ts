@@ -4,6 +4,7 @@ import { WorkPricesConfig } from './work-prices.config'
 import { WorkType } from './work-type.enum'
 
 export const bugHunt: WorkPrice = WorkPricesConfig[WorkType.bugHunt]
+export const review: WorkPrice = WorkPricesConfig[WorkType.review]
 export const data: WorkPrice = WorkPricesConfig[WorkType.data]
 export const design: WorkPrice = WorkPricesConfig[WorkType.design]
 export const designLegacy: WorkPrice = WorkPricesConfig[WorkType.designLegacy]

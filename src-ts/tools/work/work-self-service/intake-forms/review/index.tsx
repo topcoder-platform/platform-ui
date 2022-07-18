@@ -1,1 +1,1 @@
-export { default as BugHuntIntakeForm } from './Review'
+export { default as Review } from './Review'

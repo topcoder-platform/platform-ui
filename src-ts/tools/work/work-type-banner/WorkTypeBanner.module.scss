@@ -23,9 +23,12 @@
 
   &.website-design,
   &.website-design-legacy,
-  &.data-exploration,
-  &.review--payment {
+  &.data-exploration {
     background: linear-gradient(84.92deg, #065D6E 2.08%, #06596E 2.09%, #3E3B91 97.43%);
+  }
+
+  &.review--payment {
+    background: $tc-grad17;
   }
 
   &.find-me-data,
@@ -120,6 +123,17 @@
     &.website-design,
     &.website-design-legacy {
       background: url("./images/website-design-v2.png");
+      background-size: cover;
+
+      @include ltemd {
+        background: url("./images/website-design-banner-mobile.png");
+        background-size: cover;
+        background-position: bottom;
+      }
+    }
+
+    &.review--payment {
+      background: url("./images/review-banner.png");
       background-size: cover;
 
       @include ltemd {
