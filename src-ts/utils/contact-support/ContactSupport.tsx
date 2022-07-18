@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
-import { ContactSupportForm, contactSupportFormDef, ContentLayout, FormDefinition, formOnReset } from '../../lib'
+import { ContactSupportForm, contactSupportFormDef, ContentLayout, FormDefinition, formGetInputFields, formOnReset } from '../../lib'
 
 export const toolTitle: string = 'Contact Support'
 
@@ -11,7 +11,7 @@ const ContactSupport: FC<{}> = () => {
 
     function onSave(): void {
         const updatedForm: FormDefinition = { ...formDef }
-        formOnReset(updatedForm.inputs)
+        formOnReset(formGetInputFields(updatedForm.groups || []))
         setFormDef(updatedForm)
     }
 

@@ -1,8 +1,9 @@
 
 import { ReactComponent as BackIcon } from '../../../../../../src/assets/images/icon-back-arrow.svg'
-import { FormDefinition, GithubIcon, GitlabIcon, RadioButton } from '../../../../../lib'
+import { FormDefinition, GithubIcon, GitlabIcon, RadioButton, validatorRequired } from '../../../../../lib'
 
 export enum FormInputNames {
+    additionalInformation = 'additionalInformation',
     title = 'projectTitle',
     features = 'featuresToTest',
     goals = 'bugHuntGoals',
@@ -40,16 +41,16 @@ export const BugHuntFormConfig: FormDefinition = {
         {
             inputs: [
                 {
-                    events: [
-                    {
-                        event: () => {},
-                        name: 'onBlur',
-                    },
-                    ],
+                    hideInlineErrors: true,
                     label: 'Project title',
                     name: FormInputNames.title,
                     placeholder: 'Enter a descriptive title',
                     type: 'text',
+                    validators: [
+                        {
+                            validator: validatorRequired,
+                        },
+                    ],
                 },
             ],
             instructions: 'Enter a title for your website bug hunt project.',
@@ -58,16 +59,16 @@ export const BugHuntFormConfig: FormDefinition = {
         {
             inputs: [
                 {
-                    events: [
-                        {
-                            event: () => {},
-                            name: 'onBlur',
-                        },
-                    ],
+                    hideInlineErrors: true,
                     label: 'Website URL',
                     name: FormInputNames.websiteURL,
                     placeholder: 'Enter a descriptive title',
                     type: 'text',
+                    validators: [
+                        {
+                            validator: validatorRequired,
+                        },
+                    ],
                 },
             ],
             instructions: 'Enter a title for your website bug hunt project.',
@@ -76,16 +77,16 @@ export const BugHuntFormConfig: FormDefinition = {
         {
             inputs: [
                 {
-                    events: [
-                        {
-                            event: () => {},
-                            name: 'onBlur',
-                        },
-                    ],
+                    hideInlineErrors: true,
                     label: 'Project title',
                     name: FormInputNames.goals,
                     placeholder: 'Describe your goal',
                     type: 'textarea',
+                    validators: [
+                        {
+                            validator: validatorRequired,
+                        },
+                    ],
                 },
             ],
             instructions: `
@@ -97,12 +98,6 @@ export const BugHuntFormConfig: FormDefinition = {
         {
             inputs: [
                 {
-                    events: [
-                    {
-                        event: () => {},
-                        name: 'onBlur',
-                    },
-                    ],
                     label: 'Features to test (optional)',
                     name: FormInputNames.features,
                     placeholder: 'List the sepcific features',
@@ -118,6 +113,7 @@ export const BugHuntFormConfig: FormDefinition = {
         {
             inputs: [
                 {
+                    hideInlineErrors: true,
                     name: FormInputNames.deliveryType,
                     notTabbable: false,
                     options: [
@@ -133,14 +129,13 @@ export const BugHuntFormConfig: FormDefinition = {
                         },
                     ],
                     type: 'radio',
-                },
-                {
-                    events: [
+                    validators: [
                         {
-                            event: () => {},
-                            name: 'onBlur',
+                            validator: validatorRequired,
                         },
                     ],
+                },
+                {
                     label: 'Repository Link (Optional)',
                     name: FormInputNames.repositoryLink,
                     placeholder: 'www.example-share-link.com',
@@ -149,6 +144,20 @@ export const BugHuntFormConfig: FormDefinition = {
             ],
             instructions: 'How do you want your bugs delivered?',
             title: 'Bug Delivery',
+        },
+        {
+            inputs: [
+                {
+                    label: 'Additional information (optional)',
+                    name: FormInputNames.additionalInformation,
+                    placeholder: '[Suggestion text]',
+                    type: 'textarea',
+                },
+            ],
+            instructions: `
+                Is there anything else we should know about testing your website?
+            `,
+            title: 'Additional Information',
         },
     ],
 }
