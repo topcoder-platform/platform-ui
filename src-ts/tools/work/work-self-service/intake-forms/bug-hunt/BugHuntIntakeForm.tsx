@@ -1,12 +1,12 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
 import { Form, FormDefinition, formGetInputModel, FormInputModel, IconOutline } from '../../../../../lib'
-import { Challenge, workCreateAsync, WorkType, workUpdateAsync } from '../../../work-lib'
+import { Challenge, ChallengeMetadataName, workCreateAsync, WorkType, workUpdateAsync } from '../../../work-lib'
 import { bugHuntConfig } from '../../../work-lib/work-provider/work-functions/work-store/work-type.config'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
 
-import { BugHuntFormConfig, FormInputNames } from './bug-hunt.form.config'
+import { BugHuntFormConfig } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
 
 interface BugHuntIntakeFormProps {
@@ -34,12 +34,12 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
     }, [workId])
 
     const requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => void = (inputs) => {
-        const projectTitle: string = formGetInputModel(inputs, FormInputNames.title).value as string
-        const featuresToTest: string = formGetInputModel(inputs, FormInputNames.features).value as string
-        const deliveryType: string = formGetInputModel(inputs, FormInputNames.deliveryType).value as string
-        const repositoryLink: string = formGetInputModel(inputs, FormInputNames.repositoryLink).value as string
-        const websiteURL: string = formGetInputModel(inputs, FormInputNames.websiteURL).value as string
-        const goals: string = formGetInputModel(inputs, FormInputNames.goals).value as string
+        const projectTitle: string = formGetInputModel(inputs, ChallengeMetadataName.projectTitle).value as string
+        const featuresToTest: string = formGetInputModel(inputs, ChallengeMetadataName.featuresToTest).value as string
+        const deliveryType: string = formGetInputModel(inputs, ChallengeMetadataName.deliveryType).value as string
+        const repositoryLink: string = formGetInputModel(inputs, ChallengeMetadataName.repositoryLink).value as string
+        const websiteURL: string = formGetInputModel(inputs, ChallengeMetadataName.websiteURL).value as string
+        const goals: string = formGetInputModel(inputs, ChallengeMetadataName.goals).value as string
         return {
             deliveryType,
             featuresToTest,

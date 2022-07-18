@@ -6,6 +6,7 @@ import {
     ChallengeCreateBody,
     ChallengeMetadata,
     ChallengeMetadataName,
+    ChallengeMetadataTitle,
     ChallengePhase,
     ChallengePhaseName,
     ChallengeUpdateBody,
@@ -109,6 +110,11 @@ export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Chall
     const form: IntakeForm = !!intakeForm?.value ? JSON.parse(intakeForm.value)?.form : {}
     form.basicInfo = formData
 
+    // TODO: Add the progress.currentStep to form to determine if it's in the review phase (review page)
+    // or not. The legacy intakes use currentStep 7 for review and 5 for taking the user to the login step
+    // as those numbers map to the routes configured for each work type (see IntakeForm.jsx for an example).
+    // We can probably clean that up as we don't need that many routes
+
     const intakeMetadata: Array<ChallengeMetadata> = [
         {
             name: ChallengeMetadataName.intakeForm,
@@ -200,33 +206,33 @@ export function mapFormData(type: string, formData: any): ReadonlyArray<FormDeta
 function buildFormDataBugHunt(formData: any): ReadonlyArray<FormDetail> {
     return [
         {
-            key: 'projectTitle',
-            title: 'Project Title',
+            key: ChallengeMetadataName.projectTitle,
+            title: ChallengeMetadataTitle.projectTitle,
             value: formData.projectTitle,
         },
         {
-            key: 'websiteURL',
-            title: 'Website URL',
+            key: ChallengeMetadataName.websiteURL,
+            title: ChallengeMetadataTitle.websiteURL,
             value: formData.websiteURL,
         },
         {
-            key: 'goals',
-            title: 'Bug Hunt Goals',
+            key: ChallengeMetadataName.goals,
+            title: ChallengeMetadataTitle.bugHuntGoals,
             value: formData.goals,
         },
         {
-            key: 'featuresToTest',
-            title: 'Features to Test',
+            key: ChallengeMetadataName.featuresToTest,
+            title: ChallengeMetadataTitle.featuresToTest,
             value: formData.featuresToTest,
         },
         {
-            key: 'deliveryType',
-            title: 'Bug Delivery',
+            key: ChallengeMetadataName.deliveryType,
+            title: ChallengeMetadataTitle.bugDeliveryType,
             value: `${formData.deliveryType}${formData.repositoryLink ? ': ' + formData.repositoryLink : ''}`,
         },
         {
-            key: 'additionalInformation',
-            title: 'Additional Information',
+            key: ChallengeMetadataName.additionalInformation,
+            title: ChallengeMetadataTitle.additionalInformation,
             value: formData.additionalInformation,
         },
     ]

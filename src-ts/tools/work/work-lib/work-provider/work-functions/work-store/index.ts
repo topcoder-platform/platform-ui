@@ -1,4 +1,5 @@
 export * from './challenge-metadata-name.enum'
+export * from './challenge-metadata-title.enum'
 export * from './challenge-metadata.model'
 export * from './challenge-phase'
 export * from './challenge-phase-name.enum'

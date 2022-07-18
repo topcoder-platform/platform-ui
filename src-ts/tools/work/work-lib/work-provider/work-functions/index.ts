@@ -2,6 +2,7 @@ export * from './work-factory'
 export {
     type Challenge,
     ChallengeMetadataName,
+    ChallengeMetadataTitle,
     type Work,
     workPriceData,
     workPriceDesign,
