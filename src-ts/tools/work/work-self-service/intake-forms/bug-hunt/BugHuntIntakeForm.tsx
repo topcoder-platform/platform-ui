@@ -1,6 +1,7 @@
-import React, { Dispatch, SetStateAction, useState } from 'react'
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
 import { Form, FormDefinition, formGetInputModel, FormInputModel, IconOutline } from '../../../../../lib'
+import { Challenge, workCreateAsync, WorkType } from '../../../work-lib'
 import { bugHuntConfig } from '../../../work-lib/work-provider/work-functions/work-store/work-type.config'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
@@ -8,10 +9,29 @@ import { WorkTypeBanner } from '../../../work-type-banner'
 import { BugHuntFormConfig, FormInputNames } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
 
-const BugHuntIntakeForm: React.FC = () => {
+interface BugHuntIntakeFormProps {
+    workId?: string
+}
 
+const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
+
+    const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
+
+    useEffect(() => {
+        const useEffectAsync: () => Promise<void> = async () => {
+            if (!workId) {
+                // create challenge
+                const response: any = await workCreateAsync(WorkType.bugHunt)
+                setChallenge(response)
+            } else {
+                // TODO: fetch challenge using workId
+            }
+        }
+
+        useEffectAsync()
+    }, [workId])
 
     const requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => void = (inputs) => {
         const projectTitle: string = formGetInputModel(inputs, FormInputNames.title).value as string
@@ -31,7 +51,7 @@ const BugHuntIntakeForm: React.FC = () => {
     }
 
     const onSave: (val: any) => Promise<void> = (val: any) => {
-        return new Promise(() => {}).then(() => {})
+        return new Promise(() => { }).then(() => { })
     }
 
     return (

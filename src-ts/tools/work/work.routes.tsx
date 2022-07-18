@@ -20,9 +20,7 @@ export function workDetailRoute(workId: string, tab?: string): string {
 export const workRoutes: Array<PlatformRoute> = [
     {
         element: <WorkNotLoggedIn />,
-        hide: true,
         route: rootRoute,
-        title: 'Logged Out Landing',
     },
     {
         alternativePaths: [selfServiceRootRoute],
@@ -49,14 +47,11 @@ export const workRoutes: Array<PlatformRoute> = [
     },
     {
         element: <Navigate to={rootRoute} />,
-        hide: true,
         route: selfServiceRootRoute,
-        title: 'Obsolete Self Service Logged Out Landing',
     },
     {
         element: <BugHuntIntakeForm />,
         route: `/${selfServiceRootRoute}/work/new/bug-hunt/basic-info`,
-        title: toolTitle,
     },
     {
         element: <Review />,
@@ -65,14 +60,10 @@ export const workRoutes: Array<PlatformRoute> = [
     },
     {
         element: <WorkThankYou />,
-        hide: true,
         route: `/${selfServiceRootRoute}${rootRoute}/new/:workType/thank-you`,
-        title: `${toolTitle} Thank You`,
     },
     {
         element: <Navigate to={dashboardRoute} />,
-        hide: true,
         route: `${selfServiceRootRoute}/dashboard`,
-        title: 'Obsolete Self Service Dashboard',
     },
 ]

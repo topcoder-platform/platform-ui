@@ -19,6 +19,7 @@ export {
 } from './work-store'
 export * from './work-by-status.model'
 export {
+    createAsync as workCreateAsync,
     createFromChallenge as workCreateFromChallenge,
     deleteAsync as workDeleteAsync,
     getAllAsync as workGetAllAsync,
