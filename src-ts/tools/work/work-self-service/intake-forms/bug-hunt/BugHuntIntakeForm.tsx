@@ -15,6 +15,7 @@ const BugHuntIntakeForm: React.FC = () => {
     const isMobile: boolean = useCheckIsMobile()
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
+
     const requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => void = (inputs) => {
         const projectTitle: string = formGetInputModel(inputs, FormInputNames.title).value as string
         const featuresToTest: string = formGetInputModel(inputs, FormInputNames.features).value as string
