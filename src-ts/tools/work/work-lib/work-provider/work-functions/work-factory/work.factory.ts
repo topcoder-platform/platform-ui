@@ -236,7 +236,7 @@ function buildFormBughunt(formData: any): ReadonlyArray<FormDetail> {
             ...formData.additionalInformation,
         },
         {
-            key: 'package',
+            key: 'packageType',
             ...formData.package,
         },
     ]
