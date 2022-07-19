@@ -18,8 +18,8 @@
         .link {
             color: $link-blue-dark;
             cursor: pointer;
-            margin-left: 10px;
-            margin-top: 4px;
+            margin-left: $pad-md;
+            margin-top: $pad-xs;
             text-transform: none;
     
             &:hover {
