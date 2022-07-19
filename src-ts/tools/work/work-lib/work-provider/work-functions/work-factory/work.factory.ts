@@ -114,6 +114,7 @@ export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Chall
     // as those numbers map to the routes configured for each work type (see IntakeForm.jsx for an example).
     // We can probably clean that up as we don't need that many routes
 
+    // --- Build Metadata --- //
     const intakeMetadata: Array<ChallengeMetadata> = [
         {
             name: ChallengeMetadataName.intakeForm,
@@ -121,7 +122,15 @@ export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Chall
         },
     ]
 
-    // This is the Markdown string that gets displayed in Work Manager app and others
+    Object.keys(formData).forEach((key) => {
+        intakeMetadata.push({
+            name: ChallengeMetadataName[key as keyof typeof ChallengeMetadataName],
+            value: formData[key],
+        })
+    })
+    // ---- End Build Metadata ---- //
+
+    // --- Build the Markdown string that gets displayed in Work Manager app and others --- //
     const templateString: Array<string> = []
 
     const data: ReadonlyArray<FormDetail> = mapFormData(
@@ -133,11 +142,6 @@ export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Chall
         if (Object.keys(formDetail).length <= 0) { return }
 
         const formattedValue: string = formatFormDataOption(formDetail.value)
-
-        intakeMetadata.push({
-            name: ChallengeMetadataName[formDetail.key as keyof typeof ChallengeMetadataName],
-            value: formattedValue,
-        })
         templateString.push(`### ${formDetail.title}\n\n${formattedValue}\n\n`)
     })
 
@@ -146,6 +150,7 @@ export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Chall
             '## Final Submission Guidelines \n\n Please submit a zip file containing your analysis/solution.'
         )
     }
+    // ---- End Build Markdown string ---- //
 
     const body: ChallengeUpdateBody = {
         description: templateString.join(''),
@@ -350,6 +355,11 @@ function buildFormDataProblem(formData: any): ReadonlyArray<FormDetail> {
     ]
 }
 
+/**
+ * This function checks if the param provided is empty based on its type
+ * The param is empty if: is falsey || is an empty string || is an empty array || is an empty object
+ * This is used for determining if a form field entry is emtpy after being formatted for display
+ */
 function checkFormDataOptionEmpty(detail: any): boolean {
     return (
         !detail ||
