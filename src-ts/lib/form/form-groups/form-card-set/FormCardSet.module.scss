@@ -19,9 +19,8 @@
     }
 
     .card {
-        flex: 1;
+        flex: 1 1 0;
         margin-right: $pad-xl;
-        position: relative;
         border: solid 1px $black-80;
         border-radius: $pad-xs;
         padding: $pad-lg;

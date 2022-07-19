@@ -28,7 +28,6 @@ const FormCardSet: React.FC<FormCardSetProps> = ({ name, cards, onChange, value 
                 cards?.map(card => {
                     const formattedPrice: string | undefined = textFormatMoneyLocaleString(card.price)
                     const selected: boolean = value === card.id
-                    console.log('value', value, 'card.id', card.id)
 
                     return (
 
