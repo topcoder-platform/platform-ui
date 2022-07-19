@@ -4,6 +4,7 @@ export {
     ChallengeMetadataName,
     ChallengeMetadataTitle,
     type Work,
+    workBugHuntConfig,
     workPriceData,
     workPriceDesign,
     workPriceDesignLegacy,

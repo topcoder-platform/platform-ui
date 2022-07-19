@@ -19,25 +19,19 @@
         display: flex;
         flex-direction: column;
         width: 100%;
-        margin-top: auto;
-        margin-bottom: -#{$pad-md};
-        padding-top: $pad-xs;
-        border-top: 1px solid $black-10;
-
-        @include gtemd {
-            margin: $pad-xl 0 0;
-            padding-top: $pad-xxxl;
-        }
 
         .button-container {
             display: flex;
             justify-content: flex-end;
+
             .right-container {
                 display: flex;
                 flex: 1;
                 justify-content: flex-end;
+
                 button {
                     margin-right: 16px;
+
                     &:last-child {
                         margin-right: 0;
                     }
@@ -48,8 +42,10 @@
                 display: flex;
                 flex: 1;
                 justify-content: flex-start;
+
                 button {
                     margin-right: 16px;
+
                     &:last-child {
                         margin-right: 0;
                     }

@@ -2,6 +2,7 @@
 import { ReactComponent as BackIcon } from '../../../../../../src/assets/images/icon-back-arrow.svg'
 import { FormDefinition, GithubIcon, GitlabIcon, RadioButton, validatorRequired } from '../../../../../lib'
 import { ChallengeMetadataName, ChallengeMetadataTitle } from '../../../work-lib'
+import { SupportInfoCard } from '../support-info-card'
 
 export const BugHuntFormConfig: FormDefinition = {
     buttons: {
@@ -149,6 +150,9 @@ export const BugHuntFormConfig: FormDefinition = {
                 Is there anything else we should know about testing your website?
             `,
             title: ChallengeMetadataTitle.additionalInformation,
+        },
+        {
+            element: <SupportInfoCard />,
         },
     ],
 }
