@@ -32,7 +32,7 @@ const Review: React.FC = () => {
                 title: 'Bug Hunt Goals',
                 value: '[Description as entered. Lectus vestibulum mattis ullamcorper velit sed. Aliquet sagittis id consectetur purus ut faucibus pulvinar elementum integer. Integer malesuada nunc vel risus commodo viverra maecenas accumsan lacus. Et ultrices neque ornare aenean euismod elementum. Eu feugiat pretium nibh ipsum.Et ultrices neque. Integer malesuada nunc vel risus commodo viverra maecenas accumsan lacus. Et ultrices neque ornare aenean euismod elementum.]',
             },
-            package: {
+            packageType: {
                 title: 'Bug hunt Package',
                 value: '[Selected package]',
             },
