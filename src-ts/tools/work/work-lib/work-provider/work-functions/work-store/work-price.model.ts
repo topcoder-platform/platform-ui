@@ -1,17 +1,13 @@
 export interface WorkPrice {
-    base: number,
+    base: WorkPriceBreakdown,
     getPrice: (price: WorkPrice, pageCount?: number, deviceCount?: number) => number,
-    payments?: {
-        base?: {
-            prizes: ReadonlyArray<number>,
-            reviewers: ReadonlyArray<number>,
-        },
-        promo?: {
-            prizes: ReadonlyArray<number>,
-            reviewers: ReadonlyArray<number>,
-        },
-    },
     perPage?: number,
-    promo?: number,
+    promo?: WorkPriceBreakdown,
     usePromo?: boolean,
+}
+
+export interface WorkPriceBreakdown {
+    placementDistributions: ReadonlyArray<number>,
+    price: number,
+    reviewerDistributions: ReadonlyArray<number>,
 }

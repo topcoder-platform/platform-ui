@@ -1,4 +1,5 @@
 export * from './challenge-metadata-name.enum'
+export * from './challenge-metadata-title.enum'
 export * from './challenge-metadata.model'
 export * from './challenge-phase'
 export * from './challenge-phase-name.enum'
@@ -14,6 +15,7 @@ export {
     problem as workPriceProblem,
     getPricesConfig as workGetPricesConfig,
 } from './work-prices.store'
+export * from './work-prize.model'
 export * from './work-progress.model'
 export * from './work-progress-step.model'
 export * from './work-status-filter.enum'
@@ -31,4 +33,5 @@ export {
     deleteAsync as workStoreDeleteAsync,
     getAsync as workStoreGetAsync,
     getFilteredByStatus as workStoreGetFilteredByStatus,
+    updateAsync as workStoreUpdateAsync,
 } from './work.store'

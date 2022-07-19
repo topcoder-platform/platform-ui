@@ -10,11 +10,18 @@ import {
     PageDivider,
     useCheckIsMobile
 } from '../../../../../lib'
-import { Challenge, workBugHuntConfig, workCreateAsync, WorkType } from '../../../work-lib'
+import {
+    Challenge,
+    ChallengeMetadataName,
+    workBugHuntConfig,
+    workCreateAsync,
+    WorkType,
+    workUpdateAsync
+} from '../../../work-lib'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
 
-import { BugHuntFormConfig, FormInputNames } from './bug-hunt.form.config'
+import { BugHuntFormConfig } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
 import { DeliverablesInfoCard } from './deliverables-info-card'
 
@@ -48,18 +55,17 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
     }, [workId])
 
     const requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => void = (inputs) => {
-        const projectTitle: string = formGetInputModel(inputs, FormInputNames.title).value as string
-        const featuresToTest: string = formGetInputModel(inputs, FormInputNames.features).value as string
-        const deliveryType: string = formGetInputModel(inputs, FormInputNames.deliveryType).value as string
-        const repositoryLink: string = formGetInputModel(inputs, FormInputNames.repositoryLink).value as string
-        const websiteURL: string = formGetInputModel(inputs, FormInputNames.websiteURL).value as string
-        const bugHuntGoals: string = formGetInputModel(inputs, FormInputNames.goals).value as string
-        const packageType: string = formGetInputModel(inputs, FormInputNames.packageType).value as string
-        console.log(packageType)
+        const projectTitle: string = formGetInputModel(inputs, ChallengeMetadataName.projectTitle).value as string
+        const featuresToTest: string = formGetInputModel(inputs, ChallengeMetadataName.featuresToTest).value as string
+        const deliveryType: string = formGetInputModel(inputs, ChallengeMetadataName.deliveryType).value as string
+        const repositoryLink: string = formGetInputModel(inputs, ChallengeMetadataName.repositoryLink).value as string
+        const websiteURL: string = formGetInputModel(inputs, ChallengeMetadataName.websiteURL).value as string
+        const goals: string = formGetInputModel(inputs, ChallengeMetadataName.goals).value as string
+        const packageType: string = formGetInputModel(inputs, ChallengeMetadataName.packageType).value as string
         return {
-            bugHuntGoals,
             deliveryType,
             featuresToTest,
+            goals,
             packageType,
             projectTitle,
             repositoryLink,
@@ -73,7 +79,12 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
     }
 
     const onSave: (val: any) => Promise<void> = (val: any) => {
-        return new Promise(() => { }).then(() => { })
+        if (!challenge) { return Promise.resolve() }
+
+        return workUpdateAsync(WorkType.bugHunt, challenge, val)
+            .then(() => {
+                // TODO: Navigate to a different page (review, back to dashboard, etc)
+            })
     }
 
     const defaultValues: object = {

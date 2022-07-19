@@ -1,15 +1,20 @@
 import moment from 'moment'
 
+import { WorkStrings } from '../../../work-constants'
 import {
     Challenge,
     ChallengeCreateBody,
     ChallengeMetadata,
     ChallengeMetadataName,
+    ChallengeMetadataTitle,
     ChallengePhase,
     ChallengePhaseName,
+    ChallengeUpdateBody,
     Work,
     WorkPrice,
+    WorkPriceBreakdown,
     WorkPricesType,
+    WorkPrize,
     WorkProgress,
     WorkProgressStep,
     WorkStatus,
@@ -74,7 +79,7 @@ export function buildCreateBody(workTypeConfig: WorkTypeConfig): ChallengeCreate
     }
 
     return {
-        description: 'Information not provided',
+        description: WorkStrings.INFO_NOT_PROVIDED,
         discussions: [
             {
                 name: 'new-self-service-project',
@@ -95,6 +100,69 @@ export function buildCreateBody(workTypeConfig: WorkTypeConfig): ChallengeCreate
         trackId: workTypeConfig.trackId,
         typeId: workTypeConfig.typeId,
     }
+}
+
+export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Challenge, formData: any): ChallengeUpdateBody {
+
+    const type: WorkType = workTypeConfig.type
+
+    const intakeForm: ChallengeMetadata | undefined = findMetadata(challenge, ChallengeMetadataName.intakeForm) || undefined
+    const form: IntakeForm = !!intakeForm?.value ? JSON.parse(intakeForm.value)?.form : {}
+    form.basicInfo = formData
+
+    // TODO: Add the progress.currentStep to form to determine if it's in the review phase (review page)
+    // or not. The legacy intakes use currentStep 7 for review and 5 for taking the user to the login step
+    // as those numbers map to the routes configured for each work type (see IntakeForm.jsx for an example).
+    // We can probably clean that up as we don't need that many routes
+
+    // --- Build Metadata --- //
+    const intakeMetadata: Array<ChallengeMetadata> = [
+        {
+            name: ChallengeMetadataName.intakeForm,
+            value: JSON.stringify({ form }),
+        },
+    ]
+
+    Object.keys(formData).forEach((key) => {
+        intakeMetadata.push({
+            name: ChallengeMetadataName[key as keyof typeof ChallengeMetadataName],
+            value: formData[key] || '',
+        })
+    })
+    // ---- End Build Metadata ---- //
+
+    // --- Build the Markdown string that gets displayed in Work Manager app and others --- //
+    const templateString: Array<string> = []
+
+    const data: ReadonlyArray<FormDetail> = mapFormData(
+        type,
+        formData
+    )
+
+    data.forEach((formDetail) => {
+        if (Object.keys(formDetail).length <= 0) { return }
+
+        const formattedValue: string = formatFormDataOption(formDetail.value)
+        templateString.push(`### ${formDetail.title}\n\n${formattedValue}\n\n`)
+    })
+
+    if (getTypeCategory(type) === WorkTypeCategory.data) {
+        templateString.push(
+            WorkStrings.MARKDOWN_SUBMISSION_GUIDELINES
+        )
+    }
+    // ---- End Build Markdown string ---- //
+
+    const body: ChallengeUpdateBody = {
+        description: templateString.join(''),
+        id: challenge.id,
+        metadata: intakeMetadata,
+        name: formData.projectTitle,
+        phases: workTypeConfig.timeline,
+        prizeSets: getPrizes(workTypeConfig),
+    }
+
+    return body
 }
 
 export function getStatus(challenge: Challenge): WorkStatus {
@@ -134,9 +202,50 @@ export function mapFormData(type: string, formData: any): ReadonlyArray<FormDeta
             return buildFormDataFindData(formData)
         case (WorkType.design):
             return buildFormDataDesign(formData)
+        case (WorkType.bugHunt):
+            return buildFormDataBugHunt(formData)
         default:
             return formData
     }
+}
+function buildFormDataBugHunt(formData: any): ReadonlyArray<FormDetail> {
+    return [
+        {
+            key: ChallengeMetadataName.projectTitle,
+            title: ChallengeMetadataTitle.projectTitle,
+            value: formData.projectTitle,
+        },
+        {
+            key: ChallengeMetadataName.websiteURL,
+            title: ChallengeMetadataTitle.websiteURL,
+            value: formData.websiteURL,
+        },
+        {
+            key: ChallengeMetadataName.goals,
+            title: ChallengeMetadataTitle.bugHuntGoals,
+            value: formData.goals,
+        },
+        {
+            key: ChallengeMetadataName.featuresToTest,
+            title: ChallengeMetadataTitle.featuresToTest,
+            value: formData.featuresToTest,
+        },
+        {
+            key: ChallengeMetadataName.deliveryType,
+            title: ChallengeMetadataTitle.bugDeliveryType,
+            value: `${formData.deliveryType}${formData.repositoryLink ? ': ' + formData.repositoryLink : ''}`,
+        },
+        {
+            key: ChallengeMetadataName.additionalInformation,
+            title: ChallengeMetadataTitle.additionalInformation,
+            value: formData.additionalInformation,
+        },
+        {
+            key: ChallengeMetadataName.packageType,
+            title: ChallengeMetadataTitle.bugHuntPackage,
+            value: formData.packageType,
+        },
+    ]
 }
 
 function buildFormDataData(formData: any): ReadonlyArray<FormDetail> {
@@ -252,6 +361,22 @@ function buildFormDataProblem(formData: any): ReadonlyArray<FormDetail> {
     ]
 }
 
+/**
+ * This function checks if the param provided is empty based on its type
+ * The param is empty if: is falsey || is an empty string || is an empty array || is an empty object
+ * This is used for determining if a form field entry is emtpy after being formatted for display
+ */
+function checkFormDataOptionEmpty(detail: any): boolean {
+    return (
+        !detail ||
+        (typeof detail === 'string' && detail.trim().length === 0) ||
+        (Array.isArray(detail) && detail.length === 0) ||
+        (typeof detail === 'object' &&
+            Object.values(detail).filter((val: any) => val && val.trim().length !== 0)
+                .length === 0)
+    )
+}
+
 function findMetadata(challenge: Challenge, metadataName: ChallengeMetadataName): ChallengeMetadata | undefined {
     return challenge.metadata?.find((item: ChallengeMetadata) => item.name === metadataName)
 }
@@ -289,6 +414,27 @@ function findPhase(challenge: Challenge, phases: Array<string>): ChallengePhase 
     return phase
 }
 
+function formatFormDataOption(detail: Array<string> | { [key: string]: any }): string {
+    const noInfoProvidedText: string = WorkStrings.NOT_PROVIDED
+    const isEmpty: boolean = checkFormDataOptionEmpty(detail)
+
+    if (isEmpty) {
+        return noInfoProvidedText
+    }
+    if (Array.isArray(detail)) {
+        return detail.join('\n\n')
+    }
+    if (typeof detail === 'object') {
+        return Object.keys(detail)
+            .map((key: string) => {
+                const value: string = detail[key] || noInfoProvidedText
+                return `${key}: ${value}`
+            })
+            .join('\n\n')
+    }
+    return detail
+}
+
 function getCost(challenge: Challenge, priceConfig: WorkPrice, type: WorkType): number | undefined {
 
     switch (type) {
@@ -318,6 +464,33 @@ function getDescription(challenge: Challenge, type: WorkType): string | undefine
         case WorkType.designLegacy:
             return findMetadata(challenge, ChallengeMetadataName.description)?.value
     }
+}
+
+function getPrizes(workTypeConfig: WorkTypeConfig): Array<WorkPrize> {
+    const priceConfig: WorkPriceBreakdown =
+        workTypeConfig.usePromo && workTypeConfig.promo
+            ? workTypeConfig.promo
+            : workTypeConfig.base
+
+    return [
+        {
+            description: 'Challenge Prizes',
+            prizes: priceConfig.placementDistributions.map((percentage) => ({
+                type: 'USD',
+                value: Math.round(percentage * priceConfig.price),
+            })),
+            type: 'placement',
+        },
+        {
+            description: 'Reviewer Payment',
+            prizes:
+                priceConfig.reviewerDistributions.map((percentage) => ({
+                    type: 'USD',
+                    value: Math.round(percentage * priceConfig.price),
+                })),
+            type: 'reviewer',
+        },
+    ]
 }
 
 function getProgress(challenge: Challenge, workStatus: WorkStatus): WorkProgress {

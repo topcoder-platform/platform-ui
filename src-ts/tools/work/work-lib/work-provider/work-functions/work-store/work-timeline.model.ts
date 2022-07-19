@@ -1,4 +1,5 @@
+import { WorkTimelinePhase } from './work-timeline-phase.model'
+
 export interface WorkTimeline {
-    duration: number,
-    phaseId: string,
+    [workType: string]: ReadonlyArray<WorkTimelinePhase>
 }

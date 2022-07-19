@@ -1,9 +1,9 @@
-import { Page, xhrDeleteAsync, xhrGetAsync, xhrPostAsync } from '../../../../../../lib'
+import { Page, xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '../../../../../../lib'
 
-import { Challenge, ChallengeCreateBody } from './challenge.model'
+import { Challenge, ChallengeCreateBody, ChallengeUpdateBody } from './challenge.model'
 import { WorkStatusFilter } from './work-status-filter.enum'
 import { WorkStatus } from './work-status.enum'
-import { createUrl, deleteUrl, getUrl } from './work-url.config'
+import { createUrl, deleteUrl, getUrl, updateUrl } from './work-url.config'
 import { Work } from './work.model'
 
 export async function createAsync(body: ChallengeCreateBody): Promise<void> {
@@ -27,4 +27,8 @@ export function getFilteredByStatus(work: ReadonlyArray<Work>, workStatusFilter?
         .filter(w => !!workStatusFilter
             && (workStatusFilter === WorkStatusFilter.all
                 || w.status === WorkStatus[workStatusFilter as keyof typeof WorkStatus]))
+}
+
+export async function updateAsync(body: ChallengeUpdateBody): Promise<void> {
+    return xhrPatchAsync(updateUrl(body.id), JSON.stringify(body))
 }
