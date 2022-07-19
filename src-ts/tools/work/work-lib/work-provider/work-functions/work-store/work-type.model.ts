@@ -11,6 +11,12 @@ export interface WorkTypeConfig extends WorkPrice {
     duration: number,
     featured: boolean,
     intakeFormRoutes: ReadonlyArray<string>
+    results: string,
+    review: {
+        subtitle: string,
+        title: string,
+        type: string,
+    }
     shortDescription: string,
     startRoute: string,
     subtitle: string,

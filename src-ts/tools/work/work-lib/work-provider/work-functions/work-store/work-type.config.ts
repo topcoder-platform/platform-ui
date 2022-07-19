@@ -24,6 +24,14 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
         duration: 2,
         featured: true,
         intakeFormRoutes: WorkIntakeFormRoutes[WorkType.bugHunt],
+        results: `You will receive thorough testing of your website, and at the conclusion will be provided
+                a detailed report of bugs which have steps to reproduce, screenshots / videos if applicable,
+                details of the bug, and severity of the issue.`,
+        review: {
+                subtitle: 'Website Bug Hunt',
+                title: 'Review & Payment',
+                type: 'Review & Payment',
+        },
         shortDescription: 'Find bugs quickly and vigorously',
         startRoute: WorkIntakeFormRoutes[WorkType.bugHunt][1],
         subtitle: `Conduct a time based testing bug hunt where Topcoder experts scramble to find bugs or issues in the system`,
