@@ -1,6 +1,7 @@
 
 import { ReactComponent as BackIcon } from '../../../../../../src/assets/images/icon-back-arrow.svg'
 import { FormDefinition, GithubIcon, GitlabIcon, RadioButton, validatorRequired } from '../../../../../lib'
+import { SupportInfoCard } from '../support-info-card'
 
 export enum FormInputNames {
     additionalInformation = 'additionalInformation',
@@ -19,13 +20,13 @@ export const BugHuntFormConfig: FormDefinition = {
             {
                 buttonStyle: 'secondary',
                 label: 'Save for later',
-                onClick: () => {},
+                onClick: () => { },
                 type: 'button',
             },
             {
                 buttonStyle: 'primary',
                 label: 'Complete and pay',
-                onClick: () => {},
+                onClick: () => { },
                 type: 'submit',
             },
         ],
@@ -33,7 +34,7 @@ export const BugHuntFormConfig: FormDefinition = {
             {
                 buttonStyle: 'icon',
                 icon: BackIcon,
-                onClick: () => {},
+                onClick: () => { },
                 type: 'button',
             },
         ],
@@ -364,6 +365,9 @@ export const BugHuntFormConfig: FormDefinition = {
             ],
             instructions: 'Select your bug hunt package.',
             title: 'Bug Hunt Package',
+        },
+        {
+            element: <SupportInfoCard />,
         },
     ],
 }

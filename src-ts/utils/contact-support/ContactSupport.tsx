@@ -1,6 +1,13 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
-import { ContactSupportForm, contactSupportFormDef, ContentLayout, FormDefinition, formGetInputFields, formOnReset } from '../../lib'
+import {
+    ContactSupportForm,
+    contactSupportFormDef,
+    ContentLayout,
+    FormDefinition,
+    formGetInputFields,
+    formOnReset
+} from '../../lib'
 
 export const toolTitle: string = 'Contact Support'
 

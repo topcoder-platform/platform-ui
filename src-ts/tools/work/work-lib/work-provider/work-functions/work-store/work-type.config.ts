@@ -1,4 +1,4 @@
-import imgBugHunt from '../../../work-images/bug-hunt-tile.jpeg'
+import { bugHuntTileImg } from '../../../work-images'
 
 import { ChallengeTag } from './challenge-tag.enum'
 import { WorkIntakeFormRoutes } from './work-intake-form-routes.config'
@@ -15,7 +15,10 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
                 and we typically find a significant number bugs which helps improve quality of your site. The Bug Hunt will start with a
                 registration period, where experienced quality assurance engineers signup to register for the bug hunt. After the registration
                 period completes, we will run the bug hunt for the time which meets the option you choose below.`,
-        bgImage: imgBugHunt,
+        bgImage: bugHuntTileImg,
+        deliverablesDescription: `You will receive thorough testing of your website, and at the conclusion will be provided
+        a detailed report of bugs which have steps to reproduce, screenshots / videos if applicable,
+        details of the bug, and severity of the issue.`,
         description: 'Conduct a time based testing bug hunt where Topcoder experts scramble to find bugs or issues in the system',
         // TODO: The duration will be based on the package the user selects
         duration: 2,
@@ -24,6 +27,11 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
         results: `You will receive thorough testing of your website, and at the conclusion will be provided
                 a detailed report of bugs which have steps to reproduce, screenshots / videos if applicable,
                 details of the bug, and severity of the issue.`,
+        review: {
+                subtitle: 'Website Bug Hunt',
+                title: 'Review & Payment',
+                type: 'Review & Payment',
+        },
         shortDescription: 'Find bugs quickly and vigorously',
         startRoute: WorkIntakeFormRoutes[WorkType.bugHunt][1],
         subtitle: `Conduct a time based testing bug hunt where Topcoder experts scramble to find bugs or issues in the system`,

@@ -1,19 +1,30 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
-import { Form, FormDefinition, formGetInputModel, FormInputModel, IconOutline } from '../../../../../lib'
-import { Challenge, workCreateAsync, WorkType } from '../../../work-lib'
-import { bugHuntConfig } from '../../../work-lib/work-provider/work-functions/work-store/work-type.config'
+import {
+    Form,
+    FormDefinition,
+    formGetInputModel,
+    FormInputModel,
+    IconOutline,
+    InfoCard,
+    PageDivider,
+    useCheckIsMobile
+} from '../../../../../lib'
+import { Challenge, workBugHuntConfig, workCreateAsync, WorkType } from '../../../work-lib'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
 
 import { BugHuntFormConfig, FormInputNames } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
+import { DeliverablesInfoCard } from './deliverables-info-card'
 
 interface BugHuntIntakeFormProps {
     workId?: string
 }
 
 const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
+
+    const isMobile: boolean = useCheckIsMobile()
 
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
@@ -63,19 +74,29 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
     return (
         <>
             <WorkTypeBanner
-                title={bugHuntConfig.title}
-                subTitle={bugHuntConfig.subtitle}
-                workType={bugHuntConfig.type}
+                title={workBugHuntConfig.title}
+                subTitle={workBugHuntConfig.subtitle}
+                workType={workBugHuntConfig.type}
             />
             <WorkServicePrice
-                duration={bugHuntConfig.duration}
+                duration={workBugHuntConfig.duration}
                 hideTitle
                 icon={<IconOutline.BadgeCheckIcon width={48} height={48} />}
                 price={1599} // TODO in PROD-2446 - Budget/Pricing. Matching Figma mockup until then.
-                serviceType={bugHuntConfig.type}
+                serviceType={workBugHuntConfig.type}
                 showIcon
             />
             <div className={styles['bug-hunt-wrapper']}>
+                <DeliverablesInfoCard isMobile={isMobile} />
+                <InfoCard
+                    color='success'
+                    defaultOpen={!isMobile}
+                    isCollapsible
+                    title={`About ${workBugHuntConfig.type}`}
+                >
+                    {workBugHuntConfig.about}
+                </InfoCard>
+                <PageDivider />
                 <Form formDef={formDef} formValues={defaultValues} requestGenerator={requestGenerator} save={onSave} />
             </div>
         </>

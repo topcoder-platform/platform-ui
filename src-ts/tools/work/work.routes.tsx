@@ -4,7 +4,7 @@ import { PlatformRoute } from '../../lib'
 
 import Work, { toolTitle } from './Work'
 import { WorkNotLoggedIn } from './work-not-logged-in'
-import { BugHuntIntakeForm } from './work-self-service'
+import { BugHuntIntakeForm, Review } from './work-self-service'
 import { WorkTable } from './work-table'
 import { WorkThankYou } from './work-thank-you'
 
@@ -52,6 +52,10 @@ export const workRoutes: Array<PlatformRoute> = [
     {
         element: <BugHuntIntakeForm />,
         route: `/${selfServiceRootRoute}/work/new/bug-hunt/basic-info`,
+    },
+    {
+        element: <Review />,
+        route: `/${selfServiceRootRoute}/work/new/bug-hunt/basic-info/review`,
     },
     {
         element: <WorkThankYou />,
