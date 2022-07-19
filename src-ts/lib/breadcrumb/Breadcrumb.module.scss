@@ -12,22 +12,15 @@
     margin: 0 auto;
     @include pagePaddings;
 
+    @include ltemd {
+        padding-top: $pad-xs;
+        padding-bottom: $pad-xs;
+    }
+
     ol {
         display: flex;
         padding-left: 0px;
         margin: 0;
-
-        &.hidden-mobile {
-            @include ltemd {
-                display: none;
-            }
-        }
-
-        &.show-mobile {
-            @include gtemd {
-                display: none;
-            }
-        }
 
         >li {
             display: inline-flex;

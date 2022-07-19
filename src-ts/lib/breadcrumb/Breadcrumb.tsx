@@ -18,7 +18,7 @@ const Breadcrumb: FC<BreadcrumbProps> = (props: BreadcrumbProps) => {
     return createPortal((
         <div className={styles['breadcrumb-wrap']}>
             <nav className={styles.breadcrumb}>
-                <ol className={styles['show-mobile']}>
+                <ol className='desktop-hide'>
                     <>
                         {
                             props.items.length <= 2 && props.items.map((item, index) =>
@@ -55,7 +55,7 @@ const Breadcrumb: FC<BreadcrumbProps> = (props: BreadcrumbProps) => {
                         }
                     </>
                 </ol>
-                <ol className={styles['hidden-mobile']}>
+                <ol className='mobile-hide'>
                     {props.items.map((item, index) =>
                         <BreadcrumbItem
                             index={index + 1}

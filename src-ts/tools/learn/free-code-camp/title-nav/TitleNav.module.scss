@@ -3,7 +3,14 @@
 .wrap {
     display: flex;
     align-items: center;
-    padding: $pad-lg $pad-xxxxl 0;
+    @include pagePaddings;
+    padding-top: $pad-lg;
+    padding-bottom: 0;
+
+    @include ltemd {
+        flex-direction: column;
+        gap: $pad-sm;
+    }
 }
 
 .nav-wrap {
