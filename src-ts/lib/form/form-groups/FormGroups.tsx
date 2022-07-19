@@ -4,7 +4,7 @@ import { FormDefinition } from '../form-definition.model'
 import { FormGroup } from '../form-group.model'
 import { FormInputModel } from '../form-input.model'
 
-import FormCardSet from './form-card-set'
+import { FormCardSet } from './form-card-set'
 import FormGroupItem from './form-group-item/FormGroupItem'
 import { InputRating, InputText, InputTextarea } from './form-input'
 import { FormInputRow } from './form-input-row'
