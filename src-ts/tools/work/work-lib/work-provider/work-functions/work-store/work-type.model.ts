@@ -6,6 +6,7 @@ import { WorkType } from './work-type.enum'
 export interface WorkTypeConfig extends WorkPrice {
     about: string,
     bgImage: string,
+    deliverablesDescription: string,
     description: string,
     duration: number,
     featured: boolean,
