@@ -27,6 +27,7 @@ export * from './work-type.model'
 export * from './work-type-category.enum'
 export * from './work.model'
 export {
+    createAsync as workStoreCreateAsync,
     deleteAsync as workStoreDeleteAsync,
     getAsync as workStoreGetAsync,
     getFilteredByStatus as workStoreGetFilteredByStatus,

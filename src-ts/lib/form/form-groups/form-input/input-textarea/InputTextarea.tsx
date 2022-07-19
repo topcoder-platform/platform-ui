@@ -10,6 +10,7 @@ interface InputTextareaProps {
     readonly dirty?: boolean
     readonly disabled?: boolean
     readonly error?: string
+    readonly hideInlineErrors?: boolean
     readonly hint?: string
     readonly label?: string
     readonly name: string
@@ -29,6 +30,7 @@ const InputTextarea: FC<InputTextareaProps> = (props: InputTextareaProps) => {
             disabled={!!props.disabled}
             label={props.label || props.name}
             type='textarea'
+            hideInlineErrors={props.hideInlineErrors}
         >
             <textarea
                 autoComplete={props.autocomplete}

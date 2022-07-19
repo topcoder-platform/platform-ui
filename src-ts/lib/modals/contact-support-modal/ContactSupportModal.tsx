@@ -1,7 +1,7 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
 import { ContactSupportForm, contactSupportFormDef } from '../../contact-support-form'
-import { FormDefinition, formOnReset } from '../../form'
+import { FormDefinition, formGetInputFields, formOnReset } from '../../form'
 import { BaseModal } from '../base-modal'
 
 export interface ContactSupportModal {
@@ -16,7 +16,7 @@ const ContactSupportModal: FC<ContactSupportModal> = (props: ContactSupportModal
 
     function onClose(): void {
         const updatedForm: FormDefinition = { ...formDef }
-        formOnReset(updatedForm.inputs)
+        formOnReset(formGetInputFields(updatedForm.groups || []))
         setFormDef(updatedForm)
         props.onClose()
     }
