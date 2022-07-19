@@ -23,15 +23,15 @@ const TwoColumnItem: React.FC<ItemRowProps> = ({formInputs, instructions, isMult
         <div className={cn(styles['form-group-item'], !isMultiFieldGroup && styles['single-field'])}>
             {
                 isMultiFieldGroup && (
-                    <div className={cn(styles['left'])}>
-                        <h3 className={cn(styles['title'])}>
+                    <div className={styles['left']}>
+                        <h3 className={styles['title']}>
                             {title}
                         </h3>
                         <div className={styles['group-item-instructions']} dangerouslySetInnerHTML={{__html: instructions || ''}}/>
                     </div>
                 )
             }
-            <div className={cn(styles['right'])}>
+            <div className={styles['right']}>
                 {formInputs}
             </div>
         </div>
@@ -45,7 +45,7 @@ const SingleColumnItem: React.FC<ItemRowProps> = ({formInputs, instructions, isM
             {
                 isMultiFieldGroup && (
                     <>
-                        <h3 className={cn(styles['title'])}>
+                        <h3 className={styles['title']}>
                             {title}
                         </h3>
                         <div className={styles['group-item-instructions']} dangerouslySetInnerHTML={{__html: instructions || ''}}/>
