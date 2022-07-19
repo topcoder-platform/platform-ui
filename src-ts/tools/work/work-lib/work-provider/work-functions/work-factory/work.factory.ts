@@ -1,4 +1,3 @@
-import _ from 'lodash'
 import moment from 'moment'
 
 import {
@@ -462,7 +461,7 @@ function getPrizes(workTypeConfig: WorkTypeConfig): Array<WorkPrize> {
             description: 'Challenge Prizes',
             prizes: priceConfig.placementDistributions.map((percentage) => ({
                 type: 'USD',
-                value: _.round(percentage * priceConfig.price),
+                value: Math.round(percentage * priceConfig.price),
             })),
             type: 'placement',
         },
@@ -471,7 +470,7 @@ function getPrizes(workTypeConfig: WorkTypeConfig): Array<WorkPrize> {
             prizes:
                 priceConfig.reviewerDistributions.map((percentage) => ({
                     type: 'USD',
-                    value: _.round(percentage * priceConfig.price),
+                    value: Math.round(percentage * priceConfig.price),
                 })),
             type: 'reviewer',
         },
