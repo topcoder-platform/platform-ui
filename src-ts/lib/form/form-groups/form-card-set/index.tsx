@@ -45,7 +45,10 @@ const FormCardSet: React.FC<FormCardSetProps> = ({ name, cards, onChange, value 
                                                 <span className={styles['card-row-col']}>
                                                     <>
                                                         {row.icon && iconFromName(row.icon)}
-                                                        <span className='overline'>{row.label ? row.label : row.text}</span>
+                                                        {row.label ?
+                                                            <span className='overline'>{row.label}</span> :
+                                                            <span className='body-main'>{row.text}</span>
+                                                        }
                                                     </>
                                                 </span>
                                                 {row.label ? (
