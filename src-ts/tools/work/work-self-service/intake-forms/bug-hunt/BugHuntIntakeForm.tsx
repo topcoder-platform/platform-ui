@@ -26,6 +26,9 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
 
     const isMobile: boolean = useCheckIsMobile()
 
+    const [selectedPackage, setSelectedPackage]: [string, Dispatch<SetStateAction<string>>]
+        = useState<string>('standard')
+
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
@@ -52,6 +55,7 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
         const websiteURL: string = formGetInputModel(inputs, FormInputNames.websiteURL).value as string
         const bugHuntGoals: string = formGetInputModel(inputs, FormInputNames.goals).value as string
         const packageType: string = formGetInputModel(inputs, FormInputNames.packageType).value as string
+        console.log(packageType)
         return {
             bugHuntGoals,
             deliveryType,
@@ -61,6 +65,11 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
             repositoryLink,
             websiteURL,
         }
+    }
+
+    const onChange: (inputs: ReadonlyArray<FormInputModel>) => void = (inputs) => {
+        console.log('Custom OnChange called')
+        console.log(inputs)
     }
 
     const onSave: (val: any) => Promise<void> = (val: any) => {
@@ -97,7 +106,7 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
                     {workBugHuntConfig.about}
                 </InfoCard>
                 <PageDivider />
-                <Form formDef={formDef} formValues={defaultValues} requestGenerator={requestGenerator} save={onSave} />
+                <Form onChange={onChange} formDef={formDef} formValues={defaultValues} requestGenerator={requestGenerator} save={onSave} />
             </div>
         </>
     )
