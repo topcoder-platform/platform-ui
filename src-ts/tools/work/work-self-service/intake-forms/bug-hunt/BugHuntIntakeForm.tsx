@@ -1,8 +1,16 @@
-import React, { Dispatch, SetStateAction, useState } from 'react'
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
-import { Form, FormDefinition, formGetInputModel, FormInputModel, IconOutline, InfoCard, PageDivider } from '../../../../../lib'
-import { useCheckIsMobile } from '../../../../../lib/hooks'
-import { workBugHuntConfig } from '../../../work-lib'
+import {
+    Form,
+    FormDefinition,
+    formGetInputModel,
+    FormInputModel,
+    IconOutline,
+    InfoCard,
+    PageDivider,
+    useCheckIsMobile
+} from '../../../../../lib'
+import { Challenge, workBugHuntConfig, workCreateAsync, WorkType } from '../../../work-lib'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
 
@@ -10,11 +18,31 @@ import { BugHuntFormConfig, FormInputNames } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
 import { DeliverablesInfoCard } from './deliverables-info-card'
 
-const BugHuntIntakeForm: React.FC = () => {
+interface BugHuntIntakeFormProps {
+    workId?: string
+}
+
+const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
 
     const isMobile: boolean = useCheckIsMobile()
+
+    const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
+
+    useEffect(() => {
+        const useEffectAsync: () => Promise<void> = async () => {
+            if (!workId) {
+                // create challenge
+                const response: any = await workCreateAsync(WorkType.bugHunt)
+                setChallenge(response)
+            } else {
+                // TODO: fetch challenge using workId
+            }
+        }
+
+        useEffectAsync()
+    }, [workId])
 
     const requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => void = (inputs) => {
         const projectTitle: string = formGetInputModel(inputs, FormInputNames.title).value as string
@@ -63,7 +91,7 @@ const BugHuntIntakeForm: React.FC = () => {
                     {workBugHuntConfig.about}
                 </InfoCard>
                 <PageDivider />
-                <Form formDef={BugHuntFormConfig} requestGenerator={requestGenerator} save={onSave} />
+                <Form formDef={formDef} requestGenerator={requestGenerator} save={onSave} />
             </div>
         </>
     )

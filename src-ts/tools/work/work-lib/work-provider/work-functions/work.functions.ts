@@ -2,19 +2,29 @@
 import { Page, UserProfile } from '../../../../../lib'
 
 import { WorkByStatus } from './work-by-status.model'
-import { workFactoryCreate } from './work-factory'
+import { workFactoryBuildCreateBody, workFactoryCreate } from './work-factory'
 import {
     Challenge,
+    ChallengeCreateBody,
     Work,
     workGetPricesConfig,
     WorkPricesType,
     WorkStatus,
     WorkStatusFilter,
+    workStoreCreateAsync,
     workStoreDeleteAsync,
     workStoreGetAsync,
     workStoreGetFilteredByStatus,
     WorkType,
+    WorkTypeConfig,
+    WorkTypeConfigs,
 } from './work-store'
+
+export async function createAsync(type: WorkType): Promise<void> {
+    const workConfig: WorkTypeConfig = WorkTypeConfigs[type]
+    const body: ChallengeCreateBody = workFactoryBuildCreateBody(workConfig)
+    return workStoreCreateAsync(body)
+}
 
 export function createFromChallenge(challenge: Challenge): Work {
     return workFactoryCreate(challenge, workGetPricesConfig())

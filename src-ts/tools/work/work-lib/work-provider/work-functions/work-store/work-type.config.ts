@@ -1,5 +1,6 @@
 import { bugHuntTileImg } from '../../../work-images'
 
+import { ChallengeTag } from './challenge-tag.enum'
 import { WorkIntakeFormRoutes } from './work-intake-form-routes.config'
 import { bugHunt as workPriceBugHunt } from './work-prices.store'
 import { WorkTimelines } from './work-timelines.config'
@@ -26,6 +27,7 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
         shortDescription: 'Find bugs quickly and vigorously',
         startRoute: WorkIntakeFormRoutes[WorkType.bugHunt][1],
         subtitle: `Conduct a time based testing bug hunt where Topcoder experts scramble to find bugs or issues in the system`,
+        tags: [ChallengeTag.qa],
         timeline: WorkTimelines[WorkType.bugHunt],
         timelineTemplateId: '7ebf1c69-f62f-4d3a-bdfb-fe9ddb56861c', // Default Challenge
         title: WorkType.bugHunt,
