@@ -8,6 +8,7 @@ export enum ChallengeMetadataName {
     goals = 'goals',
     intakeForm = 'intake-form',
     pageCount = 'basicInfo.numberOfPages',
+    packageType = 'packageType',
     projectTitle = 'projectTitle',
     repositoryLink = 'repositoryLink',
     websiteURL = 'websiteURL',
