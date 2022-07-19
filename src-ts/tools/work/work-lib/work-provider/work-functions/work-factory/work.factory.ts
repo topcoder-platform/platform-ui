@@ -1,5 +1,6 @@
 import moment from 'moment'
 
+import { WorkStrings } from '../../../work-constants'
 import {
     Challenge,
     ChallengeCreateBody,
@@ -78,7 +79,7 @@ export function buildCreateBody(workTypeConfig: WorkTypeConfig): ChallengeCreate
     }
 
     return {
-        description: 'Information not provided',
+        description: WorkStrings.INFO_NOT_PROVIDED,
         discussions: [
             {
                 name: 'new-self-service-project',
@@ -125,7 +126,7 @@ export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Chall
     Object.keys(formData).forEach((key) => {
         intakeMetadata.push({
             name: ChallengeMetadataName[key as keyof typeof ChallengeMetadataName],
-            value: formData[key],
+            value: formData[key] || '',
         })
     })
     // ---- End Build Metadata ---- //
@@ -147,7 +148,7 @@ export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Chall
 
     if (getTypeCategory(type) === WorkTypeCategory.data) {
         templateString.push(
-            '## Final Submission Guidelines \n\n Please submit a zip file containing your analysis/solution.'
+            WorkStrings.MARKDOWN_SUBMISSION_GUIDELINES
         )
     }
     // ---- End Build Markdown string ---- //
@@ -160,7 +161,7 @@ export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Chall
         phases: workTypeConfig.timeline,
         prizeSets: getPrizes(workTypeConfig),
     }
-
+    console.log(body)
     return body
 }
 
@@ -414,7 +415,7 @@ function findPhase(challenge: Challenge, phases: Array<string>): ChallengePhase 
 }
 
 function formatFormDataOption(detail: Array<string> | { [key: string]: any }): string {
-    const noInfoProvidedText: string = 'Not provided'
+    const noInfoProvidedText: string = WorkStrings.NOT_PROVIDED
     const isEmpty: boolean = checkFormDataOptionEmpty(detail)
 
     if (isEmpty) {

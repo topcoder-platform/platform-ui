@@ -1,3 +1,4 @@
+export * from './work-constants'
 export * from './work-images'
 export * from './work-pdfs'
 export * from './work-provider'
