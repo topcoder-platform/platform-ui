@@ -41,7 +41,6 @@ const TwoColumnItem: React.FC<ItemRowProps> = ({formInputs, instructions, isMult
 const SingleColumnItem: React.FC<ItemRowProps> = ({formInputs, instructions, isMultiFieldGroup, title}: ItemRowProps) => {
     return (
         <div className={cn(styles['form-group-item'], styles['full-width-container'])}>
-            <div>
             {
                 isMultiFieldGroup && (
                     <>
@@ -52,8 +51,7 @@ const SingleColumnItem: React.FC<ItemRowProps> = ({formInputs, instructions, isM
                     </>
                 )
             }
-                <div className={styles['full-width-items']}>{formInputs}</div>
-            </div>
+            <div className={styles['full-width-items']}>{formInputs}</div>
         </div>
     )
 }
