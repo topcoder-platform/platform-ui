@@ -1,0 +1,28 @@
+@import 'variables/palette';
+
+@mixin formInputText {
+  background-color: $black-2  !important;
+  border: 0 !important;
+  box-sizing: border-box !important;
+  color: #444 !important;
+  font-size: 18px !important;
+  height: 24px !important;
+  outline: none !important;
+  width: 100% !important;
+  margin-top: 4px;
+  padding: 0 !important;
+
+  &::placeholder {
+    color: $black-40  !important;
+    font-size: 18px !important;
+    text-transform: none !important;
+  }
+
+  &:focus {
+    box-shadow: none !important;
+  }
+
+  &:disabled {
+    background-color: $black-5  !important;
+  }
+}

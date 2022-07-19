@@ -1,0 +1,20 @@
+@use '../styles/typography';
+@import '../styles/includes';
+@import '../styles/inputs';
+
+.payment-form {
+    .label {
+        @extend .body-ultra-small;
+        @extend .ultra-small-bold;
+        margin-bottom: $pad-xs;
+    }
+
+    .cardElement {
+        @include formInputText;
+    
+        input,
+        select {
+            @include formInputText;
+        }
+    }
+}

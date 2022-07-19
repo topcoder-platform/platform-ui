@@ -1,5 +1,8 @@
+import { Elements } from '@stripe/react-stripe-js'
+import { loadStripe, Stripe } from '@stripe/stripe-js'
 import React from 'react'
 
+import { EnvironmentConfig } from '../../../../../config'
 import { PaymentForm } from '../../../../../lib'
 import { WorkDetailDetailsPane } from '../../../work-detail-details'
 import { bugHuntConfig } from '../../../work-lib/work-provider/work-functions/work-store/work-type.config'
@@ -61,11 +64,25 @@ const Review: React.FC = () => {
                     <WorkDetailDetailsPane formData={formData} isReviewPage={true} redirectUrl={redirectUrl} collapsible={true} defaultOpen={true} />
                 </div>
                 <div className={styles['right']}>
-                    <PaymentForm />
+                    <div className={styles['payment-form-wrapper']}>
+                        <div className={styles['form-header']}>
+                            <h3 className={styles['price']}>$1,899</h3>
+                            <div className={styles['label']}>Total Payment</div>
+                        </div>
+                        <PaymentForm />
+                    </div>
                 </div>
             </div>
         </div>
     )
 }
 
-export default Review
+const stripePromise: Promise<Stripe | null> = loadStripe(EnvironmentConfig.STRIPE.API_KEY, {
+    apiVersion: EnvironmentConfig.STRIPE.API_VERSION,
+})
+
+export default () => (
+    <Elements stripe={stripePromise}>
+        <Review />
+    </Elements>
+)
