@@ -23,8 +23,13 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
 
     const { formDef, onBlur, onChange }: FormGroupsProps = props
 
-    const renderInputField: (input: FormInputModel, index: number) => JSX.Element | undefined = (input, index) => {
+    const getTabIndex: (input: FormInputModel, index: number) => number = (input, index) => {
         const tabIndex: number = input.notTabbable ? -1 : index + 1 + (formDef.tabIndexStart || 0)
+        return tabIndex
+    }
+
+    const renderInputField: (input: FormInputModel, index: number) => JSX.Element | undefined = (input, index) => {
+        const tabIndex: number = getTabIndex(input, index)
 
         let inputElement: JSX.Element
         switch (input.type) {
