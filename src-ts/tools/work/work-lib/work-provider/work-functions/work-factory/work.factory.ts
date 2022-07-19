@@ -161,7 +161,7 @@ export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Chall
         phases: workTypeConfig.timeline,
         prizeSets: getPrizes(workTypeConfig),
     }
-    console.log(body)
+
     return body
 }
 
