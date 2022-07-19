@@ -6,20 +6,36 @@
     cursor: pointer;
     margin: $pad-xxl 0 $pad-xxxl 0;
 
-    .title {
-        @include font-black-100;
-        @include font-barlow;
+    .header-content {
+        flex: 1;
+        flex-direction: row;
+        display: flex;
+        .title {
+            @include font-black-100;
+            @include font-barlow;
+        }
+    
+        .link {
+            color: $link-blue-dark;
+            cursor: pointer;
+            margin-left: 10px;
+            margin-top: 4px;
+            text-transform: none;
+    
+            &:hover {
+                text-decoration: underline;
+            }
+        }
     }
 
-    .link {
-        color: $link-blue-dark;
-        cursor: pointer;
-        margin-left: 10px;
-        margin-top: 4px;
-        text-transform: none;
-
-        &:hover {
-            text-decoration: underline;
+    .icon-wrapper {
+        &.open {
+            transform: rotate(180deg);
+        }
+        svg {
+            path {
+                fill: $turq-160;
+            }
         }
     }
 }

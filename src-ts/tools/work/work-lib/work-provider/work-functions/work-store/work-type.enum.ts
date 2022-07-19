@@ -5,6 +5,5 @@ export enum WorkType {
     designLegacy = 'Website Design Legacy',
     findData = 'Find Me Data',
     problem = 'Problem Statement & Data Advisory',
-    review = 'Review & Payment',
     unknown = '',
 }

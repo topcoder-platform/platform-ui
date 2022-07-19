@@ -52,11 +52,6 @@ export const WorkPricesConfig: WorkPricesType = {
         promo: 799,
         usePromo: true,
     },
-    [WorkType.review]: {
-        base: 0,
-        getPrice: () => 0,
-        usePromo: false,
-    },
     [WorkType.unknown]: {
         base: 0,
         getPrice: () => 0,

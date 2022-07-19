@@ -134,6 +134,8 @@ export function mapFormData(type: string, formData: any): ReadonlyArray<FormDeta
             return buildFormDataFindData(formData)
         case (WorkType.design):
             return buildFormDataDesign(formData)
+        case (WorkType.bugHunt):
+            return buildFormBughunt(formData)
         default:
             return formData
     }
@@ -201,6 +203,41 @@ function buildFormDataDesign(formData: any): ReadonlyArray<FormDetail> {
             title: 'Share Your Brand or Style Assets',
             value: [formData.assetsUrl?.value, formData.assetsDescription?.value]
                 .filter((item: any) => item?.trim().length > 0),
+        },
+    ]
+}
+
+function buildFormBughunt(formData: any): ReadonlyArray<FormDetail> {
+
+    return [
+        {
+            key: 'projectTitle',
+            ...formData.projectTitle,
+        },
+        {
+            key: 'websiteURL',
+            ...formData.websiteURL,
+        },
+        {
+            key: 'goals',
+            ...formData.goals,
+        },
+        {
+            key: 'features',
+            ...formData.features,
+        },
+        {
+            key: 'bugDelivery',
+            title: 'Bug Delivery',
+            value: `[${formData.deliveryType.value}]: ${formData.deliveryUrl.value}`,
+        },
+        {
+            key: 'additionalInformation',
+            ...formData.additionalInformation,
+        },
+        {
+            key: 'package',
+            ...formData.package,
         },
     ]
 }
