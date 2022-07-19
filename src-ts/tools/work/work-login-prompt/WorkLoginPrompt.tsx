@@ -1,5 +1,5 @@
-import { FC } from 'react';
-import { NavigateFunction, useNavigate } from 'react-router-dom';
+import { FC } from 'react'
+import { NavigateFunction, useNavigate } from 'react-router-dom'
 
 import config from '../../../../config'
 import { Button } from '../../../lib'
