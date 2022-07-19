@@ -136,7 +136,7 @@ function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, inpu
         })
 }
 
-function validateField(formInputDef: FormInputModel, formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit'): void {
+function validateField(formInputDef: FormInputModel, formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit' | 'initial'): void {
 
     // this is the error the field had before the event took place
     const previousError: string | undefined = formInputDef.error
@@ -168,7 +168,7 @@ function validateField(formInputDef: FormInputModel, formElements: HTMLFormContr
         })
 }
 
-function validateForm(formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit', inputs: ReadonlyArray<FormInputModel>): boolean {
+export function validateForm(formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit' | 'initial', inputs: ReadonlyArray<FormInputModel>): boolean {
     const errors: ReadonlyArray<FormInputModel> = inputs?.filter(formInputDef => {
             formInputDef.dirty = formInputDef.dirty || event === 'submit'
             validateField(formInputDef, formElements, event)

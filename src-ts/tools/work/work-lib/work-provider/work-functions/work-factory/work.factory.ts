@@ -2,6 +2,7 @@ import moment from 'moment'
 
 import {
     Challenge,
+    ChallengeCreateBody,
     ChallengeMetadata,
     ChallengeMetadataName,
     ChallengePhase,
@@ -14,6 +15,7 @@ import {
     WorkStatus,
     WorkType,
     WorkTypeCategory,
+    WorkTypeConfig,
 } from '../work-store'
 
 import { ChallengeStatus } from './challenge-status.enum'
@@ -60,6 +62,38 @@ export function create(challenge: Challenge, workPrices: WorkPricesType): Work {
         title: challenge.name,
         type,
         typeCategory: getTypeCategory(type),
+    }
+}
+
+export function buildCreateBody(workTypeConfig: WorkTypeConfig): ChallengeCreateBody {
+
+    const form: IntakeForm = {
+        workType: {
+            selectedWorkType: workTypeConfig.type,
+        },
+    }
+
+    return {
+        description: 'Information not provided',
+        discussions: [
+            {
+                name: 'new-self-service-project',
+                provider: 'vanilla',
+                type: 'challenge',
+            },
+        ],
+        legacy: {
+            selfService: true,
+        },
+        metadata: [{
+            name: ChallengeMetadataName.intakeForm,
+            value: JSON.stringify({ form }),
+        }],
+        name: 'new-self-service-project',
+        tags: workTypeConfig.tags,
+        timelineTemplateId: workTypeConfig.timelineTemplateId,
+        trackId: workTypeConfig.trackId,
+        typeId: workTypeConfig.typeId,
     }
 }
 
@@ -401,7 +435,7 @@ function getType(challenge: Challenge): WorkType {
     // parse the form
     const form: { form: IntakeForm } = JSON.parse(intakeForm.value)
     const workTypeKey: (keyof typeof WorkType) | undefined = Object.entries(WorkType)
-        .find(([key, value]) => value === form.form.workType?.selectedWorkType)
+        .find(([key, value]) => value === form.form?.workType?.selectedWorkType)
         ?.[0] as keyof typeof WorkType
 
     const output: WorkType = !!workTypeKey ? WorkType[workTypeKey] : WorkType.unknown

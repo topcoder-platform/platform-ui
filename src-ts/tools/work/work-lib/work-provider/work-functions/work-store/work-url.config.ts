@@ -1,6 +1,10 @@
 import { EnvironmentConfig } from '../../../../../../config'
 import { Page } from '../../../../../../lib'
 
+export function createUrl(): string {
+    return challengesPath
+}
+
 export function deleteUrl(workId: string): string {
     return `${challengesPath}/${workId}`
 }
