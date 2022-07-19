@@ -2,7 +2,7 @@ import imgBugHunt from '../../../work-images/bug-hunt-tile.jpeg'
 
 import { ChallengeTag } from './challenge-tag.enum'
 import { WorkIntakeFormRoutes } from './work-intake-form-routes.config'
-import { bugHunt as workPriceBugHunt, review as workPriceReview } from './work-prices.store'
+import { bugHunt as workPriceBugHunt } from './work-prices.store'
 import { WorkTimelines } from './work-timelines.config'
 import { WorkType } from './work-type.enum'
 import { WorkTypeConfig } from './work-type.model'
