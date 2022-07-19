@@ -45,4 +45,13 @@
             margin-top: $pad-xxl;
         }
     }
+
+    &.full-width-container {
+        display: inline;
+
+    }
+
+    .full-width-items {
+        margin-top: $pad-xl;
+    }
 }

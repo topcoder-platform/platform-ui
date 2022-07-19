@@ -51,10 +51,12 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
         const repositoryLink: string = formGetInputModel(inputs, FormInputNames.repositoryLink).value as string
         const websiteURL: string = formGetInputModel(inputs, FormInputNames.websiteURL).value as string
         const bugHuntGoals: string = formGetInputModel(inputs, FormInputNames.goals).value as string
+        const packageType: string = formGetInputModel(inputs, FormInputNames.packageType).value as string
         return {
             bugHuntGoals,
             deliveryType,
             featuresToTest,
+            packageType,
             projectTitle,
             repositoryLink,
             websiteURL,
@@ -63,6 +65,10 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
 
     const onSave: (val: any) => Promise<void> = (val: any) => {
         return new Promise(() => { }).then(() => { })
+    }
+
+    const defaultValues: object = {
+        packageType: 'standard',
     }
 
     return (
@@ -91,7 +97,7 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
                     {workBugHuntConfig.about}
                 </InfoCard>
                 <PageDivider />
-                <Form formDef={formDef} requestGenerator={requestGenerator} save={onSave} />
+                <Form formDef={formDef} formValues={defaultValues} requestGenerator={requestGenerator} save={onSave} />
             </div>
         </>
     )

@@ -4,6 +4,7 @@ import { FormDefinition } from '../form-definition.model'
 import { FormGroup } from '../form-group.model'
 import { FormInputModel } from '../form-input.model'
 
+import { FormCardSet } from './form-card-set'
 import FormGroupItem from './form-group-item/FormGroupItem'
 import { InputRating, InputText, InputTextarea } from './form-input'
 import { FormInputRow } from './form-input-row'
@@ -22,8 +23,13 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
 
     const { formDef, onBlur, onChange }: FormGroupsProps = props
 
-    const renderInputField: (input: FormInputModel, index: number) => JSX.Element | undefined = (input, index) => {
+    const getTabIndex: (input: FormInputModel, index: number) => number = (input, index) => {
         const tabIndex: number = input.notTabbable ? -1 : index + 1 + (formDef.tabIndexStart || 0)
+        return tabIndex
+    }
+
+    const renderInputField: (input: FormInputModel, index: number) => JSX.Element | undefined = (input, index) => {
+        const tabIndex: number = getTabIndex(input, index)
 
         let inputElement: JSX.Element
         switch (input.type) {
@@ -54,6 +60,15 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
             case 'radio':
                 inputElement = (
                     <FormRadio
+                        {...input}
+                        onChange={onChange}
+                        value={input.value}
+                    />
+                )
+                break
+            case 'card-set':
+                inputElement = (
+                    <FormCardSet
                         {...input}
                         onChange={onChange}
                         value={input.value}
