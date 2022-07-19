@@ -1,5 +1,6 @@
 import React from 'react'
 
+import { PaymentForm } from '../../../../../lib'
 import { WorkDetailDetailsPane } from '../../../work-detail-details'
 import { bugHuntConfig } from '../../../work-lib/work-provider/work-functions/work-store/work-type.config'
 import { WorkTypeBanner } from '../../../work-type-banner'
@@ -59,7 +60,9 @@ const Review: React.FC = () => {
                 <div className={styles['left']}>
                     <WorkDetailDetailsPane formData={formData} isReviewPage={true} redirectUrl={redirectUrl} collapsible={true} defaultOpen={true} />
                 </div>
-                <div className={styles['right']}></div>
+                <div className={styles['right']}>
+                    <PaymentForm />
+                </div>
             </div>
         </div>
     )

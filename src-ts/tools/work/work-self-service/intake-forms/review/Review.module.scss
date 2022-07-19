@@ -4,9 +4,9 @@
     .content {
         padding: 0 $pad-xxxxl;
         margin-top: $pad-xxl;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
+        display: grid;
+        grid-template-columns: 1fr 562px;
+        column-gap: 24px;
         @include ltemd {
             flex-direction: column;
         }
