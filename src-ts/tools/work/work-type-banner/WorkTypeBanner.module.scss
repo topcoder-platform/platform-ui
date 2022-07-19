@@ -133,11 +133,11 @@
     }
 
     &.review--payment {
-      background: url("./images/review-banner.png");
+      background: url("./images/bug-hunt.png");
       background-size: cover;
 
       @include ltemd {
-        background: url("./images/review-banner-mobile.png");
+        background: url("./images/bug-hunt-mobile.png");
         background-size: cover;
         background-position: bottom;
       }
