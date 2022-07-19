@@ -1,13 +1,16 @@
+import cn from 'classnames'
 import _ from 'lodash'
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { LoadingSpinner } from '../../../../lib'
+import { ArrowIcon, LoadingSpinner } from '../../../../lib'
 import { workFactoryMapFormData } from '../../work-lib'
 
 import styles from './WorkDetailDetailsPane.module.scss'
 
 interface WorkDetailDetailsPaneProps {
+    collapsible?: boolean,
+    defaultOpen?: boolean,
     formData: any,
     isReviewPage?: boolean,
     redirectUrl?: string
@@ -19,8 +22,9 @@ interface FormDetail {
     value: any
 }
 
-const WorkDetailDetailsPane: FC<WorkDetailDetailsPaneProps> = ({ formData, isReviewPage = false, redirectUrl = '' }: WorkDetailDetailsPaneProps) => {
+const WorkDetailDetailsPane: FC<WorkDetailDetailsPaneProps> = ({ collapsible, defaultOpen = false, formData, isReviewPage = false, redirectUrl = '' }: WorkDetailDetailsPaneProps) => {
     const [details, setDetails]: [ReadonlyArray<FormDetail>, Dispatch<SetStateAction<ReadonlyArray<FormDetail>>>] = useState<ReadonlyArray<FormDetail>>([])
+    const [isOpen, setOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(collapsible ? defaultOpen : true)
 
     useEffect(() => {
         if (!!formData?.basicInfo) {
@@ -32,17 +36,33 @@ const WorkDetailDetailsPane: FC<WorkDetailDetailsPaneProps> = ({ formData, isRev
         return <LoadingSpinner />
     }
 
+    const onTogglePane: () => void = () => {
+        if (!collapsible) {
+            return
+        }
+        setOpen(!isOpen)
+    }
+
     return (
         <>
             {isReviewPage && (
-                <div className={styles['header']}>
-                    <h3 className={styles['title']}>REVIEW REQUIREMENTS</h3>
-                    <Link className={styles['link']} to={redirectUrl}>
-                        edit
-                    </Link>
+                <div className={styles['header']} onClick={onTogglePane}>
+                    <div className={styles['header-content']}>
+                        <h3 className={styles['title']}>REVIEW REQUIREMENTS</h3>
+                        <Link className={styles['link']} to={redirectUrl}>
+                            edit
+                        </Link>
+                    </div>
+                    {
+                        collapsible && (
+                            <div className={cn(styles['icon-wrapper'], isOpen && styles['open'])}>
+                                <ArrowIcon />
+                            </div>
+                        )
+                    }
                 </div>
             )}
-            {details.map((detail) => {
+            {isOpen && details.map((detail) => {
                 return (
                     <div key={detail.key} className={styles['detail']}>
                         <h4 className={styles['title']}>{detail.title}</h4>

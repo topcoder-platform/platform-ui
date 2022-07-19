@@ -1,0 +1,25 @@
+@import '../../../../../lib/styles/includes';
+
+.review-container {
+    .content {
+        padding: 0 $pad-xxxxl;
+        margin-top: $pad-xxl;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        @include ltemd {
+            flex-direction: column;
+        }
+        .left {
+            flex: 1;
+            border-top: 2px solid $black-10;
+            padding-top: $pad-xxl;
+        }
+        .right {
+            flex-basis: 32%;
+            @include ltemd {
+                flex-basis: 100%;
+            }
+        }
+    }
+}

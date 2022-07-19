@@ -239,6 +239,11 @@ function buildFormDataBugHunt(formData: any): ReadonlyArray<FormDetail> {
             title: ChallengeMetadataTitle.additionalInformation,
             value: formData.additionalInformation,
         },
+        {
+            key: ChallengeMetadataName.packageType,
+            title: ChallengeMetadataTitle.bugHuntPackage,
+            value: formData.packageType,
+        },
     ]
 }
 
