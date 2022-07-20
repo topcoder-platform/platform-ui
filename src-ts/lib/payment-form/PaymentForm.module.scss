@@ -17,4 +17,46 @@
             @include formInputText;
         }
     }
+
+    .date-cvv-wrapper {
+        display: flex;
+        > div {
+            flex: 1;
+            &:first-child {
+                margin-right: $pad-sm;
+            }
+        }
+    }
+
+    .input-wrapper {
+        margin-bottom: 8px;
+        &.error {
+            margin-bottom: 0;
+            .error {
+                margin-bottom: 8px;
+            }
+        }
+    }
+
+    .checkbox-label {
+        @extend .body-main;
+        .link {
+            @extend .body-main-link;
+            color: $link-blue-dark;
+            margin-left: $pad-xs;
+            cursor: pointer;
+        }
+    }
+
+    .info-box {
+        @extend .body-small;
+        padding: $pad-lg;
+        background-color: $orange-25;
+        border-radius: $pad-xs;
+        margin-bottom: $pad-lg;
+    }
+
+    .pay-button {
+        width: 100%;
+    }
 }

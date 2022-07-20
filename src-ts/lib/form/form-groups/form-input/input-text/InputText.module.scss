@@ -28,4 +28,11 @@
         opacity: 1 !important;
         text-transform: none !important;
     }
+
+    &.checkbox {
+        & {
+            width: 20px !important;
+            height: 20px !important;
+        }
+    }
 }
