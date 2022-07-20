@@ -33,12 +33,13 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
 
     const isMobile: boolean = useCheckIsMobile()
 
-    const [selectedPackage, setSelectedPackage]: [string, Dispatch<SetStateAction<string>>]
-        = useState<string>('standard')
-
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
+
+    // TODO: if viewing existing challege, pull from challenge metadata
+    const [selectedPackage, setSelectedPackage]: [string, Dispatch<SetStateAction<string>>]
+        = useState<string>('standard')
 
     useEffect(() => {
         const useEffectAsync: () => Promise<void> = async () => {
@@ -76,6 +77,11 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
     const onChange: (inputs: ReadonlyArray<FormInputModel>) => void = (inputs) => {
         console.log('Custom OnChange called')
         console.log(inputs)
+        const packageType: string = formGetInputModel(inputs, ChallengeMetadataName.packageType).value as string
+        console.log(packageType)
+        if (packageType !== selectedPackage) {
+            setSelectedPackage(packageType)
+        }
     }
 
     const onSave: (val: any) => Promise<void> = (val: any) => {
@@ -102,7 +108,7 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
                 duration={workBugHuntConfig.duration}
                 hideTitle
                 icon={<IconOutline.BadgeCheckIcon width={48} height={48} />}
-                price={1599} // TODO in PROD-2446 - Budget/Pricing. Matching Figma mockup until then.
+                price={workBugHuntConfig.priceConfig.getPrice(workBugHuntConfig.priceConfig, selectedPackage)}
                 serviceType={workBugHuntConfig.type}
                 showIcon
             />

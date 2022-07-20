@@ -33,6 +33,7 @@ interface FormDetail {
 
 interface IntakeForm {
     basicInfo?: {
+        packageType?: string,
         selectedDevice?: {
             option?: Array<any>,
         }
@@ -105,6 +106,7 @@ export function buildCreateBody(workTypeConfig: WorkTypeConfig): ChallengeCreate
 export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Challenge, formData: any): ChallengeUpdateBody {
 
     const type: WorkType = workTypeConfig.type
+    const priceConfig: WorkPrice = workTypeConfig.priceConfig
 
     const intakeForm: ChallengeMetadata | undefined = findMetadata(challenge, ChallengeMetadataName.intakeForm) || undefined
     const form: IntakeForm = !!intakeForm?.value ? JSON.parse(intakeForm.value)?.form : {}
@@ -159,7 +161,7 @@ export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Chall
         metadata: intakeMetadata,
         name: formData.projectTitle,
         phases: workTypeConfig.timeline,
-        prizeSets: getPrizes(workTypeConfig),
+        prizeSets: priceConfig.getPrizeSets(priceConfig),
     }
 
     return body
@@ -448,6 +450,12 @@ function getCost(challenge: Challenge, priceConfig: WorkPrice, type: WorkType): 
             const legacyDeviceCount: number | undefined = form?.basicInfo?.selectedDevice?.option?.length
             return priceConfig.getPrice(priceConfig, legacyPageCount, legacyDeviceCount)
 
+        case WorkType.bugHunt:
+            // get the selected package from the intake form
+            const intakeFormBH: ChallengeMetadata | undefined = findMetadata(challenge, ChallengeMetadataName.intakeForm)
+            const formBH: IntakeForm = !!intakeFormBH?.value ? JSON.parse(intakeFormBH.value)?.form : undefined
+            return priceConfig.getPrice(priceConfig, formBH?.basicInfo?.packageType)
+
         default:
             return priceConfig.getPrice(priceConfig)
     }
@@ -464,33 +472,6 @@ function getDescription(challenge: Challenge, type: WorkType): string | undefine
         case WorkType.designLegacy:
             return findMetadata(challenge, ChallengeMetadataName.description)?.value
     }
-}
-
-function getPrizes(workTypeConfig: WorkTypeConfig): Array<WorkPrize> {
-    const priceConfig: WorkPriceBreakdown =
-        workTypeConfig.usePromo && workTypeConfig.promo
-            ? workTypeConfig.promo
-            : workTypeConfig.base
-
-    return [
-        {
-            description: 'Challenge Prizes',
-            prizes: priceConfig.placementDistributions.map((percentage) => ({
-                type: 'USD',
-                value: Math.round(percentage * priceConfig.price),
-            })),
-            type: 'placement',
-        },
-        {
-            description: 'Reviewer Payment',
-            prizes:
-                priceConfig.reviewerDistributions.map((percentage) => ({
-                    type: 'USD',
-                    value: Math.round(percentage * priceConfig.price),
-                })),
-            type: 'reviewer',
-        },
-    ]
 }
 
 function getProgress(challenge: Challenge, workStatus: WorkStatus): WorkProgress {

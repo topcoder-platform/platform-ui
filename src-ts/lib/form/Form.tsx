@@ -77,14 +77,14 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         }
 
         function onChange(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void {
-            if (props.onChange) {
-                props.onChange(inputs)
-            }
             formOnChange(event, inputs, props.formValues)
             const formInputFields: Array<FormInputModel> = formGetInputFields(formDef.groups || [])
             setInputs(formInputFields)
             setFormDef({ ...formDef })
             checkIfFormIsValid(formInputFields)
+            if (props.onChange) {
+                props.onChange(inputs)
+            }
         }
 
         function onReset(): void {
