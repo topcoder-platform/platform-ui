@@ -11,6 +11,7 @@ interface CurriculumSummaryProps {
     completedPercentage?: number
     course: LearnCourse
     inProgress?: boolean
+    isLoggedIn: boolean
     onClickCertificateBtn?: () => void
     onClickMainBtn: () => void
 }
@@ -19,6 +20,12 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
     const progress: number|undefined = props.completedPercentage
     const inProgress: boolean|undefined = props.inProgress
     const completed: boolean|undefined = props.completed
+
+    const mainBtnLabel: string = !props.isLoggedIn ? 'Log in' : (
+        completed ? 'Review' : (
+            inProgress ? 'Resume' : 'Start Course'
+        )
+    )
 
     const title: ReactNode = useMemo(() => {
         if (!completed || !props.completedDate) {
@@ -62,7 +69,7 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
                     <Button
                         buttonStyle={completed ? 'secondary' : 'primary'}
                         size='md'
-                        label={completed ? 'Review' : (inProgress ? 'Resume' : 'Start Course')}
+                        label={mainBtnLabel}
                         onClick={props.onClickMainBtn}
                     />
                 </div>

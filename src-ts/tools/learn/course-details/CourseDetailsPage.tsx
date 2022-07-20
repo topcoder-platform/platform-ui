@@ -25,15 +25,23 @@ import { PromoCourse } from './promo-course'
 const CourseDetailsPage: FC<{}> = () => {
 
     const routeParams: Params<string> = useParams()
-    const { profile }: ProfileContextData = useContext(profileContext)
+    const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
 
     const {
         course,
-        ready,
+        ready: courseReady,
     }: CoursesProviderData = useCoursesProvider(routeParams.provider ?? '', routeParams.certification)
 
-    const { certificateProgress: progress }: MyCertificationProgressProviderData = useMyCertificationProgress(profile?.userId, routeParams.provider, routeParams.certification)
+    const {
+        certificateProgress: progress,
+        ready: progressReady,
+    }: MyCertificationProgressProviderData = useMyCertificationProgress(
+        profile?.userId,
+        routeParams.provider,
+        routeParams.certification,
+    )
 
+    const ready: boolean = profileReady && courseReady && (!profile || progressReady)
     const breadcrumb: Array<BreadcrumbItemModel> = useMemo(() => [
         { url: '/learn', name: 'Topcoder Academy' },
         { url: `/learn/${routeParams.provider}/${routeParams.certification}`, name: course?.title ?? '' },
@@ -93,7 +101,8 @@ const CourseDetailsPage: FC<{}> = () => {
                             <CourseCurriculum
                                 course={course}
                                 progress={progress}
-                                profileUserId={profile?.userId}
+                                progressReady={progressReady}
+                                profile={profile}
                             />
                         </div>
                     </div>
