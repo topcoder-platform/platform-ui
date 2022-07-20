@@ -1,5 +1,6 @@
 export enum ChallengeMetadataName {
     additionalInformation = 'additionalInformation',
+    currentStep = 'currentStep',
     deliveryType = 'deliveryType',
     deviceCount = 'basicInfo.numberOfDevices',
     description = 'websitePurpose.description',

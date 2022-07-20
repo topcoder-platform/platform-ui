@@ -33,7 +33,7 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
                 type: 'Review & Payment',
         },
         shortDescription: 'Find bugs quickly and vigorously',
-        startRoute: WorkIntakeFormRoutes[WorkType.bugHunt][1],
+        startRoute: WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo'],
         subtitle: `Conduct a time based testing bug hunt where Topcoder experts scramble to find bugs or issues in the system`,
         tags: [ChallengeTag.qa],
         timeline: WorkTimelines[WorkType.bugHunt],
