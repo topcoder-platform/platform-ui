@@ -11,7 +11,7 @@ export const BugHuntFormConfig: FormDefinition = {
                 buttonStyle: 'secondary',
                 label: 'Save for later',
                 onClick: () => { },
-                type: 'button',
+                type: 'submit',
             },
             {
                 buttonStyle: 'primary',
