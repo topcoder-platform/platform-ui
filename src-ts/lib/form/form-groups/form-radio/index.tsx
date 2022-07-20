@@ -20,7 +20,7 @@ const FormRadio: React.FC<FormRadioProps> = ({type, name, options, onChange, val
         <div className={styles['form-radio']}>
             {
                 options?.map(({children: Option, id}: FormRadioButtonOption)  => (
-                    <label className={styles['option']} htmlFor={id}>
+                    <label key={id} className={styles['option']} htmlFor={id}>
                         <input checked={value === id} type={type} name={name} id={id} value={id} onChange={onChange} />
                         {renderOption(Option, value === id)}
                     </label>

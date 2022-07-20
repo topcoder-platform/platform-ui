@@ -127,7 +127,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
         return (
             <Route
                 element={routeElement}
-                key={route.title}
+                key={route.route}
                 path={path}
             />
         )

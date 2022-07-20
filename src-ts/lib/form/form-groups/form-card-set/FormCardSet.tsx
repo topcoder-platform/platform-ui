@@ -25,23 +25,22 @@ const FormCardSet: React.FC<FormCardSetProps> = ({ name, cards, onChange, value 
     return (
         <div className={styles['form-card-set']}>
             {
-                cards?.map(card => {
+                cards?.map((card, index: number) => {
                     const formattedPrice: string | undefined = textFormatMoneyLocaleString(card.price)
                     const selected: boolean = value === card.id
 
                     return (
-
-                        <label className={cn(styles['card'], selected && styles['selected'])}>
+                        <label key={`card-${index}`}className={cn(styles['card'], selected && styles['selected'])}>
                             <input checked={value === card.id} type='radio' name={name} id={card.id} value={card.id} onChange={onChange} />
                             <div className={styles['card-header']}>
                                 <div className='body-medium-bold'>{card.title}</div>
                                 <h3>{formattedPrice}</h3>
                             </div>
                             <hr />
-                            {card.sections.map(section => (
-                                <div className={styles['card-section']}>
-                                    {section.rows.map(row => (
-                                            <div className={styles['card-row']}>
+                            {card.sections.map((section, sectionIndex: number) => (
+                                <div key={`section-${sectionIndex}`} className={styles['card-section']}>
+                                    {section.rows.map((row, rowIndex: number) => (
+                                            <div key={`row-${rowIndex}`} className={styles['card-row']}>
                                                 <span className={styles['card-row-col']}>
                                                     <>
                                                         {row.icon && iconFromName(row.icon)}
