@@ -31,6 +31,7 @@ import styles from './Form.module.scss'
 interface FormProps<ValueType, RequestType> {
     readonly formDef: FormDefinition
     readonly formValues?: ValueType
+    readonly onChange?: (inputs: ReadonlyArray<FormInputModel>) => void,
     readonly onSuccess?: () => void
     readonly requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => RequestType
     readonly save: (value: RequestType) => Promise<void>
@@ -81,6 +82,9 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             setInputs(formInputFields)
             setFormDef({ ...formDef })
             checkIfFormIsValid(formInputFields)
+            if (props.onChange) {
+                props.onChange(inputs)
+            }
         }
 
         function onReset(): void {
