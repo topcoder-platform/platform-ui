@@ -161,7 +161,7 @@ export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Chall
         metadata: intakeMetadata,
         name: formData.projectTitle,
         phases: workTypeConfig.timeline,
-        prizeSets: priceConfig.getPrizeSets(priceConfig),
+        prizeSets: priceConfig.getPrizeSets(priceConfig, formData.packageType),
     }
 
     return body

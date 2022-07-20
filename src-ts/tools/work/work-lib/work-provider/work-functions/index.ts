@@ -3,6 +3,7 @@ export {
     type Challenge,
     ChallengeMetadataName,
     ChallengeMetadataTitle,
+    type PricePackageName,
     type Work,
     workBugHuntConfig,
     workPriceData,

@@ -13,6 +13,7 @@ import {
 import {
     Challenge,
     ChallengeMetadataName,
+    PricePackageName,
     workBugHuntConfig,
     workCreateAsync,
     WorkType,
@@ -29,6 +30,10 @@ interface BugHuntIntakeFormProps {
     workId?: string
 }
 
+interface DefaultValues {
+    [ChallengeMetadataName.packageType]: PricePackageName
+}
+
 const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
 
     const isMobile: boolean = useCheckIsMobile()
@@ -37,9 +42,12 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
 
-    // TODO: if viewing existing challege, pull from challenge metadata
-    const [selectedPackage, setSelectedPackage]: [string, Dispatch<SetStateAction<string>>]
-        = useState<string>('standard')
+    const defaultValues: DefaultValues = {
+        [ChallengeMetadataName.packageType]: 'standard',
+    }
+
+    const [selectedPackage, setSelectedPackage]: [PricePackageName, Dispatch<SetStateAction<PricePackageName>>]
+        = useState<PricePackageName>(defaultValues.packageType)
 
     useEffect(() => {
         const useEffectAsync: () => Promise<void> = async () => {
@@ -75,10 +83,8 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
     }
 
     const onChange: (inputs: ReadonlyArray<FormInputModel>) => void = (inputs) => {
-        console.log('Custom OnChange called')
-        console.log(inputs)
-        const packageType: string = formGetInputModel(inputs, ChallengeMetadataName.packageType).value as string
-        console.log(packageType)
+        const packageType: PricePackageName = formGetInputModel(inputs, ChallengeMetadataName.packageType).value as PricePackageName
+
         if (packageType !== selectedPackage) {
             setSelectedPackage(packageType)
         }
@@ -91,10 +97,6 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
             .then(() => {
                 // TODO: Navigate to a different page (review, back to dashboard, etc)
             })
-    }
-
-    const defaultValues: object = {
-        packageType: 'standard',
     }
 
     return (

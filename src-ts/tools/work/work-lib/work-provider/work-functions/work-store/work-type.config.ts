@@ -21,7 +21,7 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
         details of the bug, and severity of the issue.`,
                 description: 'Conduct a time based testing bug hunt where Topcoder experts scramble to find bugs or issues in the system',
                 // TODO: The duration will be based on the package the user selects
-                duration: 2,
+                duration: 7,
                 featured: true,
                 intakeFormRoutes: WorkIntakeFormRoutes[WorkType.bugHunt],
                 priceConfig: workPriceBugHunt,
