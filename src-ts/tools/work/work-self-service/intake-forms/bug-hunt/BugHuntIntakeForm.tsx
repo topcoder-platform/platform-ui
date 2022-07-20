@@ -14,6 +14,7 @@ import {
 import {
     Challenge,
     ChallengeMetadataName,
+    PricePackageName,
     workBugHuntConfig,
     workCreateAsync,
     WorkType,
@@ -31,6 +32,10 @@ interface BugHuntIntakeFormProps {
     workId?: string
 }
 
+interface DefaultValues {
+    [ChallengeMetadataName.packageType]: PricePackageName
+}
+
 const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
 
     const navigate: NavigateFunction = useNavigate()
@@ -44,6 +49,13 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
+
+    const defaultValues: DefaultValues = {
+        [ChallengeMetadataName.packageType]: 'standard',
+    }
+
+    const [selectedPackage, setSelectedPackage]: [PricePackageName, Dispatch<SetStateAction<PricePackageName>>]
+        = useState<PricePackageName>(defaultValues.packageType)
 
     useEffect(() => {
         const useEffectAsync: () => Promise<void> = async () => {
@@ -78,6 +90,14 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
         }
     }
 
+    const onChange: (inputs: ReadonlyArray<FormInputModel>) => void = (inputs) => {
+        const packageType: PricePackageName = formGetInputModel(inputs, ChallengeMetadataName.packageType).value as PricePackageName
+
+        if (packageType !== selectedPackage) {
+            setSelectedPackage(packageType)
+        }
+    }
+
     const onSave: (val: any) => Promise<void> = (val: any) => {
         if (!challenge) { return Promise.resolve() }
 
@@ -92,10 +112,6 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
         }
     }
 
-    const defaultValues: object = {
-        packageType: 'standard',
-    }
-
     return (
         <>
             <WorkTypeBanner
@@ -107,7 +123,7 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
                 duration={workBugHuntConfig.duration}
                 hideTitle
                 icon={<IconOutline.BadgeCheckIcon width={48} height={48} />}
-                price={1599} // TODO in PROD-2446 - Budget/Pricing. Matching Figma mockup until then.
+                price={workBugHuntConfig.priceConfig.getPrice(workBugHuntConfig.priceConfig, selectedPackage)}
                 serviceType={workBugHuntConfig.type}
                 showIcon
             />
@@ -123,6 +139,7 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
                 </InfoCard>
                 <PageDivider />
                 <Form
+                    onChange={onChange}
                     formDef={formDef}
                     formValues={defaultValues}
                     onSuccess={onSaveSuccess}
