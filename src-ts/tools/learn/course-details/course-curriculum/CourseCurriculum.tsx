@@ -2,7 +2,7 @@ import classNames from 'classnames'
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react'
 import { NavigateFunction, useNavigate, useSearchParams } from 'react-router-dom'
 
-import { authUrlLogin, Button, UserProfile } from '../../../../lib'
+import { Button, UserProfile } from '../../../../lib'
 import {
     CourseOutline,
     LearnCourse,
@@ -15,7 +15,7 @@ import {
     UpdateMyCertificateProgressActions,
     updateMyCertificationsProgressAsync
 } from '../../learn-lib'
-import { getFccLessonPath, LEARN_PATHS } from '../../learn.routes'
+import { authenticateAndStartCourseRoute, getFccLessonPath, LEARN_PATHS } from '../../learn.routes'
 
 import styles from './CourseCurriculum.module.scss'
 import { CurriculumSummary } from './curriculum-summary'
@@ -68,7 +68,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         if (!isLoggedIn) {
             // add a flag to the return url to show the academic policy modal
             // or resume the course when they're back
-            window.location.href = `${authUrlLogin}${encodeURIComponent('?start-course')}`
+            window.location.href = authenticateAndStartCourseRoute
             return
         }
 

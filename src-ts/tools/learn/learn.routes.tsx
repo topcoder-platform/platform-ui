@@ -1,4 +1,4 @@
-import { PlatformRoute } from '../../lib'
+import { authUrlLogin, PlatformRoute } from '../../lib'
 
 import { CourseCompletedPage } from './course-completed'
 import { CourseDetailsPage } from './course-details'
@@ -31,6 +31,8 @@ export enum LEARN_PATHS {
     fcc = '/learn/fcc',
     root = '/learn',
 }
+
+export const authenticateAndStartCourseRoute: string = `${authUrlLogin}${encodeURIComponent('?start-course')}`
 
 export const rootRoute: string = LEARN_PATHS.root
 

@@ -14,8 +14,11 @@ import {
     CoursesProviderData,
     CourseTitle,
     MyCertificationProgressProviderData,
+    MyCertificationProgressStatus,
+    ResourceProviderData,
     useCoursesProvider,
-    useMyCertificationProgress
+    useMyCertificationProgress,
+    useResourceProvider
 } from '../learn-lib'
 
 import { CourseCurriculum } from './course-curriculum'
@@ -26,6 +29,10 @@ const CourseDetailsPage: FC<{}> = () => {
 
     const routeParams: Params<string> = useParams()
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
+
+    const {
+        provider: resourceProvider,
+    }: ResourceProviderData = useResourceProvider(routeParams.provider)
 
     const {
         course,
@@ -52,7 +59,7 @@ const CourseDetailsPage: FC<{}> = () => {
             return
         }
 
-        return progress?.status === 'completed' ? (
+        return progress?.status === MyCertificationProgressStatus.completed ? (
             <>
                 <h3 className='details'>Suggested next steps</h3>
 
@@ -75,21 +82,6 @@ const CourseDetailsPage: FC<{}> = () => {
                     ></div>
                 </>
             )
-        )
-    }
-
-    function getProviderCredits(): ReactNode {
-        if (!course) {
-            return
-        }
-
-        return course.provider === 'freeCodeCamp' && (
-            <div className={styles['credits-link']}>
-                <a href='https://freecodecamp.org/' target='_blank' referrerPolicy='no-referrer' rel='noreferrer'>
-                    This course was created by the freeCodeCamp.org community.
-                    <IconOutline.ExternalLinkIcon />
-                </a>
-            </div>
         )
     }
 
@@ -129,7 +121,14 @@ const CourseDetailsPage: FC<{}> = () => {
                             />
                         </div>
                     </div>
-                    {getProviderCredits()}
+                    {resourceProvider && (
+                        <div className={styles['credits-link']}>
+                            <a href={`//${resourceProvider.url}`} target='_blank' referrerPolicy='no-referrer' rel='noreferrer'>
+                                This course was created by the {resourceProvider.url} community.
+                                <IconOutline.ExternalLinkIcon />
+                            </a>
+                        </div>
+                    )}
                 </>
             )}
         </ContentLayout>
