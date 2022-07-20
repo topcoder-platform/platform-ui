@@ -1,4 +1,5 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
 
 import {
     Form,
@@ -18,6 +19,7 @@ import {
     WorkType,
     workUpdateAsync
 } from '../../../work-lib'
+import { getAsyncByWorkId } from '../../../work-lib/work-provider/work-functions/work-store/work.store'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
 
@@ -25,17 +27,19 @@ import { BugHuntFormConfig } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
 import { DeliverablesInfoCard } from './deliverables-info-card'
 
-interface BugHuntIntakeFormProps {
-    workId?: string
-}
 
-const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
-
+const BugHuntIntakeForm: React.FC = () => {
+    const workId: string | undefined = useParams().workId
     const isMobile: boolean = useCheckIsMobile()
 
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
+
+    const defaultValues: object = {
+        currentStep: 'basicInfo',
+        packageType: 'standard',
+    }
 
     useEffect(() => {
         const useEffectAsync: () => Promise<void> = async () => {
@@ -44,7 +48,14 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
                 const response: any = await workCreateAsync(WorkType.bugHunt)
                 setChallenge(response)
             } else {
-                // TODO: fetch challenge using workId
+                // fetch challenge using workId
+                const response: any = await getAsyncByWorkId(workId)
+                console.log('fetched Challenge', response)
+                // Maybe?
+                // defaultValues = response.values
+                // TODO: after fetch, if currentStep !== 'basicInfo'
+                    // - if !LoggedIn, direct to LoginPrompt
+                    // - else direct to routes[bughunt].currentStep
             }
         }
 
@@ -77,10 +88,6 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
             .then(() => {
                 // TODO: Navigate to a different page (review, back to dashboard, etc)
             })
-    }
-
-    const defaultValues: object = {
-        packageType: 'standard',
     }
 
     return (

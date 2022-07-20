@@ -14,6 +14,10 @@ export async function deleteAsync(workId: string): Promise<void> {
     return xhrDeleteAsync(deleteUrl(workId))
 }
 
+export async function getAsyncByWorkId(workId: string): Promise<Challenge> {
+    return xhrGetAsync<Challenge>(updateUrl(workId))
+}
+
 export async function getAsync(handle: string, page: Page): Promise<Array<Challenge>> {
     return xhrGetAsync<Array<Challenge>>(getUrl(handle, page))
 }
