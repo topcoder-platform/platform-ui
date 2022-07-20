@@ -16,7 +16,7 @@ export interface LoadingSpinnerProps {
 
 const LoadingSpinner: FC<LoadingSpinnerProps> = ({ show = false, className }: LoadingSpinnerProps) => {
     return (
-        <div className={classNames(styles['loading-spinner'], show ? 'show' : 'hide', className)}>
+        <div className={classNames(styles['loading-spinner'], styles[show ? 'show' : 'hide'], className)}>
             <PuffLoader color={'#2196f3'} loading={true} size={100} />
         </div>
     )
