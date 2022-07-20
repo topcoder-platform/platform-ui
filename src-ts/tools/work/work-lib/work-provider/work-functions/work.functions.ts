@@ -2,10 +2,11 @@
 import { Page, UserProfile } from '../../../../../lib'
 
 import { WorkByStatus } from './work-by-status.model'
-import { workFactoryBuildCreateBody, workFactoryCreate } from './work-factory'
+import { workFactoryBuildCreateBody, workFactoryBuildUpdateBody, workFactoryCreate } from './work-factory'
 import {
     Challenge,
     ChallengeCreateBody,
+    ChallengeUpdateBody,
     Work,
     workGetPricesConfig,
     WorkPricesType,
@@ -15,6 +16,7 @@ import {
     workStoreDeleteAsync,
     workStoreGetAsync,
     workStoreGetFilteredByStatus,
+    workStoreUpdateAsync,
     WorkType,
     WorkTypeConfig,
     WorkTypeConfigs,
@@ -91,6 +93,12 @@ export function getStatusFilter(filterKey?: string): WorkStatusFilter | undefine
     // if the passed in key doesn't match any filter, return undefined;
     // otherwise, return the filter defined by the key
     return !workStatusFilter ? undefined : WorkStatusFilter[workStatusFilter]
+}
+
+export async function updateAsync(type: WorkType, challenge: Challenge, intakeForm: any): Promise<void> {
+    const workConfig: WorkTypeConfig = WorkTypeConfigs[type]
+    const body: ChallengeUpdateBody = workFactoryBuildUpdateBody(workConfig, challenge, intakeForm)
+    return workStoreUpdateAsync(body)
 }
 
 async function getPageAsync(handle: string, page: Page): Promise<Array<Work>> {

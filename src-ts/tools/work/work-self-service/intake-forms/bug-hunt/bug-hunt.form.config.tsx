@@ -1,18 +1,8 @@
 
 import { ReactComponent as BackIcon } from '../../../../../../src/assets/images/icon-back-arrow.svg'
 import { FormDefinition, GithubIcon, GitlabIcon, RadioButton, validatorRequired } from '../../../../../lib'
+import { ChallengeMetadataName, ChallengeMetadataTitle } from '../../../work-lib'
 import { SupportInfoCard } from '../support-info-card'
-
-export enum FormInputNames {
-    additionalInformation = 'additionalInformation',
-    title = 'projectTitle',
-    features = 'featuresToTest',
-    goals = 'bugHuntGoals',
-    deliveryType = 'deliveryType',
-    packageType = 'packageType',
-    repositoryLink = 'repositoryLink',
-    websiteURL = 'websiteURL',
-}
 
 export const BugHuntFormConfig: FormDefinition = {
     buttons: {
@@ -45,7 +35,7 @@ export const BugHuntFormConfig: FormDefinition = {
                 {
                     hideInlineErrors: true,
                     label: 'Project title',
-                    name: FormInputNames.title,
+                    name: ChallengeMetadataName.projectTitle,
                     placeholder: 'Enter a descriptive title',
                     type: 'text',
                     validators: [
@@ -56,14 +46,14 @@ export const BugHuntFormConfig: FormDefinition = {
                 },
             ],
             instructions: 'Enter a title for your website bug hunt project.',
-            title: 'Project Title',
+            title: ChallengeMetadataTitle.projectTitle,
         },
         {
             inputs: [
                 {
                     hideInlineErrors: true,
                     label: 'Website URL',
-                    name: FormInputNames.websiteURL,
+                    name: ChallengeMetadataName.websiteURL,
                     placeholder: 'Enter a descriptive title',
                     type: 'text',
                     validators: [
@@ -74,14 +64,14 @@ export const BugHuntFormConfig: FormDefinition = {
                 },
             ],
             instructions: 'Enter a title for your website bug hunt project.',
-            title: 'Website URL',
+            title: ChallengeMetadataTitle.websiteURL,
         },
         {
             inputs: [
                 {
                     hideInlineErrors: true,
-                    label: 'Project title',
-                    name: FormInputNames.goals,
+                    label: 'Bug hunt goals',
+                    name: ChallengeMetadataName.goals,
                     placeholder: 'Describe your goal',
                     type: 'textarea',
                     validators: [
@@ -95,13 +85,13 @@ export const BugHuntFormConfig: FormDefinition = {
                 Do you have any specific goals for your website bug hunt? </br>
                 For example: find bugs in my online shopping experience
             `,
-            title: 'Bug Hunt Goals',
+            title: ChallengeMetadataTitle.bugHuntGoals,
         },
         {
             inputs: [
                 {
                     label: 'Features to test (optional)',
-                    name: FormInputNames.features,
+                    name: ChallengeMetadataName.featuresToTest,
                     placeholder: 'List the sepcific features',
                     type: 'textarea',
                 },
@@ -110,24 +100,24 @@ export const BugHuntFormConfig: FormDefinition = {
                 Are there specific features we should focus on testing? </br>
                 For example: [An example not used above]
             `,
-            title: 'Features to test',
+            title: ChallengeMetadataTitle.featuresToTest,
         },
         {
             inputs: [
                 {
                     hideInlineErrors: true,
-                    name: FormInputNames.deliveryType,
+                    name: ChallengeMetadataName.deliveryType,
                     notTabbable: false,
                     options: [
                         {
                             checked: false,
                             children: <RadioButton name={'GitHub'} icon={<GithubIcon />} />,
-                            id: 'github',
+                            id: 'GitHub',
                         },
                         {
                             checked: false,
                             children: <RadioButton name={'GitLab'} icon={<GitlabIcon />} />,
-                            id: 'gitlab',
+                            id: 'GitLab',
                         },
                     ],
                     type: 'radio',
@@ -139,19 +129,19 @@ export const BugHuntFormConfig: FormDefinition = {
                 },
                 {
                     label: 'Repository Link (Optional)',
-                    name: FormInputNames.repositoryLink,
+                    name: ChallengeMetadataName.repositoryLink,
                     placeholder: 'www.example-share-link.com',
                     type: 'text',
                 },
             ],
             instructions: 'How do you want your bugs delivered?',
-            title: 'Bug Delivery',
+            title: ChallengeMetadataTitle.bugDeliveryType,
         },
         {
             inputs: [
                 {
                     label: 'Additional information (optional)',
-                    name: FormInputNames.additionalInformation,
+                    name: ChallengeMetadataName.additionalInformation,
                     placeholder: '[Suggestion text]',
                     type: 'textarea',
                 },
@@ -159,7 +149,7 @@ export const BugHuntFormConfig: FormDefinition = {
             instructions: `
                 Is there anything else we should know about testing your website?
             `,
-            title: 'Additional Information',
+            title: ChallengeMetadataTitle.additionalInformation,
         },
         {
             inputs: [
@@ -358,13 +348,13 @@ export const BugHuntFormConfig: FormDefinition = {
                             title: 'Premium',
                         },
                     ],
-                    name: FormInputNames.packageType,
+                    name: ChallengeMetadataName.packageType,
                     notTabbable: false,
                     type: 'card-set',
                 },
             ],
             instructions: 'Select your bug hunt package.',
-            title: 'Bug Hunt Package',
+            title: ChallengeMetadataTitle.bugHuntPackage,
         },
         {
             element: <SupportInfoCard />,
