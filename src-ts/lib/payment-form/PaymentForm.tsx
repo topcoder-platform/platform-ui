@@ -60,10 +60,10 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
     }
 
     const renderCheckboxLabel: () => JSX.Element = () => (
-        <p className={styles['checkbox-label']}>
+        <div className={styles['checkbox-label']}>
             Yes, I understand and agree to Topcoder’s
              <span className={styles['link']} onClick={onOpenOrderContract}>Order Contract</span>
-        </p>
+        </div>
     )
 
     const cardElementOnChange: (fieldName: string, data: CardChangeEvent, stateUpdater: Dispatch<string>) => void = (fieldName, data, stateUpdater) => {

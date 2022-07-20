@@ -40,6 +40,7 @@
 
     .checkbox-label {
         @extend .body-main;
+        white-space: pre-wrap;
         .link {
             @extend .body-main-link;
             color: $link-blue-dark;

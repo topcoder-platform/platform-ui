@@ -10,6 +10,7 @@
         column-gap: 24px;
         @include ltemd {
             grid-template-columns: 1fr;
+            padding: 0 $pad-lg;
         }
         .left {
             flex: 1;
@@ -22,6 +23,9 @@
                 border: 2px solid $black-20;
                 border-radius: 8px;
                 padding: $pad-xxl;
+                @include ltemd {
+                    padding: $pad-xl;
+                }
                 .form-header {
                     text-align: center;
                     padding-bottom: $pad-xxl;
