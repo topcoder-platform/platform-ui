@@ -1,7 +1,7 @@
 import { ResourceProvider } from './resource-provider-functions'
 
 export interface ResourceProviderData {
-    provider?: ResourceProvider
     loading: boolean
+    provider?: ResourceProvider
     ready: boolean
 }

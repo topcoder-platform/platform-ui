@@ -85,6 +85,21 @@ const CourseDetailsPage: FC<{}> = () => {
         )
     }
 
+    function getFooter(): ReactNode {
+        if (!resourceProvider) {
+            return
+        }
+
+        return (
+            <div className={styles['credits-link']}>
+                <a href={`//${resourceProvider.url}`} target='_blank' referrerPolicy='no-referrer' rel='noreferrer'>
+                    This course was created by the {resourceProvider.url} community.
+                    <IconOutline.ExternalLinkIcon />
+                </a>
+            </div>
+        )
+    }
+
     return (
         <ContentLayout>
             {!ready && (
@@ -121,14 +136,7 @@ const CourseDetailsPage: FC<{}> = () => {
                             />
                         </div>
                     </div>
-                    {resourceProvider && (
-                        <div className={styles['credits-link']}>
-                            <a href={`//${resourceProvider.url}`} target='_blank' referrerPolicy='no-referrer' rel='noreferrer'>
-                                This course was created by the {resourceProvider.url} community.
-                                <IconOutline.ExternalLinkIcon />
-                            </a>
-                        </div>
-                    )}
+                    {getFooter()}
                 </>
             )}
         </ContentLayout>

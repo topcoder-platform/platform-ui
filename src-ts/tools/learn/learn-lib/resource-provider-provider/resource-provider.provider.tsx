@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
+
 import { ResourceProviderData } from './resource-provider-data.model'
 import { getResourceProvidersAsync } from './resource-provider-functions/resource-provider.store'
 
@@ -7,13 +8,13 @@ export function useResourceProvider(providerName?: string): ResourceProviderData
         loading: false,
         ready: false,
     })
-    
+
     useEffect(() => {
         if (!providerName) {
             setState((prevState) => ({
                 ...prevState,
-                provider: undefined,
                 loading: false,
+                provider: undefined,
                 ready: false,
             }))
             return
@@ -27,8 +28,8 @@ export function useResourceProvider(providerName?: string): ResourceProviderData
         getResourceProvidersAsync().then((providers) => {
             setState((prevState) => ({
                 ...prevState,
-                provider: providers?.find(p => p.name === providerName),
                 loading: false,
+                provider: providers?.find(p => p.name === providerName),
                 ready: true,
             }))
         })
