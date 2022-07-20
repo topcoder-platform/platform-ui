@@ -125,7 +125,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                 return (
                     <Button
                         {...button}
-                        key={button.label}
+                        key={button.label || `button-${index}`}
                         disable={isPrimaryGroup && isFormInvalid}
                         tabIndex={button.notTabble ? -1 : index + (inputs ? inputs.length : 0) + (formDef.tabIndexStart || 0)}
                     />
