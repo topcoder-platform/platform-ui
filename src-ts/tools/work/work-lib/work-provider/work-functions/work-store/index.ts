@@ -32,6 +32,7 @@ export {
     createAsync as workStoreCreateAsync,
     deleteAsync as workStoreDeleteAsync,
     getAsync as workStoreGetAsync,
+    getChallengeByWorkId as workStoreGetChallengeByWorkId,
     getFilteredByStatus as workStoreGetFilteredByStatus,
     updateAsync as workStoreUpdateAsync,
 } from './work.store'

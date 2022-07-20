@@ -19,7 +19,7 @@ import {
     WorkType,
     workUpdateAsync
 } from '../../../work-lib'
-import { getAsyncByWorkId } from '../../../work-lib/work-provider/work-functions/work-store/work.store'
+import { workStoreGetChallengeByWorkId } from '../../../work-lib/work-provider/work-functions/work-store'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
 
@@ -49,8 +49,8 @@ const BugHuntIntakeForm: React.FC = () => {
                 setChallenge(response)
             } else {
                 // fetch challenge using workId
-                const response: any = await getAsyncByWorkId(workId)
-                console.log('fetched Challenge', response)
+                const response: any = await workStoreGetChallengeByWorkId(workId)
+                setChallenge(response)
                 // Maybe?
                 // defaultValues = response.values
                 // TODO: after fetch, if currentStep !== 'basicInfo'
