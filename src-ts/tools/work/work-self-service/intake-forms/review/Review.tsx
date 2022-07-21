@@ -1,12 +1,40 @@
-import React from 'react'
+import { Elements } from '@stripe/react-stripe-js'
+import { loadStripe, Stripe } from '@stripe/stripe-js'
+import React, { Dispatch, SetStateAction, useState } from 'react'
 
+import { EnvironmentConfig } from '../../../../../config'
+import { PaymentForm } from '../../../../../lib'
 import { WorkDetailDetailsPane } from '../../../work-detail-details'
 import { bugHuntConfig } from '../../../work-lib/work-provider/work-functions/work-store/work-type.config'
 import { WorkTypeBanner } from '../../../work-type-banner'
 
 import styles from './Review.module.scss'
 
+interface FormFieldValues {
+    cardComplete: boolean
+    country: string
+    cvvComplete: boolean
+    email: string
+    expiryComplete: boolean
+    name: string
+    orderContract: boolean
+    price: string
+    zipCode: string
+}
+
 const Review: React.FC = () => {
+
+    const [formFieldValues, setFormValues]: [FormFieldValues, Dispatch<SetStateAction<FormFieldValues>>] = useState<FormFieldValues>({
+        cardComplete: false,
+        country: '',
+        cvvComplete: false,
+        email: 'mail@gmail.com',
+        expiryComplete: false,
+        name: 'User name',
+        orderContract: false,
+        price: '$1,899',
+        zipCode: '',
+    })
     const redirectUrl: string = '/self-service/work/new/bug-hunt/basic-info'
     // This mock will be removed once the basic info is fetched from the challenge API
     const formData: any = {
@@ -48,6 +76,22 @@ const Review: React.FC = () => {
             selectedWorkType: 'Website Bug Hunt',
         },
     }
+
+    const onUpdateField: (fieldName: string, value: string | boolean) => void = (fieldName, value) => {
+        setFormValues({
+            ...formFieldValues,
+            [fieldName]: value,
+        })
+    }
+
+    const isFormValid: boolean = formFieldValues.cardComplete
+        && formFieldValues.cvvComplete
+        && formFieldValues.expiryComplete
+        && formFieldValues.orderContract
+        && !!formFieldValues.name
+        && !!formFieldValues.email
+        && !!formFieldValues.zipCode
+
     return (
         <div className={styles['review-container']}>
             <WorkTypeBanner
@@ -59,10 +103,26 @@ const Review: React.FC = () => {
                 <div className={styles['left']}>
                     <WorkDetailDetailsPane formData={formData} isReviewPage={true} redirectUrl={redirectUrl} collapsible={true} defaultOpen={true} />
                 </div>
-                <div className={styles['right']}></div>
+                <div className={styles['right']}>
+                    <div className={styles['payment-form-wrapper']}>
+                        <div className={styles['form-header']}>
+                            <h3 className={styles['price']}>{formFieldValues.price}</h3>
+                            <div className={styles['label']}>Total Payment</div>
+                        </div>
+                        <PaymentForm formData={formFieldValues} onUpdateField={onUpdateField} isFormValid={isFormValid}/>
+                    </div>
+                </div>
             </div>
         </div>
     )
 }
 
-export default Review
+const stripePromise: Promise<Stripe | null> = loadStripe(EnvironmentConfig.STRIPE.API_KEY, {
+    apiVersion: EnvironmentConfig.STRIPE.API_VERSION,
+})
+
+export default () => (
+    <Elements stripe={stripePromise}>
+        <Review />
+    </Elements>
+)
