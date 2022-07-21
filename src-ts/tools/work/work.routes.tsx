@@ -5,6 +5,7 @@ import { PlatformRoute } from '../../lib'
 import Work, { toolTitle } from './Work'
 import { WorkNotLoggedIn } from './work-not-logged-in'
 import { BugHuntIntakeForm, Review } from './work-self-service'
+import IntakeForms, { intakeFormsTitle } from './work-self-service/intake-forms/IntakeForms'
 import { WorkTable } from './work-table'
 import { WorkThankYou } from './work-thank-you'
 
@@ -50,16 +51,27 @@ export const workRoutes: Array<PlatformRoute> = [
         route: selfServiceRootRoute,
     },
     {
-        element: <BugHuntIntakeForm />,
-        route: `/${selfServiceRootRoute}/work/new/bug-hunt/basic-info`,
-    },
-    {
-        element: <Review />,
-        route: `/${selfServiceRootRoute}/work/new/bug-hunt/basic-info/review`,
-    },
-    {
-        element: <WorkThankYou />,
-        route: `/${selfServiceRootRoute}${rootRoute}/new/:workType/thank-you`,
+        children: [
+            {
+                element: <BugHuntIntakeForm />,
+                route: `bug-hunt/basic-info`,
+                title: intakeFormsTitle,
+            },
+            {
+                element: <Review />,
+                route: `bug-hunt/basic-info/review`,
+                title: intakeFormsTitle,
+            },
+            {
+                element: <WorkThankYou />,
+                route: `:workType/thank-you`,
+                title: intakeFormsTitle,
+            },
+        ],
+        customerOnly: true,
+        element: <IntakeForms />,
+        route: `/${selfServiceRootRoute}${rootRoute}/new`,
+        title: intakeFormsTitle,
     },
     {
         element: <Navigate to={dashboardRoute} />,

@@ -7,6 +7,7 @@ import { PaymentForm } from '../../../../../lib'
 import { WorkDetailDetailsPane } from '../../../work-detail-details'
 import { bugHuntConfig } from '../../../work-lib/work-provider/work-functions/work-store/work-type.config'
 import { WorkTypeBanner } from '../../../work-type-banner'
+import IntakeFormsBreadcrumb from '../intake-forms-breadcrumb/IntakeFormsBreadcrumb'
 
 import styles from './Review.module.scss'
 
@@ -94,6 +95,14 @@ const Review: React.FC = () => {
 
     return (
         <div className={styles['review-container']}>
+            {/* TODO: use the correct workId for breadcrumb
+            Also we need to not hard code the configs to that of BugHunt and instead
+            use the challenge data to determine the WorkType */}
+            <IntakeFormsBreadcrumb
+                basicInfoRoute={`${bugHuntConfig.intakeFormRoutes[1]}/{insert-work-id}`}
+                reviewRoute={bugHuntConfig.intakeFormRoutes[6]}
+                workType={bugHuntConfig.type}
+            />
             <WorkTypeBanner
                 title={bugHuntConfig.review.title}
                 subTitle={bugHuntConfig.review.subtitle}
@@ -109,7 +118,7 @@ const Review: React.FC = () => {
                             <h3 className={styles['price']}>{formFieldValues.price}</h3>
                             <div className={styles['label']}>Total Payment</div>
                         </div>
-                        <PaymentForm formData={formFieldValues} onUpdateField={onUpdateField} isFormValid={isFormValid}/>
+                        <PaymentForm formData={formFieldValues} onUpdateField={onUpdateField} isFormValid={isFormValid} />
                     </div>
                 </div>
             </div>
