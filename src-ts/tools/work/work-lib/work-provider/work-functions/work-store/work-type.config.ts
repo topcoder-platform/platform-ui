@@ -20,7 +20,6 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
         a detailed report of bugs which have steps to reproduce, screenshots / videos if applicable,
         details of the bug, and severity of the issue.`,
                 description: 'Conduct a time based testing bug hunt where Topcoder experts scramble to find bugs or issues in the system',
-                // TODO: The duration will be based on the package the user selects
                 duration: 7,
                 featured: true,
                 intakeFormRoutes: WorkIntakeFormRoutes[WorkType.bugHunt],
@@ -45,7 +44,6 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
                 typeId: '927abff4-7af9-4145-8ba1-577c16e64e2e', // Challenge
                 // TODO: do we need to include breadcrumbs here?
         },
-    },
 }
 
 export const bugHuntConfig: WorkTypeConfig = WorkTypeConfigs[WorkType.bugHunt]

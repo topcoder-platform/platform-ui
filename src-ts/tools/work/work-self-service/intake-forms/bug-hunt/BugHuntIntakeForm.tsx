@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import React, { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
 import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
 
 import {
@@ -9,6 +9,8 @@ import {
     IconOutline,
     InfoCard,
     PageDivider,
+    profileContext,
+    ProfileContextData,
     useCheckIsMobile
 } from '../../../../../lib'
 import {
@@ -20,7 +22,8 @@ import {
     WorkType,
     workUpdateAsync
 } from '../../../work-lib'
-import { workStoreGetChallengeByWorkId } from '../../../work-lib/work-provider/work-functions/work-store'
+import { ChallengeMetadata, workStoreGetChallengeByWorkId } from '../../../work-lib/work-provider/work-functions/work-store'
+import { WorkIntakeFormRoutes } from '../../../work-lib/work-provider/work-functions/work-store/work-intake-form-routes.config'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
 import { dashboardRoute } from '../../../work.routes'
@@ -32,11 +35,14 @@ import { DeliverablesInfoCard } from './deliverables-info-card'
 interface DefaultValues {
     [ChallengeMetadataName.packageType]: PricePackageName
 }
+
 const BugHuntIntakeForm: React.FC = () => {
     const workId: string | undefined = useParams().workId
     const navigate: NavigateFunction = useNavigate()
 
     const isMobile: boolean = useCheckIsMobile()
+    const { isLoggedIn }: ProfileContextData = useContext<ProfileContextData>(profileContext)
+    // TODO - this isLoggedIn check is not working - shows true even on a new incognito window
 
     let action: string = ''
     BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { action = 'save' }
@@ -46,7 +52,11 @@ const BugHuntIntakeForm: React.FC = () => {
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
 
-    const defaultValues: object = {
+    function findMetadata(metadataName: ChallengeMetadataName): ChallengeMetadata | undefined {
+        return challenge?.metadata?.find((item: ChallengeMetadata) => item.name === metadataName)
+    }
+
+    let defaultValues: Record<string, any> = {
         currentStep: 'basicInfo',
         [ChallengeMetadataName.packageType]: 'standard',
     }
@@ -54,7 +64,27 @@ const BugHuntIntakeForm: React.FC = () => {
     const [selectedPackage, setSelectedPackage]: [PricePackageName, Dispatch<SetStateAction<PricePackageName>>]
         = useState<PricePackageName>(defaultValues.packageType)
 
+    if (challenge) {
+        const intakeFormBH: ChallengeMetadata | undefined = findMetadata(ChallengeMetadataName.intakeForm)
+        if (intakeFormBH) {
+            const formData: Record<string, any> = JSON.parse(intakeFormBH.value)
 
+            // TODO: Set the correct currentStep into challenge's form data when saving form and moving on to a new page
+            if (formData.currentStep && formData.currentStep !== 'basicInfo') {
+                if (!isLoggedIn) {
+                    navigate(WorkIntakeFormRoutes[WorkType.bugHunt]['loginPrompt'])
+                } else {
+                    navigate(WorkIntakeFormRoutes[WorkType.bugHunt][formData.currentStep])
+                }
+            }
+
+            defaultValues = formData.form.basicInfo
+
+            if (formData.form.basicInfo.packageType !== selectedPackage) {
+                setSelectedPackage(formData.form.basicInfo.packageType)
+            }
+        }
+    }
 
     useEffect(() => {
         const useEffectAsync: () => Promise<void> = async () => {
@@ -65,12 +95,9 @@ const BugHuntIntakeForm: React.FC = () => {
             } else {
                 // fetch challenge using workId
                 const response: any = await workStoreGetChallengeByWorkId(workId)
+                // TODO - if we have a workID, but no challenge, we may need a loading spinner to display until the re-render after this setChallenge()
+                // TODO - Question for team: do we need to secure this fetch on the front-end, or does the back-end validate that the current user has access before giving us the data?
                 setChallenge(response)
-                // Maybe?
-                // defaultValues = response.values
-                // TODO: after fetch, if currentStep !== 'basicInfo'
-                // - if !LoggedIn, direct to LoginPrompt
-                // - else direct to routes[bughunt].currentStep
             }
         }
 
@@ -114,7 +141,11 @@ const BugHuntIntakeForm: React.FC = () => {
         if (action === 'save') {
             navigate(`${dashboardRoute}/draft`)
         } else if (action === 'submit') {
-            // TODO navigate to review & payment page
+            if (isLoggedIn) {
+                navigate(WorkIntakeFormRoutes[WorkType.bugHunt]['loginPrompt'])
+            } else {
+                navigate(WorkIntakeFormRoutes[WorkType.bugHunt]['review'])
+            }
         }
     }
 
