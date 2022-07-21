@@ -62,6 +62,10 @@ export const workRoutes: Array<PlatformRoute> = [
         route: `/${selfServiceRootRoute}/work/new/bug-hunt/basic-info/review`,
     },
     {
+        element: <Review />,
+        route: `/${selfServiceRootRoute}/work/new/bug-hunt/basic-info/review/:workId`,
+    },
+    {
         element: <WorkThankYou />,
         route: `/${selfServiceRootRoute}${rootRoute}/new/:workType/thank-you`,
     },
