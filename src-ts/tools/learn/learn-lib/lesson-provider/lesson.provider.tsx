@@ -18,7 +18,7 @@ export function useLessonProvider(
     })
 
     useEffect(() => {
-        let mounted: boolean = true;
+        let mounted: boolean = true
 
         if (!course || !module || !lesson) {
             setState((prevState) => ({
@@ -71,7 +71,7 @@ export function useLessonProvider(
             }))
         })
 
-        return () => {mounted = false};
+        return () => {mounted = false}
     }, [provider, course, module, lesson])
 
     return state
