@@ -8,6 +8,7 @@ import {
     FormInputModel,
     IconOutline,
     InfoCard,
+    LoadingSpinner,
     PageDivider,
     profileContext,
     ProfileContextData,
@@ -98,8 +99,6 @@ const BugHuntIntakeForm: React.FC = () => {
             } else {
                 // fetch challenge using workId
                 const response: any = await workStoreGetChallengeByWorkId(workId)
-                // TODO - if we have a workID, but no challenge, we may need a loading spinner to display until the re-render after this setChallenge()
-                // TODO - Question for team: do we need to secure this fetch on the front-end, or does the back-end validate that the current user has access before giving us the data?
                 setChallenge(response)
             }
         }
@@ -151,6 +150,10 @@ const BugHuntIntakeForm: React.FC = () => {
                 navigate(nextUrl)
             }
         }
+    }
+
+    if (!challenge && workId) {
+        return <LoadingSpinner />
     }
 
     return (
