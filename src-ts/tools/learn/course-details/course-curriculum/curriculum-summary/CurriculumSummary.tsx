@@ -21,7 +21,7 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
     const inProgress: boolean|undefined = props.inProgress
     const completed: boolean|undefined = props.completed
 
-    const mainBtnLabel: string = !props.isLoggedIn ? 'Log in' : (
+    const mainBtnLabel: string = !props.isLoggedIn ? 'Login & start' : (
         completed ? 'Review' : (
             inProgress ? 'Resume' : 'Start Course'
         )
