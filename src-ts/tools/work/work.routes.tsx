@@ -59,11 +59,11 @@ export const workRoutes: Array<PlatformRoute> = [
     },
     {
         element: <Review />,
-        route: `/${selfServiceRootRoute}/work/new/bug-hunt/basic-info/review`,
+        route: `/${selfServiceRootRoute}/work/new/bug-hunt/review`,
     },
     {
         element: <Review />,
-        route: `/${selfServiceRootRoute}/work/new/bug-hunt/basic-info/review/:workId`,
+        route: `/${selfServiceRootRoute}/work/new/bug-hunt/review/:workId`,
     },
     {
         element: <WorkThankYou />,
