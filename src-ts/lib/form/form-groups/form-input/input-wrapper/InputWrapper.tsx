@@ -15,9 +15,9 @@ interface InputWrapperProps {
     readonly error?: string
     readonly hideInlineErrors?: boolean
     readonly hint?: string
-    readonly label: string
+    readonly label: string | JSX.Element
     readonly tabIndex: number
-    readonly type: 'password' | 'rating' | 'text' | 'textarea'
+    readonly type: 'checkbox' | 'password' | 'rating' | 'text' | 'textarea'
 }
 
 const InputWrapper: FC<InputWrapperProps> = (props: InputWrapperProps) => {
@@ -35,6 +35,12 @@ const InputWrapper: FC<InputWrapperProps> = (props: InputWrapperProps) => {
         props.className
     )
 
+    const renderCheckboxLabel: () => JSX.Element | boolean = () => props.type === 'checkbox' && (
+        <div className={styles['checkbox-label']}>
+            {props.label}
+        </div>
+    )
+
     return (
         <div
             className={classNames(styles['input-wrapper'], styles[props.type])}
@@ -50,18 +56,24 @@ const InputWrapper: FC<InputWrapperProps> = (props: InputWrapperProps) => {
                     className={styles.label}
                     role='presentation'
                 >
-                    <div className={styles['label-and-hint']}>
-                        <div>
-                            {props.label}
-                        </div>
-                        {!!props.hint && (
-                            <div className={styles.hint}>
-                                {props.hint}
+                    {
+                        props.type !== 'checkbox' && (
+                            <div className={styles['label-and-hint']}>
+                                <div>
+                                    {props.label}
+                                </div>
+                                {!!props.hint && (
+                                    <div className={styles.hint}>
+                                        {props.hint}
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
+                        )
+                    }
 
                     {props.children}
+
+                    {renderCheckboxLabel()}
                 </label>
             </div>
 

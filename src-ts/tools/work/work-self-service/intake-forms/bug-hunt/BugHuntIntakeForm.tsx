@@ -47,6 +47,10 @@ const BugHuntIntakeForm: React.FC = () => {
     BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { action = 'save' }
     BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { action = 'submit' }
 
+    let action: string = ''
+    BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { action = 'save' }
+    BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { action = 'submit' }
+
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })

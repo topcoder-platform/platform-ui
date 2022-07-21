@@ -35,7 +35,26 @@ $error-line-height: 14px;
         border-color: transparent;
     }
 
-    &:not(.rating) {
+    &.checkbox {
+        border-color: transparent;
+        padding-left: 0;
+
+        .label {
+            color: $tc-black;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            @include ltemd {
+                align-items: flex-start;
+            }
+            .checkbox-label {
+                margin-left: $pad-sm;
+                flex: 1;
+            }
+        }
+    }
+
+    &:not(.rating):not(.checkbox) {
 
         &:hover,
         &.focus {
@@ -51,7 +70,7 @@ $error-line-height: 14px;
         }
     }
 
-    &.focus,
+    &.focus:not(.checkbox),
     &.input-error {
         border-width: $border;
         padding: calc($pad-sm - $border-xs) calc($form-pad-top - $border-xs) 0 calc($form-pad-top - $border-xs);

@@ -10,7 +10,11 @@ export interface WorkTypeConfig {
     description: string,
     duration: number,
     featured: boolean,
+<<<<<<< HEAD
     intakeFormRoutes: object,
+=======
+    intakeFormRoutes: ReadonlyArray<string>
+>>>>>>> PROD-2321_bug-hunt-intake-form
     priceConfig: WorkPrice
     results: string,
     review: {
