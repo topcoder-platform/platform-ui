@@ -41,7 +41,7 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
                 <Button
                     buttonStyle='secondary'
                     size='xs'
-                    label='Get your certificate'
+                    label='View certificate'
                     onClick={props.onClickCertificateBtn}
                 />
             </>
