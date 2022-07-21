@@ -52,17 +52,17 @@ const BugHuntIntakeForm: React.FC = () => {
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
 
+    const [formValues, setFormValues]: [any,  Dispatch<any>] = useState({
+        currentStep: 'basicInfo',
+        [ChallengeMetadataName.packageType]: 'standard',
+    })
+
     function findMetadata(metadataName: ChallengeMetadataName): ChallengeMetadata | undefined {
         return challenge?.metadata?.find((item: ChallengeMetadata) => item.name === metadataName)
     }
 
-    let defaultValues: Record<string, any> = {
-        currentStep: 'basicInfo',
-        [ChallengeMetadataName.packageType]: 'standard',
-    }
-
     const [selectedPackage, setSelectedPackage]: [PricePackageName, Dispatch<SetStateAction<PricePackageName>>]
-        = useState<PricePackageName>(defaultValues.packageType)
+        = useState<PricePackageName>(formValues.packageType)
 
     useEffect(() => {
         // We only need to pull data for existing challenges. We check if there is a workId instead of a challenge.
@@ -71,7 +71,6 @@ const BugHuntIntakeForm: React.FC = () => {
             const intakeFormBH: ChallengeMetadata | undefined = findMetadata(ChallengeMetadataName.intakeForm)
             if (intakeFormBH) {
                 const formData: Record<string, any> = JSON.parse(intakeFormBH.value)
-
                 // TODO: Set the correct currentStep into challenge's form data when saving form and moving on to a new page
                 if (formData.currentStep && formData.currentStep !== 'basicInfo') {
                     if (!isLoggedIn) {
@@ -81,7 +80,7 @@ const BugHuntIntakeForm: React.FC = () => {
                     }
                 }
 
-                defaultValues = formData.form.basicInfo
+                setFormValues(formData.form.basicInfo)
 
                 if (formData.form.basicInfo.packageType !== selectedPackage) {
                     setSelectedPackage(formData.form.basicInfo.packageType)
@@ -185,7 +184,7 @@ const BugHuntIntakeForm: React.FC = () => {
                 <Form
                     onChange={onChange}
                     formDef={formDef}
-                    formValues={defaultValues}
+                    formValues={formValues}
                     onSuccess={onSaveSuccess}
                     requestGenerator={requestGenerator}
                     save={onSave}

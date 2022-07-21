@@ -35,7 +35,7 @@ const Review: React.FC = () => {
     const redirectUrl: string = WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']
 
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
-    let formData: any = {}
+    const [formData, setFormData]: [any,  Dispatch<any>] = useState({})
 
     function findMetadata(metadataName: ChallengeMetadataName): ChallengeMetadata | undefined {
         return challenge?.metadata?.find((item: ChallengeMetadata) => item.name === metadataName)
@@ -54,7 +54,7 @@ const Review: React.FC = () => {
     useEffect(() => {
         if (challenge) {
             const intakeFormBH: any = findMetadata(ChallengeMetadataName.intakeForm)
-            formData = JSON.parse(intakeFormBH.value).form
+            setFormData(JSON.parse(intakeFormBH.value).form)
         }
 
     }, [challenge])
