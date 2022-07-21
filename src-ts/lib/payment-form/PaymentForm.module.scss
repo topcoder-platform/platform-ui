@@ -60,4 +60,10 @@
     .pay-button {
         width: 100%;
     }
+
+    .error {
+        @extend .body-small;
+        color: $red-120;
+        margin-bottom: $pad-lg;
+    }
 }

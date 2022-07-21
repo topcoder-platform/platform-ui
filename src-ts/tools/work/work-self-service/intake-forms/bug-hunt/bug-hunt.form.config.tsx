@@ -22,7 +22,7 @@ export const BugHuntFormConfig: FormDefinition = {
         ],
         secondaryGroup: [
             {
-                buttonStyle: 'icon',
+                buttonStyle: 'icon-bordered',
                 icon: BackIcon,
                 onClick: () => { },
                 type: 'button',
