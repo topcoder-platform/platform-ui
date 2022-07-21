@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
 
 import {
     Form,
@@ -14,6 +14,7 @@ import {
 import {
     Challenge,
     ChallengeMetadataName,
+    PricePackageName,
     workBugHuntConfig,
     workCreateAsync,
     WorkType,
@@ -22,15 +23,24 @@ import {
 import { workStoreGetChallengeByWorkId } from '../../../work-lib/work-provider/work-functions/work-store'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
+import { dashboardRoute } from '../../../work.routes'
 
 import { BugHuntFormConfig } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
 import { DeliverablesInfoCard } from './deliverables-info-card'
 
-
+interface DefaultValues {
+    [ChallengeMetadataName.packageType]: PricePackageName
+}
 const BugHuntIntakeForm: React.FC = () => {
     const workId: string | undefined = useParams().workId
+    const navigate: NavigateFunction = useNavigate()
+
     const isMobile: boolean = useCheckIsMobile()
+
+    let action: string = ''
+    BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { action = 'save' }
+    BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { action = 'submit' }
 
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
@@ -38,8 +48,13 @@ const BugHuntIntakeForm: React.FC = () => {
 
     const defaultValues: object = {
         currentStep: 'basicInfo',
-        packageType: 'standard',
+        [ChallengeMetadataName.packageType]: 'standard',
     }
+
+    const [selectedPackage, setSelectedPackage]: [PricePackageName, Dispatch<SetStateAction<PricePackageName>>]
+        = useState<PricePackageName>(defaultValues.packageType)
+
+
 
     useEffect(() => {
         const useEffectAsync: () => Promise<void> = async () => {
@@ -54,8 +69,8 @@ const BugHuntIntakeForm: React.FC = () => {
                 // Maybe?
                 // defaultValues = response.values
                 // TODO: after fetch, if currentStep !== 'basicInfo'
-                    // - if !LoggedIn, direct to LoginPrompt
-                    // - else direct to routes[bughunt].currentStep
+                // - if !LoggedIn, direct to LoginPrompt
+                // - else direct to routes[bughunt].currentStep
             }
         }
 
@@ -81,13 +96,26 @@ const BugHuntIntakeForm: React.FC = () => {
         }
     }
 
+    const onChange: (inputs: ReadonlyArray<FormInputModel>) => void = (inputs) => {
+        const packageType: PricePackageName = formGetInputModel(inputs, ChallengeMetadataName.packageType).value as PricePackageName
+
+        if (packageType !== selectedPackage) {
+            setSelectedPackage(packageType)
+        }
+    }
+
     const onSave: (val: any) => Promise<void> = (val: any) => {
         if (!challenge) { return Promise.resolve() }
 
         return workUpdateAsync(WorkType.bugHunt, challenge, val)
-            .then(() => {
-                // TODO: Navigate to a different page (review, back to dashboard, etc)
-            })
+    }
+
+    const onSaveSuccess: () => void = () => {
+        if (action === 'save') {
+            navigate(`${dashboardRoute}/draft`)
+        } else if (action === 'submit') {
+            // TODO navigate to review & payment page
+        }
     }
 
     return (
@@ -101,7 +129,7 @@ const BugHuntIntakeForm: React.FC = () => {
                 duration={workBugHuntConfig.duration}
                 hideTitle
                 icon={<IconOutline.BadgeCheckIcon width={48} height={48} />}
-                price={1599} // TODO in PROD-2446 - Budget/Pricing. Matching Figma mockup until then.
+                price={workBugHuntConfig.priceConfig.getPrice(workBugHuntConfig.priceConfig, selectedPackage)}
                 serviceType={workBugHuntConfig.type}
                 showIcon
             />
@@ -116,7 +144,14 @@ const BugHuntIntakeForm: React.FC = () => {
                     {workBugHuntConfig.about}
                 </InfoCard>
                 <PageDivider />
-                <Form formDef={formDef} formValues={defaultValues} requestGenerator={requestGenerator} save={onSave} />
+                <Form
+                    onChange={onChange}
+                    formDef={formDef}
+                    formValues={defaultValues}
+                    onSuccess={onSaveSuccess}
+                    requestGenerator={requestGenerator}
+                    save={onSave}
+                />
             </div>
         </>
     )

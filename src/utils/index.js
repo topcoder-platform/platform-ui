@@ -57,7 +57,7 @@ export function getDataAdvisoryPriceAndTimelineEstimate() {
   const total = workPriceProblem.getPrice(workPriceProblem);
   return {
     total,
-    stickerPrice: workPriceProblem.base.price,
+    stickerPrice: workPriceProblem.packages?.base?.price,
     submissionDuration: 3,
     totalDuration: dataAdvisoryConfigs.DEFAULT_DURATION,
     prizeSets: [
@@ -89,7 +89,7 @@ export function getDataExplorationPriceAndTimelineEstimate() {
   const total = workPriceData.getPrice(workPriceData)
   return {
     total,
-    stickerPrice: workPriceData.base.price,
+    stickerPrice: workPriceData.packages?.base?.price,
     submissionDuration: 3,
     totalDuration: dataExplorationConfigs.DEFAULT_DURATION,
     prizeSets: [
@@ -121,7 +121,7 @@ export function getWebsiteDesignPriceAndTimelineEstimate() {
   const total = workPriceDesign.getPrice(workPriceDesign);
   return {
     total,
-    // stickerPrice: workPriceDesign.base,
+    // stickerPrice: workPriceDesign.packages?.base?.price,
     submissionDuration: 4,
     totalDuration: websiteDesignConfigs.DEFAULT_DURATION,
     prizeSets: [
@@ -162,7 +162,7 @@ export function getFindMeDataPriceAndTimelineEstimate() {
 
   return {
     total,
-    stickerPrice: workPriceFindData.base.price,
+    stickerPrice: workPriceFindData.packages?.base?.price,
     submissionDuration: 3,
     totalDuration: findMeDataConfigs.DEFAULT_DURATION,
     prizeSets: [

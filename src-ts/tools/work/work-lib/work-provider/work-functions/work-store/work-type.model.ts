@@ -3,7 +3,7 @@ import { WorkPrice } from './work-price.model'
 import { WorkTimelinePhase } from './work-timeline-phase.model'
 import { WorkType } from './work-type.enum'
 
-export interface WorkTypeConfig extends WorkPrice {
+export interface WorkTypeConfig {
     about: string,
     bgImage: string,
     deliverablesDescription: string,
@@ -11,6 +11,7 @@ export interface WorkTypeConfig extends WorkPrice {
     duration: number,
     featured: boolean,
     intakeFormRoutes: object,
+    priceConfig: WorkPrice
     results: string,
     review: {
         subtitle: string,
