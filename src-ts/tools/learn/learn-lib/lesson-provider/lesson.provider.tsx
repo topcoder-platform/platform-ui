@@ -18,6 +18,8 @@ export function useLessonProvider(
     })
 
     useEffect(() => {
+        let mounted: boolean = true;
+
         if (!course || !module || !lesson) {
             setState((prevState) => ({
                 ...prevState,
@@ -34,6 +36,10 @@ export function useLessonProvider(
         }))
 
         getCourseAsync(provider, course).then((courseData) => {
+            if (!mounted) {
+                return
+            }
+
             const moduleData: LearnModule|undefined = courseData?.modules.find(m => m.key === module)
             const lessonData: LearnLesson|undefined = moduleData?.lessons.find(l => l.dashedName === lesson)
 
@@ -64,6 +70,8 @@ export function useLessonProvider(
                 ready: true,
             }))
         })
+
+        return () => {mounted = false};
     }, [provider, course, module, lesson])
 
     return state
