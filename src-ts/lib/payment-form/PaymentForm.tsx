@@ -86,8 +86,6 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
         })
     }
 
-    console.log(props.formData)
-
     return (
         <div className={styles['payment-form']}>
             <OrderContractModal

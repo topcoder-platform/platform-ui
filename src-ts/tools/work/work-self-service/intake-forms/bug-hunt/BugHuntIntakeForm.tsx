@@ -8,6 +8,7 @@ import {
     FormInputModel,
     IconOutline,
     InfoCard,
+    LoadingSpinner,
     PageDivider,
     profileContext,
     ProfileContextData,
@@ -51,43 +52,17 @@ const BugHuntIntakeForm: React.FC = () => {
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
 
+    const [formValues, setFormValues]: [any,  Dispatch<any>] = useState({
+        currentStep: 'basicInfo',
+        [ChallengeMetadataName.packageType]: 'standard',
+    })
+
     function findMetadata(metadataName: ChallengeMetadataName): ChallengeMetadata | undefined {
         return challenge?.metadata?.find((item: ChallengeMetadata) => item.name === metadataName)
     }
 
-    let defaultValues: Record<string, any> = {
-        currentStep: 'basicInfo',
-        [ChallengeMetadataName.packageType]: 'standard',
-    }
-
     const [selectedPackage, setSelectedPackage]: [PricePackageName, Dispatch<SetStateAction<PricePackageName>>]
-        = useState<PricePackageName>(defaultValues.packageType)
-
-    useEffect(() => {
-        // We only need to pull data for existing challenges. We check if there is a workId instead of a challenge.
-        // This prevents a render, but more importantly enforces that formData will actually contain values, preventing the React WSOD.
-        if (workId) {
-            const intakeFormBH: ChallengeMetadata | undefined = findMetadata(ChallengeMetadataName.intakeForm)
-            if (intakeFormBH) {
-                const formData: Record<string, any> = JSON.parse(intakeFormBH.value)
-
-                // TODO: Set the correct currentStep into challenge's form data when saving form and moving on to a new page
-                if (formData.currentStep && formData.currentStep !== 'basicInfo') {
-                    if (!isLoggedIn) {
-                        navigate(WorkIntakeFormRoutes[WorkType.bugHunt]['loginPrompt'])
-                    } else {
-                        navigate(WorkIntakeFormRoutes[WorkType.bugHunt][formData.currentStep])
-                    }
-                }
-
-                defaultValues = formData.form.basicInfo
-
-                if (formData.form.basicInfo.packageType !== selectedPackage) {
-                    setSelectedPackage(formData.form.basicInfo.packageType)
-                }
-            }
-        }
-    }, [challenge])
+        = useState<PricePackageName>(formValues.packageType)
 
     useEffect(() => {
         const useEffectAsync: () => Promise<void> = async () => {
@@ -98,9 +73,26 @@ const BugHuntIntakeForm: React.FC = () => {
             } else {
                 // fetch challenge using workId
                 const response: any = await workStoreGetChallengeByWorkId(workId)
-                // TODO - if we have a workID, but no challenge, we may need a loading spinner to display until the re-render after this setChallenge()
-                // TODO - Question for team: do we need to secure this fetch on the front-end, or does the back-end validate that the current user has access before giving us the data?
                 setChallenge(response)
+
+                const intakeFormBH: ChallengeMetadata | undefined = response.metadata?.find((item: ChallengeMetadata) => item.name === ChallengeMetadataName.intakeForm)
+                if (intakeFormBH) {
+                    const formData: Record<string, any> = JSON.parse(intakeFormBH.value)
+                    // TODO: Set the correct currentStep into challenge's form data when saving form and moving on to a new page
+                    if (formData.currentStep && formData.currentStep !== 'basicInfo') {
+                        if (!isLoggedIn) {
+                            navigate(WorkIntakeFormRoutes[WorkType.bugHunt]['loginPrompt'])
+                        } else {
+                            navigate(WorkIntakeFormRoutes[WorkType.bugHunt][formData.currentStep])
+                        }
+                    }
+
+                    setFormValues(formData.form.basicInfo)
+
+                    if (formData.form.basicInfo.packageType !== selectedPackage) {
+                        setSelectedPackage(formData.form.basicInfo.packageType)
+                    }
+                }
             }
         }
 
@@ -153,6 +145,10 @@ const BugHuntIntakeForm: React.FC = () => {
         }
     }
 
+    if (!challenge && workId) {
+        return <LoadingSpinner />
+    }
+
     return (
         <>
             <WorkTypeBanner
@@ -182,7 +178,7 @@ const BugHuntIntakeForm: React.FC = () => {
                 <Form
                     onChange={onChange}
                     formDef={formDef}
-                    formValues={defaultValues}
+                    formValues={formValues}
                     onSuccess={onSaveSuccess}
                     requestGenerator={requestGenerator}
                     save={onSave}

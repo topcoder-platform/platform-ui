@@ -60,17 +60,19 @@ const Review: React.FC = () => {
     const stripe: Stripe | null = useStripe()
     const elements: StripeElements | null = useElements()
 
-    function findMetadata(metadataName: ChallengeMetadataName): ChallengeMetadata | undefined {
-        return challenge?.metadata?.find((item: ChallengeMetadata) => item.name === metadataName)
-    }
-
     useEffect(() => {
         const useEffectAsync: () => Promise<void> = async () => {
             // fetch challenge using workId
             const response: any = await workStoreGetChallengeByWorkId(workId)
             setChallenge(response)
+            const intakeFormBH: any = response.metadata.find((item: ChallengeMetadata) => item.name === ChallengeMetadataName.intakeForm)
+            const form: any = JSON.parse(intakeFormBH.value).form
+            setFormData(JSON.parse(intakeFormBH.value).form)
+            setFormValues({
+                ...formFieldValues,
+                price: `$${getPrice(form.basicInfo.packageType)}`,
+            })
         }
-
         useEffectAsync()
     }, [workId])
 
@@ -81,19 +83,6 @@ const Review: React.FC = () => {
             name: `${profile?.firstName} ${profile?.lastName}`,
         })
     }, [profile])
-
-    useEffect(() => {
-        if (challenge) {
-            const intakeFormBH: any = findMetadata(ChallengeMetadataName.intakeForm)
-            const form: any = JSON.parse(intakeFormBH.value).form
-            setFormData(form)
-            setFormValues({
-                ...formFieldValues,
-                price: `$${getPrice(form.basicInfo.packageType)}`,
-            })
-        }
-
-    }, [challenge])
 
     const onUpdateField: (fieldName: string, value: string | boolean) => void = (fieldName, value) => {
         setFormValues({
