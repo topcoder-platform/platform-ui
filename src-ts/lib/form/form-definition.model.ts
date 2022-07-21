@@ -1,5 +1,7 @@
 import { FormButton, FormGroup } from '.'
 
+export type FormAction = 'save' | 'submit' | undefined
+
 export interface FormButtons {
     primaryGroup: ReadonlyArray<FormButton>
     secondaryGroup?: ReadonlyArray<FormButton>

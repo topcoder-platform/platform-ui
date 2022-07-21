@@ -6,7 +6,7 @@ export interface FormButton {
     readonly buttonStyle?: ButtonStyle
     readonly icon?: FC<SVGProps<SVGSVGElement>>
     readonly isReset?: boolean
-    readonly isSave?: boolean
+    readonly isSubmit?: boolean
     readonly label?: string
     readonly notTabble?: boolean
     onClick?: (event?: any) => void

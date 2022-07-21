@@ -3,6 +3,7 @@ import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
 
 import {
     Form,
+    FormAction,
     FormDefinition,
     formGetInputModel,
     FormInputModel,
@@ -44,15 +45,16 @@ const BugHuntIntakeForm: React.FC = () => {
     const isMobile: boolean = useCheckIsMobile()
     const { isLoggedIn }: ProfileContextData = useContext<ProfileContextData>(profileContext)
 
-    let action: string = ''
-    BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { action = 'save' }
-    BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { action = 'submit' }
+    const [action, setAction]: [FormAction, Dispatch<SetStateAction<FormAction>>] = useState()
+
+    BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { setAction('save') }
+    BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { setAction('submit') }
 
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
 
-    const [formValues, setFormValues]: [any,  Dispatch<any>] = useState({
+    const [formValues, setFormValues]: [any, Dispatch<any>] = useState({
         currentStep: 'basicInfo',
         [ChallengeMetadataName.packageType]: 'standard',
     })
@@ -182,6 +184,7 @@ const BugHuntIntakeForm: React.FC = () => {
                     onSuccess={onSaveSuccess}
                     requestGenerator={requestGenerator}
                     save={onSave}
+                    action={action}
                 />
             </div>
         </>

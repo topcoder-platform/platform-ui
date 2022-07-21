@@ -15,6 +15,7 @@ export const BugHuntFormConfig: FormDefinition = {
             },
             {
                 buttonStyle: 'primary',
+                isSubmit: true,
                 label: 'Complete and pay',
                 onClick: () => { },
                 type: 'submit',

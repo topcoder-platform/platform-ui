@@ -5,7 +5,7 @@ export const workFeedbackFormDef: FormDefinition = {
         primaryGroup: [
             {
                 buttonStyle: 'primary',
-                isSave: true,
+                isSubmit: true,
                 label: 'Mark as done',
                 size: 'xl',
                 type: 'submit',
