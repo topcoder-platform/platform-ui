@@ -1,24 +1,15 @@
 import { FC } from 'react'
-import { NavigateFunction, useNavigate } from 'react-router-dom'
 
 import config from '../../../../config'
 import { Button } from '../../../lib'
 
 import styles from './WorkLoginPrompt.module.scss'
 
-export interface WorkLoginPromptProps {
-    isLoggedIn: boolean,
-    nextPageUrl: string,
-}
-
-const WorkLoginPrompt: FC<WorkLoginPromptProps> = (props: WorkLoginPromptProps) => {
-    const { isLoggedIn, nextPageUrl }: WorkLoginPromptProps = props
-    const navigate: NavigateFunction = useNavigate()
-
-    if (isLoggedIn) {
-        navigate(nextPageUrl)
-        return <></>
-    }
+const WorkLoginPrompt: FC = () => {
+    // TODO: I removed the old logic for nextUrl and isLoggedIn ebcuase we are handling redirects in the intake forms
+    // and we won't necessarily have that data in works.routes
+    // Yet, we may still need to circle back here because I haven't handled telling auth0 where to go next after a log in.
+    // If we do need the logic in this component, we can call isLoggedIn from Context, and import the routes for worktypes to determine the next route.
 
     const onLogin: () => void = () => {
         window.location.href = config.SIGN_IN_URL

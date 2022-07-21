@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { PlatformRoute } from '../../lib'
 
 import Work, { toolTitle } from './Work'
+import { WorkLoginPrompt } from './work-login-prompt'
 import { WorkNotLoggedIn } from './work-not-logged-in'
 import { BugHuntIntakeForm, Review } from './work-self-service'
 import IntakeForms, { intakeFormsTitle } from './work-self-service/intake-forms/IntakeForms'
@@ -52,14 +53,31 @@ export const workRoutes: Array<PlatformRoute> = [
     },
     {
         children: [
+            // Bug Hunt
             {
                 element: <BugHuntIntakeForm />,
                 route: `bug-hunt/basic-info`,
                 title: intakeFormsTitle,
             },
             {
+                element: <BugHuntIntakeForm />,
+                route: `bug-hunt/basic-info/:workId`,
+                title: intakeFormsTitle,
+            },
+            // General
+            {
+                element: <WorkLoginPrompt />,
+                route: `:workType/login-prompt`,
+                title: intakeFormsTitle,
+            },
+            {
                 element: <Review />,
-                route: `bug-hunt/basic-info/review`,
+                route: `:workType/review`,
+                title: intakeFormsTitle,
+            },
+            {
+                element: <Review />,
+                route: `:workType/review/:workId`,
                 title: intakeFormsTitle,
             },
             {
