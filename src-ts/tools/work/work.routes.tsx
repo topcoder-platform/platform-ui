@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { PlatformRoute } from '../../lib'
 
 import Work, { toolTitle } from './Work'
+import { WorkLoginPrompt } from './work-login-prompt'
 import { WorkNotLoggedIn } from './work-not-logged-in'
 import { BugHuntIntakeForm, Review } from './work-self-service'
 import { WorkTable } from './work-table'
@@ -56,6 +57,10 @@ export const workRoutes: Array<PlatformRoute> = [
     {
         element: <BugHuntIntakeForm />,
         route: `/${selfServiceRootRoute}/work/new/bug-hunt/basic-info/:workId`,
+    },
+    {
+        element: <WorkLoginPrompt />,
+        route: `/${selfServiceRootRoute}${rootRoute}/new/:workType/login-prompt`,
     },
     {
         element: <Review />,
