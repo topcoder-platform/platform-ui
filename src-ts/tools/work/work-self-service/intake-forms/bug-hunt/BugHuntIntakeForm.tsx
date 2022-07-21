@@ -65,31 +65,6 @@ const BugHuntIntakeForm: React.FC = () => {
         = useState<PricePackageName>(formValues.packageType)
 
     useEffect(() => {
-        // We only need to pull data for existing challenges. We check if there is a workId instead of a challenge.
-        // This prevents a render, but more importantly enforces that formData will actually contain values, preventing the React WSOD.
-        if (workId) {
-            const intakeFormBH: ChallengeMetadata | undefined = findMetadata(ChallengeMetadataName.intakeForm)
-            if (intakeFormBH) {
-                const formData: Record<string, any> = JSON.parse(intakeFormBH.value)
-                // TODO: Set the correct currentStep into challenge's form data when saving form and moving on to a new page
-                if (formData.currentStep && formData.currentStep !== 'basicInfo') {
-                    if (!isLoggedIn) {
-                        navigate(WorkIntakeFormRoutes[WorkType.bugHunt]['loginPrompt'])
-                    } else {
-                        navigate(WorkIntakeFormRoutes[WorkType.bugHunt][formData.currentStep])
-                    }
-                }
-
-                setFormValues(formData.form.basicInfo)
-
-                if (formData.form.basicInfo.packageType !== selectedPackage) {
-                    setSelectedPackage(formData.form.basicInfo.packageType)
-                }
-            }
-        }
-    }, [challenge])
-
-    useEffect(() => {
         const useEffectAsync: () => Promise<void> = async () => {
             if (!workId) {
                 // create challenge
@@ -99,6 +74,25 @@ const BugHuntIntakeForm: React.FC = () => {
                 // fetch challenge using workId
                 const response: any = await workStoreGetChallengeByWorkId(workId)
                 setChallenge(response)
+
+                const intakeFormBH: ChallengeMetadata | undefined = response.metadata?.find((item: ChallengeMetadata) => item.name === ChallengeMetadataName.intakeForm)
+                if (intakeFormBH) {
+                    const formData: Record<string, any> = JSON.parse(intakeFormBH.value)
+                    // TODO: Set the correct currentStep into challenge's form data when saving form and moving on to a new page
+                    if (formData.currentStep && formData.currentStep !== 'basicInfo') {
+                        if (!isLoggedIn) {
+                            navigate(WorkIntakeFormRoutes[WorkType.bugHunt]['loginPrompt'])
+                        } else {
+                            navigate(WorkIntakeFormRoutes[WorkType.bugHunt][formData.currentStep])
+                        }
+                    }
+
+                    setFormValues(formData.form.basicInfo)
+
+                    if (formData.form.basicInfo.packageType !== selectedPackage) {
+                        setSelectedPackage(formData.form.basicInfo.packageType)
+                    }
+                }
             }
         }
 

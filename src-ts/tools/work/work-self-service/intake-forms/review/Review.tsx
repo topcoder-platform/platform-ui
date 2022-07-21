@@ -34,30 +34,17 @@ const Review: React.FC = () => {
     const workId: string | undefined = useParams().workId
     const redirectUrl: string = WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']
 
-    const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
-    const [formData, setFormData]: [any,  Dispatch<any>] = useState({})
-
-    function findMetadata(metadataName: ChallengeMetadataName): ChallengeMetadata | undefined {
-        return challenge?.metadata?.find((item: ChallengeMetadata) => item.name === metadataName)
-    }
+    const [formData, setFormData]: [any, Dispatch<any>] = useState({})
 
     useEffect(() => {
         const useEffectAsync: () => Promise<void> = async () => {
             // fetch challenge using workId
             const response: any = await workStoreGetChallengeByWorkId(workId)
-            setChallenge(response)
-        }
-
-        useEffectAsync()
-    }, [workId])
-
-    useEffect(() => {
-        if (challenge) {
-            const intakeFormBH: any = findMetadata(ChallengeMetadataName.intakeForm)
+            const intakeFormBH: any = response.metadata.find((item: ChallengeMetadata) => item.name === ChallengeMetadataName.intakeForm)
             setFormData(JSON.parse(intakeFormBH.value).form)
         }
-
-    }, [challenge])
+        useEffectAsync()
+    }, [workId])
 
     const [formFieldValues, setFormValues]: [FormFieldValues, Dispatch<SetStateAction<FormFieldValues>>] = useState<FormFieldValues>({
         cardComplete: false,
