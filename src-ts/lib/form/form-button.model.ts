@@ -9,7 +9,7 @@ export interface FormButton {
     readonly isSave?: boolean
     readonly label?: string
     readonly notTabble?: boolean
-    readonly onClick?: (event?: any) => void
+    onClick?: (event?: any) => void
     readonly route?: string
     readonly size?: ButtonSize
     readonly type?: ButtonType

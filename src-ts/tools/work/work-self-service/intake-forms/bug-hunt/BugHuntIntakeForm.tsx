@@ -1,4 +1,5 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import { NavigateFunction, useNavigate } from 'react-router-dom'
 
 import {
     Form,
@@ -21,6 +22,7 @@ import {
 } from '../../../work-lib'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
+import { dashboardRoute } from '../../../work.routes'
 
 import { BugHuntFormConfig } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
@@ -36,7 +38,13 @@ interface DefaultValues {
 
 const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
 
+    const navigate: NavigateFunction = useNavigate()
+
     const isMobile: boolean = useCheckIsMobile()
+
+    let action: string = ''
+    BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { action = 'save' }
+    BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { action = 'submit' }
 
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
@@ -94,9 +102,14 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
         if (!challenge) { return Promise.resolve() }
 
         return workUpdateAsync(WorkType.bugHunt, challenge, val)
-            .then(() => {
-                // TODO: Navigate to a different page (review, back to dashboard, etc)
-            })
+    }
+
+    const onSaveSuccess: () => void = () => {
+        if (action === 'save') {
+            navigate(`${dashboardRoute}/draft`)
+        } else if (action === 'submit') {
+            // TODO navigate to review & payment page
+        }
     }
 
     return (
@@ -125,7 +138,14 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
                     {workBugHuntConfig.about}
                 </InfoCard>
                 <PageDivider />
-                <Form onChange={onChange} formDef={formDef} formValues={defaultValues} requestGenerator={requestGenerator} save={onSave} />
+                <Form
+                    onChange={onChange}
+                    formDef={formDef}
+                    formValues={defaultValues}
+                    onSuccess={onSaveSuccess}
+                    requestGenerator={requestGenerator}
+                    save={onSave}
+                />
             </div>
         </>
     )
