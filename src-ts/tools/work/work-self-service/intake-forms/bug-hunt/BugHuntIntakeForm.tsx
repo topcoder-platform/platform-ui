@@ -1,5 +1,5 @@
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
-import { NavigateFunction, useNavigate } from 'react-router-dom'
+import React, { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
+import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
 
 import {
     Form,
@@ -8,7 +8,10 @@ import {
     FormInputModel,
     IconOutline,
     InfoCard,
+    LoadingSpinner,
     PageDivider,
+    profileContext,
+    ProfileContextData,
     useCheckIsMobile
 } from '../../../../../lib'
 import {
@@ -20,6 +23,8 @@ import {
     WorkType,
     workUpdateAsync
 } from '../../../work-lib'
+import { ChallengeMetadata, workStoreGetChallengeByWorkId } from '../../../work-lib/work-provider/work-functions/work-store'
+import { WorkIntakeFormRoutes } from '../../../work-lib/work-provider/work-functions/work-store/work-intake-form-routes.config'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
 import { dashboardRoute } from '../../../work.routes'
@@ -28,19 +33,16 @@ import { BugHuntFormConfig } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
 import { DeliverablesInfoCard } from './deliverables-info-card'
 
-interface BugHuntIntakeFormProps {
-    workId?: string
-}
-
 interface DefaultValues {
     [ChallengeMetadataName.packageType]: PricePackageName
 }
 
-const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
-
+const BugHuntIntakeForm: React.FC = () => {
+    const workId: string | undefined = useParams().workId
     const navigate: NavigateFunction = useNavigate()
 
     const isMobile: boolean = useCheckIsMobile()
+    const { isLoggedIn }: ProfileContextData = useContext<ProfileContextData>(profileContext)
 
     let action: string = ''
     BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { action = 'save' }
@@ -50,12 +52,17 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
 
-    const defaultValues: DefaultValues = {
+    const [formValues, setFormValues]: [any,  Dispatch<any>] = useState({
+        currentStep: 'basicInfo',
         [ChallengeMetadataName.packageType]: 'standard',
+    })
+
+    function findMetadata(metadataName: ChallengeMetadataName): ChallengeMetadata | undefined {
+        return challenge?.metadata?.find((item: ChallengeMetadata) => item.name === metadataName)
     }
 
     const [selectedPackage, setSelectedPackage]: [PricePackageName, Dispatch<SetStateAction<PricePackageName>>]
-        = useState<PricePackageName>(defaultValues.packageType)
+        = useState<PricePackageName>(formValues.packageType)
 
     useEffect(() => {
         const useEffectAsync: () => Promise<void> = async () => {
@@ -64,7 +71,28 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
                 const response: any = await workCreateAsync(WorkType.bugHunt)
                 setChallenge(response)
             } else {
-                // TODO: fetch challenge using workId
+                // fetch challenge using workId
+                const response: any = await workStoreGetChallengeByWorkId(workId)
+                setChallenge(response)
+
+                const intakeFormBH: ChallengeMetadata | undefined = response.metadata?.find((item: ChallengeMetadata) => item.name === ChallengeMetadataName.intakeForm)
+                if (intakeFormBH) {
+                    const formData: Record<string, any> = JSON.parse(intakeFormBH.value)
+                    // TODO: Set the correct currentStep into challenge's form data when saving form and moving on to a new page
+                    if (formData.currentStep && formData.currentStep !== 'basicInfo') {
+                        if (!isLoggedIn) {
+                            navigate(WorkIntakeFormRoutes[WorkType.bugHunt]['loginPrompt'])
+                        } else {
+                            navigate(WorkIntakeFormRoutes[WorkType.bugHunt][formData.currentStep])
+                        }
+                    }
+
+                    setFormValues(formData.form.basicInfo)
+
+                    if (formData.form.basicInfo.packageType !== selectedPackage) {
+                        setSelectedPackage(formData.form.basicInfo.packageType)
+                    }
+                }
             }
         }
 
@@ -108,8 +136,17 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
         if (action === 'save') {
             navigate(`${dashboardRoute}/draft`)
         } else if (action === 'submit') {
-            // TODO navigate to review & payment page
+            if (!isLoggedIn) {
+                navigate(WorkIntakeFormRoutes[WorkType.bugHunt]['loginPrompt'])
+            } else {
+                const nextUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt]['review']}/${workId || challenge?.id}`
+                navigate(nextUrl)
+            }
         }
+    }
+
+    if (!challenge && workId) {
+        return <LoadingSpinner />
     }
 
     return (
@@ -141,7 +178,7 @@ const BugHuntIntakeForm: React.FC<BugHuntIntakeFormProps> = ({ workId }) => {
                 <Form
                     onChange={onChange}
                     formDef={formDef}
-                    formValues={defaultValues}
+                    formValues={formValues}
                     onSuccess={onSaveSuccess}
                     requestGenerator={requestGenerator}
                     save={onSave}

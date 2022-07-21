@@ -20,7 +20,6 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
         a detailed report of bugs which have steps to reproduce, screenshots / videos if applicable,
         details of the bug, and severity of the issue.`,
                 description: 'Conduct a time based testing bug hunt where Topcoder experts scramble to find bugs or issues in the system',
-                // TODO: The duration will be based on the package the user selects
                 duration: 7,
                 featured: true,
                 intakeFormRoutes: WorkIntakeFormRoutes[WorkType.bugHunt],
@@ -34,7 +33,7 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
                         type: 'Review & Payment',
                 },
                 shortDescription: 'Find bugs quickly and vigorously',
-                startRoute: WorkIntakeFormRoutes[WorkType.bugHunt][1],
+                startRoute: WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo'],
                 subtitle: `Conduct a time based testing bug hunt where Topcoder experts scramble to find bugs or issues in the system`,
                 tags: [ChallengeTag.qa],
                 timeline: WorkTimelines[WorkType.bugHunt],

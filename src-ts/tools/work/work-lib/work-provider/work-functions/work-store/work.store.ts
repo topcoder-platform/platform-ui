@@ -18,6 +18,10 @@ export async function getAsync(handle: string, page: Page): Promise<Array<Challe
     return xhrGetAsync<Array<Challenge>>(getUrl(handle, page))
 }
 
+export async function getChallengeByWorkId(workId: string): Promise<Challenge> {
+    return xhrGetAsync<Challenge>(updateUrl(workId))
+}
+
 export function getFilteredByStatus(work: ReadonlyArray<Work>, workStatusFilter?: WorkStatusFilter): Array<Work> {
     // this is implemented in the work store
     // bc in the future we might actually want

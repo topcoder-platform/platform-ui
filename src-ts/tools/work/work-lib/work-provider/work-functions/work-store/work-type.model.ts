@@ -10,7 +10,7 @@ export interface WorkTypeConfig {
     description: string,
     duration: number,
     featured: boolean,
-    intakeFormRoutes: ReadonlyArray<string>
+    intakeFormRoutes: object,
     priceConfig: WorkPrice
     results: string,
     review: {
