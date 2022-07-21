@@ -53,7 +53,7 @@ const BugHuntIntakeForm: React.FC = () => {
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
 
-    const [formValues, setFormValues]: [any,  Dispatch<any>] = useState({
+    const [formValues, setFormValues]: [any, Dispatch<any>] = useState({
         currentStep: 'basicInfo',
         [ChallengeMetadataName.packageType]: 'standard',
     })
@@ -153,7 +153,7 @@ const BugHuntIntakeForm: React.FC = () => {
     return (
         <>
             <IntakeFormsBreadcrumb
-                basicInfoRoute={workBugHuntConfig.intakeFormRoutes[1]}
+                basicInfoRoute={WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']}
                 workType={workBugHuntConfig.type}
             />
             <WorkTypeBanner
