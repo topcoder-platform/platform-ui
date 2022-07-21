@@ -52,7 +52,7 @@ const Review: React.FC = () => {
     }, [workId])
 
     useEffect(() => {
-        if(challenge) {
+        if (challenge) {
             const intakeFormBH: any = findMetadata(ChallengeMetadataName.intakeForm)
             formData = JSON.parse(intakeFormBH.value).form
         }
