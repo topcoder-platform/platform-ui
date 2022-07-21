@@ -163,7 +163,7 @@ const Review: React.FC = () => {
 
         workStoreUpdateAsync(body)
         .then(() => {
-            navigate('/self-service/work/new/bug-hunt/thank-you')
+            navigate(WorkIntakeFormRoutes[WorkType.bugHunt].thankYou)
         })
 
     }
