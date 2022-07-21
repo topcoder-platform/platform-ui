@@ -47,10 +47,6 @@ const BugHuntIntakeForm: React.FC = () => {
     BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { action = 'save' }
     BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { action = 'submit' }
 
-    let action: string = ''
-    BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { action = 'save' }
-    BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { action = 'submit' }
-
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
@@ -67,27 +63,31 @@ const BugHuntIntakeForm: React.FC = () => {
     const [selectedPackage, setSelectedPackage]: [PricePackageName, Dispatch<SetStateAction<PricePackageName>>]
         = useState<PricePackageName>(defaultValues.packageType)
 
-    if (challenge) {
-        const intakeFormBH: ChallengeMetadata | undefined = findMetadata(ChallengeMetadataName.intakeForm)
-        if (intakeFormBH) {
-            const formData: Record<string, any> = JSON.parse(intakeFormBH.value)
+    useEffect(() => {
+        // We only need to pull data for existing challenges. We check if there is a workId instead of a challenge.
+        // This prevents a render, but more importantly enforces that formData will actually contain values, preventing the React WSOD.
+        if (workId) {
+            const intakeFormBH: ChallengeMetadata | undefined = findMetadata(ChallengeMetadataName.intakeForm)
+            if (intakeFormBH) {
+                const formData: Record<string, any> = JSON.parse(intakeFormBH.value)
 
-            // TODO: Set the correct currentStep into challenge's form data when saving form and moving on to a new page
-            if (formData.currentStep && formData.currentStep !== 'basicInfo') {
-                if (!isLoggedIn) {
-                    navigate(WorkIntakeFormRoutes[WorkType.bugHunt]['loginPrompt'])
-                } else {
-                    navigate(WorkIntakeFormRoutes[WorkType.bugHunt][formData.currentStep])
+                // TODO: Set the correct currentStep into challenge's form data when saving form and moving on to a new page
+                if (formData.currentStep && formData.currentStep !== 'basicInfo') {
+                    if (!isLoggedIn) {
+                        navigate(WorkIntakeFormRoutes[WorkType.bugHunt]['loginPrompt'])
+                    } else {
+                        navigate(WorkIntakeFormRoutes[WorkType.bugHunt][formData.currentStep])
+                    }
+                }
+
+                defaultValues = formData.form.basicInfo
+
+                if (formData.form.basicInfo.packageType !== selectedPackage) {
+                    setSelectedPackage(formData.form.basicInfo.packageType)
                 }
             }
-
-            defaultValues = formData.form.basicInfo
-
-            if (formData.form.basicInfo.packageType !== selectedPackage) {
-                setSelectedPackage(formData.form.basicInfo.packageType)
-            }
         }
-    }
+    }, [challenge])
 
     useEffect(() => {
         const useEffectAsync: () => Promise<void> = async () => {
