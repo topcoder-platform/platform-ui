@@ -15,7 +15,7 @@ import {
     UpdateMyCertificateProgressActions,
     updateMyCertificationsProgressAsync
 } from '../../learn-lib'
-import { authenticateAndStartCourseRoute, getFccLessonPath, LEARN_PATHS } from '../../learn.routes'
+import { authenticateAndStartCourseRoute, getCertificatePath, getFccLessonPath, LEARN_PATHS } from '../../learn.routes'
 
 import styles from './CourseCurriculum.module.scss'
 import { CurriculumSummary } from './curriculum-summary'
@@ -124,6 +124,11 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         props.progress?.id,
     ])
 
+    const handleNavigateToCertificate: () => void = () => {
+        const certificatePath: string = getCertificatePath(props.course.provider, props.course.certification)
+        navigate(certificatePath)
+    }
+
     /**
      * If the url has a "start-course" search param,
      * proceed as if the user just clicked "Start course" button
@@ -154,6 +159,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
                     completedPercentage={completedPercentage}
                     completed={isCompleted}
                     completedDate={props.progress?.completedDate}
+                    onClickCertificateBtn={handleNavigateToCertificate}
                     isLoggedIn={isLoggedIn}
                 />
 

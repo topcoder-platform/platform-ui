@@ -24,7 +24,7 @@ import {
     useLessonProvider,
     useMyCertificationProgress,
 } from '../learn-lib'
-import { getCoursePath, getFccLessonPath } from '../learn.routes'
+import { getCertificationCompletedPath, getCoursePath, getFccLessonPath } from '../learn.routes'
 
 import { FccFrame } from './fcc-frame'
 import styles from './FreeCodeCamp.module.scss'
@@ -185,9 +185,24 @@ const FreeCodeCamp: FC<{}> = () => {
             certificateProgress.id,
             UpdateMyCertificateProgressActions.completeCertificate,
             {}
-        ).then(setCertificateProgress)
+        )
+            .then(setCertificateProgress)
+            .then(() => {
+                const completedPath: string = getCertificationCompletedPath(
+                    providerParam,
+                    certificationParam
+                )
+
+                navigate(completedPath)
+            })
       }
-    }, [certificateProgress, setCertificateProgress])
+    }, [
+        certificateProgress,
+        certificationParam,
+        navigate,
+        providerParam,
+        setCertificateProgress,
+    ])
 
     useEffect(() => {
         const certificationPath: string = routeParams.certification ?? ''

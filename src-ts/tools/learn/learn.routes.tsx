@@ -16,6 +16,10 @@ export function getCertificatePath(provider: string, certification: string): str
     return `/learn/${provider}/${certification}/certificate`
 }
 
+export function getCertificationCompletedPath(provider: string, certification: string): string {
+    return `/learn/${provider}/${certification}/completed`
+}
+
 export function getFccLessonPath(
     provider: string,
     certification: string,
