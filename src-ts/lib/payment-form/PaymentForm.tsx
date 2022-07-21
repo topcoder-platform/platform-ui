@@ -38,6 +38,14 @@ interface PaymentFormProps {
 
 type CardChangeEvent = StripeCardExpiryElementChangeEvent | StripeCardNumberElementChangeEvent | StripeCardCvcElementChangeEvent
 
+/**
+ * This is the payment form component.
+ * TODO: Replace the rendering logic of this form
+ * to support Form.tsx(instead of rendering the fields individually).
+ * This requires ReactSelect to be rendered as part of Form.tsx
+ * @param props
+ * @returns
+ */
 const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
     const [cardNumberError, setCardNumberError]: [string, Dispatch<string>] = useState<string>('')
     const [cardExpiryError, setCardExpiryError]: [string, Dispatch<string>] = useState<string>('')
