@@ -42,7 +42,6 @@ const BugHuntIntakeForm: React.FC = () => {
 
     const isMobile: boolean = useCheckIsMobile()
     const { isLoggedIn }: ProfileContextData = useContext<ProfileContextData>(profileContext)
-    // TODO - this isLoggedIn check is not working - shows true even on a new incognito window
 
     let action: string = ''
     BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { action = 'save' }
@@ -141,10 +140,11 @@ const BugHuntIntakeForm: React.FC = () => {
         if (action === 'save') {
             navigate(`${dashboardRoute}/draft`)
         } else if (action === 'submit') {
-            if (isLoggedIn) {
+            if (!isLoggedIn) {
                 navigate(WorkIntakeFormRoutes[WorkType.bugHunt]['loginPrompt'])
             } else {
-                navigate(WorkIntakeFormRoutes[WorkType.bugHunt]['review'])
+                const nextUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt]['review']}/${workId || challenge?.id}`
+                navigate(nextUrl)
             }
         }
     }
