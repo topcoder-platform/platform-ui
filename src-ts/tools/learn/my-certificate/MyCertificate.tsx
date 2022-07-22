@@ -47,7 +47,6 @@ const MyCertificate: FC<{}> = () => {
         certificateProgress,
         ready: progressReady,
     }: MyCertificationProgressProviderData = useMyCertificationProgress(
-        profile?.userId,
         routeParams.provider,
         routeParams.certification
     )

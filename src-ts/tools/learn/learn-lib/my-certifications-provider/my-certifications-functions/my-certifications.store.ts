@@ -2,15 +2,9 @@ import { xhrGetAsync, xhrPostAsync, xhrPutAsync } from '../../../../../lib/funct
 import { getPath } from '../../learn-url.config'
 
 import { LearnMyCertificationProgress } from './learn-my-certification-progress.model'
+import { UpdateMyCertificateProgressActions } from './my-certifications-update-progress-actions.enum'
 
-export enum UpdateMyCertificateProgressActions {
-    acceptHonestyPolicy = 'honesty-policy',
-    currentLesson = 'current-lesson',
-    completeLesson = 'complete-lesson',
-    completeCertificate = 'complete-certification',
-}
-
-export function getMyCertificationsProgressAsync(userId: number, provider?: string, certification?: string): Promise<Array<LearnMyCertificationProgress>> {
+export function getProgressAsync(userId: number, provider?: string, certification?: string): Promise<Array<LearnMyCertificationProgress>> {
     return xhrGetAsync<Array<LearnMyCertificationProgress>>(getPath(
         'certification-progresses',
         [
@@ -21,7 +15,7 @@ export function getMyCertificationsProgressAsync(userId: number, provider?: stri
     ))
 }
 
-export function startMyCertificationsProgressAsync(userId: number, certificationId: string, courseId: string, data: any): Promise<LearnMyCertificationProgress> {
+export function startProgressAsync(userId: number, certificationId: string, courseId: string, data: any): Promise<LearnMyCertificationProgress> {
     return xhrPostAsync<{}, LearnMyCertificationProgress>(getPath(
         'certification-progresses',
         `${userId}`,
@@ -30,7 +24,7 @@ export function startMyCertificationsProgressAsync(userId: number, certification
     ), data)
 }
 
-export function updateMyCertificationsProgressAsync(certificationProgressId: string, action: UpdateMyCertificateProgressActions, data: any): Promise<LearnMyCertificationProgress> {
+export function updateProgressAsync(certificationProgressId: string, action: UpdateMyCertificateProgressActions, data: any): Promise<LearnMyCertificationProgress> {
     return xhrPutAsync<{}, LearnMyCertificationProgress>(getPath(
         'certification-progresses',
         certificationProgressId,

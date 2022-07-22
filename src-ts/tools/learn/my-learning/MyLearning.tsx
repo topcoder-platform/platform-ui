@@ -24,17 +24,14 @@ interface CertificatesByIdType {
 const MyLearning: FC<{}> = () => {
 
     const { profile }: ProfileContextData = useContext(profileContext)
-    const { completed, inProgress }: MyCertificationsProviderData = useMyCertifications(profile?.userId)
-
-    const {
-        certifications,
-    }: CertificationsProviderData = useCertificationsProvider()
+    const { completed, inProgress }: MyCertificationsProviderData = useMyCertifications()
+    const { certifications }: CertificationsProviderData = useCertificationsProvider()
 
     const certificatesById: CertificatesByIdType = useMemo(() => (
         certifications.reduce((certifs, certificate) => {
             certifs[certificate.id] = certificate
             return certifs
-}, {} as unknown as CertificatesByIdType)
+        }, {} as unknown as CertificatesByIdType)
     ), [certifications])
 
     const breadcrumb: Array<BreadcrumbItemModel> = useMemo(() => [

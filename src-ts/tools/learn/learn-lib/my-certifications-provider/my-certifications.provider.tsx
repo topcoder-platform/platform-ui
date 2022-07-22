@@ -1,9 +1,15 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
 
-import { getMyCertificationsProgressAsync, MyCertificationProgressStatus } from './my-certifications-functions'
+import { profileContext, ProfileContextData } from '../../../../lib'
+
+import { MyCertificationCompleted } from './my-certification-completed.model'
+import { MyCertificationInProgress } from './my-certification-in-progress.model'
+import { MyCertificationProgressStatus, myCertificationsGetProgress } from './my-certifications-functions'
 import { MyCertificationsProviderData } from './my-certifications-provider-data.model'
 
-export function useMyCertifications(userId?: number): MyCertificationsProviderData {
+export function useMyCertifications(): MyCertificationsProviderData {
+
+    const profileContextData: ProfileContextData = useContext<ProfileContextData>(profileContext)
     const [state, setState]: [MyCertificationsProviderData, Dispatch<SetStateAction<MyCertificationsProviderData>>] = useState<MyCertificationsProviderData>({
         completed: [],
         inProgress: [],
@@ -12,25 +18,34 @@ export function useMyCertifications(userId?: number): MyCertificationsProviderDa
     })
 
     useEffect(() => {
+
         setState((prevState) => ({
             ...prevState,
             loading: true,
         }))
 
+        const userId: number | undefined = profileContextData?.profile?.userId
         if (!userId) {
             return
         }
 
-        getMyCertificationsProgressAsync(userId).then((myCertifications) => {
-            setState((prevState) => ({
-                ...prevState,
-                completed: myCertifications.filter(c => c.status === MyCertificationProgressStatus.completed) as MyCertificationsProviderData['completed'],
-                inProgress: myCertifications.filter(c => c.status === MyCertificationProgressStatus.inProgress)  as MyCertificationsProviderData['inProgress'],
-                loading: false,
-                ready: true,
-            }))
-        })
-    }, [userId])
+        myCertificationsGetProgress(userId)
+            .then((myCertifications) => {
+                const completed: Array<MyCertificationCompleted> = myCertifications
+                    .filter(c => c.status === MyCertificationProgressStatus.completed)
+                    .map(c => c as MyCertificationCompleted)
+                const inProgress: Array<MyCertificationInProgress> = myCertifications
+                    .filter(c => c.status === MyCertificationProgressStatus.inProgress)
+                    .map(c => c as MyCertificationInProgress)
+                setState((prevState) => ({
+                    ...prevState,
+                    completed,
+                    inProgress,
+                    loading: false,
+                    ready: true,
+                }))
+            })
+    }, [profileContextData?.profile?.userId])
 
     return state
 }

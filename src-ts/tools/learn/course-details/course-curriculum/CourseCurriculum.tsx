@@ -11,11 +11,16 @@ import {
     LearnModule,
     LearnMyCertificationProgress,
     MyCertificationProgressStatus,
-    startMyCertificationsProgressAsync,
-    UpdateMyCertificateProgressActions,
-    updateMyCertificationsProgressAsync
+    myCertificationsStartProgress,
+    myCertificationsUpdateProgress,
+    UpdateMyCertificateProgressActions
 } from '../../learn-lib'
-import { authenticateAndStartCourseRoute, getCertificatePath, getFccLessonPath, LEARN_PATHS } from '../../learn.routes'
+import {
+    authenticateAndStartCourseRoute,
+    getCertificatePath,
+    getLessonPathFromCurrentLesson,
+    LEARN_PATHS,
+} from '../../learn.routes'
 
 import styles from './CourseCurriculum.module.scss'
 import { CurriculumSummary } from './curriculum-summary'
@@ -29,6 +34,7 @@ interface CourseCurriculumProps {
 }
 
 const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProps) => {
+
     const navigate: NavigateFunction = useNavigate()
     const [searchParams]: any = useSearchParams()
 
@@ -36,7 +42,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
 
     const [isTcAcademyPolicyModal, setIsTcAcademyPolicyModal]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
-    const status: string = props.progress?.status ?? 'init'
+    const status: string = props.progress?.status ?? MyCertificationProgressStatus.inititialized
     const completedPercentage: number = (props.progress?.courseProgressPercentage ?? 0) / 100
     const inProgress: boolean = status === MyCertificationProgressStatus.inProgress || !!props.progress?.currentLesson
     const isCompleted: boolean = status === MyCertificationProgressStatus.completed
@@ -46,19 +52,25 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
      * otherwise redirect to first module > first lesson
      */
     const handleStartCourse: () => void = useCallback(() => {
-        const current: Array<string> = (props.progress?.currentLesson ?? '').split('/')
+
         const course: LearnCourse = props.course
         const module: LearnModule = course.modules[0]
         const lesson: LearnLesson = module.lessons[0]
 
-        const lessonPath: string = getFccLessonPath(
+        const lessonPath: string = getLessonPathFromCurrentLesson(
             course.provider,
             course.certification,
-            current[0] || module.meta.dashedName,
-            current[1] || lesson.dashedName,
+            props.progress?.currentLesson,
+            module.meta.dashedName,
+            lesson.dashedName,
         )
         navigate(lessonPath)
-    }, [props.course, props.progress, navigate])
+    }, [
+        getLessonPathFromCurrentLesson,
+        navigate,
+        props.course,
+        props.progress,
+    ])
 
     /**
      * Handle user click on start course/resume/login button
@@ -97,7 +109,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         }
 
         if (!props.progress?.id) {
-            await startMyCertificationsProgressAsync(
+            await myCertificationsStartProgress(
                 props.profile.userId,
                 props.course.certificationId,
                 props.course.id,
@@ -107,7 +119,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
                 }
             )
         } else {
-            await updateMyCertificationsProgressAsync(
+            await myCertificationsUpdateProgress(
                 props.progress.id,
                 UpdateMyCertificateProgressActions.acceptHonestyPolicy,
                 {}
@@ -134,9 +146,9 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
      * proceed as if the user just clicked "Start course" button
      */
     useEffect(() => {
-      if (props.progressReady && isLoggedIn && searchParams.get('start-course') !== null) {
-        handleStartCourseClick()
-      }
+        if (props.progressReady && isLoggedIn && searchParams.get('start-course') !== null) {
+            handleStartCourseClick()
+        }
     }, [handleStartCourseClick, isLoggedIn, props.progressReady, searchParams])
 
     return (

@@ -1,19 +1,25 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
+
+import { profileContext, ProfileContextData } from '../../../../lib'
 
 import { MyCertificationProgressProviderData } from './my-certification-progress-provider-data.model'
-import { getMyCertificationsProgressAsync, LearnMyCertificationProgress } from './my-certifications-functions'
+import { LearnMyCertificationProgress, myCertificationsGetProgress } from './my-certifications-functions'
 
-export function useMyCertificationProgress(userId?: number, provider?: string, certification?: string): MyCertificationProgressProviderData {
+export function useMyCertificationProgress(provider?: string, certification?: string): MyCertificationProgressProviderData {
+
+    const profileContextData: ProfileContextData = useContext(profileContext)
+
     function setCertificateProgress(progress: LearnMyCertificationProgress): void {
-        setState((prevState) => ({...prevState, certificateProgress: progress}))
+        setState((prevState) => ({ ...prevState, certificateProgress: progress }))
     }
 
-    const [state, setState]: [MyCertificationProgressProviderData, Dispatch<SetStateAction<MyCertificationProgressProviderData>>] = useState<MyCertificationProgressProviderData>({
-        certificateProgress: undefined,
-        loading: false,
-        ready: false,
-        setCertificateProgress,
-    })
+    const [state, setState]: [MyCertificationProgressProviderData, Dispatch<SetStateAction<MyCertificationProgressProviderData>>]
+        = useState<MyCertificationProgressProviderData>({
+            certificateProgress: undefined,
+            loading: false,
+            ready: false,
+            setCertificateProgress,
+        })
 
     useEffect(() => {
         setState((prevState) => ({
@@ -21,19 +27,25 @@ export function useMyCertificationProgress(userId?: number, provider?: string, c
             loading: true,
         }))
 
+        const userId: number | undefined = profileContextData?.profile?.userId
         if (!userId) {
             return
         }
 
-        getMyCertificationsProgressAsync(userId, provider, certification).then((myCertifications) => {
-            setState((prevState) => ({
-                ...prevState,
-                certificateProgress: myCertifications.find(c => c.certification === certification),
-                loading: false,
-                ready: true,
-            }))
-        })
-    }, [userId, provider, certification])
+        myCertificationsGetProgress(userId, provider, certification)
+            .then((myCertifications) => {
+                setState((prevState) => ({
+                    ...prevState,
+                    certificateProgress: myCertifications.find(c => c.certification === certification),
+                    loading: false,
+                    ready: true,
+                }))
+            })
+    }, [
+        certification,
+        profileContextData?.profile?.userId,
+        provider,
+    ])
 
     return state
 }

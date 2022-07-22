@@ -1,4 +1,14 @@
-import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import {
+    Dispatch,
+    FC,
+    SetStateAction,
+    useCallback,
+    useContext,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useState,
+} from 'react'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 
 import {
@@ -17,14 +27,14 @@ import {
     LessonProviderData,
     MyCertificationProgressProviderData,
     MyCertificationProgressStatus,
-    startMyCertificationsProgressAsync,
+    myCertificationsStartProgress,
+    myCertificationsUpdateProgress,
     UpdateMyCertificateProgressActions,
-    updateMyCertificationsProgressAsync,
     useCoursesProvider,
     useLessonProvider,
     useMyCertificationProgress,
 } from '../learn-lib'
-import { getCertificationCompletedPath, getCoursePath, getFccLessonPath } from '../learn.routes'
+import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule } from '../learn.routes'
 
 import { FccFrame } from './fcc-frame'
 import styles from './FreeCodeCamp.module.scss'
@@ -49,7 +59,7 @@ const FreeCodeCamp: FC<{}> = () => {
         certificateProgress,
         setCertificateProgress,
         ready: progressReady,
-    }: MyCertificationProgressProviderData = useMyCertificationProgress(profile?.userId, routeParams.provider, certificationParam)
+    }: MyCertificationProgressProviderData = useMyCertificationProgress(routeParams.provider, certificationParam)
 
     const {
         course: courseData,
@@ -71,27 +81,27 @@ const FreeCodeCamp: FC<{}> = () => {
         { url: '/learn/fcc', name: lesson?.module.title ?? '' },
     ], [providerParam, lesson])
 
-    const currentModuleData: LearnModule|undefined = useMemo(() => {
+    const currentModuleData: LearnModule | undefined = useMemo(() => {
         return courseData?.modules.find(d => d.key === moduleParam)
     }, [courseData, moduleParam])
 
     const currentStepIndex: number = useMemo(() => {
-      if (!currentModuleData) {
-          return 0
-      }
+        if (!currentModuleData) {
+            return 0
+        }
 
-      const lessonIndex: number = currentModuleData.lessons.findIndex(l => l.dashedName === lessonParam)
-      return lessonIndex + 1
+        const lessonIndex: number = currentModuleData.lessons.findIndex(l => l.dashedName === lessonParam)
+        return lessonIndex + 1
     }, [currentModuleData, lessonParam])
 
     const handleNavigate: (direction: number) => void = useCallback((direction = 1) => {
 
-        const nextStep: LearnLesson|undefined = currentModuleData?.lessons[(currentStepIndex - 1) + direction]
+        const nextStep: LearnLesson | undefined = currentModuleData?.lessons[(currentStepIndex - 1) + direction]
         if (!nextStep) {
             return
         }
 
-        const lessonPath: string = getFccLessonPath(
+        const lessonPath: string = getLessonPathFromModule(
             providerParam,
             certificationParam,
             moduleParam,
@@ -108,12 +118,19 @@ const FreeCodeCamp: FC<{}> = () => {
     ])
 
     function updatePath(lessonPath: string, modulePath: string, coursePath: string): void {
-        if (coursePath !== certificationParam) { setCourseParam(coursePath) }
-        if (modulePath !== moduleParam) { setModuleParam(modulePath) }
-        if (lessonPath !== lessonParam) { setLessonParam(lessonPath) }
+
+        if (coursePath !== certificationParam) {
+            setCourseParam(coursePath)
+        }
+        if (modulePath !== moduleParam) {
+            setModuleParam(modulePath)
+        }
+        if (lessonPath !== lessonParam) {
+            setLessonParam(lessonPath)
+        }
 
         if (lessonPath !== lessonParam || modulePath !== moduleParam || coursePath !== certificationParam) {
-            const nextLessonPath: string = getFccLessonPath(
+            const nextLessonPath: string = getLessonPathFromModule(
                 providerParam,
                 coursePath,
                 modulePath,
@@ -124,10 +141,11 @@ const FreeCodeCamp: FC<{}> = () => {
     }
 
     function handleFccLessonReady(lessonPath: string): void {
+
         const [nLessonPath, modulePath, coursePath]: Array<string> = lessonPath.replace(/\/$/, '').split('/').reverse()
         updatePath(nLessonPath, modulePath, coursePath)
 
-        const currentLesson: {[key: string]: string} = {
+        const currentLesson: { [key: string]: string } = {
             lesson: nLessonPath,
             module: modulePath,
         }
@@ -141,7 +159,7 @@ const FreeCodeCamp: FC<{}> = () => {
         }
 
         if (!certificateProgress) {
-            startMyCertificationsProgressAsync(
+            myCertificationsStartProgress(
                 profile.userId,
                 lesson.course.certificationId,
                 lesson.course.id,
@@ -151,23 +169,23 @@ const FreeCodeCamp: FC<{}> = () => {
             // TODO: remove this delay!!
             // TEMP_FIX: delay this api call to allow for previous "completeLesson" call to write in the api
             setTimeout(() => {
-                updateMyCertificationsProgressAsync(
-                        certificateProgress.id,
-                        UpdateMyCertificateProgressActions.currentLesson,
-                        currentLesson
-                    )
+                myCertificationsUpdateProgress(
+                    certificateProgress.id,
+                    UpdateMyCertificateProgressActions.currentLesson,
+                    currentLesson
+                )
                     .then(setCertificateProgress)
             }, 500)
         }
     }
 
     function handleFccLessonComplete(): void {
-        const currentLesson: {[key: string]: string} = {
+        const currentLesson: { [key: string]: string } = {
             lesson: lessonParam,
             module: moduleParam,
         }
         if (certificateProgress) {
-            updateMyCertificationsProgressAsync(
+            myCertificationsUpdateProgress(
                 certificateProgress.id,
                 UpdateMyCertificateProgressActions.completeLesson,
                 currentLesson
@@ -176,26 +194,26 @@ const FreeCodeCamp: FC<{}> = () => {
     }
 
     useEffect(() => {
-      if (
-        certificateProgress &&
-        certificateProgress.courseProgressPercentage === 100 &&
-        certificateProgress.status === MyCertificationProgressStatus.inProgress
-    ) {
-        updateMyCertificationsProgressAsync(
-            certificateProgress.id,
-            UpdateMyCertificateProgressActions.completeCertificate,
-            {}
-        )
-            .then(setCertificateProgress)
-            .then(() => {
-                const completedPath: string = getCertificationCompletedPath(
-                    providerParam,
-                    certificationParam
-                )
+        if (
+            certificateProgress &&
+            certificateProgress.courseProgressPercentage === 100 &&
+            certificateProgress.status === MyCertificationProgressStatus.inProgress
+        ) {
+            myCertificationsUpdateProgress(
+                certificateProgress.id,
+                UpdateMyCertificateProgressActions.completeCertificate,
+                {}
+            )
+                .then(setCertificateProgress)
+                .then(() => {
+                    const completedPath: string = getCertificationCompletedPath(
+                        providerParam,
+                        certificationParam
+                    )
 
-                navigate(completedPath)
-            })
-      }
+                    navigate(completedPath)
+                })
+        }
     }, [
         certificateProgress,
         certificationParam,

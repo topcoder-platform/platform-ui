@@ -1,93 +1,33 @@
-import { FC, ReactNode, useContext, useMemo } from 'react'
+import { FC } from 'react'
 
-import { Button, profileContext, ProfileContextData } from '../../../../lib'
 import {
     LearnCertification,
-    LearningHat,
-    MyCertificationsProviderData,
-    MyCourseCompletedCard,
-    MyCourseInProgressCard,
-    useMyCertifications
-} from '../../learn-lib'
-import { LEARN_PATHS } from '../../learn.routes'
+    MyCertificationCompleted,
+    MyCertificationInProgress} from '../../learn-lib'
 
-import InitState from './init-state/InitState'
+import { NoProgress } from './no-progress'
+import { ProgressAction } from './progress-action'
 import styles from './ProgressBlock.module.scss'
 
 interface ProgressBlockProps {
-    certificates: Array<LearnCertification>
+    allCertifications: Array<LearnCertification>
+    myCompletedCertifications: Array<MyCertificationCompleted>
+    myInProgressCertifications: Array<MyCertificationInProgress>
+    ready: boolean
 }
 
 const ProgressBlock: FC<ProgressBlockProps> = (props: ProgressBlockProps) => {
-    const { profile }: ProfileContextData = useContext(profileContext)
 
-    const { completed, inProgress }: MyCertificationsProviderData = useMyCertifications(profile?.userId)
-    const isInit: boolean = !inProgress.length && !completed.length
+    if (!props.ready) {
+        return <></>
+    }
 
-    const certificatesById: {[key: string]: LearnCertification} = useMemo(() => (
-        props.certificates.reduce((certifs, certificate) => {
-            certifs[certificate.id] = certificate
-            return certifs
-}, {} as unknown as {[key: string]: LearnCertification})
-    ), [props.certificates])
-
-    const allMyLearningsLink: ReactNode = (
-        <span className={styles['title-link']}>
-            <Button
-                buttonStyle='link'
-                label='See all my learning'
-                route={LEARN_PATHS.myLearning}
-            />
-        </span>
-    )
+    const isStarted: boolean = !!props.myInProgressCertifications.length || !!props.myCompletedCertifications.length
 
     return (
-        <div className={styles['wrap']}>
-            {isInit && <InitState />}
-            {!isInit && (
-                <>
-                    {!!inProgress.length && (
-                        <div className={styles['title-line']}>
-                            <h4 className='details'>In progress</h4>
-                            <span className='mobile-hide'>
-                                {allMyLearningsLink}
-                            </span>
-                        </div>
-                    )}
-                    {inProgress.map((certifProgress) => (
-                        <MyCourseInProgressCard
-                            certification={certificatesById[certifProgress.certificationId]}
-                            key={certifProgress.certificationId}
-                            completedPercentage={certifProgress.courseProgressPercentage / 100}
-                            theme='minimum'
-                            currentLesson={certifProgress.currentLesson}
-                        />
-                    ))}
-                    {!!completed.length && (
-                        <div className={styles['title-line']}>
-                            <div className={styles['title']}>
-                                <LearningHat />
-                                <h4 className='details'>Congratulations!</h4>
-                            </div>
-                            {!inProgress.length && (
-                                <span className='mobile-hide'>
-                                    {allMyLearningsLink}
-                                </span>
-                            )}
-                        </div>
-                    )}
-                    {completed.map((certif) => (
-                        <MyCourseCompletedCard
-                            certification={certificatesById[certif.certificationId]}
-                            key={certif.certificationId}
-                            completed={certif.completedDate}
-                        />
-                    ))}
-                    <span className='desktop-hide'>
-                        {allMyLearningsLink}
-                    </span>
-                </>
-            )}
+        <div className={styles.wrap}>
+            {!isStarted && <NoProgress />}
+            {isStarted && <ProgressAction {...props} />}
         </div>
     )
 }

@@ -13,7 +13,7 @@ import {
     LearnCertification,
     useCoursesProvider,
 } from '../../../learn-lib'
-import { getCoursePath, getFccLessonPath } from '../../../learn.routes'
+import { getCoursePath, getLessonPathFromCurrentLesson } from '../../../learn.routes'
 import { CurriculumSummary } from '../../curriculum-summary'
 
 import styles from './InProgress.module.scss'
@@ -23,30 +23,28 @@ interface InProgressProps {
     completedPercentage: number
     currentLesson?: string
     startDate?: string
-    theme: 'detailed'|'minimum'
+    theme: 'detailed' | 'minimum'
 }
 
 const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
+
     const navigate: NavigateFunction = useNavigate()
     const isDetailed: boolean = props.theme === 'detailed'
     const isMinimum: boolean = props.theme === 'minimum'
 
     const certification: string = props.certification?.certification ?? ''
     const provider: string = props.certification?.providerName ?? ''
-    const {course}: CoursesProviderData = useCoursesProvider(provider, certification)
+    const { course }: CoursesProviderData = useCoursesProvider(provider, certification)
 
     const resumeCourse: () => void = () => {
         if (!props.currentLesson) {
             return
         }
 
-        const [module, lesson]: Array<string> = (props.currentLesson ?? '').split('/')
-
-        const coursePath: string = getFccLessonPath(
+        const coursePath: string = getLessonPathFromCurrentLesson(
             provider,
             certification,
-            module,
-            lesson,
+            props.currentLesson,
         )
         navigate(coursePath)
     }

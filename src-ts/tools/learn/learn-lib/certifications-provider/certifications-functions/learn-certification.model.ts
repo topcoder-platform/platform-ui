@@ -5,6 +5,6 @@ export interface LearnCertification {
     key: string
     providerId: string
     providerName: string
-    state: string
+    state: 'active' | 'coming-soon'
     title: string
 }

@@ -8,7 +8,7 @@ import {
     LearnModule,
     LearnMyCertificationProgress,
 } from '../../learn-lib'
-import { getFccLessonPath } from '../../learn.routes'
+import { getLessonPathFromModule } from '../../learn.routes'
 
 import { CollapsibleItem } from './collapsible-item'
 import styles from './CourseOutline.module.scss'
@@ -22,14 +22,15 @@ interface CourseOutlineProps {
 
 const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
 
-    const lessonPath: (course: LearnCourse, module: LearnModule, lesson: LearnLesson) => string = useCallback((course: LearnCourse, module: LearnModule, lesson: LearnLesson) => {
-        return getFccLessonPath(
-            course.provider,
-            course.certification,
-            module.key,
-            lesson.dashedName,
-        )
-    }, [])
+    const lessonPath: (course: LearnCourse, module: LearnModule, lesson: LearnLesson) => string
+        = useCallback((course: LearnCourse, module: LearnModule, lesson: LearnLesson) => {
+            return getLessonPathFromModule(
+                course.provider,
+                course.certification,
+                module.key,
+                lesson.dashedName,
+            )
+        }, [])
 
     return (
         <div className={classNames(styles['wrap'], 'course-outline-wrap')}>
