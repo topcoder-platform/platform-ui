@@ -29,7 +29,7 @@ interface FormFieldValues {
 
 const Review: React.FC = () => {
     const workId: string | undefined = useParams().workId
-    const redirectUrl: string = WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']
+    const redirectUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']}/${workId}`
 
     const [formData, setFormData]: [any, Dispatch<any>] = useState({})
 
