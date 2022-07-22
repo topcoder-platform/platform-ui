@@ -25,7 +25,7 @@ import {
 
 import { ChallengeStatus } from './challenge-status.enum'
 
-interface FormDetail {
+export interface FormDetail {
     key: string,
     title: string,
     value: any

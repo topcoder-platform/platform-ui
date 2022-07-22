@@ -1,9 +1,10 @@
 import { Page, xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '../../../../../../lib'
 
 import { Challenge, ChallengeCreateBody, ChallengeUpdateBody } from './challenge.model'
+import { CustomerPayment } from './work-customer-payment.model'
 import { WorkStatusFilter } from './work-status-filter.enum'
 import { WorkStatus } from './work-status.enum'
-import { createUrl, deleteUrl, getUrl, updateUrl } from './work-url.config'
+import { createPaymentUrl, createUrl, deleteUrl, getUrl, updatePaymentUrl, updateUrl } from './work-url.config'
 import { Work } from './work.model'
 
 export async function createAsync(body: ChallengeCreateBody): Promise<void> {
@@ -20,6 +21,14 @@ export async function getAsync(handle: string, page: Page): Promise<Array<Challe
 
 export async function getChallengeByWorkId(workId: string): Promise<Challenge> {
     return xhrGetAsync<Challenge>(updateUrl(workId))
+}
+
+export async function createCustomerPayment(payment: string): Promise<CustomerPayment> {
+    return xhrPostAsync(createPaymentUrl(), payment)
+}
+
+export async function confirmCustomerPayment(id: string): Promise<CustomerPayment> {
+    return xhrPatchAsync(updatePaymentUrl(id), JSON.stringify({}))
 }
 
 export function getFilteredByStatus(work: ReadonlyArray<Work>, workStatusFilter?: WorkStatusFilter): Array<Work> {

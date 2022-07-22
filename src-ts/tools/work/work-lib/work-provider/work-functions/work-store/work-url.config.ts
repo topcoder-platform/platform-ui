@@ -17,4 +17,13 @@ export function updateUrl(workId: string): string {
     return `${challengesPath}/${workId}`
 }
 
+export function updatePaymentUrl(id: string): string {
+    return `${customerPaymentPath}/${id}/confirm`
+}
+
+export function createPaymentUrl(): string {
+    return customerPaymentPath
+}
+
 const challengesPath: string = `${EnvironmentConfig.API.V5}/challenges`
+const customerPaymentPath: string = `${EnvironmentConfig.API.V5}/customer-payments`
