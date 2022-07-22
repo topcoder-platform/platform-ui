@@ -4,7 +4,7 @@ import { profileContext, ProfileContextData } from '../../../../lib'
 
 import { MyCertificationCompleted } from './my-certification-completed.model'
 import { MyCertificationInProgress } from './my-certification-in-progress.model'
-import { MyCertificationProgressStatus, myCertificationsGetProgress } from './my-certifications-functions'
+import { myCertificationProgressGet, MyCertificationProgressStatus } from './my-certifications-functions'
 import { MyCertificationsProviderData } from './my-certifications-provider-data.model'
 
 export function useMyCertifications(): MyCertificationsProviderData {
@@ -29,7 +29,7 @@ export function useMyCertifications(): MyCertificationsProviderData {
             return
         }
 
-        myCertificationsGetProgress(userId)
+        myCertificationProgressGet(userId)
             .then((myCertifications) => {
                 const completed: Array<MyCertificationCompleted> = myCertifications
                     .filter(c => c.status === MyCertificationProgressStatus.completed)

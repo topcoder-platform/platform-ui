@@ -2,9 +2,9 @@ import { xhrGetAsync, xhrPostAsync, xhrPutAsync } from '../../../../../lib/funct
 import { getPath } from '../../learn-url.config'
 
 import { LearnMyCertificationProgress } from './learn-my-certification-progress.model'
-import { UpdateMyCertificateProgressActions } from './my-certifications-update-progress-actions.enum'
+import { MyCertificationUpdateProgressActions } from './my-certification-update-progress-actions.enum'
 
-export function getProgressAsync(userId: number, provider?: string, certification?: string): Promise<Array<LearnMyCertificationProgress>> {
+export function get(userId: number, provider?: string, certification?: string): Promise<Array<LearnMyCertificationProgress>> {
     return xhrGetAsync<Array<LearnMyCertificationProgress>>(getPath(
         'certification-progresses',
         [
@@ -15,7 +15,7 @@ export function getProgressAsync(userId: number, provider?: string, certificatio
     ))
 }
 
-export function startProgressAsync(userId: number, certificationId: string, courseId: string, data: any): Promise<LearnMyCertificationProgress> {
+export function start(userId: number, certificationId: string, courseId: string, data: any): Promise<LearnMyCertificationProgress> {
     return xhrPostAsync<{}, LearnMyCertificationProgress>(getPath(
         'certification-progresses',
         `${userId}`,
@@ -24,7 +24,7 @@ export function startProgressAsync(userId: number, certificationId: string, cour
     ), data)
 }
 
-export function updateProgressAsync(certificationProgressId: string, action: UpdateMyCertificateProgressActions, data: any): Promise<LearnMyCertificationProgress> {
+export function update(certificationProgressId: string, action: MyCertificationUpdateProgressActions, data: any): Promise<LearnMyCertificationProgress> {
     return xhrPutAsync<{}, LearnMyCertificationProgress>(getPath(
         'certification-progresses',
         certificationProgressId,

@@ -1,4 +1,4 @@
-export enum UpdateMyCertificateProgressActions {
+export enum MyCertificationUpdateProgressActions {
     acceptHonestyPolicy = 'honesty-policy',
     currentLesson = 'current-lesson',
     completeLesson = 'complete-lesson',

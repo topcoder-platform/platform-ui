@@ -3,7 +3,7 @@ import { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react
 import { profileContext, ProfileContextData } from '../../../../lib'
 
 import { MyCertificationProgressProviderData } from './my-certification-progress-provider-data.model'
-import { LearnMyCertificationProgress, myCertificationsGetProgress } from './my-certifications-functions'
+import { LearnMyCertificationProgress, myCertificationProgressGet } from './my-certifications-functions'
 
 export function useMyCertificationProgress(provider?: string, certification?: string): MyCertificationProgressProviderData {
 
@@ -32,7 +32,7 @@ export function useMyCertificationProgress(provider?: string, certification?: st
             return
         }
 
-        myCertificationsGetProgress(userId, provider, certification)
+        myCertificationProgressGet(userId, provider, certification)
             .then((myCertifications) => {
                 setState((prevState) => ({
                     ...prevState,

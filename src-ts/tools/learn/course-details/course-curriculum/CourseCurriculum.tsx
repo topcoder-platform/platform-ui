@@ -10,10 +10,10 @@ import {
     LearnLesson,
     LearnModule,
     LearnMyCertificationProgress,
+    myCertificationProgressStart,
     MyCertificationProgressStatus,
-    myCertificationsStartProgress,
-    myCertificationsUpdateProgress,
-    UpdateMyCertificateProgressActions
+    myCertificationProgressUpdate,
+    MyCertificationUpdateProgressActions
 } from '../../learn-lib'
 import {
     authenticateAndStartCourseRoute,
@@ -109,7 +109,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         }
 
         if (!props.progress?.id) {
-            await myCertificationsStartProgress(
+            await myCertificationProgressStart(
                 props.profile.userId,
                 props.course.certificationId,
                 props.course.id,
@@ -119,9 +119,9 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
                 }
             )
         } else {
-            await myCertificationsUpdateProgress(
+            await myCertificationProgressUpdate(
                 props.progress.id,
-                UpdateMyCertificateProgressActions.acceptHonestyPolicy,
+                MyCertificationUpdateProgressActions.acceptHonestyPolicy,
                 {}
             )
         }

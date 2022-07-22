@@ -26,10 +26,10 @@ import {
     LearnModule,
     LessonProviderData,
     MyCertificationProgressProviderData,
+    myCertificationProgressStart,
     MyCertificationProgressStatus,
-    myCertificationsStartProgress,
-    myCertificationsUpdateProgress,
-    UpdateMyCertificateProgressActions,
+    myCertificationProgressUpdate,
+    MyCertificationUpdateProgressActions,
     useCoursesProvider,
     useLessonProvider,
     useMyCertificationProgress,
@@ -159,7 +159,7 @@ const FreeCodeCamp: FC<{}> = () => {
         }
 
         if (!certificateProgress) {
-            myCertificationsStartProgress(
+            myCertificationProgressStart(
                 profile.userId,
                 lesson.course.certificationId,
                 lesson.course.id,
@@ -169,9 +169,9 @@ const FreeCodeCamp: FC<{}> = () => {
             // TODO: remove this delay!!
             // TEMP_FIX: delay this api call to allow for previous "completeLesson" call to write in the api
             setTimeout(() => {
-                myCertificationsUpdateProgress(
+                myCertificationProgressUpdate(
                     certificateProgress.id,
-                    UpdateMyCertificateProgressActions.currentLesson,
+                    MyCertificationUpdateProgressActions.currentLesson,
                     currentLesson
                 )
                     .then(setCertificateProgress)
@@ -185,9 +185,9 @@ const FreeCodeCamp: FC<{}> = () => {
             module: moduleParam,
         }
         if (certificateProgress) {
-            myCertificationsUpdateProgress(
+            myCertificationProgressUpdate(
                 certificateProgress.id,
-                UpdateMyCertificateProgressActions.completeLesson,
+                MyCertificationUpdateProgressActions.completeLesson,
                 currentLesson
             ).then(setCertificateProgress)
         }
@@ -199,9 +199,9 @@ const FreeCodeCamp: FC<{}> = () => {
             certificateProgress.courseProgressPercentage === 100 &&
             certificateProgress.status === MyCertificationProgressStatus.inProgress
         ) {
-            myCertificationsUpdateProgress(
+            myCertificationProgressUpdate(
                 certificateProgress.id,
-                UpdateMyCertificateProgressActions.completeCertificate,
+                MyCertificationUpdateProgressActions.completeCertificate,
                 {}
             )
                 .then(setCertificateProgress)
