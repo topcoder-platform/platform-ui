@@ -7,12 +7,15 @@ import {
     Challenge,
     ChallengeCreateBody,
     ChallengeUpdateBody,
+    CustomerPayment,
     Work,
     workGetPricesConfig,
     WorkPricesType,
     WorkStatus,
     WorkStatusFilter,
+    workStoreConfirmCustomerPaymentAsync,
     workStoreCreateAsync,
+    workStoreCreateCustomerPaymentAsync,
     workStoreDeleteAsync,
     workStoreGetAsync,
     workStoreGetFilteredByStatus,
@@ -34,6 +37,14 @@ export function createFromChallenge(challenge: Challenge): Work {
 
 export async function deleteAsync(workId: string): Promise<void> {
     return workStoreDeleteAsync(workId)
+}
+
+export async function createCustomerPayment(body: string): Promise<CustomerPayment> {
+    return workStoreCreateCustomerPaymentAsync(body)
+}
+
+export async function confirmCustomerPayment(id: string): Promise<CustomerPayment> {
+    return workStoreCreateCustomerPaymentAsync(id)
 }
 
 export async function getAllAsync(profile: UserProfile): Promise<Array<Work>> {
