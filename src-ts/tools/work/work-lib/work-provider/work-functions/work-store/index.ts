@@ -28,6 +28,7 @@ export * from './work-type.enum'
 export * from './work-type.model'
 export * from './work-type-category.enum'
 export * from './work.model'
+export * from './work-customer-payment.model'
 export {
     createCustomerPayment as workStoreCreateCustomerPaymentAsync,
     createAsync as workStoreCreateAsync,

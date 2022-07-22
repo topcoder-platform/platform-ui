@@ -7,6 +7,7 @@ import {
     Challenge,
     ChallengeCreateBody,
     ChallengeUpdateBody,
+    CustomerPayment,
     Work,
     workGetPricesConfig,
     WorkPricesType,
@@ -23,7 +24,6 @@ import {
     WorkTypeConfig,
     WorkTypeConfigs,
 } from './work-store'
-import { CustomerPayment } from './work-store/work-customer-payment.model'
 
 export async function createAsync(type: WorkType): Promise<void> {
     const workConfig: WorkTypeConfig = WorkTypeConfigs[type]
