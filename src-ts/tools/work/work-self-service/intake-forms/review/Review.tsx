@@ -6,15 +6,12 @@ import { useParams } from 'react-router-dom'
 import { EnvironmentConfig } from '../../../../../config'
 import { PaymentForm } from '../../../../../lib'
 import { WorkDetailDetailsPane } from '../../../work-detail-details'
-import {
-    Challenge,
-    ChallengeMetadataName,
-    WorkType,
-} from '../../../work-lib'
+import { ChallengeMetadataName, WorkType } from '../../../work-lib'
 import { ChallengeMetadata, workStoreGetChallengeByWorkId } from '../../../work-lib/work-provider/work-functions/work-store'
 import { WorkIntakeFormRoutes } from '../../../work-lib/work-provider/work-functions/work-store/work-intake-form-routes.config'
 import { bugHuntConfig } from '../../../work-lib/work-provider/work-functions/work-store/work-type.config'
 import { WorkTypeBanner } from '../../../work-type-banner'
+import IntakeFormsBreadcrumb from '../intake-forms-breadcrumb/IntakeFormsBreadcrumb'
 
 import styles from './Review.module.scss'
 
@@ -39,7 +36,7 @@ const Review: React.FC = () => {
     useEffect(() => {
         const useEffectAsync: () => Promise<void> = async () => {
             // fetch challenge using workId
-            const response: any = await workStoreGetChallengeByWorkId(workId)
+            const response: any = await workStoreGetChallengeByWorkId(workId || '')
             const intakeFormBH: any = response.metadata.find((item: ChallengeMetadata) => item.name === ChallengeMetadataName.intakeForm)
             setFormData(JSON.parse(intakeFormBH.value).form)
         }
@@ -75,6 +72,13 @@ const Review: React.FC = () => {
 
     return (
         <div className={styles['review-container']}>
+            {/* TODO: We need to not hard code the configs to that of BugHunt and instead
+            use the challenge data to determine the WorkType */}
+            <IntakeFormsBreadcrumb
+                basicInfoRoute={`${WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']}/${workId}`}
+                reviewRoute={WorkIntakeFormRoutes[WorkType.bugHunt]['review']}
+                workType={bugHuntConfig.type}
+            />
             <WorkTypeBanner
                 title={bugHuntConfig.review.title}
                 subTitle={bugHuntConfig.review.subtitle}

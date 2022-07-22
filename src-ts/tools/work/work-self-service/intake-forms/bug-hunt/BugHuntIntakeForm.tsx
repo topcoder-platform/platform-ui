@@ -28,6 +28,7 @@ import { WorkIntakeFormRoutes } from '../../../work-lib/work-provider/work-funct
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
 import { dashboardRoute } from '../../../work.routes'
+import IntakeFormsBreadcrumb from '../intake-forms-breadcrumb/IntakeFormsBreadcrumb'
 
 import { BugHuntFormConfig } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
@@ -52,7 +53,7 @@ const BugHuntIntakeForm: React.FC = () => {
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
 
-    const [formValues, setFormValues]: [any,  Dispatch<any>] = useState({
+    const [formValues, setFormValues]: [any, Dispatch<any>] = useState({
         currentStep: 'basicInfo',
         [ChallengeMetadataName.packageType]: 'standard',
     })
@@ -151,6 +152,10 @@ const BugHuntIntakeForm: React.FC = () => {
 
     return (
         <>
+            <IntakeFormsBreadcrumb
+                basicInfoRoute={WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']}
+                workType={workBugHuntConfig.type}
+            />
             <WorkTypeBanner
                 title={workBugHuntConfig.title}
                 subTitle={workBugHuntConfig.subtitle}
