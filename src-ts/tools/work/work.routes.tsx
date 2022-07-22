@@ -64,20 +64,20 @@ export const workRoutes: Array<PlatformRoute> = [
                 route: `bug-hunt/basic-info/:workId`,
                 title: intakeFormsTitle,
             },
+            {
+                element: <Review />,
+                route: `bug-hunt/review`,
+                title: intakeFormsTitle,
+            },
+            {
+                element: <Review />,
+                route: `bug-hunt/review/:workId`,
+                title: intakeFormsTitle,
+            },
             // General
             {
                 element: <WorkLoginPrompt />,
                 route: `:workType/login-prompt`,
-                title: intakeFormsTitle,
-            },
-            {
-                element: <Review />,
-                route: `:workType/review`,
-                title: intakeFormsTitle,
-            },
-            {
-                element: <Review />,
-                route: `:workType/review/:workId`,
                 title: intakeFormsTitle,
             },
             {

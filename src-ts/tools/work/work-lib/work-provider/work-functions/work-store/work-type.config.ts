@@ -35,6 +35,11 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
                 },
                 shortDescription: 'Find bugs quickly and vigorously',
                 startRoute: WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo'],
+                submissionPhaseDuration: {
+                        'advanced': 172800, // 2 days
+                        'premium': 259200, // 3 days
+                        'standard': 86400, // 1 day
+                },
                 subtitle: `Conduct a time based testing bug hunt where Topcoder experts scramble to find bugs or issues in the system`,
                 tags: [ChallengeTag.qa],
                 timeline: WorkTimelines[WorkType.bugHunt],
