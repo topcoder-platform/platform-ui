@@ -52,14 +52,10 @@ const BugHuntIntakeForm: React.FC = () => {
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
 
-    const [formValues, setFormValues]: [any,  Dispatch<any>] = useState({
+    const [formValues, setFormValues]: [any, Dispatch<any>] = useState({
         currentStep: 'basicInfo',
         [ChallengeMetadataName.packageType]: 'standard',
     })
-
-    function findMetadata(metadataName: ChallengeMetadataName): ChallengeMetadata | undefined {
-        return challenge?.metadata?.find((item: ChallengeMetadata) => item.name === metadataName)
-    }
 
     const [selectedPackage, setSelectedPackage]: [PricePackageName, Dispatch<SetStateAction<PricePackageName>>]
         = useState<PricePackageName>(formValues.packageType)
@@ -77,17 +73,9 @@ const BugHuntIntakeForm: React.FC = () => {
 
                 const intakeFormBH: ChallengeMetadata | undefined = response.metadata?.find((item: ChallengeMetadata) => item.name === ChallengeMetadataName.intakeForm)
                 if (intakeFormBH) {
-                    const formData: Record<string, any> = JSON.parse(intakeFormBH.value)
-                    // TODO: Set the correct currentStep into challenge's form data when saving form and moving on to a new page
-                    if (formData.currentStep && formData.currentStep !== 'basicInfo') {
-                        if (!isLoggedIn) {
-                            navigate(WorkIntakeFormRoutes[WorkType.bugHunt]['loginPrompt'])
-                        } else {
-                            navigate(WorkIntakeFormRoutes[WorkType.bugHunt][formData.currentStep])
-                        }
-                    }
+                    const formData: Record<string, any> = JSON.parse(intakeFormBH.value).form.basicInfo
 
-                    setFormValues(formData.form.basicInfo)
+                    setFormValues(formData)
 
                     if (formData.form.basicInfo.packageType !== selectedPackage) {
                         setSelectedPackage(formData.form.basicInfo.packageType)
@@ -128,6 +116,11 @@ const BugHuntIntakeForm: React.FC = () => {
 
     const onSave: (val: any) => Promise<void> = (val: any) => {
         if (!challenge) { return Promise.resolve() }
+        if (action === 'save') {
+            val.currentStep = 'basicInfo'
+        } else if (action === 'submit') {
+            val.currentStep = 'review'
+        }
 
         return workUpdateAsync(WorkType.bugHunt, challenge, val)
     }
