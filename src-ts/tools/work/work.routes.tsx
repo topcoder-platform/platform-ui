@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom'
 
-import { PlatformRoute } from '../../lib'
+import { contactSupportPath, PlatformRoute } from '../../lib'
 
 import Work, { toolTitle } from './Work'
 import { WorkLoginPrompt } from './work-login-prompt'
@@ -21,6 +21,7 @@ export function workDetailRoute(workId: string, tab?: string): string {
 
 export const workRoutes: Array<PlatformRoute> = [
     {
+        customerOnly: true,
         element: <WorkNotLoggedIn />,
         route: rootRoute,
     },
@@ -30,7 +31,7 @@ export const workRoutes: Array<PlatformRoute> = [
             {
                 element: <WorkTable />,
                 route: '',
-                title: toolTitle,
+                title: `${toolTitle} Dashboard Active`,
             },
             // there doesn't seem to be support for optional path params
             // in react-router-dom v6, so duplicating route
@@ -38,14 +39,14 @@ export const workRoutes: Array<PlatformRoute> = [
             {
                 element: <WorkTable />,
                 route: ':statusKey',
-                title: toolTitle,
+                title: `${toolTitle} Dashboard Status`,
             },
         ],
         customerOnly: true,
         element: <Work />,
         requireAuth: true,
         route: dashboardRoute,
-        title: toolTitle,
+        title: `${toolTitle} Dashboard`,
     },
     {
         element: <Navigate to={rootRoute} />,
@@ -94,5 +95,10 @@ export const workRoutes: Array<PlatformRoute> = [
     {
         element: <Navigate to={dashboardRoute} />,
         route: `${selfServiceRootRoute}/dashboard`,
+    },
+    {
+        children: [],
+        element: <Navigate to={contactSupportPath} />,
+        route: `${rootRoute}/${contactSupportPath}`,
     },
 ]

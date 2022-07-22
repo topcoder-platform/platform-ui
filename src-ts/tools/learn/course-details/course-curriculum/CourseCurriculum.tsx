@@ -1,8 +1,8 @@
 import classNames from 'classnames'
-import { Dispatch, FC, SetStateAction, useCallback, useState } from 'react'
-import { NavigateFunction, useNavigate } from 'react-router-dom'
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react'
+import { NavigateFunction, useNavigate, useSearchParams } from 'react-router-dom'
 
-import { Button } from '../../../../lib'
+import { Button, UserProfile } from '../../../../lib'
 import {
     CourseOutline,
     LearnCourse,
@@ -15,7 +15,7 @@ import {
     UpdateMyCertificateProgressActions,
     updateMyCertificationsProgressAsync
 } from '../../learn-lib'
-import { getFccLessonPath, LEARN_PATHS } from '../../learn.routes'
+import { authenticateAndStartCourseRoute, getCertificatePath, getFccLessonPath, LEARN_PATHS } from '../../learn.routes'
 
 import styles from './CourseCurriculum.module.scss'
 import { CurriculumSummary } from './curriculum-summary'
@@ -23,12 +23,16 @@ import { TcAcademyPolicyModal } from './tc-academy-policy-modal'
 
 interface CourseCurriculumProps {
     course: LearnCourse
-    profileUserId?: number
+    profile?: UserProfile
     progress?: LearnMyCertificationProgress
+    progressReady?: boolean
 }
 
 const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProps) => {
     const navigate: NavigateFunction = useNavigate()
+    const [searchParams]: any = useSearchParams()
+
+    const isLoggedIn: boolean = !!props.profile
 
     const [isTcAcademyPolicyModal, setIsTcAcademyPolicyModal]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
@@ -57,18 +61,30 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
     }, [props.course, props.progress, navigate])
 
     /**
-     * Check if user accepted policy when user clicks start course
-     * If not, show the policy modal
-     * otherwise resume(or start) the course
+     * Handle user click on start course/resume/login button
      */
     const handleStartCourseClick: () => void = useCallback(() => {
-      if (props.progress?.academicHonestyPolicyAcceptedAt) {
-        handleStartCourse()
-        return
-      }
+        // if user is not logged in, redirect to login page
+        if (!isLoggedIn) {
+            // add a flag to the return url to show the academic policy modal
+            // or resume the course when they're back
+            window.location.href = authenticateAndStartCourseRoute
+            return
+        }
 
-      setIsTcAcademyPolicyModal(true)
-    }, [handleStartCourse, props.progress?.academicHonestyPolicyAcceptedAt])
+        // Check if user accepted policy and resume(or start) the course
+        if (props.progress?.academicHonestyPolicyAcceptedAt) {
+            handleStartCourse()
+            return
+        }
+
+        // show the academic policy modal before starting a new course
+        setIsTcAcademyPolicyModal(true)
+    }, [
+        handleStartCourse,
+        isLoggedIn,
+        props.progress?.academicHonestyPolicyAcceptedAt,
+    ])
 
     /**
      * When user clicks accept inside the policy modal,
@@ -76,13 +92,13 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
      * otherwise send a PUT request to expressly accept the policy
      */
     const handlePolicyAccept: () => void = useCallback(async () => {
-        if (!props.profileUserId) {
+        if (!props.profile) {
             return
         }
 
         if (!props.progress?.id) {
             await startMyCertificationsProgressAsync(
-                props.profileUserId,
+                props.profile.userId,
                 props.course.certificationId,
                 props.course.id,
                 {
@@ -104,9 +120,24 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         props.course.certificationId,
         props.course.id,
         props.course.modules,
-        props.profileUserId,
-        props.progress,
+        props.profile,
+        props.progress?.id,
     ])
+
+    const handleNavigateToCertificate: () => void = () => {
+        const certificatePath: string = getCertificatePath(props.course.provider, props.course.certification)
+        navigate(certificatePath)
+    }
+
+    /**
+     * If the url has a "start-course" search param,
+     * proceed as if the user just clicked "Start course" button
+     */
+    useEffect(() => {
+      if (props.progressReady && isLoggedIn && searchParams.get('start-course') !== null) {
+        handleStartCourseClick()
+      }
+    }, [handleStartCourseClick, isLoggedIn, props.progressReady, searchParams])
 
     return (
         <>
@@ -128,6 +159,8 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
                     completedPercentage={completedPercentage}
                     completed={isCompleted}
                     completedDate={props.progress?.completedDate}
+                    onClickCertificateBtn={handleNavigateToCertificate}
+                    isLoggedIn={isLoggedIn}
                 />
 
                 <div className={styles['course-outline']}>

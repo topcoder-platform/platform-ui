@@ -1,23 +1,12 @@
-import { Navigate } from 'react-router-dom'
-
-import { PlatformRoute } from '../../lib'
-import { routeRootLoggedOut } from '../../tools'
+import { contactSupportPath, PlatformRoute } from '../../lib'
 
 import { default as ContactSupport, toolTitle } from './ContactSupport'
-
-const supportPath: string = '/support'
 
 export const contactSupportRoutes: Array<PlatformRoute> = [
     {
         children: [],
         element: <ContactSupport />,
-        route: supportPath,
+        route: contactSupportPath,
         title: toolTitle,
-    },
-    {
-        children: [],
-        element: <Navigate to={supportPath} />,
-        route: `${routeRootLoggedOut}${supportPath}`,
-        title: 'Obsolete Self Service Support page',
     },
 ]

@@ -24,14 +24,18 @@ import {
     useLessonProvider,
     useMyCertificationProgress,
 } from '../learn-lib'
-import { getCoursePath, getFccLessonPath } from '../learn.routes'
+import { getCertificationCompletedPath, getCoursePath, getFccLessonPath } from '../learn.routes'
 
 import { FccFrame } from './fcc-frame'
 import styles from './FreeCodeCamp.module.scss'
 import { TitleNav } from './title-nav'
 
 const FreeCodeCamp: FC<{}> = () => {
-    const { profile }: ProfileContextData = useContext(profileContext)
+    const {
+        profile,
+        initialized: profileReady,
+    }: ProfileContextData = useContext(profileContext)
+    const isLoggedIn: boolean = !!profile
 
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
@@ -59,7 +63,7 @@ const FreeCodeCamp: FC<{}> = () => {
         lessonParam,
     )
 
-    const ready: boolean = courseDataReady && lessonReady && progressReady
+    const ready: boolean = profileReady && courseDataReady && lessonReady && (!isLoggedIn || progressReady)
 
     const breadcrumb: Array<BreadcrumbItemModel> = useMemo(() => [
         { url: '/learn', name: 'Topcoder Academy' },
@@ -181,9 +185,24 @@ const FreeCodeCamp: FC<{}> = () => {
             certificateProgress.id,
             UpdateMyCertificateProgressActions.completeCertificate,
             {}
-        ).then(setCertificateProgress)
+        )
+            .then(setCertificateProgress)
+            .then(() => {
+                const completedPath: string = getCertificationCompletedPath(
+                    providerParam,
+                    certificationParam
+                )
+
+                navigate(completedPath)
+            })
       }
-    }, [certificateProgress, setCertificateProgress])
+    }, [
+        certificateProgress,
+        certificationParam,
+        navigate,
+        providerParam,
+        setCertificateProgress,
+    ])
 
     useEffect(() => {
         const certificationPath: string = routeParams.certification ?? ''
@@ -200,14 +219,21 @@ const FreeCodeCamp: FC<{}> = () => {
      * if not, redirect user to course details page to accept the policy
      */
     useLayoutEffect(() => {
-        if (ready && !certificateProgress?.academicHonestyPolicyAcceptedAt) {
+        if (ready && !(isLoggedIn && certificateProgress?.academicHonestyPolicyAcceptedAt)) {
             const coursePath: string = getCoursePath(
                 providerParam,
                 certificationParam
             )
             navigate(coursePath)
         }
-    }, [ready, certificateProgress, providerParam, certificationParam, navigate])
+    }, [
+        ready,
+        certificateProgress,
+        providerParam,
+        certificationParam,
+        navigate,
+        isLoggedIn,
+    ])
 
     return (
         <>

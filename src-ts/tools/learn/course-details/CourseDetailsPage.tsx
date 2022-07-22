@@ -1,4 +1,4 @@
-import { FC, useContext, useMemo } from 'react'
+import { FC, ReactNode, useContext, useMemo } from 'react'
 import { Params, useParams } from 'react-router-dom'
 
 import {
@@ -14,8 +14,11 @@ import {
     CoursesProviderData,
     CourseTitle,
     MyCertificationProgressProviderData,
+    MyCertificationProgressStatus,
+    ResourceProviderData,
     useCoursesProvider,
-    useMyCertificationProgress
+    useMyCertificationProgress,
+    useResourceProvider
 } from '../learn-lib'
 
 import { CourseCurriculum } from './course-curriculum'
@@ -25,19 +28,77 @@ import { PromoCourse } from './promo-course'
 const CourseDetailsPage: FC<{}> = () => {
 
     const routeParams: Params<string> = useParams()
-    const { profile }: ProfileContextData = useContext(profileContext)
+    const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
+
+    const {
+        provider: resourceProvider,
+    }: ResourceProviderData = useResourceProvider(routeParams.provider)
 
     const {
         course,
-        ready,
+        ready: courseReady,
     }: CoursesProviderData = useCoursesProvider(routeParams.provider ?? '', routeParams.certification)
 
-    const { certificateProgress: progress }: MyCertificationProgressProviderData = useMyCertificationProgress(profile?.userId, routeParams.provider, routeParams.certification)
+    const {
+        certificateProgress: progress,
+        ready: progressReady,
+    }: MyCertificationProgressProviderData = useMyCertificationProgress(
+        profile?.userId,
+        routeParams.provider,
+        routeParams.certification,
+    )
 
+    const ready: boolean = profileReady && courseReady && (!profile || progressReady)
     const breadcrumb: Array<BreadcrumbItemModel> = useMemo(() => [
         { url: '/learn', name: 'Topcoder Academy' },
         { url: `/learn/${routeParams.provider}/${routeParams.certification}`, name: course?.title ?? '' },
     ], [routeParams, course])
+
+    function getDescription(): ReactNode {
+        if (!course) {
+            return
+        }
+
+        return progress?.status === MyCertificationProgressStatus.completed ? (
+            <>
+                <h3 className='details'>Suggested next steps</h3>
+
+                <div className={styles['text']}>
+                    <p>
+                        Now that you have completed the {course.title},
+                        we'd recommend you enroll in another course to continue your learning.
+                        You can view our other courses from the Topcoder Academy course page.
+                    </p>
+                </div>
+            </>
+        ) : (
+            course.keyPoints && (
+                <>
+                    <h3 className='details'>Why should you complete this course?</h3>
+
+                    <div
+                        className={styles['text']}
+                        dangerouslySetInnerHTML={{ __html: (course.keyPoints ?? []).join('<br /><br />') }}
+                    ></div>
+                </>
+            )
+        )
+    }
+
+    function getFooter(): ReactNode {
+        if (!resourceProvider) {
+            return
+        }
+
+        return (
+            <div className={styles['credits-link']}>
+                <a href={`//${resourceProvider.url}`} target='_blank' referrerPolicy='no-referrer' rel='noreferrer'>
+                    This course was created by the {resourceProvider.url} community.
+                    <IconOutline.ExternalLinkIcon />
+                </a>
+            </div>
+        )
+    }
 
     return (
         <ContentLayout>
@@ -51,7 +112,7 @@ const CourseDetailsPage: FC<{}> = () => {
                 <>
                     <div className={styles['wrap']}>
                         <div className={styles['intro-copy']}>
-                            <CourseTitle size='lg' title={course.title} credits={course?.provider} type='webdev' />
+                            <CourseTitle size='lg' title={course.title} credits={course.provider} type='webdev' />
 
                             <div
                                 className={styles['text']}
@@ -60,30 +121,7 @@ const CourseDetailsPage: FC<{}> = () => {
                         </div>
 
                         <div className={styles['description']}>
-                            {progress?.status === 'completed' ? (
-                                <>
-                                    <h3 className='details'>Suggested next steps</h3>
-
-                                    <div className={styles['text']}>
-                                        <p>
-                                            Now that you have completed the {course.title},
-                                            we'd recommend you enroll in another course to continue your learning.
-                                            You can view our other courses from the Topcoder Academy course page.
-                                        </p>
-                                    </div>
-                                </>
-                            ) : (
-                                course.keyPoints && (
-                                    <>
-                                        <h3 className='details'>Why should you complete this course?</h3>
-
-                                        <div
-                                            className={styles['text']}
-                                            dangerouslySetInnerHTML={{ __html: (course.keyPoints ?? []).join('<br /><br />') }}
-                                        ></div>
-                                    </>
-                                )
-                            )}
+                            {getDescription()}
                             <div className={styles['coming-soon']}>
                                 <PromoCourse />
                             </div>
@@ -93,18 +131,12 @@ const CourseDetailsPage: FC<{}> = () => {
                             <CourseCurriculum
                                 course={course}
                                 progress={progress}
-                                profileUserId={profile?.userId}
+                                progressReady={progressReady}
+                                profile={profile}
                             />
                         </div>
                     </div>
-                    {course?.provider === 'freeCodeCamp' && (
-                        <div className={styles['credits-link']}>
-                            <a href='https://freecodecamp.org/' target='_blank' referrerPolicy='no-referrer' rel='noreferrer'>
-                                This course was created by the freeCodeCamp.org community.
-                                <IconOutline.ExternalLinkIcon />
-                            </a>
-                        </div>
-                    )}
+                    {getFooter()}
                 </>
             )}
         </ContentLayout>

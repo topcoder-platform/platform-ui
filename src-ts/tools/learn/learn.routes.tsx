@@ -1,4 +1,4 @@
-import { PlatformRoute } from '../../lib'
+import { authUrlLogin, PlatformRoute } from '../../lib'
 
 import { CourseCompletedPage } from './course-completed'
 import { CourseDetailsPage } from './course-details'
@@ -16,6 +16,10 @@ export function getCertificatePath(provider: string, certification: string): str
     return `/learn/${provider}/${certification}/certificate`
 }
 
+export function getCertificationCompletedPath(provider: string, certification: string): string {
+    return `/learn/${provider}/${certification}/completed`
+}
+
 export function getFccLessonPath(
     provider: string,
     certification: string,
@@ -31,6 +35,8 @@ export enum LEARN_PATHS {
     fcc = '/learn/fcc',
     root = '/learn',
 }
+
+export const authenticateAndStartCourseRoute: string = `${authUrlLogin}${encodeURIComponent('?start-course')}`
 
 export const rootRoute: string = LEARN_PATHS.root
 
