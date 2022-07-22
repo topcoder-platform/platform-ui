@@ -20,6 +20,7 @@ export * from './work-progress.model'
 export * from './work-progress-step.model'
 export * from './work-status-filter.enum'
 export * from './work-status.enum'
+export * from './work-timeline-phase.model'
 export {
     bugHuntConfig as workBugHuntConfig,
     WorkTypeConfigs
