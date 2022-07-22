@@ -66,7 +66,7 @@ const BugHuntIntakeForm: React.FC = () => {
     })
 
     const [selectedPackage, setSelectedPackage]: [PricePackageName, Dispatch<SetStateAction<PricePackageName>>]
-        = useState<PricePackageName>(formValues.packageType)
+        = useState<PricePackageName>(formValues?.packageType)
 
     const formInputs: Array<FormInputModel> = formGetInputFields(formDef.groups)
     if (!workId && !challenge) {
@@ -90,7 +90,7 @@ const BugHuntIntakeForm: React.FC = () => {
 
                     setFormValues(formData)
 
-                    if (formData.form.basicInfo.packageType !== selectedPackage) {
+                    if (formData?.form?.basicInfo.packageType && formData?.form?.basicInfo.packageType !== selectedPackage) {
                         setSelectedPackage(formData.form.basicInfo.packageType)
                     }
                 }

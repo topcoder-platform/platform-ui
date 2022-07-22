@@ -57,6 +57,7 @@ export function create(challenge: Challenge, workPrices: WorkPricesType): Work {
         cost: getCost(challenge, priceConfig, type),
         created: submittedDate,
         description: getDescription(challenge, type),
+        draftStep: getDraftStep(challenge, status),
         id: challenge.id,
         messageCount: Number((Math.random() * 10).toFixed(0)), // TODO: real message count
         participantsCount: challenge.numOfRegistrants,
@@ -91,10 +92,16 @@ export function buildCreateBody(workTypeConfig: WorkTypeConfig): ChallengeCreate
         legacy: {
             selfService: true,
         },
-        metadata: [{
-            name: ChallengeMetadataName.intakeForm,
-            value: JSON.stringify({ form }),
-        }],
+        metadata: [
+            {
+                name: ChallengeMetadataName.intakeForm,
+                value: JSON.stringify({ form }),
+            },
+            {
+                name: ChallengeMetadataName.currentStep,
+                value: 'basicInfo',
+            },
+        ],
         name: 'new-self-service-project',
         tags: workTypeConfig.tags,
         timelineTemplateId: workTypeConfig.timelineTemplateId,
@@ -476,6 +483,14 @@ function getDescription(challenge: Challenge, type: WorkType): string | undefine
         case WorkType.designLegacy:
             return findMetadata(challenge, ChallengeMetadataName.description)?.value
     }
+}
+
+function getDraftStep(challenge: Challenge, status: WorkStatus): string | undefined {
+
+    if (status !== WorkStatus.draft) { return undefined }
+
+    const currentStep: ChallengeMetadata | undefined = findMetadata(challenge, ChallengeMetadataName.currentStep)
+    return currentStep?.value
 }
 
 function getProgress(challenge: Challenge, workStatus: WorkStatus): WorkProgress {
