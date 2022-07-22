@@ -3,8 +3,12 @@ import { Navigate } from 'react-router-dom'
 import { contactSupportPath, PlatformRoute } from '../../lib'
 
 import Work, { toolTitle } from './Work'
+import { WorkLoginPrompt } from './work-login-prompt'
 import { WorkNotLoggedIn } from './work-not-logged-in'
+import { BugHuntIntakeForm, Review } from './work-self-service'
+import IntakeForms, { intakeFormsTitle } from './work-self-service/intake-forms/IntakeForms'
 import { WorkTable } from './work-table'
+import { WorkThankYou } from './work-thank-you'
 
 export const rootRoute: string = '/work'
 export const selfServiceRootRoute: string = '/self-service'
@@ -20,7 +24,6 @@ export const workRoutes: Array<PlatformRoute> = [
         customerOnly: true,
         element: <WorkNotLoggedIn />,
         route: rootRoute,
-        title: toolTitle,
     },
     {
         alternativePaths: [selfServiceRootRoute],
@@ -41,28 +44,61 @@ export const workRoutes: Array<PlatformRoute> = [
         ],
         customerOnly: true,
         element: <Work />,
-        hide: true,
         requireAuth: true,
         route: dashboardRoute,
         title: `${toolTitle} Dashboard`,
     },
     {
         element: <Navigate to={rootRoute} />,
-        hide: true,
         route: selfServiceRootRoute,
-        title: 'Obsolete Self Service Logged Out Landing',
+    },
+    {
+        children: [
+            // Bug Hunt
+            {
+                element: <BugHuntIntakeForm />,
+                route: `bug-hunt/basic-info`,
+                title: intakeFormsTitle,
+            },
+            {
+                element: <BugHuntIntakeForm />,
+                route: `bug-hunt/basic-info/:workId`,
+                title: intakeFormsTitle,
+            },
+            {
+                element: <Review />,
+                route: `bug-hunt/review`,
+                title: intakeFormsTitle,
+            },
+            {
+                element: <Review />,
+                route: `bug-hunt/review/:workId`,
+                title: intakeFormsTitle,
+            },
+            // General
+            {
+                element: <WorkLoginPrompt />,
+                route: `:workType/login-prompt`,
+                title: intakeFormsTitle,
+            },
+            {
+                element: <WorkThankYou />,
+                route: `:workType/thank-you`,
+                title: intakeFormsTitle,
+            },
+        ],
+        customerOnly: true,
+        element: <IntakeForms />,
+        route: `/${selfServiceRootRoute}${rootRoute}/new`,
+        title: intakeFormsTitle,
     },
     {
         element: <Navigate to={dashboardRoute} />,
-        hide: true,
         route: `${selfServiceRootRoute}/dashboard`,
-        title: 'Obsolete Self Service Dashboard',
     },
     {
         children: [],
         element: <Navigate to={contactSupportPath} />,
-        hide: true,
         route: `${rootRoute}/${contactSupportPath}`,
-        title: 'Obsolete Self Service Support page',
     },
 ]

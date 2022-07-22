@@ -6,7 +6,7 @@ import '../styles/index.scss'
 import { IconOutline } from '../svgs'
 
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
-export type ButtonStyle = 'icon' | 'link' | 'primary' | 'secondary' | 'tertiary' | 'text'
+export type ButtonStyle = 'icon' | 'icon-bordered' | 'link' | 'primary' | 'secondary' | 'tertiary' | 'text'
 export type ButtonType = 'button' | 'submit'
 
 export interface ButtonProps {

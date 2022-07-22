@@ -157,6 +157,11 @@ h4 {
     }
 }
 
+.body-large-bold {
+    @extend .body-large;
+    font-weight: $font-weight-bold;
+}
+
 .body-large-medium {
     font-weight: $font-weight-medium;
     font-size: 24px;
@@ -277,4 +282,11 @@ h4 {
     font-weight: $font-weight-semibold;
     font-size: 11px;
     line-height: 14px;
+}
+
+.body-main-link {
+    font-family: $font-roboto;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: $font-weight-medium;
 }

@@ -23,7 +23,7 @@
     border: solid $border;
     white-space: nowrap;
     cursor: pointer;
-    font-family: $font-roboto; 
+    font-family: $font-roboto;
     font-weight: $font-weight-bold;
     font-size: 11px;
     line-height: 24px;
@@ -32,7 +32,7 @@
     &.primary,
     &.secondary {
 
-        &:focus {
+        &:not(.disabled):focus {
             outline: $border solid $turq-140;
         }
     }
@@ -47,7 +47,7 @@
         padding: $border $pad-xl;
         font-size: 13px;
     }
-    
+
     &.button-md {
         padding: 3*$border $pad-xl;
         font-size: 13px;
@@ -57,7 +57,7 @@
         padding: $pad-sm $pad-xxl;
         font-size: 14px;
     }
-    
+
     &.button-xl {
         padding: $pad-md $pad-xxl;
         font-size: 16px;
@@ -85,6 +85,7 @@
             color: $black-60;
             background-color: $black-5;
             border-color: $black-5;
+            cursor: default;
         }
     }
 
@@ -105,6 +106,7 @@
             color: $black-60;
             background-color: $black-5;
             border-color: $black-5;
+            cursor: default;
         }
     }
 
@@ -125,6 +127,7 @@
             color: $black-60;
             background-color: $tc-white;
             border-color: $black-5;
+            cursor: default;
         }
     }
 
@@ -156,6 +159,7 @@
             color: $black-60;
             background-color: $tc-white;
             border-color: $black-5;
+            cursor: default;
         }
 
         svg {
@@ -171,6 +175,7 @@
         font-size: 12px;
     }
 
+    &.icon-bordered,
     &.icon {
         margin: 0;
         padding: $pad-sm calc($pad-sm - $border-xs) $pad-xs $pad-sm;
@@ -189,6 +194,20 @@
 
         &:focus {
             outline: none;
+        }
+    }
+
+    &.icon-bordered {
+        width: 60px;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        display: flex;
+        height: 40px;
+        & {
+            border: 1px solid $turq-160;
+            padding: $pad-lg;
+            border-radius: 50px;
         }
     }
 }

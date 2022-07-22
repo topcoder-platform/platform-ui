@@ -405,6 +405,23 @@ example.scss
   }
 }
 ```
+
+Mobile UIs use xs, sm, and md breakpoints. Larger breakpoints are desktop UIs. 
+
+For specifying mobile CSS, you can use @include ltemd:
+```
+.exampleDesktopContent {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+
+  @include ltemd {
+    flex-direction: row;
+  }
+}
+```
+
+
 >**WARNING:** Do not add any breakpoints!
 
 ## Icons

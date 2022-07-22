@@ -53,7 +53,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
         //    c. the active tool in the app (in case someone deep-links to it)
         const toolsRoutesForNav: Array<PlatformRoute> = toolsRoutes
             .filter(route =>
-                !route.hide
+                !!route.title
                 && (
                     (
                         (!route.customerOnly || !!profile?.isCustomer)
@@ -62,6 +62,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
                     || isActiveTool(location.pathname, route)
                 )
             )
+
         const utilsRoutes: Array<PlatformRoute> = props.utilsRoutes.filter(route => !route.disabled)
         allRoutes = [
             ...toolsRoutes,
@@ -132,7 +133,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
         return (
             <Route
                 element={routeElement}
-                key={route.title}
+                key={route.route}
                 path={path}
             />
         )
