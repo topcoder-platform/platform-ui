@@ -1,5 +1,5 @@
 import { ChallengeTag } from './challenge-tag.enum'
-import { WorkPrice } from './work-price.model'
+import { PricePackageName, WorkPrice } from './work-price.model'
 import { WorkTimelinePhase } from './work-timeline-phase.model'
 import { WorkType } from './work-type.enum'
 
@@ -21,9 +21,12 @@ export interface WorkTypeConfig {
     }
     shortDescription: string,
     startRoute: string,
+    submissionPhaseDuration?: {
+        [key in PricePackageName]?: number
+    },
     subtitle: string,
     tags: Array<ChallengeTag>,
-    timeline: ReadonlyArray<WorkTimelinePhase>
+    timeline: Array<WorkTimelinePhase>
     timelineTemplateId: string,
     title: string,
     trackId: string,

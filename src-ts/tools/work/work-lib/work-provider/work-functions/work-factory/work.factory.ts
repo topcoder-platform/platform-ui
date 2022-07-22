@@ -1,6 +1,6 @@
 import moment from 'moment'
 
-import { WorkStrings } from '../../../work-constants'
+import { WorkConfigConstants, WorkStrings } from '../../../work-constants'
 import {
     Challenge,
     ChallengeCreateBody,
@@ -10,14 +10,14 @@ import {
     ChallengePhase,
     ChallengePhaseName,
     ChallengeUpdateBody,
+    PricePackageName,
     Work,
     WorkPrice,
-    WorkPriceBreakdown,
     WorkPricesType,
-    WorkPrize,
     WorkProgress,
     WorkProgressStep,
     WorkStatus,
+    WorkTimelinePhase,
     WorkType,
     WorkTypeCategory,
     WorkTypeConfig,
@@ -150,12 +150,21 @@ export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Chall
     }
     // ---- End Build Markdown string ---- //
 
+    // If the duration of the Submission phase depends on the package selected (i.e.: Bug Hunt),
+    // then update the duration for that phase to the correct value
+    const timeline: Array<WorkTimelinePhase> = workTypeConfig.timeline.map((phase) => {
+        if (workTypeConfig.submissionPhaseDuration && phase.phaseId === WorkConfigConstants.PHASE_ID_SUBMISSION) {
+            phase.duration = workTypeConfig.submissionPhaseDuration[formData[ChallengeMetadataName.packageType] as PricePackageName] || 0
+        }
+        return phase
+    })
+
     const body: ChallengeUpdateBody = {
         description: templateString.join(''),
         id: challenge.id,
         metadata: intakeMetadata,
         name: formData.projectTitle,
-        phases: workTypeConfig.timeline,
+        phases: timeline,
         prizeSets: priceConfig.getPrizeSets(priceConfig, formData.packageType),
     }
 
