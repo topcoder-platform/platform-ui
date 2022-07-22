@@ -7,6 +7,7 @@ export interface Work {
     cost?: number
     created: Date
     description?: string
+    draftStep?: string
     id: string
     messageCount?: number
     participantsCount?: number

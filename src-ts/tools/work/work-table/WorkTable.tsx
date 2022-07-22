@@ -20,7 +20,9 @@ import {
     workGetStatusFilter,
     WorkStatus,
     WorkStatusFilter,
+    WorkType,
 } from '../work-lib'
+import { WorkIntakeFormRoutes } from '../work-lib/work-provider/work-functions/work-store/work-intake-form-routes.config'
 import { selfServiceStartRoute, workDetailRoute } from '../work.routes'
 
 import { workDashboardTabs } from './work-nav.config'
@@ -93,16 +95,18 @@ const WorkTable: FC<{}> = () => {
 
         const isDraft: boolean = selectedWork.status === WorkStatus.draft
 
-        if (isDraft) {
-            cacheChallengeId(selectedWork.id)
-        }
+        // TODO: move the tabs definition to src-ts
+        // so we don't have to hard-code this tab id
+        let url: string = workDetailRoute(selectedWork.id, selectedWork.status === WorkStatus.ready ? 'solutions' : undefined)
 
-        // TODO: get these routes from an object/function that's not hard-coded
-        const url: string = isDraft
-            ? selfServiceStartRoute
-            // TODO: move the tabs definition to src-ts
-            // so we don't have to hard-code this tab id
-            : workDetailRoute(selectedWork.id, selectedWork.status === WorkStatus.ready ? 'solutions' : undefined)
+        if (isDraft) {
+            if (selectedWork.draftStep) {
+                url = `${WorkIntakeFormRoutes[selectedWork.type][selectedWork.draftStep]}/${selectedWork.id}`
+            } else {
+                cacheChallengeId(selectedWork.id)
+                url = selfServiceStartRoute
+            }
+        }
 
         navigate(url)
     }
