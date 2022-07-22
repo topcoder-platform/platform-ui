@@ -7,7 +7,8 @@ import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
 
 import { ReactComponent as BackIcon } from '../../../../../../src/assets/images/icon-back-arrow.svg'
 import { EnvironmentConfig } from '../../../../../config'
-import { Button, IconOutline, LoadingSpinner, PageDivider, PaymentForm, profileContext, ProfileContextData } from '../../../../../lib'
+import { Button, IconOutline, InfoCard, LoadingSpinner, PageDivider, PaymentForm, profileContext, ProfileContextData } from '../../../../../lib'
+import { useCheckIsMobile } from '../../../../../lib/hooks/use-check-is-mobile.hook'
 import { WorkDetailDetailsPane } from '../../../work-detail-details'
 import {
     Challenge,
@@ -20,8 +21,10 @@ import { WorkIntakeFormRoutes } from '../../../work-lib/work-provider/work-funct
 import { bugHuntConfig } from '../../../work-lib/work-provider/work-functions/work-store/work-type.config'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
+import { DeliverablesInfoCard } from '../bug-hunt/deliverables-info-card'
 import IntakeFormsBreadcrumb from '../intake-forms-breadcrumb/IntakeFormsBreadcrumb'
 
+import { AboutYourProjectInfoCard } from './AboutYourProjectInfoCard'
 import styles from './Review.module.scss'
 
 interface FormFieldValues {
@@ -58,6 +61,7 @@ const Review: React.FC = () => {
     const [isLoading, setLoading]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
     const [isPaymentFailed, setPaymentFailed]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
     const navigate: NavigateFunction = useNavigate()
+    const isMobile: boolean = useCheckIsMobile()
 
     const stripe: Stripe | null = useStripe()
     const elements: StripeElements | null = useElements()
@@ -244,9 +248,23 @@ const Review: React.FC = () => {
 
             {renderWorkServicePrice()}
 
+            <DeliverablesInfoCard isMobile={isMobile} />
+
             <div className={styles['content']}>
                 <div className={styles['left']}>
                     <WorkDetailDetailsPane formData={formData} isReviewPage={true} redirectUrl={redirectUrl} collapsible={true} defaultOpen={true} />
+                    {
+                        !isMobile && (
+                            <InfoCard
+                                color='success'
+                                defaultOpen={true}
+                                isCollapsible
+                                title={workBugHuntConfig.review.aboutYourProjectTitle}
+                            >
+                                <AboutYourProjectInfoCard />
+                            </InfoCard>
+                        )
+                    }
                 </div>
                 <div className={styles['right']}>
                     <div className={styles['payment-form-wrapper']}>
@@ -262,6 +280,18 @@ const Review: React.FC = () => {
                             error={isPaymentFailed}
                         />
                     </div>
+                    {
+                        isMobile && (
+                            <InfoCard
+                                color='success'
+                                defaultOpen={!isMobile}
+                                isCollapsible
+                                title={workBugHuntConfig.review.aboutYourProjectTitle}
+                            >
+                                <AboutYourProjectInfoCard />
+                            </InfoCard>
+                        )
+                    }
                 </div>
             </div>
 

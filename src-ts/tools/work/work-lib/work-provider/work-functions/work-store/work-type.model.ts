@@ -14,6 +14,7 @@ export interface WorkTypeConfig {
     priceConfig: WorkPrice
     results: string,
     review: {
+        aboutYourProjectTitle: string,
         subtitle: string,
         title: string,
         type: string,
