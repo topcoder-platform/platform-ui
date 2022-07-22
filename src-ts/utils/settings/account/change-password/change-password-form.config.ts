@@ -21,7 +21,7 @@ export const changePasswordFormDef: FormDefinition = {
         primaryGroup: [
             {
                 buttonStyle: 'secondary',
-                isSave: true,
+                isSubmit: true,
                 label: 'Change password',
                 size: 'xl',
                 type: 'submit',
@@ -80,7 +80,7 @@ export const changePasswordFormDef: FormDefinition = {
                 {
                     autocomplete: FormInputAutocompleteOption.off,
                     dependentFields: [
-                         ChangePasswordFieldName.newPassword,
+                        ChangePasswordFieldName.newPassword,
                     ],
                     label: 'Confirm Password',
                     name: ChangePasswordFieldName.confirmPassword,

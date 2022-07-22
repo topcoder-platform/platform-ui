@@ -15,7 +15,7 @@ import { Button } from '../button'
 import '../styles/index.scss'
 import { IconOutline } from '../svgs'
 
-import { FormButton, FormDefinition, FormInputModel } from '.'
+import { FormAction, FormButton, FormDefinition, FormInputModel } from '.'
 import {
     formGetInputFields,
     formInitializeValues,
@@ -29,6 +29,7 @@ import { FormGroups } from './form-groups'
 import styles from './Form.module.scss'
 
 interface FormProps<ValueType, RequestType> {
+    readonly action?: FormAction // only type submit will perform validation
     readonly formDef: FormDefinition
     readonly formValues?: ValueType
     readonly onChange?: (inputs: ReadonlyArray<FormInputModel>) => void,
@@ -60,9 +61,12 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             if (!formRef.current?.elements) {
                 return
             }
-            validateForm(formRef.current?.elements, 'initial', inputs)
+
+            // validators do not clear errors on the 'initial' event,
+            // so we call validateForm as a change here, to support the parent component sending props.formValues updates due to async data loading
+            validateForm(formRef.current?.elements, 'change', inputs)
             checkIfFormIsValid(inputs)
-        }, [])
+        }, [props.formValues])
 
         function checkIfFormIsValid(formInputFields: Array<FormInputModel>): void {
             setFormInvalid(formInputFields.filter(item => !!item.error).length > 0)
@@ -96,7 +100,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         async function onSubmitAsync(event: FormEvent<HTMLFormElement>): Promise<void> {
             const values: RequestType = props.requestGenerator(inputs)
-            formOnSubmitAsync<RequestType>(event, formDef, values, props.save, props.onSuccess)
+            formOnSubmitAsync<RequestType>(props.action || 'submit', event, formDef, values, props.save, props.onSuccess)
                 .then(() => {
                     setFormKey(Date.now())
                     formOnReset(inputs, props.formValues)
@@ -126,7 +130,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                     <Button
                         {...button}
                         key={button.label || `button-${index}`}
-                        disable={isPrimaryGroup && isFormInvalid}
+                        disable={button.isSubmit && isFormInvalid}
                         tabIndex={button.notTabble ? -1 : index + (inputs ? inputs.length : 0) + (formDef.tabIndexStart || 0)}
                     />
                 )

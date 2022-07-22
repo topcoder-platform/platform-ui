@@ -12,7 +12,7 @@ export const editNameFormDef: FormDefinition = {
         primaryGroup: [
             {
                 buttonStyle: 'secondary',
-                isSave: true,
+                isSubmit: true,
                 label: 'Save',
                 size: 'lg',
                 type: 'submit',

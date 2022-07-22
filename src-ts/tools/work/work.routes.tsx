@@ -6,6 +6,7 @@ import Work, { toolTitle } from './Work'
 import { WorkLoginPrompt } from './work-login-prompt'
 import { WorkNotLoggedIn } from './work-not-logged-in'
 import { BugHuntIntakeForm, Review } from './work-self-service'
+import IntakeForms, { intakeFormsTitle } from './work-self-service/intake-forms/IntakeForms'
 import { WorkTable } from './work-table'
 import { WorkThankYou } from './work-thank-you'
 
@@ -51,28 +52,44 @@ export const workRoutes: Array<PlatformRoute> = [
         route: selfServiceRootRoute,
     },
     {
-        element: <BugHuntIntakeForm />,
-        route: `/${selfServiceRootRoute}/work/new/bug-hunt/basic-info`,
-    },
-    {
-        element: <BugHuntIntakeForm />,
-        route: `/${selfServiceRootRoute}/work/new/bug-hunt/basic-info/:workId`,
-    },
-    {
-        element: <WorkLoginPrompt />,
-        route: `/${selfServiceRootRoute}${rootRoute}/new/:workType/login-prompt`,
-    },
-    {
-        element: <Review />,
-        route: `/${selfServiceRootRoute}/work/new/bug-hunt/review`,
-    },
-    {
-        element: <Review />,
-        route: `/${selfServiceRootRoute}/work/new/bug-hunt/review/:workId`,
-    },
-    {
-        element: <WorkThankYou />,
-        route: `/${selfServiceRootRoute}${rootRoute}/new/:workType/thank-you`,
+        children: [
+            // Bug Hunt
+            {
+                element: <BugHuntIntakeForm />,
+                route: `bug-hunt/basic-info`,
+                title: intakeFormsTitle,
+            },
+            {
+                element: <BugHuntIntakeForm />,
+                route: `bug-hunt/basic-info/:workId`,
+                title: intakeFormsTitle,
+            },
+            // General
+            {
+                element: <WorkLoginPrompt />,
+                route: `:workType/login-prompt`,
+                title: intakeFormsTitle,
+            },
+            {
+                element: <Review />,
+                route: `:workType/review`,
+                title: intakeFormsTitle,
+            },
+            {
+                element: <Review />,
+                route: `:workType/review/:workId`,
+                title: intakeFormsTitle,
+            },
+            {
+                element: <WorkThankYou />,
+                route: `:workType/thank-you`,
+                title: intakeFormsTitle,
+            },
+        ],
+        customerOnly: true,
+        element: <IntakeForms />,
+        route: `/${selfServiceRootRoute}${rootRoute}/new`,
+        title: intakeFormsTitle,
     },
     {
         element: <Navigate to={dashboardRoute} />,

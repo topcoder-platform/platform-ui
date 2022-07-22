@@ -1,7 +1,7 @@
 import { ChangeEvent, FormEvent } from 'react'
 import { toast } from 'react-toastify'
 
-import { FormDefinition } from '../form-definition.model'
+import { FormAction, FormDefinition } from '../form-definition.model'
 import { FormGroup } from '../form-group.model'
 import { FormInputModel } from '../form-input.model'
 
@@ -31,11 +31,11 @@ export function getInputModel(inputs: ReadonlyArray<FormInputModel>, fieldName: 
 
 export function initializeValues<T>(inputs: Array<FormInputModel>, formValues?: T): void {
     inputs
-        .filter(input =>  !input.dirty && !input.touched)
+        .filter(input => !input.dirty && !input.touched)
         .forEach(input => {
             input.value = !!(formValues as any)?.hasOwnProperty(input.name)
-            ? (formValues as any)[input.name]
-            : undefined
+                ? (formValues as any)[input.name]
+                : undefined
         })
 }
 
@@ -58,6 +58,7 @@ export function onReset(inputs: ReadonlyArray<FormInputModel>, formValue?: any):
 }
 
 export async function onSubmitAsync<T>(
+    action: FormAction,
     event: FormEvent<HTMLFormElement>,
     formDef: FormDefinition,
     formValue: T,
@@ -78,9 +79,11 @@ export async function onSubmitAsync<T>(
     // could have a form that's not dirty but has errors and you wouldn't
     // want to have it look like the submit succeeded
     const formValues: HTMLFormControlsCollection = (event.target as HTMLFormElement).elements
-    const isValid: boolean = validateForm(formValues, 'submit', inputs)
-    if (!isValid) {
-        return Promise.reject()
+    if (action === 'submit') {
+        const isValid: boolean = validateForm(formValues, action, inputs)
+        if (!isValid) {
+            return Promise.reject()
+        }
     }
 
     // set the properties for the updated T value
@@ -170,9 +173,9 @@ function validateField(formInputDef: FormInputModel, formElements: HTMLFormContr
 
 export function validateForm(formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit' | 'initial', inputs: ReadonlyArray<FormInputModel>): boolean {
     const errors: ReadonlyArray<FormInputModel> = inputs?.filter(formInputDef => {
-            formInputDef.dirty = formInputDef.dirty || event === 'submit'
-            validateField(formInputDef, formElements, event)
-            return !!formInputDef.error
-        })
+        formInputDef.dirty = formInputDef.dirty || event === 'submit'
+        validateField(formInputDef, formElements, event)
+        return !!formInputDef.error
+    })
     return !errors.length
 }

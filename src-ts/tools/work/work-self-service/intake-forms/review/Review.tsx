@@ -20,6 +20,7 @@ import { WorkIntakeFormRoutes } from '../../../work-lib/work-provider/work-funct
 import { bugHuntConfig } from '../../../work-lib/work-provider/work-functions/work-store/work-type.config'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
+import IntakeFormsBreadcrumb from '../intake-forms-breadcrumb/IntakeFormsBreadcrumb'
 
 import styles from './Review.module.scss'
 
@@ -37,7 +38,7 @@ interface FormFieldValues {
 
 const Review: React.FC = () => {
     const workId: string | undefined = useParams().workId
-    const redirectUrl: string = WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']
+    const redirectUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']}/${workId}`
 
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
     const [formData, setFormData]: [any, Dispatch<any>] = useState<any>({})
@@ -64,7 +65,7 @@ const Review: React.FC = () => {
     useEffect(() => {
         const useEffectAsync: () => Promise<void> = async () => {
             // fetch challenge using workId
-            const response: any = await workStoreGetChallengeByWorkId(workId)
+            const response: any = await workStoreGetChallengeByWorkId(workId || '')
             setChallenge(response)
             const intakeFormBH: any = response.metadata.find((item: ChallengeMetadata) => item.name === ChallengeMetadataName.intakeForm)
             const form: any = JSON.parse(intakeFormBH.value).form
@@ -228,6 +229,13 @@ const Review: React.FC = () => {
             {
                 isLoading && <LoadingSpinner />
             }
+            {/* TODO: We need to not hard code the configs to that of BugHunt and instead
+            use the challenge data to determine the WorkType */}
+            <IntakeFormsBreadcrumb
+                basicInfoRoute={`${WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']}/${workId}`}
+                reviewRoute={WorkIntakeFormRoutes[WorkType.bugHunt]['review']}
+                workType={bugHuntConfig.type}
+            />
             <WorkTypeBanner
                 title={bugHuntConfig.review.title}
                 subTitle={bugHuntConfig.review.subtitle}

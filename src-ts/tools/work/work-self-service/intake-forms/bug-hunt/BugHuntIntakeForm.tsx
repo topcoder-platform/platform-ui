@@ -3,6 +3,7 @@ import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
 
 import {
     Form,
+    FormAction,
     FormDefinition,
     formGetInputModel,
     FormInputModel,
@@ -28,6 +29,7 @@ import { WorkIntakeFormRoutes } from '../../../work-lib/work-provider/work-funct
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
 import { dashboardRoute } from '../../../work.routes'
+import IntakeFormsBreadcrumb from '../intake-forms-breadcrumb/IntakeFormsBreadcrumb'
 
 import { BugHuntFormConfig } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
@@ -44,22 +46,22 @@ const BugHuntIntakeForm: React.FC = () => {
     const isMobile: boolean = useCheckIsMobile()
     const { isLoggedIn }: ProfileContextData = useContext<ProfileContextData>(profileContext)
 
-    let action: string = ''
-    BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { action = 'save' }
-    BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { action = 'submit' }
+    const [action, setAction]: [FormAction, Dispatch<SetStateAction<FormAction>>] = useState()
+
+    BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { setAction('save') }
+    BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { setAction('submit') }
+    if (BugHuntFormConfig.buttons.secondaryGroup) {
+        BugHuntFormConfig.buttons.secondaryGroup[0].onClick = () => { navigate(-1) }
+    }
 
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
 
-    const [formValues, setFormValues]: [any,  Dispatch<any>] = useState({
+    const [formValues, setFormValues]: [any, Dispatch<any>] = useState({
         currentStep: 'basicInfo',
         [ChallengeMetadataName.packageType]: 'standard',
     })
-
-    function findMetadata(metadataName: ChallengeMetadataName): ChallengeMetadata | undefined {
-        return challenge?.metadata?.find((item: ChallengeMetadata) => item.name === metadataName)
-    }
 
     const [selectedPackage, setSelectedPackage]: [PricePackageName, Dispatch<SetStateAction<PricePackageName>>]
         = useState<PricePackageName>(formValues.packageType)
@@ -77,17 +79,9 @@ const BugHuntIntakeForm: React.FC = () => {
 
                 const intakeFormBH: ChallengeMetadata | undefined = response.metadata?.find((item: ChallengeMetadata) => item.name === ChallengeMetadataName.intakeForm)
                 if (intakeFormBH) {
-                    const formData: Record<string, any> = JSON.parse(intakeFormBH.value)
-                    // TODO: Set the correct currentStep into challenge's form data when saving form and moving on to a new page
-                    if (formData.currentStep && formData.currentStep !== 'basicInfo') {
-                        if (!isLoggedIn) {
-                            navigate(WorkIntakeFormRoutes[WorkType.bugHunt]['loginPrompt'])
-                        } else {
-                            navigate(WorkIntakeFormRoutes[WorkType.bugHunt][formData.currentStep])
-                        }
-                    }
+                    const formData: Record<string, any> = JSON.parse(intakeFormBH.value).form.basicInfo
 
-                    setFormValues(formData.form.basicInfo)
+                    setFormValues(formData)
 
                     if (formData.form.basicInfo.packageType !== selectedPackage) {
                         setSelectedPackage(formData.form.basicInfo.packageType)
@@ -128,6 +122,11 @@ const BugHuntIntakeForm: React.FC = () => {
 
     const onSave: (val: any) => Promise<void> = (val: any) => {
         if (!challenge) { return Promise.resolve() }
+        if (action === 'save') {
+            val.currentStep = 'basicInfo'
+        } else if (action === 'submit') {
+            val.currentStep = 'review'
+        }
 
         return workUpdateAsync(WorkType.bugHunt, challenge, val)
     }
@@ -151,6 +150,10 @@ const BugHuntIntakeForm: React.FC = () => {
 
     return (
         <>
+            <IntakeFormsBreadcrumb
+                basicInfoRoute={WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']}
+                workType={workBugHuntConfig.type}
+            />
             <WorkTypeBanner
                 title={workBugHuntConfig.title}
                 subTitle={workBugHuntConfig.subtitle}
@@ -182,6 +185,7 @@ const BugHuntIntakeForm: React.FC = () => {
                     onSuccess={onSaveSuccess}
                     requestGenerator={requestGenerator}
                     save={onSave}
+                    action={action}
                 />
             </div>
         </>

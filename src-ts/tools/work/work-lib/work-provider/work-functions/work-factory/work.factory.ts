@@ -112,11 +112,6 @@ export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Chall
     const form: IntakeForm = !!intakeForm?.value ? JSON.parse(intakeForm.value)?.form : {}
     form.basicInfo = formData
 
-    // TODO: Add the progress.currentStep to form to determine if it's in the review phase (review page)
-    // or not. The legacy intakes use currentStep 7 for review and 5 for taking the user to the login step
-    // as those numbers map to the routes configured for each work type (see IntakeForm.jsx for an example).
-    // We can probably clean that up as we don't need that many routes
-
     // --- Build Metadata --- //
     const intakeMetadata: Array<ChallengeMetadata> = [
         {
