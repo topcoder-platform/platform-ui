@@ -28,6 +28,7 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
                 a detailed report of bugs which have steps to reproduce, screenshots / videos if applicable,
                 details of the bug, and severity of the issue.`,
                 review: {
+                        aboutYourProjectTitle: 'Important things to know about your project',
                         subtitle: 'Website Bug Hunt',
                         title: 'Review & Payment',
                         type: 'Review & Payment',
