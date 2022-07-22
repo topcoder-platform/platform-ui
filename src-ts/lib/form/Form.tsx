@@ -57,13 +57,22 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         const [inputs, setInputs]: [Array<FormInputModel>, Dispatch<SetStateAction<Array<FormInputModel>>>] = useState<Array<FormInputModel>>(formGetInputFields(formDef.groups || []))
         const [isFormInvalid, setFormInvalid]: [boolean, Dispatch<boolean>] = useState<boolean>(inputs.filter(item => !!item.error).length > 0)
 
+
         useEffect(() => {
             if (!formRef.current?.elements) {
                 return
             }
 
-            // validators do not clear errors on the 'initial' event,
-            // so we call validateForm as a change here, to support the parent component sending props.formValues updates due to async data loading
+            validateForm(formRef.current?.elements, 'initial', inputs)
+            checkIfFormIsValid(inputs)
+        }, [])
+
+        useEffect(() => {
+            if (!formRef.current?.elements) {
+                return
+            }
+
+            // so we repeat the validation when formValues changes, to support the parent component's async data loading
             validateForm(formRef.current?.elements, 'change', inputs)
             checkIfFormIsValid(inputs)
         }, [props.formValues])
