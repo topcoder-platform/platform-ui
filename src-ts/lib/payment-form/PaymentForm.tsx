@@ -177,7 +177,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 value={props.formData.name}
             />
 
-            <InputWrapper className={styles['input-wrapper']} label='Date' tabIndex={3} type='text' disabled={false}>
+            <InputWrapper className={styles['input-wrapper']} label='Country' tabIndex={3} type='text' disabled={false}>
                 <ReactSelect
                     value={props.formData.country}
                     onChange={(option) => props.onUpdateField('country', option)}
