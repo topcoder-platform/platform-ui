@@ -5,8 +5,10 @@ import {
     Form,
     FormAction,
     FormDefinition,
+    formGetInputFields,
     formGetInputModel,
     FormInputModel,
+    formOnReset,
     IconOutline,
     InfoCard,
     LoadingSpinner,
@@ -65,6 +67,11 @@ const BugHuntIntakeForm: React.FC = () => {
 
     const [selectedPackage, setSelectedPackage]: [PricePackageName, Dispatch<SetStateAction<PricePackageName>>]
         = useState<PricePackageName>(formValues.packageType)
+
+    const formInputs: Array<FormInputModel> = formGetInputFields(formDef.groups)
+    if (!workId && !challenge) {
+        formOnReset(formInputs, formValues)
+    }
 
     useEffect(() => {
         const useEffectAsync: () => Promise<void> = async () => {
