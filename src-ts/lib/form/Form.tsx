@@ -60,9 +60,12 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             if (!formRef.current?.elements) {
                 return
             }
-            validateForm(formRef.current?.elements, 'initial', inputs)
+
+            // validators do not clear errors on the 'initial' event,
+            // so we call validateForm as a change here, to support the parent component sending props.formValues updates due to async data loading
+            validateForm(formRef.current?.elements, 'change', inputs)
             checkIfFormIsValid(inputs)
-        }, [])
+        }, [props.formValues])
 
         function checkIfFormIsValid(formInputFields: Array<FormInputModel>): void {
             setFormInvalid(formInputFields.filter(item => !!item.error).length > 0)
