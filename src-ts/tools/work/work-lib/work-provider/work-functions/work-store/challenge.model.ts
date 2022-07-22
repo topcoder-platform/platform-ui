@@ -16,6 +16,7 @@ export interface Challenge {
     numOfSubmissions?: number
     phases: Array<ChallengePhase>
     prizeSets?: Array<WorkPrize>
+    projectId?: number
     status: string
     tags: Array<ChallengeTag>
     timelineTemplateId?: string

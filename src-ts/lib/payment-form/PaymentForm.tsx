@@ -31,8 +31,10 @@ interface FieldDirtyState {
 }
 
 interface PaymentFormProps {
+    error: boolean
     formData: PaymentFormData
     isFormValid: boolean
+    onPay: () => void
     onUpdateField: (fieldName: string, value: string | boolean) => void
 }
 
@@ -175,7 +177,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 value={props.formData.name}
             />
 
-            <InputWrapper className={styles['input-wrapper']} label='Date' tabIndex={3} type='text' disabled={false}>
+            <InputWrapper className={styles['input-wrapper']} label='Country' tabIndex={3} type='text' disabled={false}>
                 <ReactSelect
                     value={props.formData.country}
                     onChange={(option) => props.onUpdateField('country', option)}
@@ -206,6 +208,14 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 A hold will be placed on your card for the full amount of the project. Once your work is live on the Topcoder platform, you will be charged.
             </div>
 
+            {
+                props.error && (
+                    <div className={styles['error']}>
+                        Your card was declined. Please try a different card.
+                    </div>
+                )
+            }
+
             <Button
                 className={styles['pay-button']}
                 size='lg'
@@ -214,6 +224,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 name='pay-button'
                 label={`Pay ${props.formData.price}`}
                 disable={!props.isFormValid}
+                onClick={props.onPay}
             />
         </div>
     )

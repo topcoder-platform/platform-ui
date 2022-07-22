@@ -23,6 +23,8 @@ export {
 export * from './work-by-status.model'
 export {
     createAsync as workCreateAsync,
+    createCustomerPayment as workCreateCustomerPayment,
+    confirmCustomerPayment as workConfirmCustomerPayment,
     createFromChallenge as workCreateFromChallenge,
     deleteAsync as workDeleteAsync,
     getAllAsync as workGetAllAsync,
