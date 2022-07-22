@@ -20,7 +20,6 @@ import {
     workGetStatusFilter,
     WorkStatus,
     WorkStatusFilter,
-    WorkType,
 } from '../work-lib'
 import { WorkIntakeFormRoutes } from '../work-lib/work-provider/work-functions/work-store/work-intake-form-routes.config'
 import { selfServiceStartRoute, workDetailRoute } from '../work.routes'
