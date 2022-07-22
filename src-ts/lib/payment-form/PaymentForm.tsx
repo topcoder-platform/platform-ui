@@ -5,9 +5,9 @@ import {
   } from '@stripe/react-stripe-js'
 import { StripeCardCvcElementChangeEvent, StripeCardExpiryElementChangeEvent, StripeCardNumberElementChangeEvent } from '@stripe/stripe-js'
 import cn from 'classnames'
-import React, { Dispatch, SetStateAction, useState } from 'react'
+import React, { Dispatch, SetStateAction, useContext, useState } from 'react'
 
-import { Button, OrderContractModal } from '..'
+import { Button, OrderContractModal, profileContext, ProfileContextData } from '..'
 import { InputText } from '../form/form-groups/form-input'
 import { InputWrapper } from '../form/form-groups/form-input/input-wrapper'
 import ReactSelect from '../react-select/ReactSelect'
@@ -52,6 +52,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
     const [cardNumberError, setCardNumberError]: [string, Dispatch<string>] = useState<string>('')
     const [cardExpiryError, setCardExpiryError]: [string, Dispatch<string>] = useState<string>('')
     const [cardCVVError, setCardCVVError]: [string, Dispatch<string>] = useState<string>('')
+    const { profile }: ProfileContextData = useContext<ProfileContextData>(profileContext)
 
     const [formState, setFormState]: [FieldDirtyState, Dispatch<SetStateAction<FieldDirtyState>>] = useState<FieldDirtyState>({
         cardCvv: false,
@@ -100,7 +101,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 tabIndex={1}
                 type='text'
                 onChange={(event) => props.onUpdateField('email', event.target.value)}
-                value={props.formData.email}
+                value={profile?.email}
             />
 
             <div className={styles['label']}>Card Information</div>
@@ -174,7 +175,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 tabIndex={1}
                 type='text'
                 onChange={(event) => props.onUpdateField('name', event.target.value)}
-                value={props.formData.name}
+                value={`${profile?.firstName} ${profile?.lastName}`}
             />
 
             <InputWrapper className={styles['input-wrapper']} label='Country' tabIndex={3} type='text' disabled={false}>

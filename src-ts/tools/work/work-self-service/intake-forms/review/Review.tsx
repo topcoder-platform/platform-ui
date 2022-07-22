@@ -74,8 +74,11 @@ const Review: React.FC = () => {
             const intakeFormBH: any = response.metadata.find((item: ChallengeMetadata) => item.name === ChallengeMetadataName.intakeForm)
             const form: any = JSON.parse(intakeFormBH.value).form
             setFormData(JSON.parse(intakeFormBH.value).form)
+            const { profile: userProfile }: ProfileContextData = useContext<ProfileContextData>(profileContext)
             setFormValues({
                 ...formFieldValues,
+                email: userProfile?.email || '',
+                name: `${userProfile?.firstName} ${userProfile?.lastName}`,
                 price: `$${getPrice(form.basicInfo.packageType)}`,
             })
         }
@@ -228,6 +231,8 @@ const Review: React.FC = () => {
         navigate(redirectUrl)
     }
 
+    // console.log(formFieldValues, profile)
+
     return (
         <div className={styles['review-container']}>
             {
@@ -267,19 +272,23 @@ const Review: React.FC = () => {
                     }
                 </div>
                 <div className={styles['right']}>
-                    <div className={styles['payment-form-wrapper']}>
-                        <div className={styles['form-header']}>
-                            <h3 className={styles['price']}>{formFieldValues.price}</h3>
-                            <div className={styles['label']}>Total Payment</div>
-                        </div>
-                        <PaymentForm
-                            formData={formFieldValues}
-                            onUpdateField={onUpdateField}
-                            onPay={onPay}
-                            isFormValid={isFormValid()}
-                            error={isPaymentFailed}
-                        />
-                    </div>
+                    {
+                        profile && (
+                            <div className={styles['payment-form-wrapper']}>
+                                <div className={styles['form-header']}>
+                                    <h3 className={styles['price']}>{formFieldValues.price}</h3>
+                                    <div className={styles['label']}>Total Payment</div>
+                                </div>
+                                <PaymentForm
+                                    formData={formFieldValues}
+                                    onUpdateField={onUpdateField}
+                                    onPay={onPay}
+                                    isFormValid={isFormValid()}
+                                    error={isPaymentFailed}
+                                />
+                            </div>
+                        )
+                    }
                     {
                         isMobile && (
                             <InfoCard
