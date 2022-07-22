@@ -42,6 +42,7 @@ const Review: React.FC = () => {
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
     const [formData, setFormData]: [any, Dispatch<any>] = useState<any>({})
     const { profile }: ProfileContextData = useContext<ProfileContextData>(profileContext)
+    // TODO: Move the state into payment form and this would require the onPay handler also moved to payment form
     const [formFieldValues, setFormValues]: [FormFieldValues, Dispatch<SetStateAction<FormFieldValues>>] = useState<FormFieldValues>({
         cardComplete: false,
         country: '',
