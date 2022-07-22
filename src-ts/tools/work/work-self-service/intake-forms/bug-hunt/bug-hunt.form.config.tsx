@@ -15,6 +15,7 @@ export const BugHuntFormConfig: FormDefinition = {
             },
             {
                 buttonStyle: 'primary',
+                isSubmit: true,
                 label: 'Complete and pay',
                 onClick: () => { },
                 type: 'submit',
@@ -92,7 +93,7 @@ export const BugHuntFormConfig: FormDefinition = {
                 {
                     label: 'Features to test (optional)',
                     name: ChallengeMetadataName.featuresToTest,
-                    placeholder: 'List the sepcific features',
+                    placeholder: 'List the specific features',
                     type: 'textarea',
                 },
             ],

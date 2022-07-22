@@ -3,6 +3,7 @@ import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
 
 import {
     Form,
+    FormAction,
     FormDefinition,
     formGetInputModel,
     FormInputModel,
@@ -45,9 +46,13 @@ const BugHuntIntakeForm: React.FC = () => {
     const isMobile: boolean = useCheckIsMobile()
     const { isLoggedIn }: ProfileContextData = useContext<ProfileContextData>(profileContext)
 
-    let action: string = ''
-    BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { action = 'save' }
-    BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { action = 'submit' }
+    const [action, setAction]: [FormAction, Dispatch<SetStateAction<FormAction>>] = useState()
+
+    BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { setAction('save') }
+    BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { setAction('submit') }
+    if (BugHuntFormConfig.buttons.secondaryGroup) {
+        BugHuntFormConfig.buttons.secondaryGroup[0].onClick = () => { navigate(-1) }
+    }
 
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
@@ -180,6 +185,7 @@ const BugHuntIntakeForm: React.FC = () => {
                     onSuccess={onSaveSuccess}
                     requestGenerator={requestGenerator}
                     save={onSave}
+                    action={action}
                 />
             </div>
         </>

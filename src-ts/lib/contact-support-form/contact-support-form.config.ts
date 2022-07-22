@@ -12,7 +12,7 @@ export const contactSupportFormDef: FormDefinition = {
         primaryGroup: [
             {
                 buttonStyle: 'secondary',
-                isSave: true,
+                isSubmit: true,
                 label: 'Submit',
                 size: 'lg',
                 type: 'submit',
