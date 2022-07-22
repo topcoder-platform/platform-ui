@@ -57,7 +57,6 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
         const [inputs, setInputs]: [Array<FormInputModel>, Dispatch<SetStateAction<Array<FormInputModel>>>] = useState<Array<FormInputModel>>(formGetInputFields(formDef.groups || []))
         const [isFormInvalid, setFormInvalid]: [boolean, Dispatch<boolean>] = useState<boolean>(inputs.filter(item => !!item.error).length > 0)
 
-
         useEffect(() => {
             if (!formRef.current?.elements) {
                 return
