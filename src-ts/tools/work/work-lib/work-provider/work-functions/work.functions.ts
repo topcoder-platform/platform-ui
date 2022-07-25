@@ -25,7 +25,7 @@ import {
     WorkPricesType,
     WorkStatus,
     WorkStatusFilter,
-    workStoreActivateChallengeAsync,
+    workStoreActivateAsync,
     workStoreConfirmCustomerPaymentAsync,
     workStoreCreateAsync,
     workStoreCreateCustomerPaymentAsync,
@@ -90,7 +90,7 @@ export async function createCustomerPaymentAsync(
 
     // now it's safe to activate the request
     const activationRequest: ActivateChallengeRequest = workFactoryBuildActivateRequest(challenge)
-    return workStoreActivateChallengeAsync(activationRequest)
+    return workStoreActivateAsync(activationRequest)
 }
 
 export function createFromChallenge(challenge: Challenge): Work {

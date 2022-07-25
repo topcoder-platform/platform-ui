@@ -35,7 +35,7 @@ export * from './work-type-category.enum'
 export * from './work.model'
 export * from './work-customer-payment.model'
 export {
-    activateChallengeAsync as workStoreActivateChallengeAsync,
+    activateAsync as workStoreActivateAsync,
     createCustomerPaymentAsync as workStoreCreateCustomerPaymentAsync,
     createAsync as workStoreCreateAsync,
     confirmCustomerPaymentAsync as workStoreConfirmCustomerPaymentAsync,

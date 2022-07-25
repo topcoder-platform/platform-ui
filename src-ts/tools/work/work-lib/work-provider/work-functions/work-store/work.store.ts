@@ -9,7 +9,7 @@ import { WorkStatus } from './work-status.enum'
 import { createPaymentUrl, createUrl, deleteUrl, getUrl, updatePaymentUrl, updateUrl } from './work-url.config'
 import { Work } from './work.model'
 
-export async function activateChallengeAsync(request: ActivateChallengeRequest): Promise<void> {
+export async function activateAsync(request: ActivateChallengeRequest): Promise<void> {
     return xhrPatchAsync(updateUrl(request.id), JSON.stringify(request))
 }
 
