@@ -1,7 +1,7 @@
-import { LearnMyModuleProgress } from './learn-my-module-progress.model'
-import { MyCertificationProgressStatus } from './my-certification-progress-status.enum'
+import { LearnModuleProgress } from './learn-module-progress.model'
+import { UserCertificationProgressStatus } from './user-certification-progress-status.enum'
 
-export interface LearnMyCertificationProgress {
+export interface LearnUserCertificationProgress {
     academicHonestyPolicyAcceptedAt?: number,
     certification: string
     certificationId: string
@@ -11,8 +11,8 @@ export interface LearnMyCertificationProgress {
     courseProgressPercentage: number
     currentLesson?: string
     id: string
-    modules: Array<LearnMyModuleProgress>
+    modules: Array<LearnModuleProgress>
     provider: string
     startDate: string
-    status: MyCertificationProgressStatus
+    status: UserCertificationProgressStatus
 }

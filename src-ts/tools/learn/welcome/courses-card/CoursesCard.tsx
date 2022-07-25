@@ -5,8 +5,8 @@ import { Button } from '../../../../lib'
 import {
     CourseTitle,
     LearnCertification,
-    MyCertificationCompleted,
-    MyCertificationInProgress,
+    UserCertificationCompleted,
+    UserCertificationInProgress,
 } from '../../learn-lib'
 import { getCertificatePath, getCoursePath, getLessonPathFromCurrentLesson } from '../../learn.routes'
 
@@ -14,8 +14,8 @@ import styles from './CoursesCard.module.scss'
 
 interface CoursesCardProps {
     certification: LearnCertification
-    myCompletedCertifications: Array<MyCertificationCompleted>
-    myInProgressCertifications: Array<MyCertificationInProgress>
+    userCompletedCertifications: Array<UserCertificationCompleted>
+    userInProgressCertifications: Array<UserCertificationInProgress>
 }
 
 const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
@@ -34,10 +34,10 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
         }
 
         // set the button text and link based on the progress of the user for this course
-        const isCompleted: boolean = props.myCompletedCertifications
+        const isCompleted: boolean = props.userCompletedCertifications
             .some(comp => comp.certificationId === props.certification.id)
-        const inProgress: MyCertificationInProgress | undefined
-            = props.myInProgressCertifications
+        const inProgress: UserCertificationInProgress | undefined
+            = props.userInProgressCertifications
                 .find(i => i.certificationId === props.certification.id)
 
         if (isCompleted) {
@@ -71,8 +71,8 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
         getCoursePath,
         getLessonPathFromCurrentLesson,
         props.certification,
-        props.myCompletedCertifications,
-        props.myInProgressCertifications,
+        props.userCompletedCertifications,
+        props.userInProgressCertifications,
         setButtonLabel,
         setLink,
     ])

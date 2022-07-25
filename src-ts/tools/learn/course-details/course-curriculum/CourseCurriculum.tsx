@@ -9,11 +9,11 @@ import {
     LearningHat,
     LearnLesson,
     LearnModule,
-    LearnMyCertificationProgress,
-    myCertificationProgressStart,
-    MyCertificationProgressStatus,
-    myCertificationProgressUpdate,
-    MyCertificationUpdateProgressActions
+    LearnUserCertificationProgress,
+    userCertificationProgressStartAsync,
+    UserCertificationProgressStatus,
+    userCertificationProgressUpdateAsync,
+    UserCertificationUpdateProgressActions
 } from '../../learn-lib'
 import {
     authenticateAndStartCourseRoute,
@@ -29,7 +29,7 @@ import { TcAcademyPolicyModal } from './tc-academy-policy-modal'
 interface CourseCurriculumProps {
     course: LearnCourse
     profile?: UserProfile
-    progress?: LearnMyCertificationProgress
+    progress?: LearnUserCertificationProgress
     progressReady?: boolean
 }
 
@@ -42,10 +42,10 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
 
     const [isTcAcademyPolicyModal, setIsTcAcademyPolicyModal]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
-    const status: string = props.progress?.status ?? MyCertificationProgressStatus.inititialized
+    const status: string = props.progress?.status ?? UserCertificationProgressStatus.inititialized
     const completedPercentage: number = (props.progress?.courseProgressPercentage ?? 0) / 100
-    const inProgress: boolean = status === MyCertificationProgressStatus.inProgress || !!props.progress?.currentLesson
-    const isCompleted: boolean = status === MyCertificationProgressStatus.completed
+    const inProgress: boolean = status === UserCertificationProgressStatus.inProgress || !!props.progress?.currentLesson
+    const isCompleted: boolean = status === UserCertificationProgressStatus.completed
 
     /**
      * Redirect user to the currentLesson if there's already some progress recorded
@@ -109,7 +109,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         }
 
         if (!props.progress?.id) {
-            await myCertificationProgressStart(
+            await userCertificationProgressStartAsync(
                 props.profile.userId,
                 props.course.certificationId,
                 props.course.id,
@@ -119,9 +119,9 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
                 }
             )
         } else {
-            await myCertificationProgressUpdate(
+            await userCertificationProgressUpdateAsync(
                 props.progress.id,
-                MyCertificationUpdateProgressActions.acceptHonestyPolicy,
+                UserCertificationUpdateProgressActions.acceptHonestyPolicy,
                 {}
             )
         }

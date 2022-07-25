@@ -6,7 +6,7 @@ import {
     LearnCourse,
     LearnLesson,
     LearnModule,
-    LearnMyCertificationProgress,
+    LearnUserCertificationProgress,
 } from '../../learn-lib'
 import { getLessonPathFromModule } from '../../learn.routes'
 
@@ -16,7 +16,7 @@ import styles from './CourseOutline.module.scss'
 interface CourseOutlineProps {
     course?: LearnCourse
     currentStep?: string
-    progress?: LearnMyCertificationProgress
+    progress?: LearnUserCertificationProgress
     ready?: boolean
 }
 

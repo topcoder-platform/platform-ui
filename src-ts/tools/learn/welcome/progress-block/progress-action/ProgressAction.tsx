@@ -4,10 +4,10 @@ import { Button } from '../../../../../lib'
 import {
     LearnCertification,
     LearningHat,
-    MyCertificationCompleted,
-    MyCertificationInProgress,
     MyCourseCompletedCard,
     MyCourseInProgressCard,
+    UserCertificationCompleted,
+    UserCertificationInProgress,
 } from '../../../learn-lib'
 import { LEARN_PATHS } from '../../../learn.routes'
 
@@ -15,16 +15,16 @@ import styles from './ProgressAction.module.scss'
 
 interface ProgressActionProps {
     allCertifications: Array<LearnCertification>
-    myCompletedCertifications: Array<MyCertificationCompleted>
-    myInProgressCertifications: Array<MyCertificationInProgress>
+    userCompletedCertifications: Array<UserCertificationCompleted>
+    userInProgressCertifications: Array<UserCertificationInProgress>
 }
 
 const ProgressAction: FC<ProgressActionProps> = (props: ProgressActionProps) => {
 
     const {
         allCertifications,
-        myCompletedCertifications,
-        myInProgressCertifications,
+        userCompletedCertifications: myCompletedCertifications,
+        userInProgressCertifications: myInProgressCertifications,
     }: ProgressActionProps = props
 
     const allMyLearningsLink: ReactNode = (

@@ -1,7 +1,0 @@
-export * from './my-certification-completed.model'
-export * from './my-certification-in-progress.model'
-export * from './my-certification-progress-provider-data.model'
-export * from './my-certification-progress.provider'
-export * from './my-certifications-functions'
-export * from './my-certifications-provider-data.model'
-export * from './my-certifications.provider'

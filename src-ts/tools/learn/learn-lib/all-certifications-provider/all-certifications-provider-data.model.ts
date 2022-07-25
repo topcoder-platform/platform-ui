@@ -1,6 +1,6 @@
-import { LearnCertification } from './certifications-functions'
+import { LearnCertification } from './all-certifications-functions'
 
-export interface CertificationsProviderData {
+export interface AllCertificationsProviderData {
     certification?: LearnCertification
     certifications: Array<LearnCertification>
     certificationsCount: number

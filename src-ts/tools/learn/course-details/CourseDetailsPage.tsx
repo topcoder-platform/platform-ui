@@ -13,12 +13,12 @@ import {
 import {
     CoursesProviderData,
     CourseTitle,
-    MyCertificationProgressProviderData,
-    MyCertificationProgressStatus,
     ResourceProviderData,
-    useCoursesProvider,
-    useMyCertificationProgress,
-    useResourceProvider
+    useCourses,
+    UserCertificationProgressProviderData,
+    UserCertificationProgressStatus,
+    useResourceProvider,
+    useUserCertificationProgress
 } from '../learn-lib'
 
 import { CourseCurriculum } from './course-curriculum'
@@ -37,12 +37,13 @@ const CourseDetailsPage: FC<{}> = () => {
     const {
         course,
         ready: courseReady,
-    }: CoursesProviderData = useCoursesProvider(routeParams.provider ?? '', routeParams.certification)
+    }: CoursesProviderData = useCourses(routeParams.provider ?? '', routeParams.certification)
 
     const {
-        certificateProgress: progress,
+        certificationProgress: progress,
         ready: progressReady,
-    }: MyCertificationProgressProviderData = useMyCertificationProgress(
+    }: UserCertificationProgressProviderData = useUserCertificationProgress(
+        profile?.userId,
         routeParams.provider,
         routeParams.certification,
     )
@@ -58,7 +59,7 @@ const CourseDetailsPage: FC<{}> = () => {
             return
         }
 
-        return progress?.status === MyCertificationProgressStatus.completed ? (
+        return progress?.status === UserCertificationProgressStatus.completed ? (
             <>
                 <h3 className='details'>Suggested next steps</h3>
 

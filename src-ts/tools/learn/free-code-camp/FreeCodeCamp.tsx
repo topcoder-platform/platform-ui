@@ -25,14 +25,14 @@ import {
     LearnLesson,
     LearnModule,
     LessonProviderData,
-    MyCertificationProgressProviderData,
-    myCertificationProgressStart,
-    MyCertificationProgressStatus,
-    myCertificationProgressUpdate,
-    MyCertificationUpdateProgressActions,
-    useCoursesProvider,
+    useCourses,
     useLessonProvider,
-    useMyCertificationProgress,
+    UserCertificationProgressProviderData,
+    userCertificationProgressStartAsync,
+    UserCertificationProgressStatus,
+    userCertificationProgressUpdateAsync,
+    UserCertificationUpdateProgressActions,
+    useUserCertificationProgress,
 } from '../learn-lib'
 import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule } from '../learn.routes'
 
@@ -56,15 +56,19 @@ const FreeCodeCamp: FC<{}> = () => {
     const [lessonParam, setLessonParam]: [string, Dispatch<SetStateAction<string>>] = useState(routeParams.lesson ?? '')
 
     const {
-        certificateProgress,
+        certificationProgress: certificateProgress,
         setCertificateProgress,
         ready: progressReady,
-    }: MyCertificationProgressProviderData = useMyCertificationProgress(routeParams.provider, certificationParam)
+    }: UserCertificationProgressProviderData = useUserCertificationProgress(
+        profile?.userId,
+        routeParams.provider,
+        certificationParam
+    )
 
     const {
         course: courseData,
         ready: courseDataReady,
-    }: CoursesProviderData = useCoursesProvider(providerParam, certificationParam)
+    }: CoursesProviderData = useCourses(providerParam, certificationParam)
 
     const { lesson, ready: lessonReady }: LessonProviderData = useLessonProvider(
         providerParam,
@@ -159,7 +163,7 @@ const FreeCodeCamp: FC<{}> = () => {
         }
 
         if (!certificateProgress) {
-            myCertificationProgressStart(
+            userCertificationProgressStartAsync(
                 profile.userId,
                 lesson.course.certificationId,
                 lesson.course.id,
@@ -169,9 +173,9 @@ const FreeCodeCamp: FC<{}> = () => {
             // TODO: remove this delay!!
             // TEMP_FIX: delay this api call to allow for previous "completeLesson" call to write in the api
             setTimeout(() => {
-                myCertificationProgressUpdate(
+                userCertificationProgressUpdateAsync(
                     certificateProgress.id,
-                    MyCertificationUpdateProgressActions.currentLesson,
+                    UserCertificationUpdateProgressActions.currentLesson,
                     currentLesson
                 )
                     .then(setCertificateProgress)
@@ -185,9 +189,9 @@ const FreeCodeCamp: FC<{}> = () => {
             module: moduleParam,
         }
         if (certificateProgress) {
-            myCertificationProgressUpdate(
+            userCertificationProgressUpdateAsync(
                 certificateProgress.id,
-                MyCertificationUpdateProgressActions.completeLesson,
+                UserCertificationUpdateProgressActions.completeLesson,
                 currentLesson
             ).then(setCertificateProgress)
         }
@@ -197,11 +201,11 @@ const FreeCodeCamp: FC<{}> = () => {
         if (
             certificateProgress &&
             certificateProgress.courseProgressPercentage === 100 &&
-            certificateProgress.status === MyCertificationProgressStatus.inProgress
+            certificateProgress.status === UserCertificationProgressStatus.inProgress
         ) {
-            myCertificationProgressUpdate(
+            userCertificationProgressUpdateAsync(
                 certificateProgress.id,
-                MyCertificationUpdateProgressActions.completeCertificate,
+                UserCertificationUpdateProgressActions.completeCertificate,
                 {}
             )
                 .then(setCertificateProgress)

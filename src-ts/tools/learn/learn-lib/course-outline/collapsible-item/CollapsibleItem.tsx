@@ -3,7 +3,7 @@ import { Dispatch, FC, ReactNode, SetStateAction, useCallback, useMemo, useState
 import { Link } from 'react-router-dom'
 
 import { IconOutline, IconSolid } from '../../../../../lib'
-import { LearnModule, LearnMyCertificationProgress, LearnMyModuleProgress } from '../../../learn-lib'
+import { LearnModule, LearnUserCertificationProgress, LearnModuleProgress } from '../../../learn-lib'
 import { StatusIcon } from '../status-icon'
 import { StepIcon } from '../step-icon'
 
@@ -22,7 +22,7 @@ interface CollapsibleItemProps {
     lessonsCount: number
     moduleKey: string
     path?: (item: any) => string
-    progress?: LearnMyCertificationProgress['modules']
+    progress?: LearnUserCertificationProgress['modules']
     shortDescription: Array<string>
     title: string
 }
@@ -36,7 +36,7 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
         setIsOpen(open => !open)
     }, [])
 
-    const progress: LearnMyModuleProgress|undefined = useMemo(() => {
+    const progress: LearnModuleProgress | undefined = useMemo(() => {
         return props.progress?.find(m => m.module === props.moduleKey)
     }, [props.progress, props.moduleKey])
 

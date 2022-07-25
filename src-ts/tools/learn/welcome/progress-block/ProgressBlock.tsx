@@ -2,8 +2,9 @@ import { FC } from 'react'
 
 import {
     LearnCertification,
-    MyCertificationCompleted,
-    MyCertificationInProgress} from '../../learn-lib'
+    UserCertificationCompleted,
+    UserCertificationInProgress
+} from '../../learn-lib'
 
 import { NoProgress } from './no-progress'
 import { ProgressAction } from './progress-action'
@@ -11,9 +12,9 @@ import styles from './ProgressBlock.module.scss'
 
 interface ProgressBlockProps {
     allCertifications: Array<LearnCertification>
-    myCompletedCertifications: Array<MyCertificationCompleted>
-    myInProgressCertifications: Array<MyCertificationInProgress>
     ready: boolean
+    userCompletedCertifications: Array<UserCertificationCompleted>
+    userInProgressCertifications: Array<UserCertificationInProgress>
 }
 
 const ProgressBlock: FC<ProgressBlockProps> = (props: ProgressBlockProps) => {
@@ -22,7 +23,7 @@ const ProgressBlock: FC<ProgressBlockProps> = (props: ProgressBlockProps) => {
         return <></>
     }
 
-    const isStarted: boolean = !!props.myInProgressCertifications.length || !!props.myCompletedCertifications.length
+    const isStarted: boolean = !!props.userInProgressCertifications.length || !!props.userCompletedCertifications.length
 
     return (
         <div className={styles.wrap}>

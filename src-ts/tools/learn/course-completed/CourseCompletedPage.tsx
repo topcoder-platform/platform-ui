@@ -11,16 +11,16 @@ import {
     ProfileContextData
 } from '../../../lib'
 import {
-    CertificationsProviderData,
+    AllCertificationsProviderData,
     CollapsiblePane,
     CourseOutline,
     CoursesProviderData,
     CourseTitle,
-    MyCertificationProgressProviderData,
-    MyCertificationProgressStatus,
-    useCertificationsProvider,
-    useCoursesProvider,
-    useMyCertificationProgress
+    useAllCertifications,
+    useCourses,
+    UserCertificationProgressProviderData,
+    UserCertificationProgressStatus,
+    useUserCertificationProgress
 } from '../learn-lib'
 import { getCertificatePath, getCoursePath } from '../learn.routes'
 
@@ -39,12 +39,13 @@ const CourseCompletedPage: FC<{}> = () => {
     const {
         course: courseData,
         ready: courseDataReady,
-    }: CoursesProviderData = useCoursesProvider(providerParam, certificationParam)
+    }: CoursesProviderData = useCourses(providerParam, certificationParam)
 
     const {
-        certificateProgress: progress,
+        certificationProgress: progress,
         ready: progressReady,
-    }: MyCertificationProgressProviderData = useMyCertificationProgress(
+    }: UserCertificationProgressProviderData = useUserCertificationProgress(
+        profile?.userId,
         routeParams.provider,
         routeParams.certification
     )
@@ -52,7 +53,7 @@ const CourseCompletedPage: FC<{}> = () => {
     const {
         certification,
         ready: certifReady,
-    }: CertificationsProviderData = useCertificationsProvider(providerParam, progress?.certificationId, {
+    }: AllCertificationsProviderData = useAllCertifications(providerParam, progress?.certificationId, {
         enabled: progressReady && !!progress,
     })
 
@@ -65,9 +66,9 @@ const CourseCompletedPage: FC<{}> = () => {
     ], [coursePath, courseData])
 
     useEffect(() => {
-      if (ready && progress?.status !== MyCertificationProgressStatus.completed) {
-        navigate(coursePath)
-      }
+        if (ready && progress?.status !== UserCertificationProgressStatus.completed) {
+            navigate(coursePath)
+        }
     }, [
         coursePath,
         navigate,

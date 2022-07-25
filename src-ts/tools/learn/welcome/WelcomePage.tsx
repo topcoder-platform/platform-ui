@@ -2,10 +2,10 @@ import { FC } from 'react'
 
 import { ContentLayout, LoadingSpinner, Portal } from '../../../lib'
 import {
-    CertificationsProviderData,
-    MyCertificationsProviderData,
-    useCertificationsProvider,
-    useMyCertifications,
+    AllCertificationsProviderData,
+    useAllCertifications,
+    UserCertificationsProviderData,
+    useUserCertifications,
     WaveHero,
 } from '../learn-lib'
 
@@ -15,10 +15,10 @@ import styles from './WelcomePage.module.scss'
 
 const WelcomePage: FC<{}> = () => {
 
-    const allCertsData: CertificationsProviderData = useCertificationsProvider()
-    const myCertsData: MyCertificationsProviderData = useMyCertifications()
+    const allCertsData: AllCertificationsProviderData = useAllCertifications()
+    const userCertsData: UserCertificationsProviderData = useUserCertifications()
 
-    const coursesReady: boolean = allCertsData.ready && myCertsData.ready
+    const coursesReady: boolean = allCertsData.ready && userCertsData.ready
 
     return (
         <ContentLayout>
@@ -43,8 +43,8 @@ const WelcomePage: FC<{}> = () => {
                         >
                             <ProgressBlock
                                 allCertifications={allCertsData.certifications}
-                                myCompletedCertifications={myCertsData.completed}
-                                myInProgressCertifications={myCertsData.inProgress}
+                                userCompletedCertifications={userCertsData.completed}
+                                userInProgressCertifications={userCertsData.inProgress}
                                 ready={coursesReady}
                             />
                         </WaveHero>
@@ -63,9 +63,9 @@ const WelcomePage: FC<{}> = () => {
                                 .map((certification) => (
                                     <CoursesCard
                                         certification={certification}
-                                        myCompletedCertifications={myCertsData.completed}
                                         key={certification.key}
-                                        myInProgressCertifications={myCertsData.inProgress}
+                                        userCompletedCertifications={userCertsData.completed}
+                                        userInProgressCertifications={userCertsData.inProgress}
                                     />
                                 ))}
                         </div>

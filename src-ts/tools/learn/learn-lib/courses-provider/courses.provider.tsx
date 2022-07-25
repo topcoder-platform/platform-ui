@@ -3,11 +3,13 @@ import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { getCourseAsync } from './courses-functions'
 import { CoursesProviderData } from './courses-provider-data.model'
 
-export function useCoursesProvider(provider: string, certification?: string): CoursesProviderData {
-    const [state, setState]: [CoursesProviderData, Dispatch<SetStateAction<CoursesProviderData>>] = useState<CoursesProviderData>({
-        loading: false,
-        ready: false,
-    })
+export function useCourses(provider: string, certification?: string): CoursesProviderData {
+
+    const [state, setState]: [CoursesProviderData, Dispatch<SetStateAction<CoursesProviderData>>]
+        = useState<CoursesProviderData>({
+            loading: false,
+            ready: false,
+        })
 
     useEffect(() => {
         if (!certification) {
