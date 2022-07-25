@@ -1,18 +1,24 @@
 import { FC } from 'react'
 
 import { ContentLayout, LoadingSpinner, Portal } from '../../../lib'
-import { CertificationsProviderData, useCertificationsProvider, WaveHero } from '../learn-lib'
-import { getCoursePath } from '../learn.routes'
+import {
+    AllCertificationsProviderData,
+    useAllCertifications,
+    UserCertificationsProviderData,
+    useUserCertifications,
+    WaveHero,
+} from '../learn-lib'
 
 import { CoursesCard } from './courses-card'
 import { ProgressBlock } from './progress-block'
 import styles from './WelcomePage.module.scss'
 
 const WelcomePage: FC<{}> = () => {
-    const {
-        certifications,
-        ready,
-    }: CertificationsProviderData = useCertificationsProvider()
+
+    const allCertsData: AllCertificationsProviderData = useAllCertifications()
+    const userCertsData: UserCertificationsProviderData = useUserCertifications()
+
+    const coursesReady: boolean = allCertsData.ready && userCertsData.ready
 
     return (
         <ContentLayout>
@@ -31,28 +37,33 @@ const WelcomePage: FC<{}> = () => {
                             `}
                             theme='light'
                         >
-                            <ProgressBlock certificates={certifications} />
+                            <ProgressBlock
+                                allCertifications={allCertsData.certifications}
+                                userCompletedCertifications={userCertsData.completed}
+                                userInProgressCertifications={userCertsData.inProgress}
+                                ready={coursesReady}
+                            />
                         </WaveHero>
                     </div>
                 </Portal>
 
                 <div className={styles['courses-section']}>
                     <h3 className='details'>Courses Available</h3>
-                    {!ready && (
+                    {!coursesReady && (
                         <LoadingSpinner />
                     )}
 
-                    {ready && (
+                    {coursesReady && (
                         <div className={styles['courses-list']}>
-                            {certifications.map((certification) => (
-                                <CoursesCard
-                                    title={certification.title}
-                                    type={certification.category}
-                                    link={certification.state === 'active' ? getCoursePath(certification.providerName, certification.certification) : undefined}
-                                    credits={certification.providerName}
-                                    key={certification.key}
-                                />
-                            ))}
+                            {allCertsData.certifications
+                                .map((certification) => (
+                                    <CoursesCard
+                                        certification={certification}
+                                        key={certification.key}
+                                        userCompletedCertifications={userCertsData.completed}
+                                        userInProgressCertifications={userCertsData.inProgress}
+                                    />
+                                ))}
                         </div>
                     )}
                 </div>

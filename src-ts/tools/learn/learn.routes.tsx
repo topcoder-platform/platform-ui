@@ -3,7 +3,7 @@ import { authUrlLogin, PlatformRoute } from '../../lib'
 import { CourseCompletedPage } from './course-completed'
 import { CourseDetailsPage } from './course-details'
 import { FreeCodeCamp } from './free-code-camp'
-import Learn, { toolTitle } from './Learn'
+import { default as Learn, toolTitle } from './Learn'
 import { MyCertificate } from './my-certificate'
 import { MyLearning } from './my-learning'
 import { WelcomePage } from './welcome'
@@ -20,7 +20,18 @@ export function getCertificationCompletedPath(provider: string, certification: s
     return `/learn/${provider}/${certification}/completed`
 }
 
-export function getFccLessonPath(
+export function getLessonPathFromCurrentLesson(
+    provider: string,
+    certification: string,
+    currentLesson: string | undefined,
+    fallbackModule?: string,
+    fallbackLesson?: string,
+): string {
+    const [module, lesson]: Array<string> = (currentLesson ?? '').split('/')
+    return `${getCoursePath(provider, certification)}/${module || fallbackModule}/${lesson || fallbackLesson}`
+}
+
+export function getLessonPathFromModule(
     provider: string,
     certification: string,
     module: string,

@@ -12,10 +12,10 @@ import {
 } from '../../../lib'
 import {
     CoursesProviderData,
-    MyCertificationProgressProviderData,
-    MyCertificationProgressStatus,
-    useCoursesProvider,
-    useMyCertificationProgress,
+    useCourses,
+    UserCertificationProgressProviderData,
+    UserCertificationProgressStatus,
+    useUserCertificationProgress,
 } from '../learn-lib'
 import { getCoursePath } from '../learn.routes'
 
@@ -32,21 +32,21 @@ const MyCertificate: FC<{}> = () => {
     const providerParam: string = routeParams.provider ?? ''
     const certificationParam: string = routeParams.certification ?? ''
     const coursePath: string = getCoursePath(providerParam, certificationParam)
-    const certificateElRef: MutableRefObject<HTMLElement|any> = useRef()
-    const certificateWrapRef: MutableRefObject<HTMLElement|any> = useRef()
+    const certificateElRef: MutableRefObject<HTMLElement | any> = useRef()
+    const certificateWrapRef: MutableRefObject<HTMLElement | any> = useRef()
     const userName: string = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ')
 
     const {
         course,
         ready: courseReady,
-    }: CoursesProviderData = useCoursesProvider(providerParam, certificationParam)
+    }: CoursesProviderData = useCourses(providerParam, certificationParam)
 
     const certificationTitle: string = `${userName} - ${course?.title} Certification`
 
     const {
-        certificateProgress,
+        certificationProgress: certificateProgress,
         ready: progressReady,
-    }: MyCertificationProgressProviderData = useMyCertificationProgress(
+    }: UserCertificationProgressProviderData = useUserCertificationProgress(
         profile?.userId,
         routeParams.provider,
         routeParams.certification
@@ -60,7 +60,7 @@ const MyCertificate: FC<{}> = () => {
         navigate(-1)
     }
 
-    async function getCertificateCanvas(): Promise<HTMLCanvasElement|void> {
+    async function getCertificateCanvas(): Promise<HTMLCanvasElement | void> {
         if (!certificateElRef.current) {
             return
         }
@@ -81,7 +81,7 @@ const MyCertificate: FC<{}> = () => {
     }
 
     async function handleDownload(): Promise<void> {
-        const canvas: HTMLCanvasElement|void = await getCertificateCanvas()
+        const canvas: HTMLCanvasElement | void = await getCertificateCanvas()
         if (!canvas) {
             return
         }
@@ -89,11 +89,11 @@ const MyCertificate: FC<{}> = () => {
     }
 
     async function handlePrint(): Promise<void> {
-        const canvas: HTMLCanvasElement|void = await getCertificateCanvas()
+        const canvas: HTMLCanvasElement | void = await getCertificateCanvas()
         if (!canvas) {
             return
         }
-        const printWindow: Window|null = window.open('')
+        const printWindow: Window | null = window.open('')
 
         if (!printWindow) {
             return
@@ -106,7 +106,7 @@ const MyCertificate: FC<{}> = () => {
     }
 
     async function handleShare(): Promise<void> {
-        const canvas: HTMLCanvasElement|void = await getCertificateCanvas()
+        const canvas: HTMLCanvasElement | void = await getCertificateCanvas()
         if (!canvas) {
             return
         }
@@ -118,15 +118,15 @@ const MyCertificate: FC<{}> = () => {
                     files: [sharedImg],
                     title: certificationTitle,
                 })
-            } catch (error) {}
+            } catch (error) { }
         }
     }
 
     useEffect(() => {
-        if (ready && certificateProgress?.status !== MyCertificationProgressStatus.completed) {
-          navigate(coursePath)
+        if (ready && certificateProgress?.status !== UserCertificationProgressStatus.completed) {
+            navigate(coursePath)
         }
-      }, [
+    }, [
         certificateProgress,
         coursePath,
         navigate,

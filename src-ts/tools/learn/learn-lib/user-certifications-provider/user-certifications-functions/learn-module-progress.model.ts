@@ -1,4 +1,4 @@
-export interface LearnMyModuleProgress {
+export interface LearnModuleProgress {
     completedLessons: Array<{
         completedDate?: string
         dashedName: string

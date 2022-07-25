@@ -2,14 +2,14 @@ import { FC, useContext, useMemo } from 'react'
 
 import { Breadcrumb, BreadcrumbItemModel, ContentLayout, Portal, profileContext, ProfileContextData } from '../../../lib'
 import {
-    CertificationsProviderData,
+    AllCertificationsProviderData,
     LearnCertification,
     LearningHat,
-    MyCertificationsProviderData,
     MyCourseCompletedCard,
     MyCourseInProgressCard,
-    useCertificationsProvider,
-    useMyCertifications,
+    useAllCertifications,
+    UserCertificationsProviderData,
+    useUserCertifications,
     WaveHero
 } from '../learn-lib'
 import { LEARN_PATHS } from '../learn.routes'
@@ -24,17 +24,14 @@ interface CertificatesByIdType {
 const MyLearning: FC<{}> = () => {
 
     const { profile }: ProfileContextData = useContext(profileContext)
-    const { completed, inProgress }: MyCertificationsProviderData = useMyCertifications(profile?.userId)
-
-    const {
-        certifications,
-    }: CertificationsProviderData = useCertificationsProvider()
+    const { completed, inProgress }: UserCertificationsProviderData = useUserCertifications()
+    const { certifications }: AllCertificationsProviderData = useAllCertifications()
 
     const certificatesById: CertificatesByIdType = useMemo(() => (
         certifications.reduce((certifs, certificate) => {
             certifs[certificate.id] = certificate
             return certifs
-}, {} as unknown as CertificatesByIdType)
+        }, {} as unknown as CertificatesByIdType)
     ), [certifications])
 
     const breadcrumb: Array<BreadcrumbItemModel> = useMemo(() => [

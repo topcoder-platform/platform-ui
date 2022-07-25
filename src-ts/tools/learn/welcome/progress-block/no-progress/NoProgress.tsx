@@ -2,9 +2,9 @@ import { FC } from 'react'
 
 import { LearningHat } from '../../../learn-lib'
 
-import styles from './InitState.module.scss'
+import styles from './NoProgress.module.scss'
 
-const InitState: FC<{}> = () => {
+const NoProgress: FC<{}> = () => {
     return (
         <div className={styles['wrap']}>
             <div className={styles['icon']}>
@@ -18,4 +18,4 @@ const InitState: FC<{}> = () => {
     )
 }
 
-export default InitState
+export default NoProgress
