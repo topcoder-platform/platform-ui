@@ -18,9 +18,9 @@ const WaveHero: FC<WaveHeroProps> = (props: WaveHeroProps) => {
                 <div className={styles['hero-content']}>
                     <div className={styles['hero-text-col']}>
                         <h1>{props.title}</h1>
-                        <p className={styles['hero-text']}>
-                            {props.text}
-                        </p>
+                        <p className={styles['hero-text']}
+                            dangerouslySetInnerHTML={{__html: props.text || ''}}
+                        ></p>
                     </div>
                     {props.children && (
                         <div className={classNames(styles['hero-card-col'], 'hero-card-col')}>
