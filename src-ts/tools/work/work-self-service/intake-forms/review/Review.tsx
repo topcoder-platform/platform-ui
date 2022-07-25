@@ -1,28 +1,37 @@
 import { CardNumberElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
-import { loadStripe, PaymentMethodResult, Stripe, StripeCardNumberElement, StripeElements } from '@stripe/stripe-js'
-import moment from 'moment'
+import { loadStripe, Stripe, StripeElements } from '@stripe/stripe-js'
 import React, { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
 import { toastr } from 'react-redux-toastr'
 import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
 
-import { ReactComponent as BackIcon } from '../../../../../../src/assets/images/icon-back-arrow.svg'
 import { EnvironmentConfig } from '../../../../../config'
-import { Button, IconOutline, InfoCard, LoadingSpinner, PageDivider, PaymentForm, profileContext, ProfileContextData } from '../../../../../lib'
-import { useCheckIsMobile } from '../../../../../lib/hooks/use-check-is-mobile.hook'
+import {
+    BackArrowIcon,
+    Button,
+    IconOutline,
+    InfoCard,
+    LoadingSpinner,
+    PageDivider,
+    PaymentForm,
+    profileContext,
+    ProfileContextData,
+    useCheckIsMobile,
+} from '../../../../../lib'
 import { WorkDetailDetailsPane } from '../../../work-detail-details'
 import {
     Challenge,
+    ChallengeMetadata,
     ChallengeMetadataName,
     workBugHuntConfig,
+    workCreateCustomerPayment,
+    workGetByWorkIdAsync,
+    WorkIntakeFormRoutes,
     WorkType,
 } from '../../../work-lib'
-import { ChallengeMetadata, workStoreConfirmCustomerPaymentAsync, workStoreCreateCustomerPaymentAsync, workStoreGetChallengeByWorkId, workStoreUpdateAsync } from '../../../work-lib/work-provider/work-functions/work-store'
-import { WorkIntakeFormRoutes } from '../../../work-lib/work-provider/work-functions/work-store/work-intake-form-routes.config'
-import { bugHuntConfig } from '../../../work-lib/work-provider/work-functions/work-store/work-type.config'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
-import { DeliverablesInfoCard } from '../bug-hunt/deliverables-info-card'
-import IntakeFormsBreadcrumb from '../intake-forms-breadcrumb/IntakeFormsBreadcrumb'
+import { DeliverablesInfoCard } from '../bug-hunt'
+import { IntakeFormsBreadcrumb } from '../intake-forms-breadcrumb'
 
 import { AboutYourProjectInfoCard } from './AboutYourProjectInfoCard'
 import styles from './Review.module.scss'
@@ -63,15 +72,22 @@ const Review: React.FC = () => {
     const navigate: NavigateFunction = useNavigate()
     const isMobile: boolean = useCheckIsMobile()
 
+    // TODO: move all references to stripe to a component
+    // so that only that one component is aware of the
+    // payment provider
     const stripe: Stripe | null = useStripe()
     const elements: StripeElements | null = useElements()
 
     useEffect(() => {
         const useEffectAsync: () => Promise<void> = async () => {
             // fetch challenge using workId
-            const response: any = await workStoreGetChallengeByWorkId(workId || '')
+            const response: Challenge = await workGetByWorkIdAsync(workId || '')
             setChallenge(response)
-            const intakeFormBH: any = response.metadata.find((item: ChallengeMetadata) => item.name === ChallengeMetadataName.intakeForm)
+            const intakeFormBH: ChallengeMetadata | undefined = response.metadata
+                .find((item: ChallengeMetadata) => item.name === ChallengeMetadataName.intakeForm)
+            if (!intakeFormBH) {
+                return
+            }
             const form: any = JSON.parse(intakeFormBH.value).form
             setFormData(JSON.parse(intakeFormBH.value).form)
             const { profile: userProfile }: ProfileContextData = useContext<ProfileContextData>(profileContext)
@@ -117,121 +133,48 @@ const Review: React.FC = () => {
         )
     }
 
+    // TODO: refactor this form to use the form definition model
+    // so that we can handle validation correctly
     function isFormValid(): boolean {
         return formFieldValues.cardComplete
-        && formFieldValues.cvvComplete
-        && formFieldValues.expiryComplete
-        && formFieldValues.orderContract
-        && !!formFieldValues.name
-        && !!formFieldValues.email
-        && !!formFieldValues.zipCode
-    }
-
-    function getStartDate(): string {
-        let daysToAdd: number = 1
-        switch (moment(new Date()).weekday()) {
-            case moment().day('Friday').weekday():
-                daysToAdd = 3
-                break
-            case moment().day('Saturday').weekday():
-                daysToAdd = 2
-                break
-            case moment().day('Sunday').weekday():
-                daysToAdd = 1
-                break
-            default:
-                daysToAdd = 1
-        }
-
-        return moment().add(daysToAdd, 'days').format()
-    }
-
-    function activateChallenge(): void {
-        if (!challenge) {
-            return
-        }
-
-        const newDiscussions: Array<{ [key: string]: string }> = [...(challenge.discussions || [])]
-
-        if (newDiscussions.length > 0) {
-          newDiscussions[0].name = challenge.name
-        } else {
-          newDiscussions.push({
-            name: challenge.name,
-            provider: 'vanilla',
-            type: 'challenge',
-          })
-        }
-
-        const body: any = {
-            discussions: [...newDiscussions],
-            id: challenge.id,
-            startDate: getStartDate(),
-            status: 'Draft',
-        }
-
-        workStoreUpdateAsync(body)
-        .then(() => {
-            navigate(WorkIntakeFormRoutes[WorkType.bugHunt].thankYou)
-        })
-
+            && formFieldValues.cvvComplete
+            && formFieldValues.expiryComplete
+            && formFieldValues.orderContract
+            && !!formFieldValues.name
+            && !!formFieldValues.email
+            && !!formFieldValues.zipCode
     }
 
     async function onPay(): Promise<any> {
-        if (!stripe || !elements || !challenge) {
-            return
-        }
 
         setLoading(true)
-        const description: string = `Work Item #${workId}\n${formData.basicInfo.projectTitle.slice(0, 355)}}\n${formData.workType.selectedWorkType}`
 
-        const payload: PaymentMethodResult = await stripe.createPaymentMethod({
-            card: elements.getElement(CardNumberElement) as StripeCardNumberElement,
-            type: 'card',
-        })
-
-        if (!payload) {
-            return
-        }
-
-        const body: string = JSON.stringify({
-            amount: workBugHuntConfig.priceConfig.getPrice(workBugHuntConfig.priceConfig, formData.basicInfo.packageType),
-            currency: 'USD',
-            description,
-            paymentMethodId: payload.paymentMethod && payload.paymentMethod.id,
-            receiptEmail: formFieldValues.email,
-            reference: 'project',
-            referenceId: challenge.projectId?.toString(),
-          })
-
-        workStoreCreateCustomerPaymentAsync(body)
-        .then(async (response) => {
-
-            if (response.status === 'requires_action') {
-                await stripe.handleCardAction(response.clientSecret)
-                return workStoreConfirmCustomerPaymentAsync(response.id)
-                .then(() => {
-                    activateChallenge()
-                })
-            } else {
-                activateChallenge()
-            }
-
-        })
-        .catch(() => {
-            setPaymentFailed(true)
-            toastr.error('Error', 'There was an error processing the payment')
-        })
-        .finally(() => {
-            setLoading(false)
-        })
+        workCreateCustomerPayment(
+            formFieldValues.email,
+            workBugHuntConfig.priceConfig,
+            formData.basicInfo.projectTitle,
+            formData.workType.selectedWorkType,
+            elements?.getElement(CardNumberElement),
+            challenge,
+            formData.basicInfo.packageType,
+            stripe,
+            workId,
+        )
+            .then(() => {
+                navigate(WorkIntakeFormRoutes[WorkType.bugHunt].thankYou)
+            })
+            .catch(() => {
+                setPaymentFailed(true)
+                toastr.error('Error', 'There was an error processing the payment')
+            })
+            .finally(() => {
+                setLoading(false)
+            })
     }
 
     function navigateToBasicInfo(): void {
         navigate(redirectUrl)
     }
-
-    // console.log(formFieldValues, profile)
 
     return (
         <div className={styles['review-container']}>
@@ -243,12 +186,12 @@ const Review: React.FC = () => {
             <IntakeFormsBreadcrumb
                 basicInfoRoute={`${WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']}/${workId}`}
                 reviewRoute={WorkIntakeFormRoutes[WorkType.bugHunt]['review']}
-                workType={bugHuntConfig.type}
+                workType={workBugHuntConfig.type}
             />
             <WorkTypeBanner
-                title={bugHuntConfig.review.title}
-                subTitle={bugHuntConfig.review.subtitle}
-                workType={bugHuntConfig.review.type}
+                title={workBugHuntConfig.review.title}
+                subTitle={workBugHuntConfig.review.subtitle}
+                workType={workBugHuntConfig.review.type}
             />
 
             {renderWorkServicePrice()}
@@ -306,7 +249,7 @@ const Review: React.FC = () => {
 
             <div className={styles['button-wrapper']}>
                 <PageDivider />
-                <Button type='button' buttonStyle='icon-bordered' icon={BackIcon} onClick={navigateToBasicInfo} />
+                <Button type='button' buttonStyle='icon-bordered' icon={BackArrowIcon} onClick={navigateToBasicInfo} />
             </div>
         </div>
     )

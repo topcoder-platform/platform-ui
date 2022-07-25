@@ -18,10 +18,10 @@ import {
     WorkContextData,
     workGetGroupedByStatus,
     workGetStatusFilter,
+    WorkIntakeFormRoutes,
     WorkStatus,
     WorkStatusFilter,
 } from '../work-lib'
-import { WorkIntakeFormRoutes } from '../work-lib/work-provider/work-functions/work-store/work-intake-form-routes.config'
 import { dashboardRoute, selfServiceStartRoute, workDetailRoute } from '../work.routes'
 
 import { workDashboardTabs } from './work-nav.config'

@@ -45,15 +45,17 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
         const toolsRoutes: Array<PlatformRoute> = props.toolsRoutes.filter(route => !route.disabled)
 
         // display a tool in the nav if the following conditions are met:
-        // 1. the tool isn't hidden (if the tool is hidden, it should never appear in the nav)
+        // 1. the tool has a title
+        // 2. the tool isn't hidden (if the tool is hidden, it should never appear in the nav)
         // AND
-        // 2. the tool is one of the following:
+        // 3. the tool is one of the following:
         //    a. for customers and the user is a customer
         //    b. for members and the user is a member
         //    c. the active tool in the app (in case someone deep-links to it)
         const toolsRoutesForNav: Array<PlatformRoute> = toolsRoutes
             .filter(route =>
                 !!route.title
+                && !route.hide
                 && (
                     (
                         (!route.customerOnly || !!profile?.isCustomer)

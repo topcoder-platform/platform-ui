@@ -3,7 +3,7 @@ import { WorkPrize } from './work-prize.model'
 export type PricePackageName = 'base' | 'promo' | 'standard' | 'advanced' | 'premium'
 
 export interface WorkPrice {
-    getPrice: any,
+    getPrice: (...args: Array<any>) => number,
     getPrizeSets: (price: WorkPrice, packageName?: PricePackageName | undefined) => Array<WorkPrize>,
     packages?: { [key in PricePackageName]?: WorkPriceBreakdown },
     perPage?: number,

@@ -2,6 +2,7 @@ import moment from 'moment'
 
 import { WorkConfigConstants, WorkStrings } from '../../../work-constants'
 import {
+    ActivateChallengeRequest,
     Challenge,
     ChallengeCreateBody,
     ChallengeMetadata,
@@ -9,7 +10,9 @@ import {
     ChallengeMetadataTitle,
     ChallengePhase,
     ChallengePhaseName,
+    ChallengeStatus,
     ChallengeUpdateBody,
+    CustomerPaymentRequest,
     PricePackageName,
     Work,
     WorkPrice,
@@ -22,8 +25,6 @@ import {
     WorkTypeCategory,
     WorkTypeConfig,
 } from '../work-store'
-
-import { ChallengeStatus } from './challenge-status.enum'
 
 export interface FormDetail {
     key: string,
@@ -46,33 +47,32 @@ interface IntakeForm {
     }
 }
 
-export function create(challenge: Challenge, workPrices: WorkPricesType): Work {
+export function buildActivateRequest(challenge: Challenge): ActivateChallengeRequest {
 
-    const status: WorkStatus = getStatus(challenge)
-    const submittedDate: Date | undefined = getSubmittedDate(challenge)
-    const type: WorkType = getType(challenge)
-    const priceConfig: WorkPrice = workPrices[type]
+    const newDiscussions: Array<{ [key: string]: string }> = [
+        ...(challenge.discussions || []),
+    ]
+
+    if (!!newDiscussions.length) {
+        newDiscussions[0].name = challenge.name
+
+    } else {
+        newDiscussions.push({
+            name: challenge.name,
+            provider: 'vanilla',
+            type: 'challenge',
+        })
+    }
 
     return {
-        cost: getCost(challenge, priceConfig, type),
-        created: submittedDate,
-        description: getDescription(challenge, type),
-        draftStep: getDraftStep(challenge, status),
+        discussions: [...newDiscussions],
         id: challenge.id,
-        messageCount: Number((Math.random() * 10).toFixed(0)), // TODO: real message count
-        participantsCount: challenge.numOfRegistrants,
-        progress: getProgress(challenge, status),
-        solutionsCount: challenge.numOfSubmissions,
-        solutionsReadyDate: getSolutionsReadyDate(challenge),
-        status,
-        submittedDate,
-        title: challenge.name,
-        type,
-        typeCategory: getTypeCategory(type),
+        startDate: getStartDate(),
+        status: ChallengeStatus.draft,
     }
 }
 
-export function buildCreateBody(workTypeConfig: WorkTypeConfig): ChallengeCreateBody {
+export function buildCreateRequest(workTypeConfig: WorkTypeConfig): ChallengeCreateBody {
 
     const form: IntakeForm = {
         workType: {
@@ -110,7 +110,26 @@ export function buildCreateBody(workTypeConfig: WorkTypeConfig): ChallengeCreate
     }
 }
 
-export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Challenge, formData: any): ChallengeUpdateBody {
+export function buildCustomerPaymentRequest(
+    description: string,
+    email: string,
+    priceConfig: WorkPrice,
+    paymentMethodId?: string,
+    packageType?: PricePackageName,
+    projectId?: number,
+): CustomerPaymentRequest {
+    return {
+        amount: priceConfig.getPrice(priceConfig, packageType),
+        currency: 'USD',
+        description,
+        paymentMethodId,
+        receiptEmail: email,
+        reference: 'project',
+        referenceId: projectId?.toString(),
+    }
+}
+
+export function buildUpdateRequest(workTypeConfig: WorkTypeConfig, challenge: Challenge, formData: any): ChallengeUpdateBody {
 
     const type: WorkType = workTypeConfig.type
     const priceConfig: WorkPrice = workTypeConfig.priceConfig
@@ -178,6 +197,32 @@ export function buildUpdateBody(workTypeConfig: WorkTypeConfig, challenge: Chall
     return body
 }
 
+export function create(challenge: Challenge, workPrices: WorkPricesType): Work {
+
+    const status: WorkStatus = getStatus(challenge)
+    const submittedDate: Date | undefined = getSubmittedDate(challenge)
+    const type: WorkType = getType(challenge)
+    const priceConfig: WorkPrice = workPrices[type]
+
+    return {
+        cost: getCost(challenge, priceConfig, type),
+        created: submittedDate,
+        description: getDescription(challenge, type),
+        draftStep: getDraftStep(challenge, status),
+        id: challenge.id,
+        messageCount: Number((Math.random() * 10).toFixed(0)), // TODO: real message count
+        participantsCount: challenge.numOfRegistrants,
+        progress: getProgress(challenge, status),
+        solutionsCount: challenge.numOfSubmissions,
+        solutionsReadyDate: getSolutionsReadyDate(challenge),
+        status,
+        submittedDate,
+        title: challenge.name,
+        type,
+        typeCategory: getTypeCategory(type),
+    }
+}
+
 export function getStatus(challenge: Challenge): WorkStatus {
 
     switch (challenge.status) {
@@ -221,6 +266,7 @@ export function mapFormData(type: string, formData: any): ReadonlyArray<FormDeta
             return formData
     }
 }
+
 function buildFormDataBugHunt(formData: any): ReadonlyArray<FormDetail> {
     return [
         {
@@ -591,6 +637,25 @@ function getProgressStepDateStart(challenge: Challenge, phases: Array<string>): 
 
 function getSolutionsReadyDate(challenge: Challenge): Date | undefined {
     return getProgressStepDateEnd(challenge, [ChallengePhaseName.approval, ChallengePhaseName.appealsResponse])
+}
+
+function getStartDate(): string {
+    let daysToAdd: number = 1
+    switch (moment(new Date()).weekday()) {
+        case moment().day('Friday').weekday():
+            daysToAdd = 3
+            break
+        case moment().day('Saturday').weekday():
+            daysToAdd = 2
+            break
+        case moment().day('Sunday').weekday():
+            daysToAdd = 1
+            break
+        default:
+            daysToAdd = 1
+    }
+
+    return moment().add(daysToAdd, 'days').format()
 }
 
 function getSubmittedDate(challenge: Challenge): Date {

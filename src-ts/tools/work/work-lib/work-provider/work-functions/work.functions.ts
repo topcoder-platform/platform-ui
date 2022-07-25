@@ -1,23 +1,37 @@
 // import { messageGetAndSetForWorkItemsAsync } from '../../functions'
+import { PaymentMethodResult, Stripe, StripeCardNumberElement } from '@stripe/stripe-js'
+
 import { Page, UserProfile } from '../../../../../lib'
 
 import { WorkByStatus } from './work-by-status.model'
-import { workFactoryBuildCreateBody, workFactoryBuildUpdateBody, workFactoryCreate } from './work-factory'
 import {
+    workFactoryBuildActivateRequest,
+    workFactoryBuildCreateReqeuest,
+    workFactoryBuildCustomerPaymentRequest,
+    workFactoryBuildUpdateRequest,
+    workFactoryCreate
+} from './work-factory'
+import {
+    ActivateChallengeRequest,
     Challenge,
     ChallengeCreateBody,
     ChallengeUpdateBody,
     CustomerPayment,
+    CustomerPaymentRequest,
+    PricePackageName,
     Work,
     workGetPricesConfig,
+    WorkPrice,
     WorkPricesType,
     WorkStatus,
     WorkStatusFilter,
+    workStoreActivateChallengeAsync,
     workStoreConfirmCustomerPaymentAsync,
     workStoreCreateAsync,
     workStoreCreateCustomerPaymentAsync,
     workStoreDeleteAsync,
     workStoreGetAsync,
+    workStoreGetByWorkId,
     workStoreGetFilteredByStatus,
     workStoreUpdateAsync,
     WorkType,
@@ -27,8 +41,56 @@ import {
 
 export async function createAsync(type: WorkType): Promise<void> {
     const workConfig: WorkTypeConfig = WorkTypeConfigs[type]
-    const body: ChallengeCreateBody = workFactoryBuildCreateBody(workConfig)
+    const body: ChallengeCreateBody = workFactoryBuildCreateReqeuest(workConfig)
     return workStoreCreateAsync(body)
+}
+
+export async function createCustomerPaymentAsync(
+    email: string,
+    priceConfig: WorkPrice,
+    title: string,
+    type: WorkType,
+    cardNumber?: StripeCardNumberElement | null,
+    challenge?: Challenge,
+    packageType?: PricePackageName,
+    stripe?: Stripe | null,
+    workId?: string,
+): Promise<void> {
+
+    // if we don't have the bare min, don't do anything
+    if (!stripe || !cardNumber || !challenge) {
+        return
+    }
+
+    // initialize the payment method
+    const payload: PaymentMethodResult = await stripe.createPaymentMethod({
+        card: cardNumber,
+        type: 'card',
+    })
+    if (!payload) {
+        return
+    }
+
+    // make the request to make the payment
+    const paymentRequest: CustomerPaymentRequest = workFactoryBuildCustomerPaymentRequest(
+        `Work Item #${workId}\n${title.slice(0, 355)}}\n${type}`,
+        email,
+        priceConfig,
+        payload.paymentMethod?.id,
+        packageType,
+        challenge.projectId,
+    )
+    const response: CustomerPayment = await workStoreCreateCustomerPaymentAsync(paymentRequest)
+
+    // if the response says it requires action, handle it
+    if (response?.status === 'requires_action') {
+        await stripe.handleCardAction(response.clientSecret)
+        await workStoreConfirmCustomerPaymentAsync(response.id)
+    }
+
+    // now it's safe to activate the request
+    const activationRequest: ActivateChallengeRequest = workFactoryBuildActivateRequest(challenge)
+    return workStoreActivateChallengeAsync(activationRequest)
 }
 
 export function createFromChallenge(challenge: Challenge): Work {
@@ -37,14 +99,6 @@ export function createFromChallenge(challenge: Challenge): Work {
 
 export async function deleteAsync(workId: string): Promise<void> {
     return workStoreDeleteAsync(workId)
-}
-
-export async function createCustomerPayment(body: string): Promise<CustomerPayment> {
-    return workStoreCreateCustomerPaymentAsync(body)
-}
-
-export async function confirmCustomerPayment(id: string): Promise<CustomerPayment> {
-    return workStoreCreateCustomerPaymentAsync(id)
 }
 
 export async function getAllAsync(profile: UserProfile): Promise<Array<Work>> {
@@ -68,6 +122,10 @@ export async function getAllAsync(profile: UserProfile): Promise<Array<Work>> {
     }
 
     return work
+}
+
+export async function getByWorkIdAsync(workId: string): Promise<Challenge> {
+    return workStoreGetByWorkId(workId)
 }
 
 export function getGroupedByStatus(work: ReadonlyArray<Work>): { [status: string]: WorkByStatus } {
@@ -108,7 +166,7 @@ export function getStatusFilter(filterKey?: string): WorkStatusFilter | undefine
 
 export async function updateAsync(type: WorkType, challenge: Challenge, intakeForm: any): Promise<void> {
     const workConfig: WorkTypeConfig = WorkTypeConfigs[type]
-    const body: ChallengeUpdateBody = workFactoryBuildUpdateBody(workConfig, challenge, intakeForm)
+    const body: ChallengeUpdateBody = workFactoryBuildUpdateRequest(workConfig, challenge, intakeForm)
     return workStoreUpdateAsync(body)
 }
 
