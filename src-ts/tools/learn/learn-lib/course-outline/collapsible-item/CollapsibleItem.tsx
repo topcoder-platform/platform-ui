@@ -3,7 +3,7 @@ import { Dispatch, FC, ReactNode, SetStateAction, useCallback, useMemo, useState
 import { Link } from 'react-router-dom'
 
 import { IconOutline, IconSolid } from '../../../../../lib'
-import { LearnModule, LearnUserCertificationProgress, LearnModuleProgress } from '../../../learn-lib'
+import { LearnModule, LearnModuleProgress, LearnUserCertificationProgress } from '../../../learn-lib'
 import { StatusIcon } from '../status-icon'
 import { StepIcon } from '../step-icon'
 
