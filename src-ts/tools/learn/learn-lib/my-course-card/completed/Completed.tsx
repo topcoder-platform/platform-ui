@@ -13,6 +13,10 @@ interface CompletedProps {
 
 const Completed: FC<CompletedProps> = (props: CompletedProps) => {
 
+    if (!props.certification) {
+        return <></>
+    }
+
     return (
         <div className={styles['wrap']}>
             <div className={styles['line']}>

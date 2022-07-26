@@ -5,13 +5,16 @@ import { CoursesProviderData } from './courses-provider-data.model'
 
 export function useCourses(provider: string, certification?: string): CoursesProviderData {
 
+    const defaultProviderData: CoursesProviderData = {
+        loading: false,
+        ready: false,
+    }
+
     const [state, setState]: [CoursesProviderData, Dispatch<SetStateAction<CoursesProviderData>>]
-        = useState<CoursesProviderData>({
-            loading: false,
-            ready: false,
-        })
+        = useState<CoursesProviderData>(defaultProviderData)
 
     useEffect(() => {
+
         if (!certification) {
             setState((prevState) => ({
                 ...prevState,
@@ -35,6 +38,10 @@ export function useCourses(provider: string, certification?: string): CoursesPro
                 ready: true,
             }))
         })
+
+        return () => {
+            setState(defaultProviderData)
+        }
     }, [provider, certification])
 
     return state
