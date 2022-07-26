@@ -60,7 +60,7 @@ export const BugHuntFormConfig: FormDefinition = {
                     hideInlineErrors: true,
                     label: 'Website URL',
                     name: ChallengeMetadataName.websiteURL,
-                    placeholder: 'Enter a descriptive title',
+                    placeholder: 'www.example-share-link.com',
                     type: 'text',
                     validators: [
                         {
@@ -69,7 +69,7 @@ export const BugHuntFormConfig: FormDefinition = {
                     ],
                 },
             ],
-            instructions: 'Enter a title for your website bug hunt project.',
+            instructions: 'Provide the URL to your website.',
             title: ChallengeMetadataTitle.websiteURL,
         },
         {
