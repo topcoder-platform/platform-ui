@@ -24,6 +24,7 @@ import {
     CoursesProviderData,
     LearnLesson,
     LearnModule,
+    LearnMyModuleProgress,
     LessonProviderData,
     useCourses,
     useLessonProvider,
@@ -197,6 +198,53 @@ const FreeCodeCamp: FC<{}> = () => {
         }
     }
 
+    /**
+     * Handle the navigation away from the last step of the course in the FCC frame
+     * @returns
+     */
+    function handleFccLastLessonNavigation(): void {
+        if (!certificateProgress) {
+            return
+        }
+
+        // course is completed, return user to course completed screen
+        if (certificateProgress.courseProgressPercentage === 100) {
+            const completedPath: string = getCertificationCompletedPath(
+                providerParam,
+                certificationParam
+            )
+
+            navigate(completedPath)
+            return
+        }
+
+        // course is not completed yet,
+        // so we find the first incomplete lesson
+        // and redirect user to it for a continuous flow
+        const firstIncompleteModule: LearnMyModuleProgress|undefined = certificateProgress.modules.find(m => m.completedPercentage !== 100)
+        const moduleLessons: Array<LearnLesson>|undefined = courseData?.modules.find(m => m.key === firstIncompleteModule?.module)?.lessons
+        if (!firstIncompleteModule || !moduleLessons) {
+            // case unknown, return
+            return
+        }
+
+        const completedLessons: Array<string> = firstIncompleteModule.completedLessons.map(l => l.dashedName)
+        const firstIncompleteLesson: LearnLesson|undefined = moduleLessons.find(l => !completedLessons.includes(l.dashedName))
+        if (!firstIncompleteLesson) {
+            // case unknown, return
+            return
+        }
+
+        const nextLessonPath: string = getFccLessonPath(
+            providerParam,
+            certificationParam,
+            firstIncompleteModule.module ?? '',
+            firstIncompleteLesson.dashedName ?? ''
+        )
+
+        navigate(nextLessonPath)
+    }
+
     useEffect(() => {
         if (
             certificateProgress &&
@@ -292,6 +340,7 @@ const FreeCodeCamp: FC<{}> = () => {
                             lesson={lesson}
                             onFccLessonChange={handleFccLessonReady}
                             onFccLessonComplete={handleFccLessonComplete}
+                            onFccLastLessonNavigation={handleFccLastLessonNavigation}
                         />
                     </div>
                 </div>

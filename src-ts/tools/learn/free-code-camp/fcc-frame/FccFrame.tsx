@@ -9,11 +9,13 @@ const FreecodecampIfr: FC<any> = memo((params: any) => (
     <iframe
         className={styles.iframe}
         ref={params.frameRef}
+        title='FreeCodeCamp.org Course'
     />
 ))
 
 interface FccFrameProps {
     lesson?: LearnLessonMeta
+    onFccLastLessonNavigation: () => void
     onFccLessonChange: (path: string) => void
     onFccLessonComplete: () => void
 }
@@ -51,6 +53,10 @@ const FccFrame: FC<FccFrameProps> = (props: FccFrameProps) => {
 
         const {event: eventName, data}: {data: {path: string}, event: string } = JSON.parse(jsonData)
 
+        if (eventName === 'fcc:nav:last-challenge') {
+            props.onFccLastLessonNavigation()
+        }
+
         if (eventName === 'fcc:challenge:completed') {
             props.onFccLessonComplete()
         }
@@ -65,7 +71,7 @@ const FccFrame: FC<FccFrameProps> = (props: FccFrameProps) => {
       return () => {
         window.removeEventListener('message', handleEvent, false)
       }
-    }, [frameRef, props.onFccLessonChange, props.onFccLessonComplete])
+    }, [frameRef, props.onFccLastLessonNavigation, props.onFccLessonChange, props.onFccLessonComplete])
 
     return (
         <FreecodecampIfr frameRef={frameRef} />
