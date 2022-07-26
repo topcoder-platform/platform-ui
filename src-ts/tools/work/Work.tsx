@@ -2,6 +2,7 @@ import { Dispatch, FC, useContext } from 'react'
 import { useDispatch } from 'react-redux'
 import { Navigate, NavigateFunction, Outlet, Routes, useNavigate } from 'react-router-dom'
 
+// TODO: move this from the legacy to the nextgen app
 import { resetIntakeForm } from '../../../src/actions/form'
 import {
     clearAutoSavedForm,

@@ -9,6 +9,7 @@ import {
 import { useDispatch } from 'react-redux'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 
+// TODO: move this from the legacy to the nextgen app
 import { resetIntakeForm } from '../../../../src/actions/form'
 import { clearAutoSavedForm, clearCachedChallengeId } from '../../../../src/autoSaveBeforeLogin'
 import {

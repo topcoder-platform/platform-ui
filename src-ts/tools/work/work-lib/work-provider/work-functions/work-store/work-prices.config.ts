@@ -141,6 +141,10 @@ export const WorkPricesConfig: WorkPricesType = {
     },
 }
 
+function getPriceBugHunt(priceConfig: WorkPrice, packageName: PricePackageName): number {
+    return priceConfig.packages?.[packageName]?.price || 0
+}
+
 function getPriceDefault(priceConfig: WorkPrice): number {
     return priceConfig.usePromo && priceConfig.packages?.promo
         ? priceConfig.packages?.promo?.price
@@ -154,10 +158,6 @@ function getPriceDesignLegacy(price: WorkPrice, pageCount?: number, deviceCount?
     return (basePrice || 1)
         + (safePageCount * (price.perPage || 1))
         + (safePageCount * (safeDeviceCount - 1) * (price.perPage || 1))
-}
-
-function getPriceBugHunt(priceConfig: WorkPrice, packageName: PricePackageName): number {
-    return priceConfig.packages?.[packageName]?.price || 0
 }
 
 function getPrizeSets(priceConfig: WorkPrice, packageName?: PricePackageName | undefined): Array<WorkPrize> {

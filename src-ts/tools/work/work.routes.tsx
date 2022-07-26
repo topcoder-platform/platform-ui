@@ -2,11 +2,15 @@ import { Navigate } from 'react-router-dom'
 
 import { contactSupportPath, PlatformRoute } from '../../lib'
 
-import Work, { toolTitle } from './Work'
+import { dashboardTitle, default as Work, toolTitle } from './Work'
 import { WorkLoginPrompt } from './work-login-prompt'
 import { WorkNotLoggedIn } from './work-not-logged-in'
-import { BugHuntIntakeForm, Review } from './work-self-service'
-import IntakeForms, { intakeFormsTitle } from './work-self-service/intake-forms/IntakeForms'
+import {
+    BugHuntIntakeForm,
+    IntakeForms,
+    intakeFormsTitle,
+    Review,
+} from './work-self-service'
 import { WorkTable } from './work-table'
 import { WorkThankYou } from './work-thank-you'
 
@@ -24,14 +28,16 @@ export const workRoutes: Array<PlatformRoute> = [
         customerOnly: true,
         element: <WorkNotLoggedIn />,
         route: rootRoute,
+        title: toolTitle,
     },
     {
-        alternativePaths: [selfServiceRootRoute],
+        alternativePaths: [
+            selfServiceRootRoute,
+        ],
         children: [
             {
                 element: <WorkTable />,
                 route: '',
-                title: `${toolTitle} Dashboard Active`,
             },
             // there doesn't seem to be support for optional path params
             // in react-router-dom v6, so duplicating route
@@ -39,18 +45,13 @@ export const workRoutes: Array<PlatformRoute> = [
             {
                 element: <WorkTable />,
                 route: ':statusKey',
-                title: `${toolTitle} Dashboard Status`,
             },
         ],
-        customerOnly: true,
         element: <Work />,
+        hide: true,
         requireAuth: true,
         route: dashboardRoute,
-        title: `${toolTitle} Dashboard`,
-    },
-    {
-        element: <Navigate to={rootRoute} />,
-        route: selfServiceRootRoute,
+        title: dashboardTitle,
     },
     {
         children: [
@@ -58,39 +59,37 @@ export const workRoutes: Array<PlatformRoute> = [
             {
                 element: <BugHuntIntakeForm />,
                 route: `bug-hunt/basic-info`,
-                title: intakeFormsTitle,
             },
             {
                 element: <BugHuntIntakeForm />,
                 route: `bug-hunt/basic-info/:workId`,
-                title: intakeFormsTitle,
             },
             {
                 element: <Review />,
                 route: `bug-hunt/review`,
-                title: intakeFormsTitle,
             },
             {
                 element: <Review />,
                 route: `bug-hunt/review/:workId`,
-                title: intakeFormsTitle,
             },
             // General
             {
                 element: <WorkLoginPrompt />,
                 route: `:workType/login-prompt`,
-                title: intakeFormsTitle,
             },
             {
                 element: <WorkThankYou />,
                 route: `:workType/thank-you`,
-                title: intakeFormsTitle,
             },
         ],
-        customerOnly: true,
         element: <IntakeForms />,
+        hide: true,
         route: `/${selfServiceRootRoute}${rootRoute}/new`,
         title: intakeFormsTitle,
+    },
+    {
+        element: <Navigate to={rootRoute} />,
+        route: selfServiceRootRoute,
     },
     {
         element: <Navigate to={dashboardRoute} />,

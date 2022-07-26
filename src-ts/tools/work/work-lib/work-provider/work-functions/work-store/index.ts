@@ -1,9 +1,15 @@
+export * from './activate-challenge-request.model'
 export * from './challenge-metadata-name.enum'
 export * from './challenge-metadata-title.enum'
 export * from './challenge-metadata.model'
 export * from './challenge-phase'
 export * from './challenge-phase-name.enum'
+export * from './challenge-status.enum'
 export * from './challenge.model'
+export * from './create-work-request.model'
+export * from './customer-payment-request.model'
+export * from './update-work-request.model'
+export * from './work-intake-form-routes.config'
 export * from './work-price.model'
 export * from './work-prices-type.model'
 export {
@@ -31,12 +37,13 @@ export * from './work-type-category.enum'
 export * from './work.model'
 export * from './work-customer-payment.model'
 export {
-    createCustomerPayment as workStoreCreateCustomerPaymentAsync,
+    activateAsync as workStoreActivateAsync,
+    createCustomerPaymentAsync as workStoreCreateCustomerPaymentAsync,
     createAsync as workStoreCreateAsync,
-    confirmCustomerPayment as workStoreConfirmCustomerPaymentAsync,
+    confirmCustomerPaymentAsync as workStoreConfirmCustomerPaymentAsync,
     deleteAsync as workStoreDeleteAsync,
     getAsync as workStoreGetAsync,
-    getChallengeByWorkId as workStoreGetChallengeByWorkId,
+    getByWorkIdAsync as workStoreGetByWorkId,
     getFilteredByStatus as workStoreGetFilteredByStatus,
     updateAsync as workStoreUpdateAsync,
 } from './work.store'

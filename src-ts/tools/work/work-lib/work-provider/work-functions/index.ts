@@ -1,11 +1,13 @@
 export * from './work-factory'
 export {
     type Challenge,
+    type ChallengeMetadata,
     ChallengeMetadataName,
     ChallengeMetadataTitle,
     type PricePackageName,
     type Work,
     workBugHuntConfig,
+    WorkIntakeFormRoutes,
     workPriceData,
     workPriceDesign,
     workPriceDesignLegacy,
@@ -23,11 +25,11 @@ export {
 export * from './work-by-status.model'
 export {
     createAsync as workCreateAsync,
-    createCustomerPayment as workCreateCustomerPayment,
-    confirmCustomerPayment as workConfirmCustomerPayment,
+    createCustomerPaymentAsync as workCreateCustomerPayment,
     createFromChallenge as workCreateFromChallenge,
     deleteAsync as workDeleteAsync,
     getAllAsync as workGetAllAsync,
+    getByWorkIdAsync as workGetByWorkIdAsync,
     getGroupedByStatus as workGetGroupedByStatus,
     getPricesConfig as workGetPricesConfig,
     getStatusFilter as workGetStatusFilter,

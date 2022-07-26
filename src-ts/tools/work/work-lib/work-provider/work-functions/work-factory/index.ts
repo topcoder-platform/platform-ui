@@ -1,8 +1,10 @@
 export * from './work-solution.model'
 export {
+    buildActivateRequest as workFactoryBuildActivateRequest,
+    buildCreateRequest as workFactoryBuildCreateReqeuest,
+    buildCustomerPaymentRequest as workFactoryBuildCustomerPaymentRequest,
+    buildUpdateRequest as workFactoryBuildUpdateRequest,
     create as workFactoryCreate,
-    buildCreateBody as workFactoryBuildCreateBody,
-    buildUpdateBody as workFactoryBuildUpdateBody,
     getStatus as workFactoryGetStatus,
     mapFormData as workFactoryMapFormData,
 } from './work.factory'

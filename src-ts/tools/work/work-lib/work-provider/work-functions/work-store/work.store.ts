@@ -1,14 +1,30 @@
 import { Page, xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '../../../../../../lib'
 
-import { Challenge, ChallengeCreateBody, ChallengeUpdateBody } from './challenge.model'
+import { ActivateWorkRequest } from './activate-challenge-request.model'
+import { Challenge } from './challenge.model'
+import { CreateWorkRequest } from './create-work-request.model'
+import { CustomerPaymentRequest } from './customer-payment-request.model'
+import { UpdateWorkRequest } from './update-work-request.model'
 import { CustomerPayment } from './work-customer-payment.model'
 import { WorkStatusFilter } from './work-status-filter.enum'
 import { WorkStatus } from './work-status.enum'
 import { createPaymentUrl, createUrl, deleteUrl, getUrl, updatePaymentUrl, updateUrl } from './work-url.config'
 import { Work } from './work.model'
 
-export async function createAsync(body: ChallengeCreateBody): Promise<void> {
+export async function activateAsync(request: ActivateWorkRequest): Promise<void> {
+    return xhrPatchAsync(updateUrl(request.id), JSON.stringify(request))
+}
+
+export async function confirmCustomerPaymentAsync(id: string): Promise<CustomerPayment> {
+    return xhrPatchAsync(updatePaymentUrl(id), JSON.stringify({}))
+}
+
+export async function createAsync(body: CreateWorkRequest): Promise<void> {
     return xhrPostAsync(createUrl(), JSON.stringify(body))
+}
+
+export async function createCustomerPaymentAsync(request: CustomerPaymentRequest): Promise<CustomerPayment> {
+    return xhrPostAsync(createPaymentUrl(), JSON.stringify(request))
 }
 
 export async function deleteAsync(workId: string): Promise<void> {
@@ -19,16 +35,8 @@ export async function getAsync(handle: string, page: Page): Promise<Array<Challe
     return xhrGetAsync<Array<Challenge>>(getUrl(handle, page))
 }
 
-export async function getChallengeByWorkId(workId: string): Promise<Challenge> {
+export async function getByWorkIdAsync(workId: string): Promise<Challenge> {
     return xhrGetAsync<Challenge>(updateUrl(workId))
-}
-
-export async function createCustomerPayment(payment: string): Promise<CustomerPayment> {
-    return xhrPostAsync(createPaymentUrl(), payment)
-}
-
-export async function confirmCustomerPayment(id: string): Promise<CustomerPayment> {
-    return xhrPatchAsync(updatePaymentUrl(id), JSON.stringify({}))
 }
 
 export function getFilteredByStatus(work: ReadonlyArray<Work>, workStatusFilter?: WorkStatusFilter): Array<Work> {
@@ -42,6 +50,6 @@ export function getFilteredByStatus(work: ReadonlyArray<Work>, workStatusFilter?
                 || w.status === WorkStatus[workStatusFilter as keyof typeof WorkStatus]))
 }
 
-export async function updateAsync(body: ChallengeUpdateBody): Promise<void> {
+export async function updateAsync(body: UpdateWorkRequest): Promise<void> {
     return xhrPatchAsync(updateUrl(body.id), JSON.stringify(body))
 }

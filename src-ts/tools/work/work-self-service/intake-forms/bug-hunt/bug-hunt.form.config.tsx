@@ -1,6 +1,11 @@
-
-import { ReactComponent as BackIcon } from '../../../../../../src/assets/images/icon-back-arrow.svg'
-import { FormDefinition, GithubIcon, GitlabIcon, RadioButton, validatorRequired } from '../../../../../lib'
+import {
+    BackArrowIcon,
+    FormDefinition,
+    GithubIcon,
+    GitlabIcon,
+    RadioButton,
+    validatorRequired,
+} from '../../../../../lib'
 import { ChallengeMetadataName, ChallengeMetadataTitle } from '../../../work-lib'
 import { SupportInfoCard } from '../support-info-card'
 
@@ -24,7 +29,7 @@ export const BugHuntFormConfig: FormDefinition = {
         secondaryGroup: [
             {
                 buttonStyle: 'icon-bordered',
-                icon: BackIcon,
+                icon: BackArrowIcon,
                 onClick: () => { },
                 type: 'button',
             },

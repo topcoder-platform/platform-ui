@@ -7,6 +7,7 @@ import {
     FormDefinition,
     formGetInputFields,
     formGetInputModel,
+    FormGroup,
     FormInputModel,
     formOnReset,
     IconOutline,
@@ -19,15 +20,16 @@ import {
 } from '../../../../../lib'
 import {
     Challenge,
+    ChallengeMetadata,
     ChallengeMetadataName,
     PricePackageName,
     workBugHuntConfig,
     workCreateAsync,
+    workGetByWorkIdAsync,
+    WorkIntakeFormRoutes,
     WorkType,
     workUpdateAsync
 } from '../../../work-lib'
-import { ChallengeMetadata, workStoreGetChallengeByWorkId } from '../../../work-lib/work-provider/work-functions/work-store'
-import { WorkIntakeFormRoutes } from '../../../work-lib/work-provider/work-functions/work-store/work-intake-form-routes.config'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
 import { dashboardRoute } from '../../../work.routes'
@@ -37,11 +39,8 @@ import { BugHuntFormConfig } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
 import { DeliverablesInfoCard } from './deliverables-info-card'
 
-interface DefaultValues {
-    [ChallengeMetadataName.packageType]: PricePackageName
-}
-
 const BugHuntIntakeForm: React.FC = () => {
+
     const workId: string | undefined = useParams().workId
     const navigate: NavigateFunction = useNavigate()
 
@@ -57,7 +56,7 @@ const BugHuntIntakeForm: React.FC = () => {
     }
 
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
-    const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
+    const [formDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...BugHuntFormConfig })
 
     const [formValues, setFormValues]: [any, Dispatch<any>] = useState({
@@ -68,7 +67,7 @@ const BugHuntIntakeForm: React.FC = () => {
     const [selectedPackage, setSelectedPackage]: [PricePackageName, Dispatch<SetStateAction<PricePackageName>>]
         = useState<PricePackageName>(formValues?.packageType)
 
-    const formInputs: Array<FormInputModel> = formGetInputFields(formDef.groups)
+    const formInputs: Array<FormInputModel> = formGetInputFields(formDef.groups as Array<FormGroup>)
     if (!workId && !challenge) {
         formOnReset(formInputs, formValues)
     }
@@ -81,7 +80,7 @@ const BugHuntIntakeForm: React.FC = () => {
                 setChallenge(response)
             } else {
                 // fetch challenge using workId
-                const response: any = await workStoreGetChallengeByWorkId(workId)
+                const response: Challenge = await workGetByWorkIdAsync(workId)
                 setChallenge(response)
 
                 const intakeFormBH: ChallengeMetadata | undefined = response.metadata?.find((item: ChallengeMetadata) => item.name === ChallengeMetadataName.intakeForm)
