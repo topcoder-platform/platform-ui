@@ -12,8 +12,6 @@ import {
 } from '../../../lib'
 import {
     AllCertificationsProviderData,
-    CollapsiblePane,
-    CourseOutline,
     CoursesProviderData,
     CourseTitle,
     useAllCertifications,
@@ -84,22 +82,6 @@ const CourseCompletedPage: FC<{}> = () => {
                 <>
                     <Breadcrumb items={breadcrumb} />
                     <div className={styles['main-wrap']}>
-                        <div className={styles['course-outline-pane']}>
-                            <CollapsiblePane title='Course Outline'>
-                                <div className={styles['course-outline-wrap']}>
-                                    <div className={styles['course-outline-title']}>
-                                        {courseData?.title}
-                                    </div>
-                                    <CourseOutline
-                                        course={courseData}
-                                        ready={courseDataReady}
-                                        currentStep=''
-                                        progress={progress}
-                                    />
-                                </div>
-                            </CollapsiblePane>
-                        </div>
-
                         <div className={styles['course-frame']}>
                             <div className={styles['content-wrap']}>
                                 <h1>Congratulations!</h1>

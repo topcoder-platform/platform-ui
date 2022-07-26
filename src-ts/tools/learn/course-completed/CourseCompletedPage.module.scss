@@ -35,35 +35,6 @@
     }
 }
 
-.course-outline-pane {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    z-index: 1;
-
-    @include ltemd {
-        position: relative;
-        top: auto;
-        left: auto;
-        bottom: auto;
-    }
-}
-
-.course-outline-wrap {
-    width: 406px;
-
-    @include ltemd {
-        width: 100%;
-    }
-}
-
-.course-outline-title {
-    @extend .body-main-bold;
-    flex: 0 0 auto;
-    margin-bottom: $pad-xl;
-}
-
 .content-wrap {
     padding: $pad-mx 0 $pad-xxxxl;
     position: relative;
