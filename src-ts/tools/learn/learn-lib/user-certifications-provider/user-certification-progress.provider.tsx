@@ -42,6 +42,7 @@ export function useUserCertificationProgress(userId?: number, provider?: string,
     }, [
         certification,
         provider,
+        userId,
     ])
 
     return state
