@@ -12,7 +12,7 @@ import {
     workFactoryCreate
 } from './work-factory'
 import {
-    ActivateChallengeRequest,
+    ActivateWorkRequest,
     Challenge,
     CreateWorkRequest,
     CustomerPayment,
@@ -89,7 +89,7 @@ export async function createCustomerPaymentAsync(
     }
 
     // now it's safe to activate the request
-    const activationRequest: ActivateChallengeRequest = workFactoryBuildActivateRequest(challenge)
+    const activationRequest: ActivateWorkRequest = workFactoryBuildActivateRequest(challenge)
     return workStoreActivateAsync(activationRequest)
 }
 

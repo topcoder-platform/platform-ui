@@ -2,7 +2,7 @@ import moment from 'moment'
 
 import { WorkConfigConstants, WorkStrings } from '../../../work-constants'
 import {
-    ActivateChallengeRequest,
+    ActivateWorkRequest,
     Challenge,
     ChallengeMetadata,
     ChallengeMetadataName,
@@ -47,7 +47,7 @@ interface IntakeForm {
     }
 }
 
-export function buildActivateRequest(challenge: Challenge): ActivateChallengeRequest {
+export function buildActivateRequest(challenge: Challenge): ActivateWorkRequest {
 
     const newDiscussions: Array<{ [key: string]: string }> = [
         ...(challenge.discussions || []),

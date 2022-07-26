@@ -1,6 +1,6 @@
 import { Page, xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '../../../../../../lib'
 
-import { ActivateChallengeRequest } from './activate-challenge-request.model'
+import { ActivateWorkRequest } from './activate-challenge-request.model'
 import { Challenge } from './challenge.model'
 import { CreateWorkRequest } from './create-work-request.model'
 import { CustomerPaymentRequest } from './customer-payment-request.model'
@@ -11,7 +11,7 @@ import { WorkStatus } from './work-status.enum'
 import { createPaymentUrl, createUrl, deleteUrl, getUrl, updatePaymentUrl, updateUrl } from './work-url.config'
 import { Work } from './work.model'
 
-export async function activateAsync(request: ActivateChallengeRequest): Promise<void> {
+export async function activateAsync(request: ActivateWorkRequest): Promise<void> {
     return xhrPatchAsync(updateUrl(request.id), JSON.stringify(request))
 }
 
