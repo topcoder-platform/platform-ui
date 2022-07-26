@@ -13,11 +13,11 @@ export function getCoursePath(provider: string, certification: string): string {
 }
 
 export function getCertificatePath(provider: string, certification: string): string {
-    return `/learn/${provider}/${certification}/certificate`
+    return `${getCoursePath(provider, certification)}/certificate`
 }
 
 export function getCertificationCompletedPath(provider: string, certification: string): string {
-    return `/learn/${provider}/${certification}/completed`
+    return `${getCoursePath(provider, certification)}/completed`
 }
 
 export function getLessonPathFromCurrentLesson(
@@ -41,6 +41,7 @@ export function getLessonPathFromModule(
 }
 
 export enum LEARN_PATHS {
+    completed = '/learn/completed',
     myCertificate = '/learn/my-certificate',
     myLearning = '/learn/my-learning',
     fcc = '/learn/fcc',

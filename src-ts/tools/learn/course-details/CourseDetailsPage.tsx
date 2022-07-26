@@ -1,4 +1,4 @@
-import { FC, ReactNode, useContext, useMemo } from 'react'
+import { FC, ReactNode, useContext } from 'react'
 import { Params, useParams } from 'react-router-dom'
 
 import {
@@ -15,11 +15,13 @@ import {
     CourseTitle,
     ResourceProviderData,
     useCourses,
+    useLearnBreadcrumb,
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
     useResourceProvider,
     useUserCertificationProgress
 } from '../learn-lib'
+import { getCoursePath } from '../learn.routes'
 
 import { CourseCurriculum } from './course-curriculum'
 import styles from './CourseDetailsPage.module.scss'
@@ -49,10 +51,12 @@ const CourseDetailsPage: FC<{}> = () => {
     )
 
     const ready: boolean = profileReady && courseReady && (!profile || progressReady)
-    const breadcrumb: Array<BreadcrumbItemModel> = useMemo(() => [
-        { url: '/learn', name: 'Topcoder Academy' },
-        { url: `/learn/${routeParams.provider}/${routeParams.certification}`, name: course?.title ?? '' },
-    ], [routeParams, course])
+    const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
+        {
+            name: course?.title ?? '',
+            url: getCoursePath(routeParams.provider as string, routeParams.certification as string),
+        },
+    ])
 
     function getDescription(): ReactNode {
         if (!course) {
