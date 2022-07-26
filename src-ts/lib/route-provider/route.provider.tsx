@@ -55,7 +55,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
         const toolsRoutesForNav: Array<PlatformRoute> = toolsRoutes
             .filter(route =>
                 !!route.title
-                && !route.hide
+                && !route.hidden
                 && (
                     (
                         (!route.customerOnly || !!profile?.isCustomer)
@@ -120,7 +120,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
     function getRouteElement(route: PlatformRoute): JSX.Element {
 
         // create the route element
-        const routeElement: JSX.Element = !route.requireAuth
+        const routeElement: JSX.Element = !route.authRequired
             ? route.element
             : (
                 <RequireAuthProvider loginUrl={authUrlLogin}>

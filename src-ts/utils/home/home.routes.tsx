@@ -7,7 +7,7 @@ export const homeRoute: string = ''
 export const homeRoutes: Array<PlatformRoute> = [
     {
         element: <Home />,
-        hide: true,
+        hidden: true,
         route: homeRoute,
         title: 'Home page',
     },

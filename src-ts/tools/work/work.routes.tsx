@@ -34,6 +34,7 @@ export const workRoutes: Array<PlatformRoute> = [
         alternativePaths: [
             selfServiceRootRoute,
         ],
+        authRequired: true,
         children: [
             {
                 element: <WorkTable />,
@@ -48,8 +49,7 @@ export const workRoutes: Array<PlatformRoute> = [
             },
         ],
         element: <Work />,
-        hide: true,
-        requireAuth: true,
+        hidden: true,
         route: dashboardRoute,
         title: dashboardTitle,
     },
@@ -83,7 +83,7 @@ export const workRoutes: Array<PlatformRoute> = [
             },
         ],
         element: <IntakeForms />,
-        hide: true,
+        hidden: true,
         route: `/${selfServiceRootRoute}${rootRoute}/new`,
         title: intakeFormsTitle,
     },
