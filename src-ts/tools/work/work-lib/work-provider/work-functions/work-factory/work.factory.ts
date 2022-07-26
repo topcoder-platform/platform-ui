@@ -4,16 +4,16 @@ import { WorkConfigConstants, WorkStrings } from '../../../work-constants'
 import {
     ActivateChallengeRequest,
     Challenge,
-    ChallengeCreateBody,
     ChallengeMetadata,
     ChallengeMetadataName,
     ChallengeMetadataTitle,
     ChallengePhase,
     ChallengePhaseName,
     ChallengeStatus,
-    ChallengeUpdateBody,
+    CreateWorkRequest,
     CustomerPaymentRequest,
     PricePackageName,
+    UpdateWorkRequest,
     Work,
     WorkPrice,
     WorkPricesType,
@@ -72,7 +72,7 @@ export function buildActivateRequest(challenge: Challenge): ActivateChallengeReq
     }
 }
 
-export function buildCreateRequest(workTypeConfig: WorkTypeConfig): ChallengeCreateBody {
+export function buildCreateRequest(workTypeConfig: WorkTypeConfig): CreateWorkRequest {
 
     const form: IntakeForm = {
         workType: {
@@ -129,7 +129,7 @@ export function buildCustomerPaymentRequest(
     }
 }
 
-export function buildUpdateRequest(workTypeConfig: WorkTypeConfig, challenge: Challenge, formData: any): ChallengeUpdateBody {
+export function buildUpdateRequest(workTypeConfig: WorkTypeConfig, challenge: Challenge, formData: any): UpdateWorkRequest {
 
     const type: WorkType = workTypeConfig.type
     const priceConfig: WorkPrice = workTypeConfig.priceConfig
@@ -185,7 +185,7 @@ export function buildUpdateRequest(workTypeConfig: WorkTypeConfig, challenge: Ch
         return phase
     })
 
-    const body: ChallengeUpdateBody = {
+    const body: UpdateWorkRequest = {
         description: templateString.join(''),
         id: challenge.id,
         metadata: intakeMetadata,

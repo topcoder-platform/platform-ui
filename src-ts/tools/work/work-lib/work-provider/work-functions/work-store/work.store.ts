@@ -1,8 +1,10 @@
 import { Page, xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '../../../../../../lib'
 
 import { ActivateChallengeRequest } from './activate-challenge-request.model'
-import { Challenge, ChallengeCreateBody, ChallengeUpdateBody } from './challenge.model'
+import { Challenge } from './challenge.model'
+import { CreateWorkRequest } from './create-work-request.model'
 import { CustomerPaymentRequest } from './customer-payment-request.model'
+import { UpdateWorkRequest } from './update-work-request.model'
 import { CustomerPayment } from './work-customer-payment.model'
 import { WorkStatusFilter } from './work-status-filter.enum'
 import { WorkStatus } from './work-status.enum'
@@ -17,7 +19,7 @@ export async function confirmCustomerPaymentAsync(id: string): Promise<CustomerP
     return xhrPatchAsync(updatePaymentUrl(id), JSON.stringify({}))
 }
 
-export async function createAsync(body: ChallengeCreateBody): Promise<void> {
+export async function createAsync(body: CreateWorkRequest): Promise<void> {
     return xhrPostAsync(createUrl(), JSON.stringify(body))
 }
 
@@ -48,6 +50,6 @@ export function getFilteredByStatus(work: ReadonlyArray<Work>, workStatusFilter?
                 || w.status === WorkStatus[workStatusFilter as keyof typeof WorkStatus]))
 }
 
-export async function updateAsync(body: ChallengeUpdateBody): Promise<void> {
+export async function updateAsync(body: UpdateWorkRequest): Promise<void> {
     return xhrPatchAsync(updateUrl(body.id), JSON.stringify(body))
 }

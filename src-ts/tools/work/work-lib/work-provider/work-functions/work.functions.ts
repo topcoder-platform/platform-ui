@@ -14,11 +14,11 @@ import {
 import {
     ActivateChallengeRequest,
     Challenge,
-    ChallengeCreateBody,
-    ChallengeUpdateBody,
+    CreateWorkRequest,
     CustomerPayment,
     CustomerPaymentRequest,
     PricePackageName,
+    UpdateWorkRequest,
     Work,
     workGetPricesConfig,
     WorkPrice,
@@ -41,7 +41,7 @@ import {
 
 export async function createAsync(type: WorkType): Promise<void> {
     const workConfig: WorkTypeConfig = WorkTypeConfigs[type]
-    const body: ChallengeCreateBody = workFactoryBuildCreateReqeuest(workConfig)
+    const body: CreateWorkRequest = workFactoryBuildCreateReqeuest(workConfig)
     return workStoreCreateAsync(body)
 }
 
@@ -166,7 +166,7 @@ export function getStatusFilter(filterKey?: string): WorkStatusFilter | undefine
 
 export async function updateAsync(type: WorkType, challenge: Challenge, intakeForm: any): Promise<void> {
     const workConfig: WorkTypeConfig = WorkTypeConfigs[type]
-    const body: ChallengeUpdateBody = workFactoryBuildUpdateRequest(workConfig, challenge, intakeForm)
+    const body: UpdateWorkRequest = workFactoryBuildUpdateRequest(workConfig, challenge, intakeForm)
     return workStoreUpdateAsync(body)
 }
 
