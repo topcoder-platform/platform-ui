@@ -27,6 +27,10 @@
         margin-top: 0;
         width: $pad-xxl;
         height: $pad-xxl;
+
+        &:global(.completed) {
+            color: $turq-75;
+        }
     }
 }
 
