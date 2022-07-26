@@ -5,6 +5,7 @@
     display: flex;
     gap: $pad-lg;
     align-items: center;
+
     @include ltelg {
         gap: $pad-sm;
     }
@@ -14,6 +15,22 @@
             flex-direction: column;
             text-align: center;
             gap: $pad-lg;
+        }
+    }
+
+    :global(.badge-icon) {
+        svg {
+            @include icon-size(60);
+        }
+        &:global(.lg) {
+            svg {
+                @include icon-size(72);
+            }
+        }
+        &:global(.xl) {
+            svg {
+                @include icon-size(140);
+            }
         }
     }
 }
@@ -44,22 +61,6 @@
     @include ltemd {
         :global(.quote-small.xl) {
             margin-top: $pad-sm;
-        }
-    }
-}
-
-.badge-icon {
-    svg {
-        @include icon-size(60);
-    }
-    &:global(.lg) {
-        svg {
-            @include icon-size(72);
-        }
-    }
-    &:global(.xl) {
-        svg {
-            @include icon-size(140);
         }
     }
 }

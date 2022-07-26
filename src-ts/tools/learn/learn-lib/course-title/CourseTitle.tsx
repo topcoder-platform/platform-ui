@@ -26,7 +26,7 @@ const CourseTitle: FC<CourseTitleProps> = (props: CourseTitleProps) => {
 
     return (
         <div className={classNames(styles['wrap'], props.size)}>
-            <div className={classNames(styles['badge-icon'], props.size)}>
+            <div className={classNames('badge-icon', props.size)}>
                 <LearnChallengeBadgeIcon />
             </div>
             <div className={styles['text']}>
