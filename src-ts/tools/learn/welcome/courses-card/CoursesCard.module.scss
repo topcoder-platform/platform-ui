@@ -16,10 +16,11 @@
     }
 
     &:global(.soon) {
-        .badge-icon {
+        :global(.badge-icon) {
             opacity: 0.5;
         }
     }
+
     @include ltemd {
         padding: $pad-lg;
     }
