@@ -150,10 +150,6 @@ const BugHuntIntakeForm: React.FC = () => {
         }
     }
 
-    const getDynamicDuration: () => number = () => {
-        return workBugHuntConfig.duration ? workBugHuntConfig.duration[selectedPackage] || 0 : 0
-    }
-
     if (!challenge && workId) {
         return <LoadingSpinner />
     }
@@ -170,7 +166,7 @@ const BugHuntIntakeForm: React.FC = () => {
                 workType={workBugHuntConfig.type}
             />
             <WorkServicePrice
-                duration={getDynamicDuration()}
+                duration={workBugHuntConfig.duration?.[selectedPackage] || 0}
                 hideTitle
                 icon={<IconOutline.BadgeCheckIcon width={48} height={48} />}
                 price={workBugHuntConfig.priceConfig.getPrice(workBugHuntConfig.priceConfig, selectedPackage)}
