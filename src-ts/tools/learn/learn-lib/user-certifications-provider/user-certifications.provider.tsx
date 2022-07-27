@@ -22,6 +22,8 @@ export function useUserCertifications(): UserCertificationsProviderData {
 
     useEffect(() => {
 
+        let mounted: boolean = true
+
         setState((prevState) => ({
             ...prevState,
             loading: true,
@@ -34,6 +36,11 @@ export function useUserCertifications(): UserCertificationsProviderData {
 
         userCertificationProgressGetAsync(userId)
             .then((myCertifications) => {
+
+                if (!mounted) {
+                    return
+                }
+
                 const completed: Array<UserCertificationCompleted> = myCertifications
                     .filter(c => c.status === UserCertificationProgressStatus.completed)
                     .map(c => c as UserCertificationCompleted)
@@ -50,8 +57,9 @@ export function useUserCertifications(): UserCertificationsProviderData {
             })
 
         return () => {
-            setState(defaultProviderData)
+            mounted = false
         }
+
     }, [profileContextData?.profile?.userId])
 
     return state
