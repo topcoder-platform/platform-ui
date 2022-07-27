@@ -1,0 +1,23 @@
+@mixin lg-down {
+  @media (max-width: #{$lg-max}){
+    @content;
+  }
+}
+
+@mixin md-down {
+  @media (max-width: #{$md-max}){
+    @content;
+  }
+}
+
+@mixin sm-down {
+  @media (max-width: #{$sm-max}){
+    @content;
+  }
+}
+
+@mixin xs-down {
+  @media (max-width: #{$xs-max}){
+    @content;
+  }
+}

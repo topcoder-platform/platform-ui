@@ -1,0 +1,59 @@
+@import '../../../../../../lib/styles/includes';
+
+.card {
+    background-color: $black-5;
+    width: 100%;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    
+    .cornerImage {
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        opacity: 0.1;
+    }
+
+    .cardContainer {
+        margin-left: $pad-xxxl;
+        margin-top: $pad-xxxl;
+        margin-bottom: $pad-xl;
+        display: flex;
+        flex-direction: row;
+        gap: $pad-lg;
+        
+
+        @include ltemd {
+            margin-top: $pad-xl;
+            margin-left: $pad-xl;
+            gap: 14px;
+        }
+    
+        .titleSection {
+            display: flex;
+            flex-direction: column;
+    
+            .title {
+                font-size: 32px;
+                line-height: 34px;
+                font-weight: $font-weight-medium;
+
+                margin-bottom: $pad-sm;
+
+                @include ltemd {
+                    font-size: 22px;
+                    line-height: 24px;
+                }
+            }
+
+            .summary {
+                margin-bottom: $pad-lg;
+
+                @include ltemd {
+                    font-size: 14px;
+                    line-height: 20px;
+                }
+            }
+        }
+    }
+}

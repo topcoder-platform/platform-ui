@@ -1,0 +1,24 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.contentLayout {
+  width: 100%;
+  padding-bottom: 0;
+
+  .contentLayout-outer {
+    width: 100%;
+
+    .contentLayout-inner {
+      width: 100%;
+      overflow: visible;
+    }
+  }
+}
+
+@include lg-down {
+  .contentLayout {
+    .contentLayout-outer {
+      padding: 0 $pad-lg;
+    }
+  }
+}

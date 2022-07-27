@@ -1,0 +1,29 @@
+button.rec-dot{
+    box-shadow: none;
+    background-color: #AAAAAA;
+    width: 12px;
+    height: 12px;
+}
+  
+button.rec-dot:hover, button.rec-dot:active, button.rec-dot:focus, button.rec-dot_active  {
+    border: 2.2px solid #06D6A0;
+    background-color: transparent;
+    box-shadow: none;
+    width: 18px;
+    height: 18px;
+}
+
+.rec .rec-slider-container{
+  width: 100%;
+  margin: 0;
+}
+
+.rec .rec-item-wrapper {
+  padding: 0;
+}
+
+.rec .rec-pagination {
+  align-items: center;
+  margin-bottom: 24px;
+  min-height: 30px;
+}

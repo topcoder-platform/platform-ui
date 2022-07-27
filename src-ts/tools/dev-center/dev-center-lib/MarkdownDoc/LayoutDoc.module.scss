@@ -1,0 +1,33 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.main {
+  display: flex;
+  width: 100%;
+  margin: $margin-xxxxl 0;
+}
+
+.mainContent {
+  width: calc(100% - $side-nav-width);
+  padding: 0 $pad-xxxxl 0 0;
+  min-height: calc(100vh - 520px);
+
+  &.disableToc {
+    width: 100%;
+    padding: 0;
+  }
+}
+
+@include lg-down {
+  .main {
+    margin: $margin-xxl 0;
+
+    > .mainContent {
+      width: 100%;
+      padding: 0;
+    }
+    > nav {
+      display: none;
+    }
+  }
+}

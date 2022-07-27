@@ -1,0 +1,6 @@
+.rec img  {
+  pointer-events: none;
+  width:100%;
+  box-shadow: 0px 16px 32px rgba(0, 0, 0, 0.03);
+  filter: drop-shadow(0px 16px 32px rgba(0, 0, 0, 0.03));
+}

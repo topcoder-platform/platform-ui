@@ -1,0 +1,29 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+
+.accordion {
+  margin-top: -2px;
+  border-top: 2px solid $black-10;
+  border-bottom: 2px solid $black-10;
+
+  > h2 {
+    padding-right: $pad-xxl;
+    background: url('../../assets/i/icon-cheveron-up.svg') no-repeat center right 0 / auto;
+    cursor: pointer;
+  }
+
+  &.collapsed {
+    > h2 {
+      background-image: url('../../assets/i/icon-cheveron-down.svg')
+    }
+
+    > h2 ~ * {
+      display: none;
+    }
+  }
+
+  &:first-of-type:not(:first-child) {
+    margin-top: 58px;
+  }
+}

@@ -1,0 +1,20 @@
+@import "../../../lib/styles/includes";
+
+/* Colors */
+$black-60: #767676;
+
+/* Margins */
+$margin-xs: calc(2 * $border); // 4
+$margin-sm: calc(2 * $margin-xs); // 8
+$margin-md: calc(3 * $margin-xs); // 12
+$margin-lg: calc(4 * $margin-xs); // 16
+$margin-xl: calc(5 * $margin-xs); // 20
+$margin-xxl: calc(6 * $margin-xs); // 24
+$margin-xxxl: calc(7 * $margin-xs); // 28
+$margin-xxxxl: calc(8 * $margin-xs); // 32
+
+/* Fonts */
+$font-roboto-mono: "Roboto Mono";
+
+/* Others */
+$side-nav-width: 353px;

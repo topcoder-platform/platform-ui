@@ -24,7 +24,7 @@
         }
 
         &.show-mobile {
-            @include gtemd {
+            @include gtelg {
                 display: none;
             }
         }

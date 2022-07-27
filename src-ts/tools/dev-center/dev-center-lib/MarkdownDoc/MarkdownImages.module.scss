@@ -1,0 +1,73 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.imagesBlock {
+  position: relative;
+  margin: $margin-xxl 0;
+  overflow: hidden;
+  background-color: $black-5;
+  border-radius: 8px;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 9px 0 8px;
+  border-top: $border-xs solid $black-10;
+}
+
+.indicator {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  padding: 1px;
+  margin: 0 2px;
+  font-size: 0;
+  background: $black-40 content-box;
+  border: 2px solid transparent;
+  border-radius: 50%;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    width: calc(100% + 8px);
+    height: calc(100% + 8px);
+    z-index: 0;
+  }
+
+  &.active {
+    padding: 0;
+    border-color: $turq-100;
+    background-color: transparent;
+  }
+}
+.prev,
+.next {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:disabled {
+    opacity: 0.35;
+    pointer-events: none;
+  }
+}
+
+.imageContainer {
+  max-width: 481px;
+}
+
+@include lg-down {
+  .imageContainer{
+    max-width: 100%;
+  }
+
+  .footer {
+    padding: 0;
+    border-top: none;
+  }
+}

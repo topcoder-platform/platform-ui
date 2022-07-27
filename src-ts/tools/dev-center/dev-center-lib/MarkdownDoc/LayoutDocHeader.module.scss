@@ -1,0 +1,52 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.header {
+  padding: $pad-xxxxl 0 0;
+}
+
+.title {
+  font-family: $font-barlow-condensed;
+  font-weight: $font-weight-semibold;
+  font-size: 34px;
+  line-height: 32px;
+  color: inherit;
+  text-transform: uppercase;
+
+  padding: 0 0 $pad-lg;
+}
+
+.divider {
+  width: 100%;
+  margin: 0;
+  border: 1px solid $black-10;
+  border-radius: 2px;
+}
+
+.subtitle {
+  font-family: $font-roboto;
+  font-weight: $font-weight-bold;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 1px;
+  color: $black-60;
+  text-transform: uppercase;
+
+  padding: $pad-lg 0 0;
+}
+
+@include lg-down {
+  .header {
+    padding: $pad-lg 0 0;
+  }
+
+  .title {
+    font-size: 28px;
+    line-height: 32px;
+  }
+
+  .subtitle {
+    font-size: 10px;
+    line-height: 12px;
+  }
+}
