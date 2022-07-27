@@ -17,12 +17,16 @@ import {
     UserCertificationProgressStatus,
     useUserCertificationProgress,
 } from '../learn-lib'
-import { getCoursePath } from '../learn.routes'
+import { absoluteRootRoute, getCoursePath } from '../learn.routes'
 
 import { ActionButton } from './action-button'
 import { Certificate } from './certificate'
 import styles from './MyCertificate.module.scss'
 import { useCertificateScaling } from './use-certificate-scaling.hook'
+
+import { ReactComponent as SocialShareFbSvg } from './social-share-fb.svg'
+import { ReactComponent as SocialShareLnSvg } from './social-share-linkedin.svg'
+import { ReactComponent as SocialShareTwSvg } from './social-share-twitter.svg'
 
 const MyCertificate: FC<{}> = () => {
 
@@ -166,8 +170,19 @@ const MyCertificate: FC<{}> = () => {
                                 onClick={handleDownload}
                             />
                             <ActionButton
-                                icon={<IconOutline.ShareIcon />}
-                                onClick={handleShare}
+                                icon={<SocialShareFbSvg />}
+                                url={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(absoluteRootRoute)}&src=share_button`}
+                                target="_blank"
+                            />
+                            <ActionButton
+                                icon={<SocialShareLnSvg />}
+                                url={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(absoluteRootRoute)}`}
+                                target="_blank"
+                            />
+                            <ActionButton
+                                icon={<SocialShareTwSvg />}
+                                url={`https://twitter.com/intent/tweet?url=${encodeURIComponent(absoluteRootRoute)}`}
+                                target="_blank"
                             />
                         </div>
                     </div>
