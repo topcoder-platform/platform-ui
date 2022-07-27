@@ -1,4 +1,4 @@
-import { FC, useContext, useEffect, useMemo } from 'react'
+import { FC, useContext, useEffect } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 
 import { EnvironmentConfig } from '../../../config'
@@ -30,7 +30,7 @@ const CourseCompletedPage: FC<{}> = () => {
 
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
-    const { profile }: ProfileContextData = useContext(profileContext)
+    const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
     const providerParam: string = routeParams.provider ?? ''
     const certificationParam: string = routeParams.certification ?? ''
     const coursePath: string = getCoursePath(providerParam, certificationParam)
@@ -56,7 +56,10 @@ const CourseCompletedPage: FC<{}> = () => {
         enabled: progressReady && !!progress,
     })
 
-    const ready: boolean = progressReady && courseDataReady && certifReady
+    /* tslint:disable:cyclomatic-complexity */
+    const isLoggedIn: boolean = profileReady && !!profile
+    const certificatesDataReady: boolean = progressReady && certifReady
+    const ready: boolean = profileReady && courseDataReady && (!isLoggedIn || certificatesDataReady)
 
     const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
         {

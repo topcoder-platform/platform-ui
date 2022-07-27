@@ -40,17 +40,16 @@ export function getLessonPathFromModule(
     return `${getCoursePath(provider, certification)}/${module}/${lesson}`
 }
 
-
 export enum LEARN_PATHS {
     completed = '/learn/completed',
     myCertificate = '/learn/my-certificate',
     myLearning = '/learn/my-learning',
     fcc = '/learn/fcc',
     root = '/learn',
-    startCourseRouteFlag = 'start-course'
+    startCourseRouteFlag = 'start-course',
 }
 
-export function getAuthenticateAndStartCourseRoute() {
+export function getAuthenticateAndStartCourseRoute(): string {
     return `${authUrlLogin}${encodeURIComponent(`?${LEARN_PATHS.startCourseRouteFlag}`)}`
 }
 
