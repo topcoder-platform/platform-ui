@@ -9,13 +9,16 @@ import { UserCertificationsProviderData } from './user-certifications-provider-d
 
 export function useUserCertifications(): UserCertificationsProviderData {
 
-    const profileContextData: ProfileContextData = useContext<ProfileContextData>(profileContext)
-    const [state, setState]: [UserCertificationsProviderData, Dispatch<SetStateAction<UserCertificationsProviderData>>] = useState<UserCertificationsProviderData>({
+    const defaultProviderData: UserCertificationsProviderData = {
         completed: [],
         inProgress: [],
         loading: false,
         ready: false,
-    })
+    }
+
+    const profileContextData: ProfileContextData = useContext<ProfileContextData>(profileContext)
+    const [state, setState]: [UserCertificationsProviderData, Dispatch<SetStateAction<UserCertificationsProviderData>>]
+        = useState<UserCertificationsProviderData>(defaultProviderData)
 
     useEffect(() => {
 
@@ -45,6 +48,10 @@ export function useUserCertifications(): UserCertificationsProviderData {
                     ready: true,
                 }))
             })
+
+        return () => {
+            setState(defaultProviderData)
+        }
     }, [profileContextData?.profile?.userId])
 
     return state
