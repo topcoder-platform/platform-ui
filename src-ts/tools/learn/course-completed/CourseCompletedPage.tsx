@@ -101,7 +101,7 @@ const CourseCompletedPage: FC<{}> = () => {
                                         size='xl'
                                         title={courseData.title}
                                         credits={courseData.provider}
-                                        type={certification?.category ?? ''}
+                                        trackType={certification?.trackType}
                                     />
                                 </div>
                                 <hr />

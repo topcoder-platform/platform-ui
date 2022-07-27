@@ -11,7 +11,9 @@ import {
     ProfileContextData
 } from '../../../lib'
 import {
+    AllCertificationsProviderData,
     CoursesProviderData,
+    useAllCertifications,
     useCourses,
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
@@ -52,7 +54,12 @@ const MyCertificate: FC<{}> = () => {
         routeParams.certification
     )
 
-    const ready: boolean = courseReady && progressReady
+    const {
+        certification: certificate,
+        ready: certificateReady,
+    }: AllCertificationsProviderData = useAllCertifications(routeParams.provider, course?.certificationId)
+
+    const ready: boolean = courseReady && progressReady && certificateReady
 
     useCertificateScaling(ready ? certificateWrapRef : undefined)
 
@@ -154,6 +161,7 @@ const MyCertificate: FC<{}> = () => {
                                 provider={course?.provider}
                                 completedDate={certificateProgress?.completedDate ?? ''}
                                 elRef={certificateElRef}
+                                type={certificate?.trackType}
                             />
                         </div>
                         <div className={styles['btns-wrap']}>
