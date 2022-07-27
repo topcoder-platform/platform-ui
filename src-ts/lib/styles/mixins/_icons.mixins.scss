@@ -35,6 +35,11 @@
     width: $pad-mx;
 }
 
+@mixin icon-mxx {
+    height: $pad-mxx;
+    width: $pad-mxx;
+}
+
 @mixin icon-size($size) {
     height: $size * 1px;
     width: $size * 1px;
