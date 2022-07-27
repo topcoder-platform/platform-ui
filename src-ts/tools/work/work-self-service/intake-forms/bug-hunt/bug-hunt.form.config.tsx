@@ -60,7 +60,7 @@ export const BugHuntFormConfig: FormDefinition = {
                     hideInlineErrors: true,
                     label: 'Website URL',
                     name: ChallengeMetadataName.websiteURL,
-                    placeholder: 'Enter a descriptive title',
+                    placeholder: 'www.example-share-link.com',
                     type: 'text',
                     validators: [
                         {
@@ -69,7 +69,7 @@ export const BugHuntFormConfig: FormDefinition = {
                     ],
                 },
             ],
-            instructions: 'Enter a title for your website bug hunt project.',
+            instructions: 'Provide the URL to your website.',
             title: ChallengeMetadataTitle.websiteURL,
         },
         {
@@ -104,7 +104,7 @@ export const BugHuntFormConfig: FormDefinition = {
             ],
             instructions: `
                 Are there specific features we should focus on testing? </br>
-                For example: [An example not used above]
+                For example: I want the new navigation menu to be tested to ensure all navigation works properly.
             `,
             title: ChallengeMetadataTitle.featuresToTest,
         },
@@ -134,7 +134,7 @@ export const BugHuntFormConfig: FormDefinition = {
                     ],
                 },
                 {
-                    label: 'Repository Link (Optional)',
+                    label: 'Repository Link (optional)',
                     name: ChallengeMetadataName.repositoryLink,
                     placeholder: 'www.example-share-link.com',
                     type: 'text',
@@ -148,7 +148,7 @@ export const BugHuntFormConfig: FormDefinition = {
                 {
                     label: 'Additional information (optional)',
                     name: ChallengeMetadataName.additionalInformation,
-                    placeholder: '[Suggestion text]',
+                    placeholder: 'Describe additional information',
                     type: 'textarea',
                 },
             ],

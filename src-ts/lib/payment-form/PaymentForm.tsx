@@ -148,7 +148,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 </InputWrapper>
                 <InputWrapper
                     className={cn(styles['input-wrapper'], !!cardCVVError && styles['error'])}
-                    label='CCV'
+                    label='CVC'
                     tabIndex={3}
                     type='text'
                     disabled={false}
@@ -178,7 +178,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 value={`${profile?.firstName} ${profile?.lastName}`}
             />
 
-            <InputWrapper className={styles['input-wrapper']} label='Country' tabIndex={3} type='text' disabled={false}>
+            <InputWrapper className={styles['input-wrapper']} label='Country or Region' tabIndex={3} type='text' disabled={false}>
                 <ReactSelect
                     value={props.formData.country}
                     onChange={(option) => props.onUpdateField('country', option)}
