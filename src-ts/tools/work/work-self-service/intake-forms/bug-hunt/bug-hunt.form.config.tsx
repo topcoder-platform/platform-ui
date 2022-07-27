@@ -104,7 +104,7 @@ export const BugHuntFormConfig: FormDefinition = {
             ],
             instructions: `
                 Are there specific features we should focus on testing? </br>
-                For example: [An example not used above]
+                For example: I want the new navigation menu to be tested to ensure all navigation works properly.
             `,
             title: ChallengeMetadataTitle.featuresToTest,
         },
