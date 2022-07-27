@@ -7,14 +7,14 @@ import { UserCertificationInProgress } from './user-certification-in-progress.mo
 import { userCertificationProgressGetAsync, UserCertificationProgressStatus } from './user-certifications-functions'
 import { UserCertificationsProviderData } from './user-certifications-provider-data.model'
 
-export function useUserCertifications(): UserCertificationsProviderData {
+const defaultProviderData: UserCertificationsProviderData = {
+    completed: [],
+    inProgress: [],
+    loading: false,
+    ready: false,
+}
 
-    const defaultProviderData: UserCertificationsProviderData = {
-        completed: [],
-        inProgress: [],
-        loading: false,
-        ready: false,
-    }
+export function useUserCertifications(): UserCertificationsProviderData {
 
     const profileContextData: ProfileContextData = useContext<ProfileContextData>(profileContext)
     const [state, setState]: [UserCertificationsProviderData, Dispatch<SetStateAction<UserCertificationsProviderData>>]
@@ -29,6 +29,15 @@ export function useUserCertifications(): UserCertificationsProviderData {
 
         const userId: number | undefined = profileContextData?.profile?.userId
         if (!userId) {
+            if (profileContextData.initialized) {
+                // user is logged out,
+                // we're not going to fetch any progress, data is ready as is
+                setState((prevState) => ({
+                    ...prevState,
+                    loading: false,
+                    ready: true,
+                }))
+            }
             return
         }
 
@@ -52,7 +61,7 @@ export function useUserCertifications(): UserCertificationsProviderData {
         return () => {
             setState(defaultProviderData)
         }
-    }, [profileContextData?.profile?.userId])
+    }, [profileContextData])
 
     return state
 }
