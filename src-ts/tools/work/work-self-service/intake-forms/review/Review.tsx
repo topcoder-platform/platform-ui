@@ -22,6 +22,7 @@ import {
     Challenge,
     ChallengeMetadata,
     ChallengeMetadataName,
+    PricePackageName,
     workBugHuntConfig,
     workCreateCustomerPayment,
     workGetByWorkIdAsync,
@@ -116,6 +117,10 @@ const Review: React.FC = () => {
         })
     }
 
+    function getDuration(packageType: PricePackageName): number {
+        return workBugHuntConfig.duration?.[packageType] || 0
+    }
+
     function getPrice(packageType: string): any {
         return workBugHuntConfig.priceConfig.getPrice(workBugHuntConfig.priceConfig, packageType)
     }
@@ -123,7 +128,7 @@ const Review: React.FC = () => {
     function renderWorkServicePrice(): JSX.Element {
         return formData.basicInfo && (
             <WorkServicePrice
-                duration={workBugHuntConfig.duration}
+                duration={getDuration(formData.basicInfo.packageType)}
                 hideTitle
                 icon={<IconOutline.BadgeCheckIcon width={48} height={48} />}
                 price={getPrice(formData.basicInfo.packageType)}
