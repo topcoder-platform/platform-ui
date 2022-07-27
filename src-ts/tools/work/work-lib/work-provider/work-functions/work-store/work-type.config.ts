@@ -20,7 +20,11 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
         a detailed report of bugs which have steps to reproduce, screenshots / videos if applicable,
         details of the bug, and severity of the issue.`,
         description: 'Conduct a time based testing bug hunt where Topcoder experts scramble to find bugs or issues in the system',
-        duration: 7,
+        duration: {
+            'advanced': 6,
+            'premium': 7,
+            'standard': 5,
+        },
         featured: true,
         intakeFormRoutes: WorkIntakeFormRoutes[WorkType.bugHunt],
         priceConfig: workPriceBugHunt,
@@ -48,7 +52,6 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
         trackId: '36e6a8d0-7e1e-4608-a673-64279d99c115', // QA
         type: WorkType.bugHunt,
         typeId: '927abff4-7af9-4145-8ba1-577c16e64e2e', // Challenge
-        // TODO: do we need to include breadcrumbs here?
     },
 }
 

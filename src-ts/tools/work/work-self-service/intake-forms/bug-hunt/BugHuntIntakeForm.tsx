@@ -89,8 +89,8 @@ const BugHuntIntakeForm: React.FC = () => {
 
                     setFormValues(formData)
 
-                    if (formData?.form?.basicInfo.packageType && formData?.form?.basicInfo.packageType !== selectedPackage) {
-                        setSelectedPackage(formData.form.basicInfo.packageType)
+                    if (formData?.packageType && formData?.packageType !== selectedPackage) {
+                        setSelectedPackage(formData.packageType)
                     }
                 }
             }
@@ -166,7 +166,7 @@ const BugHuntIntakeForm: React.FC = () => {
                 workType={workBugHuntConfig.type}
             />
             <WorkServicePrice
-                duration={workBugHuntConfig.duration}
+                duration={workBugHuntConfig.duration?.[selectedPackage] || 0}
                 hideTitle
                 icon={<IconOutline.BadgeCheckIcon width={48} height={48} />}
                 price={workBugHuntConfig.priceConfig.getPrice(workBugHuntConfig.priceConfig, selectedPackage)}

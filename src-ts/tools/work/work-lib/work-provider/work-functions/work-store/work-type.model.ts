@@ -8,7 +8,9 @@ export interface WorkTypeConfig {
     bgImage: string,
     deliverablesDescription: string,
     description: string,
-    duration: number,
+    duration?: {
+        [key in PricePackageName]?: number
+    },
     featured: boolean,
     intakeFormRoutes: object,
     priceConfig: WorkPrice
