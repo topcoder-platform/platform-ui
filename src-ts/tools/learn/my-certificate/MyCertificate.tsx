@@ -135,7 +135,7 @@ const MyCertificate: FC<{}> = () => {
 
     return (
         <>
-            {!ready && <LoadingSpinner />}
+            {!ready && <LoadingSpinner show />}
 
             {ready && (
                 <div className={styles['wrap']}>
