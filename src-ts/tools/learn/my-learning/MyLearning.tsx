@@ -8,6 +8,7 @@ import {
     MyCourseCompletedCard,
     MyCourseInProgressCard,
     useAllCertifications,
+    useLearnBreadcrumb,
     UserCertificationsProviderData,
     useUserCertifications,
     WaveHero
@@ -34,10 +35,12 @@ const MyLearning: FC<{}> = () => {
         }, {} as unknown as CertificatesByIdType)
     ), [certifications])
 
-    const breadcrumb: Array<BreadcrumbItemModel> = useMemo(() => [
-        { url: '/learn', name: 'Topcoder Academy' },
-        { url: LEARN_PATHS.myLearning, name: 'My Learning' },
-    ], [])
+    const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
+        {
+            name: 'My Learning',
+            url: LEARN_PATHS.myLearning,
+        },
+    ])
 
     return (
         <ContentLayout contentClass={styles['content-layout']}>

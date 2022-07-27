@@ -24,9 +24,10 @@ import {
     CoursesProviderData,
     LearnLesson,
     LearnModule,
-    LearnMyModuleProgress,
+    LearnModuleProgress,
     LessonProviderData,
     useCourses,
+    useLearnBreadcrumb,
     useLessonProvider,
     UserCertificationProgressProviderData,
     userCertificationProgressStartAsync,
@@ -35,13 +36,14 @@ import {
     UserCertificationUpdateProgressActions,
     useUserCertificationProgress,
 } from '../learn-lib'
-import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule } from '../learn.routes'
+import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule, rootRoute } from '../learn.routes'
 
 import { FccFrame } from './fcc-frame'
 import styles from './FreeCodeCamp.module.scss'
 import { TitleNav } from './title-nav'
 
 const FreeCodeCamp: FC<{}> = () => {
+
     const {
         profile,
         initialized: profileReady,
@@ -80,11 +82,18 @@ const FreeCodeCamp: FC<{}> = () => {
 
     const ready: boolean = profileReady && courseDataReady && lessonReady && (!isLoggedIn || progressReady)
 
-    const breadcrumb: Array<BreadcrumbItemModel> = useMemo(() => [
-        { url: '/learn', name: 'Topcoder Academy' },
-        { url: `/learn/${providerParam}/${lesson?.course.certification}`, name: lesson?.course.title ?? '' },
-        { url: '/learn/fcc', name: lesson?.module.title ?? '' },
-    ], [providerParam, lesson])
+    const certification: string = lesson?.course.certification ?? ''
+    const module: string = lesson?.module.title ?? ''
+    const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
+        {
+            name: lesson?.course.title ?? '',
+            url: getCoursePath(providerParam, certification),
+        },
+        {
+            name: module,
+            url: getLessonPathFromModule(providerParam, certification, module, lessonParam),
+        },
+    ])
 
     const currentModuleData: LearnModule | undefined = useMemo(() => {
         return courseData?.modules.find(d => d.key === moduleParam)
@@ -221,21 +230,21 @@ const FreeCodeCamp: FC<{}> = () => {
         // course is not completed yet,
         // so we find the first incomplete lesson
         // and redirect user to it for a continuous flow
-        const firstIncompleteModule: LearnMyModuleProgress|undefined = certificateProgress.modules.find(m => m.completedPercentage !== 100)
-        const moduleLessons: Array<LearnLesson>|undefined = courseData?.modules.find(m => m.key === firstIncompleteModule?.module)?.lessons
+        const firstIncompleteModule: LearnModuleProgress | undefined = certificateProgress.modules.find(m => m.completedPercentage !== 100)
+        const moduleLessons: Array<LearnLesson> | undefined = courseData?.modules.find(m => m.key === firstIncompleteModule?.module)?.lessons
         if (!firstIncompleteModule || !moduleLessons) {
             // case unknown, return
             return
         }
 
         const completedLessons: Array<string> = firstIncompleteModule.completedLessons.map(l => l.dashedName)
-        const firstIncompleteLesson: LearnLesson|undefined = moduleLessons.find(l => !completedLessons.includes(l.dashedName))
+        const firstIncompleteLesson: LearnLesson | undefined = moduleLessons.find(l => !completedLessons.includes(l.dashedName))
         if (!firstIncompleteLesson) {
             // case unknown, return
             return
         }
 
-        const nextLessonPath: string = getFccLessonPath(
+        const nextLessonPath: string = getLessonPathFromModule(
             providerParam,
             certificationParam,
             firstIncompleteModule.module ?? '',

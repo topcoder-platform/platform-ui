@@ -16,11 +16,12 @@ import {
     CourseTitle,
     useAllCertifications,
     useCourses,
+    useLearnBreadcrumb,
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
     useUserCertificationProgress
 } from '../learn-lib'
-import { getCertificatePath, getCoursePath } from '../learn.routes'
+import { getCertificatePath, getCoursePath, LEARN_PATHS, rootRoute } from '../learn.routes'
 
 import styles from './CourseCompletedPage.module.scss'
 import { ReactComponent as StarsSvg } from './stars.svg'
@@ -57,11 +58,16 @@ const CourseCompletedPage: FC<{}> = () => {
 
     const ready: boolean = progressReady && courseDataReady && certifReady
 
-    const breadcrumb: Array<BreadcrumbItemModel> = useMemo(() => [
-        { url: '/learn', name: 'Topcoder Academy' },
-        { url: coursePath, name: courseData?.title ?? '' },
-        { url: `/learn/completed`, name: 'Congratulations!' },
-    ], [coursePath, courseData])
+    const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
+        {
+            name: courseData?.title ?? '',
+            url: coursePath,
+        },
+        {
+            name: 'Congratulations!',
+            url: LEARN_PATHS.completed,
+        },
+    ])
 
     useEffect(() => {
         if (ready && progress?.status !== UserCertificationProgressStatus.completed) {
@@ -115,7 +121,7 @@ const CourseCompletedPage: FC<{}> = () => {
                                         size='sm'
                                         buttonStyle='primary'
                                         label='Start a new course'
-                                        route='/learn'
+                                        route={rootRoute}
                                     />
                                 </div>
                                 <p className='body-main'>
