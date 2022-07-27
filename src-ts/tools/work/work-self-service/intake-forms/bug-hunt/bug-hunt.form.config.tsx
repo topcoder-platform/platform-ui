@@ -134,7 +134,7 @@ export const BugHuntFormConfig: FormDefinition = {
                     ],
                 },
                 {
-                    label: 'Repository Link (Optional)',
+                    label: 'Repository Link (optional)',
                     name: ChallengeMetadataName.repositoryLink,
                     placeholder: 'www.example-share-link.com',
                     type: 'text',
@@ -148,7 +148,7 @@ export const BugHuntFormConfig: FormDefinition = {
                 {
                     label: 'Additional information (optional)',
                     name: ChallengeMetadataName.additionalInformation,
-                    placeholder: '[Suggestion text]',
+                    placeholder: 'Describe additional information',
                     type: 'textarea',
                 },
             ],
