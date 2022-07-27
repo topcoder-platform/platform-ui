@@ -15,6 +15,8 @@ export function useCourses(provider: string, certification?: string): CoursesPro
 
     useEffect(() => {
 
+        let mounted: boolean = true
+
         if (!certification) {
             setState((prevState) => ({
                 ...prevState,
@@ -30,18 +32,23 @@ export function useCourses(provider: string, certification?: string): CoursesPro
             loading: true,
         }))
 
-        getCourseAsync(provider, certification).then((course) => {
-            setState((prevState) => ({
-                ...prevState,
-                course,
-                loading: false,
-                ready: true,
-            }))
-        })
+        getCourseAsync(provider, certification)
+            .then((course) => {
+                if (!mounted) {
+                    return
+                }
+                setState((prevState) => ({
+                    ...prevState,
+                    course,
+                    loading: false,
+                    ready: true,
+                }))
+            })
 
         return () => {
-            setState(defaultProviderData)
+            mounted = false
         }
+
     }, [provider, certification])
 
     return state

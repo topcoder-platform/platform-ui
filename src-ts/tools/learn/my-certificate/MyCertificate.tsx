@@ -26,7 +26,7 @@ import { useCertificateScaling } from './use-certificate-scaling.hook'
 
 const MyCertificate: FC<{}> = () => {
 
-    const { profile }: ProfileContextData = useContext(profileContext)
+    const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
     const providerParam: string = routeParams.provider ?? ''
@@ -52,7 +52,7 @@ const MyCertificate: FC<{}> = () => {
         routeParams.certification
     )
 
-    const ready: boolean = courseReady && progressReady
+    const ready: boolean = profileReady && courseReady && (!profile || progressReady)
 
     useCertificateScaling(ready ? certificateWrapRef : undefined)
 
@@ -135,7 +135,7 @@ const MyCertificate: FC<{}> = () => {
 
     return (
         <>
-            {!ready && <LoadingSpinner />}
+            {!ready && <LoadingSpinner show />}
 
             {ready && (
                 <div className={styles['wrap']}>
