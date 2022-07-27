@@ -1,7 +1,7 @@
 @import '../includes';
 
 @mixin wave-bg-pattern($grad) {
-    background: url('./wave-bg.png') 0 0 no-repeat,
+    background: url('./wave-bg-2.png') 0 0 no-repeat,
         url('./pattern-bg.png') bottom right no-repeat,
         $grad;
     background-size: 12px 100%, 220% 100%, 100% 100%;
@@ -42,8 +42,8 @@
         }
 
         &:global(.wave-bg) {
-            background: url('./wave-bg.png') -1px 0 no-repeat;
-            background-size: 13px 100%;
+            background: url('./wave-bg.png') -1px 0 repeat-y;
+            background-size: 400px 116px;
         }
     }
 }
