@@ -1,0 +1,74 @@
+@use '../../../../lib/styles/typography';
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    flex: 1 1 0;
+
+    &:global(.to-left) {
+        flex-direction: row-reverse;
+    }
+
+    &:global(.collapsed) {
+        .content {
+            display: none;
+        }
+    }
+
+    @include ltemd {
+        &:global(.to-left) {
+            flex-direction: column-reverse;
+        }
+    }
+}
+
+.pane-outline {
+    width: 32px;
+    height: 100%;
+    border-radius: 0 $pad-lg $pad-lg 0;
+    padding: $pad-lg 0;
+    background: $blue-140;
+
+    display: flex;
+    align-items: center;
+    gap: $pad-sm;
+
+    color: $tc-white;
+
+    cursor: pointer;
+
+    @extend .overline;
+    flex: 0 0 auto;
+
+    svg {
+        @include icon-lg;
+    }
+
+    @include gtelg {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+    }
+    
+    @include ltemd {
+        width: 100%;
+        height: auto;
+        padding: $pad-sm $pad-lg;
+        border-radius: 0 0 $pad-lg $pad-lg;
+        margin-top: -1px;
+
+        svg {
+            transform: rotate(90deg);
+        }
+    }
+}
+
+.content {
+    background: $tc-grad15;
+    padding: $pad-lg;
+    color: $tc-white;
+    overflow: auto;
+
+    @include scrollbar;
+}

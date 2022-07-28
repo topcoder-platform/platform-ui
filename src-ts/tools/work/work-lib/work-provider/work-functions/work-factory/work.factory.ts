@@ -1,24 +1,32 @@
 import moment from 'moment'
 
+import { WorkConfigConstants, WorkStrings } from '../../../work-constants'
 import {
+    ActivateWorkRequest,
     Challenge,
     ChallengeMetadata,
     ChallengeMetadataName,
+    ChallengeMetadataTitle,
     ChallengePhase,
     ChallengePhaseName,
+    ChallengeStatus,
+    CreateWorkRequest,
+    CustomerPaymentRequest,
+    PricePackageName,
+    UpdateWorkRequest,
+    Work,
+    WorkPrice,
+    WorkPricesType,
+    WorkProgress,
+    WorkProgressStep,
+    WorkStatus,
+    WorkTimelinePhase,
+    WorkType,
+    WorkTypeCategory,
+    WorkTypeConfig,
 } from '../work-store'
 
-import { ChallengeStatus } from './challenge-status.enum'
-import { WorkPrice } from './work-price.model'
-import { WorkPrices } from './work-prices.config'
-import { WorkProgressStep } from './work-progress-step.model'
-import { WorkProgress } from './work-progress.model'
-import { WorkStatus } from './work-status.enum'
-import { WorkTypeCategory } from './work-type-category.enum'
-import { WorkType } from './work-type.enum'
-import { Work } from './work.model'
-
-interface FormDetail {
+export interface FormDetail {
     key: string,
     title: string,
     value: any
@@ -26,6 +34,7 @@ interface FormDetail {
 
 interface IntakeForm {
     basicInfo?: {
+        packageType?: string,
         selectedDevice?: {
             option?: Array<any>,
         }
@@ -38,16 +47,168 @@ interface IntakeForm {
     }
 }
 
-export function create(challenge: Challenge): Work {
+export function buildActivateRequest(challenge: Challenge): ActivateWorkRequest {
+
+    const newDiscussions: Array<{ [key: string]: string }> = [
+        ...(challenge.discussions || []),
+    ]
+
+    if (!!newDiscussions.length) {
+        newDiscussions[0].name = challenge.name
+
+    } else {
+        newDiscussions.push({
+            name: challenge.name,
+            provider: 'vanilla',
+            type: 'challenge',
+        })
+    }
+
+    return {
+        discussions: [...newDiscussions],
+        id: challenge.id,
+        startDate: getStartDate(),
+        status: ChallengeStatus.draft,
+    }
+}
+
+export function buildCreateRequest(workTypeConfig: WorkTypeConfig): CreateWorkRequest {
+
+    const form: IntakeForm = {
+        workType: {
+            selectedWorkType: workTypeConfig.type,
+        },
+    }
+
+    return {
+        description: WorkStrings.INFO_NOT_PROVIDED,
+        discussions: [
+            {
+                name: 'new-self-service-project',
+                provider: 'vanilla',
+                type: 'challenge',
+            },
+        ],
+        legacy: {
+            selfService: true,
+        },
+        metadata: [
+            {
+                name: ChallengeMetadataName.intakeForm,
+                value: JSON.stringify({ form }),
+            },
+            {
+                name: ChallengeMetadataName.currentStep,
+                value: 'basicInfo',
+            },
+        ],
+        name: 'new-self-service-project',
+        tags: workTypeConfig.tags,
+        timelineTemplateId: workTypeConfig.timelineTemplateId,
+        trackId: workTypeConfig.trackId,
+        typeId: workTypeConfig.typeId,
+    }
+}
+
+export function buildCustomerPaymentRequest(
+    description: string,
+    email: string,
+    priceConfig: WorkPrice,
+    paymentMethodId?: string,
+    packageType?: PricePackageName,
+    projectId?: number,
+): CustomerPaymentRequest {
+    return {
+        amount: priceConfig.getPrice(priceConfig, packageType),
+        currency: 'USD',
+        description,
+        paymentMethodId,
+        receiptEmail: email,
+        reference: 'project',
+        referenceId: projectId?.toString(),
+    }
+}
+
+export function buildUpdateRequest(workTypeConfig: WorkTypeConfig, challenge: Challenge, formData: any): UpdateWorkRequest {
+
+    const type: WorkType = workTypeConfig.type
+    const priceConfig: WorkPrice = workTypeConfig.priceConfig
+
+    const intakeForm: ChallengeMetadata | undefined = findMetadata(challenge, ChallengeMetadataName.intakeForm) || undefined
+    const form: IntakeForm = !!intakeForm?.value ? JSON.parse(intakeForm.value)?.form : {}
+    form.basicInfo = formData
+
+    // --- Build Metadata --- //
+    const intakeMetadata: Array<ChallengeMetadata> = [
+        {
+            name: ChallengeMetadataName.intakeForm,
+            value: JSON.stringify({ form }),
+        },
+    ]
+
+    Object.keys(formData).forEach((key) => {
+        intakeMetadata.push({
+            name: ChallengeMetadataName[key as keyof typeof ChallengeMetadataName],
+            value: formData[key] || '',
+        })
+    })
+    // ---- End Build Metadata ---- //
+
+    // --- Build the Markdown string that gets displayed in Work Manager app and others --- //
+    const templateString: Array<string> = []
+
+    const data: ReadonlyArray<FormDetail> = mapFormData(
+        type,
+        formData
+    )
+
+    data.forEach((formDetail) => {
+        if (Object.keys(formDetail).length <= 0) { return }
+
+        const formattedValue: string = formatFormDataOption(formDetail.value)
+        templateString.push(`### ${formDetail.title}\n\n${formattedValue}\n\n`)
+    })
+
+    if (getTypeCategory(type) === WorkTypeCategory.data) {
+        templateString.push(
+            WorkStrings.MARKDOWN_SUBMISSION_GUIDELINES
+        )
+    }
+    // ---- End Build Markdown string ---- //
+
+    // If the duration of the Submission phase depends on the package selected (i.e.: Bug Hunt),
+    // then update the duration for that phase to the correct value
+    const timeline: Array<WorkTimelinePhase> = workTypeConfig.timeline.map((phase) => {
+        if (workTypeConfig.submissionPhaseDuration && phase.phaseId === WorkConfigConstants.PHASE_ID_SUBMISSION) {
+            phase.duration = workTypeConfig.submissionPhaseDuration[formData[ChallengeMetadataName.packageType] as PricePackageName] || 0
+        }
+        return phase
+    })
+
+    const body: UpdateWorkRequest = {
+        description: templateString.join(''),
+        id: challenge.id,
+        metadata: intakeMetadata,
+        name: formData.projectTitle,
+        phases: timeline,
+        prizeSets: priceConfig.getPrizeSets(priceConfig, formData.packageType),
+    }
+
+    return body
+}
+
+export function create(challenge: Challenge, workPrices: WorkPricesType): Work {
 
     const status: WorkStatus = getStatus(challenge)
     const submittedDate: Date | undefined = getSubmittedDate(challenge)
     const type: WorkType = getType(challenge)
+    const priceConfig: WorkPrice = workPrices[type]
 
     return {
-        cost: getCost(challenge, type),
+        cost: getCost(challenge, priceConfig, type),
         created: submittedDate,
         description: getDescription(challenge, type),
+        draftStep: getDraftStep(challenge, status),
         id: challenge.id,
         messageCount: Number((Math.random() * 10).toFixed(0)), // TODO: real message count
         participantsCount: challenge.numOfRegistrants,
@@ -99,9 +260,51 @@ export function mapFormData(type: string, formData: any): ReadonlyArray<FormDeta
             return buildFormDataFindData(formData)
         case (WorkType.design):
             return buildFormDataDesign(formData)
+        case (WorkType.bugHunt):
+            return buildFormDataBugHunt(formData)
         default:
             return formData
     }
+}
+
+function buildFormDataBugHunt(formData: any): ReadonlyArray<FormDetail> {
+    return [
+        {
+            key: ChallengeMetadataName.projectTitle,
+            title: ChallengeMetadataTitle.projectTitle,
+            value: formData.projectTitle,
+        },
+        {
+            key: ChallengeMetadataName.websiteURL,
+            title: ChallengeMetadataTitle.websiteURL,
+            value: formData.websiteURL,
+        },
+        {
+            key: ChallengeMetadataName.goals,
+            title: ChallengeMetadataTitle.bugHuntGoals,
+            value: formData.goals,
+        },
+        {
+            key: ChallengeMetadataName.featuresToTest,
+            title: ChallengeMetadataTitle.featuresToTest,
+            value: formData.featuresToTest,
+        },
+        {
+            key: ChallengeMetadataName.deliveryType,
+            title: ChallengeMetadataTitle.bugDeliveryType,
+            value: `${formData.deliveryType}${formData.repositoryLink ? ': ' + formData.repositoryLink : ''}`,
+        },
+        {
+            key: ChallengeMetadataName.additionalInformation,
+            title: ChallengeMetadataTitle.additionalInformation,
+            value: formData.additionalInformation,
+        },
+        {
+            key: ChallengeMetadataName.packageType,
+            title: ChallengeMetadataTitle.bugHuntPackage,
+            value: formData.packageType,
+        },
+    ]
 }
 
 function buildFormDataData(formData: any): ReadonlyArray<FormDetail> {
@@ -217,6 +420,22 @@ function buildFormDataProblem(formData: any): ReadonlyArray<FormDetail> {
     ]
 }
 
+/**
+ * This function checks if the param provided is empty based on its type
+ * The param is empty if: is falsey || is an empty string || is an empty array || is an empty object
+ * This is used for determining if a form field entry is emtpy after being formatted for display
+ */
+function checkFormDataOptionEmpty(detail: any): boolean {
+    return (
+        !detail ||
+        (typeof detail === 'string' && detail.trim().length === 0) ||
+        (Array.isArray(detail) && detail.length === 0) ||
+        (typeof detail === 'object' &&
+            Object.values(detail).filter((val: any) => val && val.trim().length !== 0)
+                .length === 0)
+    )
+}
+
 function findMetadata(challenge: Challenge, metadataName: ChallengeMetadataName): ChallengeMetadata | undefined {
     return challenge.metadata?.find((item: ChallengeMetadata) => item.name === metadataName)
 }
@@ -254,15 +473,29 @@ function findPhase(challenge: Challenge, phases: Array<string>): ChallengePhase 
     return phase
 }
 
-// the switch statement shouldn't count against cyclomatic complexity
-// tslint:disable-next-line: cyclomatic-complexity
-function getCost(challenge: Challenge, type: WorkType): number | undefined {
+function formatFormDataOption(detail: Array<string> | { [key: string]: any }): string {
+    const noInfoProvidedText: string = WorkStrings.NOT_PROVIDED
+    const isEmpty: boolean = checkFormDataOptionEmpty(detail)
 
-    function getCountFromString(raw: string | undefined): number {
-        return Number(raw?.split(' ')?.[0] || '0')
+    if (isEmpty) {
+        return noInfoProvidedText
     }
+    if (Array.isArray(detail)) {
+        return detail.join('\n\n')
+    }
+    if (typeof detail === 'object') {
+        return Object.keys(detail)
+            .map((key: string) => {
+                const value: string = detail[key] || noInfoProvidedText
+                return `${key}: ${value}`
+            })
+            .join('\n\n')
+    }
+    return detail
+}
 
-    const priceConfig: WorkPrice = WorkPrices[type]
+function getCost(challenge: Challenge, priceConfig: WorkPrice, type: WorkType): number | undefined {
+
     switch (type) {
 
         case WorkType.designLegacy:
@@ -273,6 +506,12 @@ function getCost(challenge: Challenge, type: WorkType): number | undefined {
             const legacyPageCount: number | undefined = form?.pageDetails?.pages?.length || 1
             const legacyDeviceCount: number | undefined = form?.basicInfo?.selectedDevice?.option?.length
             return priceConfig.getPrice(priceConfig, legacyPageCount, legacyDeviceCount)
+
+        case WorkType.bugHunt:
+            // get the selected package from the intake form
+            const intakeFormBH: ChallengeMetadata | undefined = findMetadata(challenge, ChallengeMetadataName.intakeForm)
+            const formBH: IntakeForm = !!intakeFormBH?.value ? JSON.parse(intakeFormBH.value)?.form : undefined
+            return priceConfig.getPrice(priceConfig, formBH?.basicInfo?.packageType)
 
         default:
             return priceConfig.getPrice(priceConfig)
@@ -290,6 +529,14 @@ function getDescription(challenge: Challenge, type: WorkType): string | undefine
         case WorkType.designLegacy:
             return findMetadata(challenge, ChallengeMetadataName.description)?.value
     }
+}
+
+function getDraftStep(challenge: Challenge, status: WorkStatus): string | undefined {
+
+    if (status !== WorkStatus.draft) { return undefined }
+
+    const currentStep: ChallengeMetadata | undefined = findMetadata(challenge, ChallengeMetadataName.currentStep)
+    return currentStep?.value
 }
 
 function getProgress(challenge: Challenge, workStatus: WorkStatus): WorkProgress {
@@ -392,6 +639,25 @@ function getSolutionsReadyDate(challenge: Challenge): Date | undefined {
     return getProgressStepDateEnd(challenge, [ChallengePhaseName.approval, ChallengePhaseName.appealsResponse])
 }
 
+function getStartDate(): string {
+    let daysToAdd: number = 1
+    switch (moment(new Date()).weekday()) {
+        case moment().day('Friday').weekday():
+            daysToAdd = 3
+            break
+        case moment().day('Saturday').weekday():
+            daysToAdd = 2
+            break
+        case moment().day('Sunday').weekday():
+            daysToAdd = 1
+            break
+        default:
+            daysToAdd = 1
+    }
+
+    return moment().add(daysToAdd, 'days').format()
+}
+
 function getSubmittedDate(challenge: Challenge): Date {
     return new Date(challenge.created)
 }
@@ -407,7 +673,7 @@ function getType(challenge: Challenge): WorkType {
     // parse the form
     const form: { form: IntakeForm } = JSON.parse(intakeForm.value)
     const workTypeKey: (keyof typeof WorkType) | undefined = Object.entries(WorkType)
-        .find(([key, value]) => value === form.form.workType?.selectedWorkType)
+        .find(([key, value]) => value === form.form?.workType?.selectedWorkType)
         ?.[0] as keyof typeof WorkType
 
     const output: WorkType = !!workTypeKey ? WorkType[workTypeKey] : WorkType.unknown

@@ -276,7 +276,7 @@ export const webWorkTypes = [
     subTitle:
       "​​Create a beautiful custom visual design for your website. Specify the scope and device types, your vision, and receive up to 5 modern designs.",
     price: workPriceDesignLegacy.getPrice(workPriceDesignLegacy),
-    stickerPrice: workPriceDesignLegacy.base,
+    stickerPrice: workPriceDesignLegacy.packages?.base?.price,
     featured: false,
     startRoute: "/self-service/work/new/website-design-legacy/basic-info",
     basePath: "website-design-legacy",
@@ -292,7 +292,7 @@ export const webWorkTypes = [
     description:
       "Create a beautiful custom visual design for your website. Specify the scope and device types, your vision, and receive up to 5 modern designs.",
     price: workPriceDesign.getPrice(workPriceDesign),
-    // stickerPrice: workPriceDesign.base,
+    // stickerPrice: workPriceDesign.packages?.base?.price,
     duration: `${webDesignConfigs.DEFAULT_DURATION} Days`,
     featured: true,
     startRoute: "/self-service/work/new/website-design/basic-info",
@@ -355,7 +355,7 @@ export const webWorkTypes = [
     description:
       "We accumulate data every day in the course of life and business, yet rarely have the time to give it a closer look. Get multiple fresh, expert perspectives to identify the patterns and relationships in your data. They might just be the key to your next 'Aha' moment.",
     price: workPriceData.getPrice(workPriceData),
-    stickerPrice: workPriceData.base,
+    stickerPrice: workPriceData.packages?.base?.price,
     duration: `${dataExplorationConfigs.DEFAULT_DURATION} Days`,
     featured: true,
     startRoute: "/self-service/work/new/data-exploration/basic-info",
@@ -411,7 +411,7 @@ export const webWorkTypes = [
     description:
       "Problem Statement & Data Advisory is for those asking themselves: How can I apply data science to this idea or goal? How will I interpret solutions, and how will that help me take action? What data do I need?",
     price: workPriceProblem.getPrice(workPriceProblem),
-    stickerPrice: workPriceProblem.base,
+    stickerPrice: workPriceProblem.packages?.base?.price,
     duration: `${dataAdvisoryConfigs.DEFAULT_DURATION} Days`,
     featured: true,
     startRoute: "/self-service/work/new/data-advisory/basic-info",
@@ -473,7 +473,7 @@ export const webWorkTypes = [
     description:
       "Sometimes data is the only thing standing between you and something great. Tell us what you're solving for, and let our experts find the data to get you started now.",
     price: workPriceFindData.getPrice(workPriceFindData),
-    stickerPrice: workPriceFindData.base,
+    stickerPrice: workPriceFindData.packages?.base?.price,
     duration: `${findMeDataConfigs.DEFAULT_DURATION} Days`,
     featured: true,
     startRoute: "/self-service/work/new/find-me-data/basic-info",

@@ -4,9 +4,11 @@
 html {
     --header-height: 80px;
     --footer-height: 51px;
+    --breadcrumb-height: 64px;
 
     @include ltemd {
         --header-height: 64px;
+        --breadcrumb-height: 48px;
     }
 
     @include ltesm {
@@ -26,4 +28,21 @@ hr {
 #tc-accounts-iframe {
     border: none;
     display: none;
+}
+
+
+.mobile-hide {
+    &.mobile-hide.mobile-hide { // increase specificity without using !important
+        @include ltemd {
+            display: none;
+        }
+    }
+}
+
+.desktop-hide {
+    &.desktop-hide.desktop-hide { // increase specificity without using !important
+        @include gtelg {
+            display: none;
+        }
+    }
 }

@@ -1,6 +1,7 @@
 import { PlatformRoute } from '../lib'
 
 import { devCenterRoutes } from './dev-center'
+import { learnRoutes } from './learn'
 import { workRoutes } from './work'
 
 const toolRoutes: Array<PlatformRoute> = [
@@ -8,6 +9,7 @@ const toolRoutes: Array<PlatformRoute> = [
     // TODO: support ordering
     ...workRoutes,
     ...devCenterRoutes,
+    ...learnRoutes,
 ]
 
 export default toolRoutes

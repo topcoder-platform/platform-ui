@@ -2,17 +2,29 @@
 
 The Platform UI is the official Topcoder web app to host all modern user interfaces to be used by all users.
 
-Beginning March, 2022 all future user interfaces at Topcoder will be implemented here. Pre-existing user interfaces will be ported to here over time until this is the only user interface any user sees when interacting with Topcoder.
+All future user interfaces at Topcoder will be implemented here. 
+Pre-existing user interfaces will be ported to here over time until this is the only user interface any user sees when interacting with Topcoder.
+
+>**NOTE:** The information in this file describes our coding standards and best practices. All new code should follow these guidelines both when coding new features as well as porting old features. Please take the time to read through this file in detail.
+
+# Getting started with local development
 
 - [Local Environment Setup](#local-environment-setup)
 - [Deployments](#deployments)
 - [Yarn Commands](#yarn-commands)
+
+# Application structure
+
 - [Folder Structure](#folder-structure)
 - [Adding a Tool or Util](#adding-a-tool-or-util)
+
+# Coding Practices
 - [Git](#git)
 - [Linting](#linting)
 - [Styling](#styling)
 - [Icons](#icons)
+
+---
 
 ## Local Environment Setup
 
@@ -424,6 +436,23 @@ example.scss
   }
 }
 ```
+
+Mobile UIs use xs, sm, and md breakpoints. Larger breakpoints are desktop UIs. 
+
+For specifying mobile CSS, you can use @include ltemd:
+```
+.exampleDesktopContent {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+
+  @include ltemd {
+    flex-direction: row;
+  }
+}
+```
+
+
 >**WARNING:** Do not add any breakpoints!
 
 ## Icons

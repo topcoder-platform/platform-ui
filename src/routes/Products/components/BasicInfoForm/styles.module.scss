@@ -1,13 +1,6 @@
 @import "../../../../styles/include";
 
 .basicInfoForm {
-  .title {
-    font-weight: 600;
-    color: $grey-text;
-    font-size: 20px;
-    line-height: 20px;
-    text-transform: uppercase;
-  }
 
   .remove-website {
     color: $green1;
@@ -37,20 +30,8 @@
     }
   }
 
-  .description {
-    @include font-roboto;
-    font-size: 16px;
-    line-height: 26px;
-    margin-top: 24px;
-    color: $grey-text;
-  }
-
   .form-row {
     align-items: flex-start;
-  }
-
-  .text-area {
-    height: 117px !important;
   }
 
   .formFieldWrapper {
@@ -115,15 +96,5 @@
     @include mobile {
       padding-right: 30px;
     }
-  }
-}
-
-.label {
-  font-weight: 500;
-  font-size: 20px;
-  line-height: 26px;
-
-  @include mobile {
-    font-size: 16px;
   }
 }

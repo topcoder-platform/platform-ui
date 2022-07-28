@@ -1,0 +1,341 @@
+@import '../../../lib/styles/includes';
+
+.heroContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 0px 0px 0px 0px;
+  gap: $pad-xxl;
+
+
+  height: 104px;
+
+  background: linear-gradient(84.92deg, #363D8C 2.08%, #723390 97.43%);
+
+  border-radius: 0px;
+
+  /* Inside auto layout */
+  flex: none;
+
+  align-self: stretch;
+  flex-grow: 0;
+
+
+  &.website-design,
+  &.website-design-legacy,
+  &.data-exploration {
+    background: linear-gradient(84.92deg, #065D6E 2.08%, #06596E 2.09%, #3E3B91 97.43%);
+  }
+
+  &.review--payment {
+    background: $tc-grad18;
+  }
+
+  &.find-me-data,
+  &.problem-statement--data-advisory {
+    background: linear-gradient(84.92deg, #723390 2.08%, #8C384F 97.43%);
+  }
+
+  &.website-bug-hunt {
+    background: $tc-grad18;
+  }
+
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+
+
+  @include ltemd {
+    height: 283px;
+    overflow: hidden;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0px;
+    grid-template-columns: auto;
+    margin-top: 0 !important;
+    border-radius: 0 !important;
+    gap: 0px;
+  }
+
+  .heroBackgroundContainer {
+    position: static;
+    width: 359px;
+    left: 793px;
+    top: 0px;
+    margin: 0px;
+
+    flex: none;
+    order: 1;
+    align-self: stretch;
+    flex-grow: 0;
+
+    border-radius: 0 8px 8px 0;
+
+    @include ltemd {
+      width: 100%;
+      height: 156px;
+      order: 0;
+    }
+
+    &.website-bug-hunt {
+      background: url("./images/bug-hunt.png");
+      background-size: cover;
+
+      @include ltemd {
+        background: url("./images/bug-hunt-mobile.png");
+        background-size: cover;
+        background-position: bottom;
+      }
+    }
+
+    &.data-exploration {
+      background: url("./images/data-exploration.png");
+      background-size: cover;
+
+      @include ltemd {
+        background: url("./images/data-exploration-mobile.png");
+        background-size: cover;
+        background-position: bottom;
+      }
+    }
+
+    &.find-me-data {
+      background: url("./images/find-me-data.png");
+      background-size: cover;
+
+      @include ltemd {
+        background: url("./images/find-me-data-mobile.png");
+        background-size: cover;
+        background-position: bottom;
+      }
+    }
+
+    &.problem-statement--data-advisory {
+      background: url("./images/problem-statement.png");
+      background-size: cover;
+
+      @include ltemd {
+        background: url("./images/problem-statement-mobile.png");
+        background-size: cover;
+        background-position: bottom;
+      }
+    }
+
+    &.website-design,
+    &.website-design-legacy {
+      background: url("./images/website-design-v2.png");
+      background-size: cover;
+
+      @include ltemd {
+        background: url("./images/website-design-banner-mobile.png");
+        background-size: cover;
+        background-position: bottom;
+      }
+    }
+
+    &.review--payment {
+      background: url("./images/bug-hunt.png");
+      background-size: cover;
+
+      @include ltemd {
+        background: url("./images/bug-hunt-mobile.png");
+        background-size: cover;
+        background-position: bottom;
+      }
+    }
+  }
+
+  .heroContent {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: $pad-lg 0px;
+    color: $tc-white;
+
+    position: static;
+    left: $pad-xxxxl;
+    top: 0px;
+
+    /* Inside auto layout */
+    flex: none;
+    order: 0;
+    flex-grow: 1;
+    margin: 0px $pad-xxxl;
+
+    @include ltemd {
+      margin: 0px $pad-lg;
+      padding: $pad-sm 0px;
+    }
+
+    .heroHeader {
+      /* Auto layout */
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      padding: 0px;
+
+      position: static;
+      left: 0px;
+      top: 0px;
+
+      /* Inside auto layout */
+      flex: none;
+      order: 0;
+      align-self: stretch;
+      flex-grow: 0;
+
+      .heroIconContainer {
+        /* Auto layout */
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        margin-right: $pad-lg;
+
+        position: static;
+        width: $pad-mx;
+        left: 0px;
+        top: 0px;
+      }
+
+      .heroHeaderContent {
+        /* Auto layout */
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        row-gap: $pad-lg;
+        padding: 0px;
+
+        position: static;
+        left: 56px;
+        top: 0px;
+
+        /* Inside auto layout */
+        flex: none;
+        order: 1;
+        flex-grow: 1;
+
+        font-size: 42px;
+        font-weight: 400;
+
+        @include ltemd {
+          flex: auto;
+        }
+
+        .heroHeaderTitle {
+          height: $pad-xxxxl;
+          font-family: 'Barlow Condensed';
+          font-style: normal;
+          font-weight: 600;
+          font-size: 34px;
+          line-height: $pad-xxxxl;
+          text-transform: uppercase;
+          color: #FFFFFF;
+
+          /* Inside auto layout */
+          flex: none;
+          order: 0;
+          align-self: stretch;
+          flex-grow: 0;
+
+          @include ltemd {
+            font-size: 28px;
+            line-height: $pad-xxxxl;
+            width: 288px;
+          }
+        }
+
+        .heroHeaderSubtitle {
+          height: $pad-xxl;          
+          font-family: 'Roboto';
+          font-style: normal;
+          font-weight: 700;
+          font-size: 16px;
+          line-height: $pad-xxl;          
+          color: #FFFFFF;
+
+          /* Inside auto layout */
+     			flex: none;
+     			order: 1;
+     			align-self: stretch;
+          flex-grow: 0;
+
+          @include ltemd {
+            font-size: 14px;
+            line-height: $pad-xl;
+            width: 288px;
+            height: 60px;
+          }
+        }
+      }
+    }
+
+    .heroText {
+      position: static;
+      // height: 96px;
+      left: 0px;
+      top: 64px;
+      max-width: 713px;
+
+      /* desktop/body-large */
+      font-family: Roboto;
+      font-style: normal;
+      font-weight: normal;
+      font-size: 24px;
+      line-height: $pad-xxxxl;
+      /* or 133% */
+
+      /* gray/white */
+      color: #FFFFFF;
+
+      /* Inside auto layout */
+      order: 1;
+      margin: $pad-lg 0px;
+      flex: none;
+      align-self: stretch;
+      flex-grow: 0;
+    }
+  }
+}
+
+.cardContainer {
+  display: flex;
+  column-gap: 8px;
+  justify-content: space-around;
+
+  @include ltemd {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    row-gap: 8px;
+  }
+
+  .card {
+    /* Auto layout */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    row-gap: 8px;
+    padding: 32px;
+
+    position: static;
+    min-width: 500px;
+    max-width: 568px;
+    height: 172px;
+
+    /* gray/white */
+    background: $tc-white;
+    /* Button hover shadow */
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+
+    .title {
+      font-size: 24px;
+    }
+
+    .text {
+      font-size: 16px;
+      line-height: 28px;
+      text-align: center;
+    }
+  }
+}

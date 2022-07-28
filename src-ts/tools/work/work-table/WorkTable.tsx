@@ -18,10 +18,11 @@ import {
     WorkContextData,
     workGetGroupedByStatus,
     workGetStatusFilter,
+    WorkIntakeFormRoutes,
     WorkStatus,
     WorkStatusFilter,
 } from '../work-lib'
-import { selfServiceStartRoute, workDetailRoute } from '../work.routes'
+import { dashboardRoute, selfServiceStartRoute, workDetailRoute } from '../work.routes'
 
 import { workDashboardTabs } from './work-nav.config'
 import { WorkNoResults } from './work-no-results'
@@ -72,8 +73,11 @@ const WorkTable: FC<{}> = () => {
         const filteredColumns: Array<TableColumn<Work>> = [...workListColumns]
         filteredColumns.splice(workListColumns.findIndex(c => c.label === WorkListColumnField.status), 1)
         setColumns(filteredColumns)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         initialized,
+        // tabs change every render so we can't make it a dependency
+        // tabs,
         work,
         workStatusFilter,
     ])
@@ -86,23 +90,25 @@ const WorkTable: FC<{}> = () => {
     }
 
     function onChangeTab(active: string): void {
-        navigate(`${rootLoggedInRoute}/${active}`)
+        navigate(`${dashboardRoute}/${active}`)
     }
 
     function viewWorkDetails(selectedWork: Work): void {
 
         const isDraft: boolean = selectedWork.status === WorkStatus.draft
 
-        if (isDraft) {
-            cacheChallengeId(selectedWork.id)
-        }
+        // TODO: move the tabs definition to src-ts
+        // so we don't have to hard-code this tab id
+        let url: string = workDetailRoute(selectedWork.id, selectedWork.status === WorkStatus.ready ? 'solutions' : undefined)
 
-        // TODO: get these routes from an object/function that's not hard-coded
-        const url: string = isDraft
-            ? selfServiceStartRoute
-            // TODO: move the tabs definition to src-ts
-            // so we don't have to hard-code this tab id
-            : workDetailRoute(selectedWork.id, selectedWork.status === WorkStatus.ready ? 'solutions' : undefined)
+        if (isDraft) {
+            if (selectedWork.draftStep) {
+                url = `${WorkIntakeFormRoutes[selectedWork.type][selectedWork.draftStep]}/${selectedWork.id}`
+            } else {
+                cacheChallengeId(selectedWork.id)
+                url = selfServiceStartRoute
+            }
+        }
 
         navigate(url)
     }

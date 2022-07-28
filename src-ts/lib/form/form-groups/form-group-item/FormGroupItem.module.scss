@@ -1,0 +1,57 @@
+@use '../../../styles/typography';
+@import "../../../styles/includes";
+
+.form-group-item {
+    display: flex;
+
+    &.single-field {
+        border-bottom: none;
+        padding: 0;
+
+        .right {
+            margin-top: 0;
+        }
+    }
+
+    @include ltemd {
+        flex-direction: column;
+        padding: $pad-xxl 0 $pad-sm 0;
+    }
+
+    &:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .left {
+        flex: 1;
+
+        .title {
+            text-transform: uppercase;
+        }
+
+        .group-item-instructions {
+            @extend .body-small;
+            @include font-roboto;
+            margin-top: $pad-xxl;
+        }
+    }
+
+    .right {
+        flex: 1;
+        margin-top: 46px;
+
+        @include ltemd {
+            margin-top: $pad-xxl;
+        }
+    }
+
+    &.full-width-container {
+        display: inline;
+
+    }
+
+    .full-width-items {
+        margin-top: $pad-xl;
+    }
+}

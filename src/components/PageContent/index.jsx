@@ -10,7 +10,7 @@ import styles from "./styles.module.scss";
 
 const PageContent = ({ children, styleName, ...props }) => {
   return (
-    <div className={cn(styles["page-content"], styleName)} {...props}>
+    <div className={cn(styles["page-content"], !!styleName ? styles[styleName] : undefined)} {...props}>
       {children}
     </div>
   );

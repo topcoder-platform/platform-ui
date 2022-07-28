@@ -5,8 +5,8 @@ import { Link } from 'react-router-dom'
 import '../styles/index.scss'
 import { IconOutline } from '../svgs'
 
-export type ButtonSize = 'sm' | 'md' | 'lg' | 'xl'
-export type ButtonStyle = 'icon' | 'link' | 'primary' | 'secondary' | 'tertiary' | 'text'
+export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+export type ButtonStyle = 'icon' | 'icon-bordered' | 'link' | 'primary' | 'secondary' | 'tertiary' | 'text'
 export type ButtonType = 'button' | 'submit'
 
 export interface ButtonProps {
@@ -21,6 +21,7 @@ export interface ButtonProps {
     readonly route?: string
     readonly size?: ButtonSize
     readonly tabIndex?: number
+    readonly target?: string
     readonly title?: string
     readonly type?: ButtonType
     readonly url?: string
@@ -42,6 +43,7 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
                 onClick={clickHandler}
                 tabIndex={props.tabIndex}
                 title={props.title}
+                target={props.target}
             >
                 {content}
             </a>

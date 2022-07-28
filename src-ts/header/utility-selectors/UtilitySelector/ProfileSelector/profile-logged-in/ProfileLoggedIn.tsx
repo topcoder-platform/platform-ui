@@ -20,11 +20,6 @@ const ProfileLoggedIn: FC<ProfileLoggedInProps> = (props: ProfileLoggedInProps) 
 
     const { profile }: ProfileContextData = useContext(profileContext)
 
-    if (!profile) {
-        logInfo('tried to render the logged in profile w/out a profile')
-        return <></>
-    }
-
     const triggerRef: MutableRefObject<any> = useRef(undefined)
     const [profilePanelOpen, setProfilePanelOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
@@ -33,6 +28,11 @@ const ProfileLoggedIn: FC<ProfileLoggedInProps> = (props: ProfileLoggedInProps) 
     }, [])
 
     useClickOutside(triggerRef.current, () => setProfilePanelOpen(false))
+
+    if (!profile) {
+        logInfo('tried to render the logged in profile w/out a profile')
+        return <></>
+    }
 
     return (
         <>

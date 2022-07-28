@@ -2,6 +2,7 @@ import { Dispatch, FC, useContext } from 'react'
 import { useDispatch } from 'react-redux'
 import { Navigate, NavigateFunction, Outlet, Routes, useNavigate } from 'react-router-dom'
 
+// TODO: move this from the legacy to the nextgen app
 import { resetIntakeForm } from '../../../src/actions/form'
 import {
     clearAutoSavedForm,
@@ -21,6 +22,7 @@ import { WorkProvider } from './work-lib'
 import { selfServiceRootRoute, selfServiceStartRoute } from './work.routes'
 
 export const toolTitle: string = 'Work'
+export const dashboardTitle: string = `${toolTitle} Dashboard`
 
 const Work: FC<{}> = () => {
 
@@ -34,7 +36,7 @@ const Work: FC<{}> = () => {
 
         // if the profile isn't initialized, wait with the spinner
         if (!initialized) {
-            return <LoadingSpinner />
+            return <LoadingSpinner show={true} />
         }
 
         // if the profile is initialized, go to the self-service login
@@ -61,7 +63,7 @@ const Work: FC<{}> = () => {
             <WorkProvider>
                 <Outlet />
                 <Routes>
-                    {getChildRoutes(toolTitle)}
+                    {getChildRoutes(dashboardTitle)}
                 </Routes>
             </WorkProvider>
         </ContentLayout>

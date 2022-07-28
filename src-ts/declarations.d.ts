@@ -3,6 +3,8 @@ declare module '*.html' {
     export = htmlFile
 }
 
+declare module '*.pdf'
+
 declare module '*.scss' {
     const scssFile: { [style: string]: any }
     export = scssFile

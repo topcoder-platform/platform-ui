@@ -1,0 +1,66 @@
+@use '../../../../lib/styles/typography';
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    display: flex;
+    gap: $pad-lg;
+    align-items: center;
+
+    @include ltelg {
+        gap: $pad-sm;
+    }
+
+    @include ltemd {
+        &:global(.xl) {
+            flex-direction: column;
+            text-align: center;
+            gap: $pad-lg;
+        }
+    }
+
+    :global(.badge-icon) {
+        svg {
+            @include icon-size(60);
+        }
+        &:global(.lg) {
+            svg {
+                @include icon-size(72);
+            }
+        }
+        &:global(.xl) {
+            svg {
+                @include icon-size(140);
+            }
+        }
+    }
+}
+
+.title-row {
+    display: flex;
+    align-items: center;
+}
+
+.text {
+    color: $black-100;
+    h1 {
+        text-transform: none;
+        &:global(.xl) {
+            font-size: 34px;
+            line-height: 34px;
+            text-transform: uppercase;
+        }
+    }
+    :global(.quote-small) {
+        color: #767676;
+        display: block;
+        &:global(.lg) {
+            margin-top: $pad-sm;
+        }
+    }
+
+    @include ltemd {
+        :global(.quote-small.xl) {
+            margin-top: $pad-sm;
+        }
+    }
+}

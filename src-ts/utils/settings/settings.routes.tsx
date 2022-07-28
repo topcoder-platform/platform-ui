@@ -6,6 +6,7 @@ import Settings from './Settings'
 
 export const settingsRoutes: Array<PlatformRoute> = [
     {
+        authRequired: true,
         children: [
             {
                 children: [],
@@ -15,7 +16,6 @@ export const settingsRoutes: Array<PlatformRoute> = [
             },
         ],
         element: <Settings />,
-        requireAuth: true,
         route: '/account',
         title: ToolTitle.settings,
     },

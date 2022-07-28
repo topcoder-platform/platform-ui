@@ -1,0 +1,41 @@
+@import '../../../../../lib/styles/includes';
+
+.wrap {
+    border-radius: $pad-sm;
+    width: 100%;
+    width: 264px;
+    background: rgba($tc-white, 0.12);
+    backdrop-filter: blur(160px);
+    color: $tc-white;
+
+    h5 {
+        font-size: 24px;
+        line-height: 26px;
+    }
+}
+
+.course-title {
+    margin-top: $pad-lg;
+}
+
+.top-wrap {
+    background: url(./wave-bg.png) 0 0 no-repeat;
+    background-size: 264px 600px;
+    padding: $pad-xxl;
+    min-height: 264px;
+}
+
+.details {
+    display: flex;
+    align-items: center;
+    padding: $pad-xxl;
+    gap: calc($pad-sm + $border);
+
+    svg {
+        @include icon-xl;
+    }
+    
+    span > span {
+        display: block;
+    }
+}

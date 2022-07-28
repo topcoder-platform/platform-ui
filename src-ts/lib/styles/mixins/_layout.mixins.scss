@@ -14,3 +14,29 @@
         padding-right: $pad-lg;
     }
 }
+
+@mixin contentWidth {
+    max-width: $xxl-min;
+    @include pagePaddings;
+    margin: 0 auto;
+    width: 100%;
+}
+
+@mixin scrollbar {
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    &::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+        background-color: rgba($tc-black, 0.4);
+        border-radius: 4px;
+        
+        &:hover {
+            background-color: rgba($tc-black, 0.6);
+        }
+    }
+}

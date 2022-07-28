@@ -9,11 +9,15 @@ import {
   PageFooter,
   ProfileProvider,
   RouteProvider,
-  routeRootLoggedIn,
+  routeRootCustomer,
   routeRootLoggedOut,
-  ToolsRoutes,
-  UtilsRoutes,
+  routeRootMember,
+  toolsRoutes,
+  utilsRoutes,
 } from "../src-ts";
+// WARNING: this has to be imported from its specific directory bc it
+// causes circular or missing references when added to the barrel files
+import { WorkNotLoggedIn } from '../src-ts/tools/work/work-not-logged-in'
 
 import App from "./App";
 import store from "./store";
@@ -28,10 +32,12 @@ ReactDOM.render(
         <BrowserRouter>
 
           <RouteProvider
-            rootLoggedIn={routeRootLoggedIn}
+            rootCustomer={routeRootCustomer}
             rootLoggedOut={routeRootLoggedOut}
-            toolsRoutes={[...ToolsRoutes]}
-            utilsRoutes={[...UtilsRoutes]}
+            rootLoggedOutFC={WorkNotLoggedIn}
+            rootMember={routeRootMember}
+            toolsRoutes={[...toolsRoutes]}
+            utilsRoutes={[...utilsRoutes]}
           >
             <StrictMode>
               <AppNextGen />

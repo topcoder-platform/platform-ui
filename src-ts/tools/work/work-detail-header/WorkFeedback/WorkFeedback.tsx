@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
-import { BaseModal, Form, FormDefinition, FormInputModel, formOnReset } from '../../../../lib'
+import { BaseModal, Form, FormDefinition, formGetInputFields, FormInputModel, formOnReset } from '../../../../lib'
 import { Challenge } from '../../work-lib'
 
 import { workFeedbackFormDef } from './work-feedback-form.config'
@@ -24,10 +24,12 @@ const WorkFeedback: FC<WorkFeedbackProps> = (props: WorkFeedbackProps) => {
 
     function requestGenerator(inputs: ReadonlyArray<FormInputModel>): Array<Feedback> {
         return inputs
-            .map(input => ({
-                name: input.instructions || input.label as string,
-                value: input.value,
-            }))
+            .map((input: FormInputModel) => {
+                return {
+                    name: input.instructions || input.label as string,
+                    value: input.value,
+                }
+            })
     }
 
     async function saveAsync(feedback: Array<Feedback>): Promise<void> {
@@ -37,7 +39,7 @@ const WorkFeedback: FC<WorkFeedbackProps> = (props: WorkFeedbackProps) => {
 
     function onClose(): void {
         const updatedForm: FormDefinition = {...formDef}
-        formOnReset(updatedForm.inputs)
+        formOnReset(formGetInputFields(updatedForm.groups || []))
         setFormDef(updatedForm)
         props.onClose()
     }

@@ -1,0 +1,13 @@
+@import '../../../../lib/styles/includes';
+
+.iframe {
+    width: 100%;
+    padding: 0;
+    height: 100%;
+    flex: 1 1 auto;
+    border: 0 none;
+
+    @include ltemd {
+        height: $content-height;
+    }
+}
