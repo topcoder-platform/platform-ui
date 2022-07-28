@@ -2,7 +2,7 @@ import { FC } from 'react'
 
 import { LearnCertificateTrackType } from '../all-certifications-provider'
 
-import { getBadge } from './badges'
+import { getBadge } from './badges.functions'
 import styles from './CourseBadge.module.scss'
 
 interface CourseBadgeProps {
