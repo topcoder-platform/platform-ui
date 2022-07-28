@@ -11,6 +11,7 @@ import {
     intakeFormsTitle,
     Review,
 } from './work-self-service'
+import SaveAfterLogin from './work-self-service/intake-forms/save-after-login/SaveAfterLogin'
 import { WorkTable } from './work-table'
 import { WorkThankYou } from './work-thank-you'
 
@@ -76,6 +77,14 @@ export const workRoutes: Array<PlatformRoute> = [
             {
                 element: <WorkLoginPrompt />,
                 route: `:workType/login-prompt`,
+            },
+            {
+                element: <WorkLoginPrompt />,
+                route: `:workType/login-prompt/:retUrl`,
+            },
+            {
+                element: <SaveAfterLogin />,
+                route: `:workType/save-after-login`,
             },
             {
                 element: <WorkThankYou />,
