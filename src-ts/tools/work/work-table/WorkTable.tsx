@@ -1,7 +1,7 @@
 import { Dispatch, FC, SetStateAction, useContext, useEffect, useState } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 
-import { cacheChallengeId } from '../../../../src/autoSaveBeforeLogin' // TODO: move to src-ts
+import { cacheChallengeId, clearCachedChallengeId } from '../../../../src/autoSaveBeforeLogin' // TODO: move to src-ts
 import {
     LoadingSpinner,
     routeContext,
@@ -81,6 +81,10 @@ const WorkTable: FC<{}> = () => {
         work,
         workStatusFilter,
     ])
+
+    useEffect(() => {
+        clearCachedChallengeId()
+    }, [])
 
     // if we couldn't find a workstatusfilter,
     // redirect to the dashboard

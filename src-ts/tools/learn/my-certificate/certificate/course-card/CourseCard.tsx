@@ -2,15 +2,14 @@ import classNames from 'classnames'
 import { FC } from 'react'
 
 import { IconOutline, textFormatDateLocaleShortString } from '../../../../../lib'
-import { CertificateTrackType } from '../certificate-track-type.enum'
-import { CourseBadge } from '../course-badge'
+import { CourseBadge, LearnCertificateTrackType } from '../../../learn-lib'
 
 import styles from './CourseCard.module.scss'
 
 interface CourseCardProps {
     completedDate?: string
     course?: string
-    type: CertificateTrackType
+    type: LearnCertificateTrackType
 }
 
 const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
@@ -18,7 +17,9 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
     return (
         <div className={styles['wrap']}>
             <div className={styles['top-wrap']}>
-                <CourseBadge type={props.type} />
+                <div className={styles['badge']}>
+                    <CourseBadge type={props.type} />
+                </div>
                 <h5 className={classNames('details', styles['course-title'])}>
                     {props.course}
                 </h5>

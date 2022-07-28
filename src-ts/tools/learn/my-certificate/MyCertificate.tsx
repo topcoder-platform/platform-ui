@@ -1,5 +1,5 @@
 import html2canvas from 'html2canvas'
-import { FC, MutableRefObject, useContext, useEffect, useRef } from 'react'
+import { FC, MutableRefObject, useContext, useEffect, useMemo, useRef } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 
 import {
@@ -11,7 +11,9 @@ import {
     ProfileContextData
 } from '../../../lib'
 import {
+    AllCertificationsProviderData,
     CoursesProviderData,
+    useAllCertifications,
     useCourses,
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
@@ -52,7 +54,14 @@ const MyCertificate: FC<{}> = () => {
         routeParams.certification
     )
 
-    const ready: boolean = profileReady && courseReady && (!profile || progressReady)
+    const {
+        certification: certificate,
+        ready: certificateReady,
+    }: AllCertificationsProviderData = useAllCertifications(routeParams.provider, course?.certificationId)
+
+    const ready: boolean = useMemo(() => {
+        return profileReady && courseReady && (!profile || (progressReady && certificateReady))
+    }, [certificateReady, courseReady, profile, profileReady, progressReady])
 
     useCertificateScaling(ready ? certificateWrapRef : undefined)
 
@@ -154,6 +163,7 @@ const MyCertificate: FC<{}> = () => {
                                 provider={course?.provider}
                                 completedDate={certificateProgress?.completedDate ?? ''}
                                 elRef={certificateElRef}
+                                type={certificate?.trackType}
                             />
                         </div>
                         <div className={styles['btns-wrap']}>
