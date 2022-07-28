@@ -1,5 +1,4 @@
 import { GlobalConfig } from '../../lib'
-import { ToolTitle } from '../constants'
 
 import { AppHostEnvironment } from './app-host-environment.enum'
 import { EnvironmentConfigDefault } from './environment.default.config'
@@ -9,6 +8,7 @@ const COMMUNITY_WEBSITE: string = 'https://www.topcoder.com'
 export const EnvironmentConfigProd: GlobalConfig = {
     ...EnvironmentConfigDefault,
     API: {
+        FORUM_ACCESS_TOKEN: EnvironmentConfigDefault.API.FORUM_ACCESS_TOKEN,
         FORUM_V2: 'https://vanilla.topcoder.com/api/v2',
         V3: 'https://api.topcoder.com/v3',
         V5: 'https://api.topcoder.com/v5',

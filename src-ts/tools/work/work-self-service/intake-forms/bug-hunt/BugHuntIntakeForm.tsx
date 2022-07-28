@@ -73,31 +73,40 @@ const BugHuntIntakeForm: React.FC = () => {
     }
 
     useEffect(() => {
-        const useEffectAsync: () => Promise<void> = async () => {
+
+        async function getAndSetWork(): Promise<void> {
+
             if (!workId) {
-                // create challenge
-                const response: any = await workCreateAsync(WorkType.bugHunt)
-                setChallenge(response)
-            } else {
-                // fetch challenge using workId
-                const response: Challenge = await workGetByWorkIdAsync(workId)
-                setChallenge(response)
+                const newChallenge: Challenge = await workCreateAsync(WorkType.bugHunt)
+                setChallenge(newChallenge)
+                return
+            }
 
-                const intakeFormBH: ChallengeMetadata | undefined = response.metadata?.find((item: ChallengeMetadata) => item.name === ChallengeMetadataName.intakeForm)
-                if (intakeFormBH) {
-                    const formData: Record<string, any> = JSON.parse(intakeFormBH.value).form.basicInfo
+            // fetch challenge using workId
+            const response: Challenge = await workGetByWorkIdAsync(workId)
+            setChallenge(response)
 
-                    setFormValues(formData)
+            const intakeFormBH: ChallengeMetadata | undefined = response.metadata
+                ?.find((item: ChallengeMetadata) => item.name === ChallengeMetadataName.intakeForm)
 
-                    if (formData?.packageType && formData?.packageType !== selectedPackage) {
-                        setSelectedPackage(formData.packageType)
-                    }
-                }
+            if (!intakeFormBH) {
+                return
+            }
+
+            const formData: Record<string, any> = JSON.parse(intakeFormBH.value).form.basicInfo
+
+            setFormValues(formData)
+
+            if (formData?.packageType && formData?.packageType !== selectedPackage) {
+                setSelectedPackage(formData.packageType)
             }
         }
 
-        useEffectAsync()
-    }, [workId])
+        getAndSetWork()
+    }, [
+        selectedPackage,
+        workId,
+    ])
 
     const requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => void = (inputs) => {
         const projectTitle: string = formGetInputModel(inputs, ChallengeMetadataName.projectTitle).value as string

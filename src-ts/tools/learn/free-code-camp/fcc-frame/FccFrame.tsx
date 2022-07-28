@@ -22,8 +22,9 @@ interface FccFrameProps {
 
 const FccFrame: FC<FccFrameProps> = (props: FccFrameProps) => {
 
-    const frameRef: MutableRefObject<HTMLElement|any> = useRef()
+    const frameRef: MutableRefObject<HTMLElement | any> = useRef()
     const frameIsReady: MutableRefObject<boolean> = useRef<boolean>(false)
+    const { onFccLastLessonNavigation, onFccLessonChange, onFccLessonComplete }: FccFrameProps = props
 
     useEffect(() => {
         if (!frameRef.current || !props.lesson) {
@@ -31,47 +32,54 @@ const FccFrame: FC<FccFrameProps> = (props: FccFrameProps) => {
         }
 
         if (!frameIsReady.current) {
-            Object.assign(frameRef.current, {src: `${EnvironmentConfig.LEARN_SRC}/${props.lesson.lessonUrl}`})
+            Object.assign(frameRef.current, { src: `${EnvironmentConfig.LEARN_SRC}/${props.lesson.lessonUrl}` })
         } else {
             frameRef.current.contentWindow.postMessage(JSON.stringify({
-                data: {path: `/${props.lesson.lessonUrl}`},
+                data: { path: `/${props.lesson.lessonUrl}` },
                 event: 'fcc:url:update',
             }), '*')
         }
-    }, [props.lesson?.lessonUrl])
+    }, [
+        props.lesson,
+    ])
 
     useEffect(() => {
-      if (!frameRef) {
-          return
-      }
-      const handleEvent: (event: any) => void = (event: any) => {
-        const { data: jsonData, origin }: {data: string, origin: string} = event
-
-        if (origin.indexOf(EnvironmentConfig.LEARN_SRC) === -1) {
+        if (!frameRef) {
             return
         }
+        const handleEvent: (event: any) => void = (event: any) => {
+            const { data: jsonData, origin }: { data: string, origin: string } = event
 
-        const {event: eventName, data}: {data: {path: string}, event: string } = JSON.parse(jsonData)
+            if (origin.indexOf(EnvironmentConfig.LEARN_SRC) === -1) {
+                return
+            }
 
-        if (eventName === 'fcc:nav:last-challenge') {
-            props.onFccLastLessonNavigation()
+            const { event: eventName, data }: { data: { path: string }, event: string } = JSON.parse(jsonData)
+
+            if (eventName === 'fcc:nav:last-challenge') {
+                onFccLastLessonNavigation()
+            }
+
+            if (eventName === 'fcc:challenge:completed') {
+                onFccLessonComplete()
+            }
+
+            if (eventName === 'fcc:challenge:ready') {
+                frameIsReady.current = true
+                onFccLessonChange(data.path)
+            }
         }
 
-        if (eventName === 'fcc:challenge:completed') {
-            props.onFccLessonComplete()
+        window.addEventListener('message', handleEvent, false)
+        return () => {
+            window.removeEventListener('message', handleEvent, false)
         }
-
-        if (eventName === 'fcc:challenge:ready') {
-            frameIsReady.current = true
-            props.onFccLessonChange(data.path)
-        }
-      }
-
-      window.addEventListener('message', handleEvent, false)
-      return () => {
-        window.removeEventListener('message', handleEvent, false)
-      }
-    }, [frameRef, props.onFccLastLessonNavigation, props.onFccLessonChange, props.onFccLessonComplete])
+    }, [
+        frameRef,
+        onFccLastLessonNavigation,
+        onFccLessonChange,
+        onFccLessonComplete,
+    ])
 
     return (
         <FreecodecampIfr frameRef={frameRef} />

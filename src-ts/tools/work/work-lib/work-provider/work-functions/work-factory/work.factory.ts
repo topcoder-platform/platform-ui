@@ -465,10 +465,11 @@ function findOpenPhase(challenge: Challenge): ChallengePhase | undefined {
 
 function findPhase(challenge: Challenge, phases: Array<string>): ChallengePhase | undefined {
     let phase: ChallengePhase | undefined
-    let index: number = 0
-    while (!phase && index < phases.length) {
-        phase = challenge.phases.find((p: any) => p.name === phases[index])
-        index++
+    for (const currentPhase of phases) {
+        if (!!phase) {
+            break
+        }
+        phase = challenge.phases.find((p: any) => p.name === currentPhase)
     }
     return phase
 }

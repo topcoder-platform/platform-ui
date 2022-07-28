@@ -1,5 +1,5 @@
-import { EnvironmentConfig } from '../../../../config'
-import { xhrGetAsync } from '../../xhr-functions'
+import { EnvironmentConfig } from '../../../../../../config'
+import { xhrGetAsync } from '../../../../../../lib'
 
 import { GetUnreadMessageCountResponse } from './get-unread-message-count-response.model'
 
