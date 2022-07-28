@@ -16,7 +16,7 @@ import {
     UserCertificationUpdateProgressActions
 } from '../../learn-lib'
 import {
-    authenticateAndStartCourseRoute,
+    getAuthenticateAndStartCourseRoute,
     getCertificatePath,
     getLessonPathFromCurrentLesson,
     LEARN_PATHS,
@@ -80,7 +80,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         if (!isLoggedIn) {
             // add a flag to the return url to show the academic policy modal
             // or resume the course when they're back
-            window.location.href = authenticateAndStartCourseRoute
+            window.location.href = getAuthenticateAndStartCourseRoute()
             return
         }
 
@@ -146,7 +146,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
      * proceed as if the user just clicked "Start course" button
      */
     useEffect(() => {
-        if (props.progressReady && isLoggedIn && searchParams.get('start-course') !== null) {
+        if (props.progressReady && isLoggedIn && searchParams.get(LEARN_PATHS.startCourseRouteFlag) !== null) {
             handleStartCourseClick()
         }
     }, [handleStartCourseClick, isLoggedIn, props.progressReady, searchParams])

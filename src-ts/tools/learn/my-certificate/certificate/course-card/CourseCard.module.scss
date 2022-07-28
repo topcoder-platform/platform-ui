@@ -14,6 +14,13 @@
     }
 }
 
+.badge {
+    svg {
+        display: block;
+        @include icon-size(78);
+    }
+}
+
 .course-title {
     margin-top: $pad-lg;
 }

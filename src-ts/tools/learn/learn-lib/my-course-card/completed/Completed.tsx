@@ -22,7 +22,7 @@ const Completed: FC<CompletedProps> = (props: CompletedProps) => {
             <div className={styles['line']}>
                 <CourseTitle
                     title={props.certification.title}
-                    type={props.certification.category}
+                    trackType={props.certification.trackType}
                     credits={props.certification.providerName}
                 >
                     <div className={styles['completed-status']}>

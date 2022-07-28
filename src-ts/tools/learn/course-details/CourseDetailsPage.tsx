@@ -11,9 +11,11 @@ import {
     ProfileContextData,
 } from '../../../lib'
 import {
+    AllCertificationsProviderData,
     CoursesProviderData,
     CourseTitle,
     ResourceProviderData,
+    useAllCertifications,
     useCourses,
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
@@ -50,7 +52,15 @@ const CourseDetailsPage: FC<{}> = () => {
         routeParams.certification,
     )
 
-    const ready: boolean = profileReady && courseReady && (!profile || progressReady)
+    const {
+        certification: certificate,
+        ready: certificateReady,
+    }: AllCertificationsProviderData = useAllCertifications(routeParams.provider, course?.certificationId)
+
+    // this looks better than finding workarounds for cyclomatic-complexity
+    /* tslint:disable:cyclomatic-complexity */
+    const ready: boolean = profileReady && courseReady && certificateReady && (!profile || progressReady)
+
     const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
         {
             name: course?.title ?? '',
@@ -108,7 +118,7 @@ const CourseDetailsPage: FC<{}> = () => {
         <ContentLayout>
             {!ready && (
                 <div className={styles['wrap']}>
-                    <LoadingSpinner />
+                    <LoadingSpinner show />
                 </div>
             )}
             <Breadcrumb items={breadcrumb} />
@@ -116,7 +126,12 @@ const CourseDetailsPage: FC<{}> = () => {
                 <>
                     <div className={styles['wrap']}>
                         <div className={styles['intro-copy']}>
-                            <CourseTitle size='lg' title={course.title} credits={course.provider} type='webdev' />
+                            <CourseTitle
+                                size='lg'
+                                title={course.title}
+                                credits={course.provider}
+                                trackType={certificate?.trackType}
+                            />
 
                             <div
                                 className={styles['text']}

@@ -1,15 +1,17 @@
 import classNames from 'classnames'
 import { FC, ReactNode } from 'react'
 
+import { LearnCertificateTrackType } from '../all-certifications-provider'
+import { CourseBadge } from '../course-badge'
+
 import styles from './CourseTitle.module.scss'
-import { ReactComponent as LearnChallengeBadgeIcon } from './learn-challenge-badge-icon.svg'
 
 interface CourseTitleProps {
     children?: ReactNode
     credits?: string
     size?: 'md'|'lg'|'xl'
     title: string
-    type: string
+    trackType?: LearnCertificateTrackType
 }
 
 const CourseTitle: FC<CourseTitleProps> = (props: CourseTitleProps) => {
@@ -27,7 +29,7 @@ const CourseTitle: FC<CourseTitleProps> = (props: CourseTitleProps) => {
     return (
         <div className={classNames(styles['wrap'], props.size)}>
             <div className={classNames('badge-icon', props.size)}>
-                <LearnChallengeBadgeIcon />
+                <CourseBadge type={props.trackType ?? 'DEV'} />
             </div>
             <div className={styles['text']}>
                 <div className={styles['title-row']}>

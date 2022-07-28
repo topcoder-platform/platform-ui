@@ -46,9 +46,12 @@ export enum LEARN_PATHS {
     myLearning = '/learn/my-learning',
     fcc = '/learn/fcc',
     root = '/learn',
+    startCourseRouteFlag = 'start-course',
 }
 
-export const authenticateAndStartCourseRoute: string = `${authUrlLogin}${encodeURIComponent('?start-course')}`
+export function getAuthenticateAndStartCourseRoute(): string {
+    return `${authUrlLogin}${encodeURIComponent(`?${LEARN_PATHS.startCourseRouteFlag}`)}`
+}
 
 export const rootRoute: string = LEARN_PATHS.root
 
