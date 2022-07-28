@@ -73,15 +73,11 @@ export const workRoutes: Array<PlatformRoute> = [
                 element: <Review />,
                 route: `bug-hunt/review/:workId`,
             },
+            {
+                element: <WorkLoginPrompt />,
+                route: `bug-hunt/login-prompt/:retUrl`,
+            },
             // General
-            {
-                element: <WorkLoginPrompt />,
-                route: `:workType/login-prompt`,
-            },
-            {
-                element: <WorkLoginPrompt />,
-                route: `:workType/login-prompt/:retUrl`,
-            },
             {
                 element: <SaveAfterLogin />,
                 route: `:workType/save-after-login`,

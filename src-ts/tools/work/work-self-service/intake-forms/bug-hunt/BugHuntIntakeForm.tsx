@@ -50,6 +50,7 @@ const BugHuntIntakeForm: React.FC = () => {
     const [action, setAction]: [FormAction, Dispatch<SetStateAction<FormAction>>] = useState()
 
     BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { setAction('save') }
+    BugHuntFormConfig.buttons.primaryGroup[0].hidden = !isLoggedIn
     BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { setAction('submit') }
     if (BugHuntFormConfig.buttons.secondaryGroup) {
         BugHuntFormConfig.buttons.secondaryGroup[0].onClick = () => { navigate(-1) }

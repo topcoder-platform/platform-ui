@@ -14,6 +14,7 @@ export interface ButtonProps {
     readonly className?: string
     readonly disable?: boolean
     readonly elementType?: string
+    readonly hidden?: boolean
     readonly icon?: FC<SVGProps<SVGSVGElement>>
     readonly label?: string
     readonly name?: string
@@ -84,7 +85,8 @@ function getButtonClasses(props: ButtonProps): string {
         props.className,
         props.buttonStyle || 'primary',
         `button-${props.size || 'md'}`,
-        !!props.disable ? 'disabled' : undefined
+        !!props.disable ? 'disabled' : undefined,
+        props.hidden ? 'hidden' : undefined,
     )
     return classes
 }

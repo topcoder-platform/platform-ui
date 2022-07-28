@@ -79,6 +79,8 @@ const Review: React.FC = () => {
     const stripe: Stripe | null = useStripe()
     const elements: StripeElements | null = useElements()
 
+    const { profile: userProfile }: ProfileContextData = useContext<ProfileContextData>(profileContext)
+
     useEffect(() => {
         const useEffectAsync: () => Promise<void> = async () => {
             // fetch challenge using workId
@@ -91,7 +93,7 @@ const Review: React.FC = () => {
             }
             const form: any = JSON.parse(intakeFormBH.value).form
             setFormData(JSON.parse(intakeFormBH.value).form)
-            const { profile: userProfile }: ProfileContextData = useContext<ProfileContextData>(profileContext)
+
             setFormValues({
                 ...formFieldValues,
                 email: userProfile?.email || '',
