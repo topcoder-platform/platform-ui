@@ -85,7 +85,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
             <CourseTitle
                 credits={props.certification.providerName}
                 title={props.certification.title}
-                type={props.certification.category}
+                trackType={props.certification.trackType}
             />
             <div className={styles['bottom']}>
                 {!!link && (

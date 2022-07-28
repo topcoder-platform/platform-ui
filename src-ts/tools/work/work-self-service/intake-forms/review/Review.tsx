@@ -152,6 +152,10 @@ const Review: React.FC = () => {
 
     async function onPay(): Promise<any> {
 
+        if (!isFormValid()) {
+            return
+        }
+
         setLoading(true)
 
         workCreateCustomerPayment(
