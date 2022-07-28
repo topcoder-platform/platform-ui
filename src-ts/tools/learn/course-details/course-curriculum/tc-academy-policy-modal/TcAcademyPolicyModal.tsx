@@ -11,14 +11,14 @@ export interface TcAcademyPolicyModalProps {
 }
 
 const TcAcademyPolicyModal: FC<TcAcademyPolicyModalProps> = (props: TcAcademyPolicyModalProps) => {
-    const [loading, setLoading]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false);
+    const [loading, setLoading]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
 
     const handleConfirm: () => void = () => {
         if (loading) {
             return
         }
-        setLoading(true);
-        props.onConfirm();
+        setLoading(true)
+        props.onConfirm()
     }
 
     return (
