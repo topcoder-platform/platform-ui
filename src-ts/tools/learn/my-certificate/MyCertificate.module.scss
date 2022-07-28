@@ -51,3 +51,21 @@
 
     box-shadow: 0 20px 36px rgba($tc-black, 0.22);
 }
+
+.share-btn {
+    @include icon-mxx;
+    border-radius: 50%;
+
+    color: $tc-white;
+    border: $border solid $tc-white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: $pad-sm;
+
+    svg {
+        @include icon-xxl;
+    }
+}

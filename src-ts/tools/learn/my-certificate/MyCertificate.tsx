@@ -3,12 +3,15 @@ import { FC, MutableRefObject, useContext, useEffect, useRef } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 
 import {
+    FacebookSocialShareBtn,
     fileCreateFromCanvas,
     fileDownloadCanvasAsImage,
     IconOutline,
+    LinkedinSocialShareBtn,
     LoadingSpinner,
     profileContext,
-    ProfileContextData
+    ProfileContextData,
+    TwitterSocialShareBtn
 } from '../../../lib'
 import {
     CoursesProviderData,
@@ -22,9 +25,6 @@ import { absoluteRootRoute, getCoursePath } from '../learn.routes'
 import { ActionButton } from './action-button'
 import { Certificate } from './certificate'
 import styles from './MyCertificate.module.scss'
-import { ReactComponent as SocialShareFbSvg } from './social-share-fb.svg'
-import { ReactComponent as SocialShareLnSvg } from './social-share-linkedin.svg'
-import { ReactComponent as SocialShareTwSvg } from './social-share-twitter.svg'
 import { useCertificateScaling } from './use-certificate-scaling.hook'
 
 const MyCertificate: FC<{}> = () => {
@@ -168,20 +168,17 @@ const MyCertificate: FC<{}> = () => {
                                 icon={<IconOutline.DownloadIcon />}
                                 onClick={handleDownload}
                             />
-                            <ActionButton
-                                icon={<SocialShareFbSvg />}
-                                url={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(absoluteRootRoute)}&src=share_button`}
-                                target='_blank'
+                            <FacebookSocialShareBtn
+                                className={styles['share-btn']}
+                                shareUrl={absoluteRootRoute}
                             />
-                            <ActionButton
-                                icon={<SocialShareLnSvg />}
-                                url={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(absoluteRootRoute)}`}
-                                target='_blank'
+                            <LinkedinSocialShareBtn
+                                className={styles['share-btn']}
+                                shareUrl={absoluteRootRoute}
                             />
-                            <ActionButton
-                                icon={<SocialShareTwSvg />}
-                                url={`https://twitter.com/intent/tweet?url=${encodeURIComponent(absoluteRootRoute)}`}
-                                target='_blank'
+                            <TwitterSocialShareBtn
+                                className={styles['share-btn']}
+                                shareUrl={absoluteRootRoute}
                             />
                         </div>
                     </div>
