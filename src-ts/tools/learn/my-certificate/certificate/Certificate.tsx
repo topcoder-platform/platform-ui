@@ -1,8 +1,9 @@
 import classNames from 'classnames'
 import { FC, MutableRefObject } from 'react'
 
+import { LearnCertificateTrackType } from '../../learn-lib'
+
 import { CertificateBgPattern } from './certificate-bg-pattern'
-import { CertificateTrackType } from './certificate-track-type.enum'
 import styles from './Certificate.module.scss'
 import { CourseCard } from './course-card'
 import { ReactComponent as TcAcademyLogoSvg } from './tc-academy-logo.svg'
@@ -15,11 +16,12 @@ interface CertificateProps {
     elRef?: MutableRefObject<HTMLElement|any>
     provider?: string
     tcHandle?: string
+    type?: LearnCertificateTrackType
     userName?: string
 }
 
 const Certificate: FC<CertificateProps> = (props: CertificateProps) => {
-    const certificateType: CertificateTrackType = 'DEV'
+    const certificateType: LearnCertificateTrackType = props.type ?? 'DEV'
 
     return (
         <div className={styles['wrap']} ref={props.elRef}>
