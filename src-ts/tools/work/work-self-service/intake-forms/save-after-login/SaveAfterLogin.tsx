@@ -6,7 +6,7 @@ import { workCreateAsync, WorkIntakeFormRoutes, WorkType, workUpdateAsync } from
 import { selfServiceStartRoute } from '../../../work.routes'
 
 /**
- * This component is the intermidiate step for when a user logs in mid work creation.
+ * This component is the intermediate step for when a user logs in mid work creation.
  * If a user who is not logged in starts creating a work item and clicks on Complete and Pay,
  * we cache the form and work type and redirect to the login prompt (we cannot call the challenge api
  * and create a challenge with an unauthorized user). After the user logs in successfully, it redirects back
