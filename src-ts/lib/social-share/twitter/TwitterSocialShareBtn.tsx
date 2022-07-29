@@ -1,7 +1,7 @@
 import { FC } from 'react'
+import { Button } from '../../button'
 
 import { SocialShareTwitter } from '../../svgs'
-import { SocialShareBtn } from '../social-share-btn'
 
 interface TwitterSocialShareBtnProps {
     className?: string
@@ -11,10 +11,12 @@ interface TwitterSocialShareBtnProps {
 const TwitterSocialShareBtn: FC<TwitterSocialShareBtnProps> = (props: TwitterSocialShareBtnProps) => {
 
     return (
-        <SocialShareBtn
+        <Button
             className={props.className}
             icon={SocialShareTwitter}
             url={`https://twitter.com/intent/tweet?url=${encodeURIComponent(props.shareUrl)}`}
+            target='_blank'
+            buttonStyle='icon'
         />
     )
 }

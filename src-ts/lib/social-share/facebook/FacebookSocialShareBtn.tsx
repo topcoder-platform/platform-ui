@@ -1,7 +1,7 @@
 import { FC } from 'react'
+import { Button } from '../../button'
 
 import { SocialShareFb } from '../../svgs'
-import { SocialShareBtn } from '../social-share-btn'
 
 interface FacebookSocialShareBtnProps {
     className?: string
@@ -11,10 +11,12 @@ interface FacebookSocialShareBtnProps {
 const FacebookSocialShareBtn: FC<FacebookSocialShareBtnProps> = (props: FacebookSocialShareBtnProps) => {
 
     return (
-        <SocialShareBtn
+        <Button
             className={props.className}
             icon={SocialShareFb}
             url={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(props.shareUrl)}&src=share_button`}
+            target='_blank'
+            buttonStyle='icon'
         />
     )
 }

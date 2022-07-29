@@ -52,7 +52,7 @@
     box-shadow: 0 20px 36px rgba($tc-black, 0.22);
 }
 
-.share-btn {
+.share-btn:global(.button.icon) {
     @include icon-mxx;
     border-radius: 50%;
 
@@ -64,6 +64,10 @@
     justify-content: center;
 
     padding: $pad-sm;
+
+    &:hover {
+        background: transparent;
+    }
 
     svg {
         @include icon-xxl;
