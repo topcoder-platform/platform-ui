@@ -1,6 +1,6 @@
 import { FC } from 'react'
-import { Button } from '../../button'
 
+import { Button } from '../../button'
 import { SocialShareLinkedIn } from '../../svgs'
 
 interface TwitterSocialShareBtnProps {
