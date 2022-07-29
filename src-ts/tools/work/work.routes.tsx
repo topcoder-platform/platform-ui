@@ -11,6 +11,7 @@ import {
     intakeFormsTitle,
     Review,
 } from './work-self-service'
+import SaveAfterLogin from './work-self-service/intake-forms/save-after-login/SaveAfterLogin'
 import { WorkTable } from './work-table'
 import { WorkThankYou } from './work-thank-you'
 
@@ -72,10 +73,14 @@ export const workRoutes: Array<PlatformRoute> = [
                 element: <Review />,
                 route: `bug-hunt/review/:workId`,
             },
-            // General
             {
                 element: <WorkLoginPrompt />,
-                route: `:workType/login-prompt`,
+                route: `bug-hunt/login-prompt/:retUrl`,
+            },
+            // General
+            {
+                element: <SaveAfterLogin />,
+                route: `:workType/save-after-login`,
             },
             {
                 element: <WorkThankYou />,

@@ -7,6 +7,7 @@ export * from './content-layout'
 export * from './form'
 export {
     analyticsInitialize,
+    authUrl,
     authUrlLogin,
     authUrlLogout,
     authUrlSignup,
