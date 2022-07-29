@@ -76,6 +76,7 @@
         "@types/react-gtm-module": "^2.0.1",
         "@types/react-redux-toastr": "^7.6.2",
         "@types/react-router-dom": "^5.3.3",
+        "@types/segment-analytics": "^0.0.34",
         "@types/systemjs": "^6.1.0",
         "@types/uuid": "^8.3.4",
         "autoprefixer": "^9.8.6",

@@ -2,7 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import React, { useContext, useLayoutEffect } from "react";
 import "react-responsive-modal/styles.css";
 
-import { analyticsInitialize, EnvironmentConfig, logInitialize, profileContext } from "../src-ts";
+import { profileContext } from "../src-ts";
 
 import { UNDER_MAINTENANCE } from "./constants";
 import IntakeForm from "./IntakeForm";
@@ -11,8 +11,6 @@ import { ScrollToTop } from "./ScrollToTop";
 import styles from "./styles/main.module.scss";
 import UnderMaintenance from "./routes/UnderMaintenance";
 
-analyticsInitialize(EnvironmentConfig)
-logInitialize(EnvironmentConfig);
 
 const App = () => {
 

@@ -1,4 +1,3 @@
-export * from './analytics-functions'
 export {
     authUrlLogin,
     authUrlLogout,

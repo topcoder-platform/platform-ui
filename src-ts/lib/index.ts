@@ -1,3 +1,4 @@
+export * from './analytics'
 export * from './avatar'
 export * from './breadcrumb'
 export * from './button'
@@ -6,7 +7,6 @@ export * from './contact-support-form'
 export * from './content-layout'
 export * from './form'
 export {
-    analyticsInitialize,
     authUrlLogin,
     authUrlLogout,
     authUrlSignup,
