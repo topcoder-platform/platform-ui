@@ -4,7 +4,6 @@ import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-d
 
 import {
     FacebookSocialShareBtn,
-    fileCreateFromCanvas,
     fileDownloadCanvasAsImage,
     IconOutline,
     LinkedinSocialShareBtn,
@@ -115,23 +114,6 @@ const MyCertificate: FC<{}> = () => {
         printWindow.document.title = certificationTitle
         printWindow.focus()
         printWindow.print()
-    }
-
-    async function handleShare(): Promise<void> {
-        const canvas: HTMLCanvasElement | void = await getCertificateCanvas()
-        if (!canvas) {
-            return
-        }
-        const sharedImg: File = await fileCreateFromCanvas(canvas, `${certificationTitle}.png`)
-
-        if (navigator.canShare?.({ files: [sharedImg] })) {
-            try {
-                await navigator.share({
-                    files: [sharedImg],
-                    title: certificationTitle,
-                })
-            } catch (error) { }
-        }
     }
 
     useEffect(() => {

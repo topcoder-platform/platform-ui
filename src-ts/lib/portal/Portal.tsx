@@ -9,8 +9,7 @@ interface PortalProps {
     portalRef?: MutableRefObject<HTMLElement>,
 }
 
-const Portal: FC<PortalProps> = (
-{
+const Portal: FC<PortalProps> = ({
     portalId,
     portalNode,
     children,
@@ -33,7 +32,11 @@ const Portal: FC<PortalProps> = (
         }
         document.body.appendChild(backupHtmlNode)
         return backupHtmlNode
-    }, [portalNode, className]) as HTMLElement
+    }, [
+        portalId,
+        portalNode,
+        className,
+    ]) as HTMLElement
 
     useEffect(() => {
         return () => {
@@ -41,7 +44,7 @@ const Portal: FC<PortalProps> = (
                 document.body.removeChild(defaultPortalNode)
             }
         }
-    }, [])
+    }, [defaultPortalNode])
 
     if (portalRef) {
         portalRef.current = portalNode ?? defaultPortalNode

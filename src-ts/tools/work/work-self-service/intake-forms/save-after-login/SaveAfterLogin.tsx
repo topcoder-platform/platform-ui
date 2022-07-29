@@ -39,7 +39,9 @@ const SaveAfterLogin: FC = () => {
         }
 
         createAndUpdateAsync()
-    }, [])
+    }, [
+        navigate,
+    ])
 
     return (
         <LoadingSpinner />

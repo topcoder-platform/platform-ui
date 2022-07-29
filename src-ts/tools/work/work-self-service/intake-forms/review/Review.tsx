@@ -1,6 +1,6 @@
 import { CardNumberElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
 import { loadStripe, Stripe, StripeElements } from '@stripe/stripe-js'
-import React, { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useContext, useEffect, useState } from 'react'
 import { toastr } from 'react-redux-toastr'
 import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
 
@@ -49,7 +49,10 @@ interface FormFieldValues {
     zipCode: string
 }
 
-const Review: React.FC = () => {
+const Review: FC = () => {
+
+    const { profile: userProfile }: ProfileContextData = useContext<ProfileContextData>(profileContext)
+
     const workId: string | undefined = useParams().workId
     const redirectUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']}/${workId}`
 
@@ -79,10 +82,8 @@ const Review: React.FC = () => {
     const stripe: Stripe | null = useStripe()
     const elements: StripeElements | null = useElements()
 
-    const { profile: userProfile }: ProfileContextData = useContext<ProfileContextData>(profileContext)
-
     useEffect(() => {
-        const useEffectAsync: () => Promise<void> = async () => {
+        async function getAndSetWork(): Promise<void> {
             // fetch challenge using workId
             const response: Challenge = await workGetByWorkIdAsync(workId || '')
             setChallenge(response)
@@ -93,7 +94,6 @@ const Review: React.FC = () => {
             }
             const form: any = JSON.parse(intakeFormBH.value).form
             setFormData(JSON.parse(intakeFormBH.value).form)
-
             setFormValues({
                 ...formFieldValues,
                 email: userProfile?.email || '',
@@ -101,8 +101,12 @@ const Review: React.FC = () => {
                 price: `$${getPrice(form.basicInfo.packageType)}`,
             })
         }
-        useEffectAsync()
-    }, [workId])
+        getAndSetWork()
+    }, [
+        formFieldValues,
+        userProfile,
+        workId,
+    ])
 
     useEffect(() => {
         setFormValues({
@@ -110,7 +114,10 @@ const Review: React.FC = () => {
             email: profile?.email || '',
             name: `${profile?.firstName} ${profile?.lastName}`,
         })
-    }, [profile])
+    }, [
+        formFieldValues,
+        profile,
+    ])
 
     const onUpdateField: (fieldName: string, value: string | boolean) => void = (fieldName, value) => {
         setFormValues({
@@ -189,9 +196,7 @@ const Review: React.FC = () => {
 
     return (
         <div className={styles['review-container']}>
-            {
-                isLoading && <LoadingSpinner />
-            }
+            <LoadingSpinner show={isLoading} />
             {/* TODO: We need to not hard code the configs to that of BugHunt and instead
             use the challenge data to determine the WorkType */}
             <IntakeFormsBreadcrumb
@@ -270,8 +275,10 @@ const stripePromise: Promise<Stripe | null> = loadStripe(EnvironmentConfig.STRIP
     apiVersion: EnvironmentConfig.STRIPE.API_VERSION,
 })
 
-export default () => (
+const output: () => JSX.Element = () => (
     <Elements stripe={stripePromise}>
         <Review />
     </Elements>
 )
+
+export default output

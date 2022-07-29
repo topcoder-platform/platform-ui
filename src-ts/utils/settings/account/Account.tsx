@@ -12,7 +12,7 @@ import {
 } from '../../../lib'
 
 import styles from './Account.module.scss'
-import { ChangePassword, changePasswordFormDef } from './change-password'
+import { ChangePassword } from './change-password'
 import { EditName, editNameFormDef } from './edit-name'
 
 const Account: FC<{}> = () => {
