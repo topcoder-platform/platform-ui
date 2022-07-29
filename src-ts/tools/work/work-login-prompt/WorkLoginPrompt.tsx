@@ -1,22 +1,24 @@
 import { FC } from 'react'
+import { useParams } from 'react-router-dom'
 
-import config from '../../../../config'
-import { Button } from '../../../lib'
+import {
+    authUrl,
+    authUrlLogin,
+    authUrlSignup,
+    Button,
+} from '../../../lib'
 
 import styles from './WorkLoginPrompt.module.scss'
 
 const WorkLoginPrompt: FC = () => {
-    // TODO: I removed the old logic for nextUrl and isLoggedIn ebcuase we are handling redirects in the intake forms
-    // and we won't necessarily have that data in works.routes
-    // Yet, we may still need to circle back here because I haven't handled telling auth0 where to go next after a log in.
-    // If we do need the logic in this component, we can call isLoggedIn from Context, and import the routes for worktypes to determine the next route.
 
-    const onLogin: () => void = () => {
-        window.location.href = config.SIGN_IN_URL
-    }
+    const customReturnUrl: string | undefined = useParams().retUrl
 
-    const onSignUp: () => void = () => {
-        window.location.href = config.SIGN_UP_URL
+    let urlLogIn: string = authUrlLogin
+    let urlSignUp: string = authUrlSignup
+    if (customReturnUrl) {
+        urlLogIn = `${authUrl}?retUrl=${encodeURIComponent(customReturnUrl)}`
+        urlSignUp = `${urlLogIn}&regSource=tcBusiness&mode=signUp`
     }
 
     return (
@@ -34,12 +36,12 @@ const WorkLoginPrompt: FC = () => {
                     <div className={styles['btn']}>
                         <Button
                             label='LOG IN'
-                            onClick={onLogin}
+                            url={urlLogIn}
                         />
                         <span className={styles['separator']}>OR</span>
                         <Button
                             label='SIGN UP'
-                            onClick={onSignUp}
+                            url={urlSignUp}
                         />
                     </div>
                 </div>

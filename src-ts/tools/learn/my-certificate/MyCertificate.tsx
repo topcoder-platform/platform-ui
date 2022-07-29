@@ -3,12 +3,15 @@ import { FC, MutableRefObject, useContext, useEffect, useMemo, useRef } from 're
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 
 import {
+    FacebookSocialShareBtn,
     fileCreateFromCanvas,
     fileDownloadCanvasAsImage,
     IconOutline,
+    LinkedinSocialShareBtn,
     LoadingSpinner,
     profileContext,
-    ProfileContextData
+    ProfileContextData,
+    TwitterSocialShareBtn
 } from '../../../lib'
 import {
     AllCertificationsProviderData,
@@ -19,7 +22,7 @@ import {
     UserCertificationProgressStatus,
     useUserCertificationProgress,
 } from '../learn-lib'
-import { getCoursePath } from '../learn.routes'
+import { absoluteRootRoute, getCoursePath } from '../learn.routes'
 
 import { ActionButton } from './action-button'
 import { Certificate } from './certificate'
@@ -114,23 +117,6 @@ const MyCertificate: FC<{}> = () => {
         printWindow.print()
     }
 
-    async function handleShare(): Promise<void> {
-        const canvas: HTMLCanvasElement | void = await getCertificateCanvas()
-        if (!canvas) {
-            return
-        }
-        const sharedImg: File = await fileCreateFromCanvas(canvas, `${certificationTitle}.png`)
-
-        if (navigator.canShare?.({ files: [sharedImg] })) {
-            try {
-                await navigator.share({
-                    files: [sharedImg],
-                    title: certificationTitle,
-                })
-            } catch (error) { }
-        }
-    }
-
     useEffect(() => {
         if (ready && certificateProgress?.status !== UserCertificationProgressStatus.completed) {
             navigate(coursePath)
@@ -175,9 +161,17 @@ const MyCertificate: FC<{}> = () => {
                                 icon={<IconOutline.DownloadIcon />}
                                 onClick={handleDownload}
                             />
-                            <ActionButton
-                                icon={<IconOutline.ShareIcon />}
-                                onClick={handleShare}
+                            <FacebookSocialShareBtn
+                                className={styles['share-btn']}
+                                shareUrl={absoluteRootRoute}
+                            />
+                            <LinkedinSocialShareBtn
+                                className={styles['share-btn']}
+                                shareUrl={absoluteRootRoute}
+                            />
+                            <TwitterSocialShareBtn
+                                className={styles['share-btn']}
+                                shareUrl={absoluteRootRoute}
                             />
                         </div>
                     </div>

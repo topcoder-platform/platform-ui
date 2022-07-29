@@ -14,6 +14,7 @@ export interface ButtonProps {
     readonly className?: string
     readonly disable?: boolean
     readonly elementType?: keyof JSX.IntrinsicElements
+    readonly hidden?: boolean
     readonly icon?: FC<SVGProps<SVGSVGElement>>
     readonly label?: string
     readonly name?: string
@@ -41,7 +42,7 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
                 className={classes}
                 href={props.url}
                 onClick={clickHandler}
-                rel={props.rel}
+                rel={props.rel ?? props.target === '_blank' ? 'noreferrer' : ''}
                 role='button'
                 tabIndex={props.tabIndex}
                 title={props.title}
@@ -104,7 +105,8 @@ function getButtonClasses(props: ButtonProps): string {
         props.className,
         props.buttonStyle || 'primary',
         `button-${props.size || 'md'}`,
-        !!props.disable ? 'disabled' : undefined
+        !!props.disable ? 'disabled' : undefined,
+        props.hidden ? 'hidden' : undefined,
     )
     return classes
 }

@@ -54,6 +54,7 @@ export function getAuthenticateAndStartCourseRoute(): string {
 }
 
 export const rootRoute: string = LEARN_PATHS.root
+export const absoluteRootRoute: string = `${window.location.origin}${LEARN_PATHS.root}`
 
 export const learnRoutes: Array<PlatformRoute> = [
     {
