@@ -1,72 +1,72 @@
 import html2canvas from 'html2canvas'
-import { FC, MutableRefObject, useContext, useEffect, useMemo, useRef } from 'react'
-import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
+import { FC, MutableRefObject, useEffect, useRef } from 'react'
+import { NavigateFunction, useNavigate } from 'react-router-dom'
+import { UserProfile } from '../../../../lib'
 
 import {
     fileCreateFromCanvas,
     fileDownloadCanvasAsImage,
     IconOutline,
     LoadingSpinner,
-    profileContext,
-    ProfileContextData
-} from '../../../lib'
+} from '../../../../lib'
+
 import {
     AllCertificationsProviderData,
     CoursesProviderData,
     useAllCertifications,
     useCourses,
-    UserCertificationProgressProviderData,
-    UserCertificationProgressStatus,
-    useUserCertificationProgress,
-} from '../learn-lib'
-import { getCoursePath } from '../learn.routes'
+    useUserCompletedCertifications,
+} from '../../learn-lib'
+import { getCoursePath } from '../../learn.routes'
 
 import { ActionButton } from './action-button'
 import { Certificate } from './certificate'
-import styles from './MyCertificate.module.scss'
+import styles from './CertificateView.module.scss'
 import { useCertificateScaling } from './use-certificate-scaling.hook'
 
-const MyCertificate: FC<{}> = () => {
+interface CertificateViewProps {
+    certification: string,
+    profile: UserProfile,
+    provider: string,
+    hideActions?: boolean,
+    onCertificationNotCompleted: () => void
+}
 
-    const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
+const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) => {
     const navigate: NavigateFunction = useNavigate()
-    const routeParams: Params<string> = useParams()
-    const providerParam: string = routeParams.provider ?? ''
-    const certificationParam: string = routeParams.certification ?? ''
-    const coursePath: string = getCoursePath(providerParam, certificationParam)
+    const coursePath: string = getCoursePath(props.provider, props.certification)
     const certificateElRef: MutableRefObject<HTMLElement | any> = useRef()
     const certificateWrapRef: MutableRefObject<HTMLElement | any> = useRef()
-    const userName: string = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ')
+    const userName: string = [props.profile.firstName, props.profile.lastName].filter(Boolean).join(' ') || props.profile.handle
 
     const {
         course,
         ready: courseReady,
-    }: CoursesProviderData = useCourses(providerParam, certificationParam)
+    }: CoursesProviderData = useCourses(props.provider, props.certification)
 
     const certificationTitle: string = `${userName} - ${course?.title} Certification`
 
     const {
-        certificationProgress: certificateProgress,
-        ready: progressReady,
-    }: UserCertificationProgressProviderData = useUserCertificationProgress(
-        profile?.userId,
-        routeParams.provider,
-        routeParams.certification
+        certifications: [completedCertificate],
+        ready: completedCertificateReady,
+    } = useUserCompletedCertifications(
+        props.profile.userId,
+        props.provider,
+        props.certification
     )
+    const hasCompletedTheCertification: boolean = !!completedCertificate
 
     const {
         certification: certificate,
         ready: certificateReady,
-    }: AllCertificationsProviderData = useAllCertifications(routeParams.provider, course?.certificationId)
+    }: AllCertificationsProviderData = useAllCertifications(props.provider, course?.certificationId)
 
-    const ready: boolean = useMemo(() => {
-        return profileReady && courseReady && (!profile || (progressReady && certificateReady))
-    }, [certificateReady, courseReady, profile, profileReady, progressReady])
+    const ready: boolean = completedCertificateReady && courseReady && certificateReady
 
     useCertificateScaling(ready ? certificateWrapRef : undefined)
 
     function handleBackBtnClick(): void {
-        navigate(-1)
+        navigate(coursePath)
     }
 
     async function getCertificateCanvas(): Promise<HTMLCanvasElement | void> {
@@ -132,13 +132,13 @@ const MyCertificate: FC<{}> = () => {
     }
 
     useEffect(() => {
-        if (ready && certificateProgress?.status !== UserCertificationProgressStatus.completed) {
-            navigate(coursePath)
+        if (ready && !hasCompletedTheCertification) {
+            props.onCertificationNotCompleted()
         }
     }, [
-        certificateProgress,
         coursePath,
-        navigate,
+        hasCompletedTheCertification,
+        props.onCertificationNotCompleted,
         ready,
     ])
 
@@ -146,40 +146,44 @@ const MyCertificate: FC<{}> = () => {
         <>
             {!ready && <LoadingSpinner show />}
 
-            {ready && (
+            {ready && hasCompletedTheCertification && (
                 <div className={styles['wrap']}>
                     <div className={styles['content-wrap']}>
-                        <div className={styles['btns-wrap']}>
-                            <ActionButton
-                                icon={<IconOutline.ChevronLeftIcon />}
-                                onClick={handleBackBtnClick}
-                            />
-                        </div>
+                        {!props.hideActions && (
+                            <div className={styles['btns-wrap']}>
+                                <ActionButton
+                                    icon={<IconOutline.ChevronLeftIcon />}
+                                    onClick={handleBackBtnClick}
+                                />
+                            </div>
+                        )}
                         <div className={styles['certificate-wrap']} ref={certificateWrapRef}>
                             <Certificate
                                 course={course?.title}
                                 userName={userName}
-                                tcHandle={profile?.handle}
+                                tcHandle={props.profile.handle}
                                 provider={course?.provider}
-                                completedDate={certificateProgress?.completedDate ?? ''}
+                                completedDate={completedCertificate?.completedDate ?? ''}
                                 elRef={certificateElRef}
                                 type={certificate?.trackType}
                             />
                         </div>
-                        <div className={styles['btns-wrap']}>
-                            <ActionButton
-                                icon={<IconOutline.PrinterIcon />}
-                                onClick={handlePrint}
-                            />
-                            <ActionButton
-                                icon={<IconOutline.DownloadIcon />}
-                                onClick={handleDownload}
-                            />
-                            <ActionButton
-                                icon={<IconOutline.ShareIcon />}
-                                onClick={handleShare}
-                            />
-                        </div>
+                        {!props.hideActions && (
+                            <div className={styles['btns-wrap']}>
+                                <ActionButton
+                                    icon={<IconOutline.PrinterIcon />}
+                                    onClick={handlePrint}
+                                />
+                                <ActionButton
+                                    icon={<IconOutline.DownloadIcon />}
+                                    onClick={handleDownload}
+                                />
+                                <ActionButton
+                                    icon={<IconOutline.ShareIcon />}
+                                    onClick={handleShare}
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -187,4 +191,4 @@ const MyCertificate: FC<{}> = () => {
     )
 }
 
-export default MyCertificate
+export default CertificateView

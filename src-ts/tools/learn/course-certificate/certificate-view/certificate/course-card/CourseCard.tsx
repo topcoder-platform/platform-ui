@@ -1,8 +1,8 @@
 import classNames from 'classnames'
 import { FC } from 'react'
 
-import { IconOutline, textFormatDateLocaleShortString } from '../../../../../lib'
-import { CourseBadge, LearnCertificateTrackType } from '../../../learn-lib'
+import { IconOutline, textFormatDateLocaleShortString } from '../../../../../../lib'
+import { CourseBadge, LearnCertificateTrackType } from '../../../../learn-lib'
 
 import styles from './CourseCard.module.scss'
 
