@@ -4,7 +4,6 @@ import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-d
 
 import {
     FacebookSocialShareBtn,
-    fileCreateFromCanvas,
     fileDownloadCanvasAsImage,
     IconOutline,
     LinkedinSocialShareBtn,

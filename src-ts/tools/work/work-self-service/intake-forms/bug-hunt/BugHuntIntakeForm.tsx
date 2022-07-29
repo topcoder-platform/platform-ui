@@ -117,6 +117,7 @@ const BugHuntIntakeForm: React.FC = () => {
 
         getAndSetWork()
     }, [
+        isLoggedIn,
         selectedPackage,
         workId,
     ])
