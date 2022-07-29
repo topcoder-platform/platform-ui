@@ -45,6 +45,7 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
                 tabIndex={props.tabIndex}
                 title={props.title}
                 target={props.target}
+                rel={props.target === '_blank' ? 'noreferrer' : ''}
             >
                 {content}
             </a>
