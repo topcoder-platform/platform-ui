@@ -2,12 +2,8 @@ import { FC, ReactElement, useContext } from 'react'
 import { Routes } from 'react-router-dom'
 import { toast, ToastContainer } from 'react-toastify'
 
-import { EnvironmentConfig } from './config'
 import { Header } from './header'
-import { analyticsInitialize, logInitialize, routeContext, RouteContextData } from './lib'
-
-analyticsInitialize(EnvironmentConfig)
-logInitialize(EnvironmentConfig)
+import { routeContext, RouteContextData } from './lib'
 
 const App: FC<{}> = () => {
 

@@ -5,7 +5,10 @@ import { BrowserRouter } from "react-router-dom";
 import ReduxToastr from "react-redux-toastr";
 
 import {
+  Analytics,
   AppNextGen,
+  EnvironmentConfig,
+  logInitialize,
   PageFooter,
   ProfileProvider,
   RouteProvider,
@@ -23,6 +26,8 @@ import App from "./App";
 import store from "./store";
 
 import "./styles/main.vendor.scss";
+
+logInitialize(EnvironmentConfig);
 
 ReactDOM.render(
   <div className="root-container">
@@ -60,6 +65,8 @@ ReactDOM.render(
         </BrowserRouter>
 
         <PageFooter />
+
+        <Analytics />
 
       </ProfileProvider>
     </Provider>

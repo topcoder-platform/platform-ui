@@ -7,6 +7,10 @@ const COMMUNITY_WEBSITE: string = 'https://www.topcoder.com'
 
 export const EnvironmentConfigProd: GlobalConfig = {
     ...EnvironmentConfigDefault,
+    ANALYTICS: {
+        SEGMENT_KEY: '8fCbi94o3ruUUGxRRGxWu194t6iVq9LH',
+        TAG_MANAGER_ID: 'GTM-MXXQHG8',
+    },
     API: {
         FORUM_ACCESS_TOKEN: EnvironmentConfigDefault.API.FORUM_ACCESS_TOKEN,
         FORUM_V2: 'https://vanilla.topcoder.com/api/v2',
@@ -25,7 +29,6 @@ export const EnvironmentConfigProd: GlobalConfig = {
         CUSTOMER_TOKEN:
           'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJUb3Bjb2RlciBVc2VyIl0sImlzcyI6Imh0dHBzOi8vYXBpLnRvcGNvZGVyLWRldi5jb20iLCJoYW5kbGUiOiJ0ZXN0MSIsImV4cCI6MjU2MzA3NjY4OSwidXNlcklkIjoiNDAwNTEzMzMiLCJpYXQiOjE0NjMwNzYwODksImVtYWlsIjoidGVzdEB0b3Bjb2Rlci5jb20iLCJqdGkiOiJiMzNiNzdjZC1iNTJlLTQwZmUtODM3ZS1iZWI4ZTBhZTZhNGEifQ.jl6Lp_friVNwEP8nfsfmL-vrQFzOFp2IfM_HC7AwGcg',
     },
-    TAG_MANAGER_ID: 'GTM-MXXQHG8',
     TOPCODER_URLS: {
         CHALLENGES_PAGE: `${COMMUNITY_WEBSITE}/challenges`,
         GIGS_PAGE: `${COMMUNITY_WEBSITE}/gigs`,
