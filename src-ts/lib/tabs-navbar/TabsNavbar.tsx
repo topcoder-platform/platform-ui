@@ -5,7 +5,6 @@ import {
     MutableRefObject,
     SetStateAction,
     useCallback,
-    useEffect,
     useLayoutEffect,
     useRef,
     useState,
@@ -23,6 +22,8 @@ export interface TabsNavbarProps {
 }
 
 const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
+
+    const { defaultActive, onChange, tabs }: TabsNavbarProps = props
 
     const tabRefs: MutableRefObject<Array<HTMLElement>> = useRef([] as Array<HTMLElement>)
     const [tabOpened, setTabOpened]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>(props.defaultActive)
@@ -44,25 +45,30 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
 
     const handleActivateTab: (tabId: string) => void = useCallback((tabId: string) => {
         setTabOpened(tabId)
-        props.onChange(tabId)
+        onChange(tabId)
         updateOffset(tabId)
     }, [
-        props.onChange,
+        onChange,
         updateOffset,
     ])
 
     useLayoutEffect(() => {
 
         const query: URLSearchParams = new URLSearchParams(window.location.search)
-        const initialTab: string|null = query.get('tab')
+        const initialTab: string | null = query.get('tab')
 
-        if (initialTab && props.tabs.find(tab => tab.id === initialTab)) {
+        if (initialTab && tabs.find(tab => tab.id === initialTab)) {
             handleActivateTab(initialTab)
-        } else if (props.defaultActive) {
-            setTabOpened(props.defaultActive)
-            updateOffset(props.defaultActive)
+        } else if (defaultActive) {
+            setTabOpened(defaultActive)
+            updateOffset(defaultActive)
         }
-    }, [handleActivateTab, props.defaultActive])
+    }, [
+        defaultActive,
+        handleActivateTab,
+        tabs,
+        updateOffset,
+    ])
 
     return (
         <div className={styles['tabs-wrapper']}>

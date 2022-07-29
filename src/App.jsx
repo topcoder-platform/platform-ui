@@ -33,14 +33,14 @@ const App = () => {
 
   if (UNDER_MAINTENANCE) {
     return (
-      <div className={styles["topcoder-mfe-customer-work"]}>
+      <div className={styles["topcoder-platform-ui"]}>
         <UnderMaintenance />
       </div>
     );
   }
 
   return (
-    <div className={styles["topcoder-mfe-customer-work"]}>
+    <div className={styles["topcoder-platform-ui"]}>
       <ScrollToTop path="/">
         <Routes>
           <Route

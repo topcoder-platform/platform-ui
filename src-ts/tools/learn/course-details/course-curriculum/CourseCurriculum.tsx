@@ -66,7 +66,6 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         )
         navigate(lessonPath)
     }, [
-        getLessonPathFromCurrentLesson,
         navigate,
         props.course,
         props.progress,

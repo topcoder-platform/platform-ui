@@ -1,10 +1,8 @@
-import classNames from 'classnames'
 import {
     ChangeEvent,
     createRef,
     Dispatch,
     FC,
-    MouseEvent,
     RefObject,
     SetStateAction,
     useEffect,
@@ -62,7 +60,11 @@ const InputRating: FC<InputRatingProps> = (props: InputRatingProps) => {
             inputRef.current.dispatchEvent(new Event('input', { bubbles: true }))
         }
 
-    }, [rating])
+    }, [
+        inputRef,
+        props.value,
+        rating,
+    ])
 
     return (
         <InputWrapper
