@@ -25,10 +25,6 @@ export const workFeedbackFormDef: FormDefinition = {
                         },
                     ],
                 },
-            ],
-        },
-        {
-            inputs: [
                 {
                     instructions: 'How easy was the platform to use?',
                     name: 'question-2',
@@ -39,10 +35,6 @@ export const workFeedbackFormDef: FormDefinition = {
                         },
                     ],
                 },
-            ],
-        },
-        {
-            inputs: [
                 {
                     instructions: 'How likely are you to recommend Topcoder?',
                     name: 'question-3',
@@ -53,10 +45,6 @@ export const workFeedbackFormDef: FormDefinition = {
                         },
                     ],
                 },
-            ],
-        },
-        {
-            inputs: [
                 {
                     hint: inputOptional,
                     label: 'What can we do to make your experience better?',
