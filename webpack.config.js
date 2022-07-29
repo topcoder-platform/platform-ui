@@ -15,7 +15,7 @@ const cssLocalIdent =
 module.exports = (webpackConfigEnv) => {
   const defaultConfig = singleSpaDefaults({
     orgName: "topcoder",
-    projectName: "mfe-customer-work",
+    projectName: "platform-ui",
     webpackConfigEnv,
   });
 
