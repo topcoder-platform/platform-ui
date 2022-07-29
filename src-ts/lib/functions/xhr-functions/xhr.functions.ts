@@ -12,8 +12,12 @@ const xhrInstance: AxiosInstance = axios.create({
 // add the auth token to all xhr calls
 xhrInstance.interceptors.request.use(async (config) => {
     const tokenData: TokenModel = await tokenGetAsync()
-    config.headers = config.headers || {}
-    config.headers.Authorization = `Bearer ${tokenData.token}`
+    
+    if (tokenData.token) {
+        config.headers = config.headers || {}
+        config.headers.Authorization = `Bearer ${tokenData.token}`
+    }
+
     return config
 })
 
