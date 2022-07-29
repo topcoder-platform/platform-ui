@@ -7,6 +7,7 @@ export * from './contact-support-form'
 export * from './content-layout'
 export * from './form'
 export {
+    authUrl,
     authUrlLogin,
     authUrlLogout,
     authUrlSignup,
