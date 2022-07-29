@@ -1,4 +1,4 @@
-!function () {
+function SegmentSnippet() {
     var analytics =
         window.analytics =
         window.analytics || [];
@@ -57,5 +57,6 @@
     analytics.SNIPPET_VERSION = "4.1.0";
     // analytics.load("SEGMENT_ANALYTICS_KEY"); - don't load here and let the component decide to load or not
     // analytics.page(); - don't call the page, each app should call it when it loads a page by itself
-}();
+}
 
+export default SegmentSnippet()

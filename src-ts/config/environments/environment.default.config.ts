@@ -40,4 +40,3 @@ export const EnvironmentConfigDefault: GlobalConfig = {
         ACCOUNTS_APP_CONNECTOR: 'https://accounts-auth0.topcoder-dev.com',
     },
 }
-// 
