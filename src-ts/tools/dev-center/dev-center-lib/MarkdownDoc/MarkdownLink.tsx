@@ -1,15 +1,15 @@
 import * as React from 'react'
 
-import CopyButton from '../CopyButton'
+import { CopyButton } from '../CopyButton'
 
 import styles from './MarkdownLink.module.scss'
 
-export interface MarkdownLinkProps {
+interface MarkdownLinkProps {
   children: React.ReactNode,
   href: string,
 }
 
-export const MarkdownLink: React.FunctionComponent<MarkdownLinkProps> = (props) => {
+export const MarkdownLink: React.FC<MarkdownLinkProps> = (props) => {
   const { children, href }: MarkdownLinkProps = props
   return (
     <div className={styles['linkBlock']}>

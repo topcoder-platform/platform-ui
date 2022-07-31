@@ -1,5 +1,4 @@
 @import '../../styles/variables';
-@import '../../styles/mixins';
 
 
 .accordion {
@@ -8,7 +7,7 @@
   border-bottom: 2px solid $black-10;
 
   > h2 {
-    padding-right: $pad-xxl;
+    padding-right: $space-xxl;
     background: url('../../assets/i/icon-cheveron-up.svg') no-repeat center right 0 / auto;
     cursor: pointer;
   }

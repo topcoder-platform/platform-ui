@@ -2,10 +2,10 @@
 
 .wrap {
     background: $black-5;
-    border-radius: $pad-sm;
-    padding: $pad-xxl;
+    border-radius: $space-sm;
+    padding: $space-xxl;
 
-    gap: $pad-lg;
+    gap: $space-lg;
     display: flex;
     flex-direction: column;
 
@@ -22,7 +22,7 @@
     }
 
     @include ltemd {
-        padding: $pad-lg;
+        padding: $space-lg;
     }
 }
 

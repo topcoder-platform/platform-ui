@@ -2,9 +2,11 @@
 import classNames from 'classnames'
 import { FC } from 'react'
 
+import { EnvironmentConfig } from '../../../../../../../config'
 import { IconSolid } from '../../../../../../../lib'
 import { DevCenterTag } from '../../dev-center-tag'
-import { BlogPost, isThriveArticle, ThriveArticle } from '../Articles'
+import { isThriveArticle } from '../Articles'
+import { BlogPost, ThriveArticle } from '../models'
 
 import styles from './ArticleCard.module.scss'
 
@@ -38,7 +40,7 @@ const ArticleCard: FC<ArticleCardProps> = ({ article, isMain, className= '' }) =
     const regex: RegExp = /(<([^>]+)>)/ig
     const summary: string = content.replace(regex, '') // Remove html from the content string
     const url: string = isThrive
-        ? 'https://www.topcoder.com/thrive/articles/' + article.slug
+        ? `${EnvironmentConfig.TOPCODER_URLS.THRIVE_PAGE}/articles/${article.slug}`
         : article.link
 
     const author: string = !isThrive ? article.creator : ''

@@ -4,13 +4,13 @@ import styles from './LayoutDoc.module.scss'
 import { TOC } from './markdownRenderer'
 import TableOfContents from './TableOfContents'
 
-export interface LayoutDocProps {
+interface LayoutDocProps {
   children: React.ReactNode
   disableToc: boolean
   toc: TOC
 }
 
-export const LayoutDoc: React.FunctionComponent<LayoutDocProps> = (props) => {
+export const LayoutDoc: React.FC<LayoutDocProps> = (props) => {
   const { children, toc, disableToc }: LayoutDocProps = props
 
   return (

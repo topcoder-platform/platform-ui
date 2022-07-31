@@ -1,9 +1,9 @@
 @import '../../styles/variables';
-@import '../../styles/mixins';
+@import '../../../../lib/styles/includes';
 
 .imagesBlock {
   position: relative;
-  margin: $margin-xxl 0;
+  margin: $space-xxl 0;
   overflow: hidden;
   background-color: $black-5;
   border-radius: 8px;
@@ -61,7 +61,7 @@
   max-width: 481px;
 }
 
-@include lg-down {
+@include ltelg {
   .imageContainer{
     max-width: 100%;
   }

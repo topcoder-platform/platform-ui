@@ -3,10 +3,10 @@
 .divider {
     height: 1px;
     border-bottom: $border solid $black-10;
-    margin: $pad-xxxxl 0;
+    margin: $space-xxxxl 0;
     width: 100%;
 
     @include ltemd {
-        margin: $pad-xxl 0;
+        margin: $space-xxl 0;
     }
 }

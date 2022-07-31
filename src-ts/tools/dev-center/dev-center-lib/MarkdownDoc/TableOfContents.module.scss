@@ -11,15 +11,15 @@
 }
 
 .navLabel {
-  font-family: $font-barlow;
-  font-weight: $font-weight-semibold;
+  @include font-barlow;
+  @include font-weight-semibold;
   font-size: 18px;
   line-height: 22px;
   color: inherit;
   text-transform: uppercase;
 
-  padding: 0 0 0 $pad-xxxxl;
-  margin: 0 0 $margin-xxl;
+  padding: 0 0 0 $space-xxxxl;
+  margin: 0 0 $space-xxl;
 }
 
 .navList {
@@ -45,12 +45,12 @@
 }
 
 .navListItem-link {
-  font-family: $font-barlow;
-  font-weight: $font-weight-semibold;
+  @include font-barlow;
+  @include font-weight-semibold;
   font-size: 14px;
   line-height: 20px;
   color: $black-60;
 
   display: block;
-  padding: $pad-sm 0 $pad-sm $pad-xxxxl;
+  padding: $space-sm 0 $space-sm $space-xxxxl;
 }

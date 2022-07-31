@@ -10,13 +10,13 @@ $left-col-width-xl: calc(1.3 * $header-height);
 /* Padding */
 $border-xs: 1px;
 $border: 2px;
-$pad-xs: calc(2 * $border); // 4
-$pad-sm: calc(2 * $pad-xs); // 8
-$pad-md: calc(3 * $pad-xs); // 12
-$pad-lg: calc(4 * $pad-xs); // 16
-$pad-xl: calc(5 * $pad-xs); // 20
-$pad-xxl: calc(6 * $pad-xs); // 24
-$pad-xxxl: calc(7 * $pad-xs); // 28
-$pad-xxxxl: calc(8 * $pad-xs); // 32
-$pad-mx: calc(8 * $pad-xs + $pad-sm); // 40
-$pad-mxx: calc(12 * $pad-xs); // 48
+$space-xs: calc(2 * $border); // 4
+$space-sm: calc(2 * $space-xs); // 8
+$space-md: calc(3 * $space-xs); // 12
+$space-lg: calc(4 * $space-xs); // 16
+$space-xl: calc(5 * $space-xs); // 20
+$space-xxl: calc(6 * $space-xs); // 24
+$space-xxxl: calc(7 * $space-xs); // 28
+$space-xxxxl: calc(8 * $space-xs); // 32
+$space-mx: calc(8 * $space-xs + $space-sm); // 40
+$space-mxx: calc(12 * $space-xs); // 48

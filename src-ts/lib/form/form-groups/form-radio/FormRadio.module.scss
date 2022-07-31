@@ -3,10 +3,10 @@
 .form-radio {
     display: flex;
     flex: 1;
-    margin-bottom: $pad-xxl;
+    margin-bottom: $space-xxl;
     @include ltemd {
         flex-direction: column;
-        margin-bottom: $pad-lg;
+        margin-bottom: $space-lg;
     }
     input[type=radio], input[type=checkbox] {
         position: absolute;
@@ -18,11 +18,11 @@
     }
     .option {
         flex: 1;
-        margin-right: $pad-lg;
+        margin-right: $space-lg;
         position: relative;
         @include ltemd {
             margin-right: 0;
-            margin-bottom: $pad-lg;
+            margin-bottom: $space-lg;
             &:last-child {
                 margin-bottom: 0;
             }

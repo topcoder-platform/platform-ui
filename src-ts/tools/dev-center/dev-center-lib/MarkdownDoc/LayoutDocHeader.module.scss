@@ -1,19 +1,15 @@
 @import '../../styles/variables';
-@import '../../styles/mixins';
-
-.header {
-  padding: $pad-xxxxl 0 0;
-}
+@import '../../../../lib/styles/includes';
 
 .title {
-  font-family: $font-barlow-condensed;
-  font-weight: $font-weight-semibold;
+  @include font-barlow-condensed;
+  @include font-weight-semibold;
   font-size: 34px;
   line-height: 32px;
   color: inherit;
   text-transform: uppercase;
 
-  padding: 0 0 $pad-lg;
+  padding: 0 0 $space-lg;
 }
 
 .divider {
@@ -24,20 +20,20 @@
 }
 
 .subtitle {
-  font-family: $font-roboto;
-  font-weight: $font-weight-bold;
+  @include font-roboto;
+  @include font-weight-bold;
   font-size: 12px;
   line-height: 16px;
   letter-spacing: 1px;
   color: $black-60;
   text-transform: uppercase;
 
-  padding: $pad-lg 0 0;
+  padding: $space-lg 0 0;
 }
 
-@include lg-down {
+@include ltelg {
   .header {
-    padding: $pad-lg 0 0;
+    padding: $space-lg 0 0;
   }
 
   .title {

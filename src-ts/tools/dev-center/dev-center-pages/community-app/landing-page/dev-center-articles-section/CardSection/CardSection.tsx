@@ -2,39 +2,58 @@ import { ContentfulClientApi, createClient } from 'contentful'
 import { FC, useEffect, useState } from 'react'
 
 import { ArticleCard } from '../ArticleCard'
-import { ArticleType, BlogPost, getBlog, ThriveArticle } from '../Articles'
+import { getBlog } from '../Articles'
 import { ArticlesUrl, defaultBlogs } from '../articles.config'
+import { ArticleType, BlogPost, ThriveArticle } from '../models'
 
 import styles from './CardSection.module.scss'
 
 const CardSection: FC = () => {
-    const [articles, setArticles] = useState<Array<ThriveArticle | BlogPost>>([]) // tslint:disable-line:typedef
+    const [articles, setArticles]: [
+        Array<ThriveArticle | BlogPost>,
+        React.Dispatch<React.SetStateAction<Array<ThriveArticle | BlogPost>>>
+    ] = useState<Array<ThriveArticle | BlogPost>>([])
+
     useEffect(() => {
         const client: ContentfulClientApi = createClient({
             accessToken: process.env.REACT_APP_CONTENTFUL_EDU_CDN_API_KEY ?? '',
             space: process.env.REACT_APP_CONTENTFUL_EDU_SPACE_ID ?? '',
         })
-        Promise.all(ArticlesUrl.map(async (articleUrl, idx) => {
-            switch (articleUrl.type) {
-                case ArticleType.Thrive:
-                    const response: {fields: ThriveArticle} = await client.getEntry(articleUrl.url)
-                    return response.fields
-                case ArticleType.Blog:
-                    const blog: BlogPost = await getBlog(articleUrl.url) ?? defaultBlogs[idx]
-                    return blog
-            }
-        })).then(arr => setArticles(arr))
-
+        Promise.all(
+            ArticlesUrl.map(async (articleUrl, idx) => {
+                switch (articleUrl.type) {
+                    case ArticleType.Thrive:
+                        const response: { fields: ThriveArticle } =
+                            await client.getEntry(articleUrl.url)
+                        return response.fields
+                    case ArticleType.Blog:
+                        const blog: BlogPost =
+                            (await getBlog(articleUrl.url)) ??
+                            defaultBlogs[idx]
+                        return blog
+                }
+            })
+        ).then((arr) => setArticles(arr))
     }, [])
+
+    const articleStyles: Array<any> = [
+        styles.mainItem,
+        styles.item2,
+        styles.item3,
+        styles.item4,
+        styles.item5,
+    ]
 
     return (
         <div className={styles.container}>
             <div className={styles.innerContainer}>
-                {articles.length > 0 && <ArticleCard article={articles[0]} className={styles.mainItem} isMain={true}/> }
-                {articles.length > 1 && <ArticleCard article={articles[1]} className={styles.item2} isMain={false}/>}
-                {articles.length > 2 && <ArticleCard article={articles[2]} className={styles.item3} isMain={false}/>}
-                {articles.length > 3 && <ArticleCard article={articles[3]} className={styles.item4} isMain={false}/>}
-                {articles.length > 4 && <ArticleCard article={articles[4]} className={styles.item5} isMain={false}/>}
+                {articles.map((article, index) => (
+                    <ArticleCard
+                        article={article}
+                        className={articleStyles[index]}
+                        isMain={index === 0}
+                    />
+                ))}
             </div>
         </div>
     )

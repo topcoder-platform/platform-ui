@@ -2,8 +2,8 @@
 @import '../../../lib/styles/includes';
 
 .wrap {
-    padding: $pad-mx 0 $pad-xxxxl;
-    gap: $pad-xxxxl;
+    padding: $space-mx 0 $space-xxxxl;
+    gap: $space-xxxxl;
     position: relative;
     flex: 1;
 
@@ -36,7 +36,7 @@
     flex: 1 1 auto;
     .text {
         @extend .body-main;
-        margin-top: $pad-xxl;
+        margin-top: $space-xxl;
     }
 }
 
@@ -45,20 +45,20 @@
     flex: 1 1 auto;
     .text {
         @extend .body-main;
-        margin-top: $pad-xxl;
+        margin-top: $space-xxl;
     }
     
     p {
-        margin: $pad-sm 0;
+        margin: $space-sm 0;
     }
 }
 
 .coming-soon {
-    margin-top: $pad-xxxxl;
+    margin-top: $space-xxxxl;
 }
 
 .credits-link {
-    padding-bottom: $pad-xxl;
+    padding-bottom: $space-xxl;
 
     a {
         @extend .quote-small;
@@ -70,7 +70,7 @@
     }
     svg {
         @include icon-md;
-        margin-left: $pad-xs;
+        margin-left: $space-xs;
         flex: 0 0 auto;
     }
 }

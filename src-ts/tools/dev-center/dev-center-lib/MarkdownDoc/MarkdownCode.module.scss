@@ -1,10 +1,11 @@
 @import '../../styles/variables';
+@import '../../../../lib/styles/includes';
 
 .codeBlock {
   position: relative;
-  padding: $pad-lg;
+  padding: $space-lg;
   padding-right: 48px;
-  margin: $margin-xxl 0;
+  margin: $space-xxl 0;
   background-color: $black-100;
   border-radius: 8px;
 
@@ -13,7 +14,7 @@
 
     code {
       display: block;
-      font-family: $font-roboto-mono;
+      @include font-roboto-mono;
       font-weight: $font-weight-normal;
       font-size: 14px;
       line-height: 18px;

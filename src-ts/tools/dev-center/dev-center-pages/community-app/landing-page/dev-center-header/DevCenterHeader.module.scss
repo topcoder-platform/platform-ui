@@ -41,23 +41,23 @@
                 @include ltemd {
                     font-size: 42px;
                     line-height: 40px;
-                    padding-top: $pad-xxl;
+                    padding-top: $space-xxl;
                 }
             }
             
             .subtitle {
-                margin-top: $pad-xxl;
+                margin-top: $space-xxl;
                 display: block;
                 @include font-tc-white;
                 line-height: 20px;
                 letter-spacing: 0.5px;
                 text-transform: capitalize;
-                font-weight: $font-weight-medium;
+                @include font-weight-medium;
             }
         }
     
         .rightContent {
-            margin-top: $pad-xxxxl;
+            margin-top: $space-xxxxl;
     
             @include ltemd {
                 text-align: center;

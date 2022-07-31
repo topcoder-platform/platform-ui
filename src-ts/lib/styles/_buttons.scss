@@ -39,27 +39,27 @@
 
     &.button-xs {
         line-height: 20px;
-        padding: 0 $pad-lg;
+        padding: 0 $space-lg;
         font-size: 12px;
     }
 
     &.button-sm {
-        padding: $border $pad-xl;
+        padding: $border $space-xl;
         font-size: 13px;
     }
 
     &.button-md {
-        padding: 3*$border $pad-xl;
+        padding: 3*$border $space-xl;
         font-size: 13px;
     }
 
     &.button-lg {
-        padding: $pad-sm $pad-xxl;
+        padding: $space-sm $space-xxl;
         font-size: 14px;
     }
 
     &.button-xl {
-        padding: $pad-md $pad-xxl;
+        padding: $space-md $space-xxl;
         font-size: 16px;
 
         svg {
@@ -163,9 +163,9 @@
         }
 
         svg {
-            margin-left: $pad-xs;
-            height: $pad-lg;
-            width: $pad-lg;
+            margin-left: $space-xs;
+            height: $space-lg;
+            width: $space-lg;
         }
     }
 
@@ -178,7 +178,7 @@
     &.icon-bordered,
     &.icon {
         margin: 0;
-        padding: $pad-sm calc($pad-sm - $border-xs) $pad-xs $pad-sm;
+        padding: $space-sm calc($space-sm - $border-xs) $space-xs $space-sm;
         border: 0;
         background: none;
         color: $turq-160;
@@ -206,7 +206,7 @@
         height: 40px;
         & {
             border: 1px solid $turq-160;
-            padding: $pad-lg;
+            padding: $space-lg;
             border-radius: 50px;
         }
     }

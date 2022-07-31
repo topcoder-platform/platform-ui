@@ -1,5 +1,4 @@
 import { GlobalConfig } from '../../lib'
-import { ToolTitle } from '../constants'
 
 import { AppHostEnvironment } from './app-host-environment.enum'
 import { EnvironmentConfigDefault } from './environment.default.config'
@@ -27,9 +26,13 @@ export const EnvironmentConfigProd: GlobalConfig = {
     },
     TAG_MANAGER_ID: 'GTM-MXXQHG8',
     TOPCODER_URLS: {
+        API_BASE: `${COMMUNITY_WEBSITE}/api`,
+        BLOG_PAGE: `${COMMUNITY_WEBSITE}/blog`,
         CHALLENGES_PAGE: `${COMMUNITY_WEBSITE}/challenges`,
         GIGS_PAGE: `${COMMUNITY_WEBSITE}/gigs`,
+        THRIVE_PAGE: `${COMMUNITY_WEBSITE}/thrive`,
         USER_PROFILE: `${COMMUNITY_WEBSITE}/members`,
+        WP_CONTENT: `${COMMUNITY_WEBSITE}/wp-content`,
     },
     URL: {
         ACCOUNTS_APP_CONNECTOR: 'https://accounts-auth0.topcoder.com',

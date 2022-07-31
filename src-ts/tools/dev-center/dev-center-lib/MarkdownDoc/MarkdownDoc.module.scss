@@ -1,9 +1,9 @@
 @import '../../styles/variables';
-@import '../../styles/mixins';
+@import '../../../../lib/styles/includes';
 
 .markdown-doc {
-  font-family: $font-roboto;
-  font-weight: $font-weight-normal;
+  @include font-roboto;
+  @include font-weight-normal;
   font-size: 16px;
   line-height: 24px;
   color: inherit;
@@ -11,8 +11,8 @@
   counter-reset: devCenterHeading2;
 
   *:not(pre) code {
-    font-family: $font-roboto-mono;
-    font-weight: $font-weight-normal;
+    @include font-roboto-mono;
+    @include font-weight-normal;
     font-size: 14px;
     line-height: 18px;
     color: $purple-120;
@@ -22,7 +22,7 @@
 
   a {
     font: inherit;
-    font-weight: $font-weight-medium;
+    @include font-weight-medium;
     color: $link-blue-dark;
 
     &:hover,
@@ -37,26 +37,26 @@
 }
 
 .heading1 {
-  font-family: $font-barlow-condensed;
-  font-weight: $font-weight-semibold;
+  @include font-barlow-condensed;
+  @include font-weight-semibold;
   font-size: 34px;
   line-height: 32px;
   color: inherit;
   text-transform: uppercase;
 
-  margin: $margin-xxl 0 $margin-lg;
+  margin: $space-xxl 0 $space-lg;
   counter-reset: devCenterHeading2;
 }
 
 .heading2 {
-  font-family: $font-barlow;
-  font-weight: $font-weight-semibold;
+  @include font-barlow;
+  @include font-weight-semibold;
   font-size: 24px;
   line-height: 28px;
   color: inherit;
   text-transform: uppercase;
 
-  margin: 80px 0 $margin-xxl;
+  margin: 80px 0 $space-xxl;
   counter-increment: devCenterHeading2;
 
   &::before {
@@ -66,14 +66,14 @@
   }
 
   &:first-child {
-    margin-top: $margin-xxl;
+    margin-top: $space-xxl;
   }
 }
 
 .divider {
   hr {
     width: 100%;
-    margin: $margin-lg 0;
+    margin: $space-lg 0;
     border: 1px solid $black-10;
     border-radius: 2px;
   }
@@ -82,7 +82,7 @@
 .paragraph{
   font: inherit;
   color: inherit;
-  margin: $margin-xxl 0 0;
+  margin: $space-xxl 0 0;
 }
 
 .orderedList,
@@ -91,7 +91,7 @@
   > ul {
     font: inherit;
     color: inherit;
-    margin: 0 0 $margin-xxl;
+    margin: 0 0 $space-xxl;
 
     padding-left: 24px;
     > li {
@@ -128,7 +128,7 @@
   }
 }
 
-@include lg-down {
+@include ltelg {
   .markdown-doc {
     font-size: 14px;
     line-height: 20px;
@@ -142,6 +142,6 @@
   .heading2 {
     font-size: 20px;
     line-height: 22px;
-    margin: $margin-xxl 0 $margin-xxl;
+    margin: $space-xxl 0 $space-xxl;
   }
 }

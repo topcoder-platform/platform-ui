@@ -1,20 +1,20 @@
 @import '../../styles/variables';
-@import '../../styles/mixins';
+@import '../../../../lib/styles/includes';
 
 .linkBlock {
   display: flex;
   align-items: center;
-  margin: $margin-xxl 0;
+  margin: $space-xxl 0;
   background-color: $blue-10;
   border-radius: 4px;
 }
 
 .label {
   flex: none;
-  padding: $pad-md $pad-lg;
+  padding: $space-md $space-lg;
 
-  font-family: $font-roboto;
-  font-weight: $font-weight-bold;
+  @include font-roboto;
+  @include font-weight-bold;
   font-size: 12px;
   line-height: 16px;
   letter-spacing: 1px;
@@ -29,11 +29,11 @@
 
 .link {
   flex: auto;
-  padding: $pad-md $pad-lg;
+  padding: $space-md $space-lg;
 
   a {
-    font-family: $font-roboto;
-    font-weight: $font-weight-medium;
+    @include font-roboto;
+    @include font-weight-medium;
     font-size: 16px;
     line-height: 24px;
     color: $link-blue-dark;
@@ -42,7 +42,7 @@
   }
 }
 
-@include lg-down {
+@include ltelg {
   .label,
   .divider {
     display: none;

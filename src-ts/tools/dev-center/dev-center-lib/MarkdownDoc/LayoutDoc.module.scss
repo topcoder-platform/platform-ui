@@ -1,15 +1,15 @@
 @import '../../styles/variables';
-@import '../../styles/mixins';
+@import '../../../../lib/styles/includes';
 
 .main {
   display: flex;
   width: 100%;
-  margin: $margin-xxxxl 0;
+  margin: $space-xxxxl 0;
 }
 
 .mainContent {
   width: calc(100% - $side-nav-width);
-  padding: 0 $pad-xxxxl 0 0;
+  padding: 0 $space-xxxxl 0 0;
   min-height: calc(100vh - 520px);
 
   &.disableToc {
@@ -18,9 +18,9 @@
   }
 }
 
-@include lg-down {
+@include ltelg {
   .main {
-    margin: $margin-xxl 0;
+    margin: $space-xxl 0;
 
     > .mainContent {
       width: 100%;

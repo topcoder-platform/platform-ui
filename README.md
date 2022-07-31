@@ -496,8 +496,8 @@ e.g.:
 ```
 .logo-link {
     svg {
-        width: calc($pad-xxl + $pad-xxxxl);
-        height: $pad-xl;
+        width: calc($space-xxl + $space-xxxxl);
+        height: $space-xl;
         fill: none;
 
         path {

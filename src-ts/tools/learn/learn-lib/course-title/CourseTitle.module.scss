@@ -3,18 +3,18 @@
 
 .wrap {
     display: flex;
-    gap: $pad-lg;
+    gap: $space-lg;
     align-items: center;
 
     @include ltelg {
-        gap: $pad-sm;
+        gap: $space-sm;
     }
 
     @include ltemd {
         &:global(.xl) {
             flex-direction: column;
             text-align: center;
-            gap: $pad-lg;
+            gap: $space-lg;
         }
     }
 
@@ -54,13 +54,13 @@
         color: #767676;
         display: block;
         &:global(.lg) {
-            margin-top: $pad-sm;
+            margin-top: $space-sm;
         }
     }
 
     @include ltemd {
         :global(.quote-small.xl) {
-            margin-top: $pad-sm;
+            margin-top: $space-sm;
         }
     }
 }

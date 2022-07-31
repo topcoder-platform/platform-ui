@@ -21,9 +21,13 @@ export interface GlobalConfig {
     }
     TAG_MANAGER_ID?: string
     TOPCODER_URLS: {
+        API_BASE: string,
+        BLOG_PAGE: string,
         CHALLENGES_PAGE: string,
         GIGS_PAGE: string,
+        THRIVE_PAGE: string,
         USER_PROFILE: string,
+        WP_CONTENT: string,
     }
     URL: {
         ACCOUNTS_APP_CONNECTOR: string

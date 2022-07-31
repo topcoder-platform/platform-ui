@@ -2,16 +2,16 @@ import * as React from 'react'
 
 import styles from './LayoutDocHeader.module.scss'
 
-export interface LayoutDocHeaderProps {
+interface LayoutDocHeaderProps {
   subtitle?: string
   title?: string
 }
 
-export const LayoutDocHeader: React.FunctionComponent<LayoutDocHeaderProps> = (props) => {
+export const LayoutDocHeader: React.FC<LayoutDocHeaderProps> = (props) => {
   const { title = '', subtitle = '' }: LayoutDocHeaderProps = props
 
   return (
-    <header className={styles['header']}>
+    <header>
       <h1 className={styles['title']}>{title}</h1>
       <hr className={styles['divider']} />
       <h2 className={styles['subtitle']}>{subtitle}</h2>

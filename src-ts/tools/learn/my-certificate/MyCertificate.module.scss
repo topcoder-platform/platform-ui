@@ -1,8 +1,8 @@
 @import '../../../lib/styles/includes';
 
 .wrap {
-    padding-top: $pad-xxxxl;
-    padding-bottom: calc($pad-xxxxl + $pad-xs);
+    padding-top: $space-xxxxl;
+    padding-bottom: calc($space-xxxxl + $space-xs);
     flex: 99 1 auto;
     display: flex;
 
@@ -16,7 +16,7 @@
     width: 100%;
     justify-content: center;
 
-    gap: $pad-xxxxl;
+    gap: $space-xxxxl;
 
     @include ltemd {
         flex-direction: column;
@@ -29,7 +29,7 @@
     flex-direction: column;
     align-items: center;
 
-    gap: $pad-sm;
+    gap: $space-sm;
 
     &:last-child {
         margin-top: auto;

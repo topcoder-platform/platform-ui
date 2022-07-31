@@ -25,9 +25,9 @@
         }
 
         .container {
-            padding-left: $pad-xxl;
-            padding-right: $pad-xxl;
-            padding-bottom: $pad-xxl;
+            padding-left: $space-xxl;
+            padding-right: $space-xxl;
+            padding-bottom: $space-xxl;
             position: absolute;
             bottom: 0px;
             width: 100%;
@@ -44,15 +44,15 @@
                 opacity: 0.72;
                 text-transform: capitalize;
                 display: block;
-                margin-bottom: $pad-lg;
+                margin-bottom: $space-lg;
             }
             
             .summary {
-                font-weight: $font-weight-normal;
+                @include font-weight-normal;
                 display: block;
                 white-space: nowrap;
                 overflow: hidden;
-                margin-bottom: $pad-lg;
+                margin-bottom: $space-lg;
                 text-overflow: ellipsis;
             }
             

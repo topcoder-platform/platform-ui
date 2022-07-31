@@ -72,6 +72,7 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
             tabIndex={props.tabIndex}
             title={props.title}
             type={props.type || 'button'}
+            disabled={!!props.disable}
         >
             {content}
         </ButtonElement>

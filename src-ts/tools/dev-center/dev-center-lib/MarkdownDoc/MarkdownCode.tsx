@@ -1,17 +1,17 @@
 import * as React from 'react'
 
-import { useWindowSize } from '../../../../lib/hooks/use-window-size.hook'
-import CopyButton from '../CopyButton'
+import { useWindowSize } from '../../../../lib'
+import { CopyButton } from '../CopyButton'
 
 import styles from './MarkdownCode.module.scss'
 
-export interface MarkdownCodeProps {
+interface MarkdownCodeProps {
   children: React.ReactNode,
   code: string,
   lang?: string,
 }
 
-export const MarkdownCode: React.FunctionComponent<MarkdownCodeProps> = (props) => {
+export const MarkdownCode: React.FC<MarkdownCodeProps> = (props) => {
   const { children, code, lang }: MarkdownCodeProps = props
   const isTerminal: boolean = (lang === 'terminal' || lang === 'console')
   const [showLineNumbers, setShowLineNumbers]: [boolean, React.Dispatch<React.SetStateAction<boolean>>] = React.useState(!isTerminal)

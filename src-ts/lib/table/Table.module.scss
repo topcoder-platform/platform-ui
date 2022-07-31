@@ -40,7 +40,7 @@
 
         .th {
             @extend .small-tab;
-            padding: $pad-lg;
+            padding: $space-lg;
             white-space: nowrap;
             text-align: left;
             text-transform: uppercase;
@@ -65,7 +65,7 @@
 
             .tooltip {
                 display: inline-block;
-                margin-left: $pad-xs;
+                margin-left: $space-xs;
                 position: relative;
                 top: 2px;
 

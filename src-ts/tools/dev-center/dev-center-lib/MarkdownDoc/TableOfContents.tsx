@@ -3,11 +3,11 @@ import * as React from 'react'
 import { TOC } from './markdownRenderer'
 import styles from './TableOfContents.module.scss'
 
-export interface TableOfContentsProps {
+interface TableOfContentsProps {
   toc: TOC
 }
 
-export const TableOfContents: React.FunctionComponent<TableOfContentsProps> = (props) => {
+export const TableOfContents: React.FC<TableOfContentsProps> = (props) => {
   const [activeIndex, setActiveIndex]: [number, React.Dispatch<React.SetStateAction<number>>] = React.useState(-1)
   const { toc }: { toc: TOC } = props
   const items: TOC = React.useMemo(() => {
