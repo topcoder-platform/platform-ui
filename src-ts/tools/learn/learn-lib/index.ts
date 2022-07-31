@@ -1,5 +1,6 @@
 export * from './all-certifications-provider'
 export * from './collapsible-pane'
+export * from './course-badge'
 export * from './course-outline'
 export * from './course-title'
 export * from './courses-provider'
