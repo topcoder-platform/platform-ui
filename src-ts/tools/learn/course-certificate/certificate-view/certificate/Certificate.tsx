@@ -1,7 +1,7 @@
 import classNames from 'classnames'
 import { FC, MutableRefObject } from 'react'
 
-import { LearnCertificateTrackType } from '../../learn-lib'
+import { LearnCertificateTrackType } from '../../../learn-lib'
 
 import { CertificateBgPattern } from './certificate-bg-pattern'
 import styles from './Certificate.module.scss'

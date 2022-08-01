@@ -1,10 +1,10 @@
 import { authUrlLogin, PlatformRoute } from '../../lib'
 
+import { MyCertificate, UserCertificate } from './course-certificate'
 import { CourseCompletedPage } from './course-completed'
 import { CourseDetailsPage } from './course-details'
 import { FreeCodeCamp } from './free-code-camp'
 import { default as Learn, toolTitle } from './Learn'
-import { MyCertificate } from './my-certificate'
 import { MyLearning } from './my-learning'
 import { WelcomePage } from './welcome'
 
@@ -82,6 +82,12 @@ export const learnRoutes: Array<PlatformRoute> = [
                 element: <MyCertificate />,
                 route: ':provider/:certification/certificate',
                 title: 'My Certificate',
+            },
+            {
+                children: [],
+                element: <UserCertificate />,
+                route: ':provider/:certification/:memberHandle/certificate',
+                title: 'User Certificate',
             },
             {
                 children: [],
