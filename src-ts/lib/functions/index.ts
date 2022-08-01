@@ -1,5 +1,6 @@
 export {
     AuthenticationRegistrationSource,
+    authGetRegistrationSource,
     authUrl,
     authUrlLogin,
     authUrlLogout,

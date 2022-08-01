@@ -1,5 +1,8 @@
-import { ToolTitle } from '../../../config'
-import { AuthenticationRegistrationSource, authUrlSignup } from '../../functions'
+import {
+    AuthenticationRegistrationSource,
+    authGetRegistrationSource,
+    authUrlSignup,
+} from '../../functions'
 import { PlatformRoute } from '../platform-route.model'
 
 // NOTE: this function ties together routes and auth,
@@ -8,24 +11,16 @@ import { PlatformRoute } from '../platform-route.model'
 // profile provider; however, the routes are already
 // dependent on the profile context, so I didn't want to
 // make the profile context also dependent on the routes.
-export function getSignupUrl(currentLocation: string, toolRoutes: Array<PlatformRoute>, returnUrl?: string): string {
+export function getSignupUrl(
+    currentLocation: string,
+    toolRoutes: Array<PlatformRoute>,
+    returnUrl?: string
+): string {
 
     // figure out the current tool so we can assign the correct reg source
     const activeTool: PlatformRoute | undefined = toolRoutes.find(tool => isActiveTool(currentLocation, tool))
-
-    let regSource: AuthenticationRegistrationSource | undefined
-
-    switch (activeTool?.title) {
-
-        // currently, there is no reg source for members
-        case ToolTitle.learn:
-            break
-
-        // currently, the work tool and the platform
-        // landing page use the reg source of selfService
-        default:
-            regSource = AuthenticationRegistrationSource.work
-    }
+    const regSource: AuthenticationRegistrationSource | undefined
+        = authGetRegistrationSource(activeTool)
 
     return authUrlSignup(returnUrl, regSource)
 }
