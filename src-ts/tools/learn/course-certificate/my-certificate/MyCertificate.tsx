@@ -6,9 +6,8 @@ import {
     profileContext,
     ProfileContextData
 } from '../../../../lib'
-import CertificateView from '../certificate-view/CertificateView'
 import { getCoursePath } from '../../learn.routes'
-
+import CertificateView from '../certificate-view/CertificateView'
 
 const MyCertificate: FC<{}> = () => {
     const routeParams: Params<string> = useParams()
@@ -21,13 +20,13 @@ const MyCertificate: FC<{}> = () => {
 
     const navigateToCourse: () => void = useCallback(() => {
         navigate(coursePath)
-    }, [coursePath, navigate]);
-    
+    }, [coursePath, navigate])
+
     useEffect(() => {
       if (profileReady && !profile) {
         navigateToCourse()
       }
-    }, [profileReady, profile, navigateToCourse]);
+    }, [profileReady, profile, navigateToCourse])
 
     return (
         <>

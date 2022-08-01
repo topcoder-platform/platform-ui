@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
-import { userCompletedCertificationGetAsync } from './user-completed-certifications-functions'
-import { UserCompletedCertificationsProviderData } from './user-completed-certifications-provider-data.model'
 
+import { LearnUserCompletedCertification, userCompletedCertificationGetAsync } from './user-completed-certifications-functions'
+import { UserCompletedCertificationsProviderData } from './user-completed-certifications-provider-data.model'
 
 export function useUserCompletedCertifications(userId?: number, provider?: string, certification?: string):
     UserCompletedCertificationsProviderData {
@@ -33,7 +33,7 @@ export function useUserCompletedCertifications(userId?: number, provider?: strin
                     return
                 }
 
-                let certifications = completedCertifications;
+                let certifications: Array<LearnUserCompletedCertification> = completedCertifications
 
                 if (provider || certification) {
                     certifications = completedCertifications.filter((c) => {

@@ -1,20 +1,20 @@
 import html2canvas from 'html2canvas'
-import { FC, MutableRefObject, useEffect, useRef } from 'react'
+import { FC, MutableRefObject, useEffect, useMemo, useRef } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
-import { UserProfile } from '../../../../lib'
 
 import {
     fileCreateFromCanvas,
     fileDownloadCanvasAsImage,
     IconOutline,
     LoadingSpinner,
+    UserProfile,
 } from '../../../../lib'
-
 import {
     AllCertificationsProviderData,
     CoursesProviderData,
     useAllCertifications,
     useCourses,
+    UserCompletedCertificationsProviderData,
     useUserCompletedCertifications,
 } from '../../learn-lib'
 import { getCoursePath } from '../../learn.routes'
@@ -26,10 +26,10 @@ import { useCertificateScaling } from './use-certificate-scaling.hook'
 
 interface CertificateViewProps {
     certification: string,
-    profile: UserProfile,
-    provider: string,
     hideActions?: boolean,
     onCertificationNotCompleted: () => void
+    profile: UserProfile,
+    provider: string,
 }
 
 const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) => {
@@ -37,19 +37,19 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const coursePath: string = getCoursePath(props.provider, props.certification)
     const certificateElRef: MutableRefObject<HTMLElement | any> = useRef()
     const certificateWrapRef: MutableRefObject<HTMLElement | any> = useRef()
-    const userName: string = [props.profile.firstName, props.profile.lastName].filter(Boolean).join(' ') || props.profile.handle
+    const userName: string = [props.profile.firstName, props.profile.lastName].filter(Boolean).join(' ')
 
     const {
         course,
         ready: courseReady,
     }: CoursesProviderData = useCourses(props.provider, props.certification)
 
-    const certificationTitle: string = `${userName} - ${course?.title} Certification`
+    const certificationTitle: string = `${userName || props.profile.handle} - ${course?.title} Certification`
 
     const {
         certifications: [completedCertificate],
         ready: completedCertificateReady,
-    } = useUserCompletedCertifications(
+    }: UserCompletedCertificationsProviderData = useUserCompletedCertifications(
         props.profile.userId,
         props.provider,
         props.certification
@@ -61,7 +61,13 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         ready: certificateReady,
     }: AllCertificationsProviderData = useAllCertifications(props.provider, course?.certificationId)
 
-    const ready: boolean = completedCertificateReady && courseReady && certificateReady
+    const ready: boolean = useMemo(() => (
+        completedCertificateReady && courseReady && certificateReady
+    ), [certificateReady, completedCertificateReady, courseReady])
+
+    const readyAndCompletedCertification: boolean = useMemo(() => (
+        ready && hasCompletedTheCertification
+    ), [hasCompletedTheCertification, ready])
 
     useCertificateScaling(ready ? certificateWrapRef : undefined)
 
@@ -146,7 +152,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         <>
             {!ready && <LoadingSpinner show />}
 
-            {ready && hasCompletedTheCertification && (
+            {readyAndCompletedCertification && (
                 <div className={styles['wrap']}>
                     <div className={styles['content-wrap']}>
                         {!props.hideActions && (

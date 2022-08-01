@@ -1,12 +1,12 @@
 import { authUrlLogin, PlatformRoute } from '../../lib'
 
+import { MyCertificate, UserCertificate } from './course-certificate'
 import { CourseCompletedPage } from './course-completed'
 import { CourseDetailsPage } from './course-details'
 import { FreeCodeCamp } from './free-code-camp'
 import { default as Learn, toolTitle } from './Learn'
 import { MyLearning } from './my-learning'
 import { WelcomePage } from './welcome'
-import { UserCertificate, MyCertificate } from './course-certificate'
 
 export function getCoursePath(provider: string, certification: string): string {
     return `${rootRoute}/${provider}/${certification}`

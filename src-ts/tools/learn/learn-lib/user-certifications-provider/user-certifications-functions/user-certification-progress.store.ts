@@ -12,12 +12,7 @@ export function getAsync(userId: number, provider?: string, certification?: stri
             provider && `provider=${provider}`,
             certification && `certification=${certification}`,
         ].filter(Boolean).join('&'),
-    )).then(d => d.map(r => ({
-        ...r,
-        status: 'completed',
-        courseProgressPercentage: 100,
-        completedDate: '2022-07-24'
-    } as any)))
+    ))
 }
 
 export function startAsync(userId: number, certificationId: string, courseId: string, data: any): Promise<LearnUserCertificationProgress> {
