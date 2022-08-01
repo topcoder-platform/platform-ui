@@ -1,3 +1,4 @@
+export * from './authentication-reg-source.enum'
 export {
     authentication as authUrl,
     login as authUrlLogin,

@@ -1,25 +1,21 @@
-import { FC } from 'react'
-import { useParams } from 'react-router-dom'
+import { FC, useContext } from 'react'
+import { Location, useLocation, useParams } from 'react-router-dom'
 
 import {
-    authUrl,
     authUrlLogin,
-    authUrlSignup,
     Button,
+    routeContext,
+    RouteContextData,
+    useSignUp,
 } from '../../../lib'
 
 import styles from './WorkLoginPrompt.module.scss'
 
 const WorkLoginPrompt: FC = () => {
 
+    const routeData: RouteContextData = useContext(routeContext)
+    const location: Location = useLocation()
     const customReturnUrl: string | undefined = useParams().retUrl
-
-    let urlLogIn: string = authUrlLogin
-    let urlSignUp: string = authUrlSignup
-    if (customReturnUrl) {
-        urlLogIn = `${authUrl}?retUrl=${encodeURIComponent(customReturnUrl)}`
-        urlSignUp = `${urlLogIn}&regSource=tcBusiness&mode=signUp`
-    }
 
     return (
         <>
@@ -36,12 +32,12 @@ const WorkLoginPrompt: FC = () => {
                     <div className={styles['btn']}>
                         <Button
                             label='LOG IN'
-                            url={urlLogIn}
+                            url={authUrlLogin(customReturnUrl)}
                         />
                         <span className={styles['separator']}>OR</span>
                         <Button
                             label='SIGN UP'
-                            url={urlSignUp}
+                            onClick={() => useSignUp(location.pathname, routeData.toolsRoutes, customReturnUrl)}
                         />
                     </div>
                 </div>

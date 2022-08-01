@@ -10,7 +10,6 @@ export interface RouteContextData {
     getPathFromRoute: (route: PlatformRoute) => string
     getRouteElement: (route: PlatformRoute) => JSX.Element
     initialized: boolean
-    isActiveTool: (activePath: string, toolRoute: PlatformRoute) => boolean
     isRootRoute: (activePath: string) => boolean
     rootLoggedInRoute: string
     rootLoggedOutFC: FC<{}>
