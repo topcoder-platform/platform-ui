@@ -8,10 +8,9 @@ import {
     IconOutline,
     LinkedinSocialShareBtn,
     LoadingSpinner,
-    UserProfile,
-    TwitterSocialShareBtn
+    TwitterSocialShareBtn,
+    UserProfile
 } from '../../../../lib'
-
 import {
     AllCertificationsProviderData,
     CoursesProviderData,
@@ -20,7 +19,6 @@ import {
     UserCompletedCertificationsProviderData,
     useUserCompletedCertifications,
 } from '../../learn-lib'
-
 import { absoluteRootRoute, getCoursePath } from '../../learn.routes'
 
 import { ActionButton } from './action-button'
@@ -38,10 +36,15 @@ interface CertificateViewProps {
 
 const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) => {
     const navigate: NavigateFunction = useNavigate()
+    const { onCertificationNotCompleted }: CertificateViewProps = props
     const coursePath: string = getCoursePath(props.provider, props.certification)
     const certificateElRef: MutableRefObject<HTMLElement | any> = useRef()
     const certificateWrapRef: MutableRefObject<HTMLElement | any> = useRef()
-    const userName: string = [props.profile.firstName, props.profile.lastName].filter(Boolean).join(' ')
+
+    const userName: string = useMemo(() => (
+        [props.profile.firstName, props.profile.lastName].filter(Boolean).join(' ') ||
+        props.profile.handle
+    ), [props.profile.firstName, props.profile.handle, props.profile.lastName])
 
     const {
         course,
@@ -126,12 +129,12 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
 
     useEffect(() => {
         if (ready && !hasCompletedTheCertification) {
-            props.onCertificationNotCompleted()
+            onCertificationNotCompleted()
         }
     }, [
         coursePath,
         hasCompletedTheCertification,
-        props.onCertificationNotCompleted,
+        onCertificationNotCompleted,
         ready,
     ])
 
@@ -153,7 +156,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                         <div className={styles['certificate-wrap']} ref={certificateWrapRef}>
                             <Certificate
                                 course={course?.title}
-                                userName={userName || props.profile.handle}
+                                userName={userName}
                                 tcHandle={props.profile.handle}
                                 provider={course?.provider}
                                 completedDate={completedCertificate?.completedDate ?? ''}
