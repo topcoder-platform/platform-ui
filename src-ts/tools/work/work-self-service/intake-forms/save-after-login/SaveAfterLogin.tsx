@@ -44,7 +44,7 @@ const SaveAfterLogin: FC = () => {
     ])
 
     return (
-        <LoadingSpinner />
+        <LoadingSpinner show={true} />
     )
 }
 

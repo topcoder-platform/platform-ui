@@ -186,7 +186,7 @@ const BugHuntIntakeForm: React.FC = () => {
     }
 
     if (!challenge && workId) {
-        return <LoadingSpinner />
+        return <LoadingSpinner show={true} />
     }
 
     return (

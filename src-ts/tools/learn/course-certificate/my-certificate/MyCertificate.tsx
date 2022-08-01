@@ -30,7 +30,7 @@ const MyCertificate: FC<{}> = () => {
 
     return (
         <>
-            {!profileReady && <LoadingSpinner show />}
+            <LoadingSpinner show={!profileReady} />
 
             {profileReady && profile && (
                 <CertificateView

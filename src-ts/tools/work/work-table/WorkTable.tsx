@@ -132,7 +132,7 @@ const WorkTable: FC<{}> = () => {
             <>
                 {tabsElement}
                 <div className={styles.loader}>
-                    <LoadingSpinner />
+                    <LoadingSpinner show={true}/>
                 </div>
             </>
         )
