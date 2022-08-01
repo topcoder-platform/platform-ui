@@ -33,10 +33,6 @@ export const editNameFormDef: FormDefinition = {
                         },
                     ],
                 },
-            ],
-        },
-        {
-            inputs: [
                 {
                     autocomplete: FormInputAutocompleteOption.off,
                     label: 'Last Name',

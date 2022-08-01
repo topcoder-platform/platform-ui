@@ -4,12 +4,12 @@ import { BaseModal } from '../base-modal'
 
 import styles from './TermsModal.module.scss'
 
-export interface TermsModal {
+interface TermsModalProps {
     isOpen: boolean
     onClose: () => void
 }
 
-const TermsModal: FC<TermsModal> = ({ isOpen, onClose }: TermsModal) => (
+const TermsModal: FC<TermsModalProps> = ({ isOpen, onClose }: TermsModalProps) => (
     <BaseModal
         onClose={onClose}
         open={isOpen}

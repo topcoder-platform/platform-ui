@@ -1,3 +1,4 @@
+export * from './analytics'
 export * from './avatar'
 export * from './breadcrumb'
 export * from './button'
@@ -6,7 +7,7 @@ export * from './contact-support-form'
 export * from './content-layout'
 export * from './form'
 export {
-    analyticsInitialize,
+    authUrl,
     authUrlLogin,
     authUrlLogout,
     authUrlSignup,
@@ -42,3 +43,4 @@ export * from './tooltip'
 export * from './radio-button'
 export * from './payment-form'
 export * from './react-select'
+export * from './social-share'

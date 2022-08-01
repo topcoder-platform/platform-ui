@@ -21,7 +21,7 @@ export function startAsync(userId: number, certificationId: string, courseId: st
         `${userId}`,
         certificationId,
         courseId,
-    ), data)
+    ), {}, {params: data})
 }
 
 export function updateAsync(certificationProgressId: string, action: UserCertificationUpdateProgressActions, data: any): Promise<LearnUserCertificationProgress> {
@@ -29,5 +29,5 @@ export function updateAsync(certificationProgressId: string, action: UserCertifi
         'certification-progresses',
         certificationProgressId,
         action
-    ), data)
+    ), {}, {params: data})
 }

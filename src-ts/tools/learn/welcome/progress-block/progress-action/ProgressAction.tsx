@@ -86,6 +86,9 @@ const ProgressAction: FC<ProgressActionProps> = (props: ProgressActionProps) => 
                         completed={cert.completedDate}
                     />
                 ))}
+            <span className='desktop-hide'>
+                {allMyLearningsLink}
+            </span>
         </>
     )
 }

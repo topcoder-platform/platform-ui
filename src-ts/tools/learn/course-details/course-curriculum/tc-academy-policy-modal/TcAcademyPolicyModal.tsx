@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { Dispatch, FC, SetStateAction, useState } from 'react'
 
 import { BaseModal, Button } from '../../../../../lib'
 
@@ -11,6 +11,15 @@ export interface TcAcademyPolicyModalProps {
 }
 
 const TcAcademyPolicyModal: FC<TcAcademyPolicyModalProps> = (props: TcAcademyPolicyModalProps) => {
+    const [loading, setLoading]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
+
+    const handleConfirm: () => void = () => {
+        if (loading) {
+            return
+        }
+        setLoading(true)
+        props.onConfirm()
+    }
 
     return (
         <BaseModal
@@ -60,9 +69,10 @@ const TcAcademyPolicyModal: FC<TcAcademyPolicyModalProps> = (props: TcAcademyPol
                 <Button
                     buttonStyle='primary'
                     label={'I Agree'}
-                    onClick={props.onConfirm}
+                    onClick={handleConfirm}
                     tabIndex={2}
                     size='lg'
+                    disable={loading}
                 />
             </div>
         </BaseModal>

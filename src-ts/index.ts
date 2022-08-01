@@ -4,7 +4,7 @@
 export { default as AppNextGen } from './App'
 export { EnvironmentConfig } from './config'
 export {
-     analyticsInitialize,
+     Analytics,
      Breadcrumb,
      ContactSupportModal,
      logInitialize,

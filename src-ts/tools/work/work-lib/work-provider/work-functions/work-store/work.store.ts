@@ -19,7 +19,7 @@ export async function confirmCustomerPaymentAsync(id: string): Promise<CustomerP
     return xhrPatchAsync(updatePaymentUrl(id), JSON.stringify({}))
 }
 
-export async function createAsync(body: CreateWorkRequest): Promise<void> {
+export async function createAsync(body: CreateWorkRequest): Promise<Challenge> {
     return xhrPostAsync(createUrl(), JSON.stringify(body))
 }
 

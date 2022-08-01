@@ -48,7 +48,7 @@ const PageFooter: FC<{}> = () => {
                     <div>
                         <span>© {(new Date()).getFullYear()} Topcoder</span>
                         <a
-                            href='#'
+                            href={window.location.href}
                             onClick={(e) => handleClick(e, setIsContactSupportModalOpen)}>
                             Support
                         </a>
@@ -58,12 +58,12 @@ const PageFooter: FC<{}> = () => {
                     </div>
                     <div>
                         <a
-                            href='#'
+                            href={window.location.href}
                             onClick={(e) => handleClick(e, setIsTermsModalOpen)}>
                             Terms
                         </a>
                         <a
-                            href='#'
+                            href={window.location.href}
                             onClick={(e) => handleClick(e, setIsPrivacyModalOpen)}>
                             Privacy Policy
                         </a>

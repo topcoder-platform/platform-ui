@@ -29,7 +29,7 @@ export function useOnHoverElement(
             cb(nextVal > 0)
         }
         counter.current = nextVal
-    }, [cb, el])
+    }, [cb])
 
     return enabled ? {
         onMouseEnter: handleHover,

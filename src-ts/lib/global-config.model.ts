@@ -1,4 +1,8 @@
 export interface GlobalConfig {
+    ANALYTICS: {
+        SEGMENT_KEY?: string
+        TAG_MANAGER_ID?: string
+    }
     API: {
         FORUM_ACCESS_TOKEN: string
         FORUM_V2: string
@@ -19,7 +23,6 @@ export interface GlobalConfig {
         API_VERSION: string
         CUSTOMER_TOKEN: string
     }
-    TAG_MANAGER_ID?: string
     TOPCODER_URLS: {
         API_BASE: string,
         BLOG_PAGE: string,

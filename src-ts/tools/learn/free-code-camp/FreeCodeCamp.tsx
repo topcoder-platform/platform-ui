@@ -36,7 +36,7 @@ import {
     UserCertificationUpdateProgressActions,
     useUserCertificationProgress,
 } from '../learn-lib'
-import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule, rootRoute } from '../learn.routes'
+import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule } from '../learn.routes'
 
 import { FccFrame } from './fcc-frame'
 import styles from './FreeCodeCamp.module.scss'
@@ -288,10 +288,21 @@ const FreeCodeCamp: FC<{}> = () => {
         const modulePath: string = routeParams.module ?? ''
         const lessonPath: string = routeParams.lesson ?? ''
 
-        if (certificationPath !== certificationParam) { setCourseParam(certificationPath) }
-        if (modulePath !== moduleParam) { setModuleParam(modulePath) }
-        if (lessonPath !== lessonParam) { setLessonParam(lessonPath) }
-    }, [routeParams])
+        if (certificationPath !== certificationParam) {
+            setCourseParam(certificationPath)
+        }
+        if (modulePath !== moduleParam) {
+            setModuleParam(modulePath)
+        }
+        if (lessonPath !== lessonParam) {
+            setLessonParam(lessonPath)
+        }
+    }, [
+        certificationParam,
+        lessonParam,
+        moduleParam,
+        routeParams,
+    ])
 
     /**
      * Check if the user accepted the academic honesty policy
