@@ -153,7 +153,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                         <div className={styles['certificate-wrap']} ref={certificateWrapRef}>
                             <Certificate
                                 course={course?.title}
-                                userName={userName}
+                                userName={userName || props.profile.handle}
                                 tcHandle={props.profile.handle}
                                 provider={course?.provider}
                                 completedDate={completedCertificate?.completedDate ?? ''}
