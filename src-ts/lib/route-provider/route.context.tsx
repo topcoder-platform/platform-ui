@@ -9,6 +9,7 @@ export const defaultRouteContextData: RouteContextData = {
     getPath: () => '',
     getPathFromRoute: () => '',
     getRouteElement: () => <></>,
+    getSignupUrl: () => '',
     initialized: false,
     isRootRoute: () => false,
     rootLoggedInRoute: '',

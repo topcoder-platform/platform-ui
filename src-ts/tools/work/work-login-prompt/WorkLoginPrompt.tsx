@@ -6,7 +6,6 @@ import {
     Button,
     routeContext,
     RouteContextData,
-    useSignUp,
 } from '../../../lib'
 
 import styles from './WorkLoginPrompt.module.scss'
@@ -16,6 +15,11 @@ const WorkLoginPrompt: FC = () => {
     const routeData: RouteContextData = useContext(routeContext)
     const location: Location = useLocation()
     const customReturnUrl: string | undefined = useParams().retUrl
+
+    function signUp(): void {
+        const signUpUrl: string = routeData.getSignupUrl(location.pathname, routeData.toolsRoutes, customReturnUrl)
+        window.location.href = signUpUrl
+    }
 
     return (
         <>
@@ -37,7 +41,7 @@ const WorkLoginPrompt: FC = () => {
                         <span className={styles['separator']}>OR</span>
                         <Button
                             label='SIGN UP'
-                            onClick={() => useSignUp(location.pathname, routeData.toolsRoutes, customReturnUrl)}
+                            onClick={signUp}
                         />
                     </div>
                 </div>

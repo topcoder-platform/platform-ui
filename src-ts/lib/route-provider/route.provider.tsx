@@ -16,7 +16,7 @@ import { profileContext, ProfileContextData } from '../profile-provider'
 import { PlatformRoute } from './platform-route.model'
 import { RequireAuthProvider } from './require-auth-provider'
 import { RouteContextData } from './route-context-data.model'
-import { routeIsActiveTool } from './route-functions'
+import { routeGetSignupUrl, routeIsActiveTool } from './route-functions'
 import { default as routeContext, defaultRouteContextData } from './route.context'
 
 interface RouteProviderProps {
@@ -84,6 +84,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
             getPath,
             getPathFromRoute,
             getRouteElement,
+            getSignupUrl: routeGetSignupUrl,
             initialized,
             isRootRoute: isRootRoute(loggedInRoot, props.rootLoggedOut),
             rootLoggedInRoute: loggedInRoot,

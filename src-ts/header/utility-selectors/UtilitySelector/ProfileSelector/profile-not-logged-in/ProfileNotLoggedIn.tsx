@@ -6,7 +6,6 @@ import {
     Button,
     routeContext,
     RouteContextData,
-    useSignUp,
 } from '../../../../../lib'
 import '../../../../../lib/styles/index.scss'
 
@@ -16,6 +15,11 @@ const ProfileNotLoggedIn: FC<{}> = () => {
 
     const routeData: RouteContextData = useContext(routeContext)
     const location: Location = useLocation()
+
+    function signUp(): void {
+        const signupUrl: string = routeData.getSignupUrl(location.pathname, routeData.toolsRoutes)
+        window.location.href = signupUrl
+    }
 
     return (
         <>
@@ -33,7 +37,7 @@ const ProfileNotLoggedIn: FC<{}> = () => {
                 label='Sign Up'
                 size='md'
                 tabIndex={-1}
-                onClick={() => useSignUp(location.pathname, routeData.toolsRoutes)}
+                onClick={signUp}
             />
         </>
     )
