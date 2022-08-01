@@ -6,12 +6,12 @@ import { ContactSupportModal } from '../contact-support-modal'
 
 import styles from './PrivacyPolicyModal.module.scss'
 
-export interface PrivacyPolicyModal {
+interface PrivacyPolicyModalProps {
     isOpen: boolean
     onClose: () => void
 }
 
-const PrivacyPolicyModal: FC<PrivacyPolicyModal> = ({ isOpen, onClose }: PrivacyPolicyModal) => {
+const PrivacyPolicyModal: FC<PrivacyPolicyModalProps> = ({ isOpen, onClose }: PrivacyPolicyModalProps) => {
 
     const [isSupportOpen, setIsSupportOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
@@ -834,7 +834,7 @@ const PrivacyPolicyModal: FC<PrivacyPolicyModal> = ({ isOpen, onClose }: Privacy
                                     questions regarding this Privacy Statement or our privacy practices
                                     please fill out&nbsp;
                                     <a
-                                        href='#'
+                                        href={window.location.href}
                                         onClick={openSupportModal}>
                                         this form
                                     </a>

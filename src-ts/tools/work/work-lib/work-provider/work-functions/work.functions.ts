@@ -39,7 +39,7 @@ import {
     WorkTypeConfigs,
 } from './work-store'
 
-export async function createAsync(type: WorkType): Promise<void> {
+export async function createAsync(type: WorkType): Promise<Challenge> {
     const workConfig: WorkTypeConfig = WorkTypeConfigs[type]
     const body: CreateWorkRequest = workFactoryBuildCreateReqeuest(workConfig)
     return workStoreCreateAsync(body)

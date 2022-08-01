@@ -137,6 +137,10 @@
 .vendor {
     color: $tc-white;
     text-align: right;
+
+    :global(.body-ultra-small) {
+        line-height: 22px;
+    }
 }
 
 .vendor-logo {
