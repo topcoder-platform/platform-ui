@@ -71,3 +71,7 @@ openssl x509 -req \
     -days 365 \
     -sha256 -extfile cert.conf
 ```
+
+## Add the new RootCA cert as trusted in your browser
+
+Each OS/Browser combo has a different way to import a root cert authority, so you'll need to Google it.
