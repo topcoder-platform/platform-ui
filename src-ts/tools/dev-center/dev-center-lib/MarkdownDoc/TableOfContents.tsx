@@ -65,18 +65,18 @@ function useOnScroll({ onScroll }: { onScroll: () => void }): void {
     const debounceTimer: React.MutableRefObject<
         ReturnType<typeof setTimeout> | undefined
     > = React.useRef<ReturnType<typeof setTimeout>>()
-    const handleScroll: () => void = () => {
-        if (debounceTimer.current) {
-            clearTimeout(debounceTimer.current)
-            debounceTimer.current = undefined
-        }
-        debounceTimer.current = setTimeout(() => {
-            debounceTimer.current = undefined
-            onScroll()
-        }, 1)
-    }
-
     React.useEffect(() => {
+        const handleScroll: () => void = () => {
+            if (debounceTimer.current) {
+                clearTimeout(debounceTimer.current)
+                debounceTimer.current = undefined
+            }
+            debounceTimer.current = setTimeout(() => {
+                debounceTimer.current = undefined
+                onScroll()
+            }, 1)
+        }
+
         onScroll()
         window.addEventListener('scroll', handleScroll)
         return () => {

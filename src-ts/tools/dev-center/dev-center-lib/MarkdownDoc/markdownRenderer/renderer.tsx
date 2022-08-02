@@ -14,9 +14,21 @@ export type MarkdownString = string
 export type MarkdownResult = React.ReactNode
 export type TOC = Array<{ headingId: string; level: number; title: string }>
 
+enum MarkdownHeaderTag {
+    h1 = 'h1',
+    h2 = 'h2',
+    h3 = 'h3',
+    h4 = 'h4',
+    h5 = 'h5',
+    h6 = 'h6',
+}
+
+enum MarkdownParagraphTag {
+    p = 'p',
+}
 export interface MarkdownRenderOptions {
     baseUrl?: string
-    groupBy?: 'h2'
+    groupBy?: MarkdownHeaderTag.h2
     highlightCode?: (code: string, lang: string) => string
     sanitize?: boolean
     toc?: TOC
@@ -102,7 +114,7 @@ export class Renderer implements MarkdownRenderer {
         const isH1Tag: (tagName: keyof JSX.IntrinsicElements) => boolean = (
             tagName: keyof JSX.IntrinsicElements
         ) => {
-            return tagName === 'h1'
+            return tagName === MarkdownHeaderTag.h1
         }
         const isGroupByTag: (
             tagName: keyof JSX.IntrinsicElements
@@ -196,7 +208,7 @@ export class Renderer implements MarkdownRenderer {
                 t.tokens
                     .filter((child) => !isLineBreak(child))
                     .every((child) => child.type === 'image') &&
-                t.tokens.filter((child) => !isLineBreak(child)).length >= 2
+                t.tokens.filter((child) => !isLineBreak(child)).length >= 1
             ) {
                 return true
             }
@@ -334,20 +346,21 @@ export class Renderer implements MarkdownRenderer {
         }
 
         const tag: string = extractTag(html)
-        if (
-            tag &&
-            ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].indexOf(tag) !== -1
-        ) {
-            let id: string | undefined
-            if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].indexOf(tag) !== -1) {
-                token = token as marked.Tokens.Heading
-                id = extractId(html, `h${token.depth}`).trim()
+        if (tag) {
+            const isParagraphTag: boolean = tag === MarkdownParagraphTag.p
+            const isHeaderTag: boolean = Object.values(MarkdownHeaderTag).indexOf(tag as MarkdownHeaderTag) !== -1
+            if (isParagraphTag || isHeaderTag) {
+                let id: string | undefined
+                if (isHeaderTag) {
+                    token = token as marked.Tokens.Heading
+                    id = extractId(html, `h${token.depth}`).trim()
+                }
+                return React.createElement(tag, {
+                    className: getClassname(token),
+                    dangerouslySetInnerHTML: { __html: stripTag(html, tag) },
+                    id,
+                })
             }
-            return React.createElement(tag, {
-                className: getClassname(token),
-                dangerouslySetInnerHTML: { __html: stripTag(html, tag) },
-                id,
-            })
         }
 
         return (

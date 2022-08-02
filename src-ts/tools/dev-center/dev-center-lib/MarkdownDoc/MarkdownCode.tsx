@@ -109,7 +109,7 @@ function LineNumbers(props: LineNumbersProps): React.ReactElement | null {
         return () => {
             clearTimeout(debounceTimer.current)
         }
-    }, [size.width, onVisibilityChange, codeRef.current])
+    }, [size.width, onVisibilityChange, codeRef])
 
     if (!showLineNumbers) {
         // tslint:disable-next-line no-null-keyword

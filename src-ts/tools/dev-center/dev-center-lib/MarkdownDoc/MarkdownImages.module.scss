@@ -57,8 +57,18 @@
     }
 }
 
+.imageBlock {
+    position: relative;
+    margin: auto;
+    overflow: hidden;
+    background-color: $black-5;
+    border-radius: 8px;
+    text-align: center;
+}
+
 .imageContainer {
     max-width: 481px;
+    margin: auto;
 }
 
 @include ltelg {

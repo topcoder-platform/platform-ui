@@ -85,7 +85,7 @@ const MarkdownImages: React.FC<MarkdownImagesProps> = ({
             </div>
         )
     }
-    return (
+    return children.length > 1 ? (
         // @ts-ignore
         <Carousel
             itemsToShow={1}
@@ -104,6 +104,12 @@ const MarkdownImages: React.FC<MarkdownImagesProps> = ({
                 </div>
             ))}
         </Carousel>
+    ) : (
+        <>
+            <div key={`md-image-single`} className={`${styles['imageBlock']}}`}>
+                <div className={styles['imageContainer']}>{children[0]}</div>
+            </div>
+        </>
     )
 }
 
