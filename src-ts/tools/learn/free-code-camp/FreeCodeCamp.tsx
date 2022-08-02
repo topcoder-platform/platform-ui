@@ -328,7 +328,7 @@ const FreeCodeCamp: FC<{}> = () => {
 
     return (
         <>
-            {!ready && <LoadingSpinner show />}
+            <LoadingSpinner hide={ready} />
             <Breadcrumb items={breadcrumb} />
 
             {lesson && (

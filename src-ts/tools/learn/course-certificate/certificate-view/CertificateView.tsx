@@ -140,7 +140,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
 
     return (
         <>
-            {!ready && <LoadingSpinner show />}
+            <LoadingSpinner hide={ready} />
 
             {readyAndCompletedCertification && (
                 <div className={styles['wrap']}>

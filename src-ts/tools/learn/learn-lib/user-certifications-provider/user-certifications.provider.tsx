@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
 
-import { profileContext, ProfileContextData } from '../../../../lib'
+import { errorHandle, profileContext, ProfileContextData } from '../../../../lib'
 
 import { UserCertificationCompleted } from './user-certification-completed.model'
 import { UserCertificationInProgress } from './user-certification-in-progress.model'
@@ -60,6 +60,16 @@ export function useUserCertifications(): UserCertificationsProviderData {
                     ...prevState,
                     completed,
                     inProgress,
+                    loading: false,
+                    ready: true,
+                }))
+            })
+            .catch((err: any) => {
+                errorHandle(err, 'There was an error getting your course progress.')
+                setState((prevState) => ({
+                    ...prevState,
+                    completed: [],
+                    inProgress: [],
                     loading: false,
                     ready: true,
                 }))

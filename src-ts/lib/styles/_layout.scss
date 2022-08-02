@@ -30,9 +30,17 @@ hr {
     display: none;
 }
 
+.full-height-frame {
+    position: relative;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+}
 
 .mobile-hide {
-    &.mobile-hide.mobile-hide { // increase specificity without using !important
+
+    // increase specificity without using !important
+    &.mobile-hide.mobile-hide {
         @include ltemd {
             display: none;
         }
@@ -40,7 +48,9 @@ hr {
 }
 
 .desktop-hide {
-    &.desktop-hide.desktop-hide { // increase specificity without using !important
+
+    // increase specificity without using !important
+    &.desktop-hide.desktop-hide {
         @include gtelg {
             display: none;
         }

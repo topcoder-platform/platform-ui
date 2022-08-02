@@ -37,7 +37,7 @@ const Work: FC<{}> = () => {
 
         // if the profile isn't initialized, wait with the spinner
         if (!initialized) {
-            return <LoadingSpinner show={true} />
+            return <LoadingSpinner />
         }
 
         // if the profile is initialized, go to the self-service login

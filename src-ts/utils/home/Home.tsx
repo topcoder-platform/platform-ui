@@ -6,10 +6,15 @@ import {
     routeContext,
     RouteContextData,
 } from '../../lib'
+import '../../lib/styles/index.scss'
 
 const Home: FC<{}> = () => {
 
-    const { initialized, rootLoggedInRoute, rootLoggedOutFC }: RouteContextData = useContext<RouteContextData>(routeContext)
+    const {
+        initialized,
+        rootLoggedInRoute,
+        rootLoggedOutFC,
+    }: RouteContextData = useContext<RouteContextData>(routeContext)
 
     const navigate: NavigateFunction = useNavigate()
 
@@ -26,12 +31,14 @@ const Home: FC<{}> = () => {
     ])
 
     const LoggedOut: FC<{}> = rootLoggedOutFC
-    const showSpinner: boolean = !initialized || !!rootLoggedInRoute
+    const showLoggedOut: boolean = initialized && !rootLoggedInRoute
 
-    return <>
-        <LoadingSpinner show={showSpinner} />
-        {!showSpinner && <LoggedOut />}
-    </>
+    return (
+        <div className='full-height-frame'>
+            <LoadingSpinner hide={showLoggedOut} />
+            {showLoggedOut && <LoggedOut />}
+        </div>
+    )
 }
 
 export default Home

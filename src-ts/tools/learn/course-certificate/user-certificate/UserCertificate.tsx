@@ -11,23 +11,25 @@ import CertificateView from '../certificate-view/CertificateView'
 import styles from './UserCertificate.module.scss'
 
 const UserCertificate: FC<{}> = () => {
+
     const wrapElRef: MutableRefObject<HTMLElement | any> = useRef()
     const routeParams: Params<string> = useParams()
     const [profile, setProfile]: [
-        UserProfile|undefined,
-        Dispatch<SetStateAction<UserProfile|undefined>>
+        UserProfile | undefined,
+        Dispatch<SetStateAction<UserProfile | undefined>>
     ] = useState()
-    const [profileReady, setProfileReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
+    const [profileReady, setProfileReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
     const providerParam: string = routeParams.provider ?? ''
     const certificationParam: string = routeParams.certification ?? ''
 
     useEffect(() => {
         if (routeParams.memberHandle) {
-            profileGetAsync(routeParams.memberHandle).then((userProfile) => {
-                setProfile(userProfile)
-                setProfileReady(true)
-            })
+            profileGetAsync(routeParams.memberHandle)
+                .then((userProfile) => {
+                    setProfile(userProfile)
+                    setProfileReady(true)
+                })
         }
     }, [routeParams.memberHandle, setProfileReady])
 
@@ -39,7 +41,7 @@ const UserCertificate: FC<{}> = () => {
 
         [].forEach.call(el.parentElement?.children ?? [], (c: HTMLElement) => {
             if (c !== el) {
-                Object.assign(c.style, {display: 'none'})
+                Object.assign(c.style, { display: 'none' })
             }
         })
         el.classList.add(styles['full-screen-cert'])
@@ -47,7 +49,7 @@ const UserCertificate: FC<{}> = () => {
 
     return (
         <>
-            {!profileReady && <LoadingSpinner show />}
+            <LoadingSpinner hide={profileReady} />
 
             {profileReady && profile && (
                 <div ref={wrapElRef}>
@@ -55,7 +57,7 @@ const UserCertificate: FC<{}> = () => {
                         certification={certificationParam}
                         profile={profile}
                         provider={providerParam}
-                        onCertificationNotCompleted={() => {}}
+                        onCertificationNotCompleted={() => { }}
                         hideActions
                     />
                 </div>

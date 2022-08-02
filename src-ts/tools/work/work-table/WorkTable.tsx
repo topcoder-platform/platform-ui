@@ -11,6 +11,7 @@ import {
     TabsNavbar,
     TabsNavItem,
 } from '../../../lib'
+import '../../../lib/styles/index.scss'
 import {
     Work,
     WorkByStatus,
@@ -27,7 +28,6 @@ import { dashboardRoute, selfServiceStartRoute, workDetailRoute } from '../work.
 import { workDashboardTabs } from './work-nav.config'
 import { WorkNoResults } from './work-no-results'
 import { WorkListColumnField, workListColumns } from './work-table.config'
-import styles from './WorkTable.module.scss'
 
 const WorkTable: FC<{}> = () => {
 
@@ -131,7 +131,7 @@ const WorkTable: FC<{}> = () => {
         return (
             <>
                 {tabsElement}
-                <div className={styles.loader}>
+                <div className='full-height-frame'>
                     <LoadingSpinner />
                 </div>
             </>
