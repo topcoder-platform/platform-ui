@@ -74,12 +74,10 @@ const BugHuntIntakeForm: React.FC = () => {
         if (!workId && !challenge) {
             formOnReset(formInputs, formValues)
         }
-    }, [
-        challenge,
-        formInputs,
-        formValues,
-        workId,
-    ])
+        // Disabling lint rule as we only want this to run one time when component mounts, otherwise it resets
+        // the form for a user that is not logged in and has no challenge created yet
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     useEffect(() => {
 

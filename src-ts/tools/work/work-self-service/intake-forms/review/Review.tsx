@@ -102,11 +102,9 @@ const Review: FC = () => {
             })
         }
         getAndSetWork()
-    }, [
-        formFieldValues,
-        userProfile,
-        workId,
-    ])
+        // Disabling to avoid infite re-renders
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [workId])
 
     useEffect(() => {
         setFormValues({
@@ -114,10 +112,9 @@ const Review: FC = () => {
             email: profile?.email || '',
             name: `${profile?.firstName} ${profile?.lastName}`,
         })
-    }, [
-        formFieldValues,
-        profile,
-    ])
+        // Disabling to avoid infite re-renders
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [profile])
 
     const onUpdateField: (fieldName: string, value: string | boolean) => void = (fieldName, value) => {
         setFormValues({
