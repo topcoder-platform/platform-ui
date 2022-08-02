@@ -16,6 +16,7 @@ import { profileContext, ProfileContextData } from '../profile-provider'
 import { PlatformRoute } from './platform-route.model'
 import { RequireAuthProvider } from './require-auth-provider'
 import { RouteContextData } from './route-context-data.model'
+import { routeGetSignupUrl, routeIsActiveTool } from './route-functions'
 import { default as routeContext, defaultRouteContextData } from './route.context'
 
 interface RouteProviderProps {
@@ -61,7 +62,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
                         (!route.customerOnly || !!profile?.isCustomer)
                         && (!route.memberOnly || !!profile?.isMember)
                     )
-                    || isActiveTool(location.pathname, route)
+                    || routeIsActiveTool(location.pathname, route)
                 )
             )
 
@@ -83,8 +84,8 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
             getPath,
             getPathFromRoute,
             getRouteElement,
+            getSignupUrl: routeGetSignupUrl,
             initialized,
-            isActiveTool,
             isRootRoute: isRootRoute(loggedInRoot, props.rootLoggedOut),
             rootLoggedInRoute: loggedInRoot,
             rootLoggedOutFC: props.rootLoggedOutFC,
@@ -123,7 +124,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
         const routeElement: JSX.Element = !route.authRequired
             ? route.element
             : (
-                <RequireAuthProvider loginUrl={authUrlLogin}>
+                <RequireAuthProvider loginUrl={authUrlLogin()}>
                     {route.element}
                 </RequireAuthProvider>
             )
@@ -156,13 +157,6 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
         <routeContext.Provider value={routeContextData}>
             {props.children}
         </routeContext.Provider>
-    )
-}
-
-function isActiveTool(activePath: string, toolRoute: PlatformRoute): boolean {
-    return !!(
-        activePath.startsWith(toolRoute.route)
-        || toolRoute.alternativePaths?.some(path => activePath.startsWith(path))
     )
 }
 

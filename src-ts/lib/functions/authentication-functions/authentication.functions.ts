@@ -2,9 +2,11 @@ import cookies from 'browser-cookies'
 import { configureConnector, decodeToken, getFreshToken } from 'tc-auth-lib'
 
 import { User } from '../../../../types/tc-auth-lib'
-import { EnvironmentConfig } from '../../../config'
+import { EnvironmentConfig, ToolTitle } from '../../../config'
+import { PlatformRoute } from '../../route-provider'
 import { logError } from '../logging-functions'
 
+import { AuthenticationRegistrationSource } from './authentication-reg-source.enum'
 import { authentication as authenticationUrl } from './authentication-url.config'
 import { CookieKeys } from './cookie-keys.enum'
 
@@ -19,6 +21,21 @@ configureConnector({
     mockMode: undefined,
     mockToken: undefined,
 })
+
+export function getRegistrationSource(activeTool: PlatformRoute | undefined): AuthenticationRegistrationSource | undefined {
+
+    switch (activeTool?.title) {
+
+        // currently, there is no reg source for members
+        case ToolTitle.learn:
+            return
+
+        // currently, the work tool and the platform
+        // landing page use the reg source of selfService
+        default:
+            return AuthenticationRegistrationSource.work
+    }
+}
 
 export async function initializeAsync(): Promise<string | undefined> {
     return getFreshToken()
