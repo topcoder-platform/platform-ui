@@ -10,7 +10,6 @@ export {
     authUrl,
     authUrlLogin,
     authUrlLogout,
-    authUrlSignup,
     fileCreateFromCanvas,
     fileDownloadBlob,
     fileDownloadCanvasAsImage,
