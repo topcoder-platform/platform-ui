@@ -50,6 +50,7 @@ const BugHuntIntakeForm: React.FC = () => {
     const [action, setAction]: [FormAction, Dispatch<SetStateAction<FormAction>>] = useState()
 
     BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { setAction('save') }
+    BugHuntFormConfig.buttons.primaryGroup[0].hidden = !isLoggedIn
     BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { setAction('submit') }
     if (BugHuntFormConfig.buttons.secondaryGroup) {
         BugHuntFormConfig.buttons.secondaryGroup[0].onClick = () => { navigate(-1) }
@@ -68,36 +69,58 @@ const BugHuntIntakeForm: React.FC = () => {
         = useState<PricePackageName>(formValues?.packageType)
 
     const formInputs: Array<FormInputModel> = formGetInputFields(formDef.groups as Array<FormGroup>)
-    if (!workId && !challenge) {
-        formOnReset(formInputs, formValues)
-    }
 
     useEffect(() => {
-        const useEffectAsync: () => Promise<void> = async () => {
+        if (!workId && !challenge) {
+            formOnReset(formInputs, formValues)
+        }
+    }, [
+        challenge,
+        formInputs,
+        formValues,
+        workId,
+    ])
+
+    useEffect(() => {
+
+        async function getAndSetWork(): Promise<void> {
+
+            if (!isLoggedIn) {
+                return
+            }
+
             if (!workId) {
-                // create challenge
-                const response: any = await workCreateAsync(WorkType.bugHunt)
-                setChallenge(response)
-            } else {
-                // fetch challenge using workId
-                const response: Challenge = await workGetByWorkIdAsync(workId)
-                setChallenge(response)
+                const newChallenge: Challenge = await workCreateAsync(WorkType.bugHunt)
+                setChallenge(newChallenge)
+                return
+            }
 
-                const intakeFormBH: ChallengeMetadata | undefined = response.metadata?.find((item: ChallengeMetadata) => item.name === ChallengeMetadataName.intakeForm)
-                if (intakeFormBH) {
-                    const formData: Record<string, any> = JSON.parse(intakeFormBH.value).form.basicInfo
+            // fetch challenge using workId
+            const response: Challenge = await workGetByWorkIdAsync(workId)
+            setChallenge(response)
 
-                    setFormValues(formData)
+            const intakeFormBH: ChallengeMetadata | undefined = response.metadata
+                ?.find((item: ChallengeMetadata) => item.name === ChallengeMetadataName.intakeForm)
 
-                    if (formData?.packageType && formData?.packageType !== selectedPackage) {
-                        setSelectedPackage(formData.packageType)
-                    }
-                }
+            if (!intakeFormBH) {
+                return
+            }
+
+            const formData: Record<string, any> = JSON.parse(intakeFormBH.value).form.basicInfo
+
+            setFormValues(formData)
+
+            if (formData?.packageType && formData?.packageType !== selectedPackage) {
+                setSelectedPackage(formData.packageType)
             }
         }
 
-        useEffectAsync()
-    }, [workId])
+        getAndSetWork()
+    }, [
+        isLoggedIn,
+        selectedPackage,
+        workId,
+    ])
 
     const requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => void = (inputs) => {
         const projectTitle: string = formGetInputModel(inputs, ChallengeMetadataName.projectTitle).value as string
@@ -126,8 +149,14 @@ const BugHuntIntakeForm: React.FC = () => {
         }
     }
 
-    const onSave: (val: any) => Promise<void> = (val: any) => {
+    const onSave: (val: any) => Promise<void> = (val) => {
+        if (!isLoggedIn) {
+            goToLoginStep(val)
+            return Promise.reject()
+        }
+
         if (!challenge) { return Promise.resolve() }
+
         if (action === 'save') {
             val.currentStep = 'basicInfo'
         } else if (action === 'submit') {
@@ -141,13 +170,19 @@ const BugHuntIntakeForm: React.FC = () => {
         if (action === 'save') {
             navigate(`${dashboardRoute}/draft`)
         } else if (action === 'submit') {
-            if (!isLoggedIn) {
-                navigate(WorkIntakeFormRoutes[WorkType.bugHunt]['loginPrompt'])
-            } else {
-                const nextUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt]['review']}/${workId || challenge?.id}`
-                navigate(nextUrl)
-            }
+            const nextUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt]['review']}/${workId || challenge?.id}`
+            navigate(nextUrl)
         }
+    }
+
+    const goToLoginStep: (formData: any) => void = (formData: any) => {
+        if (localStorage) {
+            localStorage.setItem('challengeInProgress', JSON.stringify(formData))
+            localStorage.setItem('challengeInProgressType', WorkType.bugHunt)
+        }
+        const returnUrl: string = encodeURIComponent(`${window.location.origin}${WorkIntakeFormRoutes[WorkType.bugHunt]['saveAfterLogin']}`)
+        const loginPromptUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt]['loginPrompt']}/${returnUrl}`
+        navigate(loginPromptUrl)
     }
 
     if (!challenge && workId) {

@@ -1,4 +1,5 @@
 export {
+    authentication as authUrl,
     login as authUrlLogin,
     logout as authUrlLogout,
     signup as authUrlSignup,

@@ -1,12 +1,13 @@
 import React, { Dispatch, SetStateAction, useState } from 'react'
 
-import { Button, ContactSupportModal, InfoCard, PageDivider, useCheckIsMobile } from '../../../../../lib'
+import { Button, ContactSupportModal, InfoCard, useCheckIsMobile } from '../../../../../lib'
 
 import styles from './SupportInfoCard.module.scss'
 
 const SupportInfoCard: React.FC = () => {
 
-    const [showSupportModal, setShowSupportModal]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
+    const [showSupportModal, setShowSupportModal]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
     const isMobile: boolean = useCheckIsMobile()
 
     return (

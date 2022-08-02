@@ -83,6 +83,10 @@
 
         box-shadow: 0px 0px 30px 40px rgba($gold-1, 0.2);
         animation: stars-fade-in-out 10s ease-in-out 0.3s infinite both;
+
+        @include ltemd {
+            left: 50%;
+        }
     }
     
     & > svg {
@@ -92,6 +96,10 @@
         transform: translate(-50%, -50%);
         z-index: -1;
         animation: stars-fade-in-out 10s ease-in-out 0s infinite both;
+    
+        @include ltemd {
+            left: 50%;
+        }
     }
 }
 

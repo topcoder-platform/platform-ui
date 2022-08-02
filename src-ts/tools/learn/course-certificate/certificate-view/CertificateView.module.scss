@@ -1,0 +1,75 @@
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    padding-top: $space-xxxxl;
+    padding-bottom: calc($space-xxxxl + $space-xs);
+    flex: 99 1 auto;
+    display: flex;
+
+    background: $tc-grad15;
+}
+
+.content-wrap {
+    display: flex;
+    @include pagePaddings;
+    margin: auto;
+    width: 100%;
+    justify-content: center;
+
+    gap: $space-xxxxl;
+
+    @include ltemd {
+        flex-direction: column;
+        margin: 0 auto auto;
+    }
+}
+
+.btns-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: $space-sm;
+
+    &:last-child {
+        margin-top: auto;
+    }
+
+    @include ltemd {
+        flex-direction: row;
+        &:last-child {
+            justify-content: center;
+        }
+    }
+}
+
+.certificate-wrap {
+    aspect-ratio: 1.25715;
+    width: 880px;
+
+    background: #fff;
+
+    box-shadow: 0 20px 36px rgba($tc-black, 0.22);
+}
+
+.share-btn:global(.button.icon) {
+    @include icon-mxx;
+    border-radius: 50%;
+
+    color: $tc-white;
+    border: $border solid $tc-white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: $pad-sm;
+
+    &:hover {
+        background: transparent;
+    }
+
+    svg {
+        @include icon-xxl;
+    }
+}

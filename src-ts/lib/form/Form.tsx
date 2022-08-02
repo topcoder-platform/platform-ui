@@ -64,7 +64,10 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
             validateForm(formRef.current?.elements, 'initial', inputs)
             checkIfFormIsValid(inputs)
-        }, [])
+        }, [
+            formRef,
+            inputs,
+        ])
 
         useEffect(() => {
             if (!formRef.current?.elements) {
@@ -74,7 +77,11 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             // so we repeat the validation when formValues changes, to support the parent component's async data loading
             validateForm(formRef.current?.elements, 'change', inputs)
             checkIfFormIsValid(inputs)
-        }, [props.formValues])
+        }, [
+            props.formValues,
+            formRef,
+            inputs,
+        ])
 
         function checkIfFormIsValid(formInputFields: Array<FormInputModel>): void {
             setFormInvalid(formInputFields.filter(item => !!item.error).length > 0)
@@ -159,7 +166,10 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             if (!!errorsRef.current) {
                 errorsRef.current.style.maxWidth = `${formWidth}px`
             }
-        }, [formRef])
+        }, [
+            errorsRef,
+            formRef,
+        ])
 
         return (
             <form

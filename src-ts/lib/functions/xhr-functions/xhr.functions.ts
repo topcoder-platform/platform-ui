@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios'
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 
 import { tokenGetAsync, TokenModel } from '../token-functions'
 
@@ -12,8 +12,12 @@ const xhrInstance: AxiosInstance = axios.create({
 // add the auth token to all xhr calls
 xhrInstance.interceptors.request.use(async (config) => {
     const tokenData: TokenModel = await tokenGetAsync()
-    config.headers = config.headers || {}
-    config.headers.Authorization = `Bearer ${tokenData.token}`
+
+    if (tokenData.token) {
+        config.headers = config.headers || {}
+        config.headers.Authorization = `Bearer ${tokenData.token}`
+    }
+
     return config
 })
 
@@ -48,12 +52,12 @@ export async function patchAsync<T, R>(url: string, data: T): Promise<R> {
     return output.data
 }
 
-export async function postAsync<T, R>(url: string, data: T): Promise<R> {
-    const output: AxiosResponse<R> = await xhrInstance.post(url, data)
+export async function postAsync<T, R>(url: string, data: T, config?: AxiosRequestConfig<T>): Promise<R> {
+    const output: AxiosResponse<R> = await xhrInstance.post(url, data, config)
     return output.data
 }
 
-export async function putAsync<T, R>(url: string, data: T): Promise<R> {
-    const output: AxiosResponse<R> = await xhrInstance.put(url, data)
+export async function putAsync<T, R>(url: string, data: T, config?: AxiosRequestConfig<T>): Promise<R> {
+    const output: AxiosResponse<R> = await xhrInstance.put(url, data, config)
     return output.data
 }

@@ -32,10 +32,6 @@ export const contactSupportFormDef: FormDefinition = {
                         },
                     ],
                 },
-            ],
-        },
-        {
-            inputs: [
                 {
                     label: 'Last Name',
                     name: ContactSupportFormField.last,
@@ -46,10 +42,6 @@ export const contactSupportFormDef: FormDefinition = {
                         },
                     ],
                 },
-            ],
-        },
-        {
-            inputs: [
                 {
                     label: 'Email',
                     name: ContactSupportFormField.email,
@@ -63,10 +55,6 @@ export const contactSupportFormDef: FormDefinition = {
                         },
                     ],
                 },
-            ],
-        },
-        {
-            inputs: [
                 {
                     label: 'How can we help you?',
                     name: ContactSupportFormField.question,

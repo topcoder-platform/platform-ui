@@ -101,7 +101,7 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
     }
 
     const formGroups: Array<JSX.Element | undefined> = formDef?.groups?.map((element: FormGroup, index: number) => {
-        return <FormGroupItem key={`element-${index}`} group={element} renderFormInput={renderInputField} />
+        return <FormGroupItem key={`element-${index}`} group={element} renderFormInput={renderInputField} totalGroupCount={formDef.groups?.length || 0} />
     }) || []
 
     return (

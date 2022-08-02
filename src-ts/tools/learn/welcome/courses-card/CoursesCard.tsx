@@ -67,14 +67,9 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
         }
     }, [
         courseEnabled,
-        getCertificatePath,
-        getCoursePath,
-        getLessonPathFromCurrentLesson,
         props.certification,
         props.userCompletedCertifications,
         props.userInProgressCertifications,
-        setButtonLabel,
-        setLink,
     ])
 
     return (

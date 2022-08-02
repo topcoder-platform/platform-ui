@@ -4,12 +4,13 @@ import { BaseModal } from '../base-modal'
 
 import styles from './OrderContractModal.module.scss'
 
-export interface OrderContractModal {
+interface OrderContractModalProps {
     isOpen: boolean
     onClose: () => void
 }
 
-const OrderContractModal: FC<OrderContractModal> = ({ isOpen, onClose }: OrderContractModal) => (
+const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: OrderContractModalProps) => (
+
     <BaseModal
         onClose={onClose}
         open={isOpen}
