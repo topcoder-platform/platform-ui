@@ -12,9 +12,9 @@ export const LayoutDocHeader: React.FC<LayoutDocHeaderProps> = (props) => {
 
   return (
     <header>
-      <h1 className={styles['title']}>{title}</h1>
+      <h1>{title}</h1>
       <hr className={styles['divider']} />
-      <h2 className={styles['subtitle']}>{subtitle}</h2>
+      <h2>{subtitle}</h2>
     </header>
   )
 }
