@@ -297,10 +297,11 @@ const FreeCodeCamp: FC<{}> = () => {
         if (lessonPath !== lessonParam) {
             setLessonParam(lessonPath)
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
-        certificationParam,
-        lessonParam,
-        moduleParam,
+        // DO NOT UPDATE THIS DEPS ARRAY!!
+        // we do not care about changes to the other deps
+        // !!only routeParams needs to trigger this effect!!
         routeParams,
     ])
 
