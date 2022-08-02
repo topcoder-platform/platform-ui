@@ -11,6 +11,7 @@ export {
     authUrlLogin,
     authUrlLogout,
     authUrlSignup,
+    errorHandle,
     fileCreateFromCanvas,
     fileDownloadBlob,
     fileDownloadCanvasAsImage,
