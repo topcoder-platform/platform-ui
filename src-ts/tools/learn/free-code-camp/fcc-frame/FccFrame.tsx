@@ -25,6 +25,7 @@ const FccFrame: FC<FccFrameProps> = (props: FccFrameProps) => {
     const frameRef: MutableRefObject<HTMLElement | any> = useRef()
     const frameIsReady: MutableRefObject<boolean> = useRef<boolean>(false)
     const { onFccLastLessonNavigation, onFccLessonChange, onFccLessonComplete }: FccFrameProps = props
+    const lessonUrl: string | undefined = props.lesson?.lessonUrl
 
     useEffect(() => {
         if (!frameRef.current || !props.lesson) {
@@ -35,12 +36,13 @@ const FccFrame: FC<FccFrameProps> = (props: FccFrameProps) => {
             Object.assign(frameRef.current, { src: `${EnvironmentConfig.LEARN_SRC}/${props.lesson.lessonUrl}` })
         } else {
             frameRef.current.contentWindow.postMessage(JSON.stringify({
-                data: { path: `/${props.lesson.lessonUrl}` },
+                data: { path: `/${lessonUrl}` },
                 event: 'fcc:url:update',
             }), '*')
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
-        props.lesson,
+        lessonUrl,
     ])
 
     useEffect(() => {
