@@ -1,76 +1,76 @@
-@import '../../styles/variables';
-@import '../../../../lib/styles/includes';
+@import "../../styles/variables";
+@import "../../../../lib/styles/includes";
 
 .codeBlock {
-  position: relative;
-  padding: $space-lg;
-  padding-right: 48px;
-  margin: $space-xxl 0;
-  background-color: $black-100;
-  border-radius: 8px;
+    position: relative;
+    padding: $space-lg;
+    padding-right: 48px;
+    margin: $space-xxl 0;
+    background-color: $black-100;
+    border-radius: 8px;
 
-  pre {
-    white-space: pre-wrap;
+    pre {
+        white-space: pre-wrap;
 
-    code {
-      display: block;
-      @include font-roboto-mono;
-      font-weight: $font-weight-normal;
-      font-size: 14px;
-      line-height: 18px;
-      color: $tc-white;
+        code {
+            display: block;
+            @include font-roboto-mono;
+            font-weight: $font-weight-normal;
+            font-size: 14px;
+            line-height: 18px;
+            color: $tc-white;
+        }
     }
-  }
 
-  &.show-line-numbers {
-    padding-left: 57px;
+    &.show-line-numbers {
+        padding-left: 57px;
 
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      width: 41px;
-      background-color: #fff;
+        &::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 41px;
+            background-color: #fff;
+        }
     }
-  }
 }
 
 .copy-btn {
-  position: absolute;
-  top: 0;
-  right: 0;
-  padding: 13px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 13px;
 
-  &:active {
-    background-color: rgba(lighten($tc-black, 50%), .25);
-    svg path {
-      fill: $tc-white;
+    &:active {
+        background-color: rgba(lighten($tc-black, 50%), 0.25);
+        svg path {
+            fill: $tc-white;
+        }
     }
-  }
 }
 
 .lineNumbers {
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 41px;
-  padding: 16px 8px 16px 16px;
-  color: rgba($tc-white, .7);
-  background-color: rgba($black-100, .9);
-  border-radius: 8px 0 0 8px;
-  overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 41px;
+    padding: 16px 8px 16px 16px;
+    color: rgba($tc-white, 0.7);
+    background-color: rgba($black-100, 0.9);
+    border-radius: 8px 0 0 8px;
+    overflow: hidden;
 
-  .num {
-    font-family: $font-roboto-mono;
-    font-size: 14px;
-    line-height: 18px;
-    text-align: right;
+    .num {
+        font-family: $font-roboto-mono;
+        font-size: 14px;
+        line-height: 18px;
+        text-align: right;
 
-    &.hidden {
-      opacity: 0;
+        &.hidden {
+            opacity: 0;
+        }
     }
-  }
 }

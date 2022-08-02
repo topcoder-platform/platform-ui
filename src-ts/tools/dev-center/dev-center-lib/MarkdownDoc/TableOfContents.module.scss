@@ -1,56 +1,53 @@
-@import '../../styles/variables';
+@import "../../styles/variables";
 
 .nav {
-  position: sticky;
-  top: 0;
-  width: $side-nav-width;
-  height: calc(100vh);
-  overflow-y: auto;
+    position: sticky;
+    top: 0;
+    width: $side-nav-width;
+    height: calc(100vh);
+    overflow-y: auto;
 
-  box-shadow: inset 2px 0 $black-10;
+    box-shadow: inset 2px 0 $black-10;
 }
 
 .navLabel {
-  @include font-barlow;
-  @include font-weight-semibold;
-  font-size: 18px;
-  line-height: 22px;
-  color: inherit;
-  text-transform: uppercase;
+    @include font-barlow;
+    @include font-weight-semibold;
+    font-size: 18px;
+    line-height: 22px;
+    color: inherit;
+    text-transform: uppercase;
 
-  padding: 0 0 0 $space-xxxxl;
-  margin: 0 0 $space-xxl;
-}
-
-.navList {
+    padding: 0 0 0 $space-xxxxl;
+    margin: 0 0 $space-xxl;
 }
 
 .navListItem {
-  border-left: 2px solid $black-10;
-  cursor: pointer;
+    border-left: 2px solid $black-10;
+    cursor: pointer;
 
-  &::first-letter {
-    text-transform: capitalize;
-  }
-
-  &.active,
-  &:hover {
-    border-left-color: $blue-140;
-    background-color: $blue-10;
-
-    .navListItem-link {
-      color: $blue-140;
+    &::first-letter {
+        text-transform: capitalize;
     }
-  }
+
+    &.active,
+    &:hover {
+        border-left-color: $blue-140;
+        background-color: $blue-10;
+
+        .navListItem-link {
+            color: $blue-140;
+        }
+    }
 }
 
 .navListItem-link {
-  @include font-barlow;
-  @include font-weight-semibold;
-  font-size: 14px;
-  line-height: 20px;
-  color: $black-60;
+    @include font-barlow;
+    @include font-weight-semibold;
+    font-size: 14px;
+    line-height: 20px;
+    color: $black-60;
 
-  display: block;
-  padding: $space-sm 0 $space-sm $space-xxxxl;
+    display: block;
+    padding: $space-sm 0 $space-sm $space-xxxxl;
 }

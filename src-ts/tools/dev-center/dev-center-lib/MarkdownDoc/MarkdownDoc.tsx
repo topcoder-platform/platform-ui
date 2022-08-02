@@ -4,19 +4,19 @@ import LayoutDoc from './LayoutDoc'
 import { MarkdownResult, TOC } from './markdownRenderer'
 
 interface MarkdownDocProps {
-  disableToc?: boolean
-  doc: MarkdownResult
-  toc: TOC
+    disableToc?: boolean
+    doc: MarkdownResult
+    toc: TOC
 }
 
 export const MarkdownDoc: React.FC<MarkdownDocProps> = (props) => {
-  const { doc, toc, disableToc = false }: MarkdownDocProps = props
+    const { doc, toc, disableToc = false }: MarkdownDocProps = props
 
-  return (
-    <LayoutDoc disableToc={disableToc} toc={toc}>
-      {doc}
-    </LayoutDoc>
-  )
+    return (
+        <LayoutDoc disableToc={disableToc} toc={toc}>
+            {doc}
+        </LayoutDoc>
+    )
 }
 
 export default MarkdownDoc

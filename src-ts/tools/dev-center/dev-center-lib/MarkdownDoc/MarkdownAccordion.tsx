@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { useWindowSize } from '../../../../lib'
+import { IconSolid, useWindowSize } from '../../../../lib'
 import { Breakpoints } from '../../../../lib/styles'
 
 import styles from './MarkdownAccordion.module.scss'
@@ -22,20 +22,27 @@ export const MarkdownAccordion: React.FC<MarkdownAccordionProps> = (props) => {
         return <>{childrenProp}</>
     }
 
-    const [h2, ...children]: ReturnType<typeof React.Children.toArray> =
+    const [header, ...children]: ReturnType<typeof React.Children.toArray> =
         React.Children.toArray(childrenProp)
-    const header: React.ReactNode = React.isValidElement(h2)
-        ? React.cloneElement(h2, { onClick: () => setCollapsed(!collapsed) })
-        : h2
-
     return (
-        <div
-            className={`${styles['accordion']} ${
-                collapsed ? styles['collapsed'] : ''
-            }`}
-        >
-            {header}
-            {children}
+        <div className={`${styles['accordion']}`}>
+            <div
+                className={`${styles['pane-outline']}`}
+                onClick={() => {
+                    if (React.isValidElement(header)) {
+                        setCollapsed(!collapsed)
+                    }
+                }}
+            >
+                {header}
+                {collapsed ? (
+                    <IconSolid.ChevronDownIcon />
+                ) : (
+                    <IconSolid.ChevronUpIcon />
+                )}
+            </div>
+
+            {!collapsed && children}
         </div>
     )
 }
