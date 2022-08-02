@@ -11,12 +11,12 @@ import styles from './LoadingSpinner.module.scss'
 
 export interface LoadingSpinnerProps {
     className?: string
-    show?: boolean
+    hide?: boolean
 }
 
-const LoadingSpinner: FC<LoadingSpinnerProps> = ({ show = false, className }: LoadingSpinnerProps) => {
+const LoadingSpinner: FC<LoadingSpinnerProps> = ({ hide, className }: LoadingSpinnerProps) => {
 
-    if (!show) {
+    if (!!hide) {
         return <></>
     }
 

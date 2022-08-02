@@ -33,7 +33,7 @@ const WorkDetailDetailsPane: FC<WorkDetailDetailsPaneProps> = ({ collapsible, de
     }, [formData])
 
     if (!details.length) {
-        return <LoadingSpinner show={true} />
+        return <LoadingSpinner />
     }
 
     const onTogglePane: () => void = () => {

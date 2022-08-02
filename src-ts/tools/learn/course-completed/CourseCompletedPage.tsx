@@ -85,7 +85,7 @@ const CourseCompletedPage: FC<{}> = () => {
 
     return (
         <>
-            <LoadingSpinner show={!ready} />
+            <LoadingSpinner hide={ready} />
 
             {ready && courseData && (
                 <>

@@ -50,7 +50,7 @@ const WelcomePage: FC<{}> = () => {
                 <div className={styles['courses-section']}>
                     <h3 className='details'>Courses Available</h3>
 
-                    <LoadingSpinner show={!coursesReady} />
+                    <LoadingSpinner hide={coursesReady} />
 
                     {coursesReady && (
                         <div className={styles['courses-list']}>

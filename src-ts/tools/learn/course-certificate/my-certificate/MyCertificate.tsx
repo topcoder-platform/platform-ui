@@ -23,14 +23,14 @@ const MyCertificate: FC<{}> = () => {
     }, [coursePath, navigate])
 
     useEffect(() => {
-      if (profileReady && !profile) {
-        navigateToCourse()
-      }
+        if (profileReady && !profile) {
+            navigateToCourse()
+        }
     }, [profileReady, profile, navigateToCourse])
 
     return (
         <>
-            <LoadingSpinner show={!profileReady} />
+            <LoadingSpinner hide={profileReady} />
 
             {profileReady && profile && (
                 <CertificateView

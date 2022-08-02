@@ -14,6 +14,7 @@ export {
     fileCreateFromCanvas,
     fileDownloadBlob,
     fileDownloadCanvasAsImage,
+    logError,
     logInfo,
     logInitialize,
     textFormatDateLocaleShortString,

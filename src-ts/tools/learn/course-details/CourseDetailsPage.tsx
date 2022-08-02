@@ -118,7 +118,7 @@ const CourseDetailsPage: FC<{}> = () => {
         <ContentLayout>
             {!ready && (
                 <div className={styles['wrap']}>
-                    <LoadingSpinner show={true} />
+                    <LoadingSpinner />
                 </div>
             )}
             <Breadcrumb items={breadcrumb} />

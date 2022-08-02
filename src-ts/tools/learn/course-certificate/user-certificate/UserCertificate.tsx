@@ -49,7 +49,7 @@ const UserCertificate: FC<{}> = () => {
 
     return (
         <>
-            <LoadingSpinner show={!profileReady} />
+            <LoadingSpinner hide={profileReady} />
 
             {profileReady && profile && (
                 <div ref={wrapElRef}>
