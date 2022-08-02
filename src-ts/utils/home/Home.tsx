@@ -6,8 +6,7 @@ import {
     routeContext,
     RouteContextData,
 } from '../../lib'
-
-import styles from './Home.module.scss'
+import '../../lib/styles/index.scss'
 
 const Home: FC<{}> = () => {
 
@@ -35,7 +34,7 @@ const Home: FC<{}> = () => {
     const showLoggedOut: boolean = initialized && !rootLoggedInRoute
 
     return (
-        <div className={styles.home}>
+        <div className='full-height-frame'>
             <LoadingSpinner hide={showLoggedOut} />
             {showLoggedOut && <LoggedOut />}
         </div>
