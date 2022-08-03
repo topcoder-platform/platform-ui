@@ -2,12 +2,12 @@ import { FC, SVGProps } from 'react'
 
 import {
     DataScienceBadge,
-    DesignBadge,
-    DevelopBadge,
-    QABadge,
     DataScienceBadgeImg,
+    DesignBadge,
     DesignBadgeImg,
+    DevelopBadge,
     DevelopBadgeImg,
+    QABadge,
     QABadgeImg,
 } from './badges'
 

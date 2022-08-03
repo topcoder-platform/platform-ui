@@ -6,8 +6,8 @@ import { getBadge, getBadgeImg } from './badges.functions'
 import styles from './CourseBadge.module.scss'
 
 interface CourseBadgeProps {
-    type: LearnCertificateTrackType
     asImg?: boolean
+    type: LearnCertificateTrackType
 }
 
 const CourseBadge: FC<CourseBadgeProps> = (props: CourseBadgeProps) => {
