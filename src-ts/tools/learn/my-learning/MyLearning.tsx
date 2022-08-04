@@ -28,7 +28,7 @@ const MyLearning: FC<{}> = () => {
     const { completed, inProgress, ready: coursesReady }: UserCertificationsProviderData = useUserCertifications()
     const { certifications, ready: certificatesReady }: AllCertificationsProviderData = useAllCertifications()
 
-    const ready: boolean = profileReady && coursesReady && certificatesReady;
+    const ready: boolean = profileReady && coursesReady && certificatesReady
 
     const certificatesById: CertificatesByIdType = useMemo(() => (
         certifications.reduce((certifs, certificate) => {
