@@ -9,8 +9,6 @@ import {
 } from '../../../../../lib'
 import '../../../../../lib/styles/index.scss'
 
-import styles from './ProfileNotLoggedIn.module.scss'
-
 const ProfileNotLoggedIn: FC<{}> = () => {
 
     const routeData: RouteContextData = useContext(routeContext)
@@ -25,7 +23,7 @@ const ProfileNotLoggedIn: FC<{}> = () => {
         <>
             <Button
                 buttonStyle='text'
-                className={styles.login}
+                className='mobile-hide'
                 label='Log In'
                 size='md'
                 tabIndex={-1}
@@ -33,7 +31,6 @@ const ProfileNotLoggedIn: FC<{}> = () => {
             />
             <Button
                 buttonStyle='tertiary'
-                className={styles.signup}
                 label='Sign Up'
                 size='md'
                 tabIndex={-1}
