@@ -1,0 +1,44 @@
+@use '../../../../lib/styles/typography';
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    background: $black-5;
+    border-radius: $pad-sm;
+
+    padding: $pad-xxxxl;
+    gap: $pad-xxxxl;
+    display: flex;
+    flex-direction: column;
+    @include ltemd {
+        padding: $pad-lg;
+        gap: $pad-sm;
+    }
+}
+
+.text-content {
+    > *:not(:first-child) {
+        margin-top: $pad-sm;
+    }
+
+    h4 {
+        color: $blue-140;
+    }
+}
+
+.course-path-steps {
+    margin-top: $pad-sm;
+    svg {
+        width: 100%;
+        display: block;
+        &:nth-child(2) {
+            height: 100px;
+        }
+    }
+
+    @include ltemd {
+        display: flex;
+        flex-direction: column;
+        gap: $pad-lg;
+        align-items: stretch;
+    }
+}

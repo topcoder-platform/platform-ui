@@ -1,0 +1,70 @@
+@import '../../../lib/styles/includes';
+
+.wrap {
+    flex: 1 1 auto;
+    position: relative;
+}
+
+.content-layout {
+    background: $black-5;
+}
+
+.hero-wrap {
+    :global(.hero-card-col) {
+        max-width: 475px;
+    }
+
+    @include ltelg {
+        :global(.hero-card-col) {
+            max-width: none;
+        }
+    }
+}
+
+.title-line {
+    display: flex;
+    align-items: center;
+
+    svg {
+        @include icon-size(60);
+        margin-right: $pad-sm;
+        @include ltemd {
+            @include icon-size(38);
+        }
+    }
+}
+
+.courses-area {
+    padding: $pad-xxxxl 0;
+    gap: $pad-lg;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    &:empty {
+        display: none;
+    }
+
+    @include ltemd {
+        gap: $pad-xxl;
+    }
+}
+
+.cards-wrap {
+    display: flex;
+    gap: $pad-xxl;
+    flex-wrap: wrap;
+
+    > * {
+        flex: 0 1 calc(50% - calc($pad-xxl / 2));
+    }
+
+    @include ltemd {
+        > * {
+            flex: 1 1 0;
+        }
+    }
+}
+
+.loading-spinner {
+    background: none;
+}

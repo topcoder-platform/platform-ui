@@ -1,0 +1,56 @@
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    background: $tc-grad15;
+    padding: $pad-xxxxl;
+    border-radius: $pad-sm;
+
+    color: $tc-white;
+
+    display: flex;
+    flex-direction: column;
+    gap: $pad-xxl;
+
+    @include ltelg {
+        padding: $pad-lg;
+        gap: $pad-lg;
+    }
+}
+
+.title {
+    display: flex;
+    align-items: center;
+
+    svg {
+        @include icon-size(60);
+        margin-right: $pad-sm;
+        path {
+            fill: url(#lh-paint-02);
+        }
+    }
+}
+
+.bottom-link {
+    margin-top: $pad-xxxxl;
+}
+
+.course-outline {
+    max-height: 650px;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+
+    @include scrollbar;
+
+    :global(.steps-list) {
+        pointer-events: none;
+    }
+    :global(.course-outline-wrap .content) {
+        padding-right: 0;
+        margin-right: 0;
+    }
+    
+    @include ltemd {
+        max-height: none;
+    }
+}

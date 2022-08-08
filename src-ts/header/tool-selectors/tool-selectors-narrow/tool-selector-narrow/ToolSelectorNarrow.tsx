@@ -2,7 +2,7 @@ import classNames from 'classnames'
 import { FC, useContext } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
-import { IconOutline, PlatformRoute, routeContext, RouteContextData } from '../../../../lib'
+import { IconOutline, PlatformRoute, routeContext, RouteContextData, routeIsActiveTool } from '../../../../lib'
 
 import styles from './ToolSelectorNarrow.module.scss'
 
@@ -16,15 +16,14 @@ const ToolSelectorNarrow: FC<ToolSelectorNarrowProps> = (props: ToolSelectorNarr
 
     const {
         getPathFromRoute,
-        isActiveRoute,
     }: RouteContextData = useContext(routeContext)
+
     const toolRoute: PlatformRoute = props.route
     const toolPath: string = getPathFromRoute(toolRoute)
-
     const baseClass: string = 'tool-selector-narrow'
-    const isActive: boolean = isActiveRoute(useLocation().pathname, toolRoute)
+    const isActive: boolean = routeIsActiveTool(useLocation().pathname, toolRoute)
     const activeIndicaterClass: string = `${baseClass}-${isActive ? '' : 'in'}active`
-    const hasChildren: boolean = !!toolRoute.children.some(child => !!child.route && !isParamRoute(child.route))
+    const hasChildren: boolean = !!toolRoute.children?.some(child => !!child.route && !isParamRoute(child.route))
 
     return (
         <div className={styles[baseClass]}>

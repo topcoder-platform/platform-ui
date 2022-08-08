@@ -1,0 +1,34 @@
+@import '../../../styles/includes';
+
+.form-radio {
+    display: flex;
+    flex: 1;
+    margin-bottom: $pad-xxl;
+    @include ltemd {
+        flex-direction: column;
+        margin-bottom: $pad-lg;
+    }
+    input[type=radio], input[type=checkbox] {
+        position: absolute;
+        opacity: 0;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+    }
+    .option {
+        flex: 1;
+        margin-right: $pad-lg;
+        position: relative;
+        @include ltemd {
+            margin-right: 0;
+            margin-bottom: $pad-lg;
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+        &:last-child {
+            margin-right: 0;
+        }
+    }
+}

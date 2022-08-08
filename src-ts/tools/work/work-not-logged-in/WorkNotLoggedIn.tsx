@@ -9,6 +9,7 @@ import {
 import { useDispatch } from 'react-redux'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 
+// TODO: move this from the legacy to the nextgen app
 import { resetIntakeForm } from '../../../../src/actions/form'
 import { clearAutoSavedForm, clearCachedChallengeId } from '../../../../src/autoSaveBeforeLogin'
 import {
@@ -31,16 +32,15 @@ const WorkNotLoggedIn: FC<{}> = () => {
     const navigate: NavigateFunction = useNavigate()
 
     useEffect(() => {
-        if (initialized) {
-            setLoading(false)
-        }
         if (isLoggedIn) {
             navigate(dashboardRoute)
+        } else if (initialized) {
+            setLoading(false)
         }
     }, [isLoggedIn, initialized, navigate])
 
     if (isLoading) {
-        return <LoadingSpinner show={true} />
+        return <LoadingSpinner />
     }
 
     function startWork(): void {

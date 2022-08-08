@@ -2,11 +2,13 @@ import { Dispatch, FC, useContext } from 'react'
 import { useDispatch } from 'react-redux'
 import { Navigate, NavigateFunction, Outlet, Routes, useNavigate } from 'react-router-dom'
 
+// TODO: move this from the legacy to the nextgen app
 import { resetIntakeForm } from '../../../src/actions/form'
 import {
     clearAutoSavedForm,
     clearCachedChallengeId
 } from '../../../src/autoSaveBeforeLogin'
+import { ToolTitle } from '../../config'
 import {
     ButtonProps,
     ContentLayout,
@@ -20,7 +22,8 @@ import {
 import { WorkProvider } from './work-lib'
 import { selfServiceRootRoute, selfServiceStartRoute } from './work.routes'
 
-export const toolTitle: string = 'Work'
+export const toolTitle: string = ToolTitle.work
+export const dashboardTitle: string = `${toolTitle} Dashboard`
 
 const Work: FC<{}> = () => {
 
@@ -56,12 +59,12 @@ const Work: FC<{}> = () => {
     return (
         <ContentLayout
             buttonConfig={buttonConfig}
-            title={'My Work'}
+            title='My Work'
         >
             <WorkProvider>
                 <Outlet />
                 <Routes>
-                    {getChildRoutes(toolTitle)}
+                    {getChildRoutes(dashboardTitle)}
                 </Routes>
             </WorkProvider>
         </ContentLayout>

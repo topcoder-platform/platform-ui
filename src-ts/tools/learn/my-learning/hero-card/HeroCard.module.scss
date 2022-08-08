@@ -1,0 +1,32 @@
+@use '../../../../lib/styles/typography';
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    background: $black-5;
+    border-radius: $pad-sm;
+    padding: $pad-xxl;
+    color: $black-100;
+
+    display: flex;
+    flex-direction: column;
+    gap: $pad-sm;
+    width: 100%;
+
+    :global(.button.link) {
+        white-space: initial;
+    }
+    @include ltelg {
+        padding: $pad-lg;
+    }
+}
+
+.line {
+    display: flex;
+    align-items: center;
+    gap: $pad-sm;
+    justify-content: flex-end;
+    @include ltelg {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

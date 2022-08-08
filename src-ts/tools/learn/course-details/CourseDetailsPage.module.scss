@@ -1,0 +1,76 @@
+@use '../../../lib/styles/typography';
+@import '../../../lib/styles/includes';
+
+.wrap {
+    padding: $pad-mx 0 $pad-xxxxl;
+    gap: $pad-xxxxl;
+    position: relative;
+    flex: 1;
+
+    display: grid;
+    grid-template-areas:
+        'intro-copy aside'
+        'description aside';
+    grid-template-columns: 1fr 40%;
+    grid-template-rows: auto 1fr;
+
+    @include ltemd {
+        grid-template-areas: 'intro-copy' 'aside' 'description';
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr;
+    }
+}
+
+.aside {
+    flex: 0 0 auto;
+    max-width: 560px;
+    width: 100%;
+    grid-area: aside;
+    @include ltemd {
+        max-width: none;
+    }
+}
+
+.intro-copy {
+    grid-area: intro-copy;
+    flex: 1 1 auto;
+    .text {
+        @extend .body-main;
+        margin-top: $pad-xxl;
+    }
+}
+
+.description {
+    grid-area: description;
+    flex: 1 1 auto;
+    .text {
+        @extend .body-main;
+        margin-top: $pad-xxl;
+    }
+    
+    p {
+        margin: $pad-sm 0;
+    }
+}
+
+.coming-soon {
+    margin-top: $pad-xxxxl;
+}
+
+.credits-link {
+    padding-bottom: $pad-xxl;
+
+    a {
+        @extend .quote-small;
+        color: $link-blue-dark;
+        font-style: italic;
+
+        display: inline-flex;
+        align-items: center;
+    }
+    svg {
+        @include icon-md;
+        margin-left: $pad-xs;
+        flex: 0 0 auto;
+    }
+}

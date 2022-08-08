@@ -1,38 +1,82 @@
-import { Dispatch, FC, ReactElement, ReactNode, SetStateAction, useEffect, useState } from 'react'
-import { Route } from 'react-router-dom'
+import {
+    Dispatch,
+    FC,
+    ReactElement,
+    ReactNode,
+    SetStateAction,
+    useContext,
+    useEffect,
+    useState,
+} from 'react'
+import { Location, Route, useLocation } from 'react-router-dom'
 
 import { authUrlLogin } from '../functions'
+import { profileContext, ProfileContextData } from '../profile-provider'
 
 import { PlatformRoute } from './platform-route.model'
 import { RequireAuthProvider } from './require-auth-provider'
 import { RouteContextData } from './route-context-data.model'
+import { routeGetSignupUrl, routeIsActiveTool } from './route-functions'
 import { default as routeContext, defaultRouteContextData } from './route.context'
 
 interface RouteProviderProps {
     children: ReactNode
-    rootLoggedIn: string
+    rootCustomer: string
     rootLoggedOut: string
+    rootLoggedOutFC: FC<{}>
+    rootMember: string
     toolsRoutes: Array<PlatformRoute>
     utilsRoutes: Array<PlatformRoute>
 }
 
 export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps) => {
 
+    const { initialized, profile }: ProfileContextData = useContext<ProfileContextData>(profileContext)
+
     const [routeContextData, setRouteContextData]: [RouteContextData, Dispatch<SetStateAction<RouteContextData>>]
         = useState<RouteContextData>(defaultRouteContextData)
 
+    const location: Location = useLocation()
+
     let allRoutes: Array<PlatformRoute> = []
 
-    const getAndSetRoutes: () => void = () => {
+    function getAndSetRoutes(): void {
 
         // TODO: try to make these prop names configurable instead of hard-codded
         const toolsRoutes: Array<PlatformRoute> = props.toolsRoutes.filter(route => !route.disabled)
-        const toolsRoutesForNav: Array<PlatformRoute> = toolsRoutes.filter(route => !route.hide)
+
+        // display a tool in the nav if the following conditions are met:
+        // 1. the tool has a title
+        // 2. the tool isn't hidden (if the tool is hidden, it should never appear in the nav)
+        // AND
+        // 3. the tool is one of the following:
+        //    a. for customers and the user is a customer
+        //    b. for members and the user is a member
+        //    c. the active tool in the app (in case someone deep-links to it)
+        const toolsRoutesForNav: Array<PlatformRoute> = toolsRoutes
+            .filter(route =>
+                !!route.title
+                && !route.hidden
+                && (
+                    (
+                        (!route.customerOnly || !!profile?.isCustomer)
+                        && (!route.memberOnly || !!profile?.isMember)
+                    )
+                    || routeIsActiveTool(location.pathname, route)
+                )
+            )
+
         const utilsRoutes: Array<PlatformRoute> = props.utilsRoutes.filter(route => !route.disabled)
         allRoutes = [
             ...toolsRoutes,
             ...utilsRoutes,
         ]
+        // TODO: support additional roles and landing pages
+        const loggedInRoot: string = !profile
+            ? ''
+            : profile.isCustomer
+                ? props.rootCustomer
+                : props.rootMember
         const contextData: RouteContextData = {
             allRoutes,
             getChildRoutes,
@@ -40,10 +84,11 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
             getPath,
             getPathFromRoute,
             getRouteElement,
-            isActiveRoute,
-            isRootRoute: isRootRoute(props.rootLoggedIn, props.rootLoggedOut),
-            rootLoggedInRoute: props.rootLoggedIn,
-            rootLoggedOutRoute: props.rootLoggedOut,
+            getSignupUrl: routeGetSignupUrl,
+            initialized,
+            isRootRoute: isRootRoute(loggedInRoot, props.rootLoggedOut),
+            rootLoggedInRoute: loggedInRoot,
+            rootLoggedOutFC: props.rootLoggedOutFC,
             toolsRoutes,
             toolsRoutesForNav,
             utilsRoutes,
@@ -76,10 +121,10 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
     function getRouteElement(route: PlatformRoute): JSX.Element {
 
         // create the route element
-        const routeElement: JSX.Element = !route.requireAuth
+        const routeElement: JSX.Element = !route.authRequired
             ? route.element
             : (
-                <RequireAuthProvider loginUrl={authUrlLogin(props.rootLoggedIn)}>
+                <RequireAuthProvider loginUrl={authUrlLogin()}>
                     {route.element}
                 </RequireAuthProvider>
             )
@@ -91,7 +136,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
         return (
             <Route
                 element={routeElement}
-                key={route.title}
+                key={route.route}
                 path={path}
             />
         )
@@ -99,7 +144,11 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
 
     useEffect(() => {
         getAndSetRoutes()
+        // THIS WILL BE FIXED IN https://github.com/topcoder-platform/platform-ui/tree/PROD-2321_bug-hunt-intake-form
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
+        initialized,
+        profile,
         props.toolsRoutes,
         props.utilsRoutes,
     ])
@@ -111,16 +160,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
     )
 }
 
-function isActiveRoute(activePath: string, toolRoute: PlatformRoute): boolean {
-    return !!(
-        activePath?.startsWith(toolRoute.route)
-        || toolRoute.alternativePaths?.some(path => activePath?.startsWith(path))
-    )
-}
-
-function isRootRoute(rootLoggedIn: string, rootLoggedOut: string):
-    (activePath: string) => boolean {
-
+function isRootRoute(rootLoggedIn: string | undefined, rootLoggedOut: string): (activePath: string) => boolean {
     return (activePath: string) => {
         return [rootLoggedIn, rootLoggedOut].some(route => activePath === route)
     }

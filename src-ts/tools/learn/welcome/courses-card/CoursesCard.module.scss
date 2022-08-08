@@ -1,0 +1,39 @@
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    background: $black-5;
+    border-radius: $pad-sm;
+    padding: $pad-xxl;
+
+    gap: $pad-lg;
+    display: flex;
+    flex-direction: column;
+
+    width: 100%;
+
+    :global(.overline) {
+        color: $black-60;
+    }
+
+    &:global(.soon) {
+        :global(.badge-icon) {
+            opacity: 0.5;
+        }
+    }
+
+    @include ltemd {
+        padding: $pad-lg;
+    }
+}
+
+.text {
+    color: $black-100;
+    :global(.quote-small) {
+        color: #767676;
+    }
+}
+
+.bottom {
+    color: $blue-140;
+    margin-top: auto;
+}

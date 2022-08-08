@@ -25,6 +25,8 @@ interface DefaultSortDirectionMap {
 const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) => JSX.Element
     = <T extends { [propertyName: string]: any }>(props: TableProps<T>) => {
 
+        const { columns, data }: TableProps<T> = props
+
         const [sort, setSort]: [Sort | undefined, Dispatch<SetStateAction<Sort | undefined>>]
             = useState<Sort | undefined>(tableGetDefaultSort(props.columns))
         const [defaultSortDirectionMap, setDefaultSortDirectionMap]: [DefaultSortDirectionMap | undefined, Dispatch<SetStateAction<DefaultSortDirectionMap | undefined>>]
@@ -36,18 +38,19 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
 
             if (!defaultSortDirectionMap) {
                 const map: DefaultSortDirectionMap = {}
-                props.columns
+                columns
                     .filter(col => !!col.propertyName)
                     .forEach(col => map[col.propertyName as string] = col.defaultSortDirection || 'asc')
                 setDefaultSortDirectionMap(map)
             }
 
-            setSortData(tableGetSorted(props.data, props.columns, sort))
+            setSortData(tableGetSorted(data, columns, sort))
         },
             [
+                columns,
+                data,
                 defaultSortDirectionMap,
                 sort,
-                props.data,
             ])
 
         function toggleSort(fieldName: string): void {
@@ -107,11 +110,11 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
             })
 
         const rowCells: Array<JSX.Element> = sortedData
-            .map((data, index) => {
+            .map((sorted, index) => {
 
                 function onRowClick(event: MouseEvent<HTMLTableRowElement>): void {
                     event.preventDefault()
-                    props.onRowClick?.(data)
+                    props.onRowClick?.(sorted)
                 }
 
                 // get the cells in the row
@@ -120,7 +123,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                         return (
                             <TableCell
                                 {...col}
-                                data={data}
+                                data={sorted}
                                 index={index}
                                 key={`${index}${colIndex}`}
                             />

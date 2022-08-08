@@ -1,10 +1,19 @@
 import { Navigate } from 'react-router-dom'
 
-import { PlatformRoute } from '../../lib'
+import { contactSupportPath, PlatformRoute } from '../../lib'
 
-import Work, { toolTitle } from './Work'
+import { dashboardTitle, default as Work, toolTitle } from './Work'
+import { WorkLoginPrompt } from './work-login-prompt'
 import { WorkNotLoggedIn } from './work-not-logged-in'
+import {
+    BugHuntIntakeForm,
+    IntakeForms,
+    intakeFormsTitle,
+    Review,
+} from './work-self-service'
+import SaveAfterLogin from './work-self-service/intake-forms/save-after-login/SaveAfterLogin'
 import { WorkTable } from './work-table'
+import { WorkThankYou } from './work-thank-you'
 
 export const rootRoute: string = '/work'
 export const selfServiceRootRoute: string = '/self-service'
@@ -17,25 +26,20 @@ export function workDetailRoute(workId: string, tab?: string): string {
 
 export const workRoutes: Array<PlatformRoute> = [
     {
-        children: [],
-        element: <Navigate to={rootRoute} />,
-        hide: true,
-        route: '',
-        title: 'Redirect the base path to the logged out landing',
-    },
-    {
+        customerOnly: true,
         element: <WorkNotLoggedIn />,
-        hide: true,
         route: rootRoute,
-        title: 'Logged Out Landing',
+        title: toolTitle,
     },
     {
-        alternativePaths: [selfServiceRootRoute],
+        alternativePaths: [
+            selfServiceRootRoute,
+        ],
+        authRequired: true,
         children: [
             {
                 element: <WorkTable />,
                 route: '',
-                title: toolTitle,
             },
             // there doesn't seem to be support for optional path params
             // in react-router-dom v6, so duplicating route
@@ -43,24 +47,62 @@ export const workRoutes: Array<PlatformRoute> = [
             {
                 element: <WorkTable />,
                 route: ':statusKey',
-                title: toolTitle,
             },
         ],
         element: <Work />,
-        requireAuth: true,
+        hidden: true,
         route: dashboardRoute,
-        title: toolTitle,
+        title: dashboardTitle,
+    },
+    {
+        children: [
+            // Bug Hunt
+            {
+                element: <BugHuntIntakeForm />,
+                route: `bug-hunt/basic-info`,
+            },
+            {
+                element: <BugHuntIntakeForm />,
+                route: `bug-hunt/basic-info/:workId`,
+            },
+            {
+                element: <Review />,
+                route: `bug-hunt/review`,
+            },
+            {
+                element: <Review />,
+                route: `bug-hunt/review/:workId`,
+            },
+            {
+                element: <WorkLoginPrompt />,
+                route: `bug-hunt/login-prompt/:retUrl`,
+            },
+            // General
+            {
+                element: <SaveAfterLogin />,
+                route: `:workType/save-after-login`,
+            },
+            {
+                element: <WorkThankYou />,
+                route: `:workType/thank-you`,
+            },
+        ],
+        element: <IntakeForms />,
+        hidden: true,
+        route: `/${selfServiceRootRoute}${rootRoute}/new`,
+        title: intakeFormsTitle,
     },
     {
         element: <Navigate to={rootRoute} />,
-        hide: true,
         route: selfServiceRootRoute,
-        title: 'Obsolete Self Service Logged Out Landing',
     },
     {
         element: <Navigate to={dashboardRoute} />,
-        hide: true,
         route: `${selfServiceRootRoute}/dashboard`,
-        title: 'Obsolete Self Service Dashboard',
+    },
+    {
+        children: [],
+        element: <Navigate to={contactSupportPath} />,
+        route: `${rootRoute}/${contactSupportPath}`,
     },
 ]

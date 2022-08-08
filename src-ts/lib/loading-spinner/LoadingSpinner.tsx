@@ -11,12 +11,17 @@ import styles from './LoadingSpinner.module.scss'
 
 export interface LoadingSpinnerProps {
     className?: string
-    show?: boolean
+    hide?: boolean
 }
 
-const LoadingSpinner: FC<LoadingSpinnerProps> = ({ show = false, className }: LoadingSpinnerProps) => {
+const LoadingSpinner: FC<LoadingSpinnerProps> = ({ hide, className }: LoadingSpinnerProps) => {
+
+    if (!!hide) {
+        return <></>
+    }
+
     return (
-        <div className={classNames(styles['loading-spinner'], show ? 'show' : 'hide', className)}>
+        <div className={classNames(styles['loading-spinner'], styles.show, className)}>
             <PuffLoader color={'#2196f3'} loading={true} size={100} />
         </div>
     )

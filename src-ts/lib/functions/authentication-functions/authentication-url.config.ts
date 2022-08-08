@@ -1,15 +1,16 @@
 import { EnvironmentConfig } from '../../../config'
 
+import { AuthenticationRegistrationSource } from './authentication-reg-source.enum'
+
 export const authentication: string = EnvironmentConfig.URL.ACCOUNTS_APP_CONNECTOR
 
-export function login(fallback: string): string {
-    return `${authentication}?retUrl=${encodeURIComponent(window.location.href.match(/[^?]*/)?.[0] || fallback)}`
+export function login(returnUrl?: string): string {
+    const retUrl: string = returnUrl ?? window.location.href.match(/[^?]*/)?.[0] ?? window.location.host
+    return `${authentication}?retUrl=${encodeURIComponent(retUrl)}`
 }
 
-export function logout(loggedOutRoute: string): string {
-    return `${authentication}?logout=true&retUrl=${encodeURIComponent('https://' + window.location.host)}${loggedOutRoute}`
-}
+export const logout: string = `${authentication}?logout=true&retUrl=${encodeURIComponent('https://' + window.location.host)}`
 
-export function signup(fallback: string): string {
-    return `${login(fallback)}&regSource=tcBusiness&mode=signUp`
+export function signup(returnUrl?: string, regSource?: AuthenticationRegistrationSource): string {
+    return `${login(returnUrl)}&mode=signUp${!!regSource ? `&regSource=${regSource}` : ''}`
 }

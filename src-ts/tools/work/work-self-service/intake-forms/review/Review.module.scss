@@ -1,0 +1,52 @@
+@use '../../../../../lib/styles/typography';
+@import '../../../../../lib/styles/includes';
+
+.review-container {
+    .content {
+        padding: 0 $pad-xxxxl;
+        margin-top: $pad-xxl;
+        display: grid;
+        grid-template-columns: 1fr 562px;
+        column-gap: 24px;
+        @include ltemd {
+            grid-template-columns: 1fr;
+            padding: 0 $pad-lg;
+        }
+        .left {
+            flex: 1;
+            border-top: 2px solid $black-10;
+            padding-top: $pad-xxl;
+        }
+        .right {
+            flex-basis: 32%;
+            .payment-form-wrapper {
+                border: 2px solid $black-20;
+                border-radius: 8px;
+                padding: $pad-xxl;
+                @include ltemd {
+                    padding: $pad-xl;
+                }
+                .form-header {
+                    text-align: center;
+                    padding-bottom: $pad-xxl;
+                    border-bottom: 1px solid $black-20;
+                    margin-bottom: $pad-xxl;
+                    .price {
+                        color: $teal-120;
+                        margin-bottom: $pad-sm;
+                    }
+                    .label {
+                        @extend .overline;
+                    }
+                }
+            }
+            @include ltemd {
+                flex-basis: 100%;
+            }
+        }
+    }
+
+    .button-wrapper {
+        margin: 0 $pad-xxxxl $pad-xxxxl $pad-xxxxl;
+    }
+}

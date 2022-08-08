@@ -1,0 +1,47 @@
+@use '../../../../../lib/styles/typography';
+@import '../../../../../lib/styles/includes';
+
+.wrap {
+    padding: $pad-xxl;
+    border-radius: $pad-sm;
+    background: $tc-white;
+
+    display: flex;
+    flex-direction: column;
+    gap: $pad-lg;
+
+    @include ltelg {
+        padding: $pad-lg;
+        gap: $pad-sm;
+    }
+
+    @include ltemd {
+        gap: $pad-lg;
+    }
+}
+
+.title {
+    @extend .body-main-bold;
+    color: $blue-140;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.summary {
+    display: flex;
+    gap: $pad-lg;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    
+    @include ltelg {
+        gap: $pad-sm;
+    }
+
+    @include ltemd {
+        justify-content: center;
+        gap: $pad-lg;
+    }
+}

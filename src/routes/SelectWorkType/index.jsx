@@ -13,7 +13,7 @@ import PageContent from "../../components/PageContent";
 import PageDivider from "../../components/PageDivider";
 import PageH2 from "../../components/PageElements/PageH2";
 import Slider from "../../components/Slider";
-import { Breadcrumb, ContactSupportModal } from "../../../src-ts";
+import { Breadcrumb, ContactSupportModal, WorkTypeConfigs } from "../../../src-ts";
 import {
   BUTTON_SIZE,
   projectAndProfessionalWork,
@@ -127,7 +127,7 @@ const SelectWorkType = ({
   const challenge = useSelector((state) => state.challenge);
   const navigate = useNavigate()
 
-  const allWorkTypes = [...workTypes, ...webWorkTypes];
+  const allWorkTypes = [...workTypes, ...webWorkTypes, ...Object.values(WorkTypeConfigs)];
   const featuredWorkTypes = allWorkTypes.filter((wt) => wt.featured);
 
   useEffect(() => {

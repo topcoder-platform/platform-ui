@@ -1,12 +1,12 @@
 @import "../../styles/include";
+@import '../../../src-ts/lib/styles/includes';
 
 .page {
   padding-bottom: 0;
 }
 
 .pageContent {
-  padding: 0;
-  margin: 0;
+  @include pagePaddings;
 }
 
 .pageTitle {
