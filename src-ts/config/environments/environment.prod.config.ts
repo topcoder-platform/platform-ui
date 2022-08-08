@@ -19,7 +19,7 @@ export const EnvironmentConfigProd: GlobalConfig = {
     },
     DISABLED_TOOLS: [ ],
     ENV: AppHostEnvironment.prod,
-    LEARN_SRC: 'https://fcc.topcoder.com:4431',
+    LEARN_SRC: 'https://freecodecamp.topcoder.com',
     // TODO: Move stripe creds to .env file
     STRIPE: {
         ADMIN_TOKEN:
