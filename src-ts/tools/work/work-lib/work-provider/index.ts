@@ -1,3 +1,4 @@
+export { messageGetUnreadCountAsync } from './message-functions'
 export * from './work-context-data.model'
 export * from './work-functions'
 export * from './work.context'

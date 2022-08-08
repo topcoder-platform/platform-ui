@@ -19,11 +19,10 @@ import {
     WorkContextData,
     workGetGroupedByStatus,
     workGetStatusFilter,
-    WorkIntakeFormRoutes,
     WorkStatus,
     WorkStatusFilter,
 } from '../work-lib'
-import { dashboardRoute, selfServiceStartRoute, workDetailRoute } from '../work.routes'
+import { workDashboardRoute, workDetailOrDraftRoute } from '../work.routes'
 
 import { workDashboardTabs } from './work-nav.config'
 import { WorkNoResults } from './work-no-results'
@@ -31,19 +30,23 @@ import { WorkListColumnField, workListColumns } from './work-table.config'
 
 const WorkTable: FC<{}> = () => {
 
-    const workContextData: WorkContextData = useContext(workContext)
-    const { hasWork, work, initialized }: WorkContextData = workContextData
-
+    const { hasWork, work, initialized }: WorkContextData = useContext(workContext)
     const { rootLoggedInRoute }: RouteContextData = useContext(routeContext)
 
     const [statusGroups, setStatusGroups]: [{ [status: string]: WorkByStatus } | undefined,
         Dispatch<SetStateAction<{ [status: string]: WorkByStatus } | undefined>>]
         = useState<{ [status: string]: WorkByStatus }>()
 
-    const [tabs, setTabs]: [ReadonlyArray<TabsNavItem>, Dispatch<SetStateAction<ReadonlyArray<TabsNavItem>>>]
+    const [tabs, setTabs]: [
+        ReadonlyArray<TabsNavItem>,
+        Dispatch<SetStateAction<ReadonlyArray<TabsNavItem>>>,
+    ]
         = useState<ReadonlyArray<TabsNavItem>>([...workDashboardTabs])
 
-    const [columns, setColumns]: [ReadonlyArray<TableColumn<Work>>, Dispatch<ReadonlyArray<TableColumn<Work>>>]
+    const [columns, setColumns]: [
+        ReadonlyArray<TableColumn<Work>>,
+        Dispatch<SetStateAction<ReadonlyArray<TableColumn<Work>>>>,
+    ]
         = useState<ReadonlyArray<TableColumn<Work>>>([...workListColumns])
 
     const { statusKey }: Readonly<Params<string>> = useParams()
@@ -55,6 +58,8 @@ const WorkTable: FC<{}> = () => {
     // to return non-table results, but just another joy of react
     useEffect(() => {
 
+        clearCachedChallengeId()
+
         // if we don't have a status filter, we have a problem,
         // so don't do anything
         if (!workStatusFilter) {
@@ -64,15 +69,9 @@ const WorkTable: FC<{}> = () => {
         // init the status groups and set the tab badges
         initializeStatusGroups(initialized, work, setStatusGroups, tabs, setTabs)
 
-        // if the status filter is all, just set the default columns
-        if (workStatusFilter === WorkStatusFilter.all) {
-            setColumns([...workListColumns])
-            return
-        }
+        // init the columns based on the status
+        initializeColumns(workStatusFilter, setColumns)
 
-        const filteredColumns: Array<TableColumn<Work>> = [...workListColumns]
-        filteredColumns.splice(workListColumns.findIndex(c => c.label === WorkListColumnField.status), 1)
-        setColumns(filteredColumns)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         initialized,
@@ -82,10 +81,6 @@ const WorkTable: FC<{}> = () => {
         workStatusFilter,
     ])
 
-    useEffect(() => {
-        clearCachedChallengeId()
-    }, [])
-
     // if we couldn't find a workstatusfilter,
     // redirect to the dashboard
     if (!workStatusFilter) {
@@ -94,27 +89,20 @@ const WorkTable: FC<{}> = () => {
     }
 
     function onChangeTab(active: string): void {
-        navigate(`${dashboardRoute}/${active}`)
+        navigate(workDashboardRoute(active))
     }
 
-    function viewWorkDetails(selectedWork: Work): void {
+    function viewSelectedWork(selectedWork: Work): void {
 
-        const isDraft: boolean = selectedWork.status === WorkStatus.draft
-
-        // TODO: move the tabs definition to src-ts
-        // so we don't have to hard-code this tab id
-        let url: string = workDetailRoute(selectedWork.id, selectedWork.status === WorkStatus.ready ? 'solutions' : undefined)
-
-        if (isDraft) {
-            if (selectedWork.draftStep) {
-                url = `${WorkIntakeFormRoutes[selectedWork.type][selectedWork.draftStep]}/${selectedWork.id}`
-            } else {
-                cacheChallengeId(selectedWork.id)
-                url = selfServiceStartRoute
-            }
+        // if this is a draft and there is no step saved
+        // for the work, cache its ID so we can go back
+        // to the beginning
+        if (selectedWork.status === WorkStatus.draft && !selectedWork.draftStep) {
+            cacheChallengeId(selectedWork.id)
         }
 
-        navigate(url)
+        // go to the specified step
+        navigate(workDetailOrDraftRoute(selectedWork))
     }
 
     // define the tabs so they can be displayed on various results
@@ -154,7 +142,7 @@ const WorkTable: FC<{}> = () => {
             <Table
                 columns={columns}
                 data={filteredResults}
-                onRowClick={viewWorkDetails}
+                onRowClick={viewSelectedWork}
             />
         )
 
@@ -167,6 +155,30 @@ const WorkTable: FC<{}> = () => {
 }
 
 export default WorkTable
+
+function initializeColumns(
+    workStatusFilter: WorkStatusFilter,
+    setColumns: Dispatch<SetStateAction<ReadonlyArray<TableColumn<Work>>>>,
+): void {
+
+    // set the columns that should appear by status
+    const filteredColumns: Array<TableColumn<Work>> = [...workListColumns]
+
+    if (workStatusFilter === WorkStatusFilter.draft) {
+        // if this is the draft status, remove the messages column
+        filteredColumns.splice(filteredColumns.findIndex(c => c.label === WorkListColumnField.messages), 1)
+    } else if (workStatusFilter !== WorkStatusFilter.all) {
+        // if this isn't the draft or all status, remove the action button
+        filteredColumns.splice(filteredColumns.findIndex(c => c.type === 'action'), 1)
+    }
+
+    // if this is status-specific, remove the status columm
+    if (workStatusFilter !== WorkStatusFilter.all) {
+        filteredColumns.splice(filteredColumns.findIndex(c => c.label === WorkListColumnField.status), 1)
+    }
+
+    setColumns(filteredColumns)
+}
 
 function initializeStatusGroups(
     initialized: boolean,

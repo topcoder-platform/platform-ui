@@ -1,4 +1,3 @@
-// import { messageGetAndSetForWorkItemsAsync } from '../../functions'
 import { PaymentMethodResult, Stripe, StripeCardNumberElement } from '@stripe/stripe-js'
 
 import { Page, UserProfile } from '../../../../../lib'
@@ -101,27 +100,19 @@ export async function deleteAsync(workId: string): Promise<void> {
     return workStoreDeleteAsync(workId)
 }
 
-export async function getAllAsync(profile: UserProfile): Promise<Array<Work>> {
+export async function getAllAsync(profile: UserProfile, pageNumber: number): Promise<Array<Work>> {
 
     // TODO: actual pagination and sorting
     const page: Page = {
-        number: 1,
+        number: pageNumber,
         size: 100,
         sort: {
             direction: 'desc',
             fieldName: 'created',
         },
     }
-    let work: Array<Work> = []
-    let nextSet: Array<Work> = await getPageAsync((profile as UserProfile).handle, page)
 
-    while (nextSet.length > 0) {
-        work = work.concat(nextSet)
-        page.number += 1
-        nextSet = await getPageAsync((profile as UserProfile).handle, page)
-    }
-
-    return work
+    return getPageAsync(profile.handle, page)
 }
 
 export async function getByWorkIdAsync(workId: string): Promise<Challenge> {
@@ -176,17 +167,7 @@ async function getPageAsync(handle: string, page: Page): Promise<Array<Work>> {
     const challenges: Array<Challenge> = await workStoreGetAsync(handle, page)
 
     // run it through the factory and filter out deleted and non-self-service
-    const workItems: Array<Work> = challenges
+    return challenges
         .map(challenge => workFactoryCreate(challenge, workGetPricesConfig()))
         .filter(work => work.status !== WorkStatus.deleted && work.type !== WorkType.unknown)
-
-    return workItems
-
-    /*
-        TODO: add this data back to the work object when the bug is fixed:
-        https://topcoder.atlassian.net/browse/PROD-1860
-        Unread Messages count from API don't match embedded forum widget
-    // get and set the messages counts and return
-    return messageGetAndSetForWorkItemsAsync(workItems, handle)
-    */
 }

@@ -1,6 +1,5 @@
 import { ACTIONS } from "../constants";
 import workService from "../services/work";
-import challengeService from "../services/challenge";
 
 export const getWork = (id) => {
   return {
@@ -56,12 +55,5 @@ export const setIsSavingSurveyDone = (value) => {
   return {
     type: ACTIONS.WORK.SET_IS_SAVING_SURVEY_DONE,
     payload: value,
-  };
-};
-
-export const getForumNotifications = (workId, profile) => {
-  return {
-    type: ACTIONS.WORK.GET_FORUM_NOTIFICATIONS,
-    payload: challengeService.getForumNotifications(workId, profile),
   };
 };

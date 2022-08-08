@@ -26,13 +26,13 @@ import {
   downloadSolution,
   saveSurvey,
   setIsSavingSurveyDone,
-  getForumNotifications,
 } from "../../actions/work";
 import { toggleSupportModal } from "../../actions/form";
 
 import {
   Breadcrumb,
   ChallengeMetadataName,
+  messageGetUnreadCountAsync,
   TabsNavbar,
   WorkDetailDetails,
   WorkDetailHeader,
@@ -55,7 +55,6 @@ const WorkItem = ({
   isLoadingWork,
   isLoadingSolutions,
   isSavingSurveyDone,
-  forumNotifications,
   getWork,
   getSummary,
   getDetails,
@@ -64,13 +63,13 @@ const WorkItem = ({
   downloadSolution,
   saveSurvey,
   setIsSavingSurveyDone,
-  getForumNotifications,
 }) => {
 
   const { workItemId } = useParams()
 
   const [selectedTab, setSelectedTab] = useState("summary");
   const [showSurvey, setShowSurvey] = useState(false);
+  const [messageCount, setMessageCount] = useState(undefined)
   const { profile } = useContext(profileContext)
   const navigate = useNavigate()
 
@@ -132,17 +131,22 @@ const WorkItem = ({
   ]);
 
   useEffect(() => {
+
     if (!work) {
       return;
     }
 
-    if (selectedTab === "messaging") {
-      getForumNotifications(work.id, profile);
+    async function getMessageCount() {
+      const messages = await messageGetUnreadCountAsync(work.id, profile.handle)
+      setMessageCount(messages);
     }
+
+    getMessageCount()
+      .catch(err => console.error(err))
+
   }, [
     work,
     selectedTab,
-    getForumNotifications,
     profile,
   ]);
 
@@ -185,8 +189,8 @@ const WorkItem = ({
           id: "messaging",
           title: "Messages",
           badges: [
-            forumNotifications?.unreadNotifications && {
-              count: +forumNotifications?.unreadNotifications,
+            messageCount && {
+              count: messageCount,
               type: "info",
             },
           ].filter(Boolean),
@@ -207,7 +211,7 @@ const WorkItem = ({
       work,
       solutionsCount,
       isReviewPhaseEnded,
-      forumNotifications,
+      messageCount,
     ]
   );
 
@@ -324,7 +328,6 @@ const mapStateToProps = (state) => {
     isLoadingWork,
     isLoadingSolutions,
     isSavingSurveyDone,
-    forumNotifications,
   } = state.work;
 
   return {
@@ -333,7 +336,6 @@ const mapStateToProps = (state) => {
     isLoadingWork,
     isLoadingSolutions,
     isSavingSurveyDone,
-    forumNotifications,
   };
 };
 
@@ -346,7 +348,6 @@ const mapDispatchToProps = {
   downloadSolution,
   saveSurvey,
   setIsSavingSurveyDone,
-  getForumNotifications,
   toggleSupportModal,
 };
 

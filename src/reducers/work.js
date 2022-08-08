@@ -10,7 +10,6 @@ const initialState = {
   isLoadingWork: false,
   isLoadingSolutions: false,
   isSavingSurveyDone: false,
-  forumNotifications: null,
 };
 
 const workReducer = (state = initialState, action) => {
@@ -114,16 +113,6 @@ const workReducer = (state = initialState, action) => {
       return {
         ...state,
         isSavingSurveyDone: action.payload,
-      };
-    case ACTIONS.WORK.GET_FORUM_NOTIFICATIONS_PENDING:
-      return {
-        ...state,
-        forumNotifications: null,
-      };
-    case ACTIONS.WORK.GET_FORUM_NOTIFICATIONS_SUCCESS:
-      return {
-        ...state,
-        forumNotifications: action.payload,
       };
     default:
       return state;

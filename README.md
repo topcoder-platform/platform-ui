@@ -81,7 +81,9 @@ You will need to add the following line to your hosts file. The hosts file is no
 
 >% yarn start
 
-3. Go to https://local.topcoder-dev.com:3003/
+3. Go to https://local.topcoder-dev.com:3000
+
+>**NOTE**: You can override the port in your [personal config](#personal-config).
 
 ### Local SSL
 

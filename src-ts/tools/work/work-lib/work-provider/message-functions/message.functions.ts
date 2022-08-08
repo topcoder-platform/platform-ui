@@ -28,3 +28,8 @@ export async function getAndSetForWorkItemsAsync(workItems: Array<Work>, handle:
             return work
         })
 }
+
+export async function getUnreadCountAsync(workId: string, handle: string): Promise<number | undefined> {
+    const response: GetUnreadMessageCountResponse = await messageStoreGetUnreadCountAsync(workId, handle)
+    return response.messageCount
+}
