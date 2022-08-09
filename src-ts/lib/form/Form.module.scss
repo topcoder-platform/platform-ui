@@ -12,7 +12,7 @@
     }
 
     .subtitle {
-        margin-bottom: $pad-lg;
+        margin-bottom: $space-lg;
     }
 
     .form-footer {
@@ -58,12 +58,12 @@
             @extend .ultra-small-medium;
             color: $red-100;
             background-color: $black-5;
-            padding: $pad-xs;
-            margin-bottom: $pad-xl;
+            padding: $space-xs;
+            margin-bottom: $space-xl;
 
             svg {
                 @include icon-lg;
-                margin-right: $pad-xs;
+                margin-right: $space-xs;
             }
         }
 

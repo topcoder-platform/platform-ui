@@ -1,0 +1,38 @@
+@import '../../../../../../../lib/styles/includes';
+
+.card {
+    padding-left: $space-xxl;
+    padding-right: $space-xxl;
+    width: 100%;
+
+    @include ltemd {
+        padding-left: $space-lg;
+        padding-right: $space-lg;
+    }
+
+    .titleContainer{
+        margin-top: $space-xxxxl;
+
+        @include ltemd {
+            margin-top: $space-xxl;
+        }
+
+        .headline {
+            font-weight: 500;
+            font-size: 26px;
+            
+            text-align: left;
+            margin-bottom: $space-xs;
+        }
+
+        .summary {
+            text-align: left;
+            display: block;
+        }
+    }
+
+    .image {
+        margin-top: $space-xxl;
+        pointer-events: none;
+    }
+}

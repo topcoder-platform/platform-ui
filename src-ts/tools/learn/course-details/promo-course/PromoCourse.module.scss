@@ -3,21 +3,21 @@
 
 .wrap {
     background: $black-5;
-    border-radius: $pad-sm;
+    border-radius: $space-sm;
 
-    padding: $pad-xxxxl;
-    gap: $pad-xxxxl;
+    padding: $space-xxxxl;
+    gap: $space-xxxxl;
     display: flex;
     flex-direction: column;
     @include ltemd {
-        padding: $pad-lg;
-        gap: $pad-sm;
+        padding: $space-lg;
+        gap: $space-sm;
     }
 }
 
 .text-content {
     > *:not(:first-child) {
-        margin-top: $pad-sm;
+        margin-top: $space-sm;
     }
 
     h4 {
@@ -26,7 +26,7 @@
 }
 
 .course-path-steps {
-    margin-top: $pad-sm;
+    margin-top: $space-sm;
     svg {
         width: 100%;
         display: block;
@@ -38,7 +38,7 @@
     @include ltemd {
         display: flex;
         flex-direction: column;
-        gap: $pad-lg;
+        gap: $space-lg;
         align-items: stretch;
     }
 }

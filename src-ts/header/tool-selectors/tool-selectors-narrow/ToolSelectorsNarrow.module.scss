@@ -23,9 +23,9 @@
         left: 0;
         bottom: 0;
         height: $content-height;
-        width: calc(100% - calc(2 * $pad-xxl));
+        width: calc(100% - calc(2 * $space-xxl));
         z-index: 100;
         background-color: $black-100;
-        padding: $pad-xxl;
+        padding: $space-xxl;
     }
 }

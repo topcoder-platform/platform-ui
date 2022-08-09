@@ -8,7 +8,7 @@
 .main-wrap {
     height: calc($content-height - $breadcrumb-height);
     width: 100%;
-    margin-bottom: -$pad-lg;
+    margin-bottom: -$space-lg;
     background: $tc-white;
 
     display: flex;
@@ -17,7 +17,7 @@
 
     @include ltemd {
         flex-direction: column;
-        gap: $pad-lg;
+        gap: $space-lg;
         height: auto;
         flex: 99 1 auto;
         margin-bottom: 0;
@@ -29,12 +29,12 @@
     display: flex;
     flex-direction: column;
 
-    padding-left: $pad-xxxxl;
+    padding-left: $space-xxxxl;
 
     hr {
-        margin-left: $pad-xxxxl;
-        margin-right: $pad-xxxxl;
-        width: calc(100% - 2 * $pad-xxxxl);
+        margin-left: $space-xxxxl;
+        margin-right: $space-xxxxl;
+        width: calc(100% - 2 * $space-xxxxl);
     }
 
     @include ltemd {
@@ -42,9 +42,9 @@
         flex: 1 1 auto;
 
         hr {
-            margin-left: $pad-lg;
-            margin-right: $pad-lg;
-            width: calc(100% - 2 * $pad-lg);
+            margin-left: $space-lg;
+            margin-right: $space-lg;
+            width: calc(100% - 2 * $space-lg);
         }
     }
 }
@@ -75,5 +75,5 @@
 .course-outline-title {
     @extend .body-main-bold;
     flex: 0 0 auto;
-    margin-bottom: $pad-xl;
+    margin-bottom: $space-xl;
 }

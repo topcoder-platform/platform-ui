@@ -1,7 +1,7 @@
 @import '../../../../../../lib/styles/includes';
 
 .wrap {
-    border-radius: $pad-sm;
+    border-radius: $space-sm;
     width: 100%;
     width: 264px;
     background: rgba($tc-white, 0.12);
@@ -22,21 +22,21 @@
 }
 
 .course-title {
-    margin-top: $pad-lg;
+    margin-top: $space-lg;
 }
 
 .top-wrap {
     background: url(./wave-bg.png) 0 0 no-repeat;
     background-size: 264px 600px;
-    padding: $pad-xxl;
+    padding: $space-xxl;
     min-height: 264px;
 }
 
 .details {
     display: flex;
     align-items: center;
-    padding: $pad-xxl;
-    gap: calc($pad-sm + $border);
+    padding: $space-xxl;
+    gap: calc($space-sm + $border);
 
     svg {
         @include icon-xl;

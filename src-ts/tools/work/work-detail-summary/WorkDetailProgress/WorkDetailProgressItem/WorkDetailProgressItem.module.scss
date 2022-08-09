@@ -1,6 +1,6 @@
 @import "../../../../../lib/styles/includes";
 
-$dot-size: calc($pad-lg + $pad-xxl);
+$dot-size: calc($space-lg + $space-xxl);
 
 .progress-bar-list-item {
     position: relative;
@@ -12,9 +12,9 @@ $dot-size: calc($pad-lg + $pad-xxl);
 
     .label {
         display: block;
-        margin-top: $pad-sm;
+        margin-top: $space-sm;
         margin-left: calc(-1 * calc($dot-size + 3px));
-        width: calc(4 * $pad-xxxxl);
+        width: calc(4 * $space-xxxxl);
         text-align: center;
         color: $black-60;
 
@@ -24,7 +24,7 @@ $dot-size: calc($pad-lg + $pad-xxl);
 
         .date {
             display: block;
-            margin-top: $pad-xs;
+            margin-top: $space-xs;
         }
     }
 
@@ -34,9 +34,9 @@ $dot-size: calc($pad-lg + $pad-xxl);
         justify-content: center;
         width: $dot-size;
         height: $dot-size;
-        margin-bottom: $pad-sm;
+        margin-bottom: $space-sm;
         @extend .bg-black-10;
-        border: $pad-xs solid $black-20;
+        border: $space-xs solid $black-20;
         border-radius: 50%;
         box-sizing: border-box;
         color: $black-60;
@@ -46,10 +46,10 @@ $dot-size: calc($pad-lg + $pad-xxl);
         content: '';
         display: block;
         position: absolute;
-        top: $pad-lg;
+        top: $space-lg;
         left: $dot-size;
         width: 100%;
-        height: $pad-sm;
+        height: $space-sm;
         @extend .bg-black-20;
     }
 

@@ -2,18 +2,18 @@
 
 .wrap {
     background: $tc-grad15;
-    padding: $pad-xxxxl;
-    border-radius: $pad-sm;
+    padding: $space-xxxxl;
+    border-radius: $space-sm;
 
     color: $tc-white;
 
     display: flex;
     flex-direction: column;
-    gap: $pad-xxl;
+    gap: $space-xxl;
 
     @include ltelg {
-        padding: $pad-lg;
-        gap: $pad-lg;
+        padding: $space-lg;
+        gap: $space-lg;
     }
 }
 
@@ -23,7 +23,7 @@
 
     svg {
         @include icon-size(60);
-        margin-right: $pad-sm;
+        margin-right: $space-sm;
         path {
             fill: url(#lh-paint-02);
         }
@@ -31,7 +31,7 @@
 }
 
 .bottom-link {
-    margin-top: $pad-xxxxl;
+    margin-top: $space-xxxxl;
 }
 
 .course-outline {

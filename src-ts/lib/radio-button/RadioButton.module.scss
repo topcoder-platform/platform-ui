@@ -4,7 +4,7 @@
 .bug-delivery-radio {
     border: 1px solid $black-100;
     border-radius: 4px;
-    padding: $pad-lg 0;
+    padding: $space-lg 0;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -29,6 +29,6 @@
     }
     .name {
         @extend .body-large-bold;
-        margin-top: $pad-sm;
+        margin-top: $space-sm;
     }
 }

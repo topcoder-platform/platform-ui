@@ -3,18 +3,18 @@
 
 .wrap {
     background: $tc-white;
-    padding: $pad-lg $pad-xxl;
-    border-radius: $pad-sm;
+    padding: $space-lg $space-xxl;
+    border-radius: $space-sm;
 
     display: flex;
 
     &.large {
-        padding: $pad-xxxxl;
+        padding: $space-xxxxl;
     }
 
     @include ltelg {
         &, &.large {
-            padding: $pad-lg;
+            padding: $space-lg;
         }
     }
 
@@ -30,7 +30,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: $pad-lg;
+    gap: $space-lg;
 }
 
 .line {
@@ -40,7 +40,7 @@
     width: 100%;
     @include ltelg {
         flex-wrap: wrap;
-        gap: $pad-lg;
+        gap: $space-lg;
     }
 }
 
@@ -52,7 +52,7 @@
     &:before {
         content: "";
         display: inline-block;
-        margin: 2px $pad-sm -2px;
+        margin: 2px $space-sm -2px;
         width: 1px;
         height: 16px;
         background: $black-60;
@@ -65,10 +65,10 @@
 .summary {
     display: flex;
     align-items: center;
-    margin-top: $pad-lg;
+    margin-top: $space-lg;
     width: 100%;
     justify-content: space-between;
-    gap: $pad-lg;
+    gap: $space-lg;
     @include ltemd {
         flex-direction: column;
         align-items: flex-start;
@@ -86,14 +86,14 @@
         height: 100%;
         width: 1px;
         background: $black-10;
-        margin: 0 calc($pad-mx + $pad-sm);
+        margin: 0 calc($space-mx + $space-sm);
     }
 
     &-inner {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        gap: $pad-sm;
+        gap: $space-sm;
 
         p {
             display: -webkit-box;
@@ -103,14 +103,14 @@
         }
 
         :global(.button) {
-            margin-top: $pad-sm;
+            margin-top: $space-sm;
         }
     }
 
     @include ltemd {
         flex-direction: column;
         &:before {
-            margin: $pad-xxl 0;
+            margin: $space-xxl 0;
             width: 100%;
             height: 1px;
         }

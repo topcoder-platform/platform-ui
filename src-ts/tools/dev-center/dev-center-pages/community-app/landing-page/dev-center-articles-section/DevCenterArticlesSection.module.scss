@@ -1,0 +1,26 @@
+@import '../../../../../../lib/styles/includes';
+
+.container {
+    background-color: $black-5;
+    width: 100%;
+    height: fit-content;
+    padding: 80px 0px;
+    margin-top: 64px;
+
+    @include ltemd {
+        padding: 40px 0px;
+    }
+
+    .title {
+        @include font-black-100;
+        font-weight: 500;
+        font-size: 44px;
+        line-height: 44px;
+        margin-bottom: $space-xxxxl;
+    
+        @include ltemd {
+            font-size: 27px;
+            line-height: 28px;
+        }
+    }
+}
