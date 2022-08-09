@@ -10,12 +10,10 @@ export const devCenterRoutes: Array<PlatformRoute> = [
             {
                 element: <GettingStartedGuide />,
                 route: '/getting-started',
-                title: toolTitle,
             },
             {
                 element: <DevCenterLandingPage />,
                 route: '/',
-                title: toolTitle,
             },
         ],
         element: <DevCenter />,

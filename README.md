@@ -11,6 +11,7 @@ Pre-existing user interfaces will be ported to here over time until this is the 
 
 - [Local Environment Setup](#local-environment-setup)
 - [Deployments](#deployments)
+- [Developer Center specific setup](#developer-center-specific-setup)
 - [Yarn Commands](#yarn-commands)
 
 # Application structure
