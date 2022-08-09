@@ -1,6 +1,6 @@
 import { FC, useContext, useMemo } from 'react'
 
-import { Breadcrumb, BreadcrumbItemModel, ContentLayout, Portal, profileContext, ProfileContextData } from '../../../lib'
+import { Breadcrumb, BreadcrumbItemModel, ContentLayout, LoadingSpinner, Portal, profileContext, ProfileContextData } from '../../../lib'
 import {
     AllCertificationsProviderData,
     LearnCertification,
@@ -24,9 +24,11 @@ interface CertificatesByIdType {
 
 const MyLearning: FC<{}> = () => {
 
-    const { profile }: ProfileContextData = useContext(profileContext)
-    const { completed, inProgress }: UserCertificationsProviderData = useUserCertifications()
-    const { certifications }: AllCertificationsProviderData = useAllCertifications()
+    const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
+    const { completed, inProgress, ready: coursesReady }: UserCertificationsProviderData = useUserCertifications()
+    const { certifications, ready: certificatesReady }: AllCertificationsProviderData = useAllCertifications()
+
+    const ready: boolean = profileReady && coursesReady && certificatesReady
 
     const certificatesById: CertificatesByIdType = useMemo(() => (
         certifications.reduce((certifs, certificate) => {
@@ -46,6 +48,8 @@ const MyLearning: FC<{}> = () => {
         <ContentLayout contentClass={styles['content-layout']}>
             <Breadcrumb items={breadcrumb} />
             <div className={styles['wrap']}>
+                <LoadingSpinner hide={ready} className={styles['loading-spinner']} />
+
                 <Portal portalId='page-subheader-portal-el'>
                     <div className={styles['hero-wrap']}>
                         <WaveHero
@@ -60,36 +64,40 @@ const MyLearning: FC<{}> = () => {
                     </div>
                 </Portal>
 
-                <div className={styles['courses-area']}>
-                    {inProgress.map((certif) => (
-                        <MyCourseInProgressCard
-                            certification={certificatesById[certif.certificationId]}
-                            key={certif.certificationId}
-                            theme='detailed'
-                            currentLesson={certif.currentLesson}
-                            completedPercentage={certif.courseProgressPercentage / 100}
-                            startDate={certif.startDate}
-                        />
-                    ))}
-                </div>
-
-                {!!completed.length && (
-                    <div className={styles['courses-area']}>
-                        <div className={styles['title-line']}>
-                            <LearningHat />
-                            <h2 className='details'>Completed Courses</h2>
-                        </div>
-
-                        <div className={styles['cards-wrap']}>
-                            {completed.map((certif) => (
-                                <MyCourseCompletedCard
+                {ready && (
+                    <>
+                        <div className={styles['courses-area']}>
+                            {inProgress.map((certif) => (
+                                <MyCourseInProgressCard
                                     certification={certificatesById[certif.certificationId]}
                                     key={certif.certificationId}
-                                    completed={certif.completedDate}
+                                    theme='detailed'
+                                    currentLesson={certif.currentLesson}
+                                    completedPercentage={certif.courseProgressPercentage / 100}
+                                    startDate={certif.startDate}
                                 />
                             ))}
                         </div>
-                    </div>
+
+                        {!!completed.length && (
+                            <div className={styles['courses-area']}>
+                                <div className={styles['title-line']}>
+                                    <LearningHat />
+                                    <h2 className='details'>Completed Courses</h2>
+                                </div>
+
+                                <div className={styles['cards-wrap']}>
+                                    {completed.map((certif) => (
+                                        <MyCourseCompletedCard
+                                            certification={certificatesById[certif.certificationId]}
+                                            key={certif.certificationId}
+                                            completed={certif.completedDate}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </ContentLayout>

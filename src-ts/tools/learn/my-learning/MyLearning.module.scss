@@ -1,5 +1,10 @@
 @import '../../../lib/styles/includes';
 
+.wrap {
+    flex: 1 1 auto;
+    position: relative;
+}
+
 .content-layout {
     background: $black-5;
 }
@@ -34,6 +39,7 @@
     gap: $space-lg;
     display: flex;
     flex-direction: column;
+    position: relative;
     &:empty {
         display: none;
     }
@@ -57,4 +63,8 @@
             flex: 1 1 0;
         }
     }
+}
+
+.loading-spinner {
+    background: none;
 }

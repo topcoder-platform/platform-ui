@@ -9,8 +9,8 @@ export interface RouteContextData {
     getPath: (routeTitle: string) => string
     getPathFromRoute: (route: PlatformRoute) => string
     getRouteElement: (route: PlatformRoute) => JSX.Element
+    getSignupUrl: (currentLocation: string, toolRoutes: Array<PlatformRoute>, returnUrl?: string) => string
     initialized: boolean
-    isActiveTool: (activePath: string, toolRoute: PlatformRoute) => boolean
     isRootRoute: (activePath: string) => boolean
     rootLoggedInRoute: string
     rootLoggedOutFC: FC<{}>

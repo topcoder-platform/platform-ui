@@ -50,7 +50,7 @@ export enum LEARN_PATHS {
 }
 
 export function getAuthenticateAndStartCourseRoute(): string {
-    return `${authUrlLogin}${encodeURIComponent(`?${LEARN_PATHS.startCourseRouteFlag}`)}`
+    return `${authUrlLogin()}${encodeURIComponent(`?${LEARN_PATHS.startCourseRouteFlag}`)}`
 }
 
 export const rootRoute: string = LEARN_PATHS.root

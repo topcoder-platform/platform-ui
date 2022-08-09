@@ -1,6 +1,6 @@
 import { Dispatch, FC, ReactNode, SetStateAction, useContext, useEffect, useState } from 'react'
 
-import { profileContext, ProfileContextData, UserProfile } from '../../../../lib'
+import { logError, profileContext, ProfileContextData, UserProfile } from '../../../../lib'
 
 import { WorkContextData } from './work-context-data.model'
 import { Work, workGetAllAsync, } from './work-functions'
@@ -33,12 +33,12 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
                 setWorkContextData(contextData)
 
             } catch (error: any) {
+                logError(error)
                 const contextData: WorkContextData = {
+                    ...defaultWorkContextData,
                     error: error.response?.data?.result?.content || error.message || error,
-                    hasWork: false,
                     initialized: true,
                     refresh: getAndSetWork,
-                    work: [],
                 }
                 setWorkContextData(contextData)
             }

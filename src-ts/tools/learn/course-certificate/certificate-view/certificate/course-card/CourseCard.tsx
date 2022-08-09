@@ -18,7 +18,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
         <div className={styles['wrap']}>
             <div className={styles['top-wrap']}>
                 <div className={styles['badge']}>
-                    <CourseBadge type={props.type} />
+                    <CourseBadge type={props.type} asImg />
                 </div>
                 <h5 className={classNames('details', styles['course-title'])}>
                     {props.course}

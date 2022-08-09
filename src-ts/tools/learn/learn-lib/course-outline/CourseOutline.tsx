@@ -34,7 +34,8 @@ const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
 
     return (
         <div className={classNames(styles['wrap'], 'course-outline-wrap')}>
-            {props.ready === false && <LoadingSpinner show />}
+
+            <LoadingSpinner hide={props.ready !== false} />
 
             {props.course && (
                 <div className={classNames(styles['content'], 'content')}>

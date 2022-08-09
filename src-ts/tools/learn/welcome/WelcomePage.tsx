@@ -1,6 +1,8 @@
+import classNames from 'classnames'
 import { FC } from 'react'
 
 import { ContentLayout, LoadingSpinner, Portal } from '../../../lib'
+import '../../../lib/styles/index.scss'
 import {
     AllCertificationsProviderData,
     useAllCertifications,
@@ -22,7 +24,9 @@ const WelcomePage: FC<{}> = () => {
 
     return (
         <ContentLayout>
-            <div className={styles.wrap}>
+
+            <div className={classNames(styles.wrap, 'full-height-frame')}>
+
                 <Portal portalId='page-subheader-portal-el'>
                     <div className={styles['hero-wrap']}>
                         <WaveHero
@@ -47,11 +51,11 @@ const WelcomePage: FC<{}> = () => {
                     </div>
                 </Portal>
 
-                <div className={styles['courses-section']}>
+                <div className={classNames(styles['courses-section'], 'full-height-frame')}>
+
                     <h3 className='details'>Courses Available</h3>
-                    {!coursesReady && (
-                        <LoadingSpinner show />
-                    )}
+
+                    <LoadingSpinner hide={coursesReady} />
 
                     {coursesReady && (
                         <div className={styles['courses-list']}>

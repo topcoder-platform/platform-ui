@@ -40,7 +40,7 @@ const WorkNotLoggedIn: FC<{}> = () => {
     }, [isLoggedIn, initialized, navigate])
 
     if (isLoading) {
-        return <LoadingSpinner show={true} />
+        return <LoadingSpinner />
     }
 
     function startWork(): void {

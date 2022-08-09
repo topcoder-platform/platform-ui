@@ -25,7 +25,7 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
             'premium': 7,
             'standard': 5,
         },
-        featured: true,
+        featured: false,
         intakeFormRoutes: WorkIntakeFormRoutes[WorkType.bugHunt],
         priceConfig: workPriceBugHunt,
         results: `You will receive thorough testing of your website, and at the conclusion will be provided
