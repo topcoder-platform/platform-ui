@@ -17,6 +17,7 @@ export const devCenterRoutes: Array<PlatformRoute> = [
             },
         ],
         element: <DevCenter />,
+        memberOnly: true,
         route: '/dev-center',
         title: toolTitle,
     },
