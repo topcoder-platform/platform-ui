@@ -1,6 +1,6 @@
 import { FC, memo, MutableRefObject, useEffect, useRef } from 'react'
 
-import { EnvironmentConfig } from '../../../../config'
+import { LearnConfig } from '../../learn-config'
 import { LearnLessonMeta } from '../../learn-lib'
 
 import styles from './FccFrame.module.scss'
@@ -33,14 +33,14 @@ const FccFrame: FC<FccFrameProps> = (props: FccFrameProps) => {
         }
 
         if (!frameIsReady.current) {
-            Object.assign(frameRef.current, { src: `${EnvironmentConfig.LEARN_SRC}/${props.lesson.lessonUrl}` })
+            Object.assign(frameRef.current, { src: `${LearnConfig.CLIENT}/${props.lesson.lessonUrl}` })
         } else {
             frameRef.current.contentWindow.postMessage(JSON.stringify({
                 data: { path: `/${lessonUrl}` },
                 event: 'fcc:url:update',
             }), '*')
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         lessonUrl,
     ])
@@ -52,7 +52,7 @@ const FccFrame: FC<FccFrameProps> = (props: FccFrameProps) => {
         const handleEvent: (event: any) => void = (event: any) => {
             const { data: jsonData, origin }: { data: string, origin: string } = event
 
-            if (origin.indexOf(EnvironmentConfig.LEARN_SRC) === -1) {
+            if (origin.indexOf(LearnConfig.CLIENT) === -1) {
                 return
             }
 
