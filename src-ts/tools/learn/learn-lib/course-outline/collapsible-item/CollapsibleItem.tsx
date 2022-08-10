@@ -52,13 +52,35 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
         !!progress?.completedLessons.find(l => l.dashedName === key)
     )
 
-    const listItem: (item: any, isActive?: boolean) => ReactNode = (item: any, isActive?: boolean) => (
+    const stepLabel: (item: any, isActive: boolean, stepCount: string, label?: string) => ReactNode =
+    (item: any, isActive: boolean, stepCount: string, label?: string) => (
         <StepIcon
-            index={parseInt(item.dashedName.split('-').pop(), 10) || 1}
+            index={stepCount}
             completed={isItemCompleted(item.dashedName)}
             active={isActive}
+            label={label}
         />
     )
+
+    const renderListItem: (item: any) => ReactNode = (item: any) => {
+        const isActive: boolean = props.itemId?.(item) === props.active
+        const stepCount: string = item.dashedName.match(/^step-(\d+)$/i)?.[1]
+        const label: ReactNode = stepLabel(item, isActive, stepCount, !stepCount && item.title)
+        const key: string = props.itemId?.(item) ?? item.title
+
+        return (
+            <li
+                key={key}
+                className={classNames(styles['item-wrap'], !stepCount && 'full-width')}
+            >
+                {props.path ? (
+                    <Link className={styles['item-wrap']} to={props.path(item)}>
+                        {label}
+                    </Link>
+                ) : label}
+            </li>
+        )
+    }
 
     return (
         <div className={classNames(styles['wrap'], isOpen ? 'is-open' : 'collapsed')}>
@@ -93,13 +115,7 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
                     </div>
 
                     <ul className={classNames(styles['list'], 'steps-list')}>
-                        {props.items.map((it) => (
-                            <li key={props.itemId?.(it) ?? it.title} className={styles['item-wrap']}>
-                                {props.path ? (
-                                    <Link className={styles['item-wrap']} to={props.path(it)}>{listItem(it, props.itemId?.(it) === props.active)}</Link>
-                                ) : (listItem(it, props.itemId?.(it) === props.active))}
-                            </li>
-                        ))}
+                        {props.items.map(renderListItem)}
                     </ul>
                 </div>
             )}
