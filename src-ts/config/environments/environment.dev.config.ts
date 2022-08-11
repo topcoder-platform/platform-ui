@@ -6,9 +6,8 @@ import { EnvironmentConfigDefault } from './environment.default.config'
 export const EnvironmentConfigDev: GlobalConfig = {
     ...EnvironmentConfigDefault,
     ANALYTICS: {
-        SEGMENT_KEY: '8fCbi94o3ruUUGxRRGxWu194t6iVq9LH',
-        // SEGMENT_KEY: EnvironmentConfigDefault.ANALYTICS.SEGMENT_KEY,
-        // TAG_MANAGER_ID: 'GTM-W7B537Z',
+        SEGMENT_KEY: EnvironmentConfigDefault.ANALYTICS.SEGMENT_KEY,
+        TAG_MANAGER_ID: 'GTM-W7B537Z',
     },
     DISABLED_TOOLS: [],
     ENV: AppHostEnvironment.dev,
