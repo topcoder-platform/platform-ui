@@ -46,6 +46,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
                 let nextSet: Array<Work> = await workGetAllAsync(safeProfile, pageNumber++)
 
                 const contextData: WorkContextData = {
+                    ...defaultWorkContextData,
                     hasWork: !!nextSet.length,
                     initialized: true,
                     remove,
@@ -61,12 +62,14 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
                 // get the rest of the pages, and update the list
                 // after each response
                 let output: Array<Work> = []
+                let messageContextData: WorkContextData = {...contextData}
                 while (nextSet.length > 0) {
                     output = output.concat(nextSet)
-                    setWorkContextData({
-                        ...contextData,
+                    messageContextData = {
+                        ...messageContextData,
                         work: output,
-                    })
+                    }
+                    setWorkContextData(messageContextData)
                     nextSet = await workGetAllAsync(safeProfile, pageNumber++)
                 }
 
@@ -77,8 +80,8 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
                 // entire list.
                 output.forEach(async item => {
                     item.messageCount = await messageGetUnreadCountAsync(item.id, safeProfile.handle)
-                    const messageContextData: WorkContextData = {
-                        ...contextData,
+                    messageContextData = {
+                        ...messageContextData,
                         work: output,
                     }
                     setWorkContextData(messageContextData)

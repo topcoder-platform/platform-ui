@@ -8,6 +8,7 @@ import {
     RouteContextData,
     Table,
     TableColumn,
+    tabNavItemBadgeSet,
     TabsNavbar,
     TabsNavItem,
 } from '../../../lib'
@@ -204,14 +205,9 @@ function initializeStatusGroups(
             .includes(WorkStatusFilter[tab.id as keyof typeof WorkStatusFilter]))
         .forEach(tab => {
             const info: WorkByStatus = groups[tab.id]
-            if (!!info.count) {
-                tab.badges = [
-                    {
-                        count: info.count,
-                        type: 'info',
-                    },
-                ]
-            }
+            tab.badges = tab.badges || []
+            tabNavItemBadgeSet(tab.badges, 'info', info.count)
+            tabNavItemBadgeSet(tab.badges, 'important', info.messageCount)
         })
     setTabs(badgedTabs)
 }

@@ -120,13 +120,13 @@ export async function getByWorkIdAsync(workId: string): Promise<Challenge> {
 }
 
 export function getGroupedByStatus(work: ReadonlyArray<Work>): { [status: string]: WorkByStatus } {
-
     const output: { [status: string]: WorkByStatus } = {}
     Object.entries(WorkStatusFilter)
         .forEach(([key, value]) => {
             const results: ReadonlyArray<Work> = workStoreGetFilteredByStatus(work, WorkStatusFilter[key as keyof typeof WorkStatusFilter])
             output[key] = {
                 count: results.length,
+                messageCount: results.reduce((partialSum, a) => partialSum + (a.messageCount ?? 0), 0),
                 results,
             }
         })
