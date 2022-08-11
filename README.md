@@ -84,7 +84,7 @@ You will need to add the following line to your hosts file. The hosts file is no
 
 3. Go to https://local.topcoder-dev.com:3000
 
->**NOTE**: You can override the port in your [personal config](#personal-config).
+>**NOTE**: The default port is 3000, but you can override it in your [personal config](#personal-config).
 
 ### Local SSL
 
