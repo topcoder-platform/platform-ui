@@ -55,6 +55,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
 
                 // if we don't have any work, set the context and return
                 if (!nextSet.length) {
+                    contextData.messagesInitialized = true
                     setWorkContextData(contextData)
                     return
                 }
@@ -62,7 +63,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
                 // get the rest of the pages, and update the list
                 // after each response
                 let output: Array<Work> = []
-                let messageContextData: WorkContextData = {...contextData}
+                let messageContextData: WorkContextData = { ...contextData }
                 while (nextSet.length > 0) {
                     output = output.concat(nextSet)
                     messageContextData = {
@@ -75,17 +76,24 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
 
                 // now that the work list is initialized,
                 // set all the message counts individually in the background.
-                // TODO: there is probably a more efficient way of updating
-                // a single property for a single item than resetting the
-                // entire list.
-                output.forEach(async item => {
-                    item.messageCount = await messageGetUnreadCountAsync(item.id, safeProfile.handle)
-                    messageContextData = {
-                        ...messageContextData,
-                        work: output,
-                    }
-                    setWorkContextData(messageContextData)
-                })
+                const promises: Array<Promise<Work>> = output
+                    .map(item => {
+                        return messageGetUnreadCountAsync(item.id, safeProfile.handle)
+                            .then(messageCount => {
+                                item.messageCount = messageCount
+                                return item
+                            })
+                            .catch(() => item)
+                    })
+
+                Promise.all(promises)
+                    .then(results => {
+                        setWorkContextData({
+                            ...contextData,
+                            messagesInitialized: true,
+                            work: results,
+                        })
+                    })
 
             } catch (error: any) {
                 logError(error)
@@ -93,6 +101,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
                     ...defaultWorkContextData,
                     error: error.response?.data?.result?.content || error.message || error,
                     initialized: true,
+                    messagesInitialized: true,
                     remove,
                 }
                 setWorkContextData(contextData)

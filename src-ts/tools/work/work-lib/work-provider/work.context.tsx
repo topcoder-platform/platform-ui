@@ -5,6 +5,7 @@ import { WorkContextData } from './work-context-data.model'
 export const defaultWorkContextData: WorkContextData = {
     hasWork: false,
     initialized: false,
+    messagesInitialized: false,
     remove: () => undefined,
     work: [],
 }

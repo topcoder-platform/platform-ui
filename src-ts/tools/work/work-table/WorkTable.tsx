@@ -31,7 +31,12 @@ import { WorkListColumnField, workListColumns } from './work-table.config'
 
 const WorkTable: FC<{}> = () => {
 
-    const { hasWork, work, initialized }: WorkContextData = useContext(workContext)
+    const {
+        hasWork,
+        initialized,
+        messagesInitialized,
+        work,
+    }: WorkContextData = useContext(workContext)
     const { rootLoggedInRoute }: RouteContextData = useContext(routeContext)
 
     const [statusGroups, setStatusGroups]: [{ [status: string]: WorkByStatus } | undefined,
@@ -76,6 +81,7 @@ const WorkTable: FC<{}> = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         initialized,
+        messagesInitialized,
         // tabs change every render so we can't make it a dependency
         // tabs,
         work,
