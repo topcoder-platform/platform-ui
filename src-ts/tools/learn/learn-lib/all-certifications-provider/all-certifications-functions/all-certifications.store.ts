@@ -1,5 +1,5 @@
 import { xhrGetAsync } from '../../../../../lib/functions'
-import { getPath } from '../../learn-url.config'
+import { learnUrlGet } from '../../functions'
 
 import { LearnCertification } from './learn-certification.model'
 
@@ -7,9 +7,11 @@ export function getAsync(
     providerName: string = 'freeCodeCamp',
     certificationId?: string
 ): Promise<Array<LearnCertification>> {
-    return xhrGetAsync<Array<LearnCertification>>(getPath(
+
+    const url: string = learnUrlGet(
         'certifications',
         ...(certificationId ? [certificationId] : []),
         `?providerName=${providerName}`
-    ))
+    )
+    return xhrGetAsync<Array<LearnCertification>>(url)
 }

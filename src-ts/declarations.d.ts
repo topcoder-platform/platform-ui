@@ -22,3 +22,8 @@ declare module '*.svg' {
 }
 
 declare module 'tc-auth-lib'
+
+declare module '*.md' {
+    const value: string
+    export default value
+}

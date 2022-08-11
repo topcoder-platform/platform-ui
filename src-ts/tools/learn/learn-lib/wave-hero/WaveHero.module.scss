@@ -8,42 +8,42 @@
         overflow: hidden;
         padding-bottom: 40px;
         @include ltelg {
-            background-size: 100vw $pad-lg, auto;
-            padding-bottom: $pad-lg;
+            background-size: 100vw $space-lg, auto;
+            padding-bottom: $space-lg;
         }
         &:global(.light) {
             background: url('./learn-welcome-bg-curve-white.png') repeat-x center bottom , $tc-grad15;
             background-size: 1440px 40px, auto;
             @include ltelg {
-                background-size: 100vw $pad-lg, auto;
+                background-size: 100vw $space-lg, auto;
             }
         }
     }
     
     &-inner {
-        padding: calc($pad-xxxxl + $pad-sm) 0 $pad-lg;
+        padding: calc($space-xxxxl + $space-sm) 0 $space-lg;
         @include contentWidth;
 
         @include ltelg {
-            padding-bottom: $pad-mx;
+            padding-bottom: $space-mx;
         }
         @include ltemd {
-            padding-top: $pad-xxl;
-            padding-bottom: $pad-xxl;
+            padding-top: $space-xxl;
+            padding-bottom: $space-xxl;
         }
     }
 
     &-content {
         display: flex;
-        gap: calc($pad-mx * 2);
+        gap: calc($space-mx * 2);
 
         color: $tc-white;
 
         @include ltelg {
-            gap: $pad-mx;
+            gap: $space-mx;
         }
         @include ltemd {
-            gap: $pad-xxl;
+            gap: $space-xxl;
             flex-direction: column;
         }
     }
@@ -54,6 +54,6 @@
     
     &-text {
         @extend .body-medium-normal;
-        margin-top: $pad-xxl;
+        margin-top: $space-xxl;
     }
 }

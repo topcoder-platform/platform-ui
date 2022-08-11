@@ -1,7 +1,7 @@
 @use '../../../../styles/typography';
 @import '../../../../styles/includes';
 
-$form-pad-top: calc($pad-md - $border);
+$form-pad-top: calc($space-md - $border);
 $error-line-height: 14px;
 
 .input-wrapper {
@@ -23,13 +23,13 @@ $error-line-height: 14px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    padding: $pad-sm $form-pad-top $border-xs $form-pad-top;
-    height: calc($pad-xxl * 2);
+    padding: $space-sm $form-pad-top $border-xs $form-pad-top;
+    height: calc($space-xxl * 2);
     background: $tc-white;
     border: $border-xs solid $black-40;
     box-sizing: border-box;
-    border-radius: $pad-xs;
-    margin-bottom: calc($error-line-height + $pad-xs);
+    border-radius: $space-xs;
+    margin-bottom: calc($error-line-height + $space-xs);
 
     &.rating {
         border-color: transparent;
@@ -48,7 +48,7 @@ $error-line-height: 14px;
                 align-items: flex-start;
             }
             .checkbox-label {
-                margin-left: $pad-sm;
+                margin-left: $space-sm;
                 flex: 1;
             }
         }
@@ -73,7 +73,7 @@ $error-line-height: 14px;
     &.focus:not(.checkbox),
     &.input-error {
         border-width: $border;
-        padding: calc($pad-sm - $border-xs) calc($form-pad-top - $border-xs) 0 calc($form-pad-top - $border-xs);
+        padding: calc($space-sm - $border-xs) calc($form-pad-top - $border-xs) 0 calc($form-pad-top - $border-xs);
     }
 
     &.disabled {
@@ -92,12 +92,12 @@ $error-line-height: 14px;
             flex-direction: column;
             top: calc(50% - $form-pad-top/2);
             color: $turq-160;
-            margin-bottom: $pad-xs;
+            margin-bottom: $space-xs;
             width: 100%;
             // extend ultra-small and override some properties
             @extend .ultra-small;
             font-weight: $font-weight-medium;
-            line-height: calc($pad-md - $border);
+            line-height: calc($space-md - $border);
             font-style: normal;
             white-space: nowrap;
 
@@ -123,12 +123,12 @@ $error-line-height: 14px;
         flex-direction: column;
         top: calc(50% - $form-pad-top/2);
         color: $turq-160;
-        margin-bottom: $pad-xs;
+        margin-bottom: $space-xs;
         width: 100%;
         // extend ultra-small and override some properties
         @extend .ultra-small;
         font-weight: $font-weight-medium;
-        line-height: calc($pad-md - $border);
+        line-height: calc($space-md - $border);
         font-style: normal;
         white-space: nowrap;
 
@@ -156,11 +156,11 @@ $error-line-height: 14px;
     // extend body ultra small and override it
     @extend .ultra-small;
     line-height: $error-line-height;
-    margin-top: $pad-xs;
+    margin-top: $space-xs;
 
     svg {
         @include icon-md;
         fill: $red-100;
-        margin-right: $pad-xs;
+        margin-right: $space-xs;
     }
 }

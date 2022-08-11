@@ -2,21 +2,21 @@
 @import '../../../../../lib/styles/includes';
 
 .wrap {
-    padding: $pad-xxl;
-    border-radius: $pad-sm;
+    padding: $space-xxl;
+    border-radius: $space-sm;
     background: $tc-white;
 
     display: flex;
     flex-direction: column;
-    gap: $pad-lg;
+    gap: $space-lg;
 
     @include ltelg {
-        padding: $pad-lg;
-        gap: $pad-sm;
+        padding: $space-lg;
+        gap: $space-sm;
     }
 
     @include ltemd {
-        gap: $pad-lg;
+        gap: $space-lg;
     }
 }
 
@@ -31,17 +31,17 @@
 
 .summary {
     display: flex;
-    gap: $pad-lg;
+    gap: $space-lg;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     
     @include ltelg {
-        gap: $pad-sm;
+        gap: $space-sm;
     }
 
     @include ltemd {
         justify-content: center;
-        gap: $pad-lg;
+        gap: $space-lg;
     }
 }

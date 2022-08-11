@@ -73,6 +73,7 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
         return (
             <button
                 className={classes}
+                disabled={!!props.disable}
                 name={props.name}
                 onClick={clickHandler}
                 tabIndex={props.tabIndex}
@@ -89,6 +90,7 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
     return (
         <ButtonElement
             className={classes}
+            disabled={!!props.disable}
             name={props.name}
             onClick={clickHandler}
             tabIndex={props.tabIndex}

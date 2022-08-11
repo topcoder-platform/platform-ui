@@ -5,16 +5,16 @@
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: $pad-lg;
+    gap: $space-lg;
 
     svg {
         @include icon-mx;
-        margin-right: $pad-xs;
+        margin-right: $space-xs;
     }
 }
 
 .title {
     display: flex;
     align-items: center;
-    gap: $pad-md;
+    gap: $space-md;
 }

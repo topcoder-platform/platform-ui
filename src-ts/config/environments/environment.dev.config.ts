@@ -7,12 +7,10 @@ export const EnvironmentConfigDev: GlobalConfig = {
     ...EnvironmentConfigDefault,
     ANALYTICS: {
         SEGMENT_KEY: EnvironmentConfigDefault.ANALYTICS.SEGMENT_KEY,
-        TAG_MANAGER_ID: 'GTM-MXXQHG8',
-        // TAG_MANAGER_ID: 'GTM-W7B537Z',
+        TAG_MANAGER_ID: 'GTM-W7B537Z',
     },
     DISABLED_TOOLS: [],
     ENV: AppHostEnvironment.dev,
-    LEARN_SRC: 'https://freecodecamp.topcoder-dev.com',
     // TODO: Move stripe creds to .env file
     STRIPE: {
         ADMIN_TOKEN:

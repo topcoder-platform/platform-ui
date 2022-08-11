@@ -13,19 +13,19 @@
 }
 
 .courses-section {
-    padding: $pad-xxxxl 0;
+    padding: $space-xxxxl 0;
     position: relative;
     
     @include ltemd {
-        padding-top: $pad-xxl;
+        padding-top: $space-xxl;
     }
 }
 
 .courses-list {
-    margin-top: $pad-lg;
+    margin-top: $space-lg;
 
     flex-wrap: wrap;
-    gap: $pad-lg;
+    gap: $space-lg;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
 
@@ -44,6 +44,6 @@
     }
     
     @include ltemd {
-        margin-top: $pad-xxl;
+        margin-top: $space-xxl;
     }
 }

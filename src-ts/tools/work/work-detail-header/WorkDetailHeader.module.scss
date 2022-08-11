@@ -4,12 +4,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: $pad-xxxxl 0 $pad-xxl;
-    margin: 0 0 $pad-xxl;
+    padding: $space-xxxxl 0 $space-xxl;
+    margin: 0 0 $space-xxl;
     border-bottom: $border solid $black-10;
 
     .heading {
-        margin-right: $pad-xxxxl;
+        margin-right: $space-xxxxl;
         color: $black-100;
     }
 }

@@ -3,10 +3,10 @@
 
 .wrap {
     background: $tc-white;
-    padding: $pad-xxl;
-    border-radius: $pad-sm;
+    padding: $space-xxl;
+    border-radius: $space-sm;
     @include ltelg {
-        padding: $pad-lg;
+        padding: $space-lg;
     }
 }
 
@@ -15,7 +15,7 @@
     align-items: flex-start;
     flex-wrap: wrap;
 
-    margin-bottom: $pad-lg;
+    margin-bottom: $space-lg;
 }
 
 .completed-status {
@@ -26,7 +26,7 @@
     &:before {
         content: "";
         display: inline-block;
-        margin: 2px $pad-sm -2px;
+        margin: 2px $space-sm -2px;
         width: 1px;
         height: 16px;
         background: $black-60;
@@ -39,10 +39,10 @@
 .buttons-wrap {
     display: flex;
     align-items: center;
-    gap: $pad-sm;
+    gap: $space-sm;
     flex-wrap: wrap;
 
     @include ltemd {
-        gap: $pad-lg;
+        gap: $space-lg;
     }
 }

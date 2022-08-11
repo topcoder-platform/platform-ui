@@ -7,8 +7,8 @@ $arrowTipIconHeight: 9px;
     @extend .body-ultra-small;
     position: absolute;
     z-index: 1000;
-    top: calc($pad-xxxxl + 4px + $arrowTipIconHeight);
-    right: calc(-1 * $pad-xxxxl / 2);
+    top: calc($space-xxxxl + 4px + $arrowTipIconHeight);
+    right: calc(-1 * $space-xxxxl / 2);
     width: 168px;
     display: flex;
     flex-direction: column;
@@ -16,9 +16,9 @@ $arrowTipIconHeight: 9px;
 
     background-color: $tc-white;
     color: $black-100;
-    border-radius: $pad-sm;
+    border-radius: $space-sm;
 
-    padding: $pad-sm $pad-lg $pad-lg;
+    padding: $space-sm $space-lg $space-lg;
 
     .arrow-tip {
         display: flex;
@@ -37,7 +37,7 @@ $arrowTipIconHeight: 9px;
     }
 
     hr {
-        margin: $pad-sm 0;
+        margin: $space-sm 0;
     }
 
     .nav-item {
@@ -46,7 +46,7 @@ $arrowTipIconHeight: 9px;
         align-items: center;
         gap: 4px;
         + .nav-item {
-            margin-top: $pad-sm;
+            margin-top: $space-sm;
         }
 
         .icon {

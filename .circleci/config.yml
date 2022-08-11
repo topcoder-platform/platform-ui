@@ -63,6 +63,7 @@ build_configuration_fetch: &build_configuration_fetch
     command: |
       ./awsconfiguration.sh $DEPLOY_ENV
       ./buildenv.sh -e $DEPLOY_ENV -b ${LOGICAL_ENV}-${APPNAME}-buildvar
+      aws s3 cp s3://tc-platform-${LOGICAL_ENV}/securitymanager/${LOGICAL_ENV}-platform-ui.env ./.env
 
 lint_steps: &lint_steps
     # Initialization.

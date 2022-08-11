@@ -11,13 +11,13 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: $pad-mx;
-    font-size: $pad-lg;
-    line-height: $pad-lg;
+    margin-top: $space-mx;
+    font-size: $space-lg;
+    line-height: $space-lg;
 
     .separator {
-      margin-left: $pad-lg;
-      margin-right: $pad-lg;
+      margin-left: $space-lg;
+      margin-right: $space-lg;
     }
   }
 }

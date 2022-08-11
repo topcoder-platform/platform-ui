@@ -1,11 +1,10 @@
 import { xhrGetAsync } from '../../../../../lib/functions'
-import { getPath } from '../../learn-url.config'
+import { learnUrlGet } from '../../functions'
 
 import { LearnUserCompletedCertification } from './user-completed-certification.model'
 
 export function getAsync(userId: number): Promise<Array<LearnUserCompletedCertification>> {
-    return xhrGetAsync<Array<LearnUserCompletedCertification>>(getPath(
-        'completed-certifications',
-        `${userId}`,
-    ))
+
+    const url: string = learnUrlGet('completed-certifications', `${userId}`)
+    return xhrGetAsync<Array<LearnUserCompletedCertification>>(url)
 }
