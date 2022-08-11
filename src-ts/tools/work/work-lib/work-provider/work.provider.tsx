@@ -15,26 +15,26 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
     const profileContextData: ProfileContextData = useContext(profileContext)
     const { profile }: ProfileContextData = profileContextData
 
-    function remove(workId: string, work: Array<Work>): void {
-        const workList: Array<Work> = [...work]
-        const removedItemIndex: number = workList.findIndex(item => item.id === workId)
-        // if we didn't find the removed index, just return
-        if (!removedItemIndex) {
-            return
-        }
-        workList.splice(removedItemIndex, 1)
-        setWorkContextData({
-            ...workContextData,
-            hasWork: !!workList.length,
-            initialized: true,
-            work: workList,
-        })
-    }
-
     useEffect(() => {
 
         if (!!workContextData.initialized || !profile) {
             return
+        }
+
+        function remove(workId: string, work: Array<Work>): void {
+            const workList: Array<Work> = [...work]
+            const removedItemIndex: number = workList.findIndex(item => item.id === workId)
+            // if we didn't find the removed index, just return
+            if (!removedItemIndex) {
+                return
+            }
+            workList.splice(removedItemIndex, 1)
+            setWorkContextData({
+                ...workContextData,
+                hasWork: !!workList.length,
+                initialized: true,
+                work: workList,
+            })
         }
 
         async function getAndSetWork(): Promise<void> {
@@ -111,7 +111,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
         getAndSetWork()
     }, [
         profile,
-        workContextData.initialized,
+        workContextData,
     ])
 
     return (

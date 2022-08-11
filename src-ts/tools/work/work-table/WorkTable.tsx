@@ -64,8 +64,6 @@ const WorkTable: FC<{}> = () => {
     // to return non-table results, but just another joy of react
     useEffect(() => {
 
-        clearCachedChallengeId()
-
         // if we don't have a status filter, we have a problem,
         // so don't do anything
         if (!workStatusFilter) {
@@ -87,6 +85,10 @@ const WorkTable: FC<{}> = () => {
         work,
         workStatusFilter,
     ])
+
+    useEffect(() => {
+        clearCachedChallengeId()
+    }, [])
 
     // if we couldn't find a workstatusfilter,
     // redirect to the dashboard
