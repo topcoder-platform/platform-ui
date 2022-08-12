@@ -6,8 +6,7 @@
     color: $black-20;
 
     .icon {
-        width: 20px;
-        height: 20px;
+        @include icon-xl;
         border-radius: 50%;
         flex: 0 0 auto;
 
