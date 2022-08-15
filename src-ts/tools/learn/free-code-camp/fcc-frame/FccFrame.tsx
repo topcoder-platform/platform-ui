@@ -56,7 +56,13 @@ const FccFrame: FC<FccFrameProps> = (props: FccFrameProps) => {
                 return
             }
 
-            const { event: eventName, data }: { data: { path: string, meta: { id: string } }, event: string } = JSON.parse(jsonData)
+            const { event: eventName, data }: {
+                data: {
+                    meta: { id: string },
+                    path: string,
+                },
+                event: string,
+             } = JSON.parse(jsonData)
 
             if (eventName === 'fcc:nav:last-challenge') {
                 onFccLastLessonNavigation()
