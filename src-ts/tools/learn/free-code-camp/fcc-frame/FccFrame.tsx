@@ -17,7 +17,7 @@ interface FccFrameProps {
     lesson?: LearnLessonMeta
     onFccLastLessonNavigation: () => void
     onFccLessonChange: (path: string) => void
-    onFccLessonComplete: () => void
+    onFccLessonComplete: (challengeUuid: string) => void
 }
 
 const FccFrame: FC<FccFrameProps> = (props: FccFrameProps) => {
@@ -56,14 +56,14 @@ const FccFrame: FC<FccFrameProps> = (props: FccFrameProps) => {
                 return
             }
 
-            const { event: eventName, data }: { data: { path: string }, event: string } = JSON.parse(jsonData)
+            const { event: eventName, data }: { data: { path: string, meta: { id: string } }, event: string } = JSON.parse(jsonData)
 
             if (eventName === 'fcc:nav:last-challenge') {
                 onFccLastLessonNavigation()
             }
 
             if (eventName === 'fcc:challenge:completed') {
-                onFccLessonComplete()
+                onFccLessonComplete(data?.meta?.id)
             }
 
             if (eventName === 'fcc:challenge:ready') {
