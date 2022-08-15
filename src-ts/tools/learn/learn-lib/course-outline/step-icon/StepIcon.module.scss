@@ -1,25 +1,46 @@
 @import '../../../../../lib/styles/includes';
 
 .step-wrap {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-start;
+    color: $black-20;
 
-    overflow: hidden;
+    .icon {
+        @include icon-xl;
+        border-radius: 50%;
+        flex: 0 0 auto;
 
-    color: $blue-140;
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
-    background: $black-40;
+        overflow: hidden;
 
-    &:global(.completed) {
+        color: $blue-140;
+
+        background: $black-40;
+
+        > svg {
+            margin: -1 * $border;
+        }
+    }
+
+    .label {
+        margin-left: $space-sm;
+    }
+
+    &:global(.completed) .icon {
         background: $turq-75;
+    }
+    &:global(.completed.has-icon) .icon {
+        background: transparent;
+        color: $turq-75;
     }
 
     &:global(.active) {
-        background: $tc-white;
+        color: $tc-white;
+        .icon {
+            background: $tc-white;
+        }
     }
 }
