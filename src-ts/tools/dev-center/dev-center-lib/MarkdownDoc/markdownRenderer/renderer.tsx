@@ -14,7 +14,7 @@ export type MarkdownString = string
 export type MarkdownResult = React.ReactNode
 export type TOC = Array<{ headingId: string; level: number; title: string }>
 
-enum MarkdownHeaderTag {
+export enum MarkdownHeaderTag {
     h1 = 'h1',
     h2 = 'h2',
     h3 = 'h3',
@@ -28,7 +28,7 @@ enum MarkdownParagraphTag {
 }
 export interface MarkdownRenderOptions {
     baseUrl?: string
-    groupBy?: MarkdownHeaderTag.h2
+    groupBy?: MarkdownHeaderTag
     highlightCode?: (code: string, lang: string) => string
     sanitize?: boolean
     toc?: TOC
@@ -75,8 +75,8 @@ export class Renderer implements MarkdownRenderer {
         }
 
         const tokens: marked.TokensList = marked.lexer(markdown)
-        const nodes: Array<React.ReactNode> = tokens.map((token) =>
-            this.parseToken(token, options)
+        const nodes: Array<React.ReactNode> = tokens.map((token, index) =>
+            this.parseToken(token, index, options)
         )
         const children: ReturnType<typeof this.groupBy> = this.groupBy(
             nodes,
@@ -173,6 +173,7 @@ export class Renderer implements MarkdownRenderer {
     // tslint:disable-next-line: cyclomatic-complexity
     private parseToken(
         token: marked.Token,
+        index: number,
         options?: MarkdownRenderOptions
     ): React.ReactNode {
         const isLinkBlock: (t: marked.Token) => boolean = (t: marked.Token) => {
@@ -238,9 +239,10 @@ export class Renderer implements MarkdownRenderer {
             )
             return htmlString.replace(tagRegExp, '$1')
         }
-        const extractId: (htmlString: string, tagname: string) => string = (
+        const extractId: (htmlString: string, tagname: string, leadingIndex: number) => string = (
             htmlString: string,
-            tagname: string
+            tagname: string,
+            leadingIndex: number
         ) => {
             htmlString = htmlString.trim()
             const tagRegExp: RegExp = new RegExp(
@@ -248,7 +250,8 @@ export class Renderer implements MarkdownRenderer {
                 'g'
             )
             const matches: RegExpExecArray | null = tagRegExp.exec(htmlString)
-            return matches ? matches[1] : ''
+            const id: string = matches ? matches[1] : ''
+            return `${leadingIndex}-${id}`
         }
         const extractTag: (htmlString: string) => string = (
             htmlString: string
@@ -286,7 +289,7 @@ export class Renderer implements MarkdownRenderer {
             const h: string = marked.parser([token], parserOptions)
             const level: number = token.depth
             const title: string = removeLineBreak(stripTag(h, `h${level}`))
-            const headingId: string = extractId(h, `h${level}`).trim()
+            const headingId: string = extractId(h, `h${level}`, index).trim()
 
             options.toc.push({
                 headingId,
@@ -353,7 +356,7 @@ export class Renderer implements MarkdownRenderer {
                 let id: string | undefined
                 if (isHeaderTag) {
                     token = token as marked.Tokens.Heading
-                    id = extractId(html, `h${token.depth}`).trim()
+                    id = extractId(html, `h${token.depth}`, index).trim()
                 }
                 return React.createElement(tag, {
                     className: getClassname(token),

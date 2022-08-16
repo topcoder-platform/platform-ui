@@ -18,7 +18,7 @@
     color: inherit;
     text-transform: uppercase;
 
-    padding: 0 0 0 $space-xxxxl;
+    padding: 0 0 0 $space-xxxl;
     margin: 0 0 $space-xxl;
 }
 
@@ -49,5 +49,12 @@
     color: $black-60;
 
     display: block;
+}
+
+.navListItem-link-padding-level2 {
+    padding: $space-sm 0 $space-sm $space-xxxl;
+}
+
+.navListItem-link-padding-level3 {
     padding: $space-sm 0 $space-sm $space-xxxxl;
 }

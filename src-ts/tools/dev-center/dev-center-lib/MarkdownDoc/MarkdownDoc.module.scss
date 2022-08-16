@@ -9,6 +9,7 @@
     color: inherit;
 
     counter-reset: devCenterHeading2;
+    counter-reset: devCenterHeading3;
 
     *:not(pre) code {
         @include font-roboto-mono;
@@ -58,9 +59,27 @@
 
     margin: 80px 0 $space-xxl;
     counter-increment: devCenterHeading2;
+    counter-reset: devCenterHeading3;
 
     &::before {
         content: counter(devCenterHeading2) ". ";
+        font: inherit;
+        color: inherit;
+    }
+}
+
+.heading3 {
+    @include font-barlow;
+    @include font-weight-semibold;
+    font-size: 22px;
+    line-height: 26px;
+    color: inherit;
+    text-transform: uppercase;
+    margin: 10px 0 $space-xxl;
+    counter-increment: devCenterHeading3;
+
+    &::before {
+        content: counter(devCenterHeading2) "." counter(devCenterHeading3) ". ";
         font: inherit;
         color: inherit;
     }
