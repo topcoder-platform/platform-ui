@@ -1,3 +1,4 @@
+import { logError } from '../../../../../lib'
 import { Work, WorkStatus } from '../work-functions'
 
 import { GetUnreadMessageCountResponse, messageStoreGetUnreadCountAsync } from './message-store'
@@ -27,4 +28,14 @@ export async function getAndSetForWorkItemsAsync(workItems: Array<Work>, handle:
             work.messageCount = resultsMap[work.id]?.messageCount
             return work
         })
+}
+
+export async function getUnreadCountAsync(workId: string, handle: string): Promise<number | undefined> {
+    try {
+        const response: GetUnreadMessageCountResponse = await messageStoreGetUnreadCountAsync(workId, handle)
+        return response.messageCount
+    } catch (err: any) {
+        logError(err)
+        return undefined
+    }
 }

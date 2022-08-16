@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "start": "sh start-ssl.sh",
-        "start:bsouza": "sh start-ssl-bsouza.sh",
+        "start:bsouza": "sudo sh start-ssl-bsouza.sh",
         "build": "yarn react-app-rewired build",
         "lint": "tslint 'src-ts/**/*.{ts,tsx}' && eslint 'src*/**/*.{js,jsx,ts,tsx}'",
         "lint:fix": "tslint 'src-ts/**/*.{ts,tsx}' --fix && eslint 'src*/**/*.{js,jsx,ts,tsx}' --fix",

@@ -2,7 +2,8 @@ import { Navigate } from 'react-router-dom'
 
 import { contactSupportPath, PlatformRoute } from '../../lib'
 
-import { dashboardTitle, default as Work, toolTitle } from './Work'
+import { dashboardTitle, default as WorkComponent, toolTitle } from './Work'
+import { Work, WorkIntakeFormRoutes, WorkStatus } from './work-lib'
 import { WorkLoginPrompt } from './work-login-prompt'
 import { WorkNotLoggedIn } from './work-not-logged-in'
 import {
@@ -20,7 +21,29 @@ export const selfServiceRootRoute: string = '/self-service'
 export const selfServiceStartRoute: string = `${selfServiceRootRoute}/wizard`
 export const dashboardRoute: string = `${rootRoute}/dashboard`
 
-export function workDetailRoute(workId: string, tab?: string): string {
+export function workDashboardRoute(active: string): string {
+return `${dashboardRoute}/${active}`
+}
+
+export function workDetailOrDraftRoute(selectedWork: Work): string {
+
+    // if this isn't a draft, just go to the detail
+    if (selectedWork.status !== WorkStatus.draft) {
+        // TODO: move the tabs definition to src-ts
+        // so we don't have to hard-code the 'solutions' tab id
+        return workDetailRoute(selectedWork.id, selectedWork.status === WorkStatus.ready ? 'solutions' : undefined)
+    }
+
+    // if we have a draft step, go to it
+    if (!!selectedWork.draftStep) {
+        return `${WorkIntakeFormRoutes[selectedWork.type][selectedWork.draftStep]}/${selectedWork.id}`
+    }
+
+    // return the base route
+    return selfServiceStartRoute
+}
+
+export function workDetailRoute(workId: string, tab?: 'solutions' | 'messages'): string {
     return `${selfServiceRootRoute}/work-items/${workId}${!!tab ? `\?tab=${tab}` : ''}`
 }
 
@@ -49,7 +72,7 @@ export const workRoutes: Array<PlatformRoute> = [
                 route: ':statusKey',
             },
         ],
-        element: <Work />,
+        element: <WorkComponent />,
         hidden: true,
         route: dashboardRoute,
         title: dashboardTitle,

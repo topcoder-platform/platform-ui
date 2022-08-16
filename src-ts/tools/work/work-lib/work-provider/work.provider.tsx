@@ -2,6 +2,7 @@ import { Dispatch, FC, ReactNode, SetStateAction, useContext, useEffect, useStat
 
 import { logError, profileContext, ProfileContextData, UserProfile } from '../../../../lib'
 
+import { messageGetUnreadCountAsync } from './message-functions'
 import { WorkContextData } from './work-context-data.model'
 import { Work, workGetAllAsync, } from './work-functions'
 import { default as workContext, defaultWorkContextData } from './work.context'
@@ -20,17 +21,79 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
             return
         }
 
+        function remove(workId: string, work: Array<Work>): void {
+            const workList: Array<Work> = [...work]
+            const removedItemIndex: number = workList.findIndex(item => item.id === workId)
+            // if we didn't find the removed index, just return
+            if (!removedItemIndex) {
+                return
+            }
+            workList.splice(removedItemIndex, 1)
+            setWorkContextData({
+                ...workContextData,
+                hasWork: !!workList.length,
+                initialized: true,
+                work: workList,
+            })
+        }
+
         async function getAndSetWork(): Promise<void> {
 
             try {
-                const work: Array<Work> = await workGetAllAsync(profile as UserProfile)
+                const safeProfile: UserProfile = profile as UserProfile
+
+                let pageNumber: number = 1
+                let nextSet: Array<Work> = await workGetAllAsync(safeProfile, pageNumber++)
+
                 const contextData: WorkContextData = {
-                    hasWork: !!work.length,
+                    ...defaultWorkContextData,
+                    hasWork: !!nextSet.length,
                     initialized: true,
-                    refresh: getAndSetWork,
-                    work,
+                    remove,
+                    work: nextSet,
                 }
-                setWorkContextData(contextData)
+
+                // if we don't have any work, set the context and return
+                if (!nextSet.length) {
+                    contextData.messagesInitialized = true
+                    setWorkContextData(contextData)
+                    return
+                }
+
+                // get the rest of the pages, and update the list
+                // after each response
+                let output: Array<Work> = []
+                let messageContextData: WorkContextData = { ...contextData }
+                while (nextSet.length > 0) {
+                    output = output.concat(nextSet)
+                    messageContextData = {
+                        ...messageContextData,
+                        work: output,
+                    }
+                    setWorkContextData(messageContextData)
+                    nextSet = await workGetAllAsync(safeProfile, pageNumber++)
+                }
+
+                // now that the work list is initialized,
+                // set all the message counts individually in the background.
+                const promises: Array<Promise<Work>> = output
+                    .map(item => {
+                        return messageGetUnreadCountAsync(item.id, safeProfile.handle)
+                            .then(messageCount => {
+                                item.messageCount = messageCount
+                                return item
+                            })
+                            .catch(() => item)
+                    })
+
+                Promise.all(promises)
+                    .then(results => {
+                        setWorkContextData({
+                            ...contextData,
+                            messagesInitialized: true,
+                            work: results,
+                        })
+                    })
 
             } catch (error: any) {
                 logError(error)
@@ -38,7 +101,8 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
                     ...defaultWorkContextData,
                     error: error.response?.data?.result?.content || error.message || error,
                     initialized: true,
-                    refresh: getAndSetWork,
+                    messagesInitialized: true,
+                    remove,
                 }
                 setWorkContextData(contextData)
             }
@@ -47,7 +111,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
         getAndSetWork()
     }, [
         profile,
-        workContextData.initialized,
+        workContextData,
     ])
 
     return (
