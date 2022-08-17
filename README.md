@@ -2,8 +2,7 @@
 
 The Platform UI is the official Topcoder web app to host all modern user interfaces to be used by all users.
 
-All future user interfaces at Topcoder will be implemented here. 
-Pre-existing user interfaces will be ported to here over time until this is the only user interface any user sees when interacting with Topcoder.
+All future user interfaces at Topcoder will be implemented here. Pre-existing user interfaces will be ported to here over time until this is the only user interface any user sees when interacting with Topcoder.
 
 >**NOTE:** The information in this file describes our coding standards and best practices. All new code should follow these guidelines both when coding new features as well as porting old features. Please take the time to read through this file in detail.
 
