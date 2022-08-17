@@ -1,7 +1,7 @@
 import DOMPurify from 'dompurify'
 import hljs from 'highlight.js'
 
-import { MarkdownRenderOptions, MarkdownString, Renderer, TOC } from './renderer'
+import { MarkdownHeaderTag, MarkdownRenderOptions, MarkdownString, Renderer, TOC } from './renderer'
 
 export function renderMarkdown(
     markdown: MarkdownString,
@@ -10,7 +10,7 @@ export function renderMarkdown(
     const renderer: Renderer = Renderer.getInstance()
     const defaultOptions: MarkdownRenderOptions = {
         baseUrl: '/',
-        groupBy: 'h2',
+        groupBy: MarkdownHeaderTag.h3,
         highlightCode(code: string, lang: string): string {
             const language: string = hljs.getLanguage(lang) ? lang : ''
             return language ? hljs.highlight(code, { language }).value : code

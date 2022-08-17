@@ -14,7 +14,7 @@ export const TableOfContents: React.FC<TableOfContentsProps> = (props) => {
     ] = React.useState(-1)
     const { toc }: { toc: TOC } = props
     const items: TOC = React.useMemo(() => {
-        return toc.filter((item) => item.level === 2)
+        return toc.filter((item) => (item.level === 2 || item.level === 3))
     }, [toc])
 
     const findActiveIndex: () => void = React.useCallback(() => {
@@ -49,7 +49,7 @@ export const TableOfContents: React.FC<TableOfContentsProps> = (props) => {
                         >
                             <a
                                 href={`#${item.headingId}`}
-                                className={`${styles['navListItem-link']}`}
+                                className={`${styles['navListItem-link']} ${styles[`navListItem-link-padding-level${item.level}`]}`}
                             >
                                 {item.title}
                             </a>
