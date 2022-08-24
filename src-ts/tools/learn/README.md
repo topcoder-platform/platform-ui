@@ -6,7 +6,7 @@ The Learn tool has its own configuration defined in the `/src-ts/learn/learn-con
 
 The default configuration expects both the FCC Client and API to be running locally. In most cases, developers probably won't want to run both locally. 
 
->**See** `src-ts/tools/learn/learn-config/learn.bsouza.config.ts` for an example of how to override the FCC source URLs to use the dev env config.
+>**See** [/src-ts/tools/learn/learn-config/learn.bsouza.config.ts](/src-ts/tools/learn/learn-config/learn.bsouza.config.ts) for an example of how to override the FCC source URLs to use the dev env config.
 
 >**See** the [main app README](/README.md#personal-config) for instructions for creating a personal config.
 
@@ -35,7 +35,7 @@ Platform UI runs on port 3000 by default, so you will need to override it so tha
 
 >**NOTE:** It's highly recommended that you use <b>port 443</b> for convenience.
 
->**See** https://github.com/topcoder-platform/platform-ui#local-ssl for more info about local SSL.
+>**See** [Main App README #local-ssl](/README.md#local-ssl) for more info about local SSL.
 
->**See** https://github.com/topcoder-platform/platform-ui/ssl for more info about self-signed certs.
+>**See** [/ssl README](/ssl/README.md) for more info about self-signed certs.
 
