@@ -125,7 +125,7 @@ The app uses CircleCI for CI/CD.
 
 The "dev" branch is auto-deployed to the dev environment: https://platform-mvp.topcoder-dev.com.
 
-The "master" branch is auto-deployed to the production environment: https://platform-mvp.topcoder.com.
+The "master" branch is auto-deployed to the production environment: https://platform-ui.topcoder.com.
 
 ## Developer Center Contentful API Key and Space Id
 
