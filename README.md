@@ -279,7 +279,7 @@ The PlatformRoute model has several useful options:
 | `element: JSX.Element` | The element property is the JSX element that should appear at the specified URL. |
 | `disabled?: boolean` | When a route is marked as disabled, it will not be registered and will the URL will return a 404. |
 | `hide?: boolean` | When a route is hidden, it will be registered and the URL will be available through deep-linking but will not be visible in either the Tools or Utils Selectors. This is useful for handling redirects for obsolete routes. |
-| `requireAuth?: boolean` | Requiring authentication for a route means that users who are not logged in will be redirected to the Login Form when they try to access the route. |
+| `authRequired?: boolean` | Requiring authentication for a route means that users who are not logged in will be redirected to the Login Form when they try to access the route. |
 | `route: string` | The route property is the path to the route, relative to its parent(s). |
 | `title: string` | The title property is the text that will appear in the Tools or Utils Selectors (this is irrelevant on hidden routes). |
 

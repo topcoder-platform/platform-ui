@@ -1,6 +1,7 @@
 import { PlatformRoute } from '../lib'
 
 import { devCenterRoutes } from './dev-center'
+import { gamificationAdminRoutes } from './gamification-admin'
 import { learnRoutes } from './learn'
 import { workRoutes } from './work'
 
@@ -10,6 +11,7 @@ const toolRoutes: Array<PlatformRoute> = [
     ...workRoutes,
     ...devCenterRoutes,
     ...learnRoutes,
+    ...gamificationAdminRoutes,
 ]
 
 export default toolRoutes
