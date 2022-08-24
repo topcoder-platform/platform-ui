@@ -1,6 +1,6 @@
 # Dev Center Configuration
 
-See the [main app README](/README.md) for info regarding the environment variables required to run the DEV Center.
+See the [main app README](/README.md#developer-center-specific-setup) for info regarding the environment variables required to run the DEV Center.
 
 ## Landing page
 
