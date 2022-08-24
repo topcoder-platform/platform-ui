@@ -10,7 +10,7 @@ All future user interfaces at Topcoder will be implemented here. Pre-existing us
 
 - [Local Environment Setup](#local-environment-setup)
 - [Deployments](#deployments)
-- [Developer Center specific setup](#developer-center-specific-setup)
+- [Developer Center specific setup](#developer-center-contentful-api-key-and-space-id)
 - [Yarn Commands](#yarn-commands)
 
 # Application structure
