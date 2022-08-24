@@ -2,7 +2,7 @@
 
 ## Learn Config
 
-The Learn tool has its own configuration defined in the `/src-ts/learn/learn-config` directory.
+The Learn tool has its own configuration defined in the [/src-ts/tools/learn/learn-config](/src-ts/tools/learn/learn-config/learn.config.ts) directory.
 
 The default configuration expects both the FCC Client and API to be running locally. In most cases, developers probably won't want to run both locally. 
 
