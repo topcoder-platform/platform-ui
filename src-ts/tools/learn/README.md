@@ -24,7 +24,7 @@ FCC has a great README for setting up the app locally: https://github.com/topcod
 
 FCC uses the following ports:
 
-| APP | PORT | SSL |
+| APP | PORT | SSL PROXY |
 | --- | ---- | --- |
 | API | 3000 | 44311 |
 | CLIENT | 8000 | 4431 |
