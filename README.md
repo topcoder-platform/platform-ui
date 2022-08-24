@@ -101,12 +101,12 @@ Otherwise, you will need to override the exception each time you load the site. 
 
 ### Personal Config
 
-1. Add [hostname] to [`src-ts/config/environments/app-host-environment.enum.ts`](src-ts/config/environments/app-host-environment.enum.ts)
-2. Copy an existing config from [`src-ts/config/environments/environment.*.config.ts`](src-ts/config/environments/environment.bsouza.config.ts)
+1. Add [hostname] to [`/src-ts/config/environments/app-host-environment.type.ts`](/src-ts/config/environments/app-host-environment.type.ts)
+2. Copy an existing config from [`/src-ts/config/environments/environment.*.config.ts`](/src-ts/config/environments/environment.bsouza.config.ts)
 3. Rename new config `environment.[hostname].config.ts`
 4. Rename config variable to `EnvironmentConfig[HostName]`
-5. Set the `ENV` variable to `AppHostEnvironment.[hostname]`
-6. Add the switch case for the host name to [`src-ts/config/environments/environment.config.ts`](src-ts/config/environments/environment.config.ts)
+5. Set the `ENV` variable to `[hostname]`
+6. Add the switch case for the host name to [`/src-ts/config/environments/environment.config.ts`](/src-ts/config/environments/environment.config.ts)
 7. Prior to starting the server, set your host name:
 ```% export REACT_APP_HOST_ENV=[hostname]```
 
