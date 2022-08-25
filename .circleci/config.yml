@@ -150,7 +150,7 @@ jobs:
   # Test job for the cases when we don not need deployment.
   test:
     docker:
-      - image: cimg/node:16.15.0
+      - image: cypress/browsers:node16.14.2-slim-chrome100-ff99-edge
     steps:
       - checkout
       - restore_cache:
@@ -159,14 +159,6 @@ jobs:
           name: Config Git
           command: git config --global url."https://git@".insteadOf git://
       - run:
-          name: Environment preparation
-          command: sudo apt update
-      - run: sudo apt upgrade
-      - run:
-          name: Envrionment Dependency
-          command: sudo apt-get install libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
-          no_output_timeout: 20m
-      - run:
           name: App yarn install
           command: yarn install
           no_output_timeout: 20m
@@ -174,7 +166,6 @@ jobs:
           name: App yarn build
           command: yarn build
           no_output_timeout: 20m
-      - run: yarn cypress install
       - save_cache:
           key: test-node-modules-{{ checksum "yarn.lock" }}
           paths:
