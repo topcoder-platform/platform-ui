@@ -161,8 +161,10 @@ jobs:
       - run:
           name: App yarn install
           command: yarn install
-          command: yarn cypress install
-          command: yarn build
+          no_output_timeout: 20m
+      - run:
+          name: App yarn build
+          command: yarn install
           no_output_timeout: 20m
       - save_cache:
           key: test-node-modules-{{ checksum "yarn.lock" }}
