@@ -166,7 +166,7 @@ jobs:
           key: test-node-modules-{{ checksum "yarn.lock" }}
           paths:
             - node_modules
-      - run: yarn test:no-watch
+      - run: yarn cy:ci
 
 workflows:
   version: 2
