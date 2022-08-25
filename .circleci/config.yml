@@ -166,6 +166,7 @@ jobs:
           name: App yarn build
           command: yarn build
           no_output_timeout: 20m
+      - run: yarn cypress install
       - save_cache:
           key: test-node-modules-{{ checksum "yarn.lock" }}
           paths:
