@@ -166,7 +166,7 @@ jobs:
           key: test-node-modules-{{ checksum "yarn.lock" }}
           paths:
             - node_modules
-      - run: npm test
+      - run: yarn test:no-watch
 
 workflows:
   version: 2
