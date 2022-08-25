@@ -7,6 +7,7 @@ import {
 } from '../../lib'
 
 export const toolTitle: string = 'Gamification Admin'
+export const baseUrl: string = '/gamification-admin'
 
 const GamificationAdmin: FC<{}> = () => {
 
