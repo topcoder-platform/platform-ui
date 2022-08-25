@@ -1,8 +1,8 @@
 import { LearnUserCertificationProgress } from './user-certifications-functions'
 
 export interface UserCertificationsProviderData {
-    completed: ReadonlyArray<LearnUserCertificationProgress & { completedDate: string }>
-    inProgress: ReadonlyArray<LearnUserCertificationProgress & {
+    completed: Array<LearnUserCertificationProgress & { completedDate: string }>
+    inProgress: Array<LearnUserCertificationProgress & {
         currentLesson: string,
         startDate: string,
     }>
