@@ -147,6 +147,27 @@ jobs:
       APPNAME: "platform-ui-mvp"
     steps: *deploy_steps
 
+  # Test job for the cases when we don not need deployment.
+  test:
+    docker:
+      - image: cimg/node:16.15.0
+    steps:
+      - checkout
+      - restore_cache:
+          key: test-node-modules-{{ checksum "yarn.lock" }}
+      - run:
+          name: Config Git
+          command: git config --global url."https://git@".insteadOf git://
+      - run:
+          name: App yarn install
+          command: yarn install
+          no_output_timeout: 20m
+      - save_cache:
+          key: test-node-modules-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+      - run: npm test
+
 workflows:
   version: 2
   build:
@@ -196,3 +217,9 @@ workflows:
             branches:
               only:
                 - master
+
+      - test:
+          filters:
+            branches:
+              ignore:
+                - develop
