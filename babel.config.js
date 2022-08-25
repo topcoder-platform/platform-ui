@@ -50,6 +50,7 @@ module.exports = function (api) {
           ],
         ],
         plugins: [
+          "istanbul",
           [
             "module-resolver",
             {
