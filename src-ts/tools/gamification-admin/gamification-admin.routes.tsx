@@ -1,19 +1,30 @@
 import { PlatformRoute } from '../../lib'
 
-import GamificationAdmin, { toolTitle } from './GamificationAdmin'
+import GamificationAdmin, { baseUrl, toolTitle } from './GamificationAdmin'
+import BadgeDetailPage from './pages/badge-detail/BadgeDetailPage'
+import BadgeListingPage from './pages/badge-listing/BadgeListingPage'
+import CreateBadgePage from './pages/create-badge/CreateBadgePage'
 
 export const gamificationAdminRoutes: Array<PlatformRoute> = [
     {
         authRequired: true,
         children: [
             {
-                element: <div><h1>Hello Gamification Admin</h1></div>,
+                element: <BadgeListingPage />,
                 route: '/',
+            },
+            {
+                element: <CreateBadgePage />,
+                route: '/create-badge',
+            },
+            {
+                element: <BadgeDetailPage />,
+                route: '/badge-detail',
             },
         ],
         element: <GamificationAdmin />,
         hidden: true,
-        route: '/gamification-admin',
+        route: baseUrl,
         title: toolTitle,
     },
 ]
