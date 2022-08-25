@@ -29,6 +29,16 @@ FCC uses the following ports:
 | API | 3000 | 44311 |
 | CLIENT | 8000 | 4431 |
 
+### Add Local FQDN to Hosts file
+
+In order to use passthrough authentication between the Platform UI and the FCC app, both apps need to use the same domain so they can read each other's cookies.
+
+So you'll need to add the following to your hosts file to use the `topcoder-dev.com` domain.
+
+```
+127.0.0.1      fcc.topcoder-dev.com
+```
+
 ### Override Platform UI Port
 
 Platform UI runs on port 3000 by default, so you will need to override it so that it doesn't conflict with the FCC API.
