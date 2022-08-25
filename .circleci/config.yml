@@ -159,8 +159,12 @@ jobs:
           name: Config Git
           command: git config --global url."https://git@".insteadOf git://
       - run:
+          name: Environment preparation
+          command: sudo apt update
+      - run: sudo apt upgrade
+      - run:
           name: Envrionment Dependency
-          command: sudo apt-get install xvfb
+          command: sudo apt-get install libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
           no_output_timeout: 20m
       - run:
           name: App yarn install
