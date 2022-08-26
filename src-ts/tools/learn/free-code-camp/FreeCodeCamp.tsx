@@ -194,10 +194,11 @@ const FreeCodeCamp: FC<{}> = () => {
         }
     }
 
-    function handleFccLessonComplete(): void {
+    function handleFccLessonComplete(challengeUuid: string): void {
         const currentLesson: { [key: string]: string } = {
             lesson: lessonParam,
             module: moduleParam,
+            uuid: challengeUuid,
         }
         if (certificateProgress) {
             userCertificationProgressUpdateAsync(
