@@ -159,11 +159,14 @@ jobs:
           name: Config Git
           command: git config --global url."https://git@".insteadOf git://
       - run:
-          name: App yarn install
+          name: Install Dependencies
           command: yarn install
           no_output_timeout: 20m
       - run:
-          name: App yarn build
+          name: Install Cypress Binary
+          command: yarn cypress install
+      - run:
+          name: Build the application
           command: yarn build
           no_output_timeout: 20m
       - save_cache:
