@@ -170,6 +170,7 @@ jobs:
           key: test-node-modules-{{ checksum "yarn.lock" }}
           paths:
             - node_modules
+            - /root/.cache/Cypress
       - run: yarn cy:ci
 
 workflows:
