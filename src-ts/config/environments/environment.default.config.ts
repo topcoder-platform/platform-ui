@@ -1,10 +1,8 @@
-import { GlobalConfig } from '../../lib'
-
-import { AppHostEnvironment } from './app-host-environment.enum'
+import { EnvironmentConfigModel } from './environment-config.model'
 
 const COMMUNITY_WEBSITE: string = 'https://www.topcoder-dev.com'
 
-export const EnvironmentConfigDefault: GlobalConfig = {
+export const EnvironmentConfigDefault: EnvironmentConfigModel = {
     ANALYTICS: {
         SEGMENT_KEY: undefined,
         TAG_MANAGER_ID: undefined,
@@ -15,7 +13,7 @@ export const EnvironmentConfigDefault: GlobalConfig = {
         V3: 'https://api.topcoder-dev.com/v3',
         V5: 'https://api.topcoder-dev.com/v5',
     },
-    ENV: AppHostEnvironment.default,
+    ENV: 'default',
     LOGGING: {
         PUBLIC_TOKEN: 'puba0825671e469d16f940c5a30dc738f11',
         SERVICE: 'platform-ui',

@@ -1,4 +1,4 @@
-import { AppHostEnvironment } from '../../../config'
+import { EnvironmentConfig } from '../../../config'
 
 import { LearnConfigModel } from './learn-config.model'
 import { LearnConfigBsouza } from './learn.bsouza.config'
@@ -8,15 +8,15 @@ import { LearnConfigProd } from './learn.prod.config'
 
 function getConfig(): LearnConfigModel {
 
-    switch (process.env.REACT_APP_HOST_ENV) {
+    switch (EnvironmentConfig.ENV) {
 
-        case AppHostEnvironment.bsouza:
+        case 'bsouza':
             return LearnConfigBsouza
 
-        case AppHostEnvironment.dev:
+        case 'dev':
             return LearnConfigDev
 
-        case AppHostEnvironment.prod:
+        case 'prod':
             return LearnConfigProd
 
         default:
