@@ -1,4 +1,5 @@
 export {
+    createInstance as xhrCreateInstance,
     deleteAsync as xhrDeleteAsync,
     getAsync as xhrGetAsync,
     getBlobAsync as xhrGetBlobAsync,

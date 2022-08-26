@@ -1,5 +1,4 @@
-import { xhrGetAsync } from '../../../../../lib'
-import { learnUrlGet } from '../../functions'
+import { learnUrlGet, learnXhrGetAsync } from '../../functions'
 
 import { LearnCourse } from './learn-course.model'
 
@@ -8,6 +7,6 @@ export function getAsync(provider: string, certification: string):
 
     const url: string = learnUrlGet('courses', `?certification=${certification}&provider=${provider}`)
 
-    return xhrGetAsync<Array<LearnCourse>>(url)
+    return learnXhrGetAsync<Array<LearnCourse>>(url)
         .then(courses => courses[0])
 }
