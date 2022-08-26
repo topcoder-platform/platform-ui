@@ -51,7 +51,7 @@ const ProgressAction: FC<ProgressActionProps> = (props: ProgressActionProps) => 
     function renderInProgress(): JSX.Element {
 
         // if the most recently acted upon course is completed and not in progress,
-        // or there are no coursse in progress, don't show this block
+        // or there are no courses in progress, don't show this block
         if (mostRecentIsCompleted || !myInProgressCertifications.length) {
             return <></>
         }
