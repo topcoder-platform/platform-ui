@@ -13,8 +13,8 @@ import styles from './ProgressBlock.module.scss'
 interface ProgressBlockProps {
     allCertifications: Array<LearnCertification>
     ready: boolean
-    userCompletedCertifications: Array<UserCertificationCompleted>
-    userInProgressCertifications: Array<UserCertificationInProgress>
+    userCompletedCertifications: ReadonlyArray<UserCertificationCompleted>
+    userInProgressCertifications: ReadonlyArray<UserCertificationInProgress>
 }
 
 const ProgressBlock: FC<ProgressBlockProps> = (props: ProgressBlockProps) => {

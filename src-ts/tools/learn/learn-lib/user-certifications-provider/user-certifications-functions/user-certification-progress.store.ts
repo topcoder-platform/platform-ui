@@ -1,5 +1,4 @@
-import { xhrGetAsync, xhrPostAsync, xhrPutAsync } from '../../../../../lib/functions'
-import { learnUrlGet } from '../../functions'
+import { learnUrlGet, learnXhrGetAsync, learnXhrPostAsync, learnXhrPutAsync } from '../../functions'
 
 import { LearnUserCertificationProgress } from './learn-user-certification-progress.model'
 import { UserCertificationUpdateProgressActions } from './user-certification-update-progress-actions.enum'
@@ -18,13 +17,13 @@ export function getAsync(userId: number, provider?: string, certification?: stri
 
     const url: string = learnUrlGet(certProgressPath, params)
 
-    return xhrGetAsync<Array<LearnUserCertificationProgress>>(url)
+    return learnXhrGetAsync<Array<LearnUserCertificationProgress>>(url)
 }
 
 export function startAsync(userId: number, certificationId: string, courseId: string, data: any): Promise<LearnUserCertificationProgress> {
 
     const url: string = learnUrlGet(certProgressPath, `${userId}`, certificationId, courseId)
-    return xhrPostAsync<{}, LearnUserCertificationProgress>(url, {}, { params: data })
+    return learnXhrPostAsync<{}, LearnUserCertificationProgress>(url, {}, { params: data })
 }
 
 export function updateAsync(
@@ -35,5 +34,5 @@ export function updateAsync(
 
     const url: string = learnUrlGet(certProgressPath, certificationProgressId, action)
 
-    return xhrPutAsync<{}, LearnUserCertificationProgress>(url, {}, { params: data })
+    return learnXhrPutAsync<{}, LearnUserCertificationProgress>(url, {}, { params: data })
 }
