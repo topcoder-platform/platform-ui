@@ -14,8 +14,8 @@ import styles from './CoursesCard.module.scss'
 
 interface CoursesCardProps {
     certification: LearnCertification
-    userCompletedCertifications: Array<UserCertificationCompleted>
-    userInProgressCertifications: Array<UserCertificationInProgress>
+    userCompletedCertifications: ReadonlyArray<UserCertificationCompleted>
+    userInProgressCertifications: ReadonlyArray<UserCertificationInProgress>
 }
 
 const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
