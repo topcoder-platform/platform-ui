@@ -10,7 +10,7 @@ All future user interfaces at Topcoder will be implemented here. Pre-existing us
 
 - [Local Environment Setup](#local-environment-setup)
 - [Deployments](#deployments)
-- [Developer Center specific setup](#developer-center-specific-setup)
+- [Developer Center specific setup](#developer-center-contentful-api-key-and-space-id)
 - [Yarn Commands](#yarn-commands)
 
 # Application structure
@@ -89,22 +89,28 @@ You will need to add the following line to your hosts file. The hosts file is no
 
 SSL is required for authentication to work properly. 
 
-The `yarn start` command serves the site using the cert and key in the /ssl directory.
+The `yarn start` command serves the site using the cert and key in the /ssl directory, which authorize the `https://local.topcoder-dev.com`URL. 
 
-For easier development, it is recommended that you add this certificate to your trusted root authorities and as a trused cert in your browser. Google your browser and OS for more info.
+By overriding the app to use <b>port 443</b>, you can use the authorized URL and trust the root CA to avoid SSL errors in the browser.
+
+>**NOTE:** Mac users will require running the app with elevated permissions in order to use a port lower than 500. 
+
+For easier development, it is recommended that you add this certificate to your trusted root authorities and as a trused cert in your browser. Google your browser and OS for more info on how to trust cert authorities.
 
 Otherwise, you will need to override the exception each time you load the site. Firefox users may need to user an incognito browser in order to override the exception.
 
 ### Personal Config
 
-1. Add [hostname] to [`src-ts/config/environments/app-host-environment.enum.ts`](src-ts/config/environments/app-host-environment.enum.ts)
-2. Copy an existing config from [`src-ts/config/environments/environment.*.config.ts`](src-ts/config/environments/environment.bsouza.config.ts)
+1. Add [hostname] to [`/src-ts/config/environments/app-host-environment.type.ts`](/src-ts/config/environments/app-host-environment.type.ts)
+2. Copy an existing config from [`/src-ts/config/environments/environment.*.config.ts`](/src-ts/config/environments/environment.bsouza.config.ts)
 3. Rename new config `environment.[hostname].config.ts`
 4. Rename config variable to `EnvironmentConfig[HostName]`
-5. Set the `ENV` variable to `AppHostEnvironment.[hostname]`
-6. Add the switch case for the host name to [`src-ts/config/environments/environment.config.ts`](src-ts/config/environments/environment.config.ts)
+5. Set the `ENV` variable to `[hostname]`
+6. Add the switch case for the host name to [`/src-ts/config/environments/environment.config.ts`](/src-ts/config/environments/environment.config.ts)
 7. Prior to starting the server, set your host name:
 ```% export REACT_APP_HOST_ENV=[hostname]```
+
+>**NOTE:** Individual tools (e.g. [Learn tool](/src-ts/tools/learn/README.md)) can have their own configuration, which can be configured the same way as the global config. 
 
 #### For further convenience
 
@@ -119,11 +125,9 @@ The app uses CircleCI for CI/CD.
 
 The "dev" branch is auto-deployed to the dev environment: https://platform-mvp.topcoder-dev.com.
 
-The "master" branch is auto-deployed to the production environment: https://platform-mvp.topcoder.com.
+The "master" branch is auto-deployed to the production environment: https://platform-ui.topcoder.com.
 
-## Developer Center specific setup
-
-### Contentful API Key and Space Id
+## Developer Center Contentful API Key and Space Id
 
 The app requires two environment variables, which contain the space id and the key used to access contentful and retrieve Thrive Articles.
 
@@ -136,21 +140,7 @@ REACT_APP_CONTENTFUL_EDU_CDN_API_KEY=<API Key>
 
 We should use the same space ID and API Key as Topcoder Thrive, these are for fetching Thrive articles and videos in the landing page.
 
-### Landing page configuration
-
-We can configure up to 5 articles shown on the landing page. The articles can be from Topcoder Thrive and/or Topcoder Blog.
-
-The configuration file is located at `src-ts/tools/dev-center/dev-center-pages/community-app/landing-page/dev-center-articles-section/articles.config.ts`.
-
-We can configure the image carousel on the landing page, the configuration file is located at `src-ts/tools/dev-center/dev-center-pages/community-app/landing-page/dev-center-header/carousel-content.config.ts`.
-
-The local images for the carousel should be put in `src-ts/tools/dev-center/carousel-images`.
-
-### Getting Started page configuration.
-
-The content of the getting started page is from a Markdown text, the source is located at `src-ts/tools/dev-center/dev-center-pages/community-app/getting-started/GettingStartedGuide.md`.
-
-The local images for the markdown should be put in `src-ts/tools/dev-center/images`.
+See the [Dev Center README](/src-ts/tools/dev-center/README.md) for further instructions on setting up the Dev Center.
 
 ## yarn Commands
 

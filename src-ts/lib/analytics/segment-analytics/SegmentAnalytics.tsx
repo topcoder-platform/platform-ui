@@ -2,7 +2,7 @@ import { FC } from 'react'
 
 import { EnvironmentConfig } from '../../../config'
 
-import './segement-snippet'
+import './segment-snippet'
 
 const SegmentAnalytics: FC<{}> = () => {
 

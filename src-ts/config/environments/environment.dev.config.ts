@@ -1,16 +1,14 @@
-import { GlobalConfig } from '../../lib'
-
-import { AppHostEnvironment } from './app-host-environment.enum'
+import { EnvironmentConfigModel } from './environment-config.model'
 import { EnvironmentConfigDefault } from './environment.default.config'
 
-export const EnvironmentConfigDev: GlobalConfig = {
+export const EnvironmentConfigDev: EnvironmentConfigModel = {
     ...EnvironmentConfigDefault,
     ANALYTICS: {
         SEGMENT_KEY: EnvironmentConfigDefault.ANALYTICS.SEGMENT_KEY,
         TAG_MANAGER_ID: 'GTM-W7B537Z',
     },
     DISABLED_TOOLS: [],
-    ENV: AppHostEnvironment.dev,
+    ENV: 'dev',
     // TODO: Move stripe creds to .env file
     STRIPE: {
         ADMIN_TOKEN:

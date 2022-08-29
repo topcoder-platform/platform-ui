@@ -1,11 +1,9 @@
-import { GlobalConfig } from '../../lib'
-
-import { AppHostEnvironment } from './app-host-environment.enum'
+import { EnvironmentConfigModel } from './environment-config.model'
 import { EnvironmentConfigDefault } from './environment.default.config'
 
 const COMMUNITY_WEBSITE: string = 'https://www.topcoder.com'
 
-export const EnvironmentConfigProd: GlobalConfig = {
+export const EnvironmentConfigProd: EnvironmentConfigModel = {
     ...EnvironmentConfigDefault,
     ANALYTICS: {
         SEGMENT_KEY: '8fCbi94o3ruUUGxRRGxWu194t6iVq9LH',
@@ -18,7 +16,7 @@ export const EnvironmentConfigProd: GlobalConfig = {
         V5: 'https://api.topcoder.com/v5',
     },
     DISABLED_TOOLS: [],
-    ENV: AppHostEnvironment.prod,
+    ENV: 'prod',
     // TODO: Move stripe creds to .env file
     STRIPE: {
         ADMIN_TOKEN:

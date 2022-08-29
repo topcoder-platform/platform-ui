@@ -1,6 +1,7 @@
+import { LearnModelBase } from '../../functions'
 import { LearnModule } from '../../lesson-provider'
 
-export interface LearnCourse {
+export interface LearnCourse extends LearnModelBase {
     certification: string
     certificationId: string
     estimatedCompletionTime: {
