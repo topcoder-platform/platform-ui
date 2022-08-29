@@ -2,6 +2,7 @@ import classNames from 'classnames'
 import { FC } from 'react'
 
 import { LearnCertificateTrackType } from '../../../../learn-lib'
+
 import styles from './CertificateBgPattern.module.scss'
 
 interface CertificateBgPatternProps {
