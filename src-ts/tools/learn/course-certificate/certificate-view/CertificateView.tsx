@@ -66,7 +66,11 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const {
         certification: certificate,
         ready: certificateReady,
-    }: AllCertificationsProviderData = useAllCertifications(props.provider, course?.certificationId)
+    }: AllCertificationsProviderData = useAllCertifications(
+        props.provider,
+        course?.certificationId,
+        {enabled: !!course?.certificationId}
+    )
 
     const ready: boolean = useMemo(() => (
         completedCertificateReady && courseReady && certificateReady
@@ -142,7 +146,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         <>
             <LoadingSpinner hide={ready} />
 
-            {readyAndCompletedCertification && (
+            {ready && readyAndCompletedCertification && (
                 <div className={styles['wrap']}>
                     <div className={styles['content-wrap']}>
                         {!props.hideActions && (
