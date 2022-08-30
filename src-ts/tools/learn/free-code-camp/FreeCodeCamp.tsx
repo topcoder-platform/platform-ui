@@ -80,22 +80,6 @@ const FreeCodeCamp: FC<{}> = () => {
         lessonParam,
     )
 
-    if (courseDataReady && courseData) {
-        const moduleParamData = courseData.modules.find(m => m.key === moduleParam) ?? courseData.modules[0];
-        const lessonParamExists = moduleParamData?.lessons.find(l => l.dashedName === lessonParam);
-
-        if (!lessonParamExists) {            
-            const lessonPath: string = getLessonPathFromModule(
-                providerParam,
-                certificationParam,
-                moduleParamData.key,
-                moduleParamData.lessons[0].dashedName,
-            )
-
-            navigate(lessonPath)
-        }
-    }
-
     const ready: boolean = profileReady && courseDataReady && lessonReady && (!isLoggedIn || progressReady)
 
     const certification: string = lesson?.course.certification ?? ''
@@ -299,6 +283,32 @@ const FreeCodeCamp: FC<{}> = () => {
         navigate,
         providerParam,
         setCertificateProgress,
+    ])
+
+    useEffect(() => {
+        if (courseDataReady && courseData) {
+            const moduleParamData: LearnModule = courseData.modules.find(m => m.key === moduleParam) ?? courseData.modules[0]
+            const lessonParamExists: boolean = !!moduleParamData?.lessons.find(l => l.dashedName === lessonParam)
+
+            if (!lessonParamExists) {
+                const lessonPath: string = getLessonPathFromModule(
+                    providerParam,
+                    certificationParam,
+                    moduleParamData.key,
+                    moduleParamData.lessons[0].dashedName,
+                )
+
+                navigate(lessonPath)
+            }
+        }
+    }, [
+        certificationParam,
+        courseData,
+        courseDataReady,
+        lessonParam,
+        moduleParam,
+        navigate,
+        providerParam,
     ])
 
     useEffect(() => {

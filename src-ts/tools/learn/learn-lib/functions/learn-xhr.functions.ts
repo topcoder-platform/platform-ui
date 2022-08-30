@@ -1,4 +1,4 @@
-import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
+import { AxiosInstance, AxiosRequestConfig } from 'axios'
 
 import { xhrCreateInstance, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '../../../../lib'
 
