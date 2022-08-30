@@ -148,7 +148,7 @@ jobs:
     steps: *deploy_steps
 
   # Test job for the cases when we don not need deployment.
-  test:
+  e2e-test:
     docker:
       - image: cypress/browsers:node16.14.2-slim-chrome100-ff99-edge
     steps:
@@ -201,6 +201,9 @@ workflows:
               ignore:
                 - master
 
+      - e2e-test:
+          context : org-global
+
       - build-prod:
           context : org-global
           filters:
@@ -212,6 +215,7 @@ workflows:
           context : org-global
           requires:
             - build-dev
+            - e2e-test
           filters: 
             branches:
               only:
@@ -225,9 +229,3 @@ workflows:
             branches:
               only:
                 - master
-
-      - test:
-          filters:
-            branches:
-              ignore:
-                - develop
