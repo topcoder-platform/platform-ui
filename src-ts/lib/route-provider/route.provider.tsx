@@ -124,7 +124,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
         const routeElement: JSX.Element = !route.authRequired
             ? route.element
             : (
-                <RequireAuthProvider loginUrl={authUrlLogin()}>
+                <RequireAuthProvider loginUrl={authUrlLogin()} rolesRequired={route.rolesRequired}>
                     {route.element}
                 </RequireAuthProvider>
             )

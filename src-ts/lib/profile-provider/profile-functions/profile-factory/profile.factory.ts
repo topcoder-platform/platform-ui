@@ -14,5 +14,7 @@ export function create(profile: UserProfile, token: TokenModel): UserProfile {
     // rolees.
     profile.isCustomer = !!token.roles?.some(role => role === UserRole.customer)
     profile.isMember = !profile.isCustomer
+    // store roles for custom capability checks
+    profile.roles = token.roles
     return profile
 }

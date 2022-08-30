@@ -10,7 +10,8 @@ export interface UserProfile {
     isMember?: boolean
     lastName: string
     photoURL?: string
+    roles?: Array<string>,
     status: string
     updatedAt: number
-    userId: number
+    userId: number,
 }

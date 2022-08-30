@@ -1,0 +1,27 @@
+.contentLayout {
+  width: 100%;
+  padding-bottom: 0;
+
+  .contentLayout-outer {
+    width: 100%;
+
+    .contentLayout-inner {
+      width: 100%;
+      overflow: visible;
+    }
+  }
+}
+
+.container {
+  display: flex;
+  padding-top: 26px;
+
+  a {
+    color: #0D61BF;
+
+    &:hover {
+      color: #0D61BF;
+      text-decoration: underline;
+    }
+  }
+}

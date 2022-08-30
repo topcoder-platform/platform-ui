@@ -273,6 +273,7 @@ The PlatformRoute model has several useful options:
 | `authRequired?: boolean` | Requiring authentication for a route means that users who are not logged in will be redirected to the Login Form when they try to access the route. |
 | `route: string` | The route property is the path to the route, relative to its parent(s). |
 | `title: string` | The title property is the text that will appear in the Tools or Utils Selectors (this is irrelevant on hidden routes). |
+| `rolesRequired: Array<string>` | Requiring roles for a route means that users who do not own the roles will be presented with restricted page when they try to access the route. |
 
 ## Git
 

@@ -8,6 +8,7 @@ import {
 
 export const toolTitle: string = 'Gamification Admin'
 export const baseUrl: string = '/gamification-admin'
+export const rolesRequired: Array<string> = ['Gamification Admin']
 
 const GamificationAdmin: FC<{}> = () => {
 
