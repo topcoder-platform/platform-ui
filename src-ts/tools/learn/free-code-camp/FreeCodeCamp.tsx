@@ -286,6 +286,32 @@ const FreeCodeCamp: FC<{}> = () => {
     ])
 
     useEffect(() => {
+        if (courseDataReady && courseData) {
+            const moduleParamData: LearnModule = courseData.modules.find(m => m.key === moduleParam) ?? courseData.modules[0]
+            const lessonParamExists: boolean = !!moduleParamData?.lessons.find(l => l.dashedName === lessonParam)
+
+            if (!lessonParamExists) {
+                const lessonPath: string = getLessonPathFromModule(
+                    providerParam,
+                    certificationParam,
+                    moduleParamData.key,
+                    moduleParamData.lessons[0].dashedName,
+                )
+
+                navigate(lessonPath)
+            }
+        }
+    }, [
+        certificationParam,
+        courseData,
+        courseDataReady,
+        lessonParam,
+        moduleParam,
+        navigate,
+        providerParam,
+    ])
+
+    useEffect(() => {
         const certificationPath: string = routeParams.certification ?? ''
         const modulePath: string = routeParams.module ?? ''
         const lessonPath: string = routeParams.lesson ?? ''
