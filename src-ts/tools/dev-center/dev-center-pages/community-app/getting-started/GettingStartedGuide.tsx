@@ -1,7 +1,6 @@
 import * as React from 'react'
 
-import { Breadcrumb, ContentLayout } from '../../../../../lib'
-import { BreadcrumbItemModel } from '../../../../../lib/breadcrumb/breadcrumb-item/breadcrumb-item.model'
+import { Breadcrumb, BreadcrumbItemModel, ContentLayout } from '../../../../../lib'
 import useMarkdown from '../../../dev-center-lib/hooks/useMarkdown'
 import MarkdownDoc from '../../../dev-center-lib/MarkdownDoc'
 import LayoutDocHeader from '../../../dev-center-lib/MarkdownDoc/LayoutDocHeader'
