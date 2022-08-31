@@ -1,9 +1,7 @@
-import { GlobalConfig } from '../../lib'
-
-import { AppHostEnvironment } from './app-host-environment.enum'
+import { EnvironmentConfigModel } from './environment-config.model'
 import { EnvironmentConfigDefault } from './environment.default.config'
 
-export const EnvironmentConfigBsouza: GlobalConfig = {
+export const EnvironmentConfigBsouza: EnvironmentConfigModel = {
     ...EnvironmentConfigDefault,
-    ENV: AppHostEnvironment.bsouza,
+    ENV: 'bsouza',
 }

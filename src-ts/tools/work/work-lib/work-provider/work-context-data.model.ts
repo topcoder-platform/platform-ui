@@ -4,6 +4,7 @@ export interface WorkContextData {
     error?: string
     hasWork: boolean
     initialized: boolean
-    refresh: () => void
+    messagesInitialized: boolean
+    remove: (workId: string, work: Array<Work>) => void
     work: Array<Work>
 }

@@ -112,8 +112,12 @@
 
 .list {
     display: flex;
-    gap: $space-xs $space-sm;
+    gap: calc($space-xs + $border) $space-sm;
     flex-wrap: wrap;
 
     margin-top: $space-sm;
+
+    > li:global(.full-width) {
+        width: 100%;
+    }
 }

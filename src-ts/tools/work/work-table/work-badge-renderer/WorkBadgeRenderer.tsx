@@ -21,8 +21,10 @@ function WorkBadgeRenderer(props: WorkBadgeRendererProps): JSX.Element {
             : 'unread-messages')
 
     return (
-        <div className={classNames(styles.badge, styles[badgeColor])}>
-            {props.count}
+        <div className={styles['badge-container']}>
+            <div className={classNames(styles.badge, styles[badgeColor])}>
+                {props.count}
+            </div>
         </div>
     )
 }

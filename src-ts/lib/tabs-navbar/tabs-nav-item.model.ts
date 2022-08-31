@@ -1,8 +1,7 @@
+import { TabsNavItemBadge } from './tab-nav-item-badge.model'
+
 export interface TabsNavItem {
-    badges?: Array<{
-        count: number
-        type: 'info' | 'important'
-    }>
+    badges?: Array<TabsNavItemBadge>
     id: string
     title: string
 }

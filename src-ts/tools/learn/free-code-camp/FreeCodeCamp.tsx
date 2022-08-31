@@ -45,15 +45,15 @@ import { TitleNav } from './title-nav'
 const FreeCodeCamp: FC<{}> = () => {
 
     const {
-        profile,
         initialized: profileReady,
+        isLoggedIn,
+        profile,
     }: ProfileContextData = useContext(profileContext)
-    const isLoggedIn: boolean = !!profile
 
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
-
     const providerParam: string = routeParams.provider ?? ''
+
     const [certificationParam, setCourseParam]: [string, Dispatch<SetStateAction<string>>] = useState(routeParams.certification ?? '')
     const [moduleParam, setModuleParam]: [string, Dispatch<SetStateAction<string>>] = useState(routeParams.module ?? '')
     const [lessonParam, setLessonParam]: [string, Dispatch<SetStateAction<string>>] = useState(routeParams.lesson ?? '')
@@ -178,7 +178,8 @@ const FreeCodeCamp: FC<{}> = () => {
                 lesson.course.certificationId,
                 lesson.course.id,
                 currentLesson
-            ).then(setCertificateProgress)
+            )
+                .then(setCertificateProgress)
         } else {
             // TODO: remove this delay!!
             // TEMP_FIX: delay this api call to allow for previous "completeLesson" call to write in the api
@@ -193,10 +194,11 @@ const FreeCodeCamp: FC<{}> = () => {
         }
     }
 
-    function handleFccLessonComplete(): void {
+    function handleFccLessonComplete(challengeUuid: string): void {
         const currentLesson: { [key: string]: string } = {
             lesson: lessonParam,
             module: moduleParam,
+            uuid: challengeUuid,
         }
         if (certificateProgress) {
             userCertificationProgressUpdateAsync(
@@ -284,6 +286,32 @@ const FreeCodeCamp: FC<{}> = () => {
     ])
 
     useEffect(() => {
+        if (courseDataReady && courseData) {
+            const moduleParamData: LearnModule = courseData.modules.find(m => m.key === moduleParam) ?? courseData.modules[0]
+            const lessonParamExists: boolean = !!moduleParamData?.lessons.find(l => l.dashedName === lessonParam)
+
+            if (!lessonParamExists) {
+                const lessonPath: string = getLessonPathFromModule(
+                    providerParam,
+                    certificationParam,
+                    moduleParamData.key,
+                    moduleParamData.lessons[0].dashedName,
+                )
+
+                navigate(lessonPath)
+            }
+        }
+    }, [
+        certificationParam,
+        courseData,
+        courseDataReady,
+        lessonParam,
+        moduleParam,
+        navigate,
+        providerParam,
+    ])
+
+    useEffect(() => {
         const certificationPath: string = routeParams.certification ?? ''
         const modulePath: string = routeParams.module ?? ''
         const lessonPath: string = routeParams.lesson ?? ''
@@ -297,7 +325,7 @@ const FreeCodeCamp: FC<{}> = () => {
         if (lessonPath !== lessonParam) {
             setLessonParam(lessonPath)
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         // DO NOT UPDATE THIS DEPS ARRAY!!
         // we do not care about changes to the other deps

@@ -29,7 +29,10 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
 
         const [sort, setSort]: [Sort | undefined, Dispatch<SetStateAction<Sort | undefined>>]
             = useState<Sort | undefined>(tableGetDefaultSort(props.columns))
-        const [defaultSortDirectionMap, setDefaultSortDirectionMap]: [DefaultSortDirectionMap | undefined, Dispatch<SetStateAction<DefaultSortDirectionMap | undefined>>]
+        const [defaultSortDirectionMap, setDefaultSortDirectionMap]: [
+            DefaultSortDirectionMap | undefined,
+            Dispatch<SetStateAction<DefaultSortDirectionMap | undefined>>
+        ]
             = useState<DefaultSortDirectionMap | undefined>()
         const [sortedData, setSortData]: [ReadonlyArray<T>, Dispatch<SetStateAction<ReadonlyArray<T>>>]
             = useState<ReadonlyArray<T>>(props.data)

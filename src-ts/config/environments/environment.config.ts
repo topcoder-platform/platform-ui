@@ -1,25 +1,27 @@
-import { GlobalConfig } from '../../lib'
-
-import { AppHostEnvironment } from './app-host-environment.enum'
+import { AppHostEnvironmentType } from './app-host-environment.type'
+import { EnvironmentConfigModel } from './environment-config.model'
 import { EnvironmentConfigBsouza } from './environment.bsouza.config'
 import { EnvironmentConfigDefault } from './environment.default.config'
 import { EnvironmentConfigDev } from './environment.dev.config'
 import { EnvironmentConfigProd } from './environment.prod.config'
 
-function getEnvironmentConfig(): GlobalConfig {
+function getEnvironmentConfig(): EnvironmentConfigModel {
 
-    switch (process.env.REACT_APP_HOST_ENV) {
+    const environment: AppHostEnvironmentType | undefined
+        = process.env.REACT_APP_HOST_ENV as AppHostEnvironmentType | undefined
 
-        case AppHostEnvironment.bsouza:
+    switch (environment) {
+
+        case 'bsouza':
             return EnvironmentConfigBsouza
 
-        case AppHostEnvironment.default:
+        case 'default':
             return EnvironmentConfigDefault
 
-        case AppHostEnvironment.dev:
+        case 'dev':
             return EnvironmentConfigDev
 
-        case AppHostEnvironment.prod:
+        case 'prod':
             return EnvironmentConfigProd
 
         default:
@@ -27,7 +29,7 @@ function getEnvironmentConfig(): GlobalConfig {
     }
 }
 
-const enviromentConfig: GlobalConfig = {
+const enviromentConfig: EnvironmentConfigModel = {
     ...getEnvironmentConfig(),
 }
 

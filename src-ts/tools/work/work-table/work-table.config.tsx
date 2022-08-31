@@ -1,21 +1,20 @@
 import { TableColumn } from '../../../lib'
 import { Work } from '../work-lib'
 
-// import { WorkBadgeRenderer } from './work-badge-renderer'
+import { WorkBadgeRenderer } from './work-badge-renderer'
 import { WorkDeleteButtonRenderer } from './work-delete-button-renderer'
 import { WorkStatusRenderer } from './work-status-renderer'
 import { WorkTableTitleRenderer } from './work-table-title-renderer'
 
-/* TODO: uncomment this when the messages are back up
-as part of PROD-1860
 function messageBadgeRenderer(work: Work): JSX.Element {
     return WorkBadgeRenderer({
         count: work.messageCount,
         type: 'messages',
     })
-} */
+}
 
 export enum WorkListColumnField {
+    messages = 'Messages',
     status = 'Status',
 }
 
@@ -54,17 +53,12 @@ export const workListColumns: ReadonlyArray<TableColumn<Work>> = [
         propertyName: 'cost',
         type: 'money',
     },
-    /*
-        TODO: add this column back when the bug is fixed:
-        https://topcoder.atlassian.net/browse/PROD-1860
-        Unread Messages count from API don't match embedded forum widget
     {
-        label: 'Messages',
+        label: WorkListColumnField.messages,
         renderer: messageBadgeRenderer,
         tooltip: 'Messages pending response',
         type: 'element',
     },
-    */
     {
         renderer: WorkDeleteButtonRenderer,
         type: 'action',

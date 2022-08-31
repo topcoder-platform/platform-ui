@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
-import { getCourseAsync } from './courses-functions'
+import { courseGetAsync } from './courses-functions'
 import { CoursesProviderData } from './courses-provider-data.model'
 
 export function useCourses(provider: string, certification?: string): CoursesProviderData {
@@ -32,7 +32,7 @@ export function useCourses(provider: string, certification?: string): CoursesPro
             loading: true,
         }))
 
-        getCourseAsync(provider, certification)
+        courseGetAsync(provider, certification)
             .then((course) => {
                 if (!mounted) {
                     return
