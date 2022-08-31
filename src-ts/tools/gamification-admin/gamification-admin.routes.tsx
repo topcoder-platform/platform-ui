@@ -1,9 +1,12 @@
 import { PlatformRoute } from '../../lib'
 
-import GamificationAdmin, { baseUrl, rolesRequired, toolTitle } from './GamificationAdmin'
+import GamificationAdmin, { toolTitle } from './GamificationAdmin'
 import BadgeDetailPage from './pages/badge-detail/BadgeDetailPage'
 import BadgeListingPage from './pages/badge-listing/BadgeListingPage'
 import CreateBadgePage from './pages/create-badge/CreateBadgePage'
+
+export const baseUrl: string = '/gamification-admin'
+export const rolesRequired: Array<string> = ['Gamification Admin']
 
 export const gamificationAdminRoutes: Array<PlatformRoute> = [
     {

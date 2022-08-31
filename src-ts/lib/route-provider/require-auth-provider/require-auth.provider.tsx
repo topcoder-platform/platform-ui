@@ -5,8 +5,8 @@ import { RestrictedPage } from '../../restricted-page'
 
 interface RequireAuthProviderProps {
     children: JSX.Element
-    loginUrl: string,
-    rolesRequired?: Array<string>,
+    loginUrl: string
+    rolesRequired?: Array<string>
 }
 
 function RequireAuthProvider(props: RequireAuthProviderProps): JSX.Element {
@@ -23,9 +23,13 @@ function RequireAuthProvider(props: RequireAuthProviderProps): JSX.Element {
     // check the user's roles, allow access or show restricted page
     if (!!profile) {
         if (props.rolesRequired) {
-            if (!profile.roles) { return RestrictedPage }
-            const intersection: Array<string> = profile.roles?.filter(r => props.rolesRequired?.includes(r))
-            if (intersection.length !== props.rolesRequired.length) { return RestrictedPage }
+            if (!profile.roles) {
+                return RestrictedPage
+            }
+            // if the profile doesn't include all the required roles, show the restricted page
+            if (props.rolesRequired.some(role => !profile.roles.includes(role))) {
+                return RestrictedPage
+            }
             return props.children
         } else {
             return props.children

@@ -12,6 +12,6 @@ export const RestrictedPage: ReactElement =
     title='Thanks for visiting'
   >
     <div className={styles.container}>
-      <p>Unfortenatly, you are not permitted to access the site. If you feel you should be able to, please contact us at <a href='mailto:support@topcoder.com'>support@topcoder.com</a>.</p>
+      <p>Unfortunately, you are not permitted to access the site. If you feel you should be able to, please <a href='/support'>contact us</a>.</p>
     </div>
   </ContentLayout>
