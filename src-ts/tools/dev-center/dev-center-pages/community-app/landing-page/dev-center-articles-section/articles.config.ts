@@ -7,27 +7,36 @@ import { ArticleEntry, ArticleType, BlogPost } from './models'
  * The  first element in the array will be the main article.
  * For Thrive Articles, the url should be the Contentful ID.
  * For Blog Posts, the url is the url linking to the post on topcoder.com
+ * Example
+ * {
+ *   type: ArticleType.Blog,
+ *   url: `${EnvironmentConfig.TOPCODER_URLS.BLOG_PAGE}/talent-as-a-service-taas-a-brilliant-solution-to-the-talent-gap/`,
+ * }
+ * {
+ *   type: ArticleType.Thrive,
+ *   url: '6KP9iCELCsLWTSWirplWs2',
+ * }
  */
 export const ArticlesUrl: Array<ArticleEntry> = [
     {
-        type: ArticleType.Blog,
-        url: `${EnvironmentConfig.TOPCODER_URLS.BLOG_PAGE}/talent-as-a-service-taas-a-brilliant-solution-to-the-talent-gap/`,
+        type: ArticleType.Thrive,
+        url: '6KP9iCELCsLWTSWirplWs2',
     },
     {
         type: ArticleType.Thrive,
-        url: '70GnGyAZzcRtswAfCN23ge',
-    },
-    {
-        type: ArticleType.Blog,
-        url: `${EnvironmentConfig.TOPCODER_URLS.BLOG_PAGE}/building-a-tech-community-in-africa-with-code_abbey-the-topcoder-nation-show-17/`,
+        url: '1afUuuZVt1JI14iRkAIqba',
     },
     {
         type: ArticleType.Thrive,
-        url: '1E2IZxepkad3ol058XuoYd',
+        url: 'puRqAymWv7hjjyHyunGK2',
     },
     {
         type: ArticleType.Thrive,
-        url: '71YPNgNNrAsWVrgadbLOcD',
+        url: '6yZJ8xSYTEqVJhMeQyA7BA',
+    },
+    {
+        type: ArticleType.Thrive,
+        url: '3QOvaHaSxjF26owDurtfKZ',
     },
 ]
 
