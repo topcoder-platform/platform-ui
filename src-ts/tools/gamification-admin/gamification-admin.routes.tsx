@@ -1,5 +1,4 @@
-import { PlatformRoute } from '../../lib'
-import { UserRole } from '../../lib/profile-provider/profile-functions/profile-factory/user-role.enum'
+import { PlatformRoute, UserRole } from '../../lib'
 
 import GamificationAdmin, { toolTitle } from './GamificationAdmin'
 import BadgeDetailPage from './pages/badge-detail/BadgeDetailPage'

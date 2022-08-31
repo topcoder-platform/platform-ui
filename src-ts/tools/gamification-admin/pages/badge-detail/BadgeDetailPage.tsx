@@ -1,7 +1,6 @@
 import { FC, useMemo } from 'react'
 
-import { Breadcrumb, ContentLayout } from '../../../../lib'
-import { BreadcrumbItemModel } from '../../../../lib/breadcrumb/breadcrumb-item/breadcrumb-item.model'
+import { Breadcrumb, BreadcrumbItemModel, ContentLayout } from '../../../../lib'
 import { baseUrl } from '../../gamification-admin.routes'
 import { toolTitle } from '../../GamificationAdmin'
 

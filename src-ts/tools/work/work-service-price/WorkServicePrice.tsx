@@ -1,7 +1,6 @@
 import { FC } from 'react'
 
-import { IconOutline, textFormatMoneyLocaleString } from '../../../lib/index'
-import { Tooltip } from '../../../lib/tooltip'
+import { IconOutline, textFormatMoneyLocaleString, Tooltip } from '../../../lib'
 
 import styles from './WorkServicePrice.module.scss'
 
