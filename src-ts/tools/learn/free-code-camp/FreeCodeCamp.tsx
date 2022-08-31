@@ -62,6 +62,7 @@ const FreeCodeCamp: FC<{}> = () => {
         certificationProgress: certificateProgress,
         setCertificateProgress,
         ready: progressReady,
+        refetch: refetchProgress,
     }: UserCertificationProgressProviderData = useUserCertificationProgress(
         profile?.userId,
         routeParams.provider,
@@ -362,7 +363,10 @@ const FreeCodeCamp: FC<{}> = () => {
             {lesson && (
                 <div className={styles['main-wrap']}>
                     <div className={styles['course-outline-pane']}>
-                        <CollapsiblePane title='Course Outline'>
+                        <CollapsiblePane
+                            title='Course Outline'
+                            onToggle={(isOpen) => isOpen && refetchProgress()}
+                        >
                             <div className={styles['course-outline-wrap']}>
                                 <div className={styles['course-outline-title']}>
                                     {courseData?.title}
