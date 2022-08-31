@@ -3,6 +3,6 @@ describe('Landing Page', () => {
     beforeEach(() => cy.visit('/'))
 
     it('loads landing page should be successfully', () => {
-        cy.get('[data-cy="root"]').should('be.visible')
+        cy.get('[data-id="root"]').should('be.visible')
     })
 })
