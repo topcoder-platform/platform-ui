@@ -8,6 +8,7 @@ This document covers the Windows 10, Linux and MacOS setup of the development en
 ### Install Visual Studio Community 2013
 
 [https://my.visualstudio.com/Downloads?q=visual%20studio%202013](https://my.visualstudio.com/Downloads?q=visual%20studio%202013)
+or a premium version: [https://visualstudio.microsoft.com/vs/older-downloads/](https://visualstudio.microsoft.com/vs/older-downloads/) by clicking Donwload button for Visual Studio 2013 and Other Products
 
 When installing
 
@@ -64,12 +65,15 @@ The Git Bash program uses an "aliases" file for some initialisation of the shell
 * Python can be executed
 * NVM works as expected
 
+Open `C:\Program Files\Git\etc\profile.d\aliases.sh` in an explorer.
+
 We will add these 3 lines underneath the `alias ll='ls -l'` line:
 
 ```sh
-alias python='winpty C: \\Python27\\python-exe"
-export NVM DIR="$HOME/.nvm"
-[-s"$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+alias python='winpty C:\\Python27\\python.exe'
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 ```
 
 You will need to grant VS Code admin privileges to save the file once the edits are done.
@@ -120,15 +124,15 @@ nvm --version
 The output should look like this:
 
 ```terminal
-jmgas@DESKTOP-CEFAE6N MINGW64 ~
+copilot@DESKTOP-CEFAE6N MINGW64 ~
 $ python --version
 Python 2.7.18
 
-jmgas@DESKTOP-CEFAE6N MINGW64 ~
+copilot@DESKTOP-CEFAE6N MINGW64 ~
 $ nvm --version
 0.39.1
 
-jmgas@DESKTOP-CEFAE6N MINGW64 ~
+copilot@DESKTOP-CEFAE6N MINGW64 ~
 $
 ```
 
@@ -179,16 +183,16 @@ We need to proxy `https` requests through a local proxy since we don't have a va
 **NOTE** - You should run the proxy in a *separate* Git Bash window, to ensure it's always running.
 
 ```terminal
-jmgas@DESKTOP-CEFAE6N MINGW64
+copilot@DESKTOP-CEFAE6N MINGW64
 $ pm i -g local-ss1-proxy
 npm WARN deprecated nomnom@1.8.1: Package no longer supported. contact support@npmjs.com for more info.
 npm WARN notice [SECURITY] underscore has the following vulnerability: 1 high. Go here for more details: https://github.com/advisories?query=underscore - Run `npm i npm@latest -g` to upgrade your pm version, and then `npm audit` to get more info.
-c: lusers\jmgas\.num\versions\node\v8.11.2\bin\local-ss1-proxy
+c:\users\copilot\.num\versions\node\v8.11.2\bin\local-ss1-proxy
 ->
-C:\Users\jmgas\.nvm\versions\node\v8.11.2\bin\node_modules\local-ssl-proxy\bin\local-ssl-proxy + local-ss1-proxv@1.3.0
+C:\Users\copilot\.nvm\versions\node\v8.11.2\bin\node_modules\local-ssl-proxy\bin\local-ssl-proxy + local-ss1-proxv@1.3.0
 added 18 packages in 3.321s
 
-jmgas@DESKTOP-CEFAE6N MINGW64 ~
+copilot@DESKTOP-CEFAE6N MINGW64 ~
 $ local-ss1-proxy -n local.topcoder-dev.com -s 443 -t 3000
 Started proxy: https://local.topcoder-dev.com: 443 -> http://local.topcoder-dev.com:3000
 ```
@@ -204,7 +208,7 @@ git clone https://github.com/topcoder-platform/community-app.git
 ```
 
 ```terminal
-jmgas@DESKTOP-CEFAE6N MINGW64
+copilot@DESKTOP-CEFAE6N MINGW64
 $ git clone https://github.com/topcoder-platform/community-app.git
 Cloning into 'community-app'...
 remote: Enumerating objects: 88177, done.
@@ -222,7 +226,7 @@ warning: the following paths have collided (e.g. case-sensitive paths on a case-
    'docs/contentful/Viewport.md'
    'docs/contentful/viewport.md'
 
-jmgas@DESKTOP-CEFAE6N MINGW64 ~
+copilot@DESKTOP-CEFAE6N MINGW64 ~
 $
 ```
 
@@ -235,14 +239,14 @@ Now that we have the code, we can build it on the Git Bash command line.  The fi
 * `nvm install v8.11.2`
 
 ```terminal
-jmgas@DESKTOP-CEFAE6N MINGW64
+copilot@DESKTOP-CEFAE6N MINGW64
 $ nvm use
-Found '/c/Users/jmgas/community-app/.nvmrc' with version <v8.11.2>
+Found '/c/Users/copilot/community-app/.nvmrc' with version <v8.11.2>
 N/A: version "V8.11.2 -> N/A" is not yet installed.
 
 You need to run "nvm install v8.11.2" to install it before using it.
 
-jmgas@DESKTOP-CEFAE6N MINGW64 ~/community-app (develop)
+copilot@DESKTOP-CEFAE6N MINGW64 ~/community-app (develop)
 $ nvm install v8.11.2
 Downloading and installing node v8.11.2...
 Downloading https://nodejs.org/dist/v8.11.2/node-v8.11.2-win-x64.zip...
@@ -251,7 +255,7 @@ Computing checksum with sha256sum
 Checksums matched!Now using node v8.11.2 (npm v5.6.0)
 Creating default alias: default -> v8.11.2
 
-jmgas@DESKTOP-CEFAE6N MINGW64 ~/community-app (develop)
+copilot@DESKTOP-CEFAE6N MINGW64 ~/community-app (develop)
 $ node --version
 v8.11.2
 ```
@@ -266,14 +270,14 @@ npm i
 ```
 
 ```terminal
-> sharp@o.20.8 install c: \users\jmgas\community-app\node_modules\sharp
+> sharp@o.20.8 install c:\users\copilot\community-app\node_modules\sharp
 (node install/libvips && node install/d11-copy && prebuild-install)I1 (node-gyp rebuild && node install/d11-copy)
 
 info sharp Downloading https://github.com/lovell/sharp-libvips/releases/download/v8.6.1/libvips-8.6.1-win32-x64.tar.gz
-info sharp creating c: \users\jmgas\community-app\node_modules\sharp\build\Release
-info sharp Copying DLLs from C: \Users\jmgas\ community-app\node_modules \sharp\vendor\lib to c: \users\jmgas\ community-app\node_modules\sharp\build\Release
+info sharp creating c:\users\copilot\community-app\node_modules\sharp\build\Release
+info sharp Copying DLLs from C:\Users\copilot\community-app\node_modules \sharp\vendor\lib to c:\users\copilot\community-app\node_modules\sharp\build\Release
 
-> core-js@2. 6.11 postinstall c: \Users\jmgas\ community-app\node _modules\ core-js
+> core-js@2. 6.11 postinstall c:\Users\copilot\community-app\node _modules\core-js
 > node -e "try{require('./postinstall'>}catch(e)(]"
 
 Thank you for using core-js (https://github.com/zloirock/core-js) for polyfilling Javascript standard library!
@@ -285,25 +289,25 @@ The project needs your help! Please consider supporting of core-js on Open colle
 Also, the author of core-js (https://github.com/zloirock) is looking for a good job -)
 
 note-1: Pursfiedufreet;pasalhsalyssFea/ka)community-app/lnode_modules.lcore-js-pure
-> core-js@2.6.11 postinstall c: \users\jmgas\ community-app\node_modules \tc-ui \node_modules\attr-accept \node_modules \core-js
+> core-js@2.6.11 postinstall c:\users\copilot\community-app\node_modules \tc-ui \node_modules\attr-accept \node_modules \core-js
 > node -e "try{require('./postinstall ')}catch(e) {}
 
-> husky@4. 2.5 postinstall c: \Users\jmgas\community-app\node_modules \husky
+> husky@4. 2.5 postinstall c:\Users\copilot\community-app\node_modules \husky
 > opencollective-postinstall I| exit 0
 
 Thank you for using husky!
 If you rely on this package, please consider supporting our open collective:
 > https://opencollective.com/husky/donate
 
-> node-sass4.14.1 postinstall c: \users\jmgas\community-app\node_modules\node-sass
+> node-sass4.14.1 postinstall c:\users\copilot\community-app\node_modules\node-sass
 > node scripts/build.js
 
-Binary found at C: \Users\jmgas\community-app\node_modules\node-sass\vendor\win32-x64-57\binding.node
+Binary found at C:\Users\copilot\community-app\node_modules\node-sass\vendor\win32-x64-57\binding.node
 Testing binary
 Binary is fine
 (node: 3828) MaxListenersExceededwarning: Possible EventEmitter memory leak detected. 11 SIGINT listeners added. Use emitter.setMaxListeners () to increase limit
 
-> community-app@1.0.0 postinstall c: \Users \jmgas \ community-app
+> community-app@1.0.0 postinstall c:\Users\copilot\community-app
 > rimraf node _modules/navigation-component/node_modules/topcoder-react-utils && rimraf node_modules/topcoder-react-ui-kit/node_modules/topcoder-react-utils
 
 npm WARN optional SKIPTING OPTZONAL DEPENDENCY: Fsevents@2. 1. 3 (node, nodules watchpack\node modules\fsevent:)
@@ -313,30 +317,30 @@ npm WARN notup SKIPPING.OPTIONAL DEPENDENCY: Unsupported platform for fsevents@2
 
 added 2976 packages in 488.193s
 
-jmgas@DESKTOP-CEFAE6N MINGW64 ~/community-app (develop)
+copilot@DESKTOP-CEFAE6N MINGW64 ~/community-app (develop)
 $
 ```
 
 With the dependencies now successfully installed, we can build the code.  You can do this whenever you want to rebuild the app as you make changes to it.
 
-* `npm run clean` This command cleans up any previous builds:
-* `source env.sh` This command sets the environmental variables:
-* `./node_modules/.bin/webpack --env=development --progress --profile --colors`  This command builds the app
-* `npm run` This command will start the web server
+* `npm run clean` - This command cleans up any previous builds
+* `source env.sh` - This command sets the environmental variables - **IMPORTANT**: before executing this command, ask admin for the env.sh file, then paste it into root folder of community-app
+* `./node_modules/.bin/webpack --env=development --progress --profile --colors`  - This command builds the app
+* `npm run` - This command will start the web server
 
 ```terminal
-jmgas@DESKTOP-CEFAE6N MINGW64 ~
+copilot@DESKTOP-CEFAE6N MINGW64 ~
 $ cd community-app
 
-jmgas@DESKTOP-CEFAE6N MINGW64 ~/community-app (develop)
+copilot@DESKTOP-CEFAE6N MINGW64 ~/community-app (develop)
 $ npm run clean
-> community-app@1.0.0 clean C:\Users\jmgas\community-app
+> community-app@1.0.0 clean C:\Users\copilot\community-app
 > rimraf build
 
-jmgas@DESKTOP-CEFAE6N MINGW64 ~/community-app (develop)
+copilot@DESKTOP-CEFAE6N MINGW64 ~/community-app (develop)
 $ export NODE_CONFIG_ENV=development
 
-jmgas@DESKTOP-CEFAE6N MINGW64 ~/community-app (develop)
+copilot@DESKTOP-CEFAE6N MINGW64 ~/community-app (develop)
 $ ./node_modules/.bin/webpack--env=development --progress--profile --colors 36% building 221/255 modules 34 active ...app\node_modules\object-assign\index.js
 ```
 
@@ -345,15 +349,18 @@ $ ./node_modules/.bin/webpack--env=development --progress--profile --colors 36% 
 
 To validate, we'll run Chrome without web security to avoid it complaining about the local proxy redirects.
 
-Open a new Git Bash prompt and run:
+Open Chrome and paste the linkf from below, or open a new Git Bash prompt and run:
 
-* `C:\Program Files\Google\Chrome\Application\chrome.exe" --disable-web-security --disable-gpu --disable-features=IsolateOrigins,site-per-process --user-data-dir="C://ChromeDev`
+* `"C:\Program Files\Google\Chrome\Application\chrome.exe" --disable-web-security --disable-gpu --disable-features=IsolateOrigins,site-per-process --user-data-dir="C://ChromeDev"`
+
+Paste this link:
+
+[https://accounts-auth0.topcoder-dev.com/?retUrl=https://local.topcoder-dev.com](https://accounts-auth0.topcoder-dev.com/?retUrl=https://local.topcoder-dev.com)
 
 Once Chrome is running, you should be able to open this link and login with a test user.
 
 * Sample test user: `jgasperMobile12` / `Appirio123`
 
-[https://accounts-auth0.topcoder-dev.com/?retUrl=https://local.topcoder-dev.com](https://accounts-auth0.topcoder-dev.com/?retUrl=https://local.topcoder-dev.com)
 
 
 ![](./images/InitialLoginInChrome.png)
@@ -408,8 +415,8 @@ please update the following components: Switch
 ::ffff:127.0.0.1 > 200 GET /api
 /cdn/public/static-assets/main-1655784239000.Css6.177 ms- https://local.topcoder-dev.com/Mozilla/5.0 (windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) chrome/102/0/0/0 Safari/537.36
 
-::ffff: 127.0.0.1 > Authenticated as: ("https://topcoder-dev.com/roles": ["Topcoder User"], . "https: //topc oder-dev.com/userId": "88778088". ."https://topcoder-dev.com/handle" "jgaspermobile12" ev.com/user_id": "autho|88778088" "https://topcoder-dev.com/tcsso" "https://topcoder "88778088) 83dddf57fe737e45425da484c€6 d26e262b44810ba944668c61f8f42f47e94" lockIP ': false, "nickname' "jgaspermobile12 "https://topcoder-dev.com/active".true,"https://topcoder-dev.com/l "name" "jmgasper+mobile12@gmail.com "picture" "https://s.g avatar.com/avatar/5dzf2479df25f71bb56e3cbc160714c6?5=480&r=pg&d=https%3A%2F%2Fcdn.autho. com%2Favatars Egm.pna,iss" "updated_at' ''2022-06-21T04:08:23.9202"
-"email" "jmgasper+mobile12@gmail.com' "sub" "autho|88778088" "aud": "email verified
+::ffff: 127.0.0.1 > Authenticated as: ("https://topcoder-dev.com/roles": ["Topcoder User"], . "https: //topc oder-dev.com/userId": "88778088". ."https://topcoder-dev.com/handle" "copilot" ev.com/user_id": "autho|88778088" "https://topcoder-dev.com/tcsso" "https://topcoder "88778088) 83dddf57fe737e45425da484c€6 d26e262b44810ba944668c61f8f42f47e94" lockIP ': false, "nickname' "copilot "https://topcoder-dev.com/active".true,"https://topcoder-dev.com/l "name" "copilot@topcoder.com "picture" "https://s.g avatar.com/avatar/5dzf2479df25f71bb56e3cbc160714c6?5=480&r=pg&d=https%3A%2F%2Fcdn.autho. com%2Favatars Egm.pna,iss" "updated_at' ''2022-06-21T04:08:23.9202"
+"email" "copilot@topcoder.com' "sub" "autho|88778088" "aud": "email verified
 ::ffff:127.0.0.1 > 200 GET / 4023.838 ms - https://local.topcoder-dev.com/Mozilla/5.0 (windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) chrome/102/0/0/0 Safari/537.36
 
 ::ffff:127.0.0.1 > Reauth scheduled in 86367.528 seconds
@@ -436,14 +443,14 @@ To open the terminal, click "Activities" and search for "Terminal".  It would pr
 
 ### Install curl and wget
 
-Curl is a basic network utility used when install prerequisites.  
+Curl is a basic network utility used when install prerequisites.
 
 * Open the Terminal app
 * Run `sudo apt install curl`
 
 ```terminal
-jmgasper@jmgasper-desktop:$ sudo apt install curl
-[sudo] password for jmgasper:
+copilot@topcoder-desktop:$ sudo apt install curl
+[sudo] password for copilot:
 Reading package lists... Done
 Building dependency tree... Done
 Reading state information... Done
@@ -477,8 +484,8 @@ wget is used to download files from the internet.  It may already be installed, 
 * Run `sudo apt install wget`
 
 ```terminal
-jmgasper@jmgasper-desktop:$ sudo apt install wget
-[sudo] password for jmgasper:
+copilot@topcoder-desktop:$ sudo apt install wget
+[sudo] password for copilot:
 Reading package lists... Done
 Building dependency tree... Done
 Reading state information... Done
@@ -543,7 +550,7 @@ Chrome is a good default browser to use when developing the community app.  To i
 
 
 ```terminal
-jmgasper@jmgasper-desktop:$ wgethttps://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+copilot@topcoder-desktop:$ wgethttps://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 --2022-06-23 14:34:46-- https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 Resolving dl.google.com (dl.google.com)... 142.250.70.238, 2404:6800:4015:803::200e
 Connecting to dl.google.com (dl.google.com)|142.250.70.238|:443... connected.
@@ -555,8 +562,8 @@ google-chrome-stable_cu100%[==============================>] 81.78M 13.0MB/s in 
 
 2022-06-23 14:34:54 (13.0 MB/s) - 'google-chrome-stable_current_and64.deb' saved [85757216/85757216]
 
-jmgasper@jmgasper-desktop:$ sudo dpkg -i google-chrome-stable_current_amd64.deb
-[sudo] password for jmgasper:
+copilot@topcoder-desktop:$ sudo dpkg -i google-chrome-stable_current_amd64.deb
+[sudo] password for copilot:
 Selecting previously unselected package google-chrome-stable.
 (Reading database ... 160758 files and directories currently installed.)
 Preparing to unpack google-chrome-stable current_amd64.deb ...
@@ -574,14 +581,14 @@ Processing triggers for man-db (2.10.2-1) ...
 
 ### Install Git
 
-Git can be installed directly from the terminal.  
+Git can be installed directly from the terminal.
 
 * Open the Terminal app
 * Run `sudo apt install git`
 
 ```terminal
-jmgasper@jmgasper-desktop:$ sudo apt install git
-[sudo] password for jmgasper:
+copilot@topcoder-desktop:$ sudo apt install git
+[sudo] password for copilot:
 Reading package lists... Done
 Building dependency tree... Done
 Reading state information... Done
@@ -627,13 +634,13 @@ To install nsm run this command:
 * `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash`
 
 ```terminal
-jmgasper@jmgasper-desktop:$ curl-o-https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+copilot@topcoder-desktop:$ curl-o-https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 % Total   % Received       % Xferd     Average     Speed    Time     Time     Time   Current
                                        Dload       Upload   Total    Spent    Left   Speed
 100 15037 100 15037        0     0     27922           0  --:--:-- --:--:-- --:--:-- 27922
 
-=> Downloading nvm from git to '/home/jmgasper/.nvm'
-=> Cloning into '/home/jmgasper/.nvm'...
+=> Downloading nvm from git to '/home/copilot/.nvm'
+=> Cloning into '/home/copilot/.nvm'...
 remote: Enumerating objects: 355, done.
 remote: Counting objects: 100% (355/355), done.
 remote: Compressing objects: 100% (302/302), done.
@@ -644,8 +651,8 @@ Resolving deltas: 100% (39/39), done.
   master
 => Compressing and cleaning up git repository
 
-=> Appending nvm source string to /home/jmgasper/.bashrc
-=> Appending bash completion source string to /home/jmgasper/.bashrc
+=> Appending nvm source string to /home/copilot/.bashrc
+=> Appending bash completion source string to /home/copilot/.bashrc
 => Close and reopen your terminal to start using nvm or run the following to use it now:
 
 export NVM _DIR= "SHOME/.nvm"
@@ -654,14 +661,14 @@ export NVM _DIR= "SHOME/.nvm"
 
 ```
 
-Note that after you have installed nvm you will need to restart your terminal app to ensure the new settings are loaded in.  
+Note that after you have installed nvm you will need to restart your terminal app to ensure the new settings are loaded in.
 
 You can test nvm by running:
 
 * `nvm --version` in the terminal
 
 ```terminal
-jmgasper@jmgasper-desktop:$ nvm --version
+copilot@topcoder-desktop:$ nvm --version
 0.39.1
 ```
 
@@ -675,8 +682,8 @@ We will run these commands in the Terminal app:
 * `sudo apt update`
 
 ```terminal
-jmgasper@jmgasper-desktop:$ sudo apt-add-repository universe
-[sudo] password for jmgasper:
+copilot@topcoder-desktop:$ sudo apt-add-repository universe
+[sudo] password for copilot:
 Adding component(s) 'universe' to all repositories.
 Press [ENTER] to continue or Ctrl-c to cancel.
 Hit:1 http://au.archive.ubuntu.com/ubuntu jammy InRelease
@@ -688,7 +695,7 @@ Get:6 https://dl.google.com/linux/chrome/deb stable/main amd64 Packages [1,078 B
 Fetched 113 kB in 2s (67.9 kB/s)
 Reading package lists... Done
 
-jmgasper@jmgasper-desktop:$ sudo apt update
+copilot@topcoder-desktop:$ sudo apt update
 Hit:1 http://au.archive.ubuntu.com/ubuntu jammy InRelease
 Hit:2 http://au.archive.ubuntu.com/ubuntu jammy-updates InRelease
 Hit:3 http://au.archive.ubuntu.com/ubuntu jammy-backports InRelease
@@ -703,7 +710,7 @@ Reading state information... Done
 
 Then, we can install python 2.7.18:
 
-* `sudo apt install python`
+* `sudo apt install python2`
 
 ```terminal
 20.8 kB]
@@ -752,7 +759,7 @@ Processing triggers for mailcap(3.70+nmu1ubuntu1) ...
 
 ### Hosts file update
 
-We need to edit `/etc/hosts` to add a couple of entries.  We will add these two lines to the end of the file:
+We need to edit `/etc/hosts` to add a couple of entries. We will add these two lines to the end of the file:
 
 ```
 127.0.0.1 local.topcoder-dev.com
@@ -767,7 +774,7 @@ Add the lines above and then save the file, using `sudo`
 
 ```ini
 127.0.0.1 localhost
-127.0.1.1 imgasper-desktop
+127.0.1.1 copilot-desktop
 # The following lines are desirable for IPv6 capable hosts
 ::1       ip6-localhost ip6-loopback
 fe00: :0 ip6-localnet
@@ -785,7 +792,7 @@ The community app requires Node 8.11.2.  You can install it by running this comm
 * `nvm install v8.11.2`
 
 ```terminal
-jmgasper@jmgasper-desktop:$ nvm install v8.11.2
+copilot@topcoder-desktop:$ nvm install v8.11.2
 Downloading and installing node v8.11.2.
 Downloading https://nodeis.org/dist/v8.11.2/node-v8.11.2-linux-x64.tar.xz...
 #################################################################################### 100.0%
@@ -797,30 +804,30 @@ Creating default alias: default -> v8.11.2
 
 ### Install the proxy and run it
 
-We need to proxy `https` requests through a local proxy since we don't have a valid SSL key.  To do this, we use the `local-ssl-proxy` package.  You can install this in the Terminal app using these commands.  
+We need to proxy `https` requests through a local proxy since we don't have a valid SSL key.  To do this, we use the `local-ssl-proxy` package.  You can install this in the Terminal app using these commands:
 
 * `npm i -g local-ssl-proxy` You only have to run this once to install the package
+
+**NOTE** - You should run the proxy in a *separate* Terminal window or tab, to ensure it's always running.
 * `local-ssl-proxy -n local.topcoder-dev.com -s 3001 -t 3000` Every time you want to run the proxy or work on the community app, you will need to run this command
 
-**NOTE** - You should run the proxy in a *separate* Terminal window or tab, to ensure it's always running.  
-
 ```terminal
-jmgasper@jmgasper-desktop:$ local-ssl-proxy -n local.topcoder-dev.com -s 3001 -t 3000
+copilot@topcoder-desktop:$ local-ssl-proxy -n local.topcoder-dev.com -s 3001 -t 3000
 Started proxy: https://local.topcoder-dev.com:3001 -> http://local.topcoder-dev.com:3000
 ```
 
 ### Check out the code
 
-Now that all dependencies are set up, we can check out the code.  Note that this command will check out the community-app source code into a directory named `community-app`.  
+Now that all dependencies are set up, we can check out the code.  Note that this command will check out the community-app source code into a directory named `community-app`.
 
-Run this command on the Git Bash command line:
+Run this command on the Git Bash command line (you can open a Linux terminal or VS Code terminal and run these commands directly):
 
 ```terminal
 git clone https://github.com/topcoder-platform/community-app.git
 ```
 
 ```terminal
-jmgasper@jmgasper-desktop:$ git clone https://github.com/topcoder-platform/community-app.git
+copilot@topcoder-desktop:$ git clone https://github.com/topcoder-platform/community-app.git
 Cloning into 'community-app'
 remote: Enumerating objects: 88298, done.
 remote: Counting objects: 100% (1102/1102), done.
@@ -840,9 +847,9 @@ Now that we have the code, we can build it on the Terminal command line.  The fi
 * `nvm use` will warn you to install v8.11.2
 
 ```terminal
-jmgasper@jmgasper-desktop:$ cd community-app
-jmgasper@jmgasper-desktop:~/community-app$ nvm use
-Found '/home/imgasper/community-app/.nvmrc' with version <v8.11.2>
+copilot@topcoder-desktop:$ cd community-app
+copilot@topcoder-desktop:~/community-app$ nvm use
+Found '/home/copilot/community-app/.nvmrc' with version <v8.11.2>
 Now using node v8.11.2 (npm v5.6.0)
 ```
 
@@ -851,7 +858,7 @@ Once we have the proper Node version installed (8.11.2), we will install the dep
 
 **NOTE** this is a command that will take a long time and will build numerous dependencies.  This is the command that is most likely to fail.  If you have trouble here, make sure to copy / paste the entire output of the command into the forum so the copilot can help.
 
-* `npm i` 
+* `npm i`
 
 **NOTE** - If this appears to be stuck, try deleting the `package-lock.json` file and starting `npm i` again.  The `package-lock.json` will get regenerated as the modules are installed.
 
@@ -883,10 +890,10 @@ added 6 packages in 297.525s
 
 With the dependencies now successfully installed, we can build the code.  You can do this whenever you want to rebuild the app as you make changes to it.
 
-* `npm run clean` This command cleans up any previous builds: 
-* `source env.sh` This command sets the environmental variables: 
-* `npm run build`  This command builds the app
-* `npm run start` This command will start the web server
+* `npm run clean` - This command cleans up any previous builds
+* `source env.sh` - This command sets the environmental variables - **IMPORTANT**: before executing this command, ask admin for the env.sh file, then paste it into root folder of community-app
+* `npm run build` - This command builds the app
+* `npm run start` - This command will start the web server
 
 ```terminal
         ModuleConcatenation bailout: Module is not an ECMAScript module
@@ -939,15 +946,12 @@ Open a new Terminal app window and run:
 
 * `google-chrome --disable-web-security --disable-gpu --disable-features=IsolateOrigins,site-per-process --user-data-dir="~/ChromeDev"`
 
-Once Chrome is running, you should be able to open this link and login with a test user.
-
-* Sample test user: `jgasperMobile12` / `Appirio123`
+Once Chrome is running, you should be able to open this link and login with a test user:
 
 https://accounts-auth0.topcoder-dev.com/?retUrl=https://local.topcoder-dev.com:3001
-
+* Sample test user: `jgasperMobile12` / `Appirio123`
 
 ![](./images/InitialLoginInChrome.png)
-
 
 You will need to tell Chrome to ignore the self-signed certificate warning by clicking the "Proceed to local.topcoder-dev.com" link
 
@@ -972,7 +976,7 @@ Gecko) Chrome/103.0.5060.53 Safari/537.36
 
 ::ffff: 127.0.0.1 > 200 GET /api/cdn/public/static-assets/main-1655963662307.js 8.031 ms - https://local.topcoder-dev.com: 3001/ Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) chrome/103.0.5060.53 Safari/537.36
 
-::ffff:127.0.0.1 > Authenticated as: ("https: //topcoder-dev.com/roles": ["Topcoder User"], "https://topcoder-dev.com/userId": "88778088", "https://topcoder-dev.com/handle": "jgaspermobile12", "https://topcoder-dev.com/user id": "autho|88778088","https://topcoder-dev.com/tesso":"88778088|83dddf57fe737e45425da484ce6d26e262644810ba944668C61f8f42f47eg4". "https://topcoder-dev.com/active": true, "https://topcoder-dev.com/blockIP": false, "nickname": "jgaspermobile12" "name": "jmgasper+mobile1z@gmail.com", "picture": "https: //s.gravatar.com/avatar/5d2f2479df25f71bb56e3cbc160714c6?s=480&r=pg&d=https%3A%2F%2Fcdn.autho.com2Favatars%2Fjm.png", "updated at": "2022-06-23T06:11:06.5917", "email": "jmgasper+mobile12@gmail.com", "email verified": true, "iss":"https://auth.topcoder-dev.com/", "sub": "autho|88778088", "aud": "BXWXUWnilVUPdN01t2Se29Tw2ZYNGZVH", "iat":1655964672, "exp":1656051072, "nonce": "YVhusxhrSzlack5MMlByUXROb3FnTlBRMmdOdFZlMFN2c0VNczBXRlEwMw==", "userId": 88778088, "handle": "jgaspermobile12",
+::ffff:127.0.0.1 > Authenticated as: ("https: //topcoder-dev.com/roles": ["Topcoder User"], "https://topcoder-dev.com/userId": "88778088", "https://topcoder-dev.com/handle": "copilot", "https://topcoder-dev.com/user id": "autho|88778088","https://topcoder-dev.com/tesso":"88778088|83dddf57fe737e45425da484ce6d26e262644810ba944668C61f8f42f47eg4". "https://topcoder-dev.com/active": true, "https://topcoder-dev.com/blockIP": false, "nickname": "copilot" "name": "copilot@topcoder.com", "picture": "https: //s.gravatar.com/avatar/5d2f2479df25f71bb56e3cbc160714c6?s=480&r=pg&d=https%3A%2F%2Fcdn.autho.com2Favatars%2Fjm.png", "updated at": "2022-06-23T06:11:06.5917", "email": "copilot@topcoder.com", "email verified": true, "iss":"https://auth.topcoder-dev.com/", "sub": "autho|88778088", "aud": "BXWXUWnilVUPdN01t2Se29Tw2ZYNGZVH", "iat":1655964672, "exp":1656051072, "nonce": "YVhusxhrSzlack5MMlByUXROb3FnTlBRMmdOdFZlMFN2c0VNczBXRlEwMw==", "userId": 88778088, "handle": "copilot",
 "roles" : ["Topcoder User"]}
 
 ::ffff: 127.0.0.1 > 200 POST /community-app-assets/api/logger 1.438 ms - https://local.topcoder-dev.com:3001/ Mozilla/5.0 (X11; Linux x86 64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.53 Safari/537.36
@@ -989,7 +993,7 @@ You can also access a link on the community app page, like the one for the chall
 
 ### Install XCode
 
-XCode can be installed directly from the Mac App Store.  Note that XCode is a large application and will take up a lot of disk space.  
+XCode can be installed directly from the Mac App Store.  Note that XCode is a large application and will take up a lot of disk space.
 
 [https://apps.apple.com/au/app/xcode/id497799835?mt=12](https://apps.apple.com/au/app/xcode/id497799835?mt=12)
 
@@ -1027,7 +1031,7 @@ We can install it by:
 
 ```terminal
 Last login: Wed Jul 6 16:33:40 on console
-justingasper@justingaspers-Virtual-Machine ~ % /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+copilot@topcoder-Virtual-Machine ~ % /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 ==> Checking for 'sudo' access (which may request your password)...
 Password:
@@ -1062,13 +1066,13 @@ Press RETURN/ENTER to continue or any other key to abort:
 ==> /usr/bin/sudo /bin/chmod ugarwx /opt/homebrew/bin /opt/homebrew/etc /opt/homebrew/include /opt/homebrew/lib /opt/homebrew/sbin /opt/homebrew/share /opt/homebrew/var /opt/homebrew/opt /opt/homebrew/share/zsh /opt/homebrew/share/zsh/site-functions /opt/homebrew/var/homebrew /opt/homebrew/var/homebrew/linked /opt/homebrew/Cellar
 /opt/homebrew/Caskroom/opt/homebrew/Frameworks
 ==> /usr/bin/sudo /bin/chmod go-w/opt/homebrew/share/zsh/opt/homebrew/share/zsh/site-functions
-==> /usr/bin/sudo /usr/sbin/chown justingasper /opt/homebrew/bin /opt/homebrew/etc /opt/homebrew/include /opt/homebrew/lib /opt/homebrew/sbin /opt/homebrew/share /opt
+==> /usr/bin/sudo /usr/sbin/chown copilot /opt/homebrew/bin /opt/homebrew/etc /opt/homebrew/include /opt/homebrew/lib /opt/homebrew/sbin /opt/homebrew/share /opt
 /homebrew/var/opt/homebrew/opt/opt/homebrew/share/zsh/opt/homebrew/share/zsh/site-functions/opt/homebrew/var/homebrew/opt/homebrew/var/homebrew/linked/opt/homebrew/Cellar/opt/homebrew/Caskroom/opt/homebrew/Frameworks
 ==> /usr/bin/sudo /usr/bin/chgrp admin /opt/homebrew/bin /opt/homebrew/etc /opt/homebrew/include /opt/homebrew/lib /opt/homebrew/sbin /opt/homebrew/share /opt/homebrew/var/opt/homebrew/opt/opt/homebrew/share/zsh/opt/homebrew/share/zsh/site-functions/opt/homebrew/var/homebrew/opt/homebrew/var/homebrew/linked/opt/homebrew/Cellar/opt/homebrew/Caskroom/opt/homebrew/Frameworks
-==> /usr/bin/sudo /usr/sbin/chown -R justingasper:admin /opt/homebrew
-==> /usr/bin/sudo /bin/mkdir -p /Users/justingasper/Library/Caches/Homebrew
-==> /usr/bin/sudo /bin/chmod g+rwx /Users/justingasper/Library/Caches/Homebrew
-==> /usr/bin/sudo /usr/sbin/chown -R justingasper /Users/justingasper/Library/Caches/Homebrew
+==> /usr/bin/sudo /usr/sbin/chown -R copilot:admin /opt/homebrew
+==> /usr/bin/sudo /bin/mkdir -p /Users/copilot/Library/Caches/Homebrew
+==> /usr/bin/sudo /bin/chmod g+rwx /Users/copilot/Library/Caches/Homebrew
+==> /usr/bin/sudo /usr/sbin/chown -R copilot /Users/copilot/Library/Caches/Homebrew
 ==> Searching online for the Command Line Tools
 ==> /sr/bin/sudo /usr/bin/touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
 ```
@@ -1090,7 +1094,7 @@ To install nvm run this command:
 
 ```terminal
 Last login: Thu Jul 7 16:40:44 on ttys000
-justingasper@justingaspers-Virtual-Machine ~ % brew install nvm
+copilot@topcoder-Virtual-Machine ~ % brew install nvm
 ==> Downloading https://ghcr.io/v2/homebrew/core/nvm/manifests/0.39.1_
 ######################################################### 100.0%
 ==>Downloadinghttps://ghcr.io/v2/homebrew/core/nvm/blobs/sha256:6014c8a2bf9421
@@ -1132,7 +1136,7 @@ export NVM DIR="$HOME/.nvm"
 [ -s "/opt/homebrew/opt/nvm/etc/bash completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash completion.d/nvm" # This loads nvm bash completion
 ```
 
-Note that after you have installed `nvm` and updated your `.zshrc` file you will need to restart your terminal app to ensure the new settings are loaded in.  
+Note that after you have installed `nvm` and updated your `.zshrc` file you will need to restart your terminal app to ensure the new settings are loaded in.
 
 You can test nvm by running:
 
@@ -1140,7 +1144,7 @@ You can test nvm by running:
 
 ```terminal
 Last login: Fri Jul 8 14:10:49 on ttys000
-justingasper@justingaspers-Virtual-Machine ~ % nvm --version
+copilot@topcoder-Virtual-Machine ~ % nvm --version
 0.39.1
 ```
 ### Install python 2.7.18
@@ -1149,12 +1153,12 @@ You will need Python 2 to run community app.  If you are on newer macOS versions
 
 To install Python 2 on new macOS versions (12+):
 
-* Install the Python env manager: 
+* Install the Python env manager:
   * `brew install pyenv`
 
 ```terminal
 Last login: Fri Jul 8 14:10:59 on ttys000
-justingasper@justingaspers-Virtual-Machine ~ % brew install pyenv
+copilot@topcoder-Virtual-Machine ~ % brew install pyenv
 ==> Downloading https://ghcr.io/v2/homebrew/core/m4/manifests/1.4.19
 ######################################################### 100.0%
 ==> Downloading https://ghcr.io/v2/homebrew/core/m4/blobs/sha256:89fa0d7d946f7c
@@ -1169,12 +1173,12 @@ justingasper@justingaspers-Virtual-Machine ~ % brew install pyenv
 #=＃=＃
 ```
 
-* Install Python 2: 
+* Install Python 2:
   * `pyenv install 2.7.18`
 
 ```terminal
 Last login: Fri Jul 8 14:13:11 on ttys000
-justingasper@justingaspers-Virtual-Machine ~ % pyenv install 2.7.18
+copilot@topcoder-Virtual-Machine ~ % pyenv install 2.7.18
 python-build: use openssl01.1 from homebrew
 python-build: use readline from homebrew
 Downloading Python-2.7.18.tar.xz.
@@ -1199,7 +1203,7 @@ python-build: use readline from homebrew
 python-build: use zlib from xcode sdk
 ```
 
-* Tell the community app where to find the Python 2 version.  You'll need to either set this in your `.zshrc` file or run it whenever you want to build the community app:  
+* Tell the community app where to find the Python 2 version.  You'll need to either set this in your `.zshrc` file or run it whenever you want to build the community app:
   * `export PYTHON=$HOME/.pyenv/versions/2.7.18/bin/python`
   * `export PATH=$PATH:$HOME/.pyenv/versions/2.7.18/bin`
 
@@ -1213,7 +1217,7 @@ export PATH=$PATH: $HOME/.pyenv/versions/2.7.18/bin
 
 ### Hosts file update
 
-We need to edit `/etc/hosts` to add a couple of entries.  The goal is that `local.topcoder-dev.com` will point to our local machine, to aid in login.  
+We need to edit `/etc/hosts` to add a couple of entries.  The goal is that `local.topcoder-dev.com` will point to our local machine, to aid in login.
 
 We will add these two lines to the end of the file:
 
@@ -1227,7 +1231,7 @@ To do this, open up the `/etc/hosts` file in VSCode:
 Add the lines above and then save the file, using `sudo`
 
 ```sh
-## 
+##
 # Host Database
 #
 # localhost is used to configure the loopback interface
@@ -1248,7 +1252,7 @@ The community app requires Node 8.11.2.  You can install it by running this comm
 
 ```terminal
 Last login: Fri Jul 8 14:14:18 on ttys001
-justingasper@justingaspers-Virtual-Machine ~ % nvm install v8.11.2
+copilot@topcoder-Virtual-Machine ~ % nvm install v8.11.2
 Downloading
 and installing node v8.11.2.
 Downloading https://nodejs.org/dist/v8.11.2/node-v8.11.2-darwin-x64.tar.xz..
@@ -1257,30 +1261,30 @@ Downloading https://nodejs.org/dist/v8.11.2/node-v8.11.2-darwin-x64.tar.xz..
 
 ### Install the proxy and run it
 
-We need to proxy `https` requests through a local proxy since we don't have a valid SSL key.  To do this, we use the `local-ssl-proxy` package.  You can install this in the Terminal app using these commands.  
+We need to proxy `https` requests through a local proxy since we don't have a valid SSL key.  To do this, we use the `local-ssl-proxy` package.  You can install this in the Terminal app using these commands.
 
 * `npm i -g local-ssl-proxy` You only have to run this once to install the package
 * `local-ssl-proxy -n local.topcoder-dev.com -s 3001 -t 3000` Every time you want to run the proxy or work on the community app, you will need to run this command
 
-**NOTE** - You should run the proxy in a *separate* Terminal window or tab, to ensure it's always running.  
+**NOTE** - You should run the proxy in a *separate* Terminal window or tab, to ensure it's always running.
 
 ```terminal
 Last login: Fri Jul 8 14:18:14 on ttys000
-justingasper@justingaspers-Virtual-Machine ~ % pm i -9 local-ssl-proxy
+copilot@topcoder-Virtual-Machine ~ % pm i -9 local-ssl-proxy
 npm WARN deprecated nomnom@1.8.1: Package no longer supported. Contact support@npmjs.com for more info.
 npm WARN notice [SECURITY] underscore has the following vulnerability: 1 high. Go here for more details: https://github.com/advisories?query=underscore - Run npm i npm@latest -g to upgrade your pm version, and then `npm audit` to get more info.
-/Users/justingasper/.nvm/versions/node/v8.11.2/bin/local-ssl-proxy -> /Users/justingasper/.nvm/versions/node/v8.11.2/lib/node_modules/local-ssl-proxy/bin/local-ssl-proxy
+/Users/copilot/.nvm/versions/node/v8.11.2/bin/local-ssl-proxy -> /Users/copilot/.nvm/versions/node/v8.11.2/lib/node_modules/local-ssl-proxy/bin/local-ssl-proxy
 + local-ssl-proxy@1.3.0
 added 18 packages in 3.944s
 ```
 
 ```terminal
-justingasper@justingaspers-Virtual-Machine ~ % local-ssl-proxy -n local.topcoder-dev.com
+copilot@topcoder-Virtual-Machine ~ % local-ssl-proxy -n local.topcoder-dev.com
 Started proxy: https://local.topcoder-dev.com:3001 > http://local.topcoder-dev.com:3000
 ```
 ### Check out the code
 
-Now that all dependencies are set up, we can check out the code.  Note that this command will check out the community-app source code into a directory named `community-app`.  
+Now that all dependencies are set up, we can check out the code.  Note that this command will check out the community-app source code into a directory named `community-app`.
 
 Run this command on the Git Bash command line:
 
@@ -1288,7 +1292,7 @@ Run this command on the Git Bash command line:
 
 ```terminal
 Last login: Fri Jul 8 14:19:26 on ttys000
-justingasper@justingaspers-Virtual-Machine ~ % git clone https://github.com/topcoder-platform/community-app.git
+copilot@topdcoder-Virtual-Machine ~ % git clone https://github.com/topcoder-platform/community-app.git
 Cloning into 'community-app'...
 remote: Enumerating objects: 88794, done.
 remote: Counting objects: 100% (1606/1606), done.
@@ -1305,53 +1309,53 @@ Now that we have the code, we can build it on the Terminal command line.  The fi
 
 ```terminal
 Last login: Fri Jul 8 14:41:06 on ttys001
-justingasper@justingaspers-Virtual-Machine ~ % cd community-app
-justingasper@justingaspers-Virtual-Machine community-app % nvm use
-Found '/Users/justingasper/community-app/.nvmrc' with version <v8.11.2>
+copilot@topcoder-Virtual-Machine ~ % cd community-app
+copilot@topcoder-Virtual-Machine community-app % nvm use
+Found '/Users/copilot/community-app/.nvmrc' with version <v8.11.2>
 Now using node v8.11.2 (npm v5.6.0)
-justingasper@justingaspers-Virtual-Machine community-app %
+copilot@topcoder-Virtual-Machine community-app %
 ```
 
 Once we have the proper Node version installed (8.11.2), we will install the dependencies:
 
 **NOTE** this is a command that will take a long time and will build numerous dependencies.  This is the command that is most likely to fail.  If you have trouble here, make sure to copy / paste the entire output of the command into the forum so the copilot can help.
 
-* `npm i` 
+* `npm i`
 
 **NOTE** - If this appears to be stuck, try deleting the `package-lock.json` file and starting `npm i` again.  The `package-lock.json` will get regenerated as the modules are installed.
 
 ```terminal
 Last login: Fri Jul 8 14:41:06 on ttys001
-justingasper@justingaspers-Virtual-Machine ~ % cd community-app
-justingasper@justingaspers-Virtual-Machine community-app % nvm use
-Found '/Users/justingasper/community-app/.nvmrc' with version <v8.11.29>
+copilot@topcoder-Virtual-Machine ~ % cd community-app
+copilot@topcoder-Virtual-Machine community-app % nvm use
+Found '/Users/copilot/community-app/.nvmrc' with version <v8.11.29>
 Now using node v8.11.2 (npm v5.6.0)
-justingasper@justingaspers-Virtual-Machine community-app % npm i
+copilot@topcoder-Virtual-Machine community-app % npm i
 ((▋▋▋▋▋▋▋▋▋▋▋▋▋▋                )): loadIdealTree:loadAllDepsIntoIdealTree: sill install loadIdealTree
 ```
 
 With the dependencies now successfully installed, we can build the code.  You can do this whenever you want to rebuild the app as you make changes to it.
 
-* `npm run clean` This command cleans up any previous builds: 
-* `source env.sh` This command sets the environmental variables: 
+* `npm run clean` This command cleans up any previous builds:
+* `source env.sh` This command sets the environmental variables:
 * `npm run build:dev`  This command builds the app
 * `npm run dev` This command will start the web server
 
 ```terminal
 cd Last login: Fri Jul 8 15:01:47 on ttys004
-justingasper@justingaspers-Virtual-Machine ~ % cd community-app
-justingasper@justingaspers-Virtual-Machine community-app % npm run clean
+copilot@topcoder-Virtual-Machine ~ % cd community-app
+copilot@topcoder-Virtual-Machine community-app % npm run clean
 sour
-> community-app1.0.0 clean /Users/justingasper/community-app
+> community-app1.0.0 clean /Users/copilot/community-app
 > rimraf build
 
-justingasper@justingaspers-Virtual-Machine community-app % source env.sh
-justingasper@justingaspers-Virtual-Machine community-app % npm run build
+copilot@topcoder-Virtual-Machine community-app % source env.sh
+copilot@topcoder-Virtual-Machine community-app % npm run build
 
-> community-app©1.0.0 build /Users/justingasper/community-app
+> community-app©1.0.0 build /Users/copilot/community-app
 > npm run clean && ./node_modules/.bin/webpack --env=production --progress --profile --colors --display-optimization-bailout
 
-> community-app1.0.0 clean /Users/justingasper/community-app
+> community-app1.0.0 clean /Users/copilot/community-app
 > rimraf build
 67% building 1394/1448 modules 54 active ...core-js/modules/es7.reflect.metadata.js
 ```
@@ -1405,7 +1409,7 @@ To validate, we'll run Chrome without web security to avoid it complaining about
 
 Open a new Terminal app window and run:
 
-* `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --disable-web-security --ignore-certificate-errors --user-data-dir=/tmp/`
+* `/Applications/Google\Chrome.app/Contents/MacOS/Google\Chrome --disable-web-security --ignore-certificate-errors --user-data-dir=/tmp/`
 
 Once Chrome is running, you should be able to open this link and login with a test user.
 
@@ -1422,7 +1426,7 @@ After successful login, you should see:
 
 ![](./images/SuccessfulLogin.png)
 
-**Validation** 
+**Validation**
 
 You can also access a link on the community app page, like the one for the challenge listings:
 
