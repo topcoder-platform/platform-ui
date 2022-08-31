@@ -7,6 +7,7 @@ export interface PlatformRoute {
     element: JSX.Element
     hidden?: boolean
     memberOnly?: boolean
+    rolesRequired?: Array<string>
     route: string
     title?: string
 }
