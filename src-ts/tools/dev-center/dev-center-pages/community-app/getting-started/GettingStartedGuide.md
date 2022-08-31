@@ -8,7 +8,12 @@ This document covers the Windows 10, Linux and MacOS setup of the development en
 ### Install Visual Studio Community 2013
 
 [https://my.visualstudio.com/Downloads?q=visual%20studio%202013](https://my.visualstudio.com/Downloads?q=visual%20studio%202013)
-or a premium version: [https://visualstudio.microsoft.com/vs/older-downloads/](https://visualstudio.microsoft.com/vs/older-downloads/) by clicking Donwload button for Visual Studio 2013 and Other Products
+
+or a premium version: 
+
+[https://visualstudio.microsoft.com/vs/older-downloads](https://visualstudio.microsoft.com/vs/older-downloads)
+
+by clicking Donwload button for "Visual Studio 2013 and Other Products"
 
 When installing
 
