@@ -94,11 +94,9 @@ const ProgressAction: FC<ProgressActionProps> = (props: ProgressActionProps) => 
                         <LearningHat />
                         <h4 className='details'>Congratulations!</h4>
                     </div>
-                    {!myInProgressCertifications.length && (
-                        <span className='mobile-hide'>
-                            {allMyLearningsLink}
-                        </span>
-                    )}
+                    <span className='mobile-hide'>
+                        {allMyLearningsLink}
+                    </span>
                 </div>
                 <MyCourseCompletedCard
                     certification={certificationsById[certToDisplay.certificationId]}
