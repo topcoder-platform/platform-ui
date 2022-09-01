@@ -46,7 +46,7 @@ const ProgressAction: FC<ProgressActionProps> = (props: ProgressActionProps) => 
     ), [allCertifications])
 
     // we only want to display the last course that was acted upon
-    const mostRecentIsCompleted: boolean = myInProgressCertifications?.[0]?.updatedAt < myCompletedCertifications?.[0]?.updatedAt
+    const mostRecentIsCompleted: boolean = myCompletedCertifications?.[0]?.updatedAt > (myInProgressCertifications?.[0]?.updatedAt || 0)
 
     function renderInProgress(): JSX.Element {
 
