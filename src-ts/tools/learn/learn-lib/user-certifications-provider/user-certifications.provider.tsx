@@ -50,12 +50,16 @@ export function useUserCertifications(): UserCertificationsProviderData {
                     return
                 }
 
-                const completed: Array<UserCertificationCompleted> = myCertifications
+                const completed: ReadonlyArray<UserCertificationCompleted> = myCertifications
                     .filter(c => c.status === UserCertificationProgressStatus.completed)
                     .map(c => c as UserCertificationCompleted)
-                const inProgress: Array<UserCertificationInProgress> = myCertifications
+                    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+
+                const inProgress: ReadonlyArray<UserCertificationInProgress> = myCertifications
                     .filter(c => c.status === UserCertificationProgressStatus.inProgress)
                     .map(c => c as UserCertificationInProgress)
+                    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+
                 setState((prevState) => ({
                     ...prevState,
                     completed,

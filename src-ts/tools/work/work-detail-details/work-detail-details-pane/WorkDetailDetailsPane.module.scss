@@ -4,7 +4,7 @@
     display: flex;
     align-items: flex-end;
     cursor: pointer;
-    margin: $pad-xxl 0 $pad-xxxl 0;
+    margin: $space-xxl 0 $space-xxxl 0;
 
     .header-content {
         flex: 1;
@@ -18,8 +18,8 @@
         .link {
             color: $link-blue-dark;
             cursor: pointer;
-            margin-left: $pad-md;
-            margin-top: $pad-xs;
+            margin-left: $space-md;
+            margin-top: $space-xs;
             text-transform: none;
     
             &:hover {
@@ -41,14 +41,14 @@
 }
 
 .detail {
-    margin-bottom: $pad-xxl;
+    margin-bottom: $space-xxl;
     white-space: pre-wrap;
     @include font-black-100;
 
     .title {
         @include font-barlow;
         display: flex;
-        padding-bottom: $pad-sm;
+        padding-bottom: $space-sm;
     }
 
     .content {

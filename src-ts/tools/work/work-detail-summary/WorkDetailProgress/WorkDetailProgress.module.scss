@@ -1,20 +1,20 @@
 @import "../../../../lib/styles/includes";
 
 .progress-container {
-    margin-bottom: calc($pad-lg + $pad-xxl);
-    padding: $pad-lg $pad-xxl $pad-xxl;
-    border-radius: $pad-sm;
+    margin-bottom: calc($space-lg + $space-xxl);
+    padding: $space-lg $space-xxl $space-xxl;
+    border-radius: $space-sm;
     @extend .bg-black-5;
 
     h3 {
-        margin-bottom: $pad-lg;
+        margin-bottom: $space-lg;
         color: $black-100;
     }
 
     .progress {
         display: flex;
         justify-content: space-between;
-        margin-top: calc($pad-lg + $pad-xxl);
-        margin-left: calc($pad-xxxxl - $border);
+        margin-top: calc($space-lg + $space-xxl);
+        margin-left: calc($space-xxxxl - $border);
     }
 }

@@ -1,17 +1,17 @@
 @import '../variables/spacing';
 
 @mixin pagePaddings {
-    padding-left: $pad-xxxxl;
-    padding-right: $pad-xxxxl;
+    padding-left: $space-xxxxl;
+    padding-right: $space-xxxxl;
 
     @include ltemd {
-        padding-left: $pad-xxl;
-        padding-right: $pad-xxl;
+        padding-left: $space-xxl;
+        padding-right: $space-xxl;
     }
     
     @include xxs {
-        padding-left: $pad-lg;
-        padding-right: $pad-lg;
+        padding-left: $space-lg;
+        padding-right: $space-lg;
     }
 }
 

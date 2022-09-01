@@ -1,1 +1,4 @@
-export { getAndSetForWorkItemsAsync as messageGetAndSetForWorkItemsAsync  } from './message.functions'
+export {
+    getAndSetForWorkItemsAsync as messageGetAndSetForWorkItemsAsync,
+    getUnreadCountAsync as messageGetUnreadCountAsync,
+} from './message.functions'

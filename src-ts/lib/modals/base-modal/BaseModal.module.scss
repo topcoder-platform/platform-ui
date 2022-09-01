@@ -12,8 +12,8 @@
 .modal-body {
     flex: 1 1 auto;
     overflow: auto;
-    margin: 0 -1*$pad-xxxxl -1*$pad-xxxxl;
-    padding: 0 $pad-xxxxl $pad-xxxxl;
+    margin: 0 -1*$space-xxxxl -1*$space-xxxxl;
+    padding: 0 $space-xxxxl $space-xxxxl;
     
     display: flex;
     flex-direction: column;
@@ -29,11 +29,11 @@
     }
 
     @include ltemd {
-        margin: 0 -1*$pad-lg -1*$pad-lg;
-        padding: 0 $pad-lg $pad-lg;
+        margin: 0 -1*$space-lg -1*$space-lg;
+        padding: 0 $space-lg $space-lg;
     }
 
     :global(.button-container)  {
-        margin-top: $pad-sm;
+        margin-top: $space-sm;
     }
 }

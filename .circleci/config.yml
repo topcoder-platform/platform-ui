@@ -63,6 +63,7 @@ build_configuration_fetch: &build_configuration_fetch
     command: |
       ./awsconfiguration.sh $DEPLOY_ENV
       ./buildenv.sh -e $DEPLOY_ENV -b ${LOGICAL_ENV}-${APPNAME}-buildvar
+      aws s3 cp s3://tc-platform-${LOGICAL_ENV}/securitymanager/${LOGICAL_ENV}-platform-ui.env ./.env
 
 lint_steps: &lint_steps
     # Initialization.
@@ -146,6 +147,35 @@ jobs:
       APPNAME: "platform-ui-mvp"
     steps: *deploy_steps
 
+  # Test job for the cases when we don not need deployment.
+  e2e-test:
+    docker:
+      - image: cypress/browsers:node16.14.2-slim-chrome100-ff99-edge
+    steps:
+      - checkout
+      - restore_cache:
+          key: test-node-modules-{{ checksum "yarn.lock" }}
+      - run:
+          name: Config Git
+          command: git config --global url."https://git@".insteadOf git://
+      - run:
+          name: Install Dependencies
+          command: yarn install
+          no_output_timeout: 20m
+      - run:
+          name: Install Cypress Binary
+          command: yarn cypress install
+      - run:
+          name: Build the application
+          command: yarn build
+          no_output_timeout: 20m
+      - save_cache:
+          key: test-node-modules-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+            - /root/.cache/Cypress
+      - run: yarn cy:ci
+
 workflows:
   version: 2
   build:
@@ -171,6 +201,9 @@ workflows:
               ignore:
                 - master
 
+      - e2e-test:
+          context : org-global
+
       - build-prod:
           context : org-global
           filters:
@@ -182,6 +215,7 @@ workflows:
           context : org-global
           requires:
             - build-dev
+            - e2e-test
           filters: 
             branches:
               only:

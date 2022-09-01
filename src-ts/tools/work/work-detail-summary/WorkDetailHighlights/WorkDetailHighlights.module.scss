@@ -1,12 +1,12 @@
 @import '../../../../lib/styles/includes';
 @import '../../../../lib/styles/typography';
 
-$icon-size: calc($pad-xxl * 2);
+$icon-size: calc($space-xxl * 2);
 
 .highlights-container {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    margin-bottom: $pad-xxl;
+    margin-bottom: $space-xxl;
 
     .highlight {
         display: flex;
@@ -15,7 +15,7 @@ $icon-size: calc($pad-xxl * 2);
         align-items: center;
         text-align: center;
         margin-right: calc($border-xs * -1);
-        padding: $pad-lg;
+        padding: $space-lg;
         border-left: $border-xs solid $black-10;
         border-right: $border-xs solid $black-10;
 
@@ -33,7 +33,7 @@ $icon-size: calc($pad-xxl * 2);
 
         h4 {
             border: none;
-            padding: $pad-xl 0 0 0;
+            padding: $space-xl 0 0 0;
         }
 
         .info {

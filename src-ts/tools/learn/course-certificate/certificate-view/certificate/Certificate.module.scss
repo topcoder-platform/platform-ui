@@ -8,7 +8,7 @@
 
 .details {
     width: 55%;
-    padding: calc($pad-mx + $pad-lg);
+    padding: calc($space-mx + $space-lg);
     display: flex;
     flex-direction: column;
 
@@ -23,7 +23,7 @@
         font-size: 48px;
         line-height: 50px;
         color: $tc-black;
-        margin-top: $pad-sm;
+        margin-top: $space-sm;
     }
 
     h1 {
@@ -78,13 +78,13 @@
 }
 
 .username {
-    margin-top: calc($pad-mx + $pad-sm);
+    margin-top: calc($space-mx + $space-sm);
 }
 
 .tc-handle {
     color: $turq-140;
 
-    margin-top: $pad-xl;
+    margin-top: $space-xl;
 }
 
 .badges {
@@ -131,7 +131,7 @@
 .divider {
     width: $border;
     background: $black-10;
-    margin: 0 $pad-xxxxl;
+    margin: 0 $space-xxxxl;
 }
 
 .vendor {
@@ -144,7 +144,7 @@
 }
 
 .vendor-logo {
-    margin-top: $pad-sm;
+    margin-top: $space-sm;
     display: flex;
     justify-content: flex-end;
     

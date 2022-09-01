@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
-import { getCourseAsync } from '../courses-provider/courses-functions'
+import { courseGetAsync } from '../courses-provider'
 
 import { LearnLesson } from './learn-lesson.model'
 import { LearnModule } from './learn-module.model'
@@ -35,43 +35,45 @@ export function useLessonProvider(
             loading: true,
         }))
 
-        getCourseAsync(provider, course).then((courseData) => {
-            if (!mounted) {
-                return
-            }
+        courseGetAsync(provider, course)
+            .then((courseData) => {
 
-            const moduleData: LearnModule|undefined = courseData?.modules.find(m => m.key === module)
-            const lessonData: LearnLesson|undefined = moduleData?.lessons.find(l => l.dashedName === lesson)
+                if (!mounted) {
+                    return
+                }
 
-            const lessonUrl: string = [
-                'learn',
-                courseData?.key ?? course,
-                module,
-                lesson,
-            ].filter(Boolean).join('/')
+                const moduleData: LearnModule | undefined = courseData?.modules.find(m => m.key === module)
+                const lessonData: LearnLesson | undefined = moduleData?.lessons.find(l => l.dashedName === lesson)
 
-            setState((prevState) => ({
-                ...prevState,
-                lesson: lessonData && {
-                    ...lessonData,
-                    course: {
-                        certification: courseData?.certification ?? '',
-                        certificationId: courseData?.certificationId ?? '',
-                        id: courseData?.id ?? '',
-                        title: courseData?.title ?? '',
+                const lessonUrl: string = [
+                    'learn',
+                    courseData?.key ?? course,
+                    module,
+                    lesson,
+                ].filter(Boolean).join('/')
+
+                setState((prevState) => ({
+                    ...prevState,
+                    lesson: lessonData && {
+                        ...lessonData,
+                        course: {
+                            certification: courseData?.certification ?? '',
+                            certificationId: courseData?.certificationId ?? '',
+                            id: courseData?.id ?? '',
+                            title: courseData?.title ?? '',
+                        },
+                        lessonUrl,
+                        module: {
+                            dashedName: moduleData?.meta.dashedName ?? '',
+                            title: moduleData?.meta.name ?? '',
+                        },
                     },
-                    lessonUrl,
-                    module: {
-                        dashedName: moduleData?.meta.dashedName ?? '',
-                        title: moduleData?.meta.name ?? '',
-                    },
-                },
-                loading: false,
-                ready: true,
-            }))
-        })
+                    loading: false,
+                    ready: true,
+                }))
+            })
 
-        return () => {mounted = false}
+        return () => { mounted = false }
     }, [provider, course, module, lesson])
 
     return state

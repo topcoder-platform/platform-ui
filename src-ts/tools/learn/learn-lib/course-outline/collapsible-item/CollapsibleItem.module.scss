@@ -8,7 +8,7 @@
 .title-row {
     display: flex;
     align-items: flex-start;
-    gap: calc($pad-sm + $border);
+    gap: calc($space-sm + $border);
     cursor: pointer;
 
     > span {
@@ -25,8 +25,8 @@
 
     :global(.status-checkbox) {
         margin-top: 0;
-        width: $pad-xxl;
-        height: $pad-xxl;
+        width: $space-xxl;
+        height: $space-xxl;
 
         &:global(.completed) {
             color: $turq-75;
@@ -38,20 +38,20 @@
     display: inline-block;
     color: $blue-140;
     background: $tc-white;
-    padding: calc($border + $border-xs) $pad-xs;
+    padding: calc($border + $border-xs) $space-xs;
     border-radius: $border;
     text-transform: uppercase;
     line-height: 10px;
-    margin-top: $pad-xs;
-    margin-right: calc($pad-sm + $border);
+    margin-top: $space-xs;
+    margin-right: calc($space-sm + $border);
     @include ltemd {
-        margin-right: $pad-xs;
+        margin-right: $space-xs;
     }
 }
 
 .chevron {
     margin-left: auto;
-    width: $pad-xxl;
+    width: $space-xxl;
     flex: 0 0 auto;
     svg {
         @include icon-xxl;
@@ -65,16 +65,16 @@
 
 .content {
     margin-left: 34px;
-    padding-right: $pad-xxxxl;
+    padding-right: $space-xxxxl;
 
     @include ltemd {
-        padding-right: $pad-xxl;
+        padding-right: $space-xxl;
     }
 }
 
 
 .short-desc {
-    margin-top: $pad-sm;
+    margin-top: $space-sm;
 }
 
 .summary {
@@ -89,7 +89,7 @@
             width: 1px;
             height: 14px;
             background: $tc-white;
-            margin: 0 calc($pad-sm + $border);
+            margin: 0 calc($space-sm + $border);
         }
     }
 
@@ -101,19 +101,23 @@
         svg {
             width: 14px;
             height: 14px;
-            margin-right: calc($pad-xs + $border);
+            margin-right: calc($space-xs + $border);
         }
     }
 
     @include ltemd {
-        margin-top: $pad-md;
+        margin-top: $space-md;
     }
 }
 
 .list {
     display: flex;
-    gap: $pad-xs $pad-sm;
+    gap: calc($space-xs + $border) $space-sm;
     flex-wrap: wrap;
 
-    margin-top: $pad-sm;
+    margin-top: $space-sm;
+
+    > li:global(.full-width) {
+        width: 100%;
+    }
 }

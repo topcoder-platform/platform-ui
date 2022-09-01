@@ -6,6 +6,10 @@
     font-family: $font-roboto;
 }
 
+@mixin font-roboto-mono {
+    font-family: $font-roboto-mono;
+}
+
 @mixin font-barlow-condensed {
     font-family: $font-barlow-condensed;
 }

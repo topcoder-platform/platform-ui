@@ -6,6 +6,7 @@ export { default as toolsRoutes, } from './tools.routes'
 export {
     ChallengeMetadataName,
     dashboardRoute as routeRootCustomer,
+    messageGetUnreadCountAsync,
     workContext,
     WorkDetailDetails,
     WorkDetailDetailsPane,

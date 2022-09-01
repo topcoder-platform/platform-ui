@@ -23,7 +23,7 @@ function WorkDeleteButtonRenderer(work: Work): JSX.Element | undefined {
     async function deleteWork(): Promise<void> {
         toggleConfirmation()
         await workDeleteAsync(work.id)
-        await workContextData.refresh()
+        await workContextData.remove(work.id, workContextData.work)
         toast.success('Your draft work has been deleted.')
     }
 

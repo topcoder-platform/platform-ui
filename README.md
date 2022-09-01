@@ -2,8 +2,7 @@
 
 The Platform UI is the official Topcoder web app to host all modern user interfaces to be used by all users.
 
-All future user interfaces at Topcoder will be implemented here. 
-Pre-existing user interfaces will be ported to here over time until this is the only user interface any user sees when interacting with Topcoder.
+All future user interfaces at Topcoder will be implemented here. Pre-existing user interfaces will be ported to here over time until this is the only user interface any user sees when interacting with Topcoder.
 
 >**NOTE:** The information in this file describes our coding standards and best practices. All new code should follow these guidelines both when coding new features as well as porting old features. Please take the time to read through this file in detail.
 
@@ -11,6 +10,7 @@ Pre-existing user interfaces will be ported to here over time until this is the 
 
 - [Local Environment Setup](#local-environment-setup)
 - [Deployments](#deployments)
+- [Developer Center specific setup](#developer-center-contentful-api-key-and-space-id)
 - [Yarn Commands](#yarn-commands)
 
 # Application structure
@@ -81,28 +81,36 @@ You will need to add the following line to your hosts file. The hosts file is no
 
 >% yarn start
 
-3. Go to https://local.topcoder-dev.com:3003/
+3. Go to https://local.topcoder-dev.com:3000
+
+>**NOTE**: The default port is 3000, but you can override it in your [personal config](#personal-config).
 
 ### Local SSL
 
 SSL is required for authentication to work properly. 
 
-The `yarn start` command serves the site using the cert and key in the /ssl directory.
+The `yarn start` command serves the site using the cert and key in the /ssl directory, which authorize the `https://local.topcoder-dev.com`URL. 
 
-For easier development, it is recommended that you add this certificate to your trusted root authorities and as a trused cert in your browser. Google your browser and OS for more info.
+By overriding the app to use <b>port 443</b>, you can use the authorized URL and trust the root CA to avoid SSL errors in the browser.
+
+>**NOTE:** Mac users will require running the app with elevated permissions in order to use a port lower than 500. 
+
+For easier development, it is recommended that you add this certificate to your trusted root authorities and as a trused cert in your browser. Google your browser and OS for more info on how to trust cert authorities.
 
 Otherwise, you will need to override the exception each time you load the site. Firefox users may need to user an incognito browser in order to override the exception.
 
 ### Personal Config
 
-1. Add [hostname] to src-ts/config/environments/app-host-environment.enum.ts
-2. Copy an existing config from src-ts/config/environments/environment.*.config.ts
-3. Rename new config environment.[hostname].config.ts
-4. Rename config variable to EnvironmentConfig[HostName]
-5. Set the ENV variable to AppHostEnvironment.[hostname]
-6. Add the switch case for the host name to src-ts/config/environments/environment.config.ts
+1. Add [hostname] to [`/src-ts/config/environments/app-host-environment.type.ts`](/src-ts/config/environments/app-host-environment.type.ts)
+2. Copy an existing config from [`/src-ts/config/environments/environment.*.config.ts`](/src-ts/config/environments/environment.bsouza.config.ts)
+3. Rename new config `environment.[hostname].config.ts`
+4. Rename config variable to `EnvironmentConfig[HostName]`
+5. Set the `ENV` variable to `[hostname]`
+6. Add the switch case for the host name to [`/src-ts/config/environments/environment.config.ts`](/src-ts/config/environments/environment.config.ts)
 7. Prior to starting the server, set your host name:
 ```% export REACT_APP_HOST_ENV=[hostname]```
+
+>**NOTE:** Individual tools (e.g. [Learn tool](/src-ts/tools/learn/README.md)) can have their own configuration, which can be configured the same way as the global config. 
 
 #### For further convenience
 
@@ -117,7 +125,22 @@ The app uses CircleCI for CI/CD.
 
 The "dev" branch is auto-deployed to the dev environment: https://platform-mvp.topcoder-dev.com.
 
-The "master" branch is auto-deployed to the production environment: https://platform-mvp.topcoder.com.
+The "master" branch is auto-deployed to the production environment: https://platform-ui.topcoder.com.
+
+## Developer Center Contentful API Key and Space Id
+
+The app requires two environment variables, which contain the space id and the key used to access contentful and retrieve Thrive Articles.
+
+You should create a file named `.env` in the root folder, and write inside the following lines:
+
+```sh
+REACT_APP_CONTENTFUL_EDU_SPACE_ID=<space-id>
+REACT_APP_CONTENTFUL_EDU_CDN_API_KEY=<API Key>
+```
+
+We should use the same space ID and API Key as Topcoder Thrive, these are for fetching Thrive articles and videos in the landing page.
+
+See the [Dev Center README](/src-ts/tools/dev-center/README.md) for further instructions on setting up the Dev Center.
 
 ## yarn Commands
 
@@ -132,7 +155,11 @@ The "master" branch is auto-deployed to the production environment: https://plat
 | `yarn eslint`         | Run eslint against js/x files and outputs report |
 | `yarn eslint:fix`     | Run eslint against js/x files, fixes auto-fixable issues, and  outputs report |
 | `yarn test`           | Run unit tests, watching for changes and re-running per your specifications |             
-| `yarn test:no-watch`  | Run unit tests once, without watching for changes or re-running |             
+| `yarn test:no-watch`  | Run unit tests once, without watching for changes or re-running |
+| `yarn cy:run`         | Run e2e tests once in local command with the site is running    |
+| `yarn cy:ci`          | Run e2e tests once by circle ci                                 |
+| `yarn report:coverage`| Generate e2e coverage report in html format                     |
+| `yarn report:coverage:text`  | Generate e2e coverage report in text format              |
 
 ## Folder Structure
 
@@ -247,9 +274,10 @@ The PlatformRoute model has several useful options:
 | `element: JSX.Element` | The element property is the JSX element that should appear at the specified URL. |
 | `disabled?: boolean` | When a route is marked as disabled, it will not be registered and will the URL will return a 404. |
 | `hide?: boolean` | When a route is hidden, it will be registered and the URL will be available through deep-linking but will not be visible in either the Tools or Utils Selectors. This is useful for handling redirects for obsolete routes. |
-| `requireAuth?: boolean` | Requiring authentication for a route means that users who are not logged in will be redirected to the Login Form when they try to access the route. |
+| `authRequired?: boolean` | Requiring authentication for a route means that users who are not logged in will be redirected to the Login Form when they try to access the route. |
 | `route: string` | The route property is the path to the route, relative to its parent(s). |
 | `title: string` | The title property is the text that will appear in the Tools or Utils Selectors (this is irrelevant on hidden routes). |
+| `rolesRequired: Array<string>` | Requiring roles for a route means that users who do not own the roles will be presented with restricted page when they try to access the route. |
 
 ## Git
 
@@ -465,8 +493,8 @@ e.g.:
 ```
 .logo-link {
     svg {
-        width: calc($pad-xxl + $pad-xxxxl);
-        height: $pad-xl;
+        width: calc($space-xxl + $space-xxxxl);
+        height: $space-xl;
         fill: none;
 
         path {

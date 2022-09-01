@@ -10,7 +10,7 @@
     display: flex;
 
     align-items: center;
-    padding: $pad-lg 0;
+    padding: $space-lg 0;
     max-width: $xxl-min;
     margin: 0 auto;
 
@@ -21,25 +21,25 @@
 
     @include ltesm {
         flex-direction: column;
-        gap: $pad-sm;
+        gap: $space-sm;
     }
 }
 
 .utils {
     display: flex;
     align-items: center;
-    gap: $pad-lg;
+    gap: $space-lg;
 
     > div > * + * {
-        margin-left: $pad-lg;
+        margin-left: $space-lg;
     }
 
     @include ltesm {
         flex-direction: column;
-        gap: $pad-sm;
+        gap: $space-sm;
         
         > div > * + * {
-            margin-left: $pad-sm;
+            margin-left: $space-sm;
         }
     }
 }
@@ -47,7 +47,7 @@
 .social {
     display: flex;
     align-items: center;
-    gap: $pad-xs;
+    gap: $space-xs;
     color: $black-60;
 
     margin-left: auto;

@@ -15,7 +15,7 @@
 
     @include ltemd {
         flex-direction: column;
-        padding: $pad-xxl 0 $pad-sm 0;
+        padding: $space-xxl 0 $space-sm 0;
     }
 
     &:last-child {
@@ -33,7 +33,7 @@
         .group-item-instructions {
             @extend .body-small;
             @include font-roboto;
-            margin-top: $pad-xxl;
+            margin-top: $space-xxl;
         }
     }
 
@@ -42,7 +42,7 @@
         margin-top: 46px;
 
         @include ltemd {
-            margin-top: $pad-xxl;
+            margin-top: $space-xxl;
         }
     }
 
@@ -52,6 +52,6 @@
     }
 
     .full-width-items {
-        margin-top: $pad-xl;
+        margin-top: $space-xl;
     }
 }

@@ -20,11 +20,13 @@ export {
     logInitialize,
     textFormatDateLocaleShortString,
     textFormatMoneyLocaleString,
+    xhrCreateInstance,
     xhrDeleteAsync,
     xhrGetAsync,
     xhrGetBlobAsync,
     xhrPatchAsync,
     xhrPostAsync,
+    xhrPutAsync,
 } from './functions'
 export * from './global-config.model'
 export * from './hooks'

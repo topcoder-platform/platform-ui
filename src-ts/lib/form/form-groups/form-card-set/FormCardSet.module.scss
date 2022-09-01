@@ -3,10 +3,10 @@
 .form-card-set {
     display: flex;
     flex: 1;
-    margin-bottom: $pad-xxl;
+    margin-bottom: $space-xxl;
     @include ltemd {
         flex-direction: column;
-        margin-bottom: $pad-lg;
+        margin-bottom: $space-lg;
     }
 
     input[type=radio] {  
@@ -15,10 +15,10 @@
 
     .card {
         flex: 1 1 0;
-        margin-right: $pad-xl;
+        margin-right: $space-xl;
         border: solid 1px $black-80;
-        border-radius: $pad-xs;
-        padding: $pad-lg;
+        border-radius: $space-xs;
+        padding: $space-lg;
         cursor: pointer;
 
         &.selected {
@@ -34,7 +34,7 @@
 
         @include ltemd {
             margin-right: 0;
-            margin-bottom: $pad-lg;
+            margin-bottom: $space-lg;
             &:last-child {
                 margin-bottom: 0;
             }
@@ -48,7 +48,7 @@
         }
 
         .card-section {
-            margin: $pad-lg 0;
+            margin: $space-lg 0;
 
             .card-row {
                 display: flex;

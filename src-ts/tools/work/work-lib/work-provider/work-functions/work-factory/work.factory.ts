@@ -210,7 +210,7 @@ export function create(challenge: Challenge, workPrices: WorkPricesType): Work {
         description: getDescription(challenge, type),
         draftStep: getDraftStep(challenge, status),
         id: challenge.id,
-        messageCount: Number((Math.random() * 10).toFixed(0)), // TODO: real message count
+        messageCount: undefined,
         participantsCount: challenge.numOfRegistrants,
         progress: getProgress(challenge, status),
         solutionsCount: challenge.numOfSubmissions,

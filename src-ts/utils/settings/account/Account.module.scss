@@ -2,8 +2,8 @@
 
 :global(.account-settings-modal) {
     h2 {
-        margin-bottom: $pad-xxl;
-        padding: 0 0 $pad-xxl;
+        margin-bottom: $space-xxl;
+        padding: 0 0 $space-xxl;
         border-bottom: 1px solid $black-10;
     }
 
@@ -12,11 +12,11 @@
 .cards {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    column-gap: $pad-xxl;
-    margin: $pad-xxl 0 0;
+    column-gap: $space-xxl;
+    margin: $space-xxl 0 0;
 
     @include ltemd {
         grid-template-columns: 1fr;
-        row-gap: $pad-xxl;
+        row-gap: $space-xxl;
     }
 }

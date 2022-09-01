@@ -15,8 +15,8 @@ import styles from './ProgressAction.module.scss'
 
 interface ProgressActionProps {
     allCertifications: Array<LearnCertification>
-    userCompletedCertifications: Array<UserCertificationCompleted>
-    userInProgressCertifications: Array<UserCertificationInProgress>
+    userCompletedCertifications: ReadonlyArray<UserCertificationCompleted>
+    userInProgressCertifications: ReadonlyArray<UserCertificationInProgress>
 }
 
 const ProgressAction: FC<ProgressActionProps> = (props: ProgressActionProps) => {
@@ -45,47 +45,72 @@ const ProgressAction: FC<ProgressActionProps> = (props: ProgressActionProps) => 
             }, {} as unknown as { [key: string]: LearnCertification })
     ), [allCertifications])
 
-    return (
-        <>
-            {!!myInProgressCertifications.length && (
+    // we only want to display the last course that was acted upon
+    const mostRecentIsCompleted: boolean = myCompletedCertifications?.[0]?.updatedAt > (myInProgressCertifications?.[0]?.updatedAt || 0)
+
+    function renderInProgress(): JSX.Element {
+
+        // if the most recently acted upon course is completed and not in progress,
+        // or there are no courses in progress, don't show this block
+        if (mostRecentIsCompleted || !myInProgressCertifications.length) {
+            return <></>
+        }
+
+        const courseToDisplay: UserCertificationInProgress = myInProgressCertifications[0]
+
+        return (
+            <>
                 <div className={styles['title-line']}>
                     <h4 className='details'>In progress</h4>
                     <span className='mobile-hide'>
                         {allMyLearningsLink}
                     </span>
                 </div>
-            )}
-            {myInProgressCertifications
-                .map((cert) => (
-                    <MyCourseInProgressCard
-                        certification={certificationsById[cert.certificationId]}
-                        key={cert.certificationId}
-                        completedPercentage={cert.courseProgressPercentage / 100}
-                        theme='minimum'
-                        currentLesson={cert.currentLesson}
-                    />
-                ))}
-            {!!myCompletedCertifications.length && (
+                <MyCourseInProgressCard
+                    certification={certificationsById[courseToDisplay.certificationId]}
+                    key={courseToDisplay.certificationId}
+                    completedPercentage={courseToDisplay.courseProgressPercentage / 100}
+                    theme='minimum'
+                    currentLesson={courseToDisplay.currentLesson}
+                />
+            </>
+        )
+    }
+
+    function renderCompleted(): JSX.Element {
+
+        // if the most recently acted upon course is in progress rather than completed,
+        // or there are no completed courses, don't show this block
+        if (!mostRecentIsCompleted || !myCompletedCertifications.length) {
+            return <></>
+        }
+
+        const certToDisplay: UserCertificationCompleted = myCompletedCertifications[0]
+
+        return (
+            <>
                 <div className={styles['title-line']}>
                     <div className={styles.title}>
                         <LearningHat />
                         <h4 className='details'>Congratulations!</h4>
                     </div>
-                    {!myInProgressCertifications.length && (
-                        <span className='mobile-hide'>
-                            {allMyLearningsLink}
-                        </span>
-                    )}
+                    <span className='mobile-hide'>
+                        {allMyLearningsLink}
+                    </span>
                 </div>
-            )}
-            {myCompletedCertifications
-                .map((cert) => (
-                    <MyCourseCompletedCard
-                        certification={certificationsById[cert.certificationId]}
-                        key={cert.certificationId}
-                        completed={cert.completedDate}
-                    />
-                ))}
+                <MyCourseCompletedCard
+                    certification={certificationsById[certToDisplay.certificationId]}
+                    key={certToDisplay.certificationId}
+                    completed={certToDisplay.completedDate}
+                />
+            </>
+        )
+    }
+
+    return (
+        <>
+            {renderInProgress()}
+            {renderCompleted()}
             <span className='desktop-hide'>
                 {allMyLearningsLink}
             </span>

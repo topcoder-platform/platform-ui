@@ -9,7 +9,8 @@
         "src-ts/**/*"
     ],
     "exclude": [
-        "src-ts/**/*.test*"
+        "src-ts/**/*.test*",
+        ".env"
     ],
     "rules": {
         "array-type": [

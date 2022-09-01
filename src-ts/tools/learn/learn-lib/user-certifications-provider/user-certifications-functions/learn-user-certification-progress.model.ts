@@ -1,7 +1,9 @@
+import { LearnModelBase } from '../../functions'
+
 import { LearnModuleProgress } from './learn-module-progress.model'
 import { UserCertificationProgressStatus } from './user-certification-progress-status.enum'
 
-export interface LearnUserCertificationProgress {
+export interface LearnUserCertificationProgress extends LearnModelBase {
     academicHonestyPolicyAcceptedAt?: number,
     certification: string
     certificationId: string

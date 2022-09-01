@@ -175,7 +175,11 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
                 />
 
                 <div className={styles['course-outline']}>
-                    <CourseOutline course={props.course} progress={props.progress} />
+                    <CourseOutline
+                        course={props.course}
+                        progress={props.progress}
+                        currentStep={props.progress?.currentLesson}
+                    />
                 </div>
             </div>
             {isCompleted && (

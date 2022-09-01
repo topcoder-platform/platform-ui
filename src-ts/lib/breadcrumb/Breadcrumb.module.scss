@@ -7,20 +7,32 @@
 }
 
 .breadcrumb {
-    padding: $pad-md 0;
+    padding: $space-md 0;
     max-width: $xxl-min;
     margin: 0 auto;
     @include pagePaddings;
 
     @include ltemd {
-        padding-top: $pad-xs;
-        padding-bottom: $pad-xs;
+        padding-top: $space-xs;
+        padding-bottom: $space-xs;
     }
 
     ol {
         display: flex;
         padding-left: 0px;
         margin: 0;
+
+        &.hidden-mobile {
+            @include ltemd {
+                display: none;
+            }
+        }
+
+        &.show-mobile {
+            @include gtelg {
+                display: none;
+            }
+        }
 
         >li {
             display: inline-flex;
@@ -30,7 +42,7 @@
             a {
                 @extend .overline;
                 display: block;
-                padding: $pad-md;
+                padding: $space-md;
                 color: $black-80;
                 cursor: pointer;
 
@@ -46,8 +58,8 @@
             &:not(:last-child)::after {
                 content: '';
                 display: inline-block;
-                width: $pad-sm;
-                height: $pad-sm;
+                width: $space-sm;
+                height: $space-sm;
                 border-style: solid;
                 border-width: $border-xs $border-xs 0 0;
                 border-color: $black-60;

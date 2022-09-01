@@ -4,8 +4,8 @@
 .card {
     display: flex;
     flex-direction: column;
-    padding: $pad-xxl $pad-xxl $pad-xxxxl $pad-xxl;
-    border-radius: $pad-sm;
+    padding: $space-xxl $space-xxl $space-xxxxl $space-xxl;
+    border-radius: $space-sm;
     background-color: $black-5;
 
     &.clickable {
@@ -35,7 +35,7 @@
     .card-title {
         display: flex;
         justify-content: space-between;
-        margin-bottom: $pad-sm;
+        margin-bottom: $space-sm;
 
         svg {
             @include icon-xl;
@@ -51,7 +51,7 @@
         word-break: break-all;
 
         &:last-of-type {
-            margin-bottom: $pad-xl;
+            margin-bottom: $space-xl;
         }
     }
 }

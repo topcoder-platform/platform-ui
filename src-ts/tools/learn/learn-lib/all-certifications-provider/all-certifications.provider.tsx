@@ -34,11 +34,22 @@ export function useAllCertifications(
 
         allCertificationsGetAsync(provider, certificationId)
             .then((certifications) => {
+                const certs: {
+                    certification: LearnCertification;
+                    certifications?: undefined;
+                } | {
+                    certification?: undefined;
+                    certifications: Array<LearnCertification>;
+                } = certificationId
+                    ? {
+                        certification: certifications as unknown as LearnCertification,
+                    }
+                    : {
+                        certifications: [...certifications],
+                    }
                 setState((prevState) => ({
                     ...prevState,
-                    ...(certificationId ? { certification: certifications as unknown as LearnCertification } : {
-                        certifications: [...certifications],
-                    }),
+                    ...certs,
                     certificationsCount: certifications.length,
                     loading: false,
                     ready: true,

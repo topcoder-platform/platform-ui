@@ -29,6 +29,7 @@
         "src-ts"
     ],
     "exclude": [
-        "**/*.test.*"
+        "**/*.test.*",
+        ".env"
     ]
 }

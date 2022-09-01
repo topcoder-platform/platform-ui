@@ -114,28 +114,11 @@ export async function activateChallenge(challengeId) {
   return response;
 }
 
-/**
- * Get Forum notifications
- * @param {String} challengeId challenge id
- */
-export async function getForumNotifications(challengeId, profile) {
-  const response = await xhrGetAsync(
-    `${config.VANILLA_FORUM_API}/groups/${challengeId}/member/${profile.handle}?access_token=${config.VANILLA_ACCESS_TOKEN}`
-  );
-
-  const res = await response.json();
-  return {
-    ...res,
-    challengeId,
-  };
-}
-
 const output = {
   getChallengeDetails,
   getIntakeFormChallenges,
   createChallenge,
   patchChallenge,
-  getForumNotifications,
 };
 
 export default output
