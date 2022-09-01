@@ -156,9 +156,6 @@ jobs:
       - restore_cache:
           key: test-node-modules-{{ checksum "yarn.lock" }}
       - run:
-          name: Config Git
-          command: git config --global url."https://git@".insteadOf git://
-      - run:
           name: Install Dependencies
           command: yarn install
           no_output_timeout: 20m
