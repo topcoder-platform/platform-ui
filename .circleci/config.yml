@@ -83,6 +83,14 @@ build_steps: &build_steps
     - run: *install_deploysuite
     - run: *build_configuration_fetch
     - run: *running_yarn_build
+    - store_test_results:
+        path: test-results.xml
+    - store_artifacts:
+        path: test-results.xml
+    - store_artifacts:
+        path: cypress/videos
+    - store_artifacts:
+        path: cypress/screenshots
     - persist_to_workspace: *workspace_persist
 
 deploy_steps: &deploy_steps

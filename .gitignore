@@ -10,6 +10,7 @@
 .nyc_output
 /cypress/screenshots
 /cypress/videos
+test-results.xml
 
 # production
 /build

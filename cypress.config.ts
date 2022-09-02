@@ -1,7 +1,6 @@
 import { defineConfig } from 'cypress'
 
 export default defineConfig({
-  projectId: "yfm67z",
   fixturesFolder: false,
   video: true,
   screenshotOnRunFailure: true,
