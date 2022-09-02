@@ -15,5 +15,10 @@ export default defineConfig({
       require('@cypress/code-coverage/task')(on, config)
       return config;
     },
+  },
+  reporter: 'junit',
+  reporterOptions: {
+    mochaFile: 'cypress/test-report/test-result-[hash].xml',
+    toConsole: false
   }
 })

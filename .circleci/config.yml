@@ -84,9 +84,9 @@ build_steps: &build_steps
     - run: *build_configuration_fetch
     - run: *running_yarn_build
     - store_test_results:
-        path: test-results.xml
+        path: cypress/test-report
     - store_artifacts:
-        path: test-results.xml
+        path: cypress/test-report
     - store_artifacts:
         path: cypress/videos
     - store_artifacts:
