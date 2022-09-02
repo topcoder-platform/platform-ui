@@ -6,7 +6,7 @@ describe('Landing Page', () => {
         cy.get('[data-id="root"]').should('be.visible')
     })
 
-    it.skip('loads landing page should fail', () => {
+    it('loads landing page should fail', () => {
       cy.get('[data-id="root"]').should('not.be.visible')
     })
 })
