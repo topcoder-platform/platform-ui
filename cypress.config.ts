@@ -2,8 +2,8 @@ import { defineConfig } from 'cypress'
 
 export default defineConfig({
   fixturesFolder: false,
-  video: false,
-  screenshotOnRunFailure: false,
+  video: true,
+  screenshotOnRunFailure: true,
   defaultCommandTimeout: 10000,
   e2e: {
     baseUrl: 'http://localhost:3000',
@@ -16,4 +16,9 @@ export default defineConfig({
       return config;
     },
   },
+  reporter: 'junit',
+  reporterOptions: {
+    mochaFile: 'cypress/test-report/test-result-[hash].xml',
+    toConsole: false
+  }
 })

@@ -14,6 +14,7 @@ install_build_dependency: &install_build_dependency
       apt update
       apt install jq -y
       apt install python3-pip -y
+      apt install libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb -y
       pip3 install awscli --upgrade
 
 install_dependency: &install_dependency
@@ -36,6 +37,7 @@ save_cache_settings: &save_cache_settings
     key: connect-node-modules-{{ checksum "yarn.lock" }}
     paths:
       - node_modules
+      - /root/.cache/Cypress
 
 running_yarn_tslint: &running_yarn_tslint
     name: Running Yarn tslint
@@ -48,7 +50,9 @@ running_yarn_build: &running_yarn_build
     command: |
       source buildenvvar
       yarn install
+      yarn cypress install
       yarn build
+      yarn cy:ci
 
 workspace_persist: &workspace_persist
     root: .
@@ -79,6 +83,14 @@ build_steps: &build_steps
     - run: *install_deploysuite
     - run: *build_configuration_fetch
     - run: *running_yarn_build
+    - store_test_results:
+        path: cypress/test-report
+    - store_artifacts:
+        path: cypress/test-report
+    - store_artifacts:
+        path: cypress/videos
+    - store_artifacts:
+        path: cypress/screenshots
     - persist_to_workspace: *workspace_persist
 
 deploy_steps: &deploy_steps
@@ -147,35 +159,6 @@ jobs:
       APPNAME: "platform-ui-mvp"
     steps: *deploy_steps
 
-  # Test job for the cases when we don not need deployment.
-  e2e-test:
-    docker:
-      - image: cypress/browsers:node16.14.2-slim-chrome100-ff99-edge
-    steps:
-      - checkout
-      - restore_cache:
-          key: test-node-modules-{{ checksum "yarn.lock" }}
-      - run:
-          name: Config Git
-          command: git config --global url."https://git@".insteadOf git://
-      - run:
-          name: Install Dependencies
-          command: yarn install
-          no_output_timeout: 20m
-      - run:
-          name: Install Cypress Binary
-          command: yarn cypress install
-      - run:
-          name: Build the application
-          command: yarn build
-          no_output_timeout: 20m
-      - save_cache:
-          key: test-node-modules-{{ checksum "yarn.lock" }}
-          paths:
-            - node_modules
-            - /root/.cache/Cypress
-      - run: yarn cy:ci
-
 workflows:
   version: 2
   build:
@@ -201,9 +184,6 @@ workflows:
               ignore:
                 - master
 
-      - e2e-test:
-          context : org-global
-
       - build-prod:
           context : org-global
           filters:
@@ -215,7 +195,6 @@ workflows:
           context : org-global
           requires:
             - build-dev
-            - e2e-test
           filters: 
             branches:
               only:
