@@ -24,6 +24,7 @@ jobs:
           yarn cy:ci
       - name: Storing test artifacts
         uses: actions/upload-artifact@v3
+        continue-on-error: true
         with:
           name: store-testing-result
           path: |
