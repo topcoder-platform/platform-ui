@@ -18,13 +18,29 @@ jobs:
           sudo apt update
           sudo apt install jq python3-pip libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb -y
           sudo pip3 install awscli --upgrade
+      - name: Cache data
+        id: cache-data
+        uses: actions/cache@v2
+        with:
+          path: |
+            node_modules
+            ~/.cache/Cypress
+          key: ${{ runner.os }}-build-${{ hashFiles('**/yarn-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Install Dependencies
+        if: steps.cache-data.outputs.cache-hit != 'true'
+        run: |
           yarn install
-          yarn cypress install
+          yarn cypress 
+      - name: Build the codebase and Run E2E Tests
+        continue-on-error: true
+        run: |
           yarn build
           yarn cy:ci
       - name: Storing test artifacts
         uses: actions/upload-artifact@v3
-        continue-on-error: true
         with:
           name: store-testing-result
           path: |
