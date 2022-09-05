@@ -22,3 +22,11 @@ jobs:
           yarn cypress install
           yarn build
           yarn cy:ci
+      - name: Storing test artifcats
+        uses: actions/upload-artifcat@v3
+        with:
+          name: store-testing-result
+          path: |
+            cypress/test-report
+            cypress/videos
+            cypress/screenshots
