@@ -23,6 +23,7 @@ export default defineConfig({
     video: true,
 })
 
+// adds the config to node setup events
 function setUpNodeEvents(
     on: Cypress.PluginEvents,
     config: Cypress.PluginConfigOptions
