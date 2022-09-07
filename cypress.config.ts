@@ -1,24 +1,32 @@
+// tslint:disable-next-line: no-submodule-imports This is the way cypress does it
+import task from '@cypress/code-coverage/task'
 import { defineConfig } from 'cypress'
 
 export default defineConfig({
-  fixturesFolder: false,
-  video: true,
-  screenshotOnRunFailure: true,
-  defaultCommandTimeout: 10000,
-  e2e: {
-    baseUrl: 'http://localhost:3000',
-    specPattern: "cypress/e2e/**/*.spec.{js,jsx,ts,tsx}",
-    supportFile: "cypress/support/e2e.ts",
-    viewportHeight: 1000,
-    viewportWidth: 1280,
-    setupNodeEvents(on, config) {
-      require('@cypress/code-coverage/task')(on, config)
-      return config;
+    defaultCommandTimeout: 10000,
+    e2e: {
+        // baseUrl: 'https://local.topcoder-dev.com',
+        baseUrl: 'http://localhost:3000',
+        setupNodeEvents: setUpNodeEvents,
+        specPattern: 'cypress/e2e/**/*.spec.{js,jsx,ts,tsx}',
+        supportFile: 'cypress/support/e2e.ts',
+        viewportHeight: 1000,
+        viewportWidth: 1280,
     },
-  },
-  reporter: 'junit',
-  reporterOptions: {
-    mochaFile: 'cypress/test-report/test-result-[hash].xml',
-    toConsole: false
-  }
+    fixturesFolder: false,
+    reporter: 'junit',
+    reporterOptions: {
+        mochaFile: 'cypress/test-report/test-result-[hash].xml',
+        toConsole: false,
+    },
+    screenshotOnRunFailure: true,
+    video: true,
 })
+
+function setUpNodeEvents(
+    on: Cypress.PluginEvents,
+    config: Cypress.PluginConfigOptions
+): Cypress.PluginConfigOptions {
+    task(on, config)
+    return config
+}
