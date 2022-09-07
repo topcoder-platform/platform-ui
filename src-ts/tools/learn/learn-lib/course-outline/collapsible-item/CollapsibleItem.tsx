@@ -21,11 +21,11 @@ interface CollapsibleItemProps {
     items: Array<CollapsibleListItem>
     lessonsCount: number
     moduleKey: string
+    onItemClick: (item: any) => void
     path?: (item: any) => string
     progress?: LearnUserCertificationProgress['modules']
     shortDescription: Array<string>
     title: string
-    onItemClick: (item: any) => void
 }
 
 const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) => {

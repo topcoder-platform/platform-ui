@@ -16,9 +16,9 @@ import styles from './CourseOutline.module.scss'
 interface CourseOutlineProps {
     course?: LearnCourse
     currentStep?: string
+    onItemNavigate: (item: LearnLesson) => void
     progress?: LearnUserCertificationProgress
     ready?: boolean
-    onItemNavigate: (item: LearnLesson) => void
 }
 
 const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {

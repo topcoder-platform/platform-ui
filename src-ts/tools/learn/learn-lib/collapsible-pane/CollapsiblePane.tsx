@@ -1,16 +1,16 @@
+import classNames from 'classnames'
+import { noop } from 'lodash'
 import {
     Dispatch,
     FC,
+    MutableRefObject,
     ReactNode,
     SetStateAction,
-    MutableRefObject,
     useCallback,
     useEffect,
-    useState,
     useRef,
+    useState,
 } from 'react'
-import classNames from 'classnames'
-import { noop } from 'lodash'
 
 import { IconSolid } from '../../../../lib'
 
@@ -18,10 +18,10 @@ import styles from './CollapsiblePane.module.scss'
 
 interface CollapsiblePaneProps {
     children: ReactNode
+    isOpen?: boolean
     onToggle?: (isOpen: boolean) => void
     position?: 'to-left'|'to-right'
     title: string
-    isOpen?: boolean
 }
 
 const CollapsiblePane: FC<CollapsiblePaneProps> = (props: CollapsiblePaneProps) => {
@@ -35,7 +35,7 @@ const CollapsiblePane: FC<CollapsiblePaneProps> = (props: CollapsiblePaneProps) 
       onToggle(!isOpen)
     }, [isOpen, onToggle])
 
-    const close = useCallback(() => {
+    const close: () => void = useCallback(() => {
         setIsOpen(false)
         onToggle(false)
     }, [onToggle])
@@ -45,7 +45,7 @@ const CollapsiblePane: FC<CollapsiblePaneProps> = (props: CollapsiblePaneProps) 
     }, [props.isOpen])
 
     useEffect(() => {
-        const handleClickOutside = (ev: MouseEvent) => {
+        const handleClickOutside: (ev: MouseEvent) => void = (ev: MouseEvent) => {
             if (elRef.current && !elRef.current.contains(ev.target)) {
                 close()
             }
@@ -54,7 +54,7 @@ const CollapsiblePane: FC<CollapsiblePaneProps> = (props: CollapsiblePaneProps) 
             document.addEventListener('click', handleClickOutside)
         }
         return () => document.removeEventListener('click', handleClickOutside)
-    }, [close])
+    }, [close, isOpen])
 
     return (
         <div ref={elRef} className={
