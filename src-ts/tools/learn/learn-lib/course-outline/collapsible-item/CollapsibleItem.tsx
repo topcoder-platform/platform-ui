@@ -25,6 +25,7 @@ interface CollapsibleItemProps {
     progress?: LearnUserCertificationProgress['modules']
     shortDescription: Array<string>
     title: string
+    onItemClick: (item: any) => void
 }
 
 const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) => {
@@ -72,6 +73,7 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
             <li
                 key={key}
                 className={classNames(styles['item-wrap'], !stepCount && 'full-width')}
+                onClick={() => props.onItemClick(item)}
             >
                 {props.path ? (
                     <Link className={styles['item-wrap']} to={props.path(item)}>

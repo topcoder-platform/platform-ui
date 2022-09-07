@@ -18,6 +18,7 @@ interface CourseOutlineProps {
     currentStep?: string
     progress?: LearnUserCertificationProgress
     ready?: boolean
+    onItemNavigate: (item: LearnLesson) => void
 }
 
 const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
@@ -52,6 +53,7 @@ const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
                             progress={props.progress?.modules}
                             shortDescription={module.meta.introCopy}
                             title={module.meta.name}
+                            onItemClick={props.onItemNavigate}
                         />
                     ))}
                 </div>
