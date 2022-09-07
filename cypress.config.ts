@@ -5,12 +5,9 @@ import { defineConfig } from 'cypress'
 export default defineConfig({
     defaultCommandTimeout: 10000,
     e2e: {
-        // baseUrl: 'https://local.topcoder-dev.com',
-        baseUrl: 'http://localhost:3000',
-        setupNodeEvents(on: Cypress.PluginEvents, config: Cypress.PluginConfigOptions): Cypress.PluginConfigOptions {
-            task(on, config)
-            return config
-        },
+        baseUrl: 'https://local.topcoder-dev.com',
+        // baseUrl: 'http://localhost:3000',
+        setupNodeEvents: setUpNodeEvents,
         specPattern: 'cypress/e2e/**/*.spec.{js,jsx,ts,tsx}',
         supportFile: 'cypress/support/e2e.ts',
         viewportHeight: 1000,
@@ -25,3 +22,11 @@ export default defineConfig({
     screenshotOnRunFailure: true,
     video: true,
 })
+
+function setUpNodeEvents(
+    on: Cypress.PluginEvents,
+    config: Cypress.PluginConfigOptions
+): Cypress.PluginConfigOptions {
+    task(on, config)
+    return config
+}
