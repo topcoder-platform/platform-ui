@@ -4,6 +4,6 @@ import { LearnConfigDev } from './learn.dev.config'
 
 export const LearnConfigBsouza: LearnConfigModel = {
     ...LearnConfigDev,
-    // API: LearnConfigDefault.API,
+    API: LearnConfigDefault.API,
     CLIENT: LearnConfigDefault.CLIENT,
 }
