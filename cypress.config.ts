@@ -5,8 +5,8 @@ import { defineConfig } from 'cypress'
 export default defineConfig({
     defaultCommandTimeout: 10000,
     e2e: {
-        baseUrl: 'https://local.topcoder-dev.com',
-        // baseUrl: 'http://localhost:3000',
+        // baseUrl: 'https://local.topcoder-dev.com',
+        baseUrl: 'http://localhost:3000',
         setupNodeEvents: setUpNodeEvents,
         specPattern: 'cypress/e2e/**/*.spec.{js,jsx,ts,tsx}',
         supportFile: 'cypress/support/e2e.ts',
