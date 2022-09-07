@@ -16,6 +16,7 @@ import styles from './CourseOutline.module.scss'
 interface CourseOutlineProps {
     course?: LearnCourse
     currentStep?: string
+    onItemNavigate: (item: LearnLesson) => void
     progress?: LearnUserCertificationProgress
     ready?: boolean
 }
@@ -52,6 +53,7 @@ const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
                             progress={props.progress?.modules}
                             shortDescription={module.meta.introCopy}
                             title={module.meta.name}
+                            onItemClick={props.onItemNavigate}
                         />
                     ))}
                 </div>

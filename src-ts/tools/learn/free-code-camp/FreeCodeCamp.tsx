@@ -19,8 +19,6 @@ import {
     ProfileContextData,
 } from '../../../lib'
 import {
-    CollapsiblePane,
-    CourseOutline,
     CoursesProviderData,
     LearnLesson,
     LearnModule,
@@ -39,6 +37,7 @@ import {
 import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule } from '../learn.routes'
 
 import { FccFrame } from './fcc-frame'
+import { FccSidebar } from './fcc-sidebar'
 import styles from './FreeCodeCamp.module.scss'
 import { TitleNav } from './title-nav'
 
@@ -362,24 +361,13 @@ const FreeCodeCamp: FC<{}> = () => {
 
             {lesson && (
                 <div className={styles['main-wrap']}>
-                    <div className={styles['course-outline-pane']}>
-                        <CollapsiblePane
-                            title='Course Outline'
-                            onToggle={(isOpen) => isOpen && refetchProgress()}
-                        >
-                            <div className={styles['course-outline-wrap']}>
-                                <div className={styles['course-outline-title']}>
-                                    {courseData?.title}
-                                </div>
-                                <CourseOutline
-                                    course={courseData}
-                                    ready={courseDataReady}
-                                    currentStep={`${moduleParam}/${lessonParam}`}
-                                    progress={certificateProgress}
-                                />
-                            </div>
-                        </CollapsiblePane>
-                    </div>
+                    <FccSidebar
+                        courseData={courseData}
+                        courseDataReady={courseDataReady}
+                        currentStep={`${moduleParam}/${lessonParam}`}
+                        certificateProgress={certificateProgress}
+                        refetchProgress={refetchProgress}
+                    />
 
                     <div className={styles['course-frame']}>
                         <TitleNav
