@@ -12,7 +12,7 @@ import {
     useState,
 } from 'react'
 
-import { IconSolid } from '../../../../lib'
+import { IconSolid, useClickOutside } from '../../../../lib'
 
 import styles from './CollapsiblePane.module.scss'
 
@@ -44,17 +44,7 @@ const CollapsiblePane: FC<CollapsiblePaneProps> = (props: CollapsiblePaneProps) 
         setIsOpen(!!props.isOpen)
     }, [props.isOpen])
 
-    useEffect(() => {
-        const handleClickOutside: (ev: MouseEvent) => void = (ev: MouseEvent) => {
-            if (elRef.current && !elRef.current.contains(ev.target)) {
-                close()
-            }
-        }
-        if (isOpen) {
-            document.addEventListener('click', handleClickOutside)
-        }
-        return () => document.removeEventListener('click', handleClickOutside)
-    }, [close, isOpen])
+    useClickOutside(elRef.current, close, isOpen)
 
     return (
         <div ref={elRef} className={
