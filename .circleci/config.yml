@@ -99,12 +99,12 @@ test_steps: &test_steps
     - setup_remote_docker
     - restore_cache:
         key: test-node-modules-{{ checksum "yarn.lock" }}
-    - save_cache:
-          key: test-node-modules-{{ checksum "yarn.lock" }}
-          paths:
-            - node_modules
-            - /root/.cache/Cypress
     - run: *running_yarn_test
+    - save_cache:
+        key: test-node-modules-{{ checksum "yarn.lock" }}
+        paths:
+          - node_modules
+          - /root/.cache/Cypress
     - store_test_results:
         path: cypress/test-report
     - store_artifacts:
