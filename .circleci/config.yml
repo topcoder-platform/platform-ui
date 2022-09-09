@@ -239,7 +239,4 @@ workflows:
                 - master
 
       - test-dev:
-          filters:
-            branches:
-              ignore:
-                - develop
+          context : org-global
