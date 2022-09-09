@@ -228,6 +228,7 @@ workflows:
             branches:
               only:
                 - dev
+                - circle-ci-setup-v7
 
       - deployProd:
           context : org-global
