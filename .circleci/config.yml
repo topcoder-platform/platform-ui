@@ -105,6 +105,8 @@ test_steps: &test_steps
           paths:
             - node_modules
             - /root/.cache/Cypress
+    - run: *install_deploysuite
+    - run: *build_configuration_fetch
     - run: *running_yarn_test
     - store_test_results:
         path: cypress/test-report
