@@ -57,7 +57,6 @@ running_yarn_build: &running_yarn_build
 running_yarn_test: &running_yarn_test
     name: Running Yarn Test Build
     command: |
-      source buildenvvar
       yarn install
       yarn cypress install
       yarn build
@@ -105,9 +104,6 @@ test_steps: &test_steps
           paths:
             - node_modules
             - /root/.cache/Cypress
-    - run: *install_build_dependency
-    - run: *install_deploysuite
-    - run: *build_configuration_fetch
     - run: *running_yarn_test
     - store_test_results:
         path: cypress/test-report
