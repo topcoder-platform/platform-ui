@@ -8,13 +8,16 @@ deploy_defaults: &deploy_defaults
     docker:
       - image: cimg/python:3.10.2
 
+test_defaults: &test_defaults
+    docker:
+      - image: cypress/browsers:node16.14.2-slim-chrome100-ff99-edge
+
 install_build_dependency: &install_build_dependency
     name: Installation of build and deployment dependencies.
     command: |
       apt update
       apt install jq -y
       apt install python3-pip -y
-      apt install libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb -y
       pip3 install awscli --upgrade
 
 install_dependency: &install_dependency
@@ -37,7 +40,6 @@ save_cache_settings: &save_cache_settings
     key: connect-node-modules-{{ checksum "yarn.lock" }}
     paths:
       - node_modules
-      - /root/.cache/Cypress
 
 running_yarn_tslint: &running_yarn_tslint
     name: Running Yarn tslint
@@ -49,6 +51,12 @@ running_yarn_build: &running_yarn_build
     name: Running Yarn Build
     command: |
       source buildenvvar
+      yarn install
+      yarn build
+
+running_yarn_test: &running_yarn_test
+    name: Running Yarn Test Build
+    command: |
       yarn install
       yarn cypress install
       yarn build
@@ -83,6 +91,20 @@ build_steps: &build_steps
     - run: *install_deploysuite
     - run: *build_configuration_fetch
     - run: *running_yarn_build
+    - persist_to_workspace: *workspace_persist
+
+test_steps: &test_steps
+    # Initialization.
+    - checkout
+    - setup_remote_docker
+    - restore_cache:
+        key: test-node-modules-{{ checksum "yarn.lock" }}
+    - run: *running_yarn_test
+    - save_cache:
+        key: test-node-modules-{{ checksum "yarn.lock" }}
+        paths:
+          - node_modules
+          - /root/.cache/Cypress
     - store_test_results:
         path: cypress/test-report
     - store_artifacts:
@@ -91,7 +113,6 @@ build_steps: &build_steps
         path: cypress/videos
     - store_artifacts:
         path: cypress/screenshots
-    - persist_to_workspace: *workspace_persist
 
 deploy_steps: &deploy_steps
     - checkout
@@ -139,6 +160,14 @@ jobs:
       LOGICAL_ENV: "prod"
       APPNAME: "platform-ui-mvp"
     steps: *build_steps
+  
+  test-dev:
+    <<: *test_defaults
+    environment:
+      DEPLOY_ENV: "DEV"
+      LOGICAL_ENV: "dev"
+      APPNAME: "platform-ui-mvp"
+    steps: *test_steps
 
   # Just tests commited code.
   deployDev:
@@ -208,3 +237,6 @@ workflows:
             branches:
               only:
                 - master
+
+      - test-dev:
+          context : org-global
