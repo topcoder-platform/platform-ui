@@ -9,6 +9,9 @@ export const EnvironmentConfigDev: EnvironmentConfigModel = {
     },
     DISABLED_TOOLS: [],
     ENV: 'dev',
+    GAMIFICATION: {
+        ORG_ID: '6052dd9b-ea80-494b-b258-edd1331e27a3',
+    },
     // TODO: Move stripe creds to .env file
     STRIPE: {
         ADMIN_TOKEN:

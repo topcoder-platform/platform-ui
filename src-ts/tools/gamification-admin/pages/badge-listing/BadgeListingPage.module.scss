@@ -1,17 +1,105 @@
-.contentLayout {
-  width: 100%;
-  padding-bottom: 0;
-
-  .contentLayout-outer {
-    width: 100%;
-
-    .contentLayout-inner {
-      width: 100%;
-      overflow: visible;
-    }
-  }
-}
+@import "../../../../lib/styles/includes";
 
 .container {
   display: flex;
+  flex-direction: column;
+  padding-top: 32px;
+
+  .badges-table-header {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 17px;
+    color: #767676;
+    @include font-barlow;
+    @include font-weight-semibold;
+    font-size: 11px;
+    line-height: 11px;
+
+    .col-sort {
+      display: flex;
+      margin-left: 94px;
+
+      svg {
+        margin-left: 6px;
+        cursor: pointer;
+      }
+    }
+
+    div:last-child {
+      margin-right: 100px;
+
+      @media (max-width: 768px) {
+        display: none;
+      }
+    }
+  }
+
+  .badges-table {
+    display: flex;
+    flex-direction: column;
+
+    .badge-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 16px 24px;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+      }
+
+      &:nth-child(odd) {
+        background-color: #F4F4F4;
+        border-radius: 8px;
+      }
+
+      .badge {
+        display: flex;
+        align-items: center;
+
+        .badge-image {
+          width: 48px;
+          height: 48px;
+          margin-right: 20px;
+        }
+
+        .badge-image-disabled {
+          width: 48px;
+          height: 48px;
+          margin-right: 20px;
+          opacity: 0.5;
+          filter: grayscale(1);
+        }
+
+        .badge-name {
+          font-size: 16px;
+          font-weight: 700;
+          line-height: 24px;
+          color: #2a2a2a;
+        }
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+
+        @media (max-width: 768px) {
+          margin: 8px 0;
+        }
+
+        .action-btn {
+          margin-right: 8px;
+
+          &:last-child {
+            margin-right: 0;
+          }
+        }
+      }
+    }
+  }
+
+  .loadbtn-wrap {
+    display: flex;
+    justify-content: center;
+    flex: 1;
+  }
 }

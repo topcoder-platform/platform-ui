@@ -22,7 +22,7 @@ export const gamificationAdminRoutes: Array<PlatformRoute> = [
             },
             {
                 element: <BadgeDetailPage />,
-                route: '/badge-detail',
+                route: '/badge-detail/:id',
             },
         ],
         element: <GamificationAdmin />,
