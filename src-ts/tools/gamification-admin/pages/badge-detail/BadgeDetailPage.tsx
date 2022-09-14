@@ -1,5 +1,4 @@
 import { FC, useMemo } from 'react'
-// import { useParams } from 'react-router-dom'
 
 import { Breadcrumb, BreadcrumbItemModel, ContentLayout } from '../../../../lib'
 import { baseUrl } from '../../gamification-admin.routes'

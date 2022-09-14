@@ -14,9 +14,6 @@ export const EnvironmentConfigDefault: EnvironmentConfigModel = {
         V5: 'https://api.topcoder-dev.com/v5',
     },
     ENV: 'default',
-    GAMIFICATION: {
-        ORG_ID: '6052dd9b-ea80-494b-b258-edd1331e27a3',
-    },
     LOGGING: {
         PUBLIC_TOKEN: 'puba0825671e469d16f940c5a30dc738f11',
         SERVICE: 'platform-ui',

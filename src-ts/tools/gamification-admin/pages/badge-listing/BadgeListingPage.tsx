@@ -3,18 +3,20 @@ import { NavigateFunction, useNavigate } from 'react-router-dom'
 // tslint:disable-next-line
 import useSWRInfinite from 'swr/infinite' 
 
-import { EnvironmentConfig } from '../../../../config'
 import { Button, ButtonProps, ColumnSortIcon, ContentLayout, LoadingSpinner } from '../../../../lib'
+import { GamificationConfig } from '../../config'
 import { baseUrl } from '../../gamification-admin.routes'
+import getDataSource from '../../lib/hooks/getDataSource'
 
 import styles from './BadgeListingPage.module.scss'
 
 const BadgeListingPage: FC = () => {
   const [order, setOrder]: any = useState({ by: 'badge_name', type: 'asc' })
   const navigate: NavigateFunction = useNavigate()
+  const dataSource: string = getDataSource()
   const getKey: any = (pageIndex: any, previousPageData: any) => {
     if (previousPageData && !previousPageData.rows.length) { return undefined } // reached the end
-    return `${EnvironmentConfig.API.V5}/gamification/badges?organization_id=${EnvironmentConfig.GAMIFICATION.ORG_ID}&limit=12&offset=${pageIndex * 12}&order_by=${order.by}&order_type=${order.type}`
+    return `${dataSource}/badges?organization_id=${GamificationConfig.ORG_ID}&limit=12&offset=${pageIndex * 12}&order_by=${order.by}&order_type=${order.type}`
   }
   const { data: badges, size, setSize }: any = useSWRInfinite(getKey, { revalidateFirstPage: false })
   const loadedCnt: any = badges?.reduce((ps: any, a: any) => ps + a.rows.length, 0)

@@ -5,8 +5,8 @@ import { SWRConfig } from 'swr'
 import {
     routeContext,
     RouteContextData,
+    xhrGetAsync,
 } from '../../lib'
-import { getAsync } from '../../lib/functions/xhr-functions/xhr.functions'
 
 export const toolTitle: string = 'Gamification Admin'
 
@@ -17,7 +17,7 @@ const GamificationAdmin: FC<{}> = () => {
     return (
         <SWRConfig
             value={{
-                fetcher: (resource) => getAsync(resource),
+                fetcher: (resource) => xhrGetAsync(resource),
                 refreshInterval: 60000, // 1 min
             }}
         >

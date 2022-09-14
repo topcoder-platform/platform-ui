@@ -17,9 +17,6 @@ export const EnvironmentConfigProd: EnvironmentConfigModel = {
     },
     DISABLED_TOOLS: [],
     ENV: 'prod',
-    GAMIFICATION: {
-        ORG_ID: 'e111f8df-6ac8-44d1-b4da-bb916f5e3425',
-    },
     // TODO: Move stripe creds to .env file
     STRIPE: {
         ADMIN_TOKEN:
