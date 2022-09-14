@@ -1,9 +1,9 @@
 import { FC, useState } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 // tslint:disable-next-line
-import useSWRInfinite from 'swr/infinite' 
+import useSWRInfinite from 'swr/infinite'
 
-import { Button, ButtonProps, ColumnSortIcon, ContentLayout, LoadingSpinner } from '../../../../lib'
+import { Button, ButtonProps, ContentLayout, IconOutline, LoadingSpinner } from '../../../../lib'
 import { GamificationConfig } from '../../config'
 import { baseUrl } from '../../gamification-admin.routes'
 import getDataSource from '../../lib/hooks/getDataSource'
@@ -20,6 +20,12 @@ const BadgeListingPage: FC = () => {
   }
   const { data: badges, size, setSize }: any = useSWRInfinite(getKey, { revalidateFirstPage: false })
   const loadedCnt: any = badges?.reduce((ps: any, a: any) => ps + a.rows.length, 0)
+  const onOrderClick: any = () => {
+    setOrder({
+      by: order.by,
+      type: order.type === 'asc' ? 'desc' : 'asc',
+    })
+  }
 
   const buttonConfig: ButtonProps = {
     label: 'Create New Badge',
@@ -35,12 +41,16 @@ const BadgeListingPage: FC = () => {
     >
       <div className={styles.container}>
         <div className={styles['badges-table-header']}>
-          <div className={styles['col-sort']}>BADGE NAME <ColumnSortIcon onClick={() => {
-            setOrder({
-              by: order.by,
-              type: order.type === 'asc' ? 'desc' : 'asc',
-            })
-          }} /></div>
+          <div className={styles['col-sort']}>
+            BADGE NAME
+            {
+              order.type === 'asc' ? (
+                <Button icon={IconOutline.SortDescendingIcon} onClick={onOrderClick} buttonStyle='icon' />
+              ) : (
+                <Button icon={IconOutline.SortAscendingIcon} onClick={onOrderClick} buttonStyle='icon' />
+              )
+            }
+          </div>
           <div>ACTIONS</div>
         </div>
         <div className={styles['badges-table']}>
@@ -51,7 +61,7 @@ const BadgeListingPage: FC = () => {
                 <p className={styles['badge-name']}>{badge.badge_name}</p>
               </div>
               <div className={styles.actions}>
-                <Button buttonStyle='secondary' className={styles['action-btn']} label='View' size='sm' route={`${baseUrl}/badge-detail/${badge.id}`}  />
+                <Button buttonStyle='secondary' className={styles['action-btn']} label='View' size='sm' route={`${baseUrl}/badge-detail/${badge.id}`} />
                 <Button buttonStyle='secondary' className={styles['action-btn']} label='Award' size='sm' onClick={() => { }} />
               </div>
             </div>

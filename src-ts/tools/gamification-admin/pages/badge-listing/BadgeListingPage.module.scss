@@ -1,4 +1,5 @@
 @import "../../../../lib/styles/includes";
+@import "../../../../lib/styles/variables";
 
 .container {
   display: flex;
@@ -9,7 +10,7 @@
     display: flex;
     justify-content: space-between;
     padding-bottom: 17px;
-    color: #767676;
+    color: $black-60;
     @include font-barlow;
     @include font-weight-semibold;
     font-size: 11px;
@@ -18,10 +19,10 @@
     .col-sort {
       display: flex;
       margin-left: 94px;
+      align-items: center;
 
       svg {
-        margin-left: 6px;
-        cursor: pointer;
+        color: $black-100;
       }
     }
 
