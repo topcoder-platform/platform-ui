@@ -4,12 +4,12 @@
 .container {
   display: flex;
   flex-direction: column;
-  padding-top: 32px;
+  padding-top: $space-xxxxl;
 
   .badges-table-header {
     display: flex;
     justify-content: space-between;
-    padding-bottom: 17px;
+    padding-bottom: $space-lg;
     color: $black-60;
     @include font-barlow;
     @include font-weight-semibold;
@@ -42,14 +42,14 @@
     .badge-row {
       display: flex;
       justify-content: space-between;
-      padding: 16px 24px;
+      padding: $space-lg $space-xxl;
 
-      @media (max-width: 768px) {
+      @include ltemd {
         flex-direction: column;
       }
 
       &:nth-child(odd) {
-        background-color: #F4F4F4;
+        background-color: $black-5;
         border-radius: 8px;
       }
 
@@ -60,13 +60,13 @@
         .badge-image {
           width: 48px;
           height: 48px;
-          margin-right: 20px;
+          margin-right: $space-xl;
         }
 
         .badge-image-disabled {
           width: 48px;
           height: 48px;
-          margin-right: 20px;
+          margin-right: $space-xl;
           opacity: 0.5;
           filter: grayscale(1);
         }
@@ -75,7 +75,7 @@
           font-size: 16px;
           font-weight: 700;
           line-height: 24px;
-          color: #2a2a2a;
+          color: $black-100;
         }
       }
 
@@ -83,12 +83,12 @@
         display: flex;
         align-items: center;
 
-        @media (max-width: 768px) {
-          margin: 8px 0;
+        @include ltemd {
+          margin: $space-sm 0;
         }
 
         .action-btn {
-          margin-right: 8px;
+          margin-right: $space-sm;
 
           &:last-child {
             margin-right: 0;
