@@ -19,6 +19,7 @@ interface CollapsibleItemProps {
     duration: LearnModule['meta']['estimatedCompletionTime']
     itemId?: (item: any) => string
     items: Array<CollapsibleListItem>
+    isAssessment: boolean
     lessonsCount: number
     moduleKey: string
     onItemClick: (item: any) => void
@@ -30,8 +31,6 @@ interface CollapsibleItemProps {
 
 const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) => {
     const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
-
-    const isAssessment: boolean = props.lessonsCount === 1
 
     const toggle: () => void = useCallback(() => {
         setIsOpen(open => !open)
@@ -89,7 +88,7 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
             <div className={styles['title-row']} onClick={toggle}>
                 <StatusIcon completed={isCompleted} partial={isPartial} />
                 <span className={styles['title']}>
-                    {isAssessment && (
+                    {props.isAssessment && (
                         <div className={classNames(styles['title-tag'], 'label')}>
                             assessment
                         </div>

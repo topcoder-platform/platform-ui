@@ -54,6 +54,7 @@ const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
                             shortDescription={module.meta.introCopy}
                             title={module.meta.name}
                             onItemClick={props.onItemNavigate}
+                            isAssessment={module.meta.isAssessment}
                         />
                     ))}
                 </div>
