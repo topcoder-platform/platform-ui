@@ -17,9 +17,9 @@ interface CollapsibleListItem {
 interface CollapsibleItemProps {
     active?: string
     duration: LearnModule['meta']['estimatedCompletionTime']
+    isAssessment: boolean
     itemId?: (item: any) => string
     items: Array<CollapsibleListItem>
-    isAssessment: boolean
     lessonsCount: number
     moduleKey: string
     onItemClick: (item: any) => void
