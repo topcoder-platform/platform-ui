@@ -13,8 +13,8 @@ import {
 
 import { CoursesCard } from './courses-card'
 import { ProgressBlock } from './progress-block'
-import styles from './WelcomePage.module.scss'
 import { ReactComponent as TcAcademyFullLogoSvg } from './tca-full-logo.svg'
+import styles from './WelcomePage.module.scss'
 
 const WelcomePage: FC<{}> = () => {
 
