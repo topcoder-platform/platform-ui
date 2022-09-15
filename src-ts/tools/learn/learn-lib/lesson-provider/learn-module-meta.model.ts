@@ -5,6 +5,6 @@ export interface LearnModuleMeta {
         value: number
     }
     introCopy: Array<string>
-    lessonCount: number
+    isAssessment: boolean
     name: string
 }

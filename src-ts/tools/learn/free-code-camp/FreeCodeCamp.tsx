@@ -259,7 +259,7 @@ const FreeCodeCamp: FC<{}> = () => {
     useEffect(() => {
         if (
             certificateProgress &&
-            certificateProgress.courseProgressPercentage === 100 &&
+            certificateProgress.certificationProgressPercentage === 100 &&
             certificateProgress.status === UserCertificationProgressStatus.inProgress
         ) {
             userCertificationProgressUpdateAsync(
