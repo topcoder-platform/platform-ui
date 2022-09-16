@@ -1,8 +1,9 @@
-import { FC, useMemo } from 'react'
+import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
 
-import { Breadcrumb, BreadcrumbItemModel, ContentLayout } from '../../../../lib'
+import { Breadcrumb, BreadcrumbItemModel, ContentLayout, FormDefinition, formOnReset, formGetInputFields } from '../../../../lib'
 import { baseUrl } from '../../gamification-admin.routes'
 import { toolTitle } from '../../GamificationAdmin'
+import { CreateBadgeForm, createBadgeFormDef } from './create-badge-form'
 
 import styles from './CreateBadgePage.module.scss'
 
@@ -12,16 +13,25 @@ const CreateBadgePage: FC = () => {
     { name: 'create badge', url: '#' },
   ], [])
 
+  const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
+        = useState<FormDefinition>({ ...createBadgeFormDef })
+
+    function onSave(): void {
+        const updatedForm: FormDefinition = { ...formDef }
+        formOnReset(formGetInputFields(updatedForm.groups || []))
+        setFormDef(updatedForm)
+    }
+
   return (
     <ContentLayout
-      contentClass={styles['contentLayout']}
-      outerClass={styles['contentLayout-outer']}
-      innerClass={styles['contentLayout-inner']}
       title='Create Badge'
     >
       <Breadcrumb items={breadcrumb} />
       <div className={styles.container}>
-
+        <CreateBadgeForm
+          formDef={createBadgeFormDef}
+          onSave={onSave}
+        />
       </div>
     </ContentLayout>
   )
