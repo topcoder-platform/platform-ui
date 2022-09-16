@@ -9,7 +9,7 @@ interface CardsSliderProps {
 }
 
 const CardsSlider: FC<CardsSliderProps> = (props: CardsSliderProps) => {
-    const [activeSlide, setActiveSlide]: [number, Dispatch<SetStateAction<number>>] = useState(2)
+    const [activeSlide, setActiveSlide]: [number, Dispatch<SetStateAction<number>>] = useState(0)
 
     const wrapSlides: (children: Array<JSX.Element>) => Array<JSX.Element> = (children: Array<JSX.Element>) => {
         return Children.map<ReactNode, ReactNode>(children, (child, index) => (
