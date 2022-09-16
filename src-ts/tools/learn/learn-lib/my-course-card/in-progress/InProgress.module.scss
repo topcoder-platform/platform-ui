@@ -8,10 +8,6 @@
 
     display: flex;
 
-    &.large {
-        padding: $space-xxxxl;
-    }
-
     @include ltelg {
         &, &.large {
             padding: $space-lg;
@@ -119,7 +115,7 @@
 
 .started-date {
     font-weight: bold;
-    
+
     @include ltemd {
         order: -1;
     }
