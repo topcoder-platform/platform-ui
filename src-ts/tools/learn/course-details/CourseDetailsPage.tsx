@@ -99,6 +99,27 @@ const CourseDetailsPage: FC<{}> = () => {
         )
     }
 
+    function getCompletionSuggestion(): ReactNode {
+        if (!course) {
+            return
+        }
+
+        return progress?.status === UserCertificationProgressStatus.completed ? (
+            <></>
+        ) : (
+            !!course.completionSuggestions?.length && (
+                <>
+                    <h3 className='details mtop'>Suggestions for completing this course</h3>
+
+                    <div
+                        className={styles['text']}
+                        dangerouslySetInnerHTML={{ __html: (course.completionSuggestions ?? []).join('<br /><br />') }}
+                    ></div>
+                </>
+            )
+        )
+    }
+
     function getFooter(): ReactNode {
         if (!resourceProvider) {
             return
@@ -141,6 +162,7 @@ const CourseDetailsPage: FC<{}> = () => {
 
                         <div className={styles['description']}>
                             {getDescription()}
+                            {getCompletionSuggestion()}
                             <div className={styles['coming-soon']}>
                                 <PromoCourse />
                             </div>
