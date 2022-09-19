@@ -1,21 +1,22 @@
-import { orderBy } from 'lodash'
+import { filter as filterBy, orderBy } from 'lodash'
 import { Dispatch, MutableRefObject, SetStateAction, useEffect, useRef, useState } from 'react'
 
 import { allCertificationsGetAsync, LearnCertification } from './all-certifications-functions'
 import { AllCertificationsProviderData } from './all-certifications-provider-data.model'
-import { ALL_CERTIFICATIONS_DEFAULT_SORT, ALL_CERTIFICATIONS_SORT_FIELD_TYPE } from './all-certifications-sort-options'
-
-type SORT_DIRECTION = 'asc'|'desc'
-const DEFAULT_SORT_DIRECTION: SORT_DIRECTION = 'desc'
 
 interface CertificationsAllProviderSortOptions {
-    direction: SORT_DIRECTION,
-    field: ALL_CERTIFICATIONS_SORT_FIELD_TYPE
+    direction: 'asc'|'desc',
+    field: keyof LearnCertification
+}
+
+interface CertificationsAllProviderFilterOptions {
+    field: keyof LearnCertification,
+    value: string
 }
 
 interface CertificationsAllProviderOptions {
     enabled?: boolean
-    filter?: undefined|'data-science'|'web-development'|'backend-development'
+    filter?: CertificationsAllProviderFilterOptions
     sort?: CertificationsAllProviderSortOptions
 }
 
@@ -24,12 +25,8 @@ export function useAllCertifications(
     certificationId?: string,
     options?: CertificationsAllProviderOptions
 ): AllCertificationsProviderData {
-    const sort: MutableRefObject<CertificationsAllProviderSortOptions> = useRef({
-        direction: DEFAULT_SORT_DIRECTION,
-        field: ALL_CERTIFICATIONS_DEFAULT_SORT,
-        ...options?.sort,
-    })
-    // const filter = useRef(options?.filter);
+    const sort: MutableRefObject<CertificationsAllProviderSortOptions | undefined> = useRef(options?.sort)
+    const filter: MutableRefObject<CertificationsAllProviderFilterOptions | undefined> = useRef(options?.filter)
 
     const [state, setState]:
         [AllCertificationsProviderData, Dispatch<SetStateAction<AllCertificationsProviderData>>]
@@ -40,33 +37,46 @@ export function useAllCertifications(
             ready: false,
         })
 
-    function sortCertifications(
-        certificates: Array<LearnCertification>,
-        sortField: ALL_CERTIFICATIONS_SORT_FIELD_TYPE,
-        sortDir: SORT_DIRECTION
+    function getSortedCertifications(
+        certificates: Array<LearnCertification>
     ): Array<LearnCertification> {
-        return orderBy([...certificates], sortField, sortDir)
+        return !sort.current
+            ? certificates
+            : orderBy([...certificates], sort.current.field, sort.current.direction)
     }
 
-    function sortCertificates(): void {
-        setState((prevState) => ({
-            ...prevState,
-            certifications: sortCertifications(
-                prevState.allCertifications,
-                sort.current.field,
-                sort.current.direction,
-            ),
-        }))
+    function getFilteredCertifications(
+        certificates: Array<LearnCertification>
+    ): Array<LearnCertification> {
+        return !filter.current?.value
+            ? certificates
+            : filterBy([...certificates], {[filter.current.field]: filter.current.value})
     }
 
-    if (options?.sort && (sort.current?.direction !== options?.sort?.direction || sort.current?.field !== options?.sort?.field)) {
-        sort.current = {
-            direction: options?.sort?.direction ?? DEFAULT_SORT_DIRECTION,
-            field: options?.sort?.field ?? ALL_CERTIFICATIONS_DEFAULT_SORT,
-        }
+    function getFilteredAndSortedCertifications(
+        certificates: Array<LearnCertification>
+    ): Array<LearnCertification> {
+        return getSortedCertifications(getFilteredCertifications(certificates))
+    }
+
+    if (sort.current?.direction !== options?.sort?.direction || sort.current?.field !== options?.sort?.field) {
+        sort.current = options?.sort ? { ...options?.sort } : undefined
 
         // wait to exit current render loop before triggering a new state update
-        setTimeout(sortCertificates)
+        setTimeout(() => setState((prevState) => ({
+            ...prevState,
+            certifications: getFilteredAndSortedCertifications(prevState.allCertifications),
+        })))
+    }
+
+    if (filter.current?.field !== options?.filter?.field || filter.current?.value !== options?.filter?.value) {
+        filter.current = options?.filter ? { ...options?.filter } : undefined
+
+        // wait to exit current render loop before triggering a new state update
+        setTimeout(() => setState((prevState) => ({
+            ...prevState,
+            certifications: getFilteredAndSortedCertifications(prevState.allCertifications),
+        })))
     }
 
     useEffect(() => {
@@ -81,11 +91,8 @@ export function useAllCertifications(
 
         allCertificationsGetAsync(provider, certificationId)
             .then((certifications) => {
-                const sortedCertifications: Array<LearnCertification> = sortCertifications(
-                    certifications,
-                    sort.current.field,
-                    sort.current.direction,
-                )
+                const filteredCertifications: Array<LearnCertification> = getFilteredCertifications(certifications)
+                const sortedCertifications: Array<LearnCertification> = getSortedCertifications(filteredCertifications)
 
                 setState((prevState) => ({
                     ...prevState,

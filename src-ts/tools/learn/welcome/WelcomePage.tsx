@@ -1,13 +1,12 @@
 import classNames from 'classnames'
-import { Dispatch, FC, SetStateAction } from 'react'
+import { uniq } from 'lodash'
+import { Dispatch, FC, SetStateAction, useMemo } from 'react'
 
 import { ContentLayout, InputSelect, LoadingSpinner, Portal, useLocalStorage } from '../../../lib'
 import '../../../lib/styles/index.scss'
 import {
     AllCertificationsProviderData,
-    ALL_CERTIFICATIONS_DEFAULT_SORT,
-    ALL_CERTIFICATIONS_SORT_FIELD_TYPE,
-    ALL_CERTIFICATIONS_SORT_OPTIONS,
+    LearnCertification,
     useAllCertifications,
     UserCertificationsProviderData,
     useUserCertifications,
@@ -18,17 +17,34 @@ import { CoursesCard } from './courses-card'
 import { ProgressBlock } from './progress-block'
 import styles from './WelcomePage.module.scss'
 
+type SORT_FIELD_TYPE = keyof LearnCertification
+const SORT_OPTIONS: Array<{label: string, value: SORT_FIELD_TYPE}> = [
+    {label: 'Category', value: 'category'},
+    {label: 'Newest', value: 'createdAt'},
+    {label: 'Title', value: 'title'},
+]
+export const DEFAULT_SORT: SORT_FIELD_TYPE = SORT_OPTIONS[0].value
+
 const WelcomePage: FC<{}> = () => {
 
     const [sortField, setSortField]: [
-        ALL_CERTIFICATIONS_SORT_FIELD_TYPE,
-        Dispatch<SetStateAction<ALL_CERTIFICATIONS_SORT_FIELD_TYPE>>
-    ] = useLocalStorage<ALL_CERTIFICATIONS_SORT_FIELD_TYPE>('tca-welcome-sort-certs', ALL_CERTIFICATIONS_DEFAULT_SORT)
+        SORT_FIELD_TYPE,
+        Dispatch<SetStateAction<SORT_FIELD_TYPE>>
+    ] = useLocalStorage<SORT_FIELD_TYPE>('tca-welcome-sort-certs', DEFAULT_SORT)
+
+    const [selectedCategory, setSelectedCategory]: [
+        string,
+        Dispatch<SetStateAction<string>>
+    ] = useLocalStorage<string>('tca-welcome-filter-certs', '')
 
     const allCertsData: AllCertificationsProviderData = useAllCertifications(
         undefined,
         undefined,
         {
+            filter: {
+                field: 'category',
+                value: selectedCategory,
+            },
             sort: {
                 direction: sortField === 'createdAt' ? 'desc' : 'asc',
                 field: sortField,
@@ -38,6 +54,14 @@ const WelcomePage: FC<{}> = () => {
     const userCertsData: UserCertificationsProviderData = useUserCertifications()
 
     const coursesReady: boolean = allCertsData.ready && userCertsData.ready
+
+    const certsCategoriesOptions: Array<{label: string, value: string}> = useMemo(() => {
+        const certsCategories: Array<string> = uniq(allCertsData.allCertifications.map(c => c.category))
+        return [
+            {label: 'All Categories', value: ''},
+            ...certsCategories.map((c) => ({value: c, label: c})),
+        ]
+    }, [allCertsData])
 
     return (
         <ContentLayout>
@@ -80,9 +104,16 @@ const WelcomePage: FC<{}> = () => {
 
                         <div className={styles['courses-list-filters']}>
                             <InputSelect
-                                options={ALL_CERTIFICATIONS_SORT_OPTIONS}
+                                options={certsCategoriesOptions}
+                                value={selectedCategory}
+                                onChange={(e) => setSelectedCategory(e.target.value as string)}
+                                name='filter-courses'
+                                label='Categories'
+                            ></InputSelect>
+                            <InputSelect
+                                options={SORT_OPTIONS}
                                 value={sortField}
-                                onChange={(e) => setSortField(e.target.value as ALL_CERTIFICATIONS_SORT_FIELD_TYPE)}
+                                onChange={(e) => setSortField(e.target.value as SORT_FIELD_TYPE)}
                                 name='sort-courses'
                                 label='Sort by'
                             ></InputSelect>

@@ -26,6 +26,8 @@
     border: $border-xs solid $black-40;
     border-radius: 0 0 $space-xs $space-xs;
     padding: $space-sm 0;
+    max-height: 230px;
+    overflow: auto;
 }
 
 .select-option {
