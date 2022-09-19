@@ -1,7 +1,7 @@
 import classNames from 'classnames'
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
-import { ContentLayout, InputSelect, LoadingSpinner, Portal } from '../../../lib'
+import { ContentLayout, InputSelect, LoadingSpinner, Portal, useLocalStorage } from '../../../lib'
 import '../../../lib/styles/index.scss'
 import {
     AllCertificationsProviderData,
@@ -23,7 +23,7 @@ const WelcomePage: FC<{}> = () => {
     const [sortField, setSortField]: [
         ALL_CERTIFICATIONS_SORT_FIELD_TYPE,
         Dispatch<SetStateAction<ALL_CERTIFICATIONS_SORT_FIELD_TYPE>>
-    ] = useState<ALL_CERTIFICATIONS_SORT_FIELD_TYPE>(ALL_CERTIFICATIONS_DEFAULT_SORT)
+    ] = useLocalStorage<ALL_CERTIFICATIONS_SORT_FIELD_TYPE>('tca-welcome-sort-certs', ALL_CERTIFICATIONS_DEFAULT_SORT)
 
     const allCertsData: AllCertificationsProviderData = useAllCertifications(
         undefined,
