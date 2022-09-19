@@ -1,32 +1,34 @@
-import { FC, useMemo } from 'react'
+import { FC } from 'react'
 
 import { Breadcrumb, BreadcrumbItemModel, ContentLayout } from '../../../../lib'
-import { baseUrl } from '../../gamification-admin.routes'
-import { toolTitle } from '../../GamificationAdmin'
+import { useGamificationBreadcrumb } from '../../game-lib'
 
 import styles from './BadgeDetailPage.module.scss'
 
 const BadgeDetailPage: FC = () => {
-  // TDOD: use whit GAME-78
-  // const { id: badgeID } : { badgeID: string } = useParams()
-  const breadcrumb: Array<BreadcrumbItemModel> = useMemo(() => [
-    { name: toolTitle, url: baseUrl },
-    { name: 'badge detail', url: '#' },
-  ], [])
+    // TDOD: use whit GAME-78
+    // const { id: badgeID } : { badgeID: string } = useParams()
 
-  return (
-    <ContentLayout
-      contentClass={styles['contentLayout']}
-      outerClass={styles['contentLayout-outer']}
-      innerClass={styles['contentLayout-inner']}
-      title='Badge Detail'
-    >
-      <Breadcrumb items={breadcrumb} />
-      <div className={styles.container}>
+    const breadcrumb: Array<BreadcrumbItemModel> = useGamificationBreadcrumb([
+        {
+            name: 'badge detail',
+            url: '#',
+        },
+    ])
 
-      </div>
-    </ContentLayout>
-  )
+    return (
+        <ContentLayout
+            contentClass={styles['contentLayout']}
+            outerClass={styles['contentLayout-outer']}
+            innerClass={styles['contentLayout-inner']}
+            title='Badge Detail'
+        >
+            <Breadcrumb items={breadcrumb} />
+            <div className={styles.container}>
+
+            </div>
+        </ContentLayout>
+    )
 }
 
 export default BadgeDetailPage

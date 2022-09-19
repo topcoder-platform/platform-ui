@@ -1,7 +1,7 @@
 import classNames from 'classnames'
 import { Dispatch, MouseEvent, SetStateAction, useEffect, useState } from 'react'
 
-import { Button, ButtonSize, ButtonStyle } from '../button'
+import { Button } from '../button'
 import { Sort } from '../pagination'
 import '../styles/_includes.scss'
 import { IconOutline } from '../svgs'
@@ -16,13 +16,10 @@ import styles from './Table.module.scss'
 interface TableProps<T> {
     readonly columns: ReadonlyArray<TableColumn<T>>
     readonly data: ReadonlyArray<T>
-    readonly loadMoreBtnLabel?: string
-    readonly loadMoreBtnSize?: ButtonSize
-    readonly loadMoreBtnStyle?: ButtonStyle
     readonly moreToLoad?: boolean
-    readonly onLoadMoreClick?: (data: T) => void
+    readonly onLoadMoreClick?: () => void
     readonly onRowClick?: (data: T) => void
-    readonly onToggleSort?: (sort: Sort | undefined) => void
+    readonly onToggleSort?: (sort: Sort) => void
 }
 
 interface DefaultSortDirectionMap {
@@ -41,7 +38,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
             Dispatch<SetStateAction<DefaultSortDirectionMap | undefined>>
         ]
             = useState<DefaultSortDirectionMap | undefined>()
-        const [sortedData, setSortData]: [ReadonlyArray<T>, Dispatch<SetStateAction<ReadonlyArray<T>>>]
+        const [sortedData, setSortedData]: [ReadonlyArray<T>, Dispatch<SetStateAction<ReadonlyArray<T>>>]
             = useState<ReadonlyArray<T>>(props.data)
 
         useEffect(() => {
@@ -54,7 +51,11 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 setDefaultSortDirectionMap(map)
             }
 
-            setSortData(tableGetSorted(data, columns, sort))
+            // if we have a sort handler, don't worry about getting the sorted data;
+            // otherwise, get the sorted data for the table
+            const sorted: ReadonlyArray<T> = !!props.onToggleSort ? data : tableGetSorted(data, columns, sort)
+
+            setSortedData(sorted)
         },
             [
                 columns,
@@ -84,9 +85,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
             setSort(newSort)
 
             // call the callback to notify parent for sort update
-            if (props.onToggleSort) {
-                props.onToggleSort(newSort)
-            }
+            props.onToggleSort?.(newSort)
         }
 
         const headerRow: Array<JSX.Element> = props.columns
@@ -95,13 +94,12 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 const isCurrentlySorted: boolean = isSortable && col.propertyName === sort?.fieldName
                 const colorClass: string = isCurrentlySorted ? 'black-100' : 'black-60'
                 const sortableClass: string | undefined = isSortable ? styles.sortable : undefined
-                const centerClass: string | undefined = col.centerHeader ? styles.centerHeader : undefined
                 return (
                     <th
                         className={styles.th}
                         key={index}
                     >
-                        <div className={classNames(styles['header-container'], styles[col.type], colorClass, sortableClass, centerClass)}>
+                        <div className={classNames(styles['header-container'], styles[col.type], colorClass, sortableClass)}>
                             {col.label}
                             {!!col.tooltip && (
                                 <div className={styles.tooltip}>
@@ -172,9 +170,16 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                     </tbody>
                 </table>
                 {
-                    props.moreToLoad && <div className={styles['loadBtnWrap']}>
-                        <Button buttonStyle={props.loadMoreBtnStyle} label={props.loadMoreBtnLabel} size={props.loadMoreBtnSize} onClick={props.onLoadMoreClick} />
-                    </div>
+                    !!props.moreToLoad && !!props.onLoadMoreClick && (
+                        <div className={styles['loadBtnWrap']}>
+                            <Button
+                                buttonStyle='tertiary'
+                                label='Load More'
+                                size='lg'
+                                onClick={props.onLoadMoreClick}
+                            />
+                        </div>
+                    )
                 }
             </div>
         )

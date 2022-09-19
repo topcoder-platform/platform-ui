@@ -1,10 +1,10 @@
 import { TableColumn } from '../../../../../lib'
-import { Badge } from '../../../lib/models/badge.model'
+import { GameBadge } from '../../../game-lib'
 
 import { BadgeActionRenderer } from './badge-action-renderer'
 import { BadgeListingNameRenderer } from './badge-name-renderer'
 
-export const badgeListingColumns: ReadonlyArray<TableColumn<Badge>> = [
+export const badgeListingColumns: ReadonlyArray<TableColumn<GameBadge>> = [
   {
     defaultSortDirection: 'asc',
     isDefaultSort: true,
@@ -14,8 +14,6 @@ export const badgeListingColumns: ReadonlyArray<TableColumn<Badge>> = [
     type: 'element',
   },
   {
-    centerHeader: true,
-    label: 'Actions',
     renderer: BadgeActionRenderer,
     type: 'action',
   },
