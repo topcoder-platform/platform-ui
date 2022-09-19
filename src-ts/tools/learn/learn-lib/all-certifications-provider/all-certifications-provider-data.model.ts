@@ -2,8 +2,8 @@ import { LearnCertification } from './all-certifications-functions'
 
 export interface AllCertificationsProviderData {
     certification?: LearnCertification
+    allCertifications: Array<LearnCertification>
     certifications: Array<LearnCertification>
-    certificationsCount: number
     loading: boolean
     ready: boolean
 }

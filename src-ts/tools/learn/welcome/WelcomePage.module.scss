@@ -4,7 +4,7 @@
     :global(.hero-card-col) {
         width: 43.5%;
         max-width: 600px;
-        
+
         @include ltemd {
             width: 100%;
             max-width: none;
@@ -15,7 +15,7 @@
 .courses-section {
     padding: $space-xxxxl 0;
     position: relative;
-    
+
     @include ltemd {
         padding-top: $space-xxl;
     }
@@ -38,12 +38,43 @@
     @include ltelg {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     @media (max-width: 576px) {
         grid-template-columns: repeat(1, 1fr);
     }
-    
+
     @include ltemd {
         margin-top: $space-xxl;
+    }
+}
+
+.courses-list-header {
+    display: flex;
+    align-items: center;
+
+    > h3 {
+        display: flex;
+        align-items: center;
+        gap: $space-sm;
+    }
+}
+
+.badge {
+    font-family: $font-roboto;
+    background: $blue-100;
+
+    padding: 0 $space-sm;
+    border-radius: 50px;
+    color: $tc-white;
+}
+
+.courses-list-filters {
+    display: flex;
+    margin-left: auto;
+
+    gap: $space-xxl;
+
+    > * {
+        min-width: 326px;
     }
 }
