@@ -8,5 +8,5 @@ export {
 } from './form-functions'
 export * from './form-input.model'
 export * from './form-group.model'
-export { inputOptional, FormInputAutocompleteOption } from './form-groups'
+export * from './form-groups/form-input'
 export * from './validator-functions'
