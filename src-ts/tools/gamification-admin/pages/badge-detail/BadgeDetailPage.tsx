@@ -7,6 +7,7 @@ import { toolTitle } from '../../GamificationAdmin'
 import styles from './BadgeDetailPage.module.scss'
 
 const BadgeDetailPage: FC = () => {
+  // TDOD: use whit GAME-78
   // const { id: badgeID } : { badgeID: string } = useParams()
   const breadcrumb: Array<BreadcrumbItemModel> = useMemo(() => [
     { name: toolTitle, url: baseUrl },

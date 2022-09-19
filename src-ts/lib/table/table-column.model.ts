@@ -1,6 +1,7 @@
 import { TableCellType } from './table-cell.type'
 
 export interface TableColumn<T> {
+    readonly centerHeader?: boolean
     readonly defaultSortDirection?: 'asc' | 'desc'
     readonly isDefaultSort?: boolean
     readonly label?: string

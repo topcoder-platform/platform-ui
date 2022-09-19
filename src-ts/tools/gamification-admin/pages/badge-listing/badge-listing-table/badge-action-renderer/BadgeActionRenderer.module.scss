@@ -1,0 +1,27 @@
+@import "../../../../../../lib/styles/includes";
+@import "../../../../../../lib/styles/variables";
+
+.badge-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: $space-lg;
+
+  @include ltemd {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  a {
+    margin-right: $space-sm;
+
+    @include ltemd {
+      margin-right: 0;
+      margin-bottom: $space-sm;
+    }
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}

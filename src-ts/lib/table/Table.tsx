@@ -1,6 +1,7 @@
 import classNames from 'classnames'
 import { Dispatch, MouseEvent, SetStateAction, useEffect, useState } from 'react'
 
+import { Button, ButtonSize, ButtonStyle } from '../button'
 import { Sort } from '../pagination'
 import '../styles/_includes.scss'
 import { IconOutline } from '../svgs'
@@ -15,7 +16,13 @@ import styles from './Table.module.scss'
 interface TableProps<T> {
     readonly columns: ReadonlyArray<TableColumn<T>>
     readonly data: ReadonlyArray<T>
+    readonly loadMoreBtnLabel?: string
+    readonly loadMoreBtnSize?: ButtonSize
+    readonly loadMoreBtnStyle?: ButtonStyle
+    readonly moreToLoad?: boolean
+    readonly onLoadMoreClick?: (data: T) => void
     readonly onRowClick?: (data: T) => void
+    readonly onToggleSort?: (sort: Sort | undefined) => void
 }
 
 interface DefaultSortDirectionMap {
@@ -75,6 +82,11 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 fieldName,
             }
             setSort(newSort)
+
+            // call the callback to notify parent for sort update
+            if (props.onToggleSort) {
+                props.onToggleSort(newSort)
+            }
         }
 
         const headerRow: Array<JSX.Element> = props.columns
@@ -83,12 +95,13 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 const isCurrentlySorted: boolean = isSortable && col.propertyName === sort?.fieldName
                 const colorClass: string = isCurrentlySorted ? 'black-100' : 'black-60'
                 const sortableClass: string | undefined = isSortable ? styles.sortable : undefined
+                const centerClass: string | undefined = col.centerHeader ? styles.centerHeader : undefined
                 return (
                     <th
                         className={styles.th}
                         key={index}
                     >
-                        <div className={classNames(styles['header-container'], styles[col.type], colorClass, sortableClass)}>
+                        <div className={classNames(styles['header-container'], styles[col.type], colorClass, sortableClass, centerClass)}>
                             {col.label}
                             {!!col.tooltip && (
                                 <div className={styles.tooltip}>
@@ -136,7 +149,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 // return the entire row
                 return (
                     <tr
-                        className={classNames(styles.tr, !!onRowClick ? styles.clickable : undefined)}
+                        className={classNames(styles.tr, props.onRowClick ? styles.clickable : undefined)}
                         onClick={onRowClick}
                         key={index}
                     >
@@ -158,6 +171,11 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                         {rowCells}
                     </tbody>
                 </table>
+                {
+                    props.moreToLoad && <div className={styles['loadBtnWrap']}>
+                        <Button buttonStyle={props.loadMoreBtnStyle} label={props.loadMoreBtnLabel} size={props.loadMoreBtnSize} onClick={props.onLoadMoreClick} />
+                    </div>
+                }
             </div>
         )
     }

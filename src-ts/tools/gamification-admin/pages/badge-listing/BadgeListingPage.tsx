@@ -1,32 +1,51 @@
-import { FC, useState } from 'react'
+import { flatten, map } from 'lodash'
+import { Dispatch, FC, SetStateAction, useState } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 // tslint:disable-next-line
 import useSWRInfinite from 'swr/infinite'
 
-import { Button, ButtonProps, ContentLayout, IconOutline, LoadingSpinner } from '../../../../lib'
+import { ButtonProps, ContentLayout, LoadingSpinner, Sort, Table, TableColumn } from '../../../../lib'
 import { GamificationConfig } from '../../config'
 import { baseUrl } from '../../gamification-admin.routes'
 import getDataSource from '../../lib/hooks/getDataSource'
+import { Badge } from '../../lib/models/badge.model'
 
+import { badgeListingColumns } from './badge-listing-table/badge-listing-table.config'
 import styles from './BadgeListingPage.module.scss'
 
 const BadgeListingPage: FC = () => {
   const [order, setOrder]: any = useState({ by: 'badge_name', type: 'asc' })
   const navigate: NavigateFunction = useNavigate()
   const dataSource: string = getDataSource()
+
+  // server-side pagination hook
   const getKey: any = (pageIndex: any, previousPageData: any) => {
     if (previousPageData && !previousPageData.rows.length) { return undefined } // reached the end
     return `${dataSource}/badges?organization_id=${GamificationConfig.ORG_ID}&limit=12&offset=${pageIndex * 12}&order_by=${order.by}&order_type=${order.type}`
   }
   const { data: badges, size, setSize }: any = useSWRInfinite(getKey, { revalidateFirstPage: false })
-  const loadedCnt: any = badges?.reduce((ps: any, a: any) => ps + a.rows.length, 0)
-  const onOrderClick: any = () => {
+
+  const tableData: Array<Badge> = flatten(map(badges, page => page.rows)) // flatten version of badges paginated data
+  const loadedCnt: any = badges?.reduce((ps: any, a: any) => ps + a.rows.length, 0) // how much data is loaded so far
+
+  // listing table config
+  const [columns]: [
+    ReadonlyArray<TableColumn<Badge>>,
+    Dispatch<SetStateAction<ReadonlyArray<TableColumn<Badge>>>>,
+  ]
+    = useState<ReadonlyArray<TableColumn<Badge>>>([...badgeListingColumns])
+
+  // on sort toggle callback
+  const onOrderClick: any = (sort: Sort) => {
     setOrder({
-      by: order.by,
-      type: order.type === 'asc' ? 'desc' : 'asc',
+      by: sort.fieldName,
+      type: sort.direction,
     })
   }
 
+  // on load more callback
+  const onLoadMoreClick: any = () => setSize(size + 1)
+  // header button config
   const buttonConfig: ButtonProps = {
     label: 'Create New Badge',
     onClick: () => navigate(`${baseUrl}/create-badge`),
@@ -40,41 +59,16 @@ const BadgeListingPage: FC = () => {
       buttonConfig={buttonConfig}
     >
       <div className={styles.container}>
-        <div className={styles['badges-table-header']}>
-          <div className={styles['col-sort']}>
-            BADGE NAME
-            {
-              order.type === 'asc' ? (
-                <Button icon={IconOutline.SortDescendingIcon} onClick={onOrderClick} buttonStyle='icon' />
-              ) : (
-                <Button icon={IconOutline.SortAscendingIcon} onClick={onOrderClick} buttonStyle='icon' />
-              )
-            }
-          </div>
-          <div>ACTIONS</div>
-        </div>
-        <div className={styles['badges-table']}>
-          {
-            badges.map((page: any) => page.rows.map((badge: any) => <div className={styles['badge-row']} key={badge.id}>
-              <div className={styles.badge}>
-                <img src={badge.badge_image_url} alt={badge.badge_name} className={styles[badge.active ? 'badge-image' : 'badge-image-disabled']} />
-                <p className={styles['badge-name']}>{badge.badge_name}</p>
-              </div>
-              <div className={styles.actions}>
-                <Button buttonStyle='secondary' className={styles['action-btn']} label='View' size='sm' route={`${baseUrl}/badge-detail/${badge.id}`} />
-                <Button buttonStyle='secondary' className={styles['action-btn']} label='Award' size='sm' onClick={() => { }} />
-              </div>
-            </div>
-            ))
-          }
-        </div>
-        {
-          badges[0].count !== loadedCnt && <div className={styles['loadbtn-wrap']}>
-            <Button buttonStyle='tertiary' label='Load more' size='lg' onClick={() => {
-              setSize(size + 1)
-            }} />
-          </div>
-        }
+        <Table
+          columns={columns}
+          data={tableData}
+          onLoadMoreClick={onLoadMoreClick}
+          loadMoreBtnStyle='tertiary'
+          loadMoreBtnSize='lg'
+          loadMoreBtnLabel='Load More'
+          moreToLoad={badges[0].count !== loadedCnt}
+          onToggleSort={onOrderClick}
+        />
       </div>
     </ContentLayout>
   )
