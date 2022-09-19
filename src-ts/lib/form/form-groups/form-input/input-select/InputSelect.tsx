@@ -1,14 +1,15 @@
 import classNames from 'classnames'
 import {
     ChangeEvent,
-    FC,
-    ReactNode,
-    useState,
     Dispatch,
-    SetStateAction,
+    FC,
     MutableRefObject,
+    ReactNode,
+    SetStateAction,
     useRef,
+    useState,
 } from 'react'
+
 import { useClickOutside } from '../../../../hooks'
 import { IconOutline } from '../../../../svgs'
 import { InputWrapper } from '../input-wrapper'
@@ -16,8 +17,8 @@ import { InputWrapper } from '../input-wrapper'
 import styles from './InputSelect.module.scss'
 
 export interface InputSelectOption {
-    value: string
     label?: ReactNode
+    value: string
 }
 
 interface InputSelectProps {
@@ -25,26 +26,28 @@ interface InputSelectProps {
     readonly disabled?: boolean
     readonly error?: string
     readonly hideInlineErrors?: boolean
+    readonly hint?: string
+    readonly label?: string
     readonly name: string
     readonly onChange: (event: ChangeEvent<HTMLInputElement>) => void
+    readonly options: Array<InputSelectOption>
     readonly tabIndex?: number
     readonly value?: string
-    readonly options: Array<InputSelectOption>
-    readonly label?: string
-    readonly hint?: string
 }
 
 const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
     const triggerRef: MutableRefObject<any> = useRef(undefined)
     const [menuIsVisible, setMenuIsVisible]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
 
-    const selectedOption = props.options.find(option => option.value === props.value);
+    const selectedOption: InputSelectOption | undefined = props.options.find(option => option.value === props.value)
 
-    const label = (option?: InputSelectOption) => option ? option.label ?? option.value : ''
+    const label: (option: InputSelectOption) => ReactNode = (option?: InputSelectOption) => (
+        option ? option.label ?? option.value : ''
+    )
 
-    const toggleMenu = () => setMenuIsVisible((wasVisible) => !wasVisible)
+    const toggleMenu: () => void = () => setMenuIsVisible((wasVisible) => !wasVisible)
 
-    const select = (option: InputSelectOption) => () => {
+    const select: (option: InputSelectOption) => () => void = (option: InputSelectOption) => () => {
         props.onChange({
             target: {value: option.value} ,
         } as unknown as ChangeEvent<HTMLInputElement>)
@@ -65,12 +68,14 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
             hideInlineErrors={props.hideInlineErrors}
             ref={triggerRef}
         >
-            <div className={styles['selected']} onClick={toggleMenu}>
-                <span className='body-small'>{label(selectedOption)}</span>
-                <span className={styles['selected-icon']}>
-                    <IconOutline.ChevronDownIcon />
-                </span>
-            </div>
+            {selectedOption && (
+                <div className={styles['selected']} onClick={toggleMenu}>
+                    <span className='body-small'>{label(selectedOption)}</span>
+                    <span className={styles['selected-icon']}>
+                        <IconOutline.ChevronDownIcon />
+                    </span>
+                </div>
+            )}
 
             {menuIsVisible && (
                 <div className={styles['select-menu']}>

@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { Dispatch, FC, SetStateAction, useState } from 'react'
+import { Dispatch, FC, SetStateAction } from 'react'
 
 import { ContentLayout, InputSelect, LoadingSpinner, Portal, useLocalStorage } from '../../../lib'
 import '../../../lib/styles/index.scss'
@@ -31,8 +31,8 @@ const WelcomePage: FC<{}> = () => {
         {
             sort: {
                 direction: sortField === 'createdAt' ? 'desc' : 'asc',
-                field: sortField
-            }
+                field: sortField,
+            },
         }
     )
     const userCertsData: UserCertificationsProviderData = useUserCertifications()
@@ -77,7 +77,6 @@ const WelcomePage: FC<{}> = () => {
                                 {allCertsData.certifications.length}
                             </span>
                         </h3>
-
 
                         <div className={styles['courses-list-filters']}>
                             <InputSelect

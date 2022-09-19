@@ -1,5 +1,5 @@
 import { orderBy } from 'lodash'
-import { Dispatch, SetStateAction, useEffect, useState, useRef } from 'react'
+import { Dispatch, MutableRefObject, SetStateAction, useEffect, useRef, useState } from 'react'
 
 import { allCertificationsGetAsync, LearnCertification } from './all-certifications-functions'
 import { AllCertificationsProviderData } from './all-certifications-provider-data.model'
@@ -8,14 +8,15 @@ import { ALL_CERTIFICATIONS_DEFAULT_SORT, ALL_CERTIFICATIONS_SORT_FIELD_TYPE } f
 type SORT_DIRECTION = 'asc'|'desc'
 const DEFAULT_SORT_DIRECTION: SORT_DIRECTION = 'desc'
 
+interface CertificationsAllProviderSortOptions {
+    direction: SORT_DIRECTION,
+    field: ALL_CERTIFICATIONS_SORT_FIELD_TYPE
+}
 
 interface CertificationsAllProviderOptions {
     enabled?: boolean
-    sort?: {
-        direction: SORT_DIRECTION,
-        field: ALL_CERTIFICATIONS_SORT_FIELD_TYPE
-    },
     filter?: undefined|'data-science'|'web-development'|'backend-development'
+    sort?: CertificationsAllProviderSortOptions
 }
 
 export function useAllCertifications(
@@ -23,11 +24,11 @@ export function useAllCertifications(
     certificationId?: string,
     options?: CertificationsAllProviderOptions
 ): AllCertificationsProviderData {
-    const sort = useRef({
-        field: ALL_CERTIFICATIONS_DEFAULT_SORT,
+    const sort: MutableRefObject<CertificationsAllProviderSortOptions> = useRef({
         direction: DEFAULT_SORT_DIRECTION,
+        field: ALL_CERTIFICATIONS_DEFAULT_SORT,
         ...options?.sort,
-    });
+    })
     // const filter = useRef(options?.filter);
 
     const [state, setState]:
@@ -39,11 +40,15 @@ export function useAllCertifications(
             ready: false,
         })
 
-    function sortCertifications(certificates: Array<LearnCertification>, sortField: ALL_CERTIFICATIONS_SORT_FIELD_TYPE, sortDir: SORT_DIRECTION) {
+    function sortCertifications(
+        certificates: Array<LearnCertification>,
+        sortField: ALL_CERTIFICATIONS_SORT_FIELD_TYPE,
+        sortDir: SORT_DIRECTION
+    ): Array<LearnCertification> {
         return orderBy([...certificates], sortField, sortDir)
     }
 
-    function sortCertificates() {
+    function sortCertificates(): void {
         setState((prevState) => ({
             ...prevState,
             certifications: sortCertifications(
@@ -56,9 +61,9 @@ export function useAllCertifications(
 
     if (options?.sort && (sort.current?.direction !== options?.sort?.direction || sort.current?.field !== options?.sort?.field)) {
         sort.current = {
-            field: options?.sort?.field ?? ALL_CERTIFICATIONS_DEFAULT_SORT,
             direction: options?.sort?.direction ?? DEFAULT_SORT_DIRECTION,
-        };
+            field: options?.sort?.field ?? ALL_CERTIFICATIONS_DEFAULT_SORT,
+        }
 
         // wait to exit current render loop before triggering a new state update
         setTimeout(sortCertificates)
@@ -76,7 +81,7 @@ export function useAllCertifications(
 
         allCertificationsGetAsync(provider, certificationId)
             .then((certifications) => {
-                const sortedCertifications = sortCertifications(
+                const sortedCertifications: Array<LearnCertification> = sortCertifications(
                     certifications,
                     sort.current.field,
                     sort.current.direction,
@@ -84,9 +89,9 @@ export function useAllCertifications(
 
                 setState((prevState) => ({
                     ...prevState,
-                    certifications: certificationId ? [] : sortedCertifications,
-                    certification: !certificationId ? undefined : certifications as unknown as LearnCertification,
                     allCertifications: certificationId ? [] : [...certifications],
+                    certification: !certificationId ? undefined : certifications as unknown as LearnCertification,
+                    certifications: certificationId ? [] : sortedCertifications,
                     loading: false,
                     ready: true,
                 }))
