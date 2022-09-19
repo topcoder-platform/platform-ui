@@ -7,7 +7,7 @@ interface WaveHeroProps {
     children?: ReactNode
     text: string
     theme?: 'light'
-    title: string
+    title: ReactNode
 }
 
 const WaveHero: FC<WaveHeroProps> = (props: WaveHeroProps) => {
