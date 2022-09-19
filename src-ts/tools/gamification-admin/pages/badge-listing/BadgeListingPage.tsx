@@ -26,7 +26,7 @@ const BadgeListingPage: FC = () => {
     ]
         = useState<ReadonlyArray<TableColumn<GameBadge>>>([...badgeListingColumns])
 
-    const gameBadgeDataHandler: InfinitePageHandler<GameBadge> = useGetGameBadgesPage(sort)
+    const pageHandler: InfinitePageHandler<GameBadge> = useGetGameBadgesPage(sort)
     const navigate: NavigateFunction = useNavigate()
 
     function onSortClick(newSort: Sort): void {
@@ -39,7 +39,7 @@ const BadgeListingPage: FC = () => {
         onClick: () => navigate(createBadgeRoute),
     }
 
-    if (!gameBadgeDataHandler.data) {
+    if (!pageHandler.data) {
         return <LoadingSpinner />
     }
 
@@ -51,9 +51,9 @@ const BadgeListingPage: FC = () => {
             <div className={styles.container}>
                 <Table
                     columns={columns}
-                    data={gameBadgeDataHandler.data || []}
-                    onLoadMoreClick={gameBadgeDataHandler.getAndSetNext}
-                    moreToLoad={gameBadgeDataHandler.hasMore}
+                    data={pageHandler.data || []}
+                    onLoadMoreClick={pageHandler.getAndSetNext}
+                    moreToLoad={pageHandler.hasMore}
                     onToggleSort={onSortClick}
                 />
             </div>
