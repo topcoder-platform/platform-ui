@@ -1,6 +1,7 @@
 import classNames from 'classnames'
 import { Dispatch, MouseEvent, SetStateAction, useEffect, useState } from 'react'
 
+import { Button } from '../button'
 import { Sort } from '../pagination'
 import '../styles/_includes.scss'
 import { IconOutline } from '../svgs'
@@ -15,7 +16,10 @@ import styles from './Table.module.scss'
 interface TableProps<T> {
     readonly columns: ReadonlyArray<TableColumn<T>>
     readonly data: ReadonlyArray<T>
+    readonly moreToLoad?: boolean
+    readonly onLoadMoreClick?: () => void
     readonly onRowClick?: (data: T) => void
+    readonly onToggleSort?: (sort: Sort) => void
 }
 
 interface DefaultSortDirectionMap {
@@ -34,7 +38,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
             Dispatch<SetStateAction<DefaultSortDirectionMap | undefined>>
         ]
             = useState<DefaultSortDirectionMap | undefined>()
-        const [sortedData, setSortData]: [ReadonlyArray<T>, Dispatch<SetStateAction<ReadonlyArray<T>>>]
+        const [sortedData, setSortedData]: [ReadonlyArray<T>, Dispatch<SetStateAction<ReadonlyArray<T>>>]
             = useState<ReadonlyArray<T>>(props.data)
 
         useEffect(() => {
@@ -47,7 +51,11 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 setDefaultSortDirectionMap(map)
             }
 
-            setSortData(tableGetSorted(data, columns, sort))
+            // if we have a sort handler, don't worry about getting the sorted data;
+            // otherwise, get the sorted data for the table
+            const sorted: ReadonlyArray<T> = !!props.onToggleSort ? data : tableGetSorted(data, columns, sort)
+
+            setSortedData(sorted)
         },
             [
                 columns,
@@ -75,6 +83,9 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 fieldName,
             }
             setSort(newSort)
+
+            // call the callback to notify parent for sort update
+            props.onToggleSort?.(newSort)
         }
 
         const headerRow: Array<JSX.Element> = props.columns
@@ -136,7 +147,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 // return the entire row
                 return (
                     <tr
-                        className={classNames(styles.tr, !!onRowClick ? styles.clickable : undefined)}
+                        className={classNames(styles.tr, props.onRowClick ? styles.clickable : undefined)}
                         onClick={onRowClick}
                         key={index}
                     >
@@ -158,6 +169,18 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                         {rowCells}
                     </tbody>
                 </table>
+                {
+                    !!props.moreToLoad && !!props.onLoadMoreClick && (
+                        <div className={styles['loadBtnWrap']}>
+                            <Button
+                                buttonStyle='tertiary'
+                                label='Load More'
+                                size='lg'
+                                onClick={props.onLoadMoreClick}
+                            />
+                        </div>
+                    )
+                }
             </div>
         )
     }

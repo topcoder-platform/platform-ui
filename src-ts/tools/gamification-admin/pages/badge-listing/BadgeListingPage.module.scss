@@ -1,17 +1,106 @@
-.contentLayout {
-  width: 100%;
-  padding-bottom: 0;
-
-  .contentLayout-outer {
-    width: 100%;
-
-    .contentLayout-inner {
-      width: 100%;
-      overflow: visible;
-    }
-  }
-}
+@import "../../../../lib/styles/includes";
+@import "../../../../lib/styles/variables";
 
 .container {
   display: flex;
+  flex-direction: column;
+  padding-top: $space-xxxxl;
+
+  .badges-table-header {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: $space-lg;
+    color: $black-60;
+    @include font-barlow;
+    @include font-weight-semibold;
+    font-size: 11px;
+    line-height: 11px;
+
+    .col-sort {
+      display: flex;
+      margin-left: 94px;
+      align-items: center;
+
+      svg {
+        color: $black-100;
+      }
+    }
+
+    div:last-child {
+      margin-right: 100px;
+
+      @include ltemd {
+        display: none;
+      }
+    }
+  }
+
+  .badges-table {
+    display: flex;
+    flex-direction: column;
+
+    .badge-row {
+      display: flex;
+      justify-content: space-between;
+      padding: $space-lg $space-xxl;
+
+      @include ltemd {
+        flex-direction: column;
+      }
+
+      &:nth-child(odd) {
+        background-color: $black-5;
+        border-radius: 8px;
+      }
+
+      .badge {
+        display: flex;
+        align-items: center;
+
+        .badge-image {
+          width: 48px;
+          height: 48px;
+          margin-right: $space-xl;
+        }
+
+        .badge-image-disabled {
+          width: 48px;
+          height: 48px;
+          margin-right: $space-xl;
+          opacity: 0.5;
+          filter: grayscale(1);
+        }
+
+        .badge-name {
+          font-size: 16px;
+          font-weight: 700;
+          line-height: 24px;
+          color: $black-100;
+        }
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+
+        @include ltemd {
+          margin: $space-sm 0;
+        }
+
+        .action-btn {
+          margin-right: $space-sm;
+
+          &:last-child {
+            margin-right: 0;
+          }
+        }
+      }
+    }
+  }
+
+  .loadbtn-wrap {
+    display: flex;
+    justify-content: center;
+    flex: 1;
+  }
 }

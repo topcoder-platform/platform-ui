@@ -5,8 +5,16 @@ import BadgeDetailPage from './pages/badge-detail/BadgeDetailPage'
 import BadgeListingPage from './pages/badge-listing/BadgeListingPage'
 import CreateBadgePage from './pages/create-badge/CreateBadgePage'
 
-export const baseUrl: string = '/gamification-admin'
-export const rolesRequired: Array<string> = [UserRole.gamificationAdmin]
+const baseDetailPath: string = '/badge-detail'
+const createBadgePath: string = '/create-badge'
+
+export const basePath: string = '/gamification-admin'
+
+export function badgeDetailPath(badgeId: string, view?: 'edit' | 'award'): string {
+    return `${basePath}${baseDetailPath}/${badgeId}${!!view ? `#${view}` : ''}`
+}
+
+export const createBadgeRoute: string = `${basePath}${createBadgePath}`
 
 export const gamificationAdminRoutes: Array<PlatformRoute> = [
     {
@@ -18,17 +26,19 @@ export const gamificationAdminRoutes: Array<PlatformRoute> = [
             },
             {
                 element: <CreateBadgePage />,
-                route: '/create-badge',
+                route: createBadgePath,
             },
             {
                 element: <BadgeDetailPage />,
-                route: '/badge-detail',
+                route: `${baseDetailPath}/:id`,
             },
         ],
         element: <GamificationAdmin />,
         hidden: true,
-        rolesRequired,
-        route: baseUrl,
+        rolesRequired: [
+            UserRole.gamificationAdmin,
+        ],
+        route: basePath,
         title: toolTitle,
     },
 ]
