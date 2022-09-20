@@ -61,6 +61,10 @@
                         margin-right: -29px;
                     }
                 }
+
+                &.centerHeader {
+                    justify-content: center;
+                }
             }
 
             .tooltip {
@@ -89,4 +93,9 @@
 
 .tootlipBody {
     min-width: 200px;
+}
+
+.loadBtnWrap {
+    display: flex;
+    justify-content: center;
 }

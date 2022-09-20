@@ -1,17 +1,21 @@
 import { Sort } from '../../pagination'
 import { TableColumn } from '../table-column.model'
 
-export function getDefaultSort<T>(columns: ReadonlyArray<TableColumn<T>>): Sort | undefined {
+export function getDefaultSort<T>(columns: ReadonlyArray<TableColumn<T>>): Sort {
 
     const defaultSortColumn: TableColumn<T> | undefined = columns.find(col => col.isDefaultSort)
         || columns.find(col => !!col.propertyName)
+        || columns?.[0]
 
-    const defaultSort: Sort | undefined = !defaultSortColumn?.propertyName
-        ? undefined
-        : {
-            direction: defaultSortColumn.defaultSortDirection || 'asc',
-            fieldName: defaultSortColumn.propertyName,
-        }
+    // if we didn't find a default sort, we have a problem
+    if (!defaultSortColumn) {
+        throw new Error('A table must have at least one column.')
+    }
+
+    const defaultSort: Sort = {
+        direction: defaultSortColumn.defaultSortDirection || 'asc',
+        fieldName: defaultSortColumn.propertyName || '',
+    }
 
     return defaultSort
 }
