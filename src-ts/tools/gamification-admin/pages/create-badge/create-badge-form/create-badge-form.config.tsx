@@ -1,4 +1,4 @@
-import { FormDefinition, validatorRequired, IconOutline, RadioButton } from '../../../../../lib'
+import { FormDefinition, validatorRequired, IconOutline } from '../../../../../lib'
 
 export enum CreateBadgeFormField {
     badgeActive = 'badgeActive',
@@ -13,6 +13,7 @@ export const createBadgeFormDef: FormDefinition = {
                 buttonStyle: 'primary',
                 isSubmit: true,
                 label: 'Save Badge',
+                onClick: (e) => { },
                 size: 'lg',
                 type: 'submit',
             },
@@ -22,14 +23,19 @@ export const createBadgeFormDef: FormDefinition = {
                 buttonStyle: 'icon-bordered',
                 size: 'lg',
                 icon: IconOutline.ChevronLeftIcon,
-                route: `/gamification-admin`
-                
+                route: '/gamification-admin'
+
             },
         ]
     },
     groups: [
         {
             inputs: [
+                // {
+                //     label: 'Activate',
+                //     name: CreateBadgeFormField.badgeActive,
+                //     type: 'checkbox',
+                // },
                 {
                     label: 'Badge Name',
                     name: CreateBadgeFormField.badgeName,
@@ -44,16 +50,6 @@ export const createBadgeFormDef: FormDefinition = {
                     label: 'Badge Description',
                     name: CreateBadgeFormField.badgeDesc,
                     type: 'textarea',
-                    validators: [
-                        {
-                            validator: validatorRequired,
-                        },
-                    ],
-                },
-                {
-                    label: 'Activate',
-                    name: CreateBadgeFormField.badgeActive,
-                    type: 'checkbox',
                     validators: [
                         {
                             validator: validatorRequired,

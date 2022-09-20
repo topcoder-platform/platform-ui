@@ -1,7 +1,9 @@
-import { FC } from 'react'
+import { Dispatch, FC, SetStateAction, useState } from 'react'
 
 import { Breadcrumb, BreadcrumbItemModel, ContentLayout } from '../../../../lib'
 import { useGamificationBreadcrumb } from '../../game-lib'
+import { CreateBadgeForm, createBadgeFormDef } from './create-badge-form'
+import { BadgeCreatedModal } from '../../game-lib/modals/badge-created-modal'
 
 import styles from './CreateBadgePage.module.scss'
 
@@ -14,17 +16,28 @@ const CreateBadgePage: FC = () => {
         },
     ])
 
+    const [showBadgeCreatedModal, setShowBadgeCreatedModal]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
+    function onSave() {
+        setShowBadgeCreatedModal(true)
+    }
+
     return (
         <ContentLayout
-            contentClass={styles['contentLayout']}
-            outerClass={styles['contentLayout-outer']}
-            innerClass={styles['contentLayout-inner']}
             title='Create Badge'
         >
             <Breadcrumb items={breadcrumb} />
             <div className={styles.container}>
-
+                <CreateBadgeForm
+                    formDef={createBadgeFormDef}
+                    onSave={onSave}
+                />
             </div>
+            <BadgeCreatedModal
+                isOpen={showBadgeCreatedModal}
+                onClose={() => setShowBadgeCreatedModal(false)}
+            />
         </ContentLayout>
     )
 }
