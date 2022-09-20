@@ -19,6 +19,9 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
     const { profile }: ProfileContextData = useContext(profileContext)
 
     function generateRequest(inputs: ReadonlyArray<FormInputModel>): ContactSupportRequest {
+        const activeEl: any = formGetInputModel(inputs, 'active')
+        console.log('generateRequest', activeEl)
+
         const firstName: string = formGetInputModel(inputs, ContactSupportFormField.first).value as string
         const lastName: string = formGetInputModel(inputs, ContactSupportFormField.last).value as string
         const email: string = formGetInputModel(inputs, ContactSupportFormField.email).value as string

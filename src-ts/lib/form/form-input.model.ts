@@ -20,6 +20,7 @@ export interface FormCard {
 export interface FormInputModel {
     readonly autocomplete?: FormInputAutocompleteOption
     readonly cards?: ReadonlyArray<FormCard>
+    checked?: boolean
     readonly className?: string
     readonly dependentFields?: Array<string>
     dirty?: boolean

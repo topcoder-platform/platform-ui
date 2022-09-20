@@ -23,6 +23,12 @@ export const contactSupportFormDef: FormDefinition = {
         {
             inputs: [
                 {
+                    checked: true,
+                    label: 'Activate',
+                    name: 'active',
+                    type: 'checkbox',
+                },
+                {
                     label: 'First Name',
                     name: ContactSupportFormField.first,
                     type: 'text',

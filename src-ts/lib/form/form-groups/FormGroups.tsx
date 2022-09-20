@@ -6,7 +6,7 @@ import { FormInputModel } from '../form-input.model'
 
 import { FormCardSet } from './form-card-set'
 import FormGroupItem from './form-group-item/FormGroupItem'
-import { InputRating, InputText, InputTextarea } from './form-input'
+import { InputCheckbox, InputRating, InputText, InputTextarea } from './form-input'
 import { FormInputRow } from './form-input-row'
 import { InputTextTypes } from './form-input/input-text/InputText'
 import FormRadio from './form-radio'
@@ -44,7 +44,6 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                     />
                 )
                 break
-
             case 'textarea':
                 inputElement = (
                     <InputTextarea
@@ -57,6 +56,15 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                 )
                 break
             case 'checkbox':
+                inputElement = (
+                    <InputCheckbox
+                        {...input}
+                        onChange={onChange}
+                        tabIndex={tabIndex}
+                        type={'checkbox'}
+                    />
+                )
+                break
             case 'radio':
                 inputElement = (
                     <FormRadio
