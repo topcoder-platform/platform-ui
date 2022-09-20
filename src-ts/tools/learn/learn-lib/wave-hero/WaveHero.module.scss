@@ -19,7 +19,7 @@
             }
         }
     }
-    
+
     &-inner {
         padding: calc($space-xxxxl + $space-sm) 0 $space-lg;
         @include contentWidth;
@@ -47,13 +47,13 @@
             flex-direction: column;
         }
     }
-    
+
     &-card-col {
         flex: 0 0 auto;
     }
-    
+
     &-text {
         @extend .body-medium-normal;
-        margin-top: $space-xxl;
+        margin-top: $space-sm;
     }
 }

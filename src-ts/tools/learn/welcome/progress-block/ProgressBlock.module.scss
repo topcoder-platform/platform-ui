@@ -4,14 +4,14 @@
 .wrap {
     background: $black-5;
     border-radius: $space-sm;
-    padding: $space-xxl;
+    padding: $space-xxl $space-xxl $space-lg;
     color: $black-100;
 
     display: flex;
     flex-direction: column;
-    gap: $space-lg;
+    gap: $space-xxl;
     width: 100%;
-    
+
     @include ltemd {
         padding: $space-lg;
     }

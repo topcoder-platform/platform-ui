@@ -15,6 +15,7 @@ import {
 
 import { CoursesCard } from './courses-card'
 import { ProgressBlock } from './progress-block'
+import { ReactComponent as TcAcademyFullLogoSvg } from './tca-full-logo.svg'
 import styles from './WelcomePage.module.scss'
 
 type SORT_FIELD_TYPE = keyof LearnCertification
@@ -71,7 +72,12 @@ const WelcomePage: FC<{}> = () => {
                 <Portal portalId='page-subheader-portal-el'>
                     <div className={styles['hero-wrap']}>
                         <WaveHero
-                            title='Welcome to Topcoder ACADEMY'
+                            title={(
+                                <>
+                                    <TcAcademyFullLogoSvg className='tca-logo' />
+                                    Welcome!
+                                </>
+                            )}
                             text={`
                                 The Topcoder Academy will provide you with learning opportunities
                                 in the form of guided learning paths.

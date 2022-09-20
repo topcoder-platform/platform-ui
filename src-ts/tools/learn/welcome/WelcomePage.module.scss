@@ -1,6 +1,11 @@
 @import '../../../lib/styles/includes';
 
 .hero-wrap {
+    svg:global(.tca-logo) {
+        margin-bottom: $space-xxl;
+        max-width: calc(100% - 70px);
+    }
+
     :global(.hero-card-col) {
         width: 43.5%;
         max-width: 600px;
