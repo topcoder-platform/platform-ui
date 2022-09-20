@@ -28,6 +28,7 @@ const InputWrapper: ForwardRefExoticComponent<InputWrapperProps> = forwardRef<HT
     const showError: boolean = isShowError()
     const formFieldClasses: string = classNames(
         styles.input,
+        'input-el',
         styles[props.type],
         props.disabled ? styles.disabled : undefined,
         focusStyle,
@@ -43,7 +44,7 @@ const InputWrapper: ForwardRefExoticComponent<InputWrapperProps> = forwardRef<HT
 
     return (
         <div
-            className={classNames(styles['input-wrapper'], styles[props.type])}
+            className={classNames(styles['input-wrapper'], 'input-wrapper', styles[props.type])}
             tabIndex={props.type === 'rating' ? (props.tabIndex ?? -1) : -1}
             ref={ref}
         >

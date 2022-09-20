@@ -68,34 +68,34 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
             hideInlineErrors={props.hideInlineErrors}
             ref={triggerRef}
         >
-            {selectedOption && (
-                <div className={styles['selected']} onClick={toggleMenu}>
-                    <span className='body-small'>{label(selectedOption)}</span>
-                    <span className={styles['selected-icon']}>
-                        <IconOutline.ChevronDownIcon />
-                    </span>
-                </div>
-            )}
+            <div className={styles['selected']} onClick={toggleMenu}>
+                <span className='body-small'>{selectedOption ? label(selectedOption) : ''}</span>
+                <span className={styles['selected-icon']}>
+                    <IconOutline.ChevronDownIcon />
+                </span>
+            </div>
 
-            {menuIsVisible && (
-                <div className={styles['select-menu']}>
-                    {props.options.map((option) => (
-                        <div
-                            className={
-                                classNames(
-                                    styles['select-option'],
-                                    'body-main',
-                                    selectedOption === option && 'selected',
-                                )
-                            }
-                            onClick={select(option)}
-                            key={option.value}
-                        >
-                            {label(option)}
-                        </div>
-                    ))}
-                </div>
-            )}
+            <div className={styles['menu-wrap']}>
+                {menuIsVisible && (
+                    <div className={styles['select-menu']}>
+                        {props.options.map((option) => (
+                            <div
+                                className={
+                                    classNames(
+                                        styles['select-option'],
+                                        'body-main',
+                                        selectedOption === option && 'selected',
+                                    )
+                                }
+                                onClick={select(option)}
+                                key={option.value}
+                            >
+                                {label(option)}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
 
         </InputWrapper>
     )
