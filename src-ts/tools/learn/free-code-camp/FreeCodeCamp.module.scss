@@ -48,32 +48,3 @@
         }
     }
 }
-
-.course-outline-pane {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-
-    @include ltemd {
-        position: relative;
-        top: auto;
-        left: auto;
-        bottom: auto;
-        flex: 0 0 auto;
-    }
-}
-
-.course-outline-wrap {
-    width: 406px;
-
-    @include ltemd {
-        width: 100%;
-    }
-}
-
-.course-outline-title {
-    @extend .body-main-bold;
-    flex: 0 0 auto;
-    margin-bottom: $space-xl;
-}

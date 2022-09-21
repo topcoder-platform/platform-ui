@@ -155,7 +155,11 @@ See the [Dev Center README](/src-ts/tools/dev-center/README.md) for further inst
 | `yarn eslint`         | Run eslint against js/x files and outputs report |
 | `yarn eslint:fix`     | Run eslint against js/x files, fixes auto-fixable issues, and  outputs report |
 | `yarn test`           | Run unit tests, watching for changes and re-running per your specifications |             
-| `yarn test:no-watch`  | Run unit tests once, without watching for changes or re-running |             
+| `yarn test:no-watch`  | Run unit tests once, without watching for changes or re-running |
+| `yarn cy:run`         | Run e2e tests once in local command with the site is running    |
+| `yarn cy:ci`          | Run e2e tests once by circle ci                                 |
+| `yarn report:coverage`| Generate e2e coverage report in html format                     |
+| `yarn report:coverage:text`  | Generate e2e coverage report in text format              |
 
 ## Folder Structure
 

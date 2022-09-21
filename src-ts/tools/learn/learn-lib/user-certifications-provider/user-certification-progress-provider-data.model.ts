@@ -4,5 +4,6 @@ export interface UserCertificationProgressProviderData {
     certificationProgress?: LearnUserCertificationProgress
     loading: boolean
     ready: boolean
+    refetch: () => void,
     setCertificateProgress: (progess: LearnUserCertificationProgress) => void,
 }

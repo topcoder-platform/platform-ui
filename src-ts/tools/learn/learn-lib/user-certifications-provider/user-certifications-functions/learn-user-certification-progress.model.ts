@@ -7,6 +7,8 @@ export interface LearnUserCertificationProgress extends LearnModelBase {
     academicHonestyPolicyAcceptedAt?: number,
     certification: string
     certificationId: string
+    certificationProgressPercentage: number
+    certType: 'certification'
     completedDate?: string
     courseId: string
     courseKey: string

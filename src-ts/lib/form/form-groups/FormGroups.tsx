@@ -23,12 +23,13 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
 
     const { formDef, onBlur, onChange }: FormGroupsProps = props
 
-    const getTabIndex: (input: FormInputModel, index: number) => number = (input, index) => {
+    function getTabIndex(input: FormInputModel, index: number): number {
         const tabIndex: number = input.notTabbable ? -1 : index + 1 + (formDef.tabIndexStart || 0)
         return tabIndex
     }
 
-    const renderInputField: (input: FormInputModel, index: number) => JSX.Element | undefined = (input, index) => {
+    function renderInputField(input: FormInputModel, index: number): JSX.Element | undefined {
+
         const tabIndex: number = getTabIndex(input, index)
 
         let inputElement: JSX.Element
@@ -40,11 +41,10 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                         {...input}
                         onChange={onChange}
                         tabIndex={tabIndex}
-                        value={input.value}
+                        value={input.value as number | undefined}
                     />
                 )
                 break
-
             case 'textarea':
                 inputElement = (
                     <InputTextarea
@@ -52,11 +52,22 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                         onBlur={onBlur}
                         onChange={onChange}
                         tabIndex={tabIndex}
-                        value={input.value}
+                        value={input.value as string | undefined}
                     />
                 )
                 break
             case 'checkbox':
+                inputElement = (
+                    <InputText
+                        {...input}
+                        checked={!!input.value}
+                        onBlur={onBlur}
+                        onChange={onChange}
+                        tabIndex={tabIndex}
+                        type='checkbox'
+                    />
+                )
+                break
             case 'radio':
                 inputElement = (
                     <FormRadio
@@ -83,7 +94,7 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                         onChange={onChange}
                         tabIndex={tabIndex}
                         type={input.type as InputTextTypes || 'text'}
-                        value={input.value}
+                        value={input.value as string | undefined}
                     />
                 )
                 break
@@ -100,9 +111,18 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
         )
     }
 
-    const formGroups: Array<JSX.Element | undefined> = formDef?.groups?.map((element: FormGroup, index: number) => {
-        return <FormGroupItem key={`element-${index}`} group={element} renderFormInput={renderInputField} totalGroupCount={formDef.groups?.length || 0} />
-    }) || []
+    const formGroups: Array<JSX.Element | undefined> = formDef?.groups
+        ?.map((element: FormGroup, index: number) => {
+            return (
+                <FormGroupItem
+                    key={`element-${index}`}
+                    group={element}
+                    renderFormInput={renderInputField}
+                    totalGroupCount={formDef.groups?.length || 0}
+                />
+            )
+        })
+        || []
 
     return (
         <div className={styles['form-groups']}>

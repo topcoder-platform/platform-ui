@@ -33,9 +33,13 @@ export function initializeValues<T>(inputs: Array<FormInputModel>, formValues?: 
     inputs
         .filter(input => !input.dirty && !input.touched)
         .forEach(input => {
-            input.value = !!(formValues as any)?.hasOwnProperty(input.name)
-                ? (formValues as any)[input.name]
-                : undefined
+            if (input.type === 'checkbox') {
+                input.value = input.checked || false
+            } else {
+                input.value = !!(formValues as any)?.hasOwnProperty(input.name)
+                    ? (formValues as any)[input.name]
+                    : undefined
+            }
         })
 }
 
@@ -121,7 +125,13 @@ function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, inpu
     inputDef.touched = true
 
     // set the def value
-    inputDef.value = input.value
+    if (input.type === 'checkbox') {
+        const checkbox: HTMLInputElement = input as HTMLInputElement
+        inputDef.value = checkbox.checked
+        inputDef.checked = checkbox.checked
+    } else {
+        inputDef.value = input.value
+    }
 
     // now let's validate the field
     const formElements: HTMLFormControlsCollection = (input.form as HTMLFormElement).elements

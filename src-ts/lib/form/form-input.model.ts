@@ -20,6 +20,7 @@ export interface FormCard {
 export interface FormInputModel {
     readonly autocomplete?: FormInputAutocompleteOption
     readonly cards?: ReadonlyArray<FormCard>
+    checked?: boolean
     readonly className?: string
     readonly dependentFields?: Array<string>
     dirty?: boolean
@@ -40,5 +41,5 @@ export interface FormInputModel {
     touched?: boolean
     readonly type: 'card-set' | 'checkbox' | 'password' | 'radio' | 'rating' | 'text' | 'textarea'
     readonly validators?: ReadonlyArray<ValidatorFn>
-    value?: string
+    value?: string | boolean
 }

@@ -19,8 +19,6 @@ import {
     ProfileContextData,
 } from '../../../lib'
 import {
-    CollapsiblePane,
-    CourseOutline,
     CoursesProviderData,
     LearnLesson,
     LearnModule,
@@ -39,6 +37,7 @@ import {
 import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule } from '../learn.routes'
 
 import { FccFrame } from './fcc-frame'
+import { FccSidebar } from './fcc-sidebar'
 import styles from './FreeCodeCamp.module.scss'
 import { TitleNav } from './title-nav'
 
@@ -62,6 +61,7 @@ const FreeCodeCamp: FC<{}> = () => {
         certificationProgress: certificateProgress,
         setCertificateProgress,
         ready: progressReady,
+        refetch: refetchProgress,
     }: UserCertificationProgressProviderData = useUserCertificationProgress(
         profile?.userId,
         routeParams.provider,
@@ -259,7 +259,7 @@ const FreeCodeCamp: FC<{}> = () => {
     useEffect(() => {
         if (
             certificateProgress &&
-            certificateProgress.courseProgressPercentage === 100 &&
+            certificateProgress.certificationProgressPercentage === 100 &&
             certificateProgress.status === UserCertificationProgressStatus.inProgress
         ) {
             userCertificationProgressUpdateAsync(
@@ -283,6 +283,32 @@ const FreeCodeCamp: FC<{}> = () => {
         navigate,
         providerParam,
         setCertificateProgress,
+    ])
+
+    useEffect(() => {
+        if (courseDataReady && courseData) {
+            const moduleParamData: LearnModule = courseData.modules.find(m => m.key === moduleParam) ?? courseData.modules[0]
+            const lessonParamExists: boolean = !!moduleParamData?.lessons.find(l => l.dashedName === lessonParam)
+
+            if (!lessonParamExists) {
+                const lessonPath: string = getLessonPathFromModule(
+                    providerParam,
+                    certificationParam,
+                    moduleParamData.key,
+                    moduleParamData.lessons[0].dashedName,
+                )
+
+                navigate(lessonPath)
+            }
+        }
+    }, [
+        certificationParam,
+        courseData,
+        courseDataReady,
+        lessonParam,
+        moduleParam,
+        navigate,
+        providerParam,
     ])
 
     useEffect(() => {
@@ -335,21 +361,13 @@ const FreeCodeCamp: FC<{}> = () => {
 
             {lesson && (
                 <div className={styles['main-wrap']}>
-                    <div className={styles['course-outline-pane']}>
-                        <CollapsiblePane title='Course Outline'>
-                            <div className={styles['course-outline-wrap']}>
-                                <div className={styles['course-outline-title']}>
-                                    {courseData?.title}
-                                </div>
-                                <CourseOutline
-                                    course={courseData}
-                                    ready={courseDataReady}
-                                    currentStep={`${moduleParam}/${lessonParam}`}
-                                    progress={certificateProgress}
-                                />
-                            </div>
-                        </CollapsiblePane>
-                    </div>
+                    <FccSidebar
+                        courseData={courseData}
+                        courseDataReady={courseDataReady}
+                        currentStep={`${moduleParam}/${lessonParam}`}
+                        certificateProgress={certificateProgress}
+                        refetchProgress={refetchProgress}
+                    />
 
                     <div className={styles['course-frame']}>
                         <TitleNav

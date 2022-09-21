@@ -1,3 +1,5 @@
+declare module '@cypress/code-coverage/task'
+
 declare module '*.html' {
     const htmlFile: string
     export = htmlFile

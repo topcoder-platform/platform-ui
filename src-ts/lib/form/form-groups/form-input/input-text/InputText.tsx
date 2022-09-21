@@ -10,6 +10,7 @@ export type InputTextTypes = 'checkbox' | 'password' | 'text'
 
 interface InputTextProps {
     readonly autocomplete?: FormInputAutocompleteOption
+    readonly checked?: boolean
     readonly className?: string
     readonly dirty?: boolean
     readonly disabled?: boolean
@@ -24,10 +25,14 @@ interface InputTextProps {
     readonly spellCheck?: boolean
     readonly tabIndex: number
     readonly type: InputTextTypes
-    readonly value?: string | number
+    readonly value?: string | number | boolean
 }
 
 const InputText: FC<InputTextProps> = (props: InputTextProps) => {
+
+    const defaultValue: string | number | undefined = props.type === 'checkbox' && !!props.checked
+        ? 'on'
+        : props.value as string | number | undefined
 
     return (
         <InputWrapper
@@ -39,8 +44,9 @@ const InputText: FC<InputTextProps> = (props: InputTextProps) => {
         >
             <input
                 autoComplete={props.autocomplete}
+                checked={defaultValue === 'on'}
                 className={cn(styles['form-input-text'], styles[props.type])}
-                defaultValue={props.value}
+                defaultValue={defaultValue}
                 disabled={!!props.disabled}
                 onBlur={props.onBlur}
                 onChange={props.onChange}
