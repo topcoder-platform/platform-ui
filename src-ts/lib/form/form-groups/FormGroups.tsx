@@ -6,7 +6,7 @@ import { FormInputModel } from '../form-input.model'
 
 import { FormCardSet } from './form-card-set'
 import FormGroupItem from './form-group-item/FormGroupItem'
-import { InputRating, InputText, InputTextarea } from './form-input'
+import { InputImagePicker, InputRating, InputText, InputTextarea } from './form-input'
 import { FormInputRow } from './form-input-row'
 import { InputTextTypes } from './form-input/input-text/InputText'
 import FormRadio from './form-radio'
@@ -83,6 +83,13 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                         {...input}
                         onChange={onChange}
                         value={input.value}
+                    />
+                )
+                break
+            case 'image-picker':
+                inputElement = (
+                    <InputImagePicker
+                        {...input}
                     />
                 )
                 break

@@ -2,9 +2,9 @@ import { Dispatch, FC, SetStateAction, useState } from 'react'
 
 import { Breadcrumb, BreadcrumbItemModel, ContentLayout } from '../../../../lib'
 import { useGamificationBreadcrumb } from '../../game-lib'
-import { CreateBadgeForm, createBadgeFormDef } from './create-badge-form'
 import { BadgeCreatedModal } from '../../game-lib/modals/badge-created-modal'
 
+import { CreateBadgeForm, createBadgeFormDef } from './create-badge-form'
 import styles from './CreateBadgePage.module.scss'
 
 const CreateBadgePage: FC = () => {

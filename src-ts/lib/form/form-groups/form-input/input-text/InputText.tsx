@@ -8,7 +8,7 @@ import styles from './InputText.module.scss'
 
 export type InputTextTypes = 'checkbox' | 'password' | 'text'
 
-interface InputTextProps {
+export interface InputTextProps {
     readonly autocomplete?: FormInputAutocompleteOption
     readonly checked?: boolean
     readonly className?: string

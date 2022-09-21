@@ -1,5 +1,6 @@
 export interface CreateBadgeRequest {
-    badgeActive: string
-    badgeName: string
+    badgeActive: boolean
     badgeDesc: string
+    badgeName: string
+    file: File
 }

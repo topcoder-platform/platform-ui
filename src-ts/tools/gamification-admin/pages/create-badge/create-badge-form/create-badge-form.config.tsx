@@ -1,9 +1,11 @@
-import { FormDefinition, validatorRequired, IconOutline } from '../../../../../lib'
+import { FormDefinition, IconOutline, validatorRequired } from '../../../../../lib'
+import { GamificationConfig } from '../../../game-config'
 
 export enum CreateBadgeFormField {
     badgeActive = 'badgeActive',
     badgeName = 'badgeName',
     badgeDesc = 'badgeDesc',
+    file = 'file',
 }
 
 export const createBadgeFormDef: FormDefinition = {
@@ -21,21 +23,32 @@ export const createBadgeFormDef: FormDefinition = {
         secondaryGroup: [
             {
                 buttonStyle: 'icon-bordered',
-                size: 'lg',
                 icon: IconOutline.ChevronLeftIcon,
-                route: '/gamification-admin'
-
+                route: '/gamification-admin',
+                size: 'lg',
             },
-        ]
+        ],
     },
     groups: [
         {
             inputs: [
-                // {
-                //     label: 'Activate',
-                //     name: CreateBadgeFormField.badgeActive,
-                //     type: 'checkbox',
-                // },
+                {
+                    accept: GamificationConfig.ACCEPTED_BADGE_MIME_TYPES,
+                    name: CreateBadgeFormField.file,
+                    size: GamificationConfig.MAX_BADGE_IMAGE_FILE_SIZE,
+                    type: 'image-picker',
+                    // validators: [
+                    //     {
+                    //         validator: validatorRequired,
+                    //     },
+                    // ],
+                },
+                {
+                    checked: true,
+                    label: 'Activate Badge',
+                    name: CreateBadgeFormField.badgeActive,
+                    type: 'checkbox',
+                },
                 {
                     label: 'Badge Name',
                     name: CreateBadgeFormField.badgeName,
@@ -55,7 +68,7 @@ export const createBadgeFormDef: FormDefinition = {
                             validator: validatorRequired,
                         },
                     ],
-                }
+                },
             ],
         },
     ],

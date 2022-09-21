@@ -18,6 +18,7 @@ export interface FormCard {
 }
 
 export interface FormInputModel {
+    readonly accept?: string
     readonly autocomplete?: FormInputAutocompleteOption
     readonly cards?: ReadonlyArray<FormCard>
     checked?: boolean
@@ -27,6 +28,7 @@ export interface FormInputModel {
     disabled?: boolean
     error?: string
     readonly events?: ReadonlyArray<InputEvent>
+    readonly files?: FileList
     readonly hideInlineErrors?: boolean
     readonly hint?: string
     readonly id?: string
@@ -36,10 +38,11 @@ export interface FormInputModel {
     readonly notTabbable?: boolean
     options?: ReadonlyArray<FormRadioButtonOption>
     readonly placeholder?: string
+    readonly size?: number
     readonly spellCheck?: boolean
     readonly title?: string
     touched?: boolean
-    readonly type: 'card-set' | 'checkbox' | 'password' | 'radio' | 'rating' | 'text' | 'textarea'
+    readonly type: 'card-set' | 'checkbox' | 'password' | 'radio' | 'rating' | 'text' | 'textarea' | 'image-picker'
     readonly validators?: ReadonlyArray<ValidatorFn>
     value?: string | boolean
 }

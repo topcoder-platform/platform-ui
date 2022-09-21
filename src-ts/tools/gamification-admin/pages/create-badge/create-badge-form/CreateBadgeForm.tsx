@@ -1,13 +1,10 @@
-import { Dispatch, FC, SetStateAction, useState } from 'react'
+import { createRef, Dispatch, FC, RefObject, SetStateAction, useEffect, useState } from 'react'
 
-import { Form, FormDefinition, formGetInputModel, FormInputModel } from '../../../../../lib'
+import { Button, Form, FormDefinition, formGetInputModel, FormInputModel, IconOutline } from '../../../../../lib'
 
 import { CreateBadgeFormField } from './create-badge-form.config'
 import { CreateBadgeRequest } from './create-badge-functions'
 import { createBadgeSubmitRequestAsync } from './create-badge-functions/create-badge-store'
-import { createBadgeFormDef } from './create-badge-form.config'
-
-import styles from './CreateBadgeForm.module.scss'
 
 export interface CreateBadgeFormProps {
     formDef: FormDefinition
@@ -15,19 +12,25 @@ export interface CreateBadgeFormProps {
 }
 
 const CreateBadgeForm: FC<CreateBadgeFormProps> = (props: CreateBadgeFormProps) => {
-                
-    // createBadgeFormDef.buttons.primaryGroup[0].onClick = (e) => { console.log('save btn click', e); e.preventDefault() }
-
 
     function generateRequest(inputs: ReadonlyArray<FormInputModel>): CreateBadgeRequest {
         const badgeName: string = formGetInputModel(inputs, CreateBadgeFormField.badgeName).value as string
         const badgeDesc: string = formGetInputModel(inputs, CreateBadgeFormField.badgeDesc).value as string
-        const badgeActive: string = formGetInputModel(inputs, CreateBadgeFormField.badgeActive).value as string
-    
+        const badgeActive: boolean = formGetInputModel(inputs, CreateBadgeFormField.badgeActive).value as boolean
+        const files: FileList = formGetInputModel(inputs, CreateBadgeFormField.badgeActive).files as FileList
+
+        console.log('generateRequest', files)
+
+        if (!files) {
+            // if we don't have image file we have a problem
+            throw new Error(`There is no image file selected for the badge`)
+        }
+
         return {
             badgeActive,
-            badgeName,
             badgeDesc,
+            badgeName,
+            file: files[0],
         }
     }
 
@@ -41,13 +44,11 @@ const CreateBadgeForm: FC<CreateBadgeFormProps> = (props: CreateBadgeFormProps) 
     }
 
     return (
-        <>
-            <Form
-                formDef={props.formDef}
-                requestGenerator={generateRequest}
-                save={saveAsync}
-            />
-        </>
+        <Form
+            formDef={props.formDef}
+            requestGenerator={generateRequest}
+            save={saveAsync}
+        />
     )
 }
 
