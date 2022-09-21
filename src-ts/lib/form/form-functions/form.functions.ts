@@ -33,9 +33,13 @@ export function initializeValues<T>(inputs: Array<FormInputModel>, formValues?: 
     inputs
         .filter(input => !input.dirty && !input.touched)
         .forEach(input => {
-            input.value = !!(formValues as any)?.hasOwnProperty(input.name)
-                ? (formValues as any)[input.name]
-                : undefined
+            if (input.type === 'checkbox') {
+                input.value = input.checked || false
+            } else {
+                input.value = !!(formValues as any)?.hasOwnProperty(input.name)
+                    ? (formValues as any)[input.name]
+                    : undefined
+            }
         })
 }
 

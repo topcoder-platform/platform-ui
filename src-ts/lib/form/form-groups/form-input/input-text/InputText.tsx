@@ -44,6 +44,7 @@ const InputText: FC<InputTextProps> = (props: InputTextProps) => {
         >
             <input
                 autoComplete={props.autocomplete}
+                checked={defaultValue === 'on'}
                 className={cn(styles['form-input-text'], styles[props.type])}
                 defaultValue={defaultValue}
                 disabled={!!props.disabled}
