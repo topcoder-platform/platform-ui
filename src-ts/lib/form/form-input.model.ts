@@ -41,5 +41,5 @@ export interface FormInputModel {
     touched?: boolean
     readonly type: 'card-set' | 'checkbox' | 'password' | 'radio' | 'rating' | 'text' | 'textarea'
     readonly validators?: ReadonlyArray<ValidatorFn>
-    value?: string
+    value?: string | boolean
 }

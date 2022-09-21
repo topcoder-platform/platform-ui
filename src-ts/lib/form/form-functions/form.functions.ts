@@ -121,7 +121,13 @@ function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, inpu
     inputDef.touched = true
 
     // set the def value
-    inputDef.value = input.value
+    if (input.type === 'checkbox') {
+        const checkbox: HTMLInputElement = input as HTMLInputElement
+        inputDef.value = checkbox.checked
+        inputDef.checked = checkbox.checked
+    } else {
+        inputDef.value = input.value
+    }
 
     // now let's validate the field
     const formElements: HTMLFormControlsCollection = (input.form as HTMLFormElement).elements

@@ -1,4 +1,3 @@
-export * from './input-checkbox'
 export * from './form-input-autcomplete-option.enum'
 export * from './input-rating'
 export * from './input-text'
