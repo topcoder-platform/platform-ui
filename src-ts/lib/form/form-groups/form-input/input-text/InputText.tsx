@@ -1,6 +1,7 @@
 import cn from 'classnames'
 import { FC, FocusEvent } from 'react'
 
+import { InputValue } from '../../../form-input.model'
 import { FormInputAutocompleteOption } from '../form-input-autcomplete-option.enum'
 import { InputWrapper } from '../input-wrapper'
 
@@ -25,7 +26,7 @@ export interface InputTextProps {
     readonly spellCheck?: boolean
     readonly tabIndex: number
     readonly type: InputTextTypes
-    readonly value?: string | number | boolean
+    readonly value?: InputValue
 }
 
 const InputText: FC<InputTextProps> = (props: InputTextProps) => {

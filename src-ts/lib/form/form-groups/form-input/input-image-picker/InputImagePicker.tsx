@@ -1,13 +1,16 @@
-import { createRef, Dispatch, FC, RefObject, SetStateAction, useEffect, useState } from 'react'
+import { ChangeEvent, createRef, Dispatch, FC, RefObject, SetStateAction, useEffect, useState } from 'react'
 
 import { Button, IconOutline } from '../../../../../lib'
+import { InputValue } from '../../../form-input.model'
 
 import styles from './InputImagePicker.module.scss'
 
 interface InputImagePickerProps {
     readonly accept?: string
     readonly name: string
+    readonly onChange: (event: ChangeEvent<HTMLInputElement>) => void
     readonly size?: number
+    readonly value?: InputValue
 }
 
 const InputImagePicker: FC<InputImagePickerProps> = (props: InputImagePickerProps) => {
@@ -48,7 +51,10 @@ const InputImagePicker: FC<InputImagePickerProps> = (props: InputImagePickerProp
                 accept={props.accept || '*'}
                 className={styles.filePickerInput}
                 ref={fileInputRef}
-                onChange={event => setFiles(event.target.files)}
+                onChange={event => {
+                    setFiles(event.target.files)
+                    props.onChange(event)
+                }}
                 size={props.size || Infinity}
             />
             {

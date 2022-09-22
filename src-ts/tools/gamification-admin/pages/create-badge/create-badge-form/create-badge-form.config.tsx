@@ -37,18 +37,16 @@ export const createBadgeFormDef: FormDefinition = {
                     name: CreateBadgeFormField.file,
                     size: GamificationConfig.MAX_BADGE_IMAGE_FILE_SIZE,
                     type: 'image-picker',
-                    // validators: [
-                    //     {
-                    //         validator: validatorRequired,
-                    //     },
-                    // ],
+                    validators: [
+                        {
+                            validator: validatorRequired,
+                        },
+                    ],
                 },
-                {
-                    checked: true,
-                    label: 'Activate Badge',
-                    name: CreateBadgeFormField.badgeActive,
-                    type: 'checkbox',
-                },
+            ],
+        },
+        {
+            inputs: [
                 {
                     label: 'Badge Name',
                     name: CreateBadgeFormField.badgeName,
@@ -69,7 +67,19 @@ export const createBadgeFormDef: FormDefinition = {
                         },
                     ],
                 },
+                {
+                    checked: true,
+                    label: 'Activate Badge',
+                    name: CreateBadgeFormField.badgeActive,
+                    type: 'checkbox',
+                },
             ],
         },
     ],
+    groupsOptions: {
+        groupWrapStyles: {
+            gridTemplateColumns: '160px 1fr',
+        },
+        renderGroupDividers: false,
+    },
 }

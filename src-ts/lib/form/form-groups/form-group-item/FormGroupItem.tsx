@@ -9,6 +9,7 @@ import styles from './FormGroupItem.module.scss'
 
 interface FormGroupItemProps {
     group: FormGroup
+    renderDividers?: boolean
     renderFormInput: (input: FormInputModel, index: number) => JSX.Element | undefined
     totalGroupCount: number
 }
@@ -19,10 +20,11 @@ interface ItemRowProps {
     hasMultipleGroups: boolean,
     instructions?: string | undefined,
     isMultiFieldGroup: boolean,
+    renderDividers?: boolean
     title?: string,
 }
 
-const TwoColumnItem: React.FC<ItemRowProps> = ({ element, formInputs, hasMultipleGroups, instructions, isMultiFieldGroup, title }: ItemRowProps) => {
+const TwoColumnItem: React.FC<ItemRowProps> = ({ element, formInputs, hasMultipleGroups, instructions, isMultiFieldGroup, title, renderDividers }: ItemRowProps) => {
     return (
         <>
             <div className={cn(styles['form-group-item'], !isMultiFieldGroup && styles['single-field'])}>
@@ -41,7 +43,9 @@ const TwoColumnItem: React.FC<ItemRowProps> = ({ element, formInputs, hasMultipl
                     {formInputs}
                 </div>
             </div>
-            <PageDivider styleNames={[!hasMultipleGroups ? 'spacingSmall' : '']} />
+            {
+                renderDividers !== false && <PageDivider styleNames={[!hasMultipleGroups ? 'spacingSmall' : '']} />
+            }
         </>
     )
 }
@@ -67,7 +71,7 @@ const SingleColumnItem: React.FC<ItemRowProps> = ({ formInputs, hasMultipleGroup
     )
 }
 
-const FormGroupItem: React.FC<FormGroupItemProps> = ({ group, renderFormInput, totalGroupCount }: FormGroupItemProps) => {
+const FormGroupItem: React.FC<FormGroupItemProps> = ({ group, renderDividers, renderFormInput, totalGroupCount }: FormGroupItemProps) => {
     const { instructions, title, inputs, element }: FormGroup = group
 
     const formInputs: Array<JSX.Element | undefined> = inputs?.map((field: FormInputModel, index: number) => renderFormInput(field as FormInputModel, index)) || []
@@ -77,7 +81,7 @@ const FormGroupItem: React.FC<FormGroupItemProps> = ({ group, renderFormInput, t
 
     return isCardSet ?
         <SingleColumnItem hasMultipleGroups={hasMultipleGroups} instructions={instructions} isMultiFieldGroup={isMultiFieldGroup} formInputs={formInputs} title={title} /> :
-        <TwoColumnItem hasMultipleGroups={hasMultipleGroups} element={element} instructions={instructions} isMultiFieldGroup={isMultiFieldGroup} formInputs={formInputs} title={title} />
+        <TwoColumnItem hasMultipleGroups={hasMultipleGroups} element={element} instructions={instructions} isMultiFieldGroup={isMultiFieldGroup} formInputs={formInputs} title={title} renderDividers={renderDividers} />
 }
 
 export default FormGroupItem

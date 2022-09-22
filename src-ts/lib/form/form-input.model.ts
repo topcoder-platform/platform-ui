@@ -17,6 +17,8 @@ export interface FormCard {
     title: string
 }
 
+export type InputValue = string | boolean | FileList | undefined
+
 export interface FormInputModel {
     readonly accept?: string
     readonly autocomplete?: FormInputAutocompleteOption
@@ -44,5 +46,5 @@ export interface FormInputModel {
     touched?: boolean
     readonly type: 'card-set' | 'checkbox' | 'password' | 'radio' | 'rating' | 'text' | 'textarea' | 'image-picker'
     readonly validators?: ReadonlyArray<ValidatorFn>
-    value?: string | boolean
+    value?: InputValue
 }

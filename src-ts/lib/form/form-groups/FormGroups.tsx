@@ -1,5 +1,6 @@
 import { ChangeEvent, FocusEvent } from 'react'
 
+import { PageDivider } from '../../page-divider'
 import { FormDefinition } from '../form-definition.model'
 import { FormGroup } from '../form-group.model'
 import { FormInputModel } from '../form-input.model'
@@ -33,6 +34,8 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
         const tabIndex: number = getTabIndex(input, index)
 
         let inputElement: JSX.Element
+
+        /* tslint:disable:cyclomatic-complexity */
         switch (input.type) {
 
             case 'rating':
@@ -90,6 +93,8 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                 inputElement = (
                     <InputImagePicker
                         {...input}
+                        onChange={onChange}
+                        value={input.value}
                     />
                 )
                 break
@@ -126,15 +131,21 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                     group={element}
                     renderFormInput={renderInputField}
                     totalGroupCount={formDef.groups?.length || 0}
+                    renderDividers={props.formDef.groupsOptions?.renderGroupDividers}
                 />
             )
         })
         || []
 
     return (
-        <div className={styles['form-groups']}>
-            {formGroups}
-        </div>
+        <>
+            <div className={styles['form-groups']} style={props.formDef.groupsOptions?.groupWrapStyles}>
+                {formGroups}
+            </div>
+            {
+                props.formDef.groupsOptions?.renderGroupDividers === false && <PageDivider />
+            }
+        </>
     )
 }
 

@@ -68,6 +68,7 @@ export async function onSubmitAsync<T>(
     formValue: T,
     save: (value: T) => Promise<void>,
     onSuccess?: () => void,
+    customValidateForm?: (formElements: HTMLFormControlsCollection, event: ValidationEvent, inputs: ReadonlyArray<FormInputModel>) => boolean
 ): Promise<void> {
 
     event.preventDefault()
@@ -84,7 +85,7 @@ export async function onSubmitAsync<T>(
     // want to have it look like the submit succeeded
     const formValues: HTMLFormControlsCollection = (event.target as HTMLFormElement).elements
     if (action === 'submit') {
-        const isValid: boolean = validateForm(formValues, action, inputs)
+        const isValid: boolean = (customValidateForm || validateForm)(formValues, action, inputs)
         if (!isValid) {
             return Promise.reject()
         }
@@ -119,6 +120,8 @@ function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, inpu
 
     const inputDef: FormInputModel = getInputModel(inputs, input.name)
 
+    const inputEl: HTMLInputElement = input as HTMLInputElement
+
     if (event === 'change') {
         inputDef.dirty = input.value !== originalValue
     }
@@ -126,9 +129,10 @@ function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, inpu
 
     // set the def value
     if (input.type === 'checkbox') {
-        const checkbox: HTMLInputElement = input as HTMLInputElement
-        inputDef.value = checkbox.checked
-        inputDef.checked = checkbox.checked
+        inputDef.value = inputEl.checked
+        inputDef.checked = inputEl.checked
+    } else if (input.type === 'file') {
+        inputDef.value = inputEl.files || undefined
     } else {
         inputDef.value = input.value
     }
@@ -181,7 +185,9 @@ function validateField(formInputDef: FormInputModel, formElements: HTMLFormContr
         })
 }
 
-export function validateForm(formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit' | 'initial', inputs: ReadonlyArray<FormInputModel>): boolean {
+export type ValidationEvent =  'blur' | 'change' | 'submit' | 'initial'
+
+export function validateForm(formElements: HTMLFormControlsCollection, event: ValidationEvent, inputs: ReadonlyArray<FormInputModel>): boolean {
     const errors: ReadonlyArray<FormInputModel> = inputs?.filter(formInputDef => {
         formInputDef.dirty = formInputDef.dirty || event === 'submit'
         validateField(formInputDef, formElements, event)

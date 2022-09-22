@@ -10,6 +10,7 @@
     width: 132px;
     height: 132px;
     position: relative;
+    margin-bottom: $space-xl;
 
     @include ltemd {
         width: 100%;
