@@ -30,6 +30,7 @@ $error-line-height: 14px;
     box-sizing: border-box;
     border-radius: $space-xs;
     margin-bottom: calc($error-line-height + $space-xs);
+    position: relative;
 
     &.rating {
         border-color: transparent;

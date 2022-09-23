@@ -1,0 +1,57 @@
+@import '../../../../styles/includes';
+
+.selected {
+    display: flex;
+    align-items: center;
+    margin-top: $space-xs;
+    cursor: pointer;
+    color: $black-100;
+
+    &-icon {
+        margin-left: auto;
+        padding: $border-xs 0;
+        color: $turq-160;
+        > svg {
+            @include icon-size(14);
+        }
+    }
+}
+
+.menu-wrap {
+    position: absolute;
+    top: calc(100% - 2px);
+    left: 0;
+    width: 100%;
+    &:not(:empty) {
+        z-index: 9;
+    }
+}
+
+.select-menu {
+    position: absolute;
+    top: 100%;
+    left: -1px;
+    right: -1px;
+    background: $tc-white;
+    border: $border-xs solid $black-40;
+    border-radius: 0 0 $space-xs $space-xs;
+    padding: $space-sm 0;
+    max-height: 230px;
+    overflow: auto;
+}
+
+.select-option {
+    font-weight: normal;
+    color: $black-100;
+    padding: $space-sm $space-lg;
+
+    &:hover:global(:not(.selected)) {
+        background: $turq-160;
+        color: $tc-white;
+        cursor: pointer;
+    }
+
+    &:global(.selected) {
+        font-weight: bold;
+    }
+}

@@ -1,7 +1,7 @@
 import classNames from 'classnames'
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 
-import { Button } from '../../../../lib'
+import { Button, ButtonStyle } from '../../../../lib'
 import {
     CourseTitle,
     LearnCertification,
@@ -20,6 +20,8 @@ interface CoursesCardProps {
 
 const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
 
+    const [buttonStyle, setButtonStyle]: [ButtonStyle, Dispatch<SetStateAction<ButtonStyle>>]
+        = useState<ButtonStyle>('primary')
     const [buttonLabel, setButtonLabel]: [string, Dispatch<SetStateAction<string>>]
         = useState<string>('')
     const [link, setLink]: [string, Dispatch<SetStateAction<string>>]
@@ -42,6 +44,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
 
         if (isCompleted) {
             // if the course is completed, View the Certificate
+            setButtonStyle('secondary')
             setButtonLabel('View Certificate')
             setLink(getCertificatePath(
                 props.certification.providerName,
@@ -58,6 +61,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
 
         } else {
             // otherwise this course is in-progress, so Resume the course at the next lesson
+            setButtonStyle('secondary')
             setButtonLabel('Resume')
             setLink(getLessonPathFromCurrentLesson(
                 props.certification.providerName,
@@ -85,7 +89,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
             <div className={styles['bottom']}>
                 {!!link && (
                     <Button
-                        buttonStyle='primary'
+                        buttonStyle={buttonStyle}
                         size='sm'
                         label={buttonLabel}
                         route={link}

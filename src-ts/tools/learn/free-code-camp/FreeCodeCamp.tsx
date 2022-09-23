@@ -27,6 +27,7 @@ import {
     useCourses,
     useLearnBreadcrumb,
     useLessonProvider,
+    userCertificationProgressCompleteCourseAsync,
     UserCertificationProgressProviderData,
     userCertificationProgressStartAsync,
     UserCertificationProgressStatus,
@@ -257,26 +258,34 @@ const FreeCodeCamp: FC<{}> = () => {
     }
 
     useEffect(() => {
-        if (
-            certificateProgress &&
-            certificateProgress.certificationProgressPercentage === 100 &&
-            certificateProgress.status === UserCertificationProgressStatus.inProgress
-        ) {
-            userCertificationProgressUpdateAsync(
-                certificateProgress.id,
-                UserCertificationUpdateProgressActions.completeCertificate,
-                {}
-            )
-                .then(setCertificateProgress)
-                .then(() => {
-                    const completedPath: string = getCertificationCompletedPath(
-                        providerParam,
-                        certificationParam
-                    )
 
-                    navigate(completedPath)
-                })
+        // if we don't yet have the user's handle,
+        // or if the cert isn't complete,
+        // or the cert isn't in progress,
+        // there's nothing to do
+        if (
+            !profile?.handle
+            || certificateProgress?.certificationProgressPercentage !== 100
+            || certificateProgress?.status !== UserCertificationProgressStatus.inProgress
+        ) {
+            return
         }
+
+        // it's safe to complete the course
+        userCertificationProgressCompleteCourseAsync(
+            certificateProgress.id,
+            certificationParam,
+            profile.handle,
+            providerParam,
+        )
+            .then(setCertificateProgress)
+            .then(() => {
+                const completedPath: string = getCertificationCompletedPath(
+                    providerParam,
+                    certificationParam
+                )
+                navigate(completedPath)
+            })
     }, [
         certificateProgress,
         certificationParam,
