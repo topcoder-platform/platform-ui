@@ -1,6 +1,8 @@
 import { FC } from 'react'
 
 import { Form, FormDefinition, formGetInputModel, FormInputModel } from '../../../../../lib'
+import { GamificationConfig } from '../../../game-config'
+import { GameBadge } from '../../../game-lib'
 
 import { CreateBadgeFormField } from './create-badge-form.config'
 import { CreateBadgeRequest } from './create-badge-functions'
@@ -8,7 +10,7 @@ import { createBadgeSubmitRequestAsync } from './create-badge-functions/create-b
 
 export interface CreateBadgeFormProps {
     formDef: FormDefinition
-    onSave: () => void
+    onSave: (createdBadge: GameBadge) => void
 }
 
 const CreateBadgeForm: FC<CreateBadgeFormProps> = (props: CreateBadgeFormProps) => {
@@ -23,16 +25,16 @@ const CreateBadgeForm: FC<CreateBadgeFormProps> = (props: CreateBadgeFormProps) 
             badgeActive,
             badgeDesc,
             badgeName,
-            file: files[0],
+            badgeStatus: 'Active', // not used currently thus fixed field
+            files,
+            orgID: GamificationConfig.ORG_ID,
         }
     }
 
     async function saveAsync(request: CreateBadgeRequest): Promise<void> {
-        console.log('saveAsync', request)
-
         return createBadgeSubmitRequestAsync(request)
-            .then(() => {
-                props.onSave()
+            .then((createdBadge: GameBadge) => {
+                props.onSave(createdBadge)
             })
     }
 

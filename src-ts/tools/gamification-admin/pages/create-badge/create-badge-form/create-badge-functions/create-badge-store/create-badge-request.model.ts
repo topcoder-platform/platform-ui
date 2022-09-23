@@ -2,5 +2,7 @@ export interface CreateBadgeRequest {
     badgeActive: boolean
     badgeDesc: string
     badgeName: string
-    file: File
+    badgeStatus: string
+    files: FileList
+    orgID: string
 }

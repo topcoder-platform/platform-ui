@@ -1,7 +1,7 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
 import { Breadcrumb, BreadcrumbItemModel, ContentLayout } from '../../../../lib'
-import { useGamificationBreadcrumb } from '../../game-lib'
+import { GameBadge, useGamificationBreadcrumb } from '../../game-lib'
 import { BadgeCreatedModal } from '../../game-lib/modals/badge-created-modal'
 
 import { CreateBadgeForm, createBadgeFormDef } from './create-badge-form'
@@ -19,7 +19,11 @@ const CreateBadgePage: FC = () => {
     const [showBadgeCreatedModal, setShowBadgeCreatedModal]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    function onSave() {
+    const [createdBadge, setCreatedBadge]: [GameBadge | undefined, Dispatch<SetStateAction<GameBadge | undefined>>]
+        = useState<GameBadge | undefined>()
+
+    function onSave(newBadge: GameBadge): void {
+        setCreatedBadge(newBadge)
         setShowBadgeCreatedModal(true)
     }
 
@@ -34,10 +38,13 @@ const CreateBadgePage: FC = () => {
                     onSave={onSave}
                 />
             </div>
-            <BadgeCreatedModal
-                isOpen={showBadgeCreatedModal}
-                onClose={() => setShowBadgeCreatedModal(false)}
-            />
+            {
+                createdBadge && <BadgeCreatedModal
+                    badge={createdBadge}
+                    isOpen={showBadgeCreatedModal}
+                    onClose={() => setShowBadgeCreatedModal(false)}
+                />
+            }
         </ContentLayout>
     )
 }
