@@ -5,6 +5,7 @@ import { CourseCompletedPage } from './course-completed'
 import { CourseDetailsPage } from './course-details'
 import { FreeCodeCamp } from './free-code-camp'
 import { default as Learn, toolTitle } from './Learn'
+import { LearnConfig } from './learn-config'
 import { MyLearning } from './my-learning'
 import { WelcomePage } from './welcome'
 
@@ -44,7 +45,11 @@ export function getLessonPathFromModule(
     return `${getCoursePath(provider, certification)}/${module}/${lesson}`
 }
 
-export function getUserCertificatePath(provider: string, certification: string, handle: string): string {
+export function getUserCertificateSsr(provider: string, certification: string, handle: string, title: string): string {
+    return `${LearnConfig.CERT_DOMAIN}/${handle}/${provider}/${certification}/${encodeURI(title)}`
+}
+
+export function getUserCertificateUrl(provider: string, certification: string, handle: string): string {
     return `${window.location.origin}${getCoursePath(provider, certification)}/${handle}${LEARN_PATHS.certificate}`
 }
 

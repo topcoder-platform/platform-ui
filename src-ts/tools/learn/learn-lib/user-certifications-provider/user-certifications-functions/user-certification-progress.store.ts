@@ -1,5 +1,5 @@
 import { LearnConfig } from '../../../learn-config'
-import { getUserCertificatePath } from '../../../learn.routes'
+import { getUserCertificateUrl } from '../../../learn.routes'
 import { learnUrlGet, learnXhrGetAsync, learnXhrPostAsync, learnXhrPutAsync } from '../../functions'
 
 import { LearnUserCertificationProgress } from './learn-user-certification-progress.model'
@@ -16,7 +16,7 @@ export function completeCourse(
 
     // construct the certificate params
     const certificateElement: string = `[${LearnConfig.CERT_ELEMENT_SELECTOR.attribute}=${LearnConfig.CERT_ELEMENT_SELECTOR.value}]`
-    const certificateUrl: string = getUserCertificatePath(provider, certification, handle)
+    const certificateUrl: string = getUserCertificateUrl(provider, certification, handle)
 
     return updateAsync(
         certificationProgressId,
