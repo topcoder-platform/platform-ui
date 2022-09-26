@@ -1,6 +1,7 @@
 import classNames from 'classnames'
 import { FC, MutableRefObject } from 'react'
 
+import { LearnConfig } from '../../../learn-config'
 import { LearnCertificateTrackType } from '../../../learn-lib'
 
 import { CertificateBgPattern } from './certificate-bg-pattern'
@@ -13,7 +14,7 @@ import { ReactComponent as FccLogoSvg } from './vendor-fcc-logo.svg'
 interface CertificateProps {
     completedDate?: string
     course?: string
-    elRef?: MutableRefObject<HTMLElement|any>
+    elRef?: MutableRefObject<HTMLElement | any>
     provider?: string
     tcHandle?: string
     type?: LearnCertificateTrackType
@@ -21,10 +22,19 @@ interface CertificateProps {
 }
 
 const Certificate: FC<CertificateProps> = (props: CertificateProps) => {
+
     const certificateType: LearnCertificateTrackType = props.type ?? 'DEV'
 
+    const elementSelector: { [attr: string]: string } = {
+        [LearnConfig.CERT_ELEMENT_SELECTOR.attribute]: LearnConfig.CERT_ELEMENT_SELECTOR.value,
+    }
+
     return (
-        <div className={styles['wrap']} ref={props.elRef}>
+        <div
+            {...elementSelector}
+            className={styles['wrap']}
+            ref={props.elRef}
+        >
             <div className={classNames(styles['details'], `theme-${certificateType.toLowerCase()}`)}>
                 <h2 className='details grad'>Topcoder Academy</h2>
                 <h3>Certificate of Course Completion</h3>
