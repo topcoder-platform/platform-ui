@@ -6,10 +6,12 @@ import { InputValue } from '../../../form-input.model'
 import styles from './InputImagePicker.module.scss'
 
 interface InputImagePickerProps {
-    readonly accept?: string
+    readonly fileConfig?: {
+        readonly acceptFileType?: string
+        readonly maxFileSize?: number
+    }
     readonly name: string
     readonly onChange: (event: ChangeEvent<HTMLInputElement>) => void
-    readonly size?: number
     readonly value?: InputValue
 }
 
@@ -49,14 +51,14 @@ const InputImagePicker: FC<InputImagePickerProps> = (props: InputImagePickerProp
             <input
                 name={props.name}
                 type={'file'}
-                accept={props.accept || '*'}
+                accept={props.fileConfig?.acceptFileType || '*'}
                 className={styles.filePickerInput}
                 ref={fileInputRef}
                 onChange={event => {
                     setFiles(event.target.files)
                     props.onChange(event)
                 }}
-                size={props.size || Infinity}
+                size={props.fileConfig?.maxFileSize || Infinity}
             />
             {
                 fileDataURL ? (

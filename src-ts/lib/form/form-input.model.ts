@@ -20,7 +20,6 @@ export interface FormCard {
 export type InputValue = string | boolean | FileList | undefined
 
 export interface FormInputModel {
-    readonly accept?: string
     readonly autocomplete?: FormInputAutocompleteOption
     readonly cards?: ReadonlyArray<FormCard>
     checked?: boolean
@@ -30,6 +29,10 @@ export interface FormInputModel {
     disabled?: boolean
     error?: string
     readonly events?: ReadonlyArray<InputEvent>
+    readonly fileConfig?: {
+        readonly acceptFileType?: string
+        readonly maxFileSize?: number
+    }
     readonly files?: FileList
     readonly hideInlineErrors?: boolean
     readonly hint?: string
@@ -40,7 +43,6 @@ export interface FormInputModel {
     readonly notTabbable?: boolean
     options?: ReadonlyArray<FormRadioButtonOption>
     readonly placeholder?: string
-    readonly size?: number
     readonly spellCheck?: boolean
     readonly title?: string
     touched?: boolean

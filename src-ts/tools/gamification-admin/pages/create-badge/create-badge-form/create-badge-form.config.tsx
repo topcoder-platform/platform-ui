@@ -33,9 +33,11 @@ export const createBadgeFormDef: FormDefinition = {
         {
             inputs: [
                 {
-                    accept: GamificationConfig.ACCEPTED_BADGE_MIME_TYPES,
+                    fileConfig: {
+                        acceptFileType: GamificationConfig.ACCEPTED_BADGE_MIME_TYPES,
+                        maxFileSize: GamificationConfig.MAX_BADGE_IMAGE_FILE_SIZE,
+                    },
                     name: CreateBadgeFormField.file,
-                    size: GamificationConfig.MAX_BADGE_IMAGE_FILE_SIZE,
                     type: 'image-picker',
                     validators: [
                         {
