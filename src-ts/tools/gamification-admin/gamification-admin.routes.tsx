@@ -5,8 +5,8 @@ import BadgeDetailPage from './pages/badge-detail/BadgeDetailPage'
 import BadgeListingPage from './pages/badge-listing/BadgeListingPage'
 import CreateBadgePage from './pages/create-badge/CreateBadgePage'
 
-export const baseDetailPath: string = '/badge-detail'
-export const createBadgePath: string = '/create-badge'
+const baseDetailPath: string = '/badge-detail'
+const createBadgePath: string = '/create-badge'
 
 export const basePath: string = '/gamification-admin'
 

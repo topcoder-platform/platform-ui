@@ -1,4 +1,4 @@
-import { FormButton, FormGroup, FormGroupOptions } from '.'
+import { FormButton, FormGroup } from '.'
 
 export type FormAction = 'save' | 'submit' | undefined
 
@@ -10,7 +10,6 @@ export interface FormButtons {
 export interface FormDefinition {
     readonly buttons: FormButtons
     readonly groups?: Array<FormGroup>
-    readonly groupsOptions?: FormGroupOptions
     readonly shortName?: string
     readonly subtitle?: string
     readonly successMessage?: string

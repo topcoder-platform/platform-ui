@@ -33,13 +33,9 @@ export function initializeValues<T>(inputs: Array<FormInputModel>, formValues?: 
     inputs
         .filter(input => !input.dirty && !input.touched)
         .forEach(input => {
-            if (input.type === 'checkbox') {
-                input.value = input.checked || false
-            } else {
-                input.value = !!(formValues as any)?.hasOwnProperty(input.name)
-                    ? (formValues as any)[input.name]
-                    : undefined
-            }
+            input.value = !!(formValues as any)?.hasOwnProperty(input.name)
+                ? (formValues as any)[input.name]
+                : undefined
         })
 }
 
@@ -68,7 +64,6 @@ export async function onSubmitAsync<T>(
     formValue: T,
     save: (value: T) => Promise<void>,
     onSuccess?: () => void,
-    customValidateForm?: (formElements: HTMLFormControlsCollection, event: ValidationEvent, inputs: ReadonlyArray<FormInputModel>) => boolean
 ): Promise<void> {
 
     event.preventDefault()
@@ -85,7 +80,7 @@ export async function onSubmitAsync<T>(
     // want to have it look like the submit succeeded
     const formValues: HTMLFormControlsCollection = (event.target as HTMLFormElement).elements
     if (action === 'submit') {
-        const isValid: boolean = (customValidateForm || validateForm)(formValues, action, inputs)
+        const isValid: boolean = validateForm(formValues, action, inputs)
         if (!isValid) {
             return Promise.reject()
         }
@@ -120,22 +115,13 @@ function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, inpu
 
     const inputDef: FormInputModel = getInputModel(inputs, input.name)
 
-    const inputEl: HTMLInputElement = input as HTMLInputElement
-
     if (event === 'change') {
         inputDef.dirty = input.value !== originalValue
     }
     inputDef.touched = true
 
     // set the def value
-    if (input.type === 'checkbox') {
-        inputDef.value = inputEl.checked
-        inputDef.checked = inputEl.checked
-    } else if (input.type === 'file') {
-        inputDef.value = inputEl.files || undefined
-    } else {
-        inputDef.value = input.value
-    }
+    inputDef.value = input.value
 
     // now let's validate the field
     const formElements: HTMLFormControlsCollection = (input.form as HTMLFormElement).elements
@@ -185,9 +171,7 @@ function validateField(formInputDef: FormInputModel, formElements: HTMLFormContr
         })
 }
 
-export type ValidationEvent =  'blur' | 'change' | 'submit' | 'initial'
-
-export function validateForm(formElements: HTMLFormControlsCollection, event: ValidationEvent, inputs: ReadonlyArray<FormInputModel>): boolean {
+export function validateForm(formElements: HTMLFormControlsCollection, event: 'blur' | 'change' | 'submit' | 'initial', inputs: ReadonlyArray<FormInputModel>): boolean {
     const errors: ReadonlyArray<FormInputModel> = inputs?.filter(formInputDef => {
         formInputDef.dirty = formInputDef.dirty || event === 'submit'
         validateField(formInputDef, formElements, event)

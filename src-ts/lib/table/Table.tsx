@@ -61,7 +61,6 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 columns,
                 data,
                 defaultSortDirectionMap,
-                props.onToggleSort,
                 sort,
             ])
 
