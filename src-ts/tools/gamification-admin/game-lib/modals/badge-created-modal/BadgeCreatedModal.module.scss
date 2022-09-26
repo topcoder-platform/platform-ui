@@ -1,0 +1,39 @@
+@import "../../../../../lib/styles/variables";
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+
+    .badge {
+        display: flex;
+        align-items: center;
+        margin-bottom: $space-xxl;
+
+        .badge-image {
+            width: 43px;
+            height: 43px;
+            margin-right: $space-xl;
+        }
+
+        .badge-image-disabled {
+            width: 43px;
+            height: 43px;
+            margin-right: $space-xl;
+            opacity: 0.5;
+            filter: grayscale(1);
+        }
+
+        .badge-name {
+            font-size: 16px;
+        }
+    }
+
+    .actions {
+        display: flex;
+        align-items: center;
+
+        a {
+            margin-right: $space-md;
+        }
+    }
+}
