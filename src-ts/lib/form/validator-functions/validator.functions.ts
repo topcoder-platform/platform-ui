@@ -1,13 +1,12 @@
 import { formGetInput } from '../form-functions'
-import { InputValue } from '../form-input.model'
 
-function checkForBooleanValueAndThrowError(value: InputValue): void {
+function checkForBooleanValueAndThrowError(value: string | boolean | undefined): void {
     if (typeof value === 'boolean') {
         throw new Error(`The value for the email validator cannot be a boolean`)
     }
 }
 
-export function doesNotMatchOther(value: InputValue, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
+export function doesNotMatchOther(value: string | boolean | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
 
     checkForBooleanValueAndThrowError(value)
 
@@ -28,7 +27,7 @@ export function doesNotMatchOther(value: InputValue, formElements?: HTMLFormCont
     return `Cannot match the ${getOtherFieldLabel(otherField, otherFieldName)} value`
 }
 
-export function email(value: InputValue): string | undefined {
+export function email(value: string | boolean | undefined): string | undefined {
 
     checkForBooleanValueAndThrowError(value)
 
@@ -43,10 +42,10 @@ export function email(value: InputValue): string | undefined {
 
     const emailRegex: RegExp = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
 
-    return !emailRegex.test(value as string) ? 'Invalid email' : undefined
+    return !emailRegex.test(value) ? 'Invalid email' : undefined
 }
 
-export function password(value: InputValue): string | undefined {
+export function password(value: string | boolean | undefined): string | undefined {
 
     checkForBooleanValueAndThrowError(value)
 
@@ -65,10 +64,10 @@ export function password(value: InputValue): string | undefined {
     // - at least 1 symbol or number
     const passwordRegex: RegExp = /^(?=.*[a-zA-Z])(?=.*[#$^+=!*()@%&\d]).{8,}$/g
 
-    return !passwordRegex.test(value as string) ? 'Password rules: 8+ characters, 1+ letter, and 1+ number or symbol' : undefined
+    return !passwordRegex.test(value) ? 'Password rules: 8+ characters, 1+ letter, and 1+ number or symbol' : undefined
 }
 
-export function matchOther(value: InputValue, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
+export function matchOther(value: string | boolean | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
 
     checkForBooleanValueAndThrowError(value)
 
@@ -89,11 +88,11 @@ export function matchOther(value: InputValue, formElements?: HTMLFormControlsCol
     return `Does not match the ${getOtherFieldLabel(otherField, otherFieldName)}`
 }
 
-export function required(value: InputValue): string | undefined {
+export function required(value: string | boolean | undefined): string | undefined {
     return (value === undefined || value === '') ? 'Required' : undefined
 }
 
-export function requiredIfOther(value: InputValue, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
+export function requiredIfOther(value: string | boolean | undefined, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
 
     // if there is a value, there's no need to check the other input
     if (typeof value === 'string' && !!value) {
@@ -130,7 +129,7 @@ export function sslUrl(value: string | undefined): string | undefined {
 
 export interface ValidatorFn {
     dependentField?: string,
-    validator: (value: InputValue, formValues?: HTMLFormControlsCollection, otherField?: string) => string | undefined
+    validator: (value: string | boolean | undefined, formValues?: HTMLFormControlsCollection, otherField?: string) => string | undefined
 }
 
 function getOtherField(formElements?: HTMLFormControlsCollection, otherFieldName?: string): HTMLInputElement {

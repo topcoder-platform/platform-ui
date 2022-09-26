@@ -1,13 +1,12 @@
 import { ChangeEvent, FocusEvent } from 'react'
 
-import { PageDivider } from '../../page-divider'
 import { FormDefinition } from '../form-definition.model'
 import { FormGroup } from '../form-group.model'
 import { FormInputModel } from '../form-input.model'
 
 import { FormCardSet } from './form-card-set'
 import FormGroupItem from './form-group-item/FormGroupItem'
-import { InputImagePicker, InputRating, InputText, InputTextarea } from './form-input'
+import { InputRating, InputText, InputTextarea } from './form-input'
 import { FormInputRow } from './form-input-row'
 import { InputTextTypes } from './form-input/input-text/InputText'
 import FormRadio from './form-radio'
@@ -24,18 +23,15 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
 
     const { formDef, onBlur, onChange }: FormGroupsProps = props
 
-    function getTabIndex(input: FormInputModel, index: number): number {
+    const getTabIndex: (input: FormInputModel, index: number) => number = (input, index) => {
         const tabIndex: number = input.notTabbable ? -1 : index + 1 + (formDef.tabIndexStart || 0)
         return tabIndex
     }
 
-    function renderInputField(input: FormInputModel, index: number): JSX.Element | undefined {
-
+    const renderInputField: (input: FormInputModel, index: number) => JSX.Element | undefined = (input, index) => {
         const tabIndex: number = getTabIndex(input, index)
 
         let inputElement: JSX.Element
-
-        /* tslint:disable:cyclomatic-complexity */
         switch (input.type) {
 
             case 'rating':
@@ -44,10 +40,11 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                         {...input}
                         onChange={onChange}
                         tabIndex={tabIndex}
-                        value={input.value as number | undefined}
+                        value={input.value}
                     />
                 )
                 break
+
             case 'textarea':
                 inputElement = (
                     <InputTextarea
@@ -55,22 +52,11 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                         onBlur={onBlur}
                         onChange={onChange}
                         tabIndex={tabIndex}
-                        value={input.value as string | undefined}
+                        value={input.value}
                     />
                 )
                 break
             case 'checkbox':
-                inputElement = (
-                    <InputText
-                        {...input}
-                        checked={!!input.value}
-                        onBlur={onBlur}
-                        onChange={onChange}
-                        tabIndex={tabIndex}
-                        type='checkbox'
-                    />
-                )
-                break
             case 'radio':
                 inputElement = (
                     <FormRadio
@@ -89,15 +75,6 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                     />
                 )
                 break
-            case 'image-picker':
-                inputElement = (
-                    <InputImagePicker
-                        {...input}
-                        onChange={onChange}
-                        value={input.value}
-                    />
-                )
-                break
             default:
                 inputElement = (
                     <InputText
@@ -106,7 +83,7 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                         onChange={onChange}
                         tabIndex={tabIndex}
                         type={input.type as InputTextTypes || 'text'}
-                        value={input.value as string | undefined}
+                        value={input.value}
                     />
                 )
                 break
@@ -123,29 +100,14 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
         )
     }
 
-    const formGroups: Array<JSX.Element | undefined> = formDef?.groups
-        ?.map((element: FormGroup, index: number) => {
-            return (
-                <FormGroupItem
-                    key={`element-${index}`}
-                    group={element}
-                    renderFormInput={renderInputField}
-                    totalGroupCount={formDef.groups?.length || 0}
-                    renderDividers={props.formDef.groupsOptions?.renderGroupDividers}
-                />
-            )
-        })
-        || []
+    const formGroups: Array<JSX.Element | undefined> = formDef?.groups?.map((element: FormGroup, index: number) => {
+        return <FormGroupItem key={`element-${index}`} group={element} renderFormInput={renderInputField} totalGroupCount={formDef.groups?.length || 0} />
+    }) || []
 
     return (
-        <>
-            <div className={styles['form-groups']} style={props.formDef.groupsOptions?.groupWrapStyles}>
-                {formGroups}
-            </div>
-            {
-                props.formDef.groupsOptions?.renderGroupDividers === false && <PageDivider />
-            }
-        </>
+        <div className={styles['form-groups']}>
+            {formGroups}
+        </div>
     )
 }
 

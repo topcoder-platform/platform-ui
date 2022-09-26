@@ -1,7 +1,6 @@
 import cn from 'classnames'
 import { FC, FocusEvent } from 'react'
 
-import { InputValue } from '../../../form-input.model'
 import { FormInputAutocompleteOption } from '../form-input-autcomplete-option.enum'
 import { InputWrapper } from '../input-wrapper'
 
@@ -9,9 +8,8 @@ import styles from './InputText.module.scss'
 
 export type InputTextTypes = 'checkbox' | 'password' | 'text'
 
-export interface InputTextProps {
+interface InputTextProps {
     readonly autocomplete?: FormInputAutocompleteOption
-    readonly checked?: boolean
     readonly className?: string
     readonly dirty?: boolean
     readonly disabled?: boolean
@@ -26,14 +24,10 @@ export interface InputTextProps {
     readonly spellCheck?: boolean
     readonly tabIndex: number
     readonly type: InputTextTypes
-    readonly value?: InputValue
+    readonly value?: string | number
 }
 
 const InputText: FC<InputTextProps> = (props: InputTextProps) => {
-
-    const defaultValue: string | number | undefined = props.type === 'checkbox' && !!props.checked
-        ? 'on'
-        : props.value as string | number | undefined
 
     return (
         <InputWrapper
@@ -45,9 +39,8 @@ const InputText: FC<InputTextProps> = (props: InputTextProps) => {
         >
             <input
                 autoComplete={props.autocomplete}
-                checked={defaultValue === 'on'}
                 className={cn(styles['form-input-text'], styles[props.type])}
-                defaultValue={defaultValue}
+                defaultValue={props.value}
                 disabled={!!props.disabled}
                 onBlur={props.onBlur}
                 onChange={props.onChange}
