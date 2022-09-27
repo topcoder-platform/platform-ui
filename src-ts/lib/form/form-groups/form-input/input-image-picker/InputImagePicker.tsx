@@ -62,7 +62,7 @@ const InputImagePicker: FC<InputImagePickerProps> = (props: InputImagePickerProp
             />
             {
                 fileDataURL ? (
-                    <img src={fileDataURL} alt={'Badge image preview'} className={styles.badgeImage} />
+                    <img src={fileDataURL} alt={'Badge preview'} className={styles.badgeImage} />
                 ) : (
                     <div className={styles.filePickerPlaceholder}>UPLOAD<br />IMAGE</div>
                 )
