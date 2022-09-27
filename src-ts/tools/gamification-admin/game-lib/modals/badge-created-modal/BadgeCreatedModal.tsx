@@ -23,6 +23,7 @@ const BadgeCreatedModal: FC<BadgeCreatedModalProps> = (props: BadgeCreatedModalP
             open={props.isOpen}
             size='md'
             title={`Badge created`}
+            closeOnOverlayClick={false}
         >
             <div className={styles.wrapper}>
                 <div className={styles.badge}>
@@ -40,9 +41,9 @@ const BadgeCreatedModal: FC<BadgeCreatedModalProps> = (props: BadgeCreatedModalP
                         route={badgeDetailPath(props.badge.id)}
                     />
                     <Button
-                        label={props.badge.active ? 'Award' : 'Activate & Award'}
+                        label='Create a new badge'
                         buttonStyle='secondary'
-                        route={badgeDetailPath(props.badge.id, 'award')}
+                        onClick={() => window.location.reload()}
                     />
                 </div>
             </div>
