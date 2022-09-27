@@ -106,10 +106,12 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
                             <IconOutline.DocumentTextIcon />
                             {props.lessonsCount} Lessons
                         </span>
-                        <span className={styles['summary-item']}>
-                            <IconOutline.ClockIcon />
-                            {props.duration.value} {props.duration.units}
-                        </span>
+                        {props.duration.value !== 0 && (
+                            <span className={styles['summary-item']}>
+                                <IconOutline.ClockIcon />
+                                {props.duration.value} {props.duration.units}
+                            </span>
+                        )}
                     </div>
                     <div className={styles['short-desc']}>
                         <span className='body-small' dangerouslySetInnerHTML={{ __html: props.shortDescription.join('<br/>') }}></span>
