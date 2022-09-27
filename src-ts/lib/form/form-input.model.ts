@@ -17,15 +17,23 @@ export interface FormCard {
     title: string
 }
 
+export type InputValue = string | boolean | FileList | undefined
+
 export interface FormInputModel {
     readonly autocomplete?: FormInputAutocompleteOption
     readonly cards?: ReadonlyArray<FormCard>
+    checked?: boolean
     readonly className?: string
     readonly dependentFields?: Array<string>
     dirty?: boolean
     disabled?: boolean
     error?: string
     readonly events?: ReadonlyArray<InputEvent>
+    readonly fileConfig?: {
+        readonly acceptFileType?: string
+        readonly maxFileSize?: number
+    }
+    readonly files?: FileList
     readonly hideInlineErrors?: boolean
     readonly hint?: string
     readonly id?: string
@@ -38,7 +46,7 @@ export interface FormInputModel {
     readonly spellCheck?: boolean
     readonly title?: string
     touched?: boolean
-    readonly type: 'card-set' | 'checkbox' | 'password' | 'radio' | 'rating' | 'text' | 'textarea'
+    readonly type: 'card-set' | 'checkbox' | 'password' | 'radio' | 'rating' | 'text' | 'textarea' | 'image-picker'
     readonly validators?: ReadonlyArray<ValidatorFn>
-    value?: string
+    value?: InputValue
 }
