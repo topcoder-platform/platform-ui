@@ -9,6 +9,16 @@ import { LearnConfig } from './learn-config'
 import { MyLearning } from './my-learning'
 import { WelcomePage } from './welcome'
 
+export enum LEARN_PATHS {
+    certificate = '/certificate',
+    completed = '/learn/completed',
+    myCertificate = '/learn/my-certificate',
+    myLearning = '/learn/my-learning',
+    fcc = '/learn/fcc',
+    root = '/learn',
+    startCourseRouteFlag = 'start-course',
+}
+
 export function getAuthenticateAndStartCourseRoute(): string {
     return `${authUrlLogin()}${encodeURIComponent(`?${LEARN_PATHS.startCourseRouteFlag}`)}`
 }
@@ -51,16 +61,6 @@ export function getUserCertificateSsr(provider: string, certification: string, h
 
 export function getUserCertificateUrl(provider: string, certification: string, handle: string): string {
     return `${window.location.origin}${getCoursePath(provider, certification)}/${handle}${LEARN_PATHS.certificate}`
-}
-
-export enum LEARN_PATHS {
-    certificate = '/certificate',
-    completed = '/learn/completed',
-    myCertificate = '/learn/my-certificate',
-    myLearning = '/learn/my-learning',
-    fcc = '/learn/fcc',
-    root = '/learn',
-    startCourseRouteFlag = 'start-course',
 }
 
 export const rootRoute: string = LEARN_PATHS.root

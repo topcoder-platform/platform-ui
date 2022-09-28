@@ -291,6 +291,7 @@ const FreeCodeCamp: FC<{}> = () => {
         certificationParam,
         navigate,
         providerParam,
+        profile?.handle,
         setCertificateProgress,
     ])
 
