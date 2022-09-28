@@ -37,7 +37,7 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
                         {hasTimeEstimate ? props.completionHours?.value : (<>&nbsp;</>)}
                     </h3>
                     <div className={styles['count-label']}>
-                        {hasTimeEstimate ? (props.completionHours?.units ?? 'Hours') : 'Various'}
+                        {hasTimeEstimate ? (props.completionHours?.units ?? 'Hours') : 'Times vary'}
                     </div>
                 </div>
             </div>
