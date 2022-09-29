@@ -11,6 +11,7 @@ export interface LearnCertification extends LearnModelBase {
     key: string
     providerCrertificationId: string
     providerName: string
+    publishedAt?: Date
     state: 'active' | 'coming-soon'
     title: string
     trackType: LearnCertificateTrackType
