@@ -90,7 +90,7 @@ export function matchOther(value: InputValue, formElements?: HTMLFormControlsCol
 }
 
 export function required(value: InputValue): string | undefined {
-    return (value === undefined || value === '') ? 'Required' : undefined
+    return (value === undefined || value === '' || !(value as FileList).length) ? 'Required' : undefined
 }
 
 export function requiredIfOther(value: InputValue, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {

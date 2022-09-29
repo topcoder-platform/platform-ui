@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { BaseModal, Button } from '../../../../../lib'
+import { BaseModal, Button, PageDivider, useCheckIsMobile } from '../../../../../lib'
 import { badgeDetailPath } from '../../../gamification-admin.routes'
 import { GameBadge } from '../../game-badge.model'
 
@@ -12,6 +12,8 @@ export interface BadgeCreatedModalProps {
 }
 
 const BadgeCreatedModal: FC<BadgeCreatedModalProps> = (props: BadgeCreatedModalProps) => {
+
+    const isMobile: boolean = useCheckIsMobile()
 
     function onClose(): void {
         props.onClose()
@@ -34,17 +36,22 @@ const BadgeCreatedModal: FC<BadgeCreatedModalProps> = (props: BadgeCreatedModalP
                     />
                     <p className={styles['badge-name']}>{props.badge.badge_name} badge has been sucessfully created.</p>
                 </div>
-                <div className={styles.actions}>
-                    <Button
-                        label='View'
-                        buttonStyle='primary'
-                        route={badgeDetailPath(props.badge.id)}
-                    />
-                    <Button
-                        label='Create a new badge'
-                        buttonStyle='secondary'
-                        onClick={() => window.location.reload()}
-                    />
+                <div className={styles['actions-wrap']}>
+                    {
+                        isMobile && <PageDivider />
+                    }
+                    <div className={styles.actions}>
+                        <Button
+                            label='View'
+                            buttonStyle='primary'
+                            route={badgeDetailPath(props.badge.id)}
+                        />
+                        <Button
+                            label='Create a new badge'
+                            buttonStyle='secondary'
+                            onClick={() => window.location.reload()}
+                        />
+                    </div>
                 </div>
             </div>
         </BaseModal>

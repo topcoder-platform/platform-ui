@@ -35,6 +35,7 @@ interface FormProps<ValueType, RequestType> {
     readonly onChange?: (inputs: ReadonlyArray<FormInputModel>) => void,
     readonly onSuccess?: () => void
     readonly requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => RequestType
+    readonly resetFormOnUnmount?: boolean
     readonly save: (value: RequestType) => Promise<void>
 }
 
@@ -82,6 +83,14 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             formRef,
             inputs,
         ])
+
+        useEffect(() => {
+            return () => {
+                if (props.resetFormOnUnmount) {
+                    onReset()
+                }
+            }
+        }, [])
 
         function checkIfFormIsValid(formInputFields: Array<FormInputModel>): void {
             setFormInvalid(formInputFields.filter(item => !!item.error).length > 0)
