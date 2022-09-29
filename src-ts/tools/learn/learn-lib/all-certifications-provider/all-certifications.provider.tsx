@@ -42,7 +42,11 @@ export function useAllCertifications(
     ): Array<LearnCertification> {
         return !sort.current
             ? certificates
-            : orderBy([...certificates], sort.current.field, sort.current.direction)
+            : orderBy(
+                [...certificates],
+                [sort.current.field, 'title'], // always second sort by title
+                [sort.current.direction, 'asc']
+            )
     }
 
     function getFilteredCertifications(

@@ -20,8 +20,8 @@ import styles from './WelcomePage.module.scss'
 
 type SORT_FIELD_TYPE = keyof LearnCertification
 const SORT_OPTIONS: Array<{label: string, value: SORT_FIELD_TYPE}> = [
+    {label: 'Newest Course', value: 'publishedAt'},
     {label: 'Category', value: 'category'},
-    {label: 'Newest', value: 'createdAt'},
     {label: 'Title', value: 'title'},
 ]
 export const DEFAULT_SORT: SORT_FIELD_TYPE = SORT_OPTIONS[0].value
@@ -47,7 +47,7 @@ const WelcomePage: FC<{}> = () => {
                 value: selectedCategory,
             },
             sort: {
-                direction: sortField === 'createdAt' ? 'desc' : 'asc',
+                direction: sortField === 'publishedAt' ? 'desc' : 'asc',
                 field: sortField,
             },
         }
