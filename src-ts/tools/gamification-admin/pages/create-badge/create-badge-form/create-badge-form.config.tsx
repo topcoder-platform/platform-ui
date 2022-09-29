@@ -52,6 +52,7 @@ export const createBadgeFormDef: FormDefinition = {
                 {
                     label: 'Badge Name',
                     name: CreateBadgeFormField.badgeName,
+                    placeholder: 'Enter badge name',
                     type: 'text',
                     validators: [
                         {
@@ -62,6 +63,7 @@ export const createBadgeFormDef: FormDefinition = {
                 {
                     label: 'Badge Description',
                     name: CreateBadgeFormField.badgeDesc,
+                    placeholder: 'Enter badge description, details, how to get awarded info',
                     type: 'textarea',
                     validators: [
                         {

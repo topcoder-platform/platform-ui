@@ -1,8 +1,11 @@
 @import "../../../../../lib/styles/variables";
+@import "../../../../../lib/styles/includes";
 
 .wrapper {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    min-height: 100%;
 
     .badge {
         display: flex;
@@ -28,12 +31,21 @@
         }
     }
 
-    .actions {
+    .actions-wrap {
         display: flex;
-        align-items: center;
+        flex-direction: column;
 
-        a {
-            margin-right: $space-md;
+        .actions {
+            display: flex;
+            align-items: center;
+
+            @include ltemd {
+                justify-content: flex-end;
+            }
+
+            a {
+                margin-right: $space-md;
+            }
         }
     }
 }
