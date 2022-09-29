@@ -1,7 +1,7 @@
 interface LearnResponseModel {
     createdAt?: string | Date
-    updatedAt?: string | Date
     publishedAt?: string | Date
+    updatedAt?: string | Date
 }
 
 export function create<T extends LearnResponseModel>(item: T): T {
