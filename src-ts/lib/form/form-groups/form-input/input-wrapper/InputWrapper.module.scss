@@ -45,9 +45,6 @@ $error-line-height: 14px;
             display: flex;
             flex-direction: row;
             align-items: center;
-            @include ltemd {
-                align-items: flex-start;
-            }
             .checkbox-label {
                 margin-left: $space-sm;
                 flex: 1;
