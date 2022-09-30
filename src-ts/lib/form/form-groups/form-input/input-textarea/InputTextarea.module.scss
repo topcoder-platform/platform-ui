@@ -12,4 +12,10 @@
     margin-left: calc(-1 * $border);
     overflow: hidden;
     padding: $border;
+
+    &::placeholder {
+        color: $black-60;
+        opacity: 1;
+        text-transform: none;
+    }
 }
