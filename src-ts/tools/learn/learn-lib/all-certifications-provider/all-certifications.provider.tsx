@@ -34,8 +34,8 @@ export function useAllCertifications(
             .then((certifications) => {
                 setState((prevState) => ({
                     ...prevState,
-                    certifications: certificationId ? [] : [...certifications],
                     certification: !certificationId ? undefined : certifications as unknown as LearnCertification,
+                    certifications: certificationId ? [] : [...certifications],
                     loading: false,
                     ready: true,
                 }))

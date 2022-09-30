@@ -1,12 +1,12 @@
-import { Dispatch, FC, Fragment, SetStateAction, useMemo } from 'react'
 import classNames from 'classnames'
-import { groupBy, identity, orderBy } from 'lodash'
+import { Dictionary, groupBy, identity, orderBy } from 'lodash'
+import { Dispatch, FC, Fragment, SetStateAction, useMemo } from 'react'
 
 import { InputSelect, useLocalStorage } from '../../../../lib'
-
-import styles from './AvailableCoursesList.module.scss'
 import { LearnCertification, UserCertificationCompleted, UserCertificationInProgress } from '../../learn-lib'
 import { CoursesCard } from '../courses-card'
+
+import styles from './AvailableCoursesList.module.scss'
 
 interface AvailableCoursesListProps {
     certifications: ReadonlyArray<LearnCertification>
@@ -27,9 +27,9 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
     ] = useLocalStorage<string>('tca-welcome-filter-certs', '')
 
     // certificates indexed by category, sorted by title
-    const certsByCategory = useMemo(() => {
+    const certsByCategory: Dictionary<Array<LearnCertification>> = useMemo(() => {
       return groupBy(orderBy(props.certifications, 'title', 'asc'), 'category')
-    }, [props.certifications]);
+    }, [props.certifications])
 
     // compute all the available category dropdown options
     const certsCategoriesOptions: Array<{
@@ -39,8 +39,8 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
         return [
             {label: 'All Categories', value: '', orderIndex: -1},
             ...Object.keys(certsByCategory).map((c) => ({
-                value: c,
                 label: c,
+                value: c,
             })),
         ]
     }, [certsByCategory])
@@ -49,7 +49,7 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
     const certificationsGroups: Array<string> = useMemo(() => {
         return orderBy(Object.keys(certsByCategory), [
             c => PRIORITY_CATEGORIES.includes(c) ? -1 : 1,
-            identity
+            identity,
         ], ['asc', 'asc'])
     }, [certsByCategory])
 

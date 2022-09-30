@@ -10,12 +10,11 @@ import {
     useUserCertifications,
     WaveHero,
 } from '../learn-lib'
-import { AvailableCoursesList } from './available-courses-list'
 
+import { AvailableCoursesList } from './available-courses-list'
 import { ProgressBlock } from './progress-block'
 import { ReactComponent as TcAcademyFullLogoSvg } from './tca-full-logo.svg'
 import styles from './WelcomePage.module.scss'
-
 
 const WelcomePage: FC<{}> = () => {
 
