@@ -5,12 +5,15 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 100%;
 
     .badge {
         display: flex;
         align-items: center;
         margin-bottom: $space-xxl;
+        
+        @include ltemd {
+            margin-bottom: 0;
+        }
 
         .badge-image {
             width: 43px;
