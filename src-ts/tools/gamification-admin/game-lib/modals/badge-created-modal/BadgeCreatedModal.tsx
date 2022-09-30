@@ -49,7 +49,7 @@ const BadgeCreatedModal: FC<BadgeCreatedModalProps> = (props: BadgeCreatedModalP
                         <Button
                             label='Create a new badge'
                             buttonStyle='secondary'
-                            onClick={() => window.location.reload()}
+                            onClick={onClose}
                         />
                     </div>
                 </div>
