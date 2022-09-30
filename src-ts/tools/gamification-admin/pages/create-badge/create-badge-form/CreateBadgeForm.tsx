@@ -42,6 +42,7 @@ const CreateBadgeForm: FC<CreateBadgeFormProps> = (props: CreateBadgeFormProps) 
         <Form
             formDef={props.formDef}
             requestGenerator={generateRequest}
+            resetFormAfterSave={true}
             resetFormOnUnmount={true}
             save={saveAsync}
         />
