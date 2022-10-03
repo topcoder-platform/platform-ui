@@ -99,6 +99,25 @@ const CourseDetailsPage: FC<{}> = () => {
         )
     }
 
+    function getPrerequisites(): ReactNode {
+        if (!course) {
+            return
+        }
+
+        return progress?.status === UserCertificationProgressStatus.completed ? (
+            <></>
+        ) : (
+            <>
+                <h3 className='details mtop'>Prerequisites</h3>
+
+                <div className={styles['text']}>
+                    There are no prerequisites for this course.
+                    The course content is appropriate for new learners with no previous experience in this topic.
+                </div>
+            </>
+        )
+    }
+
     function getCompletionSuggestion(): ReactNode {
         if (!course) {
             return
@@ -162,6 +181,7 @@ const CourseDetailsPage: FC<{}> = () => {
 
                         <div className={styles['description']}>
                             {getDescription()}
+                            {getPrerequisites()}
                             {getCompletionSuggestion()}
                             <div className={styles['coming-soon']}>
                                 <PromoCourse />
