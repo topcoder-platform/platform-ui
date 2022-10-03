@@ -52,13 +52,17 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         ready: courseReady,
     }: CoursesProviderData = useCourses(props.provider, props.certification)
 
-    const certificationTitle: string = `${userName || props.profile.handle} - ${course?.title} Certification`
+    function getCertTitle(user: string): string {
+        return `${user} - ${course?.title} Certification`
+    }
+
+    const certificationTitle: string = getCertTitle(userName || props.profile.handle)
 
     const certUrl: string = getUserCertificateSsr(
         props.provider,
         props.certification,
         props.profile.handle,
-        `${props.profile.handle} - ${course?.title} Certification`,
+        getCertTitle(props.profile.handle),
     )
 
     const {
