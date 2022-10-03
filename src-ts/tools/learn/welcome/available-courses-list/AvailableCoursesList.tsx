@@ -53,13 +53,15 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
         ], ['asc', 'asc'])
     }, [certsByCategory])
 
+    const certificationsCount: number = (certsByCategory[selectedCategory] ?? props.certifications).length
+
     return (
         <div className={styles['wrap']}>
             <div className={styles['courses-list-header']}>
                 <h3 className='details'>
                     Courses Available
                     <span className={classNames(styles['badge'], 'medium-subtitle')}>
-                        {props.certifications.length}
+                        {certificationsCount}
                     </span>
                 </h3>
 
