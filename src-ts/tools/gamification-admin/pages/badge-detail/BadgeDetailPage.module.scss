@@ -1,17 +1,63 @@
-.contentLayout {
-  width: 100%;
-  padding-bottom: 0;
+@import "../../../../lib/styles/variables";
+@import "../../../../lib/styles/includes";
 
-  .contentLayout-outer {
-    width: 100%;
-
-    .contentLayout-inner {
-      width: 100%;
-      overflow: visible;
-    }
-  }
-}
+$badgePreview: 130px;
+$badgePreviewImage: 72px;
 
 .container {
-  display: flex;
+    display: flex;
+    flex-direction: column;
+
+    .error {
+        background-color: $black-5;
+        color: red;
+        padding: $space-sm;
+    }
+
+    .badge {
+        display: flex;
+        margin-top: $space-xxxxl;
+
+        @include ltemd {
+            flex-direction: column;
+        }
+
+        .badgeImage {
+            position: relative;
+            border-radius: $space-sm;
+            background-color: $black-5;
+            margin-right: $space-xxxxl;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: $badgePreview;
+            height: $badgePreview;
+            min-width: $badgePreview;
+            min-height: $badgePreview;
+
+            @include ltemd {
+                margin-right: 0;
+                margin-bottom: $space-xxl;
+                width: 100%;
+            }
+
+            img {
+                width: $badgePreviewImage;
+                height: $badgePreviewImage;
+            }
+        }
+
+        .badgeDetails {
+            display: flex;
+            flex-direction: column;
+
+            .badgeDesc {
+                margin-top: $space-sm;
+
+                a {
+                    color: $link-blue-dark;
+                }
+            }
+        }
+    }
 }
