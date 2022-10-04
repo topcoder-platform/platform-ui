@@ -24,7 +24,7 @@ const StepIcon: FC<StepIconProps> = (props: StepIconProps) => {
         return (
             <>
                 {props.label && props.completed && (
-                    <IconSolid.CheckCircleIcon />
+                    <IconSolid.CheckCircleIcon viewBox='2 2 16 16' />
                 )}
 
                 {!props.label && (
