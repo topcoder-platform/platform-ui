@@ -4,7 +4,6 @@
     @include icon-size(26);
     flex: 0 0 auto;
     svg {
-        width: 100%;
-        height: 100%;
+        @include icon-full;
     }
 }

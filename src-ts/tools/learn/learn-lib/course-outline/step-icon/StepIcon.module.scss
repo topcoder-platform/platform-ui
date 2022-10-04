@@ -22,8 +22,7 @@
         background: $black-40;
 
         > svg {
-            height: 100%;
-            width: 100%;
+            @include icon-full;
             margin: -1 * $border;
         }
     }
