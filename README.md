@@ -509,3 +509,5 @@ e.g.:
     }
 }
 ```
+
+>**NOTE** - all SVGs require explicit `width` and `height` in the Safari browser in order to be rendered properly, otherwise they'll be rendered to the _default_ size and probably will crop out of view
