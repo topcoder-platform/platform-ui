@@ -40,6 +40,11 @@
     width: $space-mxx;
 }
 
+@mixin icon-full {
+    height: 100%;
+    width: 100%;
+}
+
 @mixin icon-size($size) {
     height: $size * 1px;
     width: $size * 1px;
