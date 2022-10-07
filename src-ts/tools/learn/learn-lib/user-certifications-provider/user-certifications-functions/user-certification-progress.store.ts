@@ -1,3 +1,4 @@
+import { logInfo } from '../../../../../lib'
 import { LearnConfig } from '../../../learn-config'
 import { getUserCertificateUrl } from '../../../learn.routes'
 import { learnUrlGet, learnXhrGetAsync, learnXhrPostAsync, learnXhrPutAsync } from '../../functions'
@@ -17,6 +18,9 @@ export function completeCourse(
     // construct the certificate params
     const certificateElement: string = `[${LearnConfig.CERT_ELEMENT_SELECTOR.attribute}=${LearnConfig.CERT_ELEMENT_SELECTOR.value}]`
     const certificateUrl: string = getUserCertificateUrl(provider, certification, handle)
+
+    console.debug('Completing course w certificate URL =', certificateUrl)
+    logInfo(`Completing course w certificate URL = ${certificateUrl}`)
 
     return updateAsync(
         certificationProgressId,
