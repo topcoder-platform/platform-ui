@@ -91,7 +91,7 @@ You will need to add the following line to your hosts file. The hosts file is no
 
 3. Go to https://local.topcoder-dev.com
 
->**NOTE**: The must run on port 443 in order for auth0 to work and for the site to load properly. Mac users will need to run the app with elevated permissions.
+>**NOTE**: The site must run on port 443 in order for auth0 to work and for the site to load properly. Mac users will need to run the app with elevated permissions.
 
 ### Local SSL
 
