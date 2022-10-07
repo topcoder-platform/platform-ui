@@ -45,17 +45,88 @@ $badgePreviewImage: 72px;
                 width: $badgePreviewImage;
                 height: $badgePreviewImage;
             }
+
+            .filePickerPencil {
+                position: absolute;
+                top: 0;
+                right: 0;
+                color: $turq-160;
+            }
+
+            .filePickerInput {
+                display: none;
+            }
         }
 
         .badgeDetails {
             display: flex;
             flex-direction: column;
+            flex: 1;
+
+            .badgeName {
+                font-family: $font-roboto;
+                font-weight: $font-weight-bold;
+                padding: $space-sm;
+                font-size: 24px;
+                line-height: 32px;
+
+                @include ltemd {
+                    font-size: 20px;
+                    line-height: 28px;
+                }
+
+                &:hover {
+                    background-color: $black-5;
+                    cursor: text;
+                }
+
+                &:focus {
+                    background-color: $tc-white;
+                    outline-color: $turq-160;
+                }
+            }
 
             .badgeDesc {
                 margin-top: $space-sm;
 
-                a {
-                    color: $link-blue-dark;
+                .badgeEditWrap {
+                    display: flex;
+                    flex-direction: column;
+
+                    .badgeEditable,
+                    .badgeEditableMode {
+                        padding: $space-sm;
+                        border-radius: 3px;
+                        border: 2px solid $tc-white;
+
+                        &:hover {
+                            background-color: $black-5;
+                            cursor: text;
+                        }
+
+                        &:focus {
+                            background-color: $tc-white;
+                            outline: none;
+                        }
+
+                        a {
+                            color: $link-blue-dark;
+                        }
+                    }
+
+                    .badgeEditableMode {
+                        border: 2px solid $turq-160;
+                    }
+
+                    .badgeEditActions {
+                        display: flex;
+                        justify-content: flex-end;
+                        margin-top: $space-sm;
+
+                        button:first-child {
+                            margin-right: $space-sm;
+                        }
+                    }
                 }
             }
         }
