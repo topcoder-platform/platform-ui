@@ -1,7 +1,7 @@
 import { EnvironmentConfigModel } from './environment-config.model'
 import { EnvironmentConfigDefault } from './environment.default.config'
 
-export const EnvironmentConfigBsouza: EnvironmentConfigModel = {
+export const EnvironmentConfigBrooke: EnvironmentConfigModel = {
     ...EnvironmentConfigDefault,
-    ENV: 'bsouza',
+    ENV: 'brooke',
 }

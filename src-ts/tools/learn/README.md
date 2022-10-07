@@ -6,7 +6,7 @@ The Learn tool has its own configuration defined in the [/src-ts/tools/learn/lea
 
 The default configuration expects both the FCC Client and API to be running locally. In most cases, developers probably won't want to run both locally. 
 
->**See** [/src-ts/tools/learn/learn-config/learn.bsouza.config.ts](/src-ts/tools/learn/learn-config/learn.bsouza.config.ts) for an example of how to override the FCC source URLs to use the dev env config.
+>**See** [/src-ts/tools/learn/learn-config/learn.brooke.config.ts](/src-ts/tools/learn/learn-config/learn.brooke.config.ts) for an example of how to override the FCC source URLs to use the dev env config.
 
 >**See** the [main app README](/README.md#personal-config) for instructions for creating a personal config.
 

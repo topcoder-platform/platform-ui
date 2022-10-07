@@ -1,6 +1,6 @@
 import { AppHostEnvironmentType } from './app-host-environment.type'
 import { EnvironmentConfigModel } from './environment-config.model'
-import { EnvironmentConfigBsouza } from './environment.bsouza.config'
+import { EnvironmentConfigBrooke } from './environment.brooke.config'
 import { EnvironmentConfigDefault } from './environment.default.config'
 import { EnvironmentConfigDev } from './environment.dev.config'
 import { EnvironmentConfigProd } from './environment.prod.config'
@@ -12,8 +12,8 @@ function getEnvironmentConfig(): EnvironmentConfigModel {
 
     switch (environment) {
 
-        case 'bsouza':
-            return EnvironmentConfigBsouza
+        case 'brooke':
+            return EnvironmentConfigBrooke
 
         case 'default':
             return EnvironmentConfigDefault
