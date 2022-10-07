@@ -19,7 +19,6 @@ export function completeCourse(
     const certificateElement: string = `[${LearnConfig.CERT_ELEMENT_SELECTOR.attribute}=${LearnConfig.CERT_ELEMENT_SELECTOR.value}]`
     const certificateUrl: string = getUserCertificateUrl(provider, certification, handle)
 
-    console.debug('Completing course w certificate URL =', certificateUrl)
     logInfo(`Completing course w certificate URL = ${certificateUrl}`)
 
     return updateAsync(
