@@ -62,6 +62,14 @@ You can verify the versions of `nvm`, `node`, and `npm` using the commands below
 | `% nvm current`   | v15.15.0 |
 
 
+>**NOTE:** The `yarn start` command requires the `NVM_DIR` env variable is set.
+
+```zsh
+export NVM_DIR=~/.nvm
+```
+
+If you don't have this set globally, you can create your own [personal config](#personal-config) to define your local nvm dir.
+
 ### Hosting 
 You will need to add the following line to your hosts file. The hosts file is normally located at `/etc/hosts` (Mac). Do not overwrite the existing localhost entry also pointing to 127.0.0.1.
 
@@ -81,9 +89,9 @@ You will need to add the following line to your hosts file. The hosts file is no
 
 >% yarn start
 
-3. Go to https://local.topcoder-dev.com:3000
+3. Go to https://local.topcoder-dev.com
 
->**NOTE**: The default port is 3000, but you can override it in your [personal config](#personal-config).
+>**NOTE**: The site must run on port 443 in order for auth0 to work and for the site to load properly. Mac users will need to run the app with elevated permissions.
 
 ### Local SSL
 
@@ -102,7 +110,7 @@ Otherwise, you will need to override the exception each time you load the site. 
 ### Personal Config
 
 1. Add [hostname] to [`/src-ts/config/environments/app-host-environment.type.ts`](/src-ts/config/environments/app-host-environment.type.ts)
-2. Copy an existing config from [`/src-ts/config/environments/environment.*.config.ts`](/src-ts/config/environments/environment.bsouza.config.ts)
+2. Copy an existing config from [`/src-ts/config/environments/environment.*.config.ts`](/src-ts/config/environments/environment.brooke.config.ts)
 3. Rename new config `environment.[hostname].config.ts`
 4. Rename config variable to `EnvironmentConfig[HostName]`
 5. Set the `ENV` variable to `[hostname]`
