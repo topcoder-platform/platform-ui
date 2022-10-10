@@ -1,13 +1,16 @@
-import { authUrlLogin, PlatformRoute } from '../../lib'
+import { authUrlLogin, lazyLoad, PlatformRoute } from '../../lib'
 
-import { MyCertificate, UserCertificate } from './course-certificate'
-import { CourseCompletedPage } from './course-completed'
-import { CourseDetailsPage } from './course-details'
-import { FreeCodeCamp } from './free-code-camp'
-import { default as Learn, toolTitle } from './Learn'
+import { toolTitle } from './Learn'
 import { LearnConfig } from './learn-config'
-import { MyLearning } from './my-learning'
-import { WelcomePage } from './welcome'
+
+const WelcomePage = lazyLoad(() => import('./welcome'), 'WelcomePage')
+const CourseDetailsPage = lazyLoad(() => import('./course-details'), 'CourseDetailsPage')
+const CourseCompletedPage = lazyLoad(() => import('./course-completed/'), 'CourseCompletedPage')
+const MyCertificate = lazyLoad(() => import('./course-certificate'), 'MyCertificate')
+const UserCertificate = lazyLoad(() => import('./course-certificate'), 'UserCertificate')
+const FreeCodeCamp = lazyLoad(() => import('./free-code-camp'), 'FreeCodeCamp')
+const MyLearning = lazyLoad(() => import('./my-learning'), 'MyLearning')
+const LandingLearn = lazyLoad(() => import('./Learn'))
 
 export enum LEARN_PATHS {
     certificate = '/certificate',
@@ -112,7 +115,7 @@ export const learnRoutes: Array<PlatformRoute> = [
                 title: 'My Learning',
             },
         ],
-        element: <Learn />,
+        element: <LandingLearn />,
         memberOnly: true,
         route: rootRoute,
         title: toolTitle,

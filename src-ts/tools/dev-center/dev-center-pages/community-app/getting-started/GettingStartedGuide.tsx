@@ -4,7 +4,7 @@ import { Breadcrumb, BreadcrumbItemModel, ContentLayout } from '../../../../../l
 import useMarkdown from '../../../dev-center-lib/hooks/useMarkdown'
 import MarkdownDoc from '../../../dev-center-lib/MarkdownDoc'
 import LayoutDocHeader from '../../../dev-center-lib/MarkdownDoc/LayoutDocHeader'
-import { toolTitle } from '../../../DevCenter'
+import { toolTitle } from '../../../dev-center.routes'
 
 import gettingStartedGuide from './GettingStartedGuide.md'
 import styles from './GettingStartedGuide.module.scss'

@@ -1,20 +1,21 @@
 import { Navigate } from 'react-router-dom'
 
-import { contactSupportPath, PlatformRoute } from '../../lib'
+import { contactSupportPath, lazyLoad, PlatformRoute } from '../../lib'
 
-import { dashboardTitle, default as WorkComponent, toolTitle } from './Work'
+import { dashboardTitle, toolTitle } from './Work'
 import { Work, WorkIntakeFormRoutes, WorkStatus } from './work-lib'
 import { WorkLoginPrompt } from './work-login-prompt'
-import { WorkNotLoggedIn } from './work-not-logged-in'
-import {
-    BugHuntIntakeForm,
-    IntakeForms,
-    intakeFormsTitle,
-    Review,
-} from './work-self-service'
-import SaveAfterLogin from './work-self-service/intake-forms/save-after-login/SaveAfterLogin'
-import { WorkTable } from './work-table'
-import { WorkThankYou } from './work-thank-you'
+import { intakeFormsTitle } from './work-self-service'
+
+const WorkComponent = lazyLoad(() => import('./Work'))
+const WorkNotLoggedIn = lazyLoad(() => import('./work-not-logged-in'), 'WorkNotLoggedIn')
+const BugHuntIntakeForm = lazyLoad(() => import('./work-self-service'), 'BugHuntIntakeForm')
+const IntakeForms = lazyLoad(() => import('./work-self-service'), 'IntakeForms')
+const Review = lazyLoad(() => import('./work-self-service'), 'Review')
+
+const SaveAfterLogin = lazyLoad(() => import('./work-self-service/intake-forms/save-after-login/SaveAfterLogin'))
+const WorkTable = lazyLoad(() => import('./work-table'), 'WorkTable')
+const WorkThankYou = lazyLoad(() => import('./work-thank-you'), 'WorkThankYou')
 
 export const rootRoute: string = '/work'
 export const selfServiceRootRoute: string = '/self-service'
@@ -22,7 +23,7 @@ export const selfServiceStartRoute: string = `${selfServiceRootRoute}/wizard`
 export const dashboardRoute: string = `${rootRoute}/dashboard`
 
 export function workDashboardRoute(active: string): string {
-return `${dashboardRoute}/${active}`
+    return `${dashboardRoute}/${active}`
 }
 
 export function workDetailOrDraftRoute(selectedWork: Work): string {

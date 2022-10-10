@@ -1,8 +1,10 @@
-import { PlatformRoute } from '../../lib'
+import { lazyLoad, PlatformRoute } from '../../lib'
 
-import GettingStartedGuide from './dev-center-pages/community-app/getting-started/GettingStartedGuide'
-import DevCenterLandingPage from './dev-center-pages/community-app/landing-page/DevCenterLandingPage'
-import DevCenter, { toolTitle } from './DevCenter'
+const GettingStartedGuide = lazyLoad(() => import('./dev-center-pages/community-app/getting-started/GettingStartedGuide'))
+const DevCenterLandingPage = lazyLoad(() => import('./dev-center-pages/community-app/landing-page/DevCenterLandingPage'))
+const DevCenter = lazyLoad(() => import('./DevCenter'))
+
+export const toolTitle: string = 'Dev Center'
 
 export const devCenterRoutes: Array<PlatformRoute> = [
     {
