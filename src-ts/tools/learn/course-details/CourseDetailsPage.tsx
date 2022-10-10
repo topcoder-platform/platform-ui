@@ -55,7 +55,9 @@ const CourseDetailsPage: FC<{}> = () => {
     const {
         certification: certificate,
         ready: certificateReady,
-    }: AllCertificationsProviderData = useAllCertifications(routeParams.provider, course?.certificationId)
+    }: AllCertificationsProviderData = useAllCertifications(routeParams.provider, course?.certificationId, {
+        enabled: courseReady
+    })
 
     // this looks better than finding workarounds for cyclomatic-complexity
     /* tslint:disable:cyclomatic-complexity */
