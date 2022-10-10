@@ -56,7 +56,7 @@ const CourseDetailsPage: FC<{}> = () => {
         certification: certificate,
         ready: certificateReady,
     }: AllCertificationsProviderData = useAllCertifications(routeParams.provider, course?.certificationId, {
-        enabled: courseReady
+        enabled: courseReady,
     })
 
     // this looks better than finding workarounds for cyclomatic-complexity
