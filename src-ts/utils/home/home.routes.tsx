@@ -1,6 +1,6 @@
-import { PlatformRoute } from '../../lib'
+import { lazyLoad, PlatformRoute } from '../../lib'
 
-import { default as Home } from './Home'
+const Home = lazyLoad(() => import('./Home'));
 
 export const homeRoute: string = ''
 
