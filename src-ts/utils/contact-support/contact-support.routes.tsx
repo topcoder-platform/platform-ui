@@ -1,8 +1,8 @@
-import { contactSupportPath, lazyLoad, PlatformRoute } from '../../lib'
+import { contactSupportPath, lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
 
 export const toolTitle: string = 'Contact Support'
 
-const ContactSupport = lazyLoad(() => import('./ContactSupport'));
+const ContactSupport: LazyLoadedComponent = lazyLoad(() => import('./ContactSupport'))
 
 export const contactSupportRoutes: Array<PlatformRoute> = [
     {

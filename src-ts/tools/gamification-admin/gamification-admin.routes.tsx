@@ -1,10 +1,11 @@
-import { lazyLoad, PlatformRoute, UserRole } from '../../lib'
+import { lazyLoad, LazyLoadedComponent, PlatformRoute, UserRole } from '../../lib'
 
 import { toolTitle } from './GamificationAdmin'
-const GamificationAdmin = lazyLoad(() => import('./GamificationAdmin'))
-const BadgeDetailPage = lazyLoad(() => import('./pages/badge-detail/BadgeDetailPage'))
-const BadgeListingPage = lazyLoad(() => import('./pages/badge-listing/BadgeListingPage'))
-const CreateBadgePage = lazyLoad(() => import('./pages/create-badge/CreateBadgePage'))
+
+const GamificationAdmin: LazyLoadedComponent = lazyLoad(() => import('./GamificationAdmin'))
+const BadgeDetailPage: LazyLoadedComponent = lazyLoad(() => import('./pages/badge-detail/BadgeDetailPage'))
+const BadgeListingPage: LazyLoadedComponent = lazyLoad(() => import('./pages/badge-listing/BadgeListingPage'))
+const CreateBadgePage: LazyLoadedComponent = lazyLoad(() => import('./pages/create-badge/CreateBadgePage'))
 
 export const baseDetailPath: string = '/badge-detail'
 export const createBadgePath: string = '/create-badge'

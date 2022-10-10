@@ -1,21 +1,20 @@
 import { Navigate } from 'react-router-dom'
 
-import { contactSupportPath, lazyLoad, PlatformRoute } from '../../lib'
+import { contactSupportPath, lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
 
 import { dashboardTitle, toolTitle } from './Work'
 import { Work, WorkIntakeFormRoutes, WorkStatus } from './work-lib'
 import { WorkLoginPrompt } from './work-login-prompt'
 import { intakeFormsTitle } from './work-self-service'
 
-const WorkComponent = lazyLoad(() => import('./Work'))
-const WorkNotLoggedIn = lazyLoad(() => import('./work-not-logged-in'), 'WorkNotLoggedIn')
-const BugHuntIntakeForm = lazyLoad(() => import('./work-self-service'), 'BugHuntIntakeForm')
-const IntakeForms = lazyLoad(() => import('./work-self-service'), 'IntakeForms')
-const Review = lazyLoad(() => import('./work-self-service'), 'Review')
-
-const SaveAfterLogin = lazyLoad(() => import('./work-self-service/intake-forms/save-after-login/SaveAfterLogin'))
-const WorkTable = lazyLoad(() => import('./work-table'), 'WorkTable')
-const WorkThankYou = lazyLoad(() => import('./work-thank-you'), 'WorkThankYou')
+const WorkComponent: LazyLoadedComponent = lazyLoad(() => import('./Work'))
+const WorkNotLoggedIn: LazyLoadedComponent = lazyLoad(() => import('./work-not-logged-in'), 'WorkNotLoggedIn')
+const BugHuntIntakeForm: LazyLoadedComponent = lazyLoad(() => import('./work-self-service'), 'BugHuntIntakeForm')
+const IntakeForms: LazyLoadedComponent = lazyLoad(() => import('./work-self-service'), 'IntakeForms')
+const Review: LazyLoadedComponent = lazyLoad(() => import('./work-self-service'), 'Review')
+const SaveAfterLogin: LazyLoadedComponent = lazyLoad(() => import('./work-self-service/intake-forms/save-after-login/SaveAfterLogin'))
+const WorkTable: LazyLoadedComponent = lazyLoad(() => import('./work-table'), 'WorkTable')
+const WorkThankYou: LazyLoadedComponent = lazyLoad(() => import('./work-thank-you'), 'WorkThankYou')
 
 export const rootRoute: string = '/work'
 export const selfServiceRootRoute: string = '/self-service'

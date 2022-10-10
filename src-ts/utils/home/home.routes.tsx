@@ -1,6 +1,6 @@
-import { lazyLoad, PlatformRoute } from '../../lib'
+import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
 
-const Home = lazyLoad(() => import('./Home'));
+const Home: LazyLoadedComponent = lazyLoad(() => import('./Home'))
 
 export const homeRoute: string = ''
 

@@ -1,8 +1,8 @@
 import { ToolTitle } from '../../config'
-import { lazyLoad, PlatformRoute } from '../../lib'
+import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
 
-const Account = lazyLoad(() => import('./account'), 'Account');
-const Settings = lazyLoad(() => import('./Settings'));
+const Account: LazyLoadedComponent = lazyLoad(() => import('./account'), 'Account')
+const Settings: LazyLoadedComponent = lazyLoad(() => import('./Settings'))
 
 export const settingsRoutes: Array<PlatformRoute> = [
     {

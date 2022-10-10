@@ -1,16 +1,16 @@
-import { authUrlLogin, lazyLoad, PlatformRoute } from '../../lib'
+import { authUrlLogin, lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
 
 import { toolTitle } from './Learn'
 import { LearnConfig } from './learn-config'
 
-const WelcomePage = lazyLoad(() => import('./welcome'), 'WelcomePage')
-const CourseDetailsPage = lazyLoad(() => import('./course-details'), 'CourseDetailsPage')
-const CourseCompletedPage = lazyLoad(() => import('./course-completed/'), 'CourseCompletedPage')
-const MyCertificate = lazyLoad(() => import('./course-certificate'), 'MyCertificate')
-const UserCertificate = lazyLoad(() => import('./course-certificate'), 'UserCertificate')
-const FreeCodeCamp = lazyLoad(() => import('./free-code-camp'), 'FreeCodeCamp')
-const MyLearning = lazyLoad(() => import('./my-learning'), 'MyLearning')
-const LandingLearn = lazyLoad(() => import('./Learn'))
+const WelcomePage: LazyLoadedComponent = lazyLoad(() => import('./welcome'), 'WelcomePage')
+const CourseDetailsPage: LazyLoadedComponent = lazyLoad(() => import('./course-details'), 'CourseDetailsPage')
+const CourseCompletedPage: LazyLoadedComponent = lazyLoad(() => import('./course-completed/'), 'CourseCompletedPage')
+const MyCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certificate'), 'MyCertificate')
+const UserCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certificate'), 'UserCertificate')
+const FreeCodeCamp: LazyLoadedComponent = lazyLoad(() => import('./free-code-camp'), 'FreeCodeCamp')
+const MyLearning: LazyLoadedComponent = lazyLoad(() => import('./my-learning'), 'MyLearning')
+const LandingLearn: LazyLoadedComponent = lazyLoad(() => import('./Learn'))
 
 export enum LEARN_PATHS {
     certificate = '/certificate',
