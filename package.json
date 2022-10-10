@@ -39,6 +39,7 @@
         "moment": "^2.29.3",
         "moment-timezone": "^0.5.34",
         "prop-types": "^15.8.1",
+        "qs": "^6.11.0",
         "rc-checkbox": "^2.3.2",
         "react": "^17.0.2",
         "react-apexcharts": "^1.4.0",

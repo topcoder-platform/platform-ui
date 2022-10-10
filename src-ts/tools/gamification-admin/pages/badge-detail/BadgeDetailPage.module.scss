@@ -131,4 +131,12 @@ $badgePreviewImage: 72px;
             }
         }
     }
+
+    .activeTabElement {
+        margin-top: $space-xxxxl;
+
+        @include ltemd {
+            margin-top: $space-md;
+        }
+    }
 }
