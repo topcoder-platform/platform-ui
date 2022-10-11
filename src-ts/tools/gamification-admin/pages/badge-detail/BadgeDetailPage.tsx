@@ -9,14 +9,18 @@ import { Breadcrumb, BreadcrumbItemModel, Button, ButtonProps, ContentLayout, Ic
 import { GamificationConfig } from '../../game-config'
 import { BadgeDetailPageHandler, GameBadge, useGamificationBreadcrumb, useGetGameBadgeDetails } from '../../game-lib'
 
+import AwardedMembersTab from './AwardedMembersTab/AwardedMembersTab'
 import { badgeDetailsTabs, BadgeDetailsTabViews } from './badge-details-tabs.config'
 import { submitRequestAsync as updateBadgeAsync } from './badge-details.functions'
 import styles from './BadgeDetailPage.module.scss'
+import BatchAwardTab from './BatchAwardTab/BatchAwardTab'
+import ManualAwardTab from './ManualAwardTab/ManualAwardTab'
 
 const md: MarkdownIt = new MarkdownIt({
     html: true,
-    linkify: true,
-    typographer: true,
+    // TODO: check with PM ig those are needed?
+    // linkify: true,
+    // typographer: true,
 })
 
 /* tslint:disable:cyclomatic-complexity */
@@ -38,7 +42,9 @@ const BadgeDetailPage: FC = () => {
 
     const { hash }: { hash: string } = useLocation()
 
-    const activeTab: string = hash === '#award' ? BadgeDetailsTabViews.manualAward : BadgeDetailsTabViews.awardedMembers
+    const [activeTab, setActiveTab]: [string, Dispatch<SetStateAction<string>>] = useState<string>(
+        hash === '#award' ? BadgeDetailsTabViews.manualAward : BadgeDetailsTabViews.awardedMembers
+    )
 
     const [tabs]: [
         ReadonlyArray<TabsNavItem>,
@@ -118,18 +124,14 @@ const BadgeDetailPage: FC = () => {
         badgeDetailsHandler.data,
     ])
 
-    // define the tabs so they can be displayed on various results
+    // define the tabs so they can be displayed on various tasks
     const tabsElement: JSX.Element = (
         <TabsNavbar
             tabs={tabs}
             defaultActive={activeTab}
-            onChange={onChangeTab}
+            onChange={setActiveTab}
         />
     )
-
-    function onChangeTab(active: string): void {
-        // TODO: implement in GAME-129
-    }
 
     function onActivateBadge(): void {
         // TODO: implement in GAME-127
@@ -189,6 +191,19 @@ const BadgeDetailPage: FC = () => {
         }
     }
 
+    // default tab
+    let activeTabElement: JSX.Element
+        = <AwardedMembersTab
+            awardedMembers={badgeDetailsHandler.data?.member_badges}
+        />
+    if (activeTab === BadgeDetailsTabViews.manualAward) {
+        activeTabElement = <ManualAwardTab awardedMembers={badgeDetailsHandler.data?.member_badges} />
+    }
+    if (activeTab === BadgeDetailsTabViews.batchAward) {
+        activeTabElement = <BatchAwardTab />
+    }
+
+    // show page loader if we fetching results
     if (!badgeDetailsHandler.data && !badgeDetailsHandler.error) {
         return <LoadingSpinner />
     }
@@ -268,6 +283,9 @@ const BadgeDetailPage: FC = () => {
                             </div>
                             <PageDivider />
                             {tabsElement}
+                            <div className={styles.activeTabElement}>
+                                {activeTabElement}
+                            </div>
                         </>
                     )
                 }
