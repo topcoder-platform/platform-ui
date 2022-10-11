@@ -21,4 +21,8 @@
     &.show {
         opacity: 1;
     }
+    &.overlay {
+      position: fixed;
+      background: $white-100-opacity-10;
+    }
 }
