@@ -1,0 +1,23 @@
+@import "../../../../../lib/styles/variables/palette";
+@import "../../../../../lib/styles/includes";
+
+.tabWrap {
+    display: flex;
+    flex-direction: column;
+
+    .manualFormWrap {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $space-xxxxl;
+        margin-top: $space-xxl;
+
+        @include ltemd {
+            grid-template-columns: 1fr;
+        }
+
+        .manualForm {
+            display: flex;
+            flex-direction: column;
+        }
+    }
+}
