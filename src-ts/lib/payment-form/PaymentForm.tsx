@@ -202,6 +202,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 name='order-contract'
                 tabIndex={1}
                 type='checkbox'
+                checked={props.formData.orderContract}
                 onChange={(event) => props.onUpdateField('orderContract', event.target.checked)}
             />
 

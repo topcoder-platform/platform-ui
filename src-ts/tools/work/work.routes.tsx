@@ -97,7 +97,7 @@ export const workRoutes: Array<PlatformRoute> = [
                 route: `bug-hunt/review/:workId`,
             },
             {
-                element: <WorkLoginPrompt />,
+                element: <WorkLoginPrompt previousPageUrl="/self-service/work/new/bug-hunt/basic-info" />,
                 route: `bug-hunt/login-prompt/:retUrl`,
             },
             // General
