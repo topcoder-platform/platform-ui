@@ -38,7 +38,7 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
     }> = useMemo(() => {
         return [
             {label: 'All Categories', value: '', orderIndex: -1},
-            ...Object.keys(certsByCategory).map((c) => ({
+            ...Object.keys(certsByCategory).sort().map((c) => ({
                 label: c,
                 value: c,
             })),
