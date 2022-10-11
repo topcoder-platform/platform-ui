@@ -27,7 +27,7 @@ const LoadingSpinner: FC<LoadingSpinnerProps> = ({ hide, className, type = 'Norm
 
     const isOverlay: boolean = type === 'Overlay'
     return (
-        <div className={classNames(styles['loading-spinner'], styles.show, isOverlay ? styles.overlay : '', className)}>
+        <div className={classNames(styles['loading-spinner'], styles.show, {[styles.overlay]: isOverlay}, className)}>
             <PuffLoader color={'#2196f3'} loading={true} size={100} />
         </div>
     )
