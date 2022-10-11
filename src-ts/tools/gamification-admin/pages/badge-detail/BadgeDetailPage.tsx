@@ -193,11 +193,11 @@ const BadgeDetailPage: FC = () => {
 
     // default tab
     let activeTabElement: JSX.Element
-        = <AwardedMembersTab
-            awardedMembers={badgeDetailsHandler.data?.member_badges}
-        />
+        = <AwardedMembersTab badge={badgeDetailsHandler.data as GameBadge} />
     if (activeTab === BadgeDetailsTabViews.manualAward) {
-        activeTabElement = <ManualAwardTab awardedMembers={badgeDetailsHandler.data?.member_badges} />
+        activeTabElement = <ManualAwardTab
+            badge={badgeDetailsHandler.data as GameBadge}
+        />
     }
     if (activeTab === BadgeDetailsTabViews.batchAward) {
         activeTabElement = <BatchAwardTab />
