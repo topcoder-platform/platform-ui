@@ -8,8 +8,7 @@ import {
     routeContext,
     RouteContextData,
 } from '../../../lib'
-
-import { BackArrowIcon } from "../../../lib/svgs";
+import { BackArrowIcon } from '../../../lib/svgs'
 
 import styles from './WorkLoginPrompt.module.scss'
 
@@ -29,11 +28,11 @@ const WorkLoginPrompt: FC<WorkLoginPromptProps> = ({ previousPageUrl }: WorkLogi
         window.location.href = signUpUrl
     }
 
-    const onBack = () => {
+    const onBack: () => void = () => {
       navigate(
         previousPageUrl
-      );
-    };
+      )
+    }
 
     return (
         <>
@@ -61,10 +60,10 @@ const WorkLoginPrompt: FC<WorkLoginPromptProps> = ({ previousPageUrl }: WorkLogi
                 </div>
             </div>
             <PageDivider />
-            <div className={styles["footerContent"]}>
+            <div className={styles['footerContent']}>
               <div>
                 <Button
-                  size="md"
+                  size='md'
                   icon={BackArrowIcon}
                   buttonStyle='secondary'
                   onClick={onBack}

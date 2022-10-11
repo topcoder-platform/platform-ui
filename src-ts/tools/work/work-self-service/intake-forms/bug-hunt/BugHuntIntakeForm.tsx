@@ -165,7 +165,7 @@ const BugHuntIntakeForm: React.FC = () => {
         navigate(`${dashboardRoute}/draft`)
       } else if (action === 'submit') {
           const nextUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt]['review']}/${workId || challenge?.id}`
-        navigate(nextUrl)
+          navigate(nextUrl)
       }
     }
 
@@ -185,7 +185,7 @@ const BugHuntIntakeForm: React.FC = () => {
 
     return (
         <>
-            <LoadingSpinner hide={!loading} type="Overlay" />
+            <LoadingSpinner hide={!loading} type='Overlay' />
             <IntakeFormsBreadcrumb
                 basicInfoRoute={WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']}
                 workType={workBugHuntConfig.type}
