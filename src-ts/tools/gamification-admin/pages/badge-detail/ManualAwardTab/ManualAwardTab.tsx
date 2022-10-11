@@ -1,14 +1,17 @@
+import { find } from 'lodash'
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
 import { Button } from '../../../../../lib'
 import { InputHandleAutocomplete } from '../../../../../lib/member-autocomplete'
 import { MembersAutocompeteResult } from '../../../../../lib/member-autocomplete/input-handle-functions'
 import { GameBadge } from '../../../game-lib'
+import { BadgeAssignedModal } from '../../../game-lib/modals/badge-assigned-modal'
+import { generateCSV, manualAssignRequestAsync } from '../badge-details.functions'
 
 import styles from './ManualAwardTab.module.scss'
 
 export interface ManualAwardTabProps {
-    awardedMembers?: GameBadge['member_badges']
+    badge: GameBadge
 }
 
 const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => {
@@ -16,8 +19,28 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
     const [selectedMembers, setSelectedMembers]: [Array<MembersAutocompeteResult>, Dispatch<SetStateAction<Array<MembersAutocompeteResult>>>]
         = useState<Array<MembersAutocompeteResult>>([])
 
+    const [showBadgeAssigned, setShowBadgeAssigned]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+
+    const [badgeAssignError, setBadgeAssignError]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
+
     function onAward(): void {
-        setSelectedMembers([])
+        const csv: string = generateCSV(
+            selectedMembers.map(m => [m.handle, props.badge?.id as string])
+        )
+        setBadgeAssignError(undefined)
+        manualAssignRequestAsync(csv)
+            .then(() => {
+                setShowBadgeAssigned(true)
+                setSelectedMembers([])
+            })
+            .catch(e => {
+                let message: string = e.message
+                if (e.errors && e.errors[0] && e.errors[0].path === 'user_id') {
+                    const handleOrId: string = find(selectedMembers, { userId: e.errors[0].value })?.handle || e.errors[0].value
+                    message = `Member ${handleOrId} alredy owns this badge.`
+                }
+                setBadgeAssignError(message)
+            })
     }
 
     return (
@@ -33,6 +56,8 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
                         onChange={setSelectedMembers}
                         tabIndex={0}
                         value={selectedMembers}
+                        error={badgeAssignError}
+                        dirty={!!badgeAssignError}
                     />
                     <div className={styles.actionsWrap}>
                         <Button
@@ -45,6 +70,15 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
                     </div>
                 </div>
             </div>
+            {
+                showBadgeAssigned && <BadgeAssignedModal
+                    badge={props.badge}
+                    isOpen={showBadgeAssigned}
+                    onClose={() => {
+                        setShowBadgeAssigned(false)
+                    }}
+                />
+            }
         </div>
     )
 }

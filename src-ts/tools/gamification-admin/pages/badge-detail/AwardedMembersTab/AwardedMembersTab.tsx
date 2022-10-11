@@ -5,7 +5,7 @@ import { GameBadge } from '../../../game-lib'
 import styles from './AwardedMembersTab.module.scss'
 
 export interface AwardedMembersTabProps {
-    awardedMembers?: GameBadge['member_badges']
+    badge: GameBadge
 }
 
 const AwardedMembersTab: FC<AwardedMembersTabProps> = (props: AwardedMembersTabProps) => {

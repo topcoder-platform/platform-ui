@@ -74,6 +74,8 @@ function interceptError(instance: AxiosInstance): void {
 
             // if there is server error message, then return it inside `message` property of error
             error.message = error?.response?.data?.message || error.message
+            // if there is server errors data, then return it inside `errors` property of error
+            error.errors = error?.response?.data?.errors
 
             return Promise.reject(error)
         }
