@@ -1,6 +1,6 @@
 import { noop, trim } from 'lodash'
 import MarkdownIt from 'markdown-it'
-import { createRef, Dispatch, FC, KeyboardEvent, RefObject, SetStateAction, useEffect, useState } from 'react'
+import { ChangeEvent, createRef, Dispatch, FC, KeyboardEvent, RefObject, SetStateAction, useEffect, useState } from 'react'
 import ContentEditable from 'react-contenteditable'
 import { Params, useLocation, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
@@ -204,6 +204,16 @@ const BadgeDetailPage: FC = () => {
         badgeListingMutate()
     }
 
+    function validateFilePicked(e: ChangeEvent<HTMLInputElement>): void {
+        if (e.target.files?.length) {
+            if (GamificationConfig.ACCEPTED_BADGE_MIME_TYPES.includes(e.target.files[0].type)) {
+                setNewImageFile(e.target.files)
+            } else {
+                toast.error(`Not allowed file type: ${e.target.files[0].type}`)
+            }
+        }
+    }
+
     // default tab
     let activeTabElement: JSX.Element
         = <AwardedMembersTab badge={badgeDetailsHandler.data as GameBadge} />
@@ -249,7 +259,7 @@ const BadgeDetailPage: FC = () => {
                                         className={styles.filePickerInput}
                                         accept={GamificationConfig.ACCEPTED_BADGE_MIME_TYPES}
                                         size={GamificationConfig.MAX_BADGE_IMAGE_FILE_SIZE}
-                                        onChange={e => setNewImageFile(e.target.files)}
+                                        onChange={validateFilePicked}
                                     />
                                 </div>
                                 <div className={styles.badgeDetails}>
