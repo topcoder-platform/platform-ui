@@ -19,8 +19,6 @@ import {
     ProfileContextData,
 } from '../../../lib'
 import {
-    CollapsiblePane,
-    CourseOutline,
     CoursesProviderData,
     LearnLesson,
     LearnModule,
@@ -29,6 +27,7 @@ import {
     useCourses,
     useLearnBreadcrumb,
     useLessonProvider,
+    userCertificationProgressCompleteCourseAsync,
     UserCertificationProgressProviderData,
     userCertificationProgressStartAsync,
     UserCertificationProgressStatus,
@@ -39,6 +38,7 @@ import {
 import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule } from '../learn.routes'
 
 import { FccFrame } from './fcc-frame'
+import { FccSidebar } from './fcc-sidebar'
 import styles from './FreeCodeCamp.module.scss'
 import { TitleNav } from './title-nav'
 
@@ -258,31 +258,40 @@ const FreeCodeCamp: FC<{}> = () => {
     }
 
     useEffect(() => {
-        if (
-            certificateProgress &&
-            certificateProgress.courseProgressPercentage === 100 &&
-            certificateProgress.status === UserCertificationProgressStatus.inProgress
-        ) {
-            userCertificationProgressUpdateAsync(
-                certificateProgress.id,
-                UserCertificationUpdateProgressActions.completeCertificate,
-                {}
-            )
-                .then(setCertificateProgress)
-                .then(() => {
-                    const completedPath: string = getCertificationCompletedPath(
-                        providerParam,
-                        certificationParam
-                    )
 
-                    navigate(completedPath)
-                })
+        // if we don't yet have the user's handle,
+        // or if the cert isn't complete,
+        // or the cert isn't in progress,
+        // there's nothing to do
+        if (
+            !profile?.handle
+            || certificateProgress?.certificationProgressPercentage !== 100
+            || certificateProgress?.status !== UserCertificationProgressStatus.inProgress
+        ) {
+            return
         }
+
+        // it's safe to complete the course
+        userCertificationProgressCompleteCourseAsync(
+            certificateProgress.id,
+            certificationParam,
+            profile.handle,
+            providerParam,
+        )
+            .then(setCertificateProgress)
+            .then(() => {
+                const completedPath: string = getCertificationCompletedPath(
+                    providerParam,
+                    certificationParam
+                )
+                navigate(completedPath)
+            })
     }, [
         certificateProgress,
         certificationParam,
         navigate,
         providerParam,
+        profile?.handle,
         setCertificateProgress,
     ])
 
@@ -362,24 +371,13 @@ const FreeCodeCamp: FC<{}> = () => {
 
             {lesson && (
                 <div className={styles['main-wrap']}>
-                    <div className={styles['course-outline-pane']}>
-                        <CollapsiblePane
-                            title='Course Outline'
-                            onToggle={(isOpen) => isOpen && refetchProgress()}
-                        >
-                            <div className={styles['course-outline-wrap']}>
-                                <div className={styles['course-outline-title']}>
-                                    {courseData?.title}
-                                </div>
-                                <CourseOutline
-                                    course={courseData}
-                                    ready={courseDataReady}
-                                    currentStep={`${moduleParam}/${lessonParam}`}
-                                    progress={certificateProgress}
-                                />
-                            </div>
-                        </CollapsiblePane>
-                    </div>
+                    <FccSidebar
+                        courseData={courseData}
+                        courseDataReady={courseDataReady}
+                        currentStep={`${moduleParam}/${lessonParam}`}
+                        certificateProgress={certificateProgress}
+                        refetchProgress={refetchProgress}
+                    />
 
                     <div className={styles['course-frame']}>
                         <TitleNav

@@ -24,14 +24,23 @@
     &:global(.theme-qa) {
         background-image: $tc-qa-grad;
     }
+
     &:global(.theme-datascience) {
         background-image: $tc-datascience-grad;
+    }
+
+    &:global(.theme-interview) {
+        background-image: $tc-interview-grad;
+    }
+
+    &:global(.theme-security) {
+        background-image: $tc-security-grad;
     }
 
     > div {
         position: absolute;
         top: 0;
-        left: 0;
+        left: -1px;
         width: 100%;
         height: 100%;
         z-index: 1;
@@ -42,7 +51,7 @@
         }
 
         &:global(.wave-bg) {
-            background: url('./wave-bg.png') -1px 0 repeat-y;
+            background: url('./wave-bg.png') 0 0 repeat-y;
             background-size: 400px 116px;
         }
     }

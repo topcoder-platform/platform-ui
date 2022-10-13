@@ -1,1 +1,1 @@
-export type AppHostEnvironmentType = 'bsouza' | 'default' | 'dev' | 'prod'
+export type AppHostEnvironmentType = 'brooke' | 'default' | 'dev' | 'prod'

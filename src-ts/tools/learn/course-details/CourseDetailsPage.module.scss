@@ -47,9 +47,13 @@
         @extend .body-main;
         margin-top: $space-xxl;
     }
-    
+
     p {
         margin: $space-sm 0;
+    }
+
+    :global(.details.mtop) {
+        margin-top: $space-xxl;
     }
 }
 

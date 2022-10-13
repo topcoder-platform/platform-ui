@@ -57,7 +57,7 @@
         @include icon-xxl;
     }
 
-    
+
     .wrap:global(.collapsed) & svg {
         transform: rotate(180deg);
     }
@@ -75,13 +75,17 @@
 
 .short-desc {
     margin-top: $space-sm;
+
+    pre {
+        display: inline;
+    }
 }
 
 .summary {
     display: flex;
     color: $tc-white;
     margin-top: $border-xs;
-    
+
     > * + * {
         &:before {
             content: "";

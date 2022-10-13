@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { Dispatch, FC, ReactNode, SetStateAction, useState } from 'react'
+import { Dispatch, forwardRef, ForwardRefExoticComponent, ReactNode, SetStateAction, useState } from 'react'
 
 import { IconSolid } from '../../../../svgs'
 
@@ -16,11 +16,11 @@ interface InputWrapperProps {
     readonly hideInlineErrors?: boolean
     readonly hint?: string
     readonly label: string | JSX.Element
-    readonly tabIndex: number
+    readonly tabIndex?: number
     readonly type: 'checkbox' | 'password' | 'rating' | 'text' | 'textarea'
 }
 
-const InputWrapper: FC<InputWrapperProps> = (props: InputWrapperProps) => {
+const InputWrapper: ForwardRefExoticComponent<InputWrapperProps> = forwardRef<HTMLDivElement, InputWrapperProps>((props: InputWrapperProps, ref) => {
 
     const [focusStyle, setFocusStyle]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
 
@@ -28,6 +28,7 @@ const InputWrapper: FC<InputWrapperProps> = (props: InputWrapperProps) => {
     const showError: boolean = isShowError()
     const formFieldClasses: string = classNames(
         styles.input,
+        'input-el',
         styles[props.type],
         props.disabled ? styles.disabled : undefined,
         focusStyle,
@@ -43,8 +44,9 @@ const InputWrapper: FC<InputWrapperProps> = (props: InputWrapperProps) => {
 
     return (
         <div
-            className={classNames(styles['input-wrapper'], styles[props.type])}
-            tabIndex={props.type === 'rating' ? props.tabIndex : -1}
+            className={classNames(styles['input-wrapper'], 'input-wrapper', styles[props.type])}
+            tabIndex={props.type === 'rating' ? (props.tabIndex ?? -1) : -1}
+            ref={ref}
         >
 
             <div
@@ -85,6 +87,6 @@ const InputWrapper: FC<InputWrapperProps> = (props: InputWrapperProps) => {
             )}
         </div>
     )
-}
+})
 
 export default InputWrapper

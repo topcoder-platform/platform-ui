@@ -12,12 +12,10 @@ export function useAllCertifications(
     certificationId?: string,
     options?: CertificationsAllProviderOptions
 ): AllCertificationsProviderData {
-
     const [state, setState]:
         [AllCertificationsProviderData, Dispatch<SetStateAction<AllCertificationsProviderData>>]
         = useState<AllCertificationsProviderData>({
             certifications: [],
-            certificationsCount: 0,
             loading: false,
             ready: false,
         })
@@ -34,23 +32,10 @@ export function useAllCertifications(
 
         allCertificationsGetAsync(provider, certificationId)
             .then((certifications) => {
-                const certs: {
-                    certification: LearnCertification;
-                    certifications?: undefined;
-                } | {
-                    certification?: undefined;
-                    certifications: Array<LearnCertification>;
-                } = certificationId
-                    ? {
-                        certification: certifications as unknown as LearnCertification,
-                    }
-                    : {
-                        certifications: [...certifications],
-                    }
                 setState((prevState) => ({
                     ...prevState,
-                    ...certs,
-                    certificationsCount: certifications.length,
+                    certification: !certificationId ? undefined : certifications as unknown as LearnCertification,
+                    certifications: certificationId ? [] : [...certifications],
                     loading: false,
                     ready: true,
                 }))

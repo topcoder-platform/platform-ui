@@ -35,6 +35,8 @@ interface FormProps<ValueType, RequestType> {
     readonly onChange?: (inputs: ReadonlyArray<FormInputModel>) => void,
     readonly onSuccess?: () => void
     readonly requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => RequestType
+    readonly resetFormAfterSave?: boolean
+    readonly resetFormOnUnmount?: boolean
     readonly save: (value: RequestType) => Promise<void>
 }
 
@@ -83,6 +85,14 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             inputs,
         ])
 
+        useEffect(() => {
+            return () => {
+                if (props.resetFormOnUnmount) {
+                    onReset()
+                }
+            }
+        }, [])
+
         function checkIfFormIsValid(formInputFields: Array<FormInputModel>): void {
             setFormInvalid(formInputFields.filter(item => !!item.error).length > 0)
         }
@@ -111,16 +121,21 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             setFormDef({ ...formDef })
             setInputs(formGetInputFields(formDef.groups || []))
             setFormKey(Date.now())
+            setFormError(undefined)
         }
 
         async function onSubmitAsync(event: FormEvent<HTMLFormElement>): Promise<void> {
             const values: RequestType = props.requestGenerator(inputs)
             formOnSubmitAsync<RequestType>(props.action || 'submit', event, formDef, values, props.save, props.onSuccess)
                 .then(() => {
-                    setFormKey(Date.now())
-                    formOnReset(inputs, props.formValues)
-                    setFormDef({ ...formDef })
-                    setInputs(formGetInputFields(formDef.groups || []))
+                    if (!props.resetFormAfterSave) {
+                        setFormKey(Date.now())
+                        formOnReset(inputs, props.formValues)
+                        setFormDef({ ...formDef })
+                        setInputs(formGetInputFields(formDef.groups || []))
+                    } else {
+                        onReset()
+                    }
                 })
                 .catch((error: string | undefined) => {
                     setFormError(error)

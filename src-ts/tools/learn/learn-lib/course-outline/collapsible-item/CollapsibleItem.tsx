@@ -17,10 +17,12 @@ interface CollapsibleListItem {
 interface CollapsibleItemProps {
     active?: string
     duration: LearnModule['meta']['estimatedCompletionTime']
+    isAssessment: boolean
     itemId?: (item: any) => string
     items: Array<CollapsibleListItem>
     lessonsCount: number
     moduleKey: string
+    onItemClick: (item: any) => void
     path?: (item: any) => string
     progress?: LearnUserCertificationProgress['modules']
     shortDescription: Array<string>
@@ -29,8 +31,6 @@ interface CollapsibleItemProps {
 
 const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) => {
     const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
-
-    const isAssessment: boolean = props.lessonsCount === 1
 
     const toggle: () => void = useCallback(() => {
         setIsOpen(open => !open)
@@ -72,6 +72,7 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
             <li
                 key={key}
                 className={classNames(styles['item-wrap'], !stepCount && 'full-width')}
+                onClick={() => props.onItemClick(item)}
             >
                 {props.path ? (
                     <Link className={styles['item-wrap']} to={props.path(item)}>
@@ -87,7 +88,7 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
             <div className={styles['title-row']} onClick={toggle}>
                 <StatusIcon completed={isCompleted} partial={isPartial} />
                 <span className={styles['title']}>
-                    {isAssessment && (
+                    {props.isAssessment && (
                         <div className={classNames(styles['title-tag'], 'label')}>
                             assessment
                         </div>
@@ -105,10 +106,12 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
                             <IconOutline.DocumentTextIcon />
                             {props.lessonsCount} Lessons
                         </span>
-                        <span className={styles['summary-item']}>
-                            <IconOutline.ClockIcon />
-                            {props.duration.value} {props.duration.units}
-                        </span>
+                        {props.duration.value !== 0 && (
+                            <span className={styles['summary-item']}>
+                                <IconOutline.ClockIcon />
+                                {props.duration.value} {props.duration.units}
+                            </span>
+                        )}
                     </div>
                     <div className={styles['short-desc']}>
                         <span className='body-small' dangerouslySetInnerHTML={{ __html: props.shortDescription.join('<br/>') }}></span>

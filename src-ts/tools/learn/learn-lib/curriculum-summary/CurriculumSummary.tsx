@@ -11,6 +11,8 @@ interface CurriculumSummaryProps {
 }
 
 const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryProps) => {
+    const hasTimeEstimate: boolean = props.completionHours?.value !== 0
+
     return (
         <div className={styles['summary']}>
             <div className={styles['stat-item']}>
@@ -32,10 +34,10 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
                 </div>
                 <div className='sub'>
                     <h3 className={styles['count']}>
-                        {props.completionHours?.value ?? 0}
+                        {hasTimeEstimate ? props.completionHours?.value : (<>&nbsp;</>)}
                     </h3>
                     <div className={styles['count-label']}>
-                        {props.completionHours?.units ?? 'Hours'}
+                        {hasTimeEstimate ? (props.completionHours?.units ?? 'Hours') : 'Times vary'}
                     </div>
                 </div>
             </div>

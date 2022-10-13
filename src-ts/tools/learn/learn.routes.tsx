@@ -5,15 +5,30 @@ import { CourseCompletedPage } from './course-completed'
 import { CourseDetailsPage } from './course-details'
 import { FreeCodeCamp } from './free-code-camp'
 import { default as Learn, toolTitle } from './Learn'
+import { LearnConfig } from './learn-config'
 import { MyLearning } from './my-learning'
 import { WelcomePage } from './welcome'
+
+export enum LEARN_PATHS {
+    certificate = '/certificate',
+    completed = '/learn/completed',
+    myCertificate = '/learn/my-certificate',
+    myLearning = '/learn/my-learning',
+    fcc = '/learn/fcc',
+    root = '/learn',
+    startCourseRouteFlag = 'start-course',
+}
+
+export function getAuthenticateAndStartCourseRoute(): string {
+    return `${authUrlLogin()}${encodeURIComponent(`?${LEARN_PATHS.startCourseRouteFlag}`)}`
+}
 
 export function getCoursePath(provider: string, certification: string): string {
     return `${rootRoute}/${provider}/${certification}`
 }
 
 export function getCertificatePath(provider: string, certification: string): string {
-    return `${getCoursePath(provider, certification)}/certificate`
+    return `${getCoursePath(provider, certification)}${LEARN_PATHS.certificate}`
 }
 
 export function getCertificationCompletedPath(provider: string, certification: string): string {
@@ -40,17 +55,12 @@ export function getLessonPathFromModule(
     return `${getCoursePath(provider, certification)}/${module}/${lesson}`
 }
 
-export enum LEARN_PATHS {
-    completed = '/learn/completed',
-    myCertificate = '/learn/my-certificate',
-    myLearning = '/learn/my-learning',
-    fcc = '/learn/fcc',
-    root = '/learn',
-    startCourseRouteFlag = 'start-course',
+export function getUserCertificateSsr(provider: string, certification: string, handle: string, title: string): string {
+    return `${LearnConfig.CERT_DOMAIN}/${handle}/${provider}/${certification}/${encodeURI(title)}`
 }
 
-export function getAuthenticateAndStartCourseRoute(): string {
-    return `${authUrlLogin()}${encodeURIComponent(`?${LEARN_PATHS.startCourseRouteFlag}`)}`
+export function getUserCertificateUrl(provider: string, certification: string, handle: string): string {
+    return `${window.location.origin}${getCoursePath(provider, certification)}/${handle}${LEARN_PATHS.certificate}`
 }
 
 export const rootRoute: string = LEARN_PATHS.root

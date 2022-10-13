@@ -55,7 +55,9 @@ const CourseDetailsPage: FC<{}> = () => {
     const {
         certification: certificate,
         ready: certificateReady,
-    }: AllCertificationsProviderData = useAllCertifications(routeParams.provider, course?.certificationId)
+    }: AllCertificationsProviderData = useAllCertifications(routeParams.provider, course?.certificationId, {
+        enabled: courseReady,
+    })
 
     // this looks better than finding workarounds for cyclomatic-complexity
     /* tslint:disable:cyclomatic-complexity */
@@ -93,6 +95,46 @@ const CourseDetailsPage: FC<{}> = () => {
                     <div
                         className={styles['text']}
                         dangerouslySetInnerHTML={{ __html: (course.keyPoints ?? []).join('<br /><br />') }}
+                    ></div>
+                </>
+            )
+        )
+    }
+
+    function getPrerequisites(): ReactNode {
+        if (!course) {
+            return
+        }
+
+        return progress?.status === UserCertificationProgressStatus.completed ? (
+            <></>
+        ) : (
+            <>
+                <h3 className='details mtop'>Prerequisites</h3>
+
+                <div className={styles['text']}>
+                    There are no prerequisites for this course.
+                    The course content is appropriate for new learners with no previous experience in this topic.
+                </div>
+            </>
+        )
+    }
+
+    function getCompletionSuggestion(): ReactNode {
+        if (!course) {
+            return
+        }
+
+        return progress?.status === UserCertificationProgressStatus.completed ? (
+            <></>
+        ) : (
+            !!course.completionSuggestions?.length && (
+                <>
+                    <h3 className='details mtop'>Suggestions for completing this course</h3>
+
+                    <div
+                        className={styles['text']}
+                        dangerouslySetInnerHTML={{ __html: (course.completionSuggestions ?? []).join('<br /><br />') }}
                     ></div>
                 </>
             )
@@ -141,6 +183,8 @@ const CourseDetailsPage: FC<{}> = () => {
 
                         <div className={styles['description']}>
                             {getDescription()}
+                            {getPrerequisites()}
+                            {getCompletionSuggestion()}
                             <div className={styles['coming-soon']}>
                                 <PromoCourse />
                             </div>

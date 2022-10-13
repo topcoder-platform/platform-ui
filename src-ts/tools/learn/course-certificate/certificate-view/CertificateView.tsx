@@ -19,7 +19,7 @@ import {
     UserCompletedCertificationsProviderData,
     useUserCompletedCertifications,
 } from '../../learn-lib'
-import { absoluteRootRoute, getCoursePath } from '../../learn.routes'
+import { getCoursePath, getUserCertificateSsr } from '../../learn.routes'
 
 import { ActionButton } from './action-button'
 import { Certificate } from './certificate'
@@ -35,6 +35,7 @@ interface CertificateViewProps {
 }
 
 const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) => {
+
     const navigate: NavigateFunction = useNavigate()
     const { onCertificationNotCompleted }: CertificateViewProps = props
     const coursePath: string = getCoursePath(props.provider, props.certification)
@@ -51,7 +52,18 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         ready: courseReady,
     }: CoursesProviderData = useCourses(props.provider, props.certification)
 
-    const certificationTitle: string = `${userName || props.profile.handle} - ${course?.title} Certification`
+    function getCertTitle(user: string): string {
+        return `${user} - ${course?.title} Certification`
+    }
+
+    const certUrl: string = getUserCertificateSsr(
+        props.provider,
+        props.certification,
+        props.profile.handle,
+        getCertTitle(props.profile.handle),
+    )
+
+    const certificationTitle: string = getCertTitle(userName || props.profile.handle)
 
     const {
         certifications: [completedCertificate],
@@ -69,7 +81,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     }: AllCertificationsProviderData = useAllCertifications(
         props.provider,
         course?.certificationId,
-        {enabled: !!course?.certificationId}
+        { enabled: !!course?.certificationId }
     )
 
     const ready: boolean = useMemo(() => (
@@ -180,15 +192,15 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                                 />
                                 <FacebookSocialShareBtn
                                     className={styles['share-btn']}
-                                    shareUrl={absoluteRootRoute}
+                                    shareUrl={certUrl}
                                 />
                                 <LinkedinSocialShareBtn
                                     className={styles['share-btn']}
-                                    shareUrl={absoluteRootRoute}
+                                    shareUrl={certUrl}
                                 />
                                 <TwitterSocialShareBtn
                                     className={styles['share-btn']}
-                                    shareUrl={absoluteRootRoute}
+                                    shareUrl={certUrl}
                                 />
                             </div>
                         )}

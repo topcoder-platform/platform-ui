@@ -1,10 +1,15 @@
 @import '../../../lib/styles/includes';
 
 .hero-wrap {
+    svg:global(.tca-logo) {
+        margin-bottom: $space-xxl;
+        max-width: calc(100% - 70px);
+    }
+
     :global(.hero-card-col) {
         width: 43.5%;
         max-width: 600px;
-        
+
         @include ltemd {
             width: 100%;
             max-width: none;
@@ -15,35 +20,8 @@
 .courses-section {
     padding: $space-xxxxl 0;
     position: relative;
-    
+
     @include ltemd {
         padding-top: $space-xxl;
-    }
-}
-
-.courses-list {
-    margin-top: $space-lg;
-
-    flex-wrap: wrap;
-    gap: $space-lg;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-
-    // NOTE: these are not app defined breakpoints
-    // but they are required for the grid to look at it's best
-    @media (max-width: 1200px) {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    @include ltelg {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    @media (max-width: 576px) {
-        grid-template-columns: repeat(1, 1fr);
-    }
-    
-    @include ltemd {
-        margin-top: $space-xxl;
     }
 }

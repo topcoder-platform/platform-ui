@@ -4,6 +4,7 @@ import { LearnModule } from '../../lesson-provider'
 export interface LearnCourse extends LearnModelBase {
     certification: string
     certificationId: string
+    completionSuggestions: Array<string>
     estimatedCompletionTime: {
         units: string
         value: number

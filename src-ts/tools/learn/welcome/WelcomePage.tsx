@@ -11,8 +11,9 @@ import {
     WaveHero,
 } from '../learn-lib'
 
-import { CoursesCard } from './courses-card'
+import { AvailableCoursesList } from './available-courses-list'
 import { ProgressBlock } from './progress-block'
+import { ReactComponent as TcAcademyFullLogoSvg } from './tca-full-logo.svg'
 import styles from './WelcomePage.module.scss'
 
 const WelcomePage: FC<{}> = () => {
@@ -30,7 +31,12 @@ const WelcomePage: FC<{}> = () => {
                 <Portal portalId='page-subheader-portal-el'>
                     <div className={styles['hero-wrap']}>
                         <WaveHero
-                            title='Welcome to Topcoder ACADEMY'
+                            title={(
+                                <>
+                                    <TcAcademyFullLogoSvg className='tca-logo' />
+                                    Welcome!
+                                </>
+                            )}
                             text={`
                                 The Topcoder Academy will provide you with learning opportunities
                                 in the form of guided learning paths.
@@ -52,23 +58,14 @@ const WelcomePage: FC<{}> = () => {
                 </Portal>
 
                 <div className={classNames(styles['courses-section'], 'full-height-frame')}>
-
-                    <h3 className='details'>Courses Available</h3>
-
                     <LoadingSpinner hide={coursesReady} />
 
                     {coursesReady && (
-                        <div className={styles['courses-list']}>
-                            {allCertsData.certifications
-                                .map((certification) => (
-                                    <CoursesCard
-                                        certification={certification}
-                                        key={certification.key}
-                                        userCompletedCertifications={userCertsData.completed}
-                                        userInProgressCertifications={userCertsData.inProgress}
-                                    />
-                                ))}
-                        </div>
+                        <AvailableCoursesList
+                            certifications={allCertsData.certifications}
+                            userCompletedCertifications={userCertsData.completed}
+                            userInProgressCertifications={userCertsData.inProgress}
+                        />
                     )}
                 </div>
             </div>
