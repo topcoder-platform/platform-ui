@@ -4,10 +4,12 @@ import { createRef, Dispatch, FC, KeyboardEvent, RefObject, SetStateAction, useE
 import ContentEditable from 'react-contenteditable'
 import { Params, useLocation, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { KeyedMutator } from 'swr'
 
-import { Breadcrumb, BreadcrumbItemModel, Button, ButtonProps, ContentLayout, IconOutline, LoadingSpinner, PageDivider, TabsNavbar, TabsNavItem } from '../../../../lib'
+import { Breadcrumb, BreadcrumbItemModel, Button, ButtonProps, ContentLayout, IconOutline, LoadingSpinner, PageDivider, Sort, tableGetDefaultSort, TabsNavbar, TabsNavItem } from '../../../../lib'
 import { GamificationConfig } from '../../game-config'
-import { BadgeDetailPageHandler, GameBadge, useGamificationBreadcrumb, useGetGameBadgeDetails } from '../../game-lib'
+import { BadgeDetailPageHandler, GameBadge, useGamificationBreadcrumb, useGetGameBadgeDetails, useGetGameBadgesPage } from '../../game-lib'
+import { badgeListingColumns } from '../badge-listing/badge-listing-table'
 
 import AwardedMembersTab from './AwardedMembersTab/AwardedMembersTab'
 import { badgeDetailsTabs, BadgeDetailsTabViews } from './badge-details-tabs.config'
@@ -67,6 +69,10 @@ const BadgeDetailPage: FC = () => {
 
     const [isBadgeDescEditingMode, setIsBadgeDescEditingMode]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
+    // badgeListingMutate will reset badge listing page cache when called
+    const sort: Sort = tableGetDefaultSort(badgeListingColumns)
+    const { mutate: badgeListingMutate }: { mutate: KeyedMutator<any> } = useGetGameBadgesPage(sort)
+
     useEffect(() => {
         if (newImageFile && newImageFile.length) {
             const fileReader: FileReader = new FileReader()
@@ -97,6 +103,7 @@ const BadgeDetailPage: FC = () => {
                         ...badgeDetailsHandler.data,
                         badge_image_url: updatedBadge.badge_image_url,
                     })
+                    onBadgeUpdated()
                 })
         }
     }, [
@@ -168,6 +175,7 @@ const BadgeDetailPage: FC = () => {
                         ...badgeDetailsHandler.data,
                         badge_name: newBadgeName,
                     })
+                    onBadgeUpdated()
                 })
         }
     }
@@ -187,8 +195,13 @@ const BadgeDetailPage: FC = () => {
                         ...badgeDetailsHandler.data,
                         badge_description: newBadgeDesc,
                     })
+                    onBadgeUpdated()
                 })
         }
+    }
+
+    function onBadgeUpdated(): void {
+        badgeListingMutate()
     }
 
     // default tab
