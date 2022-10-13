@@ -137,13 +137,13 @@ const PrivacyPolicyModal: FC<PrivacyPolicyModalProps> = ({ isOpen, onClose }: Pr
                                             request.
                                         </li>
                                         <br />
+                                        <li>
+                                            If you believe that your Personal Data has been provided to us
+                                            improperly, or want to exercise your rights relating to your
+                                            Personal Data, please contact us by using the information in the
+                                            “Contact Us” section below.
+                                        </li>
                                     </ul>
-                                    <li>
-                                        If you believe that your Personal Data has been provided to us
-                                        improperly, or want to exercise your rights relating to your
-                                        Personal Data, please contact us by using the information in the
-                                        “Contact Us” section below.
-                                    </li>
                                     <br />
                                 </li>
                                 <li>
@@ -906,83 +906,81 @@ const PrivacyPolicyModal: FC<PrivacyPolicyModalProps> = ({ isOpen, onClose }: Pr
                                     will not deny your use of our services, or provide you a different
                                     level or quality of services for exercising any of your rights unde
                                     <br />
-                                    <li>
-                                        <ol>
-                                            <li>
-                                                1. Please note that your request does not ensure complete or
-                                                comprehensive removal of the content or information, because,
-                                                for example, some of your content may have been reposted by
-                                                another user. Please also note that you may not be entitled to
-                                                deletion of your personal information, where such retention is
-                                                necessary for Topcoder to: Complete the transaction for which
-                                                the personal information was collected, fulfill the terms of a
-                                                written warranty or product recall conducted in accordance
-                                                with federal law, provide a good or service requested by you,
-                                                or reasonably anticipated within the context of our ongoing
-                                                business relationship with you, or otherwise perform a
-                                                contract between us.
-                                            </li>
-                                            <br />
-                                            <li>
-                                                2. Detect security incidents, protect against malicious,
-                                                deceptive, fraudulent, or illegal activity; or prosecute those
-                                                responsible for that activity.
-                                            </li>
-                                            <br />
-                                            <li>
-                                                3. Debug to identify and repair errors that impair existing
-                                                intended functionality.
-                                            </li>
-                                            <br />
-                                            <li>
-                                                4. Exercise free speech, ensure the right of another consumer
-                                                to exercise that consumer’s right of free speech, or exercise
-                                                another right provided for by law.
-                                            </li>
-                                            <br />
-                                            <li>
-                                                5. Comply with the California Electronic Communications
-                                                Privacy Act pursuant to Chapter 3.6 (commencing with Section
-                                                1546) of Title 12 of Part 2 of the Penal Code.
-                                            </li>
-                                            <br />
-                                            <li>
-                                                6. Engage in public or peer-reviewed scientific, historical,
-                                                or statistical research in the public interest that adheres to
-                                                all other applicable ethics and privacy laws, when our
-                                                deletion of the information is likely to render impossible or
-                                                seriously impair the achievement of such research, if you have
-                                                provided informed consent for the same.
-                                            </li>
-                                            <br />
-                                            <li>
-                                                7. To enable solely internal uses that are reasonably aligned
-                                                with your expectations, based on your relationship with
-                                                Topcoder.
-                                            </li>
-                                            <br />
-                                            <li>
-                                                9. Otherwise use your personal information, internally, in a
-                                                lawful manner that is compatible with the context in which you
-                                                provided the information. Support For information on how to
-                                                exercise your rights, please refer to Section 9 of this
-                                                Privacy Statement. If you are an authorized agent wishing to
-                                                exercise rights on behalf of a California resident, please
-                                                contact us using the information in the “How to Contact Us”
-                                                section above and provide us with a copy of the consumer’s
-                                                written authorization designating you as their agent.
-                                            </li>
-                                            <br />
-                                            <li>
-                                                We may need to verify your identity and place of residence
-                                                before completing your rights request.
-                                            </li>
-                                            <br />
-                                            <li>
-                                                Effective Date May 31, 2017 – Updated Jan 27, 2022
-                                            </li>
-                                        </ol>
-                                    </li>
+                                    <ol>
+                                        <li>
+                                            1. Please note that your request does not ensure complete or
+                                            comprehensive removal of the content or information, because,
+                                            for example, some of your content may have been reposted by
+                                            another user. Please also note that you may not be entitled to
+                                            deletion of your personal information, where such retention is
+                                            necessary for Topcoder to: Complete the transaction for which
+                                            the personal information was collected, fulfill the terms of a
+                                            written warranty or product recall conducted in accordance
+                                            with federal law, provide a good or service requested by you,
+                                            or reasonably anticipated within the context of our ongoing
+                                            business relationship with you, or otherwise perform a
+                                            contract between us.
+                                        </li>
+                                        <br />
+                                        <li>
+                                            2. Detect security incidents, protect against malicious,
+                                            deceptive, fraudulent, or illegal activity; or prosecute those
+                                            responsible for that activity.
+                                        </li>
+                                        <br />
+                                        <li>
+                                            3. Debug to identify and repair errors that impair existing
+                                            intended functionality.
+                                        </li>
+                                        <br />
+                                        <li>
+                                            4. Exercise free speech, ensure the right of another consumer
+                                            to exercise that consumer’s right of free speech, or exercise
+                                            another right provided for by law.
+                                        </li>
+                                        <br />
+                                        <li>
+                                            5. Comply with the California Electronic Communications
+                                            Privacy Act pursuant to Chapter 3.6 (commencing with Section
+                                            1546) of Title 12 of Part 2 of the Penal Code.
+                                        </li>
+                                        <br />
+                                        <li>
+                                            6. Engage in public or peer-reviewed scientific, historical,
+                                            or statistical research in the public interest that adheres to
+                                            all other applicable ethics and privacy laws, when our
+                                            deletion of the information is likely to render impossible or
+                                            seriously impair the achievement of such research, if you have
+                                            provided informed consent for the same.
+                                        </li>
+                                        <br />
+                                        <li>
+                                            7. To enable solely internal uses that are reasonably aligned
+                                            with your expectations, based on your relationship with
+                                            Topcoder.
+                                        </li>
+                                        <br />
+                                        <li>
+                                            9. Otherwise use your personal information, internally, in a
+                                            lawful manner that is compatible with the context in which you
+                                            provided the information. Support For information on how to
+                                            exercise your rights, please refer to Section 9 of this
+                                            Privacy Statement. If you are an authorized agent wishing to
+                                            exercise rights on behalf of a California resident, please
+                                            contact us using the information in the “How to Contact Us”
+                                            section above and provide us with a copy of the consumer’s
+                                            written authorization designating you as their agent.
+                                        </li>
+                                        <br />
+                                        <li>
+                                            We may need to verify your identity and place of residence
+                                            before completing your rights request.
+                                        </li>
+                                        <br />
+                                        <li>
+                                            Effective Date May 31, 2017 – Updated Jan 27, 2022
+                                        </li>
+                                    </ol>
                                 </li>
                             </ol>
                         </li>
