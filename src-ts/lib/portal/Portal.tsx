@@ -23,13 +23,15 @@ const Portal: FC<PortalProps> = (props: PortalProps) => {
         if (props.className) {
             backupHtmlNode.classList.add(props.className)
         }
-        document.body.appendChild(backupHtmlNode)
         return backupHtmlNode
     }, [props.portalId, props.portalNode, props.className]) as HTMLElement
 
     useEffect(() => {
+        if (defaultPortalNode) {
+            document.body.appendChild(defaultPortalNode)
+        }
         return () => {
-            if (defaultPortalNode && document.body.contains(defaultPortalNode)) {
+            if (defaultPortalNode) {
                 document.body.removeChild(defaultPortalNode)
             }
         }
