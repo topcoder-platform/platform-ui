@@ -8,6 +8,7 @@ import { toast } from 'react-toastify'
 import { Breadcrumb, BreadcrumbItemModel, Button, ButtonProps, ContentLayout, IconOutline, LoadingSpinner, PageDivider, TabsNavbar, TabsNavItem } from '../../../../lib'
 import { GamificationConfig } from '../../game-config'
 import { BadgeDetailPageHandler, GameBadge, useGamificationBreadcrumb, useGetGameBadgeDetails } from '../../game-lib'
+import { BadgeActivatedModal } from '../../game-lib/modals/badge-activated-modal'
 
 import AwardedMembersTab from './AwardedMembersTab/AwardedMembersTab'
 import { badgeDetailsTabs, BadgeDetailsTabViews } from './badge-details-tabs.config'
@@ -66,6 +67,8 @@ const BadgeDetailPage: FC = () => {
     const [fileDataURL, setFileDataURL]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
 
     const [isBadgeDescEditingMode, setIsBadgeDescEditingMode]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+
+    const [showActivatedModal, setShowActivatedModal]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
     useEffect(() => {
         if (newImageFile && newImageFile.length) {
@@ -134,11 +137,33 @@ const BadgeDetailPage: FC = () => {
     )
 
     function onActivateBadge(): void {
-        // TODO: implement in GAME-127
+        updateBadgeAsync({
+            badgeActive: true,
+            id: badgeDetailsHandler.data?.id as string,
+        })
+            .then(() => {
+                badgeDetailsHandler.mutate({
+                    ...badgeDetailsHandler.data,
+                    active: true,
+                })
+                setShowActivatedModal(true)
+            })
+            .catch((e) => alert(`onActivateBadge error: ${e.message}`))
     }
 
     function onDisableBadge(): void {
-        // TODO: implement in GAME-127
+        updateBadgeAsync({
+            badgeActive: false,
+            id: badgeDetailsHandler.data?.id as string,
+        })
+            .then(() => {
+                badgeDetailsHandler.mutate({
+                    ...badgeDetailsHandler.data,
+                    active: false,
+                })
+                setShowActivatedModal(true)
+            })
+            .catch((e) => alert(`onDisableBadge error: ${e.message}`))
     }
 
     function onNameEditKeyDown(e: KeyboardEvent): void {
@@ -290,6 +315,14 @@ const BadgeDetailPage: FC = () => {
                     )
                 }
             </div>
+            {
+                badgeDetailsHandler.data &&
+                <BadgeActivatedModal
+                    isOpen={showActivatedModal}
+                    onClose={() => setShowActivatedModal(false)}
+                    badge={badgeDetailsHandler.data}
+                />
+            }
         </ContentLayout>
     )
 }
