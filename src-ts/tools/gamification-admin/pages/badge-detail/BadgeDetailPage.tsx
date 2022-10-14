@@ -144,11 +144,33 @@ const BadgeDetailPage: FC = () => {
     )
 
     function onActivateBadge(): void {
-        // TODO: implement in GAME-127
+        updateBadgeAsync({
+            badgeActive: true,
+            id: badgeDetailsHandler.data?.id as string,
+        })
+            .then(() => {
+                badgeDetailsHandler.mutate({
+                    ...badgeDetailsHandler.data,
+                    active: true,
+                })
+                setShowActivatedModal(true)
+            })
+            .catch((e) => alert(`onActivateBadge error: ${e.message}`))
     }
 
     function onDisableBadge(): void {
-        // TODO: implement in GAME-127
+        updateBadgeAsync({
+            badgeActive: false,
+            id: badgeDetailsHandler.data?.id as string,
+        })
+            .then(() => {
+                badgeDetailsHandler.mutate({
+                    ...badgeDetailsHandler.data,
+                    active: false,
+                })
+                setShowActivatedModal(true)
+            })
+            .catch((e) => alert(`onDisableBadge error: ${e.message}`))
     }
 
     function onNameEditKeyDown(e: KeyboardEvent): void {
@@ -339,6 +361,14 @@ const BadgeDetailPage: FC = () => {
                     )
                 }
             </div>
+            {
+                badgeDetailsHandler.data &&
+                <BadgeActivatedModal
+                    isOpen={showActivatedModal}
+                    onClose={() => setShowActivatedModal(false)}
+                    badge={badgeDetailsHandler.data}
+                />
+            }
         </ContentLayout>
     )
 }
