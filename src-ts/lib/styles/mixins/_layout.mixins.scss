@@ -8,7 +8,7 @@
         padding-left: $space-xxl;
         padding-right: $space-xxl;
     }
-    
+
     @include xxs {
         padding-left: $space-lg;
         padding-right: $space-lg;
@@ -23,18 +23,25 @@
 }
 
 @mixin scrollbar {
+    // firefox's solution for "customizing" scrollbars
+    & {
+        scrollbar-width: thin;
+        scrollbar-color: rgba($tc-black, 0.4) transparent;
+    }
+
     &::-webkit-scrollbar-track {
         background: transparent;
     }
+
     &::-webkit-scrollbar {
         width: 5px;
         height: 5px;
     }
-    
+
     &::-webkit-scrollbar-thumb {
         background-color: rgba($tc-black, 0.4);
         border-radius: 4px;
-        
+
         &:hover {
             background-color: rgba($tc-black, 0.6);
         }

@@ -24,8 +24,17 @@
     &:global(.theme-qa) {
         background-image: $tc-qa-grad;
     }
+
     &:global(.theme-datascience) {
         background-image: $tc-datascience-grad;
+    }
+
+    &:global(.theme-interview) {
+        background-image: $tc-interview-grad;
+    }
+
+    &:global(.theme-security) {
+        background-image: $tc-security-grad;
     }
 
     > div {
