@@ -1,24 +1,37 @@
 import { FC, useContext } from 'react'
-import { Location, useLocation, useParams } from 'react-router-dom'
+import { Location, NavigateFunction, useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import {
     authUrlLogin,
     Button,
+    PageDivider,
     routeContext,
     RouteContextData,
 } from '../../../lib'
+import { BackArrowIcon } from '../../../lib/svgs'
 
 import styles from './WorkLoginPrompt.module.scss'
 
-const WorkLoginPrompt: FC = () => {
+interface WorkLoginPromptProps {
+  previousPageUrl: string
+}
+
+const WorkLoginPrompt: FC<WorkLoginPromptProps> = ({ previousPageUrl }: WorkLoginPromptProps)  => {
 
     const routeData: RouteContextData = useContext(routeContext)
     const location: Location = useLocation()
+    const navigate: NavigateFunction = useNavigate()
     const customReturnUrl: string | undefined = useParams().retUrl
 
     function signUp(): void {
         const signUpUrl: string = routeData.getSignupUrl(location.pathname, routeData.toolsRoutes, customReturnUrl)
         window.location.href = signUpUrl
+    }
+
+    const onBack: () => void = () => {
+      navigate(
+        previousPageUrl
+      )
     }
 
     return (
@@ -45,6 +58,17 @@ const WorkLoginPrompt: FC = () => {
                         />
                     </div>
                 </div>
+            </div>
+            <PageDivider />
+            <div className={styles['footerContent']}>
+              <div>
+                <Button
+                  size='md'
+                  icon={BackArrowIcon}
+                  buttonStyle='secondary'
+                  onClick={onBack}
+                />
+              </div>
             </div>
         </>
     )
