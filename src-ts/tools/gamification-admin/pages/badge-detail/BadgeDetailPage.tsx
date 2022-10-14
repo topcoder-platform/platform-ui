@@ -1,14 +1,16 @@
 import { noop, trim } from 'lodash'
 import MarkdownIt from 'markdown-it'
-import { createRef, Dispatch, FC, KeyboardEvent, RefObject, SetStateAction, useEffect, useState } from 'react'
+import { ChangeEvent, createRef, Dispatch, FC, KeyboardEvent, RefObject, SetStateAction, useEffect, useState } from 'react'
 import ContentEditable from 'react-contenteditable'
 import { Params, useLocation, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import sanitizeHtml from 'sanitize-html'
+import { KeyedMutator } from 'swr'
 
-import { Breadcrumb, BreadcrumbItemModel, Button, ButtonProps, ContentLayout, IconOutline, LoadingSpinner, PageDivider, TabsNavbar, TabsNavItem } from '../../../../lib'
+import { Breadcrumb, BreadcrumbItemModel, Button, ButtonProps, ContentLayout, IconOutline, IconSolid, LoadingSpinner, PageDivider, Sort, tableGetDefaultSort, TabsNavbar, TabsNavItem } from '../../../../lib'
 import { GamificationConfig } from '../../game-config'
-import { BadgeDetailPageHandler, GameBadge, useGamificationBreadcrumb, useGetGameBadgeDetails } from '../../game-lib'
-import { BadgeActivatedModal } from '../../game-lib/modals/badge-activated-modal'
+import { BadgeDetailPageHandler, GameBadge, useGamificationBreadcrumb, useGetGameBadgeDetails, useGetGameBadgesPage } from '../../game-lib'
+import { badgeListingColumns } from '../badge-listing/badge-listing-table'
 
 import AwardedMembersTab from './AwardedMembersTab/AwardedMembersTab'
 import { badgeDetailsTabs, BadgeDetailsTabViews } from './badge-details-tabs.config'
@@ -68,7 +70,11 @@ const BadgeDetailPage: FC = () => {
 
     const [isBadgeDescEditingMode, setIsBadgeDescEditingMode]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
-    const [showActivatedModal, setShowActivatedModal]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    // badgeListingMutate will reset badge listing page cache when called
+    const sort: Sort = tableGetDefaultSort(badgeListingColumns)
+    const { mutate: badgeListingMutate }: { mutate: KeyedMutator<any> } = useGetGameBadgesPage(sort)
+
+    const [badgeNameErrorText, setBadgeNameErrorText]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
 
     useEffect(() => {
         if (newImageFile && newImageFile.length) {
@@ -100,6 +106,7 @@ const BadgeDetailPage: FC = () => {
                         ...badgeDetailsHandler.data,
                         badge_image_url: updatedBadge.badge_image_url,
                     })
+                    onBadgeUpdated()
                 })
         }
     }, [
@@ -170,6 +177,9 @@ const BadgeDetailPage: FC = () => {
         if (e.key === 'Enter') {
             e.preventDefault()
             badgeNameRef.current?.blur()
+        } else if (/[`'<>]+/.test(e.key)) {
+            // restrict those characters
+            e.preventDefault()
         }
     }
 
@@ -179,8 +189,19 @@ const BadgeDetailPage: FC = () => {
         }
     }
 
+    function sanitazeBadgeName(innerHTML: string): string {
+        const clean: string = sanitizeHtml(innerHTML, {
+            allowedTags: [],
+        })
+        return trim(clean)
+    }
+
     function onSaveBadgeName(): any {
-        const newBadgeName: string | undefined = trim(badgeNameRef.current?.innerHTML)
+        const newBadgeName: string = sanitazeBadgeName(badgeNameRef.current?.innerHTML as string)
+        if (!newBadgeName) {
+            setBadgeNameErrorText('Update rejected due to invalid title string.')
+            return
+        }
         if (newBadgeName !== badgeDetailsHandler.data?.badge_name) {
             // save only if different
             updateBadgeAsync({
@@ -193,6 +214,10 @@ const BadgeDetailPage: FC = () => {
                         ...badgeDetailsHandler.data,
                         badge_name: newBadgeName,
                     })
+                    onBadgeUpdated()
+                })
+                .catch(e => {
+                    setBadgeNameErrorText(e.message)
                 })
         }
     }
@@ -212,7 +237,22 @@ const BadgeDetailPage: FC = () => {
                         ...badgeDetailsHandler.data,
                         badge_description: newBadgeDesc,
                     })
+                    onBadgeUpdated()
                 })
+        }
+    }
+
+    function onBadgeUpdated(): void {
+        badgeListingMutate()
+    }
+
+    function validateFilePicked(e: ChangeEvent<HTMLInputElement>): void {
+        if (e.target.files?.length) {
+            if (GamificationConfig.ACCEPTED_BADGE_MIME_TYPES.includes(e.target.files[0].type)) {
+                setNewImageFile(e.target.files)
+            } else {
+                toast.error(`Not allowed file type: ${e.target.files[0].type}`)
+            }
         }
     }
 
@@ -261,19 +301,25 @@ const BadgeDetailPage: FC = () => {
                                         className={styles.filePickerInput}
                                         accept={GamificationConfig.ACCEPTED_BADGE_MIME_TYPES}
                                         size={GamificationConfig.MAX_BADGE_IMAGE_FILE_SIZE}
-                                        onChange={e => setNewImageFile(e.target.files)}
+                                        onChange={validateFilePicked}
                                     />
                                 </div>
                                 <div className={styles.badgeDetails}>
                                     <ContentEditable
                                         innerRef={badgeNameRef}
                                         html={badgeDetailsHandler.data?.badge_name as string}
-                                        onChange={noop}
+                                        onChange={() => badgeNameErrorText ? setBadgeNameErrorText(undefined) : ''}
                                         onKeyDown={onNameEditKeyDown}
                                         onBlur={onSaveBadgeName}
                                         onFocus={onBadgeNameEditFocus}
                                         className={styles.badgeName}
                                     />
+                                    {
+                                        badgeNameErrorText && <div className={styles.error}>
+                                            <IconSolid.ExclamationIcon />
+                                            {badgeNameErrorText}
+                                        </div>
+                                    }
                                     <div className={styles.badgeDesc}>
                                         <div className={styles.badgeEditWrap}>
                                             <ContentEditable

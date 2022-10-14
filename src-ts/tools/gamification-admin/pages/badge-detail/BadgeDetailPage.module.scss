@@ -1,5 +1,7 @@
 @import "../../../../lib/styles/variables";
 @import "../../../../lib/styles/includes";
+@import "../../../../lib/styles/typography";
+$error-line-height: 14px;
 
 $badgePreview: 130px;
 $badgePreviewImage: 72px;
@@ -83,6 +85,22 @@ $badgePreviewImage: 72px;
                 &:focus {
                     background-color: $tc-white;
                     outline-color: $turq-160;
+                }
+            }
+
+            .error {
+                display: flex;
+                align-items: center;
+                color: $red-100;
+                // extend body ultra small and override it
+                @extend .ultra-small;
+                line-height: $error-line-height;
+                margin-top: $space-xs;
+            
+                svg {
+                    @include icon-md;
+                    fill: $red-100;
+                    margin-right: $space-xs;
                 }
             }
 
