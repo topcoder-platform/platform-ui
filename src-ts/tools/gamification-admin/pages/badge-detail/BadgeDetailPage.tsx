@@ -10,6 +10,7 @@ import { KeyedMutator } from 'swr'
 import { Breadcrumb, BreadcrumbItemModel, Button, ButtonProps, ContentLayout, IconOutline, IconSolid, LoadingSpinner, PageDivider, Sort, tableGetDefaultSort, TabsNavbar, TabsNavItem } from '../../../../lib'
 import { GamificationConfig } from '../../game-config'
 import { BadgeDetailPageHandler, GameBadge, useGamificationBreadcrumb, useGetGameBadgeDetails, useGetGameBadgesPage } from '../../game-lib'
+import { BadgeActivatedModal } from '../../game-lib/modals/badge-activated-modal'
 import { badgeListingColumns } from '../badge-listing/badge-listing-table'
 
 import AwardedMembersTab from './AwardedMembersTab/AwardedMembersTab'
@@ -75,6 +76,8 @@ const BadgeDetailPage: FC = () => {
     const { mutate: badgeListingMutate }: { mutate: KeyedMutator<any> } = useGetGameBadgesPage(sort)
 
     const [badgeNameErrorText, setBadgeNameErrorText]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
+
+    const [showActivatedModal, setShowActivatedModal]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
     useEffect(() => {
         if (newImageFile && newImageFile.length) {
@@ -154,6 +157,7 @@ const BadgeDetailPage: FC = () => {
                     active: true,
                 })
                 setShowActivatedModal(true)
+                onBadgeUpdated()
             })
             .catch((e) => alert(`onActivateBadge error: ${e.message}`))
     }
@@ -169,6 +173,7 @@ const BadgeDetailPage: FC = () => {
                     active: false,
                 })
                 setShowActivatedModal(true)
+                onBadgeUpdated()
             })
             .catch((e) => alert(`onDisableBadge error: ${e.message}`))
     }
