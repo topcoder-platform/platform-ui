@@ -319,15 +319,31 @@ The PlatformRoute model has several useful options:
 
 ## Git
 
-### Branching
-When working on Jira tickets, we link associated Git PRs and branches to the tickets. Use the following naming convention for branches:
+### Pull Requests
 
-`[TICKET #]_short-description`
+If a Jira ticket if requires any code changes, it should have its own pull request.
+
+PRs should be named as follows:
+
+`[TICKET-###] [Short Description] -> [target-branch-name]`
+
+e.g. `GAME-174 Upload Badge Image Fix -> dev`
+
+### Branching
+
+All branches use `dev` as their source. All merges to `dev` should be made via [pull request](#pull-requests) and should be approved by application owner(s).
+
+When working on Jira tickets, a branch should correspond with a single ticket. 
+
+When using subtasks, each parent ticket should have its own branch off `dev`, and all subtasks branches should be merged into the parent ticket branch instead of directly to `dev`.
+
+Use the following naming convention for branches in order to link associated Git PRs and branches to the tickets:
+
+`[TICKET-###]_short-description`
 
 e.g.: `PROD-1516_work-issue`
 
 #### Branching strategy
-TBD
 
 ### Commits
 We use [Smart Commits](https://bigbrassband.com/git-integration-for-jira/documentation/smart-commits.html#bbb-nav-basic-examples) to link comments and time tracking to tickets. You would enter the following as your commit message:
