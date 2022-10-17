@@ -31,7 +31,7 @@ The `master` branch is auto-deployed to the production environment: https://plat
 
 ## Pull Requests
 
-If a Jira ticket if requires any code changes, it should have its own pull request.
+If a Jira ticket requires any code changes, it should have its own pull request.
 
 PRs should be named as follows:
 
