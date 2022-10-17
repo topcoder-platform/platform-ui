@@ -329,6 +329,8 @@ PRs should be named as follows:
 
 e.g. `GAME-174 Upload Badge Image Fix -> dev`
 
+PRs should also have description that includes a link to the Jira ticket and a summary of what the PR is changing.
+
 ### Branching
 
 All branches use `dev` as their source. All merges to `dev` should be made via [pull request](#pull-requests) and should be approved by application owner(s).
