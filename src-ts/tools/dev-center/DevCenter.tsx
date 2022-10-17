@@ -6,7 +6,7 @@ import {
     RouteContextData,
 } from '../../lib'
 
-export const toolTitle: string = 'Dev Center'
+import { toolTitle } from './dev-center.routes'
 
 const DevCenter: FC<{}> = () => {
 

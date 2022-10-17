@@ -5,11 +5,14 @@ import "react-responsive-modal/styles.css";
 import { profileContext } from "../src-ts";
 
 import { UNDER_MAINTENANCE } from "./constants";
-import IntakeForm from "./IntakeForm";
-import WorkItem from "./routes/WorkItems";
 import { ScrollToTop } from "./ScrollToTop";
 import styles from "./styles/main.module.scss";
-import UnderMaintenance from "./routes/UnderMaintenance";
+import { lazyLoad, LoadingSpinner } from "../src-ts/lib";
+import { Suspense } from "react";
+
+const WorkItem = lazyLoad(() => import("./routes/WorkItems"));
+const IntakeForm = lazyLoad(() => import("./IntakeForm"));
+const UnderMaintenance = lazyLoad(() => import("./routes/UnderMaintenance"));
 
 
 const App = () => {
@@ -40,16 +43,18 @@ const App = () => {
   return (
     <div className={styles["topcoder-platform-ui"]}>
       <ScrollToTop path="/">
-        <Routes>
-          <Route
-            element={<IntakeForm />}
-            path="/self-service/*"
-          />
-          <Route
-            element={<WorkItem />}
-            path="/self-service/work-items/:workItemId"
-          />
-        </Routes>
+        <Suspense fallback={<LoadingSpinner />}>
+            <Routes>
+                <Route
+                    element={<IntakeForm />}
+                    path="/self-service/*"
+                />
+                <Route
+                    element={<WorkItem />}
+                    path="/self-service/work-items/:workItemId"
+                />
+            </Routes>
+        </Suspense>
       </ScrollToTop>
     </div >
   );
