@@ -34,7 +34,7 @@ All future user interfaces at Topcoder will be implemented here. Pre-existing us
 - Typescript
 - React Scripts
 
-This app uses React 17, Typescript 4, and Node 16.
+This app uses React 18, Typescript 4, and Node 16.
 
 ### IDE
 

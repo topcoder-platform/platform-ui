@@ -21,10 +21,6 @@ function BadgeActionRenderer(badge: GameBadge): JSX.Element {
                 label: 'View',
             },
             {
-                label: 'Edit',
-                view: 'edit',
-            },
-            {
                 label: 'Award',
                 view: 'award',
             },

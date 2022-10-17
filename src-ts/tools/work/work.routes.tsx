@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { contactSupportPath, lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
 
 import { dashboardTitle, toolTitle } from './Work'
-import { Work, WorkIntakeFormRoutes, WorkStatus } from './work-lib'
+import { Work, WorkIntakeFormRoutes, WorkStatus, WorkType } from './work-lib'
 import { WorkLoginPrompt } from './work-login-prompt'
 import { intakeFormsTitle } from './work-self-service'
 
@@ -97,7 +97,7 @@ export const workRoutes: Array<PlatformRoute> = [
                 route: `bug-hunt/review/:workId`,
             },
             {
-                element: <WorkLoginPrompt />,
+                element: <WorkLoginPrompt previousPageUrl={WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']} />,
                 route: `bug-hunt/login-prompt/:retUrl`,
             },
             // General
