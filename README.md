@@ -272,6 +272,36 @@ These routes then need to be added to the routes file for the parent tools/utils
 Simply adding the routes to one of thes files above will register the tool/util
 with the application and will display the new component.
 
+### Lazy loading and code splitting
+
+When loading a route component, please use the `lazyLoad()` method defined in the application lib.
+
+| param | description|
+| ----- | ---------- |
+| `moduleImport: () => Promise<any>` | Function which imports the desired module |
+| `namedExport?: string` | The name of the exported module (if the module has named exports) |
+
+Eg:
+```
+// Lazy load the WelcomePage component
+const WelcomePage: LazyLoadedComponent = lazyLoad(() => import('./welcome'), 'WelcomePage')
+...
+// Use the component as route element
+export const learnRoutes: Array<PlatformRoute> = [
+    {
+        children: [
+            {
+                children: [],
+                element: <WelcomePage />,
+                ...
+            },
+            ...
+        ]
+    }
+]
+```
+
+
 ### Platform Route
 
 The PlatformRoute model has several useful options:
