@@ -11,7 +11,8 @@ import { generateCSV, manualAssignRequestAsync } from '../badge-details.function
 import styles from './ManualAwardTab.module.scss'
 
 export interface ManualAwardTabProps {
-    badge: GameBadge
+    badge: GameBadge,
+    onManualAssign: () => void
 }
 
 const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => {
@@ -76,6 +77,7 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
                     isOpen={showBadgeAssigned}
                     onClose={() => {
                         setShowBadgeAssigned(false)
+                        props.onManualAssign()
                     }}
                 />
             }

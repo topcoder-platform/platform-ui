@@ -17,5 +17,9 @@ export async function submitRequestAsync(request: CreateBadgeRequest): Promise<G
     form.append('badge_description', request.badgeDesc)
     form.append('active', request.badgeActive ? 'true' : 'false')
 
-    return xhrPostAsync(url, form)
+    return xhrPostAsync(url, form, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    })
 }
