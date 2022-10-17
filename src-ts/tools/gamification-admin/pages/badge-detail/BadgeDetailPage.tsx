@@ -267,6 +267,7 @@ const BadgeDetailPage: FC = () => {
     if (activeTab === BadgeDetailsTabViews.manualAward) {
         activeTabElement = <ManualAwardTab
             badge={badgeDetailsHandler.data as GameBadge}
+            onManualAssign={() => setActiveTab(BadgeDetailsTabViews.awardedMembers)}
         />
     }
     if (activeTab === BadgeDetailsTabViews.batchAward) {
