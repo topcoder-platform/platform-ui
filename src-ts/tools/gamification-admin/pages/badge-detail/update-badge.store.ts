@@ -24,5 +24,9 @@ export async function submitRequestAsync(request: UpdateBadgeRequest): Promise<G
         form.append('badge_description', request.badgeDesc)
     }
 
-    return xhrPostAsync(url, form)
+    return xhrPostAsync(url, form, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        }
+    })
 }
