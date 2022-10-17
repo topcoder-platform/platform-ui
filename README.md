@@ -73,7 +73,7 @@ e.g.: `PROD-001 #comment adding readme notes #time 45m`
 # Local Development
 
 - [Local Environment Setup](#local-environment-setup)
-- [Developer Center specific setup](#developer-center-contentful-api-key-and-space-id)
+- [Tool-specific Setup](#tool-specific-setup)
 - [Yarn Commands](#yarn-commands)
 
 ## Local Environment Setup
@@ -177,6 +177,10 @@ Otherwise, you will need to override the exception each time you load the site. 
 3. Set the REACT_APP_HOST_ENV=[hostname]
 4. Add "start:[hostname]": "sh start-ssl-[hostname].sh" to scripts in package.json
 
+
+## Tool-specific setup
+
+Each [Tool](#tools) can have its own setup requirements. Please see each tool's [README](#tools) for further information.
 
 ## yarn Commands
 
@@ -574,6 +578,13 @@ e.g.:
 ```
 
 >**NOTE** - all SVGs require explicit `width` and `height` in the Safari browser in order to be rendered properly, otherwise they'll be rendered to the _default_ size and probably will crop out of view
+
+
+
+
+
+
+
 
 # Tools
 
