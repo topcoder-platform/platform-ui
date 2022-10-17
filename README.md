@@ -366,6 +366,7 @@ The PlatformRoute model has several useful options:
 - [Linting](#linting)
 - [Styling](#styling)
 - [Icons](#icons)
+
 ## Linting
 
 ### Rules
