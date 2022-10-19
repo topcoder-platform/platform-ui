@@ -38,7 +38,7 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
                 let message: string = e.message
                 if (e.errors && e.errors[0] && e.errors[0].path === 'user_id') {
                     const handleOrId: string = find(selectedMembers, { userId: e.errors[0].value })?.handle || e.errors[0].value
-                    message = `Member ${handleOrId} alredy owns this badge.`
+                    message = `Member ${handleOrId} already owns this badge.`
                 }
                 setBadgeAssignError(message)
             })
