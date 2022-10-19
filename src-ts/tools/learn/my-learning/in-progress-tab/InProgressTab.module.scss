@@ -1,22 +1,17 @@
 @import '../../../../lib/styles/includes';
 
-.cards-wrap {
+.wrap {
+    gap: $space-lg;
     display: flex;
-    gap: $space-xxl;
-    flex-wrap: wrap;
+    flex-direction: column;
+    position: relative;
 
-    > * {
-        flex: 0 1 calc(50% - calc($space-xxl / 2));
+    @include ltemd {
+        gap: $space-xxl;
     }
 
     > :global(.course-card-wrap) {
         background: $black-5;
-    }
-
-    @include ltemd {
-        > * {
-            flex: 1 1 0;
-        }
     }
 }
 

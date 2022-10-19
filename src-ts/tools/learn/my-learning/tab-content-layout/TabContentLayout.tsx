@@ -10,6 +10,7 @@ import styles from './TabContentLayout.module.scss'
 interface TabContentLayoutProps {
     certifications: ReadonlyArray<LearnCertification>
     children: ReactNode
+    disableFilters?: boolean
     onCategoryChange?: (category: string) => void
     onSortChange?: (field: string) => void
     sortOptions: ReadonlyArray<SortOption>
@@ -71,6 +72,7 @@ const TabContentLayout: FC<TabContentLayoutProps> = (props: TabContentLayoutProp
                         onChange={handleCategoryChange}
                         name='filter-courses'
                         label='Categories'
+                        disabled={props.disableFilters}
                     ></InputSelect>
                     <InputSelect
                         options={props.sortOptions}
@@ -78,6 +80,7 @@ const TabContentLayout: FC<TabContentLayoutProps> = (props: TabContentLayoutProp
                         onChange={handleSortChange}
                         name='sort-courses'
                         label='Sort by'
+                        disabled={props.disableFilters}
                     ></InputSelect>
                 </div>
             </div>

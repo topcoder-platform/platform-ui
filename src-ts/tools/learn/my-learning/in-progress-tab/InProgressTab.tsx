@@ -1,10 +1,14 @@
 import { FC, ReactNode } from 'react'
 
+import { Button } from '../../../../lib'
 import { LearnCertification, MyCourseInProgressCard, UserCertificationInProgress } from '../../learn-lib'
+import { LEARN_PATHS } from '../../learn.routes'
 import { sortOptions } from '../my-learning-sort-options'
 import { MyTabsViews } from '../my-tabs-navbar'
 import { TabContentLayout } from '../tab-content-layout'
 import { useSortAndFilter, UseSortAndFilterValue } from '../use-sort-and-filter'
+
+import styles from './InProgressTab.module.scss'
 
 interface InProgressTabProps {
     allCertificates: ReadonlyArray<LearnCertification>
@@ -23,8 +27,24 @@ const InProgressTab: FC<InProgressTabProps> = (props: InProgressTabProps) => {
         props.certifications
     )
 
+    const hasCertifications: boolean = certifications.length >= 1
+
+    const renderPlaceholder: () => ReactNode = () => (
+        <div className={styles['placeholder-wrap']}>
+            <div className='body-medium-bold'>
+                Your In Progress courses will live here. Let’s go!
+            </div>
+            <Button
+                route={LEARN_PATHS.root}
+                buttonStyle='primary'
+                size='md'
+                label='Start a course'
+            />
+        </div>
+    )
+
     const renderCertificationsList: () => ReactNode = () => (
-        certifications.map((certif) => (
+        hasCertifications ? certifications.map((certif) => (
             <MyCourseInProgressCard
                 certification={props.certificatesById[certif.certificationId]}
                 key={certif.certificationId}
@@ -33,7 +53,7 @@ const InProgressTab: FC<InProgressTabProps> = (props: InProgressTabProps) => {
                 completedPercentage={certif.courseProgressPercentage / 100}
                 startDate={certif.startDate}
             />
-        ))
+        )) : renderPlaceholder()
     )
 
     return (
@@ -43,8 +63,11 @@ const InProgressTab: FC<InProgressTabProps> = (props: InProgressTabProps) => {
             sortOptions={sortOptions.inProgress}
             onSortChange={handleSortChange}
             onCategoryChange={handleCategoryChange}
+            disableFilters={!hasCertifications}
         >
-            {renderCertificationsList()}
+            <div className={styles.wrap}>
+                {renderCertificationsList()}
+            </div>
         </TabContentLayout>
     )
 }

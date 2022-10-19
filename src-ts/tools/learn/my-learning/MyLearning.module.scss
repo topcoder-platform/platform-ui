@@ -3,10 +3,9 @@
 .wrap {
     flex: 1 1 auto;
     position: relative;
-}
-
-.content-layout {
-    background: $black-5;
+    margin-top: $space-xxxxl;
+    display: flex;
+    flex-direction: column;
 }
 
 .hero-wrap {

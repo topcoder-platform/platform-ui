@@ -77,6 +77,7 @@ const MyLearning: FC<{}> = () => {
                     <div className={styles['hero-wrap']}>
                         <WaveHero
                             title='my learning'
+                            theme='light'
                             text={`
                                 This is your very own page to keep track of your professional education and skill building.
                                 From here you can resume your courses in progress or review past accomplishments.

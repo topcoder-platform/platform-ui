@@ -78,6 +78,7 @@ $error-line-height: 14px;
         background-color: $black-10;
         background: $black-10;
         border-color: $black-40;
+        pointer-events: none;
     }
 
     &.input-error {
