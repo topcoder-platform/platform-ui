@@ -1,0 +1,62 @@
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    padding: $space-xxxxl 0;
+    gap: $space-lg;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    &:empty {
+        display: none;
+    }
+
+    @include ltemd {
+        gap: $space-xxl;
+    }
+}
+
+.courses-list-filters {
+    display: flex;
+    margin-left: auto;
+
+    gap: $space-xxl;
+
+    > * {
+        min-width: 326px;
+    }
+
+    > :global(.input-wrapper) {
+        width: 100%;
+
+        > :global(.input-el) {
+            margin: 0;
+        }
+    }
+
+    @include ltelg {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: $space-lg;
+    }
+
+    @include ltemd {
+        width: 100%;
+    }
+}
+
+.title-line {
+    display: flex;
+    align-items: center;
+
+    > h3 {
+        display: flex;
+        align-items: center;
+        gap: $space-sm;
+    }
+
+    @include ltemd {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: $space-xxl;
+    }
+}

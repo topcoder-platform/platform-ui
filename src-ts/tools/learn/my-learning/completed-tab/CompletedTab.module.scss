@@ -1,0 +1,17 @@
+@import '../../../../lib/styles/includes';
+
+.cards-wrap {
+    display: flex;
+    gap: $space-xxl;
+    flex-wrap: wrap;
+
+    > * {
+        flex: 0 1 calc(50% - calc($space-xxl / 2));
+    }
+
+    @include ltemd {
+        > * {
+            flex: 1 1 0;
+        }
+    }
+}

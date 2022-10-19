@@ -30,7 +30,7 @@ interface InputSelectProps {
     readonly label?: string
     readonly name: string
     readonly onChange: (event: ChangeEvent<HTMLInputElement>) => void
-    readonly options: Array<InputSelectOption>
+    readonly options: ReadonlyArray<InputSelectOption>
     readonly tabIndex?: number
     readonly value?: string
 }
