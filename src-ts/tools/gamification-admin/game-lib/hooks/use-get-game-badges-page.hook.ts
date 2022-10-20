@@ -1,8 +1,7 @@
-import { EnvironmentConfig } from '../../../config'
-import { InfinitePageDao, InfinitePageHandler, Sort, useGetInfinitePage } from '../../../lib'
-import { GamificationConfig } from '../game-config'
-
-import { GameBadge } from './game-badge.model'
+import { EnvironmentConfig } from '../../../../config'
+import { InfinitePageDao, InfinitePageHandler, Sort, useGetInfinitePage } from '../../../../lib'
+import { GamificationConfig } from '../../game-config'
+import { GameBadge } from '../game-badge.model'
 
 export function useGetGameBadgesPage(sort: Sort): InfinitePageHandler<GameBadge> {
 

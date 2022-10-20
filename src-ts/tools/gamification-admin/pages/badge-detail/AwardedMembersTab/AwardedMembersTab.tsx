@@ -1,13 +1,15 @@
-import { Dispatch, FC, SetStateAction, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 
 import { InfinitePageHandler, Sort, Table, TableColumn, tableGetDefaultSort } from '../../../../../lib'
 import { GameBadge, MemberBadgeAward } from '../../../game-lib'
+import { useGetGameBadgeAssigneesPage } from '../../../game-lib/hooks/use-get-game-badge-assignees-page.hook'
 
 import { awardedMembersColumns } from './awarded-members-table/awarded-members-table.config'
 import styles from './AwardedMembersTab.module.scss'
 
 export interface AwardedMembersTabProps {
     badge: GameBadge
+    forceRefresh?: boolean
 }
 
 const AwardedMembersTab: FC<AwardedMembersTabProps> = (props: AwardedMembersTabProps) => {
@@ -19,6 +21,17 @@ const AwardedMembersTab: FC<AwardedMembersTabProps> = (props: AwardedMembersTabP
     ]
         = useState<ReadonlyArray<TableColumn<MemberBadgeAward>>>([...awardedMembersColumns])
 
+    const pageHandler: InfinitePageHandler<MemberBadgeAward> = useGetGameBadgeAssigneesPage(props.badge, sort)
+
+    useEffect(() => {
+        if (props.forceRefresh && pageHandler) {
+            pageHandler.mutate()
+        }
+    }, [
+        props.forceRefresh,
+        pageHandler,
+    ])
+
     function onSortClick(newSort: Sort): void {
         setSort({ ...newSort })
     }
@@ -26,13 +39,13 @@ const AwardedMembersTab: FC<AwardedMembersTabProps> = (props: AwardedMembersTabP
     return (
         <div className={styles.tabWrap}>
             {
-                props.badge.member_badges?.length ? (
+                pageHandler.data?.length ? (
                     <Table
                         columns={columns}
-                        data={props.badge.member_badges}
-                    // onLoadMoreClick={pageHandler.getAndSetNext}
-                    // moreToLoad={pageHandler.hasMore}
-                    // onToggleSort={onSortClick}
+                        data={pageHandler.data}
+                        onLoadMoreClick={pageHandler.getAndSetNext}
+                        moreToLoad={pageHandler.hasMore}
+                        onToggleSort={onSortClick}
                     />
                 ) : undefined
             }

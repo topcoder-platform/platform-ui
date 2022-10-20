@@ -1,8 +1,7 @@
 import useSWR, { KeyedMutator, SWRResponse } from 'swr'
 
-import { EnvironmentConfig } from '../../../config'
-
-import { GameBadge } from './game-badge.model'
+import { EnvironmentConfig } from '../../../../config'
+import { GameBadge } from '../game-badge.model'
 
 export interface BadgeDetailPageHandler<T> {
     data?: Readonly<T>

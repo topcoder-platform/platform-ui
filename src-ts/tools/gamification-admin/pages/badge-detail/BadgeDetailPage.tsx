@@ -79,6 +79,9 @@ const BadgeDetailPage: FC = () => {
 
     const [showActivatedModal, setShowActivatedModal]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
+    const [forceAwardedMembersTabRefresh, setForceAwardedMembersTabRefresh]: [boolean | undefined, Dispatch<SetStateAction<boolean | undefined>>]
+        = useState<boolean | undefined>()
+
     useEffect(() => {
         if (newImageFile && newImageFile.length) {
             const fileReader: FileReader = new FileReader()
@@ -261,15 +264,22 @@ const BadgeDetailPage: FC = () => {
         }
     }
 
+    function onManualAssign(): void {
+        // refresh awardedMembers data
+        setForceAwardedMembersTabRefresh(true)
+        setActiveTab(BadgeDetailsTabViews.awardedMembers)
+    }
+
     // default tab
     let activeTabElement: JSX.Element
         = <AwardedMembersTab
             badge={badgeDetailsHandler.data as GameBadge}
+            forceRefresh={forceAwardedMembersTabRefresh}
         />
     if (activeTab === BadgeDetailsTabViews.manualAward) {
         activeTabElement = <ManualAwardTab
             badge={badgeDetailsHandler.data as GameBadge}
-            onManualAssign={() => setActiveTab(BadgeDetailsTabViews.awardedMembers)}
+            onManualAssign={onManualAssign}
         />
     }
     if (activeTab === BadgeDetailsTabViews.batchAward) {
