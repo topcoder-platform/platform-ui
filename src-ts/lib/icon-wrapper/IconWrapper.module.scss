@@ -1,0 +1,18 @@
+@import '../styles/includes';
+
+.iconWrapper {
+  height: 48px;
+  width: 48px;
+  margin: 0 $space-lg $space-lg $space-lg;
+  background: $tc-grad12;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    @include icon-xl;
+    color: $tc-white;
+  }
+}
+

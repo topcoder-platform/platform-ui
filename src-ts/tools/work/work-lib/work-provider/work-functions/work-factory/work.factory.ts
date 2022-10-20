@@ -694,7 +694,10 @@ function getTypeCategory(type: WorkType): WorkTypeCategory {
         case WorkType.designLegacy:
             return WorkTypeCategory.design
 
-        // TOOD: other categories: qa and dev
+        case WorkType.bugHunt:
+          return WorkTypeCategory.qa
+
+        // TOOD: other categories: dev
         default:
             return WorkTypeCategory.unknown
     }
