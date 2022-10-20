@@ -53,8 +53,7 @@
 
     &:global(.large-container) {
         aspect-ratio: unset;
-        width: 1200px;
-        height: 630px;
+        @include socialPreviewImg;
     }
 }
 
