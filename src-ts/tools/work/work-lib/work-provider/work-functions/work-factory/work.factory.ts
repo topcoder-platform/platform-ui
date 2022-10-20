@@ -551,7 +551,7 @@ function getProgress(challenge: Challenge, workStatus: WorkStatus): WorkProgress
             date: getProgressStepDateStart(challenge, [
               ChallengePhaseName.specificationReview,
               ChallengePhaseName.specificationSubmission,
-              ChallengePhaseName.registration
+              ChallengePhaseName.registration,
             ]),
             name: 'Started',
         },
