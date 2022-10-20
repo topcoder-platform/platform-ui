@@ -1,3 +1,4 @@
+import classNames from 'classnames'
 import html2canvas from 'html2canvas'
 import { FC, MutableRefObject, useEffect, useMemo, useRef } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
@@ -26,12 +27,15 @@ import { Certificate } from './certificate'
 import styles from './CertificateView.module.scss'
 import { useCertificateScaling } from './use-certificate-scaling.hook'
 
+export type CertificateViewStyle = 'large-container' | undefined
+
 interface CertificateViewProps {
     certification: string,
     hideActions?: boolean,
     onCertificationNotCompleted: () => void
     profile: UserProfile,
     provider: string,
+    viewStyle: CertificateViewStyle
 }
 
 const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) => {
@@ -169,7 +173,10 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                                 />
                             </div>
                         )}
-                        <div className={styles['certificate-wrap']} ref={certificateWrapRef}>
+                        <div
+                            className={classNames(styles['certificate-wrap'], props.viewStyle)}
+                            ref={certificateWrapRef}
+                        >
                             <Certificate
                                 course={course?.title}
                                 userName={userName}
@@ -178,6 +185,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                                 completedDate={completedCertificate?.completedDate ?? ''}
                                 elRef={certificateElRef}
                                 type={certificate?.trackType}
+                                viewStyle={props.viewStyle}
                             />
                         </div>
                         {!props.hideActions && (

@@ -19,6 +19,7 @@ interface CertificateProps {
     tcHandle?: string
     type?: LearnCertificateTrackType
     userName?: string
+    viewStyle?: 'large-container'
 }
 
 const Certificate: FC<CertificateProps> = (props: CertificateProps) => {
@@ -32,27 +33,29 @@ const Certificate: FC<CertificateProps> = (props: CertificateProps) => {
     return (
         <div
             {...elementSelector}
-            className={styles['wrap']}
+            className={classNames(styles['wrap'], props.viewStyle)}
             ref={props.elRef}
         >
             <div className={classNames(styles['details'], `theme-${certificateType.toLowerCase()}`)}>
-                <h2 className='details grad'>Topcoder Academy</h2>
-                <h3>Certificate of Course Completion</h3>
-                <h1 className={classNames(styles['username'], 'grad')}>
-                    {props.userName}
-                </h1>
-                <div className={classNames('large-subtitle', styles['tc-handle'])}>
-                    <span>Topcoder Handle: </span>
-                    <span>{props.tcHandle}</span>
+                <div className={styles['details-inner']}>
+                    <h2 className='details grad'>Topcoder Academy</h2>
+                    <h3>Certificate of Course Completion</h3>
+                    <h1 className={classNames(styles['username'], 'grad')}>
+                        {props.userName}
+                    </h1>
+                    <div className={classNames('large-subtitle', styles['tc-handle'])}>
+                        <span>Topcoder Handle: </span>
+                        <span>{props.tcHandle}</span>
+                    </div>
+                    <div className={styles['logos']}>
+                        <div className={styles['logo']}>
+                            <TcLogoSvg />
+                        </div>
+                        <div className={styles['divider']} />
+                        <div className={styles['logo']}>
+                            <TcAcademyLogoSvg />
+                        </div>
                 </div>
-                <div className={styles['logos']}>
-                    <div className={styles['logo']}>
-                        <TcLogoSvg />
-                    </div>
-                    <div className={styles['divider']} />
-                    <div className={styles['logo']}>
-                        <TcAcademyLogoSvg />
-                    </div>
                 </div>
             </div>
             <div className={styles['badges']}>

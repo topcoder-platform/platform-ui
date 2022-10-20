@@ -50,6 +50,12 @@
     background: #fff;
 
     box-shadow: 0 20px 36px rgba($tc-black, 0.22);
+
+    &:global(.large-container) {
+        aspect-ratio: unset;
+        width: 1200px;
+        height: 630px;
+    }
 }
 
 .share-btn:global(.button.icon) {

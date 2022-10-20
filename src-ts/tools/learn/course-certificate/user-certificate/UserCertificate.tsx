@@ -1,12 +1,12 @@
 import { Dispatch, FC, MutableRefObject, SetStateAction, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Params, useParams } from 'react-router-dom'
+import { Params, useParams, useSearchParams } from 'react-router-dom'
 
 import {
     LoadingSpinner,
     profileGetAsync,
     UserProfile
 } from '../../../../lib'
-import CertificateView from '../certificate-view/CertificateView'
+import CertificateView, { CertificateViewStyle } from '../certificate-view/CertificateView'
 
 import styles from './UserCertificate.module.scss'
 
@@ -14,6 +14,8 @@ const UserCertificate: FC<{}> = () => {
 
     const wrapElRef: MutableRefObject<HTMLElement | any> = useRef()
     const routeParams: Params<string> = useParams()
+    const [queryParams]: [URLSearchParams, any] = useSearchParams()
+
     const [profile, setProfile]: [
         UserProfile | undefined,
         Dispatch<SetStateAction<UserProfile | undefined>>
@@ -59,6 +61,7 @@ const UserCertificate: FC<{}> = () => {
                         provider={providerParam}
                         onCertificationNotCompleted={() => { }}
                         hideActions
+                        viewStyle={queryParams.get('view-style') as CertificateViewStyle}
                     />
                 </div>
             )}
