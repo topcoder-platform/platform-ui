@@ -1,4 +1,4 @@
-import { useNavigate, Route, Routes } from "react-router-dom";
+import { useNavigate, Route, Routes, useLocation } from "react-router-dom";
 import _ from "lodash";
 import React, { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -20,6 +20,7 @@ import { INTAKE_FORM_ROUTES as FIND_ME_DATA_INTAKE_FORM_ROUTES } from "./constan
 import { INTAKE_FORM_ROUTES as DATA_ADVISORY_INTAKE_FORM_ROUTES } from "./constants/products/DataAdvisory";
 import { INTAKE_FORM_ROUTES as WEBSITE_DESIGN_INTAKE_FORM_ROUTES } from "./constants/products/WebsiteDesign";
 import { INTAKE_FORM_ROUTES as WEBSITE_DESIGN_LEGACY_INTAKE_FORM_ROUTES } from "./constants/products/WebsiteDesignLegacy";
+import { BUG_HUNT_ROUTE } from "./constants/products/BugHunt";
 import { getIntakeFormChallenges } from "./services/challenge";
 import SelectWorkType from "./routes/SelectWorkType";
 import DataExploration from "./routes/Products/DataExploration";
@@ -33,6 +34,7 @@ import { profileContext, WorkType } from "../src-ts";
 export default function IntakeForm() {
 
   const dispatch = useDispatch();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate()
 
@@ -141,7 +143,8 @@ export default function IntakeForm() {
   };
 
   const syncSavedData = (savedData) => {
-    if (!savedData) return;
+    const isBugHuntRoute = location.pathname.indexOf(BUG_HUNT_ROUTE) > -1
+    if (!savedData || isBugHuntRoute) return;
     const { form, progress } = savedData;
     if (form) dispatch(saveForm(form));
     if (progress?.currentStep) {
