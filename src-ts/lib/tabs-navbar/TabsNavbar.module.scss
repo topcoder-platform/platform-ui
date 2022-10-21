@@ -2,15 +2,60 @@
 @import '../styles/typography';
 
 .tabs-wrapper {
+    position: relative;
+    margin-bottom: $space-md;
+    border-bottom: 1px solid $black-20;
+    background: $blue-10;
+}
+
+.menu-trigger {
+    display: flex;
+    align-items: center;
+    padding-right: $space-md;
+
+    .tab-item {
+        .tab-label {
+            @include font-weight-bold;
+        }
+    }
+
+    svg {
+        @include icon-xxxl;
+        margin-left: auto;
+        color: $turq-160;
+        transition: 0.15s ease-in-out;
+    }
+
+    &.menu-is-visible {
+        svg {
+            transform: rotate(180deg);
+        }
+    }
+
+    @include ltemd {
+        &:not(.menu-is-visible) {
+            + .menu-wrapper {
+                display: none;
+            }
+        }
+    }
+}
+
+.menu-wrapper {
     display: flex;
     background: $blue-10;
-    border-bottom: 1px solid $black-20;
-    margin-bottom: $space-md;
-
-    position: relative;
 
     @include ltemd {
         flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        z-index: 1;
+
+        .tab-item {
+            border-top: 1px solid $black-20;
+        }
     }
 }
 
@@ -22,7 +67,7 @@
     padding: $space-md $space-lg calc($space-md - 2px);
     color: $black-80;
     cursor: pointer;
-    
+
     &:global(.active) {
         color: $black-100;
         background-color: $blue-25;
@@ -30,10 +75,6 @@
         .tab-label {
             @include font-weight-bold;
         }
-    }
-
-    &:global(.active) ~ .active-icon > svg path:last-child {
-        fill: $blue-25;
     }
 
     &:hover:not(:global(.active)) {
@@ -73,8 +114,11 @@
     top: 100%;
     left: 0;
     transform: translateX(-50%);
-    
+
     transition: left 0.15s ease-in-out;
+    > svg path:last-child {
+        fill: $blue-25;
+    }
     @include ltemd {
         display: none;
     }
