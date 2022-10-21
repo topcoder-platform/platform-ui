@@ -72,13 +72,14 @@ export async function onSubmitAsync<T>(
 ): Promise<void> {
 
     event.preventDefault()
+    event.stopPropagation();
 
     const { groups, shortName, successMessage }: FormDefinition = formDef
     const inputs: Array<FormInputModel> = getFormInputFields(groups || [])
 
     // get the dirty fields before we validate b/c validation marks them dirty on submit
     const dirty: FormInputModel | undefined = inputs?.find(fieldDef => !!fieldDef.dirty)
-
+    const pristine: FormInputModel | undefined = inputs?.find(fieldDef => !!fieldDef.pristine)
     // if there are any validation errors, display a message and stop submitting
     // NOTE: need to check this before we check if the form is dirty bc you
     // could have a form that's not dirty but has errors and you wouldn't
@@ -98,7 +99,7 @@ export async function onSubmitAsync<T>(
         })
 
     // if there are no dirty fields, don't actually perform the save
-    const savePromise: Promise<void> = !dirty ? Promise.resolve() : save(formValue)
+    const savePromise: Promise<void> = !dirty && !pristine ? Promise.resolve() : save(formValue)
 
     return savePromise
         .then(() => {

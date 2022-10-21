@@ -28,6 +28,7 @@ export interface FormInputModel {
     dirty?: boolean
     disabled?: boolean
     error?: string
+    pristine?: boolean
     readonly events?: ReadonlyArray<InputEvent>
     readonly fileConfig?: {
         readonly acceptFileType?: string
