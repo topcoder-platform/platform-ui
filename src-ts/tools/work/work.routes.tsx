@@ -20,6 +20,7 @@ export const rootRoute: string = '/work'
 export const selfServiceRootRoute: string = '/self-service'
 export const selfServiceStartRoute: string = `${selfServiceRootRoute}/wizard`
 export const dashboardRoute: string = `${rootRoute}/dashboard`
+export const bugHuntRoute: string = 'bug-hunt/'
 
 export function workDashboardRoute(active: string): string {
 return `${dashboardRoute}/${active}`
@@ -82,23 +83,23 @@ export const workRoutes: Array<PlatformRoute> = [
             // Bug Hunt
             {
                 element: <BugHuntIntakeForm />,
-                route: `bug-hunt/basic-info`,
+                route: `${bugHuntRoute}basic-info`,
             },
             {
                 element: <BugHuntIntakeForm />,
-                route: `bug-hunt/basic-info/:workId`,
+                route: `${bugHuntRoute}basic-info/:workId`,
             },
             {
                 element: <Review />,
-                route: `bug-hunt/review`,
+                route: `${bugHuntRoute}review`,
             },
             {
                 element: <Review />,
-                route: `bug-hunt/review/:workId`,
+                route: `${bugHuntRoute}review/:workId`,
             },
             {
                 element: <WorkLoginPrompt previousPageUrl={WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']} />,
-                route: `bug-hunt/login-prompt/:retUrl`,
+                route: `${bugHuntRoute}login-prompt/:retUrl`,
             },
             // General
             {

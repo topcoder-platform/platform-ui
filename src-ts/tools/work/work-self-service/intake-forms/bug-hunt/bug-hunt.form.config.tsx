@@ -41,9 +41,9 @@ export const BugHuntFormConfig: FormDefinition = {
                 {
                     hideInlineErrors: true,
                     label: 'Project title',
-                    pristine: true,
                     name: ChallengeMetadataName.projectTitle,
                     placeholder: 'Enter a descriptive title',
+                    pristine: true,
                     type: 'text',
                     validators: [
                         {

@@ -29,7 +29,7 @@ import {
 } from '../../../work-lib'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
-import { dashboardRoute } from '../../../work.routes'
+import { dashboardRoute, selfServiceStartRoute } from '../../../work.routes'
 import IntakeFormsBreadcrumb from '../intake-forms-breadcrumb/IntakeFormsBreadcrumb'
 
 import { BugHuntFormConfig } from './bug-hunt.form.config'
@@ -52,7 +52,7 @@ const BugHuntIntakeForm: React.FC = () => {
     BugHuntFormConfig.buttons.primaryGroup[0].hidden = !isLoggedIn
     BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { setAction('submit') }
     if (BugHuntFormConfig.buttons.secondaryGroup) {
-        BugHuntFormConfig.buttons.secondaryGroup[0].onClick = () => { navigate('/self-service/wizard') }
+        BugHuntFormConfig.buttons.secondaryGroup[0].onClick = () => { navigate(selfServiceStartRoute) }
     }
 
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()

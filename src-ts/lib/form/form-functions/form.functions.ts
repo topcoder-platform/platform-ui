@@ -72,7 +72,7 @@ export async function onSubmitAsync<T>(
 ): Promise<void> {
 
     event.preventDefault()
-    event.stopPropagation();
+    event.stopPropagation()
 
     const { groups, shortName, successMessage }: FormDefinition = formDef
     const inputs: Array<FormInputModel> = getFormInputFields(groups || [])

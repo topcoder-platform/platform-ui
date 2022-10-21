@@ -1,11 +1,10 @@
-import { IconOutline } from '../../../../lib'
-import IconWrapper from '../../../../lib/icon-wrapper'
+import { IconOutline, IconWrapper } from '../../../../lib'
 import {
-  Work,
-  WorkTypeCategory,
-  WorkTypeCategoryDataIcon,
-  WorkTypeCategoryDesignIcon,
-  WorkTypeCategoryUnknownIcon,
+    Work,
+    WorkTypeCategory,
+    WorkTypeCategoryDataIcon,
+    WorkTypeCategoryDesignIcon,
+    WorkTypeCategoryUnknownIcon,
 } from '../../work-lib'
 
 import styles from './WorkTableTitleRenderer.module.scss'
@@ -27,7 +26,7 @@ function WorkTableTitleRenderer(data: Work): JSX.Element {
           Icon = (
             <IconWrapper
               className={styles['qa-icon']}
-              icon={<IconOutline.BadgeCheckIcon width={48} height={48} />}
+              icon={<IconOutline.BadgeCheckIcon />}
             />
           )
           break
