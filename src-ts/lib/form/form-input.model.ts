@@ -43,7 +43,6 @@ export interface FormInputModel {
     readonly notTabbable?: boolean
     options?: ReadonlyArray<FormRadioButtonOption>
     readonly placeholder?: string
-    pristine?: boolean
     readonly spellCheck?: boolean
     readonly title?: string
     touched?: boolean
