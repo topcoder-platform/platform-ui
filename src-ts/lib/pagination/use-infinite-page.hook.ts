@@ -8,7 +8,7 @@ import { InfinitePageHandler } from './infinite-page-handler.model'
 export function useGetInfinitePage<T>(getKey: (index: number, previousPageData: InfinitePageDao<T>) => string | undefined):
     InfinitePageHandler<T> {
 
-    const { data, mutate, setSize, size }: SWRInfiniteResponse<InfinitePageDao<T>> = useSWRInfinite(getKey, { revalidateFirstPage: false })
+    const { data, isValidating, mutate, setSize, size }: SWRInfiniteResponse<InfinitePageDao<T>> = useSWRInfinite(getKey, { revalidateFirstPage: false })
 
     // flatten version of badges paginated data
     const outputData: ReadonlyArray<T> = flatten(map(data, dao => dao.rows))
@@ -21,6 +21,7 @@ export function useGetInfinitePage<T>(getKey: (index: number, previousPageData: 
         data: outputData,
         getAndSetNext,
         hasMore: outputData.length < (data?.[0]?.count || 0),
+        isValidating,
         mutate,
     }
 }
