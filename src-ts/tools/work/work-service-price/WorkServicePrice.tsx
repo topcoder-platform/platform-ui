@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { IconOutline, textFormatMoneyLocaleString, Tooltip } from '../../../lib'
+import { IconOutline, IconWrapper, textFormatMoneyLocaleString, Tooltip } from '../../../lib'
 
 import styles from './WorkServicePrice.module.scss'
 
@@ -20,11 +20,9 @@ const ServicePrice: FC<WorkServicePriceProps> = (props: WorkServicePriceProps) =
   return (
     <div className={styles.container}>
       <div className={styles.inline}>
-        <div className={styles.iconWrapper}>
-          {!!showIcon && !!icon && (
-            <>{icon}</>
-          )}
-        </div>
+        {!!showIcon && !!icon && (
+          <IconWrapper icon={icon} />
+        )}
         <div>
           {!hideTitle && (
             <p><h3 className={styles.serviceTitle}>

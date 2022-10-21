@@ -37,3 +37,4 @@ export {
     GitlabIcon,
     GithubIcon
 }
+export * from './icon-wrapper'
