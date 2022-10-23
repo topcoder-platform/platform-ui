@@ -79,6 +79,7 @@ export async function onSubmitAsync<T>(
 
     // get the dirty fields before we validate b/c validation marks them dirty on submit
     const dirty: FormInputModel | undefined = inputs?.find(fieldDef => !!fieldDef.dirty)
+
     // if there are any validation errors, display a message and stop submitting
     // NOTE: need to check this before we check if the form is dirty bc you
     // could have a form that's not dirty but has errors and you wouldn't

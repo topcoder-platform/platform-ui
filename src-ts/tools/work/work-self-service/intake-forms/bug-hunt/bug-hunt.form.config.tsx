@@ -117,7 +117,7 @@ export const BugHuntFormConfig: FormDefinition = {
                     options: [
                         {
                             checked: false,
-                            children: <RadioButton name={'GitHub'} icon={<GithubIcon />} />,
+                            children: <RadioButton name={'GitHub'} icon={<GithubIcon />} isRecommended />,
                             id: 'GitHub',
                         },
                         {
