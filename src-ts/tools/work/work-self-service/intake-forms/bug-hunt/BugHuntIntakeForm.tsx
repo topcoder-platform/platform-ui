@@ -67,6 +67,8 @@ const BugHuntIntakeForm: React.FC = () => {
     const [selectedPackage, setSelectedPackage]: [PricePackageName, Dispatch<SetStateAction<PricePackageName>>]
         = useState<PricePackageName>(formValues?.packageType)
 
+    const [disableSaveForLater, setDisableSaveForLater] = useState<boolean>(true)
+
     useEffect(() => {
 
         async function getAndSetWork(): Promise<void> {
@@ -140,6 +142,10 @@ const BugHuntIntakeForm: React.FC = () => {
         if (packageType !== selectedPackage) {
             setSelectedPackage(packageType)
         }
+
+        // If there's no project title, we should disable SAVE FOR LATER button 
+        const title: string = formGetInputModel(inputs, ChallengeMetadataName.projectTitle).value as string
+        setDisableSaveForLater(!title?.trim())
     }
 
     const onSave: (val: any) => Promise<void> = (val) => {
@@ -183,6 +189,22 @@ const BugHuntIntakeForm: React.FC = () => {
         navigate(loginPromptUrl)
     }
 
+    /**
+     * This function is used to decide whether SAVE FOR LATER button should be enabled or not
+     * @param isPrimaryGroup whether its a primary group or not
+     * @param index the index of the button
+     * @returns 
+     */
+    const shouldDisableButton = (isPrimaryGroup: boolean, index: number) => {
+        // SAVE FOR LATER belongs to primary group and its index is 0, we are interested only for that particular case
+        // else return false which means not disabled from this function
+        if (isPrimaryGroup && index === 0) {
+            return disableSaveForLater
+        }
+
+        return false
+    }
+
     return (
         <>
             <LoadingSpinner hide={!loading} type='Overlay' />
@@ -190,39 +212,43 @@ const BugHuntIntakeForm: React.FC = () => {
                 basicInfoRoute={WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']}
                 workType={workBugHuntConfig.type}
             />
-            <WorkTypeBanner
-                title={workBugHuntConfig.title}
-                subTitle={workBugHuntConfig.subtitle}
-                workType={workBugHuntConfig.type}
-            />
-            <WorkServicePrice
-                duration={workBugHuntConfig.duration?.[selectedPackage] || 0}
-                hideTitle
-                icon={<IconOutline.BadgeCheckIcon width={48} height={48} />}
-                price={workBugHuntConfig.priceConfig.getPrice(workBugHuntConfig.priceConfig, selectedPackage)}
-                serviceType={workBugHuntConfig.type}
-                showIcon
-            />
             <div className={styles['bug-hunt-wrapper']}>
-                <DeliverablesInfoCard isMobile={isMobile} />
-                <InfoCard
-                    color='success'
-                    defaultOpen={!isMobile}
-                    isCollapsible
-                    title={`About ${workBugHuntConfig.type}`}
-                >
-                    {workBugHuntConfig.about}
-                </InfoCard>
-                <PageDivider />
-                <Form
-                    onChange={onChange}
-                    formDef={formDef}
-                    formValues={formValues}
-                    onSuccess={onSaveSuccess}
-                    requestGenerator={requestGenerator}
-                    save={onSave}
-                    action={action}
-                />
+              <WorkTypeBanner
+                  title={workBugHuntConfig.title}
+                  subTitle={workBugHuntConfig.subtitle}
+                  workType={workBugHuntConfig.type}
+              />
+              <WorkServicePrice
+                  duration={workBugHuntConfig.duration?.[selectedPackage] || 0}
+                  hideTitle
+                  icon={<IconOutline.BadgeCheckIcon width={48} height={48} />}
+                  iconClass={styles['bug-hunt-icon']}
+                  price={workBugHuntConfig.priceConfig.getPrice(workBugHuntConfig.priceConfig, selectedPackage)}
+                  serviceType={workBugHuntConfig.type}
+                  showIcon
+              />
+              <div>
+                  <DeliverablesInfoCard isMobile={isMobile} />
+                  <InfoCard
+                      color='success'
+                      defaultOpen={!isMobile}
+                      isCollapsible
+                      title={`About ${workBugHuntConfig.type}`}
+                  >
+                      {workBugHuntConfig.about}
+                  </InfoCard>
+                  <PageDivider />
+                  <Form
+                      onChange={onChange}
+                      formDef={formDef}
+                      formValues={formValues}
+                      onSuccess={onSaveSuccess}
+                      requestGenerator={requestGenerator}
+                      save={onSave}
+                      action={action}
+                      shouldDisableButton={shouldDisableButton}
+                  />
+              </div>
             </div>
         </>
     )
