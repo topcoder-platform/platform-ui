@@ -8,6 +8,7 @@ export interface WorkServicePriceProps {
   duration: number,
   hideTitle?: boolean
   icon?: JSX.Element,
+  iconClass?: string,
   price: number,
   serviceType: string,
   showIcon?: boolean,
@@ -15,13 +16,13 @@ export interface WorkServicePriceProps {
 }
 
 const ServicePrice: FC<WorkServicePriceProps> = (props: WorkServicePriceProps) => {
-  const { icon, showIcon, hideTitle = false, serviceType, stickerPrice, price = 0, duration }: WorkServicePriceProps = props
+  const { icon, iconClass, showIcon, hideTitle = false, serviceType, stickerPrice, price = 0, duration }: WorkServicePriceProps = props
 
   return (
     <div className={styles.container}>
       <div className={styles.inline}>
         {!!showIcon && !!icon && (
-          <IconWrapper icon={icon} />
+          <IconWrapper icon={icon} className={iconClass} />
         )}
         <div>
           {!hideTitle && (

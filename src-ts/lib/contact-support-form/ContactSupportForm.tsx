@@ -1,6 +1,7 @@
-import { FC, useContext } from 'react'
+import { FC, useContext, useEffect, useState } from 'react'
 
 import { Form, FormDefinition, formGetInputModel, FormInputModel } from '../form'
+import { LoadingSpinner } from '../loading-spinner'
 import { profileContext, ProfileContextData } from '../profile-provider'
 
 import { ContactSupportFormField } from './contact-support-form.config'
@@ -18,6 +19,15 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
 
     const { profile }: ProfileContextData = useContext(profileContext)
 
+    const [loading, setLoading] = useState<boolean>(false)
+    const [saveOnSuccess, setSaveOnSuccess] = useState<boolean>(false)
+
+    useEffect(() => {
+      if (!loading && saveOnSuccess) {
+        props.onSave()
+      }
+    }, [loading, saveOnSuccess])
+
     function generateRequest(inputs: ReadonlyArray<FormInputModel>): ContactSupportRequest {
         const firstName: string = formGetInputModel(inputs, ContactSupportFormField.first).value as string
         const lastName: string = formGetInputModel(inputs, ContactSupportFormField.last).value as string
@@ -34,10 +44,11 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
     }
 
     async function saveAsync(request: ContactSupportRequest): Promise<void> {
+        setLoading(true)
         return contactSupportSubmitRequestAsync(request)
             .then(() => {
-                props.onSave()
-            })
+              setSaveOnSuccess(true)
+            }).finally(() => setLoading(false))
     }
 
     const emailElement: JSX.Element | undefined = !!profile?.email
@@ -50,6 +61,7 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
 
     return (
         <>
+            <LoadingSpinner hide={!loading} type="Overlay" />
             <div className={styles['contact-support-intro']}>
                 <p>
                     Hi {profile?.firstName || 'there'}, we're here to help.
