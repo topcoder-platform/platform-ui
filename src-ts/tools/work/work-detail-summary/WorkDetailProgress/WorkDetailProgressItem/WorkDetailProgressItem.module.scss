@@ -4,19 +4,23 @@ $dot-size: calc($space-lg + $space-xxl);
 
 .progress-bar-list-item {
     position: relative;
-    width: 25%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 
     &:last-child {
-        width: auto;
+        flex: 1;
     }
 
     .label {
         display: block;
         margin-top: $space-sm;
         margin-left: calc(-1 * calc($dot-size + 3px));
-        width: calc(4 * $space-xxxxl);
+        width: auto;
         text-align: center;
         color: $black-60;
+        margin: 0;
 
         span {
             display: block;
@@ -40,6 +44,7 @@ $dot-size: calc($space-lg + $space-xxl);
         border-radius: 50%;
         box-sizing: border-box;
         color: $black-60;
+        z-index: 10;
     }
 
     &:not(:last-child):after {
@@ -47,10 +52,11 @@ $dot-size: calc($space-lg + $space-xxl);
         display: block;
         position: absolute;
         top: $space-lg;
-        left: $dot-size;
+        left: 54%;
         width: 100%;
         height: $space-sm;
         @extend .bg-black-20;
+        z-index: 1;
     }
 
     &.active {
