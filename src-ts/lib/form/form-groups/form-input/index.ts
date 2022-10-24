@@ -1,3 +1,4 @@
+export * from './input-file-picker'
 export * from './input-image-picker'
 export * from './form-input-autcomplete-option.enum'
 export * from './input-rating'
