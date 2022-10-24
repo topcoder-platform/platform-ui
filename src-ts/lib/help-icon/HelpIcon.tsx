@@ -29,8 +29,8 @@ const HelpIcon: FC<HelpIconProps> = ({
   return (
     <div className={classNames(styles['help-icon-wrapper'], className)}>
       <IconOutline.QuestionMarkCircleIcon
-        width={14}
-        height={14}
+        width={16}
+        height={16}
         data-tip
         data-for={tooltipId.current}
         className={styles['help-icon']}
