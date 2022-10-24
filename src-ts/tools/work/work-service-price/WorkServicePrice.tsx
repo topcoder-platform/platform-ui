@@ -24,7 +24,7 @@ const ServicePrice: FC<WorkServicePriceProps> = (props: WorkServicePriceProps) =
         {!!showIcon && !!icon && (
           <IconWrapper icon={icon} className={iconClass} />
         )}
-        <div className={styles["content-wrapper"]}>
+        <div className={styles['content-wrapper']}>
           {!hideTitle && (
             <p><h3 className={styles.serviceTitle}>
               {serviceType}
