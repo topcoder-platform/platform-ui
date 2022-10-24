@@ -6,7 +6,8 @@ import {
     profileGetAsync,
     UserProfile
 } from '../../../../lib'
-import CertificateView, { CertificateViewStyle } from '../certificate-view/CertificateView'
+import { getViewStyleParamKey } from '../../learn.routes'
+import { CertificateView, CertificateViewStyle } from '../certificate-view'
 
 import styles from './UserCertificate.module.scss'
 
@@ -61,7 +62,7 @@ const UserCertificate: FC<{}> = () => {
                         provider={providerParam}
                         onCertificationNotCompleted={() => { }}
                         hideActions
-                        viewStyle={queryParams.get('view-style') as CertificateViewStyle}
+                        viewStyle={queryParams.get(getViewStyleParamKey()) as CertificateViewStyle}
                     />
                 </div>
             )}
