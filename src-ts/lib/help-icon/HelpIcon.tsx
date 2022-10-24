@@ -1,12 +1,20 @@
 import classNames from 'classnames'
-import { FC, ReactNode, RefObject, useRef } from 'react'
+import { FC, ReactNode, RefObject, SVGProps, useRef } from 'react'
 import ReactTooltip from 'react-tooltip'
 import { v4 as uuidv4 } from 'uuid'
 
-import { IconOutline } from '../'
+import { IconOutline, IconSolid } from '../'
 
 import styles from './HelpIcon.module.scss'
 
+type InfoType = 'Help' | 'Info'
+interface InfoIcon {
+  [type: string]: FC<SVGProps<SVGSVGElement>>
+}
+const IconMap: InfoIcon  = {
+  Help: IconOutline.QuestionMarkCircleIcon,
+  Info: IconSolid.InformationCircleIcon,
+}
 export interface HelpIconProps {
   arrowColor?: string
   backgroundColor?: string
@@ -14,6 +22,7 @@ export interface HelpIconProps {
   className?: string
   inverted?: boolean
   textColor?: string
+  type?: InfoType
 }
 
 const HelpIcon: FC<HelpIconProps> = ({
@@ -23,12 +32,14 @@ const HelpIcon: FC<HelpIconProps> = ({
   arrowColor = '#f4f4f4',
   backgroundColor = '#f4f4f4',
   textColor = '#00000',
+  type = 'Help',
 }: HelpIconProps) => {
   const tooltipId: RefObject<string> = useRef<string>(uuidv4())
 
+  const Icon: FC<SVGProps<SVGSVGElement>> = IconMap[type]
   return (
     <div className={classNames(styles['help-icon-wrapper'], className)}>
-      <IconOutline.QuestionMarkCircleIcon
+      <Icon
         width={16}
         height={16}
         data-tip

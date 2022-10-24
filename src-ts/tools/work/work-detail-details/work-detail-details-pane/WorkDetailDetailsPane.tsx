@@ -3,10 +3,10 @@ import _ from 'lodash'
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { ArrowIcon, LoadingSpinner } from '../../../../lib'
+import { currencyFormat } from '../../../../../src/utils'
+import { ArrowIcon, FormCard, LoadingSpinner } from '../../../../lib'
 import { ChallengeMetadataName, workFactoryMapFormData } from '../../work-lib'
 import BugHuntPricingConfig from '../../work-self-service/intake-forms/bug-hunt/bug-hunt.form.pricing-config'
-import { currencyFormat } from '../../../../../src/utils'
 
 import styles from './WorkDetailDetailsPane.module.scss'
 
@@ -108,11 +108,11 @@ function checkIsEmpty(detail: Array<string> | {} | string): boolean {
             .filter((val) => val?.trim().length > 0).length === 0)
 }
 
-const getSelectedPackageFormatted = (packageId: string) => {
-  const currentPackage = BugHuntPricingConfig.find((pricingConfig) => pricingConfig.id === packageId)
+const getSelectedPackageFormatted: (packageId: string) => string = (packageId) => {
+  const currentPackage: FormCard | undefined = BugHuntPricingConfig.find((pricingConfig) => pricingConfig.id === packageId)
   if (currentPackage) {
-    const deviceType = currentPackage.sections?.[0]?.rows?.[3]?.text || ''
-    const noOfTesters = `${currentPackage.sections?.[0]?.rows?.[2]?.text || 0} testers`
+    const deviceType: string = currentPackage.sections?.[0]?.rows?.[3]?.text || ''
+    const noOfTesters: string = `${currentPackage.sections?.[0]?.rows?.[2]?.text || 0} testers`
     return `${currentPackage.title} - ${currencyFormat(currentPackage.price)} - ${deviceType} - ${noOfTesters}`
   }
 

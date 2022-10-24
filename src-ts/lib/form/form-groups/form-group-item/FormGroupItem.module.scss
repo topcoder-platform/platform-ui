@@ -51,9 +51,14 @@
     &.full-width-container {
         display: inline;
 
+        .group-item-instructions {
+            margin-top: $space-xxl;
+            margin-bottom: $space-mxx;
+        }
+
     }
 
     .full-width-items {
-        margin-top: $space-xl;
+        margin-top: $space-xxxl;
     }
 }

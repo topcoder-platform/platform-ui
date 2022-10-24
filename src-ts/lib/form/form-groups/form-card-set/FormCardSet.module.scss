@@ -16,25 +16,36 @@
     .card {
         flex: 1 1 0;
         margin-right: $space-xl;
-        border: solid 1px $black-80;
         border-radius: $space-xs;
-        padding: $space-lg;
-        cursor: pointer;
+        padding: $space-lg 0;
+        background-color: $black-5;
+        position: relative;
 
-        &.selected {
-            background-color: $turq-160;
-            border: 1px solid $turq-160;
+        .popular-card {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            padding: $space-sm;
+
+            width: 100%;
+            height: $space-xxxxl;
+            background: $tc-grad19;
+            border-radius: $space-sm $space-sm 0px 0px;
             color: $tc-white;
-            svg {
-                path {
-                    color: $tc-white;
-                }
-            }
+            position: absolute;
+            left: 0;
+            top: -$space-xxl;
+        }
+
+        &.mobile-popular {
+            margin-top: $space-xxxl;
         }
 
         @include ltemd {
             margin-right: 0;
             margin-bottom: $space-lg;
+            padding-top: $space-xxl;
             &:last-child {
                 margin-bottom: 0;
             }
@@ -45,21 +56,118 @@
 
         .card-header {
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            h3 {
+                margin: $space-lg;
+                font-weight: 500;
+                font-size: $space-mx;
+                line-height: $space-mx;
+                margin-top: $space-xxl;
+            }
+
+            &.feature {
+                visibility: hidden;
+
+                h3 {
+                    margin: $space-lg;
+                    margin-top: $space-xxl;
+                    font-size: $space-xxxxl;
+                }
+            }
+
+            &.mobile {
+                h3 {
+                    font-size: $space-xxxxl;
+                    line-height: $space-xxxxl;
+                    margin-top: $space-md;
+                    margin-bottom: $space-xxl;
+                }
+            }
+        }
+
+        .card-header-features {
+            visibility: hidden;
+
+            h3 {
+                margin: $space-lg;
+            }
         }
 
         .card-section {
             margin: $space-lg 0;
 
+            .row {
+                height: auto;
+            }
+
+            .row-divider {
+                height: $border-xs;
+                border-bottom: $border solid $black-10;
+                width: auto;
+                margin: 0;
+            }
+
             .card-row {
                 display: flex;
+                padding: $space-md;
+                align-items: center;
+                min-height: calc($space-lg + $space-mx);
+                position: relative;
 
                 .card-row-col {
                     align-content: center;
                     align-items: center;
-                    width: 50%;
                     flex-wrap: wrap;
                     flex-grow: 1;
+
+                    &.mobile {
+                        display: flex;
+                        justify-content: flex-start;
+                    }
+
+                    &.info-col {
+                      display: flex;
+                    }
+
+                    svg {
+                        display: inline;
+                        margin-left: $space-xs;
+                    }
+
+                    &.center {
+                        text-align: center;
+                    }
+
+                    .label {
+                        @include ltemd {
+                            font-size: 10px;
+                        }
+                    }
                 }
+            }
+            &.mobile {
+              .feature-name {
+                width: 100%;
+              }
+              .center {
+                width: 40%;
+              }
+            }
+            &.feature {
+                margin: calc($space-lg - 0.2px) 0;
+            }
+        }
+
+        &.feature {
+            background-color: $tc-white;
+            margin-right: 0;
+
+            .row-divider {
+                width: 100%;
+                margin-left: 6%;
             }
         }
     }

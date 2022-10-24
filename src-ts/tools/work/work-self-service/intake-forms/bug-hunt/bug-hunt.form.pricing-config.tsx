@@ -1,4 +1,6 @@
-const BugHuntPricingConfig = [
+import { FormCard } from '../../../../../lib'
+
+const BugHuntPricingConfig: Array<FormCard> = [
   {
       id: 'standard',
       price: 1499,
@@ -21,14 +23,16 @@ const BugHuntPricingConfig = [
                       text: 'Up to 10',
                   },
                   {
-                      icon: 'user-group',
+                      icon: 'desktop-computer',
+                      infoIcon: true,
                       label: 'Device Types',
                       text: 'Desktop',
-                      infoIcon: true
+                      tooltipText: 'Testers may use devtools or other emulator software to test',
                   },
                   {
-                      label: 'Latest browser testing',
                       infoIcon: true,
+                      label: 'Latest browser testing',
+                      tooltipText: 'Testing takes place on Chrome, Edge, Firefox and Safari',
                       valueIcon: 'check',
                   },
                   {
@@ -40,12 +44,13 @@ const BugHuntPricingConfig = [
                       valueIcon: 'check',
                   },
               ],
-          }
+          },
       ],
       title: 'Standard',
   },
   {
       id: 'advanced',
+      mostPopular: true,
       price: 1899,
       sections: [
           {
@@ -66,27 +71,30 @@ const BugHuntPricingConfig = [
                       text: 'Up to 25',
                   },
                   {
-                      icon: 'user-group',
+                      icon: 'desktop-computer',
+                      infoIcon: true,
                       label: 'Device Types',
                       text: 'Desktop & Mobile',
+                      tooltipText: 'Testers may use devtools or other emulator software to test',
                   },
                   {
+                      infoIcon: true,
                       label: 'Latest browser testing',
-                      valueIcon: 'check'
+                      tooltipText: 'Testing takes place on Chrome, Edge, Firefox and Safari',
+                      valueIcon: 'check',
                   },
                   {
                       label: 'Detailed bug reporting',
-                      valueIcon: 'check'
+                      valueIcon: 'check',
                   },
                   {
                       label: 'Expert verification',
-                      valueIcon: 'check'
+                      valueIcon: 'check',
                   },
               ],
-          }
+          },
       ],
       title: 'Advanced',
-      mostPopular: true
   },
   {
       id: 'premium',
@@ -110,24 +118,28 @@ const BugHuntPricingConfig = [
                       text: 'Up to 50',
                   },
                   {
-                      icon: 'user-group',
+                      icon: 'desktop-computer',
+                      infoIcon: true,
                       label: 'Device Types',
                       text: 'Desktop, Tablet & Mobile',
+                      tooltipText: 'Testers may use devtools or other emulator software to test',
                   },
                   {
+                      infoIcon: true,
                       label: 'Latest browser testing',
-                      valueIcon: 'check'
+                      tooltipText: 'Testing takes place on Chrome, Edge, Firefox and Safari',
+                      valueIcon: 'check',
                   },
                   {
                       label: 'Detailed bug reporting',
-                      valueIcon: 'check'
+                      valueIcon: 'check',
                   },
                   {
                       label: 'Expert verification',
-                      valueIcon: 'check'
+                      valueIcon: 'check',
                   },
               ],
-          }
+          },
       ],
       title: 'Premium',
   },

@@ -10,11 +10,12 @@ export interface FormRadioButtonOption {
 
 export interface FormCard {
     id: string,
+    mostPopular?: boolean
     price: number,
     sections: Array<{
-        rows: Array<{ icon?: string, label?: string, text?: string }>
+        rows: Array<{ icon?: string, infoIcon?: boolean, label?: string, text?: string, tooltipText?: string, valueIcon?: string, }>
     }>,
-    title: string
+    title: string,
 }
 
 export type InputValue = string | boolean | FileList | undefined

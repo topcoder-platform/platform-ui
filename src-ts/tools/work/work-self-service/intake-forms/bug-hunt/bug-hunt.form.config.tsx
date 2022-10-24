@@ -8,6 +8,7 @@ import {
 } from '../../../../../lib'
 import { ChallengeMetadataName, ChallengeMetadataTitle } from '../../../work-lib'
 import { SupportInfoCard } from '../support-info-card'
+
 import BugHuntPricingConfig from './bug-hunt.form.pricing-config'
 
 export const BugHuntFormConfig: FormDefinition = {
