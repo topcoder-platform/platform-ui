@@ -1,0 +1,32 @@
+@use '../styles/typography';
+@import '../styles/includes';
+
+.help-icon-wrapper {
+  display: flex;
+  align-items: center;
+
+  .tooltip {
+    @extend .body-small;
+    @include font-roboto;
+
+    display: flex;
+    padding: $space-sm;
+    background-color: $black-5;
+    color: #000000;
+    border-radius: $space-sm;
+    opacity: 1 !important;
+    box-shadow: 0 1px 5px $tips-shadow;
+    text-transform: none;
+    max-width: 50%;
+
+    &.inverted {
+      background-color: #000000;
+      color: $black-5;
+    }
+  }
+  .help-icon {
+    margin-left: $space-sm;
+    color: $turq-160;
+    cursor: pointer;
+  }
+}
