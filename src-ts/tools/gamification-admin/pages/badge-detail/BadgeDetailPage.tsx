@@ -264,7 +264,7 @@ const BadgeDetailPage: FC = () => {
         }
     }
 
-    function onManualAssign(): void {
+    function onAssign(): void {
         // refresh awardedMembers data
         setForceAwardedMembersTabRefresh(true)
         setActiveTab(BadgeDetailsTabViews.awardedMembers)
@@ -279,11 +279,14 @@ const BadgeDetailPage: FC = () => {
     if (activeTab === BadgeDetailsTabViews.manualAward) {
         activeTabElement = <ManualAwardTab
             badge={badgeDetailsHandler.data as GameBadge}
-            onManualAssign={onManualAssign}
+            onManualAssign={onAssign}
         />
     }
     if (activeTab === BadgeDetailsTabViews.batchAward) {
-        activeTabElement = <BatchAwardTab />
+        activeTabElement = <BatchAwardTab
+            badge={badgeDetailsHandler.data as GameBadge}
+            onBatchAssign={onAssign}
+        />
     }
 
     // show page loader if we fetching results

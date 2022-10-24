@@ -24,7 +24,7 @@ const AwardedMembersTab: FC<AwardedMembersTabProps> = (props: AwardedMembersTabP
     const pageHandler: InfinitePageHandler<MemberBadgeAward> = useGetGameBadgeAssigneesPage(props.badge, sort)
 
     useEffect(() => {
-        if (props.forceRefresh && pageHandler) {
+        if (props.forceRefresh && pageHandler && !pageHandler.isValidating) {
             pageHandler.mutate()
         }
     }, [

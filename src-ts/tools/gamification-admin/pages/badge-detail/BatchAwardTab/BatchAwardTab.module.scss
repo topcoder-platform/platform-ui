@@ -19,6 +19,14 @@ $error-line-height: 14px;
             grid-template-columns: 1fr;
         }
 
+        .templateLink {
+            text-transform: uppercase;
+            color: $turq-160;
+            font-weight: $font-weight-bold;
+            margin-top: $space-lg;
+            display: inline-block;
+        }
+
         .batchForm {
             display: flex;
             flex-direction: column;
