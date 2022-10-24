@@ -66,6 +66,10 @@ export function getUserCertificateUrl(provider: string, certification: string, h
     return `${window.location.origin}${getCoursePath(provider, certification)}/${handle}${LEARN_PATHS.certificate}`
 }
 
+export function getViewStyleParamKey(): string {
+    return Object.keys(LearnConfig.CERT_ALT_PARAMS)[0]
+}
+
 export const rootRoute: string = LEARN_PATHS.root
 export const absoluteRootRoute: string = `${window.location.origin}${LEARN_PATHS.root}`
 
