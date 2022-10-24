@@ -147,17 +147,23 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         formInitializeValues(inputs, props.formValues)
 
+        const setOnClickOnReset: (button: FormButton) => FormButton = (button) => {
+          // if this is a reset button, set its onclick to reset
+          if (!!button.isReset) {
+              button = {
+                  ...button,
+                  onClick: onReset,
+              }
+          }
+
+          return button
+        }
+
         const createButtonGroup: (groups: ReadonlyArray<FormButton>, isPrimaryGroup: boolean) => Array<JSX.Element> = (groups, isPrimaryGroup) => {
             return groups.map((button, index) => {
-                // if this is a reset button, set its onclick to reset
-                if (!!button.isReset) {
-                    button = {
-                        ...button,
-                        onClick: onReset,
-                    }
-                }
+                button = setOnClickOnReset(button)
 
-                const disabled = (button.isSubmit && isFormInvalid) || props.shouldDisableButton?.(isPrimaryGroup, index)
+                const disabled: boolean = (button.isSubmit && isFormInvalid) || !!props.shouldDisableButton?.(isPrimaryGroup, index)
 
                 return (
                     <Button

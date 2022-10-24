@@ -5,9 +5,9 @@ import styles from './RadioButton.module.scss'
 
 interface RadioProps {
     icon?: JSX.Element
+    isRecommended?: boolean
     name: string
     selected?: boolean
-    isRecommended?: boolean
 }
 
 const RadioButton: FC<RadioProps> = ({ icon, name, selected, isRecommended }: RadioProps) => {

@@ -1,4 +1,4 @@
-import { FC, useContext, useEffect, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useContext, useEffect, useState } from 'react'
 
 import { Form, FormDefinition, formGetInputModel, FormInputModel } from '../form'
 import { LoadingSpinner } from '../loading-spinner'
@@ -19,8 +19,8 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
 
     const { profile }: ProfileContextData = useContext(profileContext)
 
-    const [loading, setLoading] = useState<boolean>(false)
-    const [saveOnSuccess, setSaveOnSuccess] = useState<boolean>(false)
+    const [loading, setLoading]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [saveOnSuccess, setSaveOnSuccess]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
     useEffect(() => {
       if (!loading && saveOnSuccess) {
@@ -61,7 +61,7 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
 
     return (
         <>
-            <LoadingSpinner hide={!loading} type="Overlay" />
+            <LoadingSpinner hide={!loading} type='Overlay' />
             <div className={styles['contact-support-intro']}>
                 <p>
                     Hi {profile?.firstName || 'there'}, we're here to help.

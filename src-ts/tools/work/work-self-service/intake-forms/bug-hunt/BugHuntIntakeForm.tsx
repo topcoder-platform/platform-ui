@@ -67,7 +67,7 @@ const BugHuntIntakeForm: React.FC = () => {
     const [selectedPackage, setSelectedPackage]: [PricePackageName, Dispatch<SetStateAction<PricePackageName>>]
         = useState<PricePackageName>(formValues?.packageType)
 
-    const [disableSaveForLater, setDisableSaveForLater] = useState<boolean>(true)
+    const [disableSaveForLater, setDisableSaveForLater]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(true)
 
     useEffect(() => {
 
@@ -143,7 +143,7 @@ const BugHuntIntakeForm: React.FC = () => {
             setSelectedPackage(packageType)
         }
 
-        // If there's no project title, we should disable SAVE FOR LATER button 
+        // If there's no project title, we should disable SAVE FOR LATER button
         const title: string = formGetInputModel(inputs, ChallengeMetadataName.projectTitle).value as string
         setDisableSaveForLater(!title?.trim())
     }
@@ -193,9 +193,9 @@ const BugHuntIntakeForm: React.FC = () => {
      * This function is used to decide whether SAVE FOR LATER button should be enabled or not
      * @param isPrimaryGroup whether its a primary group or not
      * @param index the index of the button
-     * @returns 
+     * @returns true or false depending on whether its SAVE FOR LATER
      */
-    const shouldDisableButton = (isPrimaryGroup: boolean, index: number) => {
+    const shouldDisableButton: (isPrimaryGroup: boolean, index: number) => boolean = (isPrimaryGroup, index) => {
         // SAVE FOR LATER belongs to primary group and its index is 0, we are interested only for that particular case
         // else return false which means not disabled from this function
         if (isPrimaryGroup && index === 0) {
