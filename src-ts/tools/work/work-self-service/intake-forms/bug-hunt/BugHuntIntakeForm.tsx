@@ -35,6 +35,7 @@ import IntakeFormsBreadcrumb from '../intake-forms-breadcrumb/IntakeFormsBreadcr
 import { BugHuntFormConfig } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
 import { DeliverablesInfoCard } from './deliverables-info-card'
+import { ReactComponent as SaveForLaterIcon } from "../../../../../../src/assets/images/save-for-later-icon.svg";
 
 const BugHuntIntakeForm: React.FC = () => {
 
@@ -53,6 +54,16 @@ const BugHuntIntakeForm: React.FC = () => {
     BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { setAction('submit') }
     if (BugHuntFormConfig.buttons.secondaryGroup) {
         BugHuntFormConfig.buttons.secondaryGroup[0].onClick = () => { navigate(selfServiceStartRoute) }
+    }
+
+    if (isMobile) {
+        BugHuntFormConfig.buttons.primaryGroup[0].icon = SaveForLaterIcon;
+        BugHuntFormConfig.buttons.primaryGroup[0].label = '';
+        BugHuntFormConfig.buttons.primaryGroup[1].label = 'Submit';
+    } else {
+        BugHuntFormConfig.buttons.primaryGroup[0].icon = undefined;
+        BugHuntFormConfig.buttons.primaryGroup[0].label = 'Save for later';
+        BugHuntFormConfig.buttons.primaryGroup[1].label = 'Complete and pay';
     }
 
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
