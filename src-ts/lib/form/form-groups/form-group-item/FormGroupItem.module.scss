@@ -16,6 +16,8 @@
     @include ltemd {
         flex-direction: column;
         padding: $space-xxl 0 $space-sm 0;
+        padding-top: 0;
+        padding-bottom: 0;
     }
 
     &:last-child {
