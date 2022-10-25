@@ -43,7 +43,6 @@ const ServicePrice: FC<WorkServicePriceProps> = (props: WorkServicePriceProps) =
                 <Tooltip
                   content='The price and project length is dynamic and dependent on the
                   variables selected as you define your work.'
-                  triggerOn='hover'
                   trigger={(
                     <IconOutline.QuestionMarkCircleIcon width={14} height={14} />
                   )}
