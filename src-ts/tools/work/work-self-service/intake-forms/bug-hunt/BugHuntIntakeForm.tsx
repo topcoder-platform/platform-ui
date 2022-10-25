@@ -1,7 +1,6 @@
 import React, { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
 import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
 
-import { ReactComponent as SaveForLaterIcon } from '../../../../../../src/assets/images/save-for-later-icon.svg'
 import {
     Form,
     FormAction,
@@ -16,6 +15,7 @@ import {
     ProfileContextData,
     useCheckIsMobile
 } from '../../../../../lib'
+import { SaveForLaterIcon } from '../../../../../lib/svgs'
 import {
     Challenge,
     ChallengeMetadata,
@@ -206,7 +206,7 @@ const BugHuntIntakeForm: React.FC = () => {
      * @param index the index of the button
      * @returns true or false depending on whether its SAVE FOR LATER
      */
-    const shouldDisableButton: (isPrimaryGroup: boolean, index: number) => boolean = (isPrimaryGroup, index) => {
+    function shouldDisableButton(isPrimaryGroup: boolean, index: number): boolean {
         // SAVE FOR LATER belongs to primary group and its index is 0, we are interested only for that particular case
         // else return false which means not disabled from this function
         if (isPrimaryGroup && index === 0) {

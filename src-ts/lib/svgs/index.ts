@@ -8,6 +8,7 @@ import { ReactComponent as GitlabIcon } from './gitlab.svg'
 import { ReactComponent as ArrowIcon } from './icon-arrow.svg'
 import { ReactComponent as BackArrowIcon } from './icon-back-arrow.svg'
 import { ReactComponent as LogoIcon } from './logo.svg'
+import { ReactComponent as SaveForLaterIcon } from './save-for-later-icon.svg'
 import { ReactComponent as SocialIconFacebook } from './social-fb-icon.svg'
 import { ReactComponent as SocialIconInstagram } from './social-insta-icon.svg'
 import { ReactComponent as SocialIconLinkedIn } from './social-linkedin-icon.svg'
@@ -17,6 +18,7 @@ import { ReactComponent as SocialShareTwitter } from './social-share-twitter.svg
 import { ReactComponent as SocialIconTwitter } from './social-tw-icon.svg'
 import { ReactComponent as SocialIconYoutube } from './social-yt-icon.svg'
 import { ReactComponent as TooltipArrowIcon } from './tooltip-arrow.svg'
+import { ReactComponent as IconCheck } from './icon-check-thin.svg'
 
 export {
     ActiveTabTipIcon,
@@ -35,6 +37,8 @@ export {
     SocialShareLinkedIn,
     TooltipArrowIcon,
     GitlabIcon,
-    GithubIcon
+    GithubIcon,
+    SaveForLaterIcon,
+    IconCheck
 }
 export * from './icon-wrapper'

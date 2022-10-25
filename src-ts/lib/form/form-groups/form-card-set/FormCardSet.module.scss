@@ -165,9 +165,17 @@
             background-color: $tc-white;
             margin-right: 0;
 
+            .card-row-col:nth-child(2) {
+                display: none;
+            }
+
             .row-divider {
                 width: 100%;
                 margin-left: 6%;
+            }
+
+            &.mobile {
+                display: none;
             }
         }
     }
