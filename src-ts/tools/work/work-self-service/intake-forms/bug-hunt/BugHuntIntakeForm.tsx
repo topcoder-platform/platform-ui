@@ -13,9 +13,9 @@ import {
     PageDivider,
     profileContext,
     ProfileContextData,
+    SaveForLaterIcon,
     useCheckIsMobile
 } from '../../../../../lib'
-import { SaveForLaterIcon } from '../../../../../lib/svgs'
 import {
     Challenge,
     ChallengeMetadata,
@@ -31,7 +31,7 @@ import {
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
 import { dashboardRoute, selfServiceStartRoute } from '../../../work.routes'
-import IntakeFormsBreadcrumb from '../intake-forms-breadcrumb/IntakeFormsBreadcrumb'
+import { IntakeFormsBreadcrumb } from '../intake-forms-breadcrumb'
 
 import { BugHuntFormConfig } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
@@ -45,9 +45,9 @@ const BugHuntIntakeForm: React.FC = () => {
     const isMobile: boolean = useCheckIsMobile()
     const { isLoggedIn }: ProfileContextData = useContext<ProfileContextData>(profileContext)
 
-    const [action, setAction]: [FormAction, Dispatch<SetStateAction<FormAction>>] = useState()
-    const [loading, setLoading]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
-    const [saveSuccess, setSaveSuccess]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
+    const [action, setAction]: [FormAction, Dispatch<SetStateAction<FormAction>>] = useState<FormAction>()
+    const [loading, setLoading]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [saveSuccess, setSaveSuccess]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
     BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { setAction('save') }
     BugHuntFormConfig.buttons.primaryGroup[0].hidden = !isLoggedIn
@@ -123,9 +123,9 @@ const BugHuntIntakeForm: React.FC = () => {
     ])
 
     useEffect(() => {
-      if (!loading && saveSuccess) {
-        handleSaveSuccess()
-      }
+        if (!loading && saveSuccess) {
+            handleSaveSuccess()
+        }
     }, [loading, saveSuccess])
 
     const requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => void = (inputs) => {
@@ -178,16 +178,16 @@ const BugHuntIntakeForm: React.FC = () => {
     }
 
     const handleSaveSuccess: () => void = () => {
-      if (action === 'save') {
-        navigate(`${dashboardRoute}/draft`)
-      } else if (action === 'submit') {
-          const nextUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt]['review']}/${workId || challenge?.id}`
-          navigate(nextUrl)
-      }
+        if (action === 'save') {
+            navigate(`${dashboardRoute}/draft`)
+        } else if (action === 'submit') {
+            const nextUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt]['review']}/${workId || challenge?.id}`
+            navigate(nextUrl)
+        }
     }
 
     const onSaveSuccess: () => void = () => {
-      setSaveSuccess(true)
+        setSaveSuccess(true)
     }
 
     const goToLoginStep: (formData: any) => void = (formData: any) => {
@@ -224,42 +224,42 @@ const BugHuntIntakeForm: React.FC = () => {
                 workType={workBugHuntConfig.type}
             />
             <div className={styles['bug-hunt-wrapper']}>
-              <WorkTypeBanner
-                  title={workBugHuntConfig.title}
-                  subTitle={workBugHuntConfig.subtitle}
-                  workType={workBugHuntConfig.type}
-              />
-              <WorkServicePrice
-                  duration={workBugHuntConfig.duration?.[selectedPackage] || 0}
-                  hideTitle
-                  icon={<IconOutline.BadgeCheckIcon width={48} height={48} />}
-                  iconClass={styles['bug-hunt-icon']}
-                  price={workBugHuntConfig.priceConfig.getPrice(workBugHuntConfig.priceConfig, selectedPackage)}
-                  serviceType={workBugHuntConfig.type}
-                  showIcon
-              />
-              <div>
-                  <DeliverablesInfoCard isMobile={isMobile} />
-                  <InfoCard
-                      color='success'
-                      defaultOpen={!isMobile}
-                      isCollapsible
-                      title={`About ${workBugHuntConfig.type}`}
-                  >
-                      {workBugHuntConfig.about}
-                  </InfoCard>
-                  <PageDivider />
-                  <Form
-                      onChange={onChange}
-                      formDef={formDef}
-                      formValues={formValues}
-                      onSuccess={onSaveSuccess}
-                      requestGenerator={requestGenerator}
-                      save={onSave}
-                      action={action}
-                      shouldDisableButton={shouldDisableButton}
-                  />
-              </div>
+                <WorkTypeBanner
+                    title={workBugHuntConfig.title}
+                    subTitle={workBugHuntConfig.subtitle}
+                    workType={workBugHuntConfig.type}
+                />
+                <WorkServicePrice
+                    duration={workBugHuntConfig.duration?.[selectedPackage] || 0}
+                    hideTitle
+                    icon={<IconOutline.BadgeCheckIcon width={48} height={48} />}
+                    iconClass={styles['bug-hunt-icon']}
+                    price={workBugHuntConfig.priceConfig.getPrice(workBugHuntConfig.priceConfig, selectedPackage)}
+                    serviceType={workBugHuntConfig.type}
+                    showIcon
+                />
+                <div>
+                    <DeliverablesInfoCard isMobile={isMobile} />
+                    <InfoCard
+                        color='success'
+                        defaultOpen={!isMobile}
+                        isCollapsible
+                        title={`About ${workBugHuntConfig.type}`}
+                    >
+                        {workBugHuntConfig.about}
+                    </InfoCard>
+                    <PageDivider />
+                    <Form
+                        onChange={onChange}
+                        formDef={formDef}
+                        formValues={formValues}
+                        onSuccess={onSaveSuccess}
+                        requestGenerator={requestGenerator}
+                        save={onSave}
+                        action={action}
+                        shouldDisableButton={shouldDisableButton}
+                    />
+                </div>
             </div>
         </>
     )
