@@ -46,8 +46,9 @@ const InputFilePicker: FC<InputFilePickerProps> = (props: InputFilePickerProps) 
                 className={styles.filePickerButton}
                 label={fileName ? 'Clear' : 'Browse'}
                 onClick={() => {
-                    if (fileName) {
+                    if (fileName && fileInputRef.current) {
                         setFiles(null)
+                        fileInputRef.current.value = ''
                         props.onChange(null)
                     } else {
                         fileInputRef.current?.click()
