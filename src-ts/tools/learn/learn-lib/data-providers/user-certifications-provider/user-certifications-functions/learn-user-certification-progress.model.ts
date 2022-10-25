@@ -1,4 +1,4 @@
-import { LearnModelBase } from '../../functions'
+import { LearnModelBase } from '../../../functions'
 
 import { LearnModuleProgress } from './learn-module-progress.model'
 import { UserCertificationProgressStatus } from './user-certification-progress-status.enum'

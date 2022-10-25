@@ -1,5 +1,5 @@
 import useSWR, { SWRResponse } from 'swr'
-import { learnUrlGet } from '../functions'
+import { learnUrlGet } from '../../functions'
 
 import { AllCertificationsProviderData } from './all-certifications-provider-data.model'
 

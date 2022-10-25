@@ -1,4 +1,4 @@
-import { LearnModelBase } from '../../functions'
+import { LearnModelBase } from '../../../functions'
 import { LearnModule } from '../../lesson-provider'
 
 export interface LearnCourse extends LearnModelBase {

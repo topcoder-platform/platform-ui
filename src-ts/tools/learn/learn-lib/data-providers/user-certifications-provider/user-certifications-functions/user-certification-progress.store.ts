@@ -1,6 +1,6 @@
-import { LearnConfig } from '../../../learn-config'
-import { getUserCertificateUrl } from '../../../learn.routes'
-import { learnUrlGet, learnXhrGetAsync, learnXhrPostAsync, learnXhrPutAsync } from '../../functions'
+import { LearnConfig } from '../../../../learn-config'
+import { getUserCertificateUrl } from '../../../../learn.routes'
+import { learnUrlGet, learnXhrGetAsync, learnXhrPostAsync, learnXhrPutAsync } from '../../../functions'
 
 import { LearnUserCertificationProgress } from './learn-user-certification-progress.model'
 import { UserCertificationUpdateProgressActions } from './user-certification-update-progress-actions.enum'

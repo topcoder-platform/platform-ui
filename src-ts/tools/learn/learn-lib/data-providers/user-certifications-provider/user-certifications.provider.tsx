@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
 
-import { errorHandle, profileContext, ProfileContextData } from '../../../../lib'
+import { errorHandle, profileContext, ProfileContextData } from '../../../../../lib'
 
 import { UserCertificationCompleted } from './user-certification-completed.model'
 import { UserCertificationInProgress } from './user-certification-in-progress.model'

@@ -1,5 +1,5 @@
 import { LearnCertificateTrackType } from '../../all-certifications-provider'
-import { LearnModelBase } from '../../functions'
+import { LearnModelBase } from '../../../functions'
 import { UserCertificationProgressStatus } from '../../user-certifications-provider'
 
 export interface LearnUserCompletedCertification extends LearnModelBase {

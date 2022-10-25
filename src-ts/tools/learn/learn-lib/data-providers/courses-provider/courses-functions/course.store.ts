@@ -1,4 +1,4 @@
-import { learnUrlGet, learnXhrGetAsync } from '../../functions'
+import { learnUrlGet, learnXhrGetAsync } from '../../../functions'
 
 import { LearnCourse } from './learn-course.model'
 
