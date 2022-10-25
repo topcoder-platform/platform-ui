@@ -54,6 +54,8 @@
   }
 
   .help {
+    display: flex;
+    align-items: center;
     margin-left: $space-sm;
     color: $turq-160;
   }

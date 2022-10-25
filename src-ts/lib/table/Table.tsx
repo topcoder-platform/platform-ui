@@ -106,9 +106,9 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                                 <div className={styles.tooltip}>
                                     <Tooltip
                                         content={col.tooltip}
-                                        positionX='end'
-                                        positionY='end'
+                                        place='bottom'
                                         trigger={<IconOutline.InformationCircleIcon />}
+                                        triggerOn='click'
                                     />
                                 </div>
                             )}
