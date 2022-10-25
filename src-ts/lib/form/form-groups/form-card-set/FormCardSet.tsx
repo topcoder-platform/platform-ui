@@ -1,7 +1,7 @@
 import cn from 'classnames'
 import React, { FocusEvent, SVGProps } from 'react'
 
-import { Button, HelpIcon, IconOutline, textFormatMoneyLocaleString, useCheckIsMobile, IconCheck } from '../../../../lib'
+import { Button, HelpIcon, IconCheck, IconOutline, textFormatMoneyLocaleString, useCheckIsMobile } from '../../../../lib'
 import { FormCard, FormInputModel } from '../../form-input.model'
 
 import styles from './FormCardSet.module.scss'
