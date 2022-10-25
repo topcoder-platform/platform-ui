@@ -1,5 +1,6 @@
-import useSWR, { SWRResponse } from 'swr'
+import useSWR, { SWRConfiguration, SWRResponse } from 'swr'
 import { learnUrlGet } from '../../functions'
+import { useSwrCache } from '../../learn-swr'
 
 import { AllCertificationsProviderData } from './all-certifications-provider-data.model'
 
@@ -14,10 +15,12 @@ export function useGetAllCertifications(
 
     const url: string = learnUrlGet(
         'certifications',
-        `?providerName=${providerName}&test=true`
+        `?providerName=${providerName}`
     )
+    const swrCacheConfig: SWRConfiguration = useSwrCache(url)
 
     const {data, error}: SWRResponse = useSWR(url, {
+        ...swrCacheConfig,
         isPaused: () => options?.enabled === false
     })
 

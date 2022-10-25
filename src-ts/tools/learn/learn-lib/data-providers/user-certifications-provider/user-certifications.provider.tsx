@@ -31,12 +31,12 @@ export function useGetUserCertifications(
     const completed: ReadonlyArray<UserCertificationCompleted> = data
         ?.filter(c => c.status === UserCertificationProgressStatus.completed)
         .map(c => c as UserCertificationCompleted)
-        .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()) ?? []
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()) ?? []
 
     const inProgress: ReadonlyArray<UserCertificationInProgress> = data
         ?.filter(c => c.status === UserCertificationProgressStatus.inProgress)
         .map(c => c as UserCertificationInProgress)
-        .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()) ?? []
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()) ?? []
 
     if (error) {
         errorHandle(error, 'There was an error getting your course progress.')
