@@ -137,6 +137,7 @@ const Review: FC = () => {
                 duration={getDuration(formData.basicInfo.packageType)}
                 hideTitle
                 icon={<IconOutline.BadgeCheckIcon width={48} height={48} />}
+                iconClass={styles['bug-hunt-icon']}
                 price={getPrice(formData.basicInfo.packageType)}
                 serviceType={workBugHuntConfig.type}
                 showIcon

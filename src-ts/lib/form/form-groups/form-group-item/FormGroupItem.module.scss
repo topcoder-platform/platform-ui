@@ -16,6 +16,8 @@
     @include ltemd {
         flex-direction: column;
         padding: $space-xxl 0 $space-sm 0;
+        padding-top: 0;
+        padding-bottom: 0;
     }
 
     &:last-child {
@@ -49,9 +51,14 @@
     &.full-width-container {
         display: inline;
 
+        .group-item-instructions {
+            margin-top: $space-xxl;
+            margin-bottom: $space-mxx;
+        }
+
     }
 
     .full-width-items {
-        margin-top: $space-xl;
+        margin-top: $space-xxxl;
     }
 }
