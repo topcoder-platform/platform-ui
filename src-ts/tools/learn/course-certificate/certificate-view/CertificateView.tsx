@@ -16,7 +16,7 @@ import {
     AllCertificationsProviderData,
     CoursesProviderData,
     useGetCertification,
-    useCourses,
+    useGetCourses,
     UserCompletedCertificationsProviderData,
     useUserCompletedCertifications,
 } from '../../learn-lib'
@@ -54,7 +54,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const {
         course,
         ready: courseReady,
-    }: CoursesProviderData = useCourses(props.provider, props.certification)
+    }: CoursesProviderData = useGetCourses(props.provider, props.certification)
 
     function getCertTitle(user: string): string {
         return `${user} - ${course?.title} Certification`

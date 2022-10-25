@@ -15,7 +15,7 @@ import {
     CoursesProviderData,
     CourseTitle,
     useGetCertification,
-    useCourses,
+    useGetCourses,
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
@@ -38,7 +38,7 @@ const CourseCompletedPage: FC<{}> = () => {
     const {
         course: courseData,
         ready: courseDataReady,
-    }: CoursesProviderData = useCourses(providerParam, certificationParam)
+    }: CoursesProviderData = useGetCourses(providerParam, certificationParam)
 
     const {
         certificationProgress: progress,

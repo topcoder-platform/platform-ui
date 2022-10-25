@@ -1,55 +1,29 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import { get } from 'lodash'
+import useSWR, { SWRResponse } from 'swr'
+import { learnUrlGet } from '../../functions'
 
-import { courseGetAsync } from './courses-functions'
+import { LearnCourse } from './courses-functions'
 import { CoursesProviderData } from './courses-provider-data.model'
 
-export function useCourses(provider: string, certification?: string): CoursesProviderData {
+export function useGetCourses(
+    provider: string,
+    certification?: string
+): CoursesProviderData {
 
-    const defaultProviderData: CoursesProviderData = {
-        loading: false,
-        ready: false,
+    const params: string = [
+        `certification=${certification}`,
+        `provider=${provider}`,
+    ]
+        .filter(Boolean)
+        .join('&')
+
+    const url: string = learnUrlGet('courses', `?${params}`)
+
+    const {data, error}: SWRResponse<ReadonlyArray<LearnCourse>> = useSWR(url)
+
+    return {
+        course: get(data, [0]),
+        loading: !data && !error,
+        ready: !!data || !!error,
     }
-
-    const [state, setState]: [CoursesProviderData, Dispatch<SetStateAction<CoursesProviderData>>]
-        = useState<CoursesProviderData>(defaultProviderData)
-
-    useEffect(() => {
-
-        let mounted: boolean = true
-
-        if (!certification) {
-            setState((prevState) => ({
-                ...prevState,
-                course: undefined,
-                loading: false,
-                ready: false,
-            }))
-            return
-        }
-
-        setState((prevState) => ({
-            ...prevState,
-            loading: true,
-        }))
-
-        courseGetAsync(provider, certification)
-            .then((course) => {
-                if (!mounted) {
-                    return
-                }
-                setState((prevState) => ({
-                    ...prevState,
-                    course,
-                    loading: false,
-                    ready: true,
-                }))
-            })
-
-        return () => {
-            mounted = false
-        }
-
-    }, [provider, certification])
-
-    return state
 }

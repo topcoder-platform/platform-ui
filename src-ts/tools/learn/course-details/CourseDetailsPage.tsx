@@ -16,7 +16,7 @@ import {
     CourseTitle,
     ResourceProviderData,
     useGetCertification,
-    useCourses,
+    useGetCourses,
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
@@ -41,7 +41,7 @@ const CourseDetailsPage: FC<{}> = () => {
     const {
         course,
         ready: courseReady,
-    }: CoursesProviderData = useCourses(routeParams.provider ?? '', routeParams.certification)
+    }: CoursesProviderData = useGetCourses(routeParams.provider ?? '', routeParams.certification)
 
     const {
         certificationProgress: progress,
