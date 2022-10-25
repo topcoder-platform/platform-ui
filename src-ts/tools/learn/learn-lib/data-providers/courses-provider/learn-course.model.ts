@@ -1,5 +1,5 @@
-import { LearnModelBase } from '../../../functions'
-import { LearnModule } from '../../lesson-provider'
+import { LearnModelBase } from '../../functions'
+import { LearnModule } from '../lesson-provider'
 
 export interface LearnCourse extends LearnModelBase {
     certification: string

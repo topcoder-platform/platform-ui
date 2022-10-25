@@ -26,7 +26,7 @@ import {
     LessonProviderData,
     useGetCourses,
     useLearnBreadcrumb,
-    useLessonProvider,
+    useGetLesson,
     userCertificationProgressCompleteCourseAsync,
     UserCertificationProgressProviderData,
     userCertificationProgressStartAsync,
@@ -74,7 +74,7 @@ const FreeCodeCamp: FC<{}> = () => {
         ready: courseDataReady,
     }: CoursesProviderData = useGetCourses(providerParam, certificationParam)
 
-    const { lesson, ready: lessonReady }: LessonProviderData = useLessonProvider(
+    const { lesson, ready: lessonReady }: LessonProviderData = useGetLesson(
         providerParam,
         certificationParam,
         moduleParam,

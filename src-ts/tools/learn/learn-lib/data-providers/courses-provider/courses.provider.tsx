@@ -2,8 +2,8 @@ import { get } from 'lodash'
 import useSWR, { SWRResponse } from 'swr'
 import { learnUrlGet } from '../../functions'
 
-import { LearnCourse } from './courses-functions'
 import { CoursesProviderData } from './courses-provider-data.model'
+import { LearnCourse } from './learn-course.model'
 
 export function useGetCourses(
     provider: string,
