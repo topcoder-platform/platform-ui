@@ -33,7 +33,7 @@ import {
     UserCertificationProgressStatus,
     userCertificationProgressUpdateAsync,
     UserCertificationUpdateProgressActions,
-    useUserCertificationProgress,
+    useGetUserCertificationProgress,
 } from '../learn-lib'
 import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule } from '../learn.routes'
 
@@ -63,7 +63,7 @@ const FreeCodeCamp: FC<{}> = () => {
         setCertificateProgress,
         ready: progressReady,
         refetch: refetchProgress,
-    }: UserCertificationProgressProviderData = useUserCertificationProgress(
+    }: UserCertificationProgressProviderData = useGetUserCertificationProgress(
         profile?.userId,
         routeParams.provider,
         certificationParam

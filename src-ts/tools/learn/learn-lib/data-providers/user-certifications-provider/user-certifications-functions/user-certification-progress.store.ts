@@ -1,6 +1,6 @@
 import { LearnConfig } from '../../../../learn-config'
 import { getUserCertificateUrl } from '../../../../learn.routes'
-import { learnUrlGet, learnXhrGetAsync, learnXhrPostAsync, learnXhrPutAsync } from '../../../functions'
+import { learnUrlGet, learnXhrPostAsync, learnXhrPutAsync } from '../../../functions'
 
 import { LearnUserCertificationProgress } from './learn-user-certification-progress.model'
 import { UserCertificationUpdateProgressActions } from './user-certification-update-progress-actions.enum'
@@ -28,21 +28,6 @@ export function completeCourse(
             certificateUrl,
         }
     )
-}
-
-export function getAsync(userId: number, provider?: string, certification?: string): Promise<Array<LearnUserCertificationProgress>> {
-
-    const params: string = [
-        `?userId=${userId}`,
-        provider && `provider=${provider}`,
-        certification && `certification=${certification}`,
-    ]
-        .filter(Boolean)
-        .join('&')
-
-    const url: string = learnUrlGet(certProgressPath, params)
-
-    return learnXhrGetAsync<Array<LearnUserCertificationProgress>>(url)
 }
 
 export function startAsync(userId: number, certificationId: string, courseId: string, data: any): Promise<LearnUserCertificationProgress> {

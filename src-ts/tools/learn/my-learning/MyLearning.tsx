@@ -7,7 +7,7 @@ import {
     useGetAllCertifications,
     useLearnBreadcrumb,
     UserCertificationsProviderData,
-    useUserCertifications,
+    useGetUserCertifications,
     WaveHero
 } from '../learn-lib'
 import { LEARN_PATHS } from '../learn.routes'
@@ -25,7 +25,7 @@ interface CertificatesByIdType {
 const MyLearning: FC<{}> = () => {
 
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
-    const { completed, inProgress, ready: coursesReady }: UserCertificationsProviderData = useUserCertifications()
+    const { completed, inProgress, ready: coursesReady }: UserCertificationsProviderData = useGetUserCertifications()
     const { certifications, ready: certificatesReady }: AllCertificationsProviderData = useGetAllCertifications()
     const [activeTab, setActiveTab]: [MyTabsViews|undefined, Dispatch<SetStateAction<MyTabsViews|undefined>>] = useState()
 

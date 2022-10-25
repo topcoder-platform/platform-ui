@@ -1,88 +1,56 @@
-import { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
+import { useContext } from 'react'
+import useSWR, { SWRResponse } from 'swr'
 
 import { errorHandle, profileContext, ProfileContextData } from '../../../../../lib'
+import { learnUrlGet } from '../../functions'
 
 import { UserCertificationCompleted } from './user-certification-completed.model'
 import { UserCertificationInProgress } from './user-certification-in-progress.model'
-import { userCertificationProgressGetAsync, UserCertificationProgressStatus } from './user-certifications-functions'
+import { LearnUserCertificationProgress, UserCertificationProgressStatus } from './user-certifications-functions'
 import { UserCertificationsProviderData } from './user-certifications-provider-data.model'
 
-const defaultProviderData: UserCertificationsProviderData = {
-    completed: [],
-    inProgress: [],
-    loading: false,
-    ready: false,
-}
-
-export function useUserCertifications(): UserCertificationsProviderData {
-
+export function useGetUserCertifications(
+    provider: string = 'freeCodeCamp',
+): UserCertificationsProviderData {
     const profileContextData: ProfileContextData = useContext<ProfileContextData>(profileContext)
-    const [state, setState]: [UserCertificationsProviderData, Dispatch<SetStateAction<UserCertificationsProviderData>>]
-        = useState<UserCertificationsProviderData>(defaultProviderData)
+    const userId: number | undefined = profileContextData?.profile?.userId
 
-    useEffect(() => {
+    const params: string = [
+        `?userId=${userId}`,
+        provider && `provider=${provider}`,
+    ]
+        .filter(Boolean)
+        .join('&')
 
-        let mounted: boolean = true
+    const url: string = learnUrlGet('certification-progresses', params)
 
-        setState((prevState) => ({
-            ...prevState,
-            loading: true,
-        }))
+    const { data, error }: SWRResponse<ReadonlyArray<LearnUserCertificationProgress>> = useSWR(url, {
+        isPaused: () => !userId
+    })
 
-        const userId: number | undefined = profileContextData?.profile?.userId
-        if (!userId) {
-            if (profileContextData.initialized) {
-                // user is logged out,
-                // we're not going to fetch any progress, data is ready as is
-                setState((prevState) => ({
-                    ...prevState,
-                    loading: false,
-                    ready: true,
-                }))
-            }
-            return
-        }
+    const completed: ReadonlyArray<UserCertificationCompleted> = data
+        ?.filter(c => c.status === UserCertificationProgressStatus.completed)
+        .map(c => c as UserCertificationCompleted)
+        .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()) ?? []
 
-        userCertificationProgressGetAsync(userId)
-            .then((myCertifications) => {
+    const inProgress: ReadonlyArray<UserCertificationInProgress> = data
+        ?.filter(c => c.status === UserCertificationProgressStatus.inProgress)
+        .map(c => c as UserCertificationInProgress)
+        .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()) ?? []
 
-                if (!mounted) {
-                    return
-                }
+    if (error) {
+        errorHandle(error, 'There was an error getting your course progress.')
+    }
 
-                const completed: ReadonlyArray<UserCertificationCompleted> = myCertifications
-                    .filter(c => c.status === UserCertificationProgressStatus.completed)
-                    .map(c => c as UserCertificationCompleted)
-                    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+    return {
+        completed,
+        inProgress,
+        loading: !!userId && !data && !error,
 
-                const inProgress: ReadonlyArray<UserCertificationInProgress> = myCertifications
-                    .filter(c => c.status === UserCertificationProgressStatus.inProgress)
-                    .map(c => c as UserCertificationInProgress)
-                    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
-
-                setState((prevState) => ({
-                    ...prevState,
-                    completed,
-                    inProgress,
-                    loading: false,
-                    ready: true,
-                }))
-            })
-            .catch((err: any) => {
-                errorHandle(err, 'There was an error getting your course progress.')
-                setState((prevState) => ({
-                    ...prevState,
-                    completed: [],
-                    inProgress: [],
-                    loading: false,
-                    ready: true,
-                }))
-            })
-
-        return () => {
-            mounted = false
-        }
-    }, [profileContextData])
-
-    return state
+        // ready when:
+        // profile context was initialized and
+        // user is logged out, or
+        // data or error is available
+        ready: profileContextData.initialized && (!userId || data || error),
+    }
 }

@@ -21,7 +21,7 @@ import {
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
     useResourceProvider,
-    useUserCertificationProgress
+    useGetUserCertificationProgress
 } from '../learn-lib'
 import { getCoursePath } from '../learn.routes'
 
@@ -46,7 +46,7 @@ const CourseDetailsPage: FC<{}> = () => {
     const {
         certificationProgress: progress,
         ready: progressReady,
-    }: UserCertificationProgressProviderData = useUserCertificationProgress(
+    }: UserCertificationProgressProviderData = useGetUserCertificationProgress(
         profile?.userId,
         routeParams.provider,
         routeParams.certification,

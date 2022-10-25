@@ -7,7 +7,7 @@ import {
     AllCertificationsProviderData,
     useGetAllCertifications,
     UserCertificationsProviderData,
-    useUserCertifications,
+    useGetUserCertifications,
     WaveHero,
 } from '../learn-lib'
 
@@ -19,7 +19,7 @@ import styles from './WelcomePage.module.scss'
 const WelcomePage: FC<{}> = () => {
 
     const allCertsData: AllCertificationsProviderData = useGetAllCertifications()
-    const userCertsData: UserCertificationsProviderData = useUserCertifications()
+    const userCertsData: UserCertificationsProviderData = useGetUserCertifications()
 
     const coursesReady: boolean = allCertsData.ready && userCertsData.ready
 
