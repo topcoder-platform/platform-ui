@@ -20,7 +20,7 @@ import {
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
-    useResourceProvider,
+    useGetResourceProvider,
     useGetUserCertificationProgress
 } from '../learn-lib'
 import { getCoursePath } from '../learn.routes'
@@ -36,7 +36,7 @@ const CourseDetailsPage: FC<{}> = () => {
 
     const {
         provider: resourceProvider,
-    }: ResourceProviderData = useResourceProvider(routeParams.provider)
+    }: ResourceProviderData = useGetResourceProvider(routeParams.provider)
 
     const {
         course,

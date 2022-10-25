@@ -1,39 +1,19 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import { find } from 'lodash'
+import useSWR, { SWRResponse } from 'swr'
+import { learnUrlGet } from '../../functions'
 
 import { ResourceProviderData } from './resource-provider-data.model'
-import { getResourceProvidersAsync } from './resource-provider-functions/resource-provider.store'
+import { ResourceProvider } from './resource-provider.model'
 
-export function useResourceProvider(providerName?: string): ResourceProviderData {
-    const [state, setState]: [ResourceProviderData, Dispatch<SetStateAction<ResourceProviderData>>] = useState<ResourceProviderData>({
-        loading: false,
-        ready: false,
-    })
+export function useGetResourceProvider(providerName?: string): ResourceProviderData {
 
-    useEffect(() => {
-        if (!providerName) {
-            setState((prevState) => ({
-                ...prevState,
-                loading: false,
-                provider: undefined,
-                ready: false,
-            }))
-            return
-        }
+    const url: string = learnUrlGet('providers')
 
-        setState((prevState) => ({
-            ...prevState,
-            loading: true,
-        }))
+    const {data, error}: SWRResponse<ReadonlyArray<ResourceProvider>> = useSWR(url)
 
-        getResourceProvidersAsync().then((providers) => {
-            setState((prevState) => ({
-                ...prevState,
-                loading: false,
-                provider: providers?.find(p => p.name === providerName),
-                ready: true,
-            }))
-        })
-    }, [providerName])
-
-    return state
+    return {
+        provider: find(data, {name: providerName}),
+        loading: !data && !error,
+        ready: !!data || !!error,
+    }
 }

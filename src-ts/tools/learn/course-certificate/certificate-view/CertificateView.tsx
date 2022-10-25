@@ -18,7 +18,7 @@ import {
     useGetCertification,
     useGetCourses,
     UserCompletedCertificationsProviderData,
-    useUserCompletedCertifications,
+    useGetUserCompletedCertifications,
 } from '../../learn-lib'
 import { getCoursePath, getUserCertificateSsr } from '../../learn.routes'
 
@@ -72,7 +72,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const {
         certifications: [completedCertificate],
         ready: completedCertificateReady,
-    }: UserCompletedCertificationsProviderData = useUserCompletedCertifications(
+    }: UserCompletedCertificationsProviderData = useGetUserCompletedCertifications(
         props.profile.userId,
         props.provider,
         props.certification

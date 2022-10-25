@@ -5,7 +5,11 @@ import { learnUrlGet } from '../../functions'
 import { UserCertificationProgressProviderData } from './user-certification-progress-provider-data.model'
 import { LearnUserCertificationProgress } from './user-certifications-functions'
 
-export function useGetUserCertificationProgress(userId?: number, provider?: string, certification?: string):
+export function useGetUserCertificationProgress(
+    userId?: number,
+    provider?: string,
+    certification?: string
+):
     UserCertificationProgressProviderData {
 
     const params: string = [

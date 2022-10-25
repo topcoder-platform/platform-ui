@@ -1,63 +1,31 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import useSWR, { SWRResponse } from 'swr'
 
-import { LearnUserCompletedCertification, userCompletedCertificationGetAsync } from './user-completed-certifications-functions'
+import { learnUrlGet } from '../../functions'
+import { LearnUserCompletedCertification } from './user-completed-certification.model'
 import { UserCompletedCertificationsProviderData } from './user-completed-certifications-provider-data.model'
 
-export function useUserCompletedCertifications(userId?: number, provider?: string, certification?: string):
-    UserCompletedCertificationsProviderData {
+export function useGetUserCompletedCertifications(
+    userId?: number,
+    provider?: string,
+    certification?: string
+): UserCompletedCertificationsProviderData {
 
-    const [state, setState]:
-        [UserCompletedCertificationsProviderData, Dispatch<SetStateAction<UserCompletedCertificationsProviderData>>]
-        = useState<UserCompletedCertificationsProviderData>({
-            certifications: [],
-            loading: false,
-            ready: false,
+    const url: string = learnUrlGet('completed-certifications', `${userId}`)
+
+    const {data, error}: SWRResponse<ReadonlyArray<LearnUserCompletedCertification>> = useSWR(url)
+
+    let certifications: ReadonlyArray<LearnUserCompletedCertification> = data ?? []
+
+    if (provider || certification) {
+        certifications = certifications.filter((c) => {
+            return (!provider || c.provider === provider) &&
+            (!certification || c.certification === certification)
         })
+    }
 
-    useEffect(() => {
-        let mounted: boolean = true
-
-        setState((prevState) => ({
-            ...prevState,
-            loading: true,
-        }))
-
-        if (!userId) {
-            return
-        }
-
-        userCompletedCertificationGetAsync(userId)
-            .then((completedCertifications) => {
-
-                if (!mounted) {
-                    return
-                }
-
-                let certifications: Array<LearnUserCompletedCertification> = completedCertifications
-
-                if (provider || certification) {
-                    certifications = completedCertifications.filter((c) => {
-                        return (!provider || c.provider === provider) &&
-                        (!certification || c.certification === certification)
-                    })
-                }
-
-                setState((prevState) => ({
-                    ...prevState,
-                    certifications,
-                    loading: false,
-                    ready: true,
-                }))
-            })
-
-        return () => {
-            mounted = false
-        }
-    }, [
-        certification,
-        provider,
-        userId,
-    ])
-
-    return state
+    return {
+        certifications,
+        loading: !data && !error,
+        ready: !!data || !!error,
+    }
 }
