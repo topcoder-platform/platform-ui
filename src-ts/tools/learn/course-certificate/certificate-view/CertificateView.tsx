@@ -15,7 +15,7 @@ import {
 import {
     AllCertificationsProviderData,
     CoursesProviderData,
-    useAllCertifications,
+    useGetCertification,
     useCourses,
     UserCompletedCertificationsProviderData,
     useUserCompletedCertifications,
@@ -82,9 +82,9 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const {
         certification: certificate,
         ready: certificateReady,
-    }: AllCertificationsProviderData = useAllCertifications(
+    }: AllCertificationsProviderData = useGetCertification(
         props.provider,
-        course?.certificationId,
+        course?.certificationId ?? '',
         { enabled: !!course?.certificationId }
     )
 

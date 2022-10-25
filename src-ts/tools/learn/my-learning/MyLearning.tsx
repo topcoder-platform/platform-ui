@@ -4,7 +4,7 @@ import { Breadcrumb, BreadcrumbItemModel, ContentLayout, LoadingSpinner, Portal,
 import {
     AllCertificationsProviderData,
     LearnCertification,
-    useAllCertifications,
+    useGetAllCertifications,
     useLearnBreadcrumb,
     UserCertificationsProviderData,
     useUserCertifications,
@@ -26,7 +26,7 @@ const MyLearning: FC<{}> = () => {
 
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
     const { completed, inProgress, ready: coursesReady }: UserCertificationsProviderData = useUserCertifications()
-    const { certifications, ready: certificatesReady }: AllCertificationsProviderData = useAllCertifications()
+    const { certifications, ready: certificatesReady }: AllCertificationsProviderData = useGetAllCertifications()
     const [activeTab, setActiveTab]: [MyTabsViews|undefined, Dispatch<SetStateAction<MyTabsViews|undefined>>] = useState()
 
     const ready: boolean = profileReady && coursesReady && certificatesReady

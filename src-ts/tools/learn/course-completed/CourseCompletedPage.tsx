@@ -14,7 +14,7 @@ import {
     AllCertificationsProviderData,
     CoursesProviderData,
     CourseTitle,
-    useAllCertifications,
+    useGetCertification,
     useCourses,
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
@@ -52,8 +52,8 @@ const CourseCompletedPage: FC<{}> = () => {
     const {
         certification,
         ready: certifReady,
-    }: AllCertificationsProviderData = useAllCertifications(providerParam, progress?.certificationId, {
-        enabled: progressReady && !!progress,
+    }: AllCertificationsProviderData = useGetCertification(providerParam, progress?.certificationId ?? '', {
+        enabled: progressReady && !!progress?.certificationId,
     })
 
     /* tslint:disable:cyclomatic-complexity */

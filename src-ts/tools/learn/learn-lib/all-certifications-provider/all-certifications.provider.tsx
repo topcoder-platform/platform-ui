@@ -1,46 +1,54 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import useSWR, { SWRResponse } from 'swr'
+import { learnUrlGet } from '../functions'
 
-import { allCertificationsGetAsync, LearnCertification } from './all-certifications-functions'
 import { AllCertificationsProviderData } from './all-certifications-provider-data.model'
 
 interface CertificationsAllProviderOptions {
     enabled?: boolean
 }
 
-export function useAllCertifications(
-    provider?: string,
-    certificationId?: string,
+export function useGetAllCertifications(
+    providerName: string = 'freeCodeCamp',
     options?: CertificationsAllProviderOptions
 ): AllCertificationsProviderData {
-    const [state, setState]:
-        [AllCertificationsProviderData, Dispatch<SetStateAction<AllCertificationsProviderData>>]
-        = useState<AllCertificationsProviderData>({
-            certifications: [],
-            loading: false,
-            ready: false,
-        })
 
-    useEffect(() => {
-        setState((prevState) => ({
-            ...prevState,
-            loading: true,
-        }))
+    const url: string = learnUrlGet(
+        'certifications',
+        `?providerName=${providerName}&test=true`
+    )
 
-        if (options?.enabled === false) {
-            return
-        }
+    const {data, error}: SWRResponse = useSWR(url, {
+        isPaused: () => options?.enabled === false
+    })
 
-        allCertificationsGetAsync(provider, certificationId)
-            .then((certifications) => {
-                setState((prevState) => ({
-                    ...prevState,
-                    certification: !certificationId ? undefined : certifications as unknown as LearnCertification,
-                    certifications: certificationId ? [] : [...certifications],
-                    loading: false,
-                    ready: true,
-                }))
-            })
-    }, [provider, certificationId, options?.enabled])
+    return {
+        certifications: data ?? [],
+        loading: !data,
+        ready: !!data,
+        error: !!error,
+    }
+}
 
-    return state
+export function useGetCertification(
+    providerName: string = 'freeCodeCamp',
+    certificationId: string,
+    options?: CertificationsAllProviderOptions
+): AllCertificationsProviderData {
+
+    const url: string = learnUrlGet(
+        'certifications',
+        certificationId,
+        `?providerName=${providerName}`
+    )
+
+    const {data, error}: SWRResponse = useSWR(url, {
+        isPaused: () => options?.enabled === false
+    })
+    return {
+        certifications: [],
+        certification: data ?? undefined,
+        loading: !data,
+        ready: !!data,
+        error: !!error,
+    }
 }
