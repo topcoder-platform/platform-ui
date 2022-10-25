@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { IconWrapper, textFormatMoneyLocaleString, Tooltip, IconOutline } from '../../../lib'
+import { IconOutline, IconWrapper, textFormatMoneyLocaleString, Tooltip } from '../../../lib'
 
 import styles from './WorkServicePrice.module.scss'
 
@@ -45,7 +45,7 @@ const ServicePrice: FC<WorkServicePriceProps> = (props: WorkServicePriceProps) =
                   content='The price and project length is dynamic and dependent on the
                   variables selected as you define your work.'
                   trigger={(
-                    <IconOutline.QuestionMarkCircleIcon width={14} height={14} />
+                    <IconOutline.QuestionMarkCircleIcon className={styles['help-icon']} width={16} height={16} />
                   )}
                 />
               </span>

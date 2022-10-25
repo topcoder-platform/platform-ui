@@ -146,6 +146,13 @@
                             font-size: 10px;
                         }
                     }
+
+                    .info-icon {
+                        margin-left: $space-sm;
+                        color: $turq-160;
+                        cursor: pointer;
+                        outline: none;
+                    }
                 }
             }
             &.mobile {

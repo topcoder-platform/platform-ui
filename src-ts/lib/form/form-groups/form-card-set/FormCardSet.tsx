@@ -1,7 +1,7 @@
 import cn from 'classnames'
 import React, { FocusEvent, SVGProps } from 'react'
 
-import { Button, HelpIcon, IconCheck, IconOutline, textFormatMoneyLocaleString, useCheckIsMobile } from '../../../../lib'
+import { Button, IconCheck, IconOutline, IconSolid, textFormatMoneyLocaleString, Tooltip, useCheckIsMobile } from '../../../../lib'
 import { FormCard, FormInputModel } from '../../form-input.model'
 
 import styles from './FormCardSet.module.scss'
@@ -67,14 +67,10 @@ const FormCardSet: React.FC<FormCardSetProps> = ({ name, cards, onChange, value 
                                                             <span className='body-main'>{row.text}</span>
                                                         }
                                                         {row.infoIcon && (
-                                                            <HelpIcon
-                                                                inverted
-                                                                arrowColor='#000000'
-                                                                backgroundColor='#000000'
-                                                                type='Info'
-                                                            >
-                                                                {row.tooltipText}
-                                                            </HelpIcon>
+                                                            <Tooltip
+                                                              content={row.tooltipText}
+                                                              trigger={<IconSolid.InformationCircleIcon className={styles['info-icon']} width={16} height={16} />}
+                                                            />
                                                         )}
                                                     </span>
                                                 )}
