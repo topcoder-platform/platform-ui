@@ -109,7 +109,7 @@ const BugHuntIntakeForm: React.FC = () => {
 
             setFormValues(formData)
 
-            if (formData?.packageType && formData?.packageType !== selectedPackage) {
+            if (formData?.packageType) {
                 setSelectedPackage(formData.packageType)
             }
         }
@@ -118,7 +118,6 @@ const BugHuntIntakeForm: React.FC = () => {
         getAndSetWork().finally(() => setLoading(false))
     }, [
         isLoggedIn,
-        selectedPackage,
         workId,
     ])
 
