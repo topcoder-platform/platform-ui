@@ -50,7 +50,7 @@ const BatchAwardTab: FC<BatchAwardTabProps> = (props: BatchAwardTabProps) => {
             <div className={styles.batchFormWrap}>
                 <div>
                     <p>If you would like to assign multiple people to multiple badges, this area is for you. Download the template below, populate the file with your data, and upload that file to the right once completed.</p>
-                    <a target={'_blank'} href='/gamification-admin/bulk.sample.csv' download='bulk.smaple.csv' className={styles.templateLink}>Download template CSV</a>
+                    <a target={'_blank'} href='/gamification-admin/bulk.sample.csv' download='bulk.sample.csv' className={styles.templateLink}>Download template CSV</a>
                 </div>
                 <div className={styles.batchForm}>
                     <InputFilePicker
