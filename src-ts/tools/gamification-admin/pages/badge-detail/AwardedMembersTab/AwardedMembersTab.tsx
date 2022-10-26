@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useState } from 'react'
 
 import { InfinitePageHandler, Sort, Table, TableColumn, tableGetDefaultSort } from '../../../../../lib'
 import { GameBadge, MemberBadgeAward } from '../../../game-lib'
@@ -9,7 +9,6 @@ import styles from './AwardedMembersTab.module.scss'
 
 export interface AwardedMembersTabProps {
     badge: GameBadge
-    forceRefresh?: boolean
 }
 
 const AwardedMembersTab: FC<AwardedMembersTabProps> = (props: AwardedMembersTabProps) => {
@@ -22,15 +21,6 @@ const AwardedMembersTab: FC<AwardedMembersTabProps> = (props: AwardedMembersTabP
         = useState<ReadonlyArray<TableColumn<MemberBadgeAward>>>([...awardedMembersColumns])
 
     const pageHandler: InfinitePageHandler<MemberBadgeAward> = useGetGameBadgeAssigneesPage(props.badge, sort)
-
-    useEffect(() => {
-        if (props.forceRefresh && pageHandler && !pageHandler.isValidating) {
-            pageHandler.mutate()
-        }
-    }, [
-        props.forceRefresh,
-        pageHandler,
-    ])
 
     function onSortClick(newSort: Sort): void {
         setSort({ ...newSort })

@@ -146,6 +146,10 @@ $error-line-height: 14px;
             }
         }
     }
+
+    @include ltemd {
+        margin-bottom: 0;
+    }
 }
 
 .error {

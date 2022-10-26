@@ -7,6 +7,7 @@ import {
   Breadcrumb,
   ContactSupportModal,
   WorkType,
+  SaveForLaterIcon,
 } from "../../../../../src-ts";
 
 import Button from "../../../../components/Button";
@@ -31,7 +32,6 @@ import {
 import { triggerAutoSave, triggerCookieClear } from "../../../../actions/autoSave";
 import { setProgressItem } from "../../../../actions/progress";
 import { ReactComponent as BackIcon } from "../../../../assets/images/icon-back-arrow.svg";
-import { ReactComponent as SaveForLaterIcon } from "../../../../assets/images/save-for-later-icon.svg";
 
 import BasicInfoForm from "../BasicInfoForm";
 import {

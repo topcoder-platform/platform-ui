@@ -14,6 +14,17 @@
     }
   }
 
+  .content-wrapper {
+    display: flex;
+    flex: 1;
+
+    h3 {
+      @include ltemd {
+        flex: 1;
+      }
+    }
+  }
+
   @include ltemd {
     display: flex;
     flex-direction: row;
@@ -51,10 +62,25 @@
 
   .days {
     display: inline;
+
+    @include ltemd {
+      flex: 1;
+      text-align: left;
+    }
   }
 
   .help {
+    display: flex;
+    align-items: center;
     margin-left: $space-sm;
     color: $turq-160;
+
+    .help-icon {
+      cursor: pointer;
+
+      @include ltemd {
+        @include icon-xl;
+      }
+    }
   }
 }

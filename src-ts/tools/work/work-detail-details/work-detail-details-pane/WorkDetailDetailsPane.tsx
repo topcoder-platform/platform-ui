@@ -3,8 +3,10 @@ import _ from 'lodash'
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { ArrowIcon, LoadingSpinner } from '../../../../lib'
-import { workFactoryMapFormData } from '../../work-lib'
+import { currencyFormat } from '../../../../../src/utils'
+import { ArrowIcon, FormCard, LoadingSpinner } from '../../../../lib'
+import { ChallengeMetadataName, workFactoryMapFormData } from '../../work-lib'
+import BugHuntPricingConfig from '../../work-self-service/intake-forms/bug-hunt/bug-hunt.form.pricing-config'
 
 import styles from './WorkDetailDetailsPane.module.scss'
 
@@ -66,7 +68,11 @@ const WorkDetailDetailsPane: FC<WorkDetailDetailsPaneProps> = ({ collapsible, de
                 return (
                     <div key={detail.key} className={styles['detail']}>
                         <h4 className={styles['title']}>{detail.title}</h4>
-                        <p className={styles['content']}>{formatOption(detail.value)}</p>
+                        {detail.key === ChallengeMetadataName.packageType ? (
+                          <p className={styles['content']}>{getSelectedPackageFormatted(detail.value)}</p>
+                        ) : (
+                          <p className={styles['content']}>{formatOption(detail.value)}</p>
+                        )}
                     </div>
                 )
             })}
@@ -100,6 +106,17 @@ function checkIsEmpty(detail: Array<string> | {} | string): boolean {
         (_.isArray(detail) && detail.length === 0) ||
         (_.isObject(detail) && Object.values(detail)
             .filter((val) => val?.trim().length > 0).length === 0)
+}
+
+const getSelectedPackageFormatted: (packageId: string) => string = (packageId) => {
+  const currentPackage: FormCard | undefined = BugHuntPricingConfig.find((pricingConfig) => pricingConfig.id === packageId)
+  if (currentPackage) {
+    const deviceType: string = currentPackage.sections?.[0]?.rows?.[3]?.text || ''
+    const noOfTesters: string = `${currentPackage.sections?.[0]?.rows?.[2]?.text || 0} testers`
+    return `${currentPackage.title} - ${currencyFormat(currentPackage.price)} - ${deviceType} - ${noOfTesters}`
+  }
+
+  return packageId
 }
 
 export default WorkDetailDetailsPane
