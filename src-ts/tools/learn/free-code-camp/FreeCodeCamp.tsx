@@ -25,15 +25,15 @@ import {
     LearnModuleProgress,
     LessonProviderData,
     useGetCourses,
-    useLearnBreadcrumb,
     useGetLesson,
+    useGetUserCertificationProgress,
+    useLearnBreadcrumb,
     userCertificationProgressCompleteCourseAsync,
     UserCertificationProgressProviderData,
     userCertificationProgressStartAsync,
     UserCertificationProgressStatus,
     userCertificationProgressUpdateAsync,
     UserCertificationUpdateProgressActions,
-    useGetUserCertificationProgress,
 } from '../learn-lib'
 import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule } from '../learn.routes'
 

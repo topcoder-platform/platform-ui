@@ -1,5 +1,6 @@
 import { find } from 'lodash'
 import useSWR, { SWRConfiguration, SWRResponse } from 'swr'
+
 import { learnUrlGet } from '../../functions'
 import { useSwrCache } from '../../learn-swr'
 
@@ -14,8 +15,8 @@ export function useGetResourceProvider(providerName?: string): ResourceProviderD
     const {data, error}: SWRResponse<ReadonlyArray<ResourceProvider>> = useSWR(url, swrCacheConfig)
 
     return {
-        provider: find(data, {name: providerName}),
         loading: !data && !error,
+        provider: find(data, {name: providerName}),
         ready: !!data || !!error,
     }
 }

@@ -16,10 +16,10 @@ import {
     CourseTitle,
     useGetCertification,
     useGetCourses,
+    useGetUserCertificationProgress,
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
-    UserCertificationProgressStatus,
-    useGetUserCertificationProgress
+    UserCertificationProgressStatus
 } from '../learn-lib'
 import { getCertificatePath, getCoursePath, LEARN_PATHS, rootRoute } from '../learn.routes'
 

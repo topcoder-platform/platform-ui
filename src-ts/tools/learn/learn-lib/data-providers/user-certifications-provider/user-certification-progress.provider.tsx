@@ -1,5 +1,6 @@
 import { find } from 'lodash'
 import useSWR, { SWRResponse } from 'swr'
+
 import { learnUrlGet } from '../../functions'
 
 import { UserCertificationProgressProviderData } from './user-certification-progress-provider-data.model'
@@ -23,7 +24,7 @@ export function useGetUserCertificationProgress(
     const url: string = learnUrlGet('certification-progresses', params)
 
     const { data, error, mutate }: SWRResponse<ReadonlyArray<LearnUserCertificationProgress>> = useSWR(url, {
-        isPaused: () => !userId || !certification
+        isPaused: () => !userId || !certification,
     })
 
     return {
@@ -31,6 +32,6 @@ export function useGetUserCertificationProgress(
         loading: !!userId && !data && !error,
         ready: !userId || data || error,
         refetch: () => mutate(),
-        setCertificateProgress: (progress) => mutate([progress])
-    };
+        setCertificateProgress: (progress) => mutate([progress]),
+    }
 }

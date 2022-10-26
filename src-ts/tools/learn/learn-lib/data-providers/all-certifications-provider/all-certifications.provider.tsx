@@ -1,4 +1,5 @@
 import useSWR, { SWRConfiguration, SWRResponse } from 'swr'
+
 import { learnUrlGet } from '../../functions'
 import { useSwrCache } from '../../learn-swr'
 
@@ -21,14 +22,14 @@ export function useGetAllCertifications(
 
     const {data, error}: SWRResponse = useSWR(url, {
         ...swrCacheConfig,
-        isPaused: () => options?.enabled === false
+        isPaused: () => options?.enabled === false,
     })
 
     return {
         certifications: data ?? [],
+        error: !!error,
         loading: !data,
         ready: !!data,
-        error: !!error,
     }
 }
 
@@ -45,13 +46,13 @@ export function useGetCertification(
     )
 
     const {data, error}: SWRResponse = useSWR(url, {
-        isPaused: () => options?.enabled === false
+        isPaused: () => options?.enabled === false,
     })
     return {
-        certifications: [],
         certification: data ?? undefined,
+        certifications: [],
+        error: !!error,
         loading: !data,
         ready: !!data,
-        error: !!error,
     }
 }

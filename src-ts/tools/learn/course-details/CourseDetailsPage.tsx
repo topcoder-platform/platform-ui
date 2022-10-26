@@ -17,11 +17,11 @@ import {
     ResourceProviderData,
     useGetCertification,
     useGetCourses,
+    useGetResourceProvider,
+    useGetUserCertificationProgress,
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
-    UserCertificationProgressStatus,
-    useGetResourceProvider,
-    useGetUserCertificationProgress
+    UserCertificationProgressStatus
 } from '../learn-lib'
 import { getCoursePath } from '../learn.routes'
 

@@ -14,8 +14,8 @@ const LearnSwr: FC<LearnSwrProps> = (props: LearnSwrProps) => {
             value={{
                 fetcher: (resource) => learnXhrGetAsync(resource),
                 refreshInterval: 0,
-                revalidateOnMount: true,
                 revalidateOnFocus: false,
+                revalidateOnMount: true,
             }}
         >
             {props.children}

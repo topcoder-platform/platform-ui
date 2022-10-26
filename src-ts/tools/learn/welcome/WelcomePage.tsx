@@ -6,8 +6,8 @@ import '../../../lib/styles/index.scss'
 import {
     AllCertificationsProviderData,
     useGetAllCertifications,
-    UserCertificationsProviderData,
     useGetUserCertifications,
+    UserCertificationsProviderData,
     WaveHero,
 } from '../learn-lib'
 

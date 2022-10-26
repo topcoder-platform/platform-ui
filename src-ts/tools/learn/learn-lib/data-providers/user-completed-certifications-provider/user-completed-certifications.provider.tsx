@@ -1,6 +1,7 @@
 import useSWR, { SWRResponse } from 'swr'
 
 import { learnUrlGet } from '../../functions'
+
 import { LearnUserCompletedCertification } from './user-completed-certification.model'
 import { UserCompletedCertificationsProviderData } from './user-completed-certifications-provider-data.model'
 

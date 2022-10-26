@@ -17,8 +17,8 @@ import {
     CoursesProviderData,
     useGetCertification,
     useGetCourses,
-    UserCompletedCertificationsProviderData,
     useGetUserCompletedCertifications,
+    UserCompletedCertificationsProviderData,
 } from '../../learn-lib'
 import { getCoursePath, getUserCertificateSsr } from '../../learn.routes'
 

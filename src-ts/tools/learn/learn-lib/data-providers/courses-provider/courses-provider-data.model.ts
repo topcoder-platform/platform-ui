@@ -1,4 +1,4 @@
-import { LearnCourse } from "./learn-course.model"
+import { LearnCourse } from './learn-course.model'
 
 export interface CoursesProviderData {
     course?: LearnCourse

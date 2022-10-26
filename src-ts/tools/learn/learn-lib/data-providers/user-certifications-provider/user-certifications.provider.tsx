@@ -1,4 +1,4 @@
-import { useContext } from 'react'
+import { useContext, useMemo } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { errorHandle, profileContext, ProfileContextData } from '../../../../../lib'
@@ -25,18 +25,21 @@ export function useGetUserCertifications(
     const url: string = learnUrlGet('certification-progresses', params)
 
     const { data, error }: SWRResponse<ReadonlyArray<LearnUserCertificationProgress>> = useSWR(url, {
-        isPaused: () => !userId
+        isPaused: () => !userId,
     })
+    const loading: boolean = !data && !error
 
-    const completed: ReadonlyArray<UserCertificationCompleted> = data
+    const completed: ReadonlyArray<UserCertificationCompleted> = useMemo(() => data
         ?.filter(c => c.status === UserCertificationProgressStatus.completed)
         .map(c => c as UserCertificationCompleted)
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()) ?? []
+    , [data])
 
-    const inProgress: ReadonlyArray<UserCertificationInProgress> = data
+    const inProgress: ReadonlyArray<UserCertificationInProgress> = useMemo(() => data
         ?.filter(c => c.status === UserCertificationProgressStatus.inProgress)
         .map(c => c as UserCertificationInProgress)
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()) ?? []
+    , [data])
 
     if (error) {
         errorHandle(error, 'There was an error getting your course progress.')
@@ -45,12 +48,12 @@ export function useGetUserCertifications(
     return {
         completed,
         inProgress,
-        loading: !!userId && !data && !error,
+        loading: !!userId && loading,
 
         // ready when:
         // profile context was initialized and
         // user is logged out, or
         // data or error is available
-        ready: profileContextData.initialized && (!userId || data || error),
+        ready: profileContextData.initialized && (!userId || !loading),
     }
 }

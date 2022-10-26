@@ -5,9 +5,9 @@ import {
     AllCertificationsProviderData,
     LearnCertification,
     useGetAllCertifications,
+    useGetUserCertifications,
     useLearnBreadcrumb,
     UserCertificationsProviderData,
-    useGetUserCertifications,
     WaveHero
 } from '../learn-lib'
 import { LEARN_PATHS } from '../learn.routes'
