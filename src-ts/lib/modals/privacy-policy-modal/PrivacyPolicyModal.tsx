@@ -1,4 +1,4 @@
-import { Dispatch, FC, MouseEvent, MutableRefObject, SetStateAction, useEffect, useState, useRef } from 'react'
+import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 
 import { ProfileProvider } from '../../profile-provider'
 import { BaseModal } from '../base-modal'
@@ -21,9 +21,9 @@ const PrivacyPolicyModal: FC<PrivacyPolicyModalProps> = ({ isOpen, onClose }: Pr
     }
 
     useEffect(() => {
-      document.addEventListener('open:support', openSupportModal);
-      return () => document.removeEventListener('open:support', openSupportModal);
-    }, []);
+      document.addEventListener('open:support', openSupportModal)
+      return () => document.removeEventListener('open:support', openSupportModal)
+    }, [])
 
     return (
         <>

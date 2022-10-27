@@ -1,18 +1,18 @@
 import classNames from 'classnames'
 import { FC, ReactNode } from 'react'
 import Modal, { ModalProps } from 'react-responsive-modal'
-import { LoadingSpinner } from '../../loading-spinner'
 
+import { LoadingSpinner } from '../../loading-spinner'
 import { IconOutline } from '../../svgs'
 
 import styles from './BaseModal.module.scss'
-import { useFetchModalContent } from './use-fetch-modal-content'
+import { ModalContentResponse, useFetchModalContent } from './use-fetch-modal-content'
 
 export interface BaseModalProps extends ModalProps {
+    contentClassName?: string
+    contentUrl?: string
     size?: 'lg' | 'md'
     title: string
-    contentUrl?: string
-    contentClassName?: string
 }
 
 const BaseModal: FC<BaseModalProps> = ({
@@ -23,7 +23,7 @@ const BaseModal: FC<BaseModalProps> = ({
     ...props
 }: BaseModalProps) => {
 
-    const { content } = useFetchModalContent(contentUrl, props.open)
+    const { content }: ModalContentResponse = useFetchModalContent(contentUrl, props.open)
 
     const renterContent: () => ReactNode = () => {
         if (children || !contentUrl) {

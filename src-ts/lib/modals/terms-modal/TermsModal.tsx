@@ -2,8 +2,8 @@ import { FC } from 'react'
 
 import { BaseModal } from '../base-modal'
 
-import styles from './TermsModal.module.scss'
 import contentUrl from './terms.content.txt'
+import styles from './TermsModal.module.scss'
 
 interface TermsModalProps {
     isOpen: boolean

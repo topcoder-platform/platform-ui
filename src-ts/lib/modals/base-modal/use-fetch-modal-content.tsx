@@ -1,7 +1,12 @@
-import {Dispatch, SetStateAction, useEffect, useState} from 'react';
-import { xhrGetAsync } from '../../functions';
+import {Dispatch, SetStateAction, useEffect, useState} from 'react'
 
-export function useFetchModalContent(contentUrl?: string, enabled?: boolean) {
+import { xhrGetAsync } from '../../functions'
+
+export interface ModalContentResponse {
+    content: string | undefined
+}
+
+export function useFetchModalContent(contentUrl?: string, enabled?: boolean): ModalContentResponse {
     const [content, setContent]: [string|undefined, Dispatch<SetStateAction<string|undefined>>] = useState()
 
     useEffect(() => {
@@ -14,5 +19,5 @@ export function useFetchModalContent(contentUrl?: string, enabled?: boolean) {
         }
     }, [contentUrl, content, enabled])
 
-    return {content}
+    return { content }
 }
