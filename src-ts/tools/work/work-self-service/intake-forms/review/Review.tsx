@@ -1,5 +1,6 @@
 import { CardNumberElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
-import { loadStripe, Stripe, StripeElements } from '@stripe/stripe-js'
+import { Stripe, StripeElements } from '@stripe/stripe-js'
+import { loadStripe } from '@stripe/stripe-js/pure'
 import { Dispatch, FC, SetStateAction, useContext, useEffect, useState } from 'react'
 import { toastr } from 'react-redux-toastr'
 import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
@@ -269,14 +270,19 @@ const Review: FC = () => {
     )
 }
 
-const stripePromise: Promise<Stripe | null> = loadStripe(EnvironmentConfig.STRIPE.API_KEY, {
-    apiVersion: EnvironmentConfig.STRIPE.API_VERSION,
-})
+let stripePromise: Promise<Stripe | null | undefined>;
 
-const output: () => JSX.Element = () => (
-    <Elements stripe={stripePromise}>
-        <Review />
-    </Elements>
-)
+const output: () => JSX.Element = () => {
+    if (!stripePromise) {
+        stripePromise = loadStripe(EnvironmentConfig.STRIPE.API_KEY, {
+            apiVersion: EnvironmentConfig.STRIPE.API_VERSION,
+        })
+    }
+    return (
+        <Elements stripe={stripePromise as Promise<Stripe>}>
+            <Review />
+        </Elements>
+    )
+}
 
 export default output
