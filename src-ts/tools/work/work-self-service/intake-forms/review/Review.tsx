@@ -1,5 +1,8 @@
 import { CardNumberElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
 import { Stripe, StripeElements } from '@stripe/stripe-js'
+// we need to load this from submodule instead of root
+// @see: https://www.npmjs.com/package/@stripe/stripe-js # Importing loadStripe without side effects
+// tslint:disable-next-line:no-submodule-imports
 import { loadStripe } from '@stripe/stripe-js/pure'
 import { Dispatch, FC, SetStateAction, useContext, useEffect, useState } from 'react'
 import { toastr } from 'react-redux-toastr'
@@ -270,7 +273,7 @@ const Review: FC = () => {
     )
 }
 
-let stripePromise: Promise<Stripe | null | undefined>;
+let stripePromise: Promise<Stripe | null | undefined>
 
 const output: () => JSX.Element = () => {
     if (!stripePromise) {
