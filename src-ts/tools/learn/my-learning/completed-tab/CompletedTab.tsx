@@ -27,6 +27,7 @@ const CompletedTab: FC<CompletedTabProps> = (props: CompletedTabProps) => {
         props.certifications
     )
 
+    const disableFilters: boolean = props.certifications.length < 1
     const hasCertifications: boolean = certifications.length >= 1
 
     const renderPlaceholder: () => ReactNode = () => (
@@ -60,7 +61,7 @@ const CompletedTab: FC<CompletedTabProps> = (props: CompletedTabProps) => {
             sortOptions={sortOptions.completed}
             onSortChange={handleSortChange}
             onCategoryChange={handleCategoryChange}
-            disableFilters={!hasCertifications}
+            disableFilters={disableFilters}
         >
             <div className={styles['cards-wrap']}>
                 {renderCertificationsList()}
