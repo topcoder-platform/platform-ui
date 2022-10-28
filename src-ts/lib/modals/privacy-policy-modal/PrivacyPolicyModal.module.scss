@@ -20,55 +20,18 @@
         }
     }
 
-    ul.a {
-        list-style-type: disc;
-        list-style: disc;
+    ul {
+        &:global(.disc) {
+            list-style-type: disc;
+            list-style: disc;
 
-        li {
-            padding-left: 0;
-            margin-left: 20px;
+            li {
+                padding-left: 0;
+                margin-left: 20px;
+            }
         }
     }
 
-    ul.b {
-        list-style-type: disc;
-        list-style: disc;
-
-        li {
-            padding-left: 0;
-            margin-left: 20px;
-        }
-    }
-
-    ul.c {
-        list-style-type: disc;
-        list-style: disc;
-
-        li {
-            padding-left: 0;
-            margin-left: 20px;
-        }
-    }
-
-    ul.d {
-        list-style-type: disc;
-        list-style: disc;
-
-        li {
-            padding-left: 0;
-            margin-left: 20px;
-        }
-    }
-
-    ul.e {
-        list-style-type: disc;
-        list-style: disc;
-
-        li {
-            padding-left: 0;
-            margin-left: 20px;
-        }
-    }
 
     a {
         text-decoration: underline;
