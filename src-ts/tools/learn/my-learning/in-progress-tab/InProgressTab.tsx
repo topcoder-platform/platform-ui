@@ -27,6 +27,7 @@ const InProgressTab: FC<InProgressTabProps> = (props: InProgressTabProps) => {
         props.certifications
     )
 
+    const disableFilters: boolean = props.certifications.length < 1
     const hasCertifications: boolean = certifications.length >= 1
 
     const renderPlaceholder: () => ReactNode = () => (
@@ -63,7 +64,7 @@ const InProgressTab: FC<InProgressTabProps> = (props: InProgressTabProps) => {
             sortOptions={sortOptions.inProgress}
             onSortChange={handleSortChange}
             onCategoryChange={handleCategoryChange}
-            disableFilters={!hasCertifications}
+            disableFilters={disableFilters}
         >
             <div className={styles.wrap}>
                 {renderCertificationsList()}
