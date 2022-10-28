@@ -14,12 +14,12 @@ import {
     AllCertificationsProviderData,
     CoursesProviderData,
     CourseTitle,
-    useAllCertifications,
-    useCourses,
+    useGetCertification,
+    useGetCourses,
+    useGetUserCertificationProgress,
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
-    UserCertificationProgressStatus,
-    useUserCertificationProgress
+    UserCertificationProgressStatus
 } from '../learn-lib'
 import { getCertificatePath, getCoursePath, LEARN_PATHS, rootRoute } from '../learn.routes'
 
@@ -38,12 +38,12 @@ const CourseCompletedPage: FC<{}> = () => {
     const {
         course: courseData,
         ready: courseDataReady,
-    }: CoursesProviderData = useCourses(providerParam, certificationParam)
+    }: CoursesProviderData = useGetCourses(providerParam, certificationParam)
 
     const {
         certificationProgress: progress,
         ready: progressReady,
-    }: UserCertificationProgressProviderData = useUserCertificationProgress(
+    }: UserCertificationProgressProviderData = useGetUserCertificationProgress(
         profile?.userId,
         routeParams.provider,
         routeParams.certification
@@ -52,8 +52,8 @@ const CourseCompletedPage: FC<{}> = () => {
     const {
         certification,
         ready: certifReady,
-    }: AllCertificationsProviderData = useAllCertifications(providerParam, progress?.certificationId, {
-        enabled: progressReady && !!progress,
+    }: AllCertificationsProviderData = useGetCertification(providerParam, progress?.certificationId ?? '', {
+        enabled: progressReady && !!progress?.certificationId,
     })
 
     /* tslint:disable:cyclomatic-complexity */

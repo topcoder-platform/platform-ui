@@ -24,16 +24,16 @@ import {
     LearnModule,
     LearnModuleProgress,
     LessonProviderData,
-    useCourses,
+    useGetCourses,
+    useGetLesson,
+    useGetUserCertificationProgress,
     useLearnBreadcrumb,
-    useLessonProvider,
     userCertificationProgressCompleteCourseAsync,
     UserCertificationProgressProviderData,
     userCertificationProgressStartAsync,
     UserCertificationProgressStatus,
     userCertificationProgressUpdateAsync,
     UserCertificationUpdateProgressActions,
-    useUserCertificationProgress,
 } from '../learn-lib'
 import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule } from '../learn.routes'
 
@@ -63,7 +63,7 @@ const FreeCodeCamp: FC<{}> = () => {
         setCertificateProgress,
         ready: progressReady,
         refetch: refetchProgress,
-    }: UserCertificationProgressProviderData = useUserCertificationProgress(
+    }: UserCertificationProgressProviderData = useGetUserCertificationProgress(
         profile?.userId,
         routeParams.provider,
         certificationParam
@@ -72,9 +72,9 @@ const FreeCodeCamp: FC<{}> = () => {
     const {
         course: courseData,
         ready: courseDataReady,
-    }: CoursesProviderData = useCourses(providerParam, certificationParam)
+    }: CoursesProviderData = useGetCourses(providerParam, certificationParam)
 
-    const { lesson, ready: lessonReady }: LessonProviderData = useLessonProvider(
+    const { lesson, ready: lessonReady }: LessonProviderData = useGetLesson(
         providerParam,
         certificationParam,
         moduleParam,

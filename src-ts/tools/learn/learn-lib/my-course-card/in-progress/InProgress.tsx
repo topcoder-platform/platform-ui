@@ -11,7 +11,7 @@ import {
     CoursesProviderData,
     CourseTitle,
     LearnCertification,
-    useCourses,
+    useGetCourses,
 } from '../../../learn-lib'
 import { getCoursePath, getLessonPathFromCurrentLesson } from '../../../learn.routes'
 import { CurriculumSummary } from '../../curriculum-summary'
@@ -34,7 +34,7 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
 
     const certification: string = props.certification?.certification ?? ''
     const provider: string = props.certification?.providerName ?? ''
-    const { course }: CoursesProviderData = useCourses(provider, certification)
+    const { course }: CoursesProviderData = useGetCourses(provider, certification)
 
     const resumeCourse: () => void = () => {
         if (!props.currentLesson) {

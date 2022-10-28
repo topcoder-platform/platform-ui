@@ -15,13 +15,13 @@ import {
     CoursesProviderData,
     CourseTitle,
     ResourceProviderData,
-    useAllCertifications,
-    useCourses,
+    useGetCertification,
+    useGetCourses,
+    useGetResourceProvider,
+    useGetUserCertificationProgress,
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
-    UserCertificationProgressStatus,
-    useResourceProvider,
-    useUserCertificationProgress
+    UserCertificationProgressStatus
 } from '../learn-lib'
 import { getCoursePath } from '../learn.routes'
 
@@ -36,17 +36,17 @@ const CourseDetailsPage: FC<{}> = () => {
 
     const {
         provider: resourceProvider,
-    }: ResourceProviderData = useResourceProvider(routeParams.provider)
+    }: ResourceProviderData = useGetResourceProvider(routeParams.provider)
 
     const {
         course,
         ready: courseReady,
-    }: CoursesProviderData = useCourses(routeParams.provider ?? '', routeParams.certification)
+    }: CoursesProviderData = useGetCourses(routeParams.provider ?? '', routeParams.certification)
 
     const {
         certificationProgress: progress,
         ready: progressReady,
-    }: UserCertificationProgressProviderData = useUserCertificationProgress(
+    }: UserCertificationProgressProviderData = useGetUserCertificationProgress(
         profile?.userId,
         routeParams.provider,
         routeParams.certification,
@@ -55,8 +55,8 @@ const CourseDetailsPage: FC<{}> = () => {
     const {
         certification: certificate,
         ready: certificateReady,
-    }: AllCertificationsProviderData = useAllCertifications(routeParams.provider, course?.certificationId, {
-        enabled: courseReady,
+    }: AllCertificationsProviderData = useGetCertification(routeParams.provider, course?.certificationId ?? '', {
+        enabled: courseReady && !!course?.certificationId,
     })
 
     // this looks better than finding workarounds for cyclomatic-complexity
