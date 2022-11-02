@@ -3,14 +3,17 @@ import {
     Dispatch,
     FC,
     MutableRefObject,
+    ReactNode,
     SetStateAction,
     useCallback,
     useLayoutEffect,
+    useMemo,
     useRef,
     useState,
 } from 'react'
 
-import { ActiveTabTipIcon } from '../svgs'
+import { useClickOutside } from '../hooks'
+import { ActiveTabTipIcon, IconOutline } from '../svgs'
 
 import { TabsNavItem } from './tabs-nav-item.model'
 import styles from './TabsNavbar.module.scss'
@@ -28,6 +31,12 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
     const tabRefs: MutableRefObject<Array<HTMLElement>> = useRef([] as Array<HTMLElement>)
     const [tabOpened, setTabOpened]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>(props.defaultActive)
     const [offset, setOffset]: [number, Dispatch<SetStateAction<number>>] = useState<number>(0)
+    const [menuIsVisible, setMenuIsVisible]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
+    const triggerRef: MutableRefObject<any> = useRef(undefined)
+
+    const activeTab: TabsNavItem = useMemo(() => (
+        props.tabs.find(tab => tab.id === tabOpened) as TabsNavItem
+    ), [tabOpened, props.tabs])
 
     const updateOffset: (tabId: string) => void = useCallback((tabId: string) => {
 
@@ -37,8 +46,8 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
             return
         }
 
-        const activeTab: HTMLElement = tabRefs.current[index]
-        setOffset(activeTab.offsetLeft + activeTab.offsetWidth / 2)
+        const activatedTab: HTMLElement = tabRefs.current[index]
+        setOffset(activatedTab.offsetLeft + activatedTab.offsetWidth / 2)
     }, [
         props.tabs,
     ])
@@ -70,27 +79,54 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
         updateOffset,
     ])
 
+    const renderTabItem: (tab: TabsNavItem, activeTabId?: string, ref?: (el: HTMLDivElement) => void) => ReactNode = (
+        tab: TabsNavItem,
+        activeTabId?: string,
+        ref?: (el: HTMLDivElement) => void
+    ) => (
+        <div
+            ref={ref}
+            className={classNames(styles['tab-item'], activeTabId === tab.id && 'active')}
+            key={tab.id}
+            onClick={() => handleActivateTab(tab.id)}
+        >
+            <span className={styles['tab-label']}>
+                {tab.title}
+            </span>
+            {tab.badges?.map((badge, id) => (
+                <span className={classNames(styles['tab-badge'], badge.type)} key={id}>
+                    {badge.count}
+                </span>
+            ))}
+        </div>
+    )
+
+    useClickOutside(triggerRef.current, () => setMenuIsVisible(false))
+
     return (
         <div className={styles['tabs-wrapper']}>
-            {props.tabs.map((tab, i) => (
-                <div
-                    ref={el => tabRefs.current[i] = el as HTMLElement}
-                    className={classNames(styles['tab-item'], tabOpened === tab.id && 'active')}
-                    key={tab.id}
-                    onClick={() => handleActivateTab(tab.id)}
-                >
-                    <span className={styles['tab-label']}>
-                        {tab.title}
-                    </span>
-                    {tab.badges?.map((badge, id) => (
-                        <span className={classNames(styles['tab-badge'], badge.type)} key={id}>
-                            {badge.count}
-                        </span>
-                    ))}
-                </div>
-            ))}
             <div
-                className={styles['active-icon']}
+                className={
+                    classNames(
+                        styles['menu-trigger'],
+                        'desktop-hide',
+                        menuIsVisible && styles['menu-is-visible']
+                    )
+                }
+                onClick={() => setMenuIsVisible((menuWasVisible: boolean) => !menuWasVisible)}
+                ref={triggerRef}
+            >
+                {renderTabItem(activeTab)}
+                <IconOutline.ChevronDownIcon />
+            </div>
+
+            <div className={classNames(styles['menu-wrapper'])}>
+                {props.tabs.map((tab, i) => (
+                    renderTabItem(tab, tabOpened, el => {tabRefs.current[i] = el as HTMLElement})
+                ))}
+            </div>
+            <div
+                className={classNames(styles['active-icon'], 'mobile-hide')}
                 style={{ left: `${offset}px` }}
             >
                 <ActiveTabTipIcon />

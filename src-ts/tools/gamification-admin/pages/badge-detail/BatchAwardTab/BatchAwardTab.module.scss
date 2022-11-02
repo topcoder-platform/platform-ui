@@ -1,3 +1,55 @@
+@use '../../../../../lib/styles/typography';
+@import "../../../../../lib/styles/variables/palette";
+@import "../../../../../lib/styles/includes";
+
+$error-line-height: 14px;
+
 .tabWrap {
     display: flex;
+    flex-direction: column;
+    padding-bottom: 260px;
+
+    .batchFormWrap {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $space-xxxxl;
+        margin-top: $space-xxl;
+
+        @include ltemd {
+            grid-template-columns: 1fr;
+        }
+
+        .templateLink {
+            text-transform: uppercase;
+            color: $turq-160;
+            font-weight: $font-weight-bold;
+            margin-top: $space-lg;
+            display: inline-block;
+        }
+
+        .batchForm {
+            display: flex;
+            flex-direction: column;
+
+            .error {
+                display: flex;
+                align-items: center;
+                color: $red-100;
+                // extend body ultra small and override it
+                @extend .ultra-small;
+                line-height: $error-line-height;
+                margin-top: $space-xs;
+
+                svg {
+                    @include icon-md;
+                    fill: $red-100;
+                    margin-right: $space-xs;
+                }
+            }
+
+            .actionsWrap {
+                margin-top: $space-xxl;
+            }
+        }
+    }
 }

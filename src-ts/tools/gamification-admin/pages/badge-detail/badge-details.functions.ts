@@ -1,6 +1,7 @@
 import { GamificationConfig } from '../../game-config'
 import { GameBadge } from '../../game-lib'
 
+import { submitRequestAsync as submitBatchAssignRequestAsync } from './batch-assign-badge.store'
 import { submitRequestAsync as submitBadgeAssingRequestAsync } from './manual-assign-badge.store'
 import { submitRequestAsync as submitBadgeUpdateRequestAsync } from './update-badge.store'
 import { UpdateBadgeRequest } from './updated-badge-request.model'
@@ -17,4 +18,8 @@ export function generateCSV(input: Array<Array<string | number>>): string {
 
 export async function manualAssignRequestAsync(csv: string): Promise<any> {
     return submitBadgeAssingRequestAsync(csv)
+}
+
+export async function batchAssignRequestAsync(batchFile: File): Promise<any> {
+    return submitBatchAssignRequestAsync(batchFile)
 }

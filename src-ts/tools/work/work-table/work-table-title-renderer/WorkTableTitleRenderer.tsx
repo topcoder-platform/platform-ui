@@ -1,5 +1,4 @@
-import { FC, SVGProps } from 'react'
-
+import { IconOutline, IconWrapper } from '../../../../lib'
 import {
     Work,
     WorkTypeCategory,
@@ -12,26 +11,35 @@ import styles from './WorkTableTitleRenderer.module.scss'
 
 function WorkTableTitleRenderer(data: Work): JSX.Element {
 
-    let Icon: FC<SVGProps<SVGSVGElement>>
+    let Icon: JSX.Element
     switch (data.typeCategory) {
 
         case WorkTypeCategory.data:
-            Icon = WorkTypeCategoryDataIcon
+            Icon = <WorkTypeCategoryDataIcon />
             break
 
         case WorkTypeCategory.design:
-            Icon = WorkTypeCategoryDesignIcon
+            Icon = <WorkTypeCategoryDesignIcon />
             break
 
-        // TODO: qa and dev work categories
+        case WorkTypeCategory.qa:
+          Icon = (
+            <IconWrapper
+              className={styles['qa-icon']}
+              icon={<IconOutline.BadgeCheckIcon />}
+            />
+          )
+          break
+
+        // TODO: dev work categories
         default:
-            Icon = WorkTypeCategoryUnknownIcon
+            Icon = <WorkTypeCategoryUnknownIcon />
             break
     }
 
     return (
         <div className={styles['work-table-title-container']}>
-            <Icon />
+            {Icon}
             <div className={styles['work-table-title']}>
                 <div className={styles.title}>
                     {data.title}

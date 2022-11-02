@@ -16,6 +16,7 @@ export interface ButtonProps {
     readonly elementType?: keyof JSX.IntrinsicElements
     readonly hidden?: boolean
     readonly icon?: FC<SVGProps<SVGSVGElement>>
+    readonly id?: string
     readonly label?: string
     readonly name?: string
     readonly onClick?: (event?: any) => void
@@ -79,6 +80,8 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
                 tabIndex={props.tabIndex}
                 title={props.title}
                 type={props.type || 'button'}
+                id={props.id}
+                value={props.id}
             >
                 {content}
             </button>

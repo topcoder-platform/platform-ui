@@ -1,12 +1,9 @@
-import { FC, useContext, useMemo } from 'react'
+import { Dispatch, FC, ReactNode, SetStateAction, useContext, useMemo, useState } from 'react'
 
 import { Breadcrumb, BreadcrumbItemModel, ContentLayout, LoadingSpinner, Portal, profileContext, ProfileContextData } from '../../../lib'
 import {
     AllCertificationsProviderData,
     LearnCertification,
-    LearningHat,
-    MyCourseCompletedCard,
-    MyCourseInProgressCard,
     useAllCertifications,
     useLearnBreadcrumb,
     UserCertificationsProviderData,
@@ -15,7 +12,10 @@ import {
 } from '../learn-lib'
 import { LEARN_PATHS } from '../learn.routes'
 
+import { CompletedTab } from './completed-tab'
 import { HeroCard } from './hero-card'
+import { InProgressTab } from './in-progress-tab'
+import { MyTabsNavbar, MyTabsViews } from './my-tabs-navbar'
 import styles from './MyLearning.module.scss'
 
 interface CertificatesByIdType {
@@ -27,6 +27,7 @@ const MyLearning: FC<{}> = () => {
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
     const { completed, inProgress, ready: coursesReady }: UserCertificationsProviderData = useUserCertifications()
     const { certifications, ready: certificatesReady }: AllCertificationsProviderData = useAllCertifications()
+    const [activeTab, setActiveTab]: [MyTabsViews|undefined, Dispatch<SetStateAction<MyTabsViews|undefined>>] = useState()
 
     const ready: boolean = profileReady && coursesReady && certificatesReady
 
@@ -44,6 +45,28 @@ const MyLearning: FC<{}> = () => {
         },
     ])
 
+    const renderTabs: () => ReactNode = () => (
+        <MyTabsNavbar
+            inProgress={inProgress.length}
+            completed={completed.length}
+            onTabChange={setActiveTab}
+        >
+            {activeTab === MyTabsViews.completed ? (
+                <CompletedTab
+                    allCertificates={certifications}
+                    certificatesById={certificatesById}
+                    certifications={completed}
+                />
+            ) : (
+                <InProgressTab
+                    allCertificates={certifications}
+                    certificatesById={certificatesById}
+                    certifications={inProgress}
+                />
+            )}
+        </MyTabsNavbar>
+    )
+
     return (
         <ContentLayout contentClass={styles['content-layout']}>
             <Breadcrumb items={breadcrumb} />
@@ -54,6 +77,7 @@ const MyLearning: FC<{}> = () => {
                     <div className={styles['hero-wrap']}>
                         <WaveHero
                             title='my learning'
+                            theme='light'
                             text={`
                                 This is your very own page to keep track of your professional education and skill building.
                                 From here you can resume your courses in progress or review past accomplishments.
@@ -64,41 +88,7 @@ const MyLearning: FC<{}> = () => {
                     </div>
                 </Portal>
 
-                {ready && (
-                    <>
-                        <div className={styles['courses-area']}>
-                            {inProgress.map((certif) => (
-                                <MyCourseInProgressCard
-                                    certification={certificatesById[certif.certificationId]}
-                                    key={certif.certificationId}
-                                    theme='detailed'
-                                    currentLesson={certif.currentLesson}
-                                    completedPercentage={certif.courseProgressPercentage / 100}
-                                    startDate={certif.startDate}
-                                />
-                            ))}
-                        </div>
-
-                        {!!completed.length && (
-                            <div className={styles['courses-area']}>
-                                <div className={styles['title-line']}>
-                                    <LearningHat />
-                                    <h2 className='details'>Completed Courses</h2>
-                                </div>
-
-                                <div className={styles['cards-wrap']}>
-                                    {completed.map((certif) => (
-                                        <MyCourseCompletedCard
-                                            certification={certificatesById[certif.certificationId]}
-                                            key={certif.certificationId}
-                                            completed={certif.completedDate}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </>
-                )}
+                {ready && renderTabs()}
             </div>
         </ContentLayout>
     )

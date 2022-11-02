@@ -5,17 +5,15 @@ import {
     Form,
     FormAction,
     FormDefinition,
-    formGetInputFields,
     formGetInputModel,
-    FormGroup,
     FormInputModel,
-    formOnReset,
     IconOutline,
     InfoCard,
     LoadingSpinner,
     PageDivider,
     profileContext,
     ProfileContextData,
+    SaveForLaterIcon,
     useCheckIsMobile
 } from '../../../../../lib'
 import {
@@ -32,8 +30,8 @@ import {
 } from '../../../work-lib'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
-import { dashboardRoute } from '../../../work.routes'
-import IntakeFormsBreadcrumb from '../intake-forms-breadcrumb/IntakeFormsBreadcrumb'
+import { dashboardRoute, selfServiceStartRoute } from '../../../work.routes'
+import { IntakeFormsBreadcrumb } from '../intake-forms-breadcrumb'
 
 import { BugHuntFormConfig } from './bug-hunt.form.config'
 import styles from './BugHunt.module.scss'
@@ -47,13 +45,25 @@ const BugHuntIntakeForm: React.FC = () => {
     const isMobile: boolean = useCheckIsMobile()
     const { isLoggedIn }: ProfileContextData = useContext<ProfileContextData>(profileContext)
 
-    const [action, setAction]: [FormAction, Dispatch<SetStateAction<FormAction>>] = useState()
+    const [action, setAction]: [FormAction, Dispatch<SetStateAction<FormAction>>] = useState<FormAction>()
+    const [loading, setLoading]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [saveSuccess, setSaveSuccess]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
     BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { setAction('save') }
     BugHuntFormConfig.buttons.primaryGroup[0].hidden = !isLoggedIn
     BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { setAction('submit') }
     if (BugHuntFormConfig.buttons.secondaryGroup) {
-        BugHuntFormConfig.buttons.secondaryGroup[0].onClick = () => { navigate(-1) }
+        BugHuntFormConfig.buttons.secondaryGroup[0].onClick = () => { navigate(selfServiceStartRoute) }
+    }
+
+    if (isMobile) {
+        BugHuntFormConfig.buttons.primaryGroup[0].icon = SaveForLaterIcon
+        BugHuntFormConfig.buttons.primaryGroup[0].label = ''
+        BugHuntFormConfig.buttons.primaryGroup[1].label = 'Submit'
+    } else {
+        BugHuntFormConfig.buttons.primaryGroup[0].icon = undefined
+        BugHuntFormConfig.buttons.primaryGroup[0].label = 'Save for later'
+        BugHuntFormConfig.buttons.primaryGroup[1].label = 'Complete and pay'
     }
 
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
@@ -68,16 +78,7 @@ const BugHuntIntakeForm: React.FC = () => {
     const [selectedPackage, setSelectedPackage]: [PricePackageName, Dispatch<SetStateAction<PricePackageName>>]
         = useState<PricePackageName>(formValues?.packageType)
 
-    const formInputs: Array<FormInputModel> = formGetInputFields(formDef.groups as Array<FormGroup>)
-
-    useEffect(() => {
-        if (!workId && !challenge) {
-            formOnReset(formInputs, formValues)
-        }
-        // Disabling lint rule as we only want this to run one time when component mounts, otherwise it resets
-        // the form for a user that is not logged in and has no challenge created yet
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    const [disableSaveForLater, setDisableSaveForLater]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(true)
 
     useEffect(() => {
 
@@ -108,17 +109,23 @@ const BugHuntIntakeForm: React.FC = () => {
 
             setFormValues(formData)
 
-            if (formData?.packageType && formData?.packageType !== selectedPackage) {
+            if (formData?.packageType) {
                 setSelectedPackage(formData.packageType)
             }
         }
 
-        getAndSetWork()
+        setLoading(true)
+        getAndSetWork().finally(() => setLoading(false))
     }, [
         isLoggedIn,
-        selectedPackage,
         workId,
     ])
+
+    useEffect(() => {
+        if (!loading && saveSuccess) {
+            handleSaveSuccess()
+        }
+    }, [loading, saveSuccess])
 
     const requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => void = (inputs) => {
         const projectTitle: string = formGetInputModel(inputs, ChallengeMetadataName.projectTitle).value as string
@@ -145,6 +152,10 @@ const BugHuntIntakeForm: React.FC = () => {
         if (packageType !== selectedPackage) {
             setSelectedPackage(packageType)
         }
+
+        // If there's no project title, we should disable SAVE FOR LATER button
+        const title: string = formGetInputModel(inputs, ChallengeMetadataName.projectTitle).value as string
+        setDisableSaveForLater(!title?.trim())
     }
 
     const onSave: (val: any) => Promise<void> = (val) => {
@@ -161,16 +172,21 @@ const BugHuntIntakeForm: React.FC = () => {
             val.currentStep = 'review'
         }
 
-        return workUpdateAsync(WorkType.bugHunt, challenge, val)
+        setLoading(true)
+        return workUpdateAsync(WorkType.bugHunt, challenge, val).finally(() => setLoading(false))
     }
 
-    const onSaveSuccess: () => void = () => {
+    const handleSaveSuccess: () => void = () => {
         if (action === 'save') {
             navigate(`${dashboardRoute}/draft`)
         } else if (action === 'submit') {
             const nextUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt]['review']}/${workId || challenge?.id}`
             navigate(nextUrl)
         }
+    }
+
+    const onSaveSuccess: () => void = () => {
+        setSaveSuccess(true)
     }
 
     const goToLoginStep: (formData: any) => void = (formData: any) => {
@@ -183,49 +199,66 @@ const BugHuntIntakeForm: React.FC = () => {
         navigate(loginPromptUrl)
     }
 
-    if (!challenge && workId) {
-        return <LoadingSpinner />
+    /**
+     * This function is used to decide whether SAVE FOR LATER button should be enabled or not
+     * @param isPrimaryGroup whether its a primary group or not
+     * @param index the index of the button
+     * @returns true or false depending on whether its SAVE FOR LATER
+     */
+    function shouldDisableButton(isPrimaryGroup: boolean, index: number): boolean {
+        // SAVE FOR LATER belongs to primary group and its index is 0, we are interested only for that particular case
+        // else return false which means not disabled from this function
+        if (isPrimaryGroup && index === 0) {
+            return disableSaveForLater
+        }
+
+        return false
     }
 
     return (
         <>
+            <LoadingSpinner hide={!loading} type='Overlay' />
             <IntakeFormsBreadcrumb
                 basicInfoRoute={WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']}
                 workType={workBugHuntConfig.type}
             />
-            <WorkTypeBanner
-                title={workBugHuntConfig.title}
-                subTitle={workBugHuntConfig.subtitle}
-                workType={workBugHuntConfig.type}
-            />
-            <WorkServicePrice
-                duration={workBugHuntConfig.duration?.[selectedPackage] || 0}
-                hideTitle
-                icon={<IconOutline.BadgeCheckIcon width={48} height={48} />}
-                price={workBugHuntConfig.priceConfig.getPrice(workBugHuntConfig.priceConfig, selectedPackage)}
-                serviceType={workBugHuntConfig.type}
-                showIcon
-            />
             <div className={styles['bug-hunt-wrapper']}>
-                <DeliverablesInfoCard isMobile={isMobile} />
-                <InfoCard
-                    color='success'
-                    defaultOpen={!isMobile}
-                    isCollapsible
-                    title={`About ${workBugHuntConfig.type}`}
-                >
-                    {workBugHuntConfig.about}
-                </InfoCard>
-                <PageDivider />
-                <Form
-                    onChange={onChange}
-                    formDef={formDef}
-                    formValues={formValues}
-                    onSuccess={onSaveSuccess}
-                    requestGenerator={requestGenerator}
-                    save={onSave}
-                    action={action}
+                <WorkTypeBanner
+                    title={workBugHuntConfig.title}
+                    subTitle={workBugHuntConfig.subtitle}
+                    workType={workBugHuntConfig.type}
                 />
+                <WorkServicePrice
+                    duration={workBugHuntConfig.duration?.[selectedPackage] || 0}
+                    hideTitle
+                    icon={<IconOutline.BadgeCheckIcon width={48} height={48} />}
+                    iconClass={styles['bug-hunt-icon']}
+                    price={workBugHuntConfig.priceConfig.getPrice(workBugHuntConfig.priceConfig, selectedPackage)}
+                    serviceType={workBugHuntConfig.type}
+                    showIcon
+                />
+                <div>
+                    <DeliverablesInfoCard isMobile={isMobile} />
+                    <InfoCard
+                        color='success'
+                        defaultOpen={!isMobile}
+                        isCollapsible
+                        title={`About ${workBugHuntConfig.type}`}
+                    >
+                        {workBugHuntConfig.about}
+                    </InfoCard>
+                    <PageDivider />
+                    <Form
+                        onChange={onChange}
+                        formDef={formDef}
+                        formValues={formValues}
+                        onSuccess={onSaveSuccess}
+                        requestGenerator={requestGenerator}
+                        save={onSave}
+                        action={action}
+                        shouldDisableButton={shouldDisableButton}
+                    />
+                </div>
             </div>
         </>
     )

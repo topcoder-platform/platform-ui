@@ -9,36 +9,27 @@ interface PortalProps {
     portalRef?: MutableRefObject<HTMLElement>,
 }
 
-const Portal: FC<PortalProps> = ({
-    portalId,
-    portalNode,
-    children,
-    className,
-    portalRef,
-}: PortalProps) => {
+const Portal: FC<PortalProps> = (props: PortalProps) => {
+    const portalNode: HTMLElement | null | undefined = props.portalId
+        ? document.getElementById(props.portalId)
+        :  props.portalNode ?? undefined
 
     const defaultPortalNode: HTMLElement = useMemo(() => {
-        if (portalNode) {
+        if (props.portalId || props.portalNode) {
             return
         }
 
-        if (portalId) {
-            return document.getElementById(portalId)
-        }
-
         const backupHtmlNode: HTMLElement = document.createElement('div')
-        if (className) {
-            backupHtmlNode.classList.add(className)
+        if (props.className) {
+            backupHtmlNode.classList.add(props.className)
         }
-        document.body.appendChild(backupHtmlNode)
         return backupHtmlNode
-    }, [
-        portalId,
-        portalNode,
-        className,
-    ]) as HTMLElement
+    }, [props.portalId, props.portalNode, props.className]) as HTMLElement
 
     useEffect(() => {
+        if (defaultPortalNode) {
+            document.body.appendChild(defaultPortalNode)
+        }
         return () => {
             if (defaultPortalNode) {
                 document.body.removeChild(defaultPortalNode)
@@ -46,11 +37,11 @@ const Portal: FC<PortalProps> = ({
         }
     }, [defaultPortalNode])
 
-    if (portalRef) {
-        portalRef.current = portalNode ?? defaultPortalNode
+    if (props.portalRef) {
+        props.portalRef.current = portalNode ?? defaultPortalNode
     }
 
-    return createPortal(children, portalNode ?? defaultPortalNode)
+    return createPortal(props.children, portalNode ?? defaultPortalNode)
 }
 
 export default Portal

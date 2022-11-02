@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { IconOutline, textFormatMoneyLocaleString, Tooltip } from '../../../lib'
+import { IconOutline, IconWrapper, textFormatMoneyLocaleString, Tooltip } from '../../../lib'
 
 import styles from './WorkServicePrice.module.scss'
 
@@ -8,6 +8,7 @@ export interface WorkServicePriceProps {
   duration: number,
   hideTitle?: boolean
   icon?: JSX.Element,
+  iconClass?: string,
   price: number,
   serviceType: string,
   showIcon?: boolean,
@@ -15,17 +16,15 @@ export interface WorkServicePriceProps {
 }
 
 const ServicePrice: FC<WorkServicePriceProps> = (props: WorkServicePriceProps) => {
-  const { icon, showIcon, hideTitle = false, serviceType, stickerPrice, price = 0, duration }: WorkServicePriceProps = props
+  const { icon, iconClass, showIcon, hideTitle = false, serviceType, stickerPrice, price = 0, duration }: WorkServicePriceProps = props
 
   return (
     <div className={styles.container}>
       <div className={styles.inline}>
-        <div className={styles.iconWrapper}>
-          {!!showIcon && !!icon && (
-            <>{icon}</>
-          )}
-        </div>
-        <div>
+        {!!showIcon && !!icon && (
+          <IconWrapper icon={icon} className={iconClass} />
+        )}
+        <div className={styles['content-wrapper']}>
           {!hideTitle && (
             <p><h3 className={styles.serviceTitle}>
               {serviceType}
@@ -45,9 +44,8 @@ const ServicePrice: FC<WorkServicePriceProps> = (props: WorkServicePriceProps) =
                 <Tooltip
                   content='The price and project length is dynamic and dependent on the
                   variables selected as you define your work.'
-                  triggerOn='hover'
                   trigger={(
-                    <IconOutline.QuestionMarkCircleIcon width={14} height={14} />
+                    <IconOutline.QuestionMarkCircleIcon className={styles['help-icon']} width={16} height={16} />
                   )}
                 />
               </span>

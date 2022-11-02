@@ -29,6 +29,14 @@
     line-height: 24px;
     display: inline-block;
 
+    &.flex-row {
+        display: flex;
+        align-items: center;
+        svg {
+            margin-right: 4px;
+        }
+    }
+
     &.primary,
     &.secondary {
 
@@ -133,6 +141,7 @@
 
     svg {
         @include icon-lg;
+        display: inline;
     }
 
     &.link {

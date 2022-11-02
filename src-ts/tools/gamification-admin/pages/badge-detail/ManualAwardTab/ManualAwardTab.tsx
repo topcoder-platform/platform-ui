@@ -11,7 +11,8 @@ import { generateCSV, manualAssignRequestAsync } from '../badge-details.function
 import styles from './ManualAwardTab.module.scss'
 
 export interface ManualAwardTabProps {
-    badge: GameBadge
+    badge: GameBadge,
+    onManualAssign: () => void
 }
 
 const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => {
@@ -37,7 +38,7 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
                 let message: string = e.message
                 if (e.errors && e.errors[0] && e.errors[0].path === 'user_id') {
                     const handleOrId: string = find(selectedMembers, { userId: e.errors[0].value })?.handle || e.errors[0].value
-                    message = `Member ${handleOrId} alredy owns this badge.`
+                    message = `Member ${handleOrId} already owns this badge.`
                 }
                 setBadgeAssignError(message)
             })
@@ -76,6 +77,7 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
                     isOpen={showBadgeAssigned}
                     onClose={() => {
                         setShowBadgeAssigned(false)
+                        props.onManualAssign()
                     }}
                 />
             }

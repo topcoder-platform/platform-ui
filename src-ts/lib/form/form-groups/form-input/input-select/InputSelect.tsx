@@ -30,7 +30,7 @@ interface InputSelectProps {
     readonly label?: string
     readonly name: string
     readonly onChange: (event: ChangeEvent<HTMLInputElement>) => void
-    readonly options: Array<InputSelectOption>
+    readonly options: ReadonlyArray<InputSelectOption>
     readonly tabIndex?: number
     readonly value?: string
 }
@@ -68,7 +68,7 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
             hideInlineErrors={props.hideInlineErrors}
             ref={triggerRef}
         >
-            <div className={styles['selected']} onClick={toggleMenu}>
+            <div className={styles['selected']} onClick={() => !props.disabled && toggleMenu()}>
                 <span className='body-small'>{selectedOption ? label(selectedOption) : ''}</span>
                 <span className={styles['selected-icon']}>
                     <IconOutline.ChevronDownIcon />

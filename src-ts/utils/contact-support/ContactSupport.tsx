@@ -9,7 +9,7 @@ import {
     formOnReset
 } from '../../lib'
 
-export const toolTitle: string = 'Contact Support'
+import { toolTitle } from './contact-support.routes'
 
 const ContactSupport: FC<{}> = () => {
 

@@ -22,6 +22,11 @@
     width: 100%;
 }
 
+@mixin socialPreviewImg {
+    width: 1200px;
+    height: 630px;
+}
+
 @mixin scrollbar {
     // firefox's solution for "customizing" scrollbars
     & {

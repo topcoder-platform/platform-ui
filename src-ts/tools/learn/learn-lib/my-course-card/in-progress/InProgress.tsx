@@ -50,7 +50,7 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
     }
 
     return (
-        <div className={classNames(styles['wrap'], styles['large'])}>
+        <div className={classNames(styles['wrap'], styles['large'], 'course-card-wrap', 'in-progress')}>
             <div className={styles['inner']}>
                 <div className={styles['line']}>
                     <CourseTitle

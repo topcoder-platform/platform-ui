@@ -9,5 +9,9 @@ export async function submitRequestAsync(csv: string): Promise<any> {
     // fill the form
     form.append('file', new Blob([csv], { type: 'text/csv' }), 'data.csv')
 
-    return xhrPostAsync(url, form)
+    return xhrPostAsync(url, form, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    })
 }

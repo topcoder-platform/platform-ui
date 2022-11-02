@@ -4,6 +4,7 @@ import {
     ReactElement,
     ReactNode,
     SetStateAction,
+    Suspense,
     useContext,
     useEffect,
     useState,
@@ -11,6 +12,7 @@ import {
 import { Location, Route, useLocation } from 'react-router-dom'
 
 import { authUrlLogin } from '../functions'
+import { LoadingSpinner } from '../loading-spinner'
 import { profileContext, ProfileContextData } from '../profile-provider'
 
 import { PlatformRoute } from './platform-route.model'
@@ -154,9 +156,11 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
     ])
 
     return (
-        <routeContext.Provider value={routeContextData}>
-            {props.children}
-        </routeContext.Provider>
+        <Suspense fallback={<LoadingSpinner />}>
+            <routeContext.Provider value={routeContextData}>
+                {props.children}
+            </routeContext.Provider>
+        </Suspense>
     )
 }
 

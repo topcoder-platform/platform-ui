@@ -1,13 +1,19 @@
 import { noop, trim } from 'lodash'
 import MarkdownIt from 'markdown-it'
-import { createRef, Dispatch, FC, KeyboardEvent, RefObject, SetStateAction, useEffect, useState } from 'react'
+import { ChangeEvent, createRef, Dispatch, FC, KeyboardEvent, RefObject, SetStateAction, useEffect, useState } from 'react'
 import ContentEditable from 'react-contenteditable'
 import { Params, useLocation, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import sanitizeHtml from 'sanitize-html'
+import { KeyedMutator, useSWRConfig } from 'swr'
+// tslint:disable-next-line: no-submodule-imports
+import { FullConfiguration } from 'swr/dist/types'
 
-import { Breadcrumb, BreadcrumbItemModel, Button, ButtonProps, ContentLayout, IconOutline, LoadingSpinner, PageDivider, TabsNavbar, TabsNavItem } from '../../../../lib'
+import { Breadcrumb, BreadcrumbItemModel, Button, ButtonProps, ContentLayout, IconOutline, IconSolid, LoadingSpinner, PageDivider, Sort, tableGetDefaultSort, TabsNavbar, TabsNavItem } from '../../../../lib'
 import { GamificationConfig } from '../../game-config'
-import { BadgeDetailPageHandler, GameBadge, useGamificationBreadcrumb, useGetGameBadgeDetails } from '../../game-lib'
+import { BadgeDetailPageHandler, GameBadge, useGamificationBreadcrumb, useGetGameBadgeDetails, useGetGameBadgesPage } from '../../game-lib'
+import { BadgeActivatedModal } from '../../game-lib/modals/badge-activated-modal'
+import { badgeListingColumns } from '../badge-listing/badge-listing-table'
 
 import AwardedMembersTab from './AwardedMembersTab/AwardedMembersTab'
 import { badgeDetailsTabs, BadgeDetailsTabViews } from './badge-details-tabs.config'
@@ -67,6 +73,16 @@ const BadgeDetailPage: FC = () => {
 
     const [isBadgeDescEditingMode, setIsBadgeDescEditingMode]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
+    // badgeListingMutate will reset badge listing page cache when called
+    const sort: Sort = tableGetDefaultSort(badgeListingColumns)
+    const { mutate: badgeListingMutate }: { mutate: KeyedMutator<any> } = useGetGameBadgesPage(sort)
+
+    const [badgeNameErrorText, setBadgeNameErrorText]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
+
+    const [showActivatedModal, setShowActivatedModal]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+
+    const { cache, mutate }: FullConfiguration = useSWRConfig()
+
     useEffect(() => {
         if (newImageFile && newImageFile.length) {
             const fileReader: FileReader = new FileReader()
@@ -97,6 +113,7 @@ const BadgeDetailPage: FC = () => {
                         ...badgeDetailsHandler.data,
                         badge_image_url: updatedBadge.badge_image_url,
                     })
+                    onBadgeUpdated()
                 })
         }
     }, [
@@ -134,17 +151,44 @@ const BadgeDetailPage: FC = () => {
     )
 
     function onActivateBadge(): void {
-        // TODO: implement in GAME-127
+        updateBadgeAsync({
+            badgeActive: true,
+            id: badgeDetailsHandler.data?.id as string,
+        })
+            .then(() => {
+                badgeDetailsHandler.mutate({
+                    ...badgeDetailsHandler.data,
+                    active: true,
+                })
+                setShowActivatedModal(true)
+                onBadgeUpdated()
+            })
+            .catch((e) => alert(`onActivateBadge error: ${e.message}`))
     }
 
     function onDisableBadge(): void {
-        // TODO: implement in GAME-127
+        updateBadgeAsync({
+            badgeActive: false,
+            id: badgeDetailsHandler.data?.id as string,
+        })
+            .then(() => {
+                badgeDetailsHandler.mutate({
+                    ...badgeDetailsHandler.data,
+                    active: false,
+                })
+                setShowActivatedModal(true)
+                onBadgeUpdated()
+            })
+            .catch((e) => alert(`onDisableBadge error: ${e.message}`))
     }
 
     function onNameEditKeyDown(e: KeyboardEvent): void {
         if (e.key === 'Enter') {
             e.preventDefault()
             badgeNameRef.current?.blur()
+        } else if (/[`'<>]+/.test(e.key)) {
+            // restrict those characters
+            e.preventDefault()
         }
     }
 
@@ -154,8 +198,19 @@ const BadgeDetailPage: FC = () => {
         }
     }
 
+    function sanitazeBadgeName(innerHTML: string): string {
+        const clean: string = sanitizeHtml(innerHTML, {
+            allowedTags: [],
+        })
+        return trim(clean)
+    }
+
     function onSaveBadgeName(): any {
-        const newBadgeName: string | undefined = trim(badgeNameRef.current?.innerHTML)
+        const newBadgeName: string = sanitazeBadgeName(badgeNameRef.current?.innerHTML as string)
+        if (!newBadgeName) {
+            setBadgeNameErrorText('Update rejected due to invalid title string.')
+            return
+        }
         if (newBadgeName !== badgeDetailsHandler.data?.badge_name) {
             // save only if different
             updateBadgeAsync({
@@ -168,6 +223,10 @@ const BadgeDetailPage: FC = () => {
                         ...badgeDetailsHandler.data,
                         badge_name: newBadgeName,
                     })
+                    onBadgeUpdated()
+                })
+                .catch(e => {
+                    setBadgeNameErrorText(e.message)
                 })
         }
     }
@@ -187,20 +246,52 @@ const BadgeDetailPage: FC = () => {
                         ...badgeDetailsHandler.data,
                         badge_description: newBadgeDesc,
                     })
+                    onBadgeUpdated()
                 })
         }
     }
 
+    function onBadgeUpdated(): void {
+        badgeListingMutate()
+    }
+
+    function validateFilePicked(e: ChangeEvent<HTMLInputElement>): void {
+        if (e.target.files?.length) {
+            if (GamificationConfig.ACCEPTED_BADGE_MIME_TYPES.includes(e.target.files[0].type)) {
+                setNewImageFile(e.target.files)
+            } else {
+                toast.error(`Not allowed file type: ${e.target.files[0].type}`)
+            }
+        }
+    }
+
+    function onAssign(): void {
+        // refresh awardedMembers data
+        // for all keys in the cache, containing `assignees`
+        (cache as Map<string, any>).forEach((v, key) => {
+            if (key.startsWith('https') && key.includes('assignees')) {
+                mutate(key, undefined)
+            }
+        })
+        setActiveTab(BadgeDetailsTabViews.awardedMembers)
+    }
+
     // default tab
     let activeTabElement: JSX.Element
-        = <AwardedMembersTab badge={badgeDetailsHandler.data as GameBadge} />
+        = <AwardedMembersTab
+            badge={badgeDetailsHandler.data as GameBadge}
+        />
     if (activeTab === BadgeDetailsTabViews.manualAward) {
         activeTabElement = <ManualAwardTab
             badge={badgeDetailsHandler.data as GameBadge}
+            onManualAssign={onAssign}
         />
     }
     if (activeTab === BadgeDetailsTabViews.batchAward) {
-        activeTabElement = <BatchAwardTab />
+        activeTabElement = <BatchAwardTab
+            badge={badgeDetailsHandler.data as GameBadge}
+            onBatchAssign={onAssign}
+        />
     }
 
     // show page loader if we fetching results
@@ -236,19 +327,25 @@ const BadgeDetailPage: FC = () => {
                                         className={styles.filePickerInput}
                                         accept={GamificationConfig.ACCEPTED_BADGE_MIME_TYPES}
                                         size={GamificationConfig.MAX_BADGE_IMAGE_FILE_SIZE}
-                                        onChange={e => setNewImageFile(e.target.files)}
+                                        onChange={validateFilePicked}
                                     />
                                 </div>
                                 <div className={styles.badgeDetails}>
                                     <ContentEditable
                                         innerRef={badgeNameRef}
                                         html={badgeDetailsHandler.data?.badge_name as string}
-                                        onChange={noop}
+                                        onChange={() => badgeNameErrorText ? setBadgeNameErrorText(undefined) : ''}
                                         onKeyDown={onNameEditKeyDown}
                                         onBlur={onSaveBadgeName}
                                         onFocus={onBadgeNameEditFocus}
                                         className={styles.badgeName}
                                     />
+                                    {
+                                        badgeNameErrorText && <div className={styles.error}>
+                                            <IconSolid.ExclamationIcon />
+                                            {badgeNameErrorText}
+                                        </div>
+                                    }
                                     <div className={styles.badgeDesc}>
                                         <div className={styles.badgeEditWrap}>
                                             <ContentEditable
@@ -290,6 +387,14 @@ const BadgeDetailPage: FC = () => {
                     )
                 }
             </div>
+            {
+                badgeDetailsHandler.data &&
+                <BadgeActivatedModal
+                    isOpen={showActivatedModal}
+                    onClose={() => setShowActivatedModal(false)}
+                    badge={badgeDetailsHandler.data}
+                />
+            }
         </ContentLayout>
     )
 }

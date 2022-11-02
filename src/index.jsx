@@ -1,5 +1,5 @@
 import React, { StrictMode } from "react";
-import ReactDOM from 'react-dom'
+import { createRoot } from 'react-dom/client'
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import ReduxToastr from "react-redux-toastr";
@@ -29,7 +29,8 @@ import "./styles/main.vendor.scss";
 
 logInitialize(EnvironmentConfig);
 
-ReactDOM.render(
+const root = createRoot(document.getElementById("root"));
+root.render(
   <div className="root-container">
     <Provider store={store}>
       <ProfileProvider>
@@ -71,6 +72,4 @@ ReactDOM.render(
       </ProfileProvider>
     </Provider>
   </div>
-  ,
-  document.getElementById('root')
 )

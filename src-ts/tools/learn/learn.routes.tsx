@@ -1,13 +1,16 @@
-import { authUrlLogin, PlatformRoute } from '../../lib'
+import { authUrlLogin, lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
 
-import { MyCertificate, UserCertificate } from './course-certificate'
-import { CourseCompletedPage } from './course-completed'
-import { CourseDetailsPage } from './course-details'
-import { FreeCodeCamp } from './free-code-camp'
-import { default as Learn, toolTitle } from './Learn'
+import { toolTitle } from './Learn'
 import { LearnConfig } from './learn-config'
-import { MyLearning } from './my-learning'
-import { WelcomePage } from './welcome'
+
+const WelcomePage: LazyLoadedComponent = lazyLoad(() => import('./welcome'), 'WelcomePage')
+const CourseDetailsPage: LazyLoadedComponent = lazyLoad(() => import('./course-details'), 'CourseDetailsPage')
+const CourseCompletedPage: LazyLoadedComponent = lazyLoad(() => import('./course-completed/'), 'CourseCompletedPage')
+const MyCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certificate'), 'MyCertificate')
+const UserCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certificate'), 'UserCertificate')
+const FreeCodeCamp: LazyLoadedComponent = lazyLoad(() => import('./free-code-camp'), 'FreeCodeCamp')
+const MyLearning: LazyLoadedComponent = lazyLoad(() => import('./my-learning'), 'MyLearning')
+const LandingLearn: LazyLoadedComponent = lazyLoad(() => import('./Learn'))
 
 export enum LEARN_PATHS {
     certificate = '/certificate',
@@ -63,6 +66,10 @@ export function getUserCertificateUrl(provider: string, certification: string, h
     return `${window.location.origin}${getCoursePath(provider, certification)}/${handle}${LEARN_PATHS.certificate}`
 }
 
+export function getViewStyleParamKey(): string {
+    return Object.keys(LearnConfig.CERT_ALT_PARAMS)[0]
+}
+
 export const rootRoute: string = LEARN_PATHS.root
 export const absoluteRootRoute: string = `${window.location.origin}${LEARN_PATHS.root}`
 
@@ -112,7 +119,7 @@ export const learnRoutes: Array<PlatformRoute> = [
                 title: 'My Learning',
             },
         ],
-        element: <Learn />,
+        element: <LandingLearn />,
         memberOnly: true,
         route: rootRoute,
         title: toolTitle,
