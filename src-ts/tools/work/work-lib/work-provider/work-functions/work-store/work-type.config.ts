@@ -12,9 +12,7 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
     [WorkType.bugHunt]: {
         about: `Expert QA testers will verify that all of the pages on your website are working correctly from the end-user perspective. The testing will stress functional issues, but also includes security issues, user interface issues, usability issues and more. Test on desktop, tablet, and mobile,  to uncover bugs before your customers encounter them.`,
         bgImage: bugHuntTileImg,
-        deliverablesDescription: `You will receive thorough testing of your website, and at the conclusion will be provided
-        a detailed report of bugs which have steps to reproduce, screenshots / videos if applicable,
-        details of the bug, and severity of the issue.`,
+        deliverablesDescription: 'You will receive thorough testing of your website by QA experts, and an actionable report extremely quickly. Our experts will deliver a detailed list of bugs found, with steps to reproduce, including screenshots, videos, and the information you need to fix them.',
         description: 'Execute thorough bug hunts exceptionally fast. Receive a detailed list of bugs and instructions on exactly how to fix them.',
         duration: {
             'advanced': 6,
