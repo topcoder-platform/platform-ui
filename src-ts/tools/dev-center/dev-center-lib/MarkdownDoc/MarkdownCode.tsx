@@ -33,7 +33,7 @@ export const MarkdownCode: React.FC<MarkdownCodeProps> = (props) => {
 
     return (
         <div
-            className={`${styles['codeBlock']} ${
+            className={`${styles.codeBlock} ${
                 showLineNumbers ? styles['show-line-numbers'] : ''
             } hljs`}
             ref={ref}
@@ -55,7 +55,7 @@ interface LineNumbersProps {
     showLineNumbers: boolean
 }
 
-function LineNumbers(props: LineNumbersProps): React.ReactElement | null {
+const LineNumbers = (props: LineNumbersProps): React.ReactElement | null => {
     const { codeRef, showLineNumbers, onVisibilityChange }: LineNumbersProps =
         props
     const [lineNumbers, setLineNumbers]: [
@@ -83,6 +83,7 @@ function LineNumbers(props: LineNumbersProps): React.ReactElement | null {
         if (!pre) {
             return
         }
+
         const innerText: string = pre.innerText
         const clientWidth: number = pre.clientWidth
 
@@ -117,14 +118,14 @@ function LineNumbers(props: LineNumbersProps): React.ReactElement | null {
     }
 
     return (
-        <div className={styles['lineNumbers']}>
+        <div className={styles.lineNumbers}>
             {lineNumbers.map((n, index) => {
                 const prev: number = index > 0 ? lineNumbers[index - 1] : -1
                 return (
                     <div
                         key={`line-${index}`}
-                        className={`${styles['num']} ${
-                            prev === n ? styles['hidden'] : ''
+                        className={`${styles.num} ${
+                            prev === n ? styles.hidden : ''
                         }`}
                     >
                         {n}
@@ -140,6 +141,7 @@ function measureText(text: string, canvas: HTMLCanvasElement): number {
     if (!context) {
         return Number.MAX_SAFE_INTEGER
     }
+
     context.font = 'normal 400 14px / 18px "Roboto Mono"'
     const metrics: TextMetrics = context.measureText(text)
     return metrics.width

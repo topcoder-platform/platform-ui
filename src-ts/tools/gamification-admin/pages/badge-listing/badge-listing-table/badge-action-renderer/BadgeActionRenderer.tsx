@@ -4,7 +4,7 @@ import { badgeDetailPath } from '../../../../gamification-admin.routes'
 
 import styles from './BadgeActionRenderer.module.scss'
 
-function BadgeActionRenderer(badge: GameBadge): JSX.Element {
+const BadgeActionRenderer = (badge: GameBadge): JSX.Element => {
 
     const isMobile: boolean = useCheckIsMobile()
 
@@ -17,27 +17,25 @@ function BadgeActionRenderer(badge: GameBadge): JSX.Element {
         label: string
         view?: 'edit' | 'award'
     }> = [
-            {
-                label: 'View',
-            },
-            {
-                label: 'Award',
-                view: 'award',
-            },
-        ]
+        {
+            label: 'View',
+        },
+        {
+            label: 'Award',
+            view: 'award',
+        },
+    ]
 
     return (
         <div className={styles['badge-actions']}>
-            {actionButtons.map((button, index) => {
-                return (
-                    <Button
-                        {...buttonProps}
-                        key={index}
-                        label={button.label}
-                        route={badgeDetailPath(badge.id, button.view)}
-                    />
-                )
-            })}
+            {actionButtons.map((button, index) => (
+                <Button
+                    {...buttonProps}
+                    key={index}
+                    label={button.label}
+                    route={badgeDetailPath(badge.id, button.view)}
+                />
+            ))}
         </div>
     )
 }

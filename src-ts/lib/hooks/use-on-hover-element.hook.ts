@@ -28,6 +28,7 @@ export function useOnHoverElement(
         if (!!nextVal !== !!counter.current) {
             cb(nextVal > 0)
         }
+
         counter.current = nextVal
     }, [cb])
 

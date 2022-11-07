@@ -101,7 +101,7 @@ const ArticleCard: FC<ArticleCardProps> = ({
 
     return (
         <div
-            style={{ backgroundImage: 'url(\'' + image + '\')' }}
+            style={{ backgroundImage: `url('${  image  }')` }}
             className={outerClass}
         >
             <div
@@ -125,7 +125,7 @@ const ArticleCard: FC<ArticleCardProps> = ({
                             {article.title}
                         </h2>
                     ) : (
-                        <h4 className={'font-tc-white details'}>
+                        <h4 className="font-tc-white details">
                             {article.title}
                         </h4>
                     )}

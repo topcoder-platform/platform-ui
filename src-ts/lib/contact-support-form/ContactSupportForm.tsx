@@ -23,9 +23,9 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
     const [saveOnSuccess, setSaveOnSuccess]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
     useEffect(() => {
-      if (!loading && saveOnSuccess) {
-        props.onSave()
-      }
+        if (!loading && saveOnSuccess) {
+            props.onSave()
+        }
     }, [loading, saveOnSuccess])
 
     function generateRequest(inputs: ReadonlyArray<FormInputModel>): ContactSupportRequest {
@@ -47,7 +47,7 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
         setLoading(true)
         return contactSupportSubmitRequestAsync(request)
             .then(() => {
-              setSaveOnSuccess(true)
+                setSaveOnSuccess(true)
             }).finally(() => setLoading(false))
     }
 

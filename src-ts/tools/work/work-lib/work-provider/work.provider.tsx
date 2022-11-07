@@ -28,6 +28,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
             if (!removedItemIndex) {
                 return
             }
+
             workList.splice(removedItemIndex, 1)
             setWorkContextData({
                 ...workContextData,
@@ -77,14 +78,12 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
                 // now that the work list is initialized,
                 // set all the message counts individually in the background.
                 const promises: Array<Promise<Work>> = output
-                    .map(item => {
-                        return messageGetUnreadCountAsync(item.id, safeProfile.handle)
-                            .then(messageCount => {
-                                item.messageCount = messageCount
-                                return item
-                            })
-                            .catch(() => item)
-                    })
+                    .map(item => messageGetUnreadCountAsync(item.id, safeProfile.handle)
+                        .then(messageCount => {
+                            item.messageCount = messageCount
+                            return item
+                        })
+                        .catch(() => item))
 
                 Promise.all(promises)
                     .then(results => {

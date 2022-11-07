@@ -16,42 +16,40 @@ export interface ContentLayoutProps {
     titleClass?: string
 }
 
-const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => {
-    return (
-        <div className={classNames(styles.content, props.contentClass)}>
+const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => (
+    <div className={classNames(styles.content, props.contentClass)}>
 
-            <div className={classNames(styles['content-outer'], props.outerClass)}>
+        <div className={classNames(styles['content-outer'], props.outerClass)}>
 
-                <div className={classNames(styles['content-inner'], props.innerClass)}>
+            <div className={classNames(styles['content-inner'], props.innerClass)}>
 
-                    {!!props.title && (
-                        <div className={classNames(styles['page-header'], props.titleClass)}>
+                {!!props.title && (
+                    <div className={classNames(styles['page-header'], props.titleClass)}>
 
-                            <h1>
-                                {props.title}
-                            </h1>
+                        <h1>
+                            {props.title}
+                        </h1>
 
-                            {!!props.buttonConfig && (
-                                <div>
-                                    <Button
-                                        {...props.buttonConfig}
-                                        buttonStyle='primary'
-                                        size='lg'
-                                    />
-                                </div>
-                            )}
+                        {!!props.buttonConfig && (
+                            <div>
+                                <Button
+                                    {...props.buttonConfig}
+                                    buttonStyle='primary'
+                                    size='lg'
+                                />
+                            </div>
+                        )}
 
-                        </div>
-                    )}
+                    </div>
+                )}
 
-                    {props.children}
-
-                </div>
+                {props.children}
 
             </div>
 
         </div>
-    )
-}
+
+    </div>
+)
 
 export default ContentLayout

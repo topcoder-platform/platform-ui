@@ -17,10 +17,11 @@ const CourseBadge: FC<CourseBadgeProps> = (props: CourseBadgeProps) => {
             <img src={badgeImg} alt={props.type} />
         )
     }
+
     const Badge: FC<SVGProps<SVGSVGElement>> = getBadge(props.type)
 
     return (
-        <div className={styles['wrap']}>
+        <div className={styles.wrap}>
             <Badge />
         </div>
     )

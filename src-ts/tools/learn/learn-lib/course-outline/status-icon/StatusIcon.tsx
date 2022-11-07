@@ -12,7 +12,7 @@ interface StatusIconProps {
 
 const StatusIcon: FC<StatusIconProps> = (props: StatusIconProps) => {
     const classes: string = classNames(
-        styles['checkmark'],
+        styles.checkmark,
         'status-checkbox',
         props.completed && 'completed',
         props.partial && 'partial',

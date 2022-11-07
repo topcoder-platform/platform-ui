@@ -12,7 +12,7 @@ import {
     CourseTitle,
     LearnCertification,
     useCourses,
-} from '../../../learn-lib'
+} from "../.."
 import { getCoursePath, getLessonPathFromCurrentLesson } from '../../../learn.routes'
 import { CurriculumSummary } from '../../curriculum-summary'
 
@@ -50,16 +50,16 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
     }
 
     return (
-        <div className={classNames(styles['wrap'], styles['large'], 'course-card-wrap', 'in-progress')}>
-            <div className={styles['inner']}>
-                <div className={styles['line']}>
+        <div className={classNames(styles.wrap, styles.large, 'course-card-wrap', 'in-progress')}>
+            <div className={styles.inner}>
+                <div className={styles.line}>
                     <CourseTitle
                         title={props.certification?.title ?? ''}
                         trackType={props.certification?.trackType}
                         credits={props.certification?.providerName}
                     >
                         {isDetailed && (
-                            <div className={styles['status']}>In Progress</div>
+                            <div className={styles.status}>In Progress</div>
                         )}
                     </CourseTitle>
                     {isMinimum && (
@@ -85,12 +85,12 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
                 )}
 
                 {isDetailed && (
-                    <div className={styles['summary']}>
+                    <div className={styles.summary}>
                         <CurriculumSummary
                             moduleCount={course?.modules.length ?? 0}
                             completionHours={course?.estimatedCompletionTime}
                         />
-                        <div className={styles['button']}>
+                        <div className={styles.button}>
                             <Button
                                 buttonStyle='primary'
                                 size='md'
@@ -102,9 +102,9 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
                 )}
             </div>
             {isDetailed && (
-                <div className={styles['details']}>
+                <div className={styles.details}>
                     <div className={styles['details-inner']}>
-                        <p dangerouslySetInnerHTML={{ __html: course?.introCopy.join('<br /><br />') ?? '' }}></p>
+                        <p dangerouslySetInnerHTML={{ __html: course?.introCopy.join('<br /><br />') ?? '' }} />
                         {props.startDate && (
                             <div className={styles['started-date']}>
                                 <span>Started </span>

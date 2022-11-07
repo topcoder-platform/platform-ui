@@ -9,7 +9,7 @@ interface RequireAuthProviderProps {
     rolesRequired?: Array<string>
 }
 
-function RequireAuthProvider(props: RequireAuthProviderProps): JSX.Element {
+const RequireAuthProvider = (props: RequireAuthProviderProps): JSX.Element => {
 
     const profileContextData: ProfileContextData = useContext(profileContext)
     const { profile, initialized }: ProfileContextData = profileContextData
@@ -26,14 +26,17 @@ function RequireAuthProvider(props: RequireAuthProviderProps): JSX.Element {
             if (!profile.roles) {
                 return RestrictedPage
             }
+
             // if the profile doesn't include all the required roles, show the restricted page
             if (props.rolesRequired.some(role => !profile.roles.includes(role))) {
                 return RestrictedPage
             }
-            return props.children
-        } else {
+
             return props.children
         }
+ 
+        return props.children
+        
     }
 
     // redirect to the login page

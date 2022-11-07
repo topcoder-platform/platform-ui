@@ -41,6 +41,7 @@ const TableCell: <T extends { [propertyName: string]: any }>(props: TableCellPro
             if (props.type !== 'action') {
                 return
             }
+
             // this is an action table cell, so stop propagation
             event.preventDefault()
             event.stopPropagation()

@@ -164,6 +164,7 @@ function getPrizeSets(priceConfig: WorkPrice, packageName?: PricePackageName | u
     if (!packageName) {
         packageName = priceConfig.usePromo ? 'promo' : 'base'
     }
+
     const pricePackage: WorkPriceBreakdown | undefined = priceConfig.packages?.[packageName]
 
     if (!pricePackage) { return [] }

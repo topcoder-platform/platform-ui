@@ -30,9 +30,9 @@ export function renderMarkdown(
         const matchStr: string = matches ? matches[0] : ''
         return matchStr
             ? {
-                  s: fromStr.replace(matchStr, '').trimStart(),
-                  title: matchStr.replace(/^#/, '').replace(/`/g, '').trim(),
-              }
+                s: fromStr.replace(matchStr, '').trimStart(),
+                title: matchStr.replace(/^#/, '').replace(/`/g, '').trim(),
+            }
             : { title, s }
     }
 

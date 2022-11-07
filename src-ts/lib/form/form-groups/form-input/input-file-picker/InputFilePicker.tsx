@@ -58,7 +58,7 @@ const InputFilePicker: FC<InputFilePickerProps> = (props: InputFilePickerProps) 
             />
             <input
                 name={props.name}
-                type={'file'}
+                type="file"
                 accept={props.fileConfig?.acceptFileType || '*'}
                 className={styles.filePickerInput}
                 ref={fileInputRef}

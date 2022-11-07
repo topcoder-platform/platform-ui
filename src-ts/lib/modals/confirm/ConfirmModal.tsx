@@ -15,31 +15,29 @@ const ConfirmModal: FC<ConfirmModalProps> = ({
     onConfirm,
     action = 'Confirm',
     ...props
-}: ConfirmModalProps) => {
-    return (
-        <BaseModal
-            {...props}
-            styles={{ modal: { maxWidth: '450px' } }}
-        >
-            {children}
-            <div className='button-container'>
-                <Button
-                    label='Cancel'
-                    onClick={props.onClose}
-                    tabIndex={1}
-                    buttonStyle='secondary'
-                    size='lg'
-                />
-                <Button
-                    buttonStyle='primary'
-                    label={action}
-                    onClick={onConfirm}
-                    tabIndex={2}
-                    size='lg'
-                />
-            </div>
-        </BaseModal>
-    )
-}
+}: ConfirmModalProps) => (
+    <BaseModal
+        {...props}
+        styles={{ modal: { maxWidth: '450px' } }}
+    >
+        {children}
+        <div className='button-container'>
+            <Button
+                label='Cancel'
+                onClick={props.onClose}
+                tabIndex={1}
+                buttonStyle='secondary'
+                size='lg'
+            />
+            <Button
+                buttonStyle='primary'
+                label={action}
+                onClick={onConfirm}
+                tabIndex={2}
+                size='lg'
+            />
+        </div>
+    </BaseModal>
+)
 
 export default ConfirmModal

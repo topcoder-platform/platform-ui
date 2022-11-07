@@ -10,20 +10,20 @@ import gettingStartedGuide from './GettingStartedGuide.md'
 import styles from './GettingStartedGuide.module.scss'
 
 export const GettingStartedGuide: React.FC = () => {
-  const { doc, toc, title }: ReturnType<typeof useMarkdown> = useMarkdown({ uri: gettingStartedGuide })
-  const breadcrumb: Array<BreadcrumbItemModel> = React.useMemo(() => [
-    { name: toolTitle, url: '/dev-center' },
-    { name: title, url: '#' },
-  ], [title])
+    const { doc, toc, title }: ReturnType<typeof useMarkdown> = useMarkdown({ uri: gettingStartedGuide })
+    const breadcrumb: Array<BreadcrumbItemModel> = React.useMemo(() => [
+        { name: toolTitle, url: '/dev-center' },
+        { name: title, url: '#' },
+    ], [title])
 
-  return (
-    <ContentLayout contentClass={styles['contentLayout']} outerClass={styles['contentLayout-outer']} innerClass={styles['contentLayout-inner']}>
+    return (
+        <ContentLayout contentClass={styles.contentLayout} outerClass={styles['contentLayout-outer']} innerClass={styles['contentLayout-inner']}>
 
-      <Breadcrumb items={breadcrumb} />
-      <LayoutDocHeader title={title} subtitle='Getting started Guide' />
-      <MarkdownDoc doc={doc} toc={toc} />
-    </ContentLayout>
-  )
+            <Breadcrumb items={breadcrumb} />
+            <LayoutDocHeader title={title} subtitle='Getting started Guide' />
+            <MarkdownDoc doc={doc} toc={toc} />
+        </ContentLayout>
+    )
 }
 
 export default GettingStartedGuide

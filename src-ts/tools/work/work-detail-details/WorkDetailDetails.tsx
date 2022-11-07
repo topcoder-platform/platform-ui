@@ -16,8 +16,8 @@ const WorkDetailDetails: FC<WorkDetailDetailsProps> = (props: WorkDetailDetailsP
     const workType: WorkType = props.formData?.workType?.selectedWorkType
 
     return (
-        <div className={styles['wrap']}>
-            <div className={styles['detailsContainer']}>
+        <div className={styles.wrap}>
+            <div className={styles.detailsContainer}>
                 {workType !== WorkType.designLegacy &&
                     <WorkDetailDetailsPane formData={props.formData} />
                 }

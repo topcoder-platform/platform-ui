@@ -3,7 +3,7 @@ import { Dispatch, FC, ReactNode, SetStateAction, useCallback, useMemo, useState
 import { Link } from 'react-router-dom'
 
 import { IconOutline, IconSolid } from '../../../../../lib'
-import { LearnModule, LearnModuleProgress, LearnUserCertificationProgress } from '../../../learn-lib'
+import { LearnModule, LearnModuleProgress, LearnUserCertificationProgress } from "../.."
 import { StatusIcon } from '../status-icon'
 import { StepIcon } from '../step-icon'
 
@@ -36,17 +36,11 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
         setIsOpen(open => !open)
     }, [])
 
-    const progress: LearnModuleProgress | undefined = useMemo(() => {
-        return props.progress?.find(m => m.module === props.moduleKey)
-    }, [props.progress, props.moduleKey])
+    const progress: LearnModuleProgress | undefined = useMemo(() => props.progress?.find(m => m.module === props.moduleKey), [props.progress, props.moduleKey])
 
-    const isCompleted: boolean = useMemo(() => {
-        return !!progress && progress.lessonCount === progress?.completedLessons.length
-    }, [progress])
+    const isCompleted: boolean = useMemo(() => !!progress && progress.lessonCount === progress?.completedLessons.length, [progress])
 
-    const isPartial: boolean = useMemo(() => {
-        return !!progress && !!progress.completedLessons.length
-    }, [progress])
+    const isPartial: boolean = useMemo(() => !!progress && !!progress.completedLessons.length, [progress])
 
     const isItemCompleted: (key: string) => boolean = (key: string) => (
         !!progress?.completedLessons.find(l => l.dashedName === key)
@@ -84,10 +78,10 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
     }
 
     return (
-        <div className={classNames(styles['wrap'], isOpen ? 'is-open' : 'collapsed')}>
+        <div className={classNames(styles.wrap, isOpen ? 'is-open' : 'collapsed')}>
             <div className={styles['title-row']} onClick={toggle}>
                 <StatusIcon completed={isCompleted} partial={isPartial} />
-                <span className={styles['title']}>
+                <span className={styles.title}>
                     {props.isAssessment && (
                         <div className={classNames(styles['title-tag'], 'label')}>
                             assessment
@@ -95,13 +89,13 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
                     )}
                     {props.title}
                 </span>
-                <span className={styles['chevron']}>
+                <span className={styles.chevron}>
                     <IconSolid.ChevronUpIcon />
                 </span>
             </div>
             {isOpen && (
-                <div className={styles['content']}>
-                    <div className={styles['summary']}>
+                <div className={styles.content}>
+                    <div className={styles.summary}>
                         <span className={styles['summary-item']}>
                             <IconOutline.DocumentTextIcon />
                             {props.lessonsCount} Lessons
@@ -114,10 +108,10 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
                         )}
                     </div>
                     <div className={styles['short-desc']}>
-                        <span className='body-small' dangerouslySetInnerHTML={{ __html: props.shortDescription.join('<br/>') }}></span>
+                        <span className='body-small' dangerouslySetInnerHTML={{ __html: props.shortDescription.join('<br/>') }} />
                     </div>
 
-                    <ul className={classNames(styles['list'], 'steps-list')}>
+                    <ul className={classNames(styles.list, 'steps-list')}>
                         {props.items.map(renderListItem)}
                     </ul>
                 </div>

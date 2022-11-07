@@ -1,4 +1,5 @@
 import { FC, SVGProps } from 'react'
+
 interface SocialLinkProps {
     readonly icon: FC<SVGProps<SVGSVGElement>>
     url: string

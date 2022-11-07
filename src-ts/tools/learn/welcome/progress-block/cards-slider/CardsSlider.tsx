@@ -11,22 +11,20 @@ interface CardsSliderProps {
 const CardsSlider: FC<CardsSliderProps> = (props: CardsSliderProps) => {
     const [activeSlide, setActiveSlide]: [number, Dispatch<SetStateAction<number>>] = useState(0)
 
-    const wrapSlides: (children: Array<JSX.Element>) => Array<JSX.Element> = (children: Array<JSX.Element>) => {
-        return Children.map<ReactNode, ReactNode>(children, (child, index) => (
-            <div
-                className={
-                    classNames(
-                        styles.slide,
-                        activeSlide === index && 'active',
-                        activeSlide > index && 'is-prev',
-                        activeSlide < index && 'is-next',
-                    )
-                }
-            >
-                {child}
-            </div>
-        )) as Array<JSX.Element>
-    }
+    const wrapSlides: (children: Array<JSX.Element>) => Array<JSX.Element> = (children: Array<JSX.Element>) => Children.map<ReactNode, ReactNode>(children, (child, index) => (
+        <div
+            className={
+                classNames(
+                    styles.slide,
+                    activeSlide === index && 'active',
+                    activeSlide > index && 'is-prev',
+                    activeSlide < index && 'is-next',
+                )
+            }
+        >
+            {child}
+        </div>
+    )) as Array<JSX.Element>
 
     return (
         <div className={styles.wrap}>

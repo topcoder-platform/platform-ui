@@ -70,7 +70,7 @@ const MyLearning: FC<{}> = () => {
     return (
         <ContentLayout contentClass={styles['content-layout']}>
             <Breadcrumb items={breadcrumb} />
-            <div className={styles['wrap']}>
+            <div className={styles.wrap}>
                 <LoadingSpinner hide={ready} className={styles['loading-spinner']} />
 
                 <Portal portalId='page-subheader-portal-el'>

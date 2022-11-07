@@ -92,6 +92,7 @@ const BadgeDetailPage: FC = () => {
                     setFileDataURL(result)
                 }
             }
+
             fileReader.readAsDataURL(newImageFile[0])
         } else if (fileDataURL) {
             setFileDataURL(undefined)
@@ -211,6 +212,7 @@ const BadgeDetailPage: FC = () => {
             setBadgeNameErrorText('Update rejected due to invalid title string.')
             return
         }
+
         if (newBadgeName !== badgeDetailsHandler.data?.badge_name) {
             // save only if different
             updateBadgeAsync({
@@ -287,6 +289,7 @@ const BadgeDetailPage: FC = () => {
             onManualAssign={onAssign}
         />
     }
+
     if (activeTab === BadgeDetailsTabViews.batchAward) {
         activeTabElement = <BatchAwardTab
             badge={badgeDetailsHandler.data as GameBadge}
@@ -322,7 +325,7 @@ const BadgeDetailPage: FC = () => {
                                         onClick={() => fileInputRef.current?.click()} />
                                     <img src={fileDataURL || badgeDetailsHandler.data?.badge_image_url} alt='badge media preview' />
                                     <input
-                                        type={'file'}
+                                        type="file"
                                         ref={fileInputRef}
                                         className={styles.filePickerInput}
                                         accept={GamificationConfig.ACCEPTED_BADGE_MIME_TYPES}
