@@ -109,9 +109,7 @@ export async function onSubmitAsync<T>(
             toast.success(safeSuccessMessage)
             onSuccess?.()
         })
-        .catch(error => {
-            return Promise.reject(error.response?.data?.result?.content || error.message || error)
-        })
+        .catch(error => Promise.reject(error.response?.data?.result?.content || error.message || error))
 }
 
 function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, inputs: ReadonlyArray<FormInputModel>, event: 'blur' | 'change', formValues?: T): void {
@@ -126,6 +124,7 @@ function handleFieldEvent<T>(input: HTMLInputElement | HTMLTextAreaElement, inpu
     if (event === 'change') {
         inputDef.dirty = input.value !== originalValue
     }
+
     inputDef.touched = true
 
     // set the def value
@@ -174,6 +173,7 @@ function validateField(formInputDef: FormInputModel, formElements: HTMLFormContr
                 if (!nextError) {
                     formInputDef.error = undefined
                 }
+
                 return
             }
 

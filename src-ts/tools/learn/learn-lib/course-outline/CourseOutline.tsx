@@ -7,7 +7,7 @@ import {
     LearnLesson,
     LearnModule,
     LearnUserCertificationProgress,
-} from '../../learn-lib'
+} from ".."
 import { getLessonPathFromModule } from '../../learn.routes'
 
 import { CollapsibleItem } from './collapsible-item'
@@ -24,22 +24,20 @@ interface CourseOutlineProps {
 const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
 
     const lessonPath: (course: LearnCourse, module: LearnModule, lesson: LearnLesson) => string
-        = useCallback((course: LearnCourse, module: LearnModule, lesson: LearnLesson) => {
-            return getLessonPathFromModule(
-                course.provider,
-                course.certification,
-                module.key,
-                lesson.dashedName,
-            )
-        }, [])
+        = useCallback((course: LearnCourse, module: LearnModule, lesson: LearnLesson) => getLessonPathFromModule(
+            course.provider,
+            course.certification,
+            module.key,
+            lesson.dashedName,
+        ), [])
 
     return (
-        <div className={classNames(styles['wrap'], 'course-outline-wrap')}>
+        <div className={classNames(styles.wrap, 'course-outline-wrap')}>
 
             <LoadingSpinner hide={props.ready !== false} />
 
             {props.course && (
-                <div className={classNames(styles['content'], 'content')}>
+                <div className={classNames(styles.content, 'content')}>
                     {props.course.modules.map((module) => (
                         <CollapsibleItem
                             active={props.currentStep}

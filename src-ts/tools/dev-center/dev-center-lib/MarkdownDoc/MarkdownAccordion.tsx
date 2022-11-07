@@ -25,7 +25,7 @@ export const MarkdownAccordion: React.FC<MarkdownAccordionProps> = (props) => {
     const [header, ...children]: ReturnType<typeof React.Children.toArray> =
         React.Children.toArray(childrenProp)
     return (
-        <div className={`${styles['accordion']}`}>
+        <div className={`${styles.accordion}`}>
             <div
                 className={`${styles['pane-outline']}`}
                 onClick={() => {

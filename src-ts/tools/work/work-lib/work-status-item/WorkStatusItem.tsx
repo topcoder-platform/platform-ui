@@ -6,7 +6,7 @@ export interface WorkStatusItemProps {
     workStatus?: WorkStatus
 }
 
-function WorkStatusItem({ workStatus }: WorkStatusItemProps): JSX.Element {
+const WorkStatusItem = ({ workStatus }: WorkStatusItemProps): JSX.Element => {
 
     if (!workStatus) {
         return <></>
@@ -18,7 +18,7 @@ function WorkStatusItem({ workStatus }: WorkStatusItemProps): JSX.Element {
 
     return (
         <div className={styles['status-container']}>
-            <div className={styles[statusKey]}></div>
+            <div className={styles[statusKey]} />
             <div className={styles['small-tab']}>
                 {workStatus}
             </div>

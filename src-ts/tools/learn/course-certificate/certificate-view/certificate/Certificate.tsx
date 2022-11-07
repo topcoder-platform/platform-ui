@@ -33,32 +33,32 @@ const Certificate: FC<CertificateProps> = (props: CertificateProps) => {
     return (
         <div
             {...elementSelector}
-            className={classNames(styles['wrap'], props.viewStyle)}
+            className={classNames(styles.wrap, props.viewStyle)}
             ref={props.elRef}
         >
-            <div className={classNames(styles['details'], `theme-${certificateType.toLowerCase()}`)}>
+            <div className={classNames(styles.details, `theme-${certificateType.toLowerCase()}`)}>
                 <div className={styles['details-inner']}>
                     <h2 className='details grad'>Topcoder Academy</h2>
                     <h3>Certificate of Course Completion</h3>
-                    <h1 className={classNames(styles['username'], 'grad')}>
+                    <h1 className={classNames(styles.username, 'grad')}>
                         {props.userName}
                     </h1>
                     <div className={classNames('large-subtitle', styles['tc-handle'])}>
                         <span>Topcoder Handle: </span>
                         <span>{props.tcHandle}</span>
                     </div>
-                    <div className={styles['logos']}>
-                        <div className={styles['logo']}>
+                    <div className={styles.logos}>
+                        <div className={styles.logo}>
                             <TcLogoSvg />
                         </div>
-                        <div className={styles['divider']} />
-                        <div className={styles['logo']}>
+                        <div className={styles.divider} />
+                        <div className={styles.logo}>
                             <TcAcademyLogoSvg />
                         </div>
-                </div>
+                    </div>
                 </div>
             </div>
-            <div className={styles['badges']}>
+            <div className={styles.badges}>
                 <div className={styles['pattern-bg']}>
                     <CertificateBgPattern type={certificateType} />
                 </div>
@@ -69,7 +69,7 @@ const Certificate: FC<CertificateProps> = (props: CertificateProps) => {
                         completedDate={props.completedDate}
                     />
                 </div>
-                <div className={styles['vendor']}>
+                <div className={styles.vendor}>
                     <div className='body-ultra-small'>
                         Course content provided by {props.provider}
                     </div>

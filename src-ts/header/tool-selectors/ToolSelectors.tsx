@@ -7,8 +7,6 @@ interface ToolSelectorsProps {
     isWide: boolean
 }
 
-const ToolSelectors: FC<ToolSelectorsProps> = (props: ToolSelectorsProps) => {
-    return props.isWide ? <ToolSelectorsWide /> : <ToolSelectorsNarrow />
-}
+const ToolSelectors: FC<ToolSelectorsProps> = (props: ToolSelectorsProps) => props.isWide ? <ToolSelectorsWide /> : <ToolSelectorsNarrow />
 
 export default ToolSelectors

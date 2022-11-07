@@ -152,8 +152,8 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
 
     return (
         <>
-            <div className={styles['wrap']}>
-                <div className={styles['title']}>
+            <div className={styles.wrap}>
+                <div className={styles.title}>
                     {isCompleted && (
                         <>
                             <LearningHat />

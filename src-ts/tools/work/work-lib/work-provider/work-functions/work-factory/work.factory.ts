@@ -182,6 +182,7 @@ export function buildUpdateRequest(workTypeConfig: WorkTypeConfig, challenge: Ch
         if (workTypeConfig.submissionPhaseDuration && phase.phaseId === WorkConfigConstants.PHASE_ID_SUBMISSION) {
             phase.duration = workTypeConfig.submissionPhaseDuration[formData[ChallengeMetadataName.packageType] as PricePackageName] || 0
         }
+
         return phase
     })
 
@@ -292,7 +293,7 @@ function buildFormDataBugHunt(formData: any): ReadonlyArray<FormDetail> {
         {
             key: ChallengeMetadataName.deliveryType,
             title: ChallengeMetadataTitle.bugDeliveryType,
-            value: `${formData.deliveryType}${formData.repositoryLink ? ': ' + formData.repositoryLink : ''}`,
+            value: `${formData.deliveryType}${formData.repositoryLink ? `: ${  formData.repositoryLink}` : ''}`,
         },
         {
             key: ChallengeMetadataName.additionalInformation,
@@ -451,14 +452,10 @@ function findOpenPhase(challenge: Challenge): ChallengePhase | undefined {
     const openPhase: ChallengePhase | undefined = sortedPhases.find(phase => phase.isOpen)
         // otherwise, find the phase that _should_ be open now based on its start/end datetimes
         || sortedPhases
-            .find(phase => {
-                return new Date(phase.actualEndDate) > now && new Date(phase.actualStartDate) < now
-            })
+            .find(phase => new Date(phase.actualEndDate) > now && new Date(phase.actualStartDate) < now)
         // otherwise, find the most recently started phase that's in the past
         || sortedPhases
-            .find(phase => {
-                return new Date(phase.actualStartDate) < now
-            })
+            .find(phase => new Date(phase.actualStartDate) < now)
 
     return openPhase
 }
@@ -469,8 +466,10 @@ function findPhase(challenge: Challenge, phases: Array<string>): ChallengePhase 
         if (!!phase) {
             break
         }
+
         phase = challenge.phases.find((p: any) => p.name === currentPhase)
     }
+
     return phase
 }
 
@@ -481,9 +480,11 @@ function formatFormDataOption(detail: Array<string> | { [key: string]: any }): s
     if (isEmpty) {
         return noInfoProvidedText
     }
+
     if (Array.isArray(detail)) {
         return detail.join('\n\n')
     }
+
     if (typeof detail === 'object') {
         return Object.keys(detail)
             .map((key: string) => {
@@ -492,6 +493,7 @@ function formatFormDataOption(detail: Array<string> | { [key: string]: any }): s
             })
             .join('\n\n')
     }
+
     return detail
 }
 
@@ -549,9 +551,9 @@ function getProgress(challenge: Challenge, workStatus: WorkStatus): WorkProgress
         },
         {
             date: getProgressStepDateStart(challenge, [
-              ChallengePhaseName.specificationReview,
-              ChallengePhaseName.specificationSubmission,
-              ChallengePhaseName.registration,
+                ChallengePhaseName.specificationReview,
+                ChallengePhaseName.specificationSubmission,
+                ChallengePhaseName.registration,
             ]),
             name: 'Started',
         },
@@ -699,7 +701,7 @@ function getTypeCategory(type: WorkType): WorkTypeCategory {
             return WorkTypeCategory.design
 
         case WorkType.bugHunt:
-          return WorkTypeCategory.qa
+            return WorkTypeCategory.qa
 
         // TOOD: other categories: dev
         default:

@@ -32,7 +32,7 @@ export const WorkTypeConfigs: { [workType: string]: WorkTypeConfig } = {
             type: 'Review & Payment',
         },
         shortDescription: 'Find bugs quickly and vigorously',
-        startRoute: WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo'],
+        startRoute: WorkIntakeFormRoutes[WorkType.bugHunt].basicInfo,
         submissionPhaseDuration: {
             'advanced': 172800, // 2 days
             'premium': 259200, // 3 days

@@ -14,10 +14,10 @@ export const LayoutDoc: React.FC<LayoutDocProps> = (props) => {
     const { children, toc, disableToc }: LayoutDocProps = props
 
     return (
-        <main className={styles['main']}>
+        <main className={styles.main}>
             <div
-                className={`${styles['mainContent']} ${
-                    disableToc ? styles['disableToc'] : ''
+                className={`${styles.mainContent} ${
+                    disableToc ? styles.disableToc : ''
                 }`}
             >
                 {children}

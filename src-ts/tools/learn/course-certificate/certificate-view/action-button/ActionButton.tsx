@@ -15,7 +15,7 @@ const ActionButton: FC<ActionButtonProps> = (props: ActionButtonProps) => {
     if (!!props.url) {
         return (
             <a
-                className={styles['wrap']}
+                className={styles.wrap}
                 href={props.url}
                 onClick={props.onClick}
                 tabIndex={-1}
@@ -27,7 +27,7 @@ const ActionButton: FC<ActionButtonProps> = (props: ActionButtonProps) => {
     }
 
     return (
-        <div className={styles['wrap']} onClick={props.onClick}>
+        <div className={styles.wrap} onClick={props.onClick}>
             {props.icon}
         </div>
     )

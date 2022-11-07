@@ -29,9 +29,9 @@ const WorkLoginPrompt: FC<WorkLoginPromptProps> = ({ previousPageUrl }: WorkLogi
     }
 
     const onBack: () => void = () => {
-      navigate(
-        previousPageUrl
-      )
+        navigate(
+            previousPageUrl
+        )
     }
 
     return (
@@ -46,12 +46,12 @@ const WorkLoginPrompt: FC<WorkLoginPromptProps> = ({ previousPageUrl }: WorkLogi
                         security, please log in or create an account.
                     </p>
 
-                    <div className={styles['btn']}>
+                    <div className={styles.btn}>
                         <Button
                             label='LOG IN'
                             url={authUrlLogin(customReturnUrl)}
                         />
-                        <span className={styles['separator']}>OR</span>
+                        <span className={styles.separator}>OR</span>
                         <Button
                             label='SIGN UP'
                             onClick={signUp}
@@ -60,15 +60,15 @@ const WorkLoginPrompt: FC<WorkLoginPromptProps> = ({ previousPageUrl }: WorkLogi
                 </div>
             </div>
             <PageDivider />
-            <div className={styles['footerContent']}>
-              <div>
-                <Button
-                  size='md'
-                  icon={BackArrowIcon}
-                  buttonStyle='secondary'
-                  onClick={onBack}
-                />
-              </div>
+            <div className={styles.footerContent}>
+                <div>
+                    <Button
+                        size='md'
+                        icon={BackArrowIcon}
+                        buttonStyle='secondary'
+                        onClick={onBack}
+                    />
+                </div>
             </div>
         </>
     )

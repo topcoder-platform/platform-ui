@@ -40,6 +40,7 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
                     const handleOrId: string = find(selectedMembers, { userId: e.errors[0].value })?.handle || e.errors[0].value
                     message = `Member ${handleOrId} already owns this badge.`
                 }
+
                 setBadgeAssignError(message)
             })
     }
@@ -51,7 +52,7 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
                 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Neque ullamcorper neque sed orci, enim amet, sed.</p>
                 <div className={styles.manualForm}>
                     <InputHandleAutocomplete
-                        label={'Select Member'}
+                        label="Select Member"
                         name='manual-award-member-select'
                         placeholder='Type and select member to award'
                         onChange={setSelectedMembers}

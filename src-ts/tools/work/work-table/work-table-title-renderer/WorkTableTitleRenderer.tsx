@@ -9,7 +9,7 @@ import {
 
 import styles from './WorkTableTitleRenderer.module.scss'
 
-function WorkTableTitleRenderer(data: Work): JSX.Element {
+const WorkTableTitleRenderer = (data: Work): JSX.Element => {
 
     let Icon: JSX.Element
     switch (data.typeCategory) {
@@ -23,13 +23,13 @@ function WorkTableTitleRenderer(data: Work): JSX.Element {
             break
 
         case WorkTypeCategory.qa:
-          Icon = (
-            <IconWrapper
-              className={styles['qa-icon']}
-              icon={<IconOutline.BadgeCheckIcon />}
-            />
-          )
-          break
+            Icon = (
+                <IconWrapper
+                    className={styles['qa-icon']}
+                    icon={<IconOutline.BadgeCheckIcon />}
+                />
+            )
+            break
 
         // TODO: dev work categories
         default:

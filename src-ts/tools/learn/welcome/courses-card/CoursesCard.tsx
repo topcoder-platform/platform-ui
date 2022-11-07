@@ -77,7 +77,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
     ])
 
     return (
-        <div className={classNames(styles['wrap'], !link && 'soon')}>
+        <div className={classNames(styles.wrap, !link && 'soon')}>
             <div className='overline'>
                 {props.certification.category}
             </div>
@@ -86,7 +86,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                 title={props.certification.title}
                 trackType={props.certification.trackType}
             />
-            <div className={styles['bottom']}>
+            <div className={styles.bottom}>
                 {!!link && (
                     <Button
                         buttonStyle={buttonStyle}

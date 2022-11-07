@@ -11,7 +11,7 @@ const PageDivider: FC<PageDividerProps> = ({ styleNames = [] }) => {
 
     const additionalStyles: Array<{ [key: string]: any }> = styleNames.map((style) => styles[style])
 
-    return <div className={cn(styles.divider, ...additionalStyles)}></div>
+    return <div className={cn(styles.divider, ...additionalStyles)} />
 }
 
 export default PageDivider

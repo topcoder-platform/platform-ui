@@ -180,7 +180,7 @@ const BugHuntIntakeForm: React.FC = () => {
         if (action === 'save') {
             navigate(`${dashboardRoute}/draft`)
         } else if (action === 'submit') {
-            const nextUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt]['review']}/${workId || challenge?.id}`
+            const nextUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt].review}/${workId || challenge?.id}`
             navigate(nextUrl)
         }
     }
@@ -194,8 +194,9 @@ const BugHuntIntakeForm: React.FC = () => {
             localStorage.setItem('challengeInProgress', JSON.stringify(formData))
             localStorage.setItem('challengeInProgressType', WorkType.bugHunt)
         }
-        const returnUrl: string = encodeURIComponent(`${window.location.origin}${WorkIntakeFormRoutes[WorkType.bugHunt]['saveAfterLogin']}`)
-        const loginPromptUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt]['loginPrompt']}/${returnUrl}`
+
+        const returnUrl: string = encodeURIComponent(`${window.location.origin}${WorkIntakeFormRoutes[WorkType.bugHunt].saveAfterLogin}`)
+        const loginPromptUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt].loginPrompt}/${returnUrl}`
         navigate(loginPromptUrl)
     }
 
@@ -219,7 +220,7 @@ const BugHuntIntakeForm: React.FC = () => {
         <>
             <LoadingSpinner hide={!loading} type='Overlay' />
             <IntakeFormsBreadcrumb
-                basicInfoRoute={WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']}
+                basicInfoRoute={WorkIntakeFormRoutes[WorkType.bugHunt].basicInfo}
                 workType={workBugHuntConfig.type}
             />
             <div className={styles['bug-hunt-wrapper']}>

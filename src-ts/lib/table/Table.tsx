@@ -57,13 +57,13 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
 
             setSortedData(sorted)
         },
-            [
-                columns,
-                data,
-                defaultSortDirectionMap,
-                props.onToggleSort,
-                sort,
-            ])
+        [
+            columns,
+            data,
+            defaultSortDirectionMap,
+            props.onToggleSort,
+            sort,
+        ])
 
         function toggleSort(fieldName: string): void {
 
@@ -134,16 +134,14 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
 
                 // get the cells in the row
                 const cells: Array<JSX.Element> = props.columns
-                    .map((col, colIndex) => {
-                        return (
-                            <TableCell
-                                {...col}
-                                data={sorted}
-                                index={index}
-                                key={`${index}${colIndex}`}
-                            />
-                        )
-                    })
+                    .map((col, colIndex) => (
+                        <TableCell
+                            {...col}
+                            data={sorted}
+                            index={index}
+                            key={`${index}${colIndex}`}
+                        />
+                    ))
 
                 // return the entire row
                 return (
@@ -172,7 +170,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 </table>
                 {
                     !!props.moreToLoad && !!props.onLoadMoreClick && (
-                        <div className={styles['loadBtnWrap']}>
+                        <div className={styles.loadBtnWrap}>
                             <Button
                                 buttonStyle='tertiary'
                                 label='Load More'

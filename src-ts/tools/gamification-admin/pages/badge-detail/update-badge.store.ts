@@ -13,13 +13,16 @@ export async function submitRequestAsync(request: UpdateBadgeRequest): Promise<G
     if (request.files) {
         form.append('file', request.files[0])
     }
+
     if (request.badgeActive !== undefined) {
         form.append('active', request.badgeActive)
     }
+
     if (request.badgeName) { (
         form.append('badge_name', request.badgeName)
     )
     }
+
     if (request.badgeDesc) {
         form.append('badge_description', request.badgeDesc)
     }

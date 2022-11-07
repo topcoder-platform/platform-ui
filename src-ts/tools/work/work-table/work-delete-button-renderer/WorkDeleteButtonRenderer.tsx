@@ -10,7 +10,7 @@ import {
 import '../../../../lib/styles/index.scss'
 import { Work, workContext, WorkContextData, workDeleteAsync, WorkStatus } from '../../work-lib'
 
-function WorkDeleteButtonRenderer(work: Work): JSX.Element | undefined {
+const WorkDeleteButtonRenderer = (work: Work): JSX.Element | undefined => {
 
     const workContextData: WorkContextData = useContext(workContext)
     const [confirmationOpen, setConfirmationOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)

@@ -8,5 +8,5 @@ export {
     sslUrl as validatorSslUrl,
 } from './validator.functions'
 export
-    // tslint:disable-next-line: no-unused-expression
+// tslint:disable-next-line: no-unused-expression
 type { ValidatorFn } from './validator.functions'

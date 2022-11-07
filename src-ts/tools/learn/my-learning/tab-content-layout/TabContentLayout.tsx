@@ -55,13 +55,13 @@ const TabContentLayout: FC<TabContentLayoutProps> = (props: TabContentLayoutProp
     }
 
     useEffect(() => {
-      props.onCategoryChange?.(selectedCategory)
-      props.onSortChange?.(sortingField)
+        props.onCategoryChange?.(selectedCategory)
+        props.onSortChange?.(sortingField)
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.onCategoryChange, props.onSortChange])
 
     return (
-        <div className={styles['wrap']}>
+        <div className={styles.wrap}>
             <div className={styles['title-line']}>
                 <h2 className='details'>{props.title}</h2>
 
@@ -73,7 +73,7 @@ const TabContentLayout: FC<TabContentLayoutProps> = (props: TabContentLayoutProp
                         name='filter-courses'
                         label='Categories'
                         disabled={props.disableFilters}
-                    ></InputSelect>
+                    />
                     <InputSelect
                         options={props.sortOptions}
                         value={sortingField}
@@ -81,7 +81,7 @@ const TabContentLayout: FC<TabContentLayoutProps> = (props: TabContentLayoutProp
                         name='sort-courses'
                         label='Sort by'
                         disabled={props.disableFilters}
-                    ></InputSelect>
+                    />
                 </div>
             </div>
             {props.children}

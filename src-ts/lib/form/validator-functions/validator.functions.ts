@@ -104,7 +104,9 @@ export function requiredIfOther(value: InputValue, formElements?: HTMLFormContro
     const otherField: HTMLInputElement = getOtherField(formElements, otherFieldName)
     if (typeof value === 'string' && !otherField.value) {
         return undefined
-    } else if (typeof value === 'boolean' && otherField.value !== undefined) {
+    }
+
+    if (typeof value === 'boolean' && otherField.value !== undefined) {
         return undefined
     }
 

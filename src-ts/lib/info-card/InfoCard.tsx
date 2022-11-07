@@ -37,7 +37,7 @@ const InfoCard: FC<InfoCardProps> = ({
             {renderHeader(isCollapsible, isOpen, setIsOpen, title || '')}
 
             {showSpacing && (
-                <div className={styles.spacing}></div>
+                <div className={styles.spacing} />
             )}
 
             {isOpen &&

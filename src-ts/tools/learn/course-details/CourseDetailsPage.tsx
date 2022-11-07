@@ -79,7 +79,7 @@ const CourseDetailsPage: FC<{}> = () => {
             <>
                 <h3 className='details'>Suggested next steps</h3>
 
-                <div className={styles['text']}>
+                <div className={styles.text}>
                     <p>
                         Now that you have completed the {course.title},
                         we'd recommend you enroll in another course to continue your learning.
@@ -93,9 +93,9 @@ const CourseDetailsPage: FC<{}> = () => {
                     <h3 className='details'>Why should you complete this course?</h3>
 
                     <div
-                        className={styles['text']}
+                        className={styles.text}
                         dangerouslySetInnerHTML={{ __html: (course.keyPoints ?? []).join('<br /><br />') }}
-                    ></div>
+                    />
                 </>
             )
         )
@@ -112,7 +112,7 @@ const CourseDetailsPage: FC<{}> = () => {
             <>
                 <h3 className='details mtop'>Prerequisites</h3>
 
-                <div className={styles['text']}>
+                <div className={styles.text}>
                     There are no prerequisites for this course.
                     The course content is appropriate for new learners with no previous experience in this topic.
                 </div>
@@ -133,9 +133,9 @@ const CourseDetailsPage: FC<{}> = () => {
                     <h3 className='details mtop'>Suggestions for completing this course</h3>
 
                     <div
-                        className={styles['text']}
+                        className={styles.text}
                         dangerouslySetInnerHTML={{ __html: (course.completionSuggestions ?? []).join('<br /><br />') }}
-                    ></div>
+                    />
                 </>
             )
         )
@@ -159,14 +159,14 @@ const CourseDetailsPage: FC<{}> = () => {
     return (
         <ContentLayout>
             {!ready && (
-                <div className={styles['wrap']}>
+                <div className={styles.wrap}>
                     <LoadingSpinner />
                 </div>
             )}
             <Breadcrumb items={breadcrumb} />
             {ready && course && (
                 <>
-                    <div className={styles['wrap']}>
+                    <div className={styles.wrap}>
                         <div className={styles['intro-copy']}>
                             <CourseTitle
                                 size='lg'
@@ -176,12 +176,12 @@ const CourseDetailsPage: FC<{}> = () => {
                             />
 
                             <div
-                                className={styles['text']}
+                                className={styles.text}
                                 dangerouslySetInnerHTML={{ __html: course.introCopy.join('<br /><br />') }}
-                            ></div>
+                            />
                         </div>
 
-                        <div className={styles['description']}>
+                        <div className={styles.description}>
                             {getDescription()}
                             {getPrerequisites()}
                             {getCompletionSuggestion()}
@@ -190,7 +190,7 @@ const CourseDetailsPage: FC<{}> = () => {
                             </div>
                         </div>
 
-                        <div className={styles['aside']}>
+                        <div className={styles.aside}>
                             <CourseCurriculum
                                 course={course}
                                 progress={progress}

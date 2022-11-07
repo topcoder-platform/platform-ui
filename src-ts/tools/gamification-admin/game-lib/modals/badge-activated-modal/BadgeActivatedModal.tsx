@@ -4,6 +4,7 @@ import { BaseModal, Button, PageDivider, useCheckIsMobile } from '../../../../..
 import { GameBadge } from '../../game-badge.model'
 
 import styles from './BadgeActivatedModal.module.scss'
+
 export interface BadgeActivatedModalProps {
     badge: GameBadge
     isOpen: boolean
@@ -23,7 +24,7 @@ const BadgeActivatedModal: FC<BadgeActivatedModalProps> = (props: BadgeActivated
             onClose={onClose}
             open={props.isOpen}
             size='md'
-            title={`Badge updated`}
+            title="Badge updated"
             closeOnOverlayClick={false}
         >
             <div className={styles.wrapper}>
