@@ -2,7 +2,7 @@ import classNames from 'classnames'
 import { FC } from 'react'
 
 import { Button, textFormatDateLocaleShortString } from '../../../../../lib'
-import { CourseTitle, LearnCertification } from '../../../learn-lib'
+import { CourseTitle, LearnCertification } from "../.."
 import { getCertificatePath, getCoursePath } from '../../../learn.routes'
 
 import styles from './Completed.module.scss'
@@ -19,8 +19,8 @@ const Completed: FC<CompletedProps> = (props: CompletedProps) => {
     }
 
     return (
-        <div className={classNames(styles['wrap'], 'course-card-wrap', 'completed')}>
-            <div className={styles['line']}>
+        <div className={classNames(styles.wrap, 'course-card-wrap', 'completed')}>
+            <div className={styles.line}>
                 <CourseTitle
                     title={props.certification.title}
                     trackType={props.certification.trackType}

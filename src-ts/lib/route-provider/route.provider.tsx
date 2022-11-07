@@ -165,7 +165,5 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
 }
 
 function isRootRoute(rootLoggedIn: string | undefined, rootLoggedOut: string): (activePath: string) => boolean {
-    return (activePath: string) => {
-        return [rootLoggedIn, rootLoggedOut].some(route => activePath === route)
-    }
+    return (activePath: string) => [rootLoggedIn, rootLoggedOut].some(route => activePath === route)
 }

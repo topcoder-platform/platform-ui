@@ -9,14 +9,11 @@ interface CertificateBgPatternProps {
     type: LearnCertificateTrackType
 }
 
-const CertificateBgPattern: FC<CertificateBgPatternProps> = (props: CertificateBgPatternProps) => {
-
-    return (
-        <div className={classNames(styles['wrap'], `theme-${props.type.toLowerCase()}`)}>
-            <div className='pattern-bg'></div>
-            <div className='wave-bg'></div>
-        </div>
-    )
-}
+const CertificateBgPattern: FC<CertificateBgPatternProps> = (props: CertificateBgPatternProps) => (
+    <div className={classNames(styles.wrap, `theme-${props.type.toLowerCase()}`)}>
+        <div className='pattern-bg' />
+        <div className='wave-bg' />
+    </div>
+)
 
 export default CertificateBgPattern

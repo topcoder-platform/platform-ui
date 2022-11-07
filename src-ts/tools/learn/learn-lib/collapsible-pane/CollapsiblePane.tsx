@@ -31,8 +31,8 @@ const CollapsiblePane: FC<CollapsiblePaneProps> = (props: CollapsiblePaneProps) 
     const elRef: MutableRefObject<HTMLElement | any> = useRef()
 
     const toggle: () => void = useCallback(() => {
-      setIsOpen(!isOpen)
-      onToggle(!isOpen)
+        setIsOpen(!isOpen)
+        onToggle(!isOpen)
     }, [isOpen, onToggle])
 
     const close: () => void = useCallback(() => {
@@ -49,7 +49,7 @@ const CollapsiblePane: FC<CollapsiblePaneProps> = (props: CollapsiblePaneProps) 
     return (
         <div ref={elRef} className={
             classNames(
-                styles['wrap'],
+                styles.wrap,
                 props.position ?? 'to-left',
                 isOpen ? 'open' : 'collapsed',
             )
@@ -58,7 +58,7 @@ const CollapsiblePane: FC<CollapsiblePaneProps> = (props: CollapsiblePaneProps) 
                 {isOpen ? <IconSolid.ChevronDoubleLeftIcon /> : <IconSolid.ChevronDoubleRightIcon />}
                 {props.title}
             </div>
-            <div className={styles['content']}>
+            <div className={styles.content}>
                 {props.children}
             </div>
         </div>

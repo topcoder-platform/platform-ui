@@ -46,7 +46,7 @@ const ToolSelectorWide: FC<ToolSelectorWideProps> = (props: ToolSelectorWideProp
             >
                 {toolRoute.title}
             </Link>
-            <div className={styles['active-indicator']}></div>
+            <div className={styles['active-indicator']} />
         </div>
     )
 }

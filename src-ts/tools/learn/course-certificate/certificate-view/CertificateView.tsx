@@ -127,6 +127,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         if (!canvas) {
             return
         }
+
         fileDownloadCanvasAsImage(canvas, `${certificationTitle}.png`)
     }
 
@@ -135,6 +136,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         if (!canvas) {
             return
         }
+
         const printWindow: Window | null = window.open('')
 
         if (!printWindow) {
@@ -163,7 +165,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
             <LoadingSpinner hide={ready} />
 
             {ready && readyAndCompletedCertification && (
-                <div className={styles['wrap']}>
+                <div className={styles.wrap}>
                     <div className={styles['content-wrap']}>
                         {!props.hideActions && (
                             <div className={styles['btns-wrap']}>

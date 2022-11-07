@@ -5,6 +5,7 @@ import { badgeDetailPath } from '../../../gamification-admin.routes'
 import { GameBadge } from '../../game-badge.model'
 
 import styles from './BadgeCreatedModal.module.scss'
+
 export interface BadgeCreatedModalProps {
     badge: GameBadge
     isOpen: boolean
@@ -24,7 +25,7 @@ const BadgeCreatedModal: FC<BadgeCreatedModalProps> = (props: BadgeCreatedModalP
             onClose={onClose}
             open={props.isOpen}
             size='md'
-            title={`Badge created`}
+            title="Badge created"
             closeOnOverlayClick={false}
         >
             <div className={styles.wrapper}>

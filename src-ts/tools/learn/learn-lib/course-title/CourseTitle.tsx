@@ -27,11 +27,11 @@ const CourseTitle: FC<CourseTitleProps> = (props: CourseTitleProps) => {
     )
 
     return (
-        <div className={classNames(styles['wrap'], props.size)}>
+        <div className={classNames(styles.wrap, props.size)}>
             <div className={classNames('badge-icon', props.size)}>
                 <CourseBadge type={props.trackType ?? 'DEV'} />
             </div>
-            <div className={styles['text']}>
+            <div className={styles.text}>
                 <div className={styles['title-row']}>
                     {title}
                     <span className='mobile-hide'>

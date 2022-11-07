@@ -2,7 +2,7 @@ import { MemberBadgeAward } from '../../../../../game-lib'
 
 import styles from './MemberAwaredAtRenderer.module.scss'
 
-function MemberAwaredAtRenderer(memberAward: MemberBadgeAward): JSX.Element {
+const MemberAwaredAtRenderer = (memberAward: MemberBadgeAward): JSX.Element => {
     const dateFormat: Record<string, string> = {
         day: 'numeric',
         hour: 'numeric',

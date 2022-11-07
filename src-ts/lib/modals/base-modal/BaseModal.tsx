@@ -15,25 +15,22 @@ const BaseModal: FC<BaseModalProps> = ({
     children,
     title,
     ...props
-}: BaseModalProps) => {
+}: BaseModalProps) => (
+    <Modal
+        {...props}
+        classNames={{ modal: `modal-${props.size || 'md'}` }}
+        closeIcon={<IconOutline.XIcon width={28} height={28} />}
+    >
+        <div className={styles['modal-header']}>
+            <h3>{title}</h3>
+        </div>
 
-    return (
-        <Modal
-            {...props}
-            classNames={{ modal: `modal-${props.size || 'md'}` }}
-            closeIcon={<IconOutline.XIcon width={28} height={28} />}
-        >
-            <div className={styles['modal-header']}>
-                <h3>{title}</h3>
-            </div>
+        <hr className={styles.spacer} />
 
-            <hr className={styles['spacer']} />
-
-            <div className={classNames(styles['modal-body'], 'modal-body')}>
-                {children}
-            </div>
-        </Modal>
-    )
-}
+        <div className={classNames(styles['modal-body'], 'modal-body')}>
+            {children}
+        </div>
+    </Modal>
+)
 
 export default BaseModal

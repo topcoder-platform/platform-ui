@@ -37,6 +37,7 @@ export function useCourses(provider: string, certification?: string): CoursesPro
                 if (!mounted) {
                     return
                 }
+
                 setState((prevState) => ({
                     ...prevState,
                     course,

@@ -36,10 +36,8 @@ export function useUserCompletedCertifications(userId?: number, provider?: strin
                 let certifications: Array<LearnUserCompletedCertification> = completedCertifications
 
                 if (provider || certification) {
-                    certifications = completedCertifications.filter((c) => {
-                        return (!provider || c.provider === provider) &&
-                        (!certification || c.certification === certification)
-                    })
+                    certifications = completedCertifications.filter((c) => (!provider || c.provider === provider) &&
+                        (!certification || c.certification === certification))
                 }
 
                 setState((prevState) => ({

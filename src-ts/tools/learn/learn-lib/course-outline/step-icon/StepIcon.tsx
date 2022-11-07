@@ -38,11 +38,11 @@ const StepIcon: FC<StepIconProps> = (props: StepIconProps) => {
 
     return (
         <div className={classnames}>
-            <span className={styles['icon']}>
+            <span className={styles.icon}>
                 {getIconContent()}
             </span>
             {props.label && (
-                <span className={classNames(styles['label'], 'body-small')}>
+                <span className={classNames(styles.label, 'body-small')}>
                     {props.label}
                 </span>
             )}

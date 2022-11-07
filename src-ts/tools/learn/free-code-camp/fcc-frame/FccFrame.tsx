@@ -49,6 +49,7 @@ const FccFrame: FC<FccFrameProps> = (props: FccFrameProps) => {
         if (!frameRef) {
             return
         }
+
         const handleEvent: (event: any) => void = (event: any) => {
             const { data: jsonData, origin }: { data: string, origin: string } = event
 

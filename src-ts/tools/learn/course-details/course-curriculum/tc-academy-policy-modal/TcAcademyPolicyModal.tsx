@@ -17,6 +17,7 @@ const TcAcademyPolicyModal: FC<TcAcademyPolicyModalProps> = (props: TcAcademyPol
         if (loading) {
             return
         }
+
         setLoading(true)
         props.onConfirm()
     }
@@ -68,7 +69,7 @@ const TcAcademyPolicyModal: FC<TcAcademyPolicyModalProps> = (props: TcAcademyPol
             <div className='button-container'>
                 <Button
                     buttonStyle='primary'
-                    label={'I Agree'}
+                    label="I Agree"
                     onClick={handleConfirm}
                     tabIndex={2}
                     size='lg'

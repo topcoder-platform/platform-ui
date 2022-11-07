@@ -9,9 +9,9 @@ interface IconWrapperProps {
 }
 
 const IconWrapper: FC<IconWrapperProps> = ({ className, icon }: IconWrapperProps) => (
-  <div className={classNames(styles.iconWrapper, className)}>
-    <>{icon}</>
-  </div>
+    <div className={classNames(styles.iconWrapper, className)}>
+        <>{icon}</>
+    </div>
 )
 
 export default IconWrapper

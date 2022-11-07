@@ -96,9 +96,7 @@ const FreeCodeCamp: FC<{}> = () => {
         },
     ])
 
-    const currentModuleData: LearnModule | undefined = useMemo(() => {
-        return courseData?.modules.find(d => d.key === moduleParam)
-    }, [courseData, moduleParam])
+    const currentModuleData: LearnModule | undefined = useMemo(() => courseData?.modules.find(d => d.key === moduleParam), [courseData, moduleParam])
 
     const currentStepIndex: number = useMemo(() => {
         if (!currentModuleData) {
@@ -137,9 +135,11 @@ const FreeCodeCamp: FC<{}> = () => {
         if (coursePath !== certificationParam) {
             setCourseParam(coursePath)
         }
+
         if (modulePath !== moduleParam) {
             setModuleParam(modulePath)
         }
+
         if (lessonPath !== lessonParam) {
             setLessonParam(lessonPath)
         }
@@ -329,9 +329,11 @@ const FreeCodeCamp: FC<{}> = () => {
         if (certificationPath !== certificationParam) {
             setCourseParam(certificationPath)
         }
+
         if (modulePath !== moduleParam) {
             setModuleParam(modulePath)
         }
+
         if (lessonPath !== lessonParam) {
             setLessonParam(lessonPath)
         }

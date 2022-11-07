@@ -71,8 +71,8 @@ const InputRating: FC<InputRatingProps> = (props: InputRatingProps) => {
             {...props}
             dirty={!!props.dirty}
             disabled={!!props.disabled}
-            hint={''}
-            label={''}
+            hint=""
+            label=""
             type='rating'
             className={styles['rating-input-wrapper']}
             hideInlineErrors={props.hideInlineErrors}

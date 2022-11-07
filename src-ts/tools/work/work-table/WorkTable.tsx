@@ -146,7 +146,7 @@ const WorkTable: FC<{}> = () => {
     // if we don't have any work after filtering, render no results
     // otherwise, render the table
     const resultsElement: JSX.Element = !filteredResults?.length
-        ? <WorkNoResults filtered={true} />
+        ? <WorkNoResults filtered />
         : (
             <Table
                 columns={columns}

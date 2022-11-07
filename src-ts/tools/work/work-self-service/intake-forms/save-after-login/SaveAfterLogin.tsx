@@ -30,7 +30,7 @@ const SaveAfterLogin: FC = () => {
 
                     localStorage.removeItem('challengeInProgress')
                     localStorage.removeItem('challengeInProgressType')
-                    const nextUrl: string = `${WorkIntakeFormRoutes[workType]['review']}/${challenge?.id}`
+                    const nextUrl: string = `${WorkIntakeFormRoutes[workType].review}/${challenge?.id}`
                     navigate(nextUrl)
                 }
             } catch (err) {

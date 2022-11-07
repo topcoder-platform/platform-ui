@@ -26,6 +26,7 @@ export function fileCreateFromCanvas(canvas: HTMLCanvasElement, fileName: string
                 reject()
                 return
             }
+
             resolve(
                 new File([blob], fileName, {type: blob.type})
             )

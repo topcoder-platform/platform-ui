@@ -1,7 +1,7 @@
 import classNames from 'classnames'
 import { ReactNode } from 'react'
 
-import '../../../../lib/styles/index.scss'
+import "../../../styles/index.scss"
 import { FormInputModel } from '../../form-input.model'
 
 import styles from './FormInputRow.module.scss'

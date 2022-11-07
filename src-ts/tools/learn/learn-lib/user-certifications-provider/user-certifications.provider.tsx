@@ -40,6 +40,7 @@ export function useUserCertifications(): UserCertificationsProviderData {
                     ready: true,
                 }))
             }
+
             return
         }
 

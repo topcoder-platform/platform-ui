@@ -27,40 +27,34 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
     ] = useLocalStorage<string>('tca-welcome-filter-certs', '')
 
     // certificates indexed by category, sorted by title
-    const certsByCategory: Dictionary<Array<LearnCertification>> = useMemo(() => {
-      return groupBy(orderBy(props.certifications, 'title', 'asc'), 'category')
-    }, [props.certifications])
+    const certsByCategory: Dictionary<Array<LearnCertification>> = useMemo(() => groupBy(orderBy(props.certifications, 'title', 'asc'), 'category'), [props.certifications])
 
     // compute all the available category dropdown options
     const certsCategoriesOptions: Array<{
         label: string,
         value: string,
-    }> = useMemo(() => {
-        return [
-            {label: 'All Categories', value: '', orderIndex: -1},
-            ...Object.keys(certsByCategory).sort().map((c) => ({
-                label: c,
-                value: c,
-            })),
-        ]
-    }, [certsByCategory])
+    }> = useMemo(() => [
+        {label: 'All Categories', value: '', orderIndex: -1},
+        ...Object.keys(certsByCategory).sort().map((c) => ({
+            label: c,
+            value: c,
+        })),
+    ], [certsByCategory])
 
     // create and sort the certificates groups
-    const certificationsGroups: Array<string> = useMemo(() => {
-        return orderBy(Object.keys(certsByCategory), [
-            c => PRIORITY_CATEGORIES.includes(c) ? -1 : 1,
-            identity,
-        ], ['asc', 'asc'])
-    }, [certsByCategory])
+    const certificationsGroups: Array<string> = useMemo(() => orderBy(Object.keys(certsByCategory), [
+        c => PRIORITY_CATEGORIES.includes(c) ? -1 : 1,
+        identity,
+    ], ['asc', 'asc']), [certsByCategory])
 
     const certificationsCount: number = (certsByCategory[selectedCategory] ?? props.certifications).length
 
     return (
-        <div className={styles['wrap']}>
+        <div className={styles.wrap}>
             <div className={styles['courses-list-header']}>
                 <h3 className='details'>
                     Courses Available
-                    <span className={classNames(styles['badge'], 'medium-subtitle')}>
+                    <span className={classNames(styles.badge, 'medium-subtitle')}>
                         {certificationsCount}
                     </span>
                 </h3>
@@ -72,7 +66,7 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
                         onChange={(e) => setSelectedCategory(e.target.value as string)}
                         name='filter-courses'
                         label='Categories'
-                    ></InputSelect>
+                    />
                 </div>
             </div>
 
