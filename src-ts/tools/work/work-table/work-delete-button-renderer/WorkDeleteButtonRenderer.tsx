@@ -35,9 +35,7 @@ function WorkDeleteButtonRenderer(work: Work): JSX.Element | undefined {
         <>
             <Tooltip
                 content='Delete'
-                positionX='middle'
-                positionY='end'
-                triggerOn='hover'
+                place='bottom'
                 trigger={(
                     <Button
                         buttonStyle='icon'

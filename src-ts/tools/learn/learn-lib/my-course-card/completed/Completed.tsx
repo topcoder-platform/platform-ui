@@ -1,3 +1,4 @@
+import classNames from 'classnames'
 import { FC } from 'react'
 
 import { Button, textFormatDateLocaleShortString } from '../../../../../lib'
@@ -18,7 +19,7 @@ const Completed: FC<CompletedProps> = (props: CompletedProps) => {
     }
 
     return (
-        <div className={styles['wrap']}>
+        <div className={classNames(styles['wrap'], 'course-card-wrap', 'completed')}>
             <div className={styles['line']}>
                 <CourseTitle
                     title={props.certification.title}

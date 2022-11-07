@@ -23,7 +23,7 @@ const BadgeAssignedModal: FC<BadgeAssignedModalProps> = (props: BadgeAssignedMod
             onClose={onClose}
             open={props.isOpen}
             size='md'
-            title={`Badge created`}
+            title={`Badge awarded`}
             closeOnOverlayClick={false}
         >
             <div className={styles.wrapper}>

@@ -6,25 +6,75 @@ All future user interfaces at Topcoder will be implemented here. Pre-existing us
 
 >**NOTE:** The information in this file describes our coding standards and best practices. All new code should follow these guidelines both when coding new features as well as porting old features. Please take the time to read through this file in detail.
 
-# Getting started with local development
-
-- [Local Environment Setup](#local-environment-setup)
-- [Deployments](#deployments)
-- [Developer Center specific setup](#developer-center-contentful-api-key-and-space-id)
-- [Yarn Commands](#yarn-commands)
-
-# Application structure
-
-- [Folder Structure](#folder-structure)
-- [Adding a Tool or Util](#adding-a-tool-or-util)
-
-# Coding Practices
-- [Git](#git)
-- [Linting](#linting)
-- [Styling](#styling)
-- [Icons](#icons)
+- [Source Control & CI/CD](#source-control--cicd)
+- [Local Development](#local-development)
+- [Application Structure](#application-structure)
+- [Coding Practices](#coding-practices)
+- [Tools](#tools)
 
 ---
+
+# Source Control & CI/CD
+
+- [Deployments](#deployments)
+- [Pull Requests](#pull-requests)
+- [Branching](#branching)
+- [Commits](#commits)
+
+## Deployments
+
+The app uses CircleCI for CI/CD.
+
+The `dev` branch is auto-deployed to the dev environment: https://platform-mvp.topcoder-dev.com.
+
+The `master` branch is auto-deployed to the production environment: https://platform-ui.topcoder.com.
+
+## Pull Requests
+
+If a Jira ticket requires any code changes, it should have its own pull request.
+
+PRs should be named as follows:
+
+`[TICKET-###] [Short Description] -> [target-branch-name]`
+
+e.g. `GAME-174 Upload Badge Image Fix -> dev`
+
+PRs should also have a description that includes a link to the Jira ticket and a summary of what the PR is changing.
+
+## Branching
+
+All branches use `dev` as their source. All merges to `dev` should be made via [pull request](#pull-requests) and should be approved by application owner(s).
+
+When working on Jira tickets, a branch should correspond with a single ticket. 
+
+When using subtasks, each parent ticket should have its own branch off `dev`, and all subtasks branches should be merged into the parent ticket branch instead of directly to `dev`.
+
+Use the following naming convention for branches in order to link associated Git PRs and branches to the tickets:
+
+`[TICKET-###]_[short-description]`
+
+e.g.: `PROD-1516_work-issue`
+
+## Commits
+We use [Smart Commits](https://bigbrassband.com/git-integration-for-jira/documentation/smart-commits.html#bbb-nav-basic-examples) to link comments and time tracking to tickets. You would enter the following as your commit message:
+
+`[TICKET #] #comment <commit message> #time <jira-formatted time>`
+
+e.g.: `PROD-001 #comment adding readme notes #time 45m`
+
+
+
+
+
+
+
+
+
+# Local Development
+
+- [Local Environment Setup](#local-environment-setup)
+- [Tool-specific Setup](#tool-specific-setup)
+- [Yarn Commands](#yarn-commands)
 
 ## Local Environment Setup
 
@@ -127,28 +177,10 @@ Otherwise, you will need to override the exception each time you load the site. 
 3. Set the REACT_APP_HOST_ENV=[hostname]
 4. Add "start:[hostname]": "sh start-ssl-[hostname].sh" to scripts in package.json
 
-## Deployments
 
-The app uses CircleCI for CI/CD.
+## Tool-specific setup
 
-The "dev" branch is auto-deployed to the dev environment: https://platform-mvp.topcoder-dev.com.
-
-The "master" branch is auto-deployed to the production environment: https://platform-ui.topcoder.com.
-
-## Developer Center Contentful API Key and Space Id
-
-The app requires two environment variables, which contain the space id and the key used to access contentful and retrieve Thrive Articles.
-
-You should create a file named `.env` in the root folder, and write inside the following lines:
-
-```sh
-REACT_APP_CONTENTFUL_EDU_SPACE_ID=<space-id>
-REACT_APP_CONTENTFUL_EDU_CDN_API_KEY=<API Key>
-```
-
-We should use the same space ID and API Key as Topcoder Thrive, these are for fetching Thrive articles and videos in the landing page.
-
-See the [Dev Center README](/src-ts/tools/dev-center/README.md) for further instructions on setting up the Dev Center.
+Each [Tool](#tools) can have its own setup requirements. Please see each tool's [README](#tools) for further information.
 
 ## yarn Commands
 
@@ -168,6 +200,15 @@ See the [Dev Center README](/src-ts/tools/dev-center/README.md) for further inst
 | `yarn cy:ci`          | Run e2e tests once by circle ci                                 |
 | `yarn report:coverage`| Generate e2e coverage report in html format                     |
 | `yarn report:coverage:text`  | Generate e2e coverage report in text format              |
+
+
+
+
+
+# Application Structure
+
+- [Folder Structure](#folder-structure)
+- [Adding a Tool or Util](#adding-a-tool-or-util)
 
 ## Folder Structure
 
@@ -317,25 +358,14 @@ The PlatformRoute model has several useful options:
 | `title: string` | The title property is the text that will appear in the Tools or Utils Selectors (this is irrelevant on hidden routes). |
 | `rolesRequired: Array<string>` | Requiring roles for a route means that users who do not own the roles will be presented with restricted page when they try to access the route. |
 
-## Git
 
-### Branching
-When working on Jira tickets, we link associated Git PRs and branches to the tickets. Use the following naming convention for branches:
 
-`[TICKET #]_short-description`
 
-e.g.: `PROD-1516_work-issue`
 
-#### Branching strategy
-TBD
-
-### Commits
-We use [Smart Commits](https://bigbrassband.com/git-integration-for-jira/documentation/smart-commits.html#bbb-nav-basic-examples) to link comments and time tracking to tickets. You would enter the following as your commit message:
-
-`[TICKET #] #comment <commit message> #time <jira-formatted time>`
-
-e.g.: `PROD-001 #comment adding readme notes #time 45m`
-
+# Coding Practices
+- [Linting](#linting)
+- [Styling](#styling)
+- [Icons](#icons)
 
 ## Linting
 
@@ -549,3 +579,47 @@ e.g.:
 ```
 
 >**NOTE** - all SVGs require explicit `width` and `height` in the Safari browser in order to be rendered properly, otherwise they'll be rendered to the _default_ size and probably will crop out of view
+
+
+
+
+
+
+
+
+# Tools
+
+The following summarizes the various [tools](#adding-a-tool-or-util) in the Platform UI. 
+
+- [Dev Center](#dev-center)
+- [Gamification Admin](#gamification-admin)
+- [Learn](#learn)
+- [Work](#work)
+
+## Dev Center
+
+A community-led project to document how to work with Topcoder internal applications.
+
+[Dev Center README](./src-ts/tools/dev-center/README.md)
+[Dev Center Routes](./src-ts/tools/dev-center/dev-center.routes.tsx)
+
+## Gamification Admin
+
+Application that allows administrators to CRUD badges and de/assign them to specific users.
+
+[Gamification Admin README TBD](./src-ts/tools/gamification-admin/README.md)
+[Gamification Admin Routes](./src-ts/tools/gamification-admin/gamification-admin.routes.tsx)
+
+## Learn
+
+Application that serves 3rd-party educational content.
+
+[Learn README](./src-ts/tools/learn/README.md)
+[Learn Routes](./src-ts/tools/learn/learn.routes.tsx)
+
+## Work
+
+Application that allows customers to submit/start challenges self-service.
+
+[Work README TBD](./src-ts/tools/work/README.md)
+[Work Routes](./src-ts/tools/work/work.routes.tsx)

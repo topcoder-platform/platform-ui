@@ -1,0 +1,23 @@
+@import "../../../../../../../lib/styles/includes";
+@import "../../../../../../../lib/styles/variables";
+
+.memberAward {
+  display: flex;
+  align-items: center;
+  min-width: 250px;
+
+  .memberHandle {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    color: $black-100;
+  }
+
+  .profileLink {
+    cursor: pointer;
+    color: $turq-160;
+    width: 16px;
+    height: 16px;
+    margin-left: $space-xs;
+  }
+}

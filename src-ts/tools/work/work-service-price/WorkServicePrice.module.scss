@@ -4,20 +4,6 @@
 
   margin-top: $space-xl;
 
-  .iconWrapper {
-      height: 48;
-      width: 48;
-      margin: 0 $space-lg $space-lg $space-lg;
-      background: $tc-grad12;
-      border-radius: 24px;
-      
-      svg {
-        @include icon-xl;
-        margin: $space-md;
-        color: $tc-white;
-      }
-    }
-
   .inline {
     display: flex;
     flex-direction: row;
@@ -25,6 +11,17 @@
 
     @include ltemd {
       width: 100%;
+    }
+  }
+
+  .content-wrapper {
+    display: flex;
+    flex: 1;
+
+    h3 {
+      @include ltemd {
+        flex: 1;
+      }
     }
   }
 
@@ -65,10 +62,25 @@
 
   .days {
     display: inline;
+
+    @include ltemd {
+      flex: 1;
+      text-align: left;
+    }
   }
 
   .help {
+    display: flex;
+    align-items: center;
     margin-left: $space-sm;
     color: $turq-160;
+
+    .help-icon {
+      cursor: pointer;
+
+      @include ltemd {
+        @include icon-xl;
+      }
+    }
   }
 }

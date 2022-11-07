@@ -6,5 +6,6 @@ export interface InfinitePageHandler<T> {
     data?: ReadonlyArray<T>
     getAndSetNext: () => void
     hasMore: boolean
+    isValidating: boolean
     mutate: KeyedMutator<Array<InfinitePageDao<T>>>
 }

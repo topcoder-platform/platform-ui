@@ -1,6 +1,15 @@
 # Dev Center Configuration
 
-See the [main app README](/README.md#developer-center-contentful-api-key-and-space-id) for info regarding the environment variables required to run the DEV Center.
+The app requires two environment variables, which contain the space id and the key used to access contentful and retrieve Thrive Articles.
+
+You should create a file named `.env` in the root folder, and write inside the following lines:
+
+```sh
+REACT_APP_CONTENTFUL_EDU_SPACE_ID=<space-id>
+REACT_APP_CONTENTFUL_EDU_CDN_API_KEY=<API Key>
+```
+
+We should use the same space ID and API Key as Topcoder Thrive, these are for fetching Thrive articles and videos in the landing page.
 
 ## Landing page
 

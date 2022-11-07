@@ -4,12 +4,13 @@
 .bug-delivery-radio {
     border: 1px solid $black-100;
     border-radius: 4px;
-    padding: $space-lg 0;
+    padding-top: $space-lg;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
     cursor: pointer;
+    height: 100%;
     svg {
         path {
             fill: $tc-black;
@@ -26,9 +27,29 @@
         .name {
             color: $tc-white;
         }
+        .recommended-text-wrapper {
+          background-color: $black-5;
+          color: $turq-160;
+        }
+    }
+    &.recommended {
+      .name {
+        margin-bottom: $space-xl;
+      }
     }
     .name {
         @extend .body-large-bold;
         margin-top: $space-sm;
+        margin-bottom: $space-xxxxl;
+    }
+    .recommended-text-wrapper {
+      @extend .overline;
+
+      text-align: center;
+      background-color: $black-100;
+      color: $tc-white;
+      padding: $space-xs $space-sm;
+      border-radius: 0 0 $space-xs $space-xs;
+      width: 100%;
     }
 }

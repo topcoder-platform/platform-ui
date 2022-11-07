@@ -27,4 +27,14 @@
         margin-top: 6px;
         @include text-clamp(3);
     }
+
+    .qa-icon {
+      margin: 0px 12px 0px 0px;
+      background: $tc-grad18;
+
+      svg {
+        min-width: unset;
+        margin: 0px;
+      }
+    }
 }

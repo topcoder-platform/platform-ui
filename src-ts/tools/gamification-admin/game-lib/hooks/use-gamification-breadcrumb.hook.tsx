@@ -1,6 +1,6 @@
-import { BreadcrumbItemModel } from '../../../lib'
-import { basePath } from '../gamification-admin.routes'
-import { toolTitle } from '../GamificationAdmin'
+import { BreadcrumbItemModel } from '../../../../lib'
+import { basePath } from '../../gamification-admin.routes'
+import { toolTitle } from '../../GamificationAdmin'
 
 export function useGamificationBreadcrumb(items: Array<BreadcrumbItemModel>): Array<BreadcrumbItemModel> {
 

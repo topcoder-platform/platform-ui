@@ -5,7 +5,9 @@ import ContentEditable from 'react-contenteditable'
 import { Params, useLocation, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import sanitizeHtml from 'sanitize-html'
-import { KeyedMutator } from 'swr'
+import { KeyedMutator, useSWRConfig } from 'swr'
+// tslint:disable-next-line: no-submodule-imports
+import { FullConfiguration } from 'swr/dist/types'
 
 import { Breadcrumb, BreadcrumbItemModel, Button, ButtonProps, ContentLayout, IconOutline, IconSolid, LoadingSpinner, PageDivider, Sort, tableGetDefaultSort, TabsNavbar, TabsNavItem } from '../../../../lib'
 import { GamificationConfig } from '../../game-config'
@@ -78,6 +80,8 @@ const BadgeDetailPage: FC = () => {
     const [badgeNameErrorText, setBadgeNameErrorText]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
 
     const [showActivatedModal, setShowActivatedModal]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+
+    const { cache, mutate }: FullConfiguration = useSWRConfig()
 
     useEffect(() => {
         if (newImageFile && newImageFile.length) {
@@ -261,17 +265,33 @@ const BadgeDetailPage: FC = () => {
         }
     }
 
+    function onAssign(): void {
+        // refresh awardedMembers data
+        // for all keys in the cache, containing `assignees`
+        (cache as Map<string, any>).forEach((v, key) => {
+            if (key.startsWith('https') && key.includes('assignees')) {
+                mutate(key, undefined)
+            }
+        })
+        setActiveTab(BadgeDetailsTabViews.awardedMembers)
+    }
+
     // default tab
     let activeTabElement: JSX.Element
-        = <AwardedMembersTab badge={badgeDetailsHandler.data as GameBadge} />
+        = <AwardedMembersTab
+            badge={badgeDetailsHandler.data as GameBadge}
+        />
     if (activeTab === BadgeDetailsTabViews.manualAward) {
         activeTabElement = <ManualAwardTab
             badge={badgeDetailsHandler.data as GameBadge}
-            onManualAssign={() => setActiveTab(BadgeDetailsTabViews.awardedMembers)}
+            onManualAssign={onAssign}
         />
     }
     if (activeTab === BadgeDetailsTabViews.batchAward) {
-        activeTabElement = <BatchAwardTab />
+        activeTabElement = <BatchAwardTab
+            badge={badgeDetailsHandler.data as GameBadge}
+            onBatchAssign={onAssign}
+        />
     }
 
     // show page loader if we fetching results

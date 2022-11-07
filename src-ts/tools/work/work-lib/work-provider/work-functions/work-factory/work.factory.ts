@@ -548,7 +548,11 @@ function getProgress(challenge: Challenge, workStatus: WorkStatus): WorkProgress
             name: 'Submitted',
         },
         {
-            date: getProgressStepDateStart(challenge, [ChallengePhaseName.registration]),
+            date: getProgressStepDateStart(challenge, [
+              ChallengePhaseName.specificationReview,
+              ChallengePhaseName.specificationSubmission,
+              ChallengePhaseName.registration,
+            ]),
             name: 'Started',
         },
         {
@@ -694,7 +698,10 @@ function getTypeCategory(type: WorkType): WorkTypeCategory {
         case WorkType.designLegacy:
             return WorkTypeCategory.design
 
-        // TOOD: other categories: qa and dev
+        case WorkType.bugHunt:
+          return WorkTypeCategory.qa
+
+        // TOOD: other categories: dev
         default:
             return WorkTypeCategory.unknown
     }

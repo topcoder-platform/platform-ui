@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import cn from "classnames";
 import PT from "prop-types";
 import React, { useEffect, useRef } from "react";
-import { ReactComponent as IconCheck } from "../../assets/images/icon-check-thin.svg";
+import { IconCheck } from '../../../src-ts'
 import { ReactComponent as IconCross } from "../../assets/images/icon-cross.svg";
 import styles from "./styles.module.scss";
 

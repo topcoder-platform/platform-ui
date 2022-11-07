@@ -1,4 +1,4 @@
-import { useNavigate, Route, Routes } from "react-router-dom";
+import { useNavigate, Route, Routes, useLocation } from "react-router-dom";
 import _ from "lodash";
 import React, { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -28,11 +28,12 @@ import WebsiteDesign from "./routes/Products/WebsiteDesign";
 import DataAdvisory from "./routes/Products/DataAdvisory";
 import WebsiteDesignLegacy from "./routes/Products/WebsiteDesignLegacy";
 
-import { profileContext, WorkType } from "../src-ts";
+import { profileContext, WorkType, bugHuntRoute } from "../src-ts";
 
 export default function IntakeForm() {
 
   const dispatch = useDispatch();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate()
 
@@ -141,7 +142,8 @@ export default function IntakeForm() {
   };
 
   const syncSavedData = (savedData) => {
-    if (!savedData) return;
+    const isBugHuntRoute = location.pathname.indexOf(`/${bugHuntRoute}`) > -1
+    if (!savedData || isBugHuntRoute) return;
     const { form, progress } = savedData;
     if (form) dispatch(saveForm(form));
     if (progress?.currentStep) {

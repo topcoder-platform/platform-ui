@@ -29,6 +29,7 @@ const InputHandleAutocomplete: FC<InputHandleAutocompleteProps> = (props: InputH
         control: (provided) => ({
             ...provided,
             border: 'none',
+            boxShadow: 'none',
         }),
         input: (provided) => ({
             ...provided,

@@ -38,6 +38,7 @@ interface FormProps<ValueType, RequestType> {
     readonly resetFormAfterSave?: boolean
     readonly resetFormOnUnmount?: boolean
     readonly save: (value: RequestType) => Promise<void>
+    readonly shouldDisableButton?: (isPrimaryGroup: boolean, index: number) => boolean
 }
 
 const Form: <ValueType extends any, RequestType extends any>(props: FormProps<ValueType, RequestType>) => JSX.Element
@@ -146,21 +147,29 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         formInitializeValues(inputs, props.formValues)
 
+        const setOnClickOnReset: (button: FormButton) => FormButton = (button) => {
+          // if this is a reset button, set its onclick to reset
+          if (!!button.isReset) {
+              button = {
+                  ...button,
+                  onClick: onReset,
+              }
+          }
+
+          return button
+        }
+
         const createButtonGroup: (groups: ReadonlyArray<FormButton>, isPrimaryGroup: boolean) => Array<JSX.Element> = (groups, isPrimaryGroup) => {
             return groups.map((button, index) => {
-                // if this is a reset button, set its onclick to reset
-                if (!!button.isReset) {
-                    button = {
-                        ...button,
-                        onClick: onReset,
-                    }
-                }
+                button = setOnClickOnReset(button)
+
+                const disabled: boolean = (button.isSubmit && isFormInvalid) || !!props.shouldDisableButton?.(isPrimaryGroup, index)
 
                 return (
                     <Button
                         {...button}
                         key={button.label || `button-${index}`}
-                        disable={button.isSubmit && isFormInvalid}
+                        disable={disabled}
                         tabIndex={button.notTabble ? -1 : index + (inputs ? inputs.length : 0) + (formDef.tabIndexStart || 0)}
                     />
                 )

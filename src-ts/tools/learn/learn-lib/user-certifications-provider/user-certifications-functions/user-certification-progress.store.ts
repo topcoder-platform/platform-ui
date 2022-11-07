@@ -1,4 +1,3 @@
-import { logInfo } from '../../../../../lib'
 import { LearnConfig } from '../../../learn-config'
 import { getUserCertificateUrl } from '../../../learn.routes'
 import { learnUrlGet, learnXhrGetAsync, learnXhrPostAsync, learnXhrPutAsync } from '../../functions'
@@ -16,15 +15,15 @@ export function completeCourse(
 ): Promise<LearnUserCertificationProgress> {
 
     // construct the certificate params
+    const certificateAlternateParams: { [key: string]: string } = LearnConfig.CERT_ALT_PARAMS
     const certificateElement: string = `[${LearnConfig.CERT_ELEMENT_SELECTOR.attribute}=${LearnConfig.CERT_ELEMENT_SELECTOR.value}]`
     const certificateUrl: string = getUserCertificateUrl(provider, certification, handle)
-
-    logInfo(`Completing course w certificate URL = ${certificateUrl}`)
 
     return updateAsync(
         certificationProgressId,
         UserCertificationUpdateProgressActions.completeCertificate,
         {
+            certificateAlternateParams,
             certificateElement,
             certificateUrl,
         }
