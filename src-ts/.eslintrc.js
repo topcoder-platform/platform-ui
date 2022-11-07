@@ -33,9 +33,28 @@ module.exports = {
         }
     },
     rules: {
+        "@typescript-eslint/ban-types": [
+            "error",
+            {
+                "extendDefaults": true,
+                "types": {
+                    "{}": false
+                }
+            }
+        ],
         '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/no-explicit-any': 'error',
         '@typescript-eslint/no-inferrable-types': 'off',
         '@typescript-eslint/no-shadow': 'error',
+        '@typescript-eslint/strict-boolean-expressions': [
+            'error',
+            {
+                allowNullableBoolean: true,
+                allowNullableObject: true,
+                allowNullableNumber: true,
+                allowNullableString: true
+            }
+        ],
         'import/extensions': 'off',
         'import/prefer-default-export': 'off',
         'indent': [
@@ -45,17 +64,46 @@ module.exports = {
                 SwitchCase: 1,
             },
         ],
+        'jsx-a11y/tabindex-no-positive': [
+            'warn'
+        ],
+        'no-extra-boolean-cast': "off",
+        'no-plusplus': [
+            'error',
+            {
+                allowForLoopAfterthoughts: true
+            }
+        ],
+        'no-restricted-syntax': [
+            'error',
+            'ForIfStatement',
+            'LabeledStatement',
+            'WithStatement'
+        ],
         'no-shadow': 'off',
         'no-use-before-define': [
             'error',
-            { functions: false }
+            {
+                functions: false,
+            }
         ],
-        'padded-blocks': [
+        "padding-line-between-statements": [
             'error',
-            { }
+            { blankLine: 'always', prev: 'directive', next: '*' },
+            { blankLine: 'any', prev: 'directive', next: 'directive' },
+            { blankLine: 'always', prev: 'cjs-import', next: '*' },
+            { blankLine: 'any', prev: 'cjs-import', next: 'cjs-import' },
+            { blankLine: 'always', prev: 'cjs-export', next: '*' },
+            { blankLine: 'always', prev: 'multiline-block-like', next: '*' },
+            { blankLine: 'always', prev: 'class', next: '*' }
         ],
+        'prefer-destructuring': 'off',
         'react-hooks/exhaustive-deps': 'warn',
         'react-hooks/rules-of-hooks': 'error',
+        'react/destructuring-assignment': [
+            2,
+            'never'
+        ],
         'react/function-component-definition': [
             2,
             {
@@ -79,9 +127,11 @@ module.exports = {
             2,
             4,
         ],
+        'react/jsx-no-useless-fragment': [
+            0
+        ],
         'react/jsx-props-no-spreading': [
-            2,
-            { html: 'ignore' },
+            0
         ],
         'react/react-in-jsx-scope': 'off',
         'react/require-default-props': 'off',
