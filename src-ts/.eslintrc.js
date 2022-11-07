@@ -54,6 +54,10 @@ module.exports = {
                 allowNullableString: true
             }
         ],
+        'arrow-parens': [
+            "error",
+            "as-needed"
+        ],
         'import/extensions': 'off',
         'import/prefer-default-export': 'off',
         'indent': [
@@ -62,6 +66,10 @@ module.exports = {
             {
                 SwitchCase: 1,
             },
+        ],
+        'jsx-quotes': [
+            'error',
+            'prefer-single'
         ],
         'jsx-a11y/tabindex-no-positive': [
             'warn'
@@ -86,6 +94,12 @@ module.exports = {
                 functions: false,
             }
         ],
+        'object-curly-newline': 'off',
+        'operator-linebreak': [
+            'error',
+            'before'
+        ],
+        'padded-blocks': 'off',
         "padding-line-between-statements": [
             'error',
             { blankLine: 'always', prev: 'directive', next: '*' },
