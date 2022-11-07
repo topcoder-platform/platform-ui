@@ -4,7 +4,7 @@
     display: flex;
     gap: $space-xxl;
     flex-wrap: wrap;
-    flex: 1;
+    flex: 0 1 auto;
 
     > * {
         flex: 0 1 calc(50% - calc($space-xxl / 2));
