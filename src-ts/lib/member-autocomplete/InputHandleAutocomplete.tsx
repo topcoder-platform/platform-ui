@@ -1,6 +1,5 @@
 import { FC, FocusEvent } from 'react'
 import { MultiValue, StylesConfig } from 'react-select'
-// tslint:disable-next-line: no-submodule-imports
 import AsyncSelect from 'react-select/async'
 
 import { InputWrapper } from '../form/form-groups/form-input/input-wrapper'

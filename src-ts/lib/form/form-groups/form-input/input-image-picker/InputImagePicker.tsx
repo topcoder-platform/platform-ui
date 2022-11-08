@@ -19,7 +19,6 @@ const InputImagePicker: FC<InputImagePickerProps> = (props: InputImagePickerProp
 
     const fileInputRef: RefObject<HTMLInputElement> = createRef<HTMLInputElement>()
 
-    // tslint:disable-next-line:no-null-keyword
     const [files, setFiles]: [FileList | null, Dispatch<SetStateAction<FileList | null>>] = useState<FileList | null>(null)
     const [fileDataURL, setFileDataURL]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
 

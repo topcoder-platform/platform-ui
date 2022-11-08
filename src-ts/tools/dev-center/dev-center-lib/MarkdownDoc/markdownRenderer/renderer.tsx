@@ -1,4 +1,3 @@
-// tslint:disable-next-line: no-submodule-imports
 import * as React from 'react'
 import { marked, Renderer as MarkedRenderer } from 'marked'
 import _ from 'lodash'
@@ -100,8 +99,6 @@ export class Renderer implements MarkdownRenderer {
         )
     }
 
-    // Hard to avoid due to the complexity of group by
-    // tslint:disable-next-line: cyclomatic-complexity
     private groupBy(
         nodes: Array<React.ReactNode>,
         options?: MarkdownRenderOptions,
@@ -167,8 +164,6 @@ export class Renderer implements MarkdownRenderer {
         return result
     }
 
-    // Hard to avoid due to the complexity of parsing markdown token.
-    // tslint:disable-next-line: cyclomatic-complexity
     private parseToken(
         token: marked.Token,
         index: number,

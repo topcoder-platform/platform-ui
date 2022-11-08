@@ -56,7 +56,6 @@ const CourseCompletedPage: FC<{}> = () => {
         enabled: progressReady && !!progress,
     })
 
-    /* tslint:disable:cyclomatic-complexity */
     const isLoggedIn: boolean = profileReady && !!profile
     const certificatesDataReady: boolean = progressReady && certifReady
     const ready: boolean = profileReady && courseDataReady && (!isLoggedIn || certificatesDataReady)

@@ -331,11 +331,12 @@ function buildFormDataDesign(formData: any): ReadonlyArray<FormDetail> {
     const styleInfo: {} = {
         Like: formData.likedStyles?.value?.join(', '),
         // Disabling lint error to maintain order for display
-        // tslint:disable-next-line: object-literal-sort-keys
+        /* eslint-disable sort-keys */
         Dislike: formData.dislikedStyles?.value?.join(', '),
         'Additional Details': formData.stylePreferences?.value,
         'Color Selections': formData.colorOption?.value.join(', '),
         'Specific Colors': formData.specificColor?.value,
+        /* eslint-enable sort-keys */
     }
 
     return [

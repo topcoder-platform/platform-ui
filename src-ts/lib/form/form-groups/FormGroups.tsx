@@ -35,7 +35,6 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
 
         let inputElement: JSX.Element
 
-        /* tslint:disable:cyclomatic-complexity */
         switch (input.type) {
 
             case 'rating':

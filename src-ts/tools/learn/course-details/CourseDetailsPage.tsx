@@ -59,8 +59,6 @@ const CourseDetailsPage: FC<{}> = () => {
         enabled: courseReady,
     })
 
-    // this looks better than finding workarounds for cyclomatic-complexity
-    /* tslint:disable:cyclomatic-complexity */
     const ready: boolean = profileReady && courseReady && certificateReady && (!profile || progressReady)
 
     const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([

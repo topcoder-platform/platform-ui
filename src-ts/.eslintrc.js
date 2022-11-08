@@ -20,10 +20,11 @@ module.exports = {
         sourceType: 'module',
     },
     plugins: [
-        'react',
         '@typescript-eslint',
+        'no-null',
         'ordered-imports',
-        'react-hooks',
+        'react',
+        'react-hooks'
     ],
     settings: {
         react: {
@@ -47,6 +48,7 @@ module.exports = {
         '@typescript-eslint/no-explicit-any': 'error',
         '@typescript-eslint/no-inferrable-types': 'off',
         '@typescript-eslint/no-shadow': 'error',
+        '@typescript-eslint/no-unused-vars': 'error',
         '@typescript-eslint/strict-boolean-expressions': [
             'error',
             {
@@ -59,6 +61,10 @@ module.exports = {
         'arrow-parens': [
             "error",
             "as-needed"
+        ],
+        'complexity': [
+            'error',
+            7
         ],
         'import/extensions': 'off',
         'import/prefer-default-export': 'off',
@@ -77,6 +83,7 @@ module.exports = {
             'warn'
         ],
         'no-extra-boolean-cast': "off",
+        "no-null/no-null": "error",
         'no-plusplus': [
             'error',
             {
@@ -197,5 +204,6 @@ module.exports = {
             'error',
             'never',
         ],
+        'sort-keys': 'error'
     },
 };

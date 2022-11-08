@@ -1,4 +1,3 @@
-// tslint:disable:no-null-keyword
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
 import { Button, IconSolid, InputFilePicker } from '../../../../../lib'
@@ -17,6 +16,7 @@ const BatchAwardTab: FC<BatchAwardTabProps> = (props: BatchAwardTabProps) => {
 
     const [showBadgeAssigned, setShowBadgeAssigned]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
+    // eslint-disable-next-line no-null/no-null
     const [files, setFiles]: [FileList | null, Dispatch<SetStateAction<FileList | null>>] = useState<FileList | null>(null)
 
     const [errorText, setErrorText]: [string, Dispatch<SetStateAction<string>>] = useState<string>('')

@@ -3,11 +3,10 @@ import { ChangeEvent, createRef, Dispatch, FC, KeyboardEvent, RefObject, SetStat
 import { Params, useLocation, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { KeyedMutator, useSWRConfig } from 'swr'
+import { FullConfiguration } from 'swr/dist/types'
 import ContentEditable from 'react-contenteditable'
 import MarkdownIt from 'markdown-it'
 import sanitizeHtml from 'sanitize-html'
-// tslint:disable-next-line: no-submodule-imports
-import { FullConfiguration } from 'swr/dist/types'
 
 import { Breadcrumb, BreadcrumbItemModel, Button, ButtonProps, ContentLayout, IconOutline, IconSolid, LoadingSpinner, PageDivider, Sort, tableGetDefaultSort, TabsNavbar, TabsNavItem } from '../../../../lib'
 import { GamificationConfig } from '../../game-config'
@@ -29,7 +28,6 @@ const md: MarkdownIt = new MarkdownIt({
     // typographer: true,
 })
 
-/* tslint:disable:cyclomatic-complexity */
 const BadgeDetailPage: FC = () => {
     const [headerButtonConfig, setHeaderButtonConfig]: [
         ButtonProps | undefined,
@@ -66,7 +64,7 @@ const BadgeDetailPage: FC = () => {
 
     const fileInputRef: RefObject<HTMLInputElement> = createRef<HTMLInputElement>()
 
-    // tslint:disable-next-line:no-null-keyword
+    // eslint-disable-next-line no-null/no-null
     const [newImageFile, setNewImageFile]: [FileList | null, Dispatch<SetStateAction<FileList | null>>] = useState<FileList | null>(null)
 
     const [fileDataURL, setFileDataURL]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()

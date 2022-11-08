@@ -18,7 +18,6 @@ export const MarkdownCode: React.FC<MarkdownCodeProps> = props => {
         boolean,
         React.Dispatch<React.SetStateAction<boolean>>
     ] = React.useState(!isTerminal)
-    // tslint:disable-next-line no-null-keyword
     const ref: React.RefObject<HTMLDivElement> = React.useRef<HTMLDivElement>(null)
 
     const handleLineNumberVisibilityChange: (visibility: boolean) => void
@@ -113,7 +112,6 @@ const LineNumbers = (props: LineNumbersProps): React.ReactElement | null => {
     }, [size.width, onVisibilityChange, codeRef])
 
     if (!showLineNumbers) {
-        // tslint:disable-next-line no-null-keyword
         return null
     }
 

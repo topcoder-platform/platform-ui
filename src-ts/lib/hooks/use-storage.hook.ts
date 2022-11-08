@@ -44,7 +44,7 @@ export function useStorage<T>(
             })
         } catch (error) {
             // A more advanced implementation would handle the error case
-            // tslint:disable-next-line:no-console
+            // eslint-disable-next-line no-console
             console.error(error)
         }
     }, [storage, storageKey]) as Dispatch<SetStateAction<T>>
