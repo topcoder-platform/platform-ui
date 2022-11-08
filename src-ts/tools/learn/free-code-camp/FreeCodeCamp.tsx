@@ -39,8 +39,8 @@ import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule }
 
 import { FccFrame } from './fcc-frame'
 import { FccSidebar } from './fcc-sidebar'
-import styles from './FreeCodeCamp.module.scss'
 import { TitleNav } from './title-nav'
+import styles from './FreeCodeCamp.module.scss'
 
 const FreeCodeCamp: FC<{}> = () => {
 
@@ -66,7 +66,7 @@ const FreeCodeCamp: FC<{}> = () => {
     }: UserCertificationProgressProviderData = useUserCertificationProgress(
         profile?.userId,
         routeParams.provider,
-        certificationParam
+        certificationParam,
     )
 
     const {
@@ -149,7 +149,7 @@ const FreeCodeCamp: FC<{}> = () => {
                 providerParam,
                 coursePath,
                 modulePath,
-                lessonPath
+                lessonPath,
             )
             window.history.replaceState('', '', nextLessonPath)
         }
@@ -166,9 +166,9 @@ const FreeCodeCamp: FC<{}> = () => {
         }
 
         if (
-            !profile?.userId ||
-            !lesson?.course.certificationId ||
-            !lesson?.course.id
+            !profile?.userId
+            || !lesson?.course.certificationId
+            || !lesson?.course.id
         ) {
             return
         }
@@ -178,7 +178,7 @@ const FreeCodeCamp: FC<{}> = () => {
                 profile.userId,
                 lesson.course.certificationId,
                 lesson.course.id,
-                currentLesson
+                currentLesson,
             )
                 .then(setCertificateProgress)
         } else {
@@ -188,7 +188,7 @@ const FreeCodeCamp: FC<{}> = () => {
                 userCertificationProgressUpdateAsync(
                     certificateProgress.id,
                     UserCertificationUpdateProgressActions.currentLesson,
-                    currentLesson
+                    currentLesson,
                 )
                     .then(setCertificateProgress)
             }, 500)
@@ -205,7 +205,7 @@ const FreeCodeCamp: FC<{}> = () => {
             userCertificationProgressUpdateAsync(
                 certificateProgress.id,
                 UserCertificationUpdateProgressActions.completeLesson,
-                currentLesson
+                currentLesson,
             ).then(setCertificateProgress)
         }
     }
@@ -223,7 +223,7 @@ const FreeCodeCamp: FC<{}> = () => {
         if (certificateProgress.courseProgressPercentage === 100) {
             const completedPath: string = getCertificationCompletedPath(
                 providerParam,
-                certificationParam
+                certificationParam,
             )
 
             navigate(completedPath)
@@ -251,7 +251,7 @@ const FreeCodeCamp: FC<{}> = () => {
             providerParam,
             certificationParam,
             firstIncompleteModule.module ?? '',
-            firstIncompleteLesson.dashedName ?? ''
+            firstIncompleteLesson.dashedName ?? '',
         )
 
         navigate(nextLessonPath)
@@ -282,7 +282,7 @@ const FreeCodeCamp: FC<{}> = () => {
             .then(() => {
                 const completedPath: string = getCertificationCompletedPath(
                     providerParam,
-                    certificationParam
+                    certificationParam,
                 )
                 navigate(completedPath)
             })
@@ -353,7 +353,7 @@ const FreeCodeCamp: FC<{}> = () => {
         if (ready && !(isLoggedIn && certificateProgress?.academicHonestyPolicyAcceptedAt)) {
             const coursePath: string = getCoursePath(
                 providerParam,
-                certificationParam
+                certificationParam,
             )
             navigate(coursePath)
         }

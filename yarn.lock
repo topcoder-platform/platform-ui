@@ -6250,6 +6250,11 @@ eslint-plugin-jsx-a11y@^6.3.1, eslint-plugin-jsx-a11y@^6.5.1:
     minimatch "^3.1.2"
     semver "^6.3.0"
 
+eslint-plugin-ordered-imports@^0.6.0:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-ordered-imports/-/eslint-plugin-ordered-imports-0.6.0.tgz#027a5deecfe918c451ee2d705a44cd61be2273e5"
+  integrity sha512-jTzJw7ZbXFwmY1FNrPQRs9nUU17hpHnkN92tYsdBETFP9imNxAGz9TCmCc4Cz4CAyJrCBdlpMCHVRiZ1eGa7og==
+
 eslint-plugin-react-hooks@^4.0.8, eslint-plugin-react-hooks@^4.3.0:
   version "4.6.0"
   resolved "https://registry.yarnpkg.com/eslint-plugin-react-hooks/-/eslint-plugin-react-hooks-4.6.0.tgz#4c3e697ad95b77e93f8646aaa1630c1ba607edd3"

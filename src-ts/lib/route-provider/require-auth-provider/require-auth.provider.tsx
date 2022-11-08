@@ -34,9 +34,9 @@ const RequireAuthProvider = (props: RequireAuthProviderProps): JSX.Element => {
 
             return props.children
         }
- 
+
         return props.children
-        
+
     }
 
     // redirect to the login page

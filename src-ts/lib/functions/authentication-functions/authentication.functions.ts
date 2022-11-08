@@ -1,5 +1,5 @@
-import cookies from 'browser-cookies'
 import { configureConnector, decodeToken, getFreshToken } from 'tc-auth-lib'
+import cookies from 'browser-cookies'
 
 import { User } from '../../../../types/tc-auth-lib'
 import { EnvironmentConfig, ToolTitle } from '../../../config'

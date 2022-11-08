@@ -6,5 +6,5 @@ export {
     completeCourse as userCertificationProgressCompleteCourseAsync,
     getAsync as userCertificationProgressGetAsync,
     startAsync as userCertificationProgressStartAsync,
-    updateAsync as userCertificationProgressUpdateAsync
+    updateAsync as userCertificationProgressUpdateAsync,
 } from './user-certification-progress.store'

@@ -1,7 +1,7 @@
-import cn from 'classnames'
-import _ from 'lodash'
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import _ from 'lodash'
+import cn from 'classnames'
 
 import { currencyFormat } from '../../../../../src/utils'
 import { ArrowIcon, FormCard, LoadingSpinner } from '../../../../lib'
@@ -65,7 +65,7 @@ const WorkDetailDetailsPane: FC<WorkDetailDetailsPaneProps> = ({ collapsible, de
                     }
                 </div>
             )}
-            {isOpen && details.map((detail) => (
+            {isOpen && details.map(detail => (
                 <div key={detail.key} className={styles.detail}>
                     <h4 className={styles.title}>{detail.title}</h4>
                     {detail.key === ChallengeMetadataName.packageType ? (
@@ -93,9 +93,14 @@ function formatOption(detail: Array<string> | {} | string): string | Array<JSX.E
 
     if (_.isObject(detail)) {
         return Object.keys(detail)
-            .map((key) => {
+            .map(key => {
                 const value: any = detail[key as keyof typeof detail] || noInfoProvidedElement
-                return <div key={`${key}`}>{`${key}: `}{value}</div>
+                return (
+                    <div key={`${key}`}>
+                        {`${key}: `}
+                        {value}
+                    </div>
+                )
             })
     }
 
@@ -103,15 +108,15 @@ function formatOption(detail: Array<string> | {} | string): string | Array<JSX.E
 }
 
 function checkIsEmpty(detail: Array<string> | {} | string): boolean {
-    return !detail ||
-        (typeof detail === 'string' && detail.trim().length === 0) ||
-        (_.isArray(detail) && detail.length === 0) ||
-        (_.isObject(detail) && Object.values(detail)
-            .filter((val) => val?.trim().length > 0).length === 0)
+    return !detail
+        || (typeof detail === 'string' && detail.trim().length === 0)
+        || (_.isArray(detail) && detail.length === 0)
+        || (_.isObject(detail) && Object.values(detail)
+            .filter(val => val?.trim().length > 0).length === 0)
 }
 
-const getSelectedPackageFormatted: (packageId: string) => string = (packageId) => {
-    const currentPackage: FormCard | undefined = BugHuntPricingConfig.find((pricingConfig) => pricingConfig.id === packageId)
+const getSelectedPackageFormatted: (packageId: string) => string = packageId => {
+    const currentPackage: FormCard | undefined = BugHuntPricingConfig.find(pricingConfig => pricingConfig.id === packageId)
     if (currentPackage) {
         const deviceType: string = currentPackage.sections?.[0]?.rows?.[3]?.text || ''
         const noOfTesters: string = `${currentPackage.sections?.[0]?.rows?.[2]?.text || 0} testers`

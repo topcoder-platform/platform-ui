@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { FC, useCallback } from 'react'
+import classNames from 'classnames'
 
 import { LoadingSpinner } from '../../../../lib'
 import {
@@ -7,7 +7,7 @@ import {
     LearnLesson,
     LearnModule,
     LearnUserCertificationProgress,
-} from ".."
+} from '..'
 import { getLessonPathFromModule } from '../../learn.routes'
 
 import { CollapsibleItem } from './collapsible-item'
@@ -38,7 +38,7 @@ const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
 
             {props.course && (
                 <div className={classNames(styles.content, 'content')}>
-                    {props.course.modules.map((module) => (
+                    {props.course.modules.map(module => (
                         <CollapsibleItem
                             active={props.currentStep}
                             duration={module.meta.estimatedCompletionTime}
@@ -47,7 +47,7 @@ const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
                             items={module.lessons}
                             key={module.key}
                             lessonsCount={module.lessons.length}
-                            path={(it: any) => props.course ? lessonPath(props.course, module, it) : ''}
+                            path={(it: any) => (props.course ? lessonPath(props.course, module, it) : '')}
                             progress={props.progress?.modules}
                             shortDescription={module.meta.introCopy}
                             title={module.meta.name}

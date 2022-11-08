@@ -1,4 +1,3 @@
-import classNames from 'classnames'
 import {
     Dispatch,
     FC,
@@ -11,6 +10,7 @@ import {
     useRef,
     useState,
 } from 'react'
+import classNames from 'classnames'
 
 import { useClickOutside } from '../hooks'
 import { ActiveTabTipIcon, IconOutline } from '../svgs'
@@ -82,7 +82,7 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
     const renderTabItem: (tab: TabsNavItem, activeTabId?: string, ref?: (el: HTMLDivElement) => void) => ReactNode = (
         tab: TabsNavItem,
         activeTabId?: string,
-        ref?: (el: HTMLDivElement) => void
+        ref?: (el: HTMLDivElement) => void,
     ) => (
         <div
             ref={ref}
@@ -110,7 +110,7 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
                     classNames(
                         styles['menu-trigger'],
                         'desktop-hide',
-                        menuIsVisible && styles['menu-is-visible']
+                        menuIsVisible && styles['menu-is-visible'],
                     )
                 }
                 onClick={() => setMenuIsVisible((menuWasVisible: boolean) => !menuWasVisible)}
@@ -122,7 +122,7 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
 
             <div className={classNames(styles['menu-wrapper'])}>
                 {props.tabs.map((tab, i) => (
-                    renderTabItem(tab, tabOpened, el => {tabRefs.current[i] = el as HTMLElement})
+                    renderTabItem(tab, tabOpened, el => { tabRefs.current[i] = el as HTMLElement })
                 ))}
             </div>
             <div

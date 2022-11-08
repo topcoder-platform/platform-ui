@@ -7,7 +7,8 @@ module.exports = {
     extends: [
         'plugin:react/recommended',
         'airbnb',
-        'plugin:@typescript-eslint/recommended'
+        'plugin:@typescript-eslint/recommended',
+        'plugin:ordered-imports/recommended'
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
@@ -21,6 +22,7 @@ module.exports = {
     plugins: [
         'react',
         '@typescript-eslint',
+        'ordered-imports',
         'react-hooks',
     ],
     settings: {
@@ -98,6 +100,49 @@ module.exports = {
         'operator-linebreak': [
             'error',
             'before'
+        ],
+        "ordered-imports/ordered-imports": [
+            "error",
+            {
+                "symbols-first": true,
+                "declaration-ordering": [
+                    "type", {
+                        ordering: [
+                            "namespace",
+                            "destructured",
+                            "default",
+                            "side-effect",
+                        ],
+                        secondaryOrdering: [
+                            "name",
+                            "lowercase-last"
+                        ],
+                    }
+                ],
+                "specifier-ordering": "case-insensitive",
+                "group-ordering": [
+                    {
+                        name: "project root",
+                        match: "^@",
+                        order: 20
+                    },
+                    {
+                        name: "parent directories",
+                        match: "^\\.\\.",
+                        order: 30
+                    },
+                    {
+                        name: "current directory",
+                        match: "^\\.",
+                        order: 40
+                    },
+                    {
+                        name: "third-party",
+                        match: ".*",
+                        order: 10
+                    },
+                ],
+            },
         ],
         'padded-blocks': 'off',
         "padding-line-between-statements": [

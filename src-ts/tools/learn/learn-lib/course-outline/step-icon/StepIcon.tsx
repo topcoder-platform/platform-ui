@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { FC, ReactNode } from 'react'
+import classNames from 'classnames'
 
 import { IconSolid } from '../../../../../lib'
 

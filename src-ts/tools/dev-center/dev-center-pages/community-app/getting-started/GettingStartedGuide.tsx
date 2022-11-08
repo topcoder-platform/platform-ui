@@ -1,10 +1,10 @@
 import * as React from 'react'
 
 import { Breadcrumb, BreadcrumbItemModel, ContentLayout } from '../../../../../lib'
-import useMarkdown from '../../../dev-center-lib/hooks/useMarkdown'
-import MarkdownDoc from '../../../dev-center-lib/MarkdownDoc'
-import LayoutDocHeader from '../../../dev-center-lib/MarkdownDoc/LayoutDocHeader'
 import { toolTitle } from '../../../dev-center.routes'
+import LayoutDocHeader from '../../../dev-center-lib/MarkdownDoc/LayoutDocHeader'
+import MarkdownDoc from '../../../dev-center-lib/MarkdownDoc'
+import useMarkdown from '../../../dev-center-lib/hooks/useMarkdown'
 
 import gettingStartedGuide from './GettingStartedGuide.md'
 import styles from './GettingStartedGuide.module.scss'

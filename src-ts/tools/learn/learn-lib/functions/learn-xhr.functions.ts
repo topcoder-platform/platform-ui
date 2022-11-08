@@ -8,7 +8,7 @@ const learnXhrInstance: AxiosInstance = xhrCreateInstance()
 
 // handle all created and updated dates
 learnXhrInstance.interceptors.response
-    .use((response) => {
+    .use(response => {
 
         if (response.data?.hasOwnProperty('createdAt')) {
             response.data = learnCreate(response.data)

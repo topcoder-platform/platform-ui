@@ -8,7 +8,7 @@ import {
     Button,
     LoadingSpinner,
     profileContext,
-    ProfileContextData
+    ProfileContextData,
 } from '../../../lib'
 import {
     AllCertificationsProviderData,
@@ -19,12 +19,12 @@ import {
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
-    useUserCertificationProgress
+    useUserCertificationProgress,
 } from '../learn-lib'
 import { getCertificatePath, getCoursePath, LEARN_PATHS, rootRoute } from '../learn.routes'
 
-import styles from './CourseCompletedPage.module.scss'
 import { ReactComponent as StarsSvg } from './stars.svg'
+import styles from './CourseCompletedPage.module.scss'
 
 const CourseCompletedPage: FC<{}> = () => {
 
@@ -46,7 +46,7 @@ const CourseCompletedPage: FC<{}> = () => {
     }: UserCertificationProgressProviderData = useUserCertificationProgress(
         profile?.userId,
         routeParams.provider,
-        routeParams.certification
+        routeParams.certification,
     )
 
     const {
@@ -109,7 +109,10 @@ const CourseCompletedPage: FC<{}> = () => {
                                 </div>
                                 <hr />
                                 <p className='body-main'>
-                                    Now that you have completed the {courseData.title},
+                                    Now that you have completed the
+                                    {' '}
+                                    {courseData.title}
+                                    ,
                                     take a look at our other Topcoder Academy courses.
                                     To view other courses, press the "Start a new course" button below.
                                 </p>

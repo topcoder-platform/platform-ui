@@ -10,7 +10,7 @@ interface CertificationsAllProviderOptions {
 export function useAllCertifications(
     provider?: string,
     certificationId?: string,
-    options?: CertificationsAllProviderOptions
+    options?: CertificationsAllProviderOptions,
 ): AllCertificationsProviderData {
     const [state, setState]:
         [AllCertificationsProviderData, Dispatch<SetStateAction<AllCertificationsProviderData>>]
@@ -21,7 +21,7 @@ export function useAllCertifications(
         })
 
     useEffect(() => {
-        setState((prevState) => ({
+        setState(prevState => ({
             ...prevState,
             loading: true,
         }))
@@ -31,8 +31,8 @@ export function useAllCertifications(
         }
 
         allCertificationsGetAsync(provider, certificationId)
-            .then((certifications) => {
-                setState((prevState) => ({
+            .then(certifications => {
+                setState(prevState => ({
                     ...prevState,
                     certification: !certificationId ? undefined : certifications as unknown as LearnCertification,
                     certifications: certificationId ? [] : [...certifications],

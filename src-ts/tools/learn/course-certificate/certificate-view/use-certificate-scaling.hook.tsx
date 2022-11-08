@@ -14,7 +14,7 @@ export function useCertificateScaling(certificateRef?: MutableRefObject<HTMLDivE
             // 975 and 1250 are the original container sizes,
             // and we're dividing by that to get the needed zoom level
             const ratioSize: number = window.innerWidth <= 745 ? 975 : 1250
-            Object.assign(certificateEl.style, {zoom: Math.min(1, parentWidth / ratioSize)})
+            Object.assign(certificateEl.style, { zoom: Math.min(1, parentWidth / ratioSize) })
         }
 
         window.addEventListener('resize', handleResize, false)

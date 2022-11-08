@@ -1,7 +1,7 @@
-import classNames from 'classnames'
-import html2canvas from 'html2canvas'
 import { FC, MutableRefObject, useEffect, useMemo, useRef } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
+import classNames from 'classnames'
+import html2canvas from 'html2canvas'
 
 import {
     FacebookSocialShareBtn,
@@ -10,7 +10,7 @@ import {
     LinkedinSocialShareBtn,
     LoadingSpinner,
     TwitterSocialShareBtn,
-    UserProfile
+    UserProfile,
 } from '../../../../lib'
 import {
     AllCertificationsProviderData,
@@ -24,8 +24,8 @@ import { getCoursePath, getUserCertificateSsr } from '../../learn.routes'
 
 import { ActionButton } from './action-button'
 import { Certificate } from './certificate'
-import styles from './CertificateView.module.scss'
 import { useCertificateScaling } from './use-certificate-scaling.hook'
+import styles from './CertificateView.module.scss'
 
 export type CertificateViewStyle = 'large-container' | undefined
 
@@ -47,8 +47,8 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const certificateWrapRef: MutableRefObject<HTMLElement | any> = useRef()
 
     const userName: string = useMemo(() => (
-        [props.profile.firstName, props.profile.lastName].filter(Boolean).join(' ') ||
-        props.profile.handle
+        [props.profile.firstName, props.profile.lastName].filter(Boolean).join(' ')
+        || props.profile.handle
     ), [props.profile.firstName, props.profile.handle, props.profile.lastName])
 
     const {
@@ -75,7 +75,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     }: UserCompletedCertificationsProviderData = useUserCompletedCertifications(
         props.profile.userId,
         props.provider,
-        props.certification
+        props.certification,
     )
     const hasCompletedTheCertification: boolean = !!completedCertificate
 
@@ -85,7 +85,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     }: AllCertificationsProviderData = useAllCertifications(
         props.provider,
         course?.certificationId,
-        { enabled: !!course?.certificationId }
+        { enabled: !!course?.certificationId },
     )
 
     const ready: boolean = useMemo(() => (

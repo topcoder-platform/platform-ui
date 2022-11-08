@@ -21,7 +21,8 @@ const WorkTransferredStatus: FC<{}> = () => (
             </div>
 
             <div className={styles.line}>
-                Thank you!<br />
+                Thank you!
+                <br />
                 The Topcoder Team
             </div>
         </p>

@@ -1,10 +1,12 @@
 export function dateLocaleShortString(date?: Date): string | undefined {
-    return date?.toLocaleDateString(undefined,
+    return date?.toLocaleDateString(
+        undefined,
         {
             day: 'numeric',
             month: 'short',
             year: 'numeric',
-        })
+        },
+    )
 }
 
 export function moneyLocaleString(amount?: number): string | undefined {

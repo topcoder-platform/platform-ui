@@ -14,7 +14,7 @@ import { PlatformRoute } from '../platform-route.model'
 export function getSignupUrl(
     currentLocation: string,
     toolRoutes: Array<PlatformRoute>,
-    returnUrl?: string
+    returnUrl?: string,
 ): string {
 
     // figure out the current tool so we can assign the correct reg source

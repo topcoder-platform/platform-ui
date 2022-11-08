@@ -15,7 +15,7 @@ export const createBadgeFormDef: FormDefinition = {
                 buttonStyle: 'primary',
                 isSubmit: true,
                 label: 'Save Badge',
-                onClick: (e) => { },
+                onClick: e => { },
                 size: 'lg',
                 type: 'submit',
             },

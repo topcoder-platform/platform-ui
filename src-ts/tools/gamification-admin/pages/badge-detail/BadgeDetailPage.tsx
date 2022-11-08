@@ -1,11 +1,11 @@
 import { noop, trim } from 'lodash'
-import MarkdownIt from 'markdown-it'
 import { ChangeEvent, createRef, Dispatch, FC, KeyboardEvent, RefObject, SetStateAction, useEffect, useState } from 'react'
-import ContentEditable from 'react-contenteditable'
 import { Params, useLocation, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import sanitizeHtml from 'sanitize-html'
 import { KeyedMutator, useSWRConfig } from 'swr'
+import ContentEditable from 'react-contenteditable'
+import MarkdownIt from 'markdown-it'
+import sanitizeHtml from 'sanitize-html'
 // tslint:disable-next-line: no-submodule-imports
 import { FullConfiguration } from 'swr/dist/types'
 
@@ -15,12 +15,12 @@ import { BadgeDetailPageHandler, GameBadge, useGamificationBreadcrumb, useGetGam
 import { BadgeActivatedModal } from '../../game-lib/modals/badge-activated-modal'
 import { badgeListingColumns } from '../badge-listing/badge-listing-table'
 
-import AwardedMembersTab from './AwardedMembersTab/AwardedMembersTab'
 import { badgeDetailsTabs, BadgeDetailsTabViews } from './badge-details-tabs.config'
 import { submitRequestAsync as updateBadgeAsync } from './badge-details.functions'
-import styles from './BadgeDetailPage.module.scss'
+import AwardedMembersTab from './AwardedMembersTab/AwardedMembersTab'
 import BatchAwardTab from './BatchAwardTab/BatchAwardTab'
 import ManualAwardTab from './ManualAwardTab/ManualAwardTab'
+import styles from './BadgeDetailPage.module.scss'
 
 const md: MarkdownIt = new MarkdownIt({
     html: true,
@@ -49,7 +49,7 @@ const BadgeDetailPage: FC = () => {
     const { hash }: { hash: string } = useLocation()
 
     const [activeTab, setActiveTab]: [string, Dispatch<SetStateAction<string>>] = useState<string>(
-        hash === '#award' ? BadgeDetailsTabViews.manualAward : BadgeDetailsTabViews.awardedMembers
+        hash === '#award' ? BadgeDetailsTabViews.manualAward : BadgeDetailsTabViews.awardedMembers,
     )
 
     const [tabs]: [
@@ -164,7 +164,7 @@ const BadgeDetailPage: FC = () => {
                 setShowActivatedModal(true)
                 onBadgeUpdated()
             })
-            .catch((e) => alert(`onActivateBadge error: ${e.message}`))
+            .catch(e => alert(`onActivateBadge error: ${e.message}`))
     }
 
     function onDisableBadge(): void {
@@ -180,7 +180,7 @@ const BadgeDetailPage: FC = () => {
                 setShowActivatedModal(true)
                 onBadgeUpdated()
             })
-            .catch((e) => alert(`onDisableBadge error: ${e.message}`))
+            .catch(e => alert(`onDisableBadge error: ${e.message}`))
     }
 
     function onNameEditKeyDown(e: KeyboardEvent): void {
@@ -280,21 +280,27 @@ const BadgeDetailPage: FC = () => {
 
     // default tab
     let activeTabElement: JSX.Element
-        = <AwardedMembersTab
-            badge={badgeDetailsHandler.data as GameBadge}
-        />
+        = (
+            <AwardedMembersTab
+                badge={badgeDetailsHandler.data as GameBadge}
+            />
+        )
     if (activeTab === BadgeDetailsTabViews.manualAward) {
-        activeTabElement = <ManualAwardTab
-            badge={badgeDetailsHandler.data as GameBadge}
-            onManualAssign={onAssign}
-        />
+        activeTabElement = (
+            <ManualAwardTab
+                badge={badgeDetailsHandler.data as GameBadge}
+                onManualAssign={onAssign}
+            />
+        )
     }
 
     if (activeTab === BadgeDetailsTabViews.batchAward) {
-        activeTabElement = <BatchAwardTab
-            badge={badgeDetailsHandler.data as GameBadge}
-            onBatchAssign={onAssign}
-        />
+        activeTabElement = (
+            <BatchAwardTab
+                badge={badgeDetailsHandler.data as GameBadge}
+                onBatchAssign={onAssign}
+            />
+        )
     }
 
     // show page loader if we fetching results
@@ -322,10 +328,11 @@ const BadgeDetailPage: FC = () => {
                                         buttonStyle='icon'
                                         icon={IconOutline.PencilIcon}
                                         className={styles.filePickerPencil}
-                                        onClick={() => fileInputRef.current?.click()} />
+                                        onClick={() => fileInputRef.current?.click()}
+                                    />
                                     <img src={fileDataURL || badgeDetailsHandler.data?.badge_image_url} alt='badge media preview' />
                                     <input
-                                        type="file"
+                                        type='file'
                                         ref={fileInputRef}
                                         className={styles.filePickerInput}
                                         accept={GamificationConfig.ACCEPTED_BADGE_MIME_TYPES}
@@ -337,17 +344,19 @@ const BadgeDetailPage: FC = () => {
                                     <ContentEditable
                                         innerRef={badgeNameRef}
                                         html={badgeDetailsHandler.data?.badge_name as string}
-                                        onChange={() => badgeNameErrorText ? setBadgeNameErrorText(undefined) : ''}
+                                        onChange={() => (badgeNameErrorText ? setBadgeNameErrorText(undefined) : '')}
                                         onKeyDown={onNameEditKeyDown}
                                         onBlur={onSaveBadgeName}
                                         onFocus={onBadgeNameEditFocus}
                                         className={styles.badgeName}
                                     />
                                     {
-                                        badgeNameErrorText && <div className={styles.error}>
-                                            <IconSolid.ExclamationIcon />
-                                            {badgeNameErrorText}
-                                        </div>
+                                        badgeNameErrorText && (
+                                            <div className={styles.error}>
+                                                <IconSolid.ExclamationIcon />
+                                                {badgeNameErrorText}
+                                            </div>
+                                        )
                                     }
                                     <div className={styles.badgeDesc}>
                                         <div className={styles.badgeEditWrap}>
@@ -363,19 +372,21 @@ const BadgeDetailPage: FC = () => {
                                                 className={isBadgeDescEditingMode ? styles.badgeEditableMode : styles.badgeEditable}
                                             />
                                             {
-                                                isBadgeDescEditingMode && <div className={styles.badgeEditActions}>
-                                                    <Button
-                                                        label='Cancel'
-                                                        buttonStyle='secondary'
-                                                        size='xs'
-                                                        onClick={() => setIsBadgeDescEditingMode(false)}
-                                                    />
-                                                    <Button
-                                                        label='Save'
-                                                        size='xs'
-                                                        onClick={onSaveBadgeDesc}
-                                                    />
-                                                </div>
+                                                isBadgeDescEditingMode && (
+                                                    <div className={styles.badgeEditActions}>
+                                                        <Button
+                                                            label='Cancel'
+                                                            buttonStyle='secondary'
+                                                            size='xs'
+                                                            onClick={() => setIsBadgeDescEditingMode(false)}
+                                                        />
+                                                        <Button
+                                                            label='Save'
+                                                            size='xs'
+                                                            onClick={onSaveBadgeDesc}
+                                                        />
+                                                    </div>
+                                                )
                                             }
                                         </div>
                                     </div>
@@ -391,12 +402,14 @@ const BadgeDetailPage: FC = () => {
                 }
             </div>
             {
-                badgeDetailsHandler.data &&
-                <BadgeActivatedModal
-                    isOpen={showActivatedModal}
-                    onClose={() => setShowActivatedModal(false)}
-                    badge={badgeDetailsHandler.data}
-                />
+                badgeDetailsHandler.data
+                && (
+                    <BadgeActivatedModal
+                        isOpen={showActivatedModal}
+                        onClose={() => setShowActivatedModal(false)}
+                        badge={badgeDetailsHandler.data}
+                    />
+                )
             }
         </ContentLayout>
     )

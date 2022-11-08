@@ -146,7 +146,7 @@ export function buildUpdateRequest(workTypeConfig: WorkTypeConfig, challenge: Ch
         },
     ]
 
-    Object.keys(formData).forEach((key) => {
+    Object.keys(formData).forEach(key => {
         intakeMetadata.push({
             name: ChallengeMetadataName[key as keyof typeof ChallengeMetadataName],
             value: formData[key] || '',
@@ -159,10 +159,10 @@ export function buildUpdateRequest(workTypeConfig: WorkTypeConfig, challenge: Ch
 
     const data: ReadonlyArray<FormDetail> = mapFormData(
         type,
-        formData
+        formData,
     )
 
-    data.forEach((formDetail) => {
+    data.forEach(formDetail => {
         if (Object.keys(formDetail).length <= 0) { return }
 
         const formattedValue: string = formatFormDataOption(formDetail.value)
@@ -171,14 +171,14 @@ export function buildUpdateRequest(workTypeConfig: WorkTypeConfig, challenge: Ch
 
     if (getTypeCategory(type) === WorkTypeCategory.data) {
         templateString.push(
-            WorkStrings.MARKDOWN_SUBMISSION_GUIDELINES
+            WorkStrings.MARKDOWN_SUBMISSION_GUIDELINES,
         )
     }
     // ---- End Build Markdown string ---- //
 
     // If the duration of the Submission phase depends on the package selected (i.e.: Bug Hunt),
     // then update the duration for that phase to the correct value
-    const timeline: Array<WorkTimelinePhase> = workTypeConfig.timeline.map((phase) => {
+    const timeline: Array<WorkTimelinePhase> = workTypeConfig.timeline.map(phase => {
         if (workTypeConfig.submissionPhaseDuration && phase.phaseId === WorkConfigConstants.PHASE_ID_SUBMISSION) {
             phase.duration = workTypeConfig.submissionPhaseDuration[formData[ChallengeMetadataName.packageType] as PricePackageName] || 0
         }
@@ -293,7 +293,7 @@ function buildFormDataBugHunt(formData: any): ReadonlyArray<FormDetail> {
         {
             key: ChallengeMetadataName.deliveryType,
             title: ChallengeMetadataTitle.bugDeliveryType,
-            value: `${formData.deliveryType}${formData.repositoryLink ? `: ${  formData.repositoryLink}` : ''}`,
+            value: `${formData.deliveryType}${formData.repositoryLink ? `: ${formData.repositoryLink}` : ''}`,
         },
         {
             key: ChallengeMetadataName.additionalInformation,
@@ -428,11 +428,11 @@ function buildFormDataProblem(formData: any): ReadonlyArray<FormDetail> {
  */
 function checkFormDataOptionEmpty(detail: any): boolean {
     return (
-        !detail ||
-        (typeof detail === 'string' && detail.trim().length === 0) ||
-        (Array.isArray(detail) && detail.length === 0) ||
-        (typeof detail === 'object' &&
-            Object.values(detail).filter((val: any) => val && val.trim().length !== 0)
+        !detail
+        || (typeof detail === 'string' && detail.trim().length === 0)
+        || (Array.isArray(detail) && detail.length === 0)
+        || (typeof detail === 'object'
+            && Object.values(detail).filter((val: any) => val && val.trim().length !== 0)
                 .length === 0)
     )
 }

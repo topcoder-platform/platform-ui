@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { FC } from 'react'
+import classNames from 'classnames'
 
 import styles from './DevCenterCard.module.scss'
 
@@ -13,7 +13,7 @@ interface DevCenterCardProps {
     titleClass: string
 }
 
-const DevCenterCard: FC<DevCenterCardProps> = ({ icon, cornerIcon, title, titleClass, description, button, className= '' }) => (
+const DevCenterCard: FC<DevCenterCardProps> = ({ icon, cornerIcon, title, titleClass, description, button, className = '' }) => (
     <div className={classNames(styles.card, className)}>
         <div className={styles.cornerImage}>{cornerIcon}</div>
         <div className={styles.cardContainer}>

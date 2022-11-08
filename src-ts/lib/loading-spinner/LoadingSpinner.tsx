@@ -3,9 +3,9 @@
  *
  * Centered Loading Spinner with back overlay
  */
-import classNames from 'classnames'
 import { FC } from 'react'
 import { PuffLoader } from 'react-spinners'
+import classNames from 'classnames'
 
 import styles from './LoadingSpinner.module.scss'
 
@@ -27,8 +27,8 @@ const LoadingSpinner: FC<LoadingSpinnerProps> = ({ hide, className, type = 'Norm
 
     const isOverlay: boolean = type === 'Overlay'
     return (
-        <div className={classNames(styles['loading-spinner'], styles.show, {[styles.overlay]: isOverlay}, className)}>
-            <PuffLoader color="#2196f3" loading size={100} />
+        <div className={classNames(styles['loading-spinner'], styles.show, { [styles.overlay]: isOverlay }, className)}>
+            <PuffLoader color='#2196f3' loading size={100} />
         </div>
     )
 }

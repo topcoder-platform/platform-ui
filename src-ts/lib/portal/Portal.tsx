@@ -12,7 +12,7 @@ interface PortalProps {
 const Portal: FC<PortalProps> = (props: PortalProps) => {
     const portalNode: HTMLElement | null | undefined = props.portalId
         ? document.getElementById(props.portalId)
-        :  props.portalNode ?? undefined
+        : props.portalNode ?? undefined
 
     const defaultPortalNode: HTMLElement = useMemo(() => {
         if (props.portalId || props.portalNode) {

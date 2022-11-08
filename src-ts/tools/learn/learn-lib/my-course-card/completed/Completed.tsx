@@ -1,8 +1,8 @@
-import classNames from 'classnames'
 import { FC } from 'react'
+import classNames from 'classnames'
 
 import { Button, textFormatDateLocaleShortString } from '../../../../../lib'
-import { CourseTitle, LearnCertification } from "../.."
+import { CourseTitle, LearnCertification } from '../..'
 import { getCertificatePath, getCoursePath } from '../../../learn.routes'
 
 import styles from './Completed.module.scss'
@@ -27,7 +27,8 @@ const Completed: FC<CompletedProps> = (props: CompletedProps) => {
                     credits={props.certification.providerName}
                 >
                     <div className={styles['completed-status']}>
-                        Completed{' '}
+                        Completed
+                        {' '}
                         {textFormatDateLocaleShortString(new Date(props.completed))}
                     </div>
                 </CourseTitle>

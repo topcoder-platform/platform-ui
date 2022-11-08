@@ -17,7 +17,7 @@ export function useUserCompletedCertifications(userId?: number, provider?: strin
     useEffect(() => {
         let mounted: boolean = true
 
-        setState((prevState) => ({
+        setState(prevState => ({
             ...prevState,
             loading: true,
         }))
@@ -27,7 +27,7 @@ export function useUserCompletedCertifications(userId?: number, provider?: strin
         }
 
         userCompletedCertificationGetAsync(userId)
-            .then((completedCertifications) => {
+            .then(completedCertifications => {
 
                 if (!mounted) {
                     return
@@ -36,11 +36,11 @@ export function useUserCompletedCertifications(userId?: number, provider?: strin
                 let certifications: Array<LearnUserCompletedCertification> = completedCertifications
 
                 if (provider || certification) {
-                    certifications = completedCertifications.filter((c) => (!provider || c.provider === provider) &&
-                        (!certification || c.certification === certification))
+                    certifications = completedCertifications.filter(c => (!provider || c.provider === provider)
+                        && (!certification || c.certification === certification))
                 }
 
-                setState((prevState) => ({
+                setState(prevState => ({
                     ...prevState,
                     certifications,
                     loading: false,

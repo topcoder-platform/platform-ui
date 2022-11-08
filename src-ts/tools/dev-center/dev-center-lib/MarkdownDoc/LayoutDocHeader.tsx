@@ -7,7 +7,7 @@ interface LayoutDocHeaderProps {
     title?: string
 }
 
-export const LayoutDocHeader: React.FC<LayoutDocHeaderProps> = (props) => {
+export const LayoutDocHeader: React.FC<LayoutDocHeaderProps> = props => {
     const { title = '', subtitle = '' }: LayoutDocHeaderProps = props
 
     return (

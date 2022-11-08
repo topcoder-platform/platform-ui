@@ -7,9 +7,9 @@ import styles from './DevCenterLandingPage.module.scss'
 
 const DevCenter: FC = () => (
     <div className={styles.container}>
-        <DevCenterHeader/>
-        <DevCenterGetStarted/>
-        <DevCenterArticlesection/>
+        <DevCenterHeader />
+        <DevCenterGetStarted />
+        <DevCenterArticlesection />
     </div>
 )
 

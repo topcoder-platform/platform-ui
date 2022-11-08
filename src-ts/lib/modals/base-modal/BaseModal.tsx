@@ -1,6 +1,6 @@
-import classNames from 'classnames'
 import { FC } from 'react'
 import Modal, { ModalProps } from 'react-responsive-modal'
+import classNames from 'classnames'
 
 import { IconOutline } from '../../svgs'
 

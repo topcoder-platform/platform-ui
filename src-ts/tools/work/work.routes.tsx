@@ -104,11 +104,11 @@ export const workRoutes: Array<PlatformRoute> = [
             // General
             {
                 element: <SaveAfterLogin />,
-                route: `:workType/save-after-login`,
+                route: ':workType/save-after-login',
             },
             {
                 element: <WorkThankYou />,
-                route: `:workType/thank-you`,
+                route: ':workType/thank-you',
             },
         ],
         element: <IntakeForms />,

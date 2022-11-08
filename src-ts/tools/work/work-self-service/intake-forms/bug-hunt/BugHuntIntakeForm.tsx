@@ -1,5 +1,5 @@
-import React, { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
 import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
+import React, { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
 
 import {
     Form,
@@ -14,7 +14,7 @@ import {
     profileContext,
     ProfileContextData,
     SaveForLaterIcon,
-    useCheckIsMobile
+    useCheckIsMobile,
 } from '../../../../../lib'
 import {
     Challenge,
@@ -26,7 +26,7 @@ import {
     workGetByWorkIdAsync,
     WorkIntakeFormRoutes,
     WorkType,
-    workUpdateAsync
+    workUpdateAsync,
 } from '../../../work-lib'
 import { WorkServicePrice } from '../../../work-service-price'
 import { WorkTypeBanner } from '../../../work-type-banner'
@@ -34,8 +34,8 @@ import { dashboardRoute, selfServiceStartRoute } from '../../../work.routes'
 import { IntakeFormsBreadcrumb } from '../intake-forms-breadcrumb'
 
 import { BugHuntFormConfig } from './bug-hunt.form.config'
-import styles from './BugHunt.module.scss'
 import { DeliverablesInfoCard } from './deliverables-info-card'
+import styles from './BugHunt.module.scss'
 
 const BugHuntIntakeForm: React.FC = () => {
 
@@ -127,7 +127,7 @@ const BugHuntIntakeForm: React.FC = () => {
         }
     }, [loading, saveSuccess])
 
-    const requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => void = (inputs) => {
+    const requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => void = inputs => {
         const projectTitle: string = formGetInputModel(inputs, ChallengeMetadataName.projectTitle).value as string
         const featuresToTest: string = formGetInputModel(inputs, ChallengeMetadataName.featuresToTest).value as string
         const deliveryType: string = formGetInputModel(inputs, ChallengeMetadataName.deliveryType).value as string
@@ -146,7 +146,7 @@ const BugHuntIntakeForm: React.FC = () => {
         }
     }
 
-    const onChange: (inputs: ReadonlyArray<FormInputModel>) => void = (inputs) => {
+    const onChange: (inputs: ReadonlyArray<FormInputModel>) => void = inputs => {
         const packageType: PricePackageName = formGetInputModel(inputs, ChallengeMetadataName.packageType).value as PricePackageName
 
         if (packageType !== selectedPackage) {
@@ -158,7 +158,7 @@ const BugHuntIntakeForm: React.FC = () => {
         setDisableSaveForLater(!title?.trim())
     }
 
-    const onSave: (val: any) => Promise<void> = (val) => {
+    const onSave: (val: any) => Promise<void> = val => {
         if (!isLoggedIn) {
             goToLoginStep(val)
             return Promise.reject()

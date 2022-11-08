@@ -23,15 +23,18 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                 This Topcoder Online Order User Agreement (the "Agreement") is a contract
                 between you (referred to herein as "User") and Topcoder LLC. ("Topcoder")
                 and applies to all online services available therein (the "Services") and
-                Deliverables. By submitting an Online Order through{' '}
+                Deliverables. By submitting an Online Order through
+                {' '}
                 <a
                     target='_blank'
                     className={styles.topCoderLink}
                     href='https://www.topcoder.com/'
                     rel='noreferrer'
                 >
-                    https://www.topcoder.com/{' '}
-                </a>{' '}
+                    https://www.topcoder.com/
+                    {' '}
+                </a>
+                {' '}
                 and related sub-domains (“the Site”) , User has accepted this Agreement
                 and has agreed to be bound by the terms of this Agreement. Topcoder
                 reserves the right, at its discretion, to amend this Agreement at any time
@@ -49,34 +52,50 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                     <ol>
                         <li>
                             <p>
-                                <strong>1.1. </strong> Process and Specifications for Online
+                                <strong>1.1. </strong>
+                                {' '}
+                                Process and Specifications for Online
                                 Orders. If ordering the Services online via the Site (referred to
-                                as an “<strong>Online Order”)</strong>:
+                                as an “
+                                <strong>Online Order”)</strong>
+                                :
                             </p>
                             <ol>
                                 <li>
-                                    <strong>a. </strong> To utilize the Services, the Site requires
+                                    <strong>a. </strong>
+                                    {' '}
+                                    To utilize the Services, the Site requires
                                     the User to provide specifications and information with respect
                                     to the desired Services and deliverables in reasonable detail
-                                    (the "<strong>Preliminary Specifications"</strong>) on the Site.
+                                    (the "
+                                    <strong>Preliminary Specifications"</strong>
+                                    ) on the Site.
                                 </li>
                                 <li>
-                                    <strong>b. </strong> After submitting Preliminary Specifications
+                                    <strong>b. </strong>
+                                    {' '}
+                                    After submitting Preliminary Specifications
                                     on the Site, User provides payment information and authorizes
                                     Project Fees (as defined below) associated with the Services and
                                     deliverables.
                                 </li>
                                 <li>
-                                    <strong>c .</strong> Topcoder may in its sole discretion accept
+                                    <strong>c .</strong>
+                                    {' '}
+                                    Topcoder may in its sole discretion accept
                                     or refer Preliminary Specifications to a Topcoder representative
                                     for adjustments in the Preliminary Specifications to be
                                     acceptable to Topcoder or reject the Preliminary Specifications.
                                     Preliminary Specifications accepted by Topcoder will be referred
-                                    to as “<strong>Specifications</strong>” and result in an Online
+                                    to as “
+                                    <strong>Specifications</strong>
+                                    ” and result in an Online
                                     Order.
                                 </li>
                                 <li>
-                                    <strong>d.</strong> To the extent the parties are not able to
+                                    <strong>d.</strong>
+                                    {' '}
+                                    To the extent the parties are not able to
                                     reach agreement on the Specifications, including, but not
                                     limited to situations where the information provided by User is
                                     insufficient to create Specifications or the Preliminary
@@ -86,16 +105,21 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                     this Agreement.
                                 </li>
                                 <li>
-                                    <strong>e.</strong> Topcoder agrees to provide the Deliverables
+                                    <strong>e.</strong>
+                                    {' '}
+                                    Topcoder agrees to provide the Deliverables
                                     as per the Specifications. Deliverables are provided by
                                     launching Work (as defined below) using Topcoder's crowdsourcing
                                     platform, available at the Site and online and mobile tools for
-                                    engaging the Topcoder Community (the “<strong>Platform</strong>
+                                    engaging the Topcoder Community (the “
+                                    <strong>Platform</strong>
                                     ”).
                                 </li>
                             </ol>
                             <p>
-                                <strong>1.2. Changes to Scope of Services.</strong> If User
+                                <strong>1.2. Changes to Scope of Services.</strong>
+                                {' '}
+                                If User
                                 desires to change a Specification, User will submit a written
                                 request to Topcoder detailing the proposed changes. If Topcoder is
                                 able to accommodate such changes, Topcoder shall prepare an
@@ -109,46 +133,70 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                             <h4>2. DEFINITIONS</h4>
                             <ol>
                                 <p>
-                                    <strong>2.1.</strong> For the purposes of this Agreement, the
+                                    <strong>2.1.</strong>
+                                    {' '}
+                                    For the purposes of this Agreement, the
                                     following capitalized terms have the meanings assigned to them
                                     in this Section 2. Any capitalized terms used in this Agreement
                                     but not otherwise defined in this Section shall have the
                                     meanings assigned to them elsewhere in this Agreement.
                                 </p>
                                 <li>
-                                    <strong>a.</strong> “<strong>Deliverables</strong>”: shall mean
+                                    <strong>a.</strong>
+                                    {' '}
+                                    “
+                                    <strong>Deliverables</strong>
+                                    ”: shall mean
                                     those items described and itemized in the Specifications.
                                 </li>
                                 <li>
-                                    <strong>b.</strong> “<strong>Project Fees</strong>”: The fees
+                                    <strong>b.</strong>
+                                    {' '}
+                                    “
+                                    <strong>Project Fees</strong>
+                                    ”: The fees
                                     User needs to pay for the Services and the creation of the
                                     Deliverables as either specified on the Site or as may be
                                     mutually agreed between the parties in the Online Order. Project
                                     Fees are on a fixed price basis.
                                 </li>
                                 <li>
-                                    <strong>c.</strong> “<strong>Work</strong>”: Services and/or
+                                    <strong>c.</strong>
+                                    {' '}
+                                    “
+                                    <strong>Work</strong>
+                                    ”: Services and/or
                                     Deliverables provided through the Platform (as defined below)
                                     utilizing the Topcoder Community. Work may also be referred to
                                     as “Challenges”, “Tasks”, "Competitions" or "Contests”. Work is
                                     primarily enabled through the following: “
-                                    <strong>Challenge</strong>”: A fixed-price, outcome-based online
+                                    <strong>Challenge</strong>
+                                    ”: A fixed-price, outcome-based online
                                     competition on the Platform utilizing the Topcoder Community.
                                     Also referred to as Competitions or Tasks. Work may result in
                                     multiple deliverables from the Topcoder Community (“
-                                    <strong>Submissions</strong>”). However, not all Submissions
+                                    <strong>Submissions</strong>
+                                    ”). However, not all Submissions
                                     shall be considered as Deliverables. Deliverables shall solely
                                     be determined and provided to User in accordance with criteria
                                     defined in Specifications after being selected through
                                     Topcoder’s deliverable review and scoring processes.
                                 </li>
                                 <li>
-                                    <strong>d.</strong> “<strong>Effective Date</strong>”: For
+                                    <strong>d.</strong>
+                                    {' '}
+                                    “
+                                    <strong>Effective Date</strong>
+                                    ”: For
                                     Online Orders, the Effective Date is the date that Preliminary
                                     Specifications are submitted by User.
                                 </li>
                                 <li>
-                                    <strong>e.</strong> “<strong>Topcoder Community</strong>”:
+                                    <strong>e.</strong>
+                                    {' '}
+                                    “
+                                    <strong>Topcoder Community</strong>
+                                    ”:
                                     Members of Topcoder’s global community who are registered
                                     members on the Platform.
                                 </li>
@@ -172,7 +220,11 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                             <h4>4. TITLE AND OWNERSHIP</h4>
                             <ol>
                                 <li>
-                                    <strong>4.1</strong> <strong>Retained Rights. </strong> Nothing
+                                    <strong>4.1</strong>
+                                    {' '}
+                                    <strong>Retained Rights. </strong>
+                                    {' '}
+                                    Nothing
                                     in the Agreement is intended to grant User any right to any of
                                     Topcoder’s intellectual property, including without limitation,
                                     any of its know how, works in any media, software, information,
@@ -180,7 +232,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                     trademarks, copyrights or logos (“Retained Rights”).
                                 </li>
                                 <li>
-                                    <strong>4.2 Title to the Platform.</strong> Topcoder retains all
+                                    <strong>4.2 Title to the Platform.</strong>
+                                    {' '}
+                                    Topcoder retains all
                                     right, title and interest in and to the Platform, tools and
                                     associated documentation and materials. Any use of the Platform,
                                     tools or associated documentation or materials beyond the scope
@@ -192,7 +246,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                     and associated documentation or materials.
                                 </li>
                                 <li>
-                                    <strong> 4.3. Deliverables.</strong> Regardless of Work
+                                    <strong> 4.3. Deliverables.</strong>
+                                    {' '}
+                                    Regardless of Work
                                     methodology, Deliverables shall be provided in accordance with
                                     criteria defined in Specifications, the selected Services, and
                                     Topcoder’s standard deliverable review and scoring processes.
@@ -204,7 +260,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                     Fees, Topcoder assigns and will assign to User the intellectual
                                     property rights in Deliverables created for the User pursuant to
                                     any Online Order which is expressly designated as being for
-                                    "development work" (“<strong>Custom Software</strong>”).
+                                    "development work" (“
+                                    <strong>Custom Software</strong>
+                                    ”).
                                     Deliverables shall be deemed to have been accepted upon User’s
                                     receipt of the Deliverables. The rights in and to any
                                     Submissions other than the Deliverables shall be retained by the
@@ -232,7 +290,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                             <h4>5. PAYMENT</h4>
                             <ol>
                                 <li>
-                                    <strong>5.1</strong> All Project Fees shall be placed as a hold
+                                    <strong>5.1</strong>
+                                    {' '}
+                                    All Project Fees shall be placed as a hold
                                     on User’s debit, credit card or other payment means after the
                                     Preliminary Specifications are submitted and Project Fees are
                                     authorized by User. Upon Topcoder agreement to the Preliminary
@@ -267,9 +327,13 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                             <h4>6. TERM AND TERMINATION</h4>
                             <ol>
                                 <li>
-                                    <strong>6.1</strong> This Agreement will begin on the Effective
+                                    <strong>6.1</strong>
+                                    {' '}
+                                    This Agreement will begin on the Effective
                                     Date and will continue unless terminated as set forth in this
-                                    Agreement ("<strong>Term"</strong>). Topcoder may, in its sole
+                                    Agreement ("
+                                    <strong>Term"</strong>
+                                    ). Topcoder may, in its sole
                                     discretion, terminate this Agreement and/or any Online Order(s),
                                     at any time, upon prior written notice to the User, which will
                                     result in the termination of associated rights granted to the
@@ -278,7 +342,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                     Section 6.4.
                                 </li>
                                 <li>
-                                    <strong>6.2</strong> Either party may terminate this Agreement
+                                    <strong>6.2</strong>
+                                    {' '}
+                                    Either party may terminate this Agreement
                                     and/or any Online Order(s) if the other party: (a) fails to cure
                                     any material breach of this Agreement or the applicable Online
                                     Order(s) within thirty (30) days after receipt of the written
@@ -288,13 +354,17 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                     party (and not dismissed within sixty (60) days thereafter).
                                 </li>
                                 <li>
-                                    <strong>6.3</strong> Section 5 (Payment), Section 6 (Term and
+                                    <strong>6.3</strong>
+                                    {' '}
+                                    Section 5 (Payment), Section 6 (Term and
                                     Termination), Section 8 (Confidential Information), Section 9
                                     (Limitation of Liability), and Section 11 (General) of this
                                     Agreement shall survive any termination or expiration hereof.
                                 </li>
                                 <li>
-                                    <strong>6.4</strong> In the event of a termination of an Online
+                                    <strong>6.4</strong>
+                                    {' '}
+                                    In the event of a termination of an Online
                                     Order: (a) an User’s right to avail the Services under such
                                     Online Order is automatically revoked; and ; (b) Topcoder shall
                                     refund the Project Fees on a pro rata basis unless the
@@ -303,7 +373,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                     any refund.
                                 </li>
                                 <li>
-                                    <strong>6.5</strong> In the event of a termination of the
+                                    <strong>6.5</strong>
+                                    {' '}
+                                    In the event of a termination of the
                                     Agreement before all Online Orders executed hereunder are
                                     terminated or completed, Topcoder will continue to perform and
                                     deliver Services for which the User has already paid and the
@@ -316,14 +388,18 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                             </h4>
                             <ol>
                                 <li>
-                                    <strong>7.1. Work.</strong> Topcoder will conduct Work for User
+                                    <strong>7.1. Work.</strong>
+                                    {' '}
+                                    Topcoder will conduct Work for User
                                     on the Platform among members of the Topcoder Community using
                                     the Platform tools to provide the Services. Topcoder shall have
                                     final control and ownership over all Work documents (e.g.,
                                     specifications, contest rules and requirements, prizes, etc.).
                                 </li>
                                 <li>
-                                    <strong>7.2. Third-Party Software.</strong> If the
+                                    <strong>7.2. Third-Party Software.</strong>
+                                    {' '}
+                                    If the
                                     Specifications (as mutually agreed by the parties) provide for
                                     the Deliverables to interface with, accompany, or include
                                     software or material not developed by Topcoder or its
@@ -337,7 +413,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                     Third-Party Software.
                                 </li>
                                 <li>
-                                    <strong>7.3. Export Compliance.</strong> Regardless of whether
+                                    <strong>7.3. Export Compliance.</strong>
+                                    {' '}
+                                    Regardless of whether
                                     User is a U.S.-based entity, User shall not export or re-export
                                     any of the Deliverable, (in whole or in part) to any country
                                     without ensuring that such export complies with the Export
@@ -354,7 +432,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                         </li>
                         <ol>
                             <li>
-                                <strong>8.1. Confidential Information.</strong> "Confidential
+                                <strong>8.1. Confidential Information.</strong>
+                                {' '}
+                                "Confidential
                                 Information" means information which is provided by either party
                                 under this Agreement (in such capacity, the "Disclosing Party") to
                                 the other party (in such capacity, the "Receiving Party") which is
@@ -384,7 +464,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                 Information.
                             </li>
                             <li>
-                                <strong>8.2. Exceptions.</strong> These confidentiality
+                                <strong>8.2. Exceptions.</strong>
+                                {' '}
+                                These confidentiality
                                 obligations shall not apply to any Confidential Information which:
                                 (a) is generally known to the public at the time of disclosure or
                                 later becomes so generally known (including Confidential
@@ -400,7 +482,8 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                             <li>
                                 <strong>
                                     8.3. Title and License to User's Confidential Information.
-                                </strong>{' '}
+                                </strong>
+                                {' '}
                                 All right, title, and ownership to Confidential Information
                                 provided by User hereunder, including the Preliminary
                                 Specifications, remains with User. User represents that it has all
@@ -411,7 +494,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                 Work and providing the Deliverable.
                             </li>
                             <li>
-                                <strong>8.4. Equitable Relief.</strong> The Receiving Party
+                                <strong>8.4. Equitable Relief.</strong>
+                                {' '}
+                                The Receiving Party
                                 acknowledges that unauthorized disclosure of Confidential
                                 Information would cause substantial harm for which damages alone
                                 may not be a sufficient remedy, and therefore that upon any such
@@ -420,7 +505,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                 whatever other remedies it might have at law.
                             </li>
                             <li>
-                                <strong>8.5. Confidentiality on the Platform.</strong> User
+                                <strong>8.5. Confidentiality on the Platform.</strong>
+                                {' '}
+                                User
                                 acknowledges and agrees that members of the Topcoder Community are
                                 not bound by the confidentiality obligations under this Section 8
                                 and User acknowledges that any Specifications or other information
@@ -429,13 +516,17 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                 payment information) is not Confidential Information.
                             </li>
                             <li>
-                                <strong>8.6. Confidentiality Period:</strong> The terms of this
+                                <strong>8.6. Confidentiality Period:</strong>
+                                {' '}
+                                The terms of this
                                 Section 8 shall continue in full force and effect for a period of
                                 three (3) years from the date of disclosure of such Confidential
                                 Information.
                             </li>
                             <li>
-                                <strong>8.7. Effect of Termination:</strong> In the event of
+                                <strong>8.7. Effect of Termination:</strong>
+                                {' '}
+                                In the event of
                                 termination of this Agreement, upon written request of the
                                 Disclosing Party, the Receiving Party shall promptly return the
                                 Disclosing Party’s Confidential Information, or at the Disclosing
@@ -473,7 +564,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                         <h4>10. WARRANTY</h4>
                         <ol>
                             <li>
-                                <strong>10.1. Representation.</strong> User represents and
+                                <strong>10.1. Representation.</strong>
+                                {' '}
+                                User represents and
                                 warrants that (i) it has the requisite power and corporate
                                 approvals and authority to enter into this Agreement and to
                                 perform all of its obligations under this Agreement; (ii) it will
@@ -495,7 +588,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                 completeness and accuracy of information.
                             </li>
                             <li>
-                                <strong>10.2. Limited Warranty.</strong> For a period of ten (10)
+                                <strong>10.2. Limited Warranty.</strong>
+                                {' '}
+                                For a period of ten (10)
                                 days from the provision of the Deliverables to the User, Topcoder
                                 warrants that the Deliverables will materially conform to the
                                 Specifications. If the Deliverables do not materially conform to
@@ -512,7 +607,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                 to the Specifications.
                             </li>
                             <li>
-                                <strong>10.3. Disclaimer.</strong> THE FOREGOING WARRANTIES ARE
+                                <strong>10.3. Disclaimer.</strong>
+                                {' '}
+                                THE FOREGOING WARRANTIES ARE
                                 EXCLUSIVE REMEDIES AND ARE IN LIEU OF ALL OTHER REPRESENTATIONS OR
                                 WARRANTIES, EXPRESS OR IMPLIED, STATUTORY OR OTHERWISE RELATED TO
                                 THIS AGREEMENT, INCLUDING THE SITE, THE SERVICES AND THE
@@ -530,12 +627,16 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                         <h4>11. GENERAL</h4>
                         <ol>
                             <li>
-                                <strong>11.1.</strong> Each party is an independent contractor of
+                                <strong>11.1.</strong>
+                                {' '}
+                                Each party is an independent contractor of
                                 the other and neither is an employee, agent, partner or joint
                                 venturer of the other.
                             </li>
                             <li>
-                                <strong>11.2.</strong> For the duration of this Agreement and for
+                                <strong>11.2.</strong>
+                                {' '}
+                                For the duration of this Agreement and for
                                 twelve (12) months thereafter, User shall not solicit for
                                 employment any persons employed or otherwise engaged by Topcoder,
                                 whether or not such individual had direct interaction with User;
@@ -544,7 +645,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                 contractors or agents.
                             </li>
                             <li>
-                                <strong>11.3.</strong> Neither party shall make any commitment, by
+                                <strong>11.3.</strong>
+                                {' '}
+                                Neither party shall make any commitment, by
                                 contract or otherwise, binding upon the other or represent that it
                                 has any authority to do so. This Agreement will bind and inure to
                                 the benefit of each party's permitted successors and assigns.
@@ -555,7 +658,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                 part of Topcoder's assets or voting securities.
                             </li>
                             <li>
-                                <strong>11.4.</strong> Any notice, report, approval or consent
+                                <strong>11.4.</strong>
+                                {' '}
+                                Any notice, report, approval or consent
                                 required or permitted under this Agreement will be sent to
                                 Topcoder at c/o Appirio Inc., 201 South Capitol Avenue Ste. 1100,
                                 Indianapolis, Indiana 46225, Attention: General Counsel, Email:
@@ -563,7 +668,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                 User through the Site or in an Order Form.
                             </li>
                             <li>
-                                <strong>11.5.</strong> Any waiver by either party of any breach of
+                                <strong>11.5.</strong>
+                                {' '}
+                                Any waiver by either party of any breach of
                                 this Agreement, whether express or implied, will not constitute a
                                 waiver of any other or subsequent breach. No provision of the
                                 Agreement will be waived by any act, omission or knowledge of a
@@ -576,7 +683,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                 will otherwise remain in full force and effect.
                             </li>
                             <li>
-                                <strong>11.6.</strong> Neither party shall be liable to the other
+                                <strong>11.6.</strong>
+                                {' '}
+                                Neither party shall be liable to the other
                                 for any delay of failure to perform any obligation under this
                                 Agreement (except for a failure to pay fees) if the delay or
                                 failure is due to events which are beyond the reasonable control
@@ -587,14 +696,18 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                 license by a government agency.
                             </li>
                             <li>
-                                <strong>11.7.</strong> Topcoder may refer to User by name as a
+                                <strong>11.7.</strong>
+                                {' '}
+                                Topcoder may refer to User by name as a
                                 customer in sales presentations and on Topcoder’s website and
                                 other marketing material. Topcoder may develop case studies for
                                 marketing purposes on User’s usage of Topcoder and share publicly
                                 notifying User.
                             </li>
                             <li>
-                                <strong>11.8.</strong> This Agreement will be deemed to have been
+                                <strong>11.8.</strong>
+                                {' '}
+                                This Agreement will be deemed to have been
                                 made in, and shall be construed pursuant to the laws of the State
                                 of Delaware without regard to its conflicts of laws, provisions,
                                 or the United Nations Convention on International Sale of Goods.
@@ -605,7 +718,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                 to a trial by jury.
                             </li>
                             <li>
-                                <strong>11.9.</strong> Any waivers or amendments shall be
+                                <strong>11.9.</strong>
+                                {' '}
+                                Any waivers or amendments shall be
                                 effective only if made in writing signed by a representative of
                                 the respective parties authorized to bind the parties. No
                                 provision of any purchase order or other business form (including
@@ -614,7 +729,9 @@ const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: Or
                                 Agreement, and any such document shall be for administrative
                                 purposes only and shall have no legal effect. In the event of any
                                 inconsistency between this Agreement and the privacy policy on the
-                                Site (“<strong>Privacy Policy</strong>”), the terms of this
+                                Site (“
+                                <strong>Privacy Policy</strong>
+                                ”), the terms of this
                                 Privacy Policy shall control. Both parties agree that this
                                 Agreement is the complete and exclusive statement of the mutual
                                 understanding of the parties, and supersedes and cancels all

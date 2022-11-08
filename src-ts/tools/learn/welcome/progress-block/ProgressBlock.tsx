@@ -3,7 +3,7 @@ import { FC } from 'react'
 import {
     LearnCertification,
     UserCertificationCompleted,
-    UserCertificationInProgress
+    UserCertificationInProgress,
 } from '../../learn-lib'
 
 import { NoProgress } from './no-progress'

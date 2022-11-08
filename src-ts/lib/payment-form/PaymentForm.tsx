@@ -4,8 +4,8 @@ import {
     CardNumberElement,
 } from '@stripe/react-stripe-js'
 import { StripeCardCvcElementChangeEvent, StripeCardExpiryElementChangeEvent, StripeCardNumberElementChangeEvent } from '@stripe/stripe-js'
-import cn from 'classnames'
 import React, { Dispatch, SetStateAction, useContext, useState } from 'react'
+import cn from 'classnames'
 
 import { Button, OrderContractModal, profileContext, ProfileContextData } from '..'
 import { InputText } from '../form/form-groups/form-input'
@@ -62,9 +62,9 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
 
     const [isOrderContractModalOpen, setIsOrderContractModalOpen]: [boolean, Dispatch<boolean>] = useState<boolean>(false)
 
-    const getError: (data: any) => string = (data) => data?.error?.message || ''
+    const getError: (data: any) => string = data => data?.error?.message || ''
 
-    const onOpenOrderContract: (event: React.SyntheticEvent) => void = (event) => {
+    const onOpenOrderContract: (event: React.SyntheticEvent) => void = event => {
         event.preventDefault()
         event.stopPropagation()
         setIsOrderContractModalOpen(true)
@@ -100,7 +100,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 name='email'
                 tabIndex={1}
                 type='text'
-                onChange={(event) => props.onUpdateField('email', event.target.value)}
+                onChange={event => props.onUpdateField('email', event.target.value)}
                 value={profile?.email}
             />
 
@@ -174,14 +174,14 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 name='name'
                 tabIndex={1}
                 type='text'
-                onChange={(event) => props.onUpdateField('name', event.target.value)}
+                onChange={event => props.onUpdateField('name', event.target.value)}
                 value={`${profile?.firstName} ${profile?.lastName}`}
             />
 
             <InputWrapper className={styles['input-wrapper']} label='Country or Region' tabIndex={3} type='text' disabled={false}>
                 <ReactSelect
                     value={props.formData.country}
-                    onChange={(option) => props.onUpdateField('country', option)}
+                    onChange={option => props.onUpdateField('country', option)}
                     options={COUNTRIES_OPTIONS}
                     style2
                 />
@@ -194,7 +194,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 name='zipCode'
                 tabIndex={1}
                 type='text'
-                onChange={(event) => props.onUpdateField('zipCode', event.target.value)}
+                onChange={event => props.onUpdateField('zipCode', event.target.value)}
             />
 
             <InputText
@@ -203,7 +203,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 tabIndex={1}
                 type='checkbox'
                 checked={props.formData.orderContract}
-                onChange={(event) => props.onUpdateField('orderContract', event.target.checked)}
+                onChange={event => props.onUpdateField('orderContract', event.target.checked)}
             />
 
             <div className={styles['info-box']}>

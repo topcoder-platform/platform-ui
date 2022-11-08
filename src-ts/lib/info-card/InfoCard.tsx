@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react'
+import classNames from 'classnames'
 
 import { ArrowIcon } from '../svgs'
 
@@ -24,7 +24,7 @@ const InfoCard: FC<InfoCardProps> = ({
 }: InfoCardProps) => {
 
     const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(defaultOpen)
-    const additionalStyles: Array<{ [key: string]: any }> = styleNames.map((style) => styles[style])
+    const additionalStyles: Array<{ [key: string]: any }> = styleNames.map(style => styles[style])
     const collapsibleClass: string = isCollapsible ? styles.collapsible : styles.notCollapsible
     const showSpacing: boolean = isOpen && !!title && !!children
 
@@ -40,9 +40,8 @@ const InfoCard: FC<InfoCardProps> = ({
                 <div className={styles.spacing} />
             )}
 
-            {isOpen &&
-                <div className={styles.content}>{children}</div>
-            }
+            {isOpen
+                && <div className={styles.content}>{children}</div>}
         </div>
     )
 }
@@ -51,7 +50,7 @@ function renderHeader(
     isCollapsible: boolean,
     isOpen: boolean,
     setIsOpen: Dispatch<SetStateAction<boolean>>,
-    title: string
+    title: string,
 ): JSX.Element {
 
     const arrowClass: string = isOpen ? styles.up : undefined

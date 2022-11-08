@@ -24,7 +24,7 @@ export function useUserCertifications(): UserCertificationsProviderData {
 
         let mounted: boolean = true
 
-        setState((prevState) => ({
+        setState(prevState => ({
             ...prevState,
             loading: true,
         }))
@@ -34,7 +34,7 @@ export function useUserCertifications(): UserCertificationsProviderData {
             if (profileContextData.initialized) {
                 // user is logged out,
                 // we're not going to fetch any progress, data is ready as is
-                setState((prevState) => ({
+                setState(prevState => ({
                     ...prevState,
                     loading: false,
                     ready: true,
@@ -45,7 +45,7 @@ export function useUserCertifications(): UserCertificationsProviderData {
         }
 
         userCertificationProgressGetAsync(userId)
-            .then((myCertifications) => {
+            .then(myCertifications => {
 
                 if (!mounted) {
                     return
@@ -61,7 +61,7 @@ export function useUserCertifications(): UserCertificationsProviderData {
                     .map(c => c as UserCertificationInProgress)
                     .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
 
-                setState((prevState) => ({
+                setState(prevState => ({
                     ...prevState,
                     completed,
                     inProgress,
@@ -71,7 +71,7 @@ export function useUserCertifications(): UserCertificationsProviderData {
             })
             .catch((err: any) => {
                 errorHandle(err, 'There was an error getting your course progress.')
-                setState((prevState) => ({
+                setState(prevState => ({
                     ...prevState,
                     completed: [],
                     inProgress: [],

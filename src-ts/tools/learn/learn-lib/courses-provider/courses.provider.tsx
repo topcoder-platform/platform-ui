@@ -18,7 +18,7 @@ export function useCourses(provider: string, certification?: string): CoursesPro
         let mounted: boolean = true
 
         if (!certification) {
-            setState((prevState) => ({
+            setState(prevState => ({
                 ...prevState,
                 course: undefined,
                 loading: false,
@@ -27,18 +27,18 @@ export function useCourses(provider: string, certification?: string): CoursesPro
             return
         }
 
-        setState((prevState) => ({
+        setState(prevState => ({
             ...prevState,
             loading: true,
         }))
 
         courseGetAsync(provider, certification)
-            .then((course) => {
+            .then(course => {
                 if (!mounted) {
                     return
                 }
 
-                setState((prevState) => ({
+                setState(prevState => ({
                     ...prevState,
                     course,
                     loading: false,

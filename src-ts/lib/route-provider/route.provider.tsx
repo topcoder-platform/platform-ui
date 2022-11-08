@@ -56,8 +56,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
         //    b. for members and the user is a member
         //    c. the active tool in the app (in case someone deep-links to it)
         const toolsRoutesForNav: Array<PlatformRoute> = toolsRoutes
-            .filter(route =>
-                !!route.title
+            .filter(route => !!route.title
                 && !route.hidden
                 && (
                     (
@@ -65,8 +64,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
                         && (!route.memberOnly || !!profile?.isMember)
                     )
                     || routeIsActiveTool(location.pathname, route)
-                )
-            )
+                ))
 
         const utilsRoutes: Array<PlatformRoute> = props.utilsRoutes.filter(route => !route.disabled)
         allRoutes = [

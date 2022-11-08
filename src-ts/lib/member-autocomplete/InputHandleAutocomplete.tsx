@@ -26,25 +26,25 @@ export interface InputHandleAutocompleteProps {
 
 const InputHandleAutocomplete: FC<InputHandleAutocompleteProps> = (props: InputHandleAutocompleteProps) => {
     const customStyles: StylesConfig<any> = {
-        control: (provided) => ({
+        control: provided => ({
             ...provided,
             border: 'none',
             boxShadow: 'none',
         }),
-        input: (provided) => ({
+        input: provided => ({
             ...provided,
             color: 'inherit',
             fontSize: 16,
         }),
-        multiValue: (provided) => ({
+        multiValue: provided => ({
             ...provided,
             borderRadius: 50,
         }),
-        multiValueLabel: (provided) => ({
+        multiValueLabel: provided => ({
             ...provided,
             fontSize: 12,
         }),
-        option: (provided) => ({
+        option: provided => ({
             ...provided,
             borderBottom: '1px solid #E9E9E9',
             color: 'inherit',
@@ -52,13 +52,13 @@ const InputHandleAutocomplete: FC<InputHandleAutocompleteProps> = (props: InputH
             fontWeight: 400,
             padding: 16,
         }),
-        placeholder: (provided) => ({
+        placeholder: provided => ({
             ...provided,
             color: 'inherit',
             fontSize: 16,
             fontWeight: 400,
         }),
-        valueContainer: (provided) => ({
+        valueContainer: provided => ({
             ...provided,
             padding: 0,
         }),

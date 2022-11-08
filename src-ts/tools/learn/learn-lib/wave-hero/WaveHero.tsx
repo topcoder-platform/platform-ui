@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { FC, ReactNode } from 'react'
+import classNames from 'classnames'
 
 import styles from './WaveHero.module.scss'
 
@@ -16,8 +16,9 @@ const WaveHero: FC<WaveHeroProps> = (props: WaveHeroProps) => (
             <div className={styles['hero-content']}>
                 <div className={styles['hero-text-col']}>
                     <h1>{props.title}</h1>
-                    <p className={styles['hero-text']}
-                        dangerouslySetInnerHTML={{__html: props.text || ''}}
+                    <p
+                        className={styles['hero-text']}
+                        dangerouslySetInnerHTML={{ __html: props.text || '' }}
                     />
                 </div>
                 {props.children && (

@@ -86,7 +86,7 @@ const ProgressAction: FC<ProgressActionProps> = (props: ProgressActionProps) => 
             return []
         }
 
-        return recentlyUpdatedCertifications.map((cert) => (
+        return recentlyUpdatedCertifications.map(cert => (
             isCompleted(cert)
                 ? renderCompleted(cert as UserCertificationCompleted)
                 : renderInProgress(cert as UserCertificationInProgress)

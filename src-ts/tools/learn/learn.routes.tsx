@@ -5,7 +5,7 @@ import { LearnConfig } from './learn-config'
 
 const WelcomePage: LazyLoadedComponent = lazyLoad(() => import('./welcome'), 'WelcomePage')
 const CourseDetailsPage: LazyLoadedComponent = lazyLoad(() => import('./course-details'), 'CourseDetailsPage')
-const CourseCompletedPage: LazyLoadedComponent = lazyLoad(() => import("./course-completed"), 'CourseCompletedPage')
+const CourseCompletedPage: LazyLoadedComponent = lazyLoad(() => import('./course-completed'), 'CourseCompletedPage')
 const MyCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certificate'), 'MyCertificate')
 const UserCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certificate'), 'UserCertificate')
 const FreeCodeCamp: LazyLoadedComponent = lazyLoad(() => import('./free-code-camp'), 'FreeCodeCamp')

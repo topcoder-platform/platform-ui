@@ -3,7 +3,7 @@ import {
     MouseEventHandler,
     MutableRefObject,
     useCallback,
-    useRef
+    useRef,
 } from 'react'
 
 export interface UseHoverElementValue {
@@ -19,7 +19,7 @@ export interface UseHoverElementValue {
 export function useOnHoverElement(
     el: HTMLElement | null,
     cb: (isVisible: boolean) => void,
-    enabled: boolean = true
+    enabled: boolean = true,
 ): UseHoverElementValue | {} {
     const counter: MutableRefObject<number> = useRef(0)
 

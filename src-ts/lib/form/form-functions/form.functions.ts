@@ -68,7 +68,7 @@ export async function onSubmitAsync<T>(
     formValue: T,
     save: (value: T) => Promise<void>,
     onSuccess?: () => void,
-    customValidateForm?: (formElements: HTMLFormControlsCollection, event: ValidationEvent, inputs: ReadonlyArray<FormInputModel>) => boolean
+    customValidateForm?: (formElements: HTMLFormControlsCollection, event: ValidationEvent, inputs: ReadonlyArray<FormInputModel>) => boolean,
 ): Promise<void> {
 
     event.preventDefault()
@@ -94,7 +94,7 @@ export async function onSubmitAsync<T>(
 
     // set the properties for the updated T value
     inputs
-        .forEach((field) => {
+        .forEach(field => {
             (formValue as any)[field.name] = field.value
         })
 
@@ -186,7 +186,7 @@ function validateField(formInputDef: FormInputModel, formElements: HTMLFormContr
         })
 }
 
-export type ValidationEvent =  'blur' | 'change' | 'submit' | 'initial'
+export type ValidationEvent = 'blur' | 'change' | 'submit' | 'initial'
 
 export function validateForm(formElements: HTMLFormControlsCollection, event: ValidationEvent, inputs: ReadonlyArray<FormInputModel>): boolean {
     const errors: ReadonlyArray<FormInputModel> = inputs?.filter(formInputDef => {

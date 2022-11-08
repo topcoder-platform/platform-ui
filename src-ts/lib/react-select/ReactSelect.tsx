@@ -18,7 +18,7 @@ interface ReactSelectProps {
     value?: unknown
 }
 
-const ReactSelect: React.FC<ReactSelectProps> = (props) => {
+const ReactSelect: React.FC<ReactSelectProps> = props => {
     // TODO: Refactor this closer to the other css setup on other input fields
     const customStyles: any = {
         control: (provided: any, state: any) => ({

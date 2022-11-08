@@ -9,7 +9,7 @@ import { useCallback, useEffect } from 'react'
 export function useClickOutside(
     el: HTMLElement | null,
     cb: (ev: MouseEvent) => void,
-    enabled: boolean = true
+    enabled: boolean = true,
 ): void {
     const handleClick: (ev: MouseEvent) => void = useCallback((ev: MouseEvent) => {
         if (el && !el.contains(ev.target as unknown as Node)) {

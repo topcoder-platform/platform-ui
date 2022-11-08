@@ -21,7 +21,7 @@ export function useLessonProvider(
         let mounted: boolean = true
 
         if (!course || !module || !lesson) {
-            setState((prevState) => ({
+            setState(prevState => ({
                 ...prevState,
                 lesson: undefined,
                 loading: false,
@@ -30,13 +30,13 @@ export function useLessonProvider(
             return
         }
 
-        setState((prevState) => ({
+        setState(prevState => ({
             ...prevState,
             loading: true,
         }))
 
         courseGetAsync(provider, course)
-            .then((courseData) => {
+            .then(courseData => {
 
                 if (!mounted) {
                     return
@@ -52,7 +52,7 @@ export function useLessonProvider(
                     lesson,
                 ].filter(Boolean).join('/')
 
-                setState((prevState) => ({
+                setState(prevState => ({
                     ...prevState,
                     lesson: lessonData && {
                         ...lessonData,

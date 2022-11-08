@@ -1,5 +1,5 @@
-import cn from 'classnames'
 import { FC } from 'react'
+import cn from 'classnames'
 
 import styles from './RadioButton.module.scss'
 

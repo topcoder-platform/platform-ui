@@ -8,7 +8,7 @@ import {
     useLearnBreadcrumb,
     UserCertificationsProviderData,
     useUserCertifications,
-    WaveHero
+    WaveHero,
 } from '../learn-lib'
 import { LEARN_PATHS } from '../learn.routes'
 
