@@ -45,9 +45,10 @@ export function initializeValues<T extends FormValue>(
         if (input.type === 'checkbox') {
             input.value = input.checked || false
         } else {
-            input.value = Object.prototype.hasOwnProperty.call(formValues, input.name)
-                ? (formValues as { [id: string]: InputValue })[input.name]
-                : undefined
+            input.value
+                = !!formValues && Object.prototype.hasOwnProperty.call(formValues, input.name)
+                    ? (formValues as { [id: string]: InputValue })[input.name]
+                    : undefined
         }
     }
 }
