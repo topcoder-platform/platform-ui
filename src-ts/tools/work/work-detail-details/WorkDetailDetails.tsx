@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-// TODO: move this into the next-gen architecture
+// TODO: move ReviewTableLegacy into the next-gen architecture
 import { WorkType } from '../work-lib'
 import ReviewTableLegacy from '../../../../src/routes/ReviewLegacy/components/ReviewTableLegacy'
 
