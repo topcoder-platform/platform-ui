@@ -51,7 +51,7 @@ const InputRating: FC<InputRatingProps> = (props: InputRatingProps) => {
             />
         )
         stars.push(element)
-        index++ // incrementing by 2, so do a 2nd increment each time through the loop
+        index += 1 // incrementing by 2, so do a 2nd increment each time through the loop
     }
 
     useEffect(() => {

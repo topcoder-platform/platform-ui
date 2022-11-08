@@ -23,8 +23,9 @@ import {
     formOnChange,
     formOnReset,
     formOnSubmitAsync,
+    formValidateForm,
+    FormValue,
 } from './form-functions'
-import { validateForm } from './form-functions/form.functions'
 import { FormGroups } from './form-groups'
 import styles from './Form.module.scss'
 
@@ -41,8 +42,8 @@ interface FormProps<ValueType, RequestType> {
     readonly shouldDisableButton?: (isPrimaryGroup: boolean, index: number) => boolean
 }
 
-const Form: <ValueType extends any, RequestType extends any>(props: FormProps<ValueType, RequestType>) => JSX.Element
-    = <ValueType extends any, RequestType extends any>(props: FormProps<ValueType, RequestType>) => {
+const Form: <ValueType extends FormValue, RequestType extends FormValue>(props: FormProps<ValueType, RequestType>) => JSX.Element
+    = <ValueType extends FormValue, RequestType extends FormValue>(props: FormProps<ValueType, RequestType>) => {
 
         const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
             = useState<FormDefinition>({ ...props.formDef })
@@ -65,7 +66,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                 return
             }
 
-            validateForm(formRef.current?.elements, 'initial', inputs)
+            formValidateForm(formRef.current?.elements, 'initial', inputs)
             checkIfFormIsValid(inputs)
         }, [
             formRef,
@@ -78,7 +79,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             }
 
             // so we repeat the validation when formValues changes, to support the parent component's async data loading
-            validateForm(formRef.current?.elements, 'change', inputs)
+            formValidateForm(formRef.current?.elements, 'change', inputs)
             checkIfFormIsValid(inputs)
         }, [
             props.formValues,
@@ -90,6 +91,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             if (props.resetFormOnUnmount) {
                 onReset()
             }
+            // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [])
 
         function checkIfFormIsValid(formInputFields: Array<FormInputModel>): void {
@@ -167,7 +169,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                     {...button}
                     key={button.label || `button-${index}`}
                     disable={disabled}
-                    tabIndex={button.notTabble ? -1 : index + (inputs ? inputs.length : 0) + (formDef.tabIndexStart || 0)}
+                    tabIndex={button.notTabble ? -1 : index + (inputs?.length || 0) + (formDef.tabIndexStart || 0)}
                 />
             )
         })

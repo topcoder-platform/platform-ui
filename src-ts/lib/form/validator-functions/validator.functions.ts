@@ -13,7 +13,7 @@ export function doesNotMatchOther(value: InputValue, formElements?: HTMLFormCont
 
     // if there is no value, there's no need to check the other input
     // bc this is a match validator not a required validator
-    if (!value) {
+    if (value === undefined) {
         return undefined
     }
 
@@ -35,9 +35,7 @@ export function email(value: InputValue): string | undefined {
     // if there is no value, do not set the error
     // b/c this is an email validator, not a required
     // validator
-    // Have to retain the boolean check to satisfy typescript else .test
-    // method will show typescript error
-    if (!value || typeof value === 'boolean') {
+    if (value === undefined) {
         return undefined
     }
 
@@ -55,7 +53,7 @@ export function password(value: InputValue): string | undefined {
     // validator
     // Have to retain the boolean check to satisfy typescript else .test
     // method will show typescript error
-    if (!value || typeof value === 'boolean') {
+    if (value === undefined) {
         return undefined
     }
 
@@ -74,7 +72,7 @@ export function matchOther(value: InputValue, formElements?: HTMLFormControlsCol
 
     // if there is no value, there's no need to check the other input
     // bc this is a match validator not a required validator
-    if (!value) {
+    if (value === undefined) {
         return undefined
     }
 
@@ -143,7 +141,7 @@ function getOtherField(formElements?: HTMLFormControlsCollection, otherFieldName
     }
 
     // get the other form field
-    const otherField: HTMLInputElement = formGetInput(formElements, otherFieldName)
+    const otherField: HTMLInputElement | undefined = formGetInput(formElements, otherFieldName)
 
     // if there is no other field, we have a problem
     if (!otherField) {

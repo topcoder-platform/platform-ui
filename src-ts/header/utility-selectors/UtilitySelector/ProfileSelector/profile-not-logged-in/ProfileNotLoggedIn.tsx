@@ -34,7 +34,7 @@ const ProfileNotLoggedIn: FC<{}> = () => {
                 label='Sign Up'
                 size='md'
                 tabIndex={-1}
-                onClick={signUp}
+                onClick={() => signUp()}
             />
         </>
     )

@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 import { noop, trim } from 'lodash'
 import { ChangeEvent, createRef, Dispatch, FC, KeyboardEvent, RefObject, SetStateAction, useEffect, useState } from 'react'
 import { Params, useLocation, useParams } from 'react-router-dom'
@@ -20,6 +21,8 @@ import AwardedMembersTab from './AwardedMembersTab/AwardedMembersTab'
 import BatchAwardTab from './BatchAwardTab/BatchAwardTab'
 import ManualAwardTab from './ManualAwardTab/ManualAwardTab'
 import styles from './BadgeDetailPage.module.scss'
+
+// eslint-disable-next-line import/no-unresolved
 
 const md: MarkdownIt = new MarkdownIt({
     html: true,
