@@ -3,10 +3,9 @@ import _ from 'lodash'
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { currencyFormat } from '../../../../../src/utils'
-import { ArrowIcon, FormCard, LoadingSpinner } from '../../../../lib'
+import { ArrowIcon, LoadingSpinner } from '../../../../lib'
+import getSelectedPackageFormatted from '../../../../utils/bug-hunt'
 import { ChallengeMetadataName, workFactoryMapFormData } from '../../work-lib'
-import BugHuntPricingConfig from '../../work-self-service/intake-forms/bug-hunt/bug-hunt.form.pricing-config'
 
 import styles from './WorkDetailDetailsPane.module.scss'
 
@@ -106,17 +105,6 @@ function checkIsEmpty(detail: Array<string> | {} | string): boolean {
         (_.isArray(detail) && detail.length === 0) ||
         (_.isObject(detail) && Object.values(detail)
             .filter((val) => val?.trim().length > 0).length === 0)
-}
-
-const getSelectedPackageFormatted: (packageId: string) => string = (packageId) => {
-  const currentPackage: FormCard | undefined = BugHuntPricingConfig.find((pricingConfig) => pricingConfig.id === packageId)
-  if (currentPackage) {
-    const deviceType: string = currentPackage.sections?.[0]?.rows?.[3]?.text || ''
-    const noOfTesters: string = `${currentPackage.sections?.[0]?.rows?.[2]?.text || 0} testers`
-    return `${currentPackage.title} - ${currencyFormat(currentPackage.price)} - ${deviceType} - ${noOfTesters}`
-  }
-
-  return packageId
 }
 
 export default WorkDetailDetailsPane

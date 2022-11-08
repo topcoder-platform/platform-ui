@@ -1,4 +1,5 @@
 import moment from 'moment'
+import getSelectedPackageFormatted from '../../../../../../utils/bug-hunt'
 
 import { WorkConfigConstants, WorkStrings } from '../../../work-constants'
 import {
@@ -302,7 +303,7 @@ function buildFormDataBugHunt(formData: any): ReadonlyArray<FormDetail> {
         {
             key: ChallengeMetadataName.packageType,
             title: ChallengeMetadataTitle.bugHuntPackage,
-            value: formData.packageType,
+            value: getSelectedPackageFormatted(formData.packageType),
         },
     ]
 }
