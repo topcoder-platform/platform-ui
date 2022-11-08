@@ -9,7 +9,7 @@ interface RequireAuthProviderProps {
     rolesRequired?: Array<string>
 }
 
-const RequireAuthProvider = (props: RequireAuthProviderProps): JSX.Element => {
+function RequireAuthProvider(props: RequireAuthProviderProps): JSX.Element {
 
     const profileContextData: ProfileContextData = useContext(profileContext)
     const { profile, initialized }: ProfileContextData = profileContextData

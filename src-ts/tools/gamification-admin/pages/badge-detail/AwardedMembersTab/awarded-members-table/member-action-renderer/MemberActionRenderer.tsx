@@ -4,28 +4,28 @@ import { MemberBadgeAward } from '../../../../../game-lib'
 
 import styles from './MemberActionRenderer.module.scss'
 
-const MemberActionRenderer = (memberAward: MemberBadgeAward): JSX.Element =>
+function MemberActionRenderer(memberAward: MemberBadgeAward): JSX.Element {
 
-// const isMobile: boolean = useCheckIsMobile()
+    // const isMobile: boolean = useCheckIsMobile()
 
-// const buttonProps: ButtonProps = {
-//     buttonStyle: 'secondary',
-//     size: isMobile ? 'xs' : 'sm',
-// }
+    // const buttonProps: ButtonProps = {
+    //     buttonStyle: 'secondary',
+    //     size: isMobile ? 'xs' : 'sm',
+    // }
 
-// const actionButtons: Array<{
-//     label: string
-// }> = [
-//         {
-//             label: 'Unassign',
-//         },
-//     ]
+    // const actionButtons: Array<{
+    //     label: string
+    // }> = [
+    //         {
+    //             label: 'Unassign',
+    //         },
+    //     ]
 
-// function onUnassign(): void {
+    // function onUnassign(): void {
 
-// }
+    // }
 
-    (
+    return (
         <div className={styles['badge-actions']}>
             {/* {actionButtons.map((button, index) => {
                 return (
@@ -39,5 +39,6 @@ const MemberActionRenderer = (memberAward: MemberBadgeAward): JSX.Element =>
             })} */}
         </div>
     )
+}
 
 export default MemberActionRenderer

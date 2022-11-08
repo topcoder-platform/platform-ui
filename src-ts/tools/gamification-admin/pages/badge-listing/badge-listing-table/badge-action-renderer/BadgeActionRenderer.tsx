@@ -4,7 +4,7 @@ import { badgeDetailPath } from '../../../../gamification-admin.routes'
 
 import styles from './BadgeActionRenderer.module.scss'
 
-const BadgeActionRenderer = (badge: GameBadge): JSX.Element => {
+function BadgeActionRenderer(badge: GameBadge): JSX.Element {
 
     const isMobile: boolean = useCheckIsMobile()
 

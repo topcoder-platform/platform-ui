@@ -2,7 +2,7 @@ import { MemberBadgeAward } from '../../../../../game-lib'
 
 import styles from './MemberAwaredAtRenderer.module.scss'
 
-const MemberAwaredAtRenderer = (memberAward: MemberBadgeAward): JSX.Element => {
+function MemberAwaredAtRenderer(memberAward: MemberBadgeAward): JSX.Element {
     const dateFormat: Record<string, string> = {
         day: 'numeric',
         hour: 'numeric',
@@ -12,7 +12,9 @@ const MemberAwaredAtRenderer = (memberAward: MemberBadgeAward): JSX.Element => {
     }
 
     return (
-        <div className={styles.memberAwardedAt}>{new Date(memberAward.awarded_at).toLocaleString(undefined, dateFormat)}</div>
+        <div className={styles.memberAwardedAt}>
+            {new Date(memberAward.awarded_at).toLocaleString(undefined, dateFormat)}
+        </div>
     )
 }
 

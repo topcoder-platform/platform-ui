@@ -9,7 +9,7 @@ import {
 
 import styles from './WorkTableTitleRenderer.module.scss'
 
-const WorkTableTitleRenderer = (data: Work): JSX.Element => {
+function WorkTableTitleRenderer(data: Work): JSX.Element {
 
     let Icon: JSX.Element
     switch (data.typeCategory) {

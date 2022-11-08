@@ -54,7 +54,7 @@ interface LineNumbersProps {
     showLineNumbers: boolean
 }
 
-const LineNumbers = (props: LineNumbersProps): React.ReactElement | null => {
+function LineNumbers(props: LineNumbersProps): React.ReactElement | null {
     const { codeRef, showLineNumbers, onVisibilityChange }: LineNumbersProps
         = props
     const [lineNumbers, setLineNumbers]: [

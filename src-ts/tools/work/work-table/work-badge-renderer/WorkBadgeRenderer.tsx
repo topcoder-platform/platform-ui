@@ -8,7 +8,7 @@ interface WorkBadgeRendererProps {
     type: 'messages' | 'items'
 }
 
-const WorkBadgeRenderer = (props: WorkBadgeRendererProps): JSX.Element => {
+function WorkBadgeRenderer(props: WorkBadgeRendererProps): JSX.Element {
 
     if (props.count === undefined || (!!props.hideZero && props.count === 0)) {
         return <></>

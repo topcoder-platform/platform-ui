@@ -6,7 +6,7 @@ export interface WorkStatusItemProps {
     workStatus?: WorkStatus
 }
 
-const WorkStatusItem = ({ workStatus }: WorkStatusItemProps): JSX.Element => {
+function WorkStatusItem({ workStatus }: WorkStatusItemProps): JSX.Element {
 
     if (!workStatus) {
         return <></>

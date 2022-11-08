@@ -44,7 +44,7 @@ module.exports = {
                 }
             }
         ],
-        '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/explicit-function-return-type': 'error',
         '@typescript-eslint/no-explicit-any': 'error',
         '@typescript-eslint/no-inferrable-types': 'off',
         '@typescript-eslint/no-shadow': 'error',
@@ -57,6 +57,19 @@ module.exports = {
                 allowNullableObject: true,
                 allowNullableNumber: true,
                 allowNullableString: true
+            }
+        ],
+        '@typescript-eslint/typedef': [
+            'error',
+            {
+                arrowParameter: false,
+                propertyDeclaration: true,
+                parameter: true,
+                memberVariableDeclaration: true,
+                callSignature: true,
+                variableDeclaration: true,
+                arrayDestructuring: true,
+                objectDestructuring: true
             }
         ],
         'arrow-parens': [
@@ -155,13 +168,41 @@ module.exports = {
         'padded-blocks': 'off',
         'padding-line-between-statements': [
             'error',
-            { blankLine: 'always', prev: 'directive', next: '*' },
-            { blankLine: 'any', prev: 'directive', next: 'directive' },
-            { blankLine: 'always', prev: 'cjs-import', next: '*' },
-            { blankLine: 'any', prev: 'cjs-import', next: 'cjs-import' },
-            { blankLine: 'always', prev: 'cjs-export', next: '*' },
-            { blankLine: 'always', prev: 'multiline-block-like', next: '*' },
-            { blankLine: 'always', prev: 'class', next: '*' }
+            {
+                blankLine: 'always',
+                prev: 'directive',
+                next: '*'
+            },
+            {
+                blankLine: 'any',
+                prev: 'directive',
+                next: 'directive'
+            },
+            {
+                blankLine: 'always',
+                prev: 'cjs-import',
+                next: '*'
+            },
+            {
+                blankLine: 'any',
+                prev: 'cjs-import',
+                next: 'cjs-import'
+            },
+            {
+                blankLine: 'always',
+                prev: 'cjs-export',
+                next: '*'
+            },
+            {
+                blankLine: 'always',
+                prev: 'multiline-block-like',
+                next: '*'
+            },
+            {
+                blankLine: 'always',
+                prev: 'class',
+                next: '*'
+            }
         ],
         'prefer-destructuring': 'off',
         'react-hooks/exhaustive-deps': 'warn',
@@ -171,9 +212,10 @@ module.exports = {
             'never'
         ],
         'react/function-component-definition': [
-            2,
+            'error',
             {
-                namedComponents: 'arrow-function'
+                namedComponents: 'function-declaration',
+                unnamedComponents: 'function-expression'
             }
         ],
         'react/jsx-filename-extension': [

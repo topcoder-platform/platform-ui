@@ -1,4 +1,3 @@
-import { FC } from 'react'
 import classNames from 'classnames'
 
 import { ContentLayout, LoadingSpinner, Portal } from '../../../lib'
@@ -16,7 +15,7 @@ import { ProgressBlock } from './progress-block'
 import { ReactComponent as TcAcademyFullLogoSvg } from './tca-full-logo.svg'
 import styles from './WelcomePage.module.scss'
 
-const WelcomePage: FC<{}> = () => {
+function WelcomePage(): React.ReactNode {
 
     const allCertsData: AllCertificationsProviderData = useAllCertifications()
     const userCertsData: UserCertificationsProviderData = useUserCertifications()
