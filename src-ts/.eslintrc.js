@@ -13,8 +13,8 @@ module.exports = {
     parser: '@typescript-eslint/parser',
     parserOptions: {
         useJSXTextNode: true,
-        project: "./tsconfig.json",
-        tsconfigRootDir: ".",
+        project: './tsconfig.json',
+        tsconfigRootDir: '.',
         tsx: true,
         jsx: true,
         sourceType: 'module',
@@ -28,19 +28,19 @@ module.exports = {
     ],
     settings: {
         react: {
-            "version": "detect"
+            'version': 'detect'
         },
-        "import/resolver": {
+        'import/resolver': {
             typescript: {},
         }
     },
     rules: {
-        "@typescript-eslint/ban-types": [
-            "error",
+        '@typescript-eslint/ban-types': [
+            'error',
             {
-                "extendDefaults": true,
-                "types": {
-                    "{}": false
+                'extendDefaults': true,
+                'types': {
+                    '{}': false
                 }
             }
         ],
@@ -59,8 +59,8 @@ module.exports = {
             }
         ],
         'arrow-parens': [
-            "error",
-            "as-needed"
+            'error',
+            'as-needed'
         ],
         'complexity': [
             'error',
@@ -82,8 +82,8 @@ module.exports = {
         'jsx-a11y/tabindex-no-positive': [
             'warn'
         ],
-        'no-extra-boolean-cast': "off",
-        "no-null/no-null": "error",
+        'no-extra-boolean-cast': 'off',
+        'no-null/no-null': 'error',
         'no-plusplus': [
             'error',
             {
@@ -108,51 +108,51 @@ module.exports = {
             'error',
             'before'
         ],
-        "ordered-imports/ordered-imports": [
-            "error",
+        'ordered-imports/ordered-imports': [
+            'error',
             {
-                "symbols-first": true,
-                "declaration-ordering": [
-                    "type", {
+                'symbols-first': true,
+                'declaration-ordering': [
+                    'type', {
                         ordering: [
-                            "namespace",
-                            "destructured",
-                            "default",
-                            "side-effect",
+                            'namespace',
+                            'destructured',
+                            'default',
+                            'side-effect',
                         ],
                         secondaryOrdering: [
-                            "name",
-                            "lowercase-last"
+                            'name',
+                            'lowercase-last'
                         ],
                     }
                 ],
-                "specifier-ordering": "case-insensitive",
-                "group-ordering": [
+                'specifier-ordering': 'case-insensitive',
+                'group-ordering': [
                     {
-                        name: "project root",
-                        match: "^@",
+                        name: 'project root',
+                        match: '^@',
                         order: 20
                     },
                     {
-                        name: "parent directories",
-                        match: "^\\.\\.",
+                        name: 'parent directories',
+                        match: '^\\.\\.',
                         order: 30
                     },
                     {
-                        name: "current directory",
-                        match: "^\\.",
+                        name: 'current directory',
+                        match: '^\\.',
                         order: 40
                     },
                     {
-                        name: "third-party",
-                        match: ".*",
+                        name: 'third-party',
+                        match: '.*',
                         order: 10
                     },
                 ],
             },
         ],
         'padded-blocks': 'off',
-        "padding-line-between-statements": [
+        'padding-line-between-statements': [
             'error',
             { blankLine: 'always', prev: 'directive', next: '*' },
             { blankLine: 'any', prev: 'directive', next: 'directive' },
