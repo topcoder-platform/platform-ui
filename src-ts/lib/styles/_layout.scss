@@ -30,6 +30,11 @@ hr {
     display: none;
 }
 
+.topCoderLink {
+    text-decoration: underline;
+    color: $link-blue-light;
+}
+
 .full-height-frame {
     position: relative;
     flex: 1 1 auto;

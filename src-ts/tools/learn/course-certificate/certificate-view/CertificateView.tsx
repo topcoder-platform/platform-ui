@@ -15,10 +15,10 @@ import {
 import {
     AllCertificationsProviderData,
     CoursesProviderData,
-    useAllCertifications,
-    useCourses,
+    useGetCertification,
+    useGetCourses,
+    useGetUserCompletedCertifications,
     UserCompletedCertificationsProviderData,
-    useUserCompletedCertifications,
 } from '../../learn-lib'
 import { getCoursePath, getUserCertificateSsr } from '../../learn.routes'
 
@@ -54,7 +54,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const {
         course,
         ready: courseReady,
-    }: CoursesProviderData = useCourses(props.provider, props.certification)
+    }: CoursesProviderData = useGetCourses(props.provider, props.certification)
 
     function getCertTitle(user: string): string {
         return `${user} - ${course?.title} Certification`
@@ -72,7 +72,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const {
         certifications: [completedCertificate],
         ready: completedCertificateReady,
-    }: UserCompletedCertificationsProviderData = useUserCompletedCertifications(
+    }: UserCompletedCertificationsProviderData = useGetUserCompletedCertifications(
         props.profile.userId,
         props.provider,
         props.certification
@@ -82,9 +82,9 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const {
         certification: certificate,
         ready: certificateReady,
-    }: AllCertificationsProviderData = useAllCertifications(
+    }: AllCertificationsProviderData = useGetCertification(
         props.provider,
-        course?.certificationId,
+        course?.certificationId ?? '',
         { enabled: !!course?.certificationId }
     )
 

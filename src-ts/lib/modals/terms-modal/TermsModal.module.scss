@@ -20,7 +20,7 @@
         }
     }
 
-    ul.a {
+    ul:global(.a) {
         list-style-type: circle;
         list-style: circle;
 

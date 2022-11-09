@@ -5,9 +5,9 @@ import { ContentLayout, LoadingSpinner, Portal } from '../../../lib'
 import '../../../lib/styles/index.scss'
 import {
     AllCertificationsProviderData,
-    useAllCertifications,
+    useGetAllCertifications,
+    useGetUserCertifications,
     UserCertificationsProviderData,
-    useUserCertifications,
     WaveHero,
 } from '../learn-lib'
 
@@ -18,8 +18,8 @@ import styles from './WelcomePage.module.scss'
 
 const WelcomePage: FC<{}> = () => {
 
-    const allCertsData: AllCertificationsProviderData = useAllCertifications()
-    const userCertsData: UserCertificationsProviderData = useUserCertifications()
+    const allCertsData: AllCertificationsProviderData = useGetAllCertifications()
+    const userCertsData: UserCertificationsProviderData = useGetUserCertifications()
 
     const coursesReady: boolean = allCertsData.ready && userCertsData.ready
 
