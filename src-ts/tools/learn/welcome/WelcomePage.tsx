@@ -34,7 +34,7 @@ const WelcomePage: FC<{}> = () => {
                             title={(
                                 <>
                                     <TcAcademyFullLogoSvg className='tca-logo' />
-                                    Welcome!
+                                    Welcome! TEMP FUN
                                 </>
                             )}
                             text={`
