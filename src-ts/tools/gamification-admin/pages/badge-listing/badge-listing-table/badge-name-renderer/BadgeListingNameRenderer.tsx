@@ -2,8 +2,8 @@ import { GameBadge } from '../../../../game-lib'
 
 import styles from './BadgeListingNameRenderer.module.scss'
 
-function BadgeListingNameRenderer(badge: GameBadge): JSX.Element {
-    return (
+const BadgeListingNameRenderer: (badge: GameBadge) => JSX.Element
+    = (badge: GameBadge): JSX.Element => (
         <div className={styles.badge}>
             <img
                 alt={badge.badge_name}
@@ -13,6 +13,5 @@ function BadgeListingNameRenderer(badge: GameBadge): JSX.Element {
             <p className={styles['badge-name']}>{badge.badge_name}</p>
         </div>
     )
-}
 
 export default BadgeListingNameRenderer

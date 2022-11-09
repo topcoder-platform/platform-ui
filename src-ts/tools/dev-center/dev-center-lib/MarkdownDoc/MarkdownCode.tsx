@@ -32,9 +32,7 @@ export const MarkdownCode: React.FC<MarkdownCodeProps> = props => {
 
     return (
         <div
-            className={`${styles.codeBlock} ${
-                showLineNumbers ? styles['show-line-numbers'] : ''
-            } hljs`}
+            className={`${styles.codeBlock} ${showLineNumbers ? styles['show-line-numbers'] : ''} hljs`}
             ref={ref}
         >
             <LineNumbers
@@ -54,85 +52,86 @@ interface LineNumbersProps {
     showLineNumbers: boolean
 }
 
-function LineNumbers(props: LineNumbersProps): React.ReactElement | null {
-    const { codeRef, showLineNumbers, onVisibilityChange }: LineNumbersProps
-        = props
-    const [lineNumbers, setLineNumbers]: [
-        Array<number>,
-        React.Dispatch<React.SetStateAction<Array<number>>>
-    ] = React.useState([1])
+const LineNumbers: (props: LineNumbersProps) => React.ReactElement | null
+    = (props: LineNumbersProps): React.ReactElement | null => {
 
-    const size: ReturnType<typeof useWindowSize> = useWindowSize()
+        const { codeRef, showLineNumbers, onVisibilityChange }: LineNumbersProps
+            = props
+        const [lineNumbers, setLineNumbers]: [
+            Array<number>,
+            React.Dispatch<React.SetStateAction<Array<number>>>
+        ] = React.useState([1])
 
-    // OnResizing
-    const debounceTimer: React.MutableRefObject<
-        ReturnType<typeof setTimeout> | undefined
-    > = React.useRef<ReturnType<typeof setTimeout>>()
-    React.useEffect(() => {
-        if (!size.width || !codeRef.current) {
-            return
-        }
+        const size: ReturnType<typeof useWindowSize> = useWindowSize()
 
-        if (debounceTimer.current) {
-            clearTimeout(debounceTimer.current)
-            debounceTimer.current = undefined
-        }
-
-        const pre: HTMLPreElement | null = codeRef.current.querySelector('pre')
-        if (!pre) {
-            return
-        }
-
-        const innerText: string = pre.innerText
-        const clientWidth: number = pre.clientWidth
-
-        const handleResizing: () => void = () => {
-            const result: Array<number> = computeLineNumbers(
-                innerText,
-                clientWidth,
-            )
-
-            if (result.length < 2) {
-                onVisibilityChange(false)
-            } else {
-                onVisibilityChange(true)
+        // OnResizing
+        const debounceTimer: React.MutableRefObject<
+            ReturnType<typeof setTimeout> | undefined
+        > = React.useRef<ReturnType<typeof setTimeout>>()
+        React.useEffect(() => {
+            if (!size.width || !codeRef.current) {
+                return
             }
 
-            setLineNumbers(result)
-        }
+            if (debounceTimer.current) {
+                clearTimeout(debounceTimer.current)
+                debounceTimer.current = undefined
+            }
 
-        debounceTimer.current = setTimeout(() => {
-            debounceTimer.current = undefined
-            handleResizing()
-        }, 100)
+            const pre: HTMLPreElement | null = codeRef.current.querySelector('pre')
+            if (!pre) {
+                return
+            }
 
-        return () => {
-            clearTimeout(debounceTimer.current)
-        }
-    }, [size.width, onVisibilityChange, codeRef])
+            const innerText: string = pre.innerText
+            const clientWidth: number = pre.clientWidth
 
-    if (!showLineNumbers) {
-        return null
-    }
-
-    return (
-        <div className={styles.lineNumbers}>
-            {lineNumbers.map((n, index) => {
-                const prev: number = index > 0 ? lineNumbers[index - 1] : -1
-                return (
-                    <div
-                        key={`line-${index}`}
-                        className={`${styles.num} ${
-                            prev === n ? styles.hidden : ''
-                        }`}
-                    >
-                        {n}
-                    </div>
+            const handleResizing: () => void = () => {
+                const result: Array<number> = computeLineNumbers(
+                    innerText,
+                    clientWidth,
                 )
-            })}
-        </div>
-    )
-}
+
+                if (result.length < 2) {
+                    onVisibilityChange(false)
+                } else {
+                    onVisibilityChange(true)
+                }
+
+                setLineNumbers(result)
+            }
+
+            debounceTimer.current = setTimeout(() => {
+                debounceTimer.current = undefined
+                handleResizing()
+            }, 100)
+
+            return () => {
+                clearTimeout(debounceTimer.current)
+            }
+        }, [size.width, onVisibilityChange, codeRef])
+
+        if (!showLineNumbers) {
+            return null
+        }
+
+        return (
+            <div className={styles.lineNumbers}>
+                {lineNumbers.map((n, index) => {
+                    const prev: number = index > 0 ? lineNumbers[index - 1] : -1
+                    return (
+                        <div
+                            key={`line-${index}`}
+                            className={`${styles.num} ${prev === n ? styles.hidden : ''
+                                }`}
+                        >
+                            {n}
+                        </div>
+                    )
+                })}
+            </div>
+        )
+    }
 
 function measureText(text: string, canvas: HTMLCanvasElement): number {
     const context: CanvasRenderingContext2D | null = canvas.getContext('2d')
