@@ -1,4 +1,4 @@
-import { FC, useContext } from 'react'
+import { FC, useCallback, useContext } from 'react'
 import { Location, useLocation } from 'react-router-dom'
 
 import {
@@ -14,10 +14,13 @@ const ProfileNotLoggedIn: FC<{}> = () => {
     const routeData: RouteContextData = useContext(routeContext)
     const location: Location = useLocation()
 
-    function signUp(): void {
+    const signUpHandler: () => void = useCallback(() => {
         const signupUrl: string = routeData.getSignupUrl(location.pathname, routeData.toolsRoutes)
         window.location.href = signupUrl
-    }
+    }, [
+        location.pathname,
+        routeData,
+    ])
 
     return (
         <>
@@ -34,7 +37,7 @@ const ProfileNotLoggedIn: FC<{}> = () => {
                 label='Sign Up'
                 size='md'
                 tabIndex={-1}
-                onClick={() => signUp()}
+                onClick={signUpHandler}
             />
         </>
     )
