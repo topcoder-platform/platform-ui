@@ -43,7 +43,7 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
                 className={classes}
                 href={props.url}
                 onClick={clickHandler}
-                rel={props.rel ?? props.target === '_blank' ? 'noreferrer' : ''}
+                rel={props.rel || props.target === '_blank' ? 'noreferrer' : ''}
                 role='button'
                 tabIndex={props.tabIndex}
                 title={props.title}
@@ -104,14 +104,20 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
     )
 }
 
-function getButtonClasses(props: ButtonProps): string {
+function getButtonClasses(
+    className: string,
+    buttonStyle: ButtonStyle,
+    size: ButtonSize,
+    disable?: boolean,
+    hidden?: boolean,
+): string {
     const classes: string = classNames(
         'button',
-        props.className,
-        props.buttonStyle || 'primary',
-        `button-${props.size || 'md'}`,
-        !!props.disable ? 'disabled' : undefined,
-        props.hidden ? 'hidden' : undefined,
+        className,
+        buttonStyle || 'primary',
+        `button-${size || 'md'}`,
+        { disabled: disable },
+        { hidden },
     )
     return classes
 }

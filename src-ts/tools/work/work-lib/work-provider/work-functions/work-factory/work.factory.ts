@@ -502,7 +502,7 @@ function getCost(challenge: Challenge, priceConfig: WorkPrice, type: WorkType): 
 
     switch (type) {
 
-        case WorkType.designLegacy:
+        case WorkType.designLegacy: {
 
             // get the device and page count from the intake form from the metadata
             const intakeForm: ChallengeMetadata | undefined = findMetadata(challenge, ChallengeMetadataName.intakeForm)
@@ -510,12 +510,14 @@ function getCost(challenge: Challenge, priceConfig: WorkPrice, type: WorkType): 
             const legacyPageCount: number | undefined = form?.pageDetails?.pages?.length || 1
             const legacyDeviceCount: number | undefined = form?.basicInfo?.selectedDevice?.option?.length
             return priceConfig.getPrice(priceConfig, legacyPageCount, legacyDeviceCount)
+        }
 
-        case WorkType.bugHunt:
+        case WorkType.bugHunt: {
             // get the selected package from the intake form
             const intakeFormBH: ChallengeMetadata | undefined = findMetadata(challenge, ChallengeMetadataName.intakeForm)
             const formBH: IntakeForm = !!intakeFormBH?.value ? JSON.parse(intakeFormBH.value)?.form : undefined
             return priceConfig.getPrice(priceConfig, formBH?.basicInfo?.packageType)
+        }
 
         default:
             return priceConfig.getPrice(priceConfig)

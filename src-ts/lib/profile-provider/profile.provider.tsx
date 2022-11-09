@@ -6,8 +6,8 @@ import { ChangePasswordRequest } from './change-password-request.model'
 import { EditNameRequest } from './edit-name-request.model'
 import { ProfileContextData } from './profile-context-data.model'
 import { profileEditNameAsync, profileGetAsync } from './profile-functions'
-import { default as profileContext, defaultProfileContextData } from './profile.context'
 import { UserProfile } from './user-profile.model'
+import profileContext, { defaultProfileContextData } from './profile.context'
 
 export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { children: ReactNode }) => {
 
