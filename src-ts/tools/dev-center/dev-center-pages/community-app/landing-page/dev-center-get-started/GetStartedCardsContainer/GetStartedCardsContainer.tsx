@@ -9,17 +9,17 @@ import styles from './GetStartedCardsContainer.module.scss'
 const GetStartedCardsContainer: FC = () => (
     <div className={styles.container}>
         <DevCenterCard
-            cornerIcon={<CommunityAppCornerIcon/>}
-            icon={<CommunityAppIcon/>}
-            title ='Community App'
+            cornerIcon={<CommunityAppCornerIcon />}
+            icon={<CommunityAppIcon />}
+            title='Community App'
             titleClass={styles.communityTitle}
             description='Learn about Topcoder Community App and run started code.'
-            button={<Button route='/dev-center/getting-started' label='get started' className={styles.button}/>}
+            button={<Button route='/dev-center/getting-started' label='get started' className={styles.button} />}
         />
         <DevCenterCard
-            cornerIcon={<ApiCornerIcon/>}
-            icon={<ApiIcon/>}
-            title ='TopCoder api'
+            cornerIcon={<ApiCornerIcon />}
+            icon={<ApiIcon />}
+            title='TopCoder api'
             titleClass={styles.apiTitle}
             description='Explore API libraries and integrate with API endpoints.'
             button={<h4 className={styles.comingSoon}>Coming soon</h4>}

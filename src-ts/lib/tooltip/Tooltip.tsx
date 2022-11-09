@@ -1,6 +1,6 @@
 import { FC, ReactNode, RefObject, useRef } from 'react'
-import ReactTooltip from 'react-tooltip'
 import { v4 as uuidv4 } from 'uuid'
+import ReactTooltip from 'react-tooltip'
 
 import styles from './Tooltip.module.scss'
 

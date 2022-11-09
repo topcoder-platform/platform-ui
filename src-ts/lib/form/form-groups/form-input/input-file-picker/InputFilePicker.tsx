@@ -1,4 +1,3 @@
-// tslint:disable:no-null-keyword
 import { createRef, Dispatch, FC, RefObject, SetStateAction, useEffect, useState } from 'react'
 
 import { Button, useCheckIsMobile } from '../../../..'
@@ -22,8 +21,10 @@ const InputFilePicker: FC<InputFilePickerProps> = (props: InputFilePickerProps) 
 
     const fileInputRef: RefObject<HTMLInputElement> = createRef<HTMLInputElement>()
 
+    // eslint-disable-next-line no-null/no-null
     const [files, setFiles]: [FileList | null, Dispatch<SetStateAction<FileList | null>>] = useState<FileList | null>(null)
-    const [fileName, setFileName]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
+    const [fileName, setFileName]: [string | undefined, Dispatch<SetStateAction<string | undefined>>]
+        = useState<string | undefined>()
 
     useEffect(() => {
         if (files && files.length) {
@@ -58,7 +59,7 @@ const InputFilePicker: FC<InputFilePickerProps> = (props: InputFilePickerProps) 
             />
             <input
                 name={props.name}
-                type="file"
+                type='file'
                 accept={props.fileConfig?.acceptFileType || '*'}
                 className={styles.filePickerInput}
                 ref={fileInputRef}

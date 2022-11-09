@@ -26,7 +26,7 @@ export function completeCourse(
             certificateAlternateParams,
             certificateElement,
             certificateUrl,
-        }
+        },
     )
 }
 
@@ -54,7 +54,7 @@ export function startAsync(userId: number, certificationId: string, courseId: st
 export function updateAsync(
     certificationProgressId: string,
     action: UserCertificationUpdateProgressActions,
-    data: any
+    data: any,
 ): Promise<LearnUserCertificationProgress> {
 
     const url: string = learnUrlGet(certProgressPath, certificationProgressId, action)

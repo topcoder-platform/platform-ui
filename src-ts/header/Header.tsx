@@ -1,9 +1,9 @@
 import { FC } from 'react'
 
-import styles from './Header.module.scss'
 import { Logo } from './logo'
 import { ToolSelectors } from './tool-selectors'
 import { UtilitySelectors } from './utility-selectors'
+import styles from './Header.module.scss'
 
 const Header: FC<{}> = () => (
     <div className={styles['header-wrap']}>

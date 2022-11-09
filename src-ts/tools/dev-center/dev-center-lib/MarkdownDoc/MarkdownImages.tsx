@@ -3,8 +3,8 @@ import Carousel from 'react-elastic-carousel'
 
 import { Button, IconSolid } from '../../../../lib'
 
-import './MarkdownImages.css'
 import styles from './MarkdownImages.module.scss'
+import './MarkdownImages.css'
 
 interface MarkdownImagesProps {
     children: Array<React.ReactNode>
@@ -59,7 +59,7 @@ const MarkdownImages: React.FC<MarkdownImagesProps> = ({
                 disable={carouselRef?.current?.state.activePage === 0}
                 onClick={handlePrev}
             />
-            {pages.map((page) => {
+            {pages.map(page => {
                 const isActivePage: boolean = activePage === page
                 return (
                     <CarouselButton
@@ -102,7 +102,7 @@ const MarkdownImages: React.FC<MarkdownImagesProps> = ({
         </Carousel>
     ) : (
         <>
-            <div key="md-image-single" className={`${styles.imageBlock}}`}>
+            <div key='md-image-single' className={`${styles.imageBlock}}`}>
                 <div className={styles.imageContainer}>{children[0]}</div>
             </div>
         </>

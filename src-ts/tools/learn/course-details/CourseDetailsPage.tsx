@@ -21,13 +21,13 @@ import {
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
     useResourceProvider,
-    useUserCertificationProgress
+    useUserCertificationProgress,
 } from '../learn-lib'
 import { getCoursePath } from '../learn.routes'
 
 import { CourseCurriculum } from './course-curriculum'
-import styles from './CourseDetailsPage.module.scss'
 import { PromoCourse } from './promo-course'
+import styles from './CourseDetailsPage.module.scss'
 
 const CourseDetailsPage: FC<{}> = () => {
 
@@ -59,8 +59,6 @@ const CourseDetailsPage: FC<{}> = () => {
         enabled: courseReady,
     })
 
-    // this looks better than finding workarounds for cyclomatic-complexity
-    /* tslint:disable:cyclomatic-complexity */
     const ready: boolean = profileReady && courseReady && certificateReady && (!profile || progressReady)
 
     const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
@@ -81,7 +79,10 @@ const CourseDetailsPage: FC<{}> = () => {
 
                 <div className={styles.text}>
                     <p>
-                        Now that you have completed the {course.title},
+                        Now that you have completed the
+                        {' '}
+                        {course.title}
+                        ,
                         we'd recommend you enroll in another course to continue your learning.
                         You can view our other courses from the Topcoder Academy course page.
                     </p>
@@ -149,7 +150,11 @@ const CourseDetailsPage: FC<{}> = () => {
         return (
             <div className={styles['credits-link']}>
                 <a href={`//${resourceProvider.url}`} target='_blank' referrerPolicy='no-referrer' rel='noreferrer'>
-                    This course was created by the {resourceProvider.url} community.
+                    This course was created by the
+                    {' '}
+                    {resourceProvider.url}
+                    {' '}
+                    community.
                     <IconOutline.ExternalLinkIcon />
                 </a>
             </div>

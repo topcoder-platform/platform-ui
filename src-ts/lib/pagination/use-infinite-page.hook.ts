@@ -1,5 +1,4 @@
 import { flatten, map } from 'lodash'
-// tslint:disable-next-line: no-submodule-imports
 import useSWRInfinite, { SWRInfiniteResponse } from 'swr/infinite'
 
 import { InfinitePageDao } from './infinite-page-dao.model'

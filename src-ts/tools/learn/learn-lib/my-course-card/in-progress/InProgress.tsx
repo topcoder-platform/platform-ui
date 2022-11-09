@@ -1,18 +1,18 @@
-import classNames from 'classnames'
 import { FC } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
+import classNames from 'classnames'
 
 import {
     Button,
     ProgressBar,
-    textFormatDateLocaleShortString
+    textFormatDateLocaleShortString,
 } from '../../../../../lib'
 import {
     CoursesProviderData,
     CourseTitle,
     LearnCertification,
     useCourses,
-} from "../.."
+} from '../..'
 import { getCoursePath, getLessonPathFromCurrentLesson } from '../../../learn.routes'
 import { CurriculumSummary } from '../../curriculum-summary'
 

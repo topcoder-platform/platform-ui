@@ -1,5 +1,5 @@
-import cn from 'classnames'
 import React from 'react'
+import cn from 'classnames'
 
 import { PageDivider } from '../../../page-divider'
 import { FormGroup } from '../../form-group.model'
@@ -75,9 +75,9 @@ const FormGroupItem: React.FC<FormGroupItemProps> = ({ group, renderDividers, re
     const isMultiFieldGroup: boolean = !!(title || instructions)
     const isCardSet: boolean = !!(inputs && inputs.every(input => typeof input.cards !== 'undefined'))
 
-    return isCardSet ?
-        <SingleColumnItem hasMultipleGroups={hasMultipleGroups} instructions={instructions} isMultiFieldGroup={isMultiFieldGroup} formInputs={formInputs} title={title} /> :
-        <TwoColumnItem hasMultipleGroups={hasMultipleGroups} element={element} instructions={instructions} isMultiFieldGroup={isMultiFieldGroup} formInputs={formInputs} title={title} renderDividers={renderDividers} />
+    return isCardSet
+        ? <SingleColumnItem hasMultipleGroups={hasMultipleGroups} instructions={instructions} isMultiFieldGroup={isMultiFieldGroup} formInputs={formInputs} title={title} />
+        : <TwoColumnItem hasMultipleGroups={hasMultipleGroups} element={element} instructions={instructions} isMultiFieldGroup={isMultiFieldGroup} formInputs={formInputs} title={title} renderDividers={renderDividers} />
 }
 
 export default FormGroupItem

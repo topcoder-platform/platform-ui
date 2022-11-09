@@ -1,4 +1,3 @@
-import classNames from 'classnames'
 import {
     ChangeEvent,
     createRef,
@@ -10,10 +9,11 @@ import {
     useEffect,
     useState,
 } from 'react'
+import classNames from 'classnames'
 
 import { Button } from '../button'
-import '../styles/index.scss'
 import { IconOutline } from '../svgs'
+import '../styles/index.scss'
 
 import { FormAction, FormButton, FormDefinition, FormInputModel } from '.'
 import {
@@ -145,7 +145,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         formInitializeValues(inputs, props.formValues)
 
-        const setOnClickOnReset: (button: FormButton) => FormButton = (button) => {
+        const setOnClickOnReset: (button: FormButton) => FormButton = button => {
             // if this is a reset button, set its onclick to reset
             if (!!button.isReset) {
                 button = {
@@ -193,7 +193,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         return (
             <form
-                action=""
+                action=''
                 className={styles.form}
                 key={formKey}
                 onSubmit={onSubmitAsync}

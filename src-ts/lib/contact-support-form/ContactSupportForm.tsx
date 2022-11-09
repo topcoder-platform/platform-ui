@@ -54,7 +54,9 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
     const emailElement: JSX.Element | undefined = !!profile?.email
         ? (
             <>
-                &nbsp;at <strong>{profile.email}</strong>
+                &nbsp;at
+                {' '}
+                <strong>{profile.email}</strong>
             </>
         )
         : undefined
@@ -64,7 +66,10 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
             <LoadingSpinner hide={!loading} type='Overlay' />
             <div className={styles['contact-support-intro']}>
                 <p>
-                    Hi {profile?.firstName || 'there'}, we're here to help.
+                    Hi
+                    {' '}
+                    {profile?.firstName || 'there'}
+                    , we're here to help.
                 </p>
                 <p>
                     Please describe what you'd like to discuss, and a

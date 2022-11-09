@@ -4,7 +4,7 @@ import { MemberBadgeAward } from '../../../../../game-lib'
 
 import styles from './MemberActionRenderer.module.scss'
 
-const MemberActionRenderer = (memberAward: MemberBadgeAward): JSX.Element => 
+const MemberActionRenderer = (memberAward: MemberBadgeAward): JSX.Element =>
 
 // const isMobile: boolean = useCheckIsMobile()
 
@@ -39,6 +39,5 @@ const MemberActionRenderer = (memberAward: MemberBadgeAward): JSX.Element =>
             })} */}
         </div>
     )
-
 
 export default MemberActionRenderer

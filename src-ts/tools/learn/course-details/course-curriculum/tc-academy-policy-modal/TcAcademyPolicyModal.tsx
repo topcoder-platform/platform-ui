@@ -62,14 +62,16 @@ const TcAcademyPolicyModal: FC<TcAcademyPolicyModalProps> = (props: TcAcademyPol
                     &nbsp;
                     <a href='mailto:support@topcoder.com?subject=Topcoder Academic Honesty Policy'>
                         support@topcoder.com
-                    </a> and we will investigate.
+                    </a>
+                    {' '}
+                    and we will investigate.
                 </p>
             </div>
             <hr />
             <div className='button-container'>
                 <Button
                     buttonStyle='primary'
-                    label="I Agree"
+                    label='I Agree'
                     onClick={handleConfirm}
                     tabIndex={2}
                     size='lg'

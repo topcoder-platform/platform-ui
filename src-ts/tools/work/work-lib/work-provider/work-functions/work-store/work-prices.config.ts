@@ -172,7 +172,7 @@ function getPrizeSets(priceConfig: WorkPrice, packageName?: PricePackageName | u
     const prizeSets: Array<WorkPrize> = [
         {
             description: 'Challenge Prizes',
-            prizes: pricePackage.placementDistributions.map((percentage) => ({
+            prizes: pricePackage.placementDistributions.map(percentage => ({
                 type: 'USD',
                 value: Math.round(percentage * pricePackage.price),
             })),
@@ -181,7 +181,7 @@ function getPrizeSets(priceConfig: WorkPrice, packageName?: PricePackageName | u
         {
             description: 'Reviewer Payment',
             prizes:
-                pricePackage.reviewerDistributions.map((percentage) => ({
+                pricePackage.reviewerDistributions.map(percentage => ({
                     type: 'USD',
                     value: Math.round(percentage * pricePackage.price),
                 })),
@@ -189,7 +189,7 @@ function getPrizeSets(priceConfig: WorkPrice, packageName?: PricePackageName | u
         },
         {
             description: 'Copilot Prizes',
-            prizes: pricePackage.copilotDistributions?.map((percentage) => ({
+            prizes: pricePackage.copilotDistributions?.map(percentage => ({
                 type: 'USD',
                 value: Math.round(percentage * pricePackage.price),
             })),
@@ -197,5 +197,5 @@ function getPrizeSets(priceConfig: WorkPrice, packageName?: PricePackageName | u
         },
     ]
 
-    return prizeSets.filter((set) => set.prizes.length)
+    return prizeSets.filter(set => set.prizes.length)
 }

@@ -3,7 +3,7 @@ import { InputValue } from '../form-input.model'
 
 function checkForBooleanValueAndThrowError(value: InputValue): void {
     if (typeof value === 'boolean') {
-        throw new Error(`The value for the email validator cannot be a boolean`)
+        throw new Error('The value for the email validator cannot be a boolean')
     }
 }
 
@@ -110,7 +110,7 @@ export function requiredIfOther(value: InputValue, formElements?: HTMLFormContro
         return undefined
     }
 
-    return `Required`
+    return 'Required'
 }
 
 export function sslUrl(value: string | undefined): string | undefined {

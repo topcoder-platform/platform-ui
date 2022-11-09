@@ -1,6 +1,6 @@
-import classNames from 'classnames'
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react'
 import { NavigateFunction, useNavigate, useSearchParams } from 'react-router-dom'
+import classNames from 'classnames'
 
 import { Button, UserProfile } from '../../../../lib'
 import {
@@ -13,7 +13,7 @@ import {
     userCertificationProgressStartAsync,
     UserCertificationProgressStatus,
     userCertificationProgressUpdateAsync,
-    UserCertificationUpdateProgressActions
+    UserCertificationUpdateProgressActions,
 } from '../../learn-lib'
 import {
     getAuthenticateAndStartCourseRoute,
@@ -22,9 +22,9 @@ import {
     LEARN_PATHS,
 } from '../../learn.routes'
 
-import styles from './CourseCurriculum.module.scss'
 import { CurriculumSummary } from './curriculum-summary'
 import { TcAcademyPolicyModal } from './tc-academy-policy-modal'
+import styles from './CourseCurriculum.module.scss'
 
 interface CourseCurriculumProps {
     course: LearnCourse
@@ -115,13 +115,13 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
                 {
                     lesson: props.course.modules[0].lessons[0].dashedName,
                     module: props.course.modules[0].meta.dashedName,
-                }
+                },
             )
         } else {
             await userCertificationProgressUpdateAsync(
                 props.progress.id,
                 UserCertificationUpdateProgressActions.acceptHonestyPolicy,
-                {}
+                {},
             )
         }
 

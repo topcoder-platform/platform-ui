@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { FC } from 'react'
+import classNames from 'classnames'
 
 import { EnvironmentConfig } from '../../../../../../../config'
 import { IconSolid } from '../../../../../../../lib'
@@ -28,7 +28,7 @@ interface ArticleDetails {
 function openArticle(url: string): void {
     window.open(
         url,
-        '_blank' // This is what makes it open in a new window.
+        '_blank', // This is what makes it open in a new window.
     )
 }
 
@@ -42,7 +42,7 @@ function getTagText(isThrive: boolean, isVideo: boolean): string {
 
 function getArticleContent(
     article: ThriveArticle | BlogPost,
-    isThrive: boolean
+    isThrive: boolean,
 ): string {
     return isThrive ? article.content : article.contentSnippet
 }
@@ -79,7 +79,7 @@ function getOuterClass(isMain: boolean, className: string): string {
     return classNames(
         className,
         styles.outerContainer,
-        isMain ? styles.mainArticle : styles.smallArticle
+        isMain ? styles.mainArticle : styles.smallArticle,
     )
 }
 
@@ -101,7 +101,7 @@ const ArticleCard: FC<ArticleCardProps> = ({
 
     return (
         <div
-            style={{ backgroundImage: `url('${  image  }')` }}
+            style={{ backgroundImage: `url('${image}')` }}
             className={outerClass}
         >
             <div
@@ -125,7 +125,7 @@ const ArticleCard: FC<ArticleCardProps> = ({
                             {article.title}
                         </h2>
                     ) : (
-                        <h4 className="font-tc-white details">
+                        <h4 className='font-tc-white details'>
                             {article.title}
                         </h4>
                     )}
@@ -134,7 +134,7 @@ const ArticleCard: FC<ArticleCardProps> = ({
                             className={classNames(
                                 'medium-subtitle',
                                 'font-tc-white',
-                                styles.author
+                                styles.author,
                             )}
                         >
                             {author}
@@ -146,7 +146,7 @@ const ArticleCard: FC<ArticleCardProps> = ({
                                 className={classNames(
                                     'body-main',
                                     'font-tc-white',
-                                    styles.summary
+                                    styles.summary,
                                 )}
                             >
                                 {summary}
@@ -154,7 +154,7 @@ const ArticleCard: FC<ArticleCardProps> = ({
                             <span
                                 className={classNames(
                                     'font-tc-white',
-                                    styles.readMore
+                                    styles.readMore,
                                 )}
                             >
                                 READ MORE

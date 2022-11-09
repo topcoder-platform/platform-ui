@@ -18,9 +18,10 @@ export async function submitRequestAsync(request: UpdateBadgeRequest): Promise<G
         form.append('active', request.badgeActive)
     }
 
-    if (request.badgeName) { (
-        form.append('badge_name', request.badgeName)
-    )
+    if (request.badgeName) {
+        (
+            form.append('badge_name', request.badgeName)
+        )
     }
 
     if (request.badgeDesc) {

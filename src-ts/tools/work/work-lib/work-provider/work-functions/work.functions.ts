@@ -8,7 +8,7 @@ import {
     workFactoryBuildCreateReqeuest,
     workFactoryBuildCustomerPaymentRequest,
     workFactoryBuildUpdateRequest,
-    workFactoryCreate
+    workFactoryCreate,
 } from './work-factory'
 import {
     ActivateWorkRequest,

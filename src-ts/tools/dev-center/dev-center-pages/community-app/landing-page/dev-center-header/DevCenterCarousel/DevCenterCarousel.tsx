@@ -4,8 +4,8 @@ import Carousel from 'react-elastic-carousel'
 import { CarouselContent } from '../carousel-content.config'
 import { DevCenterCarouselItem } from '../DevCenterCarouselItem'
 
-import './carouselStyle.css'
 import styles from './DevCenterCarousel.module.scss'
+import './carouselStyle.css'
 
 const DevCenterCarousel: FC = () => (
     <div className={styles.container}>

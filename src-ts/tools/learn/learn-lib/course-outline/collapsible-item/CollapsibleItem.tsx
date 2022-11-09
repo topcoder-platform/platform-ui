@@ -1,9 +1,9 @@
-import classNames from 'classnames'
 import { Dispatch, FC, ReactNode, SetStateAction, useCallback, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import classNames from 'classnames'
 
 import { IconOutline, IconSolid } from '../../../../../lib'
-import { LearnModule, LearnModuleProgress, LearnUserCertificationProgress } from "../.."
+import { LearnModule, LearnModuleProgress, LearnUserCertificationProgress } from '../..'
 import { StatusIcon } from '../status-icon'
 import { StepIcon } from '../step-icon'
 
@@ -46,8 +46,8 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
         !!progress?.completedLessons.find(l => l.dashedName === key)
     )
 
-    const stepLabel: (item: any, isActive: boolean, stepCount: string, label?: string) => ReactNode =
-    (item: any, isActive: boolean, stepCount: string, label?: string) => (
+    const stepLabel: (item: any, isActive: boolean, stepCount: string, label?: string) => ReactNode
+    = (item: any, isActive: boolean, stepCount: string, label?: string) => (
         <StepIcon
             index={stepCount}
             completed={isItemCompleted(item.dashedName)}
@@ -98,12 +98,16 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
                     <div className={styles.summary}>
                         <span className={styles['summary-item']}>
                             <IconOutline.DocumentTextIcon />
-                            {props.lessonsCount} Lessons
+                            {props.lessonsCount}
+                            {' '}
+                            Lessons
                         </span>
                         {props.duration.value !== 0 && (
                             <span className={styles['summary-item']}>
                                 <IconOutline.ClockIcon />
-                                {props.duration.value} {props.duration.units}
+                                {props.duration.value}
+                                {' '}
+                                {props.duration.units}
                             </span>
                         )}
                     </div>

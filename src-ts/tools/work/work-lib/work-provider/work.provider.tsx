@@ -4,7 +4,7 @@ import { logError, profileContext, ProfileContextData, UserProfile } from '../..
 
 import { messageGetUnreadCountAsync } from './message-functions'
 import { WorkContextData } from './work-context-data.model'
-import { Work, workGetAllAsync, } from './work-functions'
+import { Work, workGetAllAsync } from './work-functions'
 import { default as workContext, defaultWorkContextData } from './work.context'
 
 export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { children: ReactNode }) => {

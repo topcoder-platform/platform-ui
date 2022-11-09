@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { FC, ReactNode } from 'react'
+import classNames from 'classnames'
 
 import { LearnCertificateTrackType } from '../all-certifications-provider'
 import { CourseBadge } from '../course-badge'
@@ -40,7 +40,9 @@ const CourseTitle: FC<CourseTitleProps> = (props: CourseTitleProps) => {
                 </div>
                 {props.credits && (
                     <em className={classNames('quote-small', props.size)}>
-                        by {props.credits}
+                        by
+                        {' '}
+                        {props.credits}
                     </em>
                 )}
                 <span className='desktop-hide'>

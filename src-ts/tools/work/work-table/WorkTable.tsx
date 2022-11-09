@@ -12,7 +12,6 @@ import {
     TabsNavbar,
     TabsNavItem,
 } from '../../../lib'
-import '../../../lib/styles/index.scss'
 import {
     Work,
     WorkByStatus,
@@ -24,6 +23,7 @@ import {
     WorkStatusFilter,
 } from '../work-lib'
 import { workDashboardRoute, workDetailOrDraftRoute } from '../work.routes'
+import '../../../lib/styles/index.scss'
 
 import { workDashboardTabs } from './work-nav.config'
 import { WorkNoResults } from './work-no-results'
@@ -194,7 +194,7 @@ function initializeStatusGroups(
     work: ReadonlyArray<Work>,
     setStatusGroups: Dispatch<SetStateAction<{ [status: string]: WorkByStatus } | undefined>>,
     tabs: ReadonlyArray<TabsNavItem>,
-    setTabs: Dispatch<SetStateAction<ReadonlyArray<TabsNavItem>>>
+    setTabs: Dispatch<SetStateAction<ReadonlyArray<TabsNavItem>>>,
 ): void {
 
     // if we're not initialized, nothing else to do

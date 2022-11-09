@@ -282,7 +282,11 @@ const PrivacyPolicyModal: FC<PrivacyPolicyModalProps> = ({ isOpen, onClose }: Pr
                                     marketing emails that notify us when you click on a link in the
                                     email. We use these technologies to operate and improve our websites
                                     and marketing emails. For instructions on how to unsubscribe from
-                                    our marketing emails, please see <strong>Section 9.4</strong> below.
+                                    our marketing emails, please see
+                                    {' '}
+                                    <strong>Section 9.4</strong>
+                                    {' '}
+                                    below.
                                 </li>
                                 <br />
                                 <li>
@@ -314,7 +318,9 @@ const PrivacyPolicyModal: FC<PrivacyPolicyModalProps> = ({ isOpen, onClose }: Pr
                                     governed by the privacy policies of the companies providing them.
                                 </li>
                             </ol>
-                            <h4> 4. PURPOSES FOR WHICH WE PROCESS PERSONAL DATA AND THE LEGAL BASES
+                            <h4>
+                                {' '}
+                                4. PURPOSES FOR WHICH WE PROCESS PERSONAL DATA AND THE LEGAL BASES
                                 ON WHICH WE RELY
                             </h4>
                             <ol>
@@ -835,11 +841,13 @@ const PrivacyPolicyModal: FC<PrivacyPolicyModalProps> = ({ isOpen, onClose }: Pr
                                     please fill out&nbsp;
                                     <a
                                         href={window.location.href}
-                                        onClick={openSupportModal}>
+                                        onClick={openSupportModal}
+                                    >
                                         this form
                                     </a>
                                     , email us at&nbsp;
-                                    <a href='mailto:Privacy@topcoder.com'>privacy@topcoder.com</a>, call
+                                    <a href='mailto:Privacy@topcoder.com'>privacy@topcoder.com</a>
+                                    , call
                                     us at 855 867-1356, or write to us at:
                                 </li>
                                 <br />

@@ -1,9 +1,9 @@
-import classNames from 'classnames'
 import { FC, SVGProps } from 'react'
 import { Link } from 'react-router-dom'
+import classNames from 'classnames'
 
-import '../styles/index.scss'
 import { IconOutline } from '../svgs'
+import '../styles/index.scss'
 
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 export type ButtonStyle = 'icon' | 'icon-bordered' | 'link' | 'primary' | 'secondary' | 'tertiary' | 'text'

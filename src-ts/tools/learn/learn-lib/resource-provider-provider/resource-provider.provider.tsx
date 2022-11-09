@@ -11,7 +11,7 @@ export function useResourceProvider(providerName?: string): ResourceProviderData
 
     useEffect(() => {
         if (!providerName) {
-            setState((prevState) => ({
+            setState(prevState => ({
                 ...prevState,
                 loading: false,
                 provider: undefined,
@@ -20,13 +20,13 @@ export function useResourceProvider(providerName?: string): ResourceProviderData
             return
         }
 
-        setState((prevState) => ({
+        setState(prevState => ({
             ...prevState,
             loading: true,
         }))
 
-        getResourceProvidersAsync().then((providers) => {
-            setState((prevState) => ({
+        getResourceProvidersAsync().then(providers => {
+            setState(prevState => ({
                 ...prevState,
                 loading: false,
                 provider: providers?.find(p => p.name === providerName),

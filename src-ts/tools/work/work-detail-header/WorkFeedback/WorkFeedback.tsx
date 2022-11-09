@@ -36,7 +36,7 @@ const WorkFeedback: FC<WorkFeedbackProps> = (props: WorkFeedbackProps) => {
     }
 
     function onClose(): void {
-        const updatedForm: FormDefinition = {...formDef}
+        const updatedForm: FormDefinition = { ...formDef }
         formOnReset(formGetInputFields(updatedForm.groups || []))
         setFormDef(updatedForm)
         props.onClose()

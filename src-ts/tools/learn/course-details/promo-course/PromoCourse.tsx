@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { FC } from 'react'
+import classNames from 'classnames'
 
 import { ReactComponent as LearnGetCertified } from './learn-get-certified.svg'
 import { ReactComponent as MobileLearnGetCertified2 } from './mobile-get-certified-2.svg'

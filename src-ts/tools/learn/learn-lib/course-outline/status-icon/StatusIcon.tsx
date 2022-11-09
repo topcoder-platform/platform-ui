@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { FC, ReactNode, useMemo } from 'react'
+import classNames from 'classnames'
 
 import { IconOutline, IconSolid } from '../../../../../lib'
 

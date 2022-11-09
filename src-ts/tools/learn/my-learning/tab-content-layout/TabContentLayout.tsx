@@ -36,8 +36,8 @@ const TabContentLayout: FC<TabContentLayoutProps> = (props: TabContentLayoutProp
     }> = useMemo(() => {
         const certsByCategory: Dictionary<Array<LearnCertification>> = groupBy(props.certifications, 'category')
         return [
-            {label: 'All Categories', value: ''},
-            ...Object.keys(certsByCategory).sort().map((c) => ({
+            { label: 'All Categories', value: '' },
+            ...Object.keys(certsByCategory).sort().map(c => ({
                 label: c,
                 value: c,
             })),

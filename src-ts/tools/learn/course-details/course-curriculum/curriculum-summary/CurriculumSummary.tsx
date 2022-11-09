@@ -35,7 +35,8 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
         return (
             <>
                 <span>
-                    Completed{' '}
+                    Completed
+                    {' '}
                     {textFormatDateLocaleShortString(new Date(props.completedDate))}
                 </span>
                 <Button

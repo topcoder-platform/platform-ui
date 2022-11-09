@@ -11,24 +11,23 @@ interface MarkdownCodeProps {
     lang?: string
 }
 
-export const MarkdownCode: React.FC<MarkdownCodeProps> = (props) => {
+export const MarkdownCode: React.FC<MarkdownCodeProps> = props => {
     const { children, code, lang }: MarkdownCodeProps = props
     const isTerminal: boolean = lang === 'terminal' || lang === 'console'
     const [showLineNumbers, setShowLineNumbers]: [
         boolean,
         React.Dispatch<React.SetStateAction<boolean>>
     ] = React.useState(!isTerminal)
-    // tslint:disable-next-line no-null-keyword
     const ref: React.RefObject<HTMLDivElement> = React.useRef<HTMLDivElement>(null)
 
-    const handleLineNumberVisibilityChange: (visibility: boolean) => void =
-        React.useCallback(
+    const handleLineNumberVisibilityChange: (visibility: boolean) => void
+        = React.useCallback(
             (visibility: boolean) => {
                 if (!isTerminal) {
                     setShowLineNumbers(visibility)
                 }
             },
-            [isTerminal]
+            [isTerminal],
         )
 
     return (
@@ -56,8 +55,8 @@ interface LineNumbersProps {
 }
 
 const LineNumbers = (props: LineNumbersProps): React.ReactElement | null => {
-    const { codeRef, showLineNumbers, onVisibilityChange }: LineNumbersProps =
-        props
+    const { codeRef, showLineNumbers, onVisibilityChange }: LineNumbersProps
+        = props
     const [lineNumbers, setLineNumbers]: [
         Array<number>,
         React.Dispatch<React.SetStateAction<Array<number>>>
@@ -90,7 +89,7 @@ const LineNumbers = (props: LineNumbersProps): React.ReactElement | null => {
         const handleResizing: () => void = () => {
             const result: Array<number> = computeLineNumbers(
                 innerText,
-                clientWidth
+                clientWidth,
             )
 
             if (result.length < 2) {
@@ -113,7 +112,6 @@ const LineNumbers = (props: LineNumbersProps): React.ReactElement | null => {
     }, [size.width, onVisibilityChange, codeRef])
 
     if (!showLineNumbers) {
-        // tslint:disable-next-line no-null-keyword
         return null
     }
 
@@ -149,7 +147,7 @@ function measureText(text: string, canvas: HTMLCanvasElement): number {
 
 function computeLineNumbers(text: string, width: number): Array<number> {
     const canvas: HTMLCanvasElement = document.createElement(
-        'canvas'
+        'canvas',
     ) as HTMLCanvasElement
     const lines: Array<string> = text.split('\n')
     const result: Array<number> = []

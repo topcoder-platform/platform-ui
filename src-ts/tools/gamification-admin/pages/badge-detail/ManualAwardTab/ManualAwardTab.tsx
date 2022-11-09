@@ -26,7 +26,7 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
 
     function onAward(): void {
         const csv: string = generateCSV(
-            selectedMembers.map(m => [m.handle, props.badge?.id as string])
+            selectedMembers.map(m => [m.handle, props.badge?.id as string]),
         )
         setBadgeAssignError(undefined)
         manualAssignRequestAsync(csv)
@@ -52,7 +52,7 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
                 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Neque ullamcorper neque sed orci, enim amet, sed.</p>
                 <div className={styles.manualForm}>
                     <InputHandleAutocomplete
-                        label="Select Member"
+                        label='Select Member'
                         name='manual-award-member-select'
                         placeholder='Type and select member to award'
                         onChange={setSelectedMembers}
@@ -73,14 +73,16 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
                 </div>
             </div>
             {
-                showBadgeAssigned && <BadgeAssignedModal
-                    badge={props.badge}
-                    isOpen={showBadgeAssigned}
-                    onClose={() => {
-                        setShowBadgeAssigned(false)
-                        props.onManualAssign()
-                    }}
-                />
+                showBadgeAssigned && (
+                    <BadgeAssignedModal
+                        badge={props.badge}
+                        isOpen={showBadgeAssigned}
+                        onClose={() => {
+                            setShowBadgeAssigned(false)
+                            props.onManualAssign()
+                        }}
+                    />
+                )
             }
         </div>
     )

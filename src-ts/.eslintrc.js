@@ -8,37 +8,39 @@ module.exports = {
         'plugin:react/recommended',
         'airbnb',
         'plugin:@typescript-eslint/recommended',
-        'prettier'
+        'plugin:ordered-imports/recommended'
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
         useJSXTextNode: true,
-        project: "./tsconfig.json",
-        tsconfigRootDir: ".",
+        project: './tsconfig.json',
+        tsconfigRootDir: '.',
         tsx: true,
         jsx: true,
         sourceType: 'module',
     },
     plugins: [
-        'react',
         '@typescript-eslint',
-        'react-hooks',
+        'no-null',
+        'ordered-imports',
+        'react',
+        'react-hooks'
     ],
     settings: {
         react: {
-            "version": "detect"
+            'version': 'detect'
         },
-        "import/resolver": {
+        'import/resolver': {
             typescript: {},
         }
     },
     rules: {
-        "@typescript-eslint/ban-types": [
-            "error",
+        '@typescript-eslint/ban-types': [
+            'error',
             {
-                "extendDefaults": true,
-                "types": {
-                    "{}": false
+                'extendDefaults': true,
+                'types': {
+                    '{}': false
                 }
             }
         ],
@@ -46,14 +48,24 @@ module.exports = {
         '@typescript-eslint/no-explicit-any': 'error',
         '@typescript-eslint/no-inferrable-types': 'off',
         '@typescript-eslint/no-shadow': 'error',
+        '@typescript-eslint/no-unused-vars': 'error',
         '@typescript-eslint/strict-boolean-expressions': [
             'error',
             {
+                allowAny: true,
                 allowNullableBoolean: true,
                 allowNullableObject: true,
                 allowNullableNumber: true,
                 allowNullableString: true
             }
+        ],
+        'arrow-parens': [
+            'error',
+            'as-needed'
+        ],
+        'complexity': [
+            'error',
+            7
         ],
         'import/extensions': 'off',
         'import/prefer-default-export': 'off',
@@ -64,10 +76,15 @@ module.exports = {
                 SwitchCase: 1,
             },
         ],
+        'jsx-quotes': [
+            'error',
+            'prefer-single'
+        ],
         'jsx-a11y/tabindex-no-positive': [
             'warn'
         ],
-        'no-extra-boolean-cast': "off",
+        'no-extra-boolean-cast': 'off',
+        'no-null/no-null': 'error',
         'no-plusplus': [
             'error',
             {
@@ -87,7 +104,56 @@ module.exports = {
                 functions: false,
             }
         ],
-        "padding-line-between-statements": [
+        'object-curly-newline': 'off',
+        'operator-linebreak': [
+            'error',
+            'before'
+        ],
+        'ordered-imports/ordered-imports': [
+            'error',
+            {
+                'symbols-first': true,
+                'declaration-ordering': [
+                    'type', {
+                        ordering: [
+                            'namespace',
+                            'destructured',
+                            'default',
+                            'side-effect',
+                        ],
+                        secondaryOrdering: [
+                            'name',
+                            'lowercase-last'
+                        ],
+                    }
+                ],
+                'specifier-ordering': 'case-insensitive',
+                'group-ordering': [
+                    {
+                        name: 'project root',
+                        match: '^@',
+                        order: 20
+                    },
+                    {
+                        name: 'parent directories',
+                        match: '^\\.\\.',
+                        order: 30
+                    },
+                    {
+                        name: 'current directory',
+                        match: '^\\.',
+                        order: 40
+                    },
+                    {
+                        name: 'third-party',
+                        match: '.*',
+                        order: 10
+                    },
+                ],
+            },
+        ],
+        'padded-blocks': 'off',
+        'padding-line-between-statements': [
             'error',
             { blankLine: 'always', prev: 'directive', next: '*' },
             { blankLine: 'any', prev: 'directive', next: 'directive' },
@@ -139,5 +205,6 @@ module.exports = {
             'error',
             'never',
         ],
+        'sort-keys': 'error'
     },
 };

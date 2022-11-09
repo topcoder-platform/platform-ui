@@ -1,8 +1,7 @@
-import classNames from 'classnames'
 import { FC } from 'react'
+import classNames from 'classnames'
 
 import { ContentLayout, LoadingSpinner, Portal } from '../../../lib'
-import '../../../lib/styles/index.scss'
 import {
     AllCertificationsProviderData,
     useAllCertifications,
@@ -10,6 +9,7 @@ import {
     useUserCertifications,
     WaveHero,
 } from '../learn-lib'
+import '../../../lib/styles/index.scss'
 
 import { AvailableCoursesList } from './available-courses-list'
 import { ProgressBlock } from './progress-block'

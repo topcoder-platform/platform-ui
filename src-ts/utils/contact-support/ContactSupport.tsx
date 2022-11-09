@@ -6,7 +6,7 @@ import {
     ContentLayout,
     FormDefinition,
     formGetInputFields,
-    formOnReset
+    formOnReset,
 } from '../../lib'
 
 import { toolTitle } from './contact-support.routes'

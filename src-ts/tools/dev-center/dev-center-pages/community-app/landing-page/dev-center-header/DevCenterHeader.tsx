@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { FC } from 'react'
+import classNames from 'classnames'
 
 import { ContentLayout } from '../../../../../../lib'
 
@@ -12,16 +12,19 @@ const DevCenterHeader: FC<{}> = () => (
             <div className={styles.innerContainer}>
                 <div className={styles.leftContent}>
                     <h1 className={styles.title}>
-                        TopCoder <br />
+                        TopCoder
+                        {' '}
+                        <br />
                         Developer Center
                     </h1>
                     <span className={classNames(styles.subtitle, 'body-main')}>Let's build together with millions of Topcoder developers around the world.</span>
                 </div>
                 <div className={styles.rightContent}>
-                    <DevCenterCarousel/>
+                    <DevCenterCarousel />
                 </div>
             </div>
         </ContentLayout>
-    </div>)
+    </div>
+)
 
 export default DevCenterHeader

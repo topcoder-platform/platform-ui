@@ -1,7 +1,8 @@
 import { FC } from 'react'
 import { Link } from 'react-router-dom'
 
-import styles from "../Breadcrumb.module.scss"
+import styles from '../Breadcrumb.module.scss'
+
 import { BreadcrumbItemModel } from './breadcrumb-item.model'
 
 interface BreadcrumbItemProps {

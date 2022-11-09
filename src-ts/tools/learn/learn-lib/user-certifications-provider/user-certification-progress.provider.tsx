@@ -8,7 +8,7 @@ export function useUserCertificationProgress(userId?: number, provider?: string,
     const callCounter: MutableRefObject<number> = useRef(0)
 
     function setCertificateProgress(progress: LearnUserCertificationProgress): void {
-        setState((prevState) => ({ ...prevState, certificationProgress: progress }))
+        setState(prevState => ({ ...prevState, certificationProgress: progress }))
         callCounter.current++
     }
 
@@ -20,7 +20,7 @@ export function useUserCertificationProgress(userId?: number, provider?: string,
         const currentCallCounter: number = ++callCounter.current
 
         userCertificationProgressGetAsync(userId, provider, certification)
-            .then((myCertifications) => {
+            .then(myCertifications => {
                 // if another call to fetchProgress or to setCertificateProgress
                 // was made before we got the api response
                 // return, and do not update state
@@ -28,7 +28,7 @@ export function useUserCertificationProgress(userId?: number, provider?: string,
                     return
                 }
 
-                setState((prevState) => ({
+                setState(prevState => ({
                     ...prevState,
                     certificationProgress: myCertifications.find(c => c.certification === certification),
                     loading: false,
@@ -48,7 +48,7 @@ export function useUserCertificationProgress(userId?: number, provider?: string,
         })
 
     useEffect(() => {
-        setState((prevState) => ({
+        setState(prevState => ({
             ...prevState,
             loading: true,
         }))

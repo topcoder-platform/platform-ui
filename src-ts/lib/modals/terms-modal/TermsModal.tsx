@@ -22,7 +22,9 @@ const TermsModal: FC<TermsModalProps> = ({ isOpen, onClose }: TermsModalProps) =
                     <li>Date of Last Revision: Jan 27, 2022</li>
                     <br />
                     <li>
-                        This User Agreement (the "<strong>Agreement</strong>") is a contract
+                        This User Agreement (the "
+                        <strong>Agreement</strong>
+                        ") is a contract
                         between you (referred to herein as "User") and Topcoder LLC.
                         ("Topcoder") and applies to User's use and viewing of
                         <a href='https://www.topcoder.com/' target='_blank' rel='noreferrer'>

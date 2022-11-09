@@ -14,5 +14,5 @@ export type LazyLoadType = (
  * (while react's `lazy` method only allows to import default exports)
  */
 export const lazyLoad: LazyLoadType = (moduleImport: () => Promise<any>, namedExport: string = 'default') => (
-    lazy(() => moduleImport().then(m => ({default: get(m, namedExport)})))
+    lazy(() => moduleImport().then(m => ({ default: get(m, namedExport) })))
 )

@@ -7,8 +7,8 @@ import {
     IconOutline,
     Tooltip,
 } from '../../../../lib'
-import '../../../../lib/styles/index.scss'
 import { Work, workContext, WorkContextData, workDeleteAsync, WorkStatus } from '../../work-lib'
+import '../../../../lib/styles/index.scss'
 
 const WorkDeleteButtonRenderer = (work: Work): JSX.Element | undefined => {
 

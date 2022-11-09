@@ -2,7 +2,7 @@
 // EVENTUALLY, THE ONLY THINGS THAT SHOULD BE EXPORTED FROM THE
 // TOOLS ARE THE toolsRoutes and routeRoot*.
 export { learnRootRoute as routeRootMember } from './learn'
-export { default as toolsRoutes, } from './tools.routes'
+export { default as toolsRoutes } from './tools.routes'
 export {
     ChallengeMetadataName,
     dashboardRoute as routeRootCustomer,
@@ -28,5 +28,5 @@ export {
     WorkTypeCategoryUnknownIcon,
     WorkTypeConfigs,
     BugHuntIntakeForm,
-    bugHuntRoute
+    bugHuntRoute,
 } from './work'

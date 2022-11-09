@@ -1,6 +1,6 @@
-import classNames from 'classnames'
 import { Dictionary, groupBy, identity, orderBy } from 'lodash'
 import { Dispatch, FC, Fragment, SetStateAction, useMemo } from 'react'
+import classNames from 'classnames'
 
 import { InputSelect, useLocalStorage } from '../../../../lib'
 import { LearnCertification, UserCertificationCompleted, UserCertificationInProgress } from '../../learn-lib'
@@ -34,8 +34,8 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
         label: string,
         value: string,
     }> = useMemo(() => [
-        {label: 'All Categories', value: '', orderIndex: -1},
-        ...Object.keys(certsByCategory).sort().map((c) => ({
+        { label: 'All Categories', value: '', orderIndex: -1 },
+        ...Object.keys(certsByCategory).sort().map(c => ({
             label: c,
             value: c,
         })),
@@ -43,7 +43,7 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
 
     // create and sort the certificates groups
     const certificationsGroups: Array<string> = useMemo(() => orderBy(Object.keys(certsByCategory), [
-        c => PRIORITY_CATEGORIES.includes(c) ? -1 : 1,
+        c => (PRIORITY_CATEGORIES.includes(c) ? -1 : 1),
         identity,
     ], ['asc', 'asc']), [certsByCategory])
 
@@ -63,14 +63,14 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
                     <InputSelect
                         options={certsCategoriesOptions}
                         value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value as string)}
+                        onChange={e => setSelectedCategory(e.target.value as string)}
                         name='filter-courses'
                         label='Categories'
                     />
                 </div>
             </div>
 
-            {certificationsGroups.map((category) => (!selectedCategory || selectedCategory === category) && (
+            {certificationsGroups.map(category => (!selectedCategory || selectedCategory === category) && (
                 <Fragment key={category}>
                     <h4 className={classNames('details', styles['courses-group-title'])}>
                         {category}
@@ -78,7 +78,7 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
 
                     <div className={styles['courses-list']}>
                         {certsByCategory[category]
-                            .map((certification) => (
+                            .map(certification => (
                                 <CoursesCard
                                     certification={certification}
                                     key={certification.key}

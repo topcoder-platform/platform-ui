@@ -24,7 +24,7 @@ const BadgeAssignedModal: FC<BadgeAssignedModalProps> = (props: BadgeAssignedMod
             onClose={onClose}
             open={props.isOpen}
             size='md'
-            title="Badge awarded"
+            title='Badge awarded'
             closeOnOverlayClick={false}
         >
             <div className={styles.wrapper}>
@@ -34,7 +34,11 @@ const BadgeAssignedModal: FC<BadgeAssignedModalProps> = (props: BadgeAssignedMod
                         className={styles[props.badge.active ? 'badge-image' : 'badge-image-disabled']}
                         src={props.badge.badge_image_url}
                     />
-                    <p className={styles['badge-name']}>{props.badge.badge_name} badge has been sucessfully awarded.</p>
+                    <p className={styles['badge-name']}>
+                        {props.badge.badge_name}
+                        {' '}
+                        badge has been sucessfully awarded.
+                    </p>
                 </div>
                 <div className={styles['actions-wrap']}>
                     {

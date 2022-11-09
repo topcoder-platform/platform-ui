@@ -1,6 +1,6 @@
-import classNames from 'classnames'
 import { fill } from 'lodash'
 import { Children, Dispatch, FC, ReactNode, SetStateAction, useState } from 'react'
+import classNames from 'classnames'
 
 import styles from './CardsSlider.module.scss'
 

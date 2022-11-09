@@ -1,6 +1,6 @@
-import classNames from 'classnames'
 import { FC, useContext } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import classNames from 'classnames'
 
 import {
     PlatformRoute,
@@ -37,8 +37,9 @@ const ToolSelectorWide: FC<ToolSelectorWideProps> = (props: ToolSelectorWideProp
         <div className={classNames(
             styles[baseClass],
             styles[activeIndicatorClass],
-            isLink ? styles['tool-selector-wide-is-link'] : undefined
-        )}>
+            isLink ? styles['tool-selector-wide-is-link'] : undefined,
+        )}
+        >
             <Link
                 className='large-tab'
                 tabIndex={-1}

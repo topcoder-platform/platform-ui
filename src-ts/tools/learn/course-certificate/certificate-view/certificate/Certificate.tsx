@@ -1,15 +1,15 @@
-import classNames from 'classnames'
 import { FC, MutableRefObject } from 'react'
+import classNames from 'classnames'
 
 import { LearnConfig } from '../../../learn-config'
 import { LearnCertificateTrackType } from '../../../learn-lib'
 
 import { CertificateBgPattern } from './certificate-bg-pattern'
-import styles from './Certificate.module.scss'
 import { CourseCard } from './course-card'
 import { ReactComponent as TcAcademyLogoSvg } from './tc-academy-logo.svg'
 import { ReactComponent as TcLogoSvg } from './tc-logo.svg'
 import { ReactComponent as FccLogoSvg } from './vendor-fcc-logo.svg'
+import styles from './Certificate.module.scss'
 
 interface CertificateProps {
     completedDate?: string
@@ -71,7 +71,9 @@ const Certificate: FC<CertificateProps> = (props: CertificateProps) => {
                 </div>
                 <div className={styles.vendor}>
                     <div className='body-ultra-small'>
-                        Course content provided by {props.provider}
+                        Course content provided by
+                        {' '}
+                        {props.provider}
                     </div>
                     <div className={styles['vendor-logo']} title={props.provider}>
                         <FccLogoSvg />

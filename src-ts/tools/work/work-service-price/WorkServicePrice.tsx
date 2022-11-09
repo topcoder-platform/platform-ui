@@ -26,9 +26,11 @@ const ServicePrice: FC<WorkServicePriceProps> = (props: WorkServicePriceProps) =
                 )}
                 <div className={styles['content-wrapper']}>
                     {!hideTitle && (
-                        <p><h3 className={styles.serviceTitle}>
-                            {serviceType}
-                        </h3></p>
+                        <p>
+                            <h3 className={styles.serviceTitle}>
+                                {serviceType}
+                            </h3>
+                        </p>
                     )}
                     <h3>
                         <div className={styles.priceAndDuration}>
@@ -39,7 +41,10 @@ const ServicePrice: FC<WorkServicePriceProps> = (props: WorkServicePriceProps) =
                             )}
                             <span className={styles.discount}>{textFormatMoneyLocaleString(price)}</span>
                             <span className={styles.separator}>|</span>
-                            <span className={styles.days}>{duration}&nbsp;Days</span>
+                            <span className={styles.days}>
+                                {duration}
+&nbsp;Days
+                            </span>
                             <span className={styles.help}>
                                 <Tooltip
                                     content='The price and project length is dynamic and dependent on the

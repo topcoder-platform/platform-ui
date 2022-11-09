@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { MouseEvent } from 'react'
+import classNames from 'classnames'
 
 import { textFormatDateLocaleShortString, textFormatMoneyLocaleString } from '../../functions'
 import { TableCellType } from '../table-cell.type'

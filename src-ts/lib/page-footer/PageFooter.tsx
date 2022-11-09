@@ -46,10 +46,16 @@ const PageFooter: FC<{}> = () => {
             <div className={styles['footer-inner']}>
                 <div className={styles.utils}>
                     <div>
-                        <span>© {(new Date()).getFullYear()} Topcoder</span>
+                        <span>
+                            ©
+                            {(new Date()).getFullYear()}
+                            {' '}
+                            Topcoder
+                        </span>
                         <a
                             href={window.location.href}
-                            onClick={(e) => handleClick(e, setIsContactSupportModalOpen)}>
+                            onClick={e => handleClick(e, setIsContactSupportModalOpen)}
+                        >
                             Support
                         </a>
                         {/* TODO: add Report a bug functionality to send to zendesk
@@ -59,12 +65,14 @@ const PageFooter: FC<{}> = () => {
                     <div>
                         <a
                             href={window.location.href}
-                            onClick={(e) => handleClick(e, setIsTermsModalOpen)}>
+                            onClick={e => handleClick(e, setIsTermsModalOpen)}
+                        >
                             Terms
                         </a>
                         <a
                             href={window.location.href}
-                            onClick={(e) => handleClick(e, setIsPrivacyModalOpen)}>
+                            onClick={e => handleClick(e, setIsPrivacyModalOpen)}
+                        >
                             Privacy Policy
                         </a>
                     </div>

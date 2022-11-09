@@ -9,7 +9,7 @@ interface MarkdownLinkProps {
     href: string
 }
 
-export const MarkdownLink: React.FC<MarkdownLinkProps> = (props) => {
+export const MarkdownLink: React.FC<MarkdownLinkProps> = props => {
     const { children, href }: MarkdownLinkProps = props
     return (
         <div className={styles.linkBlock}>

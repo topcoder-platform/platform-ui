@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { FC } from 'react'
+import classNames from 'classnames'
 
 import { IconOutline, textFormatDateLocaleShortString } from '../../../../../../lib'
 import { CourseBadge, LearnCertificateTrackType } from '../../../../learn-lib'
