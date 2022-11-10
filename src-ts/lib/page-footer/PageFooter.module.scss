@@ -4,6 +4,10 @@
 .footer-wrap {
     height: $footer-height;
     border-top: $border-xs solid $black-10;
+
+    :global(#root:not(.app-ready)) & {
+        display: none;
+    }
 }
 
 .footer-inner {
@@ -37,7 +41,7 @@
     @include ltesm {
         flex-direction: column;
         gap: $space-sm;
-        
+
         > div > * + * {
             margin-left: $space-sm;
         }
