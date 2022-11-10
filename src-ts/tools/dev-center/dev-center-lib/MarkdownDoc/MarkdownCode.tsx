@@ -123,7 +123,7 @@ const LineNumbers: (props: LineNumbersProps) => React.ReactElement | null
                         <div
                             key={`line-${index}`}
                             className={`${styles.num} ${prev === n ? styles.hidden : ''
-                                }`}
+                            }`}
                         >
                             {n}
                         </div>

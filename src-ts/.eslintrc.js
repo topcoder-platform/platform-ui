@@ -73,7 +73,7 @@ module.exports = {
                 memberVariableDeclaration: true,
                 callSignature: true,
                 variableDeclaration: true,
-                arrayDestructuring: true,
+                arrayDestructuring: false,
                 objectDestructuring: true
             }
         ],
