@@ -175,7 +175,7 @@ jobs:
     environment:
       DEPLOY_ENV: "DEV"
       LOGICAL_ENV: "dev"
-      ENABLE_CACHE: true
+      ENABLE_CACHE: false
       APPNAME: "platform-ui-mvp"
     steps: *deploy_steps
 
