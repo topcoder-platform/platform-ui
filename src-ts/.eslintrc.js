@@ -89,6 +89,12 @@ module.exports = {
         ],
         'no-extra-boolean-cast': 'off',
         'no-null/no-null': 'error',
+        'no-param-reassign': [
+            'error',
+            {
+                props: false
+            }
+        ],
         'no-plusplus': [
             'error',
             {
