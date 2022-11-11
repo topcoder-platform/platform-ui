@@ -1,3 +1,4 @@
+/* eslint-disable react/no-danger */
 import { FC, ReactNode, useContext } from 'react'
 import { Params, useParams } from 'react-router-dom'
 
@@ -9,19 +10,20 @@ import {
     LoadingSpinner,
     profileContext,
     ProfileContextData,
+    textFormatGetSafeString,
 } from '../../../lib'
 import {
     AllCertificationsProviderData,
     CoursesProviderData,
     CourseTitle,
     ResourceProviderData,
-    useAllCertifications,
-    useCourses,
+    useGetCertification,
+    useGetCourses,
+    useGetResourceProvider,
+    useGetUserCertificationProgress,
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
-    useResourceProvider,
-    useUserCertificationProgress,
 } from '../learn-lib'
 import { getCoursePath } from '../learn.routes'
 
@@ -36,17 +38,17 @@ const CourseDetailsPage: FC<{}> = () => {
 
     const {
         provider: resourceProvider,
-    }: ResourceProviderData = useResourceProvider(routeParams.provider)
+    }: ResourceProviderData = useGetResourceProvider(routeParams.provider)
 
     const {
         course,
         ready: courseReady,
-    }: CoursesProviderData = useCourses(routeParams.provider ?? '', routeParams.certification)
+    }: CoursesProviderData = useGetCourses(textFormatGetSafeString(routeParams.provider), routeParams.certification)
 
     const {
         certificationProgress: progress,
         ready: progressReady,
-    }: UserCertificationProgressProviderData = useUserCertificationProgress(
+    }: UserCertificationProgressProviderData = useGetUserCertificationProgress(
         profile?.userId,
         routeParams.provider,
         routeParams.certification,
@@ -55,56 +57,65 @@ const CourseDetailsPage: FC<{}> = () => {
     const {
         certification: certificate,
         ready: certificateReady,
-    }: AllCertificationsProviderData = useAllCertifications(routeParams.provider, course?.certificationId, {
-        enabled: courseReady,
-    })
+    }: AllCertificationsProviderData = useGetCertification(
+        routeParams.provider,
+        textFormatGetSafeString(course?.certificationId),
+        {
+            enabled: courseReady && !!course?.certificationId,
+        },
+    )
 
     const ready: boolean = profileReady && courseReady && certificateReady && (!profile || progressReady)
 
     const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
         {
-            name: course?.title ?? '',
-            url: getCoursePath(routeParams.provider as string, routeParams.certification as string),
+
+            name: textFormatGetSafeString(course?.title),
+            url: getCoursePath(routeParams.provider as string, textFormatGetSafeString(routeParams.certification)),
         },
     ])
 
     function getDescription(): ReactNode {
+
         if (!course) {
-            return
+            return undefined
         }
 
-        return progress?.status === UserCertificationProgressStatus.completed ? (
-            <>
-                <h3 className='details'>Suggested next steps</h3>
-
-                <div className={styles.text}>
-                    <p>
-                        Now that you have completed the
-                        {' '}
-                        {course.title}
-                        ,
-                        we'd recommend you enroll in another course to continue your learning.
-                        You can view our other courses from the Topcoder Academy course page.
-                    </p>
-                </div>
-            </>
-        ) : (
-            course.keyPoints && (
+        return progress?.status === UserCertificationProgressStatus.completed
+            ? (
                 <>
-                    <h3 className='details'>Why should you complete this course?</h3>
+                    <h3 className='details'>Suggested next steps</h3>
 
-                    <div
-                        className={styles.text}
-                        dangerouslySetInnerHTML={{ __html: (course.keyPoints ?? []).join('<br /><br />') }}
-                    />
+                    <div className={styles.text}>
+                        <p>
+                            Now that you have completed the
+                            {' '}
+                            {course.title}
+                            ,
+                            we&appos;d recommend you enroll in another course to continue your learning.
+                            You can view our other courses from the Topcoder Academy course page.
+                        </p>
+                    </div>
                 </>
             )
-        )
+            : (
+                course.keyPoints && (
+                    <>
+                        <h3 className='details'>Why should you complete this course?</h3>
+
+                        <div
+                            className={styles.text}
+                            dangerouslySetInnerHTML={{ __html: (course.keyPoints ?? []).join('<br /><br />') }}
+                        />
+                    </>
+                )
+            )
     }
 
     function getPrerequisites(): ReactNode {
+
         if (!course) {
-            return
+            return undefined
         }
 
         return progress?.status === UserCertificationProgressStatus.completed ? (
@@ -122,8 +133,9 @@ const CourseDetailsPage: FC<{}> = () => {
     }
 
     function getCompletionSuggestion(): ReactNode {
+
         if (!course) {
-            return
+            return undefined
         }
 
         return progress?.status === UserCertificationProgressStatus.completed ? (
@@ -143,8 +155,9 @@ const CourseDetailsPage: FC<{}> = () => {
     }
 
     function getFooter(): ReactNode {
+
         if (!resourceProvider) {
-            return
+            return undefined
         }
 
         return (
