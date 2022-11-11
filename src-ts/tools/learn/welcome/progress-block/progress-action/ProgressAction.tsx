@@ -1,4 +1,4 @@
-import { orderBy } from 'lodash'
+import { orderBy, set } from 'lodash'
 import { FC, ReactNode, useMemo } from 'react'
 
 import { Button } from '../../../../../lib'
@@ -30,12 +30,6 @@ const USER_PROGRESS_MAX_SLIDES_COUNT: number = 8
 
 const ProgressAction: FC<ProgressActionProps> = (props: ProgressActionProps) => {
 
-    const {
-        allCertifications,
-        userCompletedCertifications: myCompletedCertifications,
-        userInProgressCertifications: myInProgressCertifications,
-    }: ProgressActionProps = props
-
     const allMyLearningsLink: ReactNode = (
         <span className={styles['title-link']}>
             <Button
@@ -47,16 +41,16 @@ const ProgressAction: FC<ProgressActionProps> = (props: ProgressActionProps) => 
     )
 
     const certificationsById: { [key: string]: LearnCertification } = useMemo(() => (
-        allCertifications
+        props.allCertifications
             .reduce((certifs, certificate) => {
-                certifs[certificate.id] = certificate
+                set(certifs, [certificate.id], certificate)
                 return certifs
             }, {} as unknown as { [key: string]: LearnCertification })
-    ), [allCertifications])
+    ), [props.allCertifications])
 
     const recentlyUpdatedCertifications: Array<LearnUserCertificationProgress> = orderBy([
-        ...myCompletedCertifications,
-        ...myInProgressCertifications,
+        ...props.userCompletedCertifications,
+        ...props.userInProgressCertifications,
     ], 'updatedAt', 'desc').slice(0, USER_PROGRESS_MAX_SLIDES_COUNT)
 
     function renderInProgress(courseToDisplay: UserCertificationInProgress): JSX.Element {

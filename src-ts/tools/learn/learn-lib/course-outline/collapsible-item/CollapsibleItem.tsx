@@ -18,7 +18,7 @@ interface CollapsibleItemProps {
     active?: string
     duration: LearnModule['meta']['estimatedCompletionTime']
     isAssessment: boolean
-    itemId?: (item: any) => string
+    itemId?: (item: CollapsibleListItem) => string
     items: Array<CollapsibleListItem>
     lessonsCount: number
     moduleKey: string
@@ -30,52 +30,67 @@ interface CollapsibleItemProps {
 }
 
 const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) => {
-    const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [isOpen, setIsOpen]: [
+        boolean,
+        Dispatch<SetStateAction<boolean>>
+    ] = useState<boolean>(false)
 
     const toggle: () => void = useCallback(() => {
         setIsOpen(open => !open)
     }, [])
 
-    const progress: LearnModuleProgress | undefined = useMemo(() => props.progress?.find(m => m.module === props.moduleKey), [props.progress, props.moduleKey])
+    const progress: LearnModuleProgress | undefined = useMemo(() => (
+        props.progress?.find(m => m.module === props.moduleKey)
+    ), [props.progress, props.moduleKey])
 
-    const isCompleted: boolean = useMemo(() => !!progress && progress.lessonCount === progress?.completedLessons.length, [progress])
+    const isCompleted: boolean = useMemo(() => (
+        !!progress && progress.lessonCount === progress?.completedLessons.length
+    ), [progress])
 
-    const isPartial: boolean = useMemo(() => !!progress && !!progress.completedLessons.length, [progress])
+    const isPartial: boolean = useMemo(() => (
+        !!progress && !!progress.completedLessons.length
+    ), [progress])
 
     const isItemCompleted: (key: string) => boolean = (key: string) => (
         !!progress?.completedLessons.find(l => l.dashedName === key)
     )
 
-    const stepLabel: (item: any, isActive: boolean, stepCount: string, label?: string) => ReactNode
-    = (item: any, isActive: boolean, stepCount: string, label?: string) => (
-        <StepIcon
-            index={stepCount}
-            completed={isItemCompleted(item.dashedName)}
-            active={isActive}
-            label={label}
-        />
-    )
-
-    const renderListItem: (item: any) => ReactNode = (item: any) => {
-        const isActive: boolean = props.itemId?.(item) === props.active
-        const stepCount: string = item.dashedName.match(/^step-(\d+)$/i)?.[1]
-        const label: ReactNode = stepLabel(item, isActive, stepCount, !stepCount && item.title)
-        const key: string = props.itemId?.(item) ?? item.title
-
-        return (
-            <li
-                key={key}
-                className={classNames(styles['item-wrap'], !stepCount && 'full-width')}
-                onClick={() => props.onItemClick(item)}
-            >
-                {props.path ? (
-                    <Link className={styles['item-wrap']} to={props.path(item)}>
-                        {label}
-                    </Link>
-                ) : label}
-            </li>
+    const stepLabel: (
+        item: CollapsibleListItem,
+        isActive: boolean,
+        stepCount?: string,
+        label?: string
+    ) => ReactNode
+        = (item: CollapsibleListItem, isActive: boolean, stepCount?: string, label?: string) => (
+            <StepIcon
+                index={stepCount}
+                completed={isItemCompleted(item.dashedName)}
+                active={isActive}
+                label={label}
+            />
         )
-    }
+
+    const renderListItem: (item: CollapsibleListItem) => ReactNode
+        = (item: CollapsibleListItem) => {
+            const isActive: boolean = props.itemId?.(item) === props.active
+            const stepCount: string | undefined = item.dashedName.match(/^step-(\d+)$/i)?.[1]
+            const label: ReactNode = stepLabel(item, isActive, stepCount, !stepCount && item.title)
+            const key: string = props.itemId?.(item) ?? item.title
+
+            return (
+                <li
+                    key={key}
+                    className={classNames(styles['item-wrap'], !stepCount && 'full-width')}
+                    onClick={() => props.onItemClick(item)}
+                >
+                    {props.path ? (
+                        <Link className={styles['item-wrap']} to={props.path(item)}>
+                            {label}
+                        </Link>
+                    ) : label}
+                </li>
+            )
+        }
 
     return (
         <div className={classNames(styles.wrap, isOpen ? 'is-open' : 'collapsed')}>

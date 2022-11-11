@@ -1,5 +1,5 @@
 import { Dictionary, groupBy, identity, orderBy } from 'lodash'
-import { Dispatch, FC, Fragment, SetStateAction, useMemo } from 'react'
+import { Dispatch, FC, Fragment, ReactNode, SetStateAction, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { InputSelect, useLocalStorage } from '../../../../lib'
@@ -34,7 +34,7 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
         label: string,
         value: string,
     }> = useMemo(() => [
-        { label: 'All Categories', value: '', orderIndex: -1 },
+        { label: 'All Categories', orderIndex: -1, value: '' },
         ...Object.keys(certsByCategory).sort().map(c => ({
             label: c,
             value: c,
@@ -42,12 +42,38 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
     ], [certsByCategory])
 
     // create and sort the certificates groups
-    const certificationsGroups: Array<string> = useMemo(() => orderBy(Object.keys(certsByCategory), [
-        c => (PRIORITY_CATEGORIES.includes(c) ? -1 : 1),
-        identity,
-    ], ['asc', 'asc']), [certsByCategory])
+    const certificationsGroups: Array<string> = useMemo(() => orderBy(
+        Object.keys(certsByCategory),
+        [
+            c => (PRIORITY_CATEGORIES.includes(c) ? -1 : 1),
+            identity,
+        ],
+        ['asc', 'asc'],
+    ), [certsByCategory])
 
-    const certificationsCount: number = (certsByCategory[selectedCategory] ?? props.certifications).length
+    const certificationsCount: number = (
+        (certsByCategory[selectedCategory] ?? props.certifications).length
+    )
+
+    const renderCertificationGroup = (category: string): ReactNode => (
+        <Fragment key={category}>
+            <h4 className={classNames('details', styles['courses-group-title'])}>
+                {category}
+            </h4>
+
+            <div className={styles['courses-list']}>
+                {certsByCategory[category]
+                    .map(certification => (
+                        <CoursesCard
+                            certification={certification}
+                            key={certification.key}
+                            userCompletedCertifications={props.userCompletedCertifications}
+                            userInProgressCertifications={props.userInProgressCertifications}
+                        />
+                    ))}
+            </div>
+        </Fragment>
+    )
 
     return (
         <div className={styles.wrap}>
@@ -70,24 +96,9 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
                 </div>
             </div>
 
-            {certificationsGroups.map(category => (!selectedCategory || selectedCategory === category) && (
-                <Fragment key={category}>
-                    <h4 className={classNames('details', styles['courses-group-title'])}>
-                        {category}
-                    </h4>
-
-                    <div className={styles['courses-list']}>
-                        {certsByCategory[category]
-                            .map(certification => (
-                                <CoursesCard
-                                    certification={certification}
-                                    key={certification.key}
-                                    userCompletedCertifications={props.userCompletedCertifications}
-                                    userInProgressCertifications={props.userInProgressCertifications}
-                                />
-                            ))}
-                    </div>
-                </Fragment>
+            {certificationsGroups.map(category => (
+                (!selectedCategory || selectedCategory === category)
+                && renderCertificationGroup(category)
             ))}
         </div>
     )

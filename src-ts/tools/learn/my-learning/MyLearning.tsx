@@ -1,3 +1,4 @@
+import { set } from 'lodash'
 import { Dispatch, FC, ReactNode, SetStateAction, useContext, useMemo, useState } from 'react'
 
 import { Breadcrumb, BreadcrumbItemModel, ContentLayout, LoadingSpinner, Portal, profileContext, ProfileContextData } from '../../../lib'
@@ -25,15 +26,23 @@ interface CertificatesByIdType {
 const MyLearning: FC<{}> = () => {
 
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
-    const { completed, inProgress, ready: coursesReady }: UserCertificationsProviderData = useUserCertifications()
-    const { certifications, ready: certificatesReady }: AllCertificationsProviderData = useAllCertifications()
-    const [activeTab, setActiveTab]: [MyTabsViews|undefined, Dispatch<SetStateAction<MyTabsViews|undefined>>] = useState()
+
+    const { completed, inProgress, ready: coursesReady }: UserCertificationsProviderData
+        = useUserCertifications()
+
+    const { certifications, ready: certificatesReady }: AllCertificationsProviderData
+        = useAllCertifications()
+
+    const [activeTab, setActiveTab]: [
+        MyTabsViews|undefined,
+        Dispatch<SetStateAction<MyTabsViews|undefined>>
+    ] = useState()
 
     const ready: boolean = profileReady && coursesReady && certificatesReady
 
     const certificatesById: CertificatesByIdType = useMemo(() => (
         certifications.reduce((certifs, certificate) => {
-            certifs[certificate.id] = certificate
+            set(certifs, [certificate.id], certificate)
             return certifs
         }, {} as unknown as CertificatesByIdType)
     ), [certifications])

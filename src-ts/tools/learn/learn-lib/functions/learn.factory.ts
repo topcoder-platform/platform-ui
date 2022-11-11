@@ -1,4 +1,6 @@
-interface LearnResponseModel {
+import { set } from 'lodash'
+
+export interface LearnResponseModel {
     createdAt?: string | Date
     publishedAt?: string | Date
     updatedAt?: string | Date
@@ -7,15 +9,15 @@ interface LearnResponseModel {
 export function create<T extends LearnResponseModel>(item: T): T {
 
     if (typeof item?.createdAt === 'string') {
-        item.createdAt = new Date(item.createdAt)
+        set(item, 'createdAt', new Date(item.createdAt))
     }
 
     if (typeof item?.updatedAt === 'string') {
-        item.updatedAt = new Date(item.updatedAt)
+        set(item, 'updatedAt', new Date(item.updatedAt))
     }
 
     if (typeof item?.publishedAt === 'string') {
-        item.publishedAt = new Date(item.publishedAt)
+        set(item, 'publishedAt', new Date(item.publishedAt))
     }
 
     return item

@@ -4,10 +4,14 @@ import { ResourceProviderData } from './resource-provider-data.model'
 import { getResourceProvidersAsync } from './resource-provider-functions/resource-provider.store'
 
 export function useResourceProvider(providerName?: string): ResourceProviderData {
-    const [state, setState]: [ResourceProviderData, Dispatch<SetStateAction<ResourceProviderData>>] = useState<ResourceProviderData>({
-        loading: false,
-        ready: false,
-    })
+    const [state, setState]: [
+        ResourceProviderData,
+        Dispatch<SetStateAction<ResourceProviderData>>
+    ]
+        = useState<ResourceProviderData>({
+            loading: false,
+            ready: false,
+        })
 
     useEffect(() => {
         if (!providerName) {

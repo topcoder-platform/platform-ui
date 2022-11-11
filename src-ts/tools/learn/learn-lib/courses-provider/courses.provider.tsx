@@ -1,3 +1,4 @@
+import { noop } from 'lodash'
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
 import { courseGetAsync } from './courses-functions'
@@ -24,7 +25,7 @@ export function useCourses(provider: string, certification?: string): CoursesPro
                 loading: false,
                 ready: false,
             }))
-            return
+            return noop
         }
 
         setState(prevState => ({

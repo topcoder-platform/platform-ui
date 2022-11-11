@@ -3,13 +3,18 @@ import { Dispatch, MutableRefObject, SetStateAction, useCallback, useEffect, use
 import { UserCertificationProgressProviderData } from './user-certification-progress-provider-data.model'
 import { LearnUserCertificationProgress, userCertificationProgressGetAsync } from './user-certifications-functions'
 
-export function useUserCertificationProgress(userId?: number, provider?: string, certification?: string):
-    UserCertificationProgressProviderData {
+export function useUserCertificationProgress(
+    userId?: number,
+    provider?: string,
+    certification?: string,
+): UserCertificationProgressProviderData {
+
     const callCounter: MutableRefObject<number> = useRef(0)
 
     function setCertificateProgress(progress: LearnUserCertificationProgress): void {
+        // eslint-disable-next-line no-use-before-define
         setState(prevState => ({ ...prevState, certificationProgress: progress }))
-        callCounter.current++
+        callCounter.current += 1
     }
 
     const fetchProgress: () => void = useCallback(() => {
@@ -17,7 +22,8 @@ export function useUserCertificationProgress(userId?: number, provider?: string,
             return
         }
 
-        const currentCallCounter: number = ++callCounter.current
+        callCounter.current += 1
+        const currentCallCounter: number = callCounter.current
 
         userCertificationProgressGetAsync(userId, provider, certification)
             .then(myCertifications => {
@@ -28,17 +34,22 @@ export function useUserCertificationProgress(userId?: number, provider?: string,
                     return
                 }
 
+                // eslint-disable-next-line no-use-before-define
                 setState(prevState => ({
                     ...prevState,
-                    certificationProgress: myCertifications.find(c => c.certification === certification),
+                    certificationProgress: (
+                        myCertifications.find(c => c.certification === certification)
+                    ),
                     loading: false,
                     ready: true,
                 }))
             })
     }, [certification, provider, userId])
 
-    const [state, setState]:
-        [UserCertificationProgressProviderData, Dispatch<SetStateAction<UserCertificationProgressProviderData>>]
+    const [state, setState]: [
+        UserCertificationProgressProviderData,
+        Dispatch<SetStateAction<UserCertificationProgressProviderData>>
+    ]
         = useState<UserCertificationProgressProviderData>({
             certificationProgress: undefined,
             loading: false,

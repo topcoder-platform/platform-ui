@@ -1,13 +1,20 @@
+import { noop } from 'lodash'
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
 import { LearnUserCompletedCertification, userCompletedCertificationGetAsync } from './user-completed-certifications-functions'
 import { UserCompletedCertificationsProviderData } from './user-completed-certifications-provider-data.model'
 
-export function useUserCompletedCertifications(userId?: number, provider?: string, certification?: string):
+export function useUserCompletedCertifications(
+    userId?: number,
+    provider?: string,
+    certification?: string,
+):
     UserCompletedCertificationsProviderData {
 
-    const [state, setState]:
-        [UserCompletedCertificationsProviderData, Dispatch<SetStateAction<UserCompletedCertificationsProviderData>>]
+    const [state, setState]: [
+        UserCompletedCertificationsProviderData,
+        Dispatch<SetStateAction<UserCompletedCertificationsProviderData>>
+    ]
         = useState<UserCompletedCertificationsProviderData>({
             certifications: [],
             loading: false,
@@ -23,7 +30,7 @@ export function useUserCompletedCertifications(userId?: number, provider?: strin
         }))
 
         if (!userId) {
-            return
+            return noop
         }
 
         userCompletedCertificationGetAsync(userId)
@@ -36,8 +43,10 @@ export function useUserCompletedCertifications(userId?: number, provider?: strin
                 let certifications: Array<LearnUserCompletedCertification> = completedCertifications
 
                 if (provider || certification) {
-                    certifications = completedCertifications.filter(c => (!provider || c.provider === provider)
-                        && (!certification || c.certification === certification))
+                    certifications = completedCertifications.filter(c => (
+                        (!provider || c.provider === provider)
+                        && (!certification || c.certification === certification)
+                    ))
                 }
 
                 setState(prevState => ({

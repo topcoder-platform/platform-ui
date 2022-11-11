@@ -12,9 +12,8 @@ interface MyTabsNavbarProps {
 }
 
 const MyTabsNavbar: FC<MyTabsNavbarProps> = (props: MyTabsNavbarProps) => {
-    const [activeTab, setActiveTab]: [MyTabsViews, Dispatch<SetStateAction<MyTabsViews>>] = useState<MyTabsViews>(
-        MyTabsViews.inProgress,
-    )
+    const [activeTab, setActiveTab]: [MyTabsViews, Dispatch<SetStateAction<MyTabsViews>>]
+        = useState<MyTabsViews>(MyTabsViews.inProgress)
 
     const tabs: ReadonlyArray<TabsNavItem> = useMemo(() => getMyTabsNavbarTabs(
         props.completed,

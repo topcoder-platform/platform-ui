@@ -7,6 +7,8 @@ import { UserCertificationUpdateProgressActions } from './user-certification-upd
 
 const certProgressPath: string = 'certification-progresses'
 
+type GenericDataObject = { [key: string]: string | GenericDataObject }
+
 export function completeCourse(
     certificationProgressId: string,
     certification: string,
@@ -15,7 +17,7 @@ export function completeCourse(
 ): Promise<LearnUserCertificationProgress> {
 
     // construct the certificate params
-    const certificateAlternateParams: { [key: string]: string } = LearnConfig.CERT_ALT_PARAMS
+    const certificateAlternateParams: GenericDataObject = LearnConfig.CERT_ALT_PARAMS
     const certificateElement: string = `[${LearnConfig.CERT_ELEMENT_SELECTOR.attribute}=${LearnConfig.CERT_ELEMENT_SELECTOR.value}]`
     const certificateUrl: string = getUserCertificateUrl(provider, certification, handle)
 
@@ -30,7 +32,8 @@ export function completeCourse(
     )
 }
 
-export function getAsync(userId: number, provider?: string, certification?: string): Promise<Array<LearnUserCertificationProgress>> {
+export function getAsync(userId: number, provider?: string, certification?: string):
+    Promise<Array<LearnUserCertificationProgress>> {
 
     const params: string = [
         `?userId=${userId}`,
@@ -45,7 +48,12 @@ export function getAsync(userId: number, provider?: string, certification?: stri
     return learnXhrGetAsync<Array<LearnUserCertificationProgress>>(url)
 }
 
-export function startAsync(userId: number, certificationId: string, courseId: string, data: any): Promise<LearnUserCertificationProgress> {
+export function startAsync(
+    userId: number,
+    certificationId: string,
+    courseId: string,
+    data: GenericDataObject,
+): Promise<LearnUserCertificationProgress> {
 
     const url: string = learnUrlGet(certProgressPath, `${userId}`, certificationId, courseId)
     return learnXhrPostAsync<{}, LearnUserCertificationProgress>(url, {}, { params: data })
@@ -54,7 +62,7 @@ export function startAsync(userId: number, certificationId: string, courseId: st
 export function updateAsync(
     certificationProgressId: string,
     action: UserCertificationUpdateProgressActions,
-    data: any,
+    data: GenericDataObject,
 ): Promise<LearnUserCertificationProgress> {
 
     const url: string = learnUrlGet(certProgressPath, certificationProgressId, action)

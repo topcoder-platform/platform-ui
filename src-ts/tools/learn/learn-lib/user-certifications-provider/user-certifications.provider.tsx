@@ -1,3 +1,4 @@
+import { noop } from 'lodash'
 import { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
 
 import { errorHandle, profileContext, ProfileContextData } from '../../../../lib'
@@ -17,7 +18,10 @@ const defaultProviderData: UserCertificationsProviderData = {
 export function useUserCertifications(): UserCertificationsProviderData {
 
     const profileContextData: ProfileContextData = useContext<ProfileContextData>(profileContext)
-    const [state, setState]: [UserCertificationsProviderData, Dispatch<SetStateAction<UserCertificationsProviderData>>]
+    const [state, setState]: [
+        UserCertificationsProviderData,
+        Dispatch<SetStateAction<UserCertificationsProviderData>>
+    ]
         = useState<UserCertificationsProviderData>(defaultProviderData)
 
     useEffect(() => {
@@ -41,7 +45,7 @@ export function useUserCertifications(): UserCertificationsProviderData {
                 }))
             }
 
-            return
+            return noop
         }
 
         userCertificationProgressGetAsync(userId)
@@ -69,7 +73,7 @@ export function useUserCertifications(): UserCertificationsProviderData {
                     ready: true,
                 }))
             })
-            .catch((err: any) => {
+            .catch((err: Error) => {
                 errorHandle(err, 'There was an error getting your course progress.')
                 setState(prevState => ({
                     ...prevState,

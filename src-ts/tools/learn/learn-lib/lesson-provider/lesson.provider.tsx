@@ -1,3 +1,4 @@
+import { get, noop } from 'lodash'
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
 import { courseGetAsync } from '../courses-provider'
@@ -12,10 +13,14 @@ export function useLessonProvider(
     module?: string,
     lesson?: string,
 ): LessonProviderData {
-    const [state, setState]: [LessonProviderData, Dispatch<SetStateAction<LessonProviderData>>] = useState<LessonProviderData>({
-        loading: false,
-        ready: false,
-    })
+    const [state, setState]: [
+        LessonProviderData,
+        Dispatch<SetStateAction<LessonProviderData>>
+    ]
+        = useState<LessonProviderData>({
+            loading: false,
+            ready: false,
+        })
 
     useEffect(() => {
         let mounted: boolean = true
@@ -27,7 +32,7 @@ export function useLessonProvider(
                 loading: false,
                 ready: false,
             }))
-            return
+            return noop
         }
 
         setState(prevState => ({
@@ -42,8 +47,10 @@ export function useLessonProvider(
                     return
                 }
 
-                const moduleData: LearnModule | undefined = courseData?.modules.find(m => m.key === module)
-                const lessonData: LearnLesson | undefined = moduleData?.lessons.find(l => l.dashedName === lesson)
+                const moduleData: LearnModule | undefined
+                    = courseData?.modules.find(m => m.key === module)
+                const lessonData: LearnLesson | undefined
+                    = moduleData?.lessons.find(l => l.dashedName === lesson)
 
                 const lessonUrl: string = [
                     'learn',
@@ -57,10 +64,10 @@ export function useLessonProvider(
                     lesson: lessonData && {
                         ...lessonData,
                         course: {
-                            certification: courseData?.certification ?? '',
-                            certificationId: courseData?.certificationId ?? '',
-                            id: courseData?.id ?? '',
-                            title: courseData?.title ?? '',
+                            certification: get(courseData, 'certification', ''),
+                            certificationId: get(courseData, 'certificationId', ''),
+                            id: get(courseData, 'id', ''),
+                            title: get(courseData, 'title', ''),
                         },
                         lessonUrl,
                         module: {
