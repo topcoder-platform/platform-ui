@@ -47,7 +47,8 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const certificateWrapRef: MutableRefObject<HTMLElement | any> = useRef()
 
     const userName: string = useMemo(() => (
-        [props.profile.firstName, props.profile.lastName].filter(Boolean).join(' ')
+        [props.profile.firstName, props.profile.lastName].filter(Boolean)
+            .join(' ')
         || props.profile.handle
     ), [props.profile.firstName, props.profile.handle, props.profile.lastName])
 

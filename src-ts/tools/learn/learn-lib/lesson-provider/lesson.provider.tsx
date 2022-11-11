@@ -57,7 +57,8 @@ export function useLessonProvider(
                     courseData?.key ?? course,
                     module,
                     lesson,
-                ].filter(Boolean).join('/')
+                ].filter(Boolean)
+                    .join('/')
 
                 setState(prevState => ({
                     ...prevState,

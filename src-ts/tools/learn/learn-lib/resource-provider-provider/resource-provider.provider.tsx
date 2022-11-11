@@ -29,14 +29,15 @@ export function useResourceProvider(providerName?: string): ResourceProviderData
             loading: true,
         }))
 
-        getResourceProvidersAsync().then(providers => {
-            setState(prevState => ({
-                ...prevState,
-                loading: false,
-                provider: providers?.find(p => p.name === providerName),
-                ready: true,
-            }))
-        })
+        getResourceProvidersAsync()
+            .then(providers => {
+                setState(prevState => ({
+                    ...prevState,
+                    loading: false,
+                    provider: providers?.find(p => p.name === providerName),
+                    ready: true,
+                }))
+            })
     }, [providerName])
 
     return state

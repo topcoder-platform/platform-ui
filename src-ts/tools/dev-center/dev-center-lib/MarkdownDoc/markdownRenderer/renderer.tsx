@@ -80,17 +80,18 @@ export class Renderer implements MarkdownRenderer {
         const children: ReturnType<typeof this.groupBy> = this.groupBy(
             nodes,
             options,
-        ).map(node => {
-            if (Array.isArray(node)) {
-                return (
-                    <MarkdownAccordion>
-                        {React.Children.map(node, child => child)}
-                    </MarkdownAccordion>
-                )
-            }
+        )
+            .map(node => {
+                if (Array.isArray(node)) {
+                    return (
+                        <MarkdownAccordion>
+                            {React.Children.map(node, child => child)}
+                        </MarkdownAccordion>
+                    )
+                }
 
-            return node
-        })
+                return node
+            })
 
         return (
             <div className={styles['markdown-doc']}>
@@ -287,7 +288,8 @@ export class Renderer implements MarkdownRenderer {
             const h: string = marked.parser([token], parserOptions)
             const level: number = token.depth
             const title: string = removeLineBreak(stripTag(h, `h${level}`))
-            const headingId: string = extractId(h, `h${level}`, index).trim()
+            const headingId: string = extractId(h, `h${level}`, index)
+                .trim()
 
             options.toc.push({
                 headingId,
@@ -351,12 +353,14 @@ export class Renderer implements MarkdownRenderer {
         const tag: string = extractTag(html)
         if (tag) {
             const isParagraphTag: boolean = tag === MarkdownParagraphTag.p
-            const isHeaderTag: boolean = Object.values(MarkdownHeaderTag).indexOf(tag as MarkdownHeaderTag) !== -1
+            const isHeaderTag: boolean = Object.values(MarkdownHeaderTag)
+                .indexOf(tag as MarkdownHeaderTag) !== -1
             if (isParagraphTag || isHeaderTag) {
                 let id: string | undefined
                 if (isHeaderTag) {
                     token = token as marked.Tokens.Heading
-                    id = extractId(html, `h${token.depth}`, index).trim()
+                    id = extractId(html, `h${token.depth}`, index)
+                        .trim()
                 }
 
                 return React.createElement(tag, {
