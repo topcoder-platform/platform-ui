@@ -35,10 +35,12 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
         value: string,
     }> = useMemo(() => [
         { label: 'All Categories', orderIndex: -1, value: '' },
-        ...Object.keys(certsByCategory).sort().map(c => ({
-            label: c,
-            value: c,
-        })),
+        ...Object.keys(certsByCategory)
+            .sort()
+            .map(c => ({
+                label: c,
+                value: c,
+            })),
     ], [certsByCategory])
 
     // create and sort the certificates groups

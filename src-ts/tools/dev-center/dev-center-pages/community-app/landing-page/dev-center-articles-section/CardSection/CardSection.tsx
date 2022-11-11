@@ -33,7 +33,8 @@ const CardSection: FC = () => {
                         return blog
                 }
             }),
-        ).then(arr => setArticles(arr))
+        )
+            .then(arr => setArticles(arr))
     }, [])
 
     const articleStyles: Array<any> = [

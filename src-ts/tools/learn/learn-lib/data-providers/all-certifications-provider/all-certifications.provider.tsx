@@ -1,3 +1,4 @@
+/* eslint-disable default-param-last */
 import useSWR, { SWRConfiguration, SWRResponse } from 'swr'
 
 import { learnUrlGet } from '../../functions'
@@ -11,16 +12,16 @@ interface CertificationsAllProviderOptions {
 
 export function useGetAllCertifications(
     providerName: string = 'freeCodeCamp',
-    options?: CertificationsAllProviderOptions
+    options?: CertificationsAllProviderOptions,
 ): AllCertificationsProviderData {
 
     const url: string = learnUrlGet(
         'certifications',
-        `?providerName=${providerName}`
+        `?providerName=${providerName}`,
     )
     const swrCacheConfig: SWRConfiguration = useSwrCache(url)
 
-    const {data, error}: SWRResponse = useSWR(url, {
+    const { data, error }: SWRResponse = useSWR(url, {
         ...swrCacheConfig,
         isPaused: () => options?.enabled === false,
     })
@@ -36,16 +37,16 @@ export function useGetAllCertifications(
 export function useGetCertification(
     providerName: string = 'freeCodeCamp',
     certificationId: string,
-    options?: CertificationsAllProviderOptions
+    options?: CertificationsAllProviderOptions,
 ): AllCertificationsProviderData {
 
     const url: string = learnUrlGet(
         'certifications',
         certificationId,
-        `?providerName=${providerName}`
+        `?providerName=${providerName}`,
     )
 
-    const {data, error}: SWRResponse = useSWR(url, {
+    const { data, error }: SWRResponse = useSWR(url, {
         isPaused: () => options?.enabled === false,
     })
     return {

@@ -10,9 +10,10 @@ if (typeof window !== 'undefined') {
 
     // parse the loaded data, and load it into swr's in-memory cache
     if (cacheMap) {
-        Object.entries(cacheMap).forEach(([key, data]) => {
-            mutate(key, data, {revalidate: false})
-        })
+        Object.entries(cacheMap)
+            .forEach(([key, data]) => {
+                mutate(key, data, { revalidate: false })
+            })
     }
 }
 

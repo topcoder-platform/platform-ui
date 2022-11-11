@@ -12,7 +12,10 @@ const MemberAwaredAtRenderer = (memberAward: MemberBadgeAward): JSX.Element => {
     }
 
     return (
-        <div className={styles.memberAwardedAt}>{new Date(memberAward.awarded_at).toLocaleString(undefined, dateFormat)}</div>
+        <div className={styles.memberAwardedAt}>
+            {new Date(memberAward.awarded_at)
+                .toLocaleString(undefined, dateFormat)}
+        </div>
     )
 }
 

@@ -21,7 +21,9 @@ export function useGetLesson(
         courseData?.key ?? course,
         module,
         lesson,
-    ].filter(Boolean).join('/')
+    ]
+        .filter(Boolean)
+        .join('/')
 
     return {
         lesson: !lessonData ? undefined : {

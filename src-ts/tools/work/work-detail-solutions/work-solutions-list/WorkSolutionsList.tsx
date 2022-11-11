@@ -20,7 +20,8 @@ const WorkSolutionsList: FC<WorkSolutionsListProps> = (props: WorkSolutionsListP
             <div className={styles['solutions-not-available']}>
                 YOUR SOLUTIONS WILL BE AVAILABLE FOR DOWNLOAD ON:
                 <br />
-                {moment(props.work.solutionsReadyDate).format('MM/DD/YY')}
+                {moment(props.work.solutionsReadyDate)
+                    .format('MM/DD/YY')}
             </div>
         )
     }

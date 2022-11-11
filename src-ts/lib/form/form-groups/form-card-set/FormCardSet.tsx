@@ -27,7 +27,10 @@ const FormCardSet: React.FC<FormCardSetProps> = (props: FormCardSetProps) => {
             return <></>
         }
 
-        const iconName: string = `${icon.split('-').map((chunk: string) => chunk.charAt(0).toUpperCase() + chunk.slice(1)).join('')}Icon`
+        const iconName: string = `${icon.split('-')
+            .map((chunk: string) => chunk.charAt(0)
+                .toUpperCase() + chunk.slice(1))
+            .join('')}Icon`
         const IconComponent: React.FC<SVGProps<SVGSVGElement>> = IconOutline[iconName as keyof typeof IconOutline]
         return <IconComponent className={styles['card-row-icon']} />
     }
