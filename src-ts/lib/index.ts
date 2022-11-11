@@ -19,6 +19,7 @@ export {
     logInfo,
     logInitialize,
     textFormatDateLocaleShortString,
+    textFormatGetSafeString,
     textFormatMoneyLocaleString,
     xhrCreateInstance,
     xhrDeleteAsync,

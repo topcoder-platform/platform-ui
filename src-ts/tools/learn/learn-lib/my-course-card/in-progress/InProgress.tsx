@@ -6,12 +6,13 @@ import {
     Button,
     ProgressBar,
     textFormatDateLocaleShortString,
+    textFormatGetSafeString,
 } from '../../../../../lib'
 import {
     CoursesProviderData,
     CourseTitle,
     LearnCertification,
-    useCourses,
+    useGetCourses,
 } from '../..'
 import { getCoursePath, getLessonPathFromCurrentLesson } from '../../../learn.routes'
 import { CurriculumSummary } from '../../curriculum-summary'
@@ -32,11 +33,12 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
     const isDetailed: boolean = props.theme === 'detailed'
     const isMinimum: boolean = props.theme === 'minimum'
 
-    const certification: string = props.certification?.certification ?? ''
-    const provider: string = props.certification?.providerName ?? ''
-    const { course }: CoursesProviderData = useCourses(provider, certification)
+    const certification: string = textFormatGetSafeString(props.certification?.certification)
+    const provider: string = textFormatGetSafeString(props.certification?.providerName)
+    const { course }: CoursesProviderData = useGetCourses(provider, certification)
 
     const resumeCourse: () => void = () => {
+
         if (!props.currentLesson) {
             return
         }
@@ -104,6 +106,7 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
             {isDetailed && (
                 <div className={styles.details}>
                     <div className={styles['details-inner']}>
+                        {/* eslint-disable-next-line react/no-danger */}
                         <p dangerouslySetInnerHTML={{ __html: course?.introCopy.join('<br /><br />') ?? '' }} />
                         {props.startDate && (
                             <div className={styles['started-date']}>
