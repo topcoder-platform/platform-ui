@@ -4,7 +4,6 @@ export interface LearnModuleProgress {
         dashedName: string
     }>
     completedPercentage: number
-    lessonCount: number
     module: string
     moduleStatus: string
 }

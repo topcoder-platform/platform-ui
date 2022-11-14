@@ -3,7 +3,12 @@ import { Dispatch, FC, ReactNode, SetStateAction, useCallback, useMemo, useState
 import { Link } from 'react-router-dom'
 
 import { IconOutline, IconSolid } from '../../../../../lib'
-import { LearnModule, LearnModuleProgress, LearnUserCertificationProgress } from '../../../learn-lib'
+import {
+    LearnModule,
+    LearnModuleStatus,
+    LearnModuleProgress,
+    LearnUserCertificationProgress
+} from '../../../learn-lib'
 import { StatusIcon } from '../status-icon'
 import { StepIcon } from '../step-icon'
 
@@ -40,15 +45,12 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
         return props.progress?.find(m => m.module === props.moduleKey)
     }, [props.progress, props.moduleKey])
 
-    const isCompleted: boolean = useMemo(() => {
-        return !!progress && progress.lessonCount === progress?.completedLessons.length
-    }, [progress])
-
     const isPartial: boolean = useMemo(() => {
         return !!progress && !!progress.completedLessons.length
     }, [progress])
 
     const isItemCompleted: (key: string) => boolean = (key: string) => (
+        progress?.moduleStatus === LearnModuleStatus.completed ||
         !!progress?.completedLessons.find(l => l.dashedName === key)
     )
 
@@ -86,7 +88,7 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
     return (
         <div className={classNames(styles['wrap'], isOpen ? 'is-open' : 'collapsed')}>
             <div className={styles['title-row']} onClick={toggle}>
-                <StatusIcon completed={isCompleted} partial={isPartial} />
+                <StatusIcon completed={progress?.moduleStatus === LearnModuleStatus.completed} partial={isPartial} />
                 <span className={styles['title']}>
                     {props.isAssessment && (
                         <div className={classNames(styles['title-tag'], 'label')}>
