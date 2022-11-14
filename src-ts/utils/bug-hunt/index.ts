@@ -1,6 +1,6 @@
-import { currencyFormat } from "../../../src/utils"
-import { FormCard } from "../../lib"
-import BugHuntPricingConfig from "../../tools/work/work-self-service/intake-forms/bug-hunt/bug-hunt.form.pricing-config"
+import { currencyFormat } from '../../../src/utils'
+import { FormCard } from '../../lib'
+import BugHuntPricingConfig from '../../tools/work/work-self-service/intake-forms/bug-hunt/bug-hunt.form.pricing-config'
 
 function getSelectedPackageFormatted(packageId: string): string {
   const currentPackage: FormCard | undefined = BugHuntPricingConfig.find((pricingConfig) => pricingConfig.id === packageId)

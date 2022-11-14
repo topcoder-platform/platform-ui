@@ -1,6 +1,6 @@
 import moment from 'moment'
-import getSelectedPackageFormatted from '../../../../../../utils/bug-hunt'
 
+import getSelectedPackageFormatted from '../../../../../../utils/bug-hunt'
 import { WorkConfigConstants, WorkStrings } from '../../../work-constants'
 import {
     ActivateWorkRequest,
