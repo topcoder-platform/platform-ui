@@ -129,21 +129,21 @@ deploy_steps: &deploy_steps
           ./master_deploy.sh -d CFRONT -e $DEPLOY_ENV -c $ENABLE_CACHE
 
 jobs:
-  lint-dev:
-    <<: *defaults
-    environment:
-      DEPLOY_ENV: "DEV"
-      LOGICAL_ENV: "dev"
-      APPNAME: "platform-ui-mvp"
-    steps: *lint_steps
+  # lint-dev:
+  #   <<: *defaults
+  #   environment:
+  #     DEPLOY_ENV: "DEV"
+  #     LOGICAL_ENV: "dev"
+  #     APPNAME: "platform-ui-mvp"
+  #   steps: *lint_steps
 
-  lint-prod:
-    <<: *defaults
-    environment:
-      DEPLOY_ENV: "PROD"
-      LOGICAL_ENV: "prod"
-      APPNAME: "platform-ui-mvp"
-    steps: *lint_steps
+  # lint-prod:
+  #   <<: *defaults
+  #   environment:
+  #     DEPLOY_ENV: "PROD"
+  #     LOGICAL_ENV: "prod"
+  #     APPNAME: "platform-ui-mvp"
+  #   steps: *lint_steps
     
   build-dev:
     <<: *defaults
