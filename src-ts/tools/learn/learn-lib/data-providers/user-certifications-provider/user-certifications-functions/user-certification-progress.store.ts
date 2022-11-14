@@ -1,3 +1,4 @@
+import { GenericDataObject } from '../../../../../../lib'
 import { LearnConfig } from '../../../../learn-config'
 import { getUserCertificateUrl } from '../../../../learn.routes'
 import { learnUrlGet, learnXhrPostAsync, learnXhrPutAsync } from '../../../functions'
@@ -6,8 +7,6 @@ import { LearnUserCertificationProgress } from './learn-user-certification-progr
 import { UserCertificationUpdateProgressActions } from './user-certification-update-progress-actions.enum'
 
 const certProgressPath: string = 'certification-progresses'
-
-type GenericDataObject = { [key: string]: string | GenericDataObject }
 
 export function completeCourse(
     certificationProgressId: string,
@@ -37,7 +36,7 @@ export function startAsync(
     userId: number,
     certificationId: string,
     courseId: string,
-    data: any,
+    data: GenericDataObject,
 ): Promise<LearnUserCertificationProgress> {
 
     const url: string = learnUrlGet(certProgressPath, `${userId}`, certificationId, courseId)

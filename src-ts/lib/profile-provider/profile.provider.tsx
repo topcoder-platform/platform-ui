@@ -11,7 +11,8 @@ import profileContext, { defaultProfileContextData } from './profile.context'
 
 export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { children: ReactNode }) => {
 
-    const [profileContextData, setProfileContextData]: [ProfileContextData, Dispatch<SetStateAction<ProfileContextData>>]
+    const [profileContextData, setProfileContextData]:
+        [ProfileContextData, Dispatch<SetStateAction<ProfileContextData>>]
         = useState<ProfileContextData>(defaultProfileContextData)
 
     function changePassword(userId: number, request: ChangePasswordRequest): Promise<void> {

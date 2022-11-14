@@ -275,9 +275,10 @@ const Review: FC = () => {
     )
 }
 
-let stripePromise: Promise<Stripe | null | undefined>
+let stripePromise: Promise<Stripe | null | undefined> | undefined
 
 const output: () => JSX.Element = () => {
+
     if (!stripePromise) {
         stripePromise = loadStripe(EnvironmentConfig.STRIPE.API_KEY, {
             apiVersion: EnvironmentConfig.STRIPE.API_VERSION,

@@ -29,6 +29,7 @@ export {
     xhrPostAsync,
     xhrPutAsync,
 } from './functions'
+export * from './generic-data-object.type'
 export * from './global-config.model'
 export * from './hooks'
 export * from './info-card'

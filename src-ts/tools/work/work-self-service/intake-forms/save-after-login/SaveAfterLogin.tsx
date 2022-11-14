@@ -1,8 +1,8 @@
 import { FC, useEffect } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 
-import { LoadingSpinner } from '../../../../../lib'
-import { workCreateAsync, WorkIntakeFormRoutes, WorkType, workUpdateAsync } from '../../../work-lib'
+import { GenericDataObject, LoadingSpinner } from '../../../../../lib'
+import { Challenge, workCreateAsync, WorkIntakeFormRoutes, WorkType, workUpdateAsync } from '../../../work-lib'
 import { selfServiceStartRoute } from '../../../work.routes'
 
 /**
@@ -19,12 +19,12 @@ const SaveAfterLogin: FC = () => {
     useEffect(() => {
         const createAndUpdateAsync: () => Promise<void> = async () => {
             try {
-                if (localStorage && localStorage.getItem('challengeInProgress') && localStorage.getItem('challengeInProgressType')) {
+                if (localStorage.getItem('challengeInProgress') && localStorage.getItem('challengeInProgressType')) {
                     const workType: WorkType = localStorage.getItem('challengeInProgressType') as WorkType
-                    const formData: any = JSON.parse(String(localStorage.getItem('challengeInProgress')))
+                    const formData: GenericDataObject = JSON.parse(String(localStorage.getItem('challengeInProgress')))
                     formData.currentStep = 'review'
 
-                    const challenge: any = await workCreateAsync(workType)
+                    const challenge: Challenge = await workCreateAsync(workType)
 
                     await workUpdateAsync(workType, challenge, formData)
 
