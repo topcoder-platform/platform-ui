@@ -83,12 +83,24 @@ module.exports = {
         'jsx-a11y/tabindex-no-positive': [
             'warn'
         ],
+        'newline-per-chained-call': [
+            'error',
+            {
+                ignoreChainWithDepth: 1,
+            }
+        ],
         'max-len': [
             'error',
             120,
         ],
         'no-extra-boolean-cast': 'off',
         'no-null/no-null': 'error',
+        'no-param-reassign': [
+            'error',
+            {
+                props: false
+            }
+        ],
         'no-plusplus': [
             'error',
             {

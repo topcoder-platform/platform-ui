@@ -146,12 +146,13 @@ export function buildUpdateRequest(workTypeConfig: WorkTypeConfig, challenge: Ch
         },
     ]
 
-    Object.keys(formData).forEach(key => {
-        intakeMetadata.push({
-            name: ChallengeMetadataName[key as keyof typeof ChallengeMetadataName],
-            value: formData[key] || '',
+    Object.keys(formData)
+        .forEach(key => {
+            intakeMetadata.push({
+                name: ChallengeMetadataName[key as keyof typeof ChallengeMetadataName],
+                value: formData[key] || '',
+            })
         })
-    })
     // ---- End Build Metadata ---- //
 
     // --- Build the Markdown string that gets displayed in Work Manager app and others --- //
@@ -433,7 +434,8 @@ function checkFormDataOptionEmpty(detail: any): boolean {
         || (typeof detail === 'string' && detail.trim().length === 0)
         || (Array.isArray(detail) && detail.length === 0)
         || (typeof detail === 'object'
-            && Object.values(detail).filter((val: any) => val && val.trim().length !== 0)
+            && Object.values(detail)
+                .filter((val: any) => val && val.trim().length !== 0)
                 .length === 0)
     )
 }
@@ -446,7 +448,9 @@ function findOpenPhase(challenge: Challenge): ChallengePhase | undefined {
 
     // sort the phases descending by start date
     const sortedPhases: Array<ChallengePhase> = challenge.phases
-        .sort((a, b) => new Date(b.actualStartDate).getTime() - new Date(a.actualStartDate).getTime())
+        .sort((a, b) => new Date(b.actualStartDate)
+            .getTime() - new Date(a.actualStartDate)
+            .getTime())
 
     const now: Date = new Date()
     // if we have an open phase, just use that
@@ -624,7 +628,8 @@ function getProgressStepDateEnd(challenge: Challenge, phases: Array<string>): Da
         return undefined
     }
 
-    if (phase.isOpen || moment(phase.scheduledStartDate).isAfter()) {
+    if (phase.isOpen || moment(phase.scheduledStartDate)
+        .isAfter()) {
         return new Date(phase.scheduledEndDate)
     }
 
@@ -638,7 +643,8 @@ function getProgressStepDateStart(challenge: Challenge, phases: Array<string>): 
         return undefined
     }
 
-    if (!phase.isOpen || moment(phase.scheduledStartDate).isAfter()) {
+    if (!phase.isOpen || moment(phase.scheduledStartDate)
+        .isAfter()) {
         return new Date(phase.scheduledStartDate)
     }
 
@@ -651,21 +657,30 @@ function getSolutionsReadyDate(challenge: Challenge): Date | undefined {
 
 function getStartDate(): string {
     let daysToAdd: number = 1
-    switch (moment(new Date()).weekday()) {
-        case moment().day('Friday').weekday():
+    switch (moment(new Date())
+        .weekday()) {
+        case moment()
+            .day('Friday')
+            .weekday():
             daysToAdd = 3
             break
-        case moment().day('Saturday').weekday():
+        case moment()
+            .day('Saturday')
+            .weekday():
             daysToAdd = 2
             break
-        case moment().day('Sunday').weekday():
+        case moment()
+            .day('Sunday')
+            .weekday():
             daysToAdd = 1
             break
         default:
             daysToAdd = 1
     }
 
-    return moment().add(daysToAdd, 'days').format()
+    return moment()
+        .add(daysToAdd, 'days')
+        .format()
 }
 
 function getSubmittedDate(challenge: Challenge): Date {

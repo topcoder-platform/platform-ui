@@ -26,7 +26,13 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => (
             <IconOutline.CalendarIcon />
             <span className='large-subtitle'>
                 <span>Completed</span>
-                <span>{props.completedDate && textFormatDateLocaleShortString(new Date(props.completedDate))}</span>
+                <span>
+                    {
+                        props.completedDate && (
+                            textFormatDateLocaleShortString(new Date(props.completedDate))
+                        )
+                    }
+                </span>
             </span>
         </div>
     </div>

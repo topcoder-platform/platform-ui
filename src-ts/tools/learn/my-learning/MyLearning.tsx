@@ -42,7 +42,6 @@ const MyLearning: FC<{}> = () => {
 
     const certificatesById: CertificatesByIdType = useMemo(() => (
         certifications.reduce((certifs, certificate) => {
-            // eslint-disable-next-line no-param-reassign
             certifs[certificate.id] = certificate
             return certifs
         }, {} as unknown as CertificatesByIdType)

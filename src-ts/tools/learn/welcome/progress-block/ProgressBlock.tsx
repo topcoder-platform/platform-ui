@@ -23,7 +23,9 @@ const ProgressBlock: FC<ProgressBlockProps> = (props: ProgressBlockProps) => {
         return <></>
     }
 
-    const isStarted: boolean = !!props.userInProgressCertifications.length || !!props.userCompletedCertifications.length
+    const isStarted: boolean = (
+        !!props.userInProgressCertifications.length || !!props.userCompletedCertifications.length
+    )
 
     return (
         <div className={styles.wrap}>

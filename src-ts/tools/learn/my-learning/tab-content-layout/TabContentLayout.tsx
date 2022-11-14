@@ -37,10 +37,12 @@ const TabContentLayout: FC<TabContentLayoutProps> = (props: TabContentLayoutProp
         const certsByCategory: Dictionary<Array<LearnCertification>> = groupBy(props.certifications, 'category')
         return [
             { label: 'All Categories', value: '' },
-            ...Object.keys(certsByCategory).sort().map(c => ({
-                label: c,
-                value: c,
-            })),
+            ...Object.keys(certsByCategory)
+                .sort()
+                .map(c => ({
+                    label: c,
+                    value: c,
+                })),
         ]
     }, [props.certifications])
 

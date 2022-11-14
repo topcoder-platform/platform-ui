@@ -52,7 +52,8 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
             ))
 
         } else if (!inProgress) {
-            // if there is no in-progress lesson for the course, Get Started by going to the course details
+            // if there is no in-progress lesson for the course,
+            // Get Started by going to the course details
             setButtonLabel('Get Started')
             setLink(getCoursePath(
                 props.certification.providerName,
@@ -60,7 +61,8 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
             ))
 
         } else {
-            // otherwise this course is in-progress, so Resume the course at the next lesson
+            // otherwise this course is in-progress,
+            // so Resume the course at the next lesson
             setButtonStyle('secondary')
             setButtonLabel('Resume')
             setLink(getLessonPathFromCurrentLesson(

@@ -115,7 +115,8 @@ const BugHuntIntakeForm: React.FC = () => {
         }
 
         setLoading(true)
-        getAndSetWork().finally(() => setLoading(false))
+        getAndSetWork()
+            .finally(() => setLoading(false))
     }, [
         isLoggedIn,
         workId,
@@ -173,7 +174,8 @@ const BugHuntIntakeForm: React.FC = () => {
         }
 
         setLoading(true)
-        return workUpdateAsync(WorkType.bugHunt, challenge, val).finally(() => setLoading(false))
+        return workUpdateAsync(WorkType.bugHunt, challenge, val)
+            .finally(() => setLoading(false))
     }
 
     const handleSaveSuccess: () => void = () => {
