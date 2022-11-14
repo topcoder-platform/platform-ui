@@ -49,7 +49,7 @@ const FormCardSet: React.FC<FormCardSetProps> = ({ name, cards, onChange, value 
                         <div key={`card-${index}`}className={cn(styles['card'], selected && styles['selected'],  isMobile && card.mostPopular && styles['mobile-popular'], { [styles.feature]: index === 0, [styles.mobile]: isMobile })}>
                             { card.mostPopular && <div className={styles['popular-card']}>MOST POPULAR</div>}
                             <div className={cn(styles['card-header'], isMobile && styles['mobile'], { [styles.feature]: index === 0 })}>
-                                <div className='body-medium-bold'>{card.title}</div>
+                                <div className={styles['body-medium-bold']}>{card.title}</div>
                                 <h3>{formattedPrice}</h3>
                                 {getButton(card, selected)}
                             </div>
@@ -77,12 +77,13 @@ const FormCardSet: React.FC<FormCardSetProps> = ({ name, cards, onChange, value 
                                                 {(
                                                     <span className={cn(styles['card-row-col'], styles['center'])}>
                                                         { row.valueIcon ?
-                                                            <IconOutline.CheckIcon width={18} height={16} /> :
+                                                            <IconOutline.CheckIcon width={28} height={20} /> :
                                                             <span className='body-main'>{row.text}</span>
                                                         }
                                                     </span>
                                                 )}
                                             </div>
+                                            <div className={styles['row-divider']}></div>
                                         </div>
                                     ))}
                                 </div>
