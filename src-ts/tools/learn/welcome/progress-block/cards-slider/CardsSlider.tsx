@@ -35,14 +35,15 @@ const CardsSlider: FC<CardsSliderProps> = (props: CardsSliderProps) => {
                 {renderSlides(props.children)}
             </div>
             <div className={styles['nav-wrap']}>
-                {fill(Array(props.children.length), '').map((_, i) => (
-                    <span
+                {fill(Array(props.children.length), '')
+                    .map((_, i) => (
+                        <span
                         // eslint-disable-next-line react/no-array-index-key
-                        key={i}
-                        className={classNames(styles['nav-dot'], activeSlide === i && 'active')}
-                        onClick={() => setActiveSlide(i)}
-                    />
-                ))}
+                            key={i}
+                            className={classNames(styles['nav-dot'], activeSlide === i && 'active')}
+                            onClick={() => setActiveSlide(i)}
+                        />
+                    ))}
             </div>
         </div>
     )

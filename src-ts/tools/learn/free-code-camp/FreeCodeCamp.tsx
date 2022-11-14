@@ -157,7 +157,9 @@ const FreeCodeCamp: FC<{}> = () => {
 
     function handleFccLessonReady(lessonPath: string): void {
 
-        const [nLessonPath, modulePath, coursePath]: Array<string> = lessonPath.replace(/\/$/, '').split('/').reverse()
+        const [nLessonPath, modulePath, coursePath]: Array<string> = lessonPath.replace(/\/$/, '')
+            .split('/')
+            .reverse()
         updatePath(nLessonPath, modulePath, coursePath)
 
         const currentLesson: { [key: string]: string } = {
@@ -206,7 +208,8 @@ const FreeCodeCamp: FC<{}> = () => {
                 certificateProgress.id,
                 UserCertificationUpdateProgressActions.completeLesson,
                 currentLesson,
-            ).then(setCertificateProgress)
+            )
+                .then(setCertificateProgress)
         }
     }
 

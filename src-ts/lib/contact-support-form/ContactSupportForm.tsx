@@ -56,7 +56,8 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
         return contactSupportSubmitRequestAsync(request)
             .then(() => {
                 setSaveOnSuccess(true)
-            }).finally(() => setLoading(false))
+            })
+            .finally(() => setLoading(false))
     }, [])
 
     const emailElement: JSX.Element | undefined = !!profile?.email

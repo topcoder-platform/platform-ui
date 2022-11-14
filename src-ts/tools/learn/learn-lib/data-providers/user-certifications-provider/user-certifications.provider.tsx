@@ -29,17 +29,25 @@ export function useGetUserCertifications(
     })
     const loading: boolean = !data && !error
 
-    const completed: ReadonlyArray<UserCertificationCompleted> = useMemo(() => data
-        ?.filter(c => c.status === UserCertificationProgressStatus.completed)
-        .map(c => c as UserCertificationCompleted)
-        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()) ?? []
-    , [data])
+    const completed: ReadonlyArray<UserCertificationCompleted> = useMemo(
+        () => data
+            ?.filter(c => c.status === UserCertificationProgressStatus.completed)
+            .map(c => c as UserCertificationCompleted)
+            .sort((a, b) => new Date(b.updatedAt)
+                .getTime() - new Date(a.updatedAt)
+                .getTime()) ?? [],
+        [data],
+    )
 
-    const inProgress: ReadonlyArray<UserCertificationInProgress> = useMemo(() => data
-        ?.filter(c => c.status === UserCertificationProgressStatus.inProgress)
-        .map(c => c as UserCertificationInProgress)
-        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()) ?? []
-    , [data])
+    const inProgress: ReadonlyArray<UserCertificationInProgress> = useMemo(
+        () => data
+            ?.filter(c => c.status === UserCertificationProgressStatus.inProgress)
+            .map(c => c as UserCertificationInProgress)
+            .sort((a, b) => new Date(b.updatedAt)
+                .getTime() - new Date(a.updatedAt)
+                .getTime()) ?? [],
+        [data],
+    )
 
     if (error) {
         errorHandle(error, 'There was an error getting your course progress.')

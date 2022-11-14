@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/tabindex-no-positive */
 import { Dispatch, FC, SetStateAction, useCallback, useContext, useState } from 'react'
 import Modal from 'react-responsive-modal'
 
@@ -70,7 +71,7 @@ const Account: FC<{}> = () => {
                 <Button
                     label='edit name'
                     onClick={toggleEditName}
-                    tabIndex={-1}
+                    tabIndex={1}
                     buttonStyle='secondary'
                 />
             </Card>
@@ -93,7 +94,7 @@ const Account: FC<{}> = () => {
                 <Button
                     label='change password'
                     onClick={toggleChangePassword}
-                    tabIndex={-1}
+                    tabIndex={2}
                     buttonStyle='secondary'
                 />
             </Card>

@@ -51,7 +51,8 @@ const ProgressAction: FC<ProgressActionProps> = (props: ProgressActionProps) => 
     const recentlyUpdatedCertifications: Array<LearnUserCertificationProgress> = orderBy([
         ...props.userCompletedCertifications,
         ...props.userInProgressCertifications,
-    ], 'updatedAt', 'desc').slice(0, USER_PROGRESS_MAX_SLIDES_COUNT)
+    ], 'updatedAt', 'desc')
+        .slice(0, USER_PROGRESS_MAX_SLIDES_COUNT)
 
     function renderInProgress(courseToDisplay: UserCertificationInProgress): JSX.Element {
         return (

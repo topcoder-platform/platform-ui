@@ -283,6 +283,7 @@ const output: () => JSX.Element = () => {
             apiVersion: EnvironmentConfig.STRIPE.API_VERSION,
         })
     }
+
     return (
         <Elements stripe={stripePromise as Promise<Stripe>}>
             <Review />

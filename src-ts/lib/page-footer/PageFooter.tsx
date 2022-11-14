@@ -48,7 +48,8 @@ const PageFooter: FC<{}> = () => {
                     <div>
                         <span>
                             ©
-                            {(new Date()).getFullYear()}
+                            {(new Date())
+                                .getFullYear()}
                             {' '}
                             Topcoder
                         </span>
