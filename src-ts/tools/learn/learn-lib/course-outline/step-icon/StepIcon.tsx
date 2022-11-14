@@ -8,7 +8,7 @@ import styles from './StepIcon.module.scss'
 interface StepIconProps {
     active?: boolean
     completed?: boolean
-    index: string
+    index?: string
     label?: string
 }
 

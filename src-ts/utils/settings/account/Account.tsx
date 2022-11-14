@@ -1,4 +1,5 @@
-import { Dispatch, FC, SetStateAction, useContext, useState } from 'react'
+/* eslint-disable jsx-a11y/tabindex-no-positive */
+import { Dispatch, FC, SetStateAction, useCallback, useContext, useState } from 'react'
 import Modal from 'react-responsive-modal'
 
 import {
@@ -20,24 +21,26 @@ const Account: FC<{}> = () => {
     const profileContextData: ProfileContextData = useContext(profileContext)
     const { profile }: ProfileContextData = profileContextData
 
-    const [editProfileOpen, setEditNameOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
-    const [changePasswordOpen, setChangePasswordOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [editProfileOpen, setEditNameOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [changePasswordOpen, setChangePasswordOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
+    const toggleEditName = useCallback((): void => {
+        const inputs: Array<FormInputModel> = formGetInputFields(editNameFormDef.groups || [])
+        formOnReset(inputs)
+        setEditNameOpen(!editProfileOpen)
+    }, [editProfileOpen])
+
+    const toggleChangePassword = useCallback((): void => {
+        const inputs: Array<FormInputModel> = formGetInputFields(editNameFormDef.groups || [])
+        formOnReset(inputs)
+        setChangePasswordOpen(!changePasswordOpen)
+    }, [changePasswordOpen])
 
     // if we don't have a profile, don't show the page
     if (!profile) {
         return <></>
-    }
-
-    function toggleEditName(): void {
-        const inputs: Array<FormInputModel> = formGetInputFields(editNameFormDef.groups || [])
-        formOnReset(inputs)
-        setEditNameOpen(!editProfileOpen)
-    }
-
-    function toggleChangePassword(): void {
-        const inputs: Array<FormInputModel> = formGetInputFields(editNameFormDef.groups || [])
-        formOnReset(inputs)
-        setChangePasswordOpen(!changePasswordOpen)
     }
 
     return (

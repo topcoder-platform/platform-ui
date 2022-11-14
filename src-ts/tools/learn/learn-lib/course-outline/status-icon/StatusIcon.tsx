@@ -18,13 +18,17 @@ const StatusIcon: FC<StatusIconProps> = (props: StatusIconProps) => {
         props.partial && 'partial',
     )
 
-    const icon: ReactNode = useMemo(() => (
-        props.completed
-            ? <IconSolid.CheckCircleIcon />
-            : props.partial
-                ? <IconOutline.ClockIcon />
-                : <IconOutline.DotsCircleHorizontalIcon />
-    ), [props.completed, props.partial])
+    const icon: ReactNode = useMemo(() => {
+        if (props.completed) {
+            return <IconSolid.CheckCircleIcon />
+        }
+
+        if (props.partial) {
+            return <IconOutline.ClockIcon />
+        }
+
+        return <IconOutline.DotsCircleHorizontalIcon />
+    }, [props.completed, props.partial])
 
     return (
         <div className={classes}>

@@ -1,6 +1,9 @@
 import { MutableRefObject, useEffect } from 'react'
 
-export function useCertificateScaling(certificateRef?: MutableRefObject<HTMLDivElement>): void {
+export function useCertificateScaling(
+    certificateRef?: MutableRefObject<HTMLDivElement | undefined>,
+): void {
+
     // the certificate isn't responsive: should look the same on mobile and desktop
     // add resize event listener to downscale the certificate
     useEffect(() => {

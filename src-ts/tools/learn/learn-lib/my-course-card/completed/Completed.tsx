@@ -8,7 +8,7 @@ import { getCertificatePath, getCoursePath } from '../../../learn.routes'
 import styles from './Completed.module.scss'
 
 interface CompletedProps {
-    certification: LearnCertification
+    certification?: LearnCertification
     completed: string
 }
 
@@ -38,13 +38,23 @@ const Completed: FC<CompletedProps> = (props: CompletedProps) => {
                     size='xs'
                     buttonStyle='secondary'
                     label='View Course'
-                    route={getCoursePath(props.certification.providerName, props.certification.certification)}
+                    route={
+                        getCoursePath(
+                            props.certification.providerName,
+                            props.certification.certification,
+                        )
+                    }
                 />
                 <Button
                     size='xs'
                     buttonStyle='secondary'
                     label='View certificate'
-                    route={getCertificatePath(props.certification.providerName, props.certification.certification)}
+                    route={
+                        getCertificatePath(
+                            props.certification.providerName,
+                            props.certification.certification,
+                        )
+                    }
                 />
             </div>
         </div>

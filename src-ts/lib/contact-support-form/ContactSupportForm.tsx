@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useContext, useEffect, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useState } from 'react'
 
 import { Form, FormDefinition, formGetInputModel, FormInputModel } from '../form'
 import { LoadingSpinner } from '../loading-spinner'
@@ -19,20 +19,28 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
 
     const { profile }: ProfileContextData = useContext(profileContext)
 
-    const [loading, setLoading]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
-    const [saveOnSuccess, setSaveOnSuccess]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [loading, setLoading]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [saveOnSuccess, setSaveOnSuccess]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
 
     useEffect(() => {
         if (!loading && saveOnSuccess) {
             props.onSave()
         }
-    }, [loading, saveOnSuccess])
+    }, [loading, saveOnSuccess, props.onSave])
 
-    function generateRequest(inputs: ReadonlyArray<FormInputModel>): ContactSupportRequest {
-        const firstName: string = formGetInputModel(inputs, ContactSupportFormField.first).value as string
-        const lastName: string = formGetInputModel(inputs, ContactSupportFormField.last).value as string
-        const email: string = formGetInputModel(inputs, ContactSupportFormField.email).value as string
-        const question: string = formGetInputModel(inputs, ContactSupportFormField.question).value as string
+    const generateRequest = useCallback((
+        inputs: ReadonlyArray<FormInputModel>,
+    ): ContactSupportRequest => {
+        const firstName: string
+            = formGetInputModel(inputs, ContactSupportFormField.first).value as string
+        const lastName: string
+            = formGetInputModel(inputs, ContactSupportFormField.last).value as string
+        const email: string
+            = formGetInputModel(inputs, ContactSupportFormField.email).value as string
+        const question: string
+            = formGetInputModel(inputs, ContactSupportFormField.question).value as string
         return {
             challengeId: props.workId,
             email,
@@ -41,15 +49,16 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
             lastName,
             question,
         }
-    }
+    }, [props.workId])
 
-    async function saveAsync(request: ContactSupportRequest): Promise<void> {
+    const saveAsync = useCallback(async (request: ContactSupportRequest): Promise<void> => {
         setLoading(true)
         return contactSupportSubmitRequestAsync(request)
             .then(() => {
                 setSaveOnSuccess(true)
-            }).finally(() => setLoading(false))
-    }
+            })
+            .finally(() => setLoading(false))
+    }, [])
 
     const emailElement: JSX.Element | undefined = !!profile?.email
         ? (
@@ -69,10 +78,10 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
                     Hi
                     {' '}
                     {profile?.firstName || 'there'}
-                    , we're here to help.
+                    , we&apos;re here to help.
                 </p>
                 <p>
-                    Please describe what you'd like to discuss, and a
+                    Please describe what you&apos;d like to discuss, and a
                     Topcoder Solutions Expert will email you back
                     {emailElement}
                     &nbsp;within one business day.

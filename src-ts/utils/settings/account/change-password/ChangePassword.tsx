@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useContext, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useCallback, useContext, useState } from 'react'
 
 import {
     ChangePasswordRequest,
@@ -25,21 +25,25 @@ const ChangePassword: FC<ChangePasswordProps> = (props: ChangePasswordProps) => 
     const [passwordForm]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>(changePasswordFormDef)
 
-    function requestGenerator(inputs: ReadonlyArray<FormInputModel>): ChangePasswordRequest {
-        const password: string = formGetInputModel(inputs, ChangePasswordFieldName.currentPassword).value as string
-        const newPassword: string = formGetInputModel(inputs, ChangePasswordFieldName.newPassword).value as string
+    const requestGenerator = useCallback((
+        inputs: ReadonlyArray<FormInputModel>,
+    ): ChangePasswordRequest => {
+        const password: string
+            = formGetInputModel(inputs, ChangePasswordFieldName.currentPassword).value as string
+        const newPassword: string
+            = formGetInputModel(inputs, ChangePasswordFieldName.newPassword).value as string
         return {
             newPassword,
             password,
         }
-    }
+    }, [])
 
-    function save(updatedPassword: ChangePasswordRequest): Promise<void> {
-        return changePassword((profile as UserProfile).userId, updatedPassword)
+    const save = useCallback((updatedPassword: ChangePasswordRequest): Promise<void> => (
+        changePassword((profile as UserProfile).userId, updatedPassword)
             .then(() => {
                 props.onClose()
             })
-    }
+    ), [changePassword, profile, props.onClose])
 
     return (
         <Form

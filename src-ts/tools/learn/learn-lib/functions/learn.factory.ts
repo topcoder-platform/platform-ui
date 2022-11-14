@@ -1,4 +1,4 @@
-interface LearnResponseModel {
+export interface LearnResponseModel {
     createdAt?: string | Date
     publishedAt?: string | Date
     updatedAt?: string | Date

@@ -1,6 +1,14 @@
 @import '../../styles/includes';
 @import '../../styles/typography';
 
+:global(.react-responsive-modal-root) {
+    :global(.react-responsive-modal-overlay),
+    :global(.react-responsive-modal-modal) {
+        animation-fill-mode:forwards !important;
+    }
+
+}
+
 .modal-header {
     padding: 5px 0 0;
 }
@@ -14,7 +22,7 @@
     overflow: auto;
     margin: 0 -1*$space-xxxxl -1*$space-xxxxl;
     padding: 0 $space-xxxxl $space-xxxxl;
-    
+
     display: flex;
     flex-direction: column;
 
