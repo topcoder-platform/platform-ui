@@ -5,8 +5,8 @@ import { Link } from 'react-router-dom'
 import { IconOutline, IconSolid } from '../../../../../lib'
 import {
     LearnModule,
-    LearnModuleStatus,
     LearnModuleProgress,
+    LearnModuleStatus,
     LearnUserCertificationProgress
 } from '../../../learn-lib'
 import { StatusIcon } from '../status-icon'
