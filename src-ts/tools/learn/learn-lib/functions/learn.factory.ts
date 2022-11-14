@@ -1,5 +1,3 @@
-import { set } from 'lodash'
-
 export interface LearnResponseModel {
     createdAt?: string | Date
     publishedAt?: string | Date
