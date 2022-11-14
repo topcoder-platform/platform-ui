@@ -1,4 +1,4 @@
-import { orderBy, set } from 'lodash'
+import { orderBy } from 'lodash'
 import { FC, ReactNode, useMemo } from 'react'
 
 import { Button } from '../../../../../lib'
@@ -43,7 +43,7 @@ const ProgressAction: FC<ProgressActionProps> = (props: ProgressActionProps) => 
     const certificationsById: { [key: string]: LearnCertification } = useMemo(() => (
         props.allCertifications
             .reduce((certifs, certificate) => {
-                set(certifs, [certificate.id], certificate)
+                certifs[certificate.id] = certificate
                 return certifs
             }, {} as unknown as { [key: string]: LearnCertification })
     ), [props.allCertifications])
