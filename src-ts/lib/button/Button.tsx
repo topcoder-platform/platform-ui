@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+//  NEED to allow any in order to support intrinisic element types
 import { FC, SVGProps } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
@@ -32,9 +34,15 @@ export interface ButtonProps {
 
 const Button: FC<ButtonProps> = (props: ButtonProps) => {
 
-    const classes: string = getButtonClasses(props)
-    const clickHandler: (event?: any) => void = getClickHandler(props)
-    const content: JSX.Element = getButtonContent(props)
+    const classes: string = getButtonClasses(
+        props.className,
+        props.buttonStyle,
+        props.size,
+        props.disable,
+        props.hidden,
+    )
+    const clickHandler: (event?: any) => void = getClickHandler(props.onClick)
+    const content: JSX.Element = getButtonContent(props.buttonStyle, props.icon, props.label)
 
     // if there is a url, this is a link button
     if (!!props.url) {
@@ -79,6 +87,7 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
                 onClick={clickHandler}
                 tabIndex={props.tabIndex}
                 title={props.title}
+                // eslint-disable-next-line react/button-has-type
                 type={props.type || 'button'}
                 id={props.id}
                 value={props.id}
@@ -105,9 +114,9 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
 }
 
 function getButtonClasses(
-    className: string,
-    buttonStyle: ButtonStyle,
-    size: ButtonSize,
+    className?: string,
+    buttonStyle?: ButtonStyle,
+    size?: ButtonSize,
     disable?: boolean,
     hidden?: boolean,
 ): string {
@@ -122,29 +131,34 @@ function getButtonClasses(
     return classes
 }
 
-function getButtonContent(props: ButtonProps): JSX.Element {
+function getButtonContent(
+    buttonStyle?: ButtonStyle,
+    icon?: FC<SVGProps<SVGSVGElement>>,
+    label?: string,
+): JSX.Element {
 
     // if this is a link, just add the label and the arrow icon
-    if (props.buttonStyle === 'link') {
+    if (buttonStyle === 'link') {
         return (
             <>
-                {props.label}
+                {label}
                 <IconOutline.ArrowRightIcon />
             </>
         )
     }
 
-    const Icon: FC<SVGProps<SVGSVGElement>> | undefined = props.icon
+    const Icon: FC<SVGProps<SVGSVGElement>> | undefined = icon
     return (
         <>
             {!!Icon && <Icon />}
-            {props.label}
+            {label}
         </>
     )
 }
 
-function getClickHandler(props: ButtonProps): (event?: any) => void {
-    return props.onClick || (() => undefined)
+function getClickHandler(onClick?: (event?: any) => void): ((event?: any) => void) {
+
+    return onClick || (() => undefined)
 }
 
 export default Button
