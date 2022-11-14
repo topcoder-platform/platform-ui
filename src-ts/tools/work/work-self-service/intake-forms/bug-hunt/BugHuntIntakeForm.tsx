@@ -49,6 +49,8 @@ const BugHuntIntakeForm: React.FC = () => {
     const [loading, setLoading]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
     const [saveSuccess, setSaveSuccess]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
+    const defaultPackage: PricePackageName = 'standard'
+
     BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { setAction('save') }
     BugHuntFormConfig.buttons.primaryGroup[0].hidden = !isLoggedIn
     BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => { setAction('submit') }
@@ -72,7 +74,7 @@ const BugHuntIntakeForm: React.FC = () => {
 
     const [formValues, setFormValues]: [any, Dispatch<any>] = useState({
         currentStep: 'basicInfo',
-        [ChallengeMetadataName.packageType]: 'standard',
+        [ChallengeMetadataName.packageType]: defaultPackage,
     })
 
     const [selectedPackage, setSelectedPackage]: [PricePackageName, Dispatch<SetStateAction<PricePackageName>>]
@@ -111,6 +113,11 @@ const BugHuntIntakeForm: React.FC = () => {
 
             if (formData?.packageType) {
                 setSelectedPackage(formData.packageType)
+            } else {
+                setFormValues({
+                    ...formValues,
+                    [ChallengeMetadataName.packageType]: defaultPackage,
+                })
             }
         }
 
