@@ -16,6 +16,7 @@ import styles from './CollapsibleItem.module.scss'
 
 interface CollapsibleListItem {
     dashedName: string
+    id: string
     title: string
 }
 
@@ -49,22 +50,22 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
         return !!progress && !!progress.completedLessons.length
     }, [progress])
 
-    const isItemCompleted: (key: string) => boolean = (key: string) => (
+    const isItemCompleted: (itemId: string) => boolean = (itemId: string) => (
         progress?.moduleStatus === LearnModuleStatus.completed ||
-        !!progress?.completedLessons.find(l => l.dashedName === key)
+        !!progress?.completedLessons.find(l => l.id === itemId)
     )
 
-    const stepLabel: (item: any, isActive: boolean, stepCount: string, label?: string) => ReactNode =
+    const stepLabel: (item: CollapsibleListItem, isActive: boolean, stepCount: string, label?: string) => ReactNode =
     (item: any, isActive: boolean, stepCount: string, label?: string) => (
         <StepIcon
             index={stepCount}
-            completed={isItemCompleted(item.dashedName)}
+            completed={isItemCompleted(item.id)}
             active={isActive}
             label={label}
         />
     )
 
-    const renderListItem: (item: any) => ReactNode = (item: any) => {
+    const renderListItem: (item: CollapsibleListItem) => ReactNode = (item: any) => {
         const isActive: boolean = props.itemId?.(item) === props.active
         const stepCount: string = item.dashedName.match(/^step-(\d+)$/i)?.[1]
         const label: ReactNode = stepLabel(item, isActive, stepCount, !stepCount && item.title)
