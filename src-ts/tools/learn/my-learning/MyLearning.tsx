@@ -4,10 +4,10 @@ import { Breadcrumb, BreadcrumbItemModel, ContentLayout, LoadingSpinner, Portal,
 import {
     AllCertificationsProviderData,
     LearnCertification,
-    useAllCertifications,
+    useGetAllCertifications,
+    useGetUserCertifications,
     useLearnBreadcrumb,
     UserCertificationsProviderData,
-    useUserCertifications,
     WaveHero
 } from '../learn-lib'
 import { LEARN_PATHS } from '../learn.routes'
@@ -25,8 +25,8 @@ interface CertificatesByIdType {
 const MyLearning: FC<{}> = () => {
 
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
-    const { completed, inProgress, ready: coursesReady }: UserCertificationsProviderData = useUserCertifications()
-    const { certifications, ready: certificatesReady }: AllCertificationsProviderData = useAllCertifications()
+    const { completed, inProgress, ready: coursesReady }: UserCertificationsProviderData = useGetUserCertifications()
+    const { certifications, ready: certificatesReady }: AllCertificationsProviderData = useGetAllCertifications()
     const [activeTab, setActiveTab]: [MyTabsViews|undefined, Dispatch<SetStateAction<MyTabsViews|undefined>>] = useState()
 
     const ready: boolean = profileReady && coursesReady && certificatesReady
