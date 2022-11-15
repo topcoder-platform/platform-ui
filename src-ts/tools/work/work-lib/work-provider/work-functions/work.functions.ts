@@ -1,6 +1,7 @@
 import { PaymentMethodResult, Stripe, StripeCardNumberElement } from '@stripe/stripe-js'
 
-import { Page, UserProfile } from '../../../../../lib'
+import { FormCard, Page, textFormatMoneyLocaleString, UserProfile } from '../../../../../lib'
+import BugHuntPricingConfig from '../../../work-self-service/intake-forms/bug-hunt/bug-hunt.form.pricing-config'
 
 import { WorkByStatus } from './work-by-status.model'
 import {
@@ -170,4 +171,15 @@ async function getPageAsync(handle: string, page: Page): Promise<Array<Work>> {
     return challenges
         .map(challenge => workFactoryCreate(challenge, workGetPricesConfig()))
         .filter(work => work.status !== WorkStatus.deleted && work.type !== WorkType.unknown)
+}
+
+export function getSelectedPackageFormatted(packageId: string): string {
+    const currentPackage: FormCard | undefined = BugHuntPricingConfig.find((pricingConfig) => pricingConfig.id === packageId)
+    if (currentPackage) {
+        const deviceType: string = currentPackage.sections?.[0]?.rows?.[3]?.text || ''
+        const noOfTesters: string = `${currentPackage.sections?.[0]?.rows?.[2]?.text || 0} testers`
+        return `${currentPackage.title} - ${textFormatMoneyLocaleString(currentPackage.price)} - ${deviceType} - ${noOfTesters}`
+    }
+
+    return packageId
 }

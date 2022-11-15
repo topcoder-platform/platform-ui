@@ -4,8 +4,8 @@ import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { ArrowIcon, LoadingSpinner } from '../../../../lib'
-import getSelectedPackageFormatted from '../../../../utils/bug-hunt'
 import { ChallengeMetadataName, workFactoryMapFormData } from '../../work-lib'
+import { getSelectedPackageFormatted } from '../../work-lib/work-provider/work-functions/work.functions'
 
 import styles from './WorkDetailDetailsPane.module.scss'
 

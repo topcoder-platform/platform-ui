@@ -1,6 +1,5 @@
 import moment from 'moment'
 
-import getSelectedPackageFormatted from '../../../../../../utils/bug-hunt'
 import { WorkConfigConstants, WorkStrings } from '../../../work-constants'
 import {
     ActivateWorkRequest,
@@ -26,6 +25,7 @@ import {
     WorkTypeCategory,
     WorkTypeConfig,
 } from '../work-store'
+import { getSelectedPackageFormatted } from '../work.functions'
 
 export interface FormDetail {
     key: string,

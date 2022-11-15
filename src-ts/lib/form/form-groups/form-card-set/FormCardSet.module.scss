@@ -68,14 +68,6 @@
                 line-height: $space-mx;
             }
 
-            .body-medium-bold {
-                font-weight: 700;
-                font-size: $space-xxl;
-                font-family: "Roboto";
-                padding: 0;
-                line-height: calc($space-xxl - 2px);
-            }
-
             &.feature {
                 visibility: hidden;
 
@@ -91,12 +83,6 @@
                     line-height: $space-xxxxl;
                     margin-top: $space-sm;
                     margin-bottom: $space-xxl;
-                }
-
-                .body-medium-bold {
-                    font-size: $space-xl;
-                    line-height: $space-xxxxl;
-                    font-style: normal;
                 }
             }
         }
@@ -178,10 +164,18 @@
                         cursor: pointer;
                         outline: none;
                     }
+
+                    .check-icon {
+                        @include icon-xxl;
+                        @include ltemd {
+                            @include icon-lg;
+                        }
+                    }
                 }
             }
             &.mobile {
               margin-bottom: 0;
+              margin-top: $space-xxl;
               .feature-name {
                 width: 100%;
               }
@@ -215,14 +209,12 @@
     }
 
     svg.card-row-icon {
-        height: 24px;
-        width: 24px;
+        @include icon-xxl;
         display: inline;
         margin-right: 6px;
 
         @include ltemd {
-          height: 16px;
-          width: 16px;
+          @include icon-lg;
       }
     }
 }
