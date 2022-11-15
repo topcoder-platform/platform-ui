@@ -4,8 +4,11 @@ import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { ArrowIcon, LoadingSpinner } from '../../../../lib'
-import { ChallengeMetadataName, workFactoryMapFormData } from '../../work-lib'
-import { getSelectedPackageFormatted } from '../../work-lib/work-provider/work-functions/work.functions'
+import {
+    ChallengeMetadataName,
+    workFactoryMapFormData,
+    workGetSelectedPackageFormatted,
+} from '../../work-lib'
 
 import styles from './WorkDetailDetailsPane.module.scss'
 
@@ -68,9 +71,9 @@ const WorkDetailDetailsPane: FC<WorkDetailDetailsPaneProps> = ({ collapsible, de
                     <div key={detail.key} className={styles['detail']}>
                         <h4 className={styles['title']}>{detail.title}</h4>
                         {detail.key === ChallengeMetadataName.packageType ? (
-                          <p className={styles['content']}>{getSelectedPackageFormatted(detail.value)}</p>
+                            <p className={styles['content']}>{workGetSelectedPackageFormatted(detail.value)}</p>
                         ) : (
-                          <p className={styles['content']}>{formatOption(detail.value)}</p>
+                            <p className={styles['content']}>{formatOption(detail.value)}</p>
                         )}
                     </div>
                 )
