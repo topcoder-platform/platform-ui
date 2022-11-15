@@ -22,30 +22,28 @@ interface InputTextareaProps {
     readonly value?: string | number
 }
 
-const InputTextarea: FC<InputTextareaProps> = (props: InputTextareaProps) => {
-    return (
-        <InputWrapper
-            {...props}
-            dirty={!!props.dirty}
+const InputTextarea: FC<InputTextareaProps> = (props: InputTextareaProps) => (
+    <InputWrapper
+        {...props}
+        dirty={!!props.dirty}
+        disabled={!!props.disabled}
+        label={props.label || props.name}
+        type='textarea'
+        hideInlineErrors={props.hideInlineErrors}
+    >
+        <textarea
+            autoComplete={props.autocomplete}
+            className={styles['form-input-textarea']}
+            defaultValue={props.value}
             disabled={!!props.disabled}
-            label={props.label || props.name}
-            type='textarea'
-            hideInlineErrors={props.hideInlineErrors}
-        >
-            <textarea
-                autoComplete={props.autocomplete}
-                className={styles['form-input-textarea']}
-                defaultValue={props.value}
-                disabled={!!props.disabled}
-                name={props.name}
-                onBlur={props.onBlur}
-                onChange={props.onChange}
-                placeholder={props.placeholder}
-                spellCheck={!!props.spellCheck}
-                tabIndex={props.tabIndex}
-            />
-        </InputWrapper>
-    )
-}
+            name={props.name}
+            onBlur={props.onBlur}
+            onChange={props.onChange}
+            placeholder={props.placeholder}
+            spellCheck={!!props.spellCheck}
+            tabIndex={props.tabIndex}
+        />
+    </InputWrapper>
+)
 
 export default InputTextarea

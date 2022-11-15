@@ -9,7 +9,7 @@ import {
     Sort,
     Table,
     TableColumn,
-    tableGetDefaultSort
+    tableGetDefaultSort,
 } from '../../../../lib'
 import { GameBadge, useGetGameBadgesPage } from '../../game-lib'
 import { createBadgeRoute } from '../../gamification-admin.routes'

@@ -4,7 +4,7 @@ import { Params, useParams, useSearchParams } from 'react-router-dom'
 import {
     LoadingSpinner,
     profileGetAsync,
-    UserProfile
+    UserProfile,
 } from '../../../../lib'
 import { getViewStyleParamKey } from '../../learn.routes'
 import { CertificateView, CertificateViewStyle } from '../certificate-view'
@@ -29,7 +29,7 @@ const UserCertificate: FC<{}> = () => {
     useEffect(() => {
         if (routeParams.memberHandle) {
             profileGetAsync(routeParams.memberHandle)
-                .then((userProfile) => {
+                .then(userProfile => {
                     setProfile(userProfile)
                     setProfileReady(true)
                 })

@@ -9,7 +9,7 @@ interface MarkdownAccordionProps {
     children: React.ReactNode
 }
 
-export const MarkdownAccordion: React.FC<MarkdownAccordionProps> = (props) => {
+export const MarkdownAccordion: React.FC<MarkdownAccordionProps> = props => {
     const { children: childrenProp }: MarkdownAccordionProps = props
 
     const [collapsed, setCollapsed]: [
@@ -22,10 +22,10 @@ export const MarkdownAccordion: React.FC<MarkdownAccordionProps> = (props) => {
         return <>{childrenProp}</>
     }
 
-    const [header, ...children]: ReturnType<typeof React.Children.toArray> =
-        React.Children.toArray(childrenProp)
+    const [header, ...children]: ReturnType<typeof React.Children.toArray>
+        = React.Children.toArray(childrenProp)
     return (
-        <div className={`${styles['accordion']}`}>
+        <div className={`${styles.accordion}`}>
             <div
                 className={`${styles['pane-outline']}`}
                 onClick={() => {

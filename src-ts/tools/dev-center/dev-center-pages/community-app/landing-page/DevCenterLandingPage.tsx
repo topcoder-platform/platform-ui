@@ -5,15 +5,12 @@ import { DevCenterGetStarted } from './dev-center-get-started'
 import { DevCenterHeader } from './dev-center-header'
 import styles from './DevCenterLandingPage.module.scss'
 
-const DevCenter: FC = () => {
-
-    return (
-        <div className={styles.container}>
-            <DevCenterHeader/>
-            <DevCenterGetStarted/>
-            <DevCenterArticlesection/>
-        </div>
-    )
-}
+const DevCenter: FC = () => (
+    <div className={styles.container}>
+        <DevCenterHeader />
+        <DevCenterGetStarted />
+        <DevCenterArticlesection />
+    </div>
+)
 
 export default DevCenter

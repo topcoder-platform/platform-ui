@@ -16,7 +16,7 @@ export const useSortAndFilter: (
     myCertifications: ReadonlyArray<UserCertificationInProgress|UserCertificationCompleted>
 ) => UseSortAndFilterValue = (
     certifications,
-    myCertifications
+    myCertifications,
 ) => {
 
     const [selectedCategory, setSelectedCategory]: [
@@ -45,7 +45,7 @@ export const useSortAndFilter: (
         const certsById: {[key: string]: LearnCertification} = mapValues(groupBy(certifications, 'id'), ([cert]) => cert)
         return groupBy(
             myCertifications as MyCertificationsType,
-            (cert) => certsById[cert.certificationId]?.category
+            cert => certsById[cert.certificationId]?.category,
         )
     }, [certifications, myCertifications])
 
@@ -56,7 +56,7 @@ export const useSortAndFilter: (
     const myCertificationsSorted: MyCertificationsType = orderBy(
         myCertificationsFiltered,
         sortingField,
-        sortingDirection as 'asc'|'desc'
+        sortingDirection as 'asc'|'desc',
     )
 
     return {

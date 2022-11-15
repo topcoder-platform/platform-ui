@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useCallback, useState } from 'react'
 
 import {
     ContactSupportForm,
@@ -6,7 +6,7 @@ import {
     ContentLayout,
     FormDefinition,
     formGetInputFields,
-    formOnReset
+    formOnReset,
 } from '../../lib'
 
 import { toolTitle } from './contact-support.routes'
@@ -16,11 +16,11 @@ const ContactSupport: FC<{}> = () => {
     const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>({ ...contactSupportFormDef })
 
-    function onSave(): void {
+    const onSave = useCallback((): void => {
         const updatedForm: FormDefinition = { ...formDef }
         formOnReset(formGetInputFields(updatedForm.groups || []))
         setFormDef(updatedForm)
-    }
+    }, [formDef])
 
     return (
         <ContentLayout title={toolTitle}>

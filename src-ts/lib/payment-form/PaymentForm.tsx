@@ -2,10 +2,10 @@ import {
     CardCvcElement,
     CardExpiryElement,
     CardNumberElement,
-  } from '@stripe/react-stripe-js'
+} from '@stripe/react-stripe-js'
 import { StripeCardCvcElementChangeEvent, StripeCardExpiryElementChangeEvent, StripeCardNumberElementChangeEvent } from '@stripe/stripe-js'
-import cn from 'classnames'
 import React, { Dispatch, SetStateAction, useContext, useState } from 'react'
+import cn from 'classnames'
 
 import { Button, OrderContractModal, profileContext, ProfileContextData } from '..'
 import { InputText } from '../form/form-groups/form-input'
@@ -62,9 +62,9 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
 
     const [isOrderContractModalOpen, setIsOrderContractModalOpen]: [boolean, Dispatch<boolean>] = useState<boolean>(false)
 
-    const getError: (data: any) => string = (data) => data?.error?.message || ''
+    const getError: (data: any) => string = data => data?.error?.message || ''
 
-    const onOpenOrderContract: (event: React.SyntheticEvent) => void = (event) => {
+    const onOpenOrderContract: (event: React.SyntheticEvent) => void = event => {
         event.preventDefault()
         event.stopPropagation()
         setIsOrderContractModalOpen(true)
@@ -73,7 +73,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
     const renderCheckboxLabel: () => JSX.Element = () => (
         <div className={styles['checkbox-label']}>
             Yes, I understand and agree to Topcoder’s
-             <span className={styles['link']} onClick={onOpenOrderContract}>Order Contract</span>
+            <span className={styles.link} onClick={onOpenOrderContract}>Order Contract</span>
         </div>
     )
 
@@ -93,21 +93,21 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 isOpen={isOrderContractModalOpen}
                 onClose={() => setIsOrderContractModalOpen(false)}
             />
-            <div className={styles['label']}>Contact Information</div>
+            <div className={styles.label}>Contact Information</div>
             <InputText
                 label='Email'
                 placeholder='email'
                 name='email'
                 tabIndex={1}
                 type='text'
-                onChange={(event) => props.onUpdateField('email', event.target.value)}
+                onChange={event => props.onUpdateField('email', event.target.value)}
                 value={profile?.email}
             />
 
-            <div className={styles['label']}>Card Information</div>
+            <div className={styles.label}>Card Information</div>
 
             <InputWrapper
-                className={cn(styles['input-wrapper'], !!cardNumberError && styles['error'])}
+                className={cn(styles['input-wrapper'], !!cardNumberError && styles.error)}
                 label='Card Number'
                 tabIndex={2}
                 type='text'
@@ -119,7 +119,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 <CardNumberElement
                     options={{
                         classes: {
-                            base: styles['cardElement'],
+                            base: styles.cardElement,
                         },
                     }}
                     onChange={(event: StripeCardNumberElementChangeEvent) => cardElementOnChange('cardComplete', event, setCardNumberError)}
@@ -128,7 +128,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
 
             <div className={styles['date-cvv-wrapper']}>
                 <InputWrapper
-                    className={cn(styles['input-wrapper'], !!cardExpiryError && styles['error'])}
+                    className={cn(styles['input-wrapper'], !!cardExpiryError && styles.error)}
                     label='Date'
                     tabIndex={3}
                     type='text'
@@ -139,7 +139,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                     <CardExpiryElement
                         options={{
                             classes: {
-                                base: styles['cardElement'],
+                                base: styles.cardElement,
                             },
                             placeholder: 'MM/YY',
                         }}
@@ -147,7 +147,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                     />
                 </InputWrapper>
                 <InputWrapper
-                    className={cn(styles['input-wrapper'], !!cardCVVError && styles['error'])}
+                    className={cn(styles['input-wrapper'], !!cardCVVError && styles.error)}
                     label='CVC'
                     tabIndex={3}
                     type='text'
@@ -158,7 +158,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                     <CardCvcElement
                         options={{
                             classes: {
-                                base: styles['cardElement'],
+                                base: styles.cardElement,
                             },
                             placeholder: 'CCV',
                         }}
@@ -174,16 +174,16 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 name='name'
                 tabIndex={1}
                 type='text'
-                onChange={(event) => props.onUpdateField('name', event.target.value)}
+                onChange={event => props.onUpdateField('name', event.target.value)}
                 value={`${profile?.firstName} ${profile?.lastName}`}
             />
 
             <InputWrapper className={styles['input-wrapper']} label='Country or Region' tabIndex={3} type='text' disabled={false}>
                 <ReactSelect
                     value={props.formData.country}
-                    onChange={(option) => props.onUpdateField('country', option)}
+                    onChange={option => props.onUpdateField('country', option)}
                     options={COUNTRIES_OPTIONS}
-                    style2={true}
+                    style2
                 />
             </InputWrapper>
 
@@ -194,7 +194,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 name='zipCode'
                 tabIndex={1}
                 type='text'
-                onChange={(event) => props.onUpdateField('zipCode', event.target.value)}
+                onChange={event => props.onUpdateField('zipCode', event.target.value)}
             />
 
             <InputText
@@ -203,7 +203,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 tabIndex={1}
                 type='checkbox'
                 checked={props.formData.orderContract}
-                onChange={(event) => props.onUpdateField('orderContract', event.target.checked)}
+                onChange={event => props.onUpdateField('orderContract', event.target.checked)}
             />
 
             <div className={styles['info-box']}>
@@ -212,7 +212,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
 
             {
                 props.error && (
-                    <div className={styles['error']}>
+                    <div className={styles.error}>
                         Your card was declined. Please try a different card.
                     </div>
                 )

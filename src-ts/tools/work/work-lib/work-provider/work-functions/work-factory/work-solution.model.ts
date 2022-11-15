@@ -1,4 +1,3 @@
-
 export interface WorkSolution {
     challengeId: number
     created: Date

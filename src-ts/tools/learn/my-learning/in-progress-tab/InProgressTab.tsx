@@ -24,7 +24,7 @@ const InProgressTab: FC<InProgressTabProps> = (props: InProgressTabProps) => {
         handleSortChange,
     }: UseSortAndFilterValue = useSortAndFilter(
         props.allCertificates,
-        props.certifications
+        props.certifications,
     )
 
     const disableFilters: boolean = props.certifications.length < 1
@@ -45,7 +45,7 @@ const InProgressTab: FC<InProgressTabProps> = (props: InProgressTabProps) => {
     )
 
     const renderCertificationsList: () => ReactNode = () => (
-        hasCertifications ? certifications.map((certif) => (
+        hasCertifications ? certifications.map(certif => (
             <MyCourseInProgressCard
                 certification={props.certificatesById[certif.certificationId]}
                 key={certif.certificationId}

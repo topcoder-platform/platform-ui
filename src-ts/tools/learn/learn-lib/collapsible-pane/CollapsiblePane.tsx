@@ -1,4 +1,3 @@
-import classNames from 'classnames'
 import { noop } from 'lodash'
 import {
     Dispatch,
@@ -11,6 +10,7 @@ import {
     useRef,
     useState,
 } from 'react'
+import classNames from 'classnames'
 
 import { IconSolid, useClickOutside } from '../../../../lib'
 
@@ -25,14 +25,14 @@ interface CollapsiblePaneProps {
 }
 
 const CollapsiblePane: FC<CollapsiblePaneProps> = (props: CollapsiblePaneProps) => {
-    const {onToggle = noop}: CollapsiblePaneProps = props
+    const { onToggle = noop }: CollapsiblePaneProps = props
     const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
     const elRef: MutableRefObject<HTMLElement | any> = useRef()
 
     const toggle: () => void = useCallback(() => {
-      setIsOpen(!isOpen)
-      onToggle(!isOpen)
+        setIsOpen(!isOpen)
+        onToggle(!isOpen)
     }, [isOpen, onToggle])
 
     const close: () => void = useCallback(() => {
@@ -47,18 +47,21 @@ const CollapsiblePane: FC<CollapsiblePaneProps> = (props: CollapsiblePaneProps) 
     useClickOutside(elRef.current, close, isOpen)
 
     return (
-        <div ref={elRef} className={
-            classNames(
-                styles['wrap'],
-                props.position ?? 'to-left',
-                isOpen ? 'open' : 'collapsed',
-            )
-        }>
+        <div
+            ref={elRef}
+            className={
+                classNames(
+                    styles.wrap,
+                    props.position ?? 'to-left',
+                    isOpen ? 'open' : 'collapsed',
+                )
+            }
+        >
             <div className={styles['pane-outline']} onClick={toggle}>
                 {isOpen ? <IconSolid.ChevronDoubleLeftIcon /> : <IconSolid.ChevronDoubleRightIcon />}
                 {props.title}
             </div>
-            <div className={styles['content']}>
+            <div className={styles.content}>
                 {props.children}
             </div>
         </div>

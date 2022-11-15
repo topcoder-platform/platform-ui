@@ -12,11 +12,11 @@ export function useGetResourceProvider(providerName?: string): ResourceProviderD
     const url: string = learnUrlGet('providers')
     const swrCacheConfig: SWRConfiguration = useSwrCache(url)
 
-    const {data, error}: SWRResponse<ReadonlyArray<ResourceProvider>> = useSWR(url, swrCacheConfig)
+    const { data, error }: SWRResponse<ReadonlyArray<ResourceProvider>> = useSWR(url, swrCacheConfig)
 
     return {
         loading: !data && !error,
-        provider: find(data, {name: providerName}),
+        provider: find(data, { name: providerName }),
         ready: !!data || !!error,
     }
 }

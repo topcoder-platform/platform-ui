@@ -1,5 +1,5 @@
-import cn from 'classnames'
 import React from 'react'
+import cn from 'classnames'
 
 import { PageDivider } from '../../../page-divider'
 import { FormGroup } from '../../form-group.model'
@@ -24,52 +24,48 @@ interface ItemRowProps {
     title?: string,
 }
 
-const TwoColumnItem: React.FC<ItemRowProps> = ({ element, formInputs, hasMultipleGroups, instructions, isMultiFieldGroup, title, renderDividers }: ItemRowProps) => {
-    return (
-        <>
-            <div className={cn(styles['form-group-item'], !isMultiFieldGroup && styles['single-field'])}>
-                {
-                    isMultiFieldGroup && (
-                        <div className={styles['left']}>
-                            <h3 className={styles['title']}>
-                                {title}
-                            </h3>
-                            <div className={styles['group-item-instructions']} dangerouslySetInnerHTML={{ __html: instructions || '' }} />
-                        </div>
-                    )
-                }
-                {element}
-                <div className={styles['right']}>
-                    {formInputs}
-                </div>
-            </div>
+const TwoColumnItem: React.FC<ItemRowProps> = ({ element, formInputs, hasMultipleGroups, instructions, isMultiFieldGroup, title, renderDividers }: ItemRowProps) => (
+    <>
+        <div className={cn(styles['form-group-item'], !isMultiFieldGroup && styles['single-field'])}>
             {
-                renderDividers !== false && <PageDivider styleNames={[!hasMultipleGroups ? 'spacingSmall' : '']} />
+                isMultiFieldGroup && (
+                    <div className={styles.left}>
+                        <h3 className={styles.title}>
+                            {title}
+                        </h3>
+                        <div className={styles['group-item-instructions']} dangerouslySetInnerHTML={{ __html: instructions || '' }} />
+                    </div>
+                )
             }
-        </>
-    )
-}
-
-const SingleColumnItem: React.FC<ItemRowProps> = ({ formInputs, hasMultipleGroups, instructions, isMultiFieldGroup, title }: ItemRowProps) => {
-    return (
-        <>
-            <div className={cn(styles['form-group-item'], styles['full-width-container'])}>
-                {
-                    isMultiFieldGroup && (
-                        <>
-                            <h3 className={styles['title']}>
-                                {title}
-                            </h3>
-                            <div className={styles['group-item-instructions']} dangerouslySetInnerHTML={{ __html: instructions || '' }} />
-                        </>
-                    )
-                }
-                <div className={styles['full-width-items']}>{formInputs}</div>
+            {element}
+            <div className={styles.right}>
+                {formInputs}
             </div>
-            <PageDivider styleNames={[!hasMultipleGroups ? 'spacingSmall' : '']} />
-        </>
-    )
-}
+        </div>
+        {
+            renderDividers !== false && <PageDivider styleNames={[!hasMultipleGroups ? 'spacingSmall' : '']} />
+        }
+    </>
+)
+
+const SingleColumnItem: React.FC<ItemRowProps> = ({ formInputs, hasMultipleGroups, instructions, isMultiFieldGroup, title }: ItemRowProps) => (
+    <>
+        <div className={cn(styles['form-group-item'], styles['full-width-container'])}>
+            {
+                isMultiFieldGroup && (
+                    <>
+                        <h3 className={styles.title}>
+                            {title}
+                        </h3>
+                        <div className={styles['group-item-instructions']} dangerouslySetInnerHTML={{ __html: instructions || '' }} />
+                    </>
+                )
+            }
+            <div className={styles['full-width-items']}>{formInputs}</div>
+        </div>
+        <PageDivider styleNames={[!hasMultipleGroups ? 'spacingSmall' : '']} />
+    </>
+)
 
 const FormGroupItem: React.FC<FormGroupItemProps> = ({ group, renderDividers, renderFormInput, totalGroupCount }: FormGroupItemProps) => {
     const { instructions, title, inputs, element }: FormGroup = group
@@ -79,9 +75,9 @@ const FormGroupItem: React.FC<FormGroupItemProps> = ({ group, renderDividers, re
     const isMultiFieldGroup: boolean = !!(title || instructions)
     const isCardSet: boolean = !!(inputs && inputs.every(input => typeof input.cards !== 'undefined'))
 
-    return isCardSet ?
-        <SingleColumnItem hasMultipleGroups={hasMultipleGroups} instructions={instructions} isMultiFieldGroup={isMultiFieldGroup} formInputs={formInputs} title={title} /> :
-        <TwoColumnItem hasMultipleGroups={hasMultipleGroups} element={element} instructions={instructions} isMultiFieldGroup={isMultiFieldGroup} formInputs={formInputs} title={title} renderDividers={renderDividers} />
+    return isCardSet
+        ? <SingleColumnItem hasMultipleGroups={hasMultipleGroups} instructions={instructions} isMultiFieldGroup={isMultiFieldGroup} formInputs={formInputs} title={title} />
+        : <TwoColumnItem hasMultipleGroups={hasMultipleGroups} element={element} instructions={instructions} isMultiFieldGroup={isMultiFieldGroup} formInputs={formInputs} title={title} renderDividers={renderDividers} />
 }
 
 export default FormGroupItem

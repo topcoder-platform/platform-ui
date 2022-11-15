@@ -10,10 +10,10 @@ interface TermsModalProps {
     onClose: () => void
 }
 
-const TermsModal: FC<TermsModalProps> = ({ isOpen, onClose }: TermsModalProps) => (
+const TermsModal: FC<TermsModalProps> = (props: TermsModalProps) => (
     <BaseModal
-        onClose={onClose}
-        open={isOpen}
+        onClose={props.onClose}
+        open={props.isOpen}
         size='lg'
         title='TOPCODER ONLINE CUSTOMER TERMS OF USE AGREEMENT'
         contentClassName={styles.container}

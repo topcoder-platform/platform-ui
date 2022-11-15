@@ -6,24 +6,25 @@ export interface WorkStatusItemProps {
     workStatus?: WorkStatus
 }
 
-function WorkStatusItem({ workStatus }: WorkStatusItemProps): JSX.Element {
+const WorkStatusItem: (props: WorkStatusItemProps) => JSX.Element
+    = (props: WorkStatusItemProps): JSX.Element => {
 
-    if (!workStatus) {
-        return <></>
-    }
+        if (!props.workStatus) {
+            return <></>
+        }
 
-    const statusKey: (keyof typeof WorkStatus) | undefined = Object.entries(WorkStatus)
-        .find(([key, value]) => value === workStatus)
-        ?.[0] as keyof typeof WorkStatus
+        const statusKey: (keyof typeof WorkStatus) | undefined = Object.entries(WorkStatus)
+            .find(([key, value]) => value === props.workStatus)
+            ?.[0] as keyof typeof WorkStatus
 
-    return (
-        <div className={styles['status-container']}>
-            <div className={styles[statusKey]}></div>
-            <div className={styles['small-tab']}>
-                {workStatus}
+        return (
+            <div className={styles['status-container']}>
+                <div className={styles[statusKey]} />
+                <div className={styles['small-tab']}>
+                    {props.workStatus}
+                </div>
             </div>
-        </div>
-    )
-}
+        )
+    }
 
 export default WorkStatusItem

@@ -20,6 +20,7 @@ export async function getBlog(url: string): Promise<BlogPost | undefined> {
         if (!blog.featuredImage) {
             blog.featuredImage = DEFAULT_BLOG_IMAGE
         }
+
         return blog
     } catch (e) {
         return undefined

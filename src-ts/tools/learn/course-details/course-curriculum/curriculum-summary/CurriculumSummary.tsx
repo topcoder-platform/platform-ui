@@ -35,7 +35,8 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
         return (
             <>
                 <span>
-                    Completed{' '}
+                    Completed
+                    {' '}
                     {textFormatDateLocaleShortString(new Date(props.completedDate))}
                 </span>
                 <Button
@@ -49,23 +50,23 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
     }, [completed, props.completedDate, props.onClickCertificateBtn])
 
     return (
-        <div className={styles['wrap']}>
+        <div className={styles.wrap}>
             {(inProgress || completed) && (
                 <>
-                    <div className={styles['title']}>
+                    <div className={styles.title}>
                         {title}
                     </div>
                     <ProgressBar progress={progress ?? 0} />
                 </>
             )}
 
-            <div className={styles['summary']}>
+            <div className={styles.summary}>
                 <CurriculumSummaryStats
                     moduleCount={props.course.modules.length}
                     completionHours={props.course.estimatedCompletionTime}
                 />
 
-                <div className={styles['button']}>
+                <div className={styles.button}>
                     <Button
                         buttonStyle={completed ? 'secondary' : 'primary'}
                         size='md'

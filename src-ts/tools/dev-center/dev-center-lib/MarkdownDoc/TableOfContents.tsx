@@ -7,36 +7,34 @@ interface TableOfContentsProps {
     toc: TOC
 }
 
-export const TableOfContents: React.FC<TableOfContentsProps> = (props) => {
+export const TableOfContents: React.FC<TableOfContentsProps> = props => {
     const [activeIndex, setActiveIndex]: [
         number,
         React.Dispatch<React.SetStateAction<number>>
     ] = React.useState(-1)
     const { toc }: { toc: TOC } = props
-    const items: TOC = React.useMemo(() => {
-        return toc.filter((item) => item.level === 2 || item.level === 3)
-    }, [toc])
+    const items: TOC = React.useMemo(() => toc.filter(item => item.level === 2 || item.level === 3), [toc])
 
     const navRef: React.RefObject<HTMLElement> = React.createRef<HTMLElement>()
 
     const findActiveIndex: () => void = React.useCallback(() => {
         for (let i: number = 0; i < items.length; i++) {
             const h: HTMLElement | null = document.getElementById(
-                items[i].headingId
+                items[i].headingId,
             )
             if (
-                h &&
-                h.offsetTop <
-                    document.documentElement.scrollTop +
-                        document.documentElement.clientHeight / 2
+                h
+                && h.offsetTop
+                    < document.documentElement.scrollTop
+                        + document.documentElement.clientHeight / 2
             ) {
                 setActiveIndex(i)
-                const liNodes: NodeListOf<HTMLLIElement> | undefined =
-                    navRef.current?.querySelectorAll('li')
+                const liNodes: NodeListOf<HTMLLIElement> | undefined
+                    = navRef.current?.querySelectorAll('li')
                 if (navRef.current && liNodes) {
-                    navRef.current.scrollTop =
-                        liNodes[i].offsetTop >
-                        document.documentElement.clientHeight - 100
+                    navRef.current.scrollTop
+                        = liNodes[i].offsetTop
+                        > document.documentElement.clientHeight - 100
                             ? liNodes[liNodes.length - 1].offsetTop
                             : 0
                 }
@@ -47,15 +45,15 @@ export const TableOfContents: React.FC<TableOfContentsProps> = (props) => {
     useOnScroll({ onScroll: findActiveIndex })
 
     return (
-        <nav ref={navRef} className={styles['nav']}>
-            <div className={styles['navLabel']}>ON THIS PAGE</div>
+        <nav ref={navRef} className={styles.nav}>
+            <div className={styles.navLabel}>ON THIS PAGE</div>
             {items.length > 0 ? (
                 <ul>
                     {items.map((item, index) => (
                         <li
                             key={`${item.title}-${index}`}
-                            className={`${styles['navListItem']} ${
-                                index === activeIndex ? styles['active'] : ''
+                            className={`${styles.navListItem} ${
+                                index === activeIndex ? styles.active : ''
                             }`}
                         >
                             <a
@@ -86,6 +84,7 @@ function useOnScroll({ onScroll }: { onScroll: () => void }): void {
                 clearTimeout(debounceTimer.current)
                 debounceTimer.current = undefined
             }
+
             debounceTimer.current = setTimeout(() => {
                 debounceTimer.current = undefined
                 onScroll()

@@ -1,8 +1,8 @@
-import classNames from 'classnames'
 import { ReactNode } from 'react'
+import classNames from 'classnames'
 
-import '../../../../lib/styles/index.scss'
 import { FormInputModel } from '../../form-input.model'
+import '../../../styles/index.scss'
 
 import styles from './FormInputRow.module.scss'
 
@@ -45,8 +45,9 @@ const FormInputRow: (props: FormInputRowProps) => JSX.Element = (props: FormInpu
                     styles['input-instructions'],
                     styles[input.type],
                     'body-small',
-                    'font-black-40'
-                )}>
+                    'font-black-40',
+                )}
+                >
                     {input.instructions}
                 </div>
                 <div className={styles.input}>

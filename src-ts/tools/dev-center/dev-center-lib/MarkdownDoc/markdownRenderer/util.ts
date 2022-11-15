@@ -5,7 +5,7 @@ import { MarkdownHeaderTag, MarkdownRenderOptions, MarkdownString, Renderer, TOC
 
 export function renderMarkdown(
     markdown: MarkdownString,
-    options?: MarkdownRenderOptions
+    options?: MarkdownRenderOptions,
 ): { doc: React.ReactNode; title: string; toc: TOC } {
     const renderer: Renderer = Renderer.getInstance()
     const defaultOptions: MarkdownRenderOptions = {
@@ -30,9 +30,12 @@ export function renderMarkdown(
         const matchStr: string = matches ? matches[0] : ''
         return matchStr
             ? {
-                  s: fromStr.replace(matchStr, '').trimStart(),
-                  title: matchStr.replace(/^#/, '').replace(/`/g, '').trim(),
-              }
+                s: fromStr.replace(matchStr, '')
+                    .trimStart(),
+                title: matchStr.replace(/^#/, '')
+                    .replace(/`/g, '')
+                    .trim(),
+            }
             : { title, s }
     }
 
@@ -42,10 +45,10 @@ export function renderMarkdown(
     const opts: MarkdownRenderOptions = { ...defaultOptions, ...options }
     const result: ReturnType<Renderer['render']> = renderer.render(
         markdown,
-        opts
+        opts,
     )
-    const { toc }: { toc: NonNullable<MarkdownRenderOptions['toc']> } =
-        opts as { toc: NonNullable<MarkdownRenderOptions['toc']> }
+    const { toc }: { toc: NonNullable<MarkdownRenderOptions['toc']> }
+        = opts as { toc: NonNullable<MarkdownRenderOptions['toc']> }
 
     return { doc: result, toc, title }
 }

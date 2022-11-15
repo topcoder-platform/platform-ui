@@ -1,6 +1,6 @@
 import { ChangeEvent, createRef, Dispatch, FC, RefObject, SetStateAction, useEffect, useState } from 'react'
 
-import { Button, IconOutline } from '../../../../../lib'
+import { Button, IconOutline } from '../../../..'
 import { InputValue } from '../../../form-input.model'
 
 import styles from './InputImagePicker.module.scss'
@@ -19,7 +19,6 @@ const InputImagePicker: FC<InputImagePickerProps> = (props: InputImagePickerProp
 
     const fileInputRef: RefObject<HTMLInputElement> = createRef<HTMLInputElement>()
 
-    // tslint:disable-next-line:no-null-keyword
     const [files, setFiles]: [FileList | null, Dispatch<SetStateAction<FileList | null>>] = useState<FileList | null>(null)
     const [fileDataURL, setFileDataURL]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
 
@@ -32,6 +31,7 @@ const InputImagePicker: FC<InputImagePickerProps> = (props: InputImagePickerProp
                     setFileDataURL(result)
                 }
             }
+
             fileReader.readAsDataURL(files[0])
         } else if (fileDataURL) {
             setFileDataURL(undefined)
@@ -47,10 +47,11 @@ const InputImagePicker: FC<InputImagePickerProps> = (props: InputImagePickerProp
                 buttonStyle='icon'
                 icon={IconOutline.PencilIcon}
                 className={styles.filePickerPencil}
-                onClick={() => fileInputRef.current?.click()} />
+                onClick={() => fileInputRef.current?.click()}
+            />
             <input
                 name={props.name}
-                type={'file'}
+                type='file'
                 accept={props.fileConfig?.acceptFileType || '*'}
                 className={styles.filePickerInput}
                 ref={fileInputRef}
@@ -62,9 +63,13 @@ const InputImagePicker: FC<InputImagePickerProps> = (props: InputImagePickerProp
             />
             {
                 fileDataURL ? (
-                    <img src={fileDataURL} alt={'Badge preview'} className={styles.badgeImage} />
+                    <img src={fileDataURL} alt='Badge preview' className={styles.badgeImage} />
                 ) : (
-                    <div className={styles.filePickerPlaceholder}>UPLOAD<br />IMAGE</div>
+                    <div className={styles.filePickerPlaceholder}>
+                        UPLOAD
+                        <br />
+                        IMAGE
+                    </div>
                 )
             }
         </div>
