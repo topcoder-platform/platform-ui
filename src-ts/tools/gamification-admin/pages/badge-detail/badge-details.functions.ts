@@ -13,7 +13,8 @@ export async function submitRequestAsync(request: UpdateBadgeRequest): Promise<G
 export function generateCSV(input: Array<Array<string | number>>): string {
     input.unshift(GamificationConfig.CSV_HEADER)
 
-    return input.map(row => row.join(',')).join('\n')
+    return input.map(row => row.join(','))
+        .join('\n')
 }
 
 export async function manualAssignRequestAsync(csv: string): Promise<any> {

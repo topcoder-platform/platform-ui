@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { FC } from 'react'
+import classNames from 'classnames'
 
 import styles from './Avatar.module.scss'
 

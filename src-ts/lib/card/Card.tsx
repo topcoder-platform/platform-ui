@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { FC, ReactNode, SVGProps } from 'react'
+import classNames from 'classnames'
 
 import { ButtonStyle } from '../button'
 import '../styles/index.scss'

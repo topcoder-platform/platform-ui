@@ -1,12 +1,12 @@
-import classNames from 'classnames'
 import { FC, ReactNode } from 'react'
 import Modal, { ModalProps } from 'react-responsive-modal'
+import classNames from 'classnames'
 
 import { LoadingSpinner } from '../../loading-spinner'
 import { IconOutline } from '../../svgs'
 
-import styles from './BaseModal.module.scss'
 import { ModalContentResponse, useFetchModalContent } from './use-fetch-modal-content'
+import styles from './BaseModal.module.scss'
 
 export interface BaseModalProps extends ModalProps {
     contentClassName?: string
@@ -15,19 +15,13 @@ export interface BaseModalProps extends ModalProps {
     title: string
 }
 
-const BaseModal: FC<BaseModalProps> = ({
-    children,
-    title,
-    contentUrl,
-    contentClassName,
-    ...props
-}: BaseModalProps) => {
+const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
 
-    const { content }: ModalContentResponse = useFetchModalContent(contentUrl, props.open)
+    const { content }: ModalContentResponse = useFetchModalContent(props.contentUrl, props.open)
 
     const renterContent: () => ReactNode = () => {
-        if (children || !contentUrl) {
-            return
+        if (props.children || !props.contentUrl) {
+            return undefined
         }
 
         if (!content) {
@@ -36,8 +30,8 @@ const BaseModal: FC<BaseModalProps> = ({
 
         return (
             <div
-                className={contentClassName}
-                dangerouslySetInnerHTML={{__html: content}}
+                className={props.contentClassName}
+                dangerouslySetInnerHTML={{ __html: content }}
             />
         )
     }
@@ -49,14 +43,14 @@ const BaseModal: FC<BaseModalProps> = ({
             closeIcon={<IconOutline.XIcon width={28} height={28} />}
         >
             <div className={styles['modal-header']}>
-                <h3>{title}</h3>
+                <h3>{props.title}</h3>
             </div>
 
-            <hr className={styles['spacer']} />
+            <hr className={styles.spacer} />
 
             <div className={classNames(styles['modal-body'], 'modal-body')}>
                 {renterContent()}
-                {children}
+                {props.children}
             </div>
         </Modal>
     )

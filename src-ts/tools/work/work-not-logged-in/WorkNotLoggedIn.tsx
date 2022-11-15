@@ -51,7 +51,7 @@ const WorkNotLoggedIn: FC<{}> = () => {
     }
 
     return (
-        <ContentLayout title={''} >
+        <ContentLayout title=''>
             <div className={styles.container}>
 
                 <div className={styles.leftContent}>

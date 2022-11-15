@@ -1,3 +1,4 @@
+/* eslint-disable react/no-danger */
 import { FC, ReactNode, useContext } from 'react'
 import { Params, useParams } from 'react-router-dom'
 
@@ -9,6 +10,7 @@ import {
     LoadingSpinner,
     profileContext,
     ProfileContextData,
+    textFormatGetSafeString,
 } from '../../../lib'
 import {
     AllCertificationsProviderData,
@@ -21,13 +23,13 @@ import {
     useGetUserCertificationProgress,
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
-    UserCertificationProgressStatus
+    UserCertificationProgressStatus,
 } from '../learn-lib'
 import { getCoursePath } from '../learn.routes'
 
 import { CourseCurriculum } from './course-curriculum'
-import styles from './CourseDetailsPage.module.scss'
 import { PromoCourse } from './promo-course'
+import styles from './CourseDetailsPage.module.scss'
 
 const CourseDetailsPage: FC<{}> = () => {
 
@@ -41,7 +43,7 @@ const CourseDetailsPage: FC<{}> = () => {
     const {
         course,
         ready: courseReady,
-    }: CoursesProviderData = useGetCourses(routeParams.provider ?? '', routeParams.certification)
+    }: CoursesProviderData = useGetCourses(textFormatGetSafeString(routeParams.provider), routeParams.certification)
 
     const {
         certificationProgress: progress,
@@ -55,55 +57,65 @@ const CourseDetailsPage: FC<{}> = () => {
     const {
         certification: certificate,
         ready: certificateReady,
-    }: AllCertificationsProviderData = useGetCertification(routeParams.provider, course?.certificationId ?? '', {
-        enabled: courseReady && !!course?.certificationId,
-    })
+    }: AllCertificationsProviderData = useGetCertification(
+        routeParams.provider,
+        textFormatGetSafeString(course?.certificationId),
+        {
+            enabled: courseReady && !!course?.certificationId,
+        },
+    )
 
-    // this looks better than finding workarounds for cyclomatic-complexity
-    /* tslint:disable:cyclomatic-complexity */
     const ready: boolean = profileReady && courseReady && certificateReady && (!profile || progressReady)
 
     const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
         {
-            name: course?.title ?? '',
-            url: getCoursePath(routeParams.provider as string, routeParams.certification as string),
+
+            name: textFormatGetSafeString(course?.title),
+            url: getCoursePath(routeParams.provider as string, textFormatGetSafeString(routeParams.certification)),
         },
     ])
 
     function getDescription(): ReactNode {
+
         if (!course) {
-            return
+            return undefined
         }
 
-        return progress?.status === UserCertificationProgressStatus.completed ? (
-            <>
-                <h3 className='details'>Suggested next steps</h3>
-
-                <div className={styles['text']}>
-                    <p>
-                        Now that you have completed the {course.title},
-                        we'd recommend you enroll in another course to continue your learning.
-                        You can view our other courses from the Topcoder Academy course page.
-                    </p>
-                </div>
-            </>
-        ) : (
-            course.keyPoints && (
+        return progress?.status === UserCertificationProgressStatus.completed
+            ? (
                 <>
-                    <h3 className='details'>Why should you complete this course?</h3>
+                    <h3 className='details'>Suggested next steps</h3>
 
-                    <div
-                        className={styles['text']}
-                        dangerouslySetInnerHTML={{ __html: (course.keyPoints ?? []).join('<br /><br />') }}
-                    ></div>
+                    <div className={styles.text}>
+                        <p>
+                            Now that you have completed the
+                            {' '}
+                            {course.title}
+                            ,
+                            we&appos;d recommend you enroll in another course to continue your learning.
+                            You can view our other courses from the Topcoder Academy course page.
+                        </p>
+                    </div>
                 </>
             )
-        )
+            : (
+                course.keyPoints && (
+                    <>
+                        <h3 className='details'>Why should you complete this course?</h3>
+
+                        <div
+                            className={styles.text}
+                            dangerouslySetInnerHTML={{ __html: (course.keyPoints ?? []).join('<br /><br />') }}
+                        />
+                    </>
+                )
+            )
     }
 
     function getPrerequisites(): ReactNode {
+
         if (!course) {
-            return
+            return undefined
         }
 
         return progress?.status === UserCertificationProgressStatus.completed ? (
@@ -112,7 +124,7 @@ const CourseDetailsPage: FC<{}> = () => {
             <>
                 <h3 className='details mtop'>Prerequisites</h3>
 
-                <div className={styles['text']}>
+                <div className={styles.text}>
                     There are no prerequisites for this course.
                     The course content is appropriate for new learners with no previous experience in this topic.
                 </div>
@@ -121,8 +133,9 @@ const CourseDetailsPage: FC<{}> = () => {
     }
 
     function getCompletionSuggestion(): ReactNode {
+
         if (!course) {
-            return
+            return undefined
         }
 
         return progress?.status === UserCertificationProgressStatus.completed ? (
@@ -133,23 +146,28 @@ const CourseDetailsPage: FC<{}> = () => {
                     <h3 className='details mtop'>Suggestions for completing this course</h3>
 
                     <div
-                        className={styles['text']}
+                        className={styles.text}
                         dangerouslySetInnerHTML={{ __html: (course.completionSuggestions ?? []).join('<br /><br />') }}
-                    ></div>
+                    />
                 </>
             )
         )
     }
 
     function getFooter(): ReactNode {
+
         if (!resourceProvider) {
-            return
+            return undefined
         }
 
         return (
             <div className={styles['credits-link']}>
                 <a href={`//${resourceProvider.url}`} target='_blank' referrerPolicy='no-referrer' rel='noreferrer'>
-                    This course was created by the {resourceProvider.url} community.
+                    This course was created by the
+                    {' '}
+                    {resourceProvider.url}
+                    {' '}
+                    community.
                     <IconOutline.ExternalLinkIcon />
                 </a>
             </div>
@@ -159,14 +177,14 @@ const CourseDetailsPage: FC<{}> = () => {
     return (
         <ContentLayout>
             {!ready && (
-                <div className={styles['wrap']}>
+                <div className={styles.wrap}>
                     <LoadingSpinner />
                 </div>
             )}
             <Breadcrumb items={breadcrumb} />
             {ready && course && (
                 <>
-                    <div className={styles['wrap']}>
+                    <div className={styles.wrap}>
                         <div className={styles['intro-copy']}>
                             <CourseTitle
                                 size='lg'
@@ -176,12 +194,12 @@ const CourseDetailsPage: FC<{}> = () => {
                             />
 
                             <div
-                                className={styles['text']}
+                                className={styles.text}
                                 dangerouslySetInnerHTML={{ __html: course.introCopy.join('<br /><br />') }}
-                            ></div>
+                            />
                         </div>
 
-                        <div className={styles['description']}>
+                        <div className={styles.description}>
                             {getDescription()}
                             {getPrerequisites()}
                             {getCompletionSuggestion()}
@@ -190,7 +208,7 @@ const CourseDetailsPage: FC<{}> = () => {
                             </div>
                         </div>
 
-                        <div className={styles['aside']}>
+                        <div className={styles.aside}>
                             <CourseCurriculum
                                 course={course}
                                 progress={progress}

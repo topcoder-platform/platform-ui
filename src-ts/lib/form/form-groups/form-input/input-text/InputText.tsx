@@ -1,5 +1,5 @@
-import cn from 'classnames'
 import { FC, FocusEvent } from 'react'
+import cn from 'classnames'
 
 import { InputValue } from '../../../form-input.model'
 import { FormInputAutocompleteOption } from '../form-input-autcomplete-option.enum'

@@ -1,4 +1,4 @@
-import {Dispatch, SetStateAction, useEffect, useState} from 'react'
+import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
 import { xhrGetAsync } from '../../functions'
 
@@ -15,7 +15,8 @@ export function useFetchModalContent(contentUrl?: string, enabled?: boolean): Mo
         }
 
         if (!content) {
-            xhrGetAsync<string>(contentUrl).then(setContent)
+            xhrGetAsync<string>(contentUrl)
+                .then(setContent)
         }
     }, [contentUrl, content, enabled])
 

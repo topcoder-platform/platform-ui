@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import classNames from 'classnames'
 
 import { Button, ButtonStyle } from '../../../../lib'
 import {
@@ -48,25 +48,27 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
             setButtonLabel('View Certificate')
             setLink(getCertificatePath(
                 props.certification.providerName,
-                props.certification.certification
+                props.certification.certification,
             ))
 
         } else if (!inProgress) {
-            // if there is no in-progress lesson for the course, Get Started by going to the course details
+            // if there is no in-progress lesson for the course,
+            // Get Started by going to the course details
             setButtonLabel('Get Started')
             setLink(getCoursePath(
                 props.certification.providerName,
-                props.certification.certification
+                props.certification.certification,
             ))
 
         } else {
-            // otherwise this course is in-progress, so Resume the course at the next lesson
+            // otherwise this course is in-progress,
+            // so Resume the course at the next lesson
             setButtonStyle('secondary')
             setButtonLabel('Resume')
             setLink(getLessonPathFromCurrentLesson(
                 props.certification.providerName,
                 props.certification.certification,
-                inProgress.currentLesson
+                inProgress.currentLesson,
             ))
         }
     }, [
@@ -77,7 +79,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
     ])
 
     return (
-        <div className={classNames(styles['wrap'], !link && 'soon')}>
+        <div className={classNames(styles.wrap, !link && 'soon')}>
             <div className='overline'>
                 {props.certification.category}
             </div>
@@ -86,7 +88,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                 title={props.certification.title}
                 trackType={props.certification.trackType}
             />
-            <div className={styles['bottom']}>
+            <div className={styles.bottom}>
                 {!!link && (
                     <Button
                         buttonStyle={buttonStyle}

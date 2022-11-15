@@ -24,7 +24,7 @@ const CompletedTab: FC<CompletedTabProps> = (props: CompletedTabProps) => {
         handleSortChange,
     }: UseSortAndFilterValue = useSortAndFilter(
         props.allCertificates,
-        props.certifications
+        props.certifications,
     )
 
     const disableFilters: boolean = props.certifications.length < 1
@@ -45,7 +45,7 @@ const CompletedTab: FC<CompletedTabProps> = (props: CompletedTabProps) => {
     )
 
     const renderCertificationsList: () => ReactNode = () => (
-        hasCertifications ? certifications.map((certif) => (
+        hasCertifications ? certifications.map(certif => (
             <MyCourseCompletedCard
                 certification={props.certificatesById[certif.certificationId]}
                 key={certif.certificationId}

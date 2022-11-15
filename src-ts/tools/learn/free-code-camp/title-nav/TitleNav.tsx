@@ -11,37 +11,34 @@ interface TitleNavProps {
     title?: string
 }
 
-const TitleNav: FC<TitleNavProps> = (props: TitleNavProps) => {
+const TitleNav: FC<TitleNavProps> = (props: TitleNavProps) => (
+    <div className={styles.wrap}>
+        <h1 className='details'>
+            {props.title}
+        </h1>
 
-    return (
-        <div className={styles['wrap']}>
-            <h1 className='details'>
-                {props.title}
-            </h1>
-
-            <div className={styles['nav-wrap']}>
-                <span className='overline'>
-                    <span className={styles['current']}>{props.currentStep}</span>
-                    <span> / </span>
-                    <span>{props.maxStep}</span>
-                </span>
-                <div className={styles['nav-btns']}>
-                    <div
-                        className={styles['nav-btn']}
-                        onClick={() => props.onNavigate(-1)}
-                    >
-                        <IconSolid.ChevronLeftIcon />
-                    </div>
-                    <div
-                        className={styles['nav-btn']}
-                        onClick={() => props.onNavigate(1)}
-                    >
-                        <IconSolid.ChevronRightIcon />
-                    </div>
+        <div className={styles['nav-wrap']}>
+            <span className='overline'>
+                <span className={styles.current}>{props.currentStep}</span>
+                <span> / </span>
+                <span>{props.maxStep}</span>
+            </span>
+            <div className={styles['nav-btns']}>
+                <div
+                    className={styles['nav-btn']}
+                    onClick={() => props.onNavigate(-1)}
+                >
+                    <IconSolid.ChevronLeftIcon />
+                </div>
+                <div
+                    className={styles['nav-btn']}
+                    onClick={() => props.onNavigate(1)}
+                >
+                    <IconSolid.ChevronRightIcon />
                 </div>
             </div>
         </div>
-    )
-}
+    </div>
+)
 
 export default TitleNav

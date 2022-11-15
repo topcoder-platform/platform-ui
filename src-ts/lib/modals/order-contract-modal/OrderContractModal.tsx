@@ -10,15 +10,16 @@ interface OrderContractModalProps {
     onClose: () => void
 }
 
-const OrderContractModal: FC<OrderContractModalProps> = ({ isOpen, onClose }: OrderContractModalProps) => (
-    <BaseModal
-        onClose={onClose}
-        open={isOpen}
-        size='lg'
-        title='TOPCODER ONLINE ORDER USER AGREEMENT'
-        contentClassName={styles.container}
-        contentUrl={contentUrl}
-    />
-)
+const OrderContractModal: FC<OrderContractModalProps>
+    = (props: OrderContractModalProps) => (
+        <BaseModal
+            onClose={props.onClose}
+            open={props.isOpen}
+            size='lg'
+            title='TOPCODER ONLINE ORDER USER AGREEMENT'
+            contentClassName={styles.container}
+            contentUrl={contentUrl}
+        />
+    )
 
 export default OrderContractModal

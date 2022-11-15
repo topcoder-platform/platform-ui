@@ -98,17 +98,17 @@ export const workRoutes: Array<PlatformRoute> = [
                 route: `${bugHuntRoute}review/:workId`,
             },
             {
-                element: <WorkLoginPrompt previousPageUrl={WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']} />,
+                element: <WorkLoginPrompt previousPageUrl={WorkIntakeFormRoutes[WorkType.bugHunt].basicInfo} />,
                 route: `${bugHuntRoute}login-prompt/:retUrl`,
             },
             // General
             {
                 element: <SaveAfterLogin />,
-                route: `:workType/save-after-login`,
+                route: ':workType/save-after-login',
             },
             {
                 element: <WorkThankYou />,
-                route: `:workType/thank-you`,
+                route: ':workType/thank-you',
             },
         ],
         element: <IntakeForms />,
