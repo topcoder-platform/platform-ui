@@ -1,18 +1,19 @@
-import classNames from 'classnames'
 import { FC } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
+import classNames from 'classnames'
 
 import {
     Button,
     ProgressBar,
-    textFormatDateLocaleShortString
+    textFormatDateLocaleShortString,
+    textFormatGetSafeString,
 } from '../../../../../lib'
 import {
     CoursesProviderData,
     CourseTitle,
     LearnCertification,
-    useCourses,
-} from '../../../learn-lib'
+    useGetCourses,
+} from '../..'
 import { getCoursePath, getLessonPathFromCurrentLesson } from '../../../learn.routes'
 import { CurriculumSummary } from '../../curriculum-summary'
 
@@ -32,11 +33,12 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
     const isDetailed: boolean = props.theme === 'detailed'
     const isMinimum: boolean = props.theme === 'minimum'
 
-    const certification: string = props.certification?.certification ?? ''
-    const provider: string = props.certification?.providerName ?? ''
-    const { course }: CoursesProviderData = useCourses(provider, certification)
+    const certification: string = textFormatGetSafeString(props.certification?.certification)
+    const provider: string = textFormatGetSafeString(props.certification?.providerName)
+    const { course }: CoursesProviderData = useGetCourses(provider, certification)
 
     const resumeCourse: () => void = () => {
+
         if (!props.currentLesson) {
             return
         }
@@ -50,16 +52,16 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
     }
 
     return (
-        <div className={classNames(styles['wrap'], styles['large'], 'course-card-wrap', 'in-progress')}>
-            <div className={styles['inner']}>
-                <div className={styles['line']}>
+        <div className={classNames(styles.wrap, styles.large, 'course-card-wrap', 'in-progress')}>
+            <div className={styles.inner}>
+                <div className={styles.line}>
                     <CourseTitle
                         title={props.certification?.title ?? ''}
                         trackType={props.certification?.trackType}
                         credits={props.certification?.providerName}
                     >
                         {isDetailed && (
-                            <div className={styles['status']}>In Progress</div>
+                            <div className={styles.status}>In Progress</div>
                         )}
                     </CourseTitle>
                     {isMinimum && (
@@ -85,12 +87,12 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
                 )}
 
                 {isDetailed && (
-                    <div className={styles['summary']}>
+                    <div className={styles.summary}>
                         <CurriculumSummary
                             moduleCount={course?.modules.length ?? 0}
                             completionHours={course?.estimatedCompletionTime}
                         />
-                        <div className={styles['button']}>
+                        <div className={styles.button}>
                             <Button
                                 buttonStyle='primary'
                                 size='md'
@@ -102,9 +104,10 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
                 )}
             </div>
             {isDetailed && (
-                <div className={styles['details']}>
+                <div className={styles.details}>
                     <div className={styles['details-inner']}>
-                        <p dangerouslySetInnerHTML={{ __html: course?.introCopy.join('<br /><br />') ?? '' }}></p>
+                        {/* eslint-disable-next-line react/no-danger */}
+                        <p dangerouslySetInnerHTML={{ __html: course?.introCopy.join('<br /><br />') ?? '' }} />
                         {props.startDate && (
                             <div className={styles['started-date']}>
                                 <span>Started </span>

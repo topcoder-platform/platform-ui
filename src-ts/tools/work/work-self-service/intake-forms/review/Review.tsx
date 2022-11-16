@@ -1,5 +1,9 @@
 import { CardNumberElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
-import { loadStripe, Stripe, StripeElements } from '@stripe/stripe-js'
+import { Stripe, StripeElements } from '@stripe/stripe-js'
+// we need to load this from submodule instead of root
+// @see: https://www.npmjs.com/package/@stripe/stripe-js # Importing loadStripe without side effects
+// tslint:disable-next-line:no-submodule-imports
+import { loadStripe } from '@stripe/stripe-js/pure'
 import { Dispatch, FC, SetStateAction, useContext, useEffect, useState } from 'react'
 import { toastr } from 'react-redux-toastr'
 import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
@@ -54,7 +58,7 @@ const Review: FC = () => {
     const { profile: userProfile }: ProfileContextData = useContext<ProfileContextData>(profileContext)
 
     const workId: string | undefined = useParams().workId
-    const redirectUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']}/${workId}`
+    const redirectUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt].basicInfo}/${workId}`
 
     const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
     const [formData, setFormData]: [any, Dispatch<any>] = useState<any>({})
@@ -92,6 +96,7 @@ const Review: FC = () => {
             if (!intakeFormBH) {
                 return
             }
+
             const form: any = JSON.parse(intakeFormBH.value).form
             setFormData(JSON.parse(intakeFormBH.value).form)
             setFormValues({
@@ -101,6 +106,7 @@ const Review: FC = () => {
                 price: `$${getPrice(form.basicInfo.packageType)}`,
             })
         }
+
         getAndSetWork()
         // Disabling to avoid infite re-renders
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -198,8 +204,8 @@ const Review: FC = () => {
             {/* TODO: We need to not hard code the configs to that of BugHunt and instead
             use the challenge data to determine the WorkType */}
             <IntakeFormsBreadcrumb
-                basicInfoRoute={`${WorkIntakeFormRoutes[WorkType.bugHunt]['basicInfo']}/${workId}`}
-                reviewRoute={WorkIntakeFormRoutes[WorkType.bugHunt]['review']}
+                basicInfoRoute={`${WorkIntakeFormRoutes[WorkType.bugHunt].basicInfo}/${workId}`}
+                reviewRoute={WorkIntakeFormRoutes[WorkType.bugHunt].review}
                 workType={workBugHuntConfig.type}
             />
             <WorkTypeBanner
@@ -212,14 +218,14 @@ const Review: FC = () => {
 
             <DeliverablesInfoCard isMobile={isMobile} />
 
-            <div className={styles['content']}>
-                <div className={styles['left']}>
-                    <WorkDetailDetailsPane formData={formData} isReviewPage={true} redirectUrl={redirectUrl} collapsible={true} defaultOpen={true} />
+            <div className={styles.content}>
+                <div className={styles.left}>
+                    <WorkDetailDetailsPane formData={formData} isReviewPage redirectUrl={redirectUrl} collapsible defaultOpen />
                     {
                         !isMobile && (
                             <InfoCard
                                 color='success'
-                                defaultOpen={true}
+                                defaultOpen
                                 isCollapsible
                                 title={workBugHuntConfig.review.aboutYourProjectTitle}
                             >
@@ -228,13 +234,13 @@ const Review: FC = () => {
                         )
                     }
                 </div>
-                <div className={styles['right']}>
+                <div className={styles.right}>
                     {
                         profile && (
                             <div className={styles['payment-form-wrapper']}>
                                 <div className={styles['form-header']}>
-                                    <h3 className={styles['price']}>{formFieldValues.price}</h3>
-                                    <div className={styles['label']}>Total Payment</div>
+                                    <h3 className={styles.price}>{formFieldValues.price}</h3>
+                                    <div className={styles.label}>Total Payment</div>
                                 </div>
                                 <PaymentForm
                                     formData={formFieldValues}
@@ -269,14 +275,21 @@ const Review: FC = () => {
     )
 }
 
-const stripePromise: Promise<Stripe | null> = loadStripe(EnvironmentConfig.STRIPE.API_KEY, {
-    apiVersion: EnvironmentConfig.STRIPE.API_VERSION,
-})
+let stripePromise: Promise<Stripe | null | undefined> | undefined
 
-const output: () => JSX.Element = () => (
-    <Elements stripe={stripePromise}>
-        <Review />
-    </Elements>
-)
+const output: () => JSX.Element = () => {
+
+    if (!stripePromise) {
+        stripePromise = loadStripe(EnvironmentConfig.STRIPE.API_KEY, {
+            apiVersion: EnvironmentConfig.STRIPE.API_VERSION,
+        })
+    }
+
+    return (
+        <Elements stripe={stripePromise as Promise<Stripe>}>
+            <Review />
+        </Elements>
+    )
+}
 
 export default output

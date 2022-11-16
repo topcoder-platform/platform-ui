@@ -1,14 +1,14 @@
-import classNames from 'classnames'
 import { FC } from 'react'
+import classNames from 'classnames'
 
 import { Button, textFormatDateLocaleShortString } from '../../../../../lib'
-import { CourseTitle, LearnCertification } from '../../../learn-lib'
+import { CourseTitle, LearnCertification } from '../..'
 import { getCertificatePath, getCoursePath } from '../../../learn.routes'
 
 import styles from './Completed.module.scss'
 
 interface CompletedProps {
-    certification: LearnCertification
+    certification?: LearnCertification
     completed: string
 }
 
@@ -19,15 +19,16 @@ const Completed: FC<CompletedProps> = (props: CompletedProps) => {
     }
 
     return (
-        <div className={classNames(styles['wrap'], 'course-card-wrap', 'completed')}>
-            <div className={styles['line']}>
+        <div className={classNames(styles.wrap, 'course-card-wrap', 'completed')}>
+            <div className={styles.line}>
                 <CourseTitle
                     title={props.certification.title}
                     trackType={props.certification.trackType}
                     credits={props.certification.providerName}
                 >
                     <div className={styles['completed-status']}>
-                        Completed{' '}
+                        Completed
+                        {' '}
                         {textFormatDateLocaleShortString(new Date(props.completed))}
                     </div>
                 </CourseTitle>
@@ -37,13 +38,23 @@ const Completed: FC<CompletedProps> = (props: CompletedProps) => {
                     size='xs'
                     buttonStyle='secondary'
                     label='View Course'
-                    route={getCoursePath(props.certification.providerName, props.certification.certification)}
+                    route={
+                        getCoursePath(
+                            props.certification.providerName,
+                            props.certification.certification,
+                        )
+                    }
                 />
                 <Button
                     size='xs'
                     buttonStyle='secondary'
                     label='View certificate'
-                    route={getCertificatePath(props.certification.providerName, props.certification.certification)}
+                    route={
+                        getCertificatePath(
+                            props.certification.providerName,
+                            props.certification.certification,
+                        )
+                    }
                 />
             </div>
         </div>

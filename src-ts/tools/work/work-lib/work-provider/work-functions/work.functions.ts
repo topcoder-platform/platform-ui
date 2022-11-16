@@ -1,6 +1,6 @@
 import { PaymentMethodResult, Stripe, StripeCardNumberElement } from '@stripe/stripe-js'
 
-import { FormCard, Page, textFormatMoneyLocaleString, UserProfile } from '../../../../../lib'
+import { FormCard, GenericDataObject, Page, textFormatMoneyLocaleString, UserProfile } from '../../../../../lib'
 import { BugHuntPricingConfig } from '../../../work-self-service'
 
 import { WorkByStatus } from './work-by-status.model'
@@ -9,7 +9,7 @@ import {
     workFactoryBuildCreateReqeuest,
     workFactoryBuildCustomerPaymentRequest,
     workFactoryBuildUpdateRequest,
-    workFactoryCreate
+    workFactoryCreate,
 } from './work-factory'
 import {
     ActivateWorkRequest,
@@ -59,7 +59,7 @@ export async function createCustomerPaymentAsync(
 
     // if we don't have the bare min, don't do anything
     if (!stripe || !cardNumber || !challenge) {
-        return
+        return undefined
     }
 
     // initialize the payment method
@@ -67,9 +67,6 @@ export async function createCustomerPaymentAsync(
         card: cardNumber,
         type: 'card',
     })
-    if (!payload) {
-        return
-    }
 
     // make the request to make the payment
     const paymentRequest: CustomerPaymentRequest = workFactoryBuildCustomerPaymentRequest(
@@ -123,8 +120,11 @@ export async function getByWorkIdAsync(workId: string): Promise<Challenge> {
 export function getGroupedByStatus(work: ReadonlyArray<Work>): { [status: string]: WorkByStatus } {
     const output: { [status: string]: WorkByStatus } = {}
     Object.entries(WorkStatusFilter)
-        .forEach(([key, value]) => {
-            const results: ReadonlyArray<Work> = workStoreGetFilteredByStatus(work, WorkStatusFilter[key as keyof typeof WorkStatusFilter])
+        .forEach(([key]) => {
+            const results: ReadonlyArray<Work> = workStoreGetFilteredByStatus(
+                work,
+                WorkStatusFilter[key as keyof typeof WorkStatusFilter],
+            )
             output[key] = {
                 count: results.length,
                 messageCount: results.reduce((partialSum, a) => partialSum + (a.messageCount ?? 0), 0),
@@ -148,7 +148,7 @@ export function getStatusFilter(filterKey?: string): WorkStatusFilter | undefine
 
     // get the filter key from the passed in key
     const workStatusFilter: keyof typeof WorkStatusFilter | undefined = Object.entries(WorkStatusFilter)
-        .find(([key, value]) => key === filterKey)
+        .find(([key]) => key === filterKey)
         ?.[0] as keyof typeof WorkStatusFilter
 
     // if the passed in key doesn't match any filter, return undefined;
@@ -156,7 +156,7 @@ export function getStatusFilter(filterKey?: string): WorkStatusFilter | undefine
     return !workStatusFilter ? undefined : WorkStatusFilter[workStatusFilter]
 }
 
-export async function updateAsync(type: WorkType, challenge: Challenge, intakeForm: any): Promise<void> {
+export async function updateAsync(type: WorkType, challenge: Challenge, intakeForm: GenericDataObject): Promise<void> {
     const workConfig: WorkTypeConfig = WorkTypeConfigs[type]
     const body: UpdateWorkRequest = workFactoryBuildUpdateRequest(workConfig, challenge, intakeForm)
     return workStoreUpdateAsync(body)
@@ -174,11 +174,13 @@ async function getPageAsync(handle: string, page: Page): Promise<Array<Work>> {
 }
 
 export function getSelectedPackageFormatted(packageId: string): string {
-    const currentPackage: FormCard | undefined = BugHuntPricingConfig.find((pricingConfig) => pricingConfig.id === packageId)
+    const currentPackage: FormCard | undefined
+        = BugHuntPricingConfig.find(pricingConfig => pricingConfig.id === packageId)
     if (currentPackage) {
         const deviceType: string = currentPackage.sections?.[0]?.rows?.[3]?.text || ''
         const noOfTesters: string = `${currentPackage.sections?.[0]?.rows?.[2]?.text || 0} testers`
-        return `${currentPackage.title} - ${textFormatMoneyLocaleString(currentPackage.price)} - ${deviceType} - ${noOfTesters}`
+        const price: string | undefined = textFormatMoneyLocaleString(currentPackage.price)
+        return `${currentPackage.title} - ${price} - ${deviceType} - ${noOfTesters}`
     }
 
     return packageId

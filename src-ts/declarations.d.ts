@@ -7,11 +7,6 @@ declare module '*.html' {
 
 declare module '*.pdf'
 
-declare module '*.scss' {
-    const scssFile: { [style: string]: any }
-    export = scssFile
-}
-
 declare module '*.svg' {
     import * as React from 'react'
 
@@ -26,6 +21,11 @@ declare module '*.svg' {
 declare module 'tc-auth-lib'
 
 declare module '*.md' {
+    const value: string
+    export default value
+}
+
+declare module '*.txt' {
     const value: string
     export default value
 }

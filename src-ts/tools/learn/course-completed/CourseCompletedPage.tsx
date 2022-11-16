@@ -8,55 +8,59 @@ import {
     Button,
     LoadingSpinner,
     profileContext,
-    ProfileContextData
+    ProfileContextData,
+    textFormatGetSafeString,
 } from '../../../lib'
 import {
     AllCertificationsProviderData,
     CoursesProviderData,
     CourseTitle,
-    useAllCertifications,
-    useCourses,
+    useGetCertification,
+    useGetCourses,
+    useGetUserCertificationProgress,
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
-    useUserCertificationProgress
 } from '../learn-lib'
 import { getCertificatePath, getCoursePath, LEARN_PATHS, rootRoute } from '../learn.routes'
 
-import styles from './CourseCompletedPage.module.scss'
 import { ReactComponent as StarsSvg } from './stars.svg'
+import styles from './CourseCompletedPage.module.scss'
 
 const CourseCompletedPage: FC<{}> = () => {
 
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
-    const providerParam: string = routeParams.provider ?? ''
-    const certificationParam: string = routeParams.certification ?? ''
+    const providerParam: string = textFormatGetSafeString(routeParams.provider)
+    const certificationParam: string = textFormatGetSafeString(routeParams.certification)
     const coursePath: string = getCoursePath(providerParam, certificationParam)
 
     const {
         course: courseData,
         ready: courseDataReady,
-    }: CoursesProviderData = useCourses(providerParam, certificationParam)
+    }: CoursesProviderData = useGetCourses(providerParam, certificationParam)
 
     const {
         certificationProgress: progress,
         ready: progressReady,
-    }: UserCertificationProgressProviderData = useUserCertificationProgress(
+    }: UserCertificationProgressProviderData = useGetUserCertificationProgress(
         profile?.userId,
         routeParams.provider,
-        routeParams.certification
+        routeParams.certification,
     )
 
     const {
         certification,
         ready: certifReady,
-    }: AllCertificationsProviderData = useAllCertifications(providerParam, progress?.certificationId, {
-        enabled: progressReady && !!progress,
-    })
+    }: AllCertificationsProviderData = useGetCertification(
+        providerParam,
+        textFormatGetSafeString(progress?.certificationId),
+        {
+            enabled: progressReady && !!progress?.certificationId,
+        },
+    )
 
-    /* tslint:disable:cyclomatic-complexity */
     const isLoggedIn: boolean = profileReady && !!profile
     const certificatesDataReady: boolean = progressReady && certifReady
     const ready: boolean = profileReady && courseDataReady && (!isLoggedIn || certificatesDataReady)
@@ -109,9 +113,12 @@ const CourseCompletedPage: FC<{}> = () => {
                                 </div>
                                 <hr />
                                 <p className='body-main'>
-                                    Now that you have completed the {courseData.title},
+                                    Now that you have completed the
+                                    {' '}
+                                    {courseData.title}
+                                    ,
                                     take a look at our other Topcoder Academy courses.
-                                    To view other courses, press the "Start a new course" button below.
+                                    To view other courses, press the  &quot;Start a new course&quot; button below.
                                 </p>
                                 <div className={styles['btns-wrap']}>
                                     <Button
@@ -129,8 +136,9 @@ const CourseCompletedPage: FC<{}> = () => {
                                 </div>
                                 <p className='body-main'>
                                     Completed courses in the Academy will reflect on your Topcoder profile.
-                                    This will make your Topcoder profile more attractive to potential employers via Gig work,
-                                    and shows the community how well you've progressed in completing learning courses.
+                                    This will make your Topcoder profile more attractive to potential employers
+                                    via Gig work, and shows the community how well you&apos;ve progressed in completing
+                                    learning courses.
                                 </p>
                                 <div className={styles['btns-wrap']}>
                                     <Button

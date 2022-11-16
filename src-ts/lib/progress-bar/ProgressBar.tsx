@@ -13,8 +13,8 @@ const ProgressBar: FC<ProgressBarProps> = (props: ProgressBarProps) => {
     }
 
     return (
-        <div className={styles['wrap']}>
-            <div className='progress' style={progressProps}></div>
+        <div className={styles.wrap}>
+            <div className='progress' style={progressProps} />
         </div>
     )
 }

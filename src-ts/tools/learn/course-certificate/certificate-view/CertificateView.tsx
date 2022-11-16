@@ -1,7 +1,7 @@
+import { FC, MutableRefObject, useCallback, useEffect, useMemo, useRef } from 'react'
+import { NavigateFunction, useNavigate } from 'react-router-dom'
 import classNames from 'classnames'
 import html2canvas from 'html2canvas'
-import { FC, MutableRefObject, useEffect, useMemo, useRef } from 'react'
-import { NavigateFunction, useNavigate } from 'react-router-dom'
 
 import {
     FacebookSocialShareBtn,
@@ -10,22 +10,22 @@ import {
     LinkedinSocialShareBtn,
     LoadingSpinner,
     TwitterSocialShareBtn,
-    UserProfile
+    UserProfile,
 } from '../../../../lib'
 import {
     AllCertificationsProviderData,
     CoursesProviderData,
-    useAllCertifications,
-    useCourses,
+    useGetCertification,
+    useGetCourses,
+    useGetUserCompletedCertifications,
     UserCompletedCertificationsProviderData,
-    useUserCompletedCertifications,
 } from '../../learn-lib'
 import { getCoursePath, getUserCertificateSsr } from '../../learn.routes'
 
 import { ActionButton } from './action-button'
 import { Certificate } from './certificate'
-import styles from './CertificateView.module.scss'
 import { useCertificateScaling } from './use-certificate-scaling.hook'
+import styles from './CertificateView.module.scss'
 
 export type CertificateViewStyle = 'large-container' | undefined
 
@@ -41,20 +41,20 @@ interface CertificateViewProps {
 const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) => {
 
     const navigate: NavigateFunction = useNavigate()
-    const { onCertificationNotCompleted }: CertificateViewProps = props
     const coursePath: string = getCoursePath(props.provider, props.certification)
-    const certificateElRef: MutableRefObject<HTMLElement | any> = useRef()
-    const certificateWrapRef: MutableRefObject<HTMLElement | any> = useRef()
+    const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
+    const certificateWrapRef: MutableRefObject<HTMLDivElement | any> = useRef()
 
     const userName: string = useMemo(() => (
-        [props.profile.firstName, props.profile.lastName].filter(Boolean).join(' ') ||
-        props.profile.handle
+        [props.profile.firstName, props.profile.lastName].filter(Boolean)
+            .join(' ')
+        || props.profile.handle
     ), [props.profile.firstName, props.profile.handle, props.profile.lastName])
 
     const {
         course,
         ready: courseReady,
-    }: CoursesProviderData = useCourses(props.provider, props.certification)
+    }: CoursesProviderData = useGetCourses(props.provider, props.certification)
 
     function getCertTitle(user: string): string {
         return `${user} - ${course?.title} Certification`
@@ -72,20 +72,20 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const {
         certifications: [completedCertificate],
         ready: completedCertificateReady,
-    }: UserCompletedCertificationsProviderData = useUserCompletedCertifications(
+    }: UserCompletedCertificationsProviderData = useGetUserCompletedCertifications(
         props.profile.userId,
         props.provider,
-        props.certification
+        props.certification,
     )
     const hasCompletedTheCertification: boolean = !!completedCertificate
 
     const {
         certification: certificate,
         ready: certificateReady,
-    }: AllCertificationsProviderData = useAllCertifications(
+    }: AllCertificationsProviderData = useGetCertification(
         props.provider,
-        course?.certificationId,
-        { enabled: !!course?.certificationId }
+        course?.certificationId ?? '',
+        { enabled: !!course?.certificationId },
     )
 
     const ready: boolean = useMemo(() => (
@@ -98,17 +98,19 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
 
     useCertificateScaling(ready ? certificateWrapRef : undefined)
 
-    function handleBackBtnClick(): void {
+    const handleBackBtnClick: () => void = useCallback(() => {
         navigate(coursePath)
-    }
+    }, [coursePath, navigate])
 
-    async function getCertificateCanvas(): Promise<HTMLCanvasElement | void> {
+    const getCertificateCanvas: () => Promise<HTMLCanvasElement | void> = useCallback(async () => {
+
         if (!certificateElRef.current) {
-            return
+            return undefined
         }
 
         return html2canvas(certificateElRef.current, {
-            // when canvas iframe is ready, remove text gradients as they're not supported in html2canvas
+            // when canvas iframe is ready, remove text gradients
+            // as they're not supported in html2canvas
             onclone: (doc: Document) => {
                 [].forEach.call(doc.querySelectorAll('.grad'), (el: HTMLDivElement) => {
                     el.classList.remove('grad')
@@ -120,23 +122,25 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
             windowHeight: 700,
             windowWidth: 1024,
         })
-    }
+    }, [])
 
-    async function handleDownload(): Promise<void> {
+    const handleDownload: () => Promise<void> = useCallback(async () => {
+
+        const canvas: HTMLCanvasElement | void = await getCertificateCanvas()
+        if (!!canvas) {
+            fileDownloadCanvasAsImage(canvas, `${certificationTitle}.png`)
+        }
+
+    }, [certificationTitle, getCertificateCanvas])
+
+    const handlePrint: () => Promise<void> = useCallback(async () => {
+
         const canvas: HTMLCanvasElement | void = await getCertificateCanvas()
         if (!canvas) {
             return
         }
-        fileDownloadCanvasAsImage(canvas, `${certificationTitle}.png`)
-    }
 
-    async function handlePrint(): Promise<void> {
-        const canvas: HTMLCanvasElement | void = await getCertificateCanvas()
-        if (!canvas) {
-            return
-        }
         const printWindow: Window | null = window.open('')
-
         if (!printWindow) {
             return
         }
@@ -145,25 +149,20 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         printWindow.document.title = certificationTitle
         printWindow.focus()
         printWindow.print()
-    }
+    }, [certificationTitle, getCertificateCanvas])
 
     useEffect(() => {
         if (ready && !hasCompletedTheCertification) {
-            onCertificationNotCompleted()
+            props.onCertificationNotCompleted()
         }
-    }, [
-        coursePath,
-        hasCompletedTheCertification,
-        onCertificationNotCompleted,
-        ready,
-    ])
+    }, [coursePath, hasCompletedTheCertification, props, ready])
 
     return (
         <>
             <LoadingSpinner hide={ready} />
 
             {ready && readyAndCompletedCertification && (
-                <div className={styles['wrap']}>
+                <div className={styles.wrap}>
                     <div className={styles['content-wrap']}>
                         {!props.hideActions && (
                             <div className={styles['btns-wrap']}>

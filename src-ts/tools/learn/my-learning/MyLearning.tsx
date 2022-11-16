@@ -1,14 +1,22 @@
 import { Dispatch, FC, ReactNode, SetStateAction, useContext, useMemo, useState } from 'react'
 
-import { Breadcrumb, BreadcrumbItemModel, ContentLayout, LoadingSpinner, Portal, profileContext, ProfileContextData } from '../../../lib'
+import {
+    Breadcrumb,
+    BreadcrumbItemModel,
+    ContentLayout,
+    LoadingSpinner,
+    Portal,
+    profileContext,
+    ProfileContextData,
+} from '../../../lib'
 import {
     AllCertificationsProviderData,
     LearnCertification,
-    useAllCertifications,
+    useGetAllCertifications,
+    useGetUserCertifications,
     useLearnBreadcrumb,
     UserCertificationsProviderData,
-    useUserCertifications,
-    WaveHero
+    WaveHero,
 } from '../learn-lib'
 import { LEARN_PATHS } from '../learn.routes'
 
@@ -25,9 +33,10 @@ interface CertificatesByIdType {
 const MyLearning: FC<{}> = () => {
 
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
-    const { completed, inProgress, ready: coursesReady }: UserCertificationsProviderData = useUserCertifications()
-    const { certifications, ready: certificatesReady }: AllCertificationsProviderData = useAllCertifications()
-    const [activeTab, setActiveTab]: [MyTabsViews|undefined, Dispatch<SetStateAction<MyTabsViews|undefined>>] = useState()
+    const { completed, inProgress, ready: coursesReady }: UserCertificationsProviderData = useGetUserCertifications()
+    const { certifications, ready: certificatesReady }: AllCertificationsProviderData = useGetAllCertifications()
+    const [activeTab, setActiveTab]: [MyTabsViews | undefined, Dispatch<SetStateAction<MyTabsViews | undefined>>]
+        = useState()
 
     const ready: boolean = profileReady && coursesReady && certificatesReady
 
@@ -70,7 +79,7 @@ const MyLearning: FC<{}> = () => {
     return (
         <ContentLayout contentClass={styles['content-layout']}>
             <Breadcrumb items={breadcrumb} />
-            <div className={styles['wrap']}>
+            <div className={styles.wrap}>
                 <LoadingSpinner hide={ready} className={styles['loading-spinner']} />
 
                 <Portal portalId='page-subheader-portal-el'>
@@ -79,8 +88,9 @@ const MyLearning: FC<{}> = () => {
                             title='my learning'
                             theme='light'
                             text={`
-                                This is your very own page to keep track of your professional education and skill building.
-                                From here you can resume your courses in progress or review past accomplishments.
+                                This is your very own page to keep track of your professional education and skill 
+                                building. From here you can resume your courses in progress or review past 
+                                accomplishments.
                             `}
                         >
                             <HeroCard userHandle={profile?.handle} />

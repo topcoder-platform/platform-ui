@@ -27,7 +27,7 @@ const ContactSupportModal: FC<ContactSupportModalProps> = (props: ContactSupport
             onClose={onClose}
             open={props.isOpen}
             size='md'
-            title={`We're Here to Help`}
+            title={'We\'re Here to Help'}
         >
             <ContactSupportForm
                 formDef={formDef}

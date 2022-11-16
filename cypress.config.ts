@@ -1,4 +1,3 @@
-// tslint:disable-next-line: no-submodule-imports This is the way cypress does it
 import task from '@cypress/code-coverage/task'
 import { defineConfig } from 'cypress'
 

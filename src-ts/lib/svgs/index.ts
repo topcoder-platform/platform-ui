@@ -39,6 +39,6 @@ export {
     GitlabIcon,
     GithubIcon,
     SaveForLaterIcon,
-    IconCheck
+    IconCheck,
 }
 export * from './icon-wrapper'

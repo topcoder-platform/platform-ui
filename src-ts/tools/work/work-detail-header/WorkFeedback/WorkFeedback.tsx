@@ -24,12 +24,10 @@ const WorkFeedback: FC<WorkFeedbackProps> = (props: WorkFeedbackProps) => {
 
     function requestGenerator(inputs: ReadonlyArray<FormInputModel>): Array<Feedback> {
         return inputs
-            .map((input: FormInputModel) => {
-                return {
-                    name: input.instructions || input.label as string,
-                    value: input.value,
-                }
-            })
+            .map((input: FormInputModel) => ({
+                name: input.instructions || input.label as string,
+                value: input.value,
+            }))
     }
 
     async function saveAsync(feedback: Array<Feedback>): Promise<void> {
@@ -38,7 +36,7 @@ const WorkFeedback: FC<WorkFeedbackProps> = (props: WorkFeedbackProps) => {
     }
 
     function onClose(): void {
-        const updatedForm: FormDefinition = {...formDef}
+        const updatedForm: FormDefinition = { ...formDef }
         formOnReset(formGetInputFields(updatedForm.groups || []))
         setFormDef(updatedForm)
         props.onClose()

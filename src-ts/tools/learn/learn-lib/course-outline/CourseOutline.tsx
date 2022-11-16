@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { FC, useCallback } from 'react'
+import classNames from 'classnames'
 
 import { LoadingSpinner } from '../../../../lib'
 import {
@@ -7,7 +7,7 @@ import {
     LearnLesson,
     LearnModule,
     LearnUserCertificationProgress,
-} from '../../learn-lib'
+} from '..'
 import { getLessonPathFromModule } from '../../learn.routes'
 
 import { CollapsibleItem } from './collapsible-item'
@@ -24,23 +24,21 @@ interface CourseOutlineProps {
 const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
 
     const lessonPath: (course: LearnCourse, module: LearnModule, lesson: LearnLesson) => string
-        = useCallback((course: LearnCourse, module: LearnModule, lesson: LearnLesson) => {
-            return getLessonPathFromModule(
-                course.provider,
-                course.certification,
-                module.key,
-                lesson.dashedName,
-            )
-        }, [])
+        = useCallback((course: LearnCourse, module: LearnModule, lesson: LearnLesson) => getLessonPathFromModule(
+            course.provider,
+            course.certification,
+            module.key,
+            lesson.dashedName,
+        ), [])
 
     return (
-        <div className={classNames(styles['wrap'], 'course-outline-wrap')}>
+        <div className={classNames(styles.wrap, 'course-outline-wrap')}>
 
             <LoadingSpinner hide={props.ready !== false} />
 
             {props.course && (
-                <div className={classNames(styles['content'], 'content')}>
-                    {props.course.modules.map((module) => (
+                <div className={classNames(styles.content, 'content')}>
+                    {props.course.modules.map(module => (
                         <CollapsibleItem
                             active={props.currentStep}
                             duration={module.meta.estimatedCompletionTime}
@@ -49,7 +47,7 @@ const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
                             items={module.lessons}
                             key={module.key}
                             lessonsCount={module.lessons.length}
-                            path={(it: any) => props.course ? lessonPath(props.course, module, it) : ''}
+                            path={(it: any) => (props.course ? lessonPath(props.course, module, it) : '')}
                             progress={props.progress?.modules}
                             shortDescription={module.meta.introCopy}
                             title={module.meta.name}

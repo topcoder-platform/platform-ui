@@ -6,10 +6,10 @@ import { FormGroup } from '../form-group.model'
 import { FormInputModel } from '../form-input.model'
 
 import { FormCardSet } from './form-card-set'
-import FormGroupItem from './form-group-item/FormGroupItem'
 import { InputImagePicker, InputRating, InputText, InputTextarea } from './form-input'
 import { FormInputRow } from './form-input-row'
 import { InputTextTypes } from './form-input/input-text/InputText'
+import FormGroupItem from './form-group-item/FormGroupItem'
 import FormRadio from './form-radio'
 import styles from './FormGroups.module.scss'
 
@@ -35,7 +35,6 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
 
         let inputElement: JSX.Element
 
-        /* tslint:disable:cyclomatic-complexity */
         switch (input.type) {
 
             case 'rating':
@@ -124,17 +123,15 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
     }
 
     const formGroups: Array<JSX.Element | undefined> = formDef?.groups
-        ?.map((element: FormGroup, index: number) => {
-            return (
-                <FormGroupItem
-                    key={`element-${index}`}
-                    group={element}
-                    renderFormInput={renderInputField}
-                    totalGroupCount={formDef.groups?.length || 0}
-                    renderDividers={props.formDef.groupsOptions?.renderGroupDividers}
-                />
-            )
-        })
+        ?.map((element: FormGroup, index: number) => (
+            <FormGroupItem
+                key={`element-${index}`}
+                group={element}
+                renderFormInput={renderInputField}
+                totalGroupCount={formDef.groups?.length || 0}
+                renderDividers={props.formDef.groupsOptions?.renderGroupDividers}
+            />
+        ))
         || []
 
     return (

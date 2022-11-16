@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { MouseEvent } from 'react'
+import classNames from 'classnames'
 
 import { textFormatDateLocaleShortString, textFormatMoneyLocaleString } from '../../functions'
 import { TableCellType } from '../table-cell.type'
@@ -41,6 +41,7 @@ const TableCell: <T extends { [propertyName: string]: any }>(props: TableCellPro
             if (props.type !== 'action') {
                 return
             }
+
             // this is an action table cell, so stop propagation
             event.preventDefault()
             event.stopPropagation()

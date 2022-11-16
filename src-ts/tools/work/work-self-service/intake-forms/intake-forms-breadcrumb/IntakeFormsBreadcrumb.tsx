@@ -19,7 +19,7 @@ const IntakeFormsBreadcrumb: FC<IntakeFormsBreadcrumbProps> = ({ basicInfoRoute,
 
     if (reviewRoute) {
         breadcrumbs.push(
-            { url: reviewRoute, name: 'Review & Payment' }
+            { url: reviewRoute, name: 'Review & Payment' },
         )
     }
 

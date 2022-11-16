@@ -1,11 +1,11 @@
-import classNames from 'classnames'
 import { Dispatch, MouseEvent, SetStateAction, useEffect, useState } from 'react'
+import classNames from 'classnames'
 
 import { Button } from '../button'
 import { Sort } from '../pagination'
-import '../styles/_includes.scss'
 import { IconOutline } from '../svgs'
 import { Tooltip } from '../tooltip'
+import '../styles/_includes.scss'
 
 import { TableCell } from './table-cell'
 import { TableColumn } from './table-column.model'
@@ -41,29 +41,31 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
         const [sortedData, setSortedData]: [ReadonlyArray<T>, Dispatch<SetStateAction<ReadonlyArray<T>>>]
             = useState<ReadonlyArray<T>>(props.data)
 
-        useEffect(() => {
+        useEffect(
+            () => {
 
-            if (!defaultSortDirectionMap) {
-                const map: DefaultSortDirectionMap = {}
-                columns
-                    .filter(col => !!col.propertyName)
-                    .forEach(col => map[col.propertyName as string] = col.defaultSortDirection || 'asc')
-                setDefaultSortDirectionMap(map)
-            }
+                if (!defaultSortDirectionMap) {
+                    const map: DefaultSortDirectionMap = {}
+                    columns
+                        .filter(col => !!col.propertyName)
+                        .forEach(col => map[col.propertyName as string] = col.defaultSortDirection || 'asc')
+                    setDefaultSortDirectionMap(map)
+                }
 
-            // if we have a sort handler, don't worry about getting the sorted data;
-            // otherwise, get the sorted data for the table
-            const sorted: ReadonlyArray<T> = !!props.onToggleSort ? data : tableGetSorted(data, columns, sort)
+                // if we have a sort handler, don't worry about getting the sorted data;
+                // otherwise, get the sorted data for the table
+                const sorted: ReadonlyArray<T> = !!props.onToggleSort ? data : tableGetSorted(data, columns, sort)
 
-            setSortedData(sorted)
-        },
+                setSortedData(sorted)
+            },
             [
                 columns,
                 data,
                 defaultSortDirectionMap,
                 props.onToggleSort,
                 sort,
-            ])
+            ],
+        )
 
         function toggleSort(fieldName: string): void {
 
@@ -134,16 +136,14 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
 
                 // get the cells in the row
                 const cells: Array<JSX.Element> = props.columns
-                    .map((col, colIndex) => {
-                        return (
-                            <TableCell
-                                {...col}
-                                data={sorted}
-                                index={index}
-                                key={`${index}${colIndex}`}
-                            />
-                        )
-                    })
+                    .map((col, colIndex) => (
+                        <TableCell
+                            {...col}
+                            data={sorted}
+                            index={index}
+                            key={`${index}${colIndex}`}
+                        />
+                    ))
 
                 // return the entire row
                 return (
@@ -153,7 +153,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                         key={index}
                     >
                         {cells}
-                    </tr >
+                    </tr>
                 )
             })
 
@@ -172,7 +172,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 </table>
                 {
                     !!props.moreToLoad && !!props.onLoadMoreClick && (
-                        <div className={styles['loadBtnWrap']}>
+                        <div className={styles.loadBtnWrap}>
                             <Button
                                 buttonStyle='tertiary'
                                 label='Load More'

@@ -159,6 +159,7 @@
                     }
 
                     .info-icon {
+                        @include icon-lg;
                         margin-left: $space-sm;
                         color: $turq-160;
                         cursor: pointer;

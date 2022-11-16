@@ -1,6 +1,9 @@
 import { MutableRefObject, useEffect } from 'react'
 
-export function useCertificateScaling(certificateRef?: MutableRefObject<HTMLDivElement>): void {
+export function useCertificateScaling(
+    certificateRef?: MutableRefObject<HTMLDivElement | undefined>,
+): void {
+
     // the certificate isn't responsive: should look the same on mobile and desktop
     // add resize event listener to downscale the certificate
     useEffect(() => {
@@ -14,7 +17,7 @@ export function useCertificateScaling(certificateRef?: MutableRefObject<HTMLDivE
             // 975 and 1250 are the original container sizes,
             // and we're dividing by that to get the needed zoom level
             const ratioSize: number = window.innerWidth <= 745 ? 975 : 1250
-            Object.assign(certificateEl.style, {zoom: Math.min(1, parentWidth / ratioSize)})
+            Object.assign(certificateEl.style, { zoom: Math.min(1, parentWidth / ratioSize) })
         }
 
         window.addEventListener('resize', handleResize, false)

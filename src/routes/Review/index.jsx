@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Elements, useElements, useStripe } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
+import { loadStripe } from "@stripe/stripe-js/pure";
 import { toastr } from "react-redux-toastr";
 import React, { useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
@@ -40,9 +40,7 @@ import {
 import AboutYourProject from "./components/AboutYourProject";
 import styles from "./styles.module.scss";
 
-const stripePromise = loadStripe(config.STRIPE.API_KEY, {
-  apiVersion: config.STRIPE.API_VERSION,
-});
+let stripePromise;
 
 /**
  * Review Page
@@ -303,6 +301,12 @@ const Review = ({
 };
 
 const ReviewWrapper = (props) => {
+  if (!stripePromise) {
+    stripePromise = loadStripe(config.STRIPE.API_KEY, {
+      apiVersion: config.STRIPE.API_VERSION,
+    });
+  }
+
   return (
     <Elements stripe={stripePromise}>
       <Review {...props} />

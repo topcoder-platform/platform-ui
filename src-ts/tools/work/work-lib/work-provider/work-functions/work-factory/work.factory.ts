@@ -147,12 +147,13 @@ export function buildUpdateRequest(workTypeConfig: WorkTypeConfig, challenge: Ch
         },
     ]
 
-    Object.keys(formData).forEach((key) => {
-        intakeMetadata.push({
-            name: ChallengeMetadataName[key as keyof typeof ChallengeMetadataName],
-            value: formData[key] || '',
+    Object.keys(formData)
+        .forEach(key => {
+            intakeMetadata.push({
+                name: ChallengeMetadataName[key as keyof typeof ChallengeMetadataName],
+                value: formData[key] || '',
+            })
         })
-    })
     // ---- End Build Metadata ---- //
 
     // --- Build the Markdown string that gets displayed in Work Manager app and others --- //
@@ -160,10 +161,10 @@ export function buildUpdateRequest(workTypeConfig: WorkTypeConfig, challenge: Ch
 
     const data: ReadonlyArray<FormDetail> = mapFormData(
         type,
-        formData
+        formData,
     )
 
-    data.forEach((formDetail) => {
+    data.forEach(formDetail => {
         if (Object.keys(formDetail).length <= 0) { return }
 
         const formattedValue: string = formatFormDataOption(formDetail.value)
@@ -172,17 +173,18 @@ export function buildUpdateRequest(workTypeConfig: WorkTypeConfig, challenge: Ch
 
     if (getTypeCategory(type) === WorkTypeCategory.data) {
         templateString.push(
-            WorkStrings.MARKDOWN_SUBMISSION_GUIDELINES
+            WorkStrings.MARKDOWN_SUBMISSION_GUIDELINES,
         )
     }
     // ---- End Build Markdown string ---- //
 
     // If the duration of the Submission phase depends on the package selected (i.e.: Bug Hunt),
     // then update the duration for that phase to the correct value
-    const timeline: Array<WorkTimelinePhase> = workTypeConfig.timeline.map((phase) => {
+    const timeline: Array<WorkTimelinePhase> = workTypeConfig.timeline.map(phase => {
         if (workTypeConfig.submissionPhaseDuration && phase.phaseId === WorkConfigConstants.PHASE_ID_SUBMISSION) {
             phase.duration = workTypeConfig.submissionPhaseDuration[formData[ChallengeMetadataName.packageType] as PricePackageName] || 0
         }
+
         return phase
     })
 
@@ -293,7 +295,7 @@ function buildFormDataBugHunt(formData: any): ReadonlyArray<FormDetail> {
         {
             key: ChallengeMetadataName.deliveryType,
             title: ChallengeMetadataTitle.bugDeliveryType,
-            value: `${formData.deliveryType}${formData.repositoryLink ? ': ' + formData.repositoryLink : ''}`,
+            value: `${formData.deliveryType}${formData.repositoryLink ? `: ${formData.repositoryLink}` : ''}`,
         },
         {
             key: ChallengeMetadataName.additionalInformation,
@@ -331,11 +333,12 @@ function buildFormDataDesign(formData: any): ReadonlyArray<FormDetail> {
     const styleInfo: {} = {
         Like: formData.likedStyles?.value?.join(', '),
         // Disabling lint error to maintain order for display
-        // tslint:disable-next-line: object-literal-sort-keys
+        /* eslint-disable sort-keys */
         Dislike: formData.dislikedStyles?.value?.join(', '),
         'Additional Details': formData.stylePreferences?.value,
         'Color Selections': formData.colorOption?.value.join(', '),
         'Specific Colors': formData.specificColor?.value,
+        /* eslint-enable sort-keys */
     }
 
     return [
@@ -428,11 +431,12 @@ function buildFormDataProblem(formData: any): ReadonlyArray<FormDetail> {
  */
 function checkFormDataOptionEmpty(detail: any): boolean {
     return (
-        !detail ||
-        (typeof detail === 'string' && detail.trim().length === 0) ||
-        (Array.isArray(detail) && detail.length === 0) ||
-        (typeof detail === 'object' &&
-            Object.values(detail).filter((val: any) => val && val.trim().length !== 0)
+        !detail
+        || (typeof detail === 'string' && detail.trim().length === 0)
+        || (Array.isArray(detail) && detail.length === 0)
+        || (typeof detail === 'object'
+            && Object.values(detail)
+                .filter((val: any) => val && val.trim().length !== 0)
                 .length === 0)
     )
 }
@@ -445,21 +449,19 @@ function findOpenPhase(challenge: Challenge): ChallengePhase | undefined {
 
     // sort the phases descending by start date
     const sortedPhases: Array<ChallengePhase> = challenge.phases
-        .sort((a, b) => new Date(b.actualStartDate).getTime() - new Date(a.actualStartDate).getTime())
+        .sort((a, b) => new Date(b.actualStartDate)
+            .getTime() - new Date(a.actualStartDate)
+            .getTime())
 
     const now: Date = new Date()
     // if we have an open phase, just use that
     const openPhase: ChallengePhase | undefined = sortedPhases.find(phase => phase.isOpen)
         // otherwise, find the phase that _should_ be open now based on its start/end datetimes
         || sortedPhases
-            .find(phase => {
-                return new Date(phase.actualEndDate) > now && new Date(phase.actualStartDate) < now
-            })
+            .find(phase => new Date(phase.actualEndDate) > now && new Date(phase.actualStartDate) < now)
         // otherwise, find the most recently started phase that's in the past
         || sortedPhases
-            .find(phase => {
-                return new Date(phase.actualStartDate) < now
-            })
+            .find(phase => new Date(phase.actualStartDate) < now)
 
     return openPhase
 }
@@ -470,8 +472,10 @@ function findPhase(challenge: Challenge, phases: Array<string>): ChallengePhase 
         if (!!phase) {
             break
         }
+
         phase = challenge.phases.find((p: any) => p.name === currentPhase)
     }
+
     return phase
 }
 
@@ -482,9 +486,11 @@ function formatFormDataOption(detail: Array<string> | { [key: string]: any }): s
     if (isEmpty) {
         return noInfoProvidedText
     }
+
     if (Array.isArray(detail)) {
         return detail.join('\n\n')
     }
+
     if (typeof detail === 'object') {
         return Object.keys(detail)
             .map((key: string) => {
@@ -493,6 +499,7 @@ function formatFormDataOption(detail: Array<string> | { [key: string]: any }): s
             })
             .join('\n\n')
     }
+
     return detail
 }
 
@@ -500,7 +507,7 @@ function getCost(challenge: Challenge, priceConfig: WorkPrice, type: WorkType): 
 
     switch (type) {
 
-        case WorkType.designLegacy:
+        case WorkType.designLegacy: {
 
             // get the device and page count from the intake form from the metadata
             const intakeForm: ChallengeMetadata | undefined = findMetadata(challenge, ChallengeMetadataName.intakeForm)
@@ -508,12 +515,14 @@ function getCost(challenge: Challenge, priceConfig: WorkPrice, type: WorkType): 
             const legacyPageCount: number | undefined = form?.pageDetails?.pages?.length || 1
             const legacyDeviceCount: number | undefined = form?.basicInfo?.selectedDevice?.option?.length
             return priceConfig.getPrice(priceConfig, legacyPageCount, legacyDeviceCount)
+        }
 
-        case WorkType.bugHunt:
+        case WorkType.bugHunt: {
             // get the selected package from the intake form
             const intakeFormBH: ChallengeMetadata | undefined = findMetadata(challenge, ChallengeMetadataName.intakeForm)
             const formBH: IntakeForm = !!intakeFormBH?.value ? JSON.parse(intakeFormBH.value)?.form : undefined
             return priceConfig.getPrice(priceConfig, formBH?.basicInfo?.packageType)
+        }
 
         default:
             return priceConfig.getPrice(priceConfig)
@@ -550,9 +559,9 @@ function getProgress(challenge: Challenge, workStatus: WorkStatus): WorkProgress
         },
         {
             date: getProgressStepDateStart(challenge, [
-              ChallengePhaseName.specificationReview,
-              ChallengePhaseName.specificationSubmission,
-              ChallengePhaseName.registration,
+                ChallengePhaseName.specificationReview,
+                ChallengePhaseName.specificationSubmission,
+                ChallengePhaseName.registration,
             ]),
             name: 'Started',
         },
@@ -620,7 +629,8 @@ function getProgressStepDateEnd(challenge: Challenge, phases: Array<string>): Da
         return undefined
     }
 
-    if (phase.isOpen || moment(phase.scheduledStartDate).isAfter()) {
+    if (phase.isOpen || moment(phase.scheduledStartDate)
+        .isAfter()) {
         return new Date(phase.scheduledEndDate)
     }
 
@@ -634,7 +644,8 @@ function getProgressStepDateStart(challenge: Challenge, phases: Array<string>): 
         return undefined
     }
 
-    if (!phase.isOpen || moment(phase.scheduledStartDate).isAfter()) {
+    if (!phase.isOpen || moment(phase.scheduledStartDate)
+        .isAfter()) {
         return new Date(phase.scheduledStartDate)
     }
 
@@ -647,21 +658,30 @@ function getSolutionsReadyDate(challenge: Challenge): Date | undefined {
 
 function getStartDate(): string {
     let daysToAdd: number = 1
-    switch (moment(new Date()).weekday()) {
-        case moment().day('Friday').weekday():
+    switch (moment(new Date())
+        .weekday()) {
+        case moment()
+            .day('Friday')
+            .weekday():
             daysToAdd = 3
             break
-        case moment().day('Saturday').weekday():
+        case moment()
+            .day('Saturday')
+            .weekday():
             daysToAdd = 2
             break
-        case moment().day('Sunday').weekday():
+        case moment()
+            .day('Sunday')
+            .weekday():
             daysToAdd = 1
             break
         default:
             daysToAdd = 1
     }
 
-    return moment().add(daysToAdd, 'days').format()
+    return moment()
+        .add(daysToAdd, 'days')
+        .format()
 }
 
 function getSubmittedDate(challenge: Challenge): Date {
@@ -700,7 +720,7 @@ function getTypeCategory(type: WorkType): WorkTypeCategory {
             return WorkTypeCategory.design
 
         case WorkType.bugHunt:
-          return WorkTypeCategory.qa
+            return WorkTypeCategory.qa
 
         // TOOD: other categories: dev
         default:

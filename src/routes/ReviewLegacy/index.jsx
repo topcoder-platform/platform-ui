@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toastr } from "react-redux-toastr";
-import { loadStripe } from "@stripe/stripe-js";
+import { loadStripe } from "@stripe/stripe-js/pure";
 import { Elements, useElements, useStripe } from "@stripe/react-stripe-js";
 import _ from "lodash";
 
@@ -43,9 +43,7 @@ import { Breadcrumb, OrderContractModal } from "../../../src-ts";
 import AboutYourProject from "../../routes/Review/components/AboutYourProject";
 import PageH2 from "../../components/PageElements/PageH2";
 
-const stripePromise = loadStripe(config.STRIPE.API_KEY, {
-  apiVersion: config.STRIPE.API_VERSION,
-});
+let stripePromise;
 
 /**
  *  Review Legacy Page
@@ -308,6 +306,12 @@ const ReviewLegacy = ({
 };
 
 const ReviewWrapper = (props) => {
+  if (!stripePromise) {
+    stripePromise = loadStripe(config.STRIPE.API_KEY, {
+      apiVersion: config.STRIPE.API_VERSION,
+    });
+  }
+
   return (
     <Elements stripe={stripePromise}>
       <ReviewLegacy {...props} />

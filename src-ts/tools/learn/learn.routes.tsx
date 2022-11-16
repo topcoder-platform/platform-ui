@@ -5,7 +5,7 @@ import { LearnConfig } from './learn-config'
 
 const WelcomePage: LazyLoadedComponent = lazyLoad(() => import('./welcome'), 'WelcomePage')
 const CourseDetailsPage: LazyLoadedComponent = lazyLoad(() => import('./course-details'), 'CourseDetailsPage')
-const CourseCompletedPage: LazyLoadedComponent = lazyLoad(() => import('./course-completed/'), 'CourseCompletedPage')
+const CourseCompletedPage: LazyLoadedComponent = lazyLoad(() => import('./course-completed'), 'CourseCompletedPage')
 const MyCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certificate'), 'MyCertificate')
 const UserCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certificate'), 'UserCertificate')
 const FreeCodeCamp: LazyLoadedComponent = lazyLoad(() => import('./free-code-camp'), 'FreeCodeCamp')
@@ -21,6 +21,9 @@ export enum LEARN_PATHS {
     root = '/learn',
     startCourseRouteFlag = 'start-course',
 }
+
+export const rootRoute: string = LEARN_PATHS.root
+export const absoluteRootRoute: string = `${window.location.origin}${LEARN_PATHS.root}`
 
 export function getAuthenticateAndStartCourseRoute(): string {
     return `${authUrlLogin()}${encodeURIComponent(`?${LEARN_PATHS.startCourseRouteFlag}`)}`
@@ -58,20 +61,26 @@ export function getLessonPathFromModule(
     return `${getCoursePath(provider, certification)}/${module}/${lesson}`
 }
 
-export function getUserCertificateSsr(provider: string, certification: string, handle: string, title: string): string {
+export function getUserCertificateSsr(
+    provider: string,
+    certification: string,
+    handle: string,
+    title: string,
+): string {
     return `${LearnConfig.CERT_DOMAIN}/${handle}/${provider}/${certification}/${encodeURI(title)}`
 }
 
-export function getUserCertificateUrl(provider: string, certification: string, handle: string): string {
+export function getUserCertificateUrl(
+    provider: string,
+    certification: string,
+    handle: string,
+): string {
     return `${window.location.origin}${getCoursePath(provider, certification)}/${handle}${LEARN_PATHS.certificate}`
 }
 
 export function getViewStyleParamKey(): string {
     return Object.keys(LearnConfig.CERT_ALT_PARAMS)[0]
 }
-
-export const rootRoute: string = LEARN_PATHS.root
-export const absoluteRootRoute: string = `${window.location.origin}${LEARN_PATHS.root}`
 
 export const learnRoutes: Array<PlatformRoute> = [
     {

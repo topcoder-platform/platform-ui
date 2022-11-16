@@ -17,7 +17,7 @@ const GamificationAdmin: FC<{}> = () => {
     return (
         <SWRConfig
             value={{
-                fetcher: (resource) => xhrGetAsync(resource),
+                fetcher: resource => xhrGetAsync(resource),
                 refreshInterval: 60000, // 1 min
             }}
         >
