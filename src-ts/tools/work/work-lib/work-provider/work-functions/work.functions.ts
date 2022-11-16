@@ -1,6 +1,9 @@
 import { PaymentMethodResult, Stripe, StripeCardNumberElement } from '@stripe/stripe-js'
 
 import { FormCard, GenericDataObject, Page, textFormatMoneyLocaleString, UserProfile } from '../../../../../lib'
+// this has to be imported directly from the file bc the order of operations
+// that items are loaded in the barrel file this config is empty and throws an error
+// eslint-disable-next-line ordered-imports/ordered-imports
 import BugHuntPricingConfig from '../../../work-self-service/intake-forms/bug-hunt/bug-hunt.form.pricing-config'
 
 import { WorkByStatus } from './work-by-status.model'
