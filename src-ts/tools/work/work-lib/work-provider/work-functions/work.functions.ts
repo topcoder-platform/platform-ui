@@ -1,6 +1,10 @@
 import { PaymentMethodResult, Stripe, StripeCardNumberElement } from '@stripe/stripe-js'
 
-import { GenericDataObject, Page, UserProfile } from '../../../../../lib'
+import { FormCard, GenericDataObject, Page, textFormatMoneyLocaleString, UserProfile } from '../../../../../lib'
+// this has to be imported directly from the file bc the order of operations
+// that items are loaded in the barrel file this config is empty and throws an error
+// eslint-disable-next-line ordered-imports/ordered-imports
+import BugHuntPricingConfig from '../../../work-self-service/intake-forms/bug-hunt/bug-hunt.form.pricing-config'
 
 import { WorkByStatus } from './work-by-status.model'
 import {
@@ -170,4 +174,17 @@ async function getPageAsync(handle: string, page: Page): Promise<Array<Work>> {
     return challenges
         .map(challenge => workFactoryCreate(challenge, workGetPricesConfig()))
         .filter(work => work.status !== WorkStatus.deleted && work.type !== WorkType.unknown)
+}
+
+export function getSelectedPackageFormatted(packageId: string): string {
+    const currentPackage: FormCard | undefined
+        = BugHuntPricingConfig.find(pricingConfig => pricingConfig.id === packageId)
+    if (currentPackage) {
+        const deviceType: string = currentPackage.sections?.[0]?.rows?.[3]?.text || ''
+        const noOfTesters: string = `${currentPackage.sections?.[0]?.rows?.[2]?.text || 0} testers`
+        const price: string | undefined = textFormatMoneyLocaleString(currentPackage.price)
+        return `${currentPackage.title} - ${price} - ${deviceType} - ${noOfTesters}`
+    }
+
+    return packageId
 }

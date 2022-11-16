@@ -32,6 +32,7 @@ export {
     getByWorkIdAsync as workGetByWorkIdAsync,
     getGroupedByStatus as workGetGroupedByStatus,
     getPricesConfig as workGetPricesConfig,
+    getSelectedPackageFormatted as workGetSelectedPackageFormatted,
     getStatusFilter as workGetStatusFilter,
     updateAsync as workUpdateAsync,
 } from './work.functions'

@@ -56,39 +56,82 @@ const FormCardSet: React.FC<FormCardSetProps> = (props: FormCardSetProps) => {
                     const formattedPrice: string | undefined = textFormatMoneyLocaleString(card.price)
                     const selected: boolean = props.value === card.id
                     return (
-                        <div key={`card-${index}`} className={cn(styles.card, selected && styles.selected, isMobile && card.mostPopular && styles['mobile-popular'], { [styles.feature]: index === 0, [styles.mobile]: isMobile })}>
+                        <div
+                            key={`card-${card.id}`}
+                            className={cn(
+                                styles.card,
+                                selected && styles.selected,
+                                isMobile && card.mostPopular && styles['mobile-popular'],
+                                {
+                                    [styles.feature]: index === 0,
+                                    [styles.mobile]: isMobile,
+                                },
+                            )}
+                        >
                             {card.mostPopular && <div className={styles['popular-card']}>MOST POPULAR</div>}
-                            <div className={cn(styles['card-header'], isMobile && styles.mobile, { [styles.feature]: index === 0 })}>
-                                <div className='body-medium-bold'>{card.title}</div>
+                            <div
+                                className={cn(
+                                    styles['card-header'],
+                                    isMobile && styles.mobile,
+                                    { [styles.feature]: index === 0 },
+                                )}
+                            >
+                                <div className='body-large-bold'>{card.title}</div>
                                 <h3>{formattedPrice}</h3>
                                 {getButton(card, selected)}
                             </div>
-                            {card.sections.map((section, sectionIndex: number) => (
-                                <div key={`section-${sectionIndex}`} className={cn(styles['card-section'], { [styles.mobile]: isMobile, [styles.feature]: index === 0 })}>
-                                    {section.rows.map((row, rowIndex: number) => (
+                            {card.sections.map(section => (
+                                <div
+                                    key={`section-${section.rows?.[0]?.label}`}
+                                    className={cn(
+                                        styles['card-section'],
+                                        {
+                                            [styles.mobile]: isMobile,
+                                            [styles.feature]: index === 0,
+                                        },
+                                    )}
+                                >
+                                    {section.rows.map(row => (
                                         <div className={styles.row}>
                                             <div className={styles['row-divider']} />
-                                            <div key={`row-${rowIndex}`} className={styles['card-row']}>
+                                            <div
+                                                key={`row-${row.label}`}
+                                                className={styles['card-row']}
+                                            >
                                                 {((isMobile) || (index === 0)) && (
-                                                    <span className={cn(styles['card-row-col'], styles.mobile, styles['feature-name'])}>
+                                                    <span className={cn(
+                                                        styles['card-row-col'],
+                                                        styles.mobile,
+                                                        styles['feature-name'],
+                                                    )}
+                                                    >
                                                         {row.icon && iconFromName(row.icon)}
                                                         {row.label
-                                                            ? <span className={cn('overline', styles.label)}>{row.label}</span>
+                                                            ? (
+                                                                <span className={cn('overline', styles.label)}>
+                                                                    {row.label}
+                                                                </span>
+                                                            )
                                                             : <span className='body-main'>{row.text}</span>}
                                                         {row.infoIcon && (
                                                             <Tooltip
                                                                 content={row.tooltipText}
-                                                                trigger={<IconSolid.InformationCircleIcon className={styles['info-icon']} width={16} height={16} />}
+                                                                trigger={(
+                                                                    <IconSolid.InformationCircleIcon
+                                                                        className={styles['info-icon']}
+                                                                    />
+                                                                )}
                                                             />
                                                         )}
                                                     </span>
                                                 )}
                                                 <span className={cn(styles['card-row-col'], styles.center)}>
                                                     {row.valueIcon
-                                                        ? <IconOutline.CheckIcon width={18} height={16} />
+                                                        ? <IconOutline.CheckIcon className={styles['check-icon']} />
                                                         : <span className='body-main'>{row.text}</span>}
                                                 </span>
                                             </div>
+                                            <div className={styles['row-divider']} />
                                         </div>
                                     ))}
                                 </div>

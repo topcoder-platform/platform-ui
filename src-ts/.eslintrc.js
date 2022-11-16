@@ -54,16 +54,6 @@ module.exports = {
         '@typescript-eslint/no-inferrable-types': 'off',
         '@typescript-eslint/no-shadow': 'error',
         '@typescript-eslint/no-unused-vars': 'error',
-        '@typescript-eslint/strict-boolean-expressions': [
-            'error',
-            {
-                allowAny: true,
-                allowNullableBoolean: true,
-                allowNullableObject: true,
-                allowNullableNumber: true,
-                allowNullableString: true
-            }
-        ],
         '@typescript-eslint/typedef': [
             'error',
             {

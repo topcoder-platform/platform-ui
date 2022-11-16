@@ -95,7 +95,7 @@ const Form: <ValueType extends FormValue, RequestType extends FormValue>(props: 
         }, [])
 
         function checkIfFormIsValid(formInputFields: Array<FormInputModel>): void {
-            setFormInvalid(formInputFields.filter(item => !!item.error).length > 0)
+            setFormInvalid(formInputFields.some(item => !!item.error))
         }
 
         function onBlur(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>): void {
