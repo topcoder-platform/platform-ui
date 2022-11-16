@@ -1,7 +1,7 @@
 import { PaymentMethodResult, Stripe, StripeCardNumberElement } from '@stripe/stripe-js'
 
 import { FormCard, GenericDataObject, Page, textFormatMoneyLocaleString, UserProfile } from '../../../../../lib'
-import { BugHuntPricingConfig } from '../../../work-self-service'
+import BugHuntPricingConfig from '../../../work-self-service/intake-forms/bug-hunt/bug-hunt.form.pricing-config'
 
 import { WorkByStatus } from './work-by-status.model'
 import {

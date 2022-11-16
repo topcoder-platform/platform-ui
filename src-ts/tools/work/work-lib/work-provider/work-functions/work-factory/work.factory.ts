@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import moment from 'moment'
 
 import { WorkConfigConstants, WorkStrings } from '../../../work-constants'
@@ -130,12 +131,17 @@ export function buildCustomerPaymentRequest(
     }
 }
 
-export function buildUpdateRequest(workTypeConfig: WorkTypeConfig, challenge: Challenge, formData: any): UpdateWorkRequest {
+export function buildUpdateRequest(
+    workTypeConfig: WorkTypeConfig,
+    challenge: Challenge,
+    formData: any,
+): UpdateWorkRequest {
 
     const type: WorkType = workTypeConfig.type
     const priceConfig: WorkPrice = workTypeConfig.priceConfig
 
-    const intakeForm: ChallengeMetadata | undefined = findMetadata(challenge, ChallengeMetadataName.intakeForm) || undefined
+    const intakeForm: ChallengeMetadata | undefined
+        = findMetadata(challenge, ChallengeMetadataName.intakeForm) || undefined
     const form: IntakeForm = !!intakeForm?.value ? JSON.parse(intakeForm.value)?.form : {}
     form.basicInfo = formData
 
@@ -182,7 +188,8 @@ export function buildUpdateRequest(workTypeConfig: WorkTypeConfig, challenge: Ch
     // then update the duration for that phase to the correct value
     const timeline: Array<WorkTimelinePhase> = workTypeConfig.timeline.map(phase => {
         if (workTypeConfig.submissionPhaseDuration && phase.phaseId === WorkConfigConstants.PHASE_ID_SUBMISSION) {
-            phase.duration = workTypeConfig.submissionPhaseDuration[formData[ChallengeMetadataName.packageType] as PricePackageName] || 0
+            const packageName: PricePackageName = formData[ChallengeMetadataName.packageType] as PricePackageName
+            phase.duration = workTypeConfig.submissionPhaseDuration[packageName] || 0
         }
 
         return phase
@@ -238,9 +245,11 @@ export function getStatus(challenge: Challenge): WorkStatus {
         case ChallengeStatus.draft:
             return WorkStatus.active
 
-        case ChallengeStatus.completed:
-            const customerFeedback: ChallengeMetadata | undefined = findMetadata(challenge, ChallengeMetadataName.feedback)
+        case ChallengeStatus.completed: {
+            const customerFeedback: ChallengeMetadata | undefined
+                = findMetadata(challenge, ChallengeMetadataName.feedback)
             return !customerFeedback ? WorkStatus.ready : WorkStatus.done
+        }
 
         case ChallengeStatus.cancelled:
         case ChallengeStatus.cancelledPaymentFailed:
@@ -450,8 +459,9 @@ function findOpenPhase(challenge: Challenge): ChallengePhase | undefined {
     // sort the phases descending by start date
     const sortedPhases: Array<ChallengePhase> = challenge.phases
         .sort((a, b) => new Date(b.actualStartDate)
-            .getTime() - new Date(a.actualStartDate)
-            .getTime())
+            .getTime()
+            - new Date(a.actualStartDate)
+                .getTime())
 
     const now: Date = new Date()
     // if we have an open phase, just use that
@@ -519,7 +529,8 @@ function getCost(challenge: Challenge, priceConfig: WorkPrice, type: WorkType): 
 
         case WorkType.bugHunt: {
             // get the selected package from the intake form
-            const intakeFormBH: ChallengeMetadata | undefined = findMetadata(challenge, ChallengeMetadataName.intakeForm)
+            const intakeFormBH: ChallengeMetadata | undefined
+                = findMetadata(challenge, ChallengeMetadataName.intakeForm)
             const formBH: IntakeForm = !!intakeFormBH?.value ? JSON.parse(intakeFormBH.value)?.form : undefined
             return priceConfig.getPrice(priceConfig, formBH?.basicInfo?.packageType)
         }
@@ -539,6 +550,9 @@ function getDescription(challenge: Challenge, type: WorkType): string | undefine
         case WorkType.design:
         case WorkType.designLegacy:
             return findMetadata(challenge, ChallengeMetadataName.description)?.value
+
+        default:
+            return undefined
     }
 }
 
@@ -597,7 +611,7 @@ function getProgressStepActive(challenge: Challenge, workStatus: WorkStatus): nu
     switch (challenge.status) {
 
         case ChallengeStatus.active:
-        case ChallengeStatus.approved:
+        case ChallengeStatus.approved: {
 
             const openPhase: ChallengePhase | undefined = findOpenPhase(challenge)
             // if we don't have an open phase, just return submitted
@@ -613,6 +627,7 @@ function getProgressStepActive(challenge: Challenge, workStatus: WorkStatus): nu
                 default:
                     return 2
             }
+        }
 
         case ChallengeStatus.completed:
             return workStatus === WorkStatus.ready ? 3 : 4
@@ -699,7 +714,7 @@ function getType(challenge: Challenge): WorkType {
     // parse the form
     const form: { form: IntakeForm } = JSON.parse(intakeForm.value)
     const workTypeKey: (keyof typeof WorkType) | undefined = Object.entries(WorkType)
-        .find(([key, value]) => value === form.form?.workType?.selectedWorkType)
+        .find(([, value]) => value === form.form?.workType?.selectedWorkType)
         ?.[0] as keyof typeof WorkType
 
     const output: WorkType = !!workTypeKey ? WorkType[workTypeKey] : WorkType.unknown

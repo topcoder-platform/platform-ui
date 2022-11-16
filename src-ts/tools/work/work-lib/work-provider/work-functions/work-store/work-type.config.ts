@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { bugHuntTileImg } from '../../../work-images'
 
 import { ChallengeTag } from './challenge-tag.enum'
