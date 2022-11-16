@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import moment from 'moment'
 
+import { workGetSelectedPackageFormatted } from '..'
 import { WorkConfigConstants, WorkStrings } from '../../../work-constants'
 import {
     ActivateWorkRequest,
@@ -26,7 +27,6 @@ import {
     WorkTypeCategory,
     WorkTypeConfig,
 } from '../work-store'
-import { getSelectedPackageFormatted } from '../work.functions'
 
 export interface FormDetail {
     key: string,
@@ -314,7 +314,7 @@ function buildFormDataBugHunt(formData: any): ReadonlyArray<FormDetail> {
         {
             key: ChallengeMetadataName.packageType,
             title: ChallengeMetadataTitle.bugHuntPackage,
-            value: getSelectedPackageFormatted(formData.packageType),
+            value: workGetSelectedPackageFormatted(formData.packageType),
         },
     ]
 }
