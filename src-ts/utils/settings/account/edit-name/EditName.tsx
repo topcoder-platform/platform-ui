@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useContext, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useCallback, useContext, useState } from 'react'
 
 import {
     EditNameRequest,
@@ -26,17 +26,21 @@ const EditName: FC<EditNameProps> = (props: EditNameProps) => {
     const [profileForm]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
         = useState<FormDefinition>(editNameFormDef)
 
-    function requestGenerator(inputs: ReadonlyArray<FormInputModel>): EditNameRequest {
-        const firstName: string = formGetInputModel(inputs, EditNameFieldName.firstName).value as string
-        const lastName: string = formGetInputModel(inputs, EditNameFieldName.lastName).value as string
+    const requestGenerator = useCallback((
+        inputs: ReadonlyArray<FormInputModel>,
+    ): EditNameRequest => {
+        const firstName: string
+            = formGetInputModel(inputs, EditNameFieldName.firstName).value as string
+        const lastName: string
+            = formGetInputModel(inputs, EditNameFieldName.lastName).value as string
         return {
             firstName,
             lastName,
         }
-    }
+    }, [])
 
-    function saveProfile(updatedProfile: EditNameRequest): Promise<void> {
-        return updateProfile({
+    const saveProfile = useCallback((updatedProfile: EditNameRequest): Promise<void> => (
+        updateProfile({
             ...profileContextData,
             profile: {
                 ...profileContextData.profile as UserProfile,
@@ -47,7 +51,7 @@ const EditName: FC<EditNameProps> = (props: EditNameProps) => {
             .then(() => {
                 props.onClose()
             })
-    }
+    ), [profileContextData, props.onClose, updateProfile])
 
     return (
         <Form
@@ -55,7 +59,8 @@ const EditName: FC<EditNameProps> = (props: EditNameProps) => {
             formValues={profile}
             requestGenerator={requestGenerator}
             save={saveProfile}
-            onSuccess={props.onClose} />
+            onSuccess={props.onClose}
+        />
     )
 }
 

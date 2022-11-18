@@ -9,7 +9,7 @@ import { LearnUserCertificationProgress } from './user-certifications-functions'
 export function useGetUserCertificationProgress(
     userId?: number,
     provider?: string,
-    certification?: string
+    certification?: string,
 ):
     UserCertificationProgressProviderData {
 
@@ -28,10 +28,10 @@ export function useGetUserCertificationProgress(
     })
 
     return {
-        certificationProgress: find(data, {certification}),
+        certificationProgress: find(data, { certification }),
         loading: !!userId && !data && !error,
         ready: !userId || data || error,
         refetch: () => mutate(),
-        setCertificateProgress: (progress) => mutate([progress]),
+        setCertificateProgress: progress => mutate([progress]),
     }
 }

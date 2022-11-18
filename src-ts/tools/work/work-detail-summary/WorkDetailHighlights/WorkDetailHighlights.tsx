@@ -22,32 +22,32 @@ const WorkDetailHighlights: FC<WorkDetailHighlightsProps> = (props: WorkDetailHi
         info?: number | string
         name: string
     }> = [
-            {
-                icon: <IconOutline.CalendarIcon />,
-                info: textFormatDateLocaleShortString(work.submittedDate),
-                name: 'Submitted',
-            },
-            {
-                icon: <IconOutline.CurrencyDollarIcon />,
-                info: textFormatMoneyLocaleString(work.cost),
-                name: 'Cost (USD)',
-            },
-            {
-                icon: <IconOutline.UserGroupIcon />,
-                info: work.participantsCount,
-                name: 'Participants',
-            },
-            {
-                icon: <IconOutline.DocumentTextIcon />,
-                info: work.solutionsCount,
-                name: 'Solutions Received',
-            },
-            {
-                icon: <IconOutline.IdentificationIcon />,
-                info: work.id,
-                name: 'Work id',
-            },
-        ]
+        {
+            icon: <IconOutline.CalendarIcon />,
+            info: textFormatDateLocaleShortString(work.submittedDate),
+            name: 'Submitted',
+        },
+        {
+            icon: <IconOutline.CurrencyDollarIcon />,
+            info: textFormatMoneyLocaleString(work.cost),
+            name: 'Cost (USD)',
+        },
+        {
+            icon: <IconOutline.UserGroupIcon />,
+            info: work.participantsCount,
+            name: 'Participants',
+        },
+        {
+            icon: <IconOutline.DocumentTextIcon />,
+            info: work.solutionsCount,
+            name: 'Solutions Received',
+        },
+        {
+            icon: <IconOutline.IdentificationIcon />,
+            info: work.id,
+            name: 'Work id',
+        },
+    ]
 
     const higlightElements: Array<JSX.Element> = highlights
         .map((item, index) => (

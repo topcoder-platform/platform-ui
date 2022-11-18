@@ -54,7 +54,7 @@ export async function putAsync<T, R>(url: string, data: T, config?: AxiosRequest
 function interceptAuth(instance: AxiosInstance): void {
 
     // add the auth token to all xhr calls
-    instance.interceptors.request.use(async (config) => {
+    instance.interceptors.request.use(async config => {
         const tokenData: TokenModel = await tokenGetAsync()
 
         if (tokenData.token) {
@@ -69,7 +69,8 @@ function interceptAuth(instance: AxiosInstance): void {
 function interceptError(instance: AxiosInstance): void {
 
     // handle all http errors
-    instance.interceptors.response.use((config) => config,
+    instance.interceptors.response.use(
+        config => config,
         (error: any) => {
 
             // if there is server error message, then return it inside `message` property of error
@@ -78,6 +79,6 @@ function interceptError(instance: AxiosInstance): void {
             error.errors = error?.response?.data?.errors
 
             return Promise.reject(error)
-        }
+        },
     )
 }

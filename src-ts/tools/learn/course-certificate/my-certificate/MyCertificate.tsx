@@ -4,7 +4,7 @@ import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-d
 import {
     LoadingSpinner,
     profileContext,
-    ProfileContextData
+    ProfileContextData,
 } from '../../../../lib'
 import { getCoursePath } from '../../learn.routes'
 import CertificateView from '../certificate-view/CertificateView'

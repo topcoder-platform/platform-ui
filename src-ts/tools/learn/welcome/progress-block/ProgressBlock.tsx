@@ -3,7 +3,7 @@ import { FC } from 'react'
 import {
     LearnCertification,
     UserCertificationCompleted,
-    UserCertificationInProgress
+    UserCertificationInProgress,
 } from '../../learn-lib'
 
 import { NoProgress } from './no-progress'
@@ -23,7 +23,9 @@ const ProgressBlock: FC<ProgressBlockProps> = (props: ProgressBlockProps) => {
         return <></>
     }
 
-    const isStarted: boolean = !!props.userInProgressCertifications.length || !!props.userCompletedCertifications.length
+    const isStarted: boolean = (
+        !!props.userInProgressCertifications.length || !!props.userCompletedCertifications.length
+    )
 
     return (
         <div className={styles.wrap}>

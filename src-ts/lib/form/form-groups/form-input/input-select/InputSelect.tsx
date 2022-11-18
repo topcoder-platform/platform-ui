@@ -1,4 +1,3 @@
-import classNames from 'classnames'
 import {
     ChangeEvent,
     Dispatch,
@@ -9,6 +8,7 @@ import {
     useRef,
     useState,
 } from 'react'
+import classNames from 'classnames'
 
 import { useClickOutside } from '../../../../hooks'
 import { IconOutline } from '../../../../svgs'
@@ -45,11 +45,11 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
         option ? option.label ?? option.value : ''
     )
 
-    const toggleMenu: () => void = () => setMenuIsVisible((wasVisible) => !wasVisible)
+    const toggleMenu: () => void = () => setMenuIsVisible(wasVisible => !wasVisible)
 
     const select: (option: InputSelectOption) => () => void = (option: InputSelectOption) => () => {
         props.onChange({
-            target: {value: option.value} ,
+            target: { value: option.value },
         } as unknown as ChangeEvent<HTMLInputElement>)
         toggleMenu()
     }
@@ -68,7 +68,7 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
             hideInlineErrors={props.hideInlineErrors}
             ref={triggerRef}
         >
-            <div className={styles['selected']} onClick={() => !props.disabled && toggleMenu()}>
+            <div className={styles.selected} onClick={() => !props.disabled && toggleMenu()}>
                 <span className='body-small'>{selectedOption ? label(selectedOption) : ''}</span>
                 <span className={styles['selected-icon']}>
                     <IconOutline.ChevronDownIcon />
@@ -78,7 +78,7 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
             <div className={styles['menu-wrap']}>
                 {menuIsVisible && (
                     <div className={styles['select-menu']}>
-                        {props.options.map((option) => (
+                        {props.options.map(option => (
                             <div
                                 className={
                                     classNames(

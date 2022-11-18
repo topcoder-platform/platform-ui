@@ -4,8 +4,8 @@ import { MemberBadgeAward } from '../../../../../game-lib'
 
 import styles from './MemberHandleRenderer.module.scss'
 
-function MemberHandleRenderer(memberAward: MemberBadgeAward): JSX.Element {
-    return (
+const MemberHandleRenderer: (memberAward: MemberBadgeAward) => JSX.Element
+    = (memberAward: MemberBadgeAward): JSX.Element => (
         <div className={styles.memberAward}>
             <p className={styles.memberHandle}>{memberAward.user_handle}</p>
             <IconOutline.ExternalLinkIcon
@@ -14,6 +14,5 @@ function MemberHandleRenderer(memberAward: MemberBadgeAward): JSX.Element {
             />
         </div>
     )
-}
 
 export default MemberHandleRenderer
