@@ -1,6 +1,15 @@
 import { Dispatch, FC, ReactNode, SetStateAction, useContext, useMemo, useState } from 'react'
 
-import { Breadcrumb, BreadcrumbItemModel, ContentLayout, LoadingSpinner, Portal, profileContext, ProfileContextData } from '../../../lib'
+import { PagePortalId } from '../../../config'
+import {
+    Breadcrumb,
+    BreadcrumbItemModel,
+    ContentLayout,
+    LoadingSpinner,
+    Portal,
+    profileContext,
+    ProfileContextData,
+} from '../../../lib'
 import {
     AllCertificationsProviderData,
     LearnCertification,
@@ -27,7 +36,8 @@ const MyLearning: FC<{}> = () => {
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
     const { completed, inProgress, ready: coursesReady }: UserCertificationsProviderData = useGetUserCertifications()
     const { certifications, ready: certificatesReady }: AllCertificationsProviderData = useGetAllCertifications()
-    const [activeTab, setActiveTab]: [MyTabsViews|undefined, Dispatch<SetStateAction<MyTabsViews|undefined>>] = useState()
+    const [activeTab, setActiveTab]: [MyTabsViews | undefined, Dispatch<SetStateAction<MyTabsViews | undefined>>]
+        = useState()
 
     const ready: boolean = profileReady && coursesReady && certificatesReady
 
@@ -73,7 +83,7 @@ const MyLearning: FC<{}> = () => {
             <div className={styles['wrap']}>
                 <LoadingSpinner hide={ready} className={styles['loading-spinner']} />
 
-                <Portal portalId='page-subheader-portal-el'>
+                <Portal portalId={PagePortalId}>
                     <div className={styles['hero-wrap']}>
                         <WaveHero
                             title='my learning'

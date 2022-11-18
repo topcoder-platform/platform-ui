@@ -1,8 +1,8 @@
-import classNames from 'classnames'
 import { FC } from 'react'
+import classNames from 'classnames'
 
+import { PagePortalId } from '../../../config'
 import { ContentLayout, LoadingSpinner, Portal } from '../../../lib'
-import '../../../lib/styles/index.scss'
 import {
     AllCertificationsProviderData,
     useGetAllCertifications,
@@ -10,6 +10,7 @@ import {
     UserCertificationsProviderData,
     WaveHero,
 } from '../learn-lib'
+import '../../../lib/styles/index.scss'
 
 import { AvailableCoursesList } from './available-courses-list'
 import { ProgressBlock } from './progress-block'
@@ -28,7 +29,7 @@ const WelcomePage: FC<{}> = () => {
 
             <div className={classNames(styles.wrap, 'full-height-frame')}>
 
-                <Portal portalId='page-subheader-portal-el'>
+                <Portal portalId={PagePortalId}>
                     <div className={styles['hero-wrap']}>
                         <WaveHero
                             title={(
