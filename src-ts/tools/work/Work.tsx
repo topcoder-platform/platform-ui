@@ -6,7 +6,7 @@ import { Navigate, NavigateFunction, Outlet, Routes, useNavigate } from 'react-r
 import { resetIntakeForm } from '../../../src/actions/form'
 import {
     clearAutoSavedForm,
-    clearCachedChallengeId
+    clearCachedChallengeId,
 } from '../../../src/autoSaveBeforeLogin'
 import { ToolTitle } from '../../config'
 import {

@@ -29,7 +29,7 @@ const WorkDetailHeader: FC<WorkDetailHeaderProps> = (props: WorkDetailHeaderProp
             {work.status === WorkStatus.ready && (
                 <Button
                     onClick={props.markAsDone}
-                    label={'Mark as Done'}
+                    label='Mark as Done'
                     size='md'
                 />
             )}

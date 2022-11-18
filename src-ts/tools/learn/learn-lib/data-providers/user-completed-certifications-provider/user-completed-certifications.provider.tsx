@@ -8,20 +8,19 @@ import { UserCompletedCertificationsProviderData } from './user-completed-certif
 export function useGetUserCompletedCertifications(
     userId?: number,
     provider?: string,
-    certification?: string
+    certification?: string,
 ): UserCompletedCertificationsProviderData {
 
     const url: string = learnUrlGet('completed-certifications', `${userId}`)
 
-    const {data, error}: SWRResponse<ReadonlyArray<LearnUserCompletedCertification>> = useSWR(url)
+    const { data, error }: SWRResponse<ReadonlyArray<LearnUserCompletedCertification>> = useSWR(url)
 
     let certifications: ReadonlyArray<LearnUserCompletedCertification> = data ?? []
 
     if (provider || certification) {
-        certifications = certifications.filter((c) => {
-            return (!provider || c.provider === provider) &&
-            (!certification || c.certification === certification)
-        })
+        certifications = certifications
+            .filter(c => (!provider || c.provider === provider)
+                && (!certification || c.certification === certification))
     }
 
     return {

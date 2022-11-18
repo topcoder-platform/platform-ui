@@ -1,4 +1,3 @@
-import classNames from 'classnames'
 import {
     ChangeEvent,
     createRef,
@@ -10,10 +9,11 @@ import {
     useEffect,
     useState,
 } from 'react'
+import classNames from 'classnames'
 
 import { Button } from '../button'
-import '../styles/index.scss'
 import { IconOutline } from '../svgs'
+import '../styles/index.scss'
 
 import { FormAction, FormButton, FormDefinition, FormInputModel } from '.'
 import {
@@ -23,8 +23,9 @@ import {
     formOnChange,
     formOnReset,
     formOnSubmitAsync,
+    formValidateForm,
+    FormValue,
 } from './form-functions'
-import { validateForm } from './form-functions/form.functions'
 import { FormGroups } from './form-groups'
 import styles from './Form.module.scss'
 
@@ -41,8 +42,8 @@ interface FormProps<ValueType, RequestType> {
     readonly shouldDisableButton?: (isPrimaryGroup: boolean, index: number) => boolean
 }
 
-const Form: <ValueType extends any, RequestType extends any>(props: FormProps<ValueType, RequestType>) => JSX.Element
-    = <ValueType extends any, RequestType extends any>(props: FormProps<ValueType, RequestType>) => {
+const Form: <ValueType extends FormValue, RequestType extends FormValue>(props: FormProps<ValueType, RequestType>) => JSX.Element
+    = <ValueType extends FormValue, RequestType extends FormValue>(props: FormProps<ValueType, RequestType>) => {
 
         const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
             = useState<FormDefinition>({ ...props.formDef })
@@ -65,7 +66,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
                 return
             }
 
-            validateForm(formRef.current?.elements, 'initial', inputs)
+            formValidateForm(formRef.current?.elements, 'initial', inputs)
             checkIfFormIsValid(inputs)
         }, [
             formRef,
@@ -78,7 +79,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             }
 
             // so we repeat the validation when formValues changes, to support the parent component's async data loading
-            validateForm(formRef.current?.elements, 'change', inputs)
+            formValidateForm(formRef.current?.elements, 'change', inputs)
             checkIfFormIsValid(inputs)
         }, [
             props.formValues,
@@ -86,16 +87,15 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
             inputs,
         ])
 
-        useEffect(() => {
-            return () => {
-                if (props.resetFormOnUnmount) {
-                    onReset()
-                }
+        useEffect(() => () => {
+            if (props.resetFormOnUnmount) {
+                onReset()
             }
+            // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [])
 
         function checkIfFormIsValid(formInputFields: Array<FormInputModel>): void {
-            setFormInvalid(formInputFields.filter(item => !!item.error).length > 0)
+            setFormInvalid(formInputFields.some(item => !!item.error))
         }
 
         function onBlur(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>): void {
@@ -147,34 +147,32 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         formInitializeValues(inputs, props.formValues)
 
-        const setOnClickOnReset: (button: FormButton) => FormButton = (button) => {
-          // if this is a reset button, set its onclick to reset
-          if (!!button.isReset) {
-              button = {
-                  ...button,
-                  onClick: onReset,
-              }
-          }
+        const setOnClickOnReset: (button: FormButton) => FormButton = button => {
+            // if this is a reset button, set its onclick to reset
+            if (!!button.isReset) {
+                button = {
+                    ...button,
+                    onClick: onReset,
+                }
+            }
 
-          return button
+            return button
         }
 
-        const createButtonGroup: (groups: ReadonlyArray<FormButton>, isPrimaryGroup: boolean) => Array<JSX.Element> = (groups, isPrimaryGroup) => {
-            return groups.map((button, index) => {
-                button = setOnClickOnReset(button)
+        const createButtonGroup: (groups: ReadonlyArray<FormButton>, isPrimaryGroup: boolean) => Array<JSX.Element> = (groups, isPrimaryGroup) => groups.map((button, index) => {
+            button = setOnClickOnReset(button)
 
-                const disabled: boolean = (button.isSubmit && isFormInvalid) || !!props.shouldDisableButton?.(isPrimaryGroup, index)
+            const disabled: boolean = (button.isSubmit && isFormInvalid) || !!props.shouldDisableButton?.(isPrimaryGroup, index)
 
-                return (
-                    <Button
-                        {...button}
-                        key={button.label || `button-${index}`}
-                        disable={disabled}
-                        tabIndex={button.notTabble ? -1 : index + (inputs ? inputs.length : 0) + (formDef.tabIndexStart || 0)}
-                    />
-                )
-            })
-        }
+            return (
+                <Button
+                    {...button}
+                    key={button.label || `button-${index}`}
+                    disable={disabled}
+                    tabIndex={button.notTabble ? -1 : index + (inputs?.length || 0) + (formDef.tabIndexStart || 0)}
+                />
+            )
+        })
 
         const secondaryGroupButtons: Array<JSX.Element> = createButtonGroup(formDef.buttons.secondaryGroup || [], false)
 
@@ -197,7 +195,7 @@ const Form: <ValueType extends any, RequestType extends any>(props: FormProps<Va
 
         return (
             <form
-                action={''}
+                action=''
                 className={styles.form}
                 key={formKey}
                 onSubmit={onSubmitAsync}

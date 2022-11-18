@@ -1,5 +1,5 @@
-import moment from 'moment'
 import { FC } from 'react'
+import moment from 'moment'
 
 import { Work, WorkSolution } from '../../work-lib'
 
@@ -20,7 +20,8 @@ const WorkSolutionsList: FC<WorkSolutionsListProps> = (props: WorkSolutionsListP
             <div className={styles['solutions-not-available']}>
                 YOUR SOLUTIONS WILL BE AVAILABLE FOR DOWNLOAD ON:
                 <br />
-                {moment(props.work.solutionsReadyDate).format('MM/DD/YY')}
+                {moment(props.work.solutionsReadyDate)
+                    .format('MM/DD/YY')}
             </div>
         )
     }
@@ -31,7 +32,7 @@ const WorkSolutionsList: FC<WorkSolutionsListProps> = (props: WorkSolutionsListP
 
     return (
         <div className={styles['list-wrap']}>
-            {props.solutions.map((solution) => (
+            {props.solutions.map(solution => (
                 <WorkSolutionsListItem solution={solution} key={solution.id} onDownload={props.onDownload} />
             ))}
         </div>

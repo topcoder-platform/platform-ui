@@ -10,7 +10,7 @@ interface CopyButtonProps {
     text?: string
 }
 
-export const CopyButton: React.FC<CopyButtonProps> = (props) => {
+export const CopyButton: React.FC<CopyButtonProps> = props => {
     const { text = '', className = '' }: CopyButtonProps = props
 
     return (

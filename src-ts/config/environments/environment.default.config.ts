@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { EnvironmentConfigModel } from './environment-config.model'
 
 const COMMUNITY_WEBSITE: string = 'https://www.topcoder-dev.com'

@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { EnvironmentConfigModel } from './environment-config.model'
 import { EnvironmentConfigDefault } from './environment.default.config'
 

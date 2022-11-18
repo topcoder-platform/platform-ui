@@ -9,7 +9,7 @@ import { LearnCourse } from './learn-course.model'
 
 export function useGetCourses(
     provider: string,
-    certification?: string
+    certification?: string,
 ): CoursesProviderData {
 
     const params: string = [
@@ -22,7 +22,7 @@ export function useGetCourses(
     const url: string = learnUrlGet('courses', `?${params}`)
     const swrCacheConfig: SWRConfiguration = useSwrCache(url)
 
-    const {data, error}: SWRResponse<ReadonlyArray<LearnCourse>> = useSWR(url, swrCacheConfig)
+    const { data, error }: SWRResponse<ReadonlyArray<LearnCourse>> = useSWR(url, swrCacheConfig)
 
     return {
         course: get(data, [0]),

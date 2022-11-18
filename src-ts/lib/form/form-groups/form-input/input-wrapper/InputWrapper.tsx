@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { Dispatch, forwardRef, ForwardRefExoticComponent, ReactNode, SetStateAction, useState } from 'react'
+import classNames from 'classnames'
 
 import { IconSolid } from '../../../../svgs'
 
@@ -33,7 +33,7 @@ const InputWrapper: ForwardRefExoticComponent<InputWrapperProps> = forwardRef<HT
         props.disabled ? styles.disabled : undefined,
         focusStyle,
         showError ? styles['input-error'] : undefined,
-        props.className
+        props.className,
     )
 
     const renderCheckboxLabel: () => JSX.Element | boolean = () => props.type === 'checkbox' && (

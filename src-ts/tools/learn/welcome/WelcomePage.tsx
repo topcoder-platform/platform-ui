@@ -17,7 +17,7 @@ import { ProgressBlock } from './progress-block'
 import { ReactComponent as TcAcademyFullLogoSvg } from './tca-full-logo.svg'
 import styles from './WelcomePage.module.scss'
 
-const WelcomePage: FC<{}> = () => {
+const WelcomePage: FC = () => {
 
     const allCertsData: AllCertificationsProviderData = useGetAllCertifications()
     const userCertsData: UserCertificationsProviderData = useGetUserCertifications()

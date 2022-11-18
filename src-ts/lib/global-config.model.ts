@@ -14,9 +14,6 @@ export interface GlobalConfig {
     }
     DISABLED_TOOLS?: Array<string>
     ENV: string
-    GAMIFICATION: {
-        ORG_ID: string
-    },
     LOGGING: {
         PUBLIC_TOKEN: string
         SERVICE: string

@@ -7,21 +7,21 @@ import { GamificationConfigProd } from './gamification.prod.config'
 
 function getConfig(): GamificationConfigModel {
 
-  switch (EnvironmentConfig.ENV) {
+    switch (EnvironmentConfig.ENV) {
 
-    case 'dev':
-      return GamificationConfigDev
+        case 'dev':
+            return GamificationConfigDev
 
-    case 'prod':
-      return GamificationConfigProd
+        case 'prod':
+            return GamificationConfigProd
 
-    default:
-      return GamificationConfigDefault
-  }
+        default:
+            return GamificationConfigDefault
+    }
 }
 
 const GamificationConfig: GamificationConfigModel = {
-  ...getConfig(),
+    ...getConfig(),
 }
 
 export default GamificationConfig

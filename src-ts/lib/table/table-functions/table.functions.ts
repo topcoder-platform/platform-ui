@@ -52,7 +52,7 @@ export function getSorted<T extends { [propertyName: string]: any }>(
             .sort((a: T, b: T) => sortNumbers(
                 (a[sort.fieldName] as Date).getTime(),
                 (b[sort.fieldName] as Date).getTime(),
-                sort.direction
+                sort.direction,
             ))
     }
 

@@ -190,10 +190,12 @@ Each [Tool](#tools) can have its own setup requirements. Please see each tool's 
 | `yarn start:<dev>`    | Serve dev mode build with dev's personal config |
 | `yarn build`          | Build dev mode build with the default config and outputs static files in /builds |
 | `yarn build:prod`     | Build prod mode build with the prod config and outputs static files in /builds |
-| `yarn lint`           | Run tslint against ts/x files and outputs report |
-| `yarn lint:fix`       | Run tslint against ts/x files, fixes auto-fixable issues, and  outputs report |
-| `yarn eslint`         | Run eslint against js/x files and outputs report |
-| `yarn eslint:fix`     | Run eslint against js/x files, fixes auto-fixable issues, and  outputs report |
+| `yarn lint:ts`        | Run eslint against ts/x files and outputs report |
+| `yarn lint:ts:fix`    | Run eslint against ts/x files, fixes auto-fixable issues, and  outputs report |
+| `yarn lint:js`        | Run eslint against js/x files and outputs report |
+| `yarn lint:js:fix`    | Run eslint against js/x files, fixes auto-fixable issues, and  outputs report |
+| `yarn lint`           | Run eslint against js/x and ts/x files and outputs report |
+| `yarn lint:fix`       | Run eslint against js/x and ts/x files, fixes auto-fixable issues, and  outputs report |
 | `yarn test`           | Run unit tests, watching for changes and re-running per your specifications |             
 | `yarn test:no-watch`  | Run unit tests once, without watching for changes or re-running |
 | `yarn cy:run`         | Run e2e tests once in local command with the site is running    |
@@ -370,11 +372,11 @@ The PlatformRoute model has several useful options:
 ## Linting
 
 ### Rules
-While [TSLint](https://palantir.github.io/tslint/) is technically deprecated in favor of [Typescript ESLint](https://typescript-eslint.io/), TSLint is still far better at linting Typescript files than ESLint. So, for the time being, TSLint will be the primary linter, but ESLint remains configured for JS/X files.
 
-The following command will install TSLint globally:
+Javascript rules: [src/.eslintrc.js](src/.eslintrc.js)
 
->% yarn global add tslint typescript 
+Typescript rules: [src-ts/.eslintrc.js](src-ts/.eslintrc.js)
+
 
 ### Command Line
 
@@ -386,9 +388,7 @@ The following command will install TSLint globally:
 
 >% yarn lint:fix
 
-OR
-
->% yarn eslint:fix
+See the [yarn commmands](#yarn-commands) for further options.
 
 ### VS Code
 
@@ -411,16 +411,16 @@ The most useful feature is to automatically apply all lint rules any time you sa
         ...
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-            "source.fixAll.tslint": true,
+            "source.fixAll.eslint": true,
         },
     }
     ```
 
-#### TSLint Plugin
+#### ESLint Plugin
 
 Created by Microsoft, this plugin will allow you to see lint errors in the Problems panel.
 
->**WARNING:** Other lint plugins can interfere with TSLint, so it is recommended that you uninstall/disable all other lint plugins (e.g. ESLint, Prettier, etc).
+>**WARNING:** Other lint plugins can interfere with ESLint, so it is recommended that you uninstall/disable all other lint plugins (e.g. TSLint, Prettier, etc).
 
 ## Styling
 
