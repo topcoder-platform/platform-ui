@@ -16,6 +16,9 @@ export const EnvironmentConfigProd: EnvironmentConfigModel = {
         V3: 'https://api.topcoder.com/v3',
         V5: 'https://api.topcoder.com/v5',
     },
+    AUTH: {
+        ACCOUNTS_APP_CONNECTOR: 'https://accounts-auth0.topcoder.com',
+    },
     DISABLED_TOOLS: [],
     ENV: 'prod',
     // TODO: Move stripe creds to .env file
@@ -36,7 +39,7 @@ export const EnvironmentConfigProd: EnvironmentConfigModel = {
         USER_PROFILE: `${COMMUNITY_WEBSITE}/members`,
         WP_CONTENT: `${COMMUNITY_WEBSITE}/wp-content`,
     },
-    URL: {
-        ACCOUNTS_APP_CONNECTOR: 'https://accounts-auth0.topcoder.com',
+    UNIVERSAL_NAV: {
+        URL: 'https://uni-nav.topcoder.com/tc-universal-nav.js',
     },
 }

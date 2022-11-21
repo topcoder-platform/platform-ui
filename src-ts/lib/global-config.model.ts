@@ -9,6 +9,9 @@ export interface GlobalConfig {
         V3: string
         V5: string
     }
+    AUTH: {
+        ACCOUNTS_APP_CONNECTOR: string
+    }
     DISABLED_TOOLS?: Array<string>
     ENV: string
     LOGGING: {
@@ -23,15 +26,15 @@ export interface GlobalConfig {
         CUSTOMER_TOKEN: string
     }
     TOPCODER_URLS: {
-        API_BASE: string,
-        BLOG_PAGE: string,
-        CHALLENGES_PAGE: string,
-        GIGS_PAGE: string,
-        THRIVE_PAGE: string,
-        USER_PROFILE: string,
-        WP_CONTENT: string,
+        API_BASE: string
+        BLOG_PAGE: string
+        CHALLENGES_PAGE: string
+        GIGS_PAGE: string
+        THRIVE_PAGE: string
+        USER_PROFILE: string
+        WP_CONTENT: string
     }
-    URL: {
-        ACCOUNTS_APP_CONNECTOR: string
-    },
+    UNIVERSAL_NAV: {
+        URL: string
+    }
 }
