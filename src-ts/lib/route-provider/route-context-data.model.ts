@@ -4,6 +4,7 @@ import { PlatformRoute } from './platform-route.model'
 
 export interface RouteContextData {
     activeToolName?: string
+    activeToolRoute?: string
     allRoutes: Array<PlatformRoute>
     getChildren: (parent: string) => Array<PlatformRoute>
     getChildRoutes: (parent: string) => Array<ReactElement>

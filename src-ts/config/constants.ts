@@ -6,4 +6,4 @@ export enum ToolTitle {
     work = 'Self-Service',
 }
 
-export const PagePortalId: string = 'page-subheader-portal-el'
+export const PageSubheaderPortalId: string = 'page-subheader-portal-el'

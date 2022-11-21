@@ -1,6 +1,6 @@
 import { Dispatch, FC, ReactNode, SetStateAction, useContext, useMemo, useState } from 'react'
 
-import { PagePortalId } from '../../../config'
+import { PageSubheaderPortalId } from '../../../config'
 import {
     Breadcrumb,
     BreadcrumbItemModel,
@@ -83,7 +83,7 @@ const MyLearning: FC<{}> = () => {
             <div className={styles.wrap}>
                 <LoadingSpinner hide={ready} className={styles['loading-spinner']} />
 
-                <Portal portalId={PagePortalId}>
+                <Portal portalId={PageSubheaderPortalId}>
                     <div className={styles['hero-wrap']}>
                         <WaveHero
                             title='my learning'
