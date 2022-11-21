@@ -38,7 +38,7 @@ const Header: FC = () => {
 
     useEffect(() => {
 
-        if (headerInit.current || !profileReady || !tcUniNav) {
+        if (headerInit.current) {
             return
         }
 
@@ -55,10 +55,37 @@ const Header: FC = () => {
                 signIn() { window.location.href = authUrlLogin() },
                 signOut() { window.location.href = authUrlLogout },
                 signUp() { window.location.href = authUrlSignup() },
+                type: 'tool',
+            },
+        )
+    }, [])
+
+    useEffect(() => {
+
+        tcUniNav(
+            'update',
+            navElementId,
+            {
                 toolName: activeToolName,
                 toolRoute: activeToolRoute,
-                type: 'tool',
-                user: profileReady && profile ? {
+            },
+        )
+    }, [
+        activeToolName,
+        activeToolRoute,
+    ])
+
+    useEffect(() => {
+
+        if (!profileReady) {
+            return
+        }
+
+        tcUniNav(
+            'update',
+            navElementId,
+            {
+                user: profile ? {
                     handle: profile.handle,
                     initials: `${profile.firstName.charAt(0)}${profile.lastName.charAt(0)}`,
                     photoURL: profile.photoURL,
@@ -67,8 +94,6 @@ const Header: FC = () => {
             },
         )
     }, [
-        activeToolName,
-        activeToolRoute,
         profileReady,
         profile,
     ])
