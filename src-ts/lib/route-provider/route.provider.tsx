@@ -55,16 +55,25 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
         //    a. for customers and the user is a customer
         //    b. for members and the user is a member
         //    c. the active tool in the app (in case someone deep-links to it)
+        let activeRoute: PlatformRoute | undefined
         const toolsRoutesForNav: Array<PlatformRoute> = toolsRoutes
-            .filter(route => !!route.title
-                && !route.hidden
-                && (
-                    (
-                        (!route.customerOnly || !!profile?.isCustomer)
-                        && (!route.memberOnly || !!profile?.isMember)
+            .filter(route => {
+
+                const isActive: boolean = routeIsActiveTool(location.pathname, route)
+                if (isActive) {
+                    activeRoute = route
+                }
+
+                return !!route.title
+                    && !route.hidden
+                    && (
+                        (
+                            (!route.customerOnly || !!profile?.isCustomer)
+                            && (!route.memberOnly || !!profile?.isMember)
+                        )
+                        || isActive
                     )
-                    || routeIsActiveTool(location.pathname, route)
-                ))
+            })
 
         const utilsRoutes: Array<PlatformRoute> = props.utilsRoutes.filter(route => !route.disabled)
         allRoutes = [
@@ -77,8 +86,10 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
             : profile.isCustomer
                 ? props.rootCustomer
                 : props.rootMember
+
         const contextData: RouteContextData = {
-            activeToolName: allRoutes.find(r => routeIsActiveTool(location.pathname, r))?.title,
+            activeToolName: activeRoute?.title,
+            activeToolRoute: !!activeRoute ? `https://${window.location.hostname}${activeRoute.route}` : undefined,
             allRoutes,
             getChildren,
             getChildRoutes,

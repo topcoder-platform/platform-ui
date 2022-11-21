@@ -10,11 +10,12 @@ import {
 } from 'react'
 import classNames from 'classnames'
 
-import { EnvironmentConfig, PagePortalId } from '../config'
+import { EnvironmentConfig, PageSubheaderPortalId } from '../config'
 import {
     authUrlLogin,
     authUrlLogout,
     authUrlSignup,
+    LoadingSpinner,
     profileContext,
     ProfileContextData,
     routeContext,
@@ -29,7 +30,7 @@ UniNavSnippet(EnvironmentConfig.UNIVERSAL_NAV.URL)
 
 const Header: FC = () => {
 
-    const { activeToolName }: RouteContextData = useContext(routeContext)
+    const { activeToolName, activeToolRoute }: RouteContextData = useContext(routeContext)
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
     const [ready, setReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
     const headerInit: MutableRefObject<boolean> = useRef(false)
@@ -44,7 +45,7 @@ const Header: FC = () => {
         headerInit.current = true
 
         tcUniNav(
-            'tool',
+            'init',
             navElementId,
             {
                 onReady() {
@@ -55,6 +56,8 @@ const Header: FC = () => {
                 signOut() { window.location.href = authUrlLogout },
                 signUp() { window.location.href = authUrlSignup() },
                 toolName: activeToolName,
+                toolRoute: activeToolRoute,
+                type: 'tool',
                 user: profileReady && profile ? {
                     handle: profile.handle,
                     initials: `${profile.firstName.charAt(0)}${profile.lastName.charAt(0)}`,
@@ -65,15 +68,18 @@ const Header: FC = () => {
         )
     }, [
         activeToolName,
+        activeToolRoute,
         profileReady,
-        profile])
+        profile,
+    ])
 
     return (
         <>
+            <LoadingSpinner hide={ready} />
             <div id={navElementId} />
             <div
-                id={PagePortalId}
-                className={classNames('full-width-relative', !ready && 'hidden')}
+                id={PageSubheaderPortalId}
+                className={classNames('full-width-relative')}
             />
         </>
     )
