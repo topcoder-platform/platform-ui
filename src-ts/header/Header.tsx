@@ -8,6 +8,7 @@ import UniNavSnippet from './universal-nav-snippet'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare let tcUniNav: any
+UniNavSnippet(EnvironmentConfig.UNIVERSAL_NAV.URL)
 
 const Header: FC = () => {
 
@@ -17,8 +18,6 @@ const Header: FC = () => {
     const navElementId: string = 'main-nav-el'
 
     useEffect(() => {
-
-        UniNavSnippet(EnvironmentConfig.UNIVERSAL_NAV.URL)
 
         if (headerInit.current || !profileReady || !tcUniNav) {
             return
