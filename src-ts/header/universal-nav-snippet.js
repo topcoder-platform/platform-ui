@@ -26,7 +26,7 @@ function UniNavSnippet(url) {
         i.type = 'module'
 
         i.src = a
-        
+
         o.parentNode.insertBefore(i, o)
 
     }(window, document, 'script', url, 'tcUniNav'))

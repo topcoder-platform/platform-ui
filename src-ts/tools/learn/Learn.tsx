@@ -9,7 +9,7 @@ import {
 
 import { LearnSwr } from './learn-lib'
 
-export const toolTitle: string = ToolTitle.learn
+export const toolTitle: string = ToolTitle.tca
 
 const Learn: FC<{}> = () => {
 

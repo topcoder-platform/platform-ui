@@ -12,7 +12,8 @@ const WorkNotLoggedIn: LazyLoadedComponent = lazyLoad(() => import('./work-not-l
 const BugHuntIntakeForm: LazyLoadedComponent = lazyLoad(() => import('./work-self-service'), 'BugHuntIntakeForm')
 const IntakeForms: LazyLoadedComponent = lazyLoad(() => import('./work-self-service'), 'IntakeForms')
 const Review: LazyLoadedComponent = lazyLoad(() => import('./work-self-service'), 'Review')
-const SaveAfterLogin: LazyLoadedComponent = lazyLoad(() => import('./work-self-service/intake-forms/save-after-login/SaveAfterLogin'))
+const SaveAfterLogin: LazyLoadedComponent
+    = lazyLoad(() => import('./work-self-service/intake-forms/save-after-login/SaveAfterLogin'))
 const WorkTable: LazyLoadedComponent = lazyLoad(() => import('./work-table'), 'WorkTable')
 const WorkThankYou: LazyLoadedComponent = lazyLoad(() => import('./work-thank-you'), 'WorkThankYou')
 
@@ -45,7 +46,7 @@ export function workDetailOrDraftRoute(selectedWork: Work): string {
 }
 
 export function workDetailRoute(workId: string, tab?: 'solutions' | 'messages'): string {
-    return `${selfServiceRootRoute}/work-items/${workId}${!!tab ? `\?tab=${tab}` : ''}`
+    return `${selfServiceRootRoute}/work-items/${workId}${!!tab ? `?tab=${tab}` : ''}`
 }
 
 export const workRoutes: Array<PlatformRoute> = [

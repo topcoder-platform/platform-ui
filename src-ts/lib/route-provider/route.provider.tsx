@@ -78,9 +78,10 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
                 ? props.rootCustomer
                 : props.rootMember
         const contextData: RouteContextData = {
+            activeToolName: allRoutes.find(r => routeIsActiveTool(location.pathname, r))?.title,
             allRoutes,
-            getChildRoutes,
             getChildren,
+            getChildRoutes,
             getPath,
             getPathFromRoute,
             getRouteElement,

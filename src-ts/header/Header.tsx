@@ -1,8 +1,25 @@
-import { Dispatch, FC, MutableRefObject, SetStateAction, useContext, useEffect, useRef, useState } from 'react'
+import {
+    Dispatch,
+    FC,
+    MutableRefObject,
+    SetStateAction,
+    useContext,
+    useEffect,
+    useRef,
+    useState,
+} from 'react'
 import classNames from 'classnames'
 
 import { EnvironmentConfig, PagePortalId } from '../config'
-import { authUrlLogin, authUrlLogout, authUrlSignup, profileContext, ProfileContextData } from '../lib'
+import {
+    authUrlLogin,
+    authUrlLogout,
+    authUrlSignup,
+    profileContext,
+    ProfileContextData,
+    routeContext,
+    RouteContextData,
+} from '../lib'
 
 import UniNavSnippet from './universal-nav-snippet'
 
@@ -12,6 +29,7 @@ UniNavSnippet(EnvironmentConfig.UNIVERSAL_NAV.URL)
 
 const Header: FC = () => {
 
+    const { activeToolName }: RouteContextData = useContext(routeContext)
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
     const [ready, setReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
     const headerInit: MutableRefObject<boolean> = useRef(false)
@@ -36,8 +54,7 @@ const Header: FC = () => {
                 signIn() { window.location.href = authUrlLogin() },
                 signOut() { window.location.href = authUrlLogout },
                 signUp() { window.location.href = authUrlSignup() },
-                // TODO: make this dynamic based on the current URL
-                toolName: 'Topcoder Academy',
+                toolName: activeToolName,
                 user: profileReady && profile ? {
                     handle: profile.handle,
                     initials: `${profile.firstName.charAt(0)}${profile.lastName.charAt(0)}`,
@@ -46,7 +63,10 @@ const Header: FC = () => {
                 } : undefined,
             },
         )
-    }, [profileReady, profile])
+    }, [
+        activeToolName,
+        profileReady,
+        profile])
 
     return (
         <>

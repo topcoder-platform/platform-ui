@@ -2,13 +2,14 @@ import { FC, useContext } from 'react'
 import { Outlet, Routes } from 'react-router-dom'
 import { SWRConfig } from 'swr'
 
+import { ToolTitle } from '../../config'
 import {
     routeContext,
     RouteContextData,
     xhrGetAsync,
 } from '../../lib'
 
-export const toolTitle: string = 'Gamification Admin'
+export const toolTitle: string = ToolTitle.game
 
 const GamificationAdmin: FC<{}> = () => {
 
