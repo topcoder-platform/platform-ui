@@ -163,6 +163,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
         profile,
         props.toolsRoutes,
         props.utilsRoutes,
+        location,
     ])
 
     return (
