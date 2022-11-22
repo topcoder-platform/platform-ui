@@ -30,6 +30,11 @@ import UniNavSnippet from './universal-nav-snippet'
 declare let tcUniNav: any
 UniNavSnippet(EnvironmentConfig.UNIVERSAL_NAV.URL)
 
+interface NavigationRequest {
+    label: string
+    path: string
+}
+
 const Header: FC = () => {
 
     const { activeToolName, activeToolRoute }: RouteContextData = useContext(routeContext)
@@ -39,16 +44,12 @@ const Header: FC = () => {
     const navElementId: string = 'main-nav-el'
     const navigate: NavigateFunction = useNavigate()
 
-    console.debug('active route', activeToolRoute)
-
-    const navigationHandler: (label: string, path: string) => void
-        = useCallback((label: string, path: string) => {
-
-            console.debug(path)
+    const navigationHandler: (request: NavigationRequest) => void
+        = useCallback((request: NavigationRequest) => {
 
             try {
                 // strip the domain and navigate to the path
-                navigate(new URL(path).pathname)
+                navigate(new URL(request.path).pathname)
             } catch (error) {
                 // if we couldn't navigate to the path, just go to the route of the currently active tool
                 navigate(new URL(activeToolRoute || '/').pathname)
@@ -71,7 +72,7 @@ const Header: FC = () => {
             'init',
             navElementId,
             {
-                navigationHandler,
+                handleNavigation: navigationHandler,
                 onReady() {
                     setReady(true)
                     document.getElementById('root')?.classList.add('app-ready')
@@ -80,7 +81,7 @@ const Header: FC = () => {
                 signOut() { window.location.href = authUrlLogout },
                 signUp() { window.location.href = authUrlSignup() },
                 toolName: activeToolName,
-                toolRoute: activeToolRoute,
+                toolRoot: activeToolRoute,
                 type: 'tool',
                 user: profile ? {
                     handle: profile.handle,
