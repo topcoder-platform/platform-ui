@@ -26,7 +26,7 @@ export function getRegistrationSource(
     activeTool: PlatformRoute | undefined,
 ): AuthenticationRegistrationSource | undefined {
 
-    switch (activeTool?.title) {
+    switch (activeTool?.id) {
 
         // currently, there is no reg source for members
         case ToolTitle.tca:

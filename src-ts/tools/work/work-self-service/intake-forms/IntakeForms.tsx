@@ -6,8 +6,7 @@ import {
     routeContext,
     RouteContextData,
 } from '../../../../lib'
-
-export const intakeFormsTitle: string = 'Work Intake Forms'
+import { intakeFormsRouteId } from '../../Work'
 
 const IntakeForms: FC<{}> = () => {
 
@@ -17,7 +16,7 @@ const IntakeForms: FC<{}> = () => {
         <ContentLayout>
             <Outlet />
             <Routes>
-                {getChildRoutes(intakeFormsTitle)}
+                {getChildRoutes(intakeFormsRouteId)}
             </Routes>
         </ContentLayout>
     )

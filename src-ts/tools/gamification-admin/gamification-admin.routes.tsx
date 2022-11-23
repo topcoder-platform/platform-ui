@@ -18,7 +18,7 @@ export function badgeDetailPath(badgeId: string, view?: 'edit' | 'award'): strin
 
 export const createBadgeRoute: string = `${basePath}${createBadgePath}`
 
-export const gamificationAdminRoutes: Array<PlatformRoute> = [
+export const gamificationAdminRoutes: ReadonlyArray<PlatformRoute> = [
     {
         authRequired: true,
         children: [
@@ -37,10 +37,10 @@ export const gamificationAdminRoutes: Array<PlatformRoute> = [
         ],
         element: <GamificationAdmin />,
         hidden: true,
+        id: toolTitle,
         rolesRequired: [
             UserRole.gamificationAdmin,
         ],
         route: basePath,
-        title: toolTitle,
     },
 ]
