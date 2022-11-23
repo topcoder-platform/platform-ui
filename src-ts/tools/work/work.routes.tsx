@@ -114,7 +114,7 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
         element: <IntakeForms />,
         hidden: true,
         id: intakeFormsRouteId,
-        route: `/${selfServiceRootRoute}${rootRoute}/new`,
+        route: `${selfServiceRootRoute}${rootRoute}/new`,
         title: toolTitle,
     },
     {
