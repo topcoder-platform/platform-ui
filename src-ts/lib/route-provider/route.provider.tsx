@@ -160,6 +160,7 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         initialized,
+        location,
         profile,
         props.toolsRoutes,
         props.utilsRoutes,
