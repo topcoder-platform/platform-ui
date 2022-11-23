@@ -8,7 +8,6 @@ export interface RouteContextData {
     allRoutes: Array<PlatformRoute>
     getChildren: (parent: string) => Array<PlatformRoute>
     getChildRoutes: (parent: string) => Array<ReactElement>
-    getPath: (routeTitle: string) => string
     getPathFromRoute: (route: PlatformRoute) => string
     getRouteElement: (route: PlatformRoute) => JSX.Element
     getSignupUrl: (currentLocation: string, toolRoutes: Array<PlatformRoute>, returnUrl?: string) => string
@@ -17,6 +16,5 @@ export interface RouteContextData {
     rootLoggedInRoute: string
     rootLoggedOutFC: FC<{}>
     toolsRoutes: Array<PlatformRoute>
-    toolsRoutesForNav: Array<PlatformRoute>
     utilsRoutes: Array<PlatformRoute>
 }

@@ -2,11 +2,10 @@ export interface PlatformRoute {
     alternativePaths?: Array<string>
     authRequired?: boolean
     children?: Array<PlatformRoute>
-    customerOnly?: boolean
     disabled?: boolean
     element: JSX.Element
     hidden?: boolean
-    memberOnly?: boolean
+    id?: string
     rolesRequired?: Array<string>
     route: string
     title?: string

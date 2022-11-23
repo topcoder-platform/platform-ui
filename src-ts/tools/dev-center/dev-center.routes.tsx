@@ -11,7 +11,7 @@ const DevCenter: LazyLoadedComponent = lazyLoad(() => import('./DevCenter'))
 
 export const toolTitle: string = ToolTitle.dev
 
-export const devCenterRoutes: Array<PlatformRoute> = [
+export const devCenterRoutes: ReadonlyArray<PlatformRoute> = [
     {
         children: [
             {
@@ -24,8 +24,7 @@ export const devCenterRoutes: Array<PlatformRoute> = [
             },
         ],
         element: <DevCenter />,
-        memberOnly: true,
+        id: toolTitle,
         route: '/dev-center',
-        title: toolTitle,
     },
 ]
