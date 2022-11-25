@@ -14064,7 +14064,7 @@ unique-string@^2.0.0:
 
 "universal-navigation@https://github.com/topcoder-platform/universal-navigation":
   version "1.0.0"
-  resolved "https://github.com/topcoder-platform/universal-navigation#1324cf3b338a9b5c98a758bf1876f8ef4d78aacb"
+  resolved "https://github.com/topcoder-platform/universal-navigation#c052f25411df8c7da6412d5b567759518699fa8a"
 
 universalify@^0.2.0:
   version "0.2.0"
