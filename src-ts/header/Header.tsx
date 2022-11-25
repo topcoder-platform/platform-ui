@@ -10,6 +10,7 @@ import {
     useState,
 } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
+import { type TcUniNavFn } from 'universal-navigation'
 import classNames from 'classnames'
 
 import { EnvironmentConfig, PageSubheaderPortalId } from '../config'
@@ -27,7 +28,7 @@ import {
 import UniNavSnippet from './universal-nav-snippet'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare let tcUniNav: any
+declare let tcUniNav: TcUniNavFn
 UniNavSnippet(EnvironmentConfig.UNIVERSAL_NAV.URL)
 
 interface NavigationRequest {
@@ -80,13 +81,13 @@ const Header: FC = () => {
                 signIn() { window.location.href = authUrlLogin() },
                 signOut() { window.location.href = authUrlLogout },
                 signUp() { window.location.href = authUrlSignup() },
-                toolName: activeToolName,
-                toolRoot: activeToolRoute,
+                toolName: activeToolName ?? '',
+                toolRoot: activeToolRoute ?? '',
                 type: 'tool',
                 user: profile ? {
                     handle: profile.handle,
                     initials: `${profile.firstName.charAt(0)}${profile.lastName.charAt(0)}`,
-                    photoURL: profile.photoURL,
+                    photoURL: profile.photoURL ?? '',
                     userId: profile.userId,
                 } : undefined,
             },
@@ -109,8 +110,8 @@ const Header: FC = () => {
             'update',
             navElementId,
             {
-                toolName: activeToolName,
-                toolRoute: activeToolRoute,
+                toolName: activeToolName ?? '',
+                toolRoot: activeToolRoute ?? '',
             },
         )
     }, [
