@@ -40,6 +40,6 @@ export const EnvironmentConfigProd: EnvironmentConfigModel = {
         WP_CONTENT: `${COMMUNITY_WEBSITE}/wp-content`,
     },
     UNIVERSAL_NAV: {
-        URL: 'https://uni-nav.topcoder.com/tc-universal-nav-1.js',
+        URL: 'https://uni-nav.topcoder.com/v1/tc-universal-nav.js',
     },
 }
