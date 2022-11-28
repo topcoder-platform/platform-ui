@@ -27,7 +27,6 @@ import {
 
 import UniNavSnippet from './universal-nav-snippet'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare let tcUniNav: TcUniNavFn
 UniNavSnippet(EnvironmentConfig.UNIVERSAL_NAV.URL)
 
