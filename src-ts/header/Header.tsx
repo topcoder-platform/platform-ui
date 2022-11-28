@@ -109,8 +109,8 @@ const Header: FC = () => {
             'update',
             navElementId,
             {
-                toolName: activeToolName ?? '',
-                toolRoot: activeToolRoute ?? '',
+                toolName: activeToolName,
+                toolRoot: activeToolRoute,
             },
         )
     }, [
