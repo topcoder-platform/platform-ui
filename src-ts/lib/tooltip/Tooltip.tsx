@@ -1,6 +1,6 @@
 import { FC, ReactNode, RefObject, useRef } from 'react'
-import ReactTooltip from 'react-tooltip'
 import { v4 as uuidv4 } from 'uuid'
+import ReactTooltip from 'react-tooltip'
 
 import styles from './Tooltip.module.scss'
 
@@ -32,12 +32,12 @@ const Tooltip: FC<TooltipProps> = ({
     let tooltipProps: TooltipEvent = {}
     // The following attributes are required by react-tooltip when we want to show the tooltip on click rather than hover
     if (triggerOn === 'click') {
-      tooltipProps = {
-        globalEventOff: 'click',
-      }
-      event = {
-        'data-event': 'click focus',
-      }
+        tooltipProps = {
+            globalEventOff: 'click',
+        }
+        event = {
+            'data-event': 'click focus',
+        }
     }
 
     return (
@@ -51,7 +51,7 @@ const Tooltip: FC<TooltipProps> = ({
                 {trigger}
             </div>
             <ReactTooltip
-                className={styles['tooltip']}
+                className={styles.tooltip}
                 id={tooltipId.current}
                 aria-haspopup='true'
                 place={place}

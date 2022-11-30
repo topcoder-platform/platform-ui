@@ -5,11 +5,11 @@ type StorageTypes = 'localStorage' | 'sessionStorage'
 export function useStorage<T>(
     storageType: StorageTypes,
     storageKey: string,
-    initialValue?: T
+    initialValue?: T,
 ): [T, Dispatch<SetStateAction<T>>] {
     const storage: Storage = window[storageType]
 
-    const readStoredValue: () => T  = useCallback(() => {
+    const readStoredValue: () => T = useCallback(() => {
         try {
             // Get from local storage by key
             const item: string | null = storage.getItem(storageKey)
@@ -44,7 +44,7 @@ export function useStorage<T>(
             })
         } catch (error) {
             // A more advanced implementation would handle the error case
-            // tslint:disable-next-line:no-console
+            // eslint-disable-next-line no-console
             console.error(error)
         }
     }, [storage, storageKey]) as Dispatch<SetStateAction<T>>
@@ -57,7 +57,7 @@ export const useLocalStorage: <T, >(
     initialValue?: T
 ) => [T, Dispatch<SetStateAction<T>>] = <T>(
     key: string,
-    initialValue?: T
+    initialValue?: T,
 ) => useStorage<T>('localStorage', key, initialValue)
 
 export const useSessionStorage: <T, >(
@@ -65,5 +65,5 @@ export const useSessionStorage: <T, >(
     initialValue?: T
 ) => [T, Dispatch<SetStateAction<T>>] = <T>(
     key: string,
-    initialValue?: T
+    initialValue?: T,
 ) => useStorage<T>('sessionStorage', key, initialValue)

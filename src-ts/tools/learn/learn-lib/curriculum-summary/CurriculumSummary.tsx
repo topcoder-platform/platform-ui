@@ -14,13 +14,13 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
     const hasTimeEstimate: boolean = props.completionHours?.value !== 0
 
     return (
-        <div className={styles['summary']}>
+        <div className={styles.summary}>
             <div className={styles['stat-item']}>
-                <div className={styles['icon']}>
+                <div className={styles.icon}>
                     <IconOutline.DocumentTextIcon />
                 </div>
                 <div className='sub'>
-                    <h3 className={styles['count']}>
+                    <h3 className={styles.count}>
                         {props.moduleCount ?? 0}
                     </h3>
                     <div className={styles['count-label']}>
@@ -29,11 +29,11 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
                 </div>
             </div>
             <div className={styles['stat-item']}>
-                <div className={styles['icon']}>
+                <div className={styles.icon}>
                     <IconOutline.ClockIcon />
                 </div>
                 <div className='sub'>
-                    <h3 className={styles['count']}>
+                    <h3 className={styles.count}>
                         {hasTimeEstimate ? props.completionHours?.value : (<>&nbsp;</>)}
                     </h3>
                     <div className={styles['count-label']}>

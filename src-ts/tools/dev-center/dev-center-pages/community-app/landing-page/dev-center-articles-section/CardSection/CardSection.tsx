@@ -23,17 +23,18 @@ const CardSection: FC = () => {
             ArticlesUrl.map(async (articleUrl, idx) => {
                 switch (articleUrl.type) {
                     case ArticleType.Thrive:
-                        const response: { fields: ThriveArticle } =
-                            await client.getEntry(articleUrl.url)
+                        const response: { fields: ThriveArticle }
+                            = await client.getEntry(articleUrl.url)
                         return response.fields
                     case ArticleType.Blog:
-                        const blog: BlogPost =
-                            (await getBlog(articleUrl.url)) ??
-                            defaultBlogs[idx]
+                        const blog: BlogPost
+                            = (await getBlog(articleUrl.url))
+                            ?? defaultBlogs[idx]
                         return blog
                 }
-            })
-        ).then((arr) => setArticles(arr))
+            }),
+        )
+            .then(arr => setArticles(arr))
     }, [])
 
     const articleStyles: Array<any> = [

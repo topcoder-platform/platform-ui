@@ -28,7 +28,7 @@ install_dependency: &install_dependency
 install_deploysuite: &install_deploysuite
     name: Installation of install_deploysuite.
     command: |
-      git clone --branch v1.4.11 https://github.com/topcoder-platform/tc-deploy-scripts ../buildscript
+      git clone --branch v1.4.12 https://github.com/topcoder-platform/tc-deploy-scripts ../buildscript
       cp ./../buildscript/master_deploy.sh .
       cp ./../buildscript/buildenv.sh .
       cp ./../buildscript/awsconfiguration.sh .
@@ -41,10 +41,10 @@ save_cache_settings: &save_cache_settings
     paths:
       - node_modules
 
-running_yarn_tslint: &running_yarn_tslint
-    name: Running Yarn tslint
+running_yarn_eslint: &running_yarn_eslint
+    name: Running Yarn eslint
     command: |
-      yarn add tslint -g
+      yarn add eslint -g
       yarn lint
 
 running_yarn_build: &running_yarn_build
@@ -81,7 +81,7 @@ lint_steps: &lint_steps
     # Initialization.
     - checkout
     - setup_remote_docker
-    - run: *running_yarn_tslint
+    - run: *running_yarn_eslint
 
 build_steps: &build_steps
     # Initialization.
@@ -129,21 +129,21 @@ deploy_steps: &deploy_steps
           ./master_deploy.sh -d CFRONT -e $DEPLOY_ENV -c $ENABLE_CACHE
 
 jobs:
-  lint-dev:
-    <<: *defaults
-    environment:
-      DEPLOY_ENV: "DEV"
-      LOGICAL_ENV: "dev"
-      APPNAME: "platform-ui-mvp"
-    steps: *lint_steps
+  # lint-dev:
+  #   <<: *defaults
+  #   environment:
+  #     DEPLOY_ENV: "DEV"
+  #     LOGICAL_ENV: "dev"
+  #     APPNAME: "platform-ui-mvp"
+  #   steps: *lint_steps
 
-  lint-prod:
-    <<: *defaults
-    environment:
-      DEPLOY_ENV: "PROD"
-      LOGICAL_ENV: "prod"
-      APPNAME: "platform-ui-mvp"
-    steps: *lint_steps
+  # lint-prod:
+  #   <<: *defaults
+  #   environment:
+  #     DEPLOY_ENV: "PROD"
+  #     LOGICAL_ENV: "prod"
+  #     APPNAME: "platform-ui-mvp"
+  #   steps: *lint_steps
     
   build-dev:
     <<: *defaults
@@ -175,7 +175,7 @@ jobs:
     environment:
       DEPLOY_ENV: "DEV"
       LOGICAL_ENV: "dev"
-      ENABLE_CACHE: false
+      ENABLE_CACHE: true
       APPNAME: "platform-ui-mvp"
     steps: *deploy_steps
 
@@ -192,19 +192,19 @@ workflows:
   version: 2
   build:
     jobs:
-      - lint-dev:
-          context : org-global
-          filters:
-            branches:
-              ignore:
-                - master
+      # - lint-dev:
+      #     context : org-global
+      #     filters:
+      #       branches:
+      #         ignore:
+      #           - master
 
-      - lint-prod:
-          context : org-global
-          filters:
-            branches:
-              only:
-                - master
+      # - lint-prod:
+      #     context : org-global
+      #     filters:
+      #       branches:
+      #         only:
+      #           - master
 
       - build-dev:
           context : org-global

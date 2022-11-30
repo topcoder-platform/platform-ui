@@ -7,11 +7,6 @@ declare module '*.html' {
 
 declare module '*.pdf'
 
-declare module '*.scss' {
-    const scssFile: { [style: string]: any }
-    export = scssFile
-}
-
 declare module '*.svg' {
     import * as React from 'react'
 

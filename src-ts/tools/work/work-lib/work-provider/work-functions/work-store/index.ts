@@ -29,7 +29,7 @@ export * from './work-status.enum'
 export * from './work-timeline-phase.model'
 export {
     bugHuntConfig as workBugHuntConfig,
-    WorkTypeConfigs
+    WorkTypeConfigs,
 } from './work-type.config'
 export * from './work-type.enum'
 export * from './work-type.model'

@@ -20,7 +20,8 @@ export function handle(error: any, errString?: string): void {
                     to={contactSupportPath}
                 >
                     Contact Support
-                </Link>.
+                </Link>
+                .
             </p>
         </>
     )

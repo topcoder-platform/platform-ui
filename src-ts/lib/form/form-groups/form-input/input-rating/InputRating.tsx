@@ -10,9 +10,9 @@ import {
 } from 'react'
 
 import { Button } from '../../../../button'
-import '../../../../styles/index.scss'
 import { IconSolid } from '../../../../svgs'
 import { InputWrapper } from '../input-wrapper'
+import '../../../../styles/index.scss'
 
 import styles from './InputRating.module.scss'
 
@@ -51,7 +51,7 @@ const InputRating: FC<InputRatingProps> = (props: InputRatingProps) => {
             />
         )
         stars.push(element)
-        index++ // incrementing by 2, so do a 2nd increment each time through the loop
+        index += 1 // incrementing by 2, so do a 2nd increment each time through the loop
     }
 
     useEffect(() => {
@@ -71,8 +71,8 @@ const InputRating: FC<InputRatingProps> = (props: InputRatingProps) => {
             {...props}
             dirty={!!props.dirty}
             disabled={!!props.disabled}
-            hint={''}
-            label={''}
+            hint=''
+            label=''
             type='rating'
             className={styles['rating-input-wrapper']}
             hideInlineErrors={props.hideInlineErrors}

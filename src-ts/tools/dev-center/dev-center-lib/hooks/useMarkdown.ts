@@ -4,7 +4,7 @@ import {
     MarkdownResult,
     MarkdownString,
     renderMarkdown,
-    TOC
+    TOC,
 } from '../MarkdownDoc/markdownRenderer'
 
 export interface UseMarkdownProps {
@@ -24,8 +24,8 @@ export default function useMarkdown({ uri }: UseMarkdownProps): {
         MarkdownResult,
         React.Dispatch<React.SetStateAction<MarkdownResult>>
     ] = React.useState<MarkdownResult>()
-    const [toc, setToc]: [TOC, React.Dispatch<React.SetStateAction<TOC>>] =
-        React.useState<TOC>([])
+    const [toc, setToc]: [TOC, React.Dispatch<React.SetStateAction<TOC>>]
+        = React.useState<TOC>([])
     const [title, setTitle]: [
         string,
         React.Dispatch<React.SetStateAction<string>>
@@ -38,8 +38,8 @@ export default function useMarkdown({ uri }: UseMarkdownProps): {
         setTitle('')
 
         fetch(uri)
-            .then((response) => response.text())
-            .then((text) => {
+            .then(response => response.text())
+            .then(text => {
                 setMarkdown(text)
             })
             .catch(() => {})
@@ -47,8 +47,8 @@ export default function useMarkdown({ uri }: UseMarkdownProps): {
 
     React.useEffect(() => {
         if (markdown) {
-            const result: ReturnType<typeof renderMarkdown> =
-                renderMarkdown(markdown)
+            const result: ReturnType<typeof renderMarkdown>
+                = renderMarkdown(markdown)
             setDoc(result.doc)
             setToc(result.toc)
             setTitle(result.title)

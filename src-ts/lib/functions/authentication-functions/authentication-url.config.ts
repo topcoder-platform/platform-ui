@@ -9,7 +9,7 @@ export function login(returnUrl?: string): string {
     return `${authentication}?retUrl=${encodeURIComponent(retUrl)}`
 }
 
-export const logout: string = `${authentication}?logout=true&retUrl=${encodeURIComponent('https://' + window.location.host)}`
+export const logout: string = `${authentication}?logout=true&retUrl=${encodeURIComponent(`https://${window.location.host}`)}`
 
 export function signup(returnUrl?: string, regSource?: AuthenticationRegistrationSource): string {
     return `${login(returnUrl)}&mode=signUp${!!regSource ? `&regSource=${regSource}` : ''}`

@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { FC, ReactNode, useMemo } from 'react'
+import classNames from 'classnames'
 
 import { IconOutline, IconSolid } from '../../../../../lib'
 
@@ -12,19 +12,23 @@ interface StatusIconProps {
 
 const StatusIcon: FC<StatusIconProps> = (props: StatusIconProps) => {
     const classes: string = classNames(
-        styles['checkmark'],
+        styles.checkmark,
         'status-checkbox',
         props.completed && 'completed',
         props.partial && 'partial',
     )
 
-    const icon: ReactNode = useMemo(() => (
-        props.completed
-            ? <IconSolid.CheckCircleIcon />
-            : props.partial
-                ? <IconOutline.ClockIcon />
-                : <IconOutline.DotsCircleHorizontalIcon />
-    ), [props.completed, props.partial])
+    const icon: ReactNode = useMemo(() => {
+        if (props.completed) {
+            return <IconSolid.CheckCircleIcon />
+        }
+
+        if (props.partial) {
+            return <IconOutline.ClockIcon />
+        }
+
+        return <IconOutline.DotsCircleHorizontalIcon />
+    }, [props.completed, props.partial])
 
     return (
         <div className={classes}>

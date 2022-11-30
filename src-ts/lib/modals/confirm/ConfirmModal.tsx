@@ -10,36 +10,29 @@ export interface ConfirmModalProps extends ModalProps {
     title: string
 }
 
-const ConfirmModal: FC<ConfirmModalProps> = ({
-    children,
-    onConfirm,
-    action = 'Confirm',
-    ...props
-}: ConfirmModalProps) => {
-    return (
-        <BaseModal
-            {...props}
-            styles={{ modal: { maxWidth: '450px' } }}
-        >
-            {children}
-            <div className='button-container'>
-                <Button
-                    label='Cancel'
-                    onClick={props.onClose}
-                    tabIndex={1}
-                    buttonStyle='secondary'
-                    size='lg'
-                />
-                <Button
-                    buttonStyle='primary'
-                    label={action}
-                    onClick={onConfirm}
-                    tabIndex={2}
-                    size='lg'
-                />
-            </div>
-        </BaseModal>
-    )
-}
+const ConfirmModal: FC<ConfirmModalProps> = (props: ConfirmModalProps) => (
+    <BaseModal
+        {...props}
+        styles={{ modal: { maxWidth: '450px' } }}
+    >
+        {props.children}
+        <div className='button-container'>
+            <Button
+                buttonStyle='secondary'
+                label='Cancel'
+                onClick={props.onClose}
+                size='lg'
+                tabIndex={1}
+            />
+            <Button
+                buttonStyle='primary'
+                label={props.action || 'Confirm'}
+                onClick={props.onConfirm}
+                size='lg'
+                tabIndex={2}
+            />
+        </div>
+    </BaseModal>
+)
 
 export default ConfirmModal

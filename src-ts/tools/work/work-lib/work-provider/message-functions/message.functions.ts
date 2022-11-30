@@ -8,12 +8,10 @@ export async function getAndSetForWorkItemsAsync(workItems: Array<Work>, handle:
     // create a list of promises
     const requestsList: Array<Promise<GetUnreadMessageCountResponse>> = workItems
         .filter(work => work.status === WorkStatus.active)
-        .map(work => {
-            return messageStoreGetUnreadCountAsync(work.id, handle)
-                .catch(() => ({
-                    workId: work.id,
-                }))
-        })
+        .map(work => messageStoreGetUnreadCountAsync(work.id, handle)
+            .catch(() => ({
+                workId: work.id,
+            })))
 
     // resolve all the promises
     const results: Array<GetUnreadMessageCountResponse> = await Promise.all(requestsList)

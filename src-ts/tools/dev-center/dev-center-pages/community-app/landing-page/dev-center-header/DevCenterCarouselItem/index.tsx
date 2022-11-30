@@ -1,1 +1,1 @@
-export {default as DevCenterCarouselItem} from './DevCenterCarouselItem'
+export { default as DevCenterCarouselItem } from './DevCenterCarouselItem'
