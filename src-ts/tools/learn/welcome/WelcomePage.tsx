@@ -1,8 +1,7 @@
-import classNames from 'classnames'
 import { FC } from 'react'
+import classNames from 'classnames'
 
 import { ContentLayout, LoadingSpinner, Portal } from '../../../lib'
-import '../../../lib/styles/index.scss'
 import {
     AllCertificationsProviderData,
     useGetAllCertifications,
@@ -10,13 +9,14 @@ import {
     UserCertificationsProviderData,
     WaveHero,
 } from '../learn-lib'
+import '../../../lib/styles/index.scss'
 
 import { AvailableCoursesList } from './available-courses-list'
 import { ProgressBlock } from './progress-block'
 import { ReactComponent as TcAcademyFullLogoSvg } from './tca-full-logo.svg'
 import styles from './WelcomePage.module.scss'
 
-const WelcomePage: FC<{}> = () => {
+const WelcomePage: FC = () => {
 
     const allCertsData: AllCertificationsProviderData = useGetAllCertifications()
     const userCertsData: UserCertificationsProviderData = useGetUserCertifications()

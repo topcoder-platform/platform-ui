@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import { FC } from 'react'
+import classNames from 'classnames'
 
 import { textFormatDateLocaleShortString } from '../../../../../lib'
 import { WorkProgressStep } from '../../../work-lib'
@@ -16,12 +16,12 @@ const WorkDetailProgressItem: FC<WorkDetailProgressItemProps> = (props: WorkDeta
     function getClasses(): string {
         return classNames(
             props.currentIndex === props.activeStepIndex ? styles.select : undefined,
-            props.currentIndex < props.activeStepIndex ? styles.active : undefined
+            props.currentIndex < props.activeStepIndex ? styles.active : undefined,
         )
     }
 
     return (
-        <div className={classNames(styles['progress-bar-list-item'], getClasses())} >
+        <div className={classNames(styles['progress-bar-list-item'], getClasses())}>
 
             <span className={classNames(styles.dots, 'body-medium-medium')}>
                 {props.currentIndex + 1}

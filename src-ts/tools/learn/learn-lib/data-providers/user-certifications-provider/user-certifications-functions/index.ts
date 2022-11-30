@@ -6,5 +6,5 @@ export * from './user-certification-update-progress-actions.enum'
 export {
     completeCourse as userCertificationProgressCompleteCourseAsync,
     startAsync as userCertificationProgressStartAsync,
-    updateAsync as userCertificationProgressUpdateAsync
+    updateAsync as userCertificationProgressUpdateAsync,
 } from './user-certification-progress.store'

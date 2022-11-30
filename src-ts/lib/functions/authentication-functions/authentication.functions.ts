@@ -1,5 +1,5 @@
-import cookies from 'browser-cookies'
 import { configureConnector, decodeToken, getFreshToken } from 'tc-auth-lib'
+import cookies from 'browser-cookies'
 
 import { User } from '../../../../types/tc-auth-lib'
 import { EnvironmentConfig, ToolTitle } from '../../../config'
@@ -28,7 +28,7 @@ export function getRegistrationSource(activeTool: PlatformRoute | undefined): Au
 
         // currently, there is no reg source for members
         case ToolTitle.learn:
-            return
+            return undefined
 
         // currently, the work tool and the platform
         // landing page use the reg source of selfService

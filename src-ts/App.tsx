@@ -1,4 +1,4 @@
-import { FC, ReactElement, useContext } from 'react'
+import { Dispatch, FC, ReactElement, SetStateAction, useContext, useEffect, useState } from 'react'
 import { Routes } from 'react-router-dom'
 import { toast, ToastContainer } from 'react-toastify'
 
@@ -7,10 +7,21 @@ import { routeContext, RouteContextData } from './lib'
 
 const App: FC<{}> = () => {
 
+    const [ready, setReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
     const { allRoutes, getRouteElement }: RouteContextData = useContext(routeContext)
 
     const routeElements: Array<ReactElement> = allRoutes
         .map(route => getRouteElement(route))
+
+    useEffect(() => {
+        setReady(true)
+    }, [])
+
+    useEffect(() => {
+        if (ready) {
+            document.getElementById('root')?.classList.add('app-ready');
+        }
+    }, [ready]);
 
     return (
         <>

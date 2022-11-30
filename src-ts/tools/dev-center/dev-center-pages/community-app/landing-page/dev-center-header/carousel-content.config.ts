@@ -20,9 +20,9 @@ export interface CarouselItem {
  */
 export const CarouselContent: Array<CarouselItem> = [
     {
-      headline: 'Introducing new feature: API Explorer (Coming soon)',
-      image: CodeImage,
-      isNewFeature: true,
-      summary: 'Now You Can Try Topcoder API Methods Without Writing Code.',
+        headline: 'Introducing new feature: API Explorer (Coming soon)',
+        image: CodeImage,
+        isNewFeature: true,
+        summary: 'Now You Can Try Topcoder API Methods Without Writing Code.',
     },
-   ]
+]

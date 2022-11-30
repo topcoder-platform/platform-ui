@@ -12,7 +12,7 @@ interface PortalProps {
 const Portal: FC<PortalProps> = (props: PortalProps) => {
     const portalNode: HTMLElement | null | undefined = props.portalId
         ? document.getElementById(props.portalId)
-        :  props.portalNode ?? undefined
+        : props.portalNode ?? undefined
 
     const defaultPortalNode: HTMLElement = useMemo(() => {
         if (props.portalId || props.portalNode) {
@@ -23,6 +23,7 @@ const Portal: FC<PortalProps> = (props: PortalProps) => {
         if (props.className) {
             backupHtmlNode.classList.add(props.className)
         }
+
         return backupHtmlNode
     }, [props.portalId, props.portalNode, props.className]) as HTMLElement
 
@@ -30,6 +31,7 @@ const Portal: FC<PortalProps> = (props: PortalProps) => {
         if (defaultPortalNode) {
             document.body.appendChild(defaultPortalNode)
         }
+
         return () => {
             if (defaultPortalNode) {
                 document.body.removeChild(defaultPortalNode)

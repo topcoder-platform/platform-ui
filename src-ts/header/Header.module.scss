@@ -3,6 +3,10 @@
 .header-wrap {
     display: block;
     background-color: $tc-black;
+
+    :global(#root:not(.app-ready)) & {
+        display: none;
+    }
 }
 
 .header {

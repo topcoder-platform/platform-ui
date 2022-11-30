@@ -12,7 +12,7 @@ export function fileDownloadBlob(content: Blob, fileName: string): void {
 export function fileDownloadCanvasAsImage(canvas: HTMLCanvasElement, fileName: string, fileType: string = 'image/png'): void {
     canvas.style.display = 'none'
     document.body.append(canvas)
-    canvas.toBlob((blob) => {
+    canvas.toBlob(blob => {
         if (blob) {
             fileDownloadBlob(blob, fileName)
         }
@@ -21,13 +21,14 @@ export function fileDownloadCanvasAsImage(canvas: HTMLCanvasElement, fileName: s
 
 export function fileCreateFromCanvas(canvas: HTMLCanvasElement, fileName: string): Promise<File> {
     return new Promise((resolve, reject) => {
-        canvas.toBlob(async (blob) => {
+        canvas.toBlob(async blob => {
             if (!blob) {
                 reject()
                 return
             }
+
             resolve(
-                new File([blob], fileName, {type: blob.type})
+                new File([blob], fileName, { type: blob.type }),
             )
         })
     })

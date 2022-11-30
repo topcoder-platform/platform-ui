@@ -10,7 +10,7 @@ interface WorkNoResultsProps {
 
 const WorkNoResults: FC<WorkNoResultsProps> = (props: WorkNoResultsProps) => {
 
-    const message: string = props.filtered ? 'No items available' : `Your future work will live here. Let's go!`
+    const message: string = props.filtered ? 'No items available' : 'Your future work will live here. Let\'s go!'
 
     return (
         <div className={styles['start-message']}>

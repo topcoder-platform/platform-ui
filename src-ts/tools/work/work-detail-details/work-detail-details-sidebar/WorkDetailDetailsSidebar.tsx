@@ -25,12 +25,12 @@ const WorkDetailDetailsSidebar: FC<{}> = () => {
             <PrivacyPolicyModal isOpen={isPrivacyPolicyModalOpen} onClose={() => setIsPrivacyPolicyModalOpen(false)} />
             <TermsModal isOpen={isTermsModalOpne} onClose={() => setIsTermsModalOpen(false)} />
 
-            <div className={styles['wrap']}>
+            <div className={styles.wrap}>
                 <h4>supporting information</h4>
                 <a
-                    className={styles['link']}
+                    className={styles.link}
                     href={window.location.href}
-                    onClick={(e) => handleClick(e, setIsOrderContractModalOpen)}
+                    onClick={e => handleClick(e, setIsOrderContractModalOpen)}
                     rel='noopener noreferrer'
                     role='button'
                     tabIndex={0}
@@ -38,9 +38,9 @@ const WorkDetailDetailsSidebar: FC<{}> = () => {
                     ORDER CONTRACT
                 </a>
                 <a
-                    className={styles['link']}
+                    className={styles.link}
                     href={window.location.href}
-                    onClick={(e) => handleClick(e, setIsPrivacyPolicyModalOpen)}
+                    onClick={e => handleClick(e, setIsPrivacyPolicyModalOpen)}
                     rel='noopener noreferrer'
                     role='button'
                     tabIndex={0}
@@ -48,9 +48,9 @@ const WorkDetailDetailsSidebar: FC<{}> = () => {
                     PRIVACY POLICY
                 </a>
                 <a
-                    className={styles['link']}
+                    className={styles.link}
                     href={window.location.href}
-                    onClick={(e) => handleClick(e, setIsTermsModalOpen)}
+                    onClick={e => handleClick(e, setIsTermsModalOpen)}
                     rel='noopener noreferrer'
                     role='button'
                     tabIndex={0}

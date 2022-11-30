@@ -1,14 +1,13 @@
-// tslint:disable-next-line: no-submodule-imports
-import 'highlight.js/styles/base16/tomorrow-night.css'
-import _ from 'lodash'
-import { marked, Renderer as MarkedRenderer } from 'marked'
 import * as React from 'react'
+import { marked, Renderer as MarkedRenderer } from 'marked'
+import _ from 'lodash'
+import 'highlight.js/styles/base16/tomorrow-night.css'
 
 import MarkdownAccordion from '../MarkdownAccordion'
 import MarkdownCode from '../MarkdownCode'
-import styles from '../MarkdownDoc.module.scss'
 import MarkdownImages from '../MarkdownImages'
 import MarkdownLink from '../MarkdownLink'
+import styles from '../MarkdownDoc.module.scss'
 
 export type MarkdownString = string
 export type MarkdownResult = React.ReactNode
@@ -55,10 +54,12 @@ export class Renderer implements MarkdownRenderer {
         if (!this.instance) {
             this.instance = new Renderer()
         }
+
         return this.instance
     }
 
     private renderer: MarkedRenderer
+
     static instance: Renderer
 
     constructor() {
@@ -67,7 +68,7 @@ export class Renderer implements MarkdownRenderer {
 
     render(
         markdown: MarkdownString,
-        options?: MarkdownRenderOptions
+        options?: MarkdownRenderOptions,
     ): React.ReactNode {
         markdown = markdown || ''
         if (markdown.length > 100_000) {
@@ -75,35 +76,33 @@ export class Renderer implements MarkdownRenderer {
         }
 
         const tokens: marked.TokensList = marked.lexer(markdown)
-        const nodes: Array<React.ReactNode> = tokens.map((token, index) =>
-            this.parseToken(token, index, options)
-        )
+        const nodes: Array<React.ReactNode> = tokens.map((token, index) => this.parseToken(token, index, options))
         const children: ReturnType<typeof this.groupBy> = this.groupBy(
             nodes,
-            options
-        ).map((node) => {
-            if (Array.isArray(node)) {
-                return (
-                    <MarkdownAccordion>
-                        {React.Children.map(node, (child) => child)}
-                    </MarkdownAccordion>
-                )
-            }
-            return node
-        })
+            options,
+        )
+            .map(node => {
+                if (Array.isArray(node)) {
+                    return (
+                        <MarkdownAccordion>
+                            {React.Children.map(node, child => child)}
+                        </MarkdownAccordion>
+                    )
+                }
+
+                return node
+            })
 
         return (
             <div className={styles['markdown-doc']}>
-                {React.Children.map(children, (child) => child)}
+                {React.Children.map(children, child => child)}
             </div>
         )
     }
 
-    // Hard to avoid due to the complexity of group by
-    // tslint:disable-next-line: cyclomatic-complexity
     private groupBy(
         nodes: Array<React.ReactNode>,
-        options?: MarkdownRenderOptions
+        options?: MarkdownRenderOptions,
     ): Array<React.ReactNode | Array<React.ReactNode>> {
         const result: Array<React.ReactNode> = []
         let group: Array<React.ReactNode | []> = []
@@ -112,15 +111,11 @@ export class Renderer implements MarkdownRenderer {
         let endGroup: boolean = false
 
         const isH1Tag: (tagName: keyof JSX.IntrinsicElements) => boolean = (
-            tagName: keyof JSX.IntrinsicElements
-        ) => {
-            return tagName === MarkdownHeaderTag.h1
-        }
+            tagName: keyof JSX.IntrinsicElements,
+        ) => tagName === MarkdownHeaderTag.h1
         const isGroupByTag: (
             tagName: keyof JSX.IntrinsicElements
-        ) => boolean = (tagName: keyof JSX.IntrinsicElements) => {
-            return !!tagName && options?.groupBy === tagName
-        }
+        ) => boolean = (tagName: keyof JSX.IntrinsicElements) => !!tagName && options?.groupBy === tagName
 
         for (const nodeElem of nodes) {
             if (!React.isValidElement(nodeElem)) {
@@ -131,16 +126,16 @@ export class Renderer implements MarkdownRenderer {
             const nodeType: React.ReactElement['type'] = node.type
 
             if (
-                typeof nodeType === 'string' &&
-                isGroupByTag(nodeType as keyof JSX.IntrinsicElements)
+                typeof nodeType === 'string'
+                && isGroupByTag(nodeType as keyof JSX.IntrinsicElements)
             ) {
                 beginGroup = true
                 isAppending = false
             }
 
             if (
-                typeof nodeType === 'string' &&
-                isH1Tag(nodeType as keyof JSX.IntrinsicElements)
+                typeof nodeType === 'string'
+                && isH1Tag(nodeType as keyof JSX.IntrinsicElements)
             ) {
                 endGroup = true
             }
@@ -159,6 +154,7 @@ export class Renderer implements MarkdownRenderer {
                     group.push(node)
                     result.push(group)
                 }
+
                 isAppending = true
                 endGroup = false
             } else {
@@ -169,104 +165,109 @@ export class Renderer implements MarkdownRenderer {
         return result
     }
 
-    // Hard to avoid due to the complexity of parsing markdown token.
-    // tslint:disable-next-line: cyclomatic-complexity
     private parseToken(
         token: marked.Token,
         index: number,
-        options?: MarkdownRenderOptions
+        options?: MarkdownRenderOptions,
     ): React.ReactNode {
         const isLinkBlock: (t: marked.Token) => boolean = (t: marked.Token) => {
             t = t as marked.Tokens.Paragraph
             if (
-                t.type === 'paragraph' &&
-                t.tokens &&
-                t.tokens.length === 1 &&
-                t.tokens[0].type === 'link'
+                t.type === 'paragraph'
+                && t.tokens
+                && t.tokens.length === 1
+                && t.tokens[0].type === 'link'
             ) {
                 return true
             }
+
             return false
         }
+
         const isCodeBlock: (t: marked.Token) => boolean = (t: marked.Token) => {
             t = t as marked.Tokens.Code
             if (t.type === 'code') {
                 return true
             }
+
             return false
         }
+
         const isImagesBlock: (t: marked.Token) => boolean = (
-            t: marked.Token
+            t: marked.Token,
         ) => {
             const isLineBreak: (tt: marked.Token) => boolean = (
-                tt: marked.Token
+                tt: marked.Token,
             ) => tt.type === 'text' && tt.text === '\n'
             t = t as marked.Tokens.Paragraph
             if (
-                t.type === 'paragraph' &&
-                t.tokens &&
-                t.tokens.length !== 0 &&
-                t.tokens
-                    .filter((child) => !isLineBreak(child))
-                    .every((child) => child.type === 'image') &&
-                t.tokens.filter((child) => !isLineBreak(child)).length >= 1
+                t.type === 'paragraph'
+                && t.tokens
+                && t.tokens.length !== 0
+                && t.tokens
+                    .filter(child => !isLineBreak(child))
+                    .every(child => child.type === 'image')
+                && t.tokens.filter(child => !isLineBreak(child)).length >= 1
             ) {
                 return true
             }
+
             return false
         }
 
         const getClassname: (t: marked.Token) => string = (t: marked.Token) => {
             const classnameMapping: MarkdownTagClassName = {
                 code: t.lang
-                    ? `${styles['codeBlock']} ${styles[`language-${t.lang}`]}`
-                    : styles['codeBlock'],
-                codespan: styles['codeInline'],
+                    ? `${styles.codeBlock} ${styles[`language-${t.lang}`]}`
+                    : styles.codeBlock,
+                codespan: styles.codeInline,
                 heading: styles[`heading${t.depth}`],
                 list: styles[`${t.ordered ? 'orderedList' : 'unorderedList'}`],
-                paragraph: styles['paragraph'],
+                paragraph: styles.paragraph,
             }
 
             return _.get(classnameMapping, t.type, '')
         }
+
         const stripTag: (htmlString: string, tagname: string) => string = (
             htmlString: string,
-            tagname: string
+            tagname: string,
         ) => {
             const tagRegExp: RegExp = new RegExp(
                 `<${tagname}\\b[^>]*>((.|\\n)*?)</${tagname}>`,
-                'g'
+                'g',
             )
             return htmlString.replace(tagRegExp, '$1')
         }
+
         const extractId: (htmlString: string, tagname: string, leadingIndex: number) => string = (
             htmlString: string,
             tagname: string,
-            leadingIndex: number
+            leadingIndex: number,
         ) => {
             htmlString = htmlString.trim()
             const tagRegExp: RegExp = new RegExp(
                 `<${tagname}\\b[^>]*id="(.*?)"[^>]*>((.|\\n)*?)</${tagname}>$`,
-                'g'
+                'g',
             )
             const matches: RegExpExecArray | null = tagRegExp.exec(htmlString)
             const id: string = matches ? matches[1] : ''
             return `${leadingIndex}-${id}`
         }
+
         const extractTag: (htmlString: string) => string = (
-            htmlString: string
+            htmlString: string,
         ) => {
             htmlString = htmlString.trim()
-            const tagRegExp: RegExp =
-                /^<([a-zA-Z0-9]+)\b[^>]*?>(.|n)*?<\/\1>$/g
+            const tagRegExp: RegExp
+                = /^<([a-zA-Z0-9]+)\b[^>]*?>(.|n)*?<\/\1>$/g
             const matches: RegExpExecArray | null = tagRegExp.exec(htmlString)
             return matches ? matches[1] : ''
         }
+
         const removeLineBreak: (htmlString: string) => string = (
-            htmlString: string
-        ) => {
-            return htmlString.replace(/\n/g, '')
-        }
+            htmlString: string,
+        ) => htmlString.replace(/\n/g, '')
         const parserOptions: marked.MarkedOptions = {
             baseUrl: options?.baseUrl,
             headerIds: true,
@@ -280,16 +281,15 @@ export class Renderer implements MarkdownRenderer {
             elementProps: any
         ) => React.ReactElement = (
             element: React.ElementType,
-            elementProps: any
-        ) => {
-            return React.createElement(element, elementProps)
-        }
+            elementProps: any,
+        ) => React.createElement(element, elementProps)
 
         if (options && options.toc && token.type === 'heading') {
             const h: string = marked.parser([token], parserOptions)
             const level: number = token.depth
             const title: string = removeLineBreak(stripTag(h, `h${level}`))
-            const headingId: string = extractId(h, `h${level}`, index).trim()
+            const headingId: string = extractId(h, `h${level}`, index)
+                .trim()
 
             options.toc.push({
                 headingId,
@@ -307,7 +307,7 @@ export class Renderer implements MarkdownRenderer {
         if (isLinkBlock(token)) {
             token = token as marked.Tokens.Paragraph
             const link: marked.Tokens.Link = token.tokens.find(
-                (t) => t.type === 'link'
+                t => t.type === 'link',
             ) as marked.Tokens.Link
             return (
                 <MarkdownLink href={link?.href}>
@@ -316,7 +316,9 @@ export class Renderer implements MarkdownRenderer {
                     })}
                 </MarkdownLink>
             )
-        } else if (isCodeBlock(token)) {
+        }
+
+        if (isCodeBlock(token)) {
             token = token as marked.Tokens.Code
             return (
                 <MarkdownCode code={token.text} lang={token.lang}>
@@ -325,22 +327,22 @@ export class Renderer implements MarkdownRenderer {
                     })}
                 </MarkdownCode>
             )
-        } else if (isImagesBlock(token)) {
+        }
+
+        if (isImagesBlock(token)) {
             token = token as marked.Tokens.Paragraph
             const length: number = token.tokens.filter(
-                (t) => t.type === 'image'
+                t => t.type === 'image',
             ).length
             const images: Array<JSX.Element> = token.tokens
-                .filter((t) => t.type === 'image')
-                .map((t, idx) => {
-                    return (
-                        <img
-                            src={require('../../../' + t.href.slice(2))}
-                            alt=''
-                            key={idx}
-                        ></img>
-                    )
-                })
+                .filter(t => t.type === 'image')
+                .map((t, idx) => (
+                    <img
+                        src={require(`../../../${t.href.slice(2)}`)}
+                        alt=''
+                        key={idx}
+                    />
+                ))
             return <MarkdownImages length={length}>{images}</MarkdownImages>
         }
 
@@ -351,13 +353,16 @@ export class Renderer implements MarkdownRenderer {
         const tag: string = extractTag(html)
         if (tag) {
             const isParagraphTag: boolean = tag === MarkdownParagraphTag.p
-            const isHeaderTag: boolean = Object.values(MarkdownHeaderTag).indexOf(tag as MarkdownHeaderTag) !== -1
+            const isHeaderTag: boolean = Object.values(MarkdownHeaderTag)
+                .indexOf(tag as MarkdownHeaderTag) !== -1
             if (isParagraphTag || isHeaderTag) {
                 let id: string | undefined
                 if (isHeaderTag) {
                     token = token as marked.Tokens.Heading
-                    id = extractId(html, `h${token.depth}`, index).trim()
+                    id = extractId(html, `h${token.depth}`, index)
+                        .trim()
                 }
+
                 return React.createElement(tag, {
                     className: getClassname(token),
                     dangerouslySetInnerHTML: { __html: stripTag(html, tag) },

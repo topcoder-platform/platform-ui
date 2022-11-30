@@ -39,14 +39,16 @@ const CreateBadgePage: FC = () => {
                 />
             </div>
             {
-                createdBadge && <BadgeCreatedModal
-                    badge={createdBadge}
-                    isOpen={showBadgeCreatedModal}
-                    onClose={() => {
-                        setCreatedBadge(undefined)
-                        setShowBadgeCreatedModal(false)
-                    }}
-                />
+                createdBadge && (
+                    <BadgeCreatedModal
+                        badge={createdBadge}
+                        isOpen={showBadgeCreatedModal}
+                        onClose={() => {
+                            setCreatedBadge(undefined)
+                            setShowBadgeCreatedModal(false)
+                        }}
+                    />
+                )
             }
         </ContentLayout>
     )

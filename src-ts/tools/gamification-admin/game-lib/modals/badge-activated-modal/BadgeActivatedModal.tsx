@@ -4,6 +4,7 @@ import { BaseModal, Button, PageDivider, useCheckIsMobile } from '../../../../..
 import { GameBadge } from '../../game-badge.model'
 
 import styles from './BadgeActivatedModal.module.scss'
+
 export interface BadgeActivatedModalProps {
     badge: GameBadge
     isOpen: boolean
@@ -23,7 +24,7 @@ const BadgeActivatedModal: FC<BadgeActivatedModalProps> = (props: BadgeActivated
             onClose={onClose}
             open={props.isOpen}
             size='md'
-            title={`Badge updated`}
+            title='Badge updated'
             closeOnOverlayClick={false}
         >
             <div className={styles.wrapper}>
@@ -33,7 +34,14 @@ const BadgeActivatedModal: FC<BadgeActivatedModalProps> = (props: BadgeActivated
                         className={styles[props.badge.active ? 'badge-image' : 'badge-image-disabled']}
                         src={props.badge.badge_image_url}
                     />
-                    <p className={styles['badge-name']}>{props.badge.badge_name} badge has been sucessfully {props.badge.active ? 'activated' : 'deactivated'}.</p>
+                    <p className={styles['badge-name']}>
+                        {props.badge.badge_name}
+                        {' '}
+                        badge has been sucessfully
+                        {' '}
+                        {props.badge.active ? 'activated' : 'deactivated'}
+                        .
+                    </p>
                 </div>
                 <div className={styles['actions-wrap']}>
                     {
