@@ -23,6 +23,7 @@
     "dependencies": {
         "@datadog/browser-logs": "^4.21.2",
         "@heroicons/react": "^1.0.6",
+        "@sprig-technologies/sprig-browser": "^2.20.1",
         "@stripe/react-stripe-js": "1.13.0",
         "@stripe/stripe-js": "1.41.0",
         "apexcharts": "^3.36.0",

@@ -17,6 +17,7 @@ import {
     LoadingSpinner,
     profileContext,
     ProfileContextData,
+    surveyTriggerForUser,
     textFormatGetSafeString,
 } from '../../../lib'
 import {
@@ -203,43 +204,55 @@ const FreeCodeCamp: FC<{}> = () => {
             }, 500)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [
+        certificateProgress,
+        lesson?.course.certificationId,
+        lesson?.course.id,
+        profile?.userId,
+    ])
 
     const handleFccLessonComplete: (challengeUuid: string) => void = useCallback((challengeUuid: string) => {
+
         const currentLesson: { [key: string]: string } = {
             lesson: lessonParam,
             module: moduleParam,
             uuid: challengeUuid,
         }
-        if (certificateProgress) {
-            userCertificationProgressUpdateAsync(
-                certificateProgress.id,
-                UserCertificationUpdateProgressActions.completeLesson,
-                currentLesson,
-            )
-                .then((progress: LearnUserCertificationProgress) => {
 
-                    setCertificateProgress(progress)
-
-                    // if this is the last lesson of the first module, show the survey
-                    const firstModule: LearnModuleProgress = progress.modules[0]
-
-                    if (moduleParam === firstModule.module
-                        && firstModule.moduleStatus === LearnModuleStatus.completed) {
-
-                        // TODO: use the Sprig SDK to send the event w/the user
-                        window.Sprig('track', 'TCA First Module Completed')
-                    }
-                })
+        if (!certificateProgress) {
+            return
         }
+
+        userCertificationProgressUpdateAsync(
+            certificateProgress.id,
+            UserCertificationUpdateProgressActions.completeLesson,
+            currentLesson,
+        )
+            .then((progress: LearnUserCertificationProgress) => {
+
+                setCertificateProgress(progress)
+
+                // if this is the last lesson of the first module, show the survey
+                const firstModule: LearnModuleProgress = progress.modules[0]
+                if (moduleParam === firstModule.module
+                    && firstModule.moduleStatus === LearnModuleStatus.completed) {
+
+                    surveyTriggerForUser('TCA First Module Completed', profile?.userId)
+                }
+            })
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [
+        certificateProgress,
+        lessonParam,
+        moduleParam,
+    ])
 
     /**
      * Handle the navigation away from the last step of the course in the FCC frame
      * @returns
      */
     const handleFccLastLessonNavigation: () => void = useCallback(() => {
+
         if (!certificateProgress) {
             return
         }
@@ -284,7 +297,12 @@ const FreeCodeCamp: FC<{}> = () => {
 
         navigate(nextLessonPath)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [
+        certificateProgress,
+        certificationParam,
+        courseData?.modules,
+        providerParam,
+    ])
 
     useEffect(() => {
 
@@ -315,13 +333,13 @@ const FreeCodeCamp: FC<{}> = () => {
                 )
                 navigate(completedPath)
             })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         certificateProgress,
         certificationParam,
-        navigate,
-        providerParam,
         profile?.handle,
-        setCertificateProgress,
+        profile?.userId,
+        providerParam,
     ])
 
     useEffect(() => {
@@ -341,13 +359,13 @@ const FreeCodeCamp: FC<{}> = () => {
                 navigate(lessonPath)
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         certificationParam,
         courseData,
         courseDataReady,
         lessonParam,
         moduleParam,
-        navigate,
         providerParam,
     ])
 
