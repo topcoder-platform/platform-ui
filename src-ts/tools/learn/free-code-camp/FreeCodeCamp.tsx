@@ -17,12 +17,15 @@ import {
     LoadingSpinner,
     profileContext,
     ProfileContextData,
+    textFormatGetSafeString,
 } from '../../../lib'
 import {
     CoursesProviderData,
     LearnLesson,
     LearnModule,
     LearnModuleProgress,
+    LearnModuleStatus,
+    LearnUserCertificationProgress,
     LessonProviderData,
     useGetCourses,
     useGetLesson,
@@ -52,11 +55,14 @@ const FreeCodeCamp: FC<{}> = () => {
 
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
-    const providerParam: string = routeParams.provider ?? ''
+    const providerParam: string = textFormatGetSafeString(routeParams.provider)
 
-    const [certificationParam, setCourseParam]: [string, Dispatch<SetStateAction<string>>] = useState(routeParams.certification ?? '')
-    const [moduleParam, setModuleParam]: [string, Dispatch<SetStateAction<string>>] = useState(routeParams.module ?? '')
-    const [lessonParam, setLessonParam]: [string, Dispatch<SetStateAction<string>>] = useState(routeParams.lesson ?? '')
+    const [certificationParam, setCourseParam]: [string, Dispatch<SetStateAction<string>>]
+        = useState(textFormatGetSafeString(routeParams.certification))
+    const [moduleParam, setModuleParam]: [string, Dispatch<SetStateAction<string>>]
+        = useState(textFormatGetSafeString(routeParams.module))
+    const [lessonParam, setLessonParam]: [string, Dispatch<SetStateAction<string>>]
+        = useState(textFormatGetSafeString(routeParams.lesson))
 
     const {
         certificationProgress: certificateProgress,
@@ -83,11 +89,11 @@ const FreeCodeCamp: FC<{}> = () => {
 
     const ready: boolean = profileReady && courseDataReady && lessonReady && (!isLoggedIn || progressReady)
 
-    const certification: string = lesson?.course.certification ?? ''
-    const module: string = lesson?.module.title ?? ''
+    const certification: string = textFormatGetSafeString(lesson?.course.certification)
+    const module: string = textFormatGetSafeString(lesson?.module.title)
     const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
         {
-            name: lesson?.course.title ?? '',
+            name: textFormatGetSafeString(lesson?.course.title),
             url: getCoursePath(providerParam, certification),
         },
         {
@@ -96,7 +102,8 @@ const FreeCodeCamp: FC<{}> = () => {
         },
     ])
 
-    const currentModuleData: LearnModule | undefined = useMemo(() => courseData?.modules.find(d => d.key === moduleParam), [courseData, moduleParam])
+    const currentModuleData: LearnModule | undefined
+        = useMemo(() => courseData?.modules.find(d => d.key === moduleParam), [courseData, moduleParam])
 
     const currentStepIndex: number = useMemo(() => {
         if (!currentModuleData) {
@@ -155,7 +162,7 @@ const FreeCodeCamp: FC<{}> = () => {
         }
     }
 
-    function handleFccLessonReady(lessonPath: string): void {
+    const handleFccLessonReady: (lessonPath: string) => void = useCallback((lessonPath: string) => {
 
         const [nLessonPath, modulePath, coursePath]: Array<string> = lessonPath.replace(/\/$/, '')
             .split('/')
@@ -195,9 +202,10 @@ const FreeCodeCamp: FC<{}> = () => {
                     .then(setCertificateProgress)
             }, 500)
         }
-    }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
-    function handleFccLessonComplete(challengeUuid: string): void {
+    const handleFccLessonComplete: (challengeUuid: string) => void = useCallback((challengeUuid: string) => {
         const currentLesson: { [key: string]: string } = {
             lesson: lessonParam,
             module: moduleParam,
@@ -209,15 +217,29 @@ const FreeCodeCamp: FC<{}> = () => {
                 UserCertificationUpdateProgressActions.completeLesson,
                 currentLesson,
             )
-                .then(setCertificateProgress)
+                .then((progress: LearnUserCertificationProgress) => {
+
+                    setCertificateProgress(progress)
+
+                    // if this is the last lesson of the first module, show the survey
+                    const firstModule: LearnModuleProgress = progress.modules[0]
+
+                    if (moduleParam === firstModule.module
+                        && firstModule.moduleStatus === LearnModuleStatus.completed) {
+
+                        // TODO: use the Sprig SDK to send the event w/the user
+                        window.Sprig('track', 'TCA First Module Completed')
+                    }
+                })
         }
-    }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     /**
      * Handle the navigation away from the last step of the course in the FCC frame
      * @returns
      */
-    function handleFccLastLessonNavigation(): void {
+    const handleFccLastLessonNavigation: () => void = useCallback(() => {
         if (!certificateProgress) {
             return
         }
@@ -236,15 +258,18 @@ const FreeCodeCamp: FC<{}> = () => {
         // course is not completed yet,
         // so we find the first incomplete lesson
         // and redirect user to it for a continuous flow
-        const firstIncompleteModule: LearnModuleProgress | undefined = certificateProgress.modules.find(m => m.completedPercentage !== 100)
-        const moduleLessons: Array<LearnLesson> | undefined = courseData?.modules.find(m => m.key === firstIncompleteModule?.module)?.lessons
+        const firstIncompleteModule: LearnModuleProgress | undefined
+            = certificateProgress.modules.find(m => m.completedPercentage !== 100)
+        const moduleLessons: Array<LearnLesson> | undefined
+            = courseData?.modules.find(m => m.key === firstIncompleteModule?.module)?.lessons
         if (!firstIncompleteModule || !moduleLessons) {
             // case unknown, return
             return
         }
 
         const completedLessons: Array<string> = firstIncompleteModule.completedLessons.map(l => l.dashedName)
-        const firstIncompleteLesson: LearnLesson | undefined = moduleLessons.find(l => !completedLessons.includes(l.dashedName))
+        const firstIncompleteLesson: LearnLesson | undefined
+            = moduleLessons.find(l => !completedLessons.includes(l.dashedName))
         if (!firstIncompleteLesson) {
             // case unknown, return
             return
@@ -258,7 +283,8 @@ const FreeCodeCamp: FC<{}> = () => {
         )
 
         navigate(nextLessonPath)
-    }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     useEffect(() => {
 
@@ -300,7 +326,8 @@ const FreeCodeCamp: FC<{}> = () => {
 
     useEffect(() => {
         if (courseDataReady && courseData) {
-            const moduleParamData: LearnModule = courseData.modules.find(m => m.key === moduleParam) ?? courseData.modules[0]
+            const moduleParamData: LearnModule = courseData.modules.find(m => m.key === moduleParam)
+                ?? courseData.modules[0]
             const lessonParamExists: boolean = !!moduleParamData?.lessons.find(l => l.dashedName === lessonParam)
 
             if (!lessonParamExists) {
