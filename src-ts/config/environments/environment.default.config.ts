@@ -20,6 +20,9 @@ export const EnvironmentConfigDefault: EnvironmentConfigModel = {
         SERVICE: 'platform-ui',
     },
     REAUTH_OFFSET: 55,
+    SPRIG: {
+        ENVIRONMENT_ID: 'bUcousVQ0-yF',
+    },
     // TODO: Move stripe creds to .env file
     STRIPE: {
         ADMIN_TOKEN:

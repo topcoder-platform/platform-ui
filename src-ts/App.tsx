@@ -7,7 +7,7 @@ import { routeContext, RouteContextData } from './lib'
 
 const App: FC<{}> = () => {
 
-    const [ready, setReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
+    const [ready, setReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
     const { allRoutes, getRouteElement }: RouteContextData = useContext(routeContext)
 
     const routeElements: Array<ReactElement> = allRoutes
@@ -19,9 +19,9 @@ const App: FC<{}> = () => {
 
     useEffect(() => {
         if (ready) {
-            document.getElementById('root')?.classList.add('app-ready');
+            document.getElementById('root')?.classList.add('app-ready')
         }
-    }, [ready]);
+    }, [ready])
 
     return (
         <>

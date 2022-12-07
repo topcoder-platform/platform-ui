@@ -18,6 +18,7 @@ export {
     logError,
     logInfo,
     logInitialize,
+    surveyTriggerForUser,
     textFormatDateLocaleShortString,
     textFormatGetSafeString,
     textFormatMoneyLocaleString,

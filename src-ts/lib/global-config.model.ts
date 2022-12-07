@@ -16,6 +16,9 @@ export interface GlobalConfig {
         SERVICE: string
     }
     REAUTH_OFFSET: number
+    SPRIG: {
+        ENVIRONMENT_ID: string
+    }
     STRIPE: {
         ADMIN_TOKEN: string
         API_KEY: string
