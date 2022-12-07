@@ -223,6 +223,10 @@ const FreeCodeCamp: FC<{}> = () => {
             return
         }
 
+        // get the current module as it exists before it's completed
+        const currentModule: LearnModuleProgress | undefined = getModuleFromProgress(certificateProgress)
+        const certWasInProgress: boolean = currentModule?.moduleStatus !== LearnModuleStatus.completed
+
         userCertificationProgressUpdateAsync(
             certificateProgress.id,
             UserCertificationUpdateProgressActions.completeLesson,
@@ -231,14 +235,8 @@ const FreeCodeCamp: FC<{}> = () => {
             .then((progress: LearnUserCertificationProgress) => {
 
                 setCertificateProgress(progress)
+                handleSurvey(certWasInProgress, progress)
 
-                // if this is the last lesson of the first module, show the survey
-                const firstModule: LearnModuleProgress = progress.modules[0]
-                if (moduleParam === firstModule.module
-                    && firstModule.moduleStatus === LearnModuleStatus.completed) {
-
-                    surveyTriggerForUser('TCA First Module Completed', profile?.userId)
-                }
             })
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
@@ -246,6 +244,37 @@ const FreeCodeCamp: FC<{}> = () => {
         lessonParam,
         moduleParam,
     ])
+
+    function getModuleFromProgress(certProgress: LearnUserCertificationProgress):
+        LearnModuleProgress | undefined {
+
+        return certProgress.modules.find(m => m.module === moduleParam)
+    }
+
+    function handleSurvey(certWasInProgress: boolean, progress: LearnUserCertificationProgress): void {
+
+        // if the current module wasn't in progress, there's nothing to do
+        if (!certWasInProgress) {
+            return
+        }
+
+        // if the updated module isn't completed now, there's nothing to do
+        const moduleResult: LearnModuleProgress | undefined = getModuleFromProgress(progress)
+        if (moduleResult?.moduleStatus !== LearnModuleStatus.completed) {
+            return
+        }
+
+        // if there are any other modules that have been completed, there's nothing to do
+        if (progress.modules
+            .some(m => m.module !== moduleParam && m.moduleStatus === LearnModuleStatus.completed)
+        ) {
+            return
+        }
+
+        // this is the last lesson to be completed in the first module completed,
+        // so it's good to show the trigger
+        surveyTriggerForUser('TCA First Module Completed', profile?.userId)
+    }
 
     /**
      * Handle the navigation away from the last step of the course in the FCC frame
