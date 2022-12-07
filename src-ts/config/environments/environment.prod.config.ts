@@ -21,6 +21,9 @@ export const EnvironmentConfigProd: EnvironmentConfigModel = {
     },
     DISABLED_TOOLS: [],
     ENV: 'prod',
+    SPRIG: {
+        ENVIRONMENT_ID: 'a-IZBZ6-r7bU',
+    },
     // TODO: Move stripe creds to .env file
     STRIPE: {
         ADMIN_TOKEN:
