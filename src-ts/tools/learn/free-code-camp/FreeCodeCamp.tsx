@@ -271,9 +271,17 @@ const FreeCodeCamp: FC<{}> = () => {
             return
         }
 
-        // this is the last lesson to be completed in the first module completed,
-        // so it's good to show the trigger
-        surveyTriggerForUser('TCA First Module Completed', profile?.userId)
+        // This is the last lesson to be completed in the first module completed,
+        // so it's time to trigger the survey
+
+        // If there is only one assessment in a cert (e.g. Data Analysis w/Python),
+        // the cert is also completed, which redirects the user to the cert page.
+        // So the survey needs to be delayed so that it appears on the completed
+        // cert page instead of the current lesson.
+        const delay: number = progress.status === UserCertificationProgressStatus.completed ? 3000 : 0
+        setTimeout(async () => {
+            surveyTriggerForUser('TCA First Module Completed', profile?.userId)
+        }, delay)
     }
 
     /**
