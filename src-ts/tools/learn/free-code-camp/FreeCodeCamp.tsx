@@ -45,6 +45,7 @@ import { FccFrame } from './fcc-frame'
 import { FccSidebar } from './fcc-sidebar'
 import { TitleNav } from './title-nav'
 import styles from './FreeCodeCamp.module.scss'
+import { debounce } from 'lodash'
 
 const FreeCodeCamp: FC<{}> = () => {
 
@@ -211,7 +212,7 @@ const FreeCodeCamp: FC<{}> = () => {
         profile?.userId,
     ])
 
-    const handleFccLessonComplete: (challengeUuid: string) => void = useCallback((challengeUuid: string) => {
+    const handleFccLessonComplete: (challengeUuid: string) => void = useCallback(debounce((challengeUuid: string) => {
 
         const currentLesson: { [key: string]: string } = {
             lesson: lessonParam,
@@ -239,7 +240,7 @@ const FreeCodeCamp: FC<{}> = () => {
 
             })
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
+    }, 30), [
         certificateProgress,
         lessonParam,
         moduleParam,
@@ -280,7 +281,7 @@ const FreeCodeCamp: FC<{}> = () => {
      * Handle the navigation away from the last step of the course in the FCC frame
      * @returns
      */
-    const handleFccLastLessonNavigation: () => void = useCallback(() => {
+    const handleFccLastLessonNavigation: () => void = useCallback(debounce(() => {
 
         if (!certificateProgress) {
             return
@@ -326,7 +327,7 @@ const FreeCodeCamp: FC<{}> = () => {
 
         navigate(nextLessonPath)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
+    }, 30), [
         certificateProgress,
         certificationParam,
         courseData?.modules,
