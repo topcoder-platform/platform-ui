@@ -48,6 +48,7 @@ const CourseDetailsPage: FC<{}> = () => {
     const {
         certificationProgress: progress,
         ready: progressReady,
+        setCertificateProgress,
     }: UserCertificationProgressProviderData = useGetUserCertificationProgress(
         profile?.userId,
         routeParams.provider,
@@ -214,6 +215,7 @@ const CourseDetailsPage: FC<{}> = () => {
                                 progress={progress}
                                 progressReady={progressReady}
                                 profile={profile}
+                                setCertificateProgress={setCertificateProgress}
                             />
                         </div>
                     </div>
