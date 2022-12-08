@@ -7,6 +7,7 @@ import { LearnUserCertificationProgress } from './learn-user-certification-progr
 import { UserCertificationUpdateProgressActions } from './user-certification-update-progress-actions.enum'
 
 const certProgressPath: string = 'certification-progresses'
+const certProgressShortcutPath = 'shortcut-fcc-course-completion'
 
 export function completeCourse(
     certificationProgressId: string,
@@ -52,4 +53,13 @@ export function updateAsync(
     const url: string = learnUrlGet(certProgressPath, certificationProgressId, action)
 
     return learnXhrPutAsync<{}, LearnUserCertificationProgress>(url, {}, { params: data })
+}
+
+export function adminCompleteCourse(
+    certificationProgressId: string,
+): Promise<any> {
+
+    const url: string = learnUrlGet(certProgressShortcutPath, certificationProgressId)
+
+    return learnXhrPutAsync<{}, any>(url, {})
 }

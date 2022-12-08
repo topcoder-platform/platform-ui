@@ -10,17 +10,22 @@ import {
     useState,
 } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
+import { toast, ToastContent } from 'react-toastify'
 
 import {
     Breadcrumb,
     BreadcrumbItemModel,
+    Button,
     LoadingSpinner,
+    logError,
     profileContext,
     ProfileContextData,
     surveyTriggerForUser,
     textFormatGetSafeString,
+    UserRole,
 } from '../../../lib'
 import {
+    adminCertificationProgressCompleteCourseAsync,
     CoursesProviderData,
     LearnLesson,
     LearnModule,
@@ -443,10 +448,49 @@ const FreeCodeCamp: FC<{}> = () => {
         isLoggedIn,
     ])
 
+    /**
+     * Complete course shortcut for admins
+     */
+    function adminCompleteCourse(): void {
+        const confirmed = confirm('Hey, You about to complete the certification. Are you sure?');
+        if (certificateProgress && confirmed) {
+            adminCertificationProgressCompleteCourseAsync(certificateProgress.id)
+                .then(setCertificateProgress)
+                .then(() => {
+                    toast.info(
+                        <>
+                            <p>Yay, success! You completed the course.</p>
+                        </>
+                    )
+                })
+                .catch(error => {
+                    logError(error)
+                    toast.error('Oops! We couldn\'t complete your request as some error happened. See console for more...')
+                })
+        }
+    }
+
     return (
         <>
             <LoadingSpinner hide={ready} />
-            <Breadcrumb items={breadcrumb} />
+            <div className={styles.wrapBreadcrumb}>
+                <Breadcrumb items={breadcrumb} />
+                {
+                    lesson
+                    && profile
+                    && profile.roles
+                    && profile.roles.includes(UserRole.tcaAdmin)
+                    && (
+                        <Button
+                            buttonStyle={'secondary'}
+                            className={styles.completeCourseBtn}
+                            size={'xs'}
+                            label='Complete Course'
+                            onClick={adminCompleteCourse}
+                        />
+                    )
+                }
+            </div>
 
             {lesson && (
                 <div className={styles['main-wrap']}>
