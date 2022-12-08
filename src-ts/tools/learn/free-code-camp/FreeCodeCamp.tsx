@@ -279,7 +279,7 @@ const FreeCodeCamp: FC<{}> = () => {
         // the cert is also completed, which redirects the user to the cert page.
         // So the survey needs to be delayed so that it appears on the completed
         // cert page instead of the current lesson.
-        if (progress.certificationProgressPercentage === 100) {
+        if (progress.certificationProgressPercentage >= 100) {
             setTimeout(async () => {
                 surveyTriggerForUser(surveyTrigger, profile?.userId)
             }, 1000)
