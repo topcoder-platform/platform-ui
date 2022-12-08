@@ -287,7 +287,7 @@ const FreeCodeCamp: FC<{}> = () => {
         }
 
         // course is completed, return user to course completed screen
-        if (certificateProgress.courseProgressPercentage === 100) {
+        if (certificateProgress.status === UserCertificationProgressStatus.completed) {
             const completedPath: string = getCertificationCompletedPath(
                 providerParam,
                 certificationParam,
