@@ -168,6 +168,7 @@ const BasicInfoLegacy = ({
       <ContactSupportModal
         workId={challenge?.id}
         isOpen={showSupportModal}
+        isSelfService={true}
         onClose={onHideSupportModal}
       />
       <Page>

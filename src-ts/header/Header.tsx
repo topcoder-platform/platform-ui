@@ -84,8 +84,10 @@ const Header: FC = () => {
                 toolRoot: activeToolRoute,
                 type: 'tool',
                 user: profile ? {
+                    email: profile.email,
+                    firstName: profile.firstName,
                     handle: profile.handle,
-                    initials: `${profile.firstName.charAt(0)}${profile.lastName.charAt(0)}`,
+                    lastName: profile.lastName,
                     photoUrl: profile.photoURL,
                     userId: profile.userId,
                 } : undefined,
