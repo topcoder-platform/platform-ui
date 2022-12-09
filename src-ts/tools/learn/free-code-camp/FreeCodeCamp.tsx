@@ -45,6 +45,7 @@ import { FccFrame } from './fcc-frame'
 import { FccSidebar } from './fcc-sidebar'
 import { TitleNav } from './title-nav'
 import styles from './FreeCodeCamp.module.scss'
+import { debounce } from 'lodash'
 
 const FreeCodeCamp: FC<{}> = () => {
 
@@ -211,7 +212,7 @@ const FreeCodeCamp: FC<{}> = () => {
         profile?.userId,
     ])
 
-    const handleFccLessonComplete: (challengeUuid: string) => void = useCallback((challengeUuid: string) => {
+    const handleFccLessonComplete: (challengeUuid: string) => void = useCallback(debounce((challengeUuid: string) => {
 
         const currentLesson: { [key: string]: string } = {
             lesson: lessonParam,
@@ -239,7 +240,7 @@ const FreeCodeCamp: FC<{}> = () => {
 
             })
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
+    }, 30), [
         certificateProgress,
         lessonParam,
         moduleParam,
@@ -271,23 +272,40 @@ const FreeCodeCamp: FC<{}> = () => {
             return
         }
 
-        // this is the last lesson to be completed in the first module completed,
-        // so it's good to show the trigger
-        surveyTriggerForUser('TCA First Module Completed', profile?.userId)
+        // This is the last lesson to be completed in the first module completed,
+        // so it's time to trigger the survey
+        const surveyTrigger: string = 'TCA First Module Completed'
+
+        // If there is only one assessment in a cert (e.g. Data Analysis w/Python),
+        // the cert is also completed, which redirects the user to the cert page.
+        // So the survey needs to be delayed so that it appears on the completed
+        // cert page instead of the current lesson.
+
+        // NOTE: we can't use the cert's status here bc it doesn't get set to
+        // completed until the UI notices the cert is complete and initiates
+        // the completion. And we have to use >= instead of === because it's
+        // possible TCA data isn't in sync w/the latest FCC curriculum.
+        if (progress.certificationProgressPercentage >= 100) {
+            setTimeout(async () => {
+                surveyTriggerForUser(surveyTrigger, profile?.userId)
+            }, 1000)
+        } else {
+            surveyTriggerForUser(surveyTrigger, profile?.userId)
+        }
     }
 
     /**
      * Handle the navigation away from the last step of the course in the FCC frame
      * @returns
      */
-    const handleFccLastLessonNavigation: () => void = useCallback(() => {
+    const handleFccLastLessonNavigation: () => void = useCallback(debounce(() => {
 
         if (!certificateProgress) {
             return
         }
 
         // course is completed, return user to course completed screen
-        if (certificateProgress.courseProgressPercentage === 100) {
+        if (certificateProgress.status === UserCertificationProgressStatus.completed) {
             const completedPath: string = getCertificationCompletedPath(
                 providerParam,
                 certificationParam,
@@ -326,7 +344,7 @@ const FreeCodeCamp: FC<{}> = () => {
 
         navigate(nextLessonPath)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
+    }, 30), [
         certificateProgress,
         certificationParam,
         courseData?.modules,
