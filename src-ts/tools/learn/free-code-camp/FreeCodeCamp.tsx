@@ -1,3 +1,4 @@
+import { debounce } from 'lodash'
 import {
     Dispatch,
     FC,
@@ -45,7 +46,6 @@ import { FccFrame } from './fcc-frame'
 import { FccSidebar } from './fcc-sidebar'
 import { TitleNav } from './title-nav'
 import styles from './FreeCodeCamp.module.scss'
-import { debounce } from 'lodash'
 
 const FreeCodeCamp: FC<{}> = () => {
 
@@ -212,6 +212,7 @@ const FreeCodeCamp: FC<{}> = () => {
         profile?.userId,
     ])
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const handleFccLessonComplete: (challengeUuid: string) => void = useCallback(debounce((challengeUuid: string) => {
 
         const currentLesson: { [key: string]: string } = {
@@ -274,30 +275,18 @@ const FreeCodeCamp: FC<{}> = () => {
 
         // This is the last lesson to be completed in the first module completed,
         // so it's time to trigger the survey
-        const surveyTrigger: string = 'TCA First Module Completed'
-
-        // If there is only one assessment in a cert (e.g. Data Analysis w/Python),
-        // the cert is also completed, which redirects the user to the cert page.
-        // So the survey needs to be delayed so that it appears on the completed
-        // cert page instead of the current lesson.
-
-        // NOTE: we can't use the cert's status here bc it doesn't get set to
-        // completed until the UI notices the cert is complete and initiates
-        // the completion. And we have to use >= instead of === because it's
-        // possible TCA data isn't in sync w/the latest FCC curriculum.
-        if (progress.certificationProgressPercentage >= 100) {
-            setTimeout(async () => {
-                surveyTriggerForUser(surveyTrigger, profile?.userId)
-            }, 1000)
-        } else {
-            surveyTriggerForUser(surveyTrigger, profile?.userId)
-        }
+        // NOTE: We have to add a delay, otherwise the survey closes when the user
+        // is automatically redirected to the next lesson.
+        setTimeout(async () => {
+            surveyTriggerForUser('TCA First Module Completed', profile?.userId)
+        }, 1000)
     }
 
     /**
      * Handle the navigation away from the last step of the course in the FCC frame
      * @returns
      */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const handleFccLastLessonNavigation: () => void = useCallback(debounce(() => {
 
         if (!certificateProgress) {
