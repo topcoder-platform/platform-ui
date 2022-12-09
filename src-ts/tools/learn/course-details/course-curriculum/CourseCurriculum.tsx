@@ -31,6 +31,7 @@ interface CourseCurriculumProps {
     profile?: UserProfile
     progress?: LearnUserCertificationProgress
     progressReady?: boolean
+    setCertificateProgress: (d: LearnUserCertificationProgress) => void
 }
 
 const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProps) => {
@@ -108,7 +109,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         }
 
         if (!props.progress?.id) {
-            await userCertificationProgressStartAsync(
+            const progress: LearnUserCertificationProgress = await userCertificationProgressStartAsync(
                 props.profile.userId,
                 props.course.certificationId,
                 props.course.id,
@@ -117,6 +118,9 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
                     module: props.course.modules[0].meta.dashedName,
                 },
             )
+
+            // update progress with data returned from calling the start progress endpoint
+            props.setCertificateProgress(progress)
         } else {
             await userCertificationProgressUpdateAsync(
                 props.progress.id,
