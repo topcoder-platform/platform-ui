@@ -459,6 +459,7 @@ const FreeCodeCamp: FC<{}> = () => {
             setShowSurvey('')
         }
     }, [
+        ready,
         showSurvey,
         certificationParam,
     ]);
