@@ -1,4 +1,4 @@
-import { FC, useContext, useEffect } from 'react'
+import { Dispatch, FC, SetStateAction, useContext, useEffect } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 
 import { EnvironmentConfig } from '../../../config'
@@ -9,7 +9,9 @@ import {
     LoadingSpinner,
     profileContext,
     ProfileContextData,
+    surveyTriggerForUser,
     textFormatGetSafeString,
+    useLocalStorage,
 } from '../../../lib'
 import {
     AllCertificationsProviderData,
@@ -35,6 +37,11 @@ const CourseCompletedPage: FC<{}> = () => {
     const providerParam: string = textFormatGetSafeString(routeParams.provider)
     const certificationParam: string = textFormatGetSafeString(routeParams.certification)
     const coursePath: string = getCoursePath(providerParam, certificationParam)
+
+    const [showSurvey, setShowSurvey]: [
+        string,
+        Dispatch<SetStateAction<string>>
+    ] = useLocalStorage<string>('tca-show-survey', '')
 
     const {
         course: courseData,
@@ -86,6 +93,13 @@ const CourseCompletedPage: FC<{}> = () => {
         progress,
         ready,
     ])
+
+    useEffect(() => {
+      if (ready && showSurvey === certificationParam) {
+        surveyTriggerForUser('TCA First Module Completed', profile?.userId)
+        setShowSurvey('')
+      }
+    }, [ready, showSurvey, certificationParam]);
 
     return (
         <>

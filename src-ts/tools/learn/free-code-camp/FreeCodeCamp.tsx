@@ -20,6 +20,7 @@ import {
     ProfileContextData,
     surveyTriggerForUser,
     textFormatGetSafeString,
+    useLocalStorage,
 } from '../../../lib'
 import {
     CoursesProviderData,
@@ -65,6 +66,11 @@ const FreeCodeCamp: FC<{}> = () => {
         = useState(textFormatGetSafeString(routeParams.module))
     const [lessonParam, setLessonParam]: [string, Dispatch<SetStateAction<string>>]
         = useState(textFormatGetSafeString(routeParams.lesson))
+
+    const [showSurvey, setShowSurvey]: [
+        string,
+        Dispatch<SetStateAction<string>>
+    ] = useLocalStorage<string>('tca-show-survey', '')
 
     const {
         certificationProgress: certificateProgress,
@@ -235,7 +241,6 @@ const FreeCodeCamp: FC<{}> = () => {
             currentLesson,
         )
             .then((progress: LearnUserCertificationProgress) => {
-
                 setCertificateProgress(progress)
                 handleSurvey(certWasInProgress, progress)
 
@@ -277,9 +282,7 @@ const FreeCodeCamp: FC<{}> = () => {
         // so it's time to trigger the survey
         // NOTE: We have to add a delay, otherwise the survey closes when the user
         // is automatically redirected to the next lesson.
-        setTimeout(async () => {
-            surveyTriggerForUser('TCA First Module Completed', profile?.userId)
-        }, 1000)
+        setShowSurvey(certificationParam)
     }
 
     /**
@@ -449,6 +452,16 @@ const FreeCodeCamp: FC<{}> = () => {
         navigate,
         isLoggedIn,
     ])
+
+    useEffect(() => {
+        if (ready && showSurvey === certificationParam) {
+            surveyTriggerForUser('TCA First Module Completed', profile?.userId)
+            setShowSurvey('')
+        }
+    }, [
+        showSurvey,
+        certificationParam,
+    ]);
 
     return (
         <>
