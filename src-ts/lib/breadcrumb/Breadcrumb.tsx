@@ -1,6 +1,8 @@
 import { FC } from 'react'
 import { createPortal } from 'react-dom'
 
+import { PageSubheaderPortalId } from '../../config'
+
 import { BreadcrumbItem, BreadcrumbItemModel } from './breadcrumb-item'
 import styles from './Breadcrumb.module.scss'
 
@@ -9,7 +11,7 @@ interface BreadcrumbProps {
 }
 
 const Breadcrumb: FC<BreadcrumbProps> = (props: BreadcrumbProps) => {
-    const portalRootEl: HTMLElement|null = document.getElementById('page-subheader-portal-el')
+    const portalRootEl: HTMLElement | null = document.getElementById(PageSubheaderPortalId)
 
     if (!portalRootEl) {
         return <></>

@@ -4,7 +4,7 @@ import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
 const Account: LazyLoadedComponent = lazyLoad(() => import('./account'), 'Account')
 const Settings: LazyLoadedComponent = lazyLoad(() => import('./Settings'))
 
-export const settingsRoutes: Array<PlatformRoute> = [
+export const settingsRoutes: ReadonlyArray<PlatformRoute> = [
     {
         authRequired: true,
         children: [
@@ -16,7 +16,7 @@ export const settingsRoutes: Array<PlatformRoute> = [
             },
         ],
         element: <Settings />,
+        id: ToolTitle.settings,
         route: '/account',
-        title: ToolTitle.settings,
     },
 ]

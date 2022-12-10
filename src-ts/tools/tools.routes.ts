@@ -5,9 +5,10 @@ import { gamificationAdminRoutes } from './gamification-admin'
 import { learnRoutes } from './learn'
 import { workRoutes } from './work'
 
-const toolRoutes: Array<PlatformRoute> = [
-    // NOTE: these will be displayed in the order they are defined in this array
-    // TODO: support ordering
+const toolRoutes: ReadonlyArray<PlatformRoute> = [
+    // NOTE: Order matters here bc the active tool
+    // is determined by finding the first route
+    // that matches the current path
     ...workRoutes,
     ...devCenterRoutes,
     ...learnRoutes,

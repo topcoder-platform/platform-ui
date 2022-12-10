@@ -1,12 +1,17 @@
+import { ToolTitle } from '../../config'
 import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
 
-const GettingStartedGuide: LazyLoadedComponent = lazyLoad(() => import('./dev-center-pages/community-app/getting-started/GettingStartedGuide'))
-const DevCenterLandingPage: LazyLoadedComponent = lazyLoad(() => import('./dev-center-pages/community-app/landing-page/DevCenterLandingPage'))
+const GettingStartedGuide: LazyLoadedComponent
+    = lazyLoad(() => import('./dev-center-pages/community-app/getting-started/GettingStartedGuide'))
+
+const DevCenterLandingPage: LazyLoadedComponent
+    = lazyLoad(() => import('./dev-center-pages/community-app/landing-page/DevCenterLandingPage'))
+
 const DevCenter: LazyLoadedComponent = lazyLoad(() => import('./DevCenter'))
 
-export const toolTitle: string = 'Dev Center'
+export const toolTitle: string = ToolTitle.dev
 
-export const devCenterRoutes: Array<PlatformRoute> = [
+export const devCenterRoutes: ReadonlyArray<PlatformRoute> = [
     {
         children: [
             {
@@ -19,8 +24,7 @@ export const devCenterRoutes: Array<PlatformRoute> = [
             },
         ],
         element: <DevCenter />,
-        memberOnly: true,
+        id: toolTitle,
         route: '/dev-center',
-        title: toolTitle,
     },
 ]

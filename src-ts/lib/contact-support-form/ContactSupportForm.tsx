@@ -11,6 +11,7 @@ import styles from './ContactSupportForm.module.scss'
 
 export interface ContactSupportFormProps {
     formDef: FormDefinition
+    isSelfService?: boolean
     onSave: () => void
     workId?: string
 }
@@ -30,7 +31,7 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
         }
     }, [loading, saveOnSuccess, props.onSave])
 
-    const generateRequest = useCallback((
+    const generateRequest: (inputs: ReadonlyArray<FormInputModel>) => void = useCallback((
         inputs: ReadonlyArray<FormInputModel>,
     ): ContactSupportRequest => {
         const firstName: string
@@ -45,20 +46,21 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
             challengeId: props.workId,
             email,
             firstName,
-            isSelfService: true,
+            isSelfService: !!props.isSelfService,
             lastName,
             question,
         }
     }, [props.workId])
 
-    const saveAsync = useCallback(async (request: ContactSupportRequest): Promise<void> => {
-        setLoading(true)
-        return contactSupportSubmitRequestAsync(request)
-            .then(() => {
-                setSaveOnSuccess(true)
-            })
-            .finally(() => setLoading(false))
-    }, [])
+    const saveAsync: (request: ContactSupportRequest) => Promise<void>
+        = useCallback(async (request: ContactSupportRequest): Promise<void> => {
+            setLoading(true)
+            return contactSupportSubmitRequestAsync(request)
+                .then(() => {
+                    setSaveOnSuccess(true)
+                })
+                .finally(() => setLoading(false))
+        }, [])
 
     const emailElement: JSX.Element | undefined = !!profile?.email
         ? (
