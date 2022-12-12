@@ -11,7 +11,6 @@ import {
     ProfileContextData,
     surveyTriggerForUser,
     textFormatGetSafeString,
-    useLocalStorage,
 } from '../../../lib'
 import {
     AllCertificationsProviderData,
@@ -23,11 +22,13 @@ import {
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
+    useShowSurvey,
 } from '../learn-lib'
 import { getCertificatePath, getCoursePath, LEARN_PATHS, rootRoute } from '../learn.routes'
 
 import { ReactComponent as StarsSvg } from './stars.svg'
 import styles from './CourseCompletedPage.module.scss'
+import { LearnConfig } from '../learn-config'
 
 const CourseCompletedPage: FC<{}> = () => {
 
@@ -41,7 +42,7 @@ const CourseCompletedPage: FC<{}> = () => {
     const [showSurvey, setShowSurvey]: [
         string,
         Dispatch<SetStateAction<string>>
-    ] = useLocalStorage<string>('tca-show-survey', '')
+    ] = useShowSurvey()
 
     const {
         course: courseData,
@@ -96,7 +97,7 @@ const CourseCompletedPage: FC<{}> = () => {
 
     useEffect(() => {
       if (ready && showSurvey === certificationParam) {
-        surveyTriggerForUser('TCA First Module Completed', profile?.userId)
+        surveyTriggerForUser(LearnConfig.SURVEY.COMPLETED_FIRST_MODULE, profile?.userId)
         setShowSurvey('')
       }
     }, [ready, showSurvey, certificationParam]);

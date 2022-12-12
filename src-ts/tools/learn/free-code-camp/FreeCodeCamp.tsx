@@ -20,7 +20,6 @@ import {
     ProfileContextData,
     surveyTriggerForUser,
     textFormatGetSafeString,
-    useLocalStorage,
 } from '../../../lib'
 import {
     CoursesProviderData,
@@ -40,6 +39,7 @@ import {
     UserCertificationProgressStatus,
     userCertificationProgressUpdateAsync,
     UserCertificationUpdateProgressActions,
+    useShowSurvey,
 } from '../learn-lib'
 import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule } from '../learn.routes'
 
@@ -47,6 +47,7 @@ import { FccFrame } from './fcc-frame'
 import { FccSidebar } from './fcc-sidebar'
 import { TitleNav } from './title-nav'
 import styles from './FreeCodeCamp.module.scss'
+import { LearnConfig } from '../learn-config'
 
 const FreeCodeCamp: FC<{}> = () => {
 
@@ -70,7 +71,7 @@ const FreeCodeCamp: FC<{}> = () => {
     const [showSurvey, setShowSurvey]: [
         string,
         Dispatch<SetStateAction<string>>
-    ] = useLocalStorage<string>('tca-show-survey', '')
+    ] = useShowSurvey()
 
     const {
         certificationProgress: certificateProgress,
@@ -455,7 +456,7 @@ const FreeCodeCamp: FC<{}> = () => {
 
     useEffect(() => {
         if (ready && showSurvey === certificationParam) {
-            surveyTriggerForUser('TCA First Module Completed', profile?.userId)
+            surveyTriggerForUser(LearnConfig.SURVEY.COMPLETED_FIRST_MODULE, profile?.userId)
             setShowSurvey('')
         }
     }, [
