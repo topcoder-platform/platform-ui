@@ -39,6 +39,7 @@ import {
     UserCertificationProgressStatus,
     userCertificationProgressUpdateAsync,
     UserCertificationUpdateProgressActions,
+    useShowSurvey,
 } from '../learn-lib'
 import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule } from '../learn.routes'
 
@@ -46,6 +47,7 @@ import { FccFrame } from './fcc-frame'
 import { FccSidebar } from './fcc-sidebar'
 import { TitleNav } from './title-nav'
 import styles from './FreeCodeCamp.module.scss'
+import { LearnConfig } from '../learn-config'
 
 const FreeCodeCamp: FC<{}> = () => {
 
@@ -65,6 +67,11 @@ const FreeCodeCamp: FC<{}> = () => {
         = useState(textFormatGetSafeString(routeParams.module))
     const [lessonParam, setLessonParam]: [string, Dispatch<SetStateAction<string>>]
         = useState(textFormatGetSafeString(routeParams.lesson))
+
+    const [showSurvey, setShowSurvey]: [
+        string,
+        Dispatch<SetStateAction<string>>
+    ] = useShowSurvey()
 
     const {
         certificationProgress: certificateProgress,
@@ -235,7 +242,6 @@ const FreeCodeCamp: FC<{}> = () => {
             currentLesson,
         )
             .then((progress: LearnUserCertificationProgress) => {
-
                 setCertificateProgress(progress)
                 handleSurvey(certWasInProgress, progress)
 
@@ -277,9 +283,7 @@ const FreeCodeCamp: FC<{}> = () => {
         // so it's time to trigger the survey
         // NOTE: We have to add a delay, otherwise the survey closes when the user
         // is automatically redirected to the next lesson.
-        setTimeout(async () => {
-            surveyTriggerForUser('TCA First Module Completed', profile?.userId)
-        }, 1000)
+        setShowSurvey(certificationParam)
     }
 
     /**
@@ -449,6 +453,17 @@ const FreeCodeCamp: FC<{}> = () => {
         navigate,
         isLoggedIn,
     ])
+
+    useEffect(() => {
+        if (ready && showSurvey === certificationParam) {
+            surveyTriggerForUser(LearnConfig.SURVEY.COMPLETED_FIRST_MODULE, profile?.userId)
+            setShowSurvey('')
+        }
+    }, [
+        ready,
+        showSurvey,
+        certificationParam,
+    ]);
 
     return (
         <>
