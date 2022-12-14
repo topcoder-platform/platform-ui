@@ -4,9 +4,8 @@ import { RouteContextData } from './route-context-data.model'
 
 export const defaultRouteContextData: RouteContextData = {
     allRoutes: [],
-    getChildRoutes: () => [],
     getChildren: () => [],
-    getPath: () => '',
+    getChildRoutes: () => [],
     getPathFromRoute: () => '',
     getRouteElement: () => <></>,
     getSignupUrl: () => '',
@@ -15,7 +14,6 @@ export const defaultRouteContextData: RouteContextData = {
     rootLoggedInRoute: '',
     rootLoggedOutFC: () => <></>,
     toolsRoutes: [],
-    toolsRoutesForNav: [],
     utilsRoutes: [],
 }
 

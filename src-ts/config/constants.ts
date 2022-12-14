@@ -1,5 +1,10 @@
 export enum ToolTitle {
-    learn = 'Learn',
+    dev = 'Dev Center',
+    game = 'Gamification Admin',
     settings = 'Account Settings',
-    work = 'Work',
+    support = 'Support',
+    tca = 'Topcoder Academy',
+    work = 'Self Service Challenges',
 }
+
+export const PageSubheaderPortalId: string = 'page-subheader-portal-el'

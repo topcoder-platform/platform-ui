@@ -1,4 +1,4 @@
-import { FC, useContext, useEffect } from 'react'
+import { Dispatch, FC, SetStateAction, useContext, useEffect } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 
 import { EnvironmentConfig } from '../../../config'
@@ -9,6 +9,7 @@ import {
     LoadingSpinner,
     profileContext,
     ProfileContextData,
+    surveyTriggerForUser,
     textFormatGetSafeString,
 } from '../../../lib'
 import {
@@ -21,11 +22,13 @@ import {
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
+    useShowSurvey,
 } from '../learn-lib'
 import { getCertificatePath, getCoursePath, LEARN_PATHS, rootRoute } from '../learn.routes'
 
 import { ReactComponent as StarsSvg } from './stars.svg'
 import styles from './CourseCompletedPage.module.scss'
+import { LearnConfig } from '../learn-config'
 
 const CourseCompletedPage: FC<{}> = () => {
 
@@ -35,6 +38,11 @@ const CourseCompletedPage: FC<{}> = () => {
     const providerParam: string = textFormatGetSafeString(routeParams.provider)
     const certificationParam: string = textFormatGetSafeString(routeParams.certification)
     const coursePath: string = getCoursePath(providerParam, certificationParam)
+
+    const [showSurvey, setShowSurvey]: [
+        string,
+        Dispatch<SetStateAction<string>>
+    ] = useShowSurvey()
 
     const {
         course: courseData,
@@ -86,6 +94,13 @@ const CourseCompletedPage: FC<{}> = () => {
         progress,
         ready,
     ])
+
+    useEffect(() => {
+      if (ready && showSurvey === certificationParam) {
+        surveyTriggerForUser(LearnConfig.SURVEY.COMPLETED_FIRST_MODULE, profile?.userId)
+        setShowSurvey('')
+      }
+    }, [ready, showSurvey, certificationParam]);
 
     return (
         <>

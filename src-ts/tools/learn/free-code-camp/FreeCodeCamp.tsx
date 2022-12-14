@@ -1,3 +1,4 @@
+import { debounce } from 'lodash'
 import {
     Dispatch,
     FC,
@@ -43,6 +44,7 @@ import {
     UserCertificationProgressStatus,
     userCertificationProgressUpdateAsync,
     UserCertificationUpdateProgressActions,
+    useShowSurvey,
 } from '../learn-lib'
 import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule } from '../learn.routes'
 
@@ -50,6 +52,7 @@ import { FccFrame } from './fcc-frame'
 import { FccSidebar } from './fcc-sidebar'
 import { TitleNav } from './title-nav'
 import styles from './FreeCodeCamp.module.scss'
+import { LearnConfig } from '../learn-config'
 
 const FreeCodeCamp: FC<{}> = () => {
 
@@ -69,6 +72,11 @@ const FreeCodeCamp: FC<{}> = () => {
         = useState(textFormatGetSafeString(routeParams.module))
     const [lessonParam, setLessonParam]: [string, Dispatch<SetStateAction<string>>]
         = useState(textFormatGetSafeString(routeParams.lesson))
+
+    const [showSurvey, setShowSurvey]: [
+        string,
+        Dispatch<SetStateAction<string>>
+    ] = useShowSurvey()
 
     const {
         certificationProgress: certificateProgress,
@@ -216,7 +224,8 @@ const FreeCodeCamp: FC<{}> = () => {
         profile?.userId,
     ])
 
-    const handleFccLessonComplete: (challengeUuid: string) => void = useCallback((challengeUuid: string) => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const handleFccLessonComplete: (challengeUuid: string) => void = useCallback(debounce((challengeUuid: string) => {
 
         const currentLesson: { [key: string]: string } = {
             lesson: lessonParam,
@@ -238,13 +247,12 @@ const FreeCodeCamp: FC<{}> = () => {
             currentLesson,
         )
             .then((progress: LearnUserCertificationProgress) => {
-
                 setCertificateProgress(progress)
                 handleSurvey(certWasInProgress, progress)
 
             })
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
+    }, 30), [
         certificateProgress,
         lessonParam,
         moduleParam,
@@ -276,23 +284,26 @@ const FreeCodeCamp: FC<{}> = () => {
             return
         }
 
-        // this is the last lesson to be completed in the first module completed,
-        // so it's good to show the trigger
-        surveyTriggerForUser('TCA First Module Completed', profile?.userId)
+        // This is the last lesson to be completed in the first module completed,
+        // so it's time to trigger the survey
+        // NOTE: We have to add a delay, otherwise the survey closes when the user
+        // is automatically redirected to the next lesson.
+        setShowSurvey(certificationParam)
     }
 
     /**
      * Handle the navigation away from the last step of the course in the FCC frame
      * @returns
      */
-    const handleFccLastLessonNavigation: () => void = useCallback(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const handleFccLastLessonNavigation: () => void = useCallback(debounce(() => {
 
         if (!certificateProgress) {
             return
         }
 
         // course is completed, return user to course completed screen
-        if (certificateProgress.courseProgressPercentage === 100) {
+        if (certificateProgress.status === UserCertificationProgressStatus.completed) {
             const completedPath: string = getCertificationCompletedPath(
                 providerParam,
                 certificationParam,
@@ -331,7 +342,7 @@ const FreeCodeCamp: FC<{}> = () => {
 
         navigate(nextLessonPath)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
+    }, 30), [
         certificateProgress,
         certificationParam,
         courseData?.modules,
@@ -447,6 +458,17 @@ const FreeCodeCamp: FC<{}> = () => {
         navigate,
         isLoggedIn,
     ])
+
+    useEffect(() => {
+        if (ready && showSurvey === certificationParam) {
+            surveyTriggerForUser(LearnConfig.SURVEY.COMPLETED_FIRST_MODULE, profile?.userId)
+            setShowSurvey('')
+        }
+    }, [
+        ready,
+        showSurvey,
+        certificationParam,
+    ]);
 
     /**
      * Complete course shortcut for admins

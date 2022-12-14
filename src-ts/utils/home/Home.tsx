@@ -1,11 +1,7 @@
 import { FC, useContext, useEffect } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 
-import {
-    LoadingSpinner,
-    routeContext,
-    RouteContextData,
-} from '../../lib'
+import { routeContext, RouteContextData } from '../../lib'
 import '../../lib/styles/index.scss'
 
 const Home: FC<{}> = () => {
@@ -35,7 +31,6 @@ const Home: FC<{}> = () => {
 
     return (
         <div className='full-height-frame'>
-            <LoadingSpinner hide={showLoggedOut} />
             {showLoggedOut && <LoggedOut />}
         </div>
     )
