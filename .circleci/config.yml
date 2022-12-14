@@ -227,7 +227,9 @@ workflows:
           filters: 
             branches:
               only:
-                - dev
+                # - dev
+                # temp only deploy this branch to dev
+                - TCA-790_assessments
 
       - deployProd:
           context : org-global
