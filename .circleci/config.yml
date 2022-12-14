@@ -228,8 +228,8 @@ workflows:
             branches:
               only:
                 # - dev
-                # temp only deploy this branch to dev
-                - TCA-790_assessments
+                # temp only deploy the release branch to dev
+                - TCA-832_release
 
       - deployProd:
           context : org-global
