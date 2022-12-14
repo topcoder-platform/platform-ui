@@ -277,8 +277,9 @@ const FreeCodeCamp: FC<{}> = () => {
 
         // NOTE: We have to add a delay, otherwise the survey closes when the user
         // is automatically redirected to the next lesson.
-        surveyTriggerForUser('TCA First Module Completed', profile?.userId)
-
+        setTimeout(() => {
+            surveyTriggerForUser('TCA First Module Completed', profile?.userId)
+        }, 1000)
     }
 
     /**
