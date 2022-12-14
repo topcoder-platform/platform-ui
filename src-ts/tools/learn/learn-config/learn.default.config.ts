@@ -11,7 +11,4 @@ export const LearnConfigDefault: LearnConfigModel = {
         value: 'certificate-container',
     },
     CLIENT: 'https://fcc.topcoder-dev.com:4431',
-    SURVEY: {
-        COMPLETED_FIRST_MODULE: 'TCA First Module Completed',
-    }
 }

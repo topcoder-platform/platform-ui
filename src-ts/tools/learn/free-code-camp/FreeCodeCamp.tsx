@@ -39,7 +39,6 @@ import {
     UserCertificationProgressStatus,
     userCertificationProgressUpdateAsync,
     UserCertificationUpdateProgressActions,
-    useShowSurvey,
 } from '../learn-lib'
 import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule } from '../learn.routes'
 
@@ -47,7 +46,6 @@ import { FccFrame } from './fcc-frame'
 import { FccSidebar } from './fcc-sidebar'
 import { TitleNav } from './title-nav'
 import styles from './FreeCodeCamp.module.scss'
-import { LearnConfig } from '../learn-config'
 
 const FreeCodeCamp: FC<{}> = () => {
 
@@ -67,11 +65,6 @@ const FreeCodeCamp: FC<{}> = () => {
         = useState(textFormatGetSafeString(routeParams.module))
     const [lessonParam, setLessonParam]: [string, Dispatch<SetStateAction<string>>]
         = useState(textFormatGetSafeString(routeParams.lesson))
-
-    const [showSurvey, setShowSurvey]: [
-        string,
-        Dispatch<SetStateAction<string>>
-    ] = useShowSurvey()
 
     const {
         certificationProgress: certificateProgress,
