@@ -1,14 +1,13 @@
+import { ToolTitle } from '../../config'
 import { contactSupportPath, lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
-
-export const toolTitle: string = 'Contact Support'
 
 const ContactSupport: LazyLoadedComponent = lazyLoad(() => import('./ContactSupport'))
 
-export const contactSupportRoutes: Array<PlatformRoute> = [
+export const contactSupportRoutes: ReadonlyArray<PlatformRoute> = [
     {
         children: [],
         element: <ContactSupport />,
+        id: ToolTitle.support,
         route: contactSupportPath,
-        title: toolTitle,
     },
 ]

@@ -2,17 +2,17 @@ import { Navigate } from 'react-router-dom'
 
 import { contactSupportPath, lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
 
-import { dashboardTitle, toolTitle } from './Work'
+import { dashboardRouteId, intakeFormsRouteId, toolTitle } from './Work'
 import { Work, WorkIntakeFormRoutes, WorkStatus, WorkType } from './work-lib'
 import { WorkLoginPrompt } from './work-login-prompt'
-import { intakeFormsTitle } from './work-self-service'
 
 const WorkComponent: LazyLoadedComponent = lazyLoad(() => import('./Work'))
 const WorkNotLoggedIn: LazyLoadedComponent = lazyLoad(() => import('./work-not-logged-in'), 'WorkNotLoggedIn')
 const BugHuntIntakeForm: LazyLoadedComponent = lazyLoad(() => import('./work-self-service'), 'BugHuntIntakeForm')
 const IntakeForms: LazyLoadedComponent = lazyLoad(() => import('./work-self-service'), 'IntakeForms')
 const Review: LazyLoadedComponent = lazyLoad(() => import('./work-self-service'), 'Review')
-const SaveAfterLogin: LazyLoadedComponent = lazyLoad(() => import('./work-self-service/intake-forms/save-after-login/SaveAfterLogin'))
+const SaveAfterLogin: LazyLoadedComponent
+    = lazyLoad(() => import('./work-self-service/intake-forms/save-after-login/SaveAfterLogin'))
 const WorkTable: LazyLoadedComponent = lazyLoad(() => import('./work-table'), 'WorkTable')
 const WorkThankYou: LazyLoadedComponent = lazyLoad(() => import('./work-thank-you'), 'WorkThankYou')
 
@@ -45,15 +45,14 @@ export function workDetailOrDraftRoute(selectedWork: Work): string {
 }
 
 export function workDetailRoute(workId: string, tab?: 'solutions' | 'messages'): string {
-    return `${selfServiceRootRoute}/work-items/${workId}${!!tab ? `\?tab=${tab}` : ''}`
+    return `${selfServiceRootRoute}/work-items/${workId}${!!tab ? `?tab=${tab}` : ''}`
 }
 
-export const workRoutes: Array<PlatformRoute> = [
+export const workRoutes: ReadonlyArray<PlatformRoute> = [
     {
-        customerOnly: true,
         element: <WorkNotLoggedIn />,
+        id: toolTitle,
         route: rootRoute,
-        title: toolTitle,
     },
     {
         alternativePaths: [
@@ -75,8 +74,9 @@ export const workRoutes: Array<PlatformRoute> = [
         ],
         element: <WorkComponent />,
         hidden: true,
+        id: dashboardRouteId,
         route: dashboardRoute,
-        title: dashboardTitle,
+        title: toolTitle,
     },
     {
         children: [
@@ -113,8 +113,9 @@ export const workRoutes: Array<PlatformRoute> = [
         ],
         element: <IntakeForms />,
         hidden: true,
-        route: `/${selfServiceRootRoute}${rootRoute}/new`,
-        title: intakeFormsTitle,
+        id: intakeFormsRouteId,
+        route: `${selfServiceRootRoute}${rootRoute}/new`,
+        title: toolTitle,
     },
     {
         element: <Navigate to={rootRoute} />,
@@ -127,6 +128,6 @@ export const workRoutes: Array<PlatformRoute> = [
     {
         children: [],
         element: <Navigate to={contactSupportPath} />,
-        route: `${rootRoute}/${contactSupportPath}`,
+        route: `${rootRoute}${contactSupportPath}`,
     },
 ]

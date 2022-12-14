@@ -82,55 +82,54 @@ export function getViewStyleParamKey(): string {
     return Object.keys(LearnConfig.CERT_ALT_PARAMS)[0]
 }
 
-export const learnRoutes: Array<PlatformRoute> = [
+export const learnRoutes: ReadonlyArray<PlatformRoute> = [
     {
         children: [
             {
                 children: [],
                 element: <WelcomePage />,
+                id: 'Welcome to Topcoder Academy',
                 route: '',
-                title: 'Welcome to Topcoder Academy',
             },
             {
                 children: [],
                 element: <CourseDetailsPage />,
+                id: 'Course Details',
                 route: ':provider/:certification',
-                title: 'Course Details',
             },
             {
                 children: [],
                 element: <CourseCompletedPage />,
+                id: 'Course Completed',
                 route: ':provider/:certification/completed',
-                title: 'Course Completed',
             },
             {
                 children: [],
                 element: <MyCertificate />,
+                id: 'My Certificate',
                 route: ':provider/:certification/certificate',
-                title: 'My Certificate',
             },
             {
                 children: [],
                 element: <UserCertificate />,
+                id: 'User Certificate',
                 route: ':provider/:certification/:memberHandle/certificate',
-                title: 'User Certificate',
             },
             {
                 children: [],
                 element: <FreeCodeCamp />,
+                id: 'FxreeCodeCamp',
                 route: ':provider/:certification/:module/:lesson',
-                title: 'FreeCodeCamp',
             },
             {
                 children: [],
                 element: <MyLearning />,
+                id: 'My Learning',
                 route: 'my-learning',
-                title: 'My Learning',
             },
         ],
         element: <LandingLearn />,
-        memberOnly: true,
+        id: toolTitle,
         route: rootRoute,
-        title: toolTitle,
     },
 ]

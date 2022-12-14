@@ -235,6 +235,7 @@ const BasicInfo = ({
       <ContactSupportModal
         challengeId={challenge?.id}
         isOpen={showSupportModal}
+        isSelfService={true}
         onClose={onHideSupportModal}
       />
       <Page>
