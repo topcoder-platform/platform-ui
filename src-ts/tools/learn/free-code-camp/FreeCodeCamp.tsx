@@ -1,3 +1,4 @@
+import { debounce } from 'lodash'
 import {
     Dispatch,
     FC,
@@ -45,7 +46,6 @@ import { FccFrame } from './fcc-frame'
 import { FccSidebar } from './fcc-sidebar'
 import { TitleNav } from './title-nav'
 import styles from './FreeCodeCamp.module.scss'
-import { debounce } from 'lodash'
 
 const FreeCodeCamp: FC<{}> = () => {
 
