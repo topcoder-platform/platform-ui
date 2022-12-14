@@ -227,9 +227,7 @@ workflows:
           filters: 
             branches:
               only:
-                # - dev
-                # temp only deploy the release branch to dev
-                - TCA-832_release
+                - dev
 
       - deployProd:
           context : org-global
