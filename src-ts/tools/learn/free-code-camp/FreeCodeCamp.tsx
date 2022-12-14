@@ -25,7 +25,6 @@ import {
     UserRole,
 } from '../../../lib'
 import {
-    adminCertificationProgressCompleteCourseAsync,
     CoursesProviderData,
     LearnLesson,
     LearnModule,
@@ -37,6 +36,7 @@ import {
     useGetLesson,
     useGetUserCertificationProgress,
     useLearnBreadcrumb,
+    userCertificationProgressAutocompleteCourse,
     userCertificationProgressCompleteCourseAsync,
     UserCertificationProgressProviderData,
     userCertificationProgressStartAsync,
@@ -452,22 +452,21 @@ const FreeCodeCamp: FC<{}> = () => {
      * Complete course shortcut for admins
      */
     function adminCompleteCourse(): void {
-        const confirmed = confirm('Hey, You about to complete the certification. Are you sure?');
-        if (certificateProgress && confirmed) {
-            adminCertificationProgressCompleteCourseAsync(certificateProgress.id)
-                .then(setCertificateProgress)
-                .then(() => {
-                    toast.info(
-                        <>
-                            <p>Yay, success! You completed the course.</p>
-                        </>
-                    )
-                })
-                .catch(error => {
-                    logError(error)
-                    toast.error('Oops! We couldn\'t complete your request as some error happened. See console for more...')
-                })
+        const confirmed = confirm('Hey, you\'re about to auto-complete this entire course. Are you sure?');
+
+        if (!certificateProgress?.id || !confirmed) {
+            return
         }
+
+        userCertificationProgressAutocompleteCourse(certificateProgress.id)
+            .then(setCertificateProgress)
+            .then(() => {
+                toast.info(<p>Yay, success! You completed the course.</p>)
+            })
+            .catch(error => {
+                logError(error)
+                toast.error('Oops! We couldn\'t complete your request as some error happened. See console for more...')
+            })
     }
 
     return (
@@ -476,11 +475,7 @@ const FreeCodeCamp: FC<{}> = () => {
             <div className={styles.wrapBreadcrumb}>
                 <Breadcrumb items={breadcrumb} />
                 {
-                    lesson
-                    && profile
-                    && profile.roles
-                    && profile.roles.includes(UserRole.tcaAdmin)
-                    && (
+                    lesson && profile?.roles?.includes(UserRole.tcaAdmin) && (
                         <Button
                             buttonStyle={'secondary'}
                             className={styles.completeCourseBtn}
