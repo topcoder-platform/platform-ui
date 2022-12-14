@@ -47,7 +47,6 @@ import { FccFrame } from './fcc-frame'
 import { FccSidebar } from './fcc-sidebar'
 import { TitleNav } from './title-nav'
 import styles from './FreeCodeCamp.module.scss'
-import { LearnConfig } from '../learn-config'
 
 const FreeCodeCamp: FC<{}> = () => {
 
@@ -281,9 +280,12 @@ const FreeCodeCamp: FC<{}> = () => {
 
         // This is the last lesson to be completed in the first module completed,
         // so it's time to trigger the survey
+
         // NOTE: We have to add a delay, otherwise the survey closes when the user
         // is automatically redirected to the next lesson.
-        setShowSurvey(certificationParam)
+        setTimeout(() => {
+            surveyTriggerForUser('TCA First Module Completed', profile?.userId)
+        }, 1000)
     }
 
     /**
