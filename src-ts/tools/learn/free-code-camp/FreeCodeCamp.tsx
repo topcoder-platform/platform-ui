@@ -1,3 +1,4 @@
+import { debounce } from 'lodash'
 import {
     Dispatch,
     FC,
@@ -17,12 +18,16 @@ import {
     LoadingSpinner,
     profileContext,
     ProfileContextData,
+    surveyTriggerForUser,
+    textFormatGetSafeString,
 } from '../../../lib'
 import {
     CoursesProviderData,
     LearnLesson,
     LearnModule,
     LearnModuleProgress,
+    LearnModuleStatus,
+    LearnUserCertificationProgress,
     LessonProviderData,
     useGetCourses,
     useGetLesson,
@@ -52,11 +57,14 @@ const FreeCodeCamp: FC<{}> = () => {
 
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
-    const providerParam: string = routeParams.provider ?? ''
+    const providerParam: string = textFormatGetSafeString(routeParams.provider)
 
-    const [certificationParam, setCourseParam]: [string, Dispatch<SetStateAction<string>>] = useState(routeParams.certification ?? '')
-    const [moduleParam, setModuleParam]: [string, Dispatch<SetStateAction<string>>] = useState(routeParams.module ?? '')
-    const [lessonParam, setLessonParam]: [string, Dispatch<SetStateAction<string>>] = useState(routeParams.lesson ?? '')
+    const [certificationParam, setCourseParam]: [string, Dispatch<SetStateAction<string>>]
+        = useState(textFormatGetSafeString(routeParams.certification))
+    const [moduleParam, setModuleParam]: [string, Dispatch<SetStateAction<string>>]
+        = useState(textFormatGetSafeString(routeParams.module))
+    const [lessonParam, setLessonParam]: [string, Dispatch<SetStateAction<string>>]
+        = useState(textFormatGetSafeString(routeParams.lesson))
 
     const {
         certificationProgress: certificateProgress,
@@ -83,11 +91,11 @@ const FreeCodeCamp: FC<{}> = () => {
 
     const ready: boolean = profileReady && courseDataReady && lessonReady && (!isLoggedIn || progressReady)
 
-    const certification: string = lesson?.course.certification ?? ''
-    const module: string = lesson?.module.title ?? ''
+    const certification: string = textFormatGetSafeString(lesson?.course.certification)
+    const module: string = textFormatGetSafeString(lesson?.module.title)
     const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
         {
-            name: lesson?.course.title ?? '',
+            name: textFormatGetSafeString(lesson?.course.title),
             url: getCoursePath(providerParam, certification),
         },
         {
@@ -96,7 +104,8 @@ const FreeCodeCamp: FC<{}> = () => {
         },
     ])
 
-    const currentModuleData: LearnModule | undefined = useMemo(() => courseData?.modules.find(d => d.key === moduleParam), [courseData, moduleParam])
+    const currentModuleData: LearnModule | undefined
+        = useMemo(() => courseData?.modules.find(d => d.key === moduleParam), [courseData, moduleParam])
 
     const currentStepIndex: number = useMemo(() => {
         if (!currentModuleData) {
@@ -155,7 +164,7 @@ const FreeCodeCamp: FC<{}> = () => {
         }
     }
 
-    function handleFccLessonReady(lessonPath: string): void {
+    const handleFccLessonReady: (lessonPath: string) => void = useCallback((lessonPath: string) => {
 
         const [nLessonPath, modulePath, coursePath]: Array<string> = lessonPath.replace(/\/$/, '')
             .split('/')
@@ -195,35 +204,96 @@ const FreeCodeCamp: FC<{}> = () => {
                     .then(setCertificateProgress)
             }, 500)
         }
-    }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+        certificateProgress,
+        lesson?.course.certificationId,
+        lesson?.course.id,
+        profile?.userId,
+    ])
 
-    function handleFccLessonComplete(challengeUuid: string): void {
+    const handleFccLessonComplete: (challengeUuid: string) => void = useCallback(debounce((challengeUuid: string) => {
+
         const currentLesson: { [key: string]: string } = {
             lesson: lessonParam,
             module: moduleParam,
             uuid: challengeUuid,
         }
-        if (certificateProgress) {
-            userCertificationProgressUpdateAsync(
-                certificateProgress.id,
-                UserCertificationUpdateProgressActions.completeLesson,
-                currentLesson,
-            )
-                .then(setCertificateProgress)
+
+        if (!certificateProgress) {
+            return
         }
+
+        // get the current module as it exists before it's completed
+        const currentModule: LearnModuleProgress | undefined = getModuleFromProgress(certificateProgress)
+        const certWasInProgress: boolean = currentModule?.moduleStatus !== LearnModuleStatus.completed
+
+        userCertificationProgressUpdateAsync(
+            certificateProgress.id,
+            UserCertificationUpdateProgressActions.completeLesson,
+            currentLesson,
+        )
+            .then((progress: LearnUserCertificationProgress) => {
+
+                setCertificateProgress(progress)
+                handleSurvey(certWasInProgress, progress)
+
+            })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, 30), [
+        certificateProgress,
+        lessonParam,
+        moduleParam,
+    ])
+
+    function getModuleFromProgress(certProgress: LearnUserCertificationProgress):
+        LearnModuleProgress | undefined {
+
+        return certProgress.modules.find(m => m.module === moduleParam)
+    }
+
+    function handleSurvey(certWasInProgress: boolean, progress: LearnUserCertificationProgress): void {
+
+        // if the current module wasn't in progress, there's nothing to do
+        if (!certWasInProgress) {
+            return
+        }
+
+        // if the updated module isn't completed now, there's nothing to do
+        const moduleResult: LearnModuleProgress | undefined = getModuleFromProgress(progress)
+        if (moduleResult?.moduleStatus !== LearnModuleStatus.completed) {
+            return
+        }
+
+        // if there are any other modules that have been completed, there's nothing to do
+        if (progress.modules
+            .some(m => m.module !== moduleParam && m.moduleStatus === LearnModuleStatus.completed)
+        ) {
+            return
+        }
+
+        // This is the last lesson to be completed in the first module completed,
+        // so it's time to trigger the survey
+
+        // NOTE: We have to add a delay, otherwise the survey closes when the user
+        // is automatically redirected to the next lesson.
+        setTimeout(() => {
+            surveyTriggerForUser('TCA First Module Completed', profile?.userId)
+        }, 1000)
     }
 
     /**
      * Handle the navigation away from the last step of the course in the FCC frame
      * @returns
      */
-    function handleFccLastLessonNavigation(): void {
+    const handleFccLastLessonNavigation: () => void = useCallback(debounce(() => {
+
         if (!certificateProgress) {
             return
         }
 
         // course is completed, return user to course completed screen
-        if (certificateProgress.courseProgressPercentage === 100) {
+        if (certificateProgress.status === UserCertificationProgressStatus.completed) {
             const completedPath: string = getCertificationCompletedPath(
                 providerParam,
                 certificationParam,
@@ -236,15 +306,18 @@ const FreeCodeCamp: FC<{}> = () => {
         // course is not completed yet,
         // so we find the first incomplete lesson
         // and redirect user to it for a continuous flow
-        const firstIncompleteModule: LearnModuleProgress | undefined = certificateProgress.modules.find(m => m.completedPercentage !== 100)
-        const moduleLessons: Array<LearnLesson> | undefined = courseData?.modules.find(m => m.key === firstIncompleteModule?.module)?.lessons
+        const firstIncompleteModule: LearnModuleProgress | undefined
+            = certificateProgress.modules.find(m => m.completedPercentage !== 100)
+        const moduleLessons: Array<LearnLesson> | undefined
+            = courseData?.modules.find(m => m.key === firstIncompleteModule?.module)?.lessons
         if (!firstIncompleteModule || !moduleLessons) {
             // case unknown, return
             return
         }
 
         const completedLessons: Array<string> = firstIncompleteModule.completedLessons.map(l => l.dashedName)
-        const firstIncompleteLesson: LearnLesson | undefined = moduleLessons.find(l => !completedLessons.includes(l.dashedName))
+        const firstIncompleteLesson: LearnLesson | undefined
+            = moduleLessons.find(l => !completedLessons.includes(l.dashedName))
         if (!firstIncompleteLesson) {
             // case unknown, return
             return
@@ -258,7 +331,13 @@ const FreeCodeCamp: FC<{}> = () => {
         )
 
         navigate(nextLessonPath)
-    }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, 30), [
+        certificateProgress,
+        certificationParam,
+        courseData?.modules,
+        providerParam,
+    ])
 
     useEffect(() => {
 
@@ -289,18 +368,19 @@ const FreeCodeCamp: FC<{}> = () => {
                 )
                 navigate(completedPath)
             })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         certificateProgress,
         certificationParam,
-        navigate,
-        providerParam,
         profile?.handle,
-        setCertificateProgress,
+        profile?.userId,
+        providerParam,
     ])
 
     useEffect(() => {
         if (courseDataReady && courseData) {
-            const moduleParamData: LearnModule = courseData.modules.find(m => m.key === moduleParam) ?? courseData.modules[0]
+            const moduleParamData: LearnModule = courseData.modules.find(m => m.key === moduleParam)
+                ?? courseData.modules[0]
             const lessonParamExists: boolean = !!moduleParamData?.lessons.find(l => l.dashedName === lessonParam)
 
             if (!lessonParamExists) {
@@ -314,13 +394,13 @@ const FreeCodeCamp: FC<{}> = () => {
                 navigate(lessonPath)
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         certificationParam,
         courseData,
         courseDataReady,
         lessonParam,
         moduleParam,
-        navigate,
         providerParam,
     ])
 

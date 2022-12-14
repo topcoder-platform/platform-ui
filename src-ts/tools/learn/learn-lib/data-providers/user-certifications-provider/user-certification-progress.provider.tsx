@@ -27,10 +27,12 @@ export function useGetUserCertificationProgress(
         isPaused: () => !userId || !certification,
     })
 
+    const certificationProgress: LearnUserCertificationProgress | undefined = find(data, { certification })
+
     return {
-        certificationProgress: find(data, { certification }),
+        certificationProgress,
         loading: !!userId && !data && !error,
-        ready: !userId || data || error,
+        ready: !userId || !!data || !!error,
         refetch: () => mutate(),
         setCertificateProgress: progress => mutate([progress]),
     }

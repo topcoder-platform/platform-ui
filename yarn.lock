@@ -2070,6 +2070,11 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
+"@sprig-technologies/sprig-browser@^2.20.1":
+  version "2.20.1"
+  resolved "https://registry.yarnpkg.com/@sprig-technologies/sprig-browser/-/sprig-browser-2.20.1.tgz#4c655052dc02514370e92886724cc740337b7d16"
+  integrity sha512-Qkt1yEhSz9FIXpDMjMzWklscF0HmKCmLebYDvVpJxqbEeYzCEQjzeD4WW5RTpvCgyuwzXT0At4Xx9UijCWAS8Q==
+
 "@stripe/react-stripe-js@1.13.0":
   version "1.13.0"
   resolved "https://registry.yarnpkg.com/@stripe/react-stripe-js/-/react-stripe-js-1.13.0.tgz#8e0bde2b116870d2aca52976f46a92d81983e235"
