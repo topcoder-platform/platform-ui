@@ -477,9 +477,9 @@ const FreeCodeCamp: FC<{}> = () => {
                 {
                     lesson && profile?.roles?.includes(UserRole.tcaAdmin) && (
                         <Button
-                            buttonStyle={'secondary'}
+                            buttonStyle='secondary'
                             className={styles.completeCourseBtn}
-                            size={'xs'}
+                            size='xs'
                             label='Complete Course'
                             onClick={adminCompleteCourse}
                         />
