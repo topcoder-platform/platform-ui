@@ -47,3 +47,23 @@
         }
     }
 }
+
+.wrapBreadcrumb {
+    position: relative;
+
+    .completeCourseBtn {
+        position: absolute;
+        right: $space-xxxxl;
+        bottom: $space-xl;
+
+        @include ltesm {
+            right: $space-sm;
+            bottom: $space-md;
+        }
+
+        @include md {
+            right: $space-sm;
+            bottom: $space-lg;
+        }
+    }
+}
