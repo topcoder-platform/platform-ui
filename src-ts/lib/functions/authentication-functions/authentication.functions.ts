@@ -22,12 +22,14 @@ configureConnector({
     mockToken: undefined,
 })
 
-export function getRegistrationSource(activeTool: PlatformRoute | undefined): AuthenticationRegistrationSource | undefined {
+export function getRegistrationSource(
+    activeTool: PlatformRoute | undefined,
+): AuthenticationRegistrationSource | undefined {
 
-    switch (activeTool?.title) {
+    switch (activeTool?.id) {
 
         // currently, there is no reg source for members
-        case ToolTitle.learn:
+        case ToolTitle.tca:
             return undefined
 
         // currently, the work tool and the platform

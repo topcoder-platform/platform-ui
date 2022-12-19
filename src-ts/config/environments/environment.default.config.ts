@@ -14,6 +14,9 @@ export const EnvironmentConfigDefault: EnvironmentConfigModel = {
         V3: 'https://api.topcoder-dev.com/v3',
         V5: 'https://api.topcoder-dev.com/v5',
     },
+    AUTH: {
+        ACCOUNTS_APP_CONNECTOR: 'https://accounts-auth0.topcoder-dev.com',
+    },
     ENV: 'default',
     LOGGING: {
         PUBLIC_TOKEN: 'puba0825671e469d16f940c5a30dc738f11',
@@ -41,7 +44,7 @@ export const EnvironmentConfigDefault: EnvironmentConfigModel = {
         USER_PROFILE: `${COMMUNITY_WEBSITE}/members`,
         WP_CONTENT: `${COMMUNITY_WEBSITE}/wp-content`,
     },
-    URL: {
-        ACCOUNTS_APP_CONNECTOR: 'https://accounts-auth0.topcoder-dev.com',
+    UNIVERSAL_NAV: {
+        URL: 'https://uni-nav.topcoder-dev.com/v1/tc-universal-nav.js',
     },
 }

@@ -1,6 +1,7 @@
 import { FC } from 'react'
 import classNames from 'classnames'
 
+import { PageSubheaderPortalId } from '../../../config'
 import { ContentLayout, LoadingSpinner, Portal } from '../../../lib'
 import {
     AllCertificationsProviderData,
@@ -28,7 +29,7 @@ const WelcomePage: FC = () => {
 
             <div className={classNames(styles.wrap, 'full-height-frame')}>
 
-                <Portal portalId='page-subheader-portal-el'>
+                <Portal portalId={PageSubheaderPortalId}>
                     <div className={styles['hero-wrap']}>
                         <WaveHero
                             title={(

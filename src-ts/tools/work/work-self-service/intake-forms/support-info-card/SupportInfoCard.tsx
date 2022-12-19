@@ -21,7 +21,8 @@ const SupportInfoCard: React.FC = () => {
             >
                 <div>
                     Topcoder also offers solutions for multiple other technical needs and problems.
-                    We have community members expertly skilled in Development, UX / UI Design, Data Science, Quality Assurance, and more.
+                    We have community members expertly skilled in Development, UX / UI Design, Data 
+                    Science, Quality Assurance, and more.
                     We’d love to talk with you about all of our services.
                 </div>
                 <div className={styles.supportButton}>

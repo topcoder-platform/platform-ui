@@ -76,6 +76,7 @@ module.exports = {
             11
         ],
         'import/extensions': 'off',
+        'import/no-named-default':  'off',
         'import/prefer-default-export': 'off',
         'indent': [
             2,
@@ -105,6 +106,7 @@ module.exports = {
             120,
         ],
         'no-extra-boolean-cast': 'off',
+        'no-nested-ternary': 'off',
         'no-null/no-null': 'error',
         'no-param-reassign': [
             'error',

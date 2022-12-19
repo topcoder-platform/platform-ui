@@ -167,6 +167,7 @@ const SelectWorkType = ({
       <ContactSupportModal
         workId={challenge?.id}
         isOpen={showSupportModal}
+        isSelfService={true}
         onClose={onHideSupportModal}
       />
       <Breadcrumb items={breadcrumb} />

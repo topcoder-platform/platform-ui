@@ -5,6 +5,10 @@ import {
 } from '../../functions'
 import { PlatformRoute } from '../platform-route.model'
 
+export function getActive(currentLocation: string, toolRoutes: Array<PlatformRoute>): PlatformRoute | undefined {
+    return toolRoutes.find(tool => isActiveTool(currentLocation, tool))
+}
+
 // NOTE: this function ties together routes and auth,
 // so one could make an argument that it should be
 // part of the auth functions and be provided by the
@@ -18,14 +22,14 @@ export function getSignupUrl(
 ): string {
 
     // figure out the current tool so we can assign the correct reg source
-    const activeTool: PlatformRoute | undefined = toolRoutes.find(tool => isActiveTool(currentLocation, tool))
+    const activeTool: PlatformRoute | undefined = getActive(currentLocation, toolRoutes)
     const regSource: AuthenticationRegistrationSource | undefined
         = authGetRegistrationSource(activeTool)
 
     return authUrlSignup(returnUrl, regSource)
 }
 
-export function isActiveTool(activePath: string, toolRoute: PlatformRoute): boolean {
+function isActiveTool(activePath: string, toolRoute: PlatformRoute): boolean {
     return !!activePath.startsWith(toolRoute.route)
         || !!toolRoute.alternativePaths?.some(path => activePath.startsWith(path))
 }

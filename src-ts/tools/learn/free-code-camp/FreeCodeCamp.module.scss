@@ -8,7 +8,6 @@
 .main-wrap {
     height: calc($content-height - $breadcrumb-height);
     width: 100%;
-    margin-bottom: -$space-lg;
     background: $tc-white;
 
     display: flex;
@@ -45,6 +44,26 @@
             margin-left: $space-lg;
             margin-right: $space-lg;
             width: calc(100% - 2 * $space-lg);
+        }
+    }
+}
+
+.wrapBreadcrumb {
+    position: relative;
+
+    .completeCourseBtn {
+        position: absolute;
+        right: $space-xxxxl;
+        bottom: $space-xl;
+
+        @include ltesm {
+            right: $space-sm;
+            bottom: $space-md;
+        }
+
+        @include md {
+            right: $space-sm;
+            bottom: $space-lg;
         }
     }
 }
