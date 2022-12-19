@@ -7,7 +7,4 @@ export interface LearnConfigModel {
         value: string,
     }
     CLIENT: string
-    SURVEY: {
-        COMPLETED_FIRST_MODULE: string
-    }
 }
