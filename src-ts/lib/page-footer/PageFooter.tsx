@@ -1,7 +1,7 @@
 import { FC } from 'react'
+import type { TcUniNavFn } from 'universal-navigation'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare let tcUniNav: any
+declare let tcUniNav: TcUniNavFn
 
 const PageFooter: FC<{}> = () => {
 
