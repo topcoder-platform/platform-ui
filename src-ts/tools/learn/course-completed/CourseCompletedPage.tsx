@@ -27,8 +27,6 @@ import {
 import { getCertificatePath, getCoursePath, LEARN_PATHS, rootRoute } from '../learn.routes'
 
 import { ReactComponent as StarsSvg } from './stars.svg'
-import styles from './CourseCompletedPage.module.scss'
-import { LearnConfig } from '../learn-config'
 
 const CourseCompletedPage: FC<{}> = () => {
 
@@ -94,13 +92,6 @@ const CourseCompletedPage: FC<{}> = () => {
         progress,
         ready,
     ])
-
-    useEffect(() => {
-      if (ready && showSurvey === certificationParam) {
-        surveyTriggerForUser(LearnConfig.SURVEY.COMPLETED_FIRST_MODULE, profile?.userId)
-        setShowSurvey('')
-      }
-    }, [ready, showSurvey, certificationParam]);
 
     return (
         <>
