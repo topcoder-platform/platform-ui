@@ -6,11 +6,12 @@ import {
     useCallback,
     useContext,
     useEffect,
+    useMemo,
     useRef,
     useState,
 } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
-import { type TcUniNavFn } from 'universal-navigation'
+import type { AuthUser as NavAuthUser, TcUniNavFn } from 'universal-navigation'
 import classNames from 'classnames'
 
 import { EnvironmentConfig, PageSubheaderPortalId } from '../config'
@@ -18,7 +19,6 @@ import {
     authUrlLogin,
     authUrlLogout,
     authUrlSignup,
-    LoadingSpinner,
     profileContext,
     ProfileContextData,
     routeContext,
@@ -44,6 +44,22 @@ const Header: FC = () => {
     const navElementId: string = 'main-nav-el'
     const navigate: NavigateFunction = useNavigate()
 
+    // userinfo will be an empty object until profileReady=true
+    // userinfo will be {user: undefined} if user is logged out
+    // userinfo will have all user's details when user is logged in
+    const userInfo: {} | undefined | NavAuthUser = useMemo(() => (
+        !profileReady ? {} : ({
+            user: profile ? {
+                email: profile.email,
+                firstName: profile.firstName,
+                handle: profile.handle,
+                lastName: profile.lastName,
+                photoUrl: profile.photoURL,
+                userId: profile.userId,
+            } : undefined,
+        })
+    ), [profile, profileReady])
+
     const navigationHandler: (request: NavigationRequest) => void
         = useCallback((request: NavigationRequest) => {
 
@@ -60,9 +76,10 @@ const Header: FC = () => {
             navigate,
         ])
 
+    // initialize uni-nav elements
     useEffect(() => {
 
-        if (headerInit.current || !profileReady) {
+        if (headerInit.current) {
             return
         }
 
@@ -73,39 +90,26 @@ const Header: FC = () => {
             navElementId,
             {
                 handleNavigation: navigationHandler,
-                onReady() {
-                    setReady(true)
-                    document.getElementById('root')?.classList.add('app-ready')
-                },
+                onReady() { setReady(true) },
                 signIn() { window.location.href = authUrlLogin() },
                 signOut() { window.location.href = authUrlLogout },
                 signUp() { window.location.href = authUrlSignup() },
                 toolName: activeToolName,
                 toolRoot: activeToolRoute,
                 type: 'tool',
-                user: profile ? {
-                    email: profile.email,
-                    firstName: profile.firstName,
-                    handle: profile.handle,
-                    lastName: profile.lastName,
-                    photoUrl: profile.photoURL,
-                    userId: profile.userId,
-                } : undefined,
+                ...userInfo,
             },
         )
     }, [
         activeToolName,
         activeToolRoute,
         navigationHandler,
-        profile,
+        userInfo,
         profileReady,
     ])
 
+    // update uni-nav's tool details
     useEffect(() => {
-
-        if (!profileReady) {
-            return
-        }
 
         tcUniNav(
             'update',
@@ -118,16 +122,33 @@ const Header: FC = () => {
     }, [
         activeToolName,
         activeToolRoute,
+    ])
+
+    // update uni-nav's user/auth details
+    useEffect(() => {
+
+        if (!profileReady) {
+            return
+        }
+
+        tcUniNav(
+            'update',
+            navElementId,
+            {
+                ...userInfo,
+            },
+        )
+    }, [
         profileReady,
+        userInfo,
     ])
 
     return (
         <>
-            <LoadingSpinner hide={ready} />
             <div id={navElementId} />
             <div
                 id={PageSubheaderPortalId}
-                className={classNames('full-width-relative')}
+                className={classNames('full-width-relative', !ready && 'hidden')}
             />
         </>
     )
