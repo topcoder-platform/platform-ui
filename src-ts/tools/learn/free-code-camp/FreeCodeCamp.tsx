@@ -11,7 +11,7 @@ import {
     useState,
 } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
-import { toast, ToastContent } from 'react-toastify'
+import { toast } from 'react-toastify'
 
 import {
     Breadcrumb,
@@ -44,7 +44,6 @@ import {
     UserCertificationProgressStatus,
     userCertificationProgressUpdateAsync,
     UserCertificationUpdateProgressActions,
-    useShowSurvey,
 } from '../learn-lib'
 import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule } from '../learn.routes'
 
@@ -71,11 +70,6 @@ const FreeCodeCamp: FC<{}> = () => {
         = useState(textFormatGetSafeString(routeParams.module))
     const [lessonParam, setLessonParam]: [string, Dispatch<SetStateAction<string>>]
         = useState(textFormatGetSafeString(routeParams.lesson))
-
-    const [showSurvey, setShowSurvey]: [
-        string,
-        Dispatch<SetStateAction<string>>
-    ] = useShowSurvey()
 
     const {
         certificationProgress: certificateProgress,
@@ -461,22 +455,12 @@ const FreeCodeCamp: FC<{}> = () => {
         isLoggedIn,
     ])
 
-    useEffect(() => {
-        if (ready && showSurvey === certificationParam) {
-            surveyTriggerForUser(LearnConfig.SURVEY.COMPLETED_FIRST_MODULE, profile?.userId)
-            setShowSurvey('')
-        }
-    }, [
-        ready,
-        showSurvey,
-        certificationParam,
-    ]);
-
     /**
      * Complete course shortcut for admins
      */
     function adminCompleteCourse(): void {
-        const confirmed = confirm('Hey, you\'re about to auto-complete this entire course. Are you sure?');
+        // eslint-disable-next-line no-restricted-globals
+        const confirmed: boolean = confirm('Hey, you\'re about to auto-complete this entire course. Are you sure?')
 
         if (!certificateProgress?.id || !confirmed) {
             return
