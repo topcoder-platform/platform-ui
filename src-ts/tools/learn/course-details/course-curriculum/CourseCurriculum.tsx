@@ -24,6 +24,7 @@ import {
 
 import { CurriculumSummary } from './curriculum-summary'
 import { TcAcademyPolicyModal } from './tc-academy-policy-modal'
+import { DiceModal } from './dice-modal'
 import styles from './CourseCurriculum.module.scss'
 
 interface CourseCurriculumProps {
@@ -42,6 +43,8 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
     const isLoggedIn: boolean = !!props.profile
 
     const [isTcAcademyPolicyModal, setIsTcAcademyPolicyModal]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [isDiceModalOpen, setIsDiceModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
     const status: string = props.progress?.status ?? UserCertificationProgressStatus.inititialized
@@ -89,8 +92,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         // if the user is wipro and s/he hasn't set up DICE,
         // let the user know
         if (props.profile?.isWipro && !props.profile.diceEnabled) {
-            // TODO
-            console.debug('TODO: user needs dice')
+            setIsDiceModalOpen(true)
             return
         }
 
@@ -102,7 +104,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
 
         // show the academic policy modal before starting a new course
         setIsTcAcademyPolicyModal(true)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         handleStartCourse,
         isLoggedIn,
@@ -141,7 +143,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         }
 
         handleStartCourse()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         handleStartCourse,
         props.course.certificationId,
@@ -166,6 +168,14 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
             handleStartCourseClick()
         }
     }, [handleStartCourseClick, isLoggedIn, props.progressReady, searchParams])
+
+    function onAcademicHonestyModalClose(): void {
+        setIsTcAcademyPolicyModal(false)
+    }
+
+    function onDiceModalClose(): void {
+        setIsDiceModalOpen(false)
+    }
 
     return (
         <>
@@ -211,8 +221,13 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
 
             <TcAcademyPolicyModal
                 isOpen={isTcAcademyPolicyModal}
-                onClose={() => setIsTcAcademyPolicyModal(false)}
+                onClose={onAcademicHonestyModalClose}
                 onConfirm={handlePolicyAccept}
+            />
+
+            <DiceModal
+                isOpen={isDiceModalOpen}
+                onClose={onDiceModalClose}
             />
         </>
     )

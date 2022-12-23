@@ -17,6 +17,7 @@ export async function getDiceStatusAsync(userId: number): Promise<boolean> {
     interface DiceStatusResult {
         result: {
             content: {
+                mfaEnabled: boolean
                 diceEnabled: boolean
             }
         }
@@ -24,7 +25,7 @@ export async function getDiceStatusAsync(userId: number): Promise<boolean> {
     const result: DiceStatusResult
         = await xhrGetAsync<DiceStatusResult>(`${userEndpoint(userId)}/2fa`)
 
-    return !!result.result.content.diceEnabled
+    return !!result.result.content.mfaEnabled && !!result.result.content.diceEnabled
 }
 
 export async function patchAsync(userId: number, request: UserPatchRequest): Promise<User> {
