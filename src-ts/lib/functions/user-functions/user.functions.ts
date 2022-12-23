@@ -1,4 +1,8 @@
-import { userPatchAsync, UserPatchRequest } from './user-store'
+import { UserPatchRequest, userStoreGetDiceStatusAsync, userStorePatchAsync } from './user-store'
+
+export async function getDiceStatusAsync(userId: number): Promise<boolean> {
+    return userStoreGetDiceStatusAsync(userId)
+}
 
 export async function updatePasswordAsync(userId: number, currentPassword: string, password: string): Promise<void> {
     const request: UserPatchRequest = {
@@ -9,6 +13,6 @@ export async function updatePasswordAsync(userId: number, currentPassword: strin
             },
         },
     }
-    return userPatchAsync(userId, request)
+    return userStorePatchAsync(userId, request)
         .then(() => undefined)
 }

@@ -1,6 +1,7 @@
 export interface UserProfile {
     competitionCountryCode: string
     createdAt: number
+    diceEnabled: boolean
     email: string
     firstName: string
     handle: string
@@ -8,6 +9,7 @@ export interface UserProfile {
     homeCountryCode: string
     isCustomer?: boolean
     isMember?: boolean
+    isWipro: boolean
     lastName: string
     photoURL?: string
     roles: Array<string>

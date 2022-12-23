@@ -7,13 +7,17 @@ const PageFooter: FC<{}> = () => {
 
     const navElementId: string = 'footer-nav-el'
 
-    tcUniNav(
-        'init',
-        navElementId,
-        {
-            type: 'footer',
-        },
-    )
+    // delay the initialization so
+    // the nav element has time to render
+    setTimeout(() => {
+        tcUniNav(
+            'init',
+            navElementId,
+            {
+                type: 'footer',
+            },
+        )
+    }, 10)
 
     return <div id={navElementId} />
 }
