@@ -1,7 +1,9 @@
-import { UserPatchRequest, userStoreGetDiceStatusAsync, userStorePatchAsync } from './user-store'
+import { UserPatchRequest, userStoreGetMfaStatusAsync, userStorePatchAsync } from './user-store'
+import { MfaStatusResult } from './user-store/user-xhr.store'
 
 export async function getDiceStatusAsync(userId: number): Promise<boolean> {
-    return userStoreGetDiceStatusAsync(userId)
+    const result: MfaStatusResult = await userStoreGetMfaStatusAsync(userId)
+    return !!result.result.content.mfaEnabled && !!result.result.content.diceEnabled
 }
 
 export async function updatePasswordAsync(userId: number, currentPassword: string, password: string): Promise<void> {
