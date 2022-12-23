@@ -24,6 +24,7 @@ import {
 
 import { CurriculumSummary } from './curriculum-summary'
 import { TcAcademyPolicyModal } from './tc-academy-policy-modal'
+import { DiceModal } from './dice-modal'
 import styles from './CourseCurriculum.module.scss'
 
 interface CourseCurriculumProps {
@@ -37,11 +38,14 @@ interface CourseCurriculumProps {
 const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProps) => {
 
     const navigate: NavigateFunction = useNavigate()
-    const [searchParams]: any = useSearchParams()
+    const [searchParams]: [URLSearchParams, unknown] = useSearchParams()
 
     const isLoggedIn: boolean = !!props.profile
 
-    const [isTcAcademyPolicyModal, setIsTcAcademyPolicyModal]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [isTcAcademyPolicyModal, setIsTcAcademyPolicyModal]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [isDiceModalOpen, setIsDiceModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
 
     const status: string = props.progress?.status ?? UserCertificationProgressStatus.inititialized
     const completedPercentage: number = (props.progress?.courseProgressPercentage ?? 0) / 100
@@ -76,11 +80,19 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
      * Handle user click on start course/resume/login button
      */
     const handleStartCourseClick: () => void = useCallback(() => {
+
         // if user is not logged in, redirect to login page
         if (!isLoggedIn) {
             // add a flag to the return url to show the academic policy modal
             // or resume the course when they're back
             window.location.href = getAuthenticateAndStartCourseRoute()
+            return
+        }
+
+        // if the user is wipro and s/he hasn't set up DICE,
+        // let the user know
+        if (props.profile?.isWipro && !props.profile.diceEnabled) {
+            setIsDiceModalOpen(true)
             return
         }
 
@@ -92,6 +104,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
 
         // show the academic policy modal before starting a new course
         setIsTcAcademyPolicyModal(true)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         handleStartCourse,
         isLoggedIn,
@@ -130,6 +143,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         }
 
         handleStartCourse()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         handleStartCourse,
         props.course.certificationId,
@@ -149,10 +163,19 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
      * proceed as if the user just clicked "Start course" button
      */
     useEffect(() => {
+        // eslint-disable-next-line no-null/no-null
         if (props.progressReady && isLoggedIn && searchParams.get(LEARN_PATHS.startCourseRouteFlag) !== null) {
             handleStartCourseClick()
         }
     }, [handleStartCourseClick, isLoggedIn, props.progressReady, searchParams])
+
+    function onAcademicHonestyModalClose(): void {
+        setIsTcAcademyPolicyModal(false)
+    }
+
+    function onDiceModalClose(): void {
+        setIsDiceModalOpen(false)
+    }
 
     return (
         <>
@@ -198,8 +221,13 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
 
             <TcAcademyPolicyModal
                 isOpen={isTcAcademyPolicyModal}
-                onClose={() => setIsTcAcademyPolicyModal(false)}
+                onClose={onAcademicHonestyModalClose}
                 onConfirm={handlePolicyAccept}
+            />
+
+            <DiceModal
+                isOpen={isDiceModalOpen}
+                onClose={onDiceModalClose}
             />
         </>
     )
