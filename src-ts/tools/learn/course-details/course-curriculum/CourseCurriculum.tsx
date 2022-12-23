@@ -87,7 +87,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         }
 
         // if the user is wipro and s/he hasn't set up DICE,
-        // let them know
+        // let the user know
         if (props.profile?.isWipro && !props.profile.diceEnabled) {
             // TODO
             console.debug('TODO: user needs dice')
