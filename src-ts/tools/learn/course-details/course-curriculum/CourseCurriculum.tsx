@@ -77,7 +77,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
      * Handle user click on start course/resume/login button
      */
     const handleStartCourseClick: () => void = useCallback(() => {
-        console.debug(props.profile)
+
         // if user is not logged in, redirect to login page
         if (!isLoggedIn) {
             // add a flag to the return url to show the academic policy modal
@@ -90,7 +90,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         // let them know
         if (props.profile?.isWipro && !props.profile.diceEnabled) {
             // TODO
-            console.debug('user needs dice')
+            console.debug('TODO: user needs dice')
             return
         }
 
