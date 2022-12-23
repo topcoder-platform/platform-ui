@@ -19,12 +19,12 @@ export async function getAsync(handle?: string): Promise<UserProfile | undefined
 
     // get the profile
     const profilePromise: Promise<UserProfile> = profileStoreGet(safeHandle)
-    const mfaPromise: Promise<boolean> = userGetDiceStatusAsync(token.userId)
+    const dicePromise: Promise<boolean> = userGetDiceStatusAsync(token.userId)
 
-    const [profileResult, mfaEnabled]: [UserProfile, boolean] = await Promise.all([profilePromise, mfaPromise])
+    const [profileResult, diceEnabled]: [UserProfile, boolean] = await Promise.all([profilePromise, dicePromise])
 
     // make the changes we need based on the token
-    const output: UserProfile = profileFactoryCreate(profileResult, token, mfaEnabled)
+    const output: UserProfile = profileFactoryCreate(profileResult, token, diceEnabled)
     return output
 }
 
