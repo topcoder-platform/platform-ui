@@ -24,13 +24,13 @@ const DiceModal: FC<DiceModalProps> = (props: DiceModalProps) => {
             onClose={props.onClose}
             open={isOpen}
             size='md'
-            title='DICE Multifactor Authentication Required'
+            title='DICE ID Multifactor Authentication Required'
         >
             <div className={styles.diceModal}>
 
                 <p>
-                    Wipro requires employees to enable multifactor Authentication
-                    with DICE in order to take Topcoder Academy courses.
+                    Wipro requires employees to enable Multifactor Authentication
+                    with DICE ID in order to take Topcoder Academy courses.
                 </p>
                 <p>
                     Please go to Account Settings to configure your account.
