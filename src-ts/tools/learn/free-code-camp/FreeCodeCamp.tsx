@@ -436,19 +436,37 @@ const FreeCodeCamp: FC<{}> = () => {
 
     /**
      * Check if the user accepted the academic honesty policy
+     * and either is not a wipro user or the wipro user has dice enabled.
      * if not, redirect user to course details page to accept the policy
      */
     useLayoutEffect(() => {
-        if (ready && !(isLoggedIn && certificateProgress?.academicHonestyPolicyAcceptedAt)) {
-            const coursePath: string = getCoursePath(
-                providerParam,
-                certificationParam,
-            )
-            navigate(coursePath)
+
+        // if we're not ready, there's nothing to do
+        if (!ready) {
+            return
         }
+
+        // if the user is logged in,
+        // and the user is a either not wipro user or is a wipro user with dice enabled,
+        // and if the user has accepted the academic honesty policy,
+        // the user is permitted to take the course, so there's nothing to do.
+        if (isLoggedIn
+            && (!profile?.isWipro || !!profile?.diceEnabled)
+            && !!certificateProgress?.academicHonestyPolicyAcceptedAt) {
+            return
+        }
+
+        // redirect the user to course details page to perform the
+        // necessary actions
+        const coursePath: string = getCoursePath(
+            providerParam,
+            certificationParam,
+        )
+        navigate(coursePath)
     }, [
         ready,
         certificateProgress,
+        profile,
         providerParam,
         certificationParam,
         navigate,
