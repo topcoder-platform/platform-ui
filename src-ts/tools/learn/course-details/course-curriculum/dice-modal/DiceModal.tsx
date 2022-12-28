@@ -39,9 +39,20 @@ const DiceModal: FC<DiceModalProps> = (props: DiceModalProps) => {
                     <Button
                         buttonStyle='primary'
                         label='Account Settings'
-                        onClick={props.onClose}
                         target='_blank'
                         url={EnvironmentConfig.TOPCODER_URLS.ACCOUNT_SETTINGS}
+                    />
+                </p>
+                <p>
+                    When you have completed configuring your account,
+                    click below to refresh your settings.
+                </p>
+                <p className={styles.buttonContainer}>
+                    <Button
+                        buttonStyle='secondary'
+                        label='Refresh Settings'
+                        onClick={props.onClose}
+                        url={window.location.href}
                     />
                 </p>
             </div>
