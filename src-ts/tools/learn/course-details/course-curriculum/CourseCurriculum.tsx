@@ -175,6 +175,8 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
 
     function onDiceModalClose(): void {
         setIsDiceModalOpen(false)
+        // reload the page so we refresh the DICE ID status
+        window.location.reload()
     }
 
     return (
