@@ -42,9 +42,7 @@ const WelcomePage: FC = () => {
                                 The Topcoder Academy will provide you with learning opportunities
                                 in the form of guided learning paths.
                                 You will have the opportunity to learn new skills that will better
-                                prepare you to earn on the Topcoder platform.<br />
-                                <br />
-                                We look forward to learning with you!
+                                prepare you to earn on the Topcoder platform.
                             `}
                             theme='light'
                         >

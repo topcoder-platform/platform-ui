@@ -1,96 +1,48 @@
 @import '../../../../lib/styles/includes';
 
-.courses-list {
-    flex-wrap: wrap;
-    gap: $space-lg;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    margin-bottom: $space-xxl;
-
-    // NOTE: these are not app defined breakpoints
-    // but they are required for the grid to look at it's best
-    @media (max-width: 1200px) {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    @include ltelg {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    @media (max-width: 576px) {
-        grid-template-columns: repeat(1, 1fr);
-    }
-
-    + .courses-group-title {
-        margin-top: $space-mxx;
-
-        @include ltemd {
-            margin-top: $space-xxxxl;
-        }
-    }
-}
-
-.courses-group-title {
-    margin-top: $space-xxl;
-    padding: $space-xxl 0;
-    border-top: $border solid $black-10;
-
-    @include ltemd {
-        padding: $space-lg 0;
-    }
-}
-
 .courses-list-header {
     display: flex;
-    align-items: center;
+    flex-direction: column;
 
-    > h3 {
+    .teaseBanner {
         display: flex;
-        align-items: center;
-        gap: $space-sm;
-    }
-
-    @include ltemd {
         flex-direction: column;
-        align-items: flex-start;
-        gap: $space-xxl;
-    }
-}
+        position: relative;
+        padding: $space-xxxxl;
+        margin: $space-xxl 0;
+        background-image: url("./assets/courses-banner-bg.png");
+        background-size: cover;
+        border-radius: 8px;
 
-.badge {
-    font-family: $font-roboto;
-    background: $blue-100;
+        @include ltemd {
+            padding: 88px $space-lg $space-lg;
+            margin: $space-lg 0;
+            background-image: url("./assets/courses-banner-bg-mobile.png");
+        }
 
-    padding: 0 $space-sm;
-    border-radius: 50px;
-    color: $tc-white;
-}
+        > h2 {
+            color: $tc-white;
+            margin-bottom: $space-lg;
+            font-family: $font-barlow;
+            
+            @include ltemd {
+                font-size: 24px;
+            }
+        }
 
-.courses-list-filters {
-    display: flex;
-    margin-left: auto;
-
-    gap: $space-xxl;
-
-    > * {
-        min-width: 326px;
-    }
-
-    > :global(.input-wrapper) {
-        width: 100%;
-
-        > :global(.input-el) {
-            margin: 0;
+        > p {
+            color: $tc-white;
+            max-width: $md-max;
         }
     }
+}
 
-    @include ltelg {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: $space-lg;
-    }
+.courses-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $space-xl;
 
     @include ltemd {
-        width: 100%;
+        grid-template-columns: 1fr;
     }
 }

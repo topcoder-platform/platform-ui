@@ -1,9 +1,9 @@
-import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, FC, memo, SetStateAction, useEffect, useState } from 'react'
 import classNames from 'classnames'
 
-import { Button, ButtonStyle } from '../../../../lib'
+import { Button, ButtonStyle, FccLogoBlackSvg, IconSolid } from '../../../../lib'
 import {
-    CourseTitle,
+    CourseBadge,
     LearnCertification,
     UserCertificationCompleted,
     UserCertificationInProgress,
@@ -80,15 +80,24 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
 
     return (
         <div className={classNames(styles.wrap, !link && 'soon')}>
-            <div className='overline'>
-                {props.certification.category}
+            <div className={styles.cardHeader}>
+                <CourseBadge type={props.certification.trackType ?? 'DEV'} />
+                <div className={styles.cardHeaderTitleWrap}>
+                    <p className='body-medium-medium'>{props.certification.title}</p>
+                    <div className={styles.subTitleWrap}>
+                        <IconSolid.ClockIcon width={16} height={16} />
+                        <em>{props.certification.completionHours} hours</em>
+                    </div>
+                </div>
             </div>
-            <CourseTitle
-                credits={props.certification.providerName}
-                title={props.certification.title}
-                trackType={props.certification.trackType}
-            />
-            <div className={styles.bottom}>
+
+            <div className={styles.cardBody}>
+                <div className={styles.certProvider}>
+                    by <FccLogoBlackSvg />
+                </div>
+            </div>
+
+            <div className={styles.cardBottom}>
                 {!!link && (
                     <Button
                         buttonStyle={buttonStyle}
@@ -105,4 +114,4 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
     )
 }
 
-export default CoursesCard
+export default memo(CoursesCard)

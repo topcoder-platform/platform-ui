@@ -11,29 +11,74 @@
 
     width: 100%;
 
-    :global(.overline) {
-        color: $black-60;
-    }
-
-    &:global(.soon) {
-        :global(.badge-icon) {
-            opacity: 0.5;
-        }
-    }
-
     @include ltemd {
         padding: $space-lg;
     }
 }
 
-.text {
-    color: $black-100;
-    :global(.quote-small) {
-        color: #767676;
+.cardHeader {
+    display: flex;
+    border-bottom: 2px solid $black-10;
+    padding-bottom: $space-lg;
+
+    >div svg {
+        max-width: 48px;
+        max-height: 48px;
+
+        @include ltemd {
+            max-width: 40px;
+            max-height: 40px;
+        }
+    }
+
+    .cardHeaderTitleWrap {
+        display: flex;
+        flex-direction: column;
+        margin-left: $space-lg;
+
+        @include ltemd {
+            margin-left: $space-sm;
+        }
+
+        .subTitleWrap {
+            display: flex;
+            align-items: center;
+
+            >svg {
+                color: $blue-140;
+                margin-right: $space-xs;
+            }
+
+            >em {
+                font-style: italic;
+                font-size: 14px;
+                line-height: 22px;
+                color: $black-60;
+            }
+        }
     }
 }
 
-.bottom {
+.cardBody {
+    display: flex;
+    flex-direction: column;
+
+    .certProvider {
+        display: flex;
+        align-items: center;
+        color: $black-60;
+        font-style: italic;
+        font-size: 14px;
+        line-height: 22px;
+
+        >svg {
+            margin-left: $space-sm;
+            fill: #0A0A23;
+        }
+    }
+}
+
+.cardBottom {
     color: $blue-140;
     margin-top: auto;
 }
