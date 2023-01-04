@@ -36,7 +36,7 @@ export interface GlobalConfig {
         THRIVE_PAGE: string
         USER_PROFILE: string
         WP_CONTENT: string
-        ACC_SETTINGS: string
+        ACCOUNT_SETTINGS: string
     }
     UNIVERSAL_NAV: {
         URL: string

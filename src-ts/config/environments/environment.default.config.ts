@@ -43,7 +43,7 @@ export const EnvironmentConfigDefault: EnvironmentConfigModel = {
         THRIVE_PAGE: `${COMMUNITY_WEBSITE}/thrive`,
         USER_PROFILE: `${COMMUNITY_WEBSITE}/members`,
         WP_CONTENT: `${COMMUNITY_WEBSITE}/wp-content`,
-        ACC_SETTINGS: `${COMMUNITY_WEBSITE}/settings/profile`,
+        ACCOUNT_SETTINGS: `${COMMUNITY_WEBSITE}/settings/profile`,
     },
     UNIVERSAL_NAV: {
         URL: 'https://uni-nav.topcoder-dev.com/v1/tc-universal-nav.js',
