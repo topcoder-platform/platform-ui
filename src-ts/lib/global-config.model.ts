@@ -29,6 +29,7 @@ export interface GlobalConfig {
         CUSTOMER_TOKEN: string
     }
     TOPCODER_URLS: {
+        ACCOUNT_PROFILE: string
         ACCOUNT_SETTINGS: string
         API_BASE: string
         BLOG_PAGE: string

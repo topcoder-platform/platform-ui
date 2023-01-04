@@ -1,22 +1,15 @@
-@import '../../../lib/styles/includes';
-
-:global(.account-settings-modal) {
-    h2 {
-        margin-bottom: $space-xxl;
-        padding: 0 0 $space-xxl;
-        border-bottom: 1px solid $black-10;
-    }
-
-}
-
+/**
+ * DEPRECATED
+ * TODO: Remove after some time, when no used...
+ */
 .cards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    column-gap: $space-xxl;
-    margin: $space-xxl 0 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 
-    @include ltemd {
-        grid-template-columns: 1fr;
-        row-gap: $space-xxl;
+    h3 {
+        margin-bottom: 32px;
     }
 }
