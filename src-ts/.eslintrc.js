@@ -251,6 +251,12 @@ module.exports = {
             2,
             4,
         ],
+        'react/jsx-no-bind': [
+            'error',
+            {
+                allowFunctions: true,
+            }
+        ],
         'react/jsx-no-useless-fragment': [
             0
         ],

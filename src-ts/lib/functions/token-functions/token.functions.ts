@@ -15,9 +15,10 @@ export async function getAsync(): Promise<TokenModel> {
     }
 
     try {
-        const { handle, roles }: {
+        const { handle, roles, userId }: {
             handle?: string
             roles?: Array<string>
+            userId?: number
         } = decodeToken(token)
 
         // if we didn't find the handle, we have a bad token
@@ -26,8 +27,9 @@ export async function getAsync(): Promise<TokenModel> {
             return Promise.resolve({})
         }
 
-        return Promise.resolve({ handle, roles, token })
+        return Promise.resolve({ handle, roles, token, userId })
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
         logError(error)
         return Promise.resolve({})
