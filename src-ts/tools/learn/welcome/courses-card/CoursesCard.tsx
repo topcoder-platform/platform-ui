@@ -1,7 +1,7 @@
 import { Dispatch, FC, memo, SetStateAction, useEffect, useState } from 'react'
 import classNames from 'classnames'
 
-import { Button, ButtonStyle, FccLogoBlackSvg, IconSolid } from '../../../../lib'
+import { Button, FccLogoBlackSvg, IconSolid } from '../../../../lib'
 import {
     CourseBadge,
     LearnCertification,
@@ -20,8 +20,6 @@ interface CoursesCardProps {
 
 const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
 
-    const [buttonStyle, setButtonStyle]: [ButtonStyle, Dispatch<SetStateAction<ButtonStyle>>]
-        = useState<ButtonStyle>('primary')
     const [buttonLabel, setButtonLabel]: [string, Dispatch<SetStateAction<string>>]
         = useState<string>('')
     const [link, setLink]: [string, Dispatch<SetStateAction<string>>]
@@ -44,7 +42,6 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
 
         if (isCompleted) {
             // if the course is completed, View the Certificate
-            setButtonStyle('secondary')
             setButtonLabel('View Certificate')
             setLink(getCertificatePath(
                 props.certification.providerName,
@@ -53,8 +50,8 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
 
         } else if (!inProgress) {
             // if there is no in-progress lesson for the course,
-            // Get Started by going to the course details
-            setButtonLabel('Get Started')
+            // Details by going to the course details
+            setButtonLabel('Details')
             setLink(getCoursePath(
                 props.certification.providerName,
                 props.certification.certification,
@@ -63,7 +60,6 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
         } else {
             // otherwise this course is in-progress,
             // so Resume the course at the next lesson
-            setButtonStyle('secondary')
             setButtonLabel('Resume')
             setLink(getLessonPathFromCurrentLesson(
                 props.certification.providerName,
@@ -86,22 +82,26 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                     <p className='body-medium-medium'>{props.certification.title}</p>
                     <div className={styles.subTitleWrap}>
                         <IconSolid.ClockIcon width={16} height={16} />
-                        <em>{props.certification.completionHours} hours</em>
+                        <em>
+                            {props.certification.completionHours}
+                            {' hours'}
+                        </em>
                     </div>
                 </div>
             </div>
 
             <div className={styles.cardBody}>
                 <div className={styles.certProvider}>
-                    by <FccLogoBlackSvg />
+                    {'by '}
+                    <FccLogoBlackSvg />
                 </div>
             </div>
 
             <div className={styles.cardBottom}>
                 {!!link && (
                     <Button
-                        buttonStyle={buttonStyle}
-                        size='sm'
+                        buttonStyle='secondary'
+                        size='xs'
                         label={buttonLabel}
                         route={link}
                     />
