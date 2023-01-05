@@ -1,0 +1,67 @@
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    display: flex;
+    flex-direction: column;
+    background-color: $black-5;
+    border-radius: 8px;
+    padding: $space-xxxxl;
+    margin-bottom: $space-xxxxl;
+
+    @include ltemd {
+        padding: $space-lg;
+        margin-bottom: $space-sm;
+    }
+
+    .collapseTrigger {
+        display: flex;
+        justify-content: space-between;
+
+        h2 {
+            margin-bottom: $space-lg;
+
+            @include ltemd {
+                max-width: 290px;
+            }
+        }
+
+        >svg {
+            color: $turq-160;
+            cursor: pointer;
+        }
+    }
+
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: $space-lg;
+        margin-top: $space-lg;
+
+        @include ltemd {
+            grid-template-columns: 1fr;
+        }
+
+        .card {
+            display: flex;
+            flex-direction: column;
+            padding: $space-xxl $space-xxl $space-xxxxl;
+            background-color: $tc-white;
+            border-radius: 8px;
+
+            @include ltemd {
+                padding: $space-lg $space-lg $space-xl;
+            }
+
+            .cardTitle {
+                display: flex;
+                align-items: center;
+                margin-bottom: $space-lg;
+
+                >svg {
+                    color: $blue-110;
+                    margin-right: $space-sm;
+                }
+            }
+        }
+    }
+}

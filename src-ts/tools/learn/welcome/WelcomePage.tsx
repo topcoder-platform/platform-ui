@@ -2,7 +2,7 @@ import { FC } from 'react'
 import classNames from 'classnames'
 
 import { PageSubheaderPortalId } from '../../../config'
-import { ContentLayout, LoadingSpinner, Portal } from '../../../lib'
+import { ContentLayout, LoadingSpinner, PageDivider, Portal } from '../../../lib'
 import {
     AllCertificationsProviderData,
     useGetAllCertifications,
@@ -14,6 +14,7 @@ import '../../../lib/styles/index.scss'
 
 import { AvailableCoursesList } from './available-courses-list'
 import { ProgressBlock } from './progress-block'
+import { WhatTCACanDo } from './what-tca-cando'
 import { ReactComponent as TcAcademyFullLogoSvg } from './tca-full-logo.svg'
 import styles from './WelcomePage.module.scss'
 
@@ -58,6 +59,10 @@ const WelcomePage: FC = () => {
 
                 <div className={classNames(styles['courses-section'], 'full-height-frame')}>
                     <LoadingSpinner hide={coursesReady} />
+
+                    <WhatTCACanDo />
+
+                    <PageDivider />
 
                     {coursesReady && (
                         <AvailableCoursesList
