@@ -58,6 +58,10 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
             setSelectedCategory(e.target.value as string)
         }, [setSelectedCategory])
 
+    const certificationsCount: number = (
+        (certsByCategory[selectedCategory] ?? props.certifications).length
+    )
+
     const renderCertificationGroup: (category: string) => ReactNode = (category: string) => (
         <Fragment key={category}>
             <h4 className={classNames('details', styles['courses-group-title'])}>
@@ -81,15 +85,13 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
     return (
         <div className={styles.wrap}>
             <div className={styles.coursesListHeaderWrap}>
-                <div className={styles.teaseBanner}>
-                    <h2>Check out our Courses</h2>
-                    <p>
-                        Topcoder is partnering with multiple content providers
-                        to bring you a best in class course catalog. Stay tuned for more courses!
-                    </p>
-                </div>
                 <div className={styles.coursesListHeader}>
-                    <h2 className='details'>Courses</h2>
+                    <h2 className='details'>
+                        Courses
+                        <span className={classNames(styles.badge, 'medium-subtitle')}>
+                            {certificationsCount}
+                        </span>
+                    </h2>
                     <div className={styles.coursesListFilters}>
                         <InputSelect
                             options={certsCategoriesOptions}
@@ -99,6 +101,14 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
                             label='Categories'
                         />
                     </div>
+                </div>
+
+                <div className={styles.teaseBanner}>
+                    <h2>Check out our Courses</h2>
+                    <p>
+                        Topcoder is partnering with multiple content providers
+                        to bring you a best in class course catalog. Stay tuned for more courses!
+                    </p>
                 </div>
             </div>
 

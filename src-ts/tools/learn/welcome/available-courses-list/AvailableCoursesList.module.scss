@@ -20,17 +20,17 @@
             background-image: url("./assets/courses-banner-bg-mobile.png");
         }
 
-        > h2 {
+        >h2 {
             color: $tc-white;
             margin-bottom: $space-lg;
             font-family: $font-barlow;
-            
+
             @include ltemd {
                 font-size: 24px;
             }
         }
 
-        > p {
+        >p {
             color: $tc-white;
             max-width: $md-max;
         }
@@ -42,7 +42,7 @@
         align-items: center;
         padding-bottom: $space-xxl;
         border-bottom: 2px solid $black-10;
-        margin-bottom: $space-xxl;
+        // margin-bottom: $space-xxl;
 
         @include ltemd {
             flex-direction: column;
@@ -53,30 +53,46 @@
             }
         }
 
+        h2 {
+            display: flex;
+            align-items: center;
+
+            .badge {
+                font-family: $font-roboto;
+                background: $blue-100;
+
+                padding: 0 $space-sm;
+                margin-left: $space-sm;
+                border-radius: 50px;
+                color: $tc-white;
+            }
+        }
+
+
         .coursesListFilters {
             display: flex;
             margin-left: auto;
-        
+
             gap: $space-xxl;
-        
-            > * {
+
+            >* {
                 min-width: 326px;
             }
-        
+
             > :global(.input-wrapper) {
                 width: 100%;
-        
+
                 > :global(.input-el) {
                     margin: 0;
                 }
             }
-        
+
             @include ltelg {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: $space-lg;
             }
-        
+
             @include ltemd {
                 width: 100%;
             }
