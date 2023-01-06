@@ -1,0 +1,72 @@
+@import '../../../../../lib/styles/includes';
+
+.wrap {
+    display: flex;
+    flex-direction: column;
+    background-color: $black-5;
+    padding: $space-xxl $space-lg;
+    border-radius: 8px;
+
+    .cardHeader {
+        display: flex;
+        align-items: center;
+        border-bottom: 2px solid $black-10;
+        padding-bottom: $space-xxl;
+        margin-bottom: $space-xxl;
+
+        .cardTitleWrap {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            margin-left: $space-xxl;
+
+            >p {
+                text-align: left;
+            }
+
+            .cardSubWrap {
+                display: flex;
+                align-items: center;
+
+                >svg {
+                    margin-right: $space-xs;
+                }
+            }
+        }
+
+        .newLabel {
+            padding: 3px 4px;
+            background-color: $green-140;
+            font-weight: 500;
+            font-size: 11px;
+            line-height: 10px;
+            color: $tc-white;
+            border-radius: 2px;
+            margin-bottom: $space-xl;
+        }
+    }
+
+    .skills {
+        display: flex;
+        margin: $space-sm 0;
+
+        >div {
+            margin-right: $space-sm;
+
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+    }
+
+    .contentFrom {
+        display: flex;
+        align-items: center;
+    }
+}
+
+.infoText {
+    font-style: italic;
+    color: $black-60;
+    margin-right: $space-sm;
+}

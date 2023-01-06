@@ -5,7 +5,9 @@ import { PageSubheaderPortalId } from '../../../config'
 import { ContentLayout, LoadingSpinner, PageDivider, Portal } from '../../../lib'
 import {
     AllCertificationsProviderData,
+    TCACertificationsProviderData,
     useGetAllCertifications,
+    useGetAllTCACertificationsMOCK,
     useGetUserCertifications,
     UserCertificationsProviderData,
     WaveHero,
@@ -15,6 +17,7 @@ import '../../../lib/styles/index.scss'
 import { AvailableCoursesList } from './available-courses-list'
 import { ProgressBlock } from './progress-block'
 import { WhatTCACanDo } from './what-tca-cando'
+import { TCCertifications } from './tc-certifications'
 import { ReactComponent as TcAcademyFullLogoSvg } from './tca-full-logo.svg'
 import styles from './WelcomePage.module.scss'
 
@@ -24,6 +27,8 @@ const WelcomePage: FC = () => {
     const userCertsData: UserCertificationsProviderData = useGetUserCertifications()
 
     const coursesReady: boolean = allCertsData.ready && userCertsData.ready
+
+    const allTCACertifications: TCACertificationsProviderData = useGetAllTCACertificationsMOCK()
 
     return (
         <ContentLayout>
@@ -61,6 +66,10 @@ const WelcomePage: FC = () => {
                     <LoadingSpinner hide={coursesReady} />
 
                     <WhatTCACanDo />
+
+                    <PageDivider />
+
+                    <TCCertifications certifications={allTCACertifications.certifications} />
 
                     <PageDivider />
 

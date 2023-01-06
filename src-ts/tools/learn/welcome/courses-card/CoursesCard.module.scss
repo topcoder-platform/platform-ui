@@ -10,10 +10,11 @@
     flex-direction: column;
 
     width: 100%;
-    min-height: 177px;
+    min-height: 225px;
 
     @include ltemd {
         padding: $space-lg;
+        min-height: auto;
     }
 }
 
@@ -89,5 +90,4 @@
 
 .cardBottom {
     color: $blue-140;
-    margin-top: auto;
 }
