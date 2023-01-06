@@ -10,6 +10,7 @@
     flex-direction: column;
 
     width: 100%;
+    min-height: 177px;
 
     @include ltemd {
         padding: $space-lg;
@@ -18,8 +19,6 @@
 
 .cardHeader {
     display: flex;
-    border-bottom: 2px solid $black-10;
-    padding-bottom: $space-lg;
 
     >div svg {
         max-width: 48px;
@@ -56,6 +55,16 @@
                 color: $black-60;
             }
         }
+    }
+}
+
+.cardHeaderDividerWrap {
+    margin-top: auto;
+
+    .cardHeaderDivider {
+        height: 1px;
+        border-bottom: $border solid $black-10;
+        width: 100%;
     }
 }
 

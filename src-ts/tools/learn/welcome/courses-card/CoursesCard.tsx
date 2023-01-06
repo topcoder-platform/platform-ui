@@ -1,7 +1,7 @@
 import { Dispatch, FC, memo, SetStateAction, useEffect, useState } from 'react'
 import classNames from 'classnames'
 
-import { Button, FccLogoBlackSvg, IconSolid } from '../../../../lib'
+import { Button, ButtonStyle, FccLogoBlackSvg, IconSolid, ProgressBar } from '../../../../lib'
 import {
     CourseBadge,
     LearnCertification,
@@ -19,13 +19,16 @@ interface CoursesCardProps {
 }
 
 const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
-
     const [buttonLabel, setButtonLabel]: [string, Dispatch<SetStateAction<string>>]
         = useState<string>('')
     const [link, setLink]: [string, Dispatch<SetStateAction<string>>]
         = useState<string>('')
-
     const courseEnabled: boolean = props.certification.state === 'active'
+    const [buttonStyle, setButtonStyle]: [string, Dispatch<SetStateAction<string>>]
+        = useState<string>('secondary')
+    const [courseProgress, setCourseProgress]: [number | undefined, Dispatch<SetStateAction<number | undefined>>]
+        = useState<number | undefined>(undefined)
+
     useEffect(() => {
 
         // if the course isn't enabled, there's nothing to do
@@ -61,11 +64,13 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
             // otherwise this course is in-progress,
             // so Resume the course at the next lesson
             setButtonLabel('Resume')
+            setButtonStyle('primary')
             setLink(getLessonPathFromCurrentLesson(
                 props.certification.providerName,
                 props.certification.certification,
                 inProgress.currentLesson,
             ))
+            setCourseProgress(inProgress.courseProgressPercentage / 100)
         }
     }, [
         courseEnabled,
@@ -90,6 +95,14 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                 </div>
             </div>
 
+            <div className={styles.cardHeaderDividerWrap}>
+                {courseProgress === undefined ? (
+                    <div className={styles.cardHeaderDivider} />
+                ) : (
+                    <ProgressBar progress={courseProgress} />
+                )}
+            </div>
+
             <div className={styles.cardBody}>
                 <div className={styles.certProvider}>
                     {'by '}
@@ -100,7 +113,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
             <div className={styles.cardBottom}>
                 {!!link && (
                     <Button
-                        buttonStyle='secondary'
+                        buttonStyle={buttonStyle as ButtonStyle}
                         size='xs'
                         label={buttonLabel}
                         route={link}
