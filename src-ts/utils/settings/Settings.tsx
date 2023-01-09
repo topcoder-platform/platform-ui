@@ -1,21 +1,17 @@
 import { FC, useContext } from 'react'
 import { Outlet, Routes } from 'react-router-dom'
 
-import { ContentLayout, profileContext, ProfileContextData, routeContext, RouteContextData } from '../../lib'
+import { ContentLayout, routeContext, RouteContextData } from '../../lib'
 
 export const toolTitle: string = 'Account Settings'
 
+/**
+ * DEPRECATED
+ * TODO: Remove after some time, when clear no one links to here...
+ */
 const Settings: FC<{}> = () => {
 
     const { getChildRoutes }: RouteContextData = useContext(routeContext)
-
-    const profileContextData: ProfileContextData = useContext(profileContext)
-    const { profile }: ProfileContextData = profileContextData
-
-    // if we don't have a profile, don't show the page
-    if (!profile) {
-        return <></>
-    }
 
     return (
         <ContentLayout title={toolTitle}>
