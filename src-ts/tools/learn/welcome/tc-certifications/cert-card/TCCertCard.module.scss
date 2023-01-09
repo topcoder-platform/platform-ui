@@ -30,6 +30,7 @@
 
                 >svg {
                     margin-right: $space-xs;
+                    color: $blue-140;
                 }
             }
         }
@@ -48,10 +49,12 @@
 
     .skills {
         display: flex;
+        flex-wrap: wrap;
         margin: $space-sm 0;
 
         >div {
             margin-right: $space-sm;
+            margin-bottom: $space-sm;
 
             &:last-child {
                 margin-right: 0;
@@ -68,5 +71,9 @@
 .infoText {
     font-style: italic;
     color: $black-60;
-    margin-right: $space-sm;
+    margin-right: $space-lg;
+
+    &:last-child {
+        margin-right: 0;
+    }
 }

@@ -86,6 +86,11 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                 <div className={styles.cardHeaderTitleWrap}>
                     <p className='body-medium-medium'>{props.certification.title}</p>
                     <div className={styles.subTitleWrap}>
+                        <IconSolid.DocumentTextIcon width={16} height={16} />
+                        <em>
+                            {/* {props.certification.estimatedCompletionTime} */}
+                            {' modules'}
+                        </em>
                         <IconSolid.ClockIcon width={16} height={16} />
                         <em>
                             {props.certification.completionHours}

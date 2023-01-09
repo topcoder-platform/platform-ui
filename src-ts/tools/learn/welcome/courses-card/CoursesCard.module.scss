@@ -10,7 +10,6 @@
     flex-direction: column;
 
     width: 100%;
-    min-height: 225px;
 
     @include ltemd {
         padding: $space-lg;
@@ -54,6 +53,11 @@
                 font-size: 14px;
                 line-height: 22px;
                 color: $black-60;
+                margin-right: $space-lg;
+
+                &:last-child {
+                    margin-right: 0;
+                }
             }
         }
     }

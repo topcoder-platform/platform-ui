@@ -1,7 +1,7 @@
 import { FC, memo, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { FccLogoBlackSvg, IconLevel1, IconLevel2, IconLevel3 } from '../../../../../lib'
+import { FccLogoBlackSvg, IconLevel1, IconLevel2, IconLevel3, IconSolid } from '../../../../../lib'
 import { TCACertification } from '../../../learn-lib/data-providers/tca-certifications-provider'
 import { SkillLabel } from '../../skill'
 import { ReactComponent as TCACertBadgeDEV1 } from '../assets/web-dev-cert-badge-1.svg'
@@ -33,6 +33,20 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                         {LEVEL_ICONS_MAP[props.certification.learnerLevel]}
                         <span className={classNames('body-small', styles.infoText)}>
                             {props.certification.learnerLevel}
+                        </span>
+                        <IconSolid.DocumentTextIcon width={16} height={16} />
+                        <span className={classNames('body-small', styles.infoText)}>
+                            {/* {props.certification.estimatedCompletionTime} */}
+                            {' courses'}
+                        </span>
+                        <IconSolid.ClockIcon width={16} height={16} />
+                        <span className={classNames('body-small', styles.infoText)}>
+                            {props.certification.estimatedCompletionTime}
+                            {' hours'}
+                        </span>
+                        <IconSolid.CurrencyDollarIcon width={16} height={16} />
+                        <span className={classNames('body-small', styles.infoText)}>
+                            {' One time payment'}
                         </span>
                     </div>
                 </div>

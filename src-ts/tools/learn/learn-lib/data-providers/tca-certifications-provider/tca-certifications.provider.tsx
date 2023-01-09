@@ -46,7 +46,7 @@ export function useGetAllTCACertificationsMOCK(): TCACertificationsProviderData 
         sequentialCourses: false,
         status: 'active',
         certificationCategoryId: '',
-        skills: ['HTML', 'CSS', 'JavaScript'],
+        skills: ['HTML', 'CSS', 'JavaScript', 'HTML', 'CSS', 'JavaScript', 'HTML', 'CSS', 'JavaScript', 'HTML', 'CSS', 'JavaScript', 'HTML', 'CSS', 'JavaScript'],
     },
     {
         id: 2,
