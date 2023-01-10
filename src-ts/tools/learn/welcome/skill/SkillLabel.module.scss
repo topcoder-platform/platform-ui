@@ -1,0 +1,12 @@
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    background-color: $tc-white;
+    padding: 0 $space-sm;
+    border-radius: 4px;
+
+    span {
+        font-style: italic;
+        color: $black-80;
+    }
+}
