@@ -28,6 +28,7 @@ const WelcomePage: FC = () => {
 
     const coursesReady: boolean = allCertsData.ready && userCertsData.ready
 
+    // TODO: this hook is mocked - remove mock when API is available...
     const allTCACertifications: TCACertificationsProviderData = useGetAllTCACertificationsMOCK()
 
     return (

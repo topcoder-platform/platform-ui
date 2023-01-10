@@ -1,6 +1,6 @@
 import { FC, ReactNode, useCallback } from 'react'
 
-import { TCACertification } from '../../learn-lib/data-providers/tca-certifications-provider'
+import { TCACertification } from '../../learn-lib'
 
 import { TCCertCard } from './cert-card'
 

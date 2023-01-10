@@ -2,7 +2,7 @@ import { FC, memo, ReactNode } from 'react'
 import classNames from 'classnames'
 
 import { FccLogoBlackSvg, IconLevel1, IconLevel2, IconLevel3, IconSolid } from '../../../../../lib'
-import { TCACertification } from '../../../learn-lib/data-providers/tca-certifications-provider'
+import { TCACertification } from '../../../learn-lib'
 import { SkillLabel } from '../../skill'
 import { ReactComponent as TCACertBadgeDEV1 } from '../assets/web-dev-cert-badge-1.svg'
 
@@ -26,6 +26,8 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
     return (
         <div className={styles.wrap}>
             <div className={styles.cardHeader}>
+                {/* TODO: move this to import from learn-lib/svgs
+                when implementing render logic based on learneLevel field... */}
                 <TCACertBadgeDEV1 />
                 <div className={styles.cardTitleWrap}>
                     <p className='body-large-medium'>{props.certification.title}</p>
