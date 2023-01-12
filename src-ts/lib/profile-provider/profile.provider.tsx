@@ -5,7 +5,7 @@ import { userUpdatePasswordAsync } from '../functions'
 import { ChangePasswordRequest } from './change-password-request.model'
 import { EditNameRequest } from './edit-name-request.model'
 import { ProfileContextData } from './profile-context-data.model'
-import { profileEditNameAsync, profileGetAsync } from './profile-functions'
+import { profileEditNameAsync, profileGetLoggedInAsync } from './profile-functions'
 import { UserProfile } from './user-profile.model'
 import profileContext, { defaultProfileContextData } from './profile.context'
 
@@ -20,7 +20,7 @@ export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { chi
     }
 
     async function getAndSetProfileAsync(): Promise<void> {
-        const profile: UserProfile | undefined = await profileGetAsync()
+        const profile: UserProfile | undefined = await profileGetLoggedInAsync()
         const contextData: ProfileContextData = {
             changePassword,
             initialized: true,
