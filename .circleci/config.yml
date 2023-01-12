@@ -77,6 +77,19 @@ build_configuration_fetch: &build_configuration_fetch
       ./buildenv.sh -e $DEPLOY_ENV -b ${LOGICAL_ENV}-${APPNAME}-buildvar
       aws s3 cp s3://tc-platform-${LOGICAL_ENV}/securitymanager/${LOGICAL_ENV}-platform-ui.env ./.env
 
+running_version_patch: &running_version_patch
+    name: Patching Version
+    command: |
+        npm install
+        git config user.name $CIRCLE_USERNAME
+        git config user.email security@topcoder.com
+        npm version patch -m "Increment Version [ci skip]"
+        git push --set-upstream origin $CIRCLE_BRANCH
+
+finger_print_add: &finger_print_add
+    fingerprints:
+        - "a5:ad:51:96:10:a9:09:fb:7b:b4:fc:b7:08:df:ab:fa"
+
 lint_steps: &lint_steps
     # Initialization.
     - checkout
@@ -90,6 +103,17 @@ build_steps: &build_steps
     - run: *install_build_dependency
     - run: *install_deploysuite
     - run: *build_configuration_fetch
+    - run: *running_yarn_build
+    - persist_to_workspace: *workspace_persist
+
+build_steps_prod: &build_steps_prod
+    # Initialization.
+    - checkout
+    - setup_remote_docker
+    - run: *install_build_dependency
+    - run: *install_deploysuite
+    - run: *build_configuration_fetch
+    - run: *running_version_patch
     - run: *running_yarn_build
     - persist_to_workspace: *workspace_persist
 
@@ -159,7 +183,7 @@ jobs:
       DEPLOY_ENV: "PROD"
       LOGICAL_ENV: "prod"
       APPNAME: "platform-ui-mvp"
-    steps: *build_steps
+    steps: *build_steps_prod
   
   test-dev:
     <<: *test_defaults
@@ -219,6 +243,7 @@ workflows:
             branches:
               only:
                 - master
+                - TCA-882_versions
 
       - deployDev:
           context : org-global
