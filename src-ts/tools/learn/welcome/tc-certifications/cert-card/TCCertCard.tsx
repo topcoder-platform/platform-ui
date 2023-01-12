@@ -1,7 +1,7 @@
 import { FC, memo, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { FccLogoBlackSvg, IconLevel1, IconLevel2, IconLevel3, IconSolid } from '../../../../../lib'
+import { FccLogoBlackSvg, IconLevel1, IconLevel2, IconLevel3, IconSolid, Tooltip } from '../../../../../lib'
 import { TCACertification } from '../../../learn-lib'
 import { SkillLabel } from '../../skill'
 import { ReactComponent as TCACertBadgeDEV1 } from '../assets/web-dev-cert-badge-1.svg'
@@ -62,7 +62,15 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
 
             <div className={styles.skills}>
                 <span className={classNames('body-small', styles.infoText)}>skills taught</span>
-                {skills.map(skill => <SkillLabel skill={skill} />)}
+                {skills.slice(0, 3)
+                    .map(skill => <SkillLabel skill={skill} />)}
+                {skills.length > 3 && (
+                    <Tooltip
+                        content={skills.slice(0, 3)
+                            .join(', ')}
+                        trigger={<SkillLabel skill={`+ ${skills.slice(0, 3).length}`} />}
+                    />
+                )}
             </div>
 
             <div className={styles.contentFrom}>
