@@ -1,5 +1,6 @@
 export { UserRole } from './profile-factory'
 export {
-    getAsync as profileGetAsync,
+    getLoggedInAsync as profileGetLoggedInAsync,
+    getPublicAsync as profileGetPublicAsync,
     editNameAsync as profileEditNameAsync,
 } from './profile.functions'
