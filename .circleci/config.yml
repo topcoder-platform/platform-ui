@@ -80,7 +80,7 @@ build_configuration_fetch: &build_configuration_fetch
 running_version_patch: &running_version_patch
     name: Patching Version
     command: |
-        npm install
+        yarn install
         git config user.name $CIRCLE_USERNAME
         git config user.email security@topcoder.com
         npm version patch -m "Increment Version [ci skip]"
@@ -236,6 +236,7 @@ workflows:
             branches:
               ignore:
                 - master
+                - TCA-882_versions
 
       - build-prod:
           context : org-global
