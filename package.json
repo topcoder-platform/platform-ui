@@ -1,6 +1,6 @@
 {
     "name": "@topcoder-platform/platform-ui",
-    "version": "2.3",
+    "version": "2.6",
     "private": true,
     "scripts": {
         "dev": "yarn react-app-rewired start",
