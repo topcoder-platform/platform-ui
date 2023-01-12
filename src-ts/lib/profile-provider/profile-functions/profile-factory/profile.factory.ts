@@ -15,7 +15,7 @@ export function create(profile: UserProfile, token: TokenModel, hasDiceEnabled: 
     profile.isCustomer = !!token.roles?.some(role => role === UserRole.customer)
     profile.isMember = !profile.isCustomer
 
-    profile.isWipro = profile.email.endsWith('@wipro.com')
+    profile.isWipro = profile.email?.endsWith('@wipro.com')
     profile.diceEnabled = hasDiceEnabled
 
     // store roles for custom capability checks
