@@ -17,6 +17,11 @@
     }
 }
 
+.completed {
+    background: $tc-white;
+    border: 1px solid $black-20;
+}
+
 .cardHeader {
     display: flex;
 
@@ -94,4 +99,8 @@
 
 .cardBottom {
     color: $blue-140;
+
+    a:nth-child(2) {
+        margin-left: $space-sm;
+    }
 }

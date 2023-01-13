@@ -28,6 +28,8 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
         = useState<string>('secondary')
     const [courseProgress, setCourseProgress]: [number | undefined, Dispatch<SetStateAction<number | undefined>>]
         = useState<number | undefined>(undefined)
+    const [linkCompleted, setLinkCompleted]: [string, Dispatch<SetStateAction<string>>]
+        = useState<string>('')
 
     useEffect(() => {
 
@@ -46,7 +48,12 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
         if (isCompleted) {
             // if the course is completed, View the Certificate
             setButtonLabel('View Certificate')
+            setButtonStyle('primary')
             setLink(getCertificatePath(
+                props.certification.providerName,
+                props.certification.certification,
+            ))
+            setLinkCompleted(getCoursePath(
                 props.certification.providerName,
                 props.certification.certification,
             ))
@@ -80,7 +87,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
     ])
 
     return (
-        <div className={classNames(styles.wrap, !link && 'soon')}>
+        <div className={classNames(styles.wrap, !link && 'soon', linkCompleted && styles.completed)}>
             <div className={styles.cardHeader}>
                 <CourseBadge type={props.certification.trackType ?? 'DEV'} />
                 <div className={styles.cardHeaderTitleWrap}>
@@ -101,7 +108,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
             </div>
 
             <div className={styles.cardHeaderDividerWrap}>
-                {courseProgress === undefined ? (
+                {courseProgress === undefined ? linkCompleted ? undefined : (
                     <div className={styles.cardHeaderDivider} />
                 ) : (
                     <ProgressBar progress={courseProgress} />
@@ -122,6 +129,14 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                         size='xs'
                         label={buttonLabel}
                         route={link}
+                    />
+                )}
+                {linkCompleted && (
+                    <Button
+                        buttonStyle='secondary'
+                        size='xs'
+                        label='Details'
+                        route={linkCompleted}
                     />
                 )}
                 {!courseEnabled && (
