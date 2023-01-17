@@ -108,6 +108,7 @@ build_steps: &build_steps
 
 build_steps_prod: &build_steps_prod
     # Initialization.
+    - add_ssh_keys: *finger_print_add          
     - checkout
     - setup_remote_docker
     - run: *install_build_dependency
