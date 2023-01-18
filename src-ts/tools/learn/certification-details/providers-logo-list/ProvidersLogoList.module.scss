@@ -1,0 +1,14 @@
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+    text-transform: none;
+
+    > div {
+        display: flex;
+        align-items: center;
+        gap: $space-lg;
+    }
+}

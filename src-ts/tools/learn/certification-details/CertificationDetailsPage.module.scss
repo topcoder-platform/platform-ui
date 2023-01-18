@@ -1,3 +1,36 @@
-.wrap {
+@import '../../../lib/styles/includes';
+
+.hero-wrap {
+    :global(.hero-content) {
+        flex-direction: column;
+        gap: $space-xxxxl;
+
+        padding-right: calc(445px + $space-xxl);
+        position: relative;
+    }
+}
+
+.contentWrap {
+    .outerContentWrap {
+        padding-top: $space-mxx;
+        padding-right: calc(445px + $space-xxxxl);
+        padding-bottom: 120px;
+    }
+}
+
+.text-section {
+    margin-top: 80px;
+    h2 {
+        margin-bottom: $space-xxl;
+    }
+
+    ul {
+        list-style: disc;
+        padding-left: $space-xxl;
+        padding-left: $space-xxl;
+    }
+}
+
+.requirement-section {
 
 }

@@ -26,6 +26,14 @@ const UserCertificate: FC<{}> = () => {
     const providerParam: string = routeParams.provider ?? ''
     const certificationParam: string = routeParams.certification ?? ''
 
+    function hideSiblings(el: HTMLElement): void {
+        [].forEach.call(el.parentElement?.children ?? [], (c: HTMLElement) => {
+            if (c !== el) {
+                Object.assign(c.style, { display: 'none' })
+            }
+        })
+    }
+
     useEffect(() => {
         if (routeParams.memberHandle) {
             profileGetAsync(routeParams.memberHandle)
@@ -42,11 +50,8 @@ const UserCertificate: FC<{}> = () => {
             return
         }
 
-        [].forEach.call(el.parentElement?.children ?? [], (c: HTMLElement) => {
-            if (c !== el) {
-                Object.assign(c.style, { display: 'none' })
-            }
-        })
+        hideSiblings(el)
+        hideSiblings(el.parentElement as HTMLElement)
         el.classList.add(styles['full-screen-cert'])
     })
 
@@ -54,8 +59,8 @@ const UserCertificate: FC<{}> = () => {
         <>
             <LoadingSpinner hide={profileReady} />
 
-            {profileReady && profile && (
-                <div ref={wrapElRef}>
+            <div ref={wrapElRef}>
+                {profileReady && profile && (
                     <CertificateView
                         certification={certificationParam}
                         profile={profile}
@@ -64,8 +69,8 @@ const UserCertificate: FC<{}> = () => {
                         hideActions
                         viewStyle={queryParams.get(getViewStyleParamKey()) as CertificateViewStyle}
                     />
-                </div>
-            )}
+                )}
+            </div>
         </>
     )
 }

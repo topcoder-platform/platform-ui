@@ -18,6 +18,13 @@
                 background-size: 100vw $space-lg, auto;
             }
         }
+        &:global(.grey) {
+            background: $black-10 url('./learn-welcome-bg-curve-white.png') repeat-x center bottom ;
+            background-size: 1440px 40px, auto;
+            @include ltelg {
+                background-size: 100vw $space-lg, auto;
+            }
+        }
     }
 
     &-inner {
@@ -38,6 +45,10 @@
         gap: calc($space-mx * 2);
 
         color: $tc-white;
+
+        .hero-wrap:global(.grey) & {
+            color: $black-100;
+        }
 
         @include ltelg {
             gap: $space-mx;

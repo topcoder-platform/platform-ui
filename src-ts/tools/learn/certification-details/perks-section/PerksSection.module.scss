@@ -1,0 +1,51 @@
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    background: $black-5;
+    padding: $space-xxxxl;
+    padding-right: 92px;
+    border-radius: $space-sm;
+
+    color: $black-100;
+}
+
+.perksList {
+    margin-top: $space-xxxxl;
+
+    li {
+        display: flex;
+        align-items: flex-start;
+        gap: $space-lg;
+
+        margin-top: $space-xxl;
+    }
+}
+
+.perkIcon {
+    display: flex;
+    width: $space-mxx;
+    height: $space-mxx;
+
+    svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+
+        path {
+            stroke: url(#paint0_linear_1847_10558);
+        }
+    }
+
+    li:nth-child(2) & {
+        svg path {
+            stroke: none;
+            fill: url(#paint0_linear_1847_10558);
+        }
+    }
+}
+
+.perkContent {
+    p {
+        margin-top: $space-sm;
+    }
+}
