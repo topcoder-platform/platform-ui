@@ -31,6 +31,7 @@ const Accordion: FC<AccordionProps> = (props: AccordionProps) => {
                     item={item}
                     toggle={toggle}
                     isToggled={!!toggled[item.title]}
+                    key={item.title}
                 />
             ))}
         </div>

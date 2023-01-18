@@ -2,14 +2,14 @@ import { FC, ReactNode } from 'react'
 import classNames from 'classnames'
 
 import { IconOutline, IconSolid, Tooltip } from '../../../../lib'
+import { ProvidersLogoList } from '../providers-logo-list'
+import { TCACertification } from '../../learn-lib'
 
 import img from './certificate-placeholder.jpg'
 import styles from './CertificationDetailsSidebar.module.scss'
-import { ProvidersLogoList } from '../providers-logo-list'
-
 
 interface CertificationDetailsSidebarProps {
-    title?: string
+    certification: TCACertification
 }
 
 function renderTooltipContents(icon: ReactNode, text: Array<string>): ReactNode {
@@ -25,7 +25,7 @@ function renderTooltipContents(icon: ReactNode, text: Array<string>): ReactNode 
 }
 
 const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props: CertificationDetailsSidebarProps) => {
-    const { title } = props
+    console.log()
 
     return (
         <div className={styles['sticky-container']}>
@@ -38,20 +38,24 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                         <span className={styles.icon}>
                             <IconSolid.ChartBarIcon />
                         </span>
-                        <span className='quote-main'>Beginer</span>
+                        <span className='quote-main'>{props.certification.learnerLevel}</span>
                     </li>
                     <li>
                         <span className={styles.icon}>
                             <IconSolid.DocumentTextIcon />
                         </span>
-                        <span className='quote-main'>4 courses</span>
+                        <span className='quote-main'>
+                            {props.certification.coursesCount}
+                            &nbsp;courses
+                        </span>
                     </li>
                     <li>
                         <span className={styles.icon}>
                             <IconSolid.ClockIcon />
                         </span>
                         <span className='quote-main'>
-                            2 months
+                            {props.certification.estimatedCompletionTime}
+                            &nbsp;months
                             <Tooltip
                                 content={renderTooltipContents(<IconSolid.ClockIcon />, [
                                     'Assuming 1 hour',
@@ -87,19 +91,16 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                     Skills covered
                 </div>
                 <ul className={styles['certification-skills-list']}>
-                    <li>HTML</li>
-                    <li>CSS</li>
-                    <li>JavaScript</li>
-                    <li>React</li>
-                    <li>Skill</li>
-                    <li>React</li>
-                    <li>HTML</li>
-                    <li>Skill</li>
-                    <li>Javascript</li>
-                    <li>Css</li>
+                    {props.certification.skills.map(skill => (
+                        <li key={skill}>{skill}</li>
+                    ))}
                 </ul>
 
-                <ProvidersLogoList label='By' className={styles.providers} />
+                <ProvidersLogoList
+                    label='By'
+                    className={styles.providers}
+                    providers={props.certification.providers}
+                />
 
             </div>
         </div>

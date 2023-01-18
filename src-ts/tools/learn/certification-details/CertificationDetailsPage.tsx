@@ -2,7 +2,7 @@ import { FC, ReactNode, useContext } from 'react'
 import { Params, useParams } from 'react-router-dom'
 
 import { PageSubheaderPortalId } from '../../../config'
-import { useLearnBreadcrumb, WaveHero } from '../learn-lib'
+import { TCACertificationsProviderData, useGetTCACertificationMOCK, useLearnBreadcrumb, WaveHero } from '../learn-lib'
 import {
     Breadcrumb,
     BreadcrumbItemModel,
@@ -23,17 +23,32 @@ import { PerksSection } from './perks-section'
 import { perks } from './data/perks.data'
 import styles from './CertificationDetailsPage.module.scss'
 
+function renderBasicList(items: Array<string>): ReactNode {
+    return (
+        <ul className='body-main'>
+            {items.map(item => (
+                <li key={item}>{item}</li>
+            ))}
+        </ul>
+    )
+}
+
 const CertificationDetailsPage: FC<{}> = () => {
     const routeParams: Params<string> = useParams()
-    const { certification }: Params<string> = routeParams
+    const { certification: dashedName }: Params<string> = routeParams
     const { initialized: profileReady }: ProfileContextData = useContext(profileContext)
 
-    const ready: boolean = profileReady
+    const {
+        certifications: [certification],
+        ready: certificateReady,
+    }: TCACertificationsProviderData = useGetTCACertificationMOCK(dashedName as string)
+
+    const ready: boolean = profileReady && certificateReady
 
     const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
         {
 
-            name: textFormatGetSafeString(certification),
+            name: textFormatGetSafeString(certification.title),
             url: '',
         },
     ])
@@ -67,9 +82,13 @@ const CertificationDetailsPage: FC<{}> = () => {
         return (
             <div className={styles['text-section']}>
                 <h2>Requirements</h2>
-                <p className='body-main'>
-                    No prior knowledge in software development is required
-                </p>
+                {certification.requirements?.length ? (
+                    renderBasicList(certification.requirements)
+                ) : (
+                    <p className='body-main'>
+                        No prior knowledge in software development is required
+                    </p>
+                )}
             </div>
         )
     }
@@ -97,15 +116,12 @@ const CertificationDetailsPage: FC<{}> = () => {
                     <WaveHero
                         title={(
                             <HeroTitle
-                                certTitle='Web Development Fundamentals'
-                                providers={['fcc', 'topcoder']}
+                                certTitle={certification.title}
+                                providers={certification.providers}
                             />
                         )}
                         theme='grey'
-                        text={`
-                            Introducing our Web Development fundamentals certification!
-                            Start your certification journey with Topcoder.
-                        `}
+                        text={certification.introText}
                     >
                         <Button
                             buttonStyle='primary'
@@ -113,7 +129,7 @@ const CertificationDetailsPage: FC<{}> = () => {
                             label='Enroll Now'
                         />
                     </WaveHero>
-                    <CertificationDetailsSidebar />
+                    <CertificationDetailsSidebar certification={certification} />
                 </div>
             </Portal>
 
