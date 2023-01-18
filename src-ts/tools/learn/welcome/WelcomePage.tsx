@@ -38,10 +38,7 @@ const WelcomePage: FC = () => {
                     <div className={styles['hero-wrap']}>
                         <WaveHero
                             title={(
-                                <>
-                                    {/* <TcAcademyFullLogoSvg className='tca-logo' /> */}
-                                    Topcoder Academy
-                                </>
+                                <>Topcoder Academy</>
                             )}
                             text={`
                                 The Topcoder Academy will provide you with learning opportunities
