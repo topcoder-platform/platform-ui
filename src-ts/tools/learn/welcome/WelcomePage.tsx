@@ -15,10 +15,8 @@ import {
 import '../../../lib/styles/index.scss'
 
 import { AvailableCoursesList } from './available-courses-list'
-import { ProgressBlock } from './progress-block'
 import { WhatTCACanDo } from './what-tca-cando'
 import { TCCertifications } from './tc-certifications'
-import { ReactComponent as TcAcademyFullLogoSvg } from './tca-full-logo.svg'
 import styles from './WelcomePage.module.scss'
 
 const WelcomePage: FC = () => {
@@ -41,8 +39,8 @@ const WelcomePage: FC = () => {
                         <WaveHero
                             title={(
                                 <>
-                                    <TcAcademyFullLogoSvg className='tca-logo' />
-                                    Welcome!
+                                    {/* <TcAcademyFullLogoSvg className='tca-logo' /> */}
+                                    Topcoder Academy
                                 </>
                             )}
                             text={`
@@ -52,14 +50,7 @@ const WelcomePage: FC = () => {
                                 prepare you to earn on the Topcoder platform.
                             `}
                             theme='light'
-                        >
-                            <ProgressBlock
-                                allCertifications={allCertsData.certifications}
-                                userCompletedCertifications={userCertsData.completed}
-                                userInProgressCertifications={userCertsData.inProgress}
-                                ready={coursesReady}
-                            />
-                        </WaveHero>
+                        />
                     </div>
                 </Portal>
 
