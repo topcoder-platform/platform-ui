@@ -3,7 +3,7 @@ import classNames from 'classnames'
 
 import { IconOutline, IconSolid, Tooltip } from '../../../../lib'
 import { ProvidersLogoList } from '../providers-logo-list'
-import { TCACertification } from '../../learn-lib'
+import { LearnLevelIcon, TCACertification } from '../../learn-lib'
 
 import img from './certificate-placeholder.jpg'
 import styles from './CertificationDetailsSidebar.module.scss'
@@ -36,7 +36,7 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                 <ul className={styles['certification-details-list']}>
                     <li>
                         <span className={styles.icon}>
-                            <IconSolid.ChartBarIcon />
+                            <LearnLevelIcon level={props.certification.learnerLevel} />
                         </span>
                         <span className='quote-main'>{props.certification.learnerLevel}</span>
                     </li>
