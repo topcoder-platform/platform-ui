@@ -73,9 +73,10 @@ export function useGetAllTCACertificationsMOCK(): TCACertificationsProviderData 
         status: 'active',
         certificationCategoryId: '',
         skills: ['HTML', 'CSS', 'JavaScript', 'HTML1', 'CSS2', 'JavaScript2', 'HTML3', 'CSS3', 'JavaScript3', 'HTML4', 'CSS4', 'JavaScript4'],
-        requirements: [],
+        prerequisites: [],
         coursesCount: 4,
         providers: ['freecodecamp', 'topcoder'],
+        learningOutcomes: [],
     },
     {
         id: 2,
@@ -89,9 +90,10 @@ export function useGetAllTCACertificationsMOCK(): TCACertificationsProviderData 
         learnerLevel: 'Expert',
         certificationCategoryId: '',
         skills: ['Python', 'TensorFlow', 'JSON'],
-        requirements: [],
+        prerequisites: [],
         coursesCount: 4,
         providers: ['freecodecamp', 'topcoder'],
+        learningOutcomes: [],
     }]
 
     return {
@@ -118,9 +120,15 @@ export function useGetTCACertificationMOCK(
         status: 'active',
         certificationCategoryId: '',
         skills: ['HTML', 'CSS', 'JavaScript', 'HTML1', 'CSS2', 'JavaScript2', 'HTML3', 'CSS3', 'JavaScript3', 'HTML4', 'CSS4', 'JavaScript4'],
-        requirements: [],
+        prerequisites: [],
         coursesCount: 4,
         providers: ['freecodecamp', 'topcoder'],
+        learningOutcomes: [
+            'Fundamental skills required to begin a career in web development',
+            'Introduction to React and other front end libraries - a jumping off point to build awesome websites',
+            'Introduction to Java Script - one of the languages every web developer should know for web development and building basic algorithms and data structures',
+            'Introduction to backend development with Node and APIs',
+        ],
     }]
 
     return {

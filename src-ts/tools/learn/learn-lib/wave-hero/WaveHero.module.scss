@@ -30,6 +30,12 @@
 
     &-inner {
         padding: calc($space-mx * 2) 0 $space-lg;
+
+        .hero-wrap:global(.grey) & {
+            padding-top: $space-xxxxl;
+            padding-bottom: 0;
+        }
+
         @include contentWidth;
 
         @include ltelg {

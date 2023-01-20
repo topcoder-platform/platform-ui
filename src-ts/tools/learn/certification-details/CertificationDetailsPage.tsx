@@ -53,27 +53,11 @@ const CertificationDetailsPage: FC<{}> = () => {
         },
     ])
 
-    function renderWhatWillILearnSection(): ReactNode {
+    function renderLearningOutcomeSection(): ReactNode {
         return (
             <div className={styles['text-section']}>
                 <h2>What I Will Learn?</h2>
-                <ul className='body-main'>
-                    <li>
-                        Fundamental skills required to begin a career in web development
-                    </li>
-                    <li>
-                        Introduction to React and other front end libraries - a
-                        jumping off point to build awesome websites
-                    </li>
-                    <li>
-                        Introduction to Java Script - one of the languages every web
-                        developer should know for web development and building basic
-                        algorithms and data structures
-                    </li>
-                    <li>
-                        Introduction to backend development with Node and APIs
-                    </li>
-                </ul>
+                {renderBasicList(certification.learningOutcomes)}
             </div>
         )
     }
@@ -82,8 +66,8 @@ const CertificationDetailsPage: FC<{}> = () => {
         return (
             <div className={styles['text-section']}>
                 <h2>Requirements</h2>
-                {certification.requirements?.length ? (
-                    renderBasicList(certification.requirements)
+                {certification.prerequisites?.length ? (
+                    renderBasicList(certification.prerequisites)
                 ) : (
                     <p className='body-main'>
                         No prior knowledge in software development is required
@@ -134,7 +118,7 @@ const CertificationDetailsPage: FC<{}> = () => {
             </Portal>
 
             <PerksSection items={perks} />
-            {renderWhatWillILearnSection()}
+            {renderLearningOutcomeSection()}
             {renderRequirementsSection()}
             {renderFaqSection()}
         </ContentLayout>

@@ -3,19 +3,20 @@ import { TCACertificationStatus } from './tca-certificate-status-type'
 import { TcaProviderType } from './tca-provider-type'
 
 export interface TCACertification {
-    id: number
-    title: string
+    certificationCategoryId: string
+    coursesCount: number
     dashedName: string
     description: string
     estimatedCompletionTime: number
+    id: number
     introText: string
-    status: TCACertificationStatus
-    requirements: Array<string>
-    sequentialCourses: boolean
     learnerLevel: TCACertificationLearnLevel
-    certificationCategoryId: string
-    coursesCount: number
-    stripeProductId?: string
-    skills: string[]
+    learningOutcomes: Array<string>
+    prerequisites: Array<string>
     providers: Array<TcaProviderType>
+    sequentialCourses: boolean
+    skills: string[]
+    status: TCACertificationStatus
+    stripeProductId?: string
+    title: string
 }

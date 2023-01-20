@@ -82,6 +82,7 @@
 
             :global(.strike) {
                 text-decoration: line-through;
+                color: $black-40;
             }
         }
     }
