@@ -1,1 +1,3 @@
+// Deprecated components
+// TODO: remove it at some point if not needed somewhere else...
 export { default as ProgressBlock } from './ProgressBlock'

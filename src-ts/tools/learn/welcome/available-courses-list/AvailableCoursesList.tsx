@@ -1,5 +1,5 @@
 import { Dictionary, groupBy, identity, orderBy } from 'lodash'
-import { Dispatch, FC, Fragment, ReactNode, SetStateAction, useMemo } from 'react'
+import { ChangeEvent, Dispatch, FC, Fragment, ReactNode, SetStateAction, useCallback, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { InputSelect, useLocalStorage } from '../../../../lib'
@@ -20,14 +20,14 @@ const PRIORITY_CATEGORIES: ReadonlyArray<string> = [
 ]
 
 const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCoursesListProps) => {
-
     const [selectedCategory, setSelectedCategory]: [
         string,
         Dispatch<SetStateAction<string>>
     ] = useLocalStorage<string>('tca-welcome-filter-certs', '')
 
     // certificates indexed by category, sorted by title
-    const certsByCategory: Dictionary<Array<LearnCertification>> = useMemo(() => groupBy(orderBy(props.certifications, 'title', 'asc'), 'category'), [props.certifications])
+    const certsByCategory: Dictionary<Array<LearnCertification>>
+        = useMemo(() => groupBy(orderBy(props.certifications, 'title', 'asc'), 'category'), [props.certifications])
 
     // compute all the available category dropdown options
     const certsCategoriesOptions: Array<{
@@ -53,17 +53,22 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
         ['asc', 'asc'],
     ), [certsByCategory])
 
+    const onSelectCategory: (e: ChangeEvent<HTMLInputElement>) => void
+        = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+            setSelectedCategory(e.target.value as string)
+        }, [setSelectedCategory])
+
     const certificationsCount: number = (
         (certsByCategory[selectedCategory] ?? props.certifications).length
     )
 
-    const renderCertificationGroup = (category: string): ReactNode => (
+    const renderCertificationGroup: (category: string) => ReactNode = (category: string) => (
         <Fragment key={category}>
             <h4 className={classNames('details', styles['courses-group-title'])}>
                 {category}
             </h4>
 
-            <div className={styles['courses-list']}>
+            <div className={styles.coursesList}>
                 {certsByCategory[category]
                     .map(certification => (
                         <CoursesCard
@@ -79,22 +84,31 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
 
     return (
         <div className={styles.wrap}>
-            <div className={styles['courses-list-header']}>
-                <h3 className='details'>
-                    Courses Available
-                    <span className={classNames(styles.badge, 'medium-subtitle')}>
-                        {certificationsCount}
-                    </span>
-                </h3>
+            <div className={styles.coursesListHeaderWrap}>
+                <div className={styles.coursesListHeader}>
+                    <h2 className='details'>
+                        Courses
+                        <span className={classNames(styles.badge, 'medium-subtitle')}>
+                            {certificationsCount}
+                        </span>
+                    </h2>
+                    <div className={styles.coursesListFilters}>
+                        <InputSelect
+                            options={certsCategoriesOptions}
+                            value={selectedCategory}
+                            onChange={onSelectCategory}
+                            name='filter-courses'
+                            label='Categories'
+                        />
+                    </div>
+                </div>
 
-                <div className={styles['courses-list-filters']}>
-                    <InputSelect
-                        options={certsCategoriesOptions}
-                        value={selectedCategory}
-                        onChange={e => setSelectedCategory(e.target.value as string)}
-                        name='filter-courses'
-                        label='Categories'
-                    />
+                <div className={styles.teaseBanner}>
+                    <h2>Check out our Courses</h2>
+                    <p>
+                        Topcoder is partnering with multiple content providers
+                        to bring you a best in class course catalog. Stay tuned for more courses!
+                    </p>
                 </div>
             </div>
 

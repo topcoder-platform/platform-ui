@@ -6,7 +6,7 @@ import { UserProfile } from '../user-profile.model'
 import { profileFactoryCreate } from './profile-factory'
 import { profileStoreGet, profileStorePatchName } from './profile-store'
 
-export async function getAsync(handle?: string): Promise<UserProfile | undefined> {
+export async function getLoggedInAsync(handle?: string): Promise<UserProfile | undefined> {
 
     // get the token
     const token: TokenModel = await tokenGetAsync()
@@ -25,6 +25,21 @@ export async function getAsync(handle?: string): Promise<UserProfile | undefined
 
     // make the changes we need based on the token
     const output: UserProfile = profileFactoryCreate(profileResult, token, diceEnabled)
+    return output
+}
+
+export async function getPublicAsync(handle?: string): Promise<UserProfile | undefined> {
+
+    // get the handle
+    if (!handle) {
+        return Promise.resolve(undefined)
+    }
+
+    // get the profile
+    const profileResult: UserProfile = await profileStoreGet(handle)
+
+    // make the changes we need based on the token
+    const output: UserProfile = profileFactoryCreate(profileResult)
     return output
 }
 

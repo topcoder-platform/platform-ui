@@ -1,9 +1,9 @@
-import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, FC, memo, SetStateAction, useEffect, useState } from 'react'
 import classNames from 'classnames'
 
-import { Button, ButtonStyle } from '../../../../lib'
+import { Button, ButtonStyle, FccLogoBlackSvg, IconSolid, ProgressBar } from '../../../../lib'
 import {
-    CourseTitle,
+    CourseBadge,
     LearnCertification,
     UserCertificationCompleted,
     UserCertificationInProgress,
@@ -19,15 +19,18 @@ interface CoursesCardProps {
 }
 
 const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
-
-    const [buttonStyle, setButtonStyle]: [ButtonStyle, Dispatch<SetStateAction<ButtonStyle>>]
-        = useState<ButtonStyle>('primary')
     const [buttonLabel, setButtonLabel]: [string, Dispatch<SetStateAction<string>>]
         = useState<string>('')
     const [link, setLink]: [string, Dispatch<SetStateAction<string>>]
         = useState<string>('')
-
     const courseEnabled: boolean = props.certification.state === 'active'
+    const [buttonStyle, setButtonStyle]: [string, Dispatch<SetStateAction<string>>]
+        = useState<string>('secondary')
+    const [courseProgress, setCourseProgress]: [number | undefined, Dispatch<SetStateAction<number | undefined>>]
+        = useState<number | undefined>(undefined)
+    const [linkCompleted, setLinkCompleted]: [string, Dispatch<SetStateAction<string>>]
+        = useState<string>('')
+
     useEffect(() => {
 
         // if the course isn't enabled, there's nothing to do
@@ -44,17 +47,21 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
 
         if (isCompleted) {
             // if the course is completed, View the Certificate
-            setButtonStyle('secondary')
             setButtonLabel('View Certificate')
+            setButtonStyle('primary')
             setLink(getCertificatePath(
+                props.certification.providerName,
+                props.certification.certification,
+            ))
+            setLinkCompleted(getCoursePath(
                 props.certification.providerName,
                 props.certification.certification,
             ))
 
         } else if (!inProgress) {
             // if there is no in-progress lesson for the course,
-            // Get Started by going to the course details
-            setButtonLabel('Get Started')
+            // Details by going to the course details
+            setButtonLabel('Details')
             setLink(getCoursePath(
                 props.certification.providerName,
                 props.certification.certification,
@@ -63,13 +70,14 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
         } else {
             // otherwise this course is in-progress,
             // so Resume the course at the next lesson
-            setButtonStyle('secondary')
             setButtonLabel('Resume')
+            setButtonStyle('primary')
             setLink(getLessonPathFromCurrentLesson(
                 props.certification.providerName,
                 props.certification.certification,
                 inProgress.currentLesson,
             ))
+            setCourseProgress(inProgress.courseProgressPercentage / 100)
         }
     }, [
         courseEnabled,
@@ -79,22 +87,56 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
     ])
 
     return (
-        <div className={classNames(styles.wrap, !link && 'soon')}>
-            <div className='overline'>
-                {props.certification.category}
+        <div className={classNames(styles.wrap, !link && 'soon', linkCompleted && styles.completed)}>
+            <div className={styles.cardHeader}>
+                <CourseBadge type={props.certification.trackType ?? 'DEV'} />
+                <div className={styles.cardHeaderTitleWrap}>
+                    <p className='body-medium-medium'>{props.certification.title}</p>
+                    <div className={styles.subTitleWrap}>
+                        <IconSolid.DocumentTextIcon width={16} height={16} />
+                        <em>
+                            {/* {props.certification.estimatedCompletionTime} */}
+                            {' modules'}
+                        </em>
+                        <IconSolid.ClockIcon width={16} height={16} />
+                        <em>
+                            {props.certification.completionHours}
+                            {' hours'}
+                        </em>
+                    </div>
+                </div>
             </div>
-            <CourseTitle
-                credits={props.certification.providerName}
-                title={props.certification.title}
-                trackType={props.certification.trackType}
-            />
-            <div className={styles.bottom}>
+
+            <div className={styles.cardHeaderDividerWrap}>
+                {courseProgress === undefined ? linkCompleted ? undefined : (
+                    <div className={styles.cardHeaderDivider} />
+                ) : (
+                    <ProgressBar progress={courseProgress} />
+                )}
+            </div>
+
+            <div className={styles.cardBody}>
+                <div className={styles.certProvider}>
+                    {'by '}
+                    <FccLogoBlackSvg />
+                </div>
+            </div>
+
+            <div className={styles.cardBottom}>
                 {!!link && (
                     <Button
-                        buttonStyle={buttonStyle}
-                        size='sm'
+                        buttonStyle={buttonStyle as ButtonStyle}
+                        size='xs'
                         label={buttonLabel}
                         route={link}
+                    />
+                )}
+                {linkCompleted && (
+                    <Button
+                        buttonStyle='secondary'
+                        size='xs'
+                        label='Details'
+                        route={linkCompleted}
                     />
                 )}
                 {!courseEnabled && (
@@ -105,4 +147,4 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
     )
 }
 
-export default CoursesCard
+export default memo(CoursesCard)
