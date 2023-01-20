@@ -7,10 +7,16 @@
     border-radius: $space-sm;
 
     color: $black-100;
+    @include ltelg {
+        padding: $space-xxl $space-lg;
+    }
 }
 
 .perksList {
     margin-top: $space-xxxxl;
+    @include ltelg {
+        margin-top: $space-xxl;
+    }
 
     li {
         display: flex;
@@ -18,6 +24,9 @@
         gap: $space-lg;
 
         margin-top: $space-xxl;
+        @include ltelg {
+            gap: $space-sm;
+        }
     }
 }
 
@@ -25,6 +34,12 @@
     display: flex;
     width: $space-mxx;
     height: $space-mxx;
+    flex: 0 0 auto;
+
+    @include ltelg {
+        width: $space-xxxxl;
+        height: $space-xxxxl;
+    }
 
     svg {
         display: block;

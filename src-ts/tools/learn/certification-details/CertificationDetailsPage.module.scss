@@ -4,22 +4,45 @@
     :global(.hero-content) {
         flex-direction: column;
         gap: $space-xxxxl;
-
-        padding-right: calc(445px + $space-xxl);
         position: relative;
+
+        @include gtelg {
+            padding-right: calc(40vw + $space-xxl);
+        }
+
+        @include gtexl {
+            padding-right: calc(445px + $space-xxl);
+        }
     }
 }
 
 .contentWrap {
     .outerContentWrap {
         padding-top: $space-mxx;
-        padding-right: calc(445px + $space-xxxxl);
         padding-bottom: 120px;
+
+        @include ltexl {
+            padding-top: $space-xxxxl;
+            padding-bottom: $space-xxxxl;
+        }
+
+        @include gtelg {
+            padding-right: calc(40vw + $space-xxl * 2);
+        }
+
+        @include gtexl {
+            padding-right: calc(445px + $space-xxxl * 2);
+        }
     }
 }
 
 .text-section {
     margin-top: 80px;
+
+    @include ltelg {
+        margin-top: $space-xxxxl;
+    }
+
     h2 {
         margin-bottom: $space-xxl;
     }

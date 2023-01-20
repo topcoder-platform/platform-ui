@@ -6,9 +6,21 @@
     gap: $space-sm;
     text-transform: none;
 
+    @include ltelg {
+        align-items: flex-start;
+        > span {
+            line-height: 22px;
+        }
+    }
+
     > div {
         display: flex;
         align-items: center;
         gap: $space-lg;
+
+        @include ltelg {
+            flex-direction: column;
+            gap: 0;
+        }
     }
 }
