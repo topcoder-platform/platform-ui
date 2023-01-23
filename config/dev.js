@@ -6,8 +6,8 @@ module.exports = {
   TERMS_URL:
     "https://www.topcoder-dev.com/challenges/terms/detail/317cd8f9-d66c-4f2a-8774-63c612d99cd4",
   PRIVACY_POLICY_URL: "https://www.topcoder-dev.com/policy",
-  SIGN_IN_URL: `https://accounts-auth0.topcoder-dev.com/?retUrl=https%3A%2F%2Fplatform.topcoder-dev.com%2Fself-service%2Fwizard&regSource=selfService`,
-  SIGN_UP_URL: `https://accounts-auth0.topcoder-dev.com/?retUrl=https%3A%2F%2Fplatform.topcoder-dev.com%2Fself-service%2Fwizard&regSource=selfService&mode=signUp`,
+  SIGN_IN_URL: `https://accounts-auth0.topcoder-dev.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder-dev.com%2Fself-service%2Fwizard&regSource=selfService`,
+  SIGN_UP_URL: `https://accounts-auth0.topcoder-dev.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder-dev.com%2Fself-service%2Fwizard&regSource=selfService&mode=signUp`,
   /**
    * URL of Topcoder Connect Website
    */
