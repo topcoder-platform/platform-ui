@@ -1,18 +1,19 @@
-import { Dispatch, FC, MutableRefObject, SetStateAction, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Params, useParams, useSearchParams } from 'react-router-dom'
+import { Dispatch, FC, MutableRefObject, SetStateAction, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { NavigateFunction, Params, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import {
     LoadingSpinner,
     profileGetPublicAsync,
     UserProfile,
 } from '../../../../lib'
-import { getViewStyleParamKey } from '../../learn.routes'
+import { getTCACertificationPath, getViewStyleParamKey } from '../../learn.routes'
 import { CertificateView, CertificateViewStyle } from '../certificate-view'
 
-import styles from './UserCertificate.module.scss'
+import styles from './UserTCACertificate.module.scss'
 
-const UserCertificate: FC<{}> = () => {
+const UserTCACertificate: FC<{}> = () => {
 
+    const navigate: NavigateFunction = useNavigate()
     const wrapElRef: MutableRefObject<HTMLElement | any> = useRef()
     const routeParams: Params<string> = useParams()
     const [queryParams]: [URLSearchParams, any] = useSearchParams()
@@ -23,8 +24,9 @@ const UserCertificate: FC<{}> = () => {
     ] = useState()
     const [profileReady, setProfileReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
-    const providerParam: string = routeParams.provider ?? ''
     const certificationParam: string = routeParams.certification ?? ''
+
+    const tcaCertificationPath: string = getTCACertificationPath(certificationParam)
 
     useEffect(() => {
         if (routeParams.memberHandle) {
@@ -50,6 +52,10 @@ const UserCertificate: FC<{}> = () => {
         el.classList.add(styles['full-screen-cert'])
     })
 
+    const navigateToCertification: () => void = useCallback(() => {
+        navigate(tcaCertificationPath)
+    }, [tcaCertificationPath, navigate])
+
     return (
         <>
             <LoadingSpinner hide={profileReady} />
@@ -59,8 +65,7 @@ const UserCertificate: FC<{}> = () => {
                     <CertificateView
                         certification={certificationParam}
                         profile={profile}
-                        provider={providerParam}
-                        onCertificationNotCompleted={() => { }}
+                        onCertificationNotCompleted={navigateToCertification}
                         hideActions
                         viewStyle={queryParams.get(getViewStyleParamKey()) as CertificateViewStyle}
                     />
@@ -70,4 +75,4 @@ const UserCertificate: FC<{}> = () => {
     )
 }
 
-export default UserCertificate
+export default UserTCACertificate

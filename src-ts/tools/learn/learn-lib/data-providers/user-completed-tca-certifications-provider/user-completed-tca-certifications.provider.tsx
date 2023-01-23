@@ -6,7 +6,7 @@ import { UserCompletedTCACertification } from './user-completed-tca-certificatio
 import { UserCompletedTCACertificationsProviderData } from './user-completed-tca-certifications-provider-data.model'
 
 const COMPLETED_CERTS_MOCK = [
-    { status: 'comleted', trackType: 'web dev', completedDate: '' },
+    { status: 'comleted', trackType: 'web dev', completedDate: 'Dec 19, 2022' },
 ]
 
 export function useGetUserTCACompletedCertifications(

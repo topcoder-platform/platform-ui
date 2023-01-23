@@ -1,1 +1,1 @@
-export { default as UserCertificate } from './UserCertificate'
+export { default as UserTCACertificate } from './UserTCACertificate'

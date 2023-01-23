@@ -12,6 +12,7 @@ const FreeCodeCamp: LazyLoadedComponent = lazyLoad(() => import('./free-code-cam
 const MyLearning: LazyLoadedComponent = lazyLoad(() => import('./my-learning'), 'MyLearning')
 const LandingLearn: LazyLoadedComponent = lazyLoad(() => import('./Learn'))
 const MyTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'MyTCACertificate')
+const UserTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'UserTCACertificate')
 
 export enum LEARN_PATHS {
     certificate = '/certificate',
@@ -146,6 +147,12 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <MyTCACertificate />,
                 id: 'My TCA Certification',
                 route: 'tca-certifications/:certification/certificate',
+            },
+            {
+                children: [],
+                element: <UserTCACertificate />,
+                id: 'User TCA Certification',
+                route: 'tca-certifications/:certification/:memberHandle/certificate',
             },
         ],
         element: <LandingLearn />,
