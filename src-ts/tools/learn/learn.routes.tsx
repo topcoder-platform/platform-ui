@@ -11,6 +11,7 @@ const UserCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-cer
 const FreeCodeCamp: LazyLoadedComponent = lazyLoad(() => import('./free-code-camp'), 'FreeCodeCamp')
 const MyLearning: LazyLoadedComponent = lazyLoad(() => import('./my-learning'), 'MyLearning')
 const LandingLearn: LazyLoadedComponent = lazyLoad(() => import('./Learn'))
+const MyTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'MyTCACertificate')
 
 export enum LEARN_PATHS {
     certificate = '/certificate',
@@ -20,6 +21,7 @@ export enum LEARN_PATHS {
     fcc = '/learn/fcc',
     root = '/learn',
     startCourseRouteFlag = 'start-course',
+    tcaCertifications = 'tca-certifications',
 }
 
 export const rootRoute: string = LEARN_PATHS.root
@@ -70,6 +72,14 @@ export function getUserCertificateSsr(
     return `${LearnConfig.CERT_DOMAIN}/${handle}/${provider}/${certification}/${encodeURI(title)}`
 }
 
+export function getUserTCACertificateSsr(
+    certification: string,
+    handle: string,
+    title: string,
+): string {
+    return `${LearnConfig.CERT_DOMAIN}/${handle}/tca/${certification}/${encodeURI(title)}`
+}
+
 export function getUserCertificateUrl(
     provider: string,
     certification: string,
@@ -80,6 +90,10 @@ export function getUserCertificateUrl(
 
 export function getViewStyleParamKey(): string {
     return Object.keys(LearnConfig.CERT_ALT_PARAMS)[0]
+}
+
+export function getTCACertificationPath(certification: string): string {
+    return `${LEARN_PATHS.root}/${LEARN_PATHS.tcaCertifications}/${certification}`
 }
 
 export const learnRoutes: ReadonlyArray<PlatformRoute> = [
@@ -126,6 +140,12 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <MyLearning />,
                 id: 'My Learning',
                 route: 'my-learning',
+            },
+            {
+                children: [],
+                element: <MyTCACertificate />,
+                id: 'My TCA Certification',
+                route: 'tca-certifications/:certification/certificate',
             },
         ],
         element: <LandingLearn />,

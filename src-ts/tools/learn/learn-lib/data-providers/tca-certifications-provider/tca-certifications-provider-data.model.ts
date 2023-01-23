@@ -6,3 +6,10 @@ export interface TCACertificationsProviderData {
     loading: boolean
     ready: boolean
 }
+
+export interface TCACertificationProviderData {
+    certification: TCACertification
+    error: boolean
+    loading: boolean
+    ready: boolean
+}

@@ -3,22 +3,46 @@
 /* eslint-disable default-param-last */
 import useSWR, { SWRConfiguration, SWRResponse } from 'swr'
 
+import { LEARN_PATHS } from '../../../learn.routes'
 import { learnUrlGet } from '../../functions'
 import { useSwrCache } from '../../learn-swr'
 
-import { TCACertificationsProviderData } from './tca-certifications-provider-data.model'
+import { TCACertificationProviderData, TCACertificationsProviderData } from './tca-certifications-provider-data.model'
 import { TCACertification } from './tca-certification.model'
 
 interface TCACertificationsAllProviderOptions {
     enabled?: boolean
 }
 
+const TCACertificationMock: TCACertification[] = [{
+    id: 1,
+    title: 'Web Development Fundamentals',
+    description: 'The Web Developer Fundamentals certification will teach you the basics of HTML, CSS, javascript, front end libraries and will also introduce you to backend development.',
+    estimatedCompletionTime: 4,
+    learnerLevel: 'Beginner',
+    sequentialCourses: false,
+    status: 'active',
+    certificationCategoryId: '',
+    skills: ['HTML', 'CSS', 'JavaScript', 'HTML', 'CSS', 'JavaScript', 'HTML', 'CSS', 'JavaScript', 'HTML', 'CSS', 'JavaScript', 'HTML', 'CSS', 'JavaScript'],
+},
+{
+    id: 2,
+    title: 'Data Science Fundamentals',
+    description: 'The Data Science Fundamentals certification will teach you the basics of scientific computing, Data Analysis and machine learning while using Python. Additionally, you will learn about data visualization.',
+    estimatedCompletionTime: 14,
+    status: 'active',
+    sequentialCourses: false,
+    learnerLevel: 'Expert',
+    certificationCategoryId: '',
+    skills: ['Python', 'TensorFlow', 'JSON'],
+}]
+
 export function useGetAllTCACertifications(
     options?: TCACertificationsAllProviderOptions,
 ): TCACertificationsProviderData {
 
     const url: string = learnUrlGet(
-        'topcoder-certifications',
+        LEARN_PATHS.tcaCertifications,
     )
     const swrCacheConfig: SWRConfiguration = useSwrCache(url)
 
@@ -35,37 +59,51 @@ export function useGetAllTCACertifications(
     }
 }
 
-// TODO: remove when integrated with API
-export function useGetAllTCACertificationsMOCK(): TCACertificationsProviderData {
-    const data: TCACertification[] = [{
-        id: 1,
-        title: 'Web Development Fundamentals',
-        description: 'The Web Developer Fundamentals certification will teach you the basics of HTML, CSS, javascript, front end libraries and will also introduce you to backend development.',
-        estimatedCompletionTime: 4,
-        learnerLevel: 'Beginner',
-        sequentialCourses: false,
-        status: 'active',
-        certificationCategoryId: '',
-        skills: ['HTML', 'CSS', 'JavaScript', 'HTML', 'CSS', 'JavaScript', 'HTML', 'CSS', 'JavaScript', 'HTML', 'CSS', 'JavaScript', 'HTML', 'CSS', 'JavaScript'],
-    },
-    {
-        id: 2,
-        title: 'Data Science Fundamentals',
-        description: 'The Data Science Fundamentals certification will teach you the basics of scientific computing, Data Analysis and machine learning while using Python. Additionally, you will learn about data visualization.',
-        estimatedCompletionTime: 14,
-        status: 'active',
-        sequentialCourses: false,
-        learnerLevel: 'Expert',
-        certificationCategoryId: '',
-        skills: ['Python', 'TensorFlow', 'JSON'],
-    }]
+export function useGetTCACertification(
+    certification: string,
+    options?: TCACertificationsAllProviderOptions,
+): TCACertificationProviderData {
 
-    const error = {}
+    const url: string = learnUrlGet(
+        LEARN_PATHS.tcaCertifications,
+        certification,
+    )
+    const swrCacheConfig: SWRConfiguration = useSwrCache(url)
+
+    const { data, error }: SWRResponse = useSWR(url, {
+        ...swrCacheConfig,
+        isPaused: () => options?.enabled === false,
+    })
 
     return {
-        certifications: data ?? [],
+        certification: data,
         error: !!error,
         loading: !data,
         ready: !!data,
+    }
+}
+
+// TODO: remove when integrated with API
+export function useGetTCACertificationMOCK(
+    certification: string,
+): TCACertificationProviderData {
+
+    const data: TCACertification = TCACertificationMock[certification as any]
+
+    return {
+        certification: data,
+        error: false,
+        loading: !data,
+        ready: !!data,
+    }
+}
+
+// TODO: remove when integrated with API
+export function useGetAllTCACertificationsMOCK(): TCACertificationsProviderData {
+    return {
+        certifications: TCACertificationMock ?? [],
+        error: false,
+        loading: !TCACertificationMock,
+        ready: !!TCACertificationMock,
     }
 }
