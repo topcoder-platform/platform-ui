@@ -23,9 +23,6 @@ import { ReactComponent as TcAcademyLogoSvg } from './tc-academy-logo.svg'
 import { ReactComponent as TcLogoSvg } from './tc-logo.svg'
 import { ReactComponent as FccLogoSvg } from './vendor-fcc-logo.svg'
 import { ReactComponent as FccLogoBlackSvg } from './vendor-fcc-logo-black.svg'
-import { ReactComponent as IconLevel1 } from './icon-level-1.svg'
-import { ReactComponent as IconLevel2 } from './icon-level-2.svg'
-import { ReactComponent as IconLevel3 } from './icon-level-3.svg'
 
 export {
     ActiveTabTipIcon,
@@ -51,8 +48,5 @@ export {
     TcLogoSvg,
     FccLogoSvg,
     FccLogoBlackSvg,
-    IconLevel1,
-    IconLevel2,
-    IconLevel3,
 }
 export * from './icon-wrapper'

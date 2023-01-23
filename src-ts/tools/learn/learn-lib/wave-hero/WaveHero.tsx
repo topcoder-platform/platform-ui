@@ -6,14 +6,21 @@ import styles from './WaveHero.module.scss'
 interface WaveHeroProps {
     children?: JSX.Element|Array<JSX.Element>
     text: string
-    theme?: 'light'
+    theme?: 'light' | 'grey'
     title: ReactNode
 }
 
 const WaveHero: FC<WaveHeroProps> = (props: WaveHeroProps) => (
     <div className={classNames(styles['hero-wrap'], props.theme)}>
         <div className={styles['hero-inner']}>
-            <div className={styles['hero-content']}>
+            <div
+                className={
+                    classNames(
+                        'hero-content',
+                        styles['hero-content'],
+                    )
+                }
+            >
                 <div className={styles['hero-text-col']}>
                     <h1>{props.title}</h1>
                     <p

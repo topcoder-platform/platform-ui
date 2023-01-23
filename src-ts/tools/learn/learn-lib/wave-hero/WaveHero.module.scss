@@ -19,10 +19,23 @@
                 background: url('./learn-welcome-bg-curve-white.png') repeat-x center bottom / 100vw, url('./learn-welcome-banner-img-mobile.png') no-repeat top, $tc-grad15;
             }
         }
+        &:global(.grey) {
+            background: $black-10 url('./learn-welcome-bg-curve-white.png') repeat-x center bottom ;
+            background-size: 1440px 40px, auto;
+            @include ltelg {
+                background-size: 100vw $space-lg, auto;
+            }
+        }
     }
 
     &-inner {
         padding: calc($space-mx * 2) 0 $space-lg;
+
+        .hero-wrap:global(.grey) & {
+            padding-top: $space-xxxxl;
+            padding-bottom: 0;
+        }
+
         @include contentWidth;
 
         @include ltelg {
@@ -41,14 +54,19 @@
 
         color: $tc-white;
 
-        h1 {
-            font-size: 80px;
-            line-height: 72px;
-            margin-bottom: $space-xxxxl;
+        .hero-wrap:global(.grey) & {
+            color: $black-100;
+        }
+        .hero-wrap:global(:not(.grey)) & {
+            h1 {
+                font-size: 80px;
+                line-height: 72px;
+                margin-bottom: $space-xxxxl;
 
-            @include ltemd {
-                font-size: 42px;
-                line-height: 40px;
+                @include ltemd {
+                    font-size: 42px;
+                    line-height: 40px;
+                }
             }
         }
 

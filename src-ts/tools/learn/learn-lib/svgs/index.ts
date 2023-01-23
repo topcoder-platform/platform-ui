@@ -1,11 +1,8 @@
-import { ReactComponent as LearningHat } from './learning-hat.svg'
-import { ReactComponent as CertIcon } from './cert-icon.svg'
-import { ReactComponent as CourseIcon } from './course-icon.svg'
-import { ReactComponent as CrowdIcon } from './crowd-icon.svg'
-
-export {
-    LearningHat,
-    CertIcon,
-    CourseIcon,
-    CrowdIcon,
-}
+export { ReactComponent as LearningHat } from './learning-hat.svg'
+export { ReactComponent as CertIcon } from './cert-icon.svg'
+export { ReactComponent as CourseIcon } from './course-icon.svg'
+export { ReactComponent as CrowdIcon } from './crowd-icon.svg'
+export { ReactComponent as DevCertBadgeSvg } from './dev-cert-badge.svg'
+export { ReactComponent as TcLogoSvg } from './tc-logo.svg'
+export { ReactComponent as FccLogoBlackSvg } from './vendor-fcc-logo-black.svg'
+export { ReactComponent as IconCertifSvg } from './icon-certif.svg'
