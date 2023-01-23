@@ -35,7 +35,7 @@ export function useGetAllTCACertifications(
     }
 }
 
-export function useGetCACertification(
+export function useGetTCACertification(
     certification: string,
     options?: TCACertificationsAllProviderOptions,
 ): TCACertificationsProviderData {

@@ -1,7 +1,7 @@
 import { FC, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { IconOutline, IconSolid, Tooltip } from '../../../../lib'
+import { Button, IconOutline, IconSolid, Tooltip } from '../../../../lib'
 import { ProvidersLogoList } from '../providers-logo-list'
 import { LearnLevelIcon, TCACertification } from '../../learn-lib'
 
@@ -99,6 +99,13 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                 providers={props.certification.providers}
             />
 
+            <div className={styles.btns}>
+                <Button
+                    buttonStyle='primary'
+                    size='md'
+                    label='Enroll Now'
+                />
+            </div>
         </div>
     </div>
 )

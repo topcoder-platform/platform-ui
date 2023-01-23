@@ -36,7 +36,8 @@ export const perks: Array<PerkItem> = [
     },
     {
         description: `
-        Topcoder is continuously looking for the best content to fill our certifications.
+            Topcoder is continuously looking for the best content to fill
+            our certifications.
         `,
         icon: 'filter-icon',
         title: 'Curated learning',

@@ -3,147 +3,53 @@ import { type FaqEntry } from '../accordion/Accordion'
 export const FAQs: Array<FaqEntry> = [
     {
         description: `
-            <p>Yes, all our courses are currently free. When you enroll in the certification, you are paying for:</p>
-            <ul>
-                <li>
-                    Access to certification progress tracking features
-                </li>
-                <li>
-                    Unique certification certificate, that is uniquely displayed on your
-                    Topcoder profile and comes with a unique sharable link you can share
-                    with potential employers
-                </li>
-                <li>
-                    Access to your respective certification’s assessment (coming soon).
-                    This will further validate your certification and complement your
-                    completion of the respective courses
-                </li>
-                <li>
-                    Introductory low pricing
-                </li>
-            </ul>
+            <p>
+                Absolutely!
+                Again, all our courses are currently free.
+                Whenever you feel like you can start to benefit from enrolling in a certification,
+                you can do it at any time.
+            </p>
         `,
-        title: 'Wait… aren’t the courses for free already? What exactly am I paying for?',
+        title: 'Can I keep working on the individual courses, even though I did not enroll in the certification?',
     },
     {
         description: `
-            <p>Yes, all our courses are currently free. When you enroll in the certification, you are paying for:</p>
-            <ul>
-                <li>
-                    Access to certification progress tracking features
-                </li>
-                <li>
-                    Unique certification certificate, that is uniquely displayed on your
-                    Topcoder profile and comes with a unique sharable link you can share
-                    with potential employers
-                </li>
-                <li>
-                    Access to your respective certification’s assessment (coming soon).
-                    This will further validate your certification and complement your
-                    completion of the respective courses
-                </li>
-                <li>
-                    Introductory low pricing
-                </li>
-            </ul>
+            <p>
+                No, currently we don’t have any time constraints.
+                Once you purchase the certification, you can complete it at your own pace.
+            </p>
         `,
-        title: 'Can I keep working on the individual courses, even though I did not purchase the certification?',
+        title: 'After I enroll, do I have to complete the certification within a certain amount of time?',
     },
     {
         description: `
-            <p>Yes, all our courses are currently free. When you enroll in the certification, you are paying for:</p>
-            <ul>
-                <li>
-                    Access to certification progress tracking features
-                </li>
-                <li>
-                    Unique certification certificate, that is uniquely displayed on your
-                    Topcoder profile and comes with a unique sharable link you can share
-                    with potential employers
-                </li>
-                <li>
-                    Access to your respective certification’s assessment (coming soon).
-                    This will further validate your certification and complement your
-                    completion of the respective courses
-                </li>
-                <li>
-                    Introductory low pricing
-                </li>
-            </ul>
-        `,
-        title: 'After I purchase, do I have to complete the certification within a certain amount of time?',
-    },
-    {
-        description: `
-            <p>Yes, all our courses are currently free. When you enroll in the certification, you are paying for:</p>
-            <ul>
-                <li>
-                    Access to certification progress tracking features
-                </li>
-                <li>
-                    Unique certification certificate, that is uniquely displayed on your
-                    Topcoder profile and comes with a unique sharable link you can share
-                    with potential employers
-                </li>
-                <li>
-                    Access to your respective certification’s assessment (coming soon).
-                    This will further validate your certification and complement your
-                    completion of the respective courses
-                </li>
-                <li>
-                    Introductory low pricing
-                </li>
-            </ul>
+            <p>
+                Assessments are coming soon!
+                We plan to release early within the 2nd Quarter of 2023.
+            </p>
         `,
         title: 'When will assessments be available for certifications?',
     },
     {
         description: `
-            <p>Yes, all our courses are currently free. When you enroll in the certification, you are paying for:</p>
-            <ul>
-                <li>
-                    Access to certification progress tracking features
-                </li>
-                <li>
-                    Unique certification certificate, that is uniquely displayed on your
-                    Topcoder profile and comes with a unique sharable link you can share
-                    with potential employers
-                </li>
-                <li>
-                    Access to your respective certification’s assessment (coming soon).
-                    This will further validate your certification and complement your
-                    completion of the respective courses
-                </li>
-                <li>
-                    Introductory low pricing
-                </li>
-            </ul>
+            <p>
+                Yes, that is our plan!  Stay tuned for more developments on this.
+            </p>
         `,
         title: 'Will you eventually have a premium plan where I can have access to multiple certifications?',
     },
     {
         description: `
-            <p>Yes, all our courses are currently free. When you enroll in the certification, you are paying for:</p>
-            <ul>
-                <li>
-                    Access to certification progress tracking features
-                </li>
-                <li>
-                    Unique certification certificate, that is uniquely displayed on your
-                    Topcoder profile and comes with a unique sharable link you can share
-                    with potential employers
-                </li>
-                <li>
-                    Access to your respective certification’s assessment (coming soon).
-                    This will further validate your certification and complement your
-                    completion of the respective courses
-                </li>
-                <li>
-                    Introductory low pricing
-                </li>
-            </ul>
+            <p>
+                Topcoder is new to the education space and we are working hard to find the right content
+                partners to build more and better certifications for our members.
+                We have a long history of competition and ratings - once we pour the secret sauce onto certifications,
+                this will become awesome.  We will get better, this is just the starting point.
+            </p>
         `,
-        title: `Can’t I just pay for a similar certification from Coursera or other
-        similar companies? What makes this different?`,
+        title: `
+            Can’t I just enroll for a similar certification from Coursera or other similar companies?
+            What makes this different?
+        `,
     },
 ]
