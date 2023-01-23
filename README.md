@@ -45,7 +45,7 @@ PRs should also have a description that includes a link to the Jira ticket and a
 
 All branches use `dev` as their source. All merges to `dev` should be made via [pull request](#pull-requests) and should be approved by application owner(s).
 
-When working on Jira tickets, a branch should correspond with a single ticket. 
+When working on Jira tickets, a branch should correspond with a single ticket.
 
 When using subtasks, each parent ticket should have its own branch off `dev`, and all subtasks branches should be merged into the parent ticket branch instead of directly to `dev`.
 
@@ -93,12 +93,12 @@ Use the [VS Code](https://code.visualstudio.com/download) IDE for MFE developmen
 ### nvm
 Use the node version manager [nvm](https://github.com/nvm-sh/nvm/blob/master/README.md) to easily and safely manage the required version of NodeJS (aka, node). Download and install it per the instructions for your development operating system. Installing a version of node via `nvm` will also install `npm`.
 
-Once nvm is installed, run: 
+Once nvm is installed, run:
 
 >% nvm install <insert node version>
 
 
-At the root of the project directory you'll notice a file called `.nvmrc` which specifies the node version used by the project. The command `nvm use` will use the version specified in the file if no version is supplied on the command line. 
+At the root of the project directory you'll notice a file called `.nvmrc` which specifies the node version used by the project. The command `nvm use` will use the version specified in the file if no version is supplied on the command line.
 See [the nvm Github README](https://github.com/nvm-sh/nvm/blob/master/README.md#nvmrc) for more information on setting this up.
 
 >**NOTE:** The current node version mentioned in the `.nvmrc` is `16.15.0`
@@ -120,7 +120,7 @@ export NVM_DIR=~/.nvm
 
 If you don't have this set globally, you can create your own [personal config](#personal-config) to define your local nvm dir.
 
-### Hosting 
+### Hosting
 You will need to add the following line to your hosts file. The hosts file is normally located at `/etc/hosts` (Mac). Do not overwrite the existing localhost entry also pointing to 127.0.0.1.
 
 ```
@@ -145,13 +145,13 @@ You will need to add the following line to your hosts file. The hosts file is no
 
 ### Local SSL
 
-SSL is required for authentication to work properly. 
+SSL is required for authentication to work properly.
 
-The `yarn start` command serves the site using the cert and key in the /ssl directory, which authorize the `https://local.topcoder-dev.com`URL. 
+The `yarn start` command serves the site using the cert and key in the /ssl directory, which authorize the `https://local.topcoder-dev.com`URL.
 
 By overriding the app to use <b>port 443</b>, you can use the authorized URL and trust the root CA to avoid SSL errors in the browser.
 
->**NOTE:** Mac users will require running the app with elevated permissions in order to use a port lower than 500. 
+>**NOTE:** Mac users will require running the app with elevated permissions in order to use a port lower than 500.
 
 For easier development, it is recommended that you add this certificate to your trusted root authorities and as a trused cert in your browser. Google your browser and OS for more info on how to trust cert authorities.
 
@@ -168,7 +168,7 @@ Otherwise, you will need to override the exception each time you load the site. 
 7. Prior to starting the server, set your host name:
 ```% export REACT_APP_HOST_ENV=[hostname]```
 
->**NOTE:** Individual tools (e.g. [Learn tool](/src-ts/tools/learn/README.md)) can have their own configuration, which can be configured the same way as the global config. 
+>**NOTE:** Individual tools (e.g. [Learn tool](/src-ts/tools/learn/README.md)) can have their own configuration, which can be configured the same way as the global config.
 
 #### For further convenience
 
@@ -196,7 +196,7 @@ Each [Tool](#tools) can have its own setup requirements. Please see each tool's 
 | `yarn lint:js:fix`    | Run eslint against js/x files, fixes auto-fixable issues, and  outputs report |
 | `yarn lint`           | Run eslint against js/x and ts/x files and outputs report |
 | `yarn lint:fix`       | Run eslint against js/x and ts/x files, fixes auto-fixable issues, and  outputs report |
-| `yarn test`           | Run unit tests, watching for changes and re-running per your specifications |             
+| `yarn test`           | Run unit tests, watching for changes and re-running per your specifications |
 | `yarn test:no-watch`  | Run unit tests once, without watching for changes or re-running |
 | `yarn cy:run`         | Run e2e tests once in local command with the site is running    |
 | `yarn cy:ci`          | Run e2e tests once by circle ci                                 |
@@ -271,8 +271,8 @@ The Tool Selectors on the site [Header](#src-tsheader) correlate 1:1 to director
 The name of a tool's directory should correlate w/the name of the tool and its url.
 
 ```
-i.e. /src-ts/tools/[tool-name] == platform.topcoder.com/[tool-name]
-e.g. /src-ts/tools/work == platform.topcoder.com/work
+i.e. /src-ts/tools/[tool-name] == platform-ui.topcoder.com/[tool-name]
+e.g. /src-ts/tools/work == platform-ui.topcoder.com/work
 ```
 
 >**NOTE:** Tools should not import modules from any directories other than lib. If it is necessary to import from outside the lib, the shared code should generally be moved to lib.
@@ -286,8 +286,8 @@ The Utility Selectors in the site [Header](#src-tsheader) correlate 1:1 to direc
 The name of a util's directory should correlate w/the name of the util and its url.
 
 ```
-i.e. /src-ts/utils/[util-name] == platform.topcoder.com/[util-name]
-e.g. /src-ts/utils/profile == platform.topcoder.com/profile
+i.e. /src-ts/utils/[util-name] == platform-ui.topcoder.com/[util-name]
+e.g. /src-ts/utils/profile == platform-ui.topcoder.com/profile
 ```
 
 >**NOTE:** Utils should not import modules from any directories other than lib. If it is necessary to import from outside the lib, the shared code should generally be moved to lib.
@@ -398,7 +398,7 @@ VS Code has several plugins and settings that make linting easy.
 
 The most useful feature is to automatically apply all lint rules any time you save a file.
 
-1) Code → Preferences → Settings 
+1) Code → Preferences → Settings
 
 2) Search for “save” to find the setting
    - Editor: Code Actions on Save
@@ -470,11 +470,11 @@ Colors and Gradients are defined as variables in `src-ts/lib/styles/_palette.scs
 
 ### Padding
 
-Padding for various screen sizes are defined as variables in `src-ts/lib/styles/_layout.scss`. This file also contains a mixin called `pagePaddings` that determines the correct padding to use for the current screen size based on breakpoints. 
+Padding for various screen sizes are defined as variables in `src-ts/lib/styles/_layout.scss`. This file also contains a mixin called `pagePaddings` that determines the correct padding to use for the current screen size based on breakpoints.
 
 ### Breakpoints
 
-Breakpoint mixins are defined in `src-ts/lib/styles/_breakpoints.scss` and can be used to apply different styling based on the screen width. 
+Breakpoint mixins are defined in `src-ts/lib/styles/_breakpoints.scss` and can be used to apply different styling based on the screen width.
 
 Here is an example that applies a different height value than the default to a css class selector if the screen is considered small (376px - 464px).
 
@@ -502,7 +502,7 @@ example.scss
 }
 ```
 
-Mobile UIs use xs, sm, and md breakpoints. Larger breakpoints are desktop UIs. 
+Mobile UIs use xs, sm, and md breakpoints. Larger breakpoints are desktop UIs.
 
 For specifying mobile CSS, you can use @include ltemd:
 ```
@@ -525,7 +525,7 @@ For specifying mobile CSS, you can use @include ltemd:
 ### Heroicons
 We use the SVG icons library [Heroicons](https://heroicons.com/), where each icon is available in an `outline` or `solid` version.
 
-We import both sets of icons in the file `src-ts/lib/svgs/index.ts`. 
+We import both sets of icons in the file `src-ts/lib/svgs/index.ts`.
 ```
 import * as IconOutline from '@heroicons/react/outline'
 import * as IconSolid from '@heroicons/react/solid'
@@ -554,8 +554,8 @@ See the /src-ts/lib/svgs for an example.
 
 ### Styling Icons
 
-You can style an SVG icon by overwritting its properties through CSS (height, width, fill, etc.). 
-There are also existing mixins located in `src-ts/lib/styles/_icons.scss` with pre-defined widths and heights for various icon sizes. 
+You can style an SVG icon by overwritting its properties through CSS (height, width, fill, etc.).
+There are also existing mixins located in `src-ts/lib/styles/_icons.scss` with pre-defined widths and heights for various icon sizes.
 
 e.g.:
 ```
@@ -568,7 +568,7 @@ e.g.:
         path {
             fill: $tc-white;
         }
-    } 
+    }
 }
 
 .no-logo-link {
@@ -589,7 +589,7 @@ e.g.:
 
 # Tools
 
-The following summarizes the various [tools](#adding-a-tool-or-util) in the Platform UI. 
+The following summarizes the various [tools](#adding-a-tool-or-util) in the Platform UI.
 
 - [Dev Center](#dev-center)
 - [Gamification Admin](#gamification-admin)
