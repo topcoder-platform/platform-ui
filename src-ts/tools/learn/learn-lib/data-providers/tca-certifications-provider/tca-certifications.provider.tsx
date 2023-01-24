@@ -9,6 +9,7 @@ import { useSwrCache } from '../../learn-swr'
 
 import { TCACertificationProviderData, TCACertificationsProviderData } from './tca-certifications-provider-data.model'
 import { TCACertification } from './tca-certification.model'
+import { find } from 'lodash'
 
 interface TCACertificationsAllProviderOptions {
     enabled?: boolean
@@ -17,6 +18,7 @@ interface TCACertificationsAllProviderOptions {
 const TCACertificationMock: TCACertification[] = [{
     id: 1,
     title: 'Web Development Fundamentals',
+    dashedName: 'web-development-fundamentals',
     description: 'The Web Developer Fundamentals certification will teach you the basics of HTML, CSS, javascript, front end libraries and will also introduce you to backend development.',
     estimatedCompletionTime: 4,
     learnerLevel: 'Beginner',
@@ -28,6 +30,7 @@ const TCACertificationMock: TCACertification[] = [{
 {
     id: 2,
     title: 'Data Science Fundamentals',
+    dashedName: 'data-science-fundamentals',
     description: 'The Data Science Fundamentals certification will teach you the basics of scientific computing, Data Analysis and machine learning while using Python. Additionally, you will learn about data visualization.',
     estimatedCompletionTime: 14,
     status: 'active',
@@ -88,7 +91,7 @@ export function useGetTCACertificationMOCK(
     certification: string,
 ): TCACertificationProviderData {
 
-    const data: TCACertification = TCACertificationMock[certification as any]
+    const data: TCACertification | undefined = find(TCACertificationMock, { dashedName: certification })
 
     return {
         certification: data,

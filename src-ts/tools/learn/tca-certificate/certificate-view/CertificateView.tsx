@@ -13,16 +13,16 @@ import {
     UserProfile,
 } from '../../../../lib'
 import {
+    ActionButton,
     TCACertificationProviderData,
-    UserCompletedTCACertificationsProviderData,
-    useGetUserTCACompletedCertificationsMOCK,
+    useCertificateScaling,
     useGetTCACertificationMOCK,
+    useGetUserTCACompletedCertificationsMOCK,
+    UserCompletedTCACertificationsProviderData,
 } from '../../learn-lib'
 import { getTCACertificationPath, getUserTCACertificateSsr } from '../../learn.routes'
 
-import { ActionButton } from './action-button'
 import { Certificate } from './certificate'
-import { useCertificateScaling } from './use-certificate-scaling.hook'
 import styles from './CertificateView.module.scss'
 
 export type CertificateViewStyle = 'large-container' | undefined

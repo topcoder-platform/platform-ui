@@ -13,8 +13,10 @@ import {
     UserProfile,
 } from '../../../../lib'
 import {
+    ActionButton,
     AllCertificationsProviderData,
     CoursesProviderData,
+    useCertificateScaling,
     useGetCertification,
     useGetCourses,
     useGetUserCompletedCertifications,
@@ -22,9 +24,7 @@ import {
 } from '../../learn-lib'
 import { getCoursePath, getUserCertificateSsr } from '../../learn.routes'
 
-import { ActionButton } from './action-button'
 import { Certificate } from './certificate'
-import { useCertificateScaling } from './use-certificate-scaling.hook'
 import styles from './CertificateView.module.scss'
 
 export type CertificateViewStyle = 'large-container' | undefined
