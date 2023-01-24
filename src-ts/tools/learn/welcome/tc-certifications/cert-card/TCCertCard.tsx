@@ -1,8 +1,8 @@
-import { FC, memo, ReactNode } from 'react'
+import { FC, memo } from 'react'
 import classNames from 'classnames'
 
-import { FccLogoBlackSvg, IconLevel1, IconLevel2, IconLevel3, IconSolid, Tooltip } from '../../../../../lib'
-import { TCACertification } from '../../../learn-lib'
+import { FccLogoBlackSvg, IconSolid, Tooltip } from '../../../../../lib'
+import { LearnLevelIcon, TCACertification } from '../../../learn-lib'
 import { SkillLabel } from '../../skill'
 import { ReactComponent as TCACertBadgeDEV1 } from '../assets/web-dev-cert-badge-1.svg'
 
@@ -13,11 +13,6 @@ interface TCCertCardProps {
 }
 
 const EXCERPT_TEXT_LEN: number = 170
-const LEVEL_ICONS_MAP: Record<string, ReactNode> = {
-    Beginner: <IconLevel1 />,
-    Expert: <IconLevel3 />,
-    Intermediate: <IconLevel2 />,
-}
 
 const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
     const desc: string = props.certification.description.slice(0, EXCERPT_TEXT_LEN)
@@ -32,7 +27,7 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                 <div className={styles.cardTitleWrap}>
                     <p className='body-large-medium'>{props.certification.title}</p>
                     <div className={styles.cardSubWrap}>
-                        {LEVEL_ICONS_MAP[props.certification.learnerLevel]}
+                        <LearnLevelIcon level={props.certification.learnerLevel} />
                         <span className={classNames('body-small', styles.infoText)}>
                             {props.certification.learnerLevel}
                         </span>

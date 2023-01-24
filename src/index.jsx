@@ -31,45 +31,49 @@ logInitialize(EnvironmentConfig);
 
 const root = createRoot(document.getElementById("root"));
 root.render(
-  <div className="root-container">
-    <Provider store={store}>
-      <ProfileProvider>
+    <>
+        <div id="main-nav-el" />
+        <div className="root-container">
+            <Provider store={store}>
+            <ProfileProvider>
 
-        <BrowserRouter>
+                <BrowserRouter>
 
-          <RouteProvider
-            rootCustomer={routeRootCustomer}
-            rootLoggedOut={routeRootLoggedOut}
-            rootLoggedOutFC={WorkNotLoggedIn}
-            rootMember={routeRootMember}
-            toolsRoutes={[...toolsRoutes]}
-            utilsRoutes={[...utilsRoutes]}
-          >
-            <StrictMode>
-              <AppNextGen />
-            </StrictMode>
-          </RouteProvider>
+                <RouteProvider
+                    rootCustomer={routeRootCustomer}
+                    rootLoggedOut={routeRootLoggedOut}
+                    rootLoggedOutFC={WorkNotLoggedIn}
+                    rootMember={routeRootMember}
+                    toolsRoutes={[...toolsRoutes]}
+                    utilsRoutes={[...utilsRoutes]}
+                >
+                    <StrictMode>
+                    <AppNextGen />
+                    </StrictMode>
+                </RouteProvider>
 
-          <App />
-          <ReduxToastr
-            timeOut={3000}
-            newestOnTop={false}
-            preventDuplicates
-            position="top-right"
-            getState={(state) => state.toastr}
-            transitionIn="fadeIn"
-            transitionOut="fadeOut"
-            progressBar
-            closeOnToastrClick
-          />
+                <App />
+                <ReduxToastr
+                    timeOut={3000}
+                    newestOnTop={false}
+                    preventDuplicates
+                    position="top-right"
+                    getState={(state) => state.toastr}
+                    transitionIn="fadeIn"
+                    transitionOut="fadeOut"
+                    progressBar
+                    closeOnToastrClick
+                />
 
-        </BrowserRouter>
+                </BrowserRouter>
 
-        <PageFooter />
+                <PageFooter />
 
-        <Analytics />
+                <Analytics />
 
-      </ProfileProvider>
-    </Provider>
-  </div>
+            </ProfileProvider>
+            </Provider>
+        </div>
+        <div id="footer-nav-el" />
+    </>
 )

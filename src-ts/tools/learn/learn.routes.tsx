@@ -4,6 +4,10 @@ import { toolTitle } from './Learn'
 import { LearnConfig } from './learn-config'
 
 const WelcomePage: LazyLoadedComponent = lazyLoad(() => import('./welcome'), 'WelcomePage')
+const CertificationDetailsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./certification-details'),
+    'CertificationDetailsPage',
+)
 const CourseDetailsPage: LazyLoadedComponent = lazyLoad(() => import('./course-details'), 'CourseDetailsPage')
 const CourseCompletedPage: LazyLoadedComponent = lazyLoad(() => import('./course-completed'), 'CourseCompletedPage')
 const MyCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certificate'), 'MyCertificate')
@@ -105,6 +109,12 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <WelcomePage />,
                 id: 'Welcome to Topcoder Academy',
                 route: '',
+            },
+            {
+                children: [],
+                element: <CertificationDetailsPage />,
+                id: 'Certification Details',
+                route: 'tca-certifications/:certification',
             },
             {
                 children: [],

@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 /* eslint-disable sort-keys */
 /* eslint-disable default-param-last */
+import { find } from 'lodash'
 import useSWR, { SWRConfiguration, SWRResponse } from 'swr'
 
 import { LEARN_PATHS } from '../../../learn.routes'
@@ -9,7 +10,6 @@ import { useSwrCache } from '../../learn-swr'
 
 import { TCACertificationProviderData, TCACertificationsProviderData } from './tca-certifications-provider-data.model'
 import { TCACertification } from './tca-certification.model'
-import { find } from 'lodash'
 
 interface TCACertificationsAllProviderOptions {
     enabled?: boolean

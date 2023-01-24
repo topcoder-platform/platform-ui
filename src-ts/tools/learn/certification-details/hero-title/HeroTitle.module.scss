@@ -1,0 +1,14 @@
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-xxl;
+    margin-bottom: $space-lg;
+}
+
+.text {
+    h1 {
+        margin-bottom: $space-sm;
+    }
+}
