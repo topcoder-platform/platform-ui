@@ -21,6 +21,7 @@ import { HeroTitle } from './hero-title'
 import { CertificationDetailsSidebar } from './certification-details-sidebar'
 import { PerksSection } from './perks-section'
 import { perks } from './data/perks.data'
+import { CertificationCurriculum } from './certification-curriculum'
 import styles from './CertificationDetailsPage.module.scss'
 
 function renderBasicList(items: Array<string>): ReactNode {
@@ -58,6 +59,14 @@ const CertificationDetailsPage: FC<{}> = () => {
             <div className={styles['text-section']}>
                 <h2>What I Will Learn?</h2>
                 {renderBasicList(certification.learningOutcomes)}
+            </div>
+        )
+    }
+
+    function renderCertificationCurriculum(): ReactNode {
+        return (
+            <div className={styles['text-section']}>
+                <CertificationCurriculum certification={certification} />
             </div>
         )
     }
@@ -119,6 +128,7 @@ const CertificationDetailsPage: FC<{}> = () => {
 
             <PerksSection items={perks} />
             {renderLearningOutcomeSection()}
+            {renderCertificationCurriculum()}
             {renderRequirementsSection()}
             {renderFaqSection()}
         </ContentLayout>

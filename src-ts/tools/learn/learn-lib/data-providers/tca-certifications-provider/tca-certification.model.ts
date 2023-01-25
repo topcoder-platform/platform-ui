@@ -1,9 +1,11 @@
 import { TCACertificationLearnLevel } from './tca-certificate-level-type'
 import { TCACertificationStatus } from './tca-certificate-status-type'
+import { TcaCertificateType } from './tca-certificate-type'
 import { TcaProviderType } from './tca-provider-type'
 
 export interface TCACertification {
     certificationCategoryId: string
+    certType: TcaCertificateType
     coursesCount: number
     dashedName: string
     description: string

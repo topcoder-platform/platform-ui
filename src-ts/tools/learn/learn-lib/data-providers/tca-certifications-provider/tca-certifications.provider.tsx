@@ -76,6 +76,7 @@ export function useGetAllTCACertificationsMOCK(): TCACertificationsProviderData 
         prerequisites: [],
         coursesCount: 4,
         providers: ['freecodecamp', 'topcoder'],
+        certType: 'DEV',
         learningOutcomes: [],
     },
     {
@@ -93,6 +94,7 @@ export function useGetAllTCACertificationsMOCK(): TCACertificationsProviderData 
         prerequisites: [],
         coursesCount: 4,
         providers: ['freecodecamp', 'topcoder'],
+        certType: 'DATASCIENCE',
         learningOutcomes: [],
     }]
 
@@ -123,6 +125,7 @@ export function useGetTCACertificationMOCK(
         prerequisites: [],
         coursesCount: 4,
         providers: ['freecodecamp', 'topcoder'],
+        certType: 'DEV',
         learningOutcomes: [
             'Fundamental skills required to begin a career in web development',
             'Introduction to React and other front end libraries - a jumping off point to build awesome websites',

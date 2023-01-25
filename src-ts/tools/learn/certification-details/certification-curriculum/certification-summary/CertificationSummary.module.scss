@@ -1,0 +1,21 @@
+@import '../../../../../lib/styles/includes';
+
+.wrap {
+    display: flex;
+    align-items: center;
+    gap: $space-lg;
+
+
+    > svg {
+        display: block;
+        width: 96px;
+        height: 96px;
+    }
+
+    :global(.body-large-bold) {
+        > span {
+            margin-top: $space-sm;
+            display: block;
+        }
+    }
+}

@@ -1,0 +1,29 @@
+@import '../../../../../lib/styles/includes';
+
+.iconse {
+    path:global(.star) {
+        opacity: 0.23;
+    }
+
+    &:global(.beginner),
+    &:global(.intermediate),
+    &:global(.expert) {
+        path:global(.star-1) {
+            opacity: 1;
+        }
+    }
+
+    &:global(.intermediate),
+    &:global(.expert) {
+        path:global(.star-2) {
+            opacity: 1;
+        }
+    }
+
+    &:global(.expert) {
+        path:global(.star-3) {
+            opacity: 1;
+        }
+    }
+
+}

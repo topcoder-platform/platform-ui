@@ -22,6 +22,7 @@
         &:global(.grey) {
             background: $black-10 url('./learn-welcome-bg-curve-white.png') repeat-x center bottom ;
             background-size: 1440px 40px, auto;
+            padding-bottom: 84px;
             @include ltelg {
                 background-size: 100vw $space-lg, auto;
             }

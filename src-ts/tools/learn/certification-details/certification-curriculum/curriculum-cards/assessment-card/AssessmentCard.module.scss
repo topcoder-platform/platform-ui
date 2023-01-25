@@ -1,0 +1,26 @@
+@import '../../../../../../lib/styles/includes';
+
+.cta {
+    color: $blue-140;
+}
+
+.content {
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+
+    :global(.quote-small) {
+        font-style: italic;
+        color: $black-60;
+    }
+}
+
+.tag {
+    padding: 2px $space-xs 0;
+    background: $blue-140;
+    border-radius: $border;
+
+    color: $tc-white;
+    text-transform: uppercase;
+    display: flex;
+}
