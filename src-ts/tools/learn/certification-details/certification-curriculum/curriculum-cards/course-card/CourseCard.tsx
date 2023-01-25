@@ -1,8 +1,11 @@
 import { FC } from 'react'
 
 import { Button, IconSolid } from '../../../../../../lib'
-import { LearnCertification, LearnLevelIcon } from '../../../../learn-lib'
-import { ProvidersLogoList } from '../../../providers-logo-list'
+import {
+    LearnCertification,
+    LearnLevelIcon,
+    ProvidersLogoList,
+} from '../../../../learn-lib'
 import CurriculumCard from '../CurriculumCard'
 
 import styles from './CourseCard.module.scss'

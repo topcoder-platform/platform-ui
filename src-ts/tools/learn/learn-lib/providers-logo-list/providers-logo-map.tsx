@@ -1,6 +1,7 @@
 import { ReactNode } from 'react'
 
-import { FccLogoBlackSvg, TcaProviderType, TcLogoSvg } from '../../learn-lib'
+import { TcaProviderType } from '../data-providers'
+import { FccLogoBlackSvg, TcLogoSvg } from '../svgs'
 
 export const providersLogoMap: {[key in TcaProviderType]: ReactNode} = {
     freecodecamp: <FccLogoBlackSvg />,

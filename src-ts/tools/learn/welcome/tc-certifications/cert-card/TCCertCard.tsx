@@ -1,10 +1,9 @@
 import { FC, memo } from 'react'
 import classNames from 'classnames'
 
-import { FccLogoBlackSvg, IconSolid, Tooltip } from '../../../../../lib'
-import { LearnLevelIcon, TCACertification } from '../../../learn-lib'
+import { IconSolid, Tooltip } from '../../../../../lib'
+import { CertificateBadgeIcon, LearnLevelIcon, ProvidersLogoList, TCACertification } from '../../../learn-lib'
 import { SkillLabel } from '../../skill'
-import { ReactComponent as TCACertBadgeDEV1 } from '../assets/web-dev-cert-badge-1.svg'
 
 import styles from './TCCertCard.module.scss'
 
@@ -21,9 +20,10 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
     return (
         <div className={styles.wrap}>
             <div className={styles.cardHeader}>
-                {/* TODO: move this to import from learn-lib/svgs
-                when implementing render logic based on learneLevel field... */}
-                <TCACertBadgeDEV1 />
+                <CertificateBadgeIcon
+                    type={props.certification.certificationCategory.track}
+                    level={props.certification.learnerLevel}
+                />
                 <div className={styles.cardTitleWrap}>
                     <p className='body-large-medium'>{props.certification.title}</p>
                     <div className={styles.cardSubWrap}>
@@ -33,13 +33,13 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                         </span>
                         <IconSolid.DocumentTextIcon width={16} height={16} />
                         <span className={classNames('body-small', styles.infoText)}>
-                            {/* {props.certification.estimatedCompletionTime} */}
+                            {props.certification.coursesCount}
                             {' courses'}
                         </span>
                         <IconSolid.ClockIcon width={16} height={16} />
                         <span className={classNames('body-small', styles.infoText)}>
                             {props.certification.estimatedCompletionTime}
-                            {' hours'}
+                            {' months'}
                         </span>
                         <IconSolid.CurrencyDollarIcon width={16} height={16} />
                         <span className={classNames('body-small', styles.infoText)}>
@@ -68,10 +68,11 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                 )}
             </div>
 
-            <div className={styles.contentFrom}>
-                <span className={classNames('body-small', styles.infoText)}>content from</span>
-                <FccLogoBlackSvg />
-            </div>
+            <ProvidersLogoList
+                className={styles.providers}
+                label='content from'
+                providers={props.certification.providers}
+            />
         </div>
     )
 }

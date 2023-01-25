@@ -11,7 +11,7 @@ interface CertBadgeIconProps {
     level: TCACertificationLearnLevel
 }
 
-const CertificateBadgeIcone: FC<CertBadgeIconProps> = (props: CertBadgeIconProps) => {
+const CertificateBadgeIcon: FC<CertBadgeIconProps> = (props: CertBadgeIconProps) => {
     const Icon: FC<SVGProps<SVGSVGElement>> = getCertBadgeIcon(props.type)
 
     return (
@@ -19,4 +19,4 @@ const CertificateBadgeIcone: FC<CertBadgeIconProps> = (props: CertBadgeIconProps
     )
 }
 
-export default CertificateBadgeIcone
+export default CertificateBadgeIcon

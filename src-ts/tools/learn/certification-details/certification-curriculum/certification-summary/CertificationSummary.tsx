@@ -11,7 +11,7 @@ interface CertificationSummaryProps {
 const CertificationSummary: FC<CertificationSummaryProps> = (props: CertificationSummaryProps) => (
     <div className={styles.wrap}>
         <CertificateBadgeIcon
-            type={props.certification.certType}
+            type={props.certification.certificationCategory.track}
             level={props.certification.learnerLevel}
         />
         <div className='body-large-bold'>

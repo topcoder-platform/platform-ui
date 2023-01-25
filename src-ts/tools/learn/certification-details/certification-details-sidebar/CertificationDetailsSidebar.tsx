@@ -2,8 +2,7 @@ import { FC, ReactNode } from 'react'
 import classNames from 'classnames'
 
 import { Button, IconOutline, IconSolid, Tooltip } from '../../../../lib'
-import { ProvidersLogoList } from '../providers-logo-list'
-import { LearnLevelIcon, TCACertification } from '../../learn-lib'
+import { LearnLevelIcon, ProvidersLogoList, TCACertification } from '../../learn-lib'
 
 import img from './certificate-placeholder.jpg'
 import styles from './CertificationDetailsSidebar.module.scss'

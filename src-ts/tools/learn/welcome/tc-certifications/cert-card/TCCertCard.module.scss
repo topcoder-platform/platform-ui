@@ -61,10 +61,13 @@
             }
         }
     }
+}
 
-    .contentFrom {
-        display: flex;
-        align-items: center;
+.providers {
+    > span {
+        font-style: italic;
+        color: $black-60;
+        font-weight: normal;
     }
 }
 

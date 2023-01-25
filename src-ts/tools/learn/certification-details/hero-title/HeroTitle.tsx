@@ -1,18 +1,25 @@
 import { FC } from 'react'
 
-import { CertificateBadgeIcon, TCACertification } from '../../learn-lib'
-import { ProvidersLogoList } from '../providers-logo-list'
+import {
+    CertificateBadgeIcon,
+    ProvidersLogoList,
+    TcaCertificateType,
+    TCACertification,
+    TCACertificationLearnLevel,
+} from '../../learn-lib'
 
 import styles from './HeroTitle.module.scss'
 
 interface HeroTitleProps {
     certTitle: string
     providers: TCACertification['providers']
+    certTrack: TcaCertificateType
+    certLevel: TCACertificationLearnLevel
 }
 
 const HeroTitle: FC<HeroTitleProps> = (props: HeroTitleProps) => (
     <div className={styles.wrap}>
-        <CertificateBadgeIcon type='DEV' level='Beginner' />
+        <CertificateBadgeIcon type={props.certTrack} level={props.certLevel} />
         <div className={styles.text}>
             <h1 className={styles.title}>
                 {props.certTitle}

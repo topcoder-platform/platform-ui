@@ -2,7 +2,7 @@ import { FC, ReactNode, useContext } from 'react'
 import { Params, useParams } from 'react-router-dom'
 
 import { PageSubheaderPortalId } from '../../../config'
-import { TCACertificationsProviderData, useGetTCACertificationMOCK, useLearnBreadcrumb, WaveHero } from '../learn-lib'
+import { TCACertificationProviderData, useGetTCACertificationMOCK, useLearnBreadcrumb, WaveHero } from '../learn-lib'
 import {
     Breadcrumb,
     BreadcrumbItemModel,
@@ -40,9 +40,9 @@ const CertificationDetailsPage: FC<{}> = () => {
     const { initialized: profileReady }: ProfileContextData = useContext(profileContext)
 
     const {
-        certifications: [certification],
+        certification,
         ready: certificateReady,
-    }: TCACertificationsProviderData = useGetTCACertificationMOCK(dashedName as string)
+    }: TCACertificationProviderData = useGetTCACertificationMOCK(dashedName as string)
 
     const ready: boolean = profileReady && certificateReady
 
@@ -110,6 +110,8 @@ const CertificationDetailsPage: FC<{}> = () => {
                         title={(
                             <HeroTitle
                                 certTitle={certification.title}
+                                certTrack={certification.certificationCategory.track}
+                                certLevel={certification.learnerLevel}
                                 providers={certification.providers}
                             />
                         )}
