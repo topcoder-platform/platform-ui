@@ -13,6 +13,7 @@ interface AssessmentCardProps {
 
 const AssessmentCard: FC<AssessmentCardProps> = (props: AssessmentCardProps) => (
     <CurriculumCard
+        className={styles.card}
         bradgeTrackType={props.trackType}
         title={props.title}
         cta={(

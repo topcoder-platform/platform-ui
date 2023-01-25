@@ -1,5 +1,11 @@
 @import '../../../../../../lib/styles/includes';
 
+.card {
+    :global(.badge) {
+        opacity: 0.5;
+    }
+}
+
 .cta {
     color: $blue-140;
 }
