@@ -1,7 +1,6 @@
 import { FC, MutableRefObject, useCallback, useEffect, useMemo, useRef } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 import classNames from 'classnames'
-import html2canvas from 'html2canvas'
 
 import {
     FacebookSocialShareBtn,
@@ -16,6 +15,8 @@ import {
     ActionButton,
     AllCertificationsProviderData,
     CoursesProviderData,
+    useCertificateCanvas,
+    useCertificatePrint,
     useCertificateScaling,
     useGetCertification,
     useGetCourses,
@@ -102,27 +103,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         navigate(coursePath)
     }, [coursePath, navigate])
 
-    const getCertificateCanvas: () => Promise<HTMLCanvasElement | void> = useCallback(async () => {
-
-        if (!certificateElRef.current) {
-            return undefined
-        }
-
-        return html2canvas(certificateElRef.current, {
-            // when canvas iframe is ready, remove text gradients
-            // as they're not supported in html2canvas
-            onclone: (doc: Document) => {
-                [].forEach.call(doc.querySelectorAll('.grad'), (el: HTMLDivElement) => {
-                    el.classList.remove('grad')
-                })
-            },
-            // scale (pixelRatio) doesn't matter for the final ceriticate, use 1
-            scale: 1,
-            // use the same (ideal) window size when rendering the certificate
-            windowHeight: 700,
-            windowWidth: 1024,
-        })
-    }, [])
+    const getCertificateCanvas: () => Promise<HTMLCanvasElement | void> = useCertificateCanvas(certificateElRef)
 
     const handleDownload: () => Promise<void> = useCallback(async () => {
 
@@ -133,23 +114,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
 
     }, [certificationTitle, getCertificateCanvas])
 
-    const handlePrint: () => Promise<void> = useCallback(async () => {
-
-        const canvas: HTMLCanvasElement | void = await getCertificateCanvas()
-        if (!canvas) {
-            return
-        }
-
-        const printWindow: Window | null = window.open('')
-        if (!printWindow) {
-            return
-        }
-
-        printWindow.document.body.appendChild(canvas)
-        printWindow.document.title = certificationTitle
-        printWindow.focus()
-        printWindow.print()
-    }, [certificationTitle, getCertificateCanvas])
+    const handlePrint: () => Promise<void> = useCertificatePrint(certificateElRef, certificationTitle)
 
     useEffect(() => {
         if (ready && !hasCompletedTheCertification) {
