@@ -5,11 +5,18 @@
     background: linear-gradient(84.45deg, $blue-160 2.12%, $blue-110 97.43%);
     border-radius: 8px;
     color: $tc-white;
+    @include ltelg {
+        padding: $space-xxxxl $space-lg $space-lg;
+    }
 }
 
 .headline {
     display: flex;
     align-items: baseline;
+
+    @include ltelg {
+        flex-direction: column;
+    }
 
     .headlineDetails {
         margin-left: auto;
@@ -17,6 +24,11 @@
         display: flex;
         align-items: baseline;
         gap: $space-lg;
+
+        @include ltelg {
+            margin-left: 0;
+            margin-top: $space-xxl;
+        }
     }
 }
 
