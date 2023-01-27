@@ -13,17 +13,15 @@ import {
 } from '../../../../lib'
 import {
     ActionButton,
-    AllCertificationsProviderData,
-    CoursesProviderData,
+    TCACertificationProviderData,
     useCertificateCanvas,
     useCertificatePrint,
     useCertificateScaling,
-    useGetCertification,
-    useGetCourses,
-    useGetUserCompletedCertifications,
-    UserCompletedCertificationsProviderData,
+    useGetTCACertificationMOCK,
+    useGetUserTCACompletedCertificationsMOCK,
+    UserCompletedTCACertificationsProviderData,
 } from '../../learn-lib'
-import { getCoursePath, getUserCertificateSsr } from '../../learn.routes'
+import { getTCACertificationPath, getUserTCACertificateSsr } from '../../learn.routes'
 
 import { Certificate } from './certificate'
 import styles from './CertificateView.module.scss'
@@ -35,14 +33,13 @@ interface CertificateViewProps {
     hideActions?: boolean,
     onCertificationNotCompleted: () => void
     profile: UserProfile,
-    provider: string,
     viewStyle: CertificateViewStyle
 }
 
 const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) => {
 
     const navigate: NavigateFunction = useNavigate()
-    const coursePath: string = getCoursePath(props.provider, props.certification)
+    const tcaCertificationPath: string = getTCACertificationPath(props.certification)
     const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
     const certificateWrapRef: MutableRefObject<HTMLDivElement | any> = useRef()
 
@@ -53,16 +50,15 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     ), [props.profile.firstName, props.profile.handle, props.profile.lastName])
 
     const {
-        course,
-        ready: courseReady,
-    }: CoursesProviderData = useGetCourses(props.provider, props.certification)
+        certification,
+        ready: certReady,
+    }: TCACertificationProviderData = useGetTCACertificationMOCK(props.certification)
 
     function getCertTitle(user: string): string {
-        return `${user} - ${course?.title} Certification`
+        return `${user} - ${certification?.title} Certification`
     }
 
-    const certUrl: string = getUserCertificateSsr(
-        props.provider,
+    const certUrl: string = getUserTCACertificateSsr(
         props.certification,
         props.profile.handle,
         getCertTitle(props.profile.handle),
@@ -73,25 +69,16 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const {
         certifications: [completedCertificate],
         ready: completedCertificateReady,
-    }: UserCompletedCertificationsProviderData = useGetUserCompletedCertifications(
+    }: UserCompletedTCACertificationsProviderData = useGetUserTCACompletedCertificationsMOCK(
         props.profile.userId,
-        props.provider,
         props.certification,
     )
+
     const hasCompletedTheCertification: boolean = !!completedCertificate
 
-    const {
-        certification: certificate,
-        ready: certificateReady,
-    }: AllCertificationsProviderData = useGetCertification(
-        props.provider,
-        course?.certificationId ?? '',
-        { enabled: !!course?.certificationId },
-    )
-
     const ready: boolean = useMemo(() => (
-        completedCertificateReady && courseReady && certificateReady
-    ), [certificateReady, completedCertificateReady, courseReady])
+        completedCertificateReady && certReady
+    ), [completedCertificateReady, certReady])
 
     const readyAndCompletedCertification: boolean = useMemo(() => (
         ready && hasCompletedTheCertification
@@ -100,8 +87,8 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     useCertificateScaling(ready ? certificateWrapRef : undefined)
 
     const handleBackBtnClick: () => void = useCallback(() => {
-        navigate(coursePath)
-    }, [coursePath, navigate])
+        navigate(tcaCertificationPath)
+    }, [tcaCertificationPath, navigate])
 
     const getCertificateCanvas: () => Promise<HTMLCanvasElement | void> = useCertificateCanvas(certificateElRef)
 
@@ -120,7 +107,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         if (ready && !hasCompletedTheCertification) {
             props.onCertificationNotCompleted()
         }
-    }, [coursePath, hasCompletedTheCertification, props, ready])
+    }, [tcaCertificationPath, hasCompletedTheCertification, props, ready])
 
     return (
         <>
@@ -142,13 +129,12 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                             ref={certificateWrapRef}
                         >
                             <Certificate
-                                course={course?.title}
+                                course={certification?.title}
                                 userName={userName}
                                 tcHandle={props.profile.handle}
-                                provider={course?.provider}
                                 completedDate={completedCertificate?.completedDate ?? ''}
                                 elRef={certificateElRef}
-                                type={certificate?.trackType}
+                                type={certification?.trackType}
                                 viewStyle={props.viewStyle}
                             />
                         </div>

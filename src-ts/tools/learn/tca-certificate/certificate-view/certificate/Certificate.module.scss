@@ -1,0 +1,168 @@
+@import '../../../../../lib/styles/includes';
+@import './includes';
+
+.wrap {
+    display: flex;
+    height: 100%;
+}
+
+.details {
+    width: 55%;
+    padding: calc($space-mx + $space-lg);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+
+    &-inner {
+        max-width: 385px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .wrap:global(.large-container) & {
+        padding-left: calc($space-mx + $space-mxx);
+    }
+
+    h2 {
+        color: $blue-160;
+        &:global(.grad) {
+            @include grad-text-color($tc-grad15);
+        }
+    }
+
+    h3 {
+        font-size: 48px;
+        line-height: 50px;
+        color: $tc-black;
+        margin-top: $space-sm;
+    }
+
+    h1 {
+        font-size: 80px;
+        line-height: 72px;
+    }
+
+    &:global(.theme-dev) {
+        .username {
+            color: $tc-dev-track-color;
+        }
+        .username:global(.grad) {
+            @include grad-text-color($tc-dev-grad);
+        }
+        .tc-handle {
+            color: $turq-140;
+        }
+    }
+    &:global(.theme-design) {
+        .username {
+            color: $tc-design-track-color;
+        }
+        .username:global(.grad) {
+            @include grad-text-color($tc-design-grad);
+        }
+        .tc-handle {
+            color: $blue-140;
+        }
+    }
+    &:global(.theme-qa) {
+        .username {
+            color: $tc-qa-track-color;
+        }
+        .username:global(.grad) {
+            @include grad-text-color($tc-qa-grad);
+        }
+        .tc-handle {
+            color: $purple-120;
+        }
+    }
+    &:global(.theme-datascience) {
+        .username {
+            color: $tc-datascience-track-color;
+        }
+        .username:global(.grad) {
+            @include grad-text-color($tc-datascience-grad);
+        }
+        .tc-handle {
+            color: $red-140;
+        }
+    }
+}
+
+.username {
+    margin-top: calc($space-mx + $space-sm);
+}
+
+.tc-handle {
+    color: $turq-140;
+
+    margin-top: $space-xl;
+}
+
+.badges {
+    width: 45%;
+    position: relative;
+    z-index: 1;
+
+    padding: 56px;
+    padding-left: 80px;
+
+    display: flex;
+    flex-direction: column;
+    max-width: 500px;
+}
+
+.course-card {
+    margin: auto;
+}
+
+.pattern-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+}
+
+.logos {
+    margin-top: auto;
+    display: flex;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    height: 52px;
+
+    svg {
+        width: auto;
+        height: 100%;
+    }
+}
+
+.divider {
+    width: $border;
+    background: $black-10;
+    margin: 0 $space-xxxxl;
+}
+
+.vendor {
+    color: $tc-white;
+    text-align: right;
+
+    :global(.body-ultra-small) {
+        line-height: 22px;
+    }
+}
+
+.vendor-logo {
+    margin-top: $space-sm;
+    display: flex;
+    justify-content: flex-end;
+
+    svg {
+        display: block;
+        height: 16px;
+    }
+}
