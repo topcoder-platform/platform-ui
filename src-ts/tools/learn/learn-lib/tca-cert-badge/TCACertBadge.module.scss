@@ -1,0 +1,8 @@
+@import '../../../../lib/styles/includes';
+
+.tcaBadge {
+    @include ltemd {
+        width: 60px;
+        height: 56px;
+    }
+}

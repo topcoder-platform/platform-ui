@@ -26,6 +26,17 @@ const TCACertificationMock: TCACertification[] = [{
     status: 'active',
     certificationCategoryId: '',
     skills: ['HTML', 'CSS', 'JavaScript', 'HTML', 'CSS', 'JavaScript', 'HTML', 'CSS', 'JavaScript', 'HTML', 'CSS', 'JavaScript', 'HTML', 'CSS', 'JavaScript'],
+    providers: [{
+        "id": 1,
+        "name": "freeCodeCamp",
+        "description": "Free courses about programming and some such",
+        "url": "freeCodeCamp.org"
+    }],
+    coursesCount: 5,
+    learningOutcomes: ['HTML', 'CSS', 'JavaScript'],
+    certificationCategory: {
+        "track": "DEV",
+    },
 },
 {
     id: 2,
@@ -38,6 +49,17 @@ const TCACertificationMock: TCACertification[] = [{
     learnerLevel: 'Expert',
     certificationCategoryId: '',
     skills: ['Python', 'TensorFlow', 'JSON'],
+    providers: [{
+        "id": 1,
+        "name": "freeCodeCamp",
+        "description": "Free courses about programming and some such",
+        "url": "freeCodeCamp.org"
+    }],
+    coursesCount: 1,
+    learningOutcomes: ['Python', 'TensorFlow', 'JSON'],
+    certificationCategory: {
+        "track": "DATASCIENCE",
+    },
 }]
 
 export function useGetAllTCACertifications(
@@ -91,7 +113,7 @@ export function useGetTCACertificationMOCK(
     certification: string,
 ): TCACertificationProviderData {
 
-    const data: TCACertification | undefined = find(TCACertificationMock, { dashedName: certification })
+    const data: TCACertification = find(TCACertificationMock, { dashedName: certification })
 
     return {
         certification: data,

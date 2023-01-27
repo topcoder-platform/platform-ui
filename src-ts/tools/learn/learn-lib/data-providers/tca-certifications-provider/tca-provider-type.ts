@@ -1,1 +1,1 @@
-export type TcaProviderType = 'freecodecamp' | 'topcoder'
+export type TCAProviderType = 'freeCodeCamp' | 'Topcoder'

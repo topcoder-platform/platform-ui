@@ -1,10 +1,16 @@
-import { FC, memo } from 'react'
+import { Dispatch, FC, memo, SetStateAction, useEffect, useState } from 'react'
 import classNames from 'classnames'
 
-import { FccLogoBlackSvg, IconSolid, Tooltip } from '../../../../../lib'
-import { LearnLevelIcon, TCACertification } from '../../../learn-lib'
+import { Button, ButtonStyle, IconSolid, Tooltip } from '../../../../../lib'
+import {
+    LearnLevelIcon,
+    ProvidersLogoList,
+    TCACertBadge,
+    TCACertification,
+    TCACertificationProviderBase,
+} from '../../../learn-lib'
 import { SkillLabel } from '../../skill'
-import { ReactComponent as TCACertBadgeDEV1 } from '../assets/web-dev-cert-badge-1.svg'
+import { getTCACertificationPath } from '../../../learn.routes'
 
 import styles from './TCCertCard.module.scss'
 
@@ -12,18 +18,37 @@ interface TCCertCardProps {
     certification: TCACertification
 }
 
-const EXCERPT_TEXT_LEN: number = 170
+const EXCERPT_TEXT_LEN: number = 165
 
 const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
     const desc: string = props.certification.description.slice(0, EXCERPT_TEXT_LEN)
-    const { skills }: { skills: string[] } = props.certification
+    const { skills, providers, dashedName }: {
+        skills: string[],
+        providers: Array<TCACertificationProviderBase>,
+        dashedName: string
+    } = props.certification
+    const [buttonLabel, setButtonLabel]: [string, Dispatch<SetStateAction<string>>]
+        = useState<string>('Details')
+    const [buttonStyle, setButtonStyle]: [string, Dispatch<SetStateAction<string>>]
+        = useState<string>('secondary')
+    const [link, setLink]: [string, Dispatch<SetStateAction<string>>]
+        = useState<string>(
+            getTCACertificationPath(dashedName),
+        )
+
+    useEffect(() => {
+
+    }, [])
 
     return (
         <div className={styles.wrap}>
             <div className={styles.cardHeader}>
                 {/* TODO: move this to import from learn-lib/svgs
                 when implementing render logic based on learneLevel field... */}
-                <TCACertBadgeDEV1 />
+                <TCACertBadge
+                    learnerLevel={props.certification.learnerLevel}
+                    certificationCategory={props.certification.certificationCategory}
+                />
                 <div className={styles.cardTitleWrap}>
                     <p className='body-large-medium'>{props.certification.title}</p>
                     <div className={styles.cardSubWrap}>
@@ -33,7 +58,7 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                         </span>
                         <IconSolid.DocumentTextIcon width={16} height={16} />
                         <span className={classNames('body-small', styles.infoText)}>
-                            {/* {props.certification.estimatedCompletionTime} */}
+                            {props.certification.coursesCount}
                             {' courses'}
                         </span>
                         <IconSolid.ClockIcon width={16} height={16} />
@@ -41,10 +66,11 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                             {props.certification.estimatedCompletionTime}
                             {' hours'}
                         </span>
-                        <IconSolid.CurrencyDollarIcon width={16} height={16} />
+                        {/* TODO: Uncomment this when paid certs come to prod! */}
+                        {/* <IconSolid.CurrencyDollarIcon width={16} height={16} />
                         <span className={classNames('body-small', styles.infoText)}>
                             {' One time payment'}
-                        </span>
+                        </span> */}
                     </div>
                 </div>
                 <div className={styles.newLabel}>NEW</div>
@@ -58,7 +84,7 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
             <div className={styles.skills}>
                 <span className={classNames('body-small', styles.infoText)}>skills taught</span>
                 {skills.slice(0, 3)
-                    .map(skill => <SkillLabel skill={skill} />)}
+                    .map(skill => <SkillLabel skill={skill} key={`${dashedName}:${skill}`} />)}
                 {skills.length > 3 && (
                     <Tooltip
                         content={skills.slice(0, 3)
@@ -70,7 +96,16 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
 
             <div className={styles.contentFrom}>
                 <span className={classNames('body-small', styles.infoText)}>content from</span>
-                <FccLogoBlackSvg />
+                <ProvidersLogoList label='' providers={providers} />
+            </div>
+
+            <div className={styles.cardBottom}>
+                <Button
+                    buttonStyle={buttonStyle as ButtonStyle}
+                    size='sm'
+                    label={buttonLabel}
+                    route={link}
+                />
             </div>
         </div>
     )
