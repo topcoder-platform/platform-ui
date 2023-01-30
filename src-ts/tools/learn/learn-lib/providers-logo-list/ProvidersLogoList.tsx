@@ -1,7 +1,7 @@
 import { FC, Fragment } from 'react'
 import classNames from 'classnames'
 
-import { TCACertification } from '../../learn-lib'
+import { TCACertification } from '..'
 
 import { getProviderLogo } from './providers-logo-map'
 import styles from './ProvidersLogoList.module.scss'
@@ -19,7 +19,7 @@ const ProvidersLogoList: FC<ProvidersLogoListProps> = (props: ProvidersLogoListP
         </span>
         <div>
             {props.providers.map(p => (
-                <Fragment key={p}>{getProviderLogo(p)}</Fragment>
+                <Fragment key={`${p.id}-${p.name}`}>{getProviderLogo(p.name)}</Fragment>
             ))}
         </div>
     </div>

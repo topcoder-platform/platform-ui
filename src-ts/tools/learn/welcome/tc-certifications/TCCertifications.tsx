@@ -13,7 +13,7 @@ interface TCCertificationsProps {
 const TCCertifications: FC<TCCertificationsProps> = (props: TCCertificationsProps) => {
     const renderListCard: (certification: TCACertification) => ReactNode
         = useCallback((certification: TCACertification) => (
-            <TCCertCard certification={certification} />
+            <TCCertCard certification={certification} key={certification.dashedName} />
         ), [])
 
     return (
