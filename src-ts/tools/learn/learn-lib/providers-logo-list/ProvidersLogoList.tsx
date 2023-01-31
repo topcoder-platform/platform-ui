@@ -14,10 +14,10 @@ interface ProvidersLogoListProps {
 
 const ProvidersLogoList: FC<ProvidersLogoListProps> = (props: ProvidersLogoListProps) => (
     <div className={classNames('body-small-medium', props.className, styles.wrap)}>
-        <span>
+        <span className='quote-small'>
             {props.label}
         </span>
-        <div>
+        <div className={styles.providersWrap}>
             {props.providers.map(p => (
                 <Fragment key={`${p.id}-${p.name}`}>{getProviderLogo(p.name)}</Fragment>
             ))}

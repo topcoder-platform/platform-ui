@@ -96,7 +96,11 @@ const CertificationDetailsPage: FC<{}> = () => {
     }
 
     return (
-        <ContentLayout contentClass={styles.contentWrap} outerClass={styles.outerContentWrap}>
+        <ContentLayout
+            contentClass={styles.contentWrap}
+            outerClass={styles.outerContentWrap}
+            innerClass={styles.innerContentWrap}
+        >
             {!ready && (
                 <div className={styles.wrap}>
                     <LoadingSpinner />

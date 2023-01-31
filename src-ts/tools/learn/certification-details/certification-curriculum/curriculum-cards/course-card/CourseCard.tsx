@@ -6,6 +6,7 @@ import {
     LearnLevelIcon,
     LearnUserCertificationProgress,
     ProvidersLogoList,
+    TCACertificationProviderBase,
     UserCertificationProgressStatus,
 } from '../../../../learn-lib'
 import { getCertificatePath, getCoursePath } from '../../../../learn.routes'
@@ -23,15 +24,27 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
         switch (props.progress.status) {
             case UserCertificationProgressStatus.completed:
                 return (
-                    <Button
-                        buttonStyle='primary'
-                        size='xs'
-                        label='View Certificate'
-                        route={getCertificatePath(
-                            props.certification.providerName,
-                            props.certification.certification,
-                        )}
-                    />
+                    <>
+                        <Button
+                            buttonStyle='primary'
+                            size='xs'
+                            label='View Certificate'
+                            route={getCertificatePath(
+                                props.certification.providerName,
+                                props.certification.certification,
+                            )}
+                        />
+                        <Button
+                            buttonStyle='secondary'
+                            size='xs'
+                            label='Details'
+                            className='desktop-hide'
+                            route={getCoursePath(
+                                props.certification.providerName,
+                                props.certification.certification,
+                            )}
+                        />
+                    </>
                 )
             case UserCertificationProgressStatus.inProgress:
                 return (
@@ -82,7 +95,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                     <ProvidersLogoList
                         className={styles.providers}
                         label='by'
-                        providers={['freecodecamp']}
+                        providers={[{ name: 'freeCodeCamp' }] as unknown as TCACertificationProviderBase[]}
                     />
                     {props.progress.status === UserCertificationProgressStatus.inProgress && (
                         <div className={styles.progress}>

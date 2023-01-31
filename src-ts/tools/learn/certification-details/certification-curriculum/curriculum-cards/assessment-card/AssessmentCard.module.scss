@@ -15,6 +15,13 @@
     align-items: center;
     gap: $space-sm;
 
+    @include ltelg {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: $space-xs;
+        margin-top: $space-sm;
+    }
+
     :global(.quote-small) {
         font-style: italic;
         color: $black-60;

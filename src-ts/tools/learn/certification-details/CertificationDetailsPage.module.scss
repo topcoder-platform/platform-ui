@@ -34,6 +34,12 @@
             padding-right: calc(445px + $space-xxxl * 2);
         }
     }
+
+    .innerContentWrap.innerContentWrap.innerContentWrap {
+        @include ltemd {
+            overflow: visible;
+        }
+    }
 }
 
 .text-section {

@@ -5,6 +5,19 @@
     background: linear-gradient(84.45deg, $blue-160 2.12%, $blue-110 97.43%);
     border-radius: 8px;
     color: $tc-white;
+
+
+    @include ltemd {
+        border-radius: 0;
+        margin-left: -$space-xxl;
+        margin-right: -$space-xxl;
+    }
+
+    @include ltesm {
+        margin-left: -$space-lg;
+        margin-right: -$space-lg;
+    }
+
     @include ltelg {
         padding: $space-xxxxl $space-lg $space-lg;
     }
@@ -75,6 +88,9 @@
     padding: $space-xxxxl;
 
     margin-top: $space-xxl;
+    @include ltelg {
+        padding: $space-lg;
+    }
 }
 
 .courses {

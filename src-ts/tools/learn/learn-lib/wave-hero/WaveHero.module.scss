@@ -25,6 +25,7 @@
             padding-bottom: 84px;
             @include ltelg {
                 background-size: 100vw $space-lg, auto;
+                padding-bottom: 60px;
             }
         }
     }

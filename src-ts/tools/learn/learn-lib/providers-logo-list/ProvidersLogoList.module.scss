@@ -8,12 +8,9 @@
 
     @include ltelg {
         align-items: flex-start;
-        > span {
-            line-height: 22px;
-        }
     }
 
-    > div {
+    .providersWrap {
         display: flex;
         align-items: center;
         gap: $space-lg;
@@ -21,6 +18,11 @@
         @include ltelg {
             flex-direction: column;
             gap: 0;
+        }
+
+        > svg {
+            height: 22px;
+            display: block;
         }
     }
 }

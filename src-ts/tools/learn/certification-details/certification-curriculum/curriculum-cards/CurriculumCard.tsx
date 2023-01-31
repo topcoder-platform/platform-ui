@@ -15,23 +15,28 @@ interface CurriculumCardProps {
 
 const CurriculumCard: FC<CurriculumCardProps> = (props: CurriculumCardProps) => (
     <div className={classNames(styles.wrap, props.className)}>
-        <CourseBadge
-            className={classNames(styles.badge, 'badge')}
-            type={props.bradgeTrackType ?? 'DEV'}
-        />
+        <div className={classNames(styles.inner, props.className)}>
+            <CourseBadge
+                className={classNames(styles.badge, 'badge')}
+                type={props.bradgeTrackType ?? 'DEV'}
+            />
 
-        <div className={styles.contentWrap}>
-            <div className={styles.headline}>
-                <div className='body-main-bold'>
-                    {props.title ?? 'Responsive Web Design Certification'}
+            <div className={styles.contentWrap}>
+                <div className={styles.headline}>
+                    <div className='body-main-bold'>
+                        {props.title ?? 'Responsive Web Design Certification'}
+                    </div>
+                    <div className={classNames(styles.cta, 'mobile-hide')}>
+                        {props.cta}
+                    </div>
                 </div>
-                <div className={styles.cta}>
-                    {props.cta}
+                <div className={styles.content}>
+                    {props.content}
                 </div>
             </div>
-            <div className={styles.content}>
-                {props.content}
-            </div>
+        </div>
+        <div className={classNames(styles.bottomCta, 'desktop-hide')}>
+            {props.cta}
         </div>
     </div>
 )

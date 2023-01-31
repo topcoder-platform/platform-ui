@@ -1,19 +1,35 @@
 @import '../../../../../lib/styles/includes';
 
 .wrap {
-    padding: $space-xxl;
-    background: $black-5;
     border-radius: $space-sm;
+    background: $black-5;
+    padding: $space-xxl;
+
+    @include ltelg {
+        padding: $space-lg;
+    }
+}
+
+.inner {
 
     display: flex;
     align-items: flex-start;
     gap: $space-lg;
+
+    @include ltelg {
+        gap: $space-sm;
+    }
 }
 
 .badge {
-    width: 48px;
-    height: 48px;
+    width: $space-mxx;
+    height: $space-mxx;
     flex: 0 0 auto;
+
+    @include ltelg {
+        width: $space-mx;
+        height: $space-mx;
+    }
 
     svg {
         display: block;
@@ -37,6 +53,19 @@
     }
 }
 
+.cta, .bottomCta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $space-sm;
+}
+.bottomCta {
+    margin-top: $space-lg;
+}
+
 .content {
     margin-top: $space-xs;
+    @include ltelg {
+        margin-top: 0;
+    }
 }
