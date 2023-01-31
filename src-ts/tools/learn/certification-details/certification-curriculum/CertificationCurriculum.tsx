@@ -31,7 +31,7 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
     }: UserCertificationsProviderData = useGetUserCertifications()
 
     const {
-        certifications,
+        certifications: allCertifications,
         ready: certificatesReady,
     }: AllCertificationsProviderData = useGetAllCertifications()
 
@@ -49,9 +49,13 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
         )
     }, [completed, inProgress])
 
-    const certificationsG: LearnCertification[] = useMemo(() => (
-        certifications.slice(0, 4)
-    ), [certifications])
+    const certResources: string[] = useMemo(() => (
+        props.certification.certificationResources.map(d => d.freeCodeCampCertification.fccId)
+    ), [props.certification.certificationResources])
+
+    const certifications: LearnCertification[] = useMemo(() => (
+        allCertifications.filter(cert => certResources.includes(cert.id))
+    ), [allCertifications, certResources])
 
     return (
         <div className={styles.wrap}>
@@ -80,7 +84,7 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
             <div className={styles.container}>
                 {certificatesReady && userCertsReady && (
                     <div className={styles.courses}>
-                        {certificationsG.map(cert => (
+                        {certifications.map(cert => (
                             <CourseCard
                                 certification={cert}
                                 progress={progressById[cert.id]}
@@ -88,8 +92,8 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
                             />
                         ))}
                         <AssessmentCard
-                            title='Web Development Fundamentals Assessment'
-                            trackType='DEV'
+                            title={`${props.certification.title} Assessment`}
+                            trackType={props.certification.certificationCategory.track}
                         />
                     </div>
                 )}

@@ -37,7 +37,22 @@ const TCACertificationMock: TCACertification[] = [{
     prerequisites: [],
     coursesCount: 4,
     resourceProviders: [],
-    certificationResources: [],
+    certificationResources: [{
+        id: 1,
+        topcoderCertificationId: 1,
+        resourceProviderId: 1,
+        resourceableId: 1,
+        resourceableType: 'FreeCodeCampCertification',
+        displayOrder: 0,
+        completionOrder: 0,
+        resourceDescription: 'The fundamentals of responsive web design',
+        resourceTitle: 'Responsive Web Design',
+        createdAt: new Date('2023-01-26T14:08:11.883Z'),
+        updatedAt: new Date('2023-01-26T14:08:11.883Z'),
+        freeCodeCampCertification: {
+            fccId: '9bd93a8a-1fcb-405a-b2e3-4a283915bbca',
+        },
+    }],
     providers: [{
         id: 1,
         name: 'freeCodeCamp',
