@@ -29,7 +29,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
     }
 
     function renderCta(): ReactNode {
-        switch (props.progress.status) {
+        switch (props.progress?.status) {
             case UserCertificationProgressStatus.completed:
                 return (
                     <>
@@ -108,7 +108,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                         label='by'
                         providers={[{ name: 'freeCodeCamp' }] as unknown as TCACertificationProviderBase[]}
                     />
-                    {props.progress.status === UserCertificationProgressStatus.inProgress && (
+                    {props.progress?.status === UserCertificationProgressStatus.inProgress && (
                         <div className={styles.progress}>
                             <ProgressBar
                                 progress={props.progress.courseProgressPercentage / 100}
