@@ -6,6 +6,7 @@ import {
     LearnCertification,
     LearnUserCertificationProgress,
     TCACertification,
+    TCACertificationLearnLevel,
     useGetAllCertifications,
     useGetUserCertifications,
     UserCertificationsProviderData,
@@ -49,12 +50,17 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
         )
     }, [completed, inProgress])
 
-    const certResources: string[] = useMemo(() => (
-        props.certification.certificationResources.map(d => d.freeCodeCampCertification.fccId)
+    const certResources: {[key: string]: {learnerLevel: TCACertificationLearnLevel}} = useMemo(() => (
+        Object.fromEntries(
+            props.certification.certificationResources.map(d => [
+                d.freeCodeCampCertification.fccId,
+                d.freeCodeCampCertification,
+            ]),
+        )
     ), [props.certification.certificationResources])
 
     const certifications: LearnCertification[] = useMemo(() => (
-        allCertifications.filter(cert => certResources.includes(cert.id))
+        allCertifications.filter(cert => !!certResources[cert.id])
     ), [allCertifications, certResources])
 
     return (
@@ -89,6 +95,7 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
                                 certification={cert}
                                 progress={progressById[cert.id]}
                                 key={cert.id}
+                                learnerLevel={certResources[cert.id]?.learnerLevel}
                             />
                         ))}
                         <AssessmentCard

@@ -51,6 +51,7 @@ const TCACertificationMock: TCACertification[] = [{
         updatedAt: new Date('2023-01-26T14:08:11.883Z'),
         freeCodeCampCertification: {
             fccId: '9bd93a8a-1fcb-405a-b2e3-4a283915bbca',
+            learnerLevel: 'Intermediate',
         },
     }],
     providers: [{

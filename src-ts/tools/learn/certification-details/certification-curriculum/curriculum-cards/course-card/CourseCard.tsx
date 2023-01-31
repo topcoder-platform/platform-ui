@@ -6,6 +6,7 @@ import {
     LearnLevelIcon,
     LearnUserCertificationProgress,
     ProvidersLogoList,
+    TCACertificationLearnLevel,
     TCACertificationProviderBase,
     UserCertificationProgressStatus,
 } from '../../../../learn-lib'
@@ -17,9 +18,16 @@ import styles from './CourseCard.module.scss'
 interface CourseCardProps {
     certification: LearnCertification
     progress: LearnUserCertificationProgress
+    learnerLevel: TCACertificationLearnLevel
 }
 
 const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
+    function getWeeks(hours: number): number {
+        // 4 hours per day
+        // 5 days per week
+        return hours / 4 / 5
+    }
+
     function renderCta(): ReactNode {
         switch (props.progress.status) {
             case UserCertificationProgressStatus.completed:
@@ -75,9 +83,9 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                     <ul className={styles.stats}>
                         <li className={styles.stat}>
                             <span className={styles.icon}>
-                                <LearnLevelIcon level='Beginner' />
+                                <LearnLevelIcon level={props.learnerLevel} />
                             </span>
-                            <span className='quote-small'>Beginner</span>
+                            <span className='quote-small'>{props.learnerLevel}</span>
                         </li>
                         <li className={styles.stat}>
                             <span className={styles.icon}>
@@ -89,7 +97,10 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                             <span className={styles.icon}>
                                 <IconSolid.ClockIcon />
                             </span>
-                            <span className='quote-small'>2 weeks</span>
+                            <span className='quote-small'>
+                                {getWeeks(props.certification.completionHours)}
+                                {' weeks'}
+                            </span>
                         </li>
                     </ul>
                     <ProvidersLogoList
