@@ -1,11 +1,14 @@
 import { TCACertificationLearnLevel } from './tca-certificate-level-type'
 import { TCACertificationStatus } from './tca-certificate-status-type'
 import { TCACertificationCategory } from './tca-certification-category.model'
-import { TcaProviderType } from './tca-provider-type'
+import { TCACertificationProvider } from './tca-certification-provider.model'
+import { TCACertificationProviderBase } from './tca-certification-provider.model-base'
+import { TCACertificationResource } from './tca-certification-resource.model'
 
 export interface TCACertification {
     certificationCategory: TCACertificationCategory
     certificationCategoryId: string
+    certificationResources: Array<TCACertificationResource>
     coursesCount: number
     createdAt: Date
     dashedName: string
@@ -16,7 +19,8 @@ export interface TCACertification {
     learnerLevel: TCACertificationLearnLevel
     learningOutcomes: string[]
     prerequisites: string[]
-    providers: Array<TcaProviderType>
+    providers: Array<TCACertificationProviderBase>
+    resourceProviders: Array<TCACertificationProvider>
     sequentialCourses: boolean
     skills: string[]
     status: TCACertificationStatus

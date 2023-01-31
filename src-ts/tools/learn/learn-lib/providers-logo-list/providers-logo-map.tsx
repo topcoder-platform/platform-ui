@@ -1,13 +1,13 @@
 import { ReactNode } from 'react'
 
-import { TcaProviderType } from '../data-providers'
 import { FccLogoBlackSvg, TcLogoSvg } from '../svgs'
+import { TCAProviderType } from '../data-providers'
 
-export const providersLogoMap: {[key in TcaProviderType]: ReactNode} = {
-    freecodecamp: <FccLogoBlackSvg />,
-    topcoder: <TcLogoSvg />,
+export const providersLogoMap: {[key in TCAProviderType]: ReactNode} = {
+    freeCodeCamp: <FccLogoBlackSvg />,
+    Topcoder: <TcLogoSvg />,
 }
 
-export function getProviderLogo(provider: TcaProviderType): ReactNode {
+export function getProviderLogo(provider: TCAProviderType): ReactNode {
     return providersLogoMap[provider]
 }

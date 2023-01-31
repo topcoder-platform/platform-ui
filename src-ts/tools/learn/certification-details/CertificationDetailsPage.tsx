@@ -108,12 +108,7 @@ const CertificationDetailsPage: FC<{}> = () => {
                 <div className={styles['hero-wrap']}>
                     <WaveHero
                         title={(
-                            <HeroTitle
-                                certTitle={certification.title}
-                                certTrack={certification.certificationCategory.track}
-                                certLevel={certification.learnerLevel}
-                                providers={certification.providers}
-                            />
+                            <HeroTitle certification={certification} certTitle={certification.title} />
                         )}
                         theme='grey'
                         text={certification.introText}

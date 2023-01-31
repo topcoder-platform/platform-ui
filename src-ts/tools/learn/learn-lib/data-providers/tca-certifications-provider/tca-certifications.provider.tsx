@@ -4,6 +4,7 @@
 import { find } from 'lodash'
 import useSWR, { SWRConfiguration, SWRResponse } from 'swr'
 
+import { LEARN_PATHS } from '../../../learn.routes'
 import { learnUrlGet } from '../../functions'
 import { useSwrCache } from '../../learn-swr'
 
@@ -35,7 +36,19 @@ const TCACertificationMock: TCACertification[] = [{
     skills: ['HTML', 'CSS', 'JavaScript', 'HTML1', 'CSS2', 'JavaScript2', 'HTML3', 'CSS3', 'JavaScript3', 'HTML4', 'CSS4', 'JavaScript4'],
     prerequisites: [],
     coursesCount: 4,
-    providers: ['freecodecamp', 'topcoder'],
+    resourceProviders: [],
+    certificationResources: [],
+    providers: [{
+        id: 1,
+        name: 'freeCodeCamp',
+        description: 'Free courses about programming and some such',
+        url: 'freeCodeCamp.org',
+    }, {
+        id: 2,
+        name: 'Topcoder',
+        description: '',
+        url: 'topcoder.org',
+    }],
     createdAt: new Date(),
     updatedAt: new Date(),
     stripeProductId: '1',
@@ -60,8 +73,15 @@ const TCACertificationMock: TCACertification[] = [{
     skills: ['Python', 'TensorFlow', 'JSON'],
     prerequisites: [],
     coursesCount: 4,
-    providers: ['freecodecamp', 'topcoder'],
-    learningOutcomes: [],
+    resourceProviders: [],
+    certificationResources: [],
+    providers: [{
+        id: 1,
+        name: 'freeCodeCamp',
+        description: 'Free courses about programming and some such',
+        url: 'freeCodeCamp.org',
+    }],
+    learningOutcomes: ['Python', 'TensorFlow', 'JSON'],
     createdAt: new Date(),
     updatedAt: new Date(),
     stripeProductId: '1',
@@ -79,7 +99,7 @@ export function useGetAllTCACertifications(
 ): TCACertificationsProviderData {
 
     const url: string = learnUrlGet(
-        'topcoder-certifications',
+        LEARN_PATHS.tcaCertifications,
     )
     const swrCacheConfig: SWRConfiguration = useSwrCache(url)
 
@@ -99,10 +119,10 @@ export function useGetAllTCACertifications(
 export function useGetTCACertification(
     certification: string,
     options?: TCACertificationsAllProviderOptions,
-): TCACertificationsProviderData {
+): TCACertificationProviderData {
 
     const url: string = learnUrlGet(
-        'topcoder-certifications',
+        LEARN_PATHS.tcaCertifications,
         certification,
     )
     const swrCacheConfig: SWRConfiguration = useSwrCache(url)
@@ -113,7 +133,7 @@ export function useGetTCACertification(
     })
 
     return {
-        certifications: data ?? [],
+        certification: data,
         error: !!error,
         loading: !data,
         ready: !!data,
