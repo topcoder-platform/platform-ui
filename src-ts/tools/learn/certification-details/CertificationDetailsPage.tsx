@@ -21,6 +21,7 @@ import { HeroTitle } from './hero-title'
 import { CertificationDetailsSidebar } from './certification-details-sidebar'
 import { PerksSection } from './perks-section'
 import { perks } from './data/perks.data'
+import { CertificationCurriculum } from './certification-curriculum'
 import styles from './CertificationDetailsPage.module.scss'
 
 function renderBasicList(items: Array<string>): ReactNode {
@@ -62,6 +63,14 @@ const CertificationDetailsPage: FC<{}> = () => {
         )
     }
 
+    function renderCertificationCurriculum(): ReactNode {
+        return (
+            <div className={styles['text-section']}>
+                <CertificationCurriculum certification={certification} />
+            </div>
+        )
+    }
+
     function renderRequirementsSection(): ReactNode {
         return (
             <div className={styles['text-section']}>
@@ -87,7 +96,11 @@ const CertificationDetailsPage: FC<{}> = () => {
     }
 
     return (
-        <ContentLayout contentClass={styles.contentWrap} outerClass={styles.outerContentWrap}>
+        <ContentLayout
+            contentClass={styles.contentWrap}
+            outerClass={styles.outerContentWrap}
+            innerClass={styles.innerContentWrap}
+        >
             {!ready && (
                 <div className={styles.wrap}>
                     <LoadingSpinner />
@@ -99,10 +112,7 @@ const CertificationDetailsPage: FC<{}> = () => {
                 <div className={styles['hero-wrap']}>
                     <WaveHero
                         title={(
-                            <HeroTitle
-                                certification={certification}
-                                certTitle={certification.title}
-                            />
+                            <HeroTitle certification={certification} certTitle={certification.title} />
                         )}
                         theme='grey'
                         text={certification.introText}
@@ -119,6 +129,7 @@ const CertificationDetailsPage: FC<{}> = () => {
 
             <PerksSection items={perks} />
             {renderLearningOutcomeSection()}
+            {renderCertificationCurriculum()}
             {renderRequirementsSection()}
             {renderFaqSection()}
         </ContentLayout>

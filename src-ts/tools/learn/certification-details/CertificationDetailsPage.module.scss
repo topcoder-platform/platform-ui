@@ -34,6 +34,12 @@
             padding-right: calc(445px + $space-xxxl * 2);
         }
     }
+
+    .innerContentWrap.innerContentWrap.innerContentWrap {
+        @include ltemd {
+            overflow: visible;
+        }
+    }
 }
 
 .text-section {
@@ -43,11 +49,11 @@
         margin-top: $space-xxxxl;
     }
 
-    h2 {
+    > h2 {
         margin-bottom: $space-xxl;
     }
 
-    ul {
+    > ul {
         list-style: disc;
         padding-left: $space-xxl;
         padding-left: $space-xxl;

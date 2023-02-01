@@ -6,25 +6,25 @@ import { TCACertificationProviderBase } from './tca-certification-provider.model
 import { TCACertificationResource } from './tca-certification-resource.model'
 
 export interface TCACertification {
-    id: number
-    title: string
+    certificationCategory: TCACertificationCategory
+    certificationCategoryId: string
+    certificationResources: Array<TCACertificationResource>
+    coursesCount: number
+    createdAt: Date
     dashedName: string
     description: string
-    introText: string
     estimatedCompletionTime: number
-    status: TCACertificationStatus
-    sequentialCourses: boolean
+    id: number
+    introText: string
     learnerLevel: TCACertificationLearnLevel
-    certificationCategoryId: string
-    stripeProductId?: string
-    skills: string[]
     learningOutcomes: string[]
     prerequisites: string[]
-    createdAt: Date
-    updatedAt: Date
-    certificationResources: Array<TCACertificationResource>
-    certificationCategory: TCACertificationCategory
-    resourceProviders: Array<TCACertificationProvider>
-    coursesCount: number
     providers: Array<TCACertificationProviderBase>
+    resourceProviders: Array<TCACertificationProvider>
+    sequentialCourses: boolean
+    skills: string[]
+    status: TCACertificationStatus
+    stripeProductId?: string
+    title: string
+    updatedAt: Date
 }

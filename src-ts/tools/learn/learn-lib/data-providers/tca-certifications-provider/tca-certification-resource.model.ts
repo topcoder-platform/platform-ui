@@ -1,3 +1,4 @@
+import { TCACertificationLearnLevel } from './tca-certificate-level-type'
 import { TCACertificationResourceable } from './tca-certification-resourceable.type'
 
 export interface TCACertificationResource {
@@ -12,4 +13,8 @@ export interface TCACertificationResource {
     resourceTitle: string
     createdAt: Date
     updatedAt: Date
+    freeCodeCampCertification: {
+        fccId: string
+        learnerLevel: TCACertificationLearnLevel
+    }
 }

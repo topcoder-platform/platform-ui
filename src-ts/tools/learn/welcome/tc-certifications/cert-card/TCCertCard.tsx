@@ -3,9 +3,9 @@ import classNames from 'classnames'
 
 import { Button, ButtonStyle, IconSolid, Tooltip } from '../../../../../lib'
 import {
+    CertificateBadgeIcon,
     LearnLevelIcon,
     ProvidersLogoList,
-    TCACertBadge,
     TCACertification,
     TCACertificationProviderBase,
 } from '../../../learn-lib'
@@ -43,11 +43,9 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
     return (
         <div className={styles.wrap}>
             <div className={styles.cardHeader}>
-                {/* TODO: move this to import from learn-lib/svgs
-                when implementing render logic based on learneLevel field... */}
-                <TCACertBadge
-                    learnerLevel={props.certification.learnerLevel}
-                    certificationCategory={props.certification.certificationCategory}
+                <CertificateBadgeIcon
+                    type={props.certification.certificationCategory.track}
+                    level={props.certification.learnerLevel}
                 />
                 <div className={styles.cardTitleWrap}>
                     <p className='body-large-medium'>{props.certification.title}</p>
@@ -64,7 +62,7 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                         <IconSolid.ClockIcon width={16} height={16} />
                         <span className={classNames('body-small', styles.infoText)}>
                             {props.certification.estimatedCompletionTime}
-                            {' hours'}
+                            {' months'}
                         </span>
                         {/* TODO: Uncomment this when paid certs come to prod! */}
                         {/* <IconSolid.CurrencyDollarIcon width={16} height={16} />
@@ -94,10 +92,11 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                 )}
             </div>
 
-            <div className={styles.contentFrom}>
-                <span className={classNames('body-small', styles.infoText)}>content from</span>
-                <ProvidersLogoList label='' providers={providers} />
-            </div>
+            <ProvidersLogoList
+                className={styles.providers}
+                label='content from'
+                providers={props.certification.providers}
+            />
 
             <div className={styles.cardBottom}>
                 <Button

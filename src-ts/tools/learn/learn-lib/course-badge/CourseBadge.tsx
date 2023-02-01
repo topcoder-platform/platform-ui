@@ -1,3 +1,4 @@
+import classNames from 'classnames'
 import { FC, SVGProps } from 'react'
 
 import { LearnCertificateTrackType } from '../all-certifications-provider'
@@ -7,6 +8,7 @@ import styles from './CourseBadge.module.scss'
 
 interface CourseBadgeProps {
     asImg?: boolean
+    className?: string
     type: LearnCertificateTrackType
 }
 
@@ -21,7 +23,7 @@ const CourseBadge: FC<CourseBadgeProps> = (props: CourseBadgeProps) => {
     const Badge: FC<SVGProps<SVGSVGElement>> = getBadge(props.type)
 
     return (
-        <div className={styles.wrap}>
+        <div className={classNames(props.className, styles.wrap)}>
             <Badge />
         </div>
     )

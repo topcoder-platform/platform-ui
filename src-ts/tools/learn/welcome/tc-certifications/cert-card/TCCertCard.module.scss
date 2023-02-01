@@ -65,19 +65,18 @@
             }
         }
     }
+}
 
-    .contentFrom {
-        display: flex;
-        align-items: center;
+.providers {
+    > span {
+        font-style: italic;
+        color: $black-60;
+        font-weight: normal;
     }
+}
 
-    .cardBottom {
-        margin-top: $space-xxl;
-
-        @include ltemd {
-            margin-top: $space-xl;
-        }
-    }
+.cardBottom {
+    margin-top: $space-lg;
 }
 
 .infoText {
