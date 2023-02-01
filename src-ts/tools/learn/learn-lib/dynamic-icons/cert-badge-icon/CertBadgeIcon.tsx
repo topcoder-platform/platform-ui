@@ -1,13 +1,13 @@
 import { FC, SVGProps } from 'react'
 import classNames from 'classnames'
 
-import { TcaCertificateType, TCACertificationLearnLevel } from '../../data-providers'
+import { TCACertificateType, TCACertificationLearnLevel } from '../../data-providers'
 
 import { getCertBadgeIcon } from './badges'
 import styles from './CertBadgeIcon.module.scss'
 
 interface CertBadgeIconProps {
-    type: TcaCertificateType
+    type: TCACertificateType
     level: TCACertificationLearnLevel
 }
 

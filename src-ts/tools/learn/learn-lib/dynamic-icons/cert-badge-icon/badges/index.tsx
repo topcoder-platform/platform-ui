@@ -1,6 +1,6 @@
 import { FC, SVGProps } from 'react'
 
-import { TcaCertificateType } from '../../../data-providers'
+import { TCACertificateType } from '../../../data-providers'
 
 import { ReactComponent as DatabaseCertBadgeSvg } from './database.svg'
 import { ReactComponent as DatascienceCertBadgeSvg } from './datascience.svg'
@@ -10,7 +10,7 @@ import { ReactComponent as InterviewCertBadgeSvg } from './interview.svg'
 import { ReactComponent as QaCertBadgeSvg } from './qa.svg'
 import { ReactComponent as SecurityCertBadgeSvg } from './security.svg'
 
-export const certBadgeIconMap: {[key in TcaCertificateType]: FC} = {
+export const certBadgeIconMap: {[key in TCACertificateType]: FC} = {
     DATABASE: DatabaseCertBadgeSvg,
     DATASCIENCE: DatascienceCertBadgeSvg,
     DESIGN: DesignCertBadgeSvg,
@@ -20,6 +20,6 @@ export const certBadgeIconMap: {[key in TcaCertificateType]: FC} = {
     SECURITY: SecurityCertBadgeSvg,
 }
 
-export function getCertBadgeIcon(certificateTrackType: TcaCertificateType): FC<SVGProps<SVGSVGElement>> {
+export function getCertBadgeIcon(certificateTrackType: TCACertificateType): FC<SVGProps<SVGSVGElement>> {
     return certBadgeIconMap[certificateTrackType]
 }

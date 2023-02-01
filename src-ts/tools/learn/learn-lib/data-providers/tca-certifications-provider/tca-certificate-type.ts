@@ -1,1 +1,1 @@
-export type TcaCertificateType = 'QA' | 'DEV' | 'DATASCIENCE' | 'DESIGN' | 'DATABASE' | 'INTERVIEW' | 'SECURITY'
+export type TCACertificateType = 'QA' | 'DEV' | 'DATASCIENCE' | 'DESIGN' | 'DATABASE' | 'INTERVIEW' | 'SECURITY'

@@ -18,7 +18,7 @@ interface TCACertificationsAllProviderOptions {
 const TCACertificationMock: TCACertification[] = [{
     id: 1,
     title: 'Web Development Fundamentals',
-    dashedName: 'web-developmnt-fundamentals',
+    dashedName: 'web-development-fundamentals',
     description: 'The Web Developer Fundamentals certification will teach you the basics of HTML, CSS, javascript, front end libraries and will also introduce you to backend development.',
     introText: 'Introducing our Web Development fundamentals certification! Start your certification journey with Topcoder.',
     estimatedCompletionTime: 4,

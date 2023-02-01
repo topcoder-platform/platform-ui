@@ -1,12 +1,12 @@
 import { FC, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { CourseBadge, TcaCertificateType } from '../../../learn-lib'
+import { CourseBadge, TCACertificateType } from '../../../learn-lib'
 
 import styles from './CurriculumCard.module.scss'
 
 interface CurriculumCardProps {
-    bradgeTrackType: TcaCertificateType
+    badgeTrackType: TCACertificateType
     className?: string
     content: ReactNode
     cta: ReactNode
@@ -18,7 +18,7 @@ const CurriculumCard: FC<CurriculumCardProps> = (props: CurriculumCardProps) => 
         <div className={classNames(styles.inner, props.className)}>
             <CourseBadge
                 className={classNames(styles.badge, 'badge')}
-                type={props.bradgeTrackType ?? 'DEV'}
+                type={props.badgeTrackType ?? 'DEV'}
             />
 
             <div className={styles.contentWrap}>

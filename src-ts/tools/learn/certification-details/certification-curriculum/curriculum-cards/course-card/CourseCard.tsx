@@ -75,7 +75,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
 
     return (
         <CurriculumCard
-            bradgeTrackType={props.certification.trackType ?? 'DEV'}
+            badgeTrackType={props.certification.trackType ?? 'DEV'}
             title={props.certification.title ?? 'Responsive Web Design Certification'}
             cta={renderCta()}
             content={(

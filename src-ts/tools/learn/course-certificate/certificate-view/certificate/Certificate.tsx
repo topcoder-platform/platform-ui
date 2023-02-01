@@ -2,13 +2,12 @@ import { FC, MutableRefObject } from 'react'
 import classNames from 'classnames'
 
 import { LearnConfig } from '../../../learn-config'
-import { LearnCertificateTrackType } from '../../../learn-lib'
+import { LearnCertificateTrackType, TcLogoSvg } from '../../../learn-lib'
+import { FccLogoSvg, TcAcademyLogoSvg } from '../../../../../lib'
 
 import { CertificateBgPattern } from './certificate-bg-pattern'
 import { CourseCard } from './course-card'
-
 import styles from './Certificate.module.scss'
-import { FccLogoSvg, TcAcademyLogoSvg, TcLogoSvg } from '../../../../../lib'
 
 interface CertificateProps {
     completedDate?: string
