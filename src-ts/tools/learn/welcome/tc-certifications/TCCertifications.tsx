@@ -1,20 +1,36 @@
-import { FC, ReactNode, useCallback } from 'react'
+import { sortBy } from 'lodash'
+import { FC, ReactNode, useCallback, useMemo } from 'react'
 
-import { TCACertification } from '../../learn-lib'
+import { TCACertification, TCACertificationProgress } from '../../learn-lib'
 
 import { TCCertCard } from './cert-card'
-
 import styles from './TCCertifications.module.scss'
 
 interface TCCertificationsProps {
     certifications: ReadonlyArray<TCACertification>
+    progress: TCACertificationProgress[]
+}
+
+interface ProgressByIdCollection {
+    [key: string]: TCACertificationProgress
 }
 
 const TCCertifications: FC<TCCertificationsProps> = (props: TCCertificationsProps) => {
+    const progressById: ProgressByIdCollection = useMemo(() => (
+        (props.progress ?? []).reduce((all, progress) => {
+            all[progress.topcoderCertificationId] = progress
+            return all
+        }, {} as ProgressByIdCollection) ?? {}
+    ), [props.progress])
+
     const renderListCard: (certification: TCACertification) => ReactNode
         = useCallback((certification: TCACertification) => (
-            <TCCertCard certification={certification} key={certification.dashedName} />
-        ), [])
+            <TCCertCard
+                certification={certification}
+                key={certification.id}
+                progress={progressById[certification.id]}
+            />
+        ), [progressById])
 
     return (
         <div className={styles.wrap}>
@@ -29,7 +45,8 @@ const TCCertifications: FC<TCCertificationsProps> = (props: TCCertificationsProp
 
             <div className={styles.certsList}>
                 {
-                    props.certifications.map(renderListCard)
+                    sortBy(props.certifications, 'createdAt')
+                        .map(renderListCard)
                 }
             </div>
         </div>

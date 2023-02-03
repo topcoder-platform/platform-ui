@@ -27,7 +27,9 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
 
     // certificates indexed by category, sorted by title
     const certsByCategory: Dictionary<Array<LearnCertification>>
-        = useMemo(() => groupBy(orderBy(props.certifications, 'title', 'asc'), 'category'), [props.certifications])
+        = useMemo(() => (
+            groupBy(orderBy(props.certifications, 'title', 'asc'), 'certificationCategory.category')
+        ), [props.certifications])
 
     // compute all the available category dropdown options
     const certsCategoriesOptions: Array<{

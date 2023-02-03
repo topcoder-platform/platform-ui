@@ -19,36 +19,31 @@ interface CourseCardProps {
     certification: LearnCertification
     progress: LearnUserCertificationProgress
     learnerLevel: TCACertificationLearnLevel
+    provider: string
+    isEnrolled: boolean
 }
 
 const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
-    function getWeeks(hours: number): number {
-        // 4 hours per day
-        // 5 days per week
-        return hours / 4 / 5
-    }
-
     function renderCta(): ReactNode {
         switch (props.progress?.status) {
             case UserCertificationProgressStatus.completed:
                 return (
                     <>
                         <Button
-                            buttonStyle='primary'
+                            buttonStyle='secondary'
                             size='xs'
-                            label='View Certificate'
-                            route={getCertificatePath(
-                                props.certification.providerName,
+                            label='Details'
+                            route={getCoursePath(
+                                props.provider,
                                 props.certification.certification,
                             )}
                         />
                         <Button
-                            buttonStyle='secondary'
+                            buttonStyle='primary'
                             size='xs'
-                            label='Details'
-                            className='desktop-hide'
-                            route={getCoursePath(
-                                props.certification.providerName,
+                            label='View Certificate'
+                            route={getCertificatePath(
+                                props.provider,
                                 props.certification.certification,
                             )}
                         />
@@ -56,7 +51,15 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                 )
             case UserCertificationProgressStatus.inProgress:
                 return (
-                    <></>
+                    <Button
+                        buttonStyle='primary'
+                        size='xs'
+                        label='Resume'
+                        route={getCoursePath(
+                            props.provider,
+                            props.certification.certification,
+                        )}
+                    />
                 )
             default:
                 return (
@@ -65,7 +68,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                         size='xs'
                         label='Details'
                         route={getCoursePath(
-                            props.certification.providerName,
+                            props.provider,
                             props.certification.certification,
                         )}
                     />
@@ -78,6 +81,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
             badgeTrackType={props.certification.trackType ?? 'DEV'}
             title={props.certification.title ?? 'Responsive Web Design Certification'}
             cta={renderCta()}
+            status={props.isEnrolled ? props.progress?.status : undefined}
             content={(
                 <>
                     <ul className={styles.stats}>
@@ -98,20 +102,20 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                                 <IconSolid.ClockIcon />
                             </span>
                             <span className='quote-small'>
-                                {getWeeks(props.certification.completionHours)}
-                                {' weeks'}
+                                {props.certification.completionHours}
+                                {' hours'}
                             </span>
                         </li>
                     </ul>
                     <ProvidersLogoList
                         className={styles.providers}
                         label='by'
-                        providers={[{ name: 'freeCodeCamp' }] as unknown as TCACertificationProviderBase[]}
+                        providers={[{ name: props.provider }] as unknown as TCACertificationProviderBase[]}
                     />
                     {props.progress?.status === UserCertificationProgressStatus.inProgress && (
                         <div className={styles.progress}>
                             <ProgressBar
-                                progress={props.progress.courseProgressPercentage / 100}
+                                progress={(props.progress.courseProgressPercentage ?? 0) / 100}
                             />
                         </div>
                     )}

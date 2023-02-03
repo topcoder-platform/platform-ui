@@ -1,4 +1,5 @@
 @import '../../../../lib/styles/includes';
+@import '../../../../lib/styles/typography';
 
 .sticky-container {
     @include ltelg {
@@ -77,8 +78,8 @@
 
             > svg {
                 display: block;
-                width: 20px;
-                height: 20px;
+                width: 100%;
+                height: 100%;
             }
         }
 
@@ -121,6 +122,10 @@
 
 .providers {
     margin-top: $space-sm;
+
+    > span {
+        @extend .body-small-medium;
+    }
 }
 
 .tooltip {
@@ -133,5 +138,19 @@
 }
 
 .btns {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
     margin-top: $space-xxl;
+}
+
+.tag {
+    display: block;
+    padding: $space-xs calc($space-sm + $border);
+    border-radius: $space-xs;
+
+    &.enrolled {
+        background: $blue-140;
+        color: $tc-white;
+    }
 }

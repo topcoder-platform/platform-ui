@@ -10,9 +10,6 @@
     .cardHeader {
         display: flex;
         align-items: center;
-        border-bottom: 2px solid $black-10;
-        padding-bottom: $space-xxl;
-        margin-bottom: $space-xxl;
 
         @include ltemd {
             align-items: flex-start;
@@ -65,6 +62,15 @@
             }
         }
     }
+}
+
+.separatorBar {
+    border-bottom: 2px solid $black-10;
+    margin: $space-lg 0;
+}
+
+.progressBar {
+    margin: $space-lg 0;
 }
 
 .providers {
