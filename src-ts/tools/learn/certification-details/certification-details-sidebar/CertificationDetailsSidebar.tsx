@@ -85,7 +85,7 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
             </ul>
 
             <div className={classNames('body-main-medium', styles['section-header'])}>
-                Skills covered
+                Skills Covered
             </div>
             <ul className={styles['certification-skills-list']}>
                 {props.certification.skills.map(skill => (
