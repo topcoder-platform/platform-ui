@@ -1,13 +1,22 @@
-import { FC } from 'react'
+import { FC, useContext } from 'react'
 import classNames from 'classnames'
 
 import { PageSubheaderPortalId } from '../../../config'
-import { ContentLayout, LoadingSpinner, PageDivider, Portal } from '../../../lib'
+import {
+    ContentLayout,
+    LoadingSpinner,
+    PageDivider,
+    Portal,
+    profileContext,
+    ProfileContextData,
+} from '../../../lib'
 import {
     AllCertificationsProviderData,
+    TCACertificationsProgressProviderData,
     TCACertificationsProviderData,
     useGetAllCertifications,
-    useGetAllTCACertificationsMOCK,
+    useGetAllTCACertifications,
+    useGetAllTCACertificationsProgress,
     useGetUserCertifications,
     UserCertificationsProviderData,
     WaveHero,
@@ -20,14 +29,24 @@ import { TCCertifications } from './tc-certifications'
 import styles from './WelcomePage.module.scss'
 
 const WelcomePage: FC = () => {
+    const { initialized: profileReady, profile }: ProfileContextData = useContext(profileContext)
 
     const allCertsData: AllCertificationsProviderData = useGetAllCertifications()
     const userCertsData: UserCertificationsProviderData = useGetUserCertifications()
 
     const coursesReady: boolean = allCertsData.ready && userCertsData.ready
 
-    // TODO: this hook is mocked - remove mock when API is available...
-    const allTCACertifications: TCACertificationsProviderData = useGetAllTCACertificationsMOCK()
+    const allTCACertifications: TCACertificationsProviderData = useGetAllTCACertifications()
+
+    const {
+        progresses: certsProgress,
+        ready: progressReady,
+    }: TCACertificationsProgressProviderData = useGetAllTCACertificationsProgress(
+        profile?.userId as unknown as string,
+        { enabled: profileReady && !!profile },
+    )
+
+    const ready: boolean = profileReady && coursesReady && (!profile || progressReady)
 
     return (
         <ContentLayout>
@@ -52,13 +71,16 @@ const WelcomePage: FC = () => {
                 </Portal>
 
                 <div className={classNames(styles['courses-section'], 'full-height-frame')}>
-                    <LoadingSpinner hide={coursesReady} />
+                    <LoadingSpinner hide={ready} />
 
                     <WhatTCACanDo />
 
                     <PageDivider />
 
-                    <TCCertifications certifications={allTCACertifications.certifications} />
+                    <TCCertifications
+                        certifications={allTCACertifications.certifications}
+                        progress={certsProgress}
+                    />
 
                     <PageDivider />
 
