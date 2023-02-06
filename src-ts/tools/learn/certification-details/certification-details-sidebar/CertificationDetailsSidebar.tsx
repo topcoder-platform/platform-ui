@@ -9,6 +9,8 @@ import styles from './CertificationDetailsSidebar.module.scss'
 
 interface CertificationDetailsSidebarProps {
     certification: TCACertification
+    enrolled: boolean
+    onEnroll: () => void
 }
 
 function renderTooltipContents(icon: ReactNode, text: Array<string>): ReactNode {
@@ -42,7 +44,7 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                     </span>
                     <span className='quote-main'>
                         {props.certification.coursesCount}
-                        &nbsp;courses
+                        {' courses'}
                     </span>
                 </li>
                 <li>
@@ -51,10 +53,10 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                     </span>
                     <span className='quote-main'>
                         {props.certification.estimatedCompletionTime}
-                        &nbsp;months
+                        {' hours'}
                         <Tooltip
                             content={renderTooltipContents(<IconSolid.ClockIcon />, [
-                                'Assuming 1 hour',
+                                'Assuming 4 hour',
                                 'learning per day',
                             ])}
                             place='bottom'
@@ -69,8 +71,7 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                     </span>
                     <span className='quote-main'>
                         <span className='strike'>$15</span>
-                        &nbsp;$5
-                        &nbsp;one-time payment
+                        {' Free until March 31'}
                         <Tooltip
                             content={renderTooltipContents(<IconSolid.CurrencyDollarIcon />, [
                                 'Introductory low pricing',
@@ -99,11 +100,18 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
             />
 
             <div className={styles.btns}>
-                <Button
-                    buttonStyle='primary'
-                    size='md'
-                    label='Enroll Now'
-                />
+                {props.enrolled ? (
+                    <div className={classNames(styles.tag, styles.enrolled)}>
+                        <span className='body-main-medium'>Enrolled</span>
+                    </div>
+                ) : (
+                    <Button
+                        buttonStyle='primary'
+                        size='md'
+                        label='Enroll Now'
+                        onClick={props.onEnroll}
+                    />
+                )}
             </div>
         </div>
     </div>

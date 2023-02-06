@@ -7,6 +7,7 @@ export interface LearnCertification extends LearnModelBase {
     certification: string
     certType: 'certification' | 'course-completion'
     completionHours: number
+    fccId: string
     id: string
     key: string
     providerCrertificationId: string

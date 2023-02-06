@@ -17,7 +17,7 @@ import {
     useCertificateCanvas,
     useCertificatePrint,
     useCertificateScaling,
-    useGetTCACertificationMOCK,
+    useGetTCACertification,
     useGetUserTCACompletedCertificationsMOCK,
     UserCompletedTCACertificationsProviderData,
 } from '../../learn-lib'
@@ -52,7 +52,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const {
         certification,
         ready: certReady,
-    }: TCACertificationProviderData = useGetTCACertificationMOCK(props.certification)
+    }: TCACertificationProviderData = useGetTCACertification(props.certification)
 
     function getCertTitle(user: string): string {
         return `${user} - ${certification?.title} Certification`

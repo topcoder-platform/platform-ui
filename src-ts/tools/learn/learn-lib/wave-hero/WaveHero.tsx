@@ -4,7 +4,7 @@ import classNames from 'classnames'
 import styles from './WaveHero.module.scss'
 
 interface WaveHeroProps {
-    children?: JSX.Element|Array<JSX.Element>
+    children?: ReactNode
     text: string
     theme?: 'light' | 'grey'
     title: ReactNode

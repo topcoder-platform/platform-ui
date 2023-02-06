@@ -2,7 +2,17 @@ import { FC, ReactNode, useContext } from 'react'
 import { Params, useParams } from 'react-router-dom'
 
 import { PageSubheaderPortalId } from '../../../config'
-import { TCACertificationProviderData, useGetTCACertificationMOCK, useLearnBreadcrumb, WaveHero } from '../learn-lib'
+import {
+    enrollTCACertificationAsync,
+    TCACertificationProgressProviderData,
+    TCACertificationProviderData,
+    useGetTCACertification,
+    useGetTCACertificationProgress,
+    useGetUserCertifications,
+    useLearnBreadcrumb,
+    UserCertificationsProviderData,
+    WaveHero,
+} from '../learn-lib'
 import {
     Breadcrumb,
     BreadcrumbItemModel,
@@ -37,22 +47,57 @@ function renderBasicList(items: Array<string>): ReactNode {
 const CertificationDetailsPage: FC<{}> = () => {
     const routeParams: Params<string> = useParams()
     const { certification: dashedName }: Params<string> = routeParams
-    const { initialized: profileReady }: ProfileContextData = useContext(profileContext)
+    const { initialized: profileReady, profile }: ProfileContextData = useContext(profileContext)
+
+    // Fetch the User's progress for all the courses
+    // so we can show their progress
+    // even before they enroll with the certification
+    const {
+        progresses: certsProgress,
+        ready: certsProgressReady,
+    }: UserCertificationsProviderData = useGetUserCertifications()
 
     const {
         certification,
         ready: certificateReady,
-    }: TCACertificationProviderData = useGetTCACertificationMOCK(dashedName as string)
+    }: TCACertificationProviderData = useGetTCACertification(dashedName as string)
 
-    const ready: boolean = profileReady && certificateReady
+    // Fetch Enrollment status & progress
+    const {
+        progress,
+        ready: progressReady,
+        setCertificateProgress,
+    }: TCACertificationProgressProviderData = useGetTCACertificationProgress(
+        profile?.userId as unknown as string,
+        dashedName as string,
+        { enabled: profileReady && !!profile },
+    )
+
+    const ready: boolean = profileReady && certificateReady && (!profile || (progressReady && certsProgressReady))
+
+    const isEnrolled: boolean = progressReady && !!progress
 
     const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
         {
 
-            name: textFormatGetSafeString(certification.title),
+            name: textFormatGetSafeString(certification?.title),
             url: '',
         },
     ])
+
+    /**
+     * TODO: should launch the enrollment process, it SHOULD NOT call enroll api directly!
+     */
+    function handleEnrollClick(): void {
+        if (!profile) {
+            return
+        }
+
+        enrollTCACertificationAsync(`${profile.userId}`, `${certification.id}`)
+            .then(d => {
+                setCertificateProgress(d)
+            })
+    }
 
     function renderLearningOutcomeSection(): ReactNode {
         return (
@@ -66,7 +111,11 @@ const CertificationDetailsPage: FC<{}> = () => {
     function renderCertificationCurriculum(): ReactNode {
         return (
             <div className={styles['text-section']}>
-                <CertificationCurriculum certification={certification} />
+                <CertificationCurriculum
+                    certification={certification}
+                    isEnrolled={isEnrolled}
+                    certsProgress={certsProgress}
+                />
             </div>
         )
     }
@@ -95,43 +144,57 @@ const CertificationDetailsPage: FC<{}> = () => {
         )
     }
 
+    function renderContents(): ReactNode {
+        return (
+            <>
+                <Breadcrumb items={breadcrumb} />
+
+                <Portal portalId={PageSubheaderPortalId}>
+                    <div className={styles['hero-wrap']}>
+                        <WaveHero
+                            title={(
+                                <HeroTitle certification={certification} certTitle={certification.title} />
+                            )}
+                            theme='grey'
+                            text={certification.introText}
+                        >
+                            {!isEnrolled && (
+                                <Button
+                                    buttonStyle='primary'
+                                    size='md'
+                                    label='Enroll Now'
+                                    onClick={handleEnrollClick}
+                                />
+                            )}
+                        </WaveHero>
+                        <CertificationDetailsSidebar
+                            certification={certification}
+                            enrolled={isEnrolled}
+                            onEnroll={handleEnrollClick}
+                        />
+                    </div>
+                </Portal>
+
+                <PerksSection items={perks} />
+                {renderLearningOutcomeSection()}
+                {renderCertificationCurriculum()}
+                {renderRequirementsSection()}
+                {renderFaqSection()}
+            </>
+        )
+    }
+
     return (
         <ContentLayout
             contentClass={styles.contentWrap}
             outerClass={styles.outerContentWrap}
             innerClass={styles.innerContentWrap}
         >
-            {!ready && (
+            {!ready ? (
                 <div className={styles.wrap}>
                     <LoadingSpinner />
                 </div>
-            )}
-            <Breadcrumb items={breadcrumb} />
-
-            <Portal portalId={PageSubheaderPortalId}>
-                <div className={styles['hero-wrap']}>
-                    <WaveHero
-                        title={(
-                            <HeroTitle certification={certification} certTitle={certification.title} />
-                        )}
-                        theme='grey'
-                        text={certification.introText}
-                    >
-                        <Button
-                            buttonStyle='primary'
-                            size='md'
-                            label='Enroll Now'
-                        />
-                    </WaveHero>
-                    <CertificationDetailsSidebar certification={certification} />
-                </div>
-            </Portal>
-
-            <PerksSection items={perks} />
-            {renderLearningOutcomeSection()}
-            {renderCertificationCurriculum()}
-            {renderRequirementsSection()}
-            {renderFaqSection()}
+            ) : renderContents()}
         </ContentLayout>
     )
 }

@@ -1,15 +1,11 @@
 import { FC, useMemo } from 'react'
+import { get } from 'lodash'
 
 import { IconOutline } from '../../../../lib'
 import {
-    AllCertificationsProviderData,
-    LearnCertification,
     LearnUserCertificationProgress,
     TCACertification,
-    TCACertificationLearnLevel,
-    useGetAllCertifications,
-    useGetUserCertifications,
-    UserCertificationsProviderData,
+    TCACertificationProvider,
 } from '../../learn-lib'
 
 import { CertificationSummary } from './certification-summary'
@@ -18,50 +14,32 @@ import styles from './CertificationCurriculum.module.scss'
 
 interface CertificationCurriculumProps {
     certification: TCACertification
+    certsProgress?: ReadonlyArray<LearnUserCertificationProgress>
+    isEnrolled: boolean
 }
 
-interface CertificatesByIdType {
+interface ProgressByIdCollection {
     [key: string]: LearnUserCertificationProgress
 }
 
+interface ProvidersByIdCollection {
+    [key: string]: TCACertificationProvider
+}
+
 const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: CertificationCurriculumProps) => {
-    const {
-        completed,
-        inProgress,
-        ready: userCertsReady,
-    }: UserCertificationsProviderData = useGetUserCertifications()
+    const progressById: ProgressByIdCollection = useMemo(() => (
+        props.certsProgress?.reduce((all, progress) => {
+            all[progress.certificationId] = progress
+            return all
+        }, {} as ProgressByIdCollection) ?? {}
+    ), [props.certsProgress])
 
-    const {
-        certifications: allCertifications,
-        ready: certificatesReady,
-    }: AllCertificationsProviderData = useGetAllCertifications()
-
-    const progressById: CertificatesByIdType = useMemo(() => {
-        const progresses: LearnUserCertificationProgress[] = [
-            ...completed,
-            ...inProgress,
-        ]
-
-        return (
-            progresses.reduce((certifs, certificate) => {
-                certifs[certificate.certificationId] = certificate
-                return certifs
-            }, {} as unknown as CertificatesByIdType)
-        )
-    }, [completed, inProgress])
-
-    const certResources: {[key: string]: {learnerLevel: TCACertificationLearnLevel}} = useMemo(() => (
-        Object.fromEntries(
-            props.certification.certificationResources.map(d => [
-                d.freeCodeCampCertification.fccId,
-                d.freeCodeCampCertification,
-            ]),
-        )
-    ), [props.certification.certificationResources])
-
-    const certifications: LearnCertification[] = useMemo(() => (
-        allCertifications.filter(cert => !!certResources[cert.id])
-    ), [allCertifications, certResources])
+    const providersById: ProvidersByIdCollection = useMemo(() => (
+        props.certification.resourceProviders.reduce((all, provider) => {
+            all[provider.id] = provider
+            return all
+        }, {} as ProvidersByIdCollection)
+    ), [props.certification])
 
     return (
         <div className={styles.wrap}>
@@ -74,36 +52,36 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
                         <div className={styles.icon}>
                             <IconOutline.DocumentTextIcon />
                         </div>
-                        <strong>4</strong>
+                        <strong>{props.certification.coursesCount}</strong>
                         <span>courses</span>
                     </div>
                     <div className={styles.headlineDetailsItem}>
                         <div className={styles.icon}>
                             <IconOutline.CalendarIcon />
                         </div>
-                        <strong>2</strong>
-                        <span>months</span>
+                        <strong>{props.certification.estimatedCompletionTime}</strong>
+                        <span>hours</span>
                     </div>
                 </div>
             </div>
 
             <div className={styles.container}>
-                {certificatesReady && userCertsReady && (
-                    <div className={styles.courses}>
-                        {certifications.map(cert => (
-                            <CourseCard
-                                certification={cert}
-                                progress={progressById[cert.id]}
-                                key={cert.id}
-                                learnerLevel={certResources[cert.id]?.learnerLevel}
-                            />
-                        ))}
-                        <AssessmentCard
-                            title={`${props.certification.title} Assessment`}
-                            trackType={props.certification.certificationCategory.track}
+                <div className={styles.courses}>
+                    {props.certification.certificationResources.map(cert => (
+                        <CourseCard
+                            certification={cert.freeCodeCampCertification}
+                            progress={progressById[cert.freeCodeCampCertification.fccId]}
+                            key={cert.id}
+                            learnerLevel={cert.freeCodeCampCertification.learnerLevel}
+                            provider={get(providersById, [cert.resourceProviderId, 'name'])}
+                            isEnrolled={props.isEnrolled}
                         />
-                    </div>
-                )}
+                    ))}
+                    <AssessmentCard
+                        title={`${props.certification.title} Assessment`}
+                        trackType={props.certification.certificationCategory.track}
+                    />
+                </div>
                 <CertificationSummary certification={props.certification} />
             </div>
         </div>

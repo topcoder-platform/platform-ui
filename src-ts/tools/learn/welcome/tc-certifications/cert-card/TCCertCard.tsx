@@ -1,12 +1,13 @@
-import { Dispatch, FC, memo, SetStateAction, useEffect, useState } from 'react'
+import { FC, memo, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { Button, ButtonStyle, IconSolid, Tooltip } from '../../../../../lib'
+import { Button, ButtonStyle, IconSolid, ProgressBar, Tooltip } from '../../../../../lib'
 import {
     CertificateBadgeIcon,
     LearnLevelIcon,
     ProvidersLogoList,
     TCACertification,
+    TCACertificationProgress,
     TCACertificationProviderBase,
 } from '../../../learn-lib'
 import { SkillLabel } from '../../skill'
@@ -16,7 +17,13 @@ import styles from './TCCertCard.module.scss'
 
 interface TCCertCardProps {
     certification: TCACertification
+    progress: TCACertificationProgress
 }
+
+const getCtaBtn: (style: ButtonStyle, label: string, route: string) => ReactNode
+    = (style: ButtonStyle, label: string, route: string) => (
+        <Button buttonStyle={style} size='sm' label={label} route={route} />
+    )
 
 const EXCERPT_TEXT_LEN: number = 165
 
@@ -27,18 +34,28 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
         providers: Array<TCACertificationProviderBase>,
         dashedName: string
     } = props.certification
-    const [buttonLabel, setButtonLabel]: [string, Dispatch<SetStateAction<string>>]
-        = useState<string>('Details')
-    const [buttonStyle, setButtonStyle]: [string, Dispatch<SetStateAction<string>>]
-        = useState<string>('secondary')
-    const [link, setLink]: [string, Dispatch<SetStateAction<string>>]
-        = useState<string>(
-            getTCACertificationPath(dashedName),
+
+    const isEnrolled: boolean = props.progress?.status === 'enrolled'
+
+    function renderCta(): ReactNode {
+        if (!isEnrolled) {
+            return getCtaBtn('secondary', 'Details', getTCACertificationPath(dashedName))
+        }
+
+        return getCtaBtn('primary', 'Resume', getTCACertificationPath(dashedName))
+    }
+
+    function renderProgressBar(): ReactNode {
+        if (props.progress?.status !== 'enrolled') {
+            return <div className={styles.separatorBar} />
+        }
+
+        return (
+            <div className={styles.progressBar}>
+                <ProgressBar progress={props.progress.certificationProgress / 100} />
+            </div>
         )
-
-    useEffect(() => {
-
-    }, [])
+    }
 
     return (
         <div className={styles.wrap}>
@@ -62,7 +79,7 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                         <IconSolid.ClockIcon width={16} height={16} />
                         <span className={classNames('body-small', styles.infoText)}>
                             {props.certification.estimatedCompletionTime}
-                            {' months'}
+                            {' hours'}
                         </span>
                         {/* TODO: Uncomment this when paid certs come to prod! */}
                         {/* <IconSolid.CurrencyDollarIcon width={16} height={16} />
@@ -73,6 +90,8 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                 </div>
                 <div className={styles.newLabel}>NEW</div>
             </div>
+
+            {renderProgressBar()}
 
             <p>
                 {desc}
@@ -95,16 +114,11 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
             <ProvidersLogoList
                 className={styles.providers}
                 label='content from'
-                providers={props.certification.providers}
+                providers={providers}
             />
 
             <div className={styles.cardBottom}>
-                <Button
-                    buttonStyle={buttonStyle as ButtonStyle}
-                    size='sm'
-                    label={buttonLabel}
-                    route={link}
-                />
+                {renderCta()}
             </div>
         </div>
     )

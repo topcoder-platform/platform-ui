@@ -5,12 +5,70 @@
     background: $black-5;
     padding: $space-xxl;
 
+    display: flex;
+    gap: $space-xxl;
+
     @include ltelg {
         padding: $space-lg;
+        flex-direction: column;
+        gap: $space-lg;
+    }
+}
+
+.statusCol {
+    margin: -$space-xxl;
+    margin-right: 0;
+
+    border-radius: $space-sm 0px 0px $space-sm;
+    overflow: hidden;
+
+    width: 64px;
+    flex: 0 0 auto;
+    display: flex;
+
+    @include ltelg {
+        display: none;
+    }
+}
+
+.statusBox {
+    margin-left: auto;
+    @include icon-xxxxl;
+    border-radius: $space-xs;
+    display: flex;
+    overflow: hidden;
+}
+
+.statusIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: $tc-white;
+    color: $black-40;
+    flex: 1 1 auto;
+
+    &.inProgress {
+        color: $turq-100;
+    }
+
+    &.completed {
+        background: $turq-100;
+        color: $tc-white;
+    }
+
+    > svg {
+        display: flex;
+        @include icon-xxxxl;
+
+        @include ltelg {
+            @include icon-xxl;
+        }
     }
 }
 
 .inner {
+    flex: 1 1 auto;
 
     display: flex;
     align-items: flex-start;
@@ -50,17 +108,27 @@
 
     .cta {
         margin-left: auto;
+        @include ltelg {
+            display: none;
+        }
     }
 }
 
-.cta, .bottomCta {
+.cta, .bottomActions, .bottomCta {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: $space-sm;
 }
+
+.bottomActions {
+    @include gtexl {
+        display: none;
+    }
+}
+
 .bottomCta {
-    margin-top: $space-lg;
+    flex-direction: row-reverse;
 }
 
 .content {
