@@ -13,7 +13,11 @@ export interface TCACertification {
     createdAt: Date
     dashedName: string
     description: string
-    estimatedCompletionTime: number
+    completionTimeRange: {
+        highRangeValue: number,
+        lowRangeValue: number,
+        units: string,
+    }
     id: number
     introText: string
     learnerLevel: TCACertificationLearnLevel

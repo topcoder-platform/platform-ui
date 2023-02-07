@@ -104,3 +104,13 @@
         margin-left: $space-sm;
     }
 }
+
+.infoText {
+    font-style: italic;
+    color: $black-60;
+    margin-right: $space-sm;
+
+    &:last-child {
+        margin-right: 0;
+    }
+}

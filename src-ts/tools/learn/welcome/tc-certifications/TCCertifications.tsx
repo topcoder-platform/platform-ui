@@ -1,5 +1,6 @@
 import { sortBy } from 'lodash'
 import { FC, ReactNode, useCallback, useMemo } from 'react'
+import classNames from 'classnames'
 
 import { TCACertification, TCACertificationProgress } from '../../learn-lib'
 
@@ -32,9 +33,16 @@ const TCCertifications: FC<TCCertificationsProps> = (props: TCCertificationsProp
             />
         ), [progressById])
 
+    const certificationsCount: number = props.certifications.length
+
     return (
         <div className={styles.wrap}>
-            <h2 className='details'>Certifications</h2>
+            <h2 className='details'>
+                Certifications
+                <span className={classNames(styles.badge, 'medium-subtitle')}>
+                    {certificationsCount}
+                </span>
+            </h2>
             <div className={styles.teaseBanner}>
                 <h2>Introducing Topcoder Certifications</h2>
                 <p>

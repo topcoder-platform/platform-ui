@@ -1,4 +1,5 @@
-import { FC, useContext } from 'react'
+import { Dictionary, groupBy, identity, orderBy } from 'lodash'
+import { ChangeEvent, Dispatch, FC, SetStateAction, useCallback, useContext, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { PageSubheaderPortalId } from '../../../config'
@@ -9,9 +10,11 @@ import {
     Portal,
     profileContext,
     ProfileContextData,
+    useLocalStorage,
 } from '../../../lib'
 import {
     AllCertificationsProviderData,
+    LearnCertification,
     TCACertificationsProgressProviderData,
     TCACertificationsProviderData,
     useGetAllCertifications,
@@ -26,7 +29,13 @@ import '../../../lib/styles/index.scss'
 import { AvailableCoursesList } from './available-courses-list'
 import { WhatTCACanDo } from './what-tca-cando'
 import { TCCertifications } from './tc-certifications'
+import { FilterBar } from './filter-bar'
 import styles from './WelcomePage.module.scss'
+
+const PRIORITY_CATEGORIES: ReadonlyArray<string> = [
+    'Data Science',
+    'Web Development',
+]
 
 const WelcomePage: FC = () => {
     const { initialized: profileReady, profile }: ProfileContextData = useContext(profileContext)
@@ -47,6 +56,46 @@ const WelcomePage: FC = () => {
     )
 
     const ready: boolean = profileReady && coursesReady && (!profile || progressReady)
+
+    const [selectedCategory, setSelectedCategory]: [
+        string,
+        Dispatch<SetStateAction<string>>
+    ] = useLocalStorage<string>('tca-welcome-filter-certs', '')
+
+    // certificates indexed by category, sorted by title
+    const certsByCategory: Dictionary<Array<LearnCertification>>
+        = useMemo(() => (
+            groupBy(orderBy(allCertsData.certifications, 'title', 'asc'), 'certificationCategory.category')
+        ), [allCertsData.certifications])
+
+    // compute all the available category dropdown options
+    const certsCategoriesOptions: Array<{
+        label: string,
+        value: string,
+    }> = useMemo(() => [
+        { label: 'All Categories', orderIndex: -1, value: '' },
+        ...Object.keys(certsByCategory)
+            .sort()
+            .map(c => ({
+                label: c,
+                value: c,
+            })),
+    ], [certsByCategory])
+
+    // create and sort the certificates groups
+    const certificationsGroups: Array<string> = useMemo(() => orderBy(
+        Object.keys(certsByCategory),
+        [
+            c => (PRIORITY_CATEGORIES.includes(c) ? -1 : 1),
+            identity,
+        ],
+        ['asc', 'asc'],
+    ), [certsByCategory])
+
+    const onSelectCategory: (e: ChangeEvent<HTMLInputElement>) => void
+        = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+            setSelectedCategory(e.target.value as string)
+        }, [setSelectedCategory])
 
     return (
         <ContentLayout>
@@ -75,6 +124,12 @@ const WelcomePage: FC = () => {
 
                     <WhatTCACanDo />
 
+                    <FilterBar
+                        certsCategoriesOptions={certsCategoriesOptions}
+                        onSelectCategory={onSelectCategory}
+                        selectedCategory={selectedCategory}
+                    />
+
                     <PageDivider />
 
                     <TCCertifications
@@ -86,7 +141,10 @@ const WelcomePage: FC = () => {
 
                     {coursesReady && (
                         <AvailableCoursesList
+                            certsByCategory={certsByCategory}
                             certifications={allCertsData.certifications}
+                            certificationsGroups={certificationsGroups}
+                            selectedCategory={selectedCategory}
                             userCompletedCertifications={userCertsData.completed}
                             userInProgressCertifications={userCertsData.inProgress}
                         />

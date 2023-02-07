@@ -17,5 +17,6 @@ export interface LearnCourse extends LearnModelBase {
     modules: Array<LearnModule>
     note: string
     provider: string
+    skills: Array<string>
     title: string
 }
