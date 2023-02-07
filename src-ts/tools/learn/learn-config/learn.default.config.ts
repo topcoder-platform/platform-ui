@@ -1,7 +1,7 @@
 import { LearnConfigModel } from './learn-config.model'
 
 export const LearnConfigDefault: LearnConfigModel = {
-    API: 'http://localhost:3001/v5/learning-paths',
+    API: 'https://api.topcoder-dev.com/v5/learning-paths',
     CERT_ALT_PARAMS: {
         'view-style': 'large-container',
     },
