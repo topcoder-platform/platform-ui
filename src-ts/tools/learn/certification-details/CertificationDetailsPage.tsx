@@ -123,7 +123,7 @@ const CertificationDetailsPage: FC<{}> = () => {
     function renderRequirementsSection(): ReactNode {
         return (
             <div className={styles['text-section']}>
-                <h2>Requirements</h2>
+                <h2>Prerequisites</h2>
                 {certification.prerequisites?.length ? (
                     renderBasicList(certification.prerequisites)
                 ) : (

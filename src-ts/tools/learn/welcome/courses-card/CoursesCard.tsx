@@ -3,10 +3,11 @@ import classNames from 'classnames'
 
 import { Button, ButtonStyle, FccLogoBlackSvg, IconSolid, ProgressBar } from '../../../../lib'
 import {
+    CompletionTimeRange,
     CourseBadge,
     LearnCertification,
-    LearnLevelIcon,
-    SkillTags,
+    TCACertificationCompletionTimeRange,
+    useHoursEstimateToRange,
     UserCertificationCompleted,
     UserCertificationInProgress,
 } from '../../learn-lib'
@@ -91,6 +92,10 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
         props.userInProgressCertifications,
     ])
 
+    const completionTimeRange: TCACertificationCompletionTimeRange = useHoursEstimateToRange(
+        props.certification.completionHours,
+    )
+
     return (
         <div className={classNames(styles.wrap, !link && 'soon', linkCompleted && styles.completed)}>
             <div className={styles.cardHeader}>
@@ -109,8 +114,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                         </em>
                         <IconSolid.ClockIcon width={16} height={16} />
                         <em>
-                            {props.certification.completionHours}
-                            {' hours'}
+                            <CompletionTimeRange range={completionTimeRange} />
                         </em>
                     </div>
                 </div>

@@ -4,6 +4,7 @@ import classNames from 'classnames'
 import { Button, ButtonStyle, IconSolid, ProgressBar } from '../../../../../lib'
 import {
     CertificateBadgeIcon,
+    CompletionTimeRange,
     LearnLevelIcon,
     ProvidersLogoList,
     SkillTags,
@@ -77,13 +78,7 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                             {' courses'}
                         </span>
                         <IconSolid.ClockIcon width={16} height={16} />
-                        <span className={classNames('body-small', styles.infoText)}>
-                            {props.certification.completionTimeRange.lowRangeValue}
-                            -
-                            {props.certification.completionTimeRange.highRangeValue}
-                            {' '}
-                            {props.certification.completionTimeRange.units}
-                        </span>
+                        <CompletionTimeRange range={props.certification.completionTimeRange} />
                         {/* TODO: Uncomment this when paid certs come to prod! */}
                         {/* <IconSolid.CurrencyDollarIcon width={16} height={16} />
                         <span className={classNames('body-small', styles.infoText)}>

@@ -1,8 +1,8 @@
-import { FC, ReactNode } from 'react'
+import { FC } from 'react'
 import classNames from 'classnames'
 
-import { Button, IconOutline, IconSolid, Tooltip } from '../../../../lib'
-import { LearnLevelIcon, ProvidersLogoList, TCACertification } from '../../learn-lib'
+import { Button, IconSolid } from '../../../../lib'
+import { CompletionTimeRange, LearnLevelIcon, ProvidersLogoList, TCACertification } from '../../learn-lib'
 
 import img from './certificate-placeholder.jpg'
 import styles from './CertificationDetailsSidebar.module.scss'
@@ -13,17 +13,18 @@ interface CertificationDetailsSidebarProps {
     onEnroll: () => void
 }
 
-function renderTooltipContents(icon: ReactNode, text: Array<string>): ReactNode {
-    return (
-        <div className={styles.tooltip}>
-            {icon}
-            <span
-                className='body-small'
-                dangerouslySetInnerHTML={{ __html: text.join('<br />') }}
-            />
-        </div>
-    )
-}
+// Needed for the tooltip which is disabled unti payments are implemented
+// function renderTooltipContents(icon: ReactNode, text: Array<string>): ReactNode {
+//     return (
+//         <div className={styles.tooltip}>
+//             {icon}
+//             <span
+//                 className='body-small'
+//                 dangerouslySetInnerHTML={{ __html: text.join('<br />') }}
+//             />
+//         </div>
+//     )
+// }
 
 const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props: CertificationDetailsSidebarProps) => (
     <div className={styles['sticky-container']}>
@@ -52,20 +53,11 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                         <IconSolid.ClockIcon />
                     </span>
                     <span className='quote-main'>
-                        {props.certification.estimatedCompletionTime}
-                        {' hours'}
-                        <Tooltip
-                            content={renderTooltipContents(<IconSolid.ClockIcon />, [
-                                'Assuming 4 hour',
-                                'learning per day',
-                            ])}
-                            place='bottom'
-                            trigger={<IconOutline.InformationCircleIcon />}
-                            triggerOn='hover'
-                        />
+                        <CompletionTimeRange range={props.certification.completionTimeRange} />
                     </span>
                 </li>
-                <li>
+                {/* Probably will be added later on when payments are implemented */}
+                {/* <li>
                     <span className={styles.icon}>
                         <IconSolid.CurrencyDollarIcon />
                     </span>
@@ -81,11 +73,11 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                             triggerOn='hover'
                         />
                     </span>
-                </li>
+                </li> */}
             </ul>
 
             <div className={classNames('body-main-medium', styles['section-header'])}>
-                Skills covered
+                Skills Covered
             </div>
             <ul className={styles['certification-skills-list']}>
                 {props.certification.skills.map(skill => (
