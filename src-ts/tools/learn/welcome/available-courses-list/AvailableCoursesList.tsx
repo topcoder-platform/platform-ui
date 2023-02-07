@@ -1,67 +1,24 @@
-import { Dictionary, groupBy, identity, orderBy } from 'lodash'
-import { ChangeEvent, Dispatch, FC, Fragment, ReactNode, SetStateAction, useCallback, useMemo } from 'react'
+import { Dictionary } from 'lodash'
+import { FC, Fragment, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { InputSelect, useLocalStorage } from '../../../../lib'
 import { LearnCertification, UserCertificationCompleted, UserCertificationInProgress } from '../../learn-lib'
 import { CoursesCard } from '../courses-card'
 
 import styles from './AvailableCoursesList.module.scss'
 
 interface AvailableCoursesListProps {
+    certsByCategory: Dictionary<Array<LearnCertification>>
     certifications: ReadonlyArray<LearnCertification>
+    certificationsGroups: Array<string>
+    selectedCategory: string
     userCompletedCertifications: ReadonlyArray<UserCertificationCompleted>
     userInProgressCertifications: ReadonlyArray<UserCertificationInProgress>
 }
 
-const PRIORITY_CATEGORIES: ReadonlyArray<string> = [
-    'Data Science',
-    'Web Development',
-]
-
 const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCoursesListProps) => {
-    const [selectedCategory, setSelectedCategory]: [
-        string,
-        Dispatch<SetStateAction<string>>
-    ] = useLocalStorage<string>('tca-welcome-filter-certs', '')
-
-    // certificates indexed by category, sorted by title
-    const certsByCategory: Dictionary<Array<LearnCertification>>
-        = useMemo(() => (
-            groupBy(orderBy(props.certifications, 'title', 'asc'), 'certificationCategory.category')
-        ), [props.certifications])
-
-    // compute all the available category dropdown options
-    const certsCategoriesOptions: Array<{
-        label: string,
-        value: string,
-    }> = useMemo(() => [
-        { label: 'All Categories', orderIndex: -1, value: '' },
-        ...Object.keys(certsByCategory)
-            .sort()
-            .map(c => ({
-                label: c,
-                value: c,
-            })),
-    ], [certsByCategory])
-
-    // create and sort the certificates groups
-    const certificationsGroups: Array<string> = useMemo(() => orderBy(
-        Object.keys(certsByCategory),
-        [
-            c => (PRIORITY_CATEGORIES.includes(c) ? -1 : 1),
-            identity,
-        ],
-        ['asc', 'asc'],
-    ), [certsByCategory])
-
-    const onSelectCategory: (e: ChangeEvent<HTMLInputElement>) => void
-        = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-            setSelectedCategory(e.target.value as string)
-        }, [setSelectedCategory])
-
     const certificationsCount: number = (
-        (certsByCategory[selectedCategory] ?? props.certifications).length
+        (props.certsByCategory[props.selectedCategory] ?? props.certifications).length
     )
 
     const renderCertificationGroup: (category: string) => ReactNode = (category: string) => (
@@ -71,7 +28,7 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
             </h4>
 
             <div className={styles.coursesList}>
-                {certsByCategory[category]
+                {props.certsByCategory[category]
                     .map(certification => (
                         <CoursesCard
                             certification={certification}
@@ -94,15 +51,7 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
                             {certificationsCount}
                         </span>
                     </h2>
-                    <div className={styles.coursesListFilters}>
-                        <InputSelect
-                            options={certsCategoriesOptions}
-                            value={selectedCategory}
-                            onChange={onSelectCategory}
-                            name='filter-courses'
-                            label='Categories'
-                        />
-                    </div>
+
                 </div>
 
                 <div className={styles.teaseBanner}>
@@ -114,8 +63,8 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
                 </div>
             </div>
 
-            {certificationsGroups.map(category => (
-                (!selectedCategory || selectedCategory === category)
+            {props.certificationsGroups.map(category => (
+                (!props.selectedCategory || props.selectedCategory === category)
                 && renderCertificationGroup(category)
             ))}
         </div>

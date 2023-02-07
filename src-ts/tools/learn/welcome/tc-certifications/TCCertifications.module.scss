@@ -3,13 +3,33 @@
 .wrap {
     display: flex;
     flex-direction: column;
+    margin-bottom: $space-xxxxl;
+
+    @include ltemd {
+        margin-bottom: 0;
+    }
+
+    >h2 {
+        display: flex;
+        align-items: center;
+
+        .badge {
+            font-family: $font-roboto;
+            background: $blue-100;
+
+            padding: 0 $space-sm;
+            margin-left: $space-sm;
+            border-radius: 50px;
+            color: $tc-white;
+        }
+    }
 
     .teaseBanner {
         display: flex;
         flex-direction: column;
         position: relative;
         padding: $space-xxxxl;
-        margin: $space-xxl 0;
+        margin: $space-mx 0;
         background-image: url("./assets/certs-banner-bg.png");
         background-size: cover;
         border-radius: 8px;

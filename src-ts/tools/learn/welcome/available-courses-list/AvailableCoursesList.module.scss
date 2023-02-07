@@ -9,14 +9,14 @@
         flex-direction: column;
         position: relative;
         padding: $space-xxxxl;
-        margin: $space-xxl 0;
+        margin: $space-xxl 0 $space-mx;
         background-image: url("./assets/courses-banner-bg.png");
         background-size: cover;
         border-radius: 8px;
 
         @include ltemd {
             padding: 88px $space-lg $space-lg;
-            margin: $space-lg 0;
+            margin: 0 0 $space-xxl;
             background-image: url("./assets/courses-banner-bg-mobile.png");
         }
 
@@ -40,13 +40,12 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding-bottom: $space-xxl;
-        border-bottom: 2px solid $black-10;
-        // margin-bottom: $space-xxl;
+        padding-bottom: $space-lg;
 
         @include ltemd {
             flex-direction: column;
             align-items: flex-start;
+            padding-bottom: 0;
 
             h2 {
                 margin: $space-md 0 $space-xxl;
@@ -67,36 +66,6 @@
                 color: $tc-white;
             }
         }
-
-
-        .coursesListFilters {
-            display: flex;
-            margin-left: auto;
-
-            gap: $space-xxl;
-
-            >* {
-                min-width: 326px;
-            }
-
-            > :global(.input-wrapper) {
-                width: 100%;
-
-                > :global(.input-el) {
-                    margin: 0;
-                }
-            }
-
-            @include ltelg {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: $space-lg;
-            }
-
-            @include ltemd {
-                width: 100%;
-            }
-        }
     }
 }
 
@@ -104,9 +73,7 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: $space-xl;
-    padding: $space-xxl 0 $space-mxx;
-    border-bottom: 2px solid $black-10;
-    margin-bottom: $space-xxl;
+    padding: $space-xxl 0 $space-mx;
 
     &:last-child {
         border-bottom: none;
@@ -114,7 +81,6 @@
 
     @include ltemd {
         grid-template-columns: 1fr;
-        padding: $space-lg 0 $space-mx;
-        margin-bottom: $space-lg;
+        padding: $space-lg 0 $space-xxl;
     }
 }

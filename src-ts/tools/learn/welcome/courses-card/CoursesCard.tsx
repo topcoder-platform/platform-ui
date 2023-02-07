@@ -21,7 +21,10 @@ interface CoursesCardProps {
     userInProgressCertifications: ReadonlyArray<UserCertificationInProgress>
 }
 
+const EXCERPT_TEXT_LEN: number = 99
+
 const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
+    const desc: string = props.certification.description?.slice(0, EXCERPT_TEXT_LEN)
     const [buttonLabel, setButtonLabel]: [string, Dispatch<SetStateAction<string>>]
         = useState<string>('')
     const [link, setLink]: [string, Dispatch<SetStateAction<string>>]
@@ -53,11 +56,11 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
             setButtonLabel('View Certificate')
             setButtonStyle('primary')
             setLink(getCertificatePath(
-                props.certification.providerName,
+                props.certification.resourceProvider.name,
                 props.certification.certification,
             ))
             setLinkCompleted(getCoursePath(
-                props.certification.providerName,
+                props.certification.resourceProvider.name,
                 props.certification.certification,
             ))
 
@@ -66,7 +69,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
             // Details by going to the course details
             setButtonLabel('Details')
             setLink(getCoursePath(
-                props.certification.providerName,
+                props.certification.resourceProvider.name,
                 props.certification.certification,
             ))
 
@@ -76,7 +79,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
             setButtonLabel('Resume')
             setButtonStyle('primary')
             setLink(getLessonPathFromCurrentLesson(
-                props.certification.providerName,
+                props.certification.resourceProvider.name,
                 props.certification.certification,
                 inProgress.currentLesson,
             ))
@@ -100,6 +103,10 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                 <div className={styles.cardHeaderTitleWrap}>
                     <p className='body-medium-medium'>{props.certification.title}</p>
                     <div className={styles.subTitleWrap}>
+                        <LearnLevelIcon level={props.certification.learnerLevel} />
+                        <span className={classNames('body-small', styles.infoText)}>
+                            {props.certification.learnerLevel}
+                        </span>
                         <IconSolid.DocumentTextIcon width={16} height={16} />
                         <em>
                             {props.certification.moduleCount}
@@ -120,6 +127,13 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                     <ProgressBar progress={courseProgress} />
                 )}
             </div>
+
+            <p>
+                {desc}
+                {props.certification.description?.length > EXCERPT_TEXT_LEN ? '...' : ''}
+            </p>
+
+            <SkillTags skills={props.certification.course.skills} courseKey={props.certification.course.key} />
 
             <div className={styles.cardBody}>
                 <div className={styles.certProvider}>

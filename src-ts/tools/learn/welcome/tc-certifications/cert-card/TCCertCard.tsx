@@ -1,17 +1,17 @@
 import { FC, memo, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { Button, ButtonStyle, IconSolid, ProgressBar, Tooltip } from '../../../../../lib'
+import { Button, ButtonStyle, IconSolid, ProgressBar } from '../../../../../lib'
 import {
     CertificateBadgeIcon,
     CompletionTimeRange,
     LearnLevelIcon,
     ProvidersLogoList,
+    SkillTags,
     TCACertification,
     TCACertificationProgress,
     TCACertificationProviderBase,
 } from '../../../learn-lib'
-import { SkillLabel } from '../../skill'
 import { getTCACertificationPath } from '../../../learn.routes'
 
 import styles from './TCCertCard.module.scss'
@@ -78,9 +78,7 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                             {' courses'}
                         </span>
                         <IconSolid.ClockIcon width={16} height={16} />
-                        <span className={classNames('body-small', styles.infoText)}>
-                            <CompletionTimeRange range={props.certification.completionTimeRange} />
-                        </span>
+                        <CompletionTimeRange range={props.certification.completionTimeRange} />
                         {/* TODO: Uncomment this when paid certs come to prod! */}
                         {/* <IconSolid.CurrencyDollarIcon width={16} height={16} />
                         <span className={classNames('body-small', styles.infoText)}>
@@ -98,18 +96,7 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                 {props.certification.description.length > EXCERPT_TEXT_LEN ? '...' : ''}
             </p>
 
-            <div className={styles.skills}>
-                <span className={classNames('body-small', styles.infoText)}>skills taught</span>
-                {skills.slice(0, 3)
-                    .map(skill => <SkillLabel skill={skill} key={`${dashedName}:${skill}`} />)}
-                {skills.length > 3 && (
-                    <Tooltip
-                        content={skills.slice(0, 3)
-                            .join(', ')}
-                        trigger={<SkillLabel skill={`+ ${skills.slice(0, 3).length}`} />}
-                    />
-                )}
-            </div>
+            <SkillTags skills={skills} courseKey={dashedName} />
 
             <ProvidersLogoList
                 className={styles.providers}
