@@ -2,12 +2,15 @@ import { FC, ReactNode } from 'react'
 
 import { Button, IconSolid, ProgressBar } from '../../../../../../lib'
 import {
+    CompletionTimeRange,
     LearnCertification,
     LearnLevelIcon,
     LearnUserCertificationProgress,
     ProvidersLogoList,
+    TCACertificationCompletionTimeRange,
     TCACertificationLearnLevel,
     TCACertificationProviderBase,
+    useHoursEstimateToRange,
     UserCertificationProgressStatus,
 } from '../../../../learn-lib'
 import { getCertificatePath, getCoursePath } from '../../../../learn.routes'
@@ -76,6 +79,10 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
         }
     }
 
+    const completionTimeRange: TCACertificationCompletionTimeRange = useHoursEstimateToRange(
+        props.certification.completionHours,
+    )
+
     return (
         <CurriculumCard
             badgeTrackType={props.certification.trackType ?? 'DEV'}
@@ -102,8 +109,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                                 <IconSolid.ClockIcon />
                             </span>
                             <span className='quote-small'>
-                                {props.certification.completionHours}
-                                {' hours'}
+                                <CompletionTimeRange range={completionTimeRange} />
                             </span>
                         </li>
                     </ul>

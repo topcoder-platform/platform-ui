@@ -10,6 +10,7 @@ export interface LearnCertification extends LearnModelBase {
     fccId: string
     id: string
     key: string
+    moduleCount: string
     providerCrertificationId: string
     providerName: string
     publishedAt?: Date

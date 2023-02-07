@@ -8,6 +8,7 @@ export * from './tca-certification-provider.model'
 export * from './tca-certification-resource.model'
 export * from './tca-certification-resourceable.type'
 export * from './tca-certification-category.model'
+export * from './tca-certification-completion-time-range.model'
 
 export * from './tca-all-certifications'
 export * from './tca-all-certifications-progress'
