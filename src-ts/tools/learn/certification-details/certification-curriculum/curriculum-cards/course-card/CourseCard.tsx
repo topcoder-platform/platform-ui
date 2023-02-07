@@ -1,11 +1,13 @@
-import { FC, ReactNode } from 'react'
+import { FC, ReactNode, useMemo } from 'react'
 
 import { Button, IconSolid, ProgressBar } from '../../../../../../lib'
 import {
+    CompletionTimeRange,
     LearnCertification,
     LearnLevelIcon,
     LearnUserCertificationProgress,
     ProvidersLogoList,
+    TCACertificationCompletionTimeRange,
     TCACertificationLearnLevel,
     TCACertificationProviderBase,
     UserCertificationProgressStatus,
@@ -76,6 +78,12 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
         }
     }
 
+    const completionTimeRange: TCACertificationCompletionTimeRange = useMemo(() => ({
+        highRangeValue: props.certification.completionHours,
+        lowRangeValue: Math.ceil(props.certification.completionHours * (1 / 3)),
+        units: 'hours',
+    }), [props.certification])
+
     return (
         <CurriculumCard
             badgeTrackType={props.certification.trackType ?? 'DEV'}
@@ -102,8 +110,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                                 <IconSolid.ClockIcon />
                             </span>
                             <span className='quote-small'>
-                                {props.certification.completionHours}
-                                {' hours'}
+                                <CompletionTimeRange range={completionTimeRange} />
                             </span>
                         </li>
                     </ul>
