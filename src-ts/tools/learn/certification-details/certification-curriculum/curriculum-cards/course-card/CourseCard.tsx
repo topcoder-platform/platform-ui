@@ -1,4 +1,4 @@
-import { FC, ReactNode, useMemo } from 'react'
+import { FC, ReactNode } from 'react'
 
 import { Button, IconSolid, ProgressBar } from '../../../../../../lib'
 import {
@@ -10,6 +10,7 @@ import {
     TCACertificationCompletionTimeRange,
     TCACertificationLearnLevel,
     TCACertificationProviderBase,
+    useHoursEstimateToRange,
     UserCertificationProgressStatus,
 } from '../../../../learn-lib'
 import { getCertificatePath, getCoursePath } from '../../../../learn.routes'
@@ -78,11 +79,9 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
         }
     }
 
-    const completionTimeRange: TCACertificationCompletionTimeRange = useMemo(() => ({
-        highRangeValue: props.certification.completionHours,
-        lowRangeValue: Math.ceil(props.certification.completionHours * (1 / 3)),
-        units: 'hours',
-    }), [props.certification])
+    const completionTimeRange: TCACertificationCompletionTimeRange = useHoursEstimateToRange(
+        props.certification.completionHours,
+    )
 
     return (
         <CurriculumCard
