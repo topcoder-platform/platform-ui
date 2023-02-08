@@ -1,4 +1,5 @@
 import { LearnModelBase } from '../../../functions'
+import { ResourceProvider } from '../../resource-provider-provider'
 
 import { LearnModuleProgress } from './learn-module-progress.model'
 import { UserCertificationProgressStatus } from './user-certification-progress-status.enum'
@@ -15,8 +16,8 @@ export interface LearnUserCertificationProgress extends LearnModelBase {
     courseProgressPercentage: number
     currentLesson?: string
     id: string
-    modules: Array<LearnModuleProgress>
-    provider: string
+    moduleProgresses: Array<LearnModuleProgress>
+    resourceProvider: ResourceProvider
     startDate: string
     status: UserCertificationProgressStatus
 }

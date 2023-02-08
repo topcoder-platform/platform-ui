@@ -31,7 +31,7 @@ interface CollapsibleItemProps {
     moduleKey: string
     onItemClick: (item: any) => void
     path?: (item: any) => string
-    progress?: LearnUserCertificationProgress['modules']
+    progress?: LearnUserCertificationProgress['moduleProgresses']
     shortDescription: Array<string>
     title: string
 }

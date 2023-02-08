@@ -1,7 +1,7 @@
-import classNames from 'classnames'
 import { FC, SVGProps } from 'react'
+import classNames from 'classnames'
 
-import { LearnCertificateTrackType } from '../all-certifications-provider'
+import { TCACertificateType } from '../data-providers'
 
 import { getBadge, getBadgeImg } from './badges.functions'
 import styles from './CourseBadge.module.scss'
@@ -9,7 +9,7 @@ import styles from './CourseBadge.module.scss'
 interface CourseBadgeProps {
     asImg?: boolean
     className?: string
-    type: LearnCertificateTrackType
+    type: TCACertificateType
 }
 
 const CourseBadge: FC<CourseBadgeProps> = (props: CourseBadgeProps) => {

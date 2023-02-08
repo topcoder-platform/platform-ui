@@ -25,7 +25,7 @@ const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
 
     const lessonPath: (course: LearnCourse, module: LearnModule, lesson: LearnLesson) => string
         = useCallback((course: LearnCourse, module: LearnModule, lesson: LearnLesson) => getLessonPathFromModule(
-            course.provider,
+            course.resourceProvider.name,
             course.certification,
             module.key,
             lesson.dashedName,
@@ -49,7 +49,7 @@ const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
                             key={module.key}
                             lessonsCount={module.lessons.length}
                             path={(it: any) => (props.course ? lessonPath(props.course, module, it) : '')}
-                            progress={props.progress?.modules}
+                            progress={props.progress?.moduleProgresses}
                             shortDescription={module.introCopy}
                             title={module.name}
                             onItemClick={props.onItemNavigate}

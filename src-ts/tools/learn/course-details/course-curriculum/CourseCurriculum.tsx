@@ -63,7 +63,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         const lesson: LearnLesson = module.lessons[0]
 
         const lessonPath: string = getLessonPathFromCurrentLesson(
-            course.provider,
+            course.resourceProvider.name,
             course.certification,
             props.progress?.currentLesson,
             module.dashedName,
@@ -154,7 +154,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
     ])
 
     const handleNavigateToCertificate: () => void = () => {
-        const certificatePath: string = getCertificatePath(props.course.provider, props.course.certification)
+        const certificatePath: string = getCertificatePath(props.course.resourceProvider.name, props.course.key)
         navigate(certificatePath)
     }
 

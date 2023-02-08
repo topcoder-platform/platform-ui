@@ -190,7 +190,7 @@ const CourseDetailsPage: FC<{}> = () => {
                             <CourseTitle
                                 size='lg'
                                 title={course.title}
-                                credits={course.provider}
+                                credits={course.resourceProvider.name}
                                 trackType={certificate?.trackType}
                             />
 

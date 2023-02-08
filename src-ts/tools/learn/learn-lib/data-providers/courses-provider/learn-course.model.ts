@@ -1,5 +1,6 @@
 import { LearnModelBase } from '../../functions'
 import { LearnModule } from '../lesson-provider'
+import { ResourceProvider } from '../resource-provider-provider'
 
 export interface LearnCourse extends LearnModelBase {
     certification: string
@@ -14,7 +15,7 @@ export interface LearnCourse extends LearnModelBase {
     moduleCount: number
     modules: Array<LearnModule>
     note: string
-    provider: string
+    resourceProvider: ResourceProvider
     skills: Array<string>
     title: string
 }
