@@ -139,6 +139,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                 courseKey={props.certification.course.key}
                 expandCount={2}
                 skills={props.certification.course.skills}
+                theme={linkCompleted ? 'gray' : 'white'}
             />
 
             <div className={styles.cardBody}>
