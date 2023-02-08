@@ -26,6 +26,7 @@ export enum LEARN_PATHS {
     fcc = '/learn/fcc',
     root = '/learn',
     startCourseRouteFlag = 'start-course',
+    enrollCertifRouteFlag = 'start-enroll',
     tcaCertifications = 'tca-certifications',
 }
 
@@ -34,6 +35,10 @@ export const absoluteRootRoute: string = `${window.location.origin}${LEARN_PATHS
 
 export function getAuthenticateAndStartCourseRoute(): string {
     return `${authUrlLogin()}${encodeURIComponent(`?${LEARN_PATHS.startCourseRouteFlag}`)}`
+}
+
+export function getAuthenticateAndEnrollRoute(): string {
+    return `${authUrlLogin()}${encodeURIComponent(`?${LEARN_PATHS.enrollCertifRouteFlag}`)}`
 }
 
 export function getCoursePath(provider: string, certification: string): string {

@@ -10,11 +10,19 @@ interface CompletionTimeRangeProps {
 
 const CompletionTimeRange: FC<CompletionTimeRangeProps> = (props: CompletionTimeRangeProps) => (
     <div className={styles.wrap}>
-        {props.range.lowRangeValue}
-        -
-        {props.range.highRangeValue}
+        <span className='range-value lower-value'>
+            {props.range.lowRangeValue}
+        </span>
+        <span className='range-dash'>
+            -
+        </span>
+        <span className='range-value higher-value'>
+            {props.range.highRangeValue}
+        </span>
         &nbsp;
-        {props.range.units}
+        <span className='units'>
+            {props.range.units}
+        </span>
     </div>
 )
 
