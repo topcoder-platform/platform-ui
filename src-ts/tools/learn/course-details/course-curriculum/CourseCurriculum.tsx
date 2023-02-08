@@ -66,7 +66,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
             course.provider,
             course.certification,
             props.progress?.currentLesson,
-            module.meta.dashedName,
+            module.dashedName,
             lesson.dashedName,
         )
         navigate(lessonPath)
@@ -128,7 +128,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
                 props.course.id,
                 {
                     lesson: props.course.modules[0].lessons[0].dashedName,
-                    module: props.course.modules[0].meta.dashedName,
+                    module: props.course.modules[0].dashedName,
                 },
             )
 

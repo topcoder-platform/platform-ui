@@ -41,18 +41,18 @@ const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
                     {props.course.modules.map(module => (
                         <CollapsibleItem
                             active={props.currentStep}
-                            duration={module.meta.estimatedCompletionTime}
+                            duration={module.estimatedCompletionTimeValue}
                             moduleKey={module.key}
-                            itemId={(it: any) => `${module.meta.dashedName}/${it.dashedName}`}
+                            itemId={(it: any) => `${module.dashedName}/${it.dashedName}`}
                             items={module.lessons}
                             key={module.key}
                             lessonsCount={module.lessons.length}
                             path={(it: any) => (props.course ? lessonPath(props.course, module, it) : '')}
                             progress={props.progress?.modules}
-                            shortDescription={module.meta.introCopy}
-                            title={module.meta.name}
+                            shortDescription={module.introCopy}
+                            title={module.name}
                             onItemClick={props.onItemNavigate}
-                            isAssessment={module.meta.isAssessment}
+                            isAssessment={module.isAssessment}
                         />
                     ))}
                 </div>

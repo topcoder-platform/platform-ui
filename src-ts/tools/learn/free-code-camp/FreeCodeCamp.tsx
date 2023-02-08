@@ -525,7 +525,7 @@ const FreeCodeCamp: FC<{}> = () => {
 
                     <div className={styles['course-frame']}>
                         <TitleNav
-                            title={currentModuleData?.meta.name}
+                            title={currentModuleData?.name}
                             currentStep={currentStepIndex}
                             maxStep={currentModuleData?.lessons.length ?? 0}
                             onNavigate={handleNavigate}
