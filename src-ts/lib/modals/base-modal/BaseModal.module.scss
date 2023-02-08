@@ -17,6 +17,19 @@
     margin: 24px 0;
 }
 
+.buttonsWrap {
+    position: relative;
+    background: $tc-white;
+}
+
+.buttonContainer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
 .modal-body {
     flex: 1 1 auto;
     overflow: auto;
@@ -28,12 +41,8 @@
 
     @extend .body-main;
     & :global(.button-container) {
-        display: flex;
-        justify-content: flex-end;
-        gap: 16px;
-        align-items: center;
+        @extend .buttonContainer;
         margin-top: 24px;
-        flex: 0 0 auto;
     }
 
     @include ltemd {
@@ -41,7 +50,7 @@
         padding: 0 $space-lg $space-lg;
     }
 
-    :global(.button-container)  {
+    :global(.button-container) {
         margin-top: $space-sm;
     }
 }
