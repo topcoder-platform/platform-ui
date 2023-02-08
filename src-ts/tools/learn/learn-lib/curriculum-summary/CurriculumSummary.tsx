@@ -1,17 +1,18 @@
 import { FC } from 'react'
 
 import { IconOutline } from '../../../../lib'
-import { LearnCourse } from '../courses-provider'
+import { LearnCourse } from '../data-providers'
 
 import styles from './CurriculumSummary.module.scss'
 
 interface CurriculumSummaryProps {
-    completionHours?: LearnCourse['estimatedCompletionTime']
+    completionTimeValue?: LearnCourse['estimatedCompletionTimeValue']
+    completionTimeUnits?: LearnCourse['estimatedCompletionTimeUnits']
     moduleCount?: number
 }
 
 const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryProps) => {
-    const hasTimeEstimate: boolean = props.completionHours?.value !== 0
+    const hasTimeEstimate: boolean = props.completionTimeValue !== 0
 
     return (
         <div className={styles.summary}>
@@ -34,10 +35,10 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
                 </div>
                 <div className='sub'>
                     <h3 className={styles.count}>
-                        {hasTimeEstimate ? props.completionHours?.value : (<>&nbsp;</>)}
+                        {hasTimeEstimate ? props.completionTimeValue : (<>&nbsp;</>)}
                     </h3>
                     <div className={styles['count-label']}>
-                        {hasTimeEstimate ? (props.completionHours?.units ?? 'Hours') : 'Times vary'}
+                        {hasTimeEstimate ? props.completionTimeUnits : 'Times vary'}
                     </div>
                 </div>
             </div>

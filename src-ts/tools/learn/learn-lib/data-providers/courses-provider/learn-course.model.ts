@@ -5,10 +5,8 @@ export interface LearnCourse extends LearnModelBase {
     certification: string
     certificationId: string
     completionSuggestions: Array<string>
-    estimatedCompletionTime: {
-        units: string
-        value: number
-    }
+    estimatedCompletionTimeValue: number
+    estimatedCompletionTimeUnits: string
     id: string
     introCopy: Array<string>
     key: string

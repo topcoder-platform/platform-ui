@@ -42,6 +42,7 @@ const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
                         <CollapsibleItem
                             active={props.currentStep}
                             duration={module.estimatedCompletionTimeValue}
+                            durationUnits={module.estimatedCompletionTimeUnits}
                             moduleKey={module.key}
                             itemId={(it: any) => `${module.dashedName}/${it.dashedName}`}
                             items={module.lessons}
