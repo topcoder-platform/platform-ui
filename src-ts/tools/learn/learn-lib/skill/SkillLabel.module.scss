@@ -1,6 +1,7 @@
 @import '../../../../lib/styles/includes';
 
-.wrap {
+.wrap,
+.wrapGray {
     background-color: $tc-white;
     padding: 0 $space-sm;
     border-radius: 4px;
@@ -9,4 +10,8 @@
         font-style: italic;
         color: $black-80;
     }
+}
+
+.wrapGray {
+    background-color: $black-5;
 }

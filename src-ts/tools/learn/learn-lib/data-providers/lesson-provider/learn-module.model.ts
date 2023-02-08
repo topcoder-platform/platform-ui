@@ -1,8 +1,15 @@
-import { LearnLesson } from './learn-lesson.model'
-import { LearnModuleMeta } from './learn-module-meta.model'
+import { LearnModelBase } from '../../functions'
 
-export interface LearnModule {
+import { LearnLesson } from './learn-lesson.model'
+
+export interface LearnModule extends LearnModelBase {
+    dashedName: string
+    estimatedCompletionTimeValue: number
+    estimatedCompletionTimeUnits: string
+    introCopy: Array<string>
+    isAssessment: boolean
     key: string
     lessons: Array<LearnLesson>
-    meta: LearnModuleMeta
+    name: string
+    order: number
 }

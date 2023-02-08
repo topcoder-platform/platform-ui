@@ -13,7 +13,7 @@ export function useGetCourses(
 ): CoursesProviderData {
 
     const params: string = [
-        `certification=${certification}`,
+        `key=${certification}`,
         `provider=${provider}`,
     ]
         .filter(Boolean)

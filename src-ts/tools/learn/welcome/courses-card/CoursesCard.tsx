@@ -6,6 +6,8 @@ import {
     CompletionTimeRange,
     CourseBadge,
     LearnCertification,
+    LearnLevelIcon,
+    SkillTags,
     TCACertificationCompletionTimeRange,
     useHoursEstimateToRange,
     UserCertificationCompleted,
@@ -46,10 +48,10 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
 
         // set the button text and link based on the progress of the user for this course
         const isCompleted: boolean = props.userCompletedCertifications
-            .some(comp => comp.certificationId === props.certification.id)
+            .some(comp => comp.certificationId === props.certification.fccId)
         const inProgress: UserCertificationInProgress | undefined
             = props.userInProgressCertifications
-                .find(i => i.certificationId === props.certification.id)
+                .find(i => i.certificationId === props.certification.fccId)
 
         if (isCompleted) {
             // if the course is completed, View the Certificate
@@ -99,7 +101,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
     return (
         <div className={classNames(styles.wrap, !link && 'soon', linkCompleted && styles.completed)}>
             <div className={styles.cardHeader}>
-                <CourseBadge type={props.certification.trackType ?? 'DEV'} />
+                <CourseBadge type={props.certification.certificationCategory.track ?? 'DEV'} />
                 <div className={styles.cardHeaderTitleWrap}>
                     <p className='body-medium-medium'>{props.certification.title}</p>
                     <div className={styles.subTitleWrap}>
@@ -133,7 +135,12 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                 {props.certification.description?.length > EXCERPT_TEXT_LEN ? '...' : ''}
             </p>
 
-            <SkillTags skills={props.certification.course.skills} courseKey={props.certification.course.key} />
+            <SkillTags
+                courseKey={props.certification.course.key}
+                expandCount={2}
+                skills={props.certification.course.skills}
+                theme={linkCompleted ? 'gray' : 'white'}
+            />
 
             <div className={styles.cardBody}>
                 <div className={styles.certProvider}>

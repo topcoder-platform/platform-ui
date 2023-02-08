@@ -36,8 +36,8 @@ export function useGetLesson(
             },
             lessonUrl,
             module: {
-                dashedName: moduleData?.meta.dashedName ?? '',
-                title: moduleData?.meta.name ?? '',
+                dashedName: moduleData?.dashedName ?? '',
+                title: moduleData?.name ?? '',
             },
         },
         loading,

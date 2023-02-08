@@ -1,14 +1,13 @@
 import { LearnModelBase } from '../../functions'
 import { LearnModule } from '../lesson-provider'
+import { ResourceProvider } from '../resource-provider-provider'
 
 export interface LearnCourse extends LearnModelBase {
     certification: string
     certificationId: string
     completionSuggestions: Array<string>
-    estimatedCompletionTime: {
-        units: string
-        value: number
-    }
+    estimatedCompletionTimeValue: number
+    estimatedCompletionTimeUnits: string
     id: string
     introCopy: Array<string>
     key: string
@@ -16,7 +15,7 @@ export interface LearnCourse extends LearnModelBase {
     moduleCount: number
     modules: Array<LearnModule>
     note: string
-    provider: string
+    resourceProvider: ResourceProvider
     skills: Array<string>
     title: string
 }

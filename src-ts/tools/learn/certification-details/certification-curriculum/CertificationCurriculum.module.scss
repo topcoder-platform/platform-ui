@@ -61,16 +61,7 @@
         color: $turq-75;
     }
 
-    strong {
-        @include font-barlow-condensed;
-        font-weight: 500;
-        font-size: 44px;
-        line-height: 44px;
-
-        text-transform: uppercase;
-    }
-
-    > span {
+    > span, .headlineDetailsSpan {
         @include font-barlow;
         font-weight: 600;
         font-size: 18px;
@@ -78,6 +69,21 @@
 
         color: $black-20;
         text-transform: uppercase;
+    }
+
+    strong {
+        @include font-barlow-condensed;
+        font-weight: 500;
+        font-size: 44px;
+        line-height: 44px;
+
+        text-transform: uppercase;
+
+        :global(span.units) {
+            @extend .headlineDetailsSpan;
+            align-self: flex-end;
+            padding-bottom: 1px;
+        }
     }
 }
 

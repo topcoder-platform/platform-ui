@@ -22,7 +22,8 @@ interface CollapsibleListItem {
 
 interface CollapsibleItemProps {
     active?: string
-    duration: LearnModule['meta']['estimatedCompletionTime']
+    duration: LearnModule['estimatedCompletionTimeValue']
+    durationUnits: LearnModule['estimatedCompletionTimeUnits']
     isAssessment: boolean
     itemId?: (item: CollapsibleListItem) => string
     items: Array<CollapsibleListItem>
@@ -30,7 +31,7 @@ interface CollapsibleItemProps {
     moduleKey: string
     onItemClick: (item: any) => void
     path?: (item: any) => string
-    progress?: LearnUserCertificationProgress['modules']
+    progress?: LearnUserCertificationProgress['moduleProgresses']
     shortDescription: Array<string>
     title: string
 }
@@ -118,12 +119,12 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
                             {' '}
                             Lessons
                         </span>
-                        {props.duration.value !== 0 && (
+                        {props.duration && (
                             <span className={styles['summary-item']}>
                                 <IconOutline.ClockIcon />
-                                {props.duration.value}
+                                {props.duration}
                                 {' '}
-                                {props.duration.units}
+                                {props.durationUnits}
                             </span>
                         )}
                     </div>
