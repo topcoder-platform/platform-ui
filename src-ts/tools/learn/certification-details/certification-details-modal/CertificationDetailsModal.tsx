@@ -25,7 +25,7 @@ const CertificationDetailsModal: FC<CertificationDetailsModalProps> = (props: Ce
             onClose={props.onClose}
             open={isOpen}
             size='body'
-            title={props.certification.title}
+            title={`${props.certification.title} Details`}
             buttons={(
                 <Button
                     buttonStyle='primary'
