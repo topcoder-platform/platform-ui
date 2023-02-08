@@ -6,6 +6,8 @@ import {
     CompletionTimeRange,
     CourseBadge,
     LearnCertification,
+    LearnLevelIcon,
+    SkillTags,
     TCACertificationCompletionTimeRange,
     useHoursEstimateToRange,
     UserCertificationCompleted,
@@ -133,7 +135,11 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                 {props.certification.description?.length > EXCERPT_TEXT_LEN ? '...' : ''}
             </p>
 
-            <SkillTags skills={props.certification.course.skills} courseKey={props.certification.course.key} />
+            <SkillTags
+                courseKey={props.certification.course.key}
+                expandCount={2}
+                skills={props.certification.course.skills}
+            />
 
             <div className={styles.cardBody}>
                 <div className={styles.certProvider}>
