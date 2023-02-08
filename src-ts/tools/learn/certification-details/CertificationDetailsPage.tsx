@@ -1,5 +1,6 @@
-import { FC, ReactNode, useContext } from 'react'
-import { Params, useParams } from 'react-router-dom'
+import { Dispatch, FC, ReactNode, SetStateAction, useCallback, useContext, useEffect, useState } from 'react'
+import { Params, useParams, useSearchParams } from 'react-router-dom'
+import classNames from 'classnames'
 
 import { PageSubheaderPortalId } from '../../../config'
 import {
@@ -24,30 +25,28 @@ import {
     ProfileContextData,
     textFormatGetSafeString,
 } from '../../../lib'
+import { LEARN_PATHS } from '../learn.routes'
 
-import { Accordion } from './accordion'
-import { FAQs } from './data/faqs.data'
 import { HeroTitle } from './hero-title'
 import { CertificationDetailsSidebar } from './certification-details-sidebar'
-import { PerksSection } from './perks-section'
-import { perks } from './data/perks.data'
 import { CertificationCurriculum } from './certification-curriculum'
+import { EnrollCtaBtn } from './enroll-cta-btn'
+import { EnrolledModal } from './enrolled-modal'
+import { CertifDetailsContent, CertificationDetailsModal } from './certification-details-modal'
 import styles from './CertificationDetailsPage.module.scss'
-
-function renderBasicList(items: Array<string>): ReactNode {
-    return (
-        <ul className='body-main'>
-            {items.map(item => (
-                <li key={item}>{item}</li>
-            ))}
-        </ul>
-    )
-}
 
 const CertificationDetailsPage: FC<{}> = () => {
     const routeParams: Params<string> = useParams()
     const { certification: dashedName }: Params<string> = routeParams
+    const [searchParams]: [URLSearchParams, unknown] = useSearchParams()
     const { initialized: profileReady, profile }: ProfileContextData = useContext(profileContext)
+    const isLoggedIn: boolean = profileReady && !!profile
+
+    const [isEnrolledModalOpen, setIsEnrolledModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
+    const [isCertifDetailsModalOpen, setCertifDetailsModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
 
     // Fetch the User's progress for all the courses
     // so we can show their progress
@@ -59,7 +58,7 @@ const CertificationDetailsPage: FC<{}> = () => {
 
     const {
         certification,
-        ready: certificateReady,
+        ready: certificationReady,
     }: TCACertificationProviderData = useGetTCACertification(dashedName as string)
 
     // Fetch Enrollment status & progress
@@ -73,9 +72,10 @@ const CertificationDetailsPage: FC<{}> = () => {
         { enabled: profileReady && !!profile },
     )
 
-    const ready: boolean = profileReady && certificateReady && (!profile || (progressReady && certsProgressReady))
+    const ready: boolean = profileReady && certificationReady && (!profile || (progressReady && certsProgressReady))
 
     const isEnrolled: boolean = progressReady && !!progress
+    const isNotEnrolledView: boolean = !progressReady || !progress
 
     const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
         {
@@ -88,29 +88,21 @@ const CertificationDetailsPage: FC<{}> = () => {
     /**
      * TODO: should launch the enrollment process, it SHOULD NOT call enroll api directly!
      */
-    function handleEnrollClick(): void {
+    const startEnrollFlow: () => void = useCallback((): void => {
         if (!profile) {
             return
         }
 
         enrollTCACertificationAsync(`${profile.userId}`, `${certification.id}`)
             .then(d => {
+                setIsEnrolledModalOpen(true)
                 setCertificateProgress(d)
             })
-    }
-
-    function renderLearningOutcomeSection(): ReactNode {
-        return (
-            <div className={styles['text-section']}>
-                <h2>What I Will Learn?</h2>
-                {renderBasicList(certification.learningOutcomes)}
-            </div>
-        )
-    }
+    }, [certification?.id, profile, setCertificateProgress])
 
     function renderCertificationCurriculum(): ReactNode {
         return (
-            <div className={styles['text-section']}>
+            <div className={classNames(styles['text-section'], isEnrolled && styles['no-top'])}>
                 <CertificationCurriculum
                     certification={certification}
                     isEnrolled={isEnrolled}
@@ -120,29 +112,29 @@ const CertificationDetailsPage: FC<{}> = () => {
         )
     }
 
-    function renderRequirementsSection(): ReactNode {
-        return (
-            <div className={styles['text-section']}>
-                <h2>Prerequisites</h2>
-                {certification.prerequisites?.length ? (
-                    renderBasicList(certification.prerequisites)
-                ) : (
-                    <p className='body-main'>
-                        No prior knowledge in software development is required
-                    </p>
-                )}
-            </div>
-        )
+    function closeEnrolledModal(): void {
+        setIsEnrolledModalOpen(false)
     }
 
-    function renderFaqSection(): ReactNode {
-        return (
-            <div className={styles['text-section']}>
-                <h2>Frequently Asked Questions</h2>
-                <Accordion items={FAQs} />
-            </div>
-        )
+    function toggleCertifDetailsModal(): void {
+        setCertifDetailsModalOpen(d => !d)
     }
+
+    /**
+     * If the url has a "start-course" search param,
+     * proceed as if the user just clicked "Start course" button
+     */
+    useEffect(() => {
+        if (
+            progressReady
+            && isLoggedIn
+            // eslint-disable-next-line no-null/no-null
+            && searchParams.get(LEARN_PATHS.enrollCertifRouteFlag) !== null
+            && (!progress || progress.status !== 'enrolled')
+        ) {
+            startEnrollFlow()
+        }
+    }, [startEnrollFlow, isLoggedIn, progressReady, progress?.status, searchParams])
 
     function renderContents(): ReactNode {
         return (
@@ -159,27 +151,33 @@ const CertificationDetailsPage: FC<{}> = () => {
                             text={certification.introText}
                         >
                             {!isEnrolled && (
-                                <Button
-                                    buttonStyle='primary'
-                                    size='md'
-                                    label='Enroll Now'
-                                    onClick={handleEnrollClick}
-                                />
+                                <EnrollCtaBtn onEnroll={startEnrollFlow} />
                             )}
                         </WaveHero>
                         <CertificationDetailsSidebar
                             certification={certification}
                             enrolled={isEnrolled}
-                            onEnroll={handleEnrollClick}
+                            onEnroll={startEnrollFlow}
                         />
                     </div>
                 </Portal>
 
-                <PerksSection items={perks} />
-                {renderLearningOutcomeSection()}
-                {renderCertificationCurriculum()}
-                {renderRequirementsSection()}
-                {renderFaqSection()}
+                {isNotEnrolledView ? (
+                    <CertifDetailsContent certification={certification} sectionClassName={styles['text-section']}>
+                        {renderCertificationCurriculum()}
+                    </CertifDetailsContent>
+                ) : (
+                    <>
+                        {renderCertificationCurriculum()}
+                        <div className={styles['text-section']}>
+                            <Button
+                                buttonStyle='link'
+                                label='Certification Details'
+                                onClick={toggleCertifDetailsModal}
+                            />
+                        </div>
+                    </>
+                )}
             </>
         )
     }
@@ -195,6 +193,19 @@ const CertificationDetailsPage: FC<{}> = () => {
                     <LoadingSpinner />
                 </div>
             ) : renderContents()}
+
+            <EnrolledModal
+                isOpen={isEnrolledModalOpen}
+                onClose={closeEnrolledModal}
+            />
+
+            {certificationReady && (
+                <CertificationDetailsModal
+                    isOpen={isCertifDetailsModalOpen}
+                    onClose={toggleCertifDetailsModal}
+                    certification={certification}
+                />
+            )}
         </ContentLayout>
     )
 }

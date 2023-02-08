@@ -1,8 +1,9 @@
 import { FC } from 'react'
 import classNames from 'classnames'
 
-import { Button, IconSolid } from '../../../../lib'
+import { IconSolid } from '../../../../lib'
 import { CompletionTimeRange, LearnLevelIcon, ProvidersLogoList, TCACertification } from '../../learn-lib'
+import { EnrollCtaBtn } from '../enroll-cta-btn'
 
 import img from './certificate-placeholder.jpg'
 import styles from './CertificationDetailsSidebar.module.scss'
@@ -97,12 +98,7 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                         <span className='body-main-medium'>Enrolled</span>
                     </div>
                 ) : (
-                    <Button
-                        buttonStyle='primary'
-                        size='md'
-                        label='Enroll Now'
-                        onClick={props.onEnroll}
-                    />
+                    <EnrollCtaBtn onEnroll={props.onEnroll} />
                 )}
             </div>
         </div>

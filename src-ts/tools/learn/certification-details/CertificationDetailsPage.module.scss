@@ -42,7 +42,7 @@
     }
 }
 
-.text-section {
+.text-section.text-section {
     margin-top: 80px;
 
     @include ltelg {
@@ -58,8 +58,8 @@
         padding-left: $space-xxl;
         padding-left: $space-xxl;
     }
-}
 
-.requirement-section {
-
+    &.no-top {
+        margin-top: 0;
+    }
 }

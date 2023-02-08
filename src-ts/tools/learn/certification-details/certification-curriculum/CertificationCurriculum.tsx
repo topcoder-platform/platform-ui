@@ -3,6 +3,7 @@ import { get } from 'lodash'
 
 import { IconOutline } from '../../../../lib'
 import {
+    CompletionTimeRange,
     LearnUserCertificationProgress,
     TCACertification,
     TCACertificationProvider,
@@ -59,8 +60,9 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
                         <div className={styles.icon}>
                             <IconOutline.CalendarIcon />
                         </div>
-                        <strong>{props.certification.estimatedCompletionTime}</strong>
-                        <span>hours</span>
+                        <strong>
+                            <CompletionTimeRange range={props.certification.completionTimeRange} />
+                        </strong>
                     </div>
                 </div>
             </div>
