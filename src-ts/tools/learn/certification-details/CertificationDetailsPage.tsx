@@ -194,17 +194,19 @@ const CertificationDetailsPage: FC<{}> = () => {
                 </div>
             ) : renderContents()}
 
-            <EnrolledModal
-                isOpen={isEnrolledModalOpen}
-                onClose={closeEnrolledModal}
-            />
-
             {certificationReady && (
-                <CertificationDetailsModal
-                    isOpen={isCertifDetailsModalOpen}
-                    onClose={toggleCertifDetailsModal}
-                    certification={certification}
-                />
+                <>
+                    <EnrolledModal
+                        isOpen={isEnrolledModalOpen}
+                        certification={certification}
+                        onClose={closeEnrolledModal}
+                    />
+                    <CertificationDetailsModal
+                        isOpen={isCertifDetailsModalOpen}
+                        onClose={toggleCertifDetailsModal}
+                        certification={certification}
+                    />
+                </>
             )}
         </ContentLayout>
     )
