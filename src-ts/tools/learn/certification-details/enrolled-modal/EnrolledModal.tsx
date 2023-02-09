@@ -1,10 +1,12 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 
 import { BaseModal, Button } from '../../../../lib'
+import { TCACertification } from '../../learn-lib'
 
 import styles from './EnrolledModal.module.scss'
 
 interface EnrolledModalProps {
+    certification: TCACertification
     isOpen: boolean
     onClose: () => void
 }
@@ -26,7 +28,12 @@ const EnrolledModal: FC<EnrolledModalProps> = (props: EnrolledModalProps) => {
             classNames={{ modal: styles.enrolledModal, root: styles.modalRoot }}
         >
             <>
-                <h2 className='details'>You have Successfully Enrolled!</h2>
+                <h2 className='details'>
+                    You have Successfully Enrolled in the
+                    {' '}
+                    {props.certification.title}
+                    !
+                </h2>
                 <Button buttonStyle='outline' label='Close' onClick={props.onClose} />
             </>
 
