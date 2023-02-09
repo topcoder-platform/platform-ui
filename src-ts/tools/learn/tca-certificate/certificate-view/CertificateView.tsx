@@ -103,6 +103,13 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
 
     const handlePrint: () => Promise<void> = useCertificatePrint(certificateElRef, certificationTitle)
 
+    // TODO: connect this with hiring manager page
+    const validateLink: string = 'https://platform-ui.topcoder-dev.com'
+
+    const handleLinkClick: () => void = useCallback(() => {
+        window.open(validateLink, 'blank')
+    }, [validateLink])
+
     useEffect(() => {
         if (ready && !hasCompletedTheCertification) {
             props.onCertificationNotCompleted()
@@ -129,12 +136,12 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                             ref={certificateWrapRef}
                         >
                             <Certificate
-                                course={certification?.title}
+                                certification={certification}
                                 userName={userName}
                                 tcHandle={props.profile.handle}
                                 completedDate={completedCertificate?.completedDate ?? ''}
                                 elRef={certificateElRef}
-                                type={certification?.trackType}
+                                validateLink={validateLink}
                                 viewStyle={props.viewStyle}
                             />
                         </div>
@@ -147,6 +154,10 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                                 <ActionButton
                                     icon={<IconOutline.DownloadIcon />}
                                     onClick={handleDownload}
+                                />
+                                <ActionButton
+                                    icon={<IconOutline.LinkIcon />}
+                                    onClick={handleLinkClick}
                                 />
                                 <FacebookSocialShareBtn
                                     className={styles['share-btn']}
