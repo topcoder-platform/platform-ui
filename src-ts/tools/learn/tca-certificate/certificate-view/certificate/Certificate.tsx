@@ -1,29 +1,29 @@
 import { FC, MutableRefObject } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
 import classNames from 'classnames'
 
 import { LearnConfig } from '../../../learn-config'
-import { LearnCertificateTrackType } from '../../../learn-lib'
-
-import { CertificateBgPattern } from './certificate-bg-pattern'
-import { CourseCard } from './course-card'
+import { TCAcademyLogoWhiteSvg, TCLogoSvg } from '../../../../../lib'
+import { CertificateBadgeIcon, DougSigSvg, TCACertificateType, TCACertification } from '../../../learn-lib'
 
 import styles from './Certificate.module.scss'
-import { FccLogoSvg, TcAcademyLogoSvg, TcLogoSvg } from '../../../../../lib'
 
 interface CertificateProps {
+    certification: TCACertification
     completedDate?: string
-    course?: string
+    displaySignature?: boolean
     elRef?: MutableRefObject<HTMLElement | any>
-    provider?: string
     tcHandle?: string
-    type?: LearnCertificateTrackType
     userName?: string
+    validateLink: string
     viewStyle?: 'large-container'
 }
 
 const Certificate: FC<CertificateProps> = (props: CertificateProps) => {
+    // TODO: add cross track theme/type support
+    const certificateType: TCACertificateType = props.certification.certificationCategory.track ?? 'DEV'
 
-    const certificateType: LearnCertificateTrackType = props.type ?? 'DEV'
+    const displaySignature: boolean = props.displaySignature ?? true
 
     const elementSelector: { [attr: string]: string } = {
         [LearnConfig.CERT_ELEMENT_SELECTOR.attribute]: LearnConfig.CERT_ELEMENT_SELECTOR.value,
@@ -32,52 +32,66 @@ const Certificate: FC<CertificateProps> = (props: CertificateProps) => {
     return (
         <div
             {...elementSelector}
-            className={classNames(styles.wrap, props.viewStyle)}
+            className={classNames(styles.wrap, props.viewStyle, styles[`theme-${certificateType.toLowerCase()}`])}
             ref={props.elRef}
         >
-            <div className={classNames(styles.details, `theme-${certificateType.toLowerCase()}`)}>
-                <div className={styles['details-inner']}>
-                    <h2 className='details grad'>Topcoder Academy</h2>
-                    <h3>Certificate of Completion</h3>
-                    <h1 className={classNames(styles.username, 'grad')}>
-                        {props.userName}
-                    </h1>
-                    <div className={classNames('large-subtitle', styles['tc-handle'])}>
-                        <span>Topcoder Handle: </span>
-                        <span>{props.tcHandle}</span>
-                    </div>
-                    <div className={styles.logos}>
-                        <div className={styles.logo}>
-                            <TcLogoSvg />
-                        </div>
-                        <div className={styles.divider} />
-                        <div className={styles.logo}>
-                            <TcAcademyLogoSvg />
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div className={styles.badges}>
-                <div className={styles['pattern-bg']}>
-                    <CertificateBgPattern type={certificateType} />
-                </div>
-                <div className={styles['course-card']}>
-                    <CourseCard
+            <div className={classNames(styles.details)}>
+                <div className={styles.headerWrap}>
+                    <CertificateBadgeIcon
                         type={certificateType}
-                        course={props.course}
-                        completedDate={props.completedDate}
+                        level={props.certification.learnerLevel}
                     />
-                </div>
-                <div className={styles.vendor}>
-                    <div className='body-ultra-small'>
-                        Course content provided by
-                        {' '}
-                        {props.provider}
-                    </div>
-                    <div className={styles['vendor-logo']} title={props.provider}>
-                        <FccLogoSvg />
+                    <div className={styles.logos}>
+                        <TCLogoSvg />
+                        <div className={styles.logosDivider} />
+                        <TCAcademyLogoWhiteSvg />
                     </div>
                 </div>
+                <div className={styles.certWrap}>
+                    <div className={styles.certOwner}>{props.userName || props.tcHandle || 'Your Name'}</div>
+                    <p className={classNames('body-small', styles.certText)}>
+                        has successfully completed the certification requirements and has been awarded
+                    </p>
+                    <div className={classNames('grad', styles.certTitle)}>
+                        {props.certification.title}
+                    </div>
+                </div>
+                {
+                    props.completedDate && (
+                        <div className={styles.certInfo}>
+                            <div className={styles.certInfoLeft}>
+                                <QRCodeSVG
+                                    value={props.validateLink}
+                                    size={57}
+                                    className={styles.qrCode}
+                                    includeMargin
+                                />
+                                <div className={styles.certInfoLeftData}>
+                                    <span>Date of certification</span>
+                                    <span className='ultra-small-medium'>{props.completedDate}</span>
+                                    <span>Valid through</span>
+                                    <span className={classNames('ultra-small-medium', styles.gridSeparator)}>
+                                        {props.completedDate}
+                                    </span>
+                                    <span>Serial Number</span>
+                                    <span className='ultra-small-medium'>{'12345'}</span>
+                                    <span>Validate at</span>
+                                    <span className='ultra-small-medium'>{props.validateLink}</span>
+                                </div>
+                            </div>
+                            {
+                                displaySignature && (
+                                    <div className={styles.sigWrap}>
+                                        <DougSigSvg />
+                                        <div className={styles.divider} />
+                                        <span>Doug Hanson</span>
+                                        <span>CEO, Topcoder</span>
+                                    </div>
+                                )
+                            }
+                        </div>
+                    )
+                }
             </div>
         </div>
     )
