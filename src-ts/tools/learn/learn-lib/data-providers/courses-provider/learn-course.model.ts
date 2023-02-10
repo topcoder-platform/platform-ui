@@ -1,17 +1,20 @@
 import { LearnModelBase } from '../../functions'
+import { CertificationLearnLevel, LearnCertification } from '../all-certifications-provider'
 import { LearnModule } from '../lesson-provider'
 import { ResourceProvider } from '../resource-provider-provider'
 
 export interface LearnCourse extends LearnModelBase {
-    certification: string
     certificationId: string
     completionSuggestions: Array<string>
     estimatedCompletionTimeValue: number
     estimatedCompletionTimeUnits: string
+    fccCourseUuid: string
+    freeCodeCampCertification: LearnCertification
     id: string
     introCopy: Array<string>
     key: string
     keyPoints: Array<string>
+    learnerLevel: CertificationLearnLevel
     moduleCount: number
     modules: Array<LearnModule>
     note: string

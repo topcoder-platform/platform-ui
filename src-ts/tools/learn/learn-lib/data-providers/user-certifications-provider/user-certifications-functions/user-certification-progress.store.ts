@@ -7,7 +7,7 @@ import { LearnUserCertificationProgress } from './learn-user-certification-progr
 import { UserCertificationUpdateProgressActions } from './user-certification-update-progress-actions.enum'
 
 const certProgressPath: string = 'certification-progresses'
-const certProgressShortcutPath = 'shortcut-fcc-course-completion'
+const certProgressShortcutPath: string = 'shortcut-fcc-course-completion'
 
 export function completeCourse(
     certificationProgressId: string,

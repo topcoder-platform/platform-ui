@@ -14,6 +14,7 @@ import { CollapsibleItem } from './collapsible-item'
 import styles from './CourseOutline.module.scss'
 
 interface CourseOutlineProps {
+    certification: string
     course?: LearnCourse
     currentStep?: string
     onItemNavigate: (item: LearnLesson) => void
@@ -26,10 +27,22 @@ const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
     const lessonPath: (course: LearnCourse, module: LearnModule, lesson: LearnLesson) => string
         = useCallback((course: LearnCourse, module: LearnModule, lesson: LearnLesson) => getLessonPathFromModule(
             course.resourceProvider.name,
-            course.certification,
+            props.certification,
             module.key,
             lesson.dashedName,
-        ), [])
+        ), [props.certification])
+
+    function getItemKeyFn(module: LearnModule): (l: LearnLesson) => string {
+        return function getItemKey(lesson: LearnLesson): string {
+            return `${module.dashedName}/${lesson.dashedName}`
+        }
+    }
+
+    function getItemPathFn(module: LearnModule): (l: LearnLesson) => string {
+        return function getItemPath(lesson: LearnLesson): string {
+            return (props.course ? lessonPath(props.course, module, lesson) : '')
+        }
+    }
 
     return (
         <div className={classNames(styles.wrap, 'course-outline-wrap')}>
@@ -44,11 +57,11 @@ const CourseOutline: FC<CourseOutlineProps> = (props: CourseOutlineProps) => {
                             duration={module.estimatedCompletionTimeValue}
                             durationUnits={module.estimatedCompletionTimeUnits}
                             moduleKey={module.key}
-                            itemId={(it: any) => `${module.dashedName}/${it.dashedName}`}
+                            itemId={getItemKeyFn(module)}
                             items={module.lessons}
                             key={module.key}
                             lessonsCount={module.lessons.length}
-                            path={(it: any) => (props.course ? lessonPath(props.course, module, it) : '')}
+                            path={getItemPathFn(module)}
                             progress={props.progress?.moduleProgresses}
                             shortDescription={module.introCopy}
                             title={module.name}

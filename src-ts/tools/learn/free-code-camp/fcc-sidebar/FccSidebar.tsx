@@ -1,10 +1,11 @@
-import { FC, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useState } from 'react'
 
 import { CollapsiblePane, CourseOutline, LearnCourse, LearnUserCertificationProgress } from '../../learn-lib'
 
 import styles from './FccSidebar.module.scss'
 
 interface FccSidebarProps {
+    certification: string
     certificateProgress?: LearnUserCertificationProgress
     courseData?: LearnCourse
     courseDataReady: boolean
@@ -15,11 +16,15 @@ interface FccSidebarProps {
 const FccSidebar: FC<FccSidebarProps> = (props: FccSidebarProps) => {
     const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
 
-    const handleToggle: (isOutlineOpen: boolean) => void = (isOutlineOpen: boolean) => {
+    function handleToggle(isOutlineOpen: boolean): void {
         setIsOpen(isOutlineOpen)
         if (isOutlineOpen) {
             props.refetchProgress()
         }
+    }
+
+    function toggle(): void {
+        setIsOpen(false)
     }
 
     return (
@@ -34,11 +39,12 @@ const FccSidebar: FC<FccSidebarProps> = (props: FccSidebarProps) => {
                         {props.courseData?.title}
                     </div>
                     <CourseOutline
+                        certification={props.certification}
                         course={props.courseData}
                         ready={props.courseDataReady}
                         currentStep={props.currentStep}
                         progress={props.certificateProgress}
-                        onItemNavigate={() => setIsOpen(false)}
+                        onItemNavigate={toggle}
                     />
                 </div>
             </CollapsiblePane>

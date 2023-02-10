@@ -1,7 +1,7 @@
-import { LearnUserCompletedCertification } from './user-completed-certifications-functions'
+import { LearnUserCertificationProgress } from '../user-certifications-provider'
 
 export interface UserCompletedCertificationsProviderData {
-    certifications: ReadonlyArray<LearnUserCompletedCertification>
+    certifications: ReadonlyArray<LearnUserCertificationProgress>
     loading: boolean
     ready: boolean
 }

@@ -1,9 +1,9 @@
+import { LearnModelBase } from '../../functions'
+
 import { TCACertificateType } from './tca-certificate-type'
 
-export interface TCACertificationCategory {
+export interface TCACertificationCategory extends LearnModelBase {
     id: number
     category: string
     track: TCACertificateType
-    createdAt: Date
-    updatedAt: Date
 }

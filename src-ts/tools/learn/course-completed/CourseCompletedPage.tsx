@@ -55,9 +55,9 @@ const CourseCompletedPage: FC<{}> = () => {
         ready: certifReady,
     }: AllCertificationsProviderData = useGetCertification(
         providerParam,
-        textFormatGetSafeString(progress?.certificationId),
+        textFormatGetSafeString(progress?.fccCertificationId),
         {
-            enabled: progressReady && !!progress?.certificationId,
+            enabled: progressReady && !!progress?.fccCertificationId,
         },
     )
 
@@ -107,8 +107,8 @@ const CourseCompletedPage: FC<{}> = () => {
                                     <CourseTitle
                                         size='xl'
                                         title={courseData.title}
-                                        credits={courseData.provider}
-                                        trackType={certification?.trackType}
+                                        credits={courseData.resourceProvider.name}
+                                        trackType={certification?.certificationCategory.track}
                                     />
                                 </div>
                                 <hr />
@@ -125,7 +125,12 @@ const CourseCompletedPage: FC<{}> = () => {
                                         size='sm'
                                         buttonStyle='secondary'
                                         label='View certificate'
-                                        route={getCertificatePath(courseData.provider, courseData.certification)}
+                                        route={(
+                                            getCertificatePath(
+                                                courseData.resourceProvider.name,
+                                                certificationParam,
+                                            )
+                                        )}
                                     />
                                     <Button
                                         size='sm'

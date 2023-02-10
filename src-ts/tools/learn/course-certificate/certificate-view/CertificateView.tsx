@@ -28,7 +28,7 @@ import { getCoursePath, getUserCertificateSsr } from '../../learn.routes'
 import { Certificate } from './certificate'
 import styles from './CertificateView.module.scss'
 
-export type CertificateViewStyle = 'large-container' | undefined
+export type CertificateViewStyle = 'large-container'
 
 interface CertificateViewProps {
     certification: string,
@@ -36,7 +36,7 @@ interface CertificateViewProps {
     onCertificationNotCompleted: () => void
     profile: UserProfile,
     provider: string,
-    viewStyle: CertificateViewStyle
+    viewStyle?: CertificateViewStyle
 }
 
 const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) => {
@@ -57,13 +57,22 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         ready: courseReady,
     }: CoursesProviderData = useGetCourses(props.provider, props.certification)
 
+    const {
+        certification: certificate,
+        ready: certificateReady,
+    }: AllCertificationsProviderData = useGetCertification(
+        props.provider,
+        course?.certificationId ?? '',
+        { enabled: !!course?.certificationId },
+    )
+
     function getCertTitle(user: string): string {
         return `${user} - ${course?.title} Certification`
     }
 
     const certUrl: string = getUserCertificateSsr(
         props.provider,
-        props.certification,
+        certificate?.certification ?? '',
         props.profile.handle,
         getCertTitle(props.profile.handle),
     )
@@ -76,18 +85,9 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     }: UserCompletedCertificationsProviderData = useGetUserCompletedCertifications(
         props.profile.userId,
         props.provider,
-        props.certification,
+        certificate?.certification,
     )
     const hasCompletedTheCertification: boolean = !!completedCertificate
-
-    const {
-        certification: certificate,
-        ready: certificateReady,
-    }: AllCertificationsProviderData = useGetCertification(
-        props.provider,
-        course?.certificationId ?? '',
-        { enabled: !!course?.certificationId },
-    )
 
     const ready: boolean = useMemo(() => (
         completedCertificateReady && courseReady && certificateReady
@@ -148,7 +148,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                                 provider={course?.resourceProvider.name}
                                 completedDate={completedCertificate?.completedDate ?? ''}
                                 elRef={certificateElRef}
-                                type={certificate?.trackType}
+                                type={certificate?.certificationCategory.track}
                                 viewStyle={props.viewStyle}
                             />
                         </div>
