@@ -24,7 +24,6 @@ export interface LearnUserCertificationProgress extends LearnModelBase {
     fccCertificationId: string
     fccCourseId: string
     freeCodeCampCertification: LearnCertification
-    lastInteractionDate: string
     moduleProgresses: Array<LearnModuleProgress>
     resourceProvider: ResourceProvider
     startDate: string
