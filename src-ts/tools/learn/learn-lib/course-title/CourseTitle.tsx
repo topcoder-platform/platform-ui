@@ -1,7 +1,7 @@
 import { FC, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { LearnCertificateTrackType } from '../all-certifications-provider'
+import { LearnCertificateTrackType } from '../data-providers'
 import { CourseBadge } from '../course-badge'
 
 import styles from './CourseTitle.module.scss'

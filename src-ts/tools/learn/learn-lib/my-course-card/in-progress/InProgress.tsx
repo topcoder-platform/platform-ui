@@ -57,8 +57,8 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
                 <div className={styles.line}>
                     <CourseTitle
                         title={props.certification?.title ?? ''}
-                        trackType={props.certification?.trackType}
-                        credits={props.certification?.providerName}
+                        trackType={props.certification?.certificationCategory.track}
+                        credits={props.certification?.resourceProvider.name}
                     >
                         {isDetailed && (
                             <div className={styles.status}>In Progress</div>
@@ -90,7 +90,8 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
                     <div className={styles.summary}>
                         <CurriculumSummary
                             moduleCount={course?.modules.length ?? 0}
-                            completionHours={course?.estimatedCompletionTime}
+                            completionTimeValue={course?.estimatedCompletionTimeValue}
+                            completionTimeUnits={course?.estimatedCompletionTimeUnits}
                         />
                         <div className={styles.button}>
                             <Button
@@ -118,7 +119,7 @@ const InProgress: FC<InProgressProps> = (props: InProgressProps) => {
                             size='xs'
                             buttonStyle='secondary'
                             label='View Course'
-                            route={getCoursePath(props.certification?.providerName ?? '', certification)}
+                            route={getCoursePath(props.certification?.resourceProvider.name ?? '', certification)}
                         />
                     </div>
                 </div>

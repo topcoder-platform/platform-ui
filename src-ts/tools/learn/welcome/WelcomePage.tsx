@@ -145,8 +145,7 @@ const WelcomePage: FC = () => {
                             certifications={allCertsData.certifications}
                             certificationsGroups={certificationsGroups}
                             selectedCategory={selectedCategory}
-                            userCompletedCertifications={userCertsData.completed}
-                            userInProgressCertifications={userCertsData.inProgress}
+                            certificationsProgresses={userCertsData.progresses}
                         />
                     )}
                 </div>

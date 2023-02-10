@@ -1,3 +1,4 @@
+import { noop } from 'lodash'
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react'
 import { NavigateFunction, useNavigate, useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
@@ -28,6 +29,7 @@ import { DiceModal } from './dice-modal'
 import styles from './CourseCurriculum.module.scss'
 
 interface CourseCurriculumProps {
+    certification: string
     course: LearnCourse
     profile?: UserProfile
     progress?: LearnUserCertificationProgress
@@ -64,7 +66,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
 
         const lessonPath: string = getLessonPathFromCurrentLesson(
             course.resourceProvider.name,
-            course.certification,
+            props.certification,
             props.progress?.currentLesson,
             module.dashedName,
             lesson.dashedName,
@@ -72,6 +74,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         navigate(lessonPath)
     }, [
         navigate,
+        props.certification,
         props.course,
         props.progress,
     ])
@@ -121,8 +124,9 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
             return
         }
 
+        let progress: LearnUserCertificationProgress | undefined = props.progress
         if (!props.progress?.id) {
-            const progress: LearnUserCertificationProgress = await userCertificationProgressStartAsync(
+            progress = await userCertificationProgressStartAsync(
                 props.profile.userId,
                 props.course.certificationId,
                 props.course.id,
@@ -131,16 +135,16 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
                     module: props.course.modules[0].dashedName,
                 },
             )
-
-            // update progress with data returned from calling the start progress endpoint
-            props.setCertificateProgress(progress)
-        } else {
-            await userCertificationProgressUpdateAsync(
-                props.progress.id,
-                UserCertificationUpdateProgressActions.acceptHonestyPolicy,
-                {},
-            )
         }
+
+        progress = await userCertificationProgressUpdateAsync(
+            progress!.id,
+            UserCertificationUpdateProgressActions.acceptHonestyPolicy,
+            {},
+        )
+
+        // update progress with data returned from calling the start progress endpoint
+        props.setCertificateProgress(progress)
 
         handleStartCourse()
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -153,8 +157,11 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         props.progress?.id,
     ])
 
-    const handleNavigateToCertificate: () => void = () => {
-        const certificatePath: string = getCertificatePath(props.course.resourceProvider.name, props.course.key)
+    function handleNavigateToCertificate(): void {
+        const certificatePath: string = getCertificatePath(
+            props.course.resourceProvider.name,
+            props.certification,
+        )
         navigate(certificatePath)
     }
 
@@ -203,9 +210,11 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
 
                 <div className={styles['course-outline']}>
                     <CourseOutline
+                        certification={props.certification}
                         course={props.course}
                         progress={props.progress}
                         currentStep={props.progress?.currentLesson}
+                        onItemNavigate={noop}
                     />
                 </div>
             </div>

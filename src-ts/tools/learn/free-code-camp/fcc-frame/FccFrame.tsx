@@ -1,3 +1,4 @@
+import { noop } from 'lodash'
 import { FC, memo, MutableRefObject, useEffect, useRef } from 'react'
 
 import { LearnConfig } from '../../learn-config'
@@ -24,7 +25,6 @@ const FccFrame: FC<FccFrameProps> = (props: FccFrameProps) => {
 
     const frameRef: MutableRefObject<HTMLElement | any> = useRef()
     const frameIsReady: MutableRefObject<boolean> = useRef<boolean>(false)
-    const { onFccLastLessonNavigation, onFccLessonChange, onFccLessonComplete }: FccFrameProps = props
     const lessonUrl: string | undefined = props.lesson?.lessonUrl
 
     useEffect(() => {
@@ -47,7 +47,7 @@ const FccFrame: FC<FccFrameProps> = (props: FccFrameProps) => {
 
     useEffect(() => {
         if (!frameRef) {
-            return
+            return noop
         }
 
         const handleEvent: (event: any) => void = (event: any) => {
@@ -66,28 +66,28 @@ const FccFrame: FC<FccFrameProps> = (props: FccFrameProps) => {
              } = JSON.parse(jsonData)
 
             if (eventName === 'fcc:nav:last-challenge') {
-                onFccLastLessonNavigation()
+                props.onFccLastLessonNavigation.call(undefined)
             }
 
             if (eventName === 'fcc:challenge:completed') {
-                onFccLessonComplete(data?.meta?.id)
+                props.onFccLessonComplete.call(undefined, data?.meta?.id)
             }
 
             if (eventName === 'fcc:challenge:ready') {
                 frameIsReady.current = true
-                onFccLessonChange(data.path)
+                props.onFccLessonChange.call(undefined, data.path)
             }
         }
 
         window.addEventListener('message', handleEvent, false)
-        return () => {
+        return (): void => {
             window.removeEventListener('message', handleEvent, false)
         }
     }, [
         frameRef,
-        onFccLastLessonNavigation,
-        onFccLessonChange,
-        onFccLessonComplete,
+        props.onFccLastLessonNavigation,
+        props.onFccLessonChange,
+        props.onFccLessonComplete,
     ])
 
     return (

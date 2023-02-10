@@ -134,7 +134,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                                 tcHandle={props.profile.handle}
                                 completedDate={completedCertificate?.completedDate ?? ''}
                                 elRef={certificateElRef}
-                                type={certification?.trackType}
+                                type={certification?.certificationCategory.track}
                                 viewStyle={props.viewStyle}
                             />
                         </div>

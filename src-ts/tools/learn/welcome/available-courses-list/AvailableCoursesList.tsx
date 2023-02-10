@@ -2,7 +2,7 @@ import { Dictionary } from 'lodash'
 import { FC, Fragment, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { LearnCertification, UserCertificationCompleted, UserCertificationInProgress } from '../../learn-lib'
+import { LearnCertification, LearnUserCertificationProgress } from '../../learn-lib'
 import { CoursesCard } from '../courses-card'
 
 import styles from './AvailableCoursesList.module.scss'
@@ -12,8 +12,7 @@ interface AvailableCoursesListProps {
     certifications: ReadonlyArray<LearnCertification>
     certificationsGroups: Array<string>
     selectedCategory: string
-    userCompletedCertifications: ReadonlyArray<UserCertificationCompleted>
-    userInProgressCertifications: ReadonlyArray<UserCertificationInProgress>
+    certificationsProgresses: ReadonlyArray<LearnUserCertificationProgress>
 }
 
 const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCoursesListProps) => {
@@ -33,8 +32,9 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
                         <CoursesCard
                             certification={certification}
                             key={certification.key}
-                            userCompletedCertifications={props.userCompletedCertifications}
-                            userInProgressCertifications={props.userInProgressCertifications}
+                            progress={
+                                props.certificationsProgresses.find(p => p.certificationId === certification.fccId)
+                            }
                         />
                     ))}
             </div>

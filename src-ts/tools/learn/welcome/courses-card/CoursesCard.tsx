@@ -1,17 +1,17 @@
-import { Dispatch, FC, memo, SetStateAction, useEffect, useState } from 'react'
+import { FC, memo, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { Button, ButtonStyle, FccLogoBlackSvg, IconSolid, ProgressBar } from '../../../../lib'
+import { Button, FccLogoBlackSvg, IconSolid, ProgressBar } from '../../../../lib'
 import {
     CompletionTimeRange,
     CourseBadge,
     LearnCertification,
     LearnLevelIcon,
+    LearnUserCertificationProgress,
     SkillTags,
     TCACertificationCompletionTimeRange,
     useHoursEstimateToRange,
-    UserCertificationCompleted,
-    UserCertificationInProgress,
+    UserCertificationProgressStatus,
 } from '../../learn-lib'
 import { getCertificatePath, getCoursePath, getLessonPathFromCurrentLesson } from '../../learn.routes'
 
@@ -19,87 +19,48 @@ import styles from './CoursesCard.module.scss'
 
 interface CoursesCardProps {
     certification: LearnCertification
-    userCompletedCertifications: ReadonlyArray<UserCertificationCompleted>
-    userInProgressCertifications: ReadonlyArray<UserCertificationInProgress>
+    progress?: LearnUserCertificationProgress
 }
 
 const EXCERPT_TEXT_LEN: number = 99
 
 const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
     const desc: string = props.certification.description?.slice(0, EXCERPT_TEXT_LEN)
-    const [buttonLabel, setButtonLabel]: [string, Dispatch<SetStateAction<string>>]
-        = useState<string>('')
-    const [link, setLink]: [string, Dispatch<SetStateAction<string>>]
-        = useState<string>('')
+    const descLength: number = props.certification.description?.length
     const courseEnabled: boolean = props.certification.state === 'active'
-    const [buttonStyle, setButtonStyle]: [string, Dispatch<SetStateAction<string>>]
-        = useState<string>('secondary')
-    const [courseProgress, setCourseProgress]: [number | undefined, Dispatch<SetStateAction<number | undefined>>]
-        = useState<number | undefined>(undefined)
-    const [linkCompleted, setLinkCompleted]: [string, Dispatch<SetStateAction<string>>]
-        = useState<string>('')
+    const isCompleted: boolean = props.progress?.status === UserCertificationProgressStatus.completed
+    const isInProgress: boolean = props.progress?.status === UserCertificationProgressStatus.inProgress
 
-    useEffect(() => {
+    function renderCtaBtns(status?: UserCertificationProgressStatus): ReactNode {
+        const provider: string = props.certification.resourceProvider.name
+        const certificationCourse: string = props.certification.certification
+        const currentLesson: string | undefined = props.progress?.currentLesson
 
-        // if the course isn't enabled, there's nothing to do
-        if (!courseEnabled) {
-            return
+        const resumeRoute: string = getLessonPathFromCurrentLesson(provider, certificationCourse, currentLesson)
+        const detailsRoute: string = getCoursePath(provider, certificationCourse)
+        const certifRoute: string = getCertificatePath(provider, certificationCourse)
+
+        switch (status) {
+            case UserCertificationProgressStatus.completed:
+                return (
+                    <>
+                        <Button buttonStyle='primary' size='xs' label='View Certificate' route={certifRoute} />
+                        <Button buttonStyle='secondary' size='xs' label='Details' route={detailsRoute} />
+                    </>
+                )
+            case UserCertificationProgressStatus.inProgress:
+                return <Button buttonStyle='primary' size='xs' label='Resume' route={resumeRoute} />
+            default:
+                return <Button buttonStyle='secondary' size='xs' label='Details' route={detailsRoute} />
         }
-
-        // set the button text and link based on the progress of the user for this course
-        const isCompleted: boolean = props.userCompletedCertifications
-            .some(comp => comp.certificationId === props.certification.fccId)
-        const inProgress: UserCertificationInProgress | undefined
-            = props.userInProgressCertifications
-                .find(i => i.certificationId === props.certification.fccId)
-
-        if (isCompleted) {
-            // if the course is completed, View the Certificate
-            setButtonLabel('View Certificate')
-            setButtonStyle('primary')
-            setLink(getCertificatePath(
-                props.certification.resourceProvider.name,
-                props.certification.certification,
-            ))
-            setLinkCompleted(getCoursePath(
-                props.certification.resourceProvider.name,
-                props.certification.certification,
-            ))
-
-        } else if (!inProgress) {
-            // if there is no in-progress lesson for the course,
-            // Details by going to the course details
-            setButtonLabel('Details')
-            setLink(getCoursePath(
-                props.certification.resourceProvider.name,
-                props.certification.certification,
-            ))
-
-        } else {
-            // otherwise this course is in-progress,
-            // so Resume the course at the next lesson
-            setButtonLabel('Resume')
-            setButtonStyle('primary')
-            setLink(getLessonPathFromCurrentLesson(
-                props.certification.resourceProvider.name,
-                props.certification.certification,
-                inProgress.currentLesson,
-            ))
-            setCourseProgress(inProgress.courseProgressPercentage / 100)
-        }
-    }, [
-        courseEnabled,
-        props.certification,
-        props.userCompletedCertifications,
-        props.userInProgressCertifications,
-    ])
+    }
 
     const completionTimeRange: TCACertificationCompletionTimeRange = useHoursEstimateToRange(
         props.certification.completionHours,
     )
 
     return (
-        <div className={classNames(styles.wrap, !link && 'soon', linkCompleted && styles.completed)}>
+        <div className={classNames(styles.wrap, !courseEnabled && 'soon', isCompleted && styles.completed)}>
             <div className={styles.cardHeader}>
                 <CourseBadge type={props.certification.certificationCategory.track ?? 'DEV'} />
                 <div className={styles.cardHeaderTitleWrap}>
@@ -123,23 +84,20 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
             </div>
 
             <div className={styles.cardHeaderDividerWrap}>
-                {courseProgress === undefined ? linkCompleted ? undefined : (
-                    <div className={styles.cardHeaderDivider} />
-                ) : (
-                    <ProgressBar progress={courseProgress} />
-                )}
+                {isInProgress && <ProgressBar progress={(props.progress?.courseProgressPercentage ?? 0) / 100} />}
+                {!isInProgress && !isCompleted && <div className={styles.cardHeaderDivider} />}
             </div>
 
             <p>
                 {desc}
-                {props.certification.description?.length > EXCERPT_TEXT_LEN ? '...' : ''}
+                {descLength > EXCERPT_TEXT_LEN ? '...' : ''}
             </p>
 
             <SkillTags
                 courseKey={props.certification.course.key}
                 expandCount={2}
                 skills={props.certification.course.skills}
-                theme={linkCompleted ? 'gray' : 'white'}
+                theme={isCompleted ? 'gray' : 'white'}
             />
 
             <div className={styles.cardBody}>
@@ -150,23 +108,9 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
             </div>
 
             <div className={styles.cardBottom}>
-                {!!link && (
-                    <Button
-                        buttonStyle={buttonStyle as ButtonStyle}
-                        size='xs'
-                        label={buttonLabel}
-                        route={link}
-                    />
-                )}
-                {linkCompleted && (
-                    <Button
-                        buttonStyle='secondary'
-                        size='xs'
-                        label='Details'
-                        route={linkCompleted}
-                    />
-                )}
-                {!courseEnabled && (
+                {courseEnabled ? (
+                    renderCtaBtns(props.progress?.status)
+                ) : (
                     <h4 className='details'>Coming Soon</h4>
                 )}
             </div>
