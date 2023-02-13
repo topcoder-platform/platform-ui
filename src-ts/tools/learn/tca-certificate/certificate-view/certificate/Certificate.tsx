@@ -15,7 +15,7 @@ interface CertificateProps {
     elRef?: MutableRefObject<HTMLElement | any>
     tcHandle?: string
     userName?: string
-    validateLink: string
+    validateLink?: string
     viewStyle?: 'large-container' | 'small-container'
 }
 
@@ -58,7 +58,7 @@ const Certificate: FC<CertificateProps> = (props: CertificateProps) => {
                         </div>
                     </div>
                     {
-                        props.completedDate && (
+                        props.completedDate && props.validateLink && (
                             <div className={styles.certInfo}>
                                 <div className={styles.certInfoLeft}>
                                     <QRCodeSVG

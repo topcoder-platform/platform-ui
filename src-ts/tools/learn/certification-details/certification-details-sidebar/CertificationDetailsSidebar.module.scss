@@ -43,6 +43,10 @@
     top: 40px;
 }
 
+.certCta {
+    margin-top: $space-xxl;
+}
+
 .section-header {
     margin-top: $space-xxl;
 }
@@ -54,11 +58,6 @@
     background: $black-5;
     overflow: hidden;
     width: 100%;
-
-    img {
-        display: block;
-        width: 100%;
-    }
 }
 
 .certification-details-list {
@@ -152,5 +151,10 @@
     &.enrolled {
         background: $blue-140;
         color: $tc-white;
+    }
+
+    &.completed {
+        background: $turq-75;
+        color: $black-100;
     }
 }

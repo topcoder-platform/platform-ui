@@ -108,6 +108,19 @@ export function getTCACertificationPath(certification: string): string {
     return `${LEARN_PATHS.root}/${LEARN_PATHS.tcaCertifications}/${certification}`
 }
 
+export function getTCACertificateUrl(
+    certification: string,
+): string {
+    return `${getTCACertificationPath(certification)}${LEARN_PATHS.certificate}`
+}
+
+export function getUserTCACertificateUrl(
+    certification: string,
+    handle: string,
+): string {
+    return `${getTCACertificationPath(certification)}/${handle}${LEARN_PATHS.certificate}`
+}
+
 export const learnRoutes: ReadonlyArray<PlatformRoute> = [
     {
         children: [
