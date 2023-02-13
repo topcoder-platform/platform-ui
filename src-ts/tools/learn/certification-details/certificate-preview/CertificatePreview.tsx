@@ -38,6 +38,7 @@ const CertificatePreview: FC<CertificatePreviewProps> = (props: CertificatePrevi
         )
 
         return (
+            // TODO: update validateLink with real link
             <Certificate
                 certification={props.certification}
                 completedDate={props.completedDate ? new Date(props.completedDate).toDateString() : ''}
