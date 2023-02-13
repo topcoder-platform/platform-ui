@@ -108,6 +108,7 @@
 
     .cta {
         margin-left: auto;
+        justify-content: flex-end;
         @include ltelg {
             display: none;
         }

@@ -71,9 +71,11 @@ const CurriculumCard: FC<CurriculumCardProps> = (props: CurriculumCardProps) => 
                 <div className={styles.bottomCta}>
                     {props.cta}
                 </div>
-                <div className={styles.statusBox}>
-                    {renderStatusCol()}
-                </div>
+                {props.status && (
+                    <div className={styles.statusBox}>
+                        {renderStatusCol()}
+                    </div>
+                )}
             </div>
         </div>
     )
