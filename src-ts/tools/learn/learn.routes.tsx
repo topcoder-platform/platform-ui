@@ -17,6 +17,8 @@ const MyLearning: LazyLoadedComponent = lazyLoad(() => import('./my-learning'), 
 const LandingLearn: LazyLoadedComponent = lazyLoad(() => import('./Learn'))
 const MyTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'MyTCACertificate')
 const UserTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'UserTCACertificate')
+const ValidateTCACertificate: LazyLoadedComponent
+    = lazyLoad(() => import('./tca-certificate'), 'ValidateTCACertificate')
 
 export enum LEARN_PATHS {
     certificate = '/certificate',
@@ -168,6 +170,12 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <UserTCACertificate />,
                 id: 'User TCA Certification',
                 route: 'tca-certifications/:certification/:memberHandle/certificate',
+            },
+            {
+                children: [],
+                element: <ValidateTCACertificate />,
+                id: 'Validate TCA Certification',
+                route: 'tca-certifications/:certification/:memberHandle',
             },
         ],
         element: <LandingLearn />,
