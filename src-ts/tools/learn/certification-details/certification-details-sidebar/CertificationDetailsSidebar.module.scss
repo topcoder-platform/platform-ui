@@ -1,0 +1,156 @@
+@import '../../../../lib/styles/includes';
+@import '../../../../lib/styles/typography';
+
+.sticky-container {
+    @include ltelg {
+        @include contentWidth;
+        padding-top: $space-xxl;
+    }
+
+    @include gtelg {
+        position: absolute;
+        top: 65px;
+        width: 445px;
+        padding: 40px 0;
+        bottom: 0;
+    }
+
+    @include lg {
+        width: 40vw;
+    }
+
+    @include ltexxl {
+        right: $space-xxxxl;
+    }
+
+    @include xxl {
+        right: calc(50vw - calc($xxl-min/2 - $space-xxl));
+    }
+
+}
+
+.wrap {
+    background: $tc-white;
+    border: $border-xs solid $black-20;
+    border-radius: $space-sm;
+
+    width: 100%;
+    margin: 0 auto;
+
+    padding: $space-xxl;
+
+    position: sticky;
+    top: 40px;
+}
+
+.section-header {
+    margin-top: $space-xxl;
+}
+
+.certificate-placeholder {
+    display: flex;
+    border-radius: $space-sm;
+    border: $border-xs solid $black-20;
+    background: $black-5;
+    overflow: hidden;
+    width: 100%;
+
+    img {
+        display: block;
+        width: 100%;
+    }
+}
+
+.certification-details-list {
+    margin-top: $space-xxl;
+    li {
+        display: flex;
+        align-items: center;
+        margin-top: $space-sm;
+        .icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: $space-sm;
+            color: $blue-140;
+
+            > svg {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+        }
+
+        :global(.tooltip-icon) {
+            width: 16px;
+            height: 16px;
+            margin-left: $space-sm;
+        }
+
+        :global(.quote-main) {
+            color: $black-100;
+            display: flex;
+            align-items: center;
+
+            :global(.strike) {
+                text-decoration: line-through;
+                color: $black-40;
+            }
+        }
+    }
+}
+
+.certification-skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: $space-sm;
+    max-width: 325px;
+
+    li {
+        background: $black-5;
+        border-radius: $space-xs;
+        padding: 0 $space-sm;
+        line-height: 22px;
+        font-size: 14px;
+        color: $black-80;
+        font-style: italic;
+    }
+}
+
+.providers {
+    margin-top: $space-sm;
+
+    > span {
+        @extend .body-small-medium;
+    }
+}
+
+.tooltip {
+    font-style: normal;
+
+    svg {
+        @include icon-lg;
+        display: block;
+    }
+}
+
+.btns {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-top: $space-xxl;
+}
+
+.tag {
+    display: block;
+    padding: $space-xs calc($space-sm + $border);
+    border-radius: $space-xs;
+
+    &.enrolled {
+        background: $blue-140;
+        color: $tc-white;
+    }
+}

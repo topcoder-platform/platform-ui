@@ -1,0 +1,127 @@
+@import '../../../../lib/styles/includes';
+@import '../../course-certificate/certificate-view/certificate/includes.scss';
+
+.hero {
+    display: flex;
+    flex-direction: column;
+    padding-top: calc($space-mx * 2);
+    color: $tc-white;
+
+    @include ltemd {
+        padding-top: $space-mx;
+    }
+
+    &-dev {
+        background: url('./bg-curve-white.png') no-repeat center bottom / 100vw, $tc-dev-grad;
+    }
+
+    &-datascience {
+        background: url('./bg-curve-white.png') no-repeat center bottom / 100vw, $tc-datascience-grad;
+    }
+
+    &-design {
+        background: url('./bg-curve-white.png') no-repeat center bottom / 100vw, $tc-design-grad;
+    }
+
+    &-qa {
+        background: url('./bg-curve-white.png') no-repeat center bottom / 100vw, $tc-qa-grad;
+    }
+
+    .heroInner {
+        display: grid;
+        grid-template-columns: 750px 1fr;
+        gap: $space-mx;
+        margin-bottom: calc($space-mx * 2); 
+
+        @include ltemd {
+            grid-template-columns: 1fr;
+        }
+
+        .heroLeft {
+            display: flex;
+            flex-direction: column;
+
+            .member {
+                display: flex;
+                align-items: center;
+                margin-bottom: $space-mx;
+
+                >svg {
+                    max-width: 120px;
+                }
+
+                .memberInfo {
+                    display: flex;
+                    flex-direction: column;
+                    margin-left: $space-lg;
+                }
+            }
+
+            .certTitle {
+                font-family: $font-barlow-condensed;
+                font-weight: 600;
+                font-size: 64px;
+                line-height: 64px;
+                text-transform: uppercase;
+                margin-top: $space-lg;
+            }
+        }
+
+        .heroCert {
+            filter: drop-shadow(0px 20px 36px rgba(0, 0, 0, 0.22));
+        }
+    }
+}
+
+.wrap {
+    display: flex;
+    flex-direction: column;
+    margin-top: calc($space-mx + $space-mx);
+
+    @include ltemd {
+        margin-top: $space-mx;
+    }
+
+    h2 {
+        font-family: $font-barlow;
+    }
+
+    ul {
+        list-style: disc;
+        margin: $space-xxl 0 $space-mx $space-xxl;
+    }
+
+    .courses {
+        display: flex;
+        flex-direction: column;
+        padding: $space-xl $space-xxxxl;
+        background: $black-5;
+        border-radius: $space-sm;
+        margin-bottom: $space-mx;
+
+        .coursesGrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: $space-xl;
+            margin-top: $space-xxl;
+
+            @include ltemd {
+                grid-template-columns: 1fr;
+            }
+
+            .courseCard {
+                background-color: $tc-white;
+                border-radius: $space-sm;
+                padding: $space-lg;
+                display: flex;
+                align-items: center;
+
+                svg {
+                    width: 48px;
+                    height: 48px;
+                    margin-right: $space-lg;
+                }
+            }
+        }
+    }
+}

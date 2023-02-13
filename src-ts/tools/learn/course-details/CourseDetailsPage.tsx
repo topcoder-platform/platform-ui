@@ -46,16 +46,6 @@ const CourseDetailsPage: FC<{}> = () => {
     }: CoursesProviderData = useGetCourses(textFormatGetSafeString(routeParams.provider), routeParams.certification)
 
     const {
-        certificationProgress: progress,
-        ready: progressReady,
-        setCertificateProgress,
-    }: UserCertificationProgressProviderData = useGetUserCertificationProgress(
-        profile?.userId,
-        routeParams.provider,
-        routeParams.certification,
-    )
-
-    const {
         certification: certificate,
         ready: certificateReady,
     }: AllCertificationsProviderData = useGetCertification(
@@ -64,6 +54,16 @@ const CourseDetailsPage: FC<{}> = () => {
         {
             enabled: courseReady && !!course?.certificationId,
         },
+    )
+
+    const {
+        certificationProgress: progress,
+        ready: progressReady,
+        setCertificateProgress,
+    }: UserCertificationProgressProviderData = useGetUserCertificationProgress(
+        profile?.userId,
+        routeParams.provider,
+        certificate?.certification,
     )
 
     const ready: boolean = profileReady && courseReady && certificateReady && (!profile || progressReady)
@@ -183,15 +183,15 @@ const CourseDetailsPage: FC<{}> = () => {
                 </div>
             )}
             <Breadcrumb items={breadcrumb} />
-            {ready && course && (
+            {ready && course && certificate && (
                 <>
                     <div className={styles.wrap}>
                         <div className={styles['intro-copy']}>
                             <CourseTitle
                                 size='lg'
                                 title={course.title}
-                                credits={course.provider}
-                                trackType={certificate?.trackType}
+                                credits={course.resourceProvider.name}
+                                trackType={certificate?.certificationCategory.track}
                             />
 
                             <div
@@ -211,6 +211,7 @@ const CourseDetailsPage: FC<{}> = () => {
 
                         <div className={styles.aside}>
                             <CourseCurriculum
+                                certification={routeParams.certification ?? ''}
                                 course={course}
                                 progress={progress}
                                 progressReady={progressReady}

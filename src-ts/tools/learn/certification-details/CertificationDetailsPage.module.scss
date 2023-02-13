@@ -1,0 +1,65 @@
+@import '../../../lib/styles/includes';
+
+.hero-wrap {
+    :global(.hero-content) {
+        flex-direction: column;
+        gap: $space-xxxxl;
+        position: relative;
+
+        @include gtelg {
+            padding-right: calc(40vw + $space-xxl);
+        }
+
+        @include gtexl {
+            padding-right: calc(445px + $space-xxl);
+        }
+    }
+}
+
+.contentWrap {
+    .outerContentWrap {
+        padding-top: $space-mxx;
+        padding-bottom: 120px;
+
+        @include ltexl {
+            padding-top: $space-xxxxl;
+            padding-bottom: $space-xxxxl;
+        }
+
+        @include gtelg {
+            padding-right: calc(40vw + $space-xxl * 2);
+        }
+
+        @include gtexl {
+            padding-right: calc(445px + $space-xxxl * 2);
+        }
+    }
+
+    .innerContentWrap.innerContentWrap.innerContentWrap {
+        @include ltemd {
+            overflow: visible;
+        }
+    }
+}
+
+.text-section.text-section {
+    margin-top: 80px;
+
+    @include ltelg {
+        margin-top: $space-xxxxl;
+    }
+
+    > h2 {
+        margin-bottom: $space-xxl;
+    }
+
+    > ul {
+        list-style: disc;
+        padding-left: $space-xxl;
+        padding-left: $space-xxl;
+    }
+
+    &.no-top {
+        margin-top: 0;
+    }
+}

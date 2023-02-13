@@ -1,4 +1,13 @@
-import { Dispatch, FC, ReactNode, SetStateAction, useCallback, useMemo, useState } from 'react'
+import {
+    Dispatch,
+    FC,
+    ReactNode,
+    SetStateAction,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
@@ -22,20 +31,22 @@ interface CollapsibleListItem {
 
 interface CollapsibleItemProps {
     active?: string
-    duration: LearnModule['meta']['estimatedCompletionTime']
+    duration: LearnModule['estimatedCompletionTimeValue']
+    durationUnits: LearnModule['estimatedCompletionTimeUnits']
     isAssessment: boolean
-    itemId?: (item: CollapsibleListItem) => string
+    itemId?: (item: any) => string
     items: Array<CollapsibleListItem>
     lessonsCount: number
     moduleKey: string
     onItemClick: (item: any) => void
     path?: (item: any) => string
-    progress?: LearnUserCertificationProgress['modules']
+    progress?: LearnUserCertificationProgress['moduleProgresses']
     shortDescription: Array<string>
     title: string
 }
 
 const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) => {
+    const hasActiveItem: boolean = props.items.some(item => props.itemId?.(item) === props.active)
     const [isOpen, setIsOpen]: [
         boolean,
         Dispatch<SetStateAction<boolean>>
@@ -49,7 +60,7 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
         props.progress?.find(m => m.module === props.moduleKey)
     ), [props.progress, props.moduleKey])
 
-    const isPartial: boolean = useMemo(() => !!progress && !!progress.completedLessons.length, [progress])
+    const isPartial: boolean = useMemo(() => !!progress && !!progress.completedLessons?.length, [progress])
 
     const isItemCompleted: (itemId: string) => boolean = (itemId: string) => (
         progress?.moduleStatus === LearnModuleStatus.completed
@@ -78,11 +89,15 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
             const label: ReactNode = stepLabel(item, isActive, stepCount, !stepCount ? item.title : undefined)
             const key: string = props.itemId?.(item) ?? item.title
 
+            function handleClick(): void {
+                props.onItemClick(item)
+            }
+
             return (
                 <li
                     key={key}
                     className={classNames(styles['item-wrap'], !stepCount && 'full-width')}
-                    onClick={() => props.onItemClick(item)}
+                    onClick={handleClick}
                 >
                     {props.path ? (
                         <Link className={styles['item-wrap']} to={props.path(item)}>
@@ -92,6 +107,20 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
                 </li>
             )
         }
+
+    /**
+     * Automatically open the parent module of the active lesson
+     */
+    useEffect(() => {
+        if (!hasActiveItem || isOpen) {
+            return
+        }
+
+        setIsOpen(hasActiveItem)
+    // only trigger this on `hasActiveItem` change,
+    // we don't want to trigger it on `isOpen` change - that will force the parent of the active item to always be open
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [hasActiveItem])
 
     return (
         <div className={classNames(styles.wrap, isOpen ? 'is-open' : 'collapsed')}>
@@ -118,12 +147,12 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
                             {' '}
                             Lessons
                         </span>
-                        {props.duration.value !== 0 && (
+                        {props.duration && (
                             <span className={styles['summary-item']}>
                                 <IconOutline.ClockIcon />
-                                {props.duration.value}
+                                {props.duration}
                                 {' '}
-                                {props.duration.units}
+                                {props.durationUnits}
                             </span>
                         )}
                     </div>

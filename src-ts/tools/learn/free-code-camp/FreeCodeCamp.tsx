@@ -96,16 +96,15 @@ const FreeCodeCamp: FC<{}> = () => {
 
     const ready: boolean = profileReady && courseDataReady && lessonReady && (!isLoggedIn || progressReady)
 
-    const certification: string = textFormatGetSafeString(lesson?.course.certification)
     const module: string = textFormatGetSafeString(lesson?.module.title)
     const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
         {
             name: textFormatGetSafeString(lesson?.course.title),
-            url: getCoursePath(providerParam, certification),
+            url: getCoursePath(providerParam, certificationParam),
         },
         {
             name: module,
-            url: getLessonPathFromModule(providerParam, certification, module, lessonParam),
+            url: getLessonPathFromModule(providerParam, certificationParam, module, lessonParam),
         },
     ])
 
@@ -176,8 +175,19 @@ const FreeCodeCamp: FC<{}> = () => {
             .reverse()
         updatePath(nLessonPath, modulePath, coursePath)
 
+        const newLessonId: string = ((): string => {
+            if (!courseData) return ''
+
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const newModule: LearnModule = courseData.modules.find(m => m.dashedName === modulePath)!
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const newLesson: LearnLesson = newModule.lessons.find(l => l.dashedName === nLessonPath)!
+            return newLesson.id
+        })()
+
         const currentLesson: { [key: string]: string } = {
             lesson: nLessonPath,
+            lessonId: newLessonId,
             module: modulePath,
         }
 
@@ -254,7 +264,7 @@ const FreeCodeCamp: FC<{}> = () => {
     function getModuleFromProgress(certProgress: LearnUserCertificationProgress):
         LearnModuleProgress | undefined {
 
-        return certProgress.modules.find(m => m.module === moduleParam)
+        return certProgress.moduleProgresses.find(m => m.module === moduleParam)
     }
 
     function handleSurvey(certWasInProgress: boolean, progress: LearnUserCertificationProgress): void {
@@ -271,7 +281,7 @@ const FreeCodeCamp: FC<{}> = () => {
         }
 
         // if there are any other modules that have been completed, there's nothing to do
-        if (progress.modules
+        if (progress.moduleProgresses
             .some(m => m.module !== moduleParam && m.moduleStatus === LearnModuleStatus.completed)
         ) {
             return
@@ -313,7 +323,7 @@ const FreeCodeCamp: FC<{}> = () => {
         // so we find the first incomplete lesson
         // and redirect user to it for a continuous flow
         const firstIncompleteModule: LearnModuleProgress | undefined
-            = certificateProgress.modules.find(m => m.completedPercentage !== 100)
+            = certificateProgress.moduleProgresses.find(m => m.completedPercentage !== 100)
         const moduleLessons: Array<LearnLesson> | undefined
             = courseData?.modules.find(m => m.key === firstIncompleteModule?.module)?.lessons
         if (!firstIncompleteModule || !moduleLessons) {
@@ -458,6 +468,7 @@ const FreeCodeCamp: FC<{}> = () => {
 
         // redirect the user to course details page to perform the
         // necessary actions
+
         const coursePath: string = getCoursePath(
             providerParam,
             certificationParam,
@@ -516,6 +527,7 @@ const FreeCodeCamp: FC<{}> = () => {
             {lesson && (
                 <div className={styles['main-wrap']}>
                     <FccSidebar
+                        certification={certificationParam}
                         courseData={courseData}
                         courseDataReady={courseDataReady}
                         currentStep={`${moduleParam}/${lessonParam}`}
@@ -525,7 +537,7 @@ const FreeCodeCamp: FC<{}> = () => {
 
                     <div className={styles['course-frame']}>
                         <TitleNav
-                            title={currentModuleData?.meta.name}
+                            title={currentModuleData?.name}
                             currentStep={currentStepIndex}
                             maxStep={currentModuleData?.lessons.length ?? 0}
                             onNavigate={handleNavigate}

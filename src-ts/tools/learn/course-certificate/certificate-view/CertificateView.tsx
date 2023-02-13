@@ -1,7 +1,6 @@
 import { FC, MutableRefObject, useCallback, useEffect, useMemo, useRef } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 import classNames from 'classnames'
-import html2canvas from 'html2canvas'
 
 import {
     FacebookSocialShareBtn,
@@ -13,8 +12,12 @@ import {
     UserProfile,
 } from '../../../../lib'
 import {
+    ActionButton,
     AllCertificationsProviderData,
     CoursesProviderData,
+    useCertificateCanvas,
+    useCertificatePrint,
+    useCertificateScaling,
     useGetCertification,
     useGetCourses,
     useGetUserCompletedCertifications,
@@ -22,12 +25,10 @@ import {
 } from '../../learn-lib'
 import { getCoursePath, getUserCertificateSsr } from '../../learn.routes'
 
-import { ActionButton } from './action-button'
 import { Certificate } from './certificate'
-import { useCertificateScaling } from './use-certificate-scaling.hook'
 import styles from './CertificateView.module.scss'
 
-export type CertificateViewStyle = 'large-container' | undefined
+export type CertificateViewStyle = 'large-container'
 
 interface CertificateViewProps {
     certification: string,
@@ -35,7 +36,7 @@ interface CertificateViewProps {
     onCertificationNotCompleted: () => void
     profile: UserProfile,
     provider: string,
-    viewStyle: CertificateViewStyle
+    viewStyle?: CertificateViewStyle
 }
 
 const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) => {
@@ -56,13 +57,22 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         ready: courseReady,
     }: CoursesProviderData = useGetCourses(props.provider, props.certification)
 
+    const {
+        certification: certificate,
+        ready: certificateReady,
+    }: AllCertificationsProviderData = useGetCertification(
+        props.provider,
+        course?.certificationId ?? '',
+        { enabled: !!course?.certificationId },
+    )
+
     function getCertTitle(user: string): string {
         return `${user} - ${course?.title} Certification`
     }
 
     const certUrl: string = getUserCertificateSsr(
         props.provider,
-        props.certification,
+        certificate?.certification ?? '',
         props.profile.handle,
         getCertTitle(props.profile.handle),
     )
@@ -75,18 +85,9 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     }: UserCompletedCertificationsProviderData = useGetUserCompletedCertifications(
         props.profile.userId,
         props.provider,
-        props.certification,
+        certificate?.certification,
     )
     const hasCompletedTheCertification: boolean = !!completedCertificate
-
-    const {
-        certification: certificate,
-        ready: certificateReady,
-    }: AllCertificationsProviderData = useGetCertification(
-        props.provider,
-        course?.certificationId ?? '',
-        { enabled: !!course?.certificationId },
-    )
 
     const ready: boolean = useMemo(() => (
         completedCertificateReady && courseReady && certificateReady
@@ -102,27 +103,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         navigate(coursePath)
     }, [coursePath, navigate])
 
-    const getCertificateCanvas: () => Promise<HTMLCanvasElement | void> = useCallback(async () => {
-
-        if (!certificateElRef.current) {
-            return undefined
-        }
-
-        return html2canvas(certificateElRef.current, {
-            // when canvas iframe is ready, remove text gradients
-            // as they're not supported in html2canvas
-            onclone: (doc: Document) => {
-                [].forEach.call(doc.querySelectorAll('.grad'), (el: HTMLDivElement) => {
-                    el.classList.remove('grad')
-                })
-            },
-            // scale (pixelRatio) doesn't matter for the final ceriticate, use 1
-            scale: 1,
-            // use the same (ideal) window size when rendering the certificate
-            windowHeight: 700,
-            windowWidth: 1024,
-        })
-    }, [])
+    const getCertificateCanvas: () => Promise<HTMLCanvasElement | void> = useCertificateCanvas(certificateElRef)
 
     const handleDownload: () => Promise<void> = useCallback(async () => {
 
@@ -133,23 +114,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
 
     }, [certificationTitle, getCertificateCanvas])
 
-    const handlePrint: () => Promise<void> = useCallback(async () => {
-
-        const canvas: HTMLCanvasElement | void = await getCertificateCanvas()
-        if (!canvas) {
-            return
-        }
-
-        const printWindow: Window | null = window.open('')
-        if (!printWindow) {
-            return
-        }
-
-        printWindow.document.body.appendChild(canvas)
-        printWindow.document.title = certificationTitle
-        printWindow.focus()
-        printWindow.print()
-    }, [certificationTitle, getCertificateCanvas])
+    const handlePrint: () => Promise<void> = useCertificatePrint(certificateElRef, certificationTitle)
 
     useEffect(() => {
         if (ready && !hasCompletedTheCertification) {
@@ -180,10 +145,10 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                                 course={course?.title}
                                 userName={userName}
                                 tcHandle={props.profile.handle}
-                                provider={course?.provider}
+                                provider={course?.resourceProvider.name}
                                 completedDate={completedCertificate?.completedDate ?? ''}
                                 elRef={certificateElRef}
-                                type={certificate?.trackType}
+                                type={certificate?.certificationCategory.track}
                                 viewStyle={props.viewStyle}
                             />
                         </div>

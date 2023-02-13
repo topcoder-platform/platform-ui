@@ -1,0 +1,69 @@
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: $space-xxxxl;
+
+    @include ltemd {
+        margin-bottom: 0;
+    }
+
+    >h2 {
+        display: flex;
+        align-items: center;
+
+        .badge {
+            font-family: $font-roboto;
+            background: $blue-100;
+
+            padding: 0 $space-sm;
+            margin-left: $space-sm;
+            border-radius: 50px;
+            color: $tc-white;
+        }
+    }
+
+    .teaseBanner {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        padding: $space-xxxxl;
+        margin: $space-mx 0;
+        background-image: url("./assets/certs-banner-bg.png");
+        background-size: cover;
+        border-radius: 8px;
+
+        @include ltemd {
+            padding: 88px $space-lg $space-lg;
+            margin: $space-lg 0;
+            background-image: url("./assets/certs-banner-bg-mobile.png");
+        }
+
+        >h2 {
+            color: $tc-white;
+            margin-bottom: $space-lg;
+            font-family: $font-barlow;
+            font-size: 24px;
+
+            @include ltemd {
+                line-height: 28px;
+            }
+        }
+
+        >p {
+            color: $tc-white;
+            max-width: $md-max;
+        }
+    }
+
+    .certsList {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $space-xxl;
+
+        @include ltemd {
+            grid-template-columns: 1fr;
+        }
+    }
+}

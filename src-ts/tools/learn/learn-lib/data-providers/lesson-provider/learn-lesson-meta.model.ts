@@ -1,4 +1,5 @@
 export interface LearnLessonMeta {
+    id: string
     course: {
         certification: string
         certificationId: string

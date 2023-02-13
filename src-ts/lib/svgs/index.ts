@@ -19,6 +19,12 @@ import { ReactComponent as SocialShareTwitter } from './social-share-twitter.svg
 import { ReactComponent as SocialIconTwitter } from './social-tw-icon.svg'
 import { ReactComponent as SocialIconYoutube } from './social-yt-icon.svg'
 import { ReactComponent as TooltipArrowIcon } from './tooltip-arrow.svg'
+import { ReactComponent as TcAcademyLogoSvg } from './tc-academy-logo.svg'
+import { ReactComponent as TCAcademyLogoWhiteSvg } from './tc-academy-logo-white.svg'
+import { ReactComponent as TcLogoSvg } from './tc-logo.svg'
+import { ReactComponent as TCLogoSvg } from './tc-logo-white.svg'
+import { ReactComponent as FccLogoSvg } from './vendor-fcc-logo.svg'
+import { ReactComponent as FccLogoBlackSvg } from './vendor-fcc-logo-black.svg'
 
 export {
     ActiveTabTipIcon,
@@ -40,5 +46,11 @@ export {
     GithubIcon,
     SaveForLaterIcon,
     IconCheck,
+    TcAcademyLogoSvg,
+    TCAcademyLogoWhiteSvg,
+    TcLogoSvg,
+    TCLogoSvg,
+    FccLogoSvg,
+    FccLogoBlackSvg,
 }
 export * from './icon-wrapper'

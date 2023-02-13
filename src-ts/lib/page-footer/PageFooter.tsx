@@ -19,7 +19,7 @@ const PageFooter: FC<{}> = () => {
         )
     }, 10)
 
-    return <div id={navElementId} />
+    return <></>
 }
 
 export default PageFooter

@@ -2,13 +2,11 @@ import { FC, MutableRefObject } from 'react'
 import classNames from 'classnames'
 
 import { LearnConfig } from '../../../learn-config'
-import { LearnCertificateTrackType } from '../../../learn-lib'
+import { LearnCertificateTrackType, TcLogoSvg } from '../../../learn-lib'
+import { FccLogoSvg, TcAcademyLogoSvg } from '../../../../../lib'
 
 import { CertificateBgPattern } from './certificate-bg-pattern'
 import { CourseCard } from './course-card'
-import { ReactComponent as TcAcademyLogoSvg } from './tc-academy-logo.svg'
-import { ReactComponent as TcLogoSvg } from './tc-logo.svg'
-import { ReactComponent as FccLogoSvg } from './vendor-fcc-logo.svg'
 import styles from './Certificate.module.scss'
 
 interface CertificateProps {

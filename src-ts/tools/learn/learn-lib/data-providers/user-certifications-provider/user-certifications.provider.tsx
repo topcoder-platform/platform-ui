@@ -57,6 +57,7 @@ export function useGetUserCertifications(
         completed,
         inProgress,
         loading: !!userId && loading,
+        progresses: data ?? [],
 
         // ready when:
         // profile context was initialized and

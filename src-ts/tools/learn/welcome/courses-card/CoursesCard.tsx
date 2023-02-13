@@ -1,12 +1,17 @@
-import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import { FC, memo, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { Button, ButtonStyle } from '../../../../lib'
+import { Button, FccLogoBlackSvg, IconSolid, ProgressBar } from '../../../../lib'
 import {
-    CourseTitle,
+    CompletionTimeRange,
+    CourseBadge,
     LearnCertification,
-    UserCertificationCompleted,
-    UserCertificationInProgress,
+    LearnLevelIcon,
+    LearnUserCertificationProgress,
+    SkillTags,
+    TCACertificationCompletionTimeRange,
+    useHoursEstimateToRange,
+    UserCertificationProgressStatus,
 } from '../../learn-lib'
 import { getCertificatePath, getCoursePath, getLessonPathFromCurrentLesson } from '../../learn.routes'
 
@@ -14,90 +19,98 @@ import styles from './CoursesCard.module.scss'
 
 interface CoursesCardProps {
     certification: LearnCertification
-    userCompletedCertifications: ReadonlyArray<UserCertificationCompleted>
-    userInProgressCertifications: ReadonlyArray<UserCertificationInProgress>
+    progress?: LearnUserCertificationProgress
 }
 
+const EXCERPT_TEXT_LEN: number = 99
+
 const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
-
-    const [buttonStyle, setButtonStyle]: [ButtonStyle, Dispatch<SetStateAction<ButtonStyle>>]
-        = useState<ButtonStyle>('primary')
-    const [buttonLabel, setButtonLabel]: [string, Dispatch<SetStateAction<string>>]
-        = useState<string>('')
-    const [link, setLink]: [string, Dispatch<SetStateAction<string>>]
-        = useState<string>('')
-
+    const desc: string = props.certification.description?.slice(0, EXCERPT_TEXT_LEN)
+    const descLength: number = props.certification.description?.length
     const courseEnabled: boolean = props.certification.state === 'active'
-    useEffect(() => {
+    const isCompleted: boolean = props.progress?.status === UserCertificationProgressStatus.completed
+    const isInProgress: boolean = props.progress?.status === UserCertificationProgressStatus.inProgress
 
-        // if the course isn't enabled, there's nothing to do
-        if (!courseEnabled) {
-            return
+    function renderCtaBtns(status?: UserCertificationProgressStatus): ReactNode {
+        const provider: string = props.certification.resourceProvider.name
+        const certificationCourse: string = props.certification.certification
+        const currentLesson: string | undefined = props.progress?.currentLesson
+
+        const resumeRoute: string = getLessonPathFromCurrentLesson(provider, certificationCourse, currentLesson)
+        const detailsRoute: string = getCoursePath(provider, certificationCourse)
+        const certifRoute: string = getCertificatePath(provider, certificationCourse)
+
+        switch (status) {
+            case UserCertificationProgressStatus.completed:
+                return (
+                    <>
+                        <Button buttonStyle='primary' size='xs' label='View Certificate' route={certifRoute} />
+                        <Button buttonStyle='secondary' size='xs' label='Details' route={detailsRoute} />
+                    </>
+                )
+            case UserCertificationProgressStatus.inProgress:
+                return <Button buttonStyle='primary' size='xs' label='Resume' route={resumeRoute} />
+            default:
+                return <Button buttonStyle='secondary' size='xs' label='Details' route={detailsRoute} />
         }
+    }
 
-        // set the button text and link based on the progress of the user for this course
-        const isCompleted: boolean = props.userCompletedCertifications
-            .some(comp => comp.certificationId === props.certification.id)
-        const inProgress: UserCertificationInProgress | undefined
-            = props.userInProgressCertifications
-                .find(i => i.certificationId === props.certification.id)
-
-        if (isCompleted) {
-            // if the course is completed, View the Certificate
-            setButtonStyle('secondary')
-            setButtonLabel('View Certificate')
-            setLink(getCertificatePath(
-                props.certification.providerName,
-                props.certification.certification,
-            ))
-
-        } else if (!inProgress) {
-            // if there is no in-progress lesson for the course,
-            // Get Started by going to the course details
-            setButtonLabel('Get Started')
-            setLink(getCoursePath(
-                props.certification.providerName,
-                props.certification.certification,
-            ))
-
-        } else {
-            // otherwise this course is in-progress,
-            // so Resume the course at the next lesson
-            setButtonStyle('secondary')
-            setButtonLabel('Resume')
-            setLink(getLessonPathFromCurrentLesson(
-                props.certification.providerName,
-                props.certification.certification,
-                inProgress.currentLesson,
-            ))
-        }
-    }, [
-        courseEnabled,
-        props.certification,
-        props.userCompletedCertifications,
-        props.userInProgressCertifications,
-    ])
+    const completionTimeRange: TCACertificationCompletionTimeRange = useHoursEstimateToRange(
+        props.certification.completionHours,
+    )
 
     return (
-        <div className={classNames(styles.wrap, !link && 'soon')}>
-            <div className='overline'>
-                {props.certification.category}
+        <div className={classNames(styles.wrap, !courseEnabled && 'soon', isCompleted && styles.completed)}>
+            <div className={styles.cardHeader}>
+                <CourseBadge type={props.certification.certificationCategory.track ?? 'DEV'} />
+                <div className={styles.cardHeaderTitleWrap}>
+                    <p className='body-medium-medium'>{props.certification.title}</p>
+                    <div className={styles.subTitleWrap}>
+                        <LearnLevelIcon level={props.certification.learnerLevel} />
+                        <span className={classNames('body-small', styles.infoText)}>
+                            {props.certification.learnerLevel}
+                        </span>
+                        <IconSolid.DocumentTextIcon width={16} height={16} />
+                        <em>
+                            {props.certification.moduleCount}
+                            {' modules'}
+                        </em>
+                        <IconSolid.ClockIcon width={16} height={16} />
+                        <em>
+                            <CompletionTimeRange range={completionTimeRange} />
+                        </em>
+                    </div>
+                </div>
             </div>
-            <CourseTitle
-                credits={props.certification.providerName}
-                title={props.certification.title}
-                trackType={props.certification.trackType}
+
+            <div className={styles.cardHeaderDividerWrap}>
+                {isInProgress && <ProgressBar progress={(props.progress?.courseProgressPercentage ?? 0) / 100} />}
+                {!isInProgress && !isCompleted && <div className={styles.cardHeaderDivider} />}
+            </div>
+
+            <p>
+                {desc}
+                {descLength > EXCERPT_TEXT_LEN ? '...' : ''}
+            </p>
+
+            <SkillTags
+                courseKey={props.certification.course.key}
+                expandCount={2}
+                skills={props.certification.course.skills}
+                theme={isCompleted ? 'gray' : 'white'}
             />
-            <div className={styles.bottom}>
-                {!!link && (
-                    <Button
-                        buttonStyle={buttonStyle}
-                        size='sm'
-                        label={buttonLabel}
-                        route={link}
-                    />
-                )}
-                {!courseEnabled && (
+
+            <div className={styles.cardBody}>
+                <div className={styles.certProvider}>
+                    {'by '}
+                    <FccLogoBlackSvg />
+                </div>
+            </div>
+
+            <div className={styles.cardBottom}>
+                {courseEnabled ? (
+                    renderCtaBtns(props.progress?.status)
+                ) : (
                     <h4 className='details'>Coming Soon</h4>
                 )}
             </div>
@@ -105,4 +118,4 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
     )
 }
 
-export default CoursesCard
+export default memo(CoursesCard)

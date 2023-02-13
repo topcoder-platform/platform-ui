@@ -1,3 +1,5 @@
+import { get } from 'lodash'
+
 import { CoursesProviderData, useGetCourses } from '../courses-provider'
 
 import { LearnLesson } from './learn-lesson.model'
@@ -29,15 +31,15 @@ export function useGetLesson(
         lesson: !lessonData ? undefined : {
             ...lessonData,
             course: {
-                certification: courseData?.certification ?? '',
+                certification: get(courseData, 'freeCodeCampCertification.certification', ''),
                 certificationId: courseData?.certificationId ?? '',
                 id: courseData?.id ?? '',
                 title: courseData?.title ?? '',
             },
             lessonUrl,
             module: {
-                dashedName: moduleData?.meta.dashedName ?? '',
-                title: moduleData?.meta.name ?? '',
+                dashedName: moduleData?.dashedName ?? '',
+                title: moduleData?.name ?? '',
             },
         },
         loading,

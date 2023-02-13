@@ -9,7 +9,7 @@ interface TooltipEvent {
 }
 
 interface TooltipProps {
-    content?: string
+    content?: ReactNode
     place?: 'top' | 'right' | 'bottom' | 'left'
     trigger: ReactNode
     triggerOn?: 'click' | 'hover'

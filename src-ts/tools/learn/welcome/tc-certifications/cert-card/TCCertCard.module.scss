@@ -1,0 +1,97 @@
+@import '../../../../../lib/styles/includes';
+
+.wrap {
+    display: flex;
+    flex-direction: column;
+    background-color: $black-5;
+    padding: $space-xxxxl $space-xxl;
+    border-radius: 8px;
+    overflow: auto;
+
+    .cardHeader {
+        display: flex;
+        align-items: center;
+
+        @include ltemd {
+            align-items: flex-start;
+        }
+
+        .cardTitleWrap {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            margin-left: $space-xxl;
+
+            >p {
+                text-align: left;
+            }
+
+            .cardSubWrap {
+                display: flex;
+                align-items: center;
+
+                >svg {
+                    margin-right: $space-xs;
+                    color: $blue-140;
+                }
+
+                .durationWrap {
+                    font-style: italic;
+                    font-size: 14px;
+                    line-height: 22px;
+                    color: $black-60;
+
+                    @include ltemd {
+                        font-size: 12px;
+                    }
+                }
+            }
+        }
+
+        .newLabel {
+            padding: 3px 4px;
+            background-color: $green-140;
+            font-weight: 500;
+            font-size: 11px;
+            line-height: 10px;
+            color: $tc-white;
+            border-radius: 2px;
+            margin-bottom: $space-xl;
+        }
+    }
+}
+
+.separatorBar {
+    border-bottom: 2px solid $black-10;
+    margin: $space-lg 0;
+}
+
+.progressBar {
+    margin: $space-lg 0;
+}
+
+.providers {
+    >span {
+        font-style: italic;
+        color: $black-60;
+        font-weight: normal;
+    }
+}
+
+.cardBottom {
+    margin-top: $space-lg;
+}
+
+.infoText {
+    font-style: italic;
+    color: $black-60;
+    margin-right: $space-sm;
+
+    @include ltemd {
+        margin-right: 50px;
+    }
+
+    &:last-child {
+        margin-right: 0;
+    }
+}
