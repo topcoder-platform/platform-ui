@@ -70,7 +70,6 @@
         display: flex;
         flex-direction: column;
         flex: 1;
-        justify-content: space-between;
 
         .headerWrap {
             display: flex;
@@ -98,6 +97,7 @@
         .certWrap {
             display: flex;
             flex-direction: column;
+            margin: auto 0;
 
             .certOwner {
                 font-family: $font-barlow;
@@ -105,12 +105,12 @@
                 font-size: 34px;
                 line-height: 32px;
                 color: $black-100;
-                margin-bottom: $space-xxxxl;
+                margin-bottom: $space-xl;
             }
 
             .certText {
                 font-size: 13px;
-                margin-bottom: $space-xl;
+                margin-bottom: $space-sm;
             }
 
             .certTitle {

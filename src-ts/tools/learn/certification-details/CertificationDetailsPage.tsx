@@ -134,7 +134,7 @@ const CertificationDetailsPage: FC<{}> = () => {
         ) {
             startEnrollFlow()
         }
-    }, [startEnrollFlow, isLoggedIn, progressReady, progress?.status, searchParams])
+    }, [startEnrollFlow, isLoggedIn, progressReady, progress, progress?.status, searchParams])
 
     function renderContents(): ReactNode {
         return (
@@ -158,6 +158,8 @@ const CertificationDetailsPage: FC<{}> = () => {
                             certification={certification}
                             enrolled={isEnrolled}
                             onEnroll={startEnrollFlow}
+                            profile={profile}
+                            certProgress={progress}
                         />
                     </div>
                 </Portal>
