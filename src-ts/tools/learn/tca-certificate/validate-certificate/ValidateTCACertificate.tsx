@@ -5,10 +5,13 @@ import classNames from 'classnames'
 import {
     Button,
     ContentLayout,
-    IconSolid,
+    DefaultMemberIcon,
+    IconOutline,
     LoadingSpinner,
     profileGetPublicAsync,
+    Tooltip,
     UserProfile,
+    VerifiedMemberFlagSvg,
 } from '../../../../lib'
 import {
     CourseBadge,
@@ -88,9 +91,28 @@ const ValidateTCACertificate: FC<{}> = () => {
                             <div className={styles.heroInner}>
                                 <div className={styles.heroLeft}>
                                     <div className={styles.member}>
-                                        <IconSolid.UserCircleIcon />
+                                        {
+                                            profile.photoURL ? (
+                                                <img src={profile.photoURL} alt='Member Avatar' />
+                                            ) : (
+                                                <DefaultMemberIcon />
+                                            )
+                                        }
                                         <div className={styles.memberInfo}>
                                             <p className='body-large-medium'>{profile.handle}</p>
+                                            <div className={styles.verifyStatus}>
+                                                <VerifiedMemberFlagSvg />
+                                                <span>verified member</span>
+                                                <Tooltip
+                                                    trigger={(
+                                                        <IconOutline.InformationCircleIcon
+                                                            className={styles.toolTipIcon}
+                                                        />
+                                                    )}
+                                                    content={`This member is compliant with Topcoder policies
+                                                     and is a trusted member of the Topcoder community.`}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                     <p className='body-large'>

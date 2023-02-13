@@ -25,6 +25,7 @@ import { ReactComponent as TcLogoSvg } from './tc-logo.svg'
 import { ReactComponent as TCLogoSvg } from './tc-logo-white.svg'
 import { ReactComponent as FccLogoSvg } from './vendor-fcc-logo.svg'
 import { ReactComponent as FccLogoBlackSvg } from './vendor-fcc-logo-black.svg'
+import { ReactComponent as VerifiedMemberFlagSvg } from './verified-member-flag.svg'
 
 export {
     ActiveTabTipIcon,
@@ -52,5 +53,6 @@ export {
     TCLogoSvg,
     FccLogoSvg,
     FccLogoBlackSvg,
+    VerifiedMemberFlagSvg,
 }
 export * from './icon-wrapper'
