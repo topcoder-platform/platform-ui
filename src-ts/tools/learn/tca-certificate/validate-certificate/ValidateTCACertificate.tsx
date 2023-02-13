@@ -102,7 +102,7 @@ const ValidateTCACertificate: FC<{}> = () => {
                                             <p className='body-large-medium'>{profile.handle}</p>
                                             <div className={styles.verifyStatus}>
                                                 <VerifiedMemberFlagSvg />
-                                                <span>verified member</span>
+                                                <span className='overline'>verified member</span>
                                                 <Tooltip
                                                     trigger={(
                                                         <IconOutline.InformationCircleIcon
