@@ -80,23 +80,26 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                         <CompletionTimeRange range={props.certification.completionTimeRange} />
                     </span>
                 </li>
-                <li>
-                    <span className={styles.icon}>
-                        <IconSolid.CurrencyDollarIcon />
-                    </span>
-                    <span className='quote-main'>
-                        {' Free until March 31'}
-                        <span className='strike'>$20</span>
-                        <Tooltip
-                            content={renderTooltipContents(<IconSolid.CurrencyDollarIcon />, [
-                                'Introductory low pricing',
-                            ])}
-                            place='bottom'
-                            trigger={<IconOutline.InformationCircleIcon />}
-                            triggerOn='hover'
-                        />
-                    </span>
-                </li>
+                {!props.certProgress && (
+                    <li>
+                        <span className={styles.icon}>
+                            <IconSolid.CurrencyDollarIcon />
+                        </span>
+                        <span className='quote-main'>
+                            <strong>Free</strong>
+                            &nbsp;until March 31&nbsp;
+                            <span className='strike'>$20</span>
+                            <Tooltip
+                                content={renderTooltipContents(<IconSolid.CurrencyDollarIcon />, [
+                                    'Introductory low pricing',
+                                ])}
+                                place='bottom'
+                                trigger={<IconOutline.InformationCircleIcon />}
+                                triggerOn='hover'
+                            />
+                        </span>
+                    </li>
+                )}
             </ul>
 
             <div className={classNames('body-main-medium', styles['section-header'])}>
@@ -109,7 +112,7 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
             </ul>
 
             <ProvidersLogoList
-                label='By'
+                label='Content from'
                 className={styles.providers}
                 providers={props.certification.providers}
             />
