@@ -9,8 +9,8 @@ const CertificationDetailsPage: LazyLoadedComponent = lazyLoad(
     'CertificationDetailsPage',
 )
 const EnrollmentPage: LazyLoadedComponent = lazyLoad(
-    () => import('./certification-details/enroll-view'),
-    'EnrollView',
+    () => import('./certification-details/enrollment-page'),
+    'EnrollmentPage',
 )
 const CourseDetailsPage: LazyLoadedComponent = lazyLoad(() => import('./course-details'), 'CourseDetailsPage')
 const CourseCompletedPage: LazyLoadedComponent = lazyLoad(() => import('./course-completed'), 'CourseCompletedPage')

@@ -13,7 +13,6 @@ import {
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 
 import {
-    authUrlLogin,
     BreadcrumbItemModel,
     profileContext,
     ProfileContextData,
@@ -37,7 +36,7 @@ import { EnrollmentFormValue } from './enrollment-form/enrollment-form.config'
 
 const enrollmentBreadcrumb: Array<BreadcrumbItemModel> = [{ name: 'Enrollment', url: '' }]
 
-const EnrollView: FC<{}> = () => {
+const EnrollmentPage: FC<{}> = () => {
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
     const { certification: dashedName }: Params<string> = routeParams
@@ -64,7 +63,7 @@ const EnrollView: FC<{}> = () => {
         { enabled: profileReady && !!profile },
     )
 
-    const ready: boolean = profileReady && certificationReady && !!profile
+    const ready: boolean = profileReady && certificationReady && progressReady && !!profile
 
     if (ready && profile && !userInfo.current) {
         userInfo.current = { ...profile }
@@ -77,7 +76,6 @@ const EnrollView: FC<{}> = () => {
             navigate(getTCACertificationPath(certification.dashedName))
         }
     }
-
 
     const startEnrollFlow: (value?: EnrollmentFormValue) => Promise<void>
     = useCallback(async (value?: EnrollmentFormValue): Promise<void> => {
@@ -124,9 +122,9 @@ const EnrollView: FC<{}> = () => {
 
     useLayoutEffect(() => {
         if (profileReady && !profile) {
-            window.location.href = authUrlLogin()
+            navigate(getTCACertificationPath(certification.dashedName))
         }
-    }, [profileReady, profile])
+    }, [profileReady, profile, navigate, certification?.dashedName])
 
     return (
         <PageLayout
@@ -138,4 +136,4 @@ const EnrollView: FC<{}> = () => {
     )
 }
 
-export default EnrollView
+export default EnrollmentPage
