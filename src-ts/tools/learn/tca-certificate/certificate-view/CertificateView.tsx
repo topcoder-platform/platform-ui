@@ -22,8 +22,7 @@ import {
     UserCompletedTCACertificationsProviderData,
     useValidateTCACertification,
 } from '../../learn-lib'
-import { getTCACertificationPath, getUserTCACertificateSsr } from '../../learn.routes'
-import { EnvironmentConfig } from '../../../../config'
+import { getTCACertificationPath, getTCACertificationValidationUrl, getUserTCACertificateSsr } from '../../learn.routes'
 
 import { Certificate } from './certificate'
 import styles from './CertificateView.module.scss'
@@ -102,8 +101,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const handlePrint: () => Promise<void> = useCertificatePrint(certificateElRef, certificationTitle)
 
     // TODO: update this to use `completionUuid`
-    const validateLink: string
-        = `${EnvironmentConfig.TOPCODER_URLS.TCA}/tca-certifications/${props.certification}/${props.profile.handle}`
+    const validateLink: string = getTCACertificationValidationUrl(props.certification, props.profile.handle)
 
     const handleLinkClick: () => void = useCallback(() => {
         window.open(validateLink, 'blank')
