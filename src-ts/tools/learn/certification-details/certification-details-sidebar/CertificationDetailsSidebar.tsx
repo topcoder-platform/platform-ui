@@ -1,133 +1,129 @@
-import { FC } from 'react'
+import { FC, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { Button, IconSolid, UserProfile } from '../../../../lib'
+import { Button, IconOutline, IconSolid, Tooltip, UserProfile } from '../../../../lib'
 import {
     CompletionTimeRange,
     LearnLevelIcon,
     ProvidersLogoList,
+    StickySidebar,
     TCACertification,
     TCACertificationProgress,
 } from '../../learn-lib'
 import { EnrollCtaBtn } from '../enroll-cta-btn'
 import { CertificatePreview } from '../certificate-preview'
+import { getTCACertificateUrl } from '../../learn.routes'
 
 import styles from './CertificationDetailsSidebar.module.scss'
-import { getTCACertificateUrl } from '../../learn.routes'
 
 interface CertificationDetailsSidebarProps {
     certification: TCACertification
     enrolled: boolean
-    onEnroll: () => void
     profile?: UserProfile
     certProgress?: TCACertificationProgress
 }
 
-// Needed for the tooltip which is disabled unti payments are implemented
-// function renderTooltipContents(icon: ReactNode, text: Array<string>): ReactNode {
-//     return (
-//         <div className={styles.tooltip}>
-//             {icon}
-//             <span
-//                 className='body-small'
-//                 dangerouslySetInnerHTML={{ __html: text.join('<br />') }}
-//             />
-//         </div>
-//     )
-// }
+function renderTooltipContents(icon: ReactNode, text: Array<string>): ReactNode {
+    return (
+        <div className={styles.tooltip}>
+            {icon}
+            <span
+                className='body-small'
+                dangerouslySetInnerHTML={{ __html: text.join('<br />') }}
+            />
+        </div>
+    )
+}
 
 const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props: CertificationDetailsSidebarProps) => {
     const completed: boolean = !!props.certProgress?.completedAt
 
     return (
-        <div className={styles['sticky-container']}>
-            <div className={styles.wrap}>
-                <div className={styles['certificate-placeholder']}>
-                    <CertificatePreview
-                        certification={props.certification}
-                        profile={props.profile}
-                        completedDate={props.certProgress?.completedAt ?? undefined}
+        <StickySidebar>
+            <div className={styles['certificate-placeholder']}>
+                <CertificatePreview
+                    certification={props.certification}
+                    profile={props.profile}
+                    completedDate={props.certProgress?.completedAt ?? undefined}
+                />
+            </div>
+            {completed && props.certification && (
+                <div className={styles.certCta}>
+                    <Button
+                        buttonStyle='primary'
+                        route={getTCACertificateUrl(props.certification.dashedName)}
+                        label='View Certificate'
                     />
                 </div>
-                {completed && props.certification && (
-                    <div className={styles.certCta}>
-                        <Button
-                            buttonStyle='primary'
-                            route={getTCACertificateUrl(props.certification.dashedName)}
-                            label='View Certificate'
+            )}
+            <ul className={styles['certification-details-list']}>
+                <li>
+                    <span className={styles.icon}>
+                        <LearnLevelIcon level={props.certification.learnerLevel} />
+                    </span>
+                    <span className='quote-main'>{props.certification.learnerLevel}</span>
+                </li>
+                <li>
+                    <span className={styles.icon}>
+                        <IconSolid.DocumentTextIcon />
+                    </span>
+                    <span className='quote-main'>
+                        {props.certification.coursesCount}
+                        {' courses'}
+                    </span>
+                </li>
+                <li>
+                    <span className={styles.icon}>
+                        <IconSolid.ClockIcon />
+                    </span>
+                    <span className='quote-main'>
+                        <CompletionTimeRange range={props.certification.completionTimeRange} />
+                    </span>
+                </li>
+                <li>
+                    <span className={styles.icon}>
+                        <IconSolid.CurrencyDollarIcon />
+                    </span>
+                    <span className='quote-main'>
+                        {' Free until March 31'}
+                        <span className='strike'>$20</span>
+                        <Tooltip
+                            content={renderTooltipContents(<IconSolid.CurrencyDollarIcon />, [
+                                'Introductory low pricing',
+                            ])}
+                            place='bottom'
+                            trigger={<IconOutline.InformationCircleIcon />}
+                            triggerOn='hover'
                         />
-                    </div>
-                )}
-                <ul className={styles['certification-details-list']}>
-                    <li>
-                        <span className={styles.icon}>
-                            <LearnLevelIcon level={props.certification.learnerLevel} />
-                        </span>
-                        <span className='quote-main'>{props.certification.learnerLevel}</span>
-                    </li>
-                    <li>
-                        <span className={styles.icon}>
-                            <IconSolid.DocumentTextIcon />
-                        </span>
-                        <span className='quote-main'>
-                            {props.certification.coursesCount}
-                            {' courses'}
-                        </span>
-                    </li>
-                    <li>
-                        <span className={styles.icon}>
-                            <IconSolid.ClockIcon />
-                        </span>
-                        <span className='quote-main'>
-                            <CompletionTimeRange range={props.certification.completionTimeRange} />
-                        </span>
-                    </li>
-                    {/* Probably will be added later on when payments are implemented */}
-                    {/* <li>
-                        <span className={styles.icon}>
-                            <IconSolid.CurrencyDollarIcon />
-                        </span>
-                        <span className='quote-main'>
-                            <span className='strike'>$15</span>
-                            {' Free until March 31'}
-                            <Tooltip
-                                content={renderTooltipContents(<IconSolid.CurrencyDollarIcon />, [
-                                    'Introductory low pricing',
-                                ])}
-                                place='bottom'
-                                trigger={<IconOutline.InformationCircleIcon />}
-                                triggerOn='hover'
-                            />
-                        </span>
-                    </li> */}
-                </ul>
+                    </span>
+                </li>
+            </ul>
 
-                <div className={classNames('body-main-medium', styles['section-header'])}>
-                    Skills Covered
-                </div>
-                <ul className={styles['certification-skills-list']}>
-                    {props.certification.skills.map(skill => (
-                        <li key={skill}>{skill}</li>
-                    ))}
-                </ul>
-
-                <ProvidersLogoList
-                    label='By'
-                    className={styles.providers}
-                    providers={props.certification.providers}
-                />
-
-                <div className={styles.btns}>
-                    {(props.enrolled || completed) ? (
-                        <div className={classNames(styles.tag, completed ? styles.completed : styles.enrolled)}>
-                            <span className='body-main-medium'>{completed ? 'Completed' : 'Enrolled'}</span>
-                        </div>
-                    ) : (
-                        <EnrollCtaBtn onEnroll={props.onEnroll} />
-                    )}
-                </div>
+            <div className={classNames('body-main-medium', styles['section-header'])}>
+                Skills Covered
             </div>
-        </div>
+            <ul className={styles['certification-skills-list']}>
+                {props.certification.skills.map(skill => (
+                    <li key={skill}>{skill}</li>
+                ))}
+            </ul>
+
+            <ProvidersLogoList
+                label='By'
+                className={styles.providers}
+                providers={props.certification.providers}
+            />
+
+            <div className={styles.btns}>
+                {(props.enrolled || completed) ? (
+                    <div className={classNames(styles.tag, completed ? styles.completed : styles.enrolled)}>
+                        <span className='body-main-medium'>{completed ? 'Completed' : 'Enrolled'}</span>
+                    </div>
+                ) : (
+                    <EnrollCtaBtn certification={props.certification.dashedName} />
+                )}
+            </div>
+        </StickySidebar>
     )
 }
 

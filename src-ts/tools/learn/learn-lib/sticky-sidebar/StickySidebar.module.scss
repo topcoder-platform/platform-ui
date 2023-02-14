@@ -1,0 +1,43 @@
+@import '../../../../lib/styles/includes';
+
+.sticky-container {
+    @include ltelg {
+        @include contentWidth;
+        padding-top: $space-xxl;
+    }
+
+    @include gtelg {
+        position: absolute;
+        top: 65px;
+        width: 445px;
+        padding: 40px 0;
+        bottom: 0;
+    }
+
+    @include lg {
+        width: 40vw;
+    }
+
+    @include ltexxl {
+        right: $space-xxxxl;
+    }
+
+    @include xxl {
+        right: calc(50vw - calc($xxl-min/2 - $space-xxl));
+    }
+
+}
+
+.wrap {
+    background: $tc-white;
+    border: $border-xs solid $black-20;
+    border-radius: $space-sm;
+
+    width: 100%;
+    margin: 0 auto;
+
+    padding: $space-xxl;
+
+    position: sticky;
+    top: 40px;
+}
