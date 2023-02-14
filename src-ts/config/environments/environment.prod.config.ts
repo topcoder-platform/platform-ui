@@ -3,6 +3,7 @@ import { EnvironmentConfigModel } from './environment-config.model'
 import { EnvironmentConfigDefault } from './environment.default.config'
 
 const COMMUNITY_WEBSITE: string = 'https://www.topcoder.com'
+const TCA_WEBSITE: string = 'https://platform-ui.topcoder.com'
 
 export const EnvironmentConfigProd: EnvironmentConfigModel = {
     ...EnvironmentConfigDefault,
@@ -40,6 +41,7 @@ export const EnvironmentConfigProd: EnvironmentConfigModel = {
         BLOG_PAGE: `${COMMUNITY_WEBSITE}/blog`,
         CHALLENGES_PAGE: `${COMMUNITY_WEBSITE}/challenges`,
         GIGS_PAGE: `${COMMUNITY_WEBSITE}/gigs`,
+        TCA: `${TCA_WEBSITE}`,
         THRIVE_PAGE: `${COMMUNITY_WEBSITE}/thrive`,
         USER_PROFILE: `${COMMUNITY_WEBSITE}/members`,
         WP_CONTENT: `${COMMUNITY_WEBSITE}/wp-content`,

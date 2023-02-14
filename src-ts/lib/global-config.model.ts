@@ -36,6 +36,7 @@ export interface GlobalConfig {
         CHALLENGES_PAGE: string
         GIGS_PAGE: string
         THRIVE_PAGE: string
+        TCA: string
         USER_PROFILE: string
         WP_CONTENT: string
     }
