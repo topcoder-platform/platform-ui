@@ -57,6 +57,11 @@
                     align-items: flex-start;
                     margin-left: $space-lg;
 
+                    :global(.body-large-bold) {
+                        font-size: 32px;
+                        margin-bottom: $space-sm;
+                    }
+
                     .verifyStatus {
                         display: flex;
                         align-items: center;

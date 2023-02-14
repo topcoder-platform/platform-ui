@@ -13,15 +13,16 @@ import {
 } from '../../../../lib'
 import {
     ActionButton,
-    TCACertificationProviderData,
+    TCACertification,
+    TCACertificationValidationData,
     useCertificateCanvas,
     useCertificatePrint,
     useCertificateScaling,
-    useGetTCACertification,
     useGetUserTCACompletedCertificationsMOCK,
     UserCompletedTCACertificationsProviderData,
+    useValidateTCACertification,
 } from '../../learn-lib'
-import { getTCACertificationPath, getUserTCACertificateSsr } from '../../learn.routes'
+import { getTCACertificationPath, getTCACertificationValidationUrl, getUserTCACertificateSsr } from '../../learn.routes'
 
 import { Certificate } from './certificate'
 import styles from './CertificateView.module.scss'
@@ -43,16 +44,12 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
     const certificateWrapRef: MutableRefObject<HTMLDivElement | any> = useRef()
 
-    const userName: string = useMemo(() => (
-        [props.profile.firstName, props.profile.lastName].filter(Boolean)
-            .join(' ')
-        || props.profile.handle
-    ), [props.profile.firstName, props.profile.handle, props.profile.lastName])
-
     const {
         certification,
+        enrollment,
         ready: certReady,
-    }: TCACertificationProviderData = useGetTCACertification(props.certification)
+    }: TCACertificationValidationData
+        = useValidateTCACertification(props.certification, props.profile.handle)
 
     function getCertTitle(user: string): string {
         return `${user} - ${certification?.title} Certification`
@@ -64,7 +61,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         getCertTitle(props.profile.handle),
     )
 
-    const certificationTitle: string = getCertTitle(userName || props.profile.handle)
+    const certificationTitle: string = getCertTitle(enrollment?.userName || props.profile.handle)
 
     const {
         certifications: [completedCertificate],
@@ -103,8 +100,8 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
 
     const handlePrint: () => Promise<void> = useCertificatePrint(certificateElRef, certificationTitle)
 
-    // TODO: connect this with hiring manager page
-    const validateLink: string = 'https://platform-ui.topcoder-dev.com'
+    // TODO: update this to use `completionUuid`
+    const validateLink: string = getTCACertificationValidationUrl(props.certification, props.profile.handle)
 
     const handleLinkClick: () => void = useCallback(() => {
         window.open(validateLink, 'blank')
@@ -136,8 +133,9 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                             ref={certificateWrapRef}
                         >
                             <Certificate
-                                certification={certification}
-                                userName={userName}
+                                certification={certification as TCACertification}
+                                completionUuid={enrollment?.completionUuid}
+                                userName={enrollment?.userName}
                                 tcHandle={props.profile.handle}
                                 completedDate={completedCertificate?.completedDate ?? ''}
                                 elRef={certificateElRef}

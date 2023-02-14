@@ -1,3 +1,4 @@
+import { EnvironmentConfig } from '../../config'
 import { authUrlLogin, lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
 
 import { toolTitle } from './Learn'
@@ -123,6 +124,13 @@ export function getUserTCACertificateUrl(
     handle: string,
 ): string {
     return `${getTCACertificationPath(certification)}/${handle}${LEARN_PATHS.certificate}`
+}
+
+export function getTCACertificationValidationUrl(
+    certification: string,
+    handle: string,
+): string {
+    return `${EnvironmentConfig.TOPCODER_URLS.TCA}/${LEARN_PATHS.tcaCertifications}/${certification}/${handle}`
 }
 
 export function getAuthenticateAndEnrollRoute(): string {
