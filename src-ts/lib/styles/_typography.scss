@@ -58,6 +58,11 @@ h3 {
         font-size: 18px;
         line-height: 20px;
     }
+
+    &.marketing {
+        font-size: 44px;
+        line-height: 44px;
+    }
 }
 
 h4 {
@@ -235,13 +240,15 @@ h4 {
 }
 
 .body-ultra-small,
-.body-ultra-small-medium {
+.body-ultra-small-medium,
+.body-ultra-small-bold {
     font-size: 12px;
     line-height: 18px;
     font-weight: $font-weight-normal;
 }
 
-.body-ultra-small-medium {
+.body-ultra-small-medium,
+.body-ultra-small-bold {
     font-weight: $font-weight-bold;
 }
 

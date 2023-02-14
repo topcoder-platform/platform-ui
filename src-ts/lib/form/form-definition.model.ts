@@ -13,7 +13,7 @@ export interface FormDefinition {
     readonly groupsOptions?: FormGroupOptions
     readonly shortName?: string
     readonly subtitle?: string
-    readonly successMessage?: string
+    readonly successMessage?: string | boolean
     readonly tabIndexStart?: number
     readonly title?: string
 }
