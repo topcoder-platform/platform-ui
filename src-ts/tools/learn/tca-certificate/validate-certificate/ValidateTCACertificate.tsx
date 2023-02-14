@@ -15,12 +15,13 @@ import {
 } from '../../../../lib'
 import {
     CourseBadge,
-    TCACertification,
-    TCACertificationProgressProviderData,
-    useGetTCACertificationProgress,
+    TCACertificateType,
+    TCACertificationValidationData,
+    useValidateTCACertification,
 } from '../../learn-lib'
 import { EnvironmentConfig } from '../../../../config'
 import { Certificate } from '../certificate-view/certificate'
+import { getTCACertificationValidationUrl } from '../../learn.routes'
 
 import styles from './ValidateTCACertificate.module.scss'
 
@@ -37,17 +38,13 @@ const ValidateTCACertificate: FC<{}> = () => {
 
     // Fetch Enrollment status & progress
     const {
-        progress,
-        ready: progressReady,
-    }: TCACertificationProgressProviderData = useGetTCACertificationProgress(
-        profile?.userId as unknown as string,
-        routeParams.certification as string,
-        { enabled: profileReady && !!profile },
-    )
+        certification,
+        enrollment,
+        ready: certReady,
+    }: TCACertificationValidationData
+        = useValidateTCACertification(routeParams.certification as string, routeParams.memberHandle as string)
 
-    // TODO: see if need to remap if provider hook changes
-    const certification: TCACertification | undefined = progress?.topcoderCertification
-    const courses: any = progress?.resourceProgresses
+    const courses: any = certification?.certificationResources
 
     const learningOutcomes: ReactNode[] | undefined
         = useMemo(() => certification?.learningOutcomes.map((lO: string) => <li>{lO}</li>), [certification])
@@ -55,10 +52,14 @@ const ValidateTCACertificate: FC<{}> = () => {
     const coursesGridItems: ReactNode[] | undefined
         = useMemo(() => courses?.map((course: any) => (
             <div className={styles.courseCard}>
-                <CourseBadge type={course.fccCertificationProgress.certificationTrackType} />
-                <p className='body-main-bold'>{course.fccCertificationProgress.certificationTitle}</p>
+                <CourseBadge type={certification?.certificationCategory.track as TCACertificateType} />
+                <p className='body-main-bold'>{course.freeCodeCampCertification.title}</p>
             </div>
-        )), [courses])
+        )), [courses, certification])
+
+    // TODO: update this to use `completionUuid`
+    const validateLink: string
+        = getTCACertificationValidationUrl(routeParams.certification as string, routeParams.memberHandle as string)
 
     useEffect(() => {
         if (routeParams.memberHandle) {
@@ -76,7 +77,7 @@ const ValidateTCACertificate: FC<{}> = () => {
 
     return (
         <>
-            <LoadingSpinner hide={profileReady && progressReady} />
+            <LoadingSpinner hide={profileReady && certReady} />
 
             {profile && certification && (
                 <div className='full-height-frame'>
@@ -99,6 +100,7 @@ const ValidateTCACertificate: FC<{}> = () => {
                                             )
                                         }
                                         <div className={styles.memberInfo}>
+                                            <p className='body-large-bold'>{enrollment?.userName}</p>
                                             <p className='body-large-medium'>{profile.handle}</p>
                                             <div className={styles.verifyStatus}>
                                                 <VerifiedMemberFlagSvg />
@@ -125,8 +127,9 @@ const ValidateTCACertificate: FC<{}> = () => {
                                 <div className={styles.heroCert}>
                                     <Certificate
                                         certification={certification}
-                                        completedDate={progress?.completedAt as unknown as string || '1.1.2023'}
-                                        tcHandle={profile.handle}
+                                        completedDate={enrollment?.completedAt as unknown as string || '1.1.2023'}
+                                        userName={enrollment?.userName}
+                                        validateLink={validateLink}
                                         viewStyle='small-container'
                                     />
                                 </div>
