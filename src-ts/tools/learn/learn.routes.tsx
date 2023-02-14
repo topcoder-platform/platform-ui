@@ -8,6 +8,10 @@ const CertificationDetailsPage: LazyLoadedComponent = lazyLoad(
     () => import('./certification-details'),
     'CertificationDetailsPage',
 )
+const EnrollmentPage: LazyLoadedComponent = lazyLoad(
+    () => import('./certification-details/enrollment-page'),
+    'EnrollmentPage',
+)
 const CourseDetailsPage: LazyLoadedComponent = lazyLoad(() => import('./course-details'), 'CourseDetailsPage')
 const CourseCompletedPage: LazyLoadedComponent = lazyLoad(() => import('./course-completed'), 'CourseCompletedPage')
 const MyCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certificate'), 'MyCertificate')
@@ -28,8 +32,8 @@ export enum LEARN_PATHS {
     fcc = '/learn/fcc',
     root = '/learn',
     startCourseRouteFlag = 'start-course',
-    enrollCertifRouteFlag = 'start-enroll',
-    tcaCertifications = 'tca-certifications',
+    tcaCertifications = '/tca-certifications',
+    tcaEnroll = '/enroll',
 }
 
 export const rootRoute: string = LEARN_PATHS.root
@@ -37,10 +41,6 @@ export const absoluteRootRoute: string = `${window.location.origin}${LEARN_PATHS
 
 export function getAuthenticateAndStartCourseRoute(): string {
     return `${authUrlLogin()}${encodeURIComponent(`?${LEARN_PATHS.startCourseRouteFlag}`)}`
-}
-
-export function getAuthenticateAndEnrollRoute(): string {
-    return `${authUrlLogin()}${encodeURIComponent(`?${LEARN_PATHS.enrollCertifRouteFlag}`)}`
 }
 
 export function getCoursePath(provider: string, certification: string): string {
@@ -105,7 +105,11 @@ export function getViewStyleParamKey(): string {
 }
 
 export function getTCACertificationPath(certification: string): string {
-    return `${LEARN_PATHS.root}/${LEARN_PATHS.tcaCertifications}/${certification}`
+    return `${LEARN_PATHS.root}${LEARN_PATHS.tcaCertifications}/${certification}`
+}
+
+export function getTCACertificationEnrollPath(certification: string): string {
+    return `${LEARN_PATHS.root}${LEARN_PATHS.tcaCertifications}/${certification}${LEARN_PATHS.tcaEnroll}`
 }
 
 export function getTCACertificateUrl(
@@ -119,6 +123,10 @@ export function getUserTCACertificateUrl(
     handle: string,
 ): string {
     return `${getTCACertificationPath(certification)}/${handle}${LEARN_PATHS.certificate}`
+}
+
+export function getAuthenticateAndEnrollRoute(): string {
+    return `${authUrlLogin()}${encodeURIComponent(LEARN_PATHS.tcaEnroll)}`
 }
 
 export const learnRoutes: ReadonlyArray<PlatformRoute> = [
@@ -135,6 +143,12 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <CertificationDetailsPage />,
                 id: 'Certification Details',
                 route: 'tca-certifications/:certification',
+            },
+            {
+                children: [],
+                element: <EnrollmentPage />,
+                id: 'Certification Details',
+                route: 'tca-certifications/:certification/enroll',
             },
             {
                 children: [],

@@ -10,6 +10,11 @@
     @include ltelg {
         padding: $space-xxl $space-lg;
     }
+
+    &.clear {
+        background: $tc-white;
+        padding: 0;
+    }
 }
 
 .perksList {

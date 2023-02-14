@@ -1,13 +1,15 @@
 import { FC, useCallback, useContext } from 'react'
+import { NavigateFunction, useNavigate } from 'react-router-dom'
 
 import { Button, profileContext, ProfileContextData } from '../../../../lib'
-import { getAuthenticateAndEnrollRoute } from '../../learn.routes'
+import { getAuthenticateAndEnrollRoute, getTCACertificationEnrollPath } from '../../learn.routes'
 
 interface EnrollCtaBtnProps {
-    onEnroll: () => void
+    certification: string
 }
 
 const EnrollCtaBtn: FC<EnrollCtaBtnProps> = (props: EnrollCtaBtnProps) => {
+    const navigate: NavigateFunction = useNavigate()
     const { initialized: profileReady, profile }: ProfileContextData = useContext(profileContext)
 
     const isLoggedIn: boolean = profileReady && !!profile
@@ -32,8 +34,8 @@ const EnrollCtaBtn: FC<EnrollCtaBtnProps> = (props: EnrollCtaBtnProps) => {
             return
         }
 
-        props.onEnroll()
-    }, [isLoggedIn, profile?.isWipro, profile?.diceEnabled, props.onEnroll])
+        navigate(getTCACertificationEnrollPath(props.certification))
+    }, [isLoggedIn, profile?.isWipro, profile?.diceEnabled, props, navigate])
 
     return (
         <>
