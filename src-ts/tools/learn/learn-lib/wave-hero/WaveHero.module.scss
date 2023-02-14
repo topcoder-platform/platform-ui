@@ -27,6 +27,9 @@
                 background-size: 100vw $space-lg, auto;
                 padding-bottom: 60px;
             }
+            @include ltemd {
+                padding-bottom: 32px;
+            }
         }
     }
 

@@ -103,7 +103,11 @@ const EnrollmentPage: FC<{}> = () => {
     function renderMainContent(): ReactNode {
         return ready ? (
             <>
-                <PerksSection items={perks} />
+                <PerksSection
+                    style='clear'
+                    items={perks}
+                    title='Enroll now with our introductory low pricing!'
+                />
 
                 <EnrolledModal
                     isOpen={isEnrolledModalOpen}

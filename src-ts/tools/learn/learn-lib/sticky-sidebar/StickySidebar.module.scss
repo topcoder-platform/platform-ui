@@ -40,4 +40,10 @@
 
     position: sticky;
     top: 40px;
+
+    @include ltemd {
+        padding: $space-lg;
+        position: relative;
+        top: 0;
+    }
 }

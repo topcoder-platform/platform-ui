@@ -45,6 +45,10 @@
     border-radius: $space-sm;
 
     margin-bottom: $space-xxl;
+
+    @include ltemd {
+        margin-top: $space-lg;
+    }
 }
 
 .form {
