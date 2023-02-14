@@ -38,6 +38,7 @@ export const enrollmentFormDef: FormDefinition = {
                 {
                     label: 'Email',
                     name: EnrollmentFormFields.email,
+                    readonly: true,
                     type: 'text',
                     validators: [
                         {
