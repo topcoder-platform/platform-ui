@@ -45,7 +45,7 @@ const TCACertificationBanner: FC<TCACertificationBannerProps> = (props: TCACerti
                 />
                 <div className={styles.headerContent}>
                     <div className='overline'>
-                        This course is part of A topcoder certification:
+                        This course is part of a topcoder certification:
                     </div>
                     <div className='body-main-bold'>
                         {certification.title}
