@@ -8,3 +8,10 @@ export interface TCACertificationProgressProviderData {
     refetch: () => void,
     setCertificateProgress: (progess: TCACertificationProgress) => void,
 }
+
+export interface TCACertificationEnrollmentProviderData {
+    enrollment: TCACertificationProgress | undefined
+    error: boolean
+    loading: boolean
+    ready: boolean
+}
