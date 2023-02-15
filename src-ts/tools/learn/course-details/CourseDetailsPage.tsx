@@ -17,6 +17,9 @@ import {
     CoursesProviderData,
     CourseTitle,
     ResourceProviderData,
+    TCACertification,
+    TCACertificationsProviderData,
+    useGetAllTCACertifications,
     useGetCertification,
     useGetCourses,
     useGetResourceProvider,
@@ -29,6 +32,7 @@ import { getCoursePath } from '../learn.routes'
 
 import { CourseCurriculum } from './course-curriculum'
 import styles from './CourseDetailsPage.module.scss'
+import { TCACertificationBanner } from './tca-certification-banner'
 
 const CourseDetailsPage: FC<{}> = () => {
 
@@ -191,6 +195,11 @@ const CourseDetailsPage: FC<{}> = () => {
                                 title={course.title}
                                 provider={course.resourceProvider.name}
                                 trackType={certificate?.certificationCategory.track}
+                            />
+
+                            <TCACertificationBanner
+                                className={styles.tcaCertBanner}
+                                fccCertificateId={certificate.id}
                             />
 
                             <div
