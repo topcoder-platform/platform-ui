@@ -218,15 +218,6 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
                     />
                 </div>
             </div>
-            {isCompleted && (
-                <div className={classNames('mobile-hide', styles['bottom-link'])}>
-                    <Button
-                        buttonStyle='link'
-                        label='See all my learning'
-                        route={LEARN_PATHS.myLearning}
-                    />
-                </div>
-            )}
 
             <TcAcademyPolicyModal
                 isOpen={isTcAcademyPolicyModal}
