@@ -8,11 +8,8 @@ import { EnrollmentForm } from '../enrollment-form'
 import styles from './EnrollmentSidebar.module.scss'
 
 interface EnrollmentSidebarProps {
-    // certification: TCACertification
-    // enrolled: boolean
     onEnroll: (d: {email: string}) => Promise<void>
     profile?: UserProfile
-    // certProgress?: TCACertificationProgress
 }
 
 const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarProps) => (

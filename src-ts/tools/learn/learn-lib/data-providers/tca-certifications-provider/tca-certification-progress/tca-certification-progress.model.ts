@@ -2,11 +2,13 @@ import { TCACertification } from '../tca-certification.model'
 
 import { TCAFccCertificationProgress } from './tca-fcc-certification-progress.model'
 
+export type TCACertificationProgressStatus = 'enrolled' | 'completed'
+
 export interface TCACertificationProgress {
     id: number
     topcoderCertification: TCACertification
     topcoderCertificationId: number
-    status: 'enrolled'
+    status: TCACertificationProgressStatus
     completedAt: null | Date
     createdAt: Date
     updatedAt: Date

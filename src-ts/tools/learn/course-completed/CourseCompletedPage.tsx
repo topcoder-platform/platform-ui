@@ -1,4 +1,4 @@
-import { FC, useContext, useEffect } from 'react'
+import { FC, ReactNode, useContext, useEffect } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 
 import { EnvironmentConfig } from '../../../config'
@@ -15,16 +15,19 @@ import {
     AllCertificationsProviderData,
     CoursesProviderData,
     CourseTitle,
+    TCACertificationCheckCompleted,
     useGetCertification,
     useGetCourses,
     useGetUserCertificationProgress,
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
+    useTCACertificationCheckCompleted,
 } from '../learn-lib'
 import { getCertificatePath, getCoursePath, LEARN_PATHS, rootRoute } from '../learn.routes'
 
 import { ReactComponent as StarsSvg } from './stars.svg'
+import { useTcaCertificationModal } from './tca-certification-completed-modal'
 import styles from './CourseCompletedPage.module.scss'
 
 const CourseCompletedPage: FC<{}> = () => {
@@ -61,6 +64,12 @@ const CourseCompletedPage: FC<{}> = () => {
         },
     )
 
+    const { certification: tcaCertificationName }: TCACertificationCheckCompleted = useTCACertificationCheckCompleted(
+        'FccCertificationProgress',
+        progress?.id ?? '',
+        { enabled: !!progress?.id },
+    )
+
     const isLoggedIn: boolean = profileReady && !!profile
     const certificatesDataReady: boolean = progressReady && certifReady
     const ready: boolean = profileReady && courseDataReady && (!isLoggedIn || certificatesDataReady)
@@ -75,6 +84,8 @@ const CourseCompletedPage: FC<{}> = () => {
             url: LEARN_PATHS.completed,
         },
     ])
+
+    const tcaCertificationCompletedModal: ReactNode = useTcaCertificationModal(tcaCertificationName)
 
     useEffect(() => {
         if (ready && progress?.status !== UserCertificationProgressStatus.completed) {
@@ -156,6 +167,7 @@ const CourseCompletedPage: FC<{}> = () => {
                             </div>
                         </div>
                     </div>
+                    {tcaCertificationCompletedModal}
                 </>
             )}
         </>
