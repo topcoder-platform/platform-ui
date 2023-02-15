@@ -1,10 +1,10 @@
 import useSWR, { SWRConfiguration, SWRResponse } from 'swr'
 
-import { learnUrlGet, learnXhrGetAsync } from '../../../functions'
+import { learnUrlGet, learnXhrGetAsync, learnXhrPutAsync } from '../../../functions'
 import { useSwrCache } from '../../../learn-swr'
 
 import { TCACertificationProgressProviderData } from './tca-certification-progress-data.model'
-import { TCACertificationProgress } from './tca-certification-progress.model'
+import { TCACertificationProgress, TCACertificationProgressStatus } from './tca-certification-progress.model'
 
 interface TCACertificationProgressProviderOptions {
     enabled?: boolean

@@ -21,6 +21,7 @@ import {
     useGetUserCertificationProgress,
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
+    UserCertificationProgressStatus,
     useTCACertificationCheckCompleted,
 } from '../learn-lib'
 import { getCertificatePath, getCoursePath, LEARN_PATHS, rootRoute } from '../learn.routes'
@@ -86,16 +87,16 @@ const CourseCompletedPage: FC<{}> = () => {
 
     const tcaCertificationCompletedModal: ReactNode = useTcaCertificationModal(tcaCertificationName)
 
-    // useEffect(() => {
-    //     if (ready && progress?.status !== UserCertificationProgressStatus.completed) {
-    //         navigate(coursePath)
-    //     }
-    // }, [
-    //     coursePath,
-    //     navigate,
-    //     progress,
-    //     ready,
-    // ])
+    useEffect(() => {
+        if (ready && progress?.status !== UserCertificationProgressStatus.completed) {
+            navigate(coursePath)
+        }
+    }, [
+        coursePath,
+        navigate,
+        progress,
+        ready,
+    ])
 
     return (
         <>
