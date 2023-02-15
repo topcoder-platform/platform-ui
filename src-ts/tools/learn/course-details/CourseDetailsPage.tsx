@@ -28,7 +28,6 @@ import {
 import { getCoursePath } from '../learn.routes'
 
 import { CourseCurriculum } from './course-curriculum'
-import { PromoCourse } from './promo-course'
 import styles from './CourseDetailsPage.module.scss'
 
 const CourseDetailsPage: FC<{}> = () => {
@@ -155,7 +154,7 @@ const CourseDetailsPage: FC<{}> = () => {
         )
     }
 
-    function getFooter(): ReactNode {
+    function getProviderCredits(): ReactNode {
 
         if (!resourceProvider) {
             return undefined
@@ -190,7 +189,7 @@ const CourseDetailsPage: FC<{}> = () => {
                             <CourseTitle
                                 size='lg'
                                 title={course.title}
-                                credits={course.resourceProvider.name}
+                                provider={course.resourceProvider.name}
                                 trackType={certificate?.certificationCategory.track}
                             />
 
@@ -204,9 +203,7 @@ const CourseDetailsPage: FC<{}> = () => {
                             {getDescription()}
                             {getPrerequisites()}
                             {getCompletionSuggestion()}
-                            <div className={styles['coming-soon']}>
-                                <PromoCourse />
-                            </div>
+                            {getProviderCredits()}
                         </div>
 
                         <div className={styles.aside}>
@@ -220,7 +217,6 @@ const CourseDetailsPage: FC<{}> = () => {
                             />
                         </div>
                     </div>
-                    {getFooter()}
                 </>
             )}
         </ContentLayout>
