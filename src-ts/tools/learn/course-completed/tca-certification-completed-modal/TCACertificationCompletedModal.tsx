@@ -45,7 +45,7 @@ const TCACertificationCompletedModal: FC<TCACertificationCompletedModalProps>
         >
             <>
                 <h2 className='details'>
-                    You have Successfully Completed the
+                    You have successfully completed the
                     {' '}
                     {props.certification.title}
                     !

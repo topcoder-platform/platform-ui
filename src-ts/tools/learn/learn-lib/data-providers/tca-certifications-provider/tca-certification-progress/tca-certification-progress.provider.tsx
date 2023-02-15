@@ -81,7 +81,7 @@ export function useTCACertificationCheckCompleted(
 
     return {
         certification: (
-            data?.topcoderCertificationStatus.status === 'completed' ? (
+            data?.topcoderCertificationStatus?.status === 'completed' ? (
                 data?.topcoderCertificationStatus.certification
             ) : undefined
         ),
