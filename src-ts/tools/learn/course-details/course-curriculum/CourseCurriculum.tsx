@@ -51,7 +51,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
 
     const status: string = props.progress?.status ?? UserCertificationProgressStatus.inititialized
     const completedPercentage: number = (props.progress?.courseProgressPercentage ?? 0) / 100
-    const inProgress: boolean = status === UserCertificationProgressStatus.inProgress || !!props.progress?.currentLesson
+    const inProgress: boolean = status === UserCertificationProgressStatus.inProgress
     const isCompleted: boolean = status === UserCertificationProgressStatus.completed
 
     /**
@@ -125,17 +125,16 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         }
 
         let progress: LearnUserCertificationProgress | undefined = props.progress
-        if (!props.progress?.id) {
-            progress = await userCertificationProgressStartAsync(
-                props.profile.userId,
-                props.course.certificationId,
-                props.course.id,
-                {
-                    lesson: props.course.modules[0].lessons[0].dashedName,
-                    module: props.course.modules[0].dashedName,
-                },
-            )
-        }
+        // start and mark progress object as "in progress"
+        progress = await userCertificationProgressStartAsync(
+            props.profile.userId,
+            props.course.certificationId,
+            props.course.id,
+            {
+                lesson: props.course.modules[0].lessons[0].dashedName,
+                module: props.course.modules[0].dashedName,
+            },
+        )
 
         progress = await userCertificationProgressUpdateAsync(
             progress!.id,
