@@ -1,3 +1,4 @@
+import classNames from 'classnames'
 import { FC } from 'react'
 
 import { type PerkItem } from '../data/perks.data'
@@ -7,11 +8,13 @@ import styles from './PerksSection.module.scss'
 
 interface PerksSectionProps {
     items: Array<PerkItem>
+    title?: string
+    style?: 'clear'
 }
 
 const PerksSection: FC<PerksSectionProps> = (props: PerksSectionProps) => (
-    <div className={styles.wrap}>
-        <h2>Why certify with Topcoder?</h2>
+    <div className={classNames(styles.wrap, props.style && styles[props.style])}>
+        <h2>{props.title ?? 'Why certify with Topcoder?'}</h2>
         <svg width='0' height='0'>
             <defs>
                 <linearGradient

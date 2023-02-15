@@ -2,6 +2,7 @@
 import { EnvironmentConfigModel } from './environment-config.model'
 
 const COMMUNITY_WEBSITE: string = 'https://www.topcoder-dev.com'
+const TCA_WEBSITE: string = 'https://platform-ui.topcoder-dev.com'
 
 export const EnvironmentConfigDefault: EnvironmentConfigModel = {
     ANALYTICS: {
@@ -42,6 +43,7 @@ export const EnvironmentConfigDefault: EnvironmentConfigModel = {
         BLOG_PAGE: `${COMMUNITY_WEBSITE}/blog`,
         CHALLENGES_PAGE: `${COMMUNITY_WEBSITE}/challenges`,
         GIGS_PAGE: `${COMMUNITY_WEBSITE}/gigs`,
+        TCA: `${TCA_WEBSITE}`,
         THRIVE_PAGE: `${COMMUNITY_WEBSITE}/thrive`,
         USER_PROFILE: `${COMMUNITY_WEBSITE}/members`,
         WP_CONTENT: `${COMMUNITY_WEBSITE}/wp-content`,

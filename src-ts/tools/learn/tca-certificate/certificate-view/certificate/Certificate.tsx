@@ -1,6 +1,7 @@
 import { FC, MutableRefObject } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import classNames from 'classnames'
+import moment from 'moment'
 
 import { LearnConfig } from '../../../learn-config'
 import { TCAcademyLogoWhiteSvg, TCLogoSvg } from '../../../../../lib'
@@ -10,6 +11,7 @@ import styles from './Certificate.module.scss'
 
 interface CertificateProps {
     certification: TCACertification
+    completionUuid?: null | string
     completedDate?: string
     displaySignature?: boolean
     elRef?: MutableRefObject<HTMLElement | any>
@@ -24,6 +26,11 @@ const Certificate: FC<CertificateProps> = (props: CertificateProps) => {
     const certificateType: TCACertificateType = props.certification.certificationCategory?.track ?? 'DEV'
 
     const displaySignature: boolean = props.displaySignature ?? true
+
+    // TODO: revisit this when certs expirations are defined, now just +1 year
+    const expireDate: string = moment(props.completedDate || new Date())
+        .add(1, 'year')
+        .format('MMM D, YYYY')
 
     const elementSelector: { [attr: string]: string } = {
         [LearnConfig.CERT_ELEMENT_SELECTOR.attribute]: LearnConfig.CERT_ELEMENT_SELECTOR.value,
@@ -72,10 +79,10 @@ const Certificate: FC<CertificateProps> = (props: CertificateProps) => {
                                         <span className='ultra-small-medium'>{props.completedDate}</span>
                                         <span>Valid through</span>
                                         <span className={classNames('ultra-small-medium', styles.gridSeparator)}>
-                                            {props.completedDate}
+                                            {expireDate}
                                         </span>
                                         <span>Serial Number</span>
-                                        <span className='ultra-small-medium'>{'12345'}</span>
+                                        <span className='ultra-small-medium'>{props.completionUuid}</span>
                                         <span>Validate at</span>
                                         <span className='ultra-small-medium'>{props.validateLink}</span>
                                     </div>

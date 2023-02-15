@@ -122,10 +122,13 @@ export async function onSubmitAsync<T extends FormValue>(
 
     return savePromise
         .then(() => {
-            const safeSuccessMessage: string = !!successMessage
-                ? successMessage as string
-                : `Your ${shortName || 'data'} has been saved.`
-            toast.success(safeSuccessMessage)
+            if (successMessage !== false) {
+                const safeSuccessMessage: string = !!successMessage
+                    ? successMessage as string
+                    : `Your ${shortName || 'data'} has been saved.`
+                toast.success(safeSuccessMessage)
+            }
+
             onSuccess?.()
         })
         .catch(error => Promise.reject(error.response?.data?.result?.content ?? error.message ?? error))

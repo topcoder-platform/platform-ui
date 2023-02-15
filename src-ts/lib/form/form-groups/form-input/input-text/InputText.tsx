@@ -23,6 +23,7 @@ export interface InputTextProps {
     readonly onBlur?: (event: FocusEvent<HTMLInputElement>) => void
     readonly onChange: (event: FocusEvent<HTMLInputElement>) => void
     readonly placeholder?: string
+    readonly readonly?: boolean
     readonly spellCheck?: boolean
     readonly tabIndex: number
     readonly type: InputTextTypes
@@ -53,6 +54,7 @@ const InputText: FC<InputTextProps> = (props: InputTextProps) => {
                 onChange={props.onChange}
                 name={props.name}
                 placeholder={props.placeholder}
+                readOnly={props.readonly}
                 spellCheck={!!props.spellCheck}
                 tabIndex={props.tabIndex}
                 type={props.type || 'text'}
