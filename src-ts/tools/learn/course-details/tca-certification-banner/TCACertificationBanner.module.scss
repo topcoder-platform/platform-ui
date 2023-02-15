@@ -1,0 +1,43 @@
+@import '../../../../lib/styles/includes';
+
+.wrap {
+    border: $border dashed $blue-140;
+    border-radius: $space-sm;
+
+    padding: $space-xxl;
+}
+
+.header {
+    display: flex;
+    gap: $space-lg;
+    align-items: flex-start;
+
+    svg {
+        @include icon-size(47);
+    }
+
+    &Content {
+        :global(.overline) {
+            color: $blue-140;
+        }
+
+        :global(.body-main-bold) {
+            margin-top: $space-xs;
+        }
+    }
+}
+
+.desc {
+    margin-top: $space-lg;
+}
+
+.link {
+    display: block;
+    margin-top: $space-lg;
+    font-family: $font-roboto;
+    font-size: 12px;
+    line-height: 14px;
+    font-weight: $font-weight-bold;
+    color: $turq-160;
+    text-transform: uppercase;
+}

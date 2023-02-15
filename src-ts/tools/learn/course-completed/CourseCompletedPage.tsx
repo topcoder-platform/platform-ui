@@ -118,7 +118,7 @@ const CourseCompletedPage: FC<{}> = () => {
                                     <CourseTitle
                                         size='xl'
                                         title={courseData.title}
-                                        credits={courseData.resourceProvider.name}
+                                        provider={courseData.resourceProvider.name}
                                         trackType={certification?.certificationCategory.track}
                                     />
                                 </div>
