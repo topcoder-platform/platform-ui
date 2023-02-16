@@ -100,8 +100,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
 
     const handlePrint: () => Promise<void> = useCertificatePrint(certificateElRef, certificationTitle)
 
-    // TODO: update this to use `completionUuid`
-    const validateLink: string = getTCACertificationValidationUrl(props.certification, props.profile.handle)
+    const validateLink: string = getTCACertificationValidationUrl(enrollment?.completionUuid as string)
 
     const handleLinkClick: () => void = useCallback(() => {
         window.open(validateLink, 'blank')
