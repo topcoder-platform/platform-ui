@@ -16,8 +16,9 @@ import {
 import {
     CourseBadge,
     TCACertificateType,
-    TCACertificationValidationData,
-    useValidateTCACertification,
+    TCACertification,
+    TCACertificationEnrollmentProviderData,
+    useTCACertificationEnrollment,
 } from '../../learn-lib'
 import { EnvironmentConfig } from '../../../../config'
 import { Certificate } from '../certificate-view/certificate'
@@ -36,13 +37,13 @@ const ValidateTCACertificate: FC<{}> = () => {
 
     const [profileReady, setProfileReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
-    // Fetch Enrollment status & progress
     const {
-        certification,
         enrollment,
         ready: certReady,
-    }: TCACertificationValidationData
-        = useValidateTCACertification(routeParams.certification as string, routeParams.memberHandle as string)
+    }: TCACertificationEnrollmentProviderData
+    = useTCACertificationEnrollment(routeParams.completionUuid as string)
+
+    const certification: TCACertification | undefined = enrollment?.topcoderCertification
 
     const courses: any = certification?.certificationResources
 
@@ -51,7 +52,7 @@ const ValidateTCACertificate: FC<{}> = () => {
 
     const coursesGridItems: ReactNode[] | undefined
         = useMemo(() => courses?.map((course: any) => (
-            <div className={styles.courseCard}>
+            <div className={styles.courseCard} key={course.freeCodeCampCertification.fccId}>
                 <CourseBadge type={certification?.certificationCategory.track as TCACertificateType} />
                 <p className='body-main-bold'>{course.freeCodeCampCertification.title}</p>
             </div>
@@ -59,17 +60,17 @@ const ValidateTCACertificate: FC<{}> = () => {
 
     // TODO: update this to use `completionUuid`
     const validateLink: string
-        = getTCACertificationValidationUrl(routeParams.certification as string, routeParams.memberHandle as string)
+        = getTCACertificationValidationUrl(routeParams.completionUuid as string)
 
     useEffect(() => {
-        if (routeParams.memberHandle) {
-            profileGetPublicAsync(routeParams.memberHandle)
+        if (enrollment?.userHandle) {
+            profileGetPublicAsync(enrollment.userHandle)
                 .then(userProfile => {
                     setProfile(userProfile)
                     setProfileReady(true)
                 })
         }
-    }, [routeParams.memberHandle, setProfileReady])
+    }, [enrollment, setProfileReady])
 
     function visitFullProfile(): void {
         window.open(`${EnvironmentConfig.TOPCODER_URLS.USER_PROFILE}/${profile?.handle}`, '_blank')
@@ -84,7 +85,6 @@ const ValidateTCACertificate: FC<{}> = () => {
                     <div
                         className={classNames(
                             styles.hero,
-                            // TODO: check on API response if category is expanded
                             styles[`hero-${certification.certificationCategory?.track.toLowerCase() || 'dev'}`],
                         )}
                     >
@@ -127,8 +127,9 @@ const ValidateTCACertificate: FC<{}> = () => {
                                 <div className={styles.heroCert}>
                                     <Certificate
                                         certification={certification}
-                                        completedDate={enrollment?.completedAt as unknown as string || '1.1.2023'}
+                                        completedDate={enrollment?.completedAt as unknown as string}
                                         userName={enrollment?.userName}
+                                        completionUuid={routeParams.completionUuid}
                                         validateLink={validateLink}
                                         viewStyle='small-container'
                                     />

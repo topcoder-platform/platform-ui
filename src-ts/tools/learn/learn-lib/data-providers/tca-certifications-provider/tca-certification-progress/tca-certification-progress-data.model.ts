@@ -1,3 +1,5 @@
+import { TCACertificationEnrollmentBase } from '../tca-certification-enrollment-base.model'
+
 import { TCACertificationProgress } from './tca-certification-progress.model'
 
 export interface TCACertificationProgressProviderData {
@@ -10,7 +12,7 @@ export interface TCACertificationProgressProviderData {
 }
 
 export interface TCACertificationEnrollmentProviderData {
-    enrollment: TCACertificationProgress | undefined
+    enrollment: TCACertificationEnrollmentBase | TCACertificationProgress | undefined
     error: boolean
     loading: boolean
     ready: boolean

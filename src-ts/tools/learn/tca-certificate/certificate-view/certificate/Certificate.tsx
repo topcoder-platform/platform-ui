@@ -27,6 +27,9 @@ const Certificate: FC<CertificateProps> = (props: CertificateProps) => {
 
     const displaySignature: boolean = props.displaySignature ?? true
 
+    const completedDate: string = moment(props.completedDate || new Date())
+        .format('MMM D, YYYY')
+
     // TODO: revisit this when certs expirations are defined, now just +1 year
     const expireDate: string = moment(props.completedDate || new Date())
         .add(1, 'year')
@@ -76,7 +79,7 @@ const Certificate: FC<CertificateProps> = (props: CertificateProps) => {
                                     />
                                     <div className={styles.certInfoLeftData}>
                                         <span>Date of certification</span>
-                                        <span className='ultra-small-medium'>{props.completedDate}</span>
+                                        <span className='ultra-small-medium'>{completedDate}</span>
                                         <span>Valid through</span>
                                         <span className={classNames('ultra-small-medium', styles.gridSeparator)}>
                                             {expireDate}

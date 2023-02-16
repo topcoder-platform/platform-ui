@@ -127,10 +127,9 @@ export function getUserTCACertificateUrl(
 }
 
 export function getTCACertificationValidationUrl(
-    certification: string,
-    handle: string,
+    completionUuid: string,
 ): string {
-    return `${EnvironmentConfig.TOPCODER_URLS.TCA}/${LEARN_PATHS.tcaCertifications}/${certification}/${handle}`
+    return `${EnvironmentConfig.TOPCODER_URLS.TCA}/${LEARN_PATHS.root}/${completionUuid}`
 }
 
 export function getAuthenticateAndEnrollRoute(): string {
@@ -209,8 +208,8 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
             {
                 children: [],
                 element: <ValidateTCACertificate />,
-                id: 'Validate TCA Certification',
-                route: 'tca-certifications/:certification/:memberHandle',
+                id: 'Validate TCA Certification - aka hiring manager view',
+                route: ':completionUuid',
             },
         ],
         element: <LandingLearn />,
