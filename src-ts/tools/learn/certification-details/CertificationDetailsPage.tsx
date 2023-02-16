@@ -2,34 +2,25 @@ import { Dispatch, FC, ReactNode, SetStateAction, useContext, useState } from 'r
 import { Params, useParams } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { PageSubheaderPortalId } from '../../../config'
 import {
     TCACertificationProgressProviderData,
     TCACertificationProviderData,
     useGetTCACertification,
     useGetTCACertificationProgress,
     useGetUserCertifications,
-    useLearnBreadcrumb,
     UserCertificationsProviderData,
-    WaveHero,
 } from '../learn-lib'
 import {
-    Breadcrumb,
-    BreadcrumbItemModel,
     Button,
-    ContentLayout,
-    LoadingSpinner,
-    Portal,
     profileContext,
     ProfileContextData,
-    textFormatGetSafeString,
 } from '../../../lib'
 
-import { HeroTitle } from './hero-title'
 import { CertificationDetailsSidebar } from './certification-details-sidebar'
 import { CertificationCurriculum } from './certification-curriculum'
 import { EnrollCtaBtn } from './enroll-cta-btn'
 import { CertifDetailsContent, CertificationDetailsModal } from './certification-details-modal'
+import { PageLayout } from './page-layout'
 import styles from './CertificationDetailsPage.module.scss'
 
 const CertificationDetailsPage: FC<{}> = () => {
@@ -68,14 +59,6 @@ const CertificationDetailsPage: FC<{}> = () => {
     const isEnrolled: boolean = progressReady && !!progress
     const isNotEnrolledView: boolean = !progressReady || !progress
 
-    const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
-        {
-
-            name: textFormatGetSafeString(certification?.title),
-            url: '',
-        },
-    ])
-
     function renderCertificationCurriculum(): ReactNode {
         return (
             <div className={classNames(styles['text-section'], isEnrolled && styles['no-top'])}>
@@ -92,73 +75,52 @@ const CertificationDetailsPage: FC<{}> = () => {
         setCertifDetailsModalOpen(d => !d)
     }
 
-    function renderContents(): ReactNode {
-        return (
-            <>
-                <Breadcrumb items={breadcrumb} />
-
-                <Portal portalId={PageSubheaderPortalId}>
-                    <div className={styles['hero-wrap']}>
-                        <WaveHero
-                            title={(
-                                <HeroTitle certification={certification} certTitle={certification.title} />
-                            )}
-                            theme='grey'
-                            text={certification.introText}
-                        >
-                            {!isEnrolled && (
-                                <EnrollCtaBtn certification={certification.dashedName} />
-                            )}
-                        </WaveHero>
-                        <CertificationDetailsSidebar
-                            certification={certification}
-                            enrolled={isEnrolled}
-                            profile={profile}
-                            certProgress={progress}
+    function renderMainContent(): ReactNode {
+        return ready ? (
+            isNotEnrolledView ? (
+                <CertifDetailsContent certification={certification} sectionClassName={styles['text-section']}>
+                    {renderCertificationCurriculum()}
+                </CertifDetailsContent>
+            ) : (
+                <>
+                    {renderCertificationCurriculum()}
+                    <div className={styles['text-section']}>
+                        <Button
+                            buttonStyle='link'
+                            label='Certification Details'
+                            onClick={toggleCertifDetailsModal}
                         />
                     </div>
-                </Portal>
+                    <CertificationDetailsModal
+                        isOpen={isCertifDetailsModalOpen}
+                        onClose={toggleCertifDetailsModal}
+                        certification={certification}
+                    />
+                </>
+            )
+        ) : null
+    }
 
-                {isNotEnrolledView ? (
-                    <CertifDetailsContent certification={certification} sectionClassName={styles['text-section']}>
-                        {renderCertificationCurriculum()}
-                    </CertifDetailsContent>
-                ) : (
-                    <>
-                        {renderCertificationCurriculum()}
-                        <div className={styles['text-section']}>
-                            <Button
-                                buttonStyle='link'
-                                label='Certification Details'
-                                onClick={toggleCertifDetailsModal}
-                            />
-                        </div>
-                    </>
-                )}
-            </>
+    function renderSidebar(): ReactNode {
+        return (
+            <CertificationDetailsSidebar
+                certification={certification}
+                enrolled={isEnrolled}
+                profile={profile}
+                certProgress={progress}
+            />
         )
     }
 
     return (
-        <ContentLayout
-            contentClass={styles.contentWrap}
-            outerClass={styles.outerContentWrap}
-            innerClass={styles.innerContentWrap}
-        >
-            {!ready ? (
-                <div className={styles.wrap}>
-                    <LoadingSpinner />
-                </div>
-            ) : renderContents()}
-
-            {certificationReady && (
-                <CertificationDetailsModal
-                    isOpen={isCertifDetailsModalOpen}
-                    onClose={toggleCertifDetailsModal}
-                    certification={certification}
-                />
+        <PageLayout
+            sidebarContents={renderSidebar()}
+            mainContent={renderMainContent()}
+            certification={certification}
+            heroCTA={!isEnrolled && (
+                <EnrollCtaBtn certification={certification.dashedName} />
             )}
-        </ContentLayout>
+        />
     )
 }
 

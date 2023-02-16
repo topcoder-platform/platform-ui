@@ -15,7 +15,7 @@ interface CertificatePreviewProps {
 const CertificatePreview: FC<CertificatePreviewProps> = (props: CertificatePreviewProps) => {
     const certificateWrapRef: MutableRefObject<HTMLDivElement | any> = useRef()
 
-    useCertificateScaling(certificateWrapRef, 780, 395)
+    useCertificateScaling(certificateWrapRef, 780, 780)
 
     function getPlaceholder(): ReactNode {
         return (

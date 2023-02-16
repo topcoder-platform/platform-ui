@@ -6,12 +6,12 @@
         gap: $space-xxxxl;
         position: relative;
 
-        @include gtelg {
-            padding-right: calc(40vw + $space-xxl);
+        @media (min-width: 1151px) {
+            padding-right: calc(445px + $space-xxl);
         }
 
-        @include gtexl {
-            padding-right: calc(445px + $space-xxl);
+        @include gtelg {
+            padding-right: calc(40vw + $space-xxl);
         }
     }
 }
@@ -30,7 +30,7 @@
             padding-right: calc(40vw + $space-xxl * 2);
         }
 
-        @include gtexl {
+        @media (min-width: 1151px) {
             padding-right: calc(445px + $space-xxxl * 2);
         }
     }

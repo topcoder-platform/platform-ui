@@ -34,6 +34,9 @@
         &.modal-body {
             width: 90vw;
             max-width: 1000px;
+            @include ltemd {
+                width: 100vw;
+            }
         }
 
         @include ltemd {
