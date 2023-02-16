@@ -18,7 +18,7 @@
         margin-right: -$space-lg;
     }
 
-    @include ltelg {
+    @media (max-width: 1150px) {
         padding: $space-xxxxl $space-lg $space-lg;
     }
 }
@@ -37,6 +37,11 @@
         display: flex;
         align-items: baseline;
         gap: $space-lg;
+
+        @media (max-width: 1250px) {
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
 
         @include ltelg {
             margin-left: 0;
@@ -94,7 +99,7 @@
     padding: $space-xxxxl;
 
     margin-top: $space-xxl;
-    @include ltelg {
+    @media (max-width: 1150px) {
         padding: $space-lg;
     }
 }

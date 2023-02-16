@@ -14,7 +14,7 @@
         bottom: 0;
     }
 
-    @include lg {
+    @media (min-width: $lg-min) and (max-width: 1150px){
         width: 40vw;
     }
 

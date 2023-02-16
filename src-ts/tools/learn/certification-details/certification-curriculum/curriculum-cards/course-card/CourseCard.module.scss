@@ -9,8 +9,11 @@
     color: $black-60;
 
     margin-top: $space-xs;
-    @include ltelg {
+    @media (max-width: 1150px) {
         flex-wrap: wrap;
+    }
+    
+    @include ltelg {
         gap: 0 5px;
         margin-top: 0;
     }

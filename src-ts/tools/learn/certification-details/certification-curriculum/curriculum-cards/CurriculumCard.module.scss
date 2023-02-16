@@ -8,7 +8,7 @@
     display: flex;
     gap: $space-xxl;
 
-    @include ltelg {
+    @media (max-width: 1150px) {
         padding: $space-lg;
         flex-direction: column;
         gap: $space-lg;
@@ -26,7 +26,7 @@
     flex: 0 0 auto;
     display: flex;
 
-    @include ltelg {
+    @media (max-width: 1150px) {
         display: none;
     }
 }
@@ -109,7 +109,12 @@
     .cta {
         margin-left: auto;
         justify-content: flex-end;
-        @include ltelg {
+
+        @media (max-width: 1250px) {
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 1150px) {
             display: none;
         }
     }
@@ -118,12 +123,11 @@
 .cta, .bottomActions, .bottomCta {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
     gap: $space-sm;
 }
 
 .bottomActions {
-    @include gtexl {
+    @media (min-width: 1151px) {
         display: none;
     }
 }
