@@ -1,4 +1,4 @@
-import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useMemo, useState } from 'react'
+import { Dispatch, FC, MutableRefObject, ReactNode, SetStateAction, useEffect, useMemo, useRef, useState } from 'react'
 import { Params, useParams } from 'react-router-dom'
 import classNames from 'classnames'
 
@@ -18,6 +18,7 @@ import {
     TCACertificateType,
     TCACertification,
     TCACertificationEnrollmentProviderData,
+    useCertificateScaling,
     useTCACertificationEnrollment,
 } from '../../learn-lib'
 import { EnvironmentConfig } from '../../../../config'
@@ -29,6 +30,7 @@ import styles from './ValidateTCACertificate.module.scss'
 const ValidateTCACertificate: FC<{}> = () => {
 
     const routeParams: Params<string> = useParams()
+    const certificateWrapRef: MutableRefObject<HTMLDivElement | any> = useRef()
 
     const [profile, setProfile]: [
         UserProfile | undefined,
@@ -71,6 +73,8 @@ const ValidateTCACertificate: FC<{}> = () => {
                 })
         }
     }, [enrollment, setProfileReady])
+
+    useCertificateScaling(profile && certification && certificateWrapRef, 780, 780)
 
     function visitFullProfile(): void {
         window.open(`${EnvironmentConfig.TOPCODER_URLS.USER_PROFILE}/${profile?.handle}`, '_blank')
@@ -126,12 +130,13 @@ const ValidateTCACertificate: FC<{}> = () => {
                                 </div>
                                 <div className={styles.heroCert}>
                                     <Certificate
+                                        elRef={certificateWrapRef}
                                         certification={certification}
                                         completedDate={enrollment?.completedAt as unknown as string}
                                         userName={enrollment?.userName}
                                         completionUuid={routeParams.completionUuid}
                                         validateLink={validateLink}
-                                        viewStyle='small-container'
+                                        viewStyle='large-container'
                                     />
                                 </div>
                             </div>
