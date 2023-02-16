@@ -127,7 +127,7 @@ const ValidateTCACertificate: FC<{}> = () => {
                                 <div className={styles.heroCert}>
                                     <Certificate
                                         certification={certification}
-                                        completedDate={enrollment?.completedAt as unknown as string || '1.1.2023'}
+                                        completedDate={enrollment?.completedAt as unknown as string}
                                         userName={enrollment?.userName}
                                         completionUuid={routeParams.completionUuid}
                                         validateLink={validateLink}

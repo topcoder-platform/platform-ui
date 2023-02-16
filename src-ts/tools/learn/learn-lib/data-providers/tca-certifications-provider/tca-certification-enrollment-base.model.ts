@@ -8,7 +8,7 @@ export interface TCACertificationEnrollmentBase {
     userHandle: string
     userName: string
     status: 'enrolled'
-    completedAt: null | Date
+    completedAt: null | Date | string
     completionUuid: undefined | null | string
     createdAt: Date
     updatedAt: Date
