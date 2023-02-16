@@ -12,7 +12,7 @@ import {
     TCACertificationProgress,
     TCACertificationProviderBase,
 } from '../../../learn-lib'
-import { getTCACertificationPath } from '../../../learn.routes'
+import { getTCACertificateUrl, getTCACertificationPath } from '../../../learn.routes'
 
 import styles from './TCCertCard.module.scss'
 
@@ -41,9 +41,20 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
 
     const isEnrolled: boolean = props.progress?.status === 'enrolled'
 
+    const isCompleted: boolean = props.progress?.status === 'completed'
+
     function renderCta(): ReactNode {
-        if (!isEnrolled) {
+        if (!isEnrolled && !isCompleted) {
             return getCtaBtn('secondary', 'Details', getTCACertificationPath(dashedName))
+        }
+
+        if (isCompleted) {
+            return (
+                <div className={styles.certCTAButtons}>
+                    {getCtaBtn('primary', 'View Certificate', getTCACertificateUrl(dashedName))}
+                    {getCtaBtn('secondary', 'Details', getTCACertificationPath(dashedName))}
+                </div>
+            )
         }
 
         return getCtaBtn('primary', 'Resume', getTCACertificationPath(dashedName))
@@ -62,7 +73,7 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
     }
 
     return (
-        <div className={styles.wrap}>
+        <div className={classNames(styles.wrap, isCompleted && styles.completed)}>
             <div className={styles.cardHeader}>
                 <CertificateBadgeIcon
                     type={props.certification.certificationCategory.track}
@@ -130,7 +141,11 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                 {props.certification.description.length > EXCERPT_TEXT_LEN ? '...' : ''}
             </p>
 
-            <SkillTags skills={skills} courseKey={dashedName} />
+            <SkillTags
+                skills={skills}
+                courseKey={dashedName}
+                theme={isCompleted ? 'gray' : 'white'}
+            />
 
             <ProvidersLogoList
                 className={styles.providers}
