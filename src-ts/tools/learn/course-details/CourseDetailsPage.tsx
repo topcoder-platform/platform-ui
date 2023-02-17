@@ -198,6 +198,7 @@ const CourseDetailsPage: FC<{}> = () => {
                             />
 
                             <TCACertificationBanner
+                                userId={profile?.userId}
                                 className={styles.tcaCertBanner}
                                 fccCertificateId={certificate.id}
                             />

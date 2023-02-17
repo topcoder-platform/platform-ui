@@ -13,7 +13,11 @@ import {
     useHoursEstimateToRange,
     UserCertificationProgressStatus,
 } from '../../../../learn-lib'
-import { getCertificatePath, getCoursePath } from '../../../../learn.routes'
+import {
+    getCertificatePath,
+    getCoursePath,
+    getLessonPathFromCurrentLesson,
+} from '../../../../learn.routes'
 import CurriculumCard from '../CurriculumCard'
 
 import styles from './CourseCard.module.scss'
@@ -58,9 +62,10 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                         buttonStyle='primary'
                         size='xs'
                         label='Resume'
-                        route={getCoursePath(
+                        route={getLessonPathFromCurrentLesson(
                             props.provider,
                             props.certification.certification,
+                            props.progress?.currentLesson,
                         )}
                     />
                 )
