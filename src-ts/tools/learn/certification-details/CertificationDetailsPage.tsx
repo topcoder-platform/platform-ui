@@ -118,7 +118,7 @@ const CertificationDetailsPage: FC<{}> = () => {
             mainContent={renderMainContent()}
             certification={certification}
             heroCTA={!isEnrolled && (
-                <EnrollCtaBtn certification={certification.dashedName} />
+                <EnrollCtaBtn certification={certification?.dashedName} />
             )}
         />
     )
