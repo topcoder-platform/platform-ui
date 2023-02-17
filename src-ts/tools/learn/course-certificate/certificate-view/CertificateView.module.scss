@@ -45,15 +45,35 @@
 
 .certificate-wrap {
     aspect-ratio: 1.25715;
-    width: 880px;
-
-    background: #fff;
-
-    box-shadow: 0 20px 36px rgba($tc-black, 0.22);
+    width: 100%;
+    max-width: 880px;
+    position: relative;
 
     &:global(.large-container) {
         aspect-ratio: unset;
         @include socialPreviewImg;
+    }
+
+    body:global(.canvas-clone) & {
+        transform: none!important;
+    }
+}
+
+.certifInnerWrap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 880px;
+    aspect-ratio: inherit;
+
+    background: #fff;
+    box-shadow: 0 20px 36px rgba($tc-black, 0.22);
+
+    > * {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
     }
 }
 

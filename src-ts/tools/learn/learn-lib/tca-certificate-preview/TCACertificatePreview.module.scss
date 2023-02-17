@@ -1,0 +1,23 @@
+.wrap {
+    flex: 1 1 auto;
+    aspect-ratio: 1.25715;
+    position: relative;
+
+    body:global(.canvas-clone) & {
+        transform: none!important;
+    }
+}
+
+.inner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 880px;
+    aspect-ratio: inherit;
+
+    > * {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+}

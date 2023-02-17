@@ -13,18 +13,17 @@ import {
 } from '../../../../lib'
 import {
     ActionButton,
+    TCACertificatePreview,
     TCACertification,
     TCACertificationValidationData,
     useCertificateCanvas,
     useCertificatePrint,
-    useCertificateScaling,
     useGetUserTCACompletedCertificationsMOCK,
     UserCompletedTCACertificationsProviderData,
     useValidateTCACertification,
 } from '../../learn-lib'
 import { getTCACertificationPath, getTCACertificationValidationUrl, getUserTCACertificateSsr } from '../../learn.routes'
 
-import { Certificate } from './certificate'
 import styles from './CertificateView.module.scss'
 
 export type CertificateViewStyle = 'large-container' | undefined
@@ -42,7 +41,6 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const navigate: NavigateFunction = useNavigate()
     const tcaCertificationPath: string = getTCACertificationPath(props.certification)
     const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
-    const certificateWrapRef: MutableRefObject<HTMLDivElement | any> = useRef()
 
     const {
         certification,
@@ -80,8 +78,6 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const readyAndCompletedCertification: boolean = useMemo(() => (
         ready && hasCompletedTheCertification
     ), [hasCompletedTheCertification, ready])
-
-    useCertificateScaling(ready ? certificateWrapRef : undefined)
 
     const handleBackBtnClick: () => void = useCallback(() => {
         navigate(tcaCertificationPath)
@@ -127,17 +123,14 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                                 />
                             </div>
                         )}
-                        <div
-                            className={classNames(styles['certificate-wrap'], props.viewStyle)}
-                            ref={certificateWrapRef}
-                        >
-                            <Certificate
+                        <div className={classNames(styles['certificate-wrap'], props.viewStyle)}>
+                            <TCACertificatePreview
                                 certification={certification as TCACertification}
-                                completionUuid={enrollment?.completionUuid}
+                                completionUuid={enrollment?.completionUuid ?? ''}
                                 userName={enrollment?.userName}
                                 tcHandle={props.profile.handle}
                                 completedDate={enrollment?.completedAt as string}
-                                elRef={certificateElRef}
+                                certificateElRef={certificateElRef}
                                 validateLink={validateLink}
                                 viewStyle={props.viewStyle}
                             />

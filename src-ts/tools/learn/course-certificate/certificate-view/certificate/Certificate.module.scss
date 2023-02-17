@@ -137,14 +137,14 @@
 
     svg {
         width: auto;
-        height: 100%;
     }
 }
 
 .divider {
     width: $border;
     background: $black-10;
-    margin: 0 $space-xxxxl;
+    margin: 0 $space-lg;
+    flex: 0 0 auto;
 }
 
 .vendor {
