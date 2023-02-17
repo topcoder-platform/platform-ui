@@ -4,6 +4,7 @@ import classNames from 'classnames'
 
 import {
     TCACertificationProgressProviderData,
+    TCACertificationProgressStatus,
     TCACertificationProviderData,
     useGetTCACertification,
     useGetTCACertificationProgress,
@@ -58,6 +59,7 @@ const CertificationDetailsPage: FC<{}> = () => {
 
     const isEnrolled: boolean = progressReady && !!progress
     const isNotEnrolledView: boolean = !progressReady || !progress
+    const isCompleted: boolean = progress?.status === TCACertificationProgressStatus.completed
 
     function renderCertificationCurriculum(): ReactNode {
         return (
@@ -65,6 +67,7 @@ const CertificationDetailsPage: FC<{}> = () => {
                 <CertificationCurriculum
                     certification={certification}
                     isEnrolled={isEnrolled}
+                    isCompleted={isCompleted}
                     certsProgress={certsProgress}
                 />
             </div>
