@@ -8,8 +8,7 @@
 
     > svg {
         display: block;
-        width: 96px;
-        height: 96px;
+        @include icon-size(96);
     }
 
     :global(.body-large-bold) {
@@ -17,5 +16,13 @@
             margin-top: $space-sm;
             display: block;
         }
+    }
+}
+
+.completedIcon {
+    margin-left: auto;
+    svg {
+        @include icon-size(52);
+        color: $turq-75;
     }
 }

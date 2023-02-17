@@ -2,7 +2,10 @@ import { TCACertification } from '../tca-certification.model'
 
 import { TCAFccCertificationProgress } from './tca-fcc-certification-progress.model'
 
-export type TCACertificationProgressStatus = 'enrolled' | 'completed'
+export enum TCACertificationProgressStatus {
+    enrolled = 'enrolled',
+    completed = 'completed',
+}
 
 export interface TCACertificationProgress {
     id: number
