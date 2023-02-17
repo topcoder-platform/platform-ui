@@ -46,7 +46,8 @@
                 align-items: center;
                 margin-bottom: $space-mx;
 
-                >svg {
+                >svg,
+                >img {
                     max-width: 120px;
                     max-height: 120px;
                 }
