@@ -52,7 +52,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         = useValidateTCACertification(props.certification, props.profile.handle)
 
     function getCertTitle(user: string): string {
-        return `${user} - ${certification?.title} Certification`
+        return `${user} - ${certification?.title}`
     }
 
     const certUrl: string = getUserTCACertificateSsr(
