@@ -61,6 +61,11 @@
     }
 }
 
+.completed {
+    background: $tc-white;
+    border: 1px solid $black-20;
+}
+
 .separatorBar {
     border-bottom: 2px solid $black-10;
     margin: $space-lg 0;
@@ -80,6 +85,12 @@
 
 .cardBottom {
     margin-top: $space-lg;
+
+    .certCTAButtons {
+        a:first-child {
+            margin-right: $space-sm;
+        }
+    }
 }
 
 .infoText {
