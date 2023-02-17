@@ -1,7 +1,7 @@
 import { Dispatch, FC, SetStateAction, useEffect } from 'react'
 
 import { BaseModal, Button, useLocalStorage } from '../../../../lib'
-import { TCACertification } from '../../learn-lib'
+import { TCACertification } from '../data-providers'
 import { getTCACertificateUrl } from '../../learn.routes'
 
 import styles from './TCACertificationCompletedModal.module.scss'

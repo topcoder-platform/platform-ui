@@ -23,11 +23,11 @@ import {
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
     useTCACertificationCheckCompleted,
+    useTcaCertificationModal,
 } from '../learn-lib'
 import { getCertificatePath, getCoursePath, LEARN_PATHS, rootRoute } from '../learn.routes'
 
 import { ReactComponent as StarsSvg } from './stars.svg'
-import { useTcaCertificationModal } from './tca-certification-completed-modal'
 import styles from './CourseCompletedPage.module.scss'
 
 const CourseCompletedPage: FC<{}> = () => {
