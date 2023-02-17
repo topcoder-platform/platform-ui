@@ -24,6 +24,7 @@ import {
     TCACertificationProviderData,
     useGetTCACertification,
     useGetTCACertificationProgress,
+    useTcaCertificationModal,
 } from '../../learn-lib'
 import { perks } from '../certification-details-modal/certif-details-content/data'
 import { PerksSection } from '../perks-section'
@@ -65,6 +66,11 @@ const EnrollmentPage: FC<{}> = () => {
 
     const ready: boolean = profileReady && certificationReady && progressReady && !!profile
 
+    const tcaCertificationCompletedModal: ReactNode = useTcaCertificationModal(
+        progress ? certification.dashedName : undefined,
+        navToCertificationDetails,
+    )
+
     if (ready && profile && !userInfo.current) {
         userInfo.current = { ...profile }
     }
@@ -95,9 +101,15 @@ const EnrollmentPage: FC<{}> = () => {
             })
     }, [certification?.id, profile, setCertificateProgress])
 
+    function navToCertificationDetails(): void {
+        navigate(getTCACertificationPath(certification.dashedName))
+    }
+
     function closeEnrolledModal(): void {
         setIsEnrolledModalOpen(false)
-        navigate(getTCACertificationPath(certification.dashedName))
+        if (!tcaCertificationCompletedModal) {
+            navToCertificationDetails()
+        }
     }
 
     function renderMainContent(): ReactNode {
@@ -114,6 +126,7 @@ const EnrollmentPage: FC<{}> = () => {
                     certification={certification}
                     onClose={closeEnrolledModal}
                 />
+                {!isEnrolledModalOpen && tcaCertificationCompletedModal}
             </>
         ) : null
     }
