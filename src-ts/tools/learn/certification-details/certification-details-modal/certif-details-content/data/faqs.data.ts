@@ -15,8 +15,10 @@ export const FAQs: Array<FaqEntry> = [
     {
         description: `
             <p>
-                No, currently we don’t have any time constraints.
-                Once you purchase the certification, you can complete it at your own pace.
+                During the free trial period, you will have to complete the certification during the free trial
+                period to be awarded the certificate.
+                When the free trial period is over, and you end up purchasing the certificate,
+                you can complete it at your own pace.
             </p>
         `,
         title: 'After I enroll, do I have to complete the certification within a certain amount of time?',
@@ -33,7 +35,7 @@ export const FAQs: Array<FaqEntry> = [
     {
         description: `
             <p>
-                Yes, that is our plan!  Stay tuned for more developments on this.
+                Yes, that is our plan! Stay tuned for more developments on this.
             </p>
         `,
         title: 'Will you eventually have a premium plan where I can have access to multiple certifications?',
