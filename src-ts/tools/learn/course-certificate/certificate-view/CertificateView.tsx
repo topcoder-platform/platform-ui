@@ -97,7 +97,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         ready && hasCompletedTheCertification
     ), [hasCompletedTheCertification, ready])
 
-    useCertificateScaling(ready ? certificateWrapRef : undefined)
+    useCertificateScaling(ready ? certificateWrapRef : undefined, 880, 880)
 
     const handleBackBtnClick: () => void = useCallback(() => {
         navigate(coursePath)
@@ -141,16 +141,18 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                             className={classNames(styles['certificate-wrap'], props.viewStyle)}
                             ref={certificateWrapRef}
                         >
-                            <Certificate
-                                course={course?.title}
-                                userName={userName}
-                                tcHandle={props.profile.handle}
-                                provider={course?.resourceProvider.name}
-                                completedDate={completedCertificate?.completedDate ?? ''}
-                                elRef={certificateElRef}
-                                type={certificate?.certificationCategory.track}
-                                viewStyle={props.viewStyle}
-                            />
+                            <div className={styles.certifInnerWrap}>
+                                <Certificate
+                                    course={course?.title}
+                                    userName={userName}
+                                    tcHandle={props.profile.handle}
+                                    provider={course?.resourceProvider.name}
+                                    completedDate={completedCertificate?.completedDate ?? ''}
+                                    elRef={certificateElRef}
+                                    type={certificate?.certificationCategory.track}
+                                    viewStyle={props.viewStyle}
+                                />
+                            </div>
                         </div>
                         {!props.hideActions && (
                             <div className={styles['btns-wrap']}>

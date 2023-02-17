@@ -1,19 +1,22 @@
+import { LearnModelBase } from '../../../functions'
 import { TCACertification } from '../tca-certification.model'
 
 import { TCAFccCertificationProgress } from './tca-fcc-certification-progress.model'
 
 export type TCACertificationProgressStatus = 'enrolled' | 'completed'
 
-export interface TCACertificationProgress {
+export interface TCACertificationProgress extends LearnModelBase {
     id: number
+    completionUuid: string
+    coursesCount: number
     topcoderCertification: TCACertification
-    topcoderCertificationId: number
     status: TCACertificationProgressStatus
     completedAt: null | Date
-    createdAt: Date
-    updatedAt: Date
-    certificationProgress: 0
+    certificationProgress: number
     resourceProgresses: [{
         fccCertificationProgress: TCAFccCertificationProgress
     }]
+    userHandle: string
+    userId: number
+    userName: string
 }

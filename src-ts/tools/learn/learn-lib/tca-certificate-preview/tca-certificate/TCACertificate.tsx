@@ -3,13 +3,15 @@ import { QRCodeSVG } from 'qrcode.react'
 import classNames from 'classnames'
 import moment from 'moment'
 
-import { LearnConfig } from '../../../learn-config'
 import { TCAcademyLogoWhiteSvg, TCLogoSvg } from '../../../../../lib'
-import { CertificateBadgeIcon, DougSigSvg, TCACertificateType, TCACertification } from '../../../learn-lib'
+import { LearnConfig } from '../../../learn-config'
+import { TCACertificateType, TCACertification } from '../../data-providers'
+import { CertificateBadgeIcon } from '../../dynamic-icons'
+import { DougSigSvg } from '../../svgs'
 
-import styles from './Certificate.module.scss'
+import styles from './TCACertificate.module.scss'
 
-interface CertificateProps {
+interface TCACertificateProps {
     certification: TCACertification
     completionUuid?: null | string
     completedDate?: string
@@ -21,7 +23,7 @@ interface CertificateProps {
     viewStyle?: 'large-container' | 'small-container'
 }
 
-const Certificate: FC<CertificateProps> = (props: CertificateProps) => {
+const TCACertificate: FC<TCACertificateProps> = (props: TCACertificateProps) => {
     // TODO: add cross track theme/type support
     const certificateType: TCACertificateType = props.certification.certificationCategory?.track ?? 'DEV'
 
@@ -109,4 +111,4 @@ const Certificate: FC<CertificateProps> = (props: CertificateProps) => {
     )
 }
 
-export default Certificate
+export default TCACertificate
