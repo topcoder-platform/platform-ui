@@ -55,6 +55,11 @@
                     max-height: 120px;
                 }
 
+                >img {
+                    border: 3px solid $tc-white;
+                    border-radius: 50%;
+                }
+
                 .memberInfo {
                     display: flex;
                     flex-direction: column;
