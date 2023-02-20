@@ -7,7 +7,7 @@
     padding-top: calc($space-mx * 2);
     color: $tc-white;
 
-    @include ltemd {
+    @include ltelg {
         padding-top: $space-mx;
     }
 
@@ -34,7 +34,7 @@
         overflow: hidden;
         justify-content: center;
 
-        @include ltemd {
+        @include ltelg {
             flex-direction: column;
         }
 
@@ -104,7 +104,7 @@
             flex: 1 1 auto;
             min-width: 360px;
             max-width: 480px;
-            @include ltemd {
+            @include ltelg {
                 max-width: none;
             }
         }
@@ -116,7 +116,7 @@
     flex-direction: column;
     margin-top: calc($space-mx + $space-mx);
 
-    @include ltemd {
+    @include ltelg {
         margin-top: $space-mx;
     }
 
@@ -143,7 +143,7 @@
             gap: $space-xl;
             margin-top: $space-xxl;
 
-            @include ltemd {
+            @include ltelg {
                 grid-template-columns: 1fr;
             }
 
@@ -167,12 +167,28 @@
 .modalView {
     .hero {
         padding-top: $space-lg;
+        max-height: 360px;
+
+        @include ltesm {
+            max-height: none;
+        }
+
 
         .heroInner {
             margin-bottom: 0;
+            flex-direction: row;
+
+            @include ltesm {
+                flex-direction: column;
+            }
 
             .heroLeft {
-                transform: scale(0.6)translate(-250px, -80px);
+                transform: scale(0.67);
+                transform-origin: 0 0;
+
+                @include ltesm {
+                    transform: none;
+                }
             }
         }
     }

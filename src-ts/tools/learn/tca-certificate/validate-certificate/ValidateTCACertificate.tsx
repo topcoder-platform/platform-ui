@@ -108,7 +108,7 @@ const ValidateTCACertificate: FC<{}> = () => {
             <LoadingSpinner hide={profileReady && certReady} />
 
             {profile && certification && (
-                <div className={classNames('full-height-frame', styles.modalView)} ref={wrapElRef}>
+                <div className={classNames('full-height-frame', isModalView ? styles.modalView : '')} ref={wrapElRef}>
                     <div
                         className={classNames(
                             styles.hero,
@@ -159,14 +159,6 @@ const ValidateTCACertificate: FC<{}> = () => {
                                         completionUuid={routeParams.completionUuid}
                                         validateLink={validateLink}
                                     />
-                                    {/* <Certificate
-                                        certification={certification}
-                                        completedDate={enrollment?.completedAt as unknown as string}
-                                        userName={enrollment?.userName}
-                                        completionUuid={routeParams.completionUuid}
-                                        validateLink={validateLink}
-                                        viewStyle='small-container'
-                                    /> */}
                                 </div>
                             </div>
                         </ContentLayout>
