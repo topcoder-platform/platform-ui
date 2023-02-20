@@ -3,23 +3,25 @@ import { FC, ReactNode, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
+import { IconOutline, IconSolid } from '../../../../lib'
 import {
     CertificateBadgeIcon,
+    LearnUserCertificationProgress,
     TCACertification,
     TCACertificationProgressProviderData,
     TCACertificationsProviderData,
     useGetAllTCACertifications,
     useGetTCACertificationProgress,
+    useGetUserCertifications,
+    UserCertificationProgressStatus,
+    UserCertificationsProviderData,
 } from '../../learn-lib'
 import { getTCACertificationPath } from '../../learn.routes'
 
 import styles from './TCACertificationBanner.module.scss'
-import { IconOutline, IconSolid } from '../../../../lib'
 
-export interface TCACertificationBannerProps {
-    userId?: number
-    className?: string
-    fccCertificateId?: string
+interface ProgressByIdCollection {
+    [key: string]: LearnUserCertificationProgress
 }
 
 function getStatusBox(icon: ReactNode, text: string, theme: string = 'gray'): ReactNode {
@@ -33,6 +35,12 @@ function getStatusBox(icon: ReactNode, text: string, theme: string = 'gray'): Re
             </div>
         </div>
     )
+}
+
+export interface TCACertificationBannerProps {
+    userId?: number
+    className?: string
+    fccCertificateId?: string
 }
 
 const TCACertificationBanner: FC<TCACertificationBannerProps> = (props: TCACertificationBannerProps) => {
@@ -50,11 +58,27 @@ const TCACertificationBanner: FC<TCACertificationBannerProps> = (props: TCACerti
     // Fetch Enrollment status & progress
     const {
         progress: certifProgress,
+        ready: certifProgressReady,
     }: TCACertificationProgressProviderData = useGetTCACertificationProgress(
         props.userId as unknown as string,
         certification?.dashedName as string,
         { enabled: !!certification && !!props.userId },
     )
+
+    // Fetch the User's progress for all the tca certification's courses
+    // so we can show their progress even before they enroll with the certification
+    const {
+        progresses: certsProgress,
+    }: UserCertificationsProviderData = useGetUserCertifications('freeCodeCamp', {
+        enabled: certifProgressReady && !certifProgress,
+    })
+
+    const progressById: ProgressByIdCollection = useMemo(() => (
+        certsProgress?.reduce((all, progress) => {
+            all[progress.certificationId] = progress
+            return all
+        }, {} as ProgressByIdCollection) ?? {}
+    ), [certsProgress])
 
     if (!certification) {
         return <></>
@@ -63,27 +87,22 @@ const TCACertificationBanner: FC<TCACertificationBannerProps> = (props: TCACerti
     const certifUrl: string = getTCACertificationPath(certification.dashedName)
 
     function renderStatusBox(): ReactNode {
-
-        if (!certifProgress) {
-            return (
-                <Link
-                    className={styles.link}
-                    title='Learn more'
-                    to={certifUrl}
-                >
-                    Learn more
-                </Link>
-            )
+        if (!certification) {
+            return <></>
         }
 
-        const coursesCount: number = certifProgress.coursesCount
-        const completedCoursesCount: number = Math.round(coursesCount * (certifProgress.certificationProgress / 100))
+        const coursesCount: number = certification.coursesCount
+        const completedCoursesCount: number = certifProgress
+            ? Math.round(coursesCount * (certifProgress.certificationProgress / 100))
+            : certification.certificationResources.filter(d => (
+                progressById[d.freeCodeCampCertification.fccId]?.status === UserCertificationProgressStatus.completed
+            )).length
 
         if (!completedCoursesCount) {
-            return getStatusBox(
+            return certifProgress ? getStatusBox(
                 <IconOutline.DotsCircleHorizontalIcon />,
                 'Begin working towards earning this Topcoder Certification by starting this course today!',
-            )
+            ) : <></>
         }
 
         if (completedCoursesCount === 1) {
@@ -130,6 +149,16 @@ const TCACertificationBanner: FC<TCACertificationBannerProps> = (props: TCACerti
             )}
 
             {renderStatusBox()}
+
+            {!certifProgress && (
+                <Link
+                    className={styles.link}
+                    title='Learn more'
+                    to={certifUrl}
+                >
+                    Learn more
+                </Link>
+            )}
         </div>
     )
 }
