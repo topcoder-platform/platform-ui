@@ -25,8 +25,15 @@ const UserTCACertificate: FC<{}> = () => {
     const [profileReady, setProfileReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
     const certificationParam: string = routeParams.certification ?? ''
-
     const tcaCertificationPath: string = getTCACertificationPath(certificationParam)
+
+    function hideSiblings(el: HTMLElement): void {
+        [].forEach.call(el.parentElement?.children ?? [], (c: HTMLElement) => {
+            if (c !== el) {
+                Object.assign(c.style, { display: 'none' })
+            }
+        })
+    }
 
     useEffect(() => {
         if (routeParams.memberHandle) {
@@ -44,11 +51,8 @@ const UserTCACertificate: FC<{}> = () => {
             return
         }
 
-        [].forEach.call(el.parentElement?.children ?? [], (c: HTMLElement) => {
-            if (c !== el) {
-                Object.assign(c.style, { display: 'none' })
-            }
-        })
+        hideSiblings(el)
+        hideSiblings(el.parentElement as HTMLElement)
         el.classList.add(styles['full-screen-cert'])
     })
 

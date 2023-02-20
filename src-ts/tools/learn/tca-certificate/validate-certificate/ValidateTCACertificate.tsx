@@ -25,13 +25,13 @@ import {
 } from '../../../../lib'
 import {
     CourseBadge,
+    TCACertificatePreview,
     TCACertificateType,
     TCACertification,
     TCACertificationEnrollmentProviderData,
     useTCACertificationEnrollment,
 } from '../../learn-lib'
 import { EnvironmentConfig } from '../../../../config'
-import { Certificate } from '../certificate-view/certificate'
 import { getTCACertificationValidationUrl } from '../../learn.routes'
 import { hideSiblings } from '../../learn-lib/functions'
 
@@ -152,14 +152,21 @@ const ValidateTCACertificate: FC<{}> = () => {
                                     <div className={styles.certTitle}>{certification.title}</div>
                                 </div>
                                 <div className={styles.heroCert}>
-                                    <Certificate
+                                    <TCACertificatePreview
+                                        certification={certification}
+                                        userName={enrollment?.userName}
+                                        completedDate={enrollment?.completedAt ?? undefined}
+                                        completionUuid={routeParams.completionUuid}
+                                        validateLink={validateLink}
+                                    />
+                                    {/* <Certificate
                                         certification={certification}
                                         completedDate={enrollment?.completedAt as unknown as string}
                                         userName={enrollment?.userName}
                                         completionUuid={routeParams.completionUuid}
                                         validateLink={validateLink}
                                         viewStyle='small-container'
-                                    />
+                                    /> */}
                                 </div>
                             </div>
                         </ContentLayout>

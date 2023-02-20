@@ -14,6 +14,7 @@ export function useCertificateCanvas(
             // when canvas iframe is ready, remove text gradients
             // as they're not supported in html2canvas
             onclone: (doc: Document) => {
+                doc.body.classList.add('canvas-clone');
                 [].forEach.call(doc.querySelectorAll('.grad'), (el: HTMLDivElement) => {
                     el.classList.remove('grad')
                 })
@@ -22,7 +23,7 @@ export function useCertificateCanvas(
             scale: 1,
             // use the same (ideal) window size when rendering the certificate
             windowHeight: 700,
-            windowWidth: 1024,
+            windowWidth: 1250,
         })
     }, [certificateElRef])
 

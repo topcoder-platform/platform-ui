@@ -28,18 +28,21 @@
     }
 
     .heroInner {
-        display: grid;
-        grid-template-columns: 750px 1fr;
+        display: flex;
         gap: $space-mx;
         margin-bottom: calc($space-mx * 2); 
+        overflow: hidden;
+        justify-content: center;
 
         @include ltemd {
-            grid-template-columns: 1fr;
+            flex-direction: column;
         }
 
         .heroLeft {
             display: flex;
             flex-direction: column;
+            max-width: 750px;
+            flex: 1 1 auto;
 
             .member {
                 display: flex;
@@ -98,6 +101,12 @@
 
         .heroCert {
             filter: drop-shadow(0px 20px 36px rgba(0, 0, 0, 0.22));
+            flex: 1 1 auto;
+            min-width: 360px;
+            max-width: 480px;
+            @include ltemd {
+                max-width: none;
+            }
         }
     }
 }

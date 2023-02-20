@@ -1,4 +1,5 @@
 import { MutableRefObject, useCallback } from 'react'
+
 import { useCertificateCanvas } from '../use-certificate-canvas-hook'
 
 export function useCertificatePrint(
