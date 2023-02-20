@@ -1,5 +1,15 @@
-import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useMemo, useState } from 'react'
-import { Params, useParams } from 'react-router-dom'
+import {
+    Dispatch,
+    FC,
+    MutableRefObject,
+    ReactNode,
+    SetStateAction,
+    useEffect,
+    useLayoutEffect,
+    useMemo, useRef,
+    useState,
+} from 'react'
+import { Params, useParams, useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import {
@@ -23,12 +33,18 @@ import {
 import { EnvironmentConfig } from '../../../../config'
 import { Certificate } from '../certificate-view/certificate'
 import { getTCACertificationValidationUrl } from '../../learn.routes'
+import { hideSiblings } from '../../learn-lib/functions'
 
 import styles from './ValidateTCACertificate.module.scss'
 
 const ValidateTCACertificate: FC<{}> = () => {
 
+    const wrapElRef: MutableRefObject<HTMLElement | any> = useRef()
+
     const routeParams: Params<string> = useParams()
+    const [queryParams]: [URLSearchParams, any] = useSearchParams()
+
+    const isModalView: boolean = queryParams.get('view-style') === 'modal'
 
     const [profile, setProfile]: [
         UserProfile | undefined,
@@ -41,7 +57,7 @@ const ValidateTCACertificate: FC<{}> = () => {
         enrollment,
         ready: certReady,
     }: TCACertificationEnrollmentProviderData
-    = useTCACertificationEnrollment(routeParams.completionUuid as string)
+        = useTCACertificationEnrollment(routeParams.completionUuid as string)
 
     const certification: TCACertification | undefined = enrollment?.topcoderCertification
 
@@ -72,6 +88,17 @@ const ValidateTCACertificate: FC<{}> = () => {
         }
     }, [enrollment, setProfileReady])
 
+    useLayoutEffect(() => {
+        const el: HTMLElement = wrapElRef.current
+        if (!el || !isModalView) {
+            return
+        }
+
+        hideSiblings(el)
+        hideSiblings(el.parentElement as HTMLElement)
+
+    })
+
     function visitFullProfile(): void {
         window.open(`${EnvironmentConfig.TOPCODER_URLS.USER_PROFILE}/${profile?.handle}`, '_blank')
     }
@@ -81,14 +108,14 @@ const ValidateTCACertificate: FC<{}> = () => {
             <LoadingSpinner hide={profileReady && certReady} />
 
             {profile && certification && (
-                <div className='full-height-frame'>
+                <div className={classNames('full-height-frame', styles.modalView)} ref={wrapElRef}>
                     <div
                         className={classNames(
                             styles.hero,
                             styles[`hero-${certification.certificationCategory?.track.toLowerCase() || 'dev'}`],
                         )}
                     >
-                        <ContentLayout>
+                        <ContentLayout outerClass={isModalView ? styles.contentOuter : ''}>
                             <div className={styles.heroInner}>
                                 <div className={styles.heroLeft}>
                                     <div className={styles.member}>
@@ -138,7 +165,7 @@ const ValidateTCACertificate: FC<{}> = () => {
                         </ContentLayout>
                     </div>
 
-                    <ContentLayout>
+                    <ContentLayout outerClass={isModalView ? styles.contentOuter : ''}>
                         <div className={styles.wrap}>
                             <h2>
                                 {'What '}
@@ -153,12 +180,15 @@ const ValidateTCACertificate: FC<{}> = () => {
                                     {coursesGridItems}
                                 </div>
                             </div>
-
-                            <Button
-                                buttonStyle='link'
-                                label='Visit Full Profile'
-                                onClick={visitFullProfile}
-                            />
+                            {
+                                !isModalView && (
+                                    <Button
+                                        buttonStyle='link'
+                                        label='Visit Full Profile'
+                                        onClick={visitFullProfile}
+                                    />
+                                )
+                            }
                         </div>
                     </ContentLayout>
                 </div>

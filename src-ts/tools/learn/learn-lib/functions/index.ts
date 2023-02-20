@@ -5,3 +5,4 @@ export {
     postAsync as learnXhrPostAsync,
     putAsync as learnXhrPutAsync,
 } from './learn-xhr.functions'
+export { hideSiblings } from './hide-siblings'

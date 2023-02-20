@@ -154,3 +154,29 @@
         }
     }
 }
+
+.modalView {
+    .hero {
+        padding-top: $space-lg;
+
+        .heroInner {
+            margin-bottom: 0;
+
+            .heroLeft {
+                transform: scale(0.6)translate(-250px, -80px);
+            }
+        }
+    }
+
+    .contentOuter {
+        max-width: none;
+
+        >div {
+            max-width: none !important;
+        }
+
+        .courses {
+            margin-bottom: 0;
+        }
+    }
+}
