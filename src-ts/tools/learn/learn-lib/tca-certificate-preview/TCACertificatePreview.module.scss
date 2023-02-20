@@ -1,6 +1,8 @@
+@import '../../../../lib/styles/includes';
+
 .wrap {
     flex: 1 1 auto;
-    aspect-ratio: 1.25715;
+    aspect-ratio: $tca-certif-aspect-ratio;
     position: relative;
     
     body:global(.canvas-clone) & {
@@ -13,7 +15,7 @@
     top: 0;
     left: 0;
     width: 880px;
-    aspect-ratio: inherit;
+    aspect-ratio: $tca-certif-aspect-ratio;
 
     > * {
         position: absolute;
