@@ -1,25 +1,24 @@
 import { FC, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { Button, IconOutline, IconSolid, Tooltip, UserProfile } from '../../../../lib'
+import { Button, IconOutline, IconSolid, Tooltip } from '../../../../lib'
 import {
     CompletionTimeRange,
     LearnLevelIcon,
     ProvidersLogoList,
     StickySidebar,
+    TCACertificatePreview,
     TCACertification,
     TCACertificationProgress,
 } from '../../learn-lib'
 import { EnrollCtaBtn } from '../enroll-cta-btn'
-import { CertificatePreview } from '../certificate-preview'
-import { getTCACertificateUrl } from '../../learn.routes'
+import { getTCACertificateUrl, getTCACertificationValidationUrl } from '../../learn.routes'
 
 import styles from './CertificationDetailsSidebar.module.scss'
 
 interface CertificationDetailsSidebarProps {
     certification: TCACertification
     enrolled: boolean
-    profile?: UserProfile
     certProgress?: TCACertificationProgress
 }
 
@@ -38,13 +37,18 @@ function renderTooltipContents(icon: ReactNode, text: Array<string>): ReactNode 
 const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props: CertificationDetailsSidebarProps) => {
     const completed: boolean = !!props.certProgress?.completedAt
 
+    const validateLink: string
+        = getTCACertificationValidationUrl(props.certProgress?.completionUuid as string ?? '')
+
     return (
         <StickySidebar>
             <div className={styles['certificate-placeholder']}>
-                <CertificatePreview
+                <TCACertificatePreview
                     certification={props.certification}
-                    profile={props.profile}
-                    completedDate={props.certProgress?.completedAt ?? undefined}
+                    userName={props.certProgress?.userName}
+                    tcHandle={props.certProgress?.userHandle}
+                    completedDate={props.certProgress?.completedAt as unknown as string ?? ''}
+                    validateLink={validateLink}
                 />
             </div>
             {completed && props.certification && (

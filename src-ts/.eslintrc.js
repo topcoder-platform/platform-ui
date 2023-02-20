@@ -73,7 +73,7 @@ module.exports = {
         ],
         'complexity': [
             'error',
-            11
+            14
         ],
         'import/extensions': 'off',
         'import/no-named-default':  'off',

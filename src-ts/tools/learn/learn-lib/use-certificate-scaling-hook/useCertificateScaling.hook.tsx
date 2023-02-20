@@ -15,11 +15,12 @@ export function useCertificateScaling(
             }
 
             const certificateEl: HTMLDivElement = certificateRef.current
-            const parentWidth: number = certificateEl.parentElement?.offsetWidth ?? 0
+            const parentWidth: number = certificateEl?.offsetWidth ?? 0
             // 975 and 1250 are the original container sizes,
             // and we're dividing by that to get the needed zoom level
             const ratioSize: number = window.innerWidth <= 745 ? originalSizeSm : originalSizeLg
-            Object.assign(certificateEl.style, { zoom: Math.min(1, parentWidth / ratioSize) })
+            const scaleLevel: number = Math.min(1, parentWidth / ratioSize)
+            Object.assign(certificateEl.style, { transform: `scale(${scaleLevel})`, transformOrigin: '0 0' })
         }
 
         window.addEventListener('resize', handleResize, false)

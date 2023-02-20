@@ -11,10 +11,15 @@
     display: flex;
     height: 100%;
     color: $black-100;
+    background-repeat: no-repeat;
+    background-size: cover;
+
+    :global(.large-container) & {
+        background-size: 100% 100%;
+    }
 
     &-dev {
-        background: url('./assets/bg-dev.png') no-repeat;
-        background-size: cover;
+        background-image: url('./assets/bg-dev.png');
 
         .certTitle {
             color: $tc-dev-track-color;
@@ -26,8 +31,7 @@
     }
 
     &-datascience {
-        background: url('./assets/bg-datascience.png') no-repeat;
-        background-size: cover;
+        background-image: url('./assets/bg-datascience.png');
 
         .certTitle {
             color: $tc-datascience-track-color;
@@ -39,8 +43,7 @@
     }
 
     &-design {
-        background: url('./assets/bg-design.png') no-repeat;
-        background-size: cover;
+        background-image: url('./assets/bg-design.png');
 
         .certTitle {
             color: $tc-design-track-color;
@@ -52,8 +55,7 @@
     }
 
     &-qa {
-        background: url('./assets/bg-qa.png') no-repeat;
-        background-size: cover;
+        background-image: url('./assets/bg-qa.png');
 
         .certTitle {
             color: $tc-qa-track-color;
