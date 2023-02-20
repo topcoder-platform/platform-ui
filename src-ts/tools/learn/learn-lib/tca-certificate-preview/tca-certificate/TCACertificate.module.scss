@@ -175,6 +175,12 @@
     }
 }
 
+:global(.large-container) {
+    .certWrap {
+        max-width: 800px;
+    }
+}
+
 // Small view styles
 :global(.small-container) {
     max-width: 420px;
