@@ -17,9 +17,6 @@ import {
     CoursesProviderData,
     CourseTitle,
     ResourceProviderData,
-    TCACertification,
-    TCACertificationsProviderData,
-    useGetAllTCACertifications,
     useGetCertification,
     useGetCourses,
     useGetResourceProvider,
@@ -31,8 +28,8 @@ import {
 import { getCoursePath } from '../learn.routes'
 
 import { CourseCurriculum } from './course-curriculum'
-import styles from './CourseDetailsPage.module.scss'
 import { TCACertificationBanner } from './tca-certification-banner'
+import styles from './CourseDetailsPage.module.scss'
 
 const CourseDetailsPage: FC<{}> = () => {
 
@@ -198,6 +195,7 @@ const CourseDetailsPage: FC<{}> = () => {
                             />
 
                             <TCACertificationBanner
+                                userId={profile?.userId}
                                 className={styles.tcaCertBanner}
                                 fccCertificateId={certificate.id}
                             />

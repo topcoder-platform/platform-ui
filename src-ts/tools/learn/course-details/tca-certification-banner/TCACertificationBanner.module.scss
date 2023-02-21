@@ -5,6 +5,10 @@
     border-radius: $space-sm;
 
     padding: $space-xxl;
+
+    @include ltemd {
+        padding: $space-lg;
+    }
 }
 
 .header {
@@ -14,6 +18,7 @@
 
     svg {
         @include icon-size(47);
+        flex: 0 0 auto;
     }
 
     &Content {
@@ -25,6 +30,12 @@
             margin-top: $space-xs;
         }
     }
+}
+
+.certTitle {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-xs;
 }
 
 .desc {
@@ -40,4 +51,46 @@
     font-weight: $font-weight-bold;
     color: $turq-160;
     text-transform: uppercase;
+}
+
+.externalLink {
+    display: flex;
+    height: 24px;
+    align-items: center;
+    color: $turq-160;
+
+    svg {
+        @include icon-lg;
+    }
+}
+
+.statusBox {
+    display: flex;
+    align-items: center;
+
+    background: $black-5;
+    border-radius: $space-sm;
+
+    margin-top: $space-lg;
+    padding: $space-sm;
+    padding-left: 0;
+
+    .icon {
+        display: flex;
+        width: 40px;
+        height: 24px;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+
+        color: $black-40;
+
+        svg {
+            @include icon-xxl;
+        }
+
+        &:global(.green) {
+            color: $turq-75;
+        }
+    }
 }
