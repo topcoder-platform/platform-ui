@@ -1,4 +1,5 @@
 import { LearnModelBase } from '../../../functions'
+import { UserCertificationProgressStatus } from '../../user-certifications-provider'
 import { TCACertification } from '../tca-certification.model'
 
 import { TCAFccCertificationProgress } from './tca-fcc-certification-progress.model'
@@ -17,6 +18,7 @@ export interface TCACertificationProgress extends LearnModelBase {
     completedAt: null | Date
     certificationProgress: number
     resourceProgresses: [{
+        status: UserCertificationProgressStatus,
         fccCertificationProgress: TCAFccCertificationProgress
     }]
     userHandle: string
