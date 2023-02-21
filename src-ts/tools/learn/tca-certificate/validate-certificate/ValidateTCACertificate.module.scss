@@ -188,9 +188,11 @@
         .heroInner {
             margin-bottom: 0;
             flex-direction: row;
+            padding-right: $space-mx;
 
             @include ltesm {
                 flex-direction: column;
+                padding-right: 0;
             }
 
             .heroLeft {
@@ -214,11 +216,6 @@
 
     .contentOuter {
         max-width: none;
-        padding-right: $space-mx;
-
-        @include ltesm {
-            padding-right: $space-lg;
-        }
 
         >div {
             max-width: none !important;
