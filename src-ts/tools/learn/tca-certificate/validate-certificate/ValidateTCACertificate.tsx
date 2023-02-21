@@ -144,8 +144,8 @@ const ValidateTCACertificate: FC<{}> = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    <p className='body-large'>
-                                        {profile.handle}
+                                    <p className={classNames(isModalView ? 'body-medium' : 'body-large')}>
+                                        {enrollment?.userName}
                                         {' '}
                                         has successfully met the requirements of the certification
                                     </p>
