@@ -58,7 +58,6 @@ const TCACertificationBanner: FC<TCACertificationBannerProps> = (props: TCACerti
     // Fetch Enrollment status & progress
     const {
         progress: certifProgress,
-        ready: certifProgressReady,
     }: TCACertificationProgressProviderData = useGetTCACertificationProgress(
         props.userId as unknown as string,
         certification?.dashedName as string,
@@ -69,9 +68,7 @@ const TCACertificationBanner: FC<TCACertificationBannerProps> = (props: TCACerti
     // so we can show their progress even before they enroll with the certification
     const {
         progresses: certsProgress,
-    }: UserCertificationsProviderData = useGetUserCertifications('freeCodeCamp', {
-        enabled: certifProgressReady && !certifProgress,
-    })
+    }: UserCertificationsProviderData = useGetUserCertifications('freeCodeCamp')
 
     const progressById: ProgressByIdCollection = useMemo(() => (
         certsProgress?.reduce((all, progress) => {
@@ -97,20 +94,19 @@ const TCACertificationBanner: FC<TCACertificationBannerProps> = (props: TCACerti
             : certification.certificationResources.filter(d => (
                 progressById[d.freeCodeCampCertification.fccId]?.status === UserCertificationProgressStatus.completed
             )).length
+        const inProgressCoursesCount: number = certification.certificationResources.filter(d => (
+            progressById[d.freeCodeCampCertification.fccId]?.status === UserCertificationProgressStatus.inProgress
+        )).length
 
         if (!completedCoursesCount) {
-            return certifProgress ? getStatusBox(
+            return inProgressCoursesCount ? getStatusBox(
+                <IconOutline.ClockIcon />,
+                `Good job! You are making progress with ${inProgressCoursesCount} of ${coursesCount} required courses.`,
+                'green',
+            ) : certifProgress ? getStatusBox(
                 <IconOutline.DotsCircleHorizontalIcon />,
                 'Begin working towards earning this Topcoder Certification by starting this course today!',
             ) : <></>
-        }
-
-        if (completedCoursesCount === 1) {
-            return getStatusBox(
-                <IconOutline.ClockIcon />,
-                `Good job! You are making progress with 1 of ${coursesCount} required courses.`,
-                'green',
-            )
         }
 
         return getStatusBox(
