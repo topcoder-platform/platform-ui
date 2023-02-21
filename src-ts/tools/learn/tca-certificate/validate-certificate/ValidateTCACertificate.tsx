@@ -145,7 +145,7 @@ const ValidateTCACertificate: FC<{}> = () => {
                                         </div>
                                     </div>
                                     <p className='body-large'>
-                                        {profile.handle}
+                                        {enrollment?.userName}
                                         {' '}
                                         has successfully met the requirements of the certification
                                     </p>

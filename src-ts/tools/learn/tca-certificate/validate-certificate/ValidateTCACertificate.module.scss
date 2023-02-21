@@ -58,6 +58,7 @@
                 >img {
                     border: 3px solid $tc-white;
                     border-radius: 50%;
+                    aspect-ratio: 1;
                 }
 
                 .memberInfo {
@@ -149,6 +150,10 @@
             margin-top: $space-xxl;
 
             @include ltelg {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            @include ltesm {
                 grid-template-columns: 1fr;
             }
 
@@ -171,8 +176,9 @@
 
 .modalView {
     .hero {
-        padding-top: $space-lg;
-        max-height: 360px;
+        padding-top: $space-mx;
+        max-height: 440px;
+        min-height: 380px;
 
         @include ltesm {
             max-height: none;
@@ -188,11 +194,24 @@
             }
 
             .heroLeft {
-                transform: scale(0.67);
-                transform-origin: 0 0;
+                .member {
+                    margin-bottom: $space-xxxxl;
 
-                @include ltesm {
-                    transform: none;
+                    >svg,
+                    >img {
+                        max-width: 88px;
+                        max-height: 88px;
+                    }
+                }
+
+                :global(p.body-large) {
+                    font-size: 20px;
+                    line-height: 26px;
+                }
+
+                .certTitle {
+                    font-size: 40px;
+                    line-height: 40px;
                 }
             }
         }
@@ -200,6 +219,11 @@
 
     .contentOuter {
         max-width: none;
+        padding-right: $space-mx;
+
+        @include ltesm {
+            padding-right: $space-lg;
+        }
 
         >div {
             max-width: none !important;
