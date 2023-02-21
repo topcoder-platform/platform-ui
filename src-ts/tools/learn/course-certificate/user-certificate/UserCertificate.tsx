@@ -8,6 +8,7 @@ import {
 } from '../../../../lib'
 import { getViewStyleParamKey } from '../../learn.routes'
 import { CertificateView, CertificateViewStyle } from '../certificate-view'
+import { hideSiblings } from '../../learn-lib/functions'
 
 import styles from './UserCertificate.module.scss'
 
@@ -25,14 +26,6 @@ const UserCertificate: FC<{}> = () => {
 
     const providerParam: string = routeParams.provider ?? ''
     const certificationParam: string = routeParams.certification ?? ''
-
-    function hideSiblings(el: HTMLElement): void {
-        [].forEach.call(el.parentElement?.children ?? [], (c: HTMLElement) => {
-            if (c !== el) {
-                Object.assign(c.style, { display: 'none' })
-            }
-        })
-    }
 
     useEffect(() => {
         if (routeParams.memberHandle) {
