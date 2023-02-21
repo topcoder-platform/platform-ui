@@ -8,6 +8,10 @@
     border-radius: 8px;
     overflow: auto;
 
+    @include ltesm {
+        padding: $space-xxl $space-lg;
+    }
+
     .cardHeader {
         display: flex;
         align-items: center;
@@ -29,6 +33,11 @@
             .cardSubWrap {
                 display: flex;
                 align-items: center;
+
+                @include ltexs {
+                    display: grid;
+                    grid-template-columns: 30px 1fr;
+                }
 
                 >svg {
                     margin-right: $space-xs;
@@ -63,7 +72,7 @@
 
 .completed {
     background: $tc-white;
-    border: 1px solid $black-20;
+    border: 2px solid $turq-75;
 }
 
 .separatorBar {
@@ -85,6 +94,29 @@
 
 .cardBottom {
     margin-top: $space-lg;
+
+    .completedCTAs {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+
+        @include ltesm {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .completedLabel {
+            background-color: $turq-75;
+            padding: $space-xs $space-sm;
+            border-radius: $space-xs;
+            color: $black-100;
+            font-weight: $font-weight-medium;
+
+            @include ltesm {
+                margin-top: $space-lg;
+            }
+        }
+    }
 
     .certCTAButtons {
         a:first-child {
