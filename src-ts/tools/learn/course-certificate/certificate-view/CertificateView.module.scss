@@ -44,7 +44,7 @@
 }
 
 .certificate-wrap {
-    aspect-ratio: 1.25715;
+    aspect-ratio: $tca-certif-aspect-ratio;
     width: 100%;
     max-width: 880px;
     position: relative;
@@ -65,7 +65,7 @@
     top: 0;
     left: 0;
     width: 880px;
-    aspect-ratio: inherit;
+    aspect-ratio: $tca-certif-aspect-ratio;
 
     background: #fff;
     box-shadow: 0 20px 36px rgba($tc-black, 0.22);
