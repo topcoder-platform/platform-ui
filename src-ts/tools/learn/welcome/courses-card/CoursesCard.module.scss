@@ -19,7 +19,7 @@
 
 .completed {
     background: $tc-white;
-    border: 1px solid $black-20;
+    border: 2px solid $turq-75;
 }
 
 .cardHeader {
@@ -47,6 +47,11 @@
         .subTitleWrap {
             display: flex;
             align-items: center;
+
+            @include ltexs {
+                display: grid;
+                grid-template-columns: 30px 1fr;
+            }
 
             >svg {
                 color: $blue-140;
@@ -102,6 +107,29 @@
 
     a:nth-child(2) {
         margin-left: $space-sm;
+    }
+
+    .completedCTAs {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+
+        @include ltexs {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .completedLabel {
+            background-color: $turq-75;
+            padding: $space-xs $space-sm;
+            border-radius: $space-xs;
+            color: $black-100;
+            font-weight: $font-weight-medium;
+
+            @include ltexs {
+                margin-top: $space-lg;
+            }
+        }
     }
 }
 

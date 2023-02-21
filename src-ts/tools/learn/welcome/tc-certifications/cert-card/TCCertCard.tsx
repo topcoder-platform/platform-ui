@@ -50,9 +50,12 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
 
         if (isCompleted) {
             return (
-                <div className={styles.certCTAButtons}>
-                    {getCtaBtn('primary', 'View Certificate', getTCACertificateUrl(dashedName))}
-                    {getCtaBtn('secondary', 'Details', getTCACertificationPath(dashedName))}
+                <div className={styles.completedCTAs}>
+                    <div className={styles.certCTAButtons}>
+                        {getCtaBtn('primary', 'View Certificate', getTCACertificateUrl(dashedName))}
+                        {getCtaBtn('secondary', 'Details', getTCACertificationPath(dashedName))}
+                    </div>
+                    <div className={styles.completedLabel}>Completed</div>
                 </div>
             )
         }

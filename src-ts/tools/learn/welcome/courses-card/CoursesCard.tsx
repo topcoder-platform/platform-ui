@@ -43,10 +43,14 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
         switch (status) {
             case UserCertificationProgressStatus.completed:
                 return (
-                    <>
-                        <Button buttonStyle='primary' size='xs' label='View Certificate' route={certifRoute} />
-                        <Button buttonStyle='secondary' size='xs' label='Details' route={detailsRoute} />
-                    </>
+                    <div className={styles.completedCTAs}>
+                        <div>
+                            <Button buttonStyle='primary' size='xs' label='View Certificate' route={certifRoute} />
+                            <Button buttonStyle='secondary' size='xs' label='Details' route={detailsRoute} />
+
+                        </div>
+                        <div className={styles.completedLabel}>Completed</div>
+                    </div>
                 )
             case UserCertificationProgressStatus.inProgress:
                 return <Button buttonStyle='primary' size='xs' label='Resume' route={resumeRoute} />
