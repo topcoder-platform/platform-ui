@@ -82,6 +82,15 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                     </span>
                     <span className='quote-main'>
                         <CompletionTimeRange range={props.certification.completionTimeRange} />
+                        <Tooltip
+                            content={renderTooltipContents(<IconSolid.ClockIcon />, [
+                                'Assuming 4 hour',
+                                'learning per day',
+                            ])}
+                            place='bottom'
+                            trigger={<IconOutline.InformationCircleIcon />}
+                            triggerOn='hover'
+                        />
                     </span>
                 </li>
                 {!props.certProgress && (

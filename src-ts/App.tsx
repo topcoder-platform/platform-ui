@@ -3,7 +3,7 @@ import { Routes } from 'react-router-dom'
 import { toast, ToastContainer } from 'react-toastify'
 
 import { Header } from './header'
-import { routeContext, RouteContextData } from './lib'
+import { routeContext, RouteContextData, useViewportUnitsFix } from './lib'
 
 const App: FC<{}> = () => {
 
@@ -11,6 +11,8 @@ const App: FC<{}> = () => {
 
     const routeElements: Array<ReactElement> = allRoutes
         .map(route => getRouteElement(route))
+
+    useViewportUnitsFix()
 
     return (
         <>
