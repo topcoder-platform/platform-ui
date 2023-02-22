@@ -4,6 +4,17 @@
 .wrap {
     background-color: $tc-white;
     height: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+.background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
 }
 
 // TODO: add cross track theme
@@ -19,8 +30,6 @@
     }
 
     &-dev {
-        background-image: url('./assets/bg-dev.png');
-
         .certTitle {
             color: $tc-dev-track-color;
         }
@@ -31,8 +40,6 @@
     }
 
     &-datascience {
-        background-image: url('./assets/bg-datascience.png');
-
         .certTitle {
             color: $tc-datascience-track-color;
         }
@@ -43,8 +50,6 @@
     }
 
     &-design {
-        background-image: url('./assets/bg-design.png');
-
         .certTitle {
             color: $tc-design-track-color;
         }
@@ -55,8 +60,6 @@
     }
 
     &-qa {
-        background-image: url('./assets/bg-qa.png');
-
         .certTitle {
             color: $tc-qa-track-color;
         }
