@@ -236,3 +236,10 @@
         }
     }
 }
+
+// print/download styles
+:global(.canvas-clone) {
+    .certText {
+        margin-bottom: $space-xxxl !important;
+    }
+}
