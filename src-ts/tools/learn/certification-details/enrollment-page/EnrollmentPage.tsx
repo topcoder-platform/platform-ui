@@ -6,6 +6,7 @@ import {
     SetStateAction,
     useCallback,
     useContext,
+    useEffect,
     useLayoutEffect,
     useRef,
     useState,
@@ -27,7 +28,6 @@ import {
     useGetTCACertification,
     useGetTCACertificationProgress,
     useTCACertificationCheckCompleted,
-    useTcaCertificationModal,
 } from '../../learn-lib'
 import { perks } from '../certification-details-modal/certif-details-content/data'
 import { PerksSection } from '../perks-section'
@@ -60,6 +60,7 @@ const EnrollmentPage: FC<{}> = () => {
     const {
         progress,
         ready: progressReady,
+        refetch: refetchProgress,
         setCertificateProgress,
     }: TCACertificationProgressProviderData = useGetTCACertificationProgress(
         profile?.userId as unknown as string,
@@ -72,15 +73,12 @@ const EnrollmentPage: FC<{}> = () => {
     const firstResourceProgress: TCACertificationProgress['resourceProgresses'][0] | undefined
         = progress?.resourceProgresses?.[0]
 
-    const { certification: tcaCertificationName }: TCACertificationCheckCompleted = useTCACertificationCheckCompleted(
+    const {
+        ready: certCheckReady,
+    }: TCACertificationCheckCompleted = useTCACertificationCheckCompleted(
         firstResourceProgress?.resourceProgressType ?? '',
         firstResourceProgress?.resourceProgressId ?? '',
         { enabled: !!firstResourceProgress?.resourceProgressType },
-    )
-
-    const tcaCertificationCompletedModal: ReactNode = useTcaCertificationModal(
-        tcaCertificationName,
-        navToCertificationDetails,
     )
 
     if (ready && profile && !userInfo.current) {
@@ -119,10 +117,17 @@ const EnrollmentPage: FC<{}> = () => {
 
     function closeEnrolledModal(): void {
         setIsEnrolledModalOpen(false)
-        if (!tcaCertificationCompletedModal) {
-            navToCertificationDetails()
-        }
     }
+
+    useEffect(() => {
+        if (!certCheckReady || isEnrolledModalOpen) {
+            return
+        }
+
+        refetchProgress()
+        navToCertificationDetails()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [certCheckReady, isEnrolledModalOpen])
 
     function renderMainContent(): ReactNode {
         return ready ? (
@@ -135,10 +140,8 @@ const EnrollmentPage: FC<{}> = () => {
 
                 <EnrolledModal
                     isOpen={isEnrolledModalOpen}
-                    certification={certification}
                     onClose={closeEnrolledModal}
                 />
-                {!isEnrolledModalOpen && tcaCertificationCompletedModal}
             </>
         ) : null
     }

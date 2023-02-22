@@ -6,7 +6,6 @@ import { TCACertification } from '../../learn-lib'
 import styles from './EnrolledModal.module.scss'
 
 interface EnrolledModalProps {
-    certification: TCACertification
     isOpen: boolean
     onClose: () => void
 }
@@ -29,10 +28,7 @@ const EnrolledModal: FC<EnrolledModalProps> = (props: EnrolledModalProps) => {
         >
             <>
                 <h2 className='details'>
-                    You have Successfully Enrolled in the
-                    {' '}
-                    {props.certification.title}
-                    !
+                    You have successfully enrolled!
                 </h2>
                 <Button buttonStyle='outline' label='Close' onClick={props.onClose} />
             </>
