@@ -20,10 +20,13 @@ import {
 } from '../../../../lib'
 import {
     enrollTCACertificationAsync,
+    TCACertificationCheckCompleted,
+    TCACertificationProgress,
     TCACertificationProgressProviderData,
     TCACertificationProviderData,
     useGetTCACertification,
     useGetTCACertificationProgress,
+    useTCACertificationCheckCompleted,
     useTcaCertificationModal,
 } from '../../learn-lib'
 import { perks } from '../certification-details-modal/certif-details-content/data'
@@ -66,8 +69,17 @@ const EnrollmentPage: FC<{}> = () => {
 
     const ready: boolean = profileReady && certificationReady && progressReady && !!profile
 
+    const firstResourceProgress: TCACertificationProgress['resourceProgresses'][0] | undefined
+        = progress?.resourceProgresses?.[0]
+
+    const { certification: tcaCertificationName }: TCACertificationCheckCompleted = useTCACertificationCheckCompleted(
+        firstResourceProgress?.resourceProgressType ?? '',
+        firstResourceProgress?.resourceProgressId ?? '',
+        { enabled: !!firstResourceProgress?.resourceProgressType },
+    )
+
     const tcaCertificationCompletedModal: ReactNode = useTcaCertificationModal(
-        progress ? certification.dashedName : undefined,
+        tcaCertificationName,
         navToCertificationDetails,
     )
 

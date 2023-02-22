@@ -9,10 +9,10 @@
 
 .enrolledModal {
     color: $tc-white;
-    background: url(./bg.png) center no-repeat;
+    background: url(./bg.jpg) center no-repeat, $tc-grad20;
 
     @include ltemd {
-        background: url(./bg-mobile.png) 0 0 no-repeat;
+        background: url(./bg-mobile.jpg) 0 0 no-repeat, $tc-grad20;
         background-size: cover;
     }
 

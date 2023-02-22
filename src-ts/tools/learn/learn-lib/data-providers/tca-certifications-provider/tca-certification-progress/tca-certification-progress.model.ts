@@ -18,8 +18,10 @@ export interface TCACertificationProgress extends LearnModelBase {
     completedAt: null | Date
     certificationProgress: number
     resourceProgresses: [{
-        status: UserCertificationProgressStatus,
+        resourceProgressId: string
+        resourceProgressType: 'FccCertificationProgress'
         fccCertificationProgress: TCAFccCertificationProgress
+        status: UserCertificationProgressStatus,
     }]
     userHandle: string
     userId: number
