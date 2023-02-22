@@ -9,6 +9,7 @@ import { TCACertificateType, TCACertification } from '../../data-providers'
 import { CertificateBadgeIcon } from '../../dynamic-icons'
 import { DougSigSvg } from '../../svgs'
 
+import { CertificateBackground } from './certificate-background'
 import styles from './TCACertificate.module.scss'
 
 interface TCACertificateProps {
@@ -47,7 +48,8 @@ const TCACertificate: FC<TCACertificateProps> = (props: TCACertificateProps) => 
             className={classNames(styles.wrap, props.viewStyle)}
             ref={props.elRef}
         >
-            <div className={classNames(styles.theme, styles[`theme-${certificateType.toLowerCase()}`])}>
+            <div className={styles.theme}>
+                <CertificateBackground className={styles.background} certType={certificateType} />
                 <div className={classNames(styles.details)}>
                     <div className={styles.headerWrap}>
                         <CertificateBadgeIcon
