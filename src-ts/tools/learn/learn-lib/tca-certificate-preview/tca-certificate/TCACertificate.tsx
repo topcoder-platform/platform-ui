@@ -48,7 +48,7 @@ const TCACertificate: FC<TCACertificateProps> = (props: TCACertificateProps) => 
             className={classNames(styles.wrap, props.viewStyle)}
             ref={props.elRef}
         >
-            <div className={styles.theme}>
+            <div className={classNames(styles.theme, styles[`theme-${certificateType.toLowerCase()}`])}>
                 <CertificateBackground className={styles.background} certType={certificateType} />
                 <div className={classNames(styles.details)}>
                     <div className={styles.headerWrap}>
