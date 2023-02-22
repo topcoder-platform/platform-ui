@@ -1,12 +1,12 @@
 import { Dispatch, FC, SetStateAction, useEffect } from 'react'
 
-import { BaseModal, Button, useLocalStorage } from '../../../../lib'
+import { BaseModal, BaseModalProps, Button, useSessionStorage } from '../../../../lib'
 import { TCACertification } from '../data-providers'
 import { getTCACertificateUrl } from '../../learn.routes'
 
 import styles from './TCACertificationCompletedModal.module.scss'
 
-interface TCACertificationCompletedModalProps {
+interface TCACertificationCompletedModalProps extends BaseModalProps {
     certification: TCACertification
     isOpen: boolean
 }
@@ -17,19 +17,15 @@ const TCACertificationCompletedModal: FC<TCACertificationCompletedModalProps>
     const storeKey: string = props.certification?.dashedName && `tca-cert-completed[${props.certification.dashedName}]`
 
     const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useLocalStorage<boolean>(storeKey, false)
+        = useSessionStorage<boolean>(storeKey, false)
 
     function handleClick(): void {
-        handleClose()
+        props.onClose()
         window.open(getTCACertificateUrl(props.certification.dashedName), '_blank')
     }
 
-    function handleClose(): void {
-        setIsOpen(false)
-    }
-
     useEffect(() => {
-        if (!storeKey || localStorage.getItem(storeKey) !== null) {
+        if (!storeKey || sessionStorage.getItem(storeKey) !== null) {
             return
         }
 
@@ -38,7 +34,7 @@ const TCACertificationCompletedModal: FC<TCACertificationCompletedModalProps>
 
     return (
         <BaseModal
-            onClose={handleClose}
+            onClose={props.onClose}
             open={isOpen}
             size='sm'
             classNames={{ modal: styles.completedModal, root: styles.modalRoot }}
