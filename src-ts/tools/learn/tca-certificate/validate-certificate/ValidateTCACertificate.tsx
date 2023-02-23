@@ -168,7 +168,7 @@ const ValidateTCACertificate: FC<{}> = () => {
                         <div className={styles.wrap}>
                             <h2>
                                 {'What '}
-                                {profile.handle}
+                                {enrollment?.userName}
                                 {' Learned?'}
                             </h2>
                             <ul>{learningOutcomes}</ul>
