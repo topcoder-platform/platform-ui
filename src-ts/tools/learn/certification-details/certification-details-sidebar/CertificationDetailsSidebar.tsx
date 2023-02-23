@@ -84,7 +84,7 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                         <CompletionTimeRange range={props.certification.completionTimeRange} />
                         <Tooltip
                             content={renderTooltipContents(<IconSolid.ClockIcon />, [
-                                'Assuming 4 hour',
+                                'Assuming 1 to 4 hour',
                                 'learning per day',
                             ])}
                             place='bottom'
@@ -115,7 +115,7 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                 )}
             </ul>
 
-            <div className={classNames('body-main-medium', styles['section-header'])}>
+            <div className={classNames('body-small-medium', styles['section-header'])}>
                 Skills Covered
             </div>
             <ul className={styles['certification-skills-list']}>

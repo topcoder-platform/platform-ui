@@ -23,6 +23,7 @@ const CertificationDetailsModal: FC<CertificationDetailsModalProps> = (props: Ce
     return (
         <BaseModal
             onClose={props.onClose}
+            blockScroll={false}
             open={isOpen}
             size='body'
             title={`${props.certification.title} Details`}

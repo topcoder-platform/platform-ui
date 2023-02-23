@@ -30,7 +30,11 @@ const EnrolledModal: FC<EnrolledModalProps> = (props: EnrolledModalProps) => {
                 <h2 className='details'>
                     You have successfully enrolled!
                 </h2>
-                <Button buttonStyle='outline' label='Close' onClick={props.onClose} />
+                <Button
+                    buttonStyle='outline'
+                    label='Go to the certification details'
+                    onClick={props.onClose}
+                />
             </>
 
         </BaseModal>

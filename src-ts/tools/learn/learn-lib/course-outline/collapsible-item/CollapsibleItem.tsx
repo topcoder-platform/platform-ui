@@ -147,7 +147,7 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
                             {' '}
                             Lessons
                         </span>
-                        {props.duration && (
+                        {!!props.duration && (
                             <span className={styles['summary-item']}>
                                 <IconOutline.ClockIcon />
                                 {props.duration}
