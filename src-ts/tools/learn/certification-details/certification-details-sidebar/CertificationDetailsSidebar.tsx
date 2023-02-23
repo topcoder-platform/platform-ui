@@ -84,7 +84,7 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                         <CompletionTimeRange range={props.certification.completionTimeRange} />
                         <Tooltip
                             content={renderTooltipContents(<IconSolid.ClockIcon />, [
-                                'Assuming 4 hour',
+                                'Assuming 1 to 4 hour',
                                 'learning per day',
                             ])}
                             place='bottom'
