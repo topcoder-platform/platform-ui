@@ -2,6 +2,7 @@ import { FC, ReactNode } from 'react'
 
 import { Button, IconSolid, ProgressBar } from '../../../../../../lib'
 import {
+    clearFCCCertificationTitle,
     CompletionTimeRange,
     LearnCertification,
     LearnLevelIcon,
@@ -91,7 +92,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
     return (
         <CurriculumCard
             badgeTrackType={props.certification.certificationCategory.track ?? 'DEV'}
-            title={props.certification.title ?? 'Responsive Web Design Certification'}
+            title={clearFCCCertificationTitle(props.certification.title)}
             cta={renderCta()}
             status={props.isEnrolled ? props.progress?.status : undefined}
             content={(

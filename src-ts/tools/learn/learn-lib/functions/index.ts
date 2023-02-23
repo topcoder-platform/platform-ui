@@ -6,3 +6,4 @@ export {
     putAsync as learnXhrPutAsync,
 } from './learn-xhr.functions'
 export { hideSiblings } from './hide-siblings'
+export * from './clean-fcc-certif-title'
