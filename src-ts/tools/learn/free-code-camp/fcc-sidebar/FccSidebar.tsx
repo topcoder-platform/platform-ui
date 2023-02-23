@@ -1,6 +1,12 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
-import { CollapsiblePane, CourseOutline, LearnCourse, LearnUserCertificationProgress } from '../../learn-lib'
+import {
+    CollapsiblePane,
+    CourseOutline,
+    LearnCourse,
+    LearnUserCertificationProgress,
+    TCACertificationProgressBox,
+} from '../../learn-lib'
 
 import styles from './FccSidebar.module.scss'
 
@@ -11,6 +17,7 @@ interface FccSidebarProps {
     courseDataReady: boolean
     currentStep: string
     refetchProgress: () => void
+    userId?: number
 }
 
 const FccSidebar: FC<FccSidebarProps> = (props: FccSidebarProps) => {
@@ -35,6 +42,12 @@ const FccSidebar: FC<FccSidebarProps> = (props: FccSidebarProps) => {
                 isOpen={isOpen}
             >
                 <div className={styles['course-outline-wrap']}>
+                    <TCACertificationProgressBox
+                        userId={props.userId}
+                        className={styles.tcaCertBanner}
+                        fccCertificateId={props.certificateProgress?.fccCertificationId}
+                        theme='sidebar'
+                    />
                     <div className={styles['course-outline-title']}>
                         {props.courseData?.title}
                     </div>

@@ -533,6 +533,7 @@ const FreeCodeCamp: FC<{}> = () => {
                         currentStep={`${moduleParam}/${lessonParam}`}
                         certificateProgress={certificateProgress}
                         refetchProgress={refetchProgress}
+                        userId={profile?.userId}
                     />
 
                     <div className={styles['course-frame']}>
