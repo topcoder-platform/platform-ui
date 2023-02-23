@@ -100,7 +100,7 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                         </span>
                         <span className='quote-main'>
                             <strong>Free</strong>
-                            &nbsp;until March 31&nbsp;
+                            &nbsp;until April 30&nbsp;
                             <span className='strike'>$20</span>
                             <Tooltip
                                 content={renderTooltipContents(<IconSolid.CurrencyDollarIcon />, [
