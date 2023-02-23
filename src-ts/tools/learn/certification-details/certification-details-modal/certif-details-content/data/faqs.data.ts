@@ -1,4 +1,4 @@
-import { type FaqEntry } from '../accordion/Accordion'
+import { FaqEntry } from '../../../accordion/Accordion';
 
 export const FAQs: Array<FaqEntry> = [
     {
@@ -41,15 +41,14 @@ export const FAQs: Array<FaqEntry> = [
     {
         description: `
             <p>
-                Topcoder is new to the education space and we are working hard to find the right content
-                partners to build more and better certifications for our members.
-                We have a long history of competition and ratings - once we pour the secret sauce onto certifications,
-                this will become awesome.  We will get better, this is just the starting point.
+                We have a long history of producing and recognizing top technical talent.
+                Our ratings are reliable measures of expertise and have been trusted by companies like Google.
+                When you infuse our history with the learning space, we can create the perfect recipe for you to learn,
+                earn and thrive at Topcoder and beyond.
             </p>
         `,
         title: `
-            Can’t I just enroll for a similar certification from Coursera or other similar companies?
-            What makes this different?
+            Why should I learn at Topcoder vs. other platforms?
         `,
     },
 ]
