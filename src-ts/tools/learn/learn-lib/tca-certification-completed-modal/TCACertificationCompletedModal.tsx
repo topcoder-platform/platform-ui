@@ -20,8 +20,13 @@ const TCACertificationCompletedModal: FC<TCACertificationCompletedModalProps>
         = useSessionStorage<boolean>(storeKey, false)
 
     function handleClick(): void {
-        props.onClose()
+        handleClose()
         window.open(getTCACertificateUrl(props.certification.dashedName), '_blank')
+    }
+
+    function handleClose(): void {
+        setIsOpen(false)
+        props.onClose()
     }
 
     useEffect(() => {
@@ -34,7 +39,7 @@ const TCACertificationCompletedModal: FC<TCACertificationCompletedModalProps>
 
     return (
         <BaseModal
-            onClose={props.onClose}
+            onClose={handleClose}
             open={isOpen}
             size='sm'
             classNames={{ modal: styles.completedModal, root: styles.modalRoot }}
