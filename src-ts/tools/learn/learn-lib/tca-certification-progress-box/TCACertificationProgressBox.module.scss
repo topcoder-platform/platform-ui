@@ -93,4 +93,32 @@
             color: $turq-75;
         }
     }
+
+}
+    
+.wrap:global(.theme-sidebar) {
+    background: $black-5;
+    color: $tc-black;
+    border: 0 none;
+    padding: $space-lg;
+
+    .header {
+        > svg {
+            @include icon-size(36);
+        }
+
+        :global(.overline) {
+            font-size: 10px;
+            line-height: 12px;
+        }
+
+        :global(.body-main-bold) {
+            font-size: 14px;
+            line-height: 20px;
+        }
+    }
+
+    .statusBox {
+        background: $tc-white;
+    }
 }

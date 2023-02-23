@@ -15,10 +15,10 @@ import {
     useGetUserCertifications,
     UserCertificationProgressStatus,
     UserCertificationsProviderData,
-} from '../../learn-lib'
+} from '..'
 import { getTCACertificationPath } from '../../learn.routes'
 
-import styles from './TCACertificationBanner.module.scss'
+import styles from './TCACertificationProgressBox.module.scss'
 
 interface ProgressByIdCollection {
     [key: string]: LearnUserCertificationProgress
@@ -37,13 +37,14 @@ function getStatusBox(icon: ReactNode, text: string, theme: string = 'gray'): Re
     )
 }
 
-export interface TCACertificationBannerProps {
+export interface TCACertificationProgressBoxProps {
     userId?: number
     className?: string
     fccCertificateId?: string
+    theme?: 'sidebar'
 }
 
-const TCACertificationBanner: FC<TCACertificationBannerProps> = (props: TCACertificationBannerProps) => {
+const TCACertificationProgressBox: FC<TCACertificationProgressBoxProps> = (props: TCACertificationProgressBoxProps) => {
 
     const {
         certifications: tcaCertifications,
@@ -117,7 +118,7 @@ const TCACertificationBanner: FC<TCACertificationBannerProps> = (props: TCACerti
     }
 
     return (
-        <div className={classNames(props.className, styles.wrap)}>
+        <div className={classNames(props.className, styles.wrap, props.theme && `theme-${props.theme}`)}>
             <div className={styles.header}>
                 <CertificateBadgeIcon
                     type={certification.certificationCategory.track}
@@ -159,4 +160,4 @@ const TCACertificationBanner: FC<TCACertificationBannerProps> = (props: TCACerti
     )
 }
 
-export default TCACertificationBanner
+export default TCACertificationProgressBox
