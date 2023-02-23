@@ -1,9 +1,7 @@
 import { FC } from 'react'
-import classNames from 'classnames'
 
-import { UserProfile } from '../../../../../lib'
+import { Button, UserProfile } from '../../../../../lib'
 import { StickySidebar } from '../../../learn-lib'
-import { EnrollmentForm } from '../enrollment-form'
 
 import styles from './EnrollmentSidebar.module.scss'
 
@@ -20,18 +18,17 @@ const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarP
             <strong className='overline'>Total payment</strong>
         </div>
         <hr />
-        <div className={classNames('body-ultra-small-bold', styles.formTitle)}>
-            Contact Information
-        </div>
         <div className={styles.form}>
-            <EnrollmentForm profile={props.profile} onSubmit={props.onEnroll}>
-                <div className={styles.noPaymentBanner}>
-                    <h3 className='details'>No payment required</h3>
-                    <div className='body-medium'>
-                        Enroll until March 31 with no cost.
-                    </div>
+            <div className={styles.noPaymentBanner}>
+                <h3 className='details'>No payment required</h3>
+                <div className='body-medium'>
+                    Enroll until April 30 with no cost.
                 </div>
-            </EnrollmentForm>
+            </div>
+            <Button buttonStyle='primary' onClick={props.onEnroll} label='Enroll Now' size='lg' />
+            {/* TODO: this form will probably be re-used when we add actuall payments, leaving this here for now */}
+            {/* <EnrollmentForm profile={props.profile} onSubmit={props.onEnroll}>
+            </EnrollmentForm> */}
         </div>
     </StickySidebar>
 )
