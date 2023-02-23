@@ -51,8 +51,7 @@ const WhatTCACanDo: FC = () => {
                                 <h3 className='details'>Certifications</h3>
                             </div>
                             <p>
-                                With our certification program, take advantage of our
-                                progress tracking tools and access to future assessments.
+                                Earn certifications to increase your earning opportunities inside and out of Topcoder.
                             </p>
                         </div>
 
