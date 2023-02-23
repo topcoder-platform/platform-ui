@@ -62,7 +62,7 @@ const WhatTCACanDo: FC = () => {
                             </div>
                             <p>
                                 Our catalog of courses is growing! We currently offer 11 free courses
-                                covering data science,web development, coding interview prep,
+                                covering data science, web development, coding interview prep,
                                 information security, and quality assurance.
                             </p>
                         </div>
