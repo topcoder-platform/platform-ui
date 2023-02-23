@@ -29,7 +29,7 @@ export const perks: Array<PerkItem> = [
     },
     {
         description: `
-            Topcoder has been grooming top developers for over 20 years.
+            Topcoder has been engaging and up-skilling top developers for over 20 years.
         `,
         icon: 'shield-check',
         title: 'Trusted Platform',
