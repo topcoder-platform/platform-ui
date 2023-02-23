@@ -90,11 +90,9 @@ const TCACertificationProgressBox: FC<TCACertificationProgressBoxProps> = (props
         }
 
         const coursesCount: number = certification.coursesCount
-        const completedCoursesCount: number = certifProgress
-            ? Math.round(coursesCount * (certifProgress.certificationProgress / 100))
-            : certification.certificationResources.filter(d => (
-                progressById[d.freeCodeCampCertification.fccId]?.status === UserCertificationProgressStatus.completed
-            )).length
+        const completedCoursesCount: number = certification.certificationResources.filter(d => (
+            progressById[d.freeCodeCampCertification.fccId]?.status === UserCertificationProgressStatus.completed
+        )).length
         const inProgressCoursesCount: number = certification.certificationResources.filter(d => (
             progressById[d.freeCodeCampCertification.fccId]?.status === UserCertificationProgressStatus.inProgress
         )).length
