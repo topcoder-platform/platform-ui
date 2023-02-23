@@ -51,8 +51,7 @@ const WhatTCACanDo: FC = () => {
                                 <h3 className='details'>Certifications</h3>
                             </div>
                             <p>
-                                With our certification program, take advantage of our
-                                progress tracking tools and access to future assessments.
+                                Earn certifications to increase your earning opportunities inside and out of Topcoder.
                             </p>
                         </div>
 
@@ -62,8 +61,9 @@ const WhatTCACanDo: FC = () => {
                                 <h3 className='details'>Courses</h3>
                             </div>
                             <p>
-                                Our catalog of courses is growing! We currently offer 11
-                                free courses and plan on adding more in the future.
+                                Our catalog of courses is growing! We currently offer 11 free courses
+                                covering data science,web development, coding interview prep,
+                                information security, and quality assurance.
                             </p>
                         </div>
                     </div>
