@@ -34,7 +34,7 @@
                 display: flex;
                 align-items: center;
 
-                @include ltexs {
+                @include ltesm {
                     display: grid;
                     grid-template-columns: 30px 1fr;
                 }
