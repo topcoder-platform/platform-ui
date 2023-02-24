@@ -132,7 +132,15 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
 
             <div className={styles.btns}>
                 {(props.enrolled || completed) ? (
-                    <div className={classNames(styles.tag, completed ? styles.completed : styles.enrolled)}>
+                    <div className={classNames(
+                        styles.tag,
+                        completed
+                            ? styles[
+                                `completed-${props.certification.certificationCategory.track.toLowerCase() || 'dev'}`
+                            ]
+                            : styles.enrolled,
+                    )}
+                    >
                         <span className='body-main-medium'>{completed ? 'Completed' : 'Enrolled'}</span>
                     </div>
                 ) : (

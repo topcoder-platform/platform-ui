@@ -22,7 +22,7 @@ interface CoursesCardProps {
     progress?: LearnUserCertificationProgress
 }
 
-const EXCERPT_TEXT_LEN: number = 99
+const EXCERPT_TEXT_LEN: number = 95
 
 const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
     const desc: string = props.certification.description?.slice(0, EXCERPT_TEXT_LEN)
@@ -49,7 +49,6 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                             <Button buttonStyle='secondary' size='xs' label='Details' route={detailsRoute} />
 
                         </div>
-                        <div className={styles.completedLabel}>Completed</div>
                     </div>
                 )
             case UserCertificationProgressStatus.inProgress:
@@ -88,7 +87,12 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
             </div>
 
             <div className={styles.cardHeaderDividerWrap}>
-                {isInProgress && <ProgressBar progress={(props.progress?.courseProgressPercentage ?? 0) / 100} />}
+                {(isInProgress || isCompleted) && (
+                    <ProgressBar
+                        progress={(props.progress?.courseProgressPercentage ?? 0) / 100}
+                        track={props.certification.certificationCategory.track}
+                    />
+                )}
                 {!isInProgress && !isCompleted && <div className={styles.cardHeaderDivider} />}
             </div>
 
