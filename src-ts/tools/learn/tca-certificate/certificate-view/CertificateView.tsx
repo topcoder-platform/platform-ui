@@ -1,5 +1,4 @@
 import { FC, MutableRefObject, useCallback, useEffect, useMemo, useRef } from 'react'
-import { NavigateFunction, useNavigate } from 'react-router-dom'
 import classNames from 'classnames'
 
 import {
@@ -8,7 +7,9 @@ import {
     IconOutline,
     LinkedinSocialShareBtn,
     LoadingSpinner,
+    NavigateBackFunction,
     TwitterSocialShareBtn,
+    useNavigateBack,
     UserProfile,
 } from '../../../../lib'
 import {
@@ -38,7 +39,7 @@ interface CertificateViewProps {
 
 const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) => {
 
-    const navigate: NavigateFunction = useNavigate()
+    const navigateBack: NavigateBackFunction = useNavigateBack()
     const tcaCertificationPath: string = getTCACertificationPath(props.certification)
     const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
 
@@ -80,8 +81,8 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     ), [hasCompletedTheCertification, ready])
 
     const handleBackBtnClick: () => void = useCallback(() => {
-        navigate(tcaCertificationPath)
-    }, [tcaCertificationPath, navigate])
+        navigateBack(tcaCertificationPath)
+    }, [tcaCertificationPath, navigateBack])
 
     const getCertificateCanvas: () => Promise<HTMLCanvasElement | void> = useCertificateCanvas(certificateElRef)
 
