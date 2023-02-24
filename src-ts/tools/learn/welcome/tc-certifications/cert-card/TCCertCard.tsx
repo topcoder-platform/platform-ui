@@ -55,7 +55,6 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                         {getCtaBtn('primary', 'View Certificate', getTCACertificateUrl(dashedName))}
                         {getCtaBtn('secondary', 'Details', getTCACertificationPath(dashedName))}
                     </div>
-                    <div className={styles.completedLabel}>Completed</div>
                 </div>
             )
         }
@@ -64,13 +63,16 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
     }
 
     function renderProgressBar(): ReactNode {
-        if (props.progress?.status !== 'enrolled') {
+        if (!isEnrolled && !isCompleted) {
             return <div className={styles.separatorBar} />
         }
 
         return (
             <div className={styles.progressBar}>
-                <ProgressBar progress={props.progress.certificationProgress / 100} />
+                <ProgressBar
+                    progress={props.progress.certificationProgress / 100}
+                    track={props.certification.certificationCategory.track}
+                />
             </div>
         )
     }

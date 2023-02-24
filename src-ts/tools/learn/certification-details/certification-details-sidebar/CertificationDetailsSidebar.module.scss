@@ -20,10 +20,12 @@
 
 .certification-details-list {
     margin-top: $space-xxl;
+
     li {
         display: flex;
         align-items: center;
         margin-top: $space-sm;
+
         .icon {
             width: 24px;
             height: 24px;
@@ -33,7 +35,7 @@
             margin-right: $space-sm;
             color: $blue-140;
 
-            > svg {
+            >svg {
                 display: block;
                 width: 100%;
                 height: 100%;
@@ -80,7 +82,7 @@
 .providers {
     margin-top: $space-sm;
 
-    > span {
+    >span {
         @extend .body-small-medium;
     }
 }
@@ -105,14 +107,25 @@
     display: block;
     padding: $space-xs calc($space-sm + $border);
     border-radius: $space-xs;
+    color: $tc-white;
 
     &.enrolled {
         background: $blue-140;
-        color: $tc-white;
     }
 
-    &.completed {
-        background: $turq-75;
-        color: $black-100;
+    &.completed-dev {
+        background: $tc-dev-grad;
+    }
+
+    &.completed-datascience {
+        background: $tc-datascience-grad;
+    }
+
+    &.completed-design {
+        background: $tc-design-grad;
+    }
+
+    &.completed-qa {
+        background: $tc-qa-grad;
     }
 }

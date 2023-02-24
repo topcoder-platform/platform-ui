@@ -75,6 +75,8 @@
 
 .cardHeaderDividerWrap {
     margin-top: auto;
+    margin-bottom: $space-lg;
+    padding-top: $space-sm;
 
     .cardHeaderDivider {
         height: 1px;
@@ -117,18 +119,6 @@
         @include ltexs {
             flex-direction: column;
             align-items: flex-start;
-        }
-
-        .completedLabel {
-            background-color: $turq-75;
-            padding: $space-xs $space-sm;
-            border-radius: $space-xs;
-            color: $black-100;
-            font-weight: $font-weight-medium;
-
-            @include ltexs {
-                margin-top: $space-lg;
-            }
         }
     }
 }
