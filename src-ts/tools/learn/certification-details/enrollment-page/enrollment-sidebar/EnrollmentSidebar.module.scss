@@ -9,8 +9,10 @@
 .header {
     text-align: center;
     
-    h3 {
-        color: $blue-140;
+    .freeLabel {
+        @include freeLabel;
+
+        margin-bottom: $space-sm;
     }
     
     :global(.strike) {

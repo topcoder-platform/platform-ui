@@ -57,6 +57,14 @@
                 text-decoration: line-through;
                 color: $black-40;
             }
+
+            :global(.body-main-bold) {
+                font-style: normal;
+            }
+        }
+
+        .freeLabel {
+            @include freeLabel;
         }
     }
 }

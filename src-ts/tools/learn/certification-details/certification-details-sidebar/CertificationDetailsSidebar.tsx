@@ -99,17 +99,9 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                             <IconSolid.CurrencyDollarIcon />
                         </span>
                         <span className='quote-main'>
-                            <strong>Free</strong>
-                            &nbsp;until April 30&nbsp;
+                            <strong className={styles.freeLabel}>FREE</strong>
+                            <span className='body-main-bold'>&nbsp;until April 30&nbsp;</span>
                             <span className='strike'>$20</span>
-                            <Tooltip
-                                content={renderTooltipContents(<IconSolid.CurrencyDollarIcon />, [
-                                    'Introductory low pricing',
-                                ])}
-                                place='bottom'
-                                trigger={<IconOutline.InformationCircleIcon />}
-                                triggerOn='hover'
-                            />
                         </span>
                     </li>
                 )}

@@ -136,7 +136,10 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                         )
                     }
                 </div>
-                <div className={styles.newLabel}>NEW</div>
+                <div className={styles.cardLabels}>
+                    <div className={styles.newLabel}>NEW</div>
+                    <div className={styles.freeLabel}>FREE</div>
+                </div>
             </div>
 
             {renderProgressBar()}
