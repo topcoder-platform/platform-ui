@@ -24,7 +24,12 @@ const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarP
                     Enroll until April 30 with no cost.
                 </div>
             </div>
-            <Button buttonStyle='primary' onClick={props.onEnroll} label='Enroll Now' size='lg' />
+            <Button
+                buttonStyle='primary'
+                onClick={props.onEnroll}
+                label='Complete Enrollment'
+                size='lg'
+            />
             {/* TODO: this form will probably be re-used when we add actuall payments, leaving this here for now */}
             {/* <EnrollmentForm profile={props.profile} onSubmit={props.onEnroll}>
             </EnrollmentForm> */}

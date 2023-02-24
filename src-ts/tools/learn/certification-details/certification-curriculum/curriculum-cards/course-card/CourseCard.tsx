@@ -86,7 +86,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
     }
 
     const completionTimeRange: TCACertificationCompletionTimeRange = useHoursEstimateToRange(
-        props.certification.completionHours,
+        props.certification.course.estimatedCompletionTimeValue,
     )
 
     return (
@@ -108,7 +108,10 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                             <span className={styles.icon}>
                                 <IconSolid.DocumentTextIcon />
                             </span>
-                            <span className='quote-small'>4 modules</span>
+                            <span className='quote-small'>
+                                {props.certification.course.modules.length}
+                                {' modules'}
+                            </span>
                         </li>
                         <li className={styles.stat}>
                             <span className={styles.icon}>

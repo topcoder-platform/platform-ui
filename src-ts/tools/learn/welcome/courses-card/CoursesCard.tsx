@@ -3,6 +3,7 @@ import classNames from 'classnames'
 
 import { Button, FccLogoBlackSvg, IconSolid, ProgressBar } from '../../../../lib'
 import {
+    clearFCCCertificationTitle,
     CompletionTimeRange,
     CourseBadge,
     LearnCertification,
@@ -67,7 +68,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
             <div className={styles.cardHeader}>
                 <CourseBadge type={props.certification.certificationCategory.track ?? 'DEV'} />
                 <div className={styles.cardHeaderTitleWrap}>
-                    <p className='body-medium-medium'>{props.certification.title}</p>
+                    <p className='body-medium-medium'>{clearFCCCertificationTitle(props.certification.title)}</p>
                     <div className={styles.subTitleWrap}>
                         <LearnLevelIcon level={props.certification.learnerLevel} />
                         <span className={classNames('body-small', styles.infoText)}>

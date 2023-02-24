@@ -93,7 +93,7 @@ const CourseDetailsPage: FC<{}> = () => {
                             {' '}
                             {course.title}
                             ,
-                            we&appos;d recommend you enroll in another course to continue your learning.
+                            we&apos;d recommend you enroll in another course to continue your learning.
                             You can view our other courses from the Topcoder Academy course page.
                         </p>
                     </div>
