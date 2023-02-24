@@ -50,6 +50,11 @@ const TCCertifications: FC<TCCertificationsProps> = (props: TCCertificationsProp
                     of our pilot Certification program. Click on a certification below to learn more.
                 </p>
             </div>
+            <div className={styles.freeBanner}>
+                <strong className='body-large-bold'>FREE!</strong>
+                &nbsp;
+                <span className='body-large'>Certifications are free until April 30th.</span>
+            </div>
 
             <div className={styles.certsList}>
                 {

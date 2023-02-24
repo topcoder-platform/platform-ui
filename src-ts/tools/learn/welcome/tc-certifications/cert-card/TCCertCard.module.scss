@@ -18,6 +18,11 @@
 
         @include ltemd {
             align-items: flex-start;
+
+            >svg {
+                max-width: 60px;
+                max-height: 56px;
+            }
         }
 
         .cardTitleWrap {
@@ -25,6 +30,10 @@
             flex-direction: column;
             flex: 1;
             margin-left: $space-xxl;
+
+            @include ltesm {
+                margin-left: $space-lg;
+            }
 
             >p {
                 text-align: left;
@@ -57,15 +66,30 @@
             }
         }
 
-        .newLabel {
-            padding: 3px 4px;
-            background-color: $green-140;
-            font-weight: 500;
-            font-size: 11px;
-            line-height: 10px;
-            color: $tc-white;
-            border-radius: 2px;
-            margin-bottom: $space-xl;
+        .cardLabels {
+            display: flex;
+            align-items: flex-start;
+
+            .newLabel {
+                font-weight: 500;
+                font-size: 11px;
+                line-height: 10px;
+                border-radius: 2px;
+                margin-bottom: $space-xl;
+                background-color: $green-140;
+                padding: 3px $space-xs;
+                color: $tc-white;
+            }
+
+            .freeLabel {
+                @include freeLabel;
+
+                margin-left: $space-sm;
+                padding: 3px $space-xs;
+                font-weight: 500;
+                font-size: 11px;
+                line-height: 10px;
+            }
         }
     }
 }

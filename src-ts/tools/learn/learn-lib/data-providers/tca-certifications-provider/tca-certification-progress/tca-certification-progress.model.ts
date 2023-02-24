@@ -14,6 +14,7 @@ export interface TCACertificationProgress extends LearnModelBase {
     completionUuid: string
     coursesCount: number
     topcoderCertification: TCACertification
+    topcoderCertificationId: number
     status: TCACertificationProgressStatus
     completedAt: null | Date
     certificationProgress: number

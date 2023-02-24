@@ -43,6 +43,7 @@
 }
 
 @mixin scrollbar {
+
     // firefox's solution for "customizing" scrollbars
     & {
         scrollbar-width: thin;
@@ -65,5 +66,22 @@
         &:hover {
             background-color: rgba($tc-black, 0.6);
         }
+    }
+}
+
+@mixin freeLabel {
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: $font-weight-bold;
+    font-style: normal;
+    background-color: $orange-100;
+    padding: 2px $space-sm;
+    border-radius: 4px;
+    color: $black-100;
+    display: inline-block;
+
+    @include ltesm {
+        font-size: 20px;
+        line-height: 28px;
     }
 }

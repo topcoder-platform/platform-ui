@@ -13,9 +13,8 @@ interface EnrollmentSidebarProps {
 const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarProps) => (
     <StickySidebar className={styles.wrap}>
         <div className={styles.header}>
-            <h3 className='marketing'>Free</h3>
+            <div className={styles.freeLabel}>FREE</div>
             <span className='strike'>$20</span>
-            <strong className='overline'>Total payment</strong>
         </div>
         <hr />
         <div className={styles.form}>

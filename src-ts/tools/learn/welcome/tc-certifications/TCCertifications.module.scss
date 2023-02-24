@@ -29,14 +29,15 @@
         flex-direction: column;
         position: relative;
         padding: $space-xxxxl;
-        margin: $space-mx 0;
+        margin: $space-mx 0 0;
         background-image: url("./assets/certs-banner-bg.png");
         background-size: cover;
-        border-radius: 8px;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
 
         @include ltemd {
             padding: 88px $space-lg $space-lg;
-            margin: $space-lg 0;
+            margin: $space-lg 0 0;
             background-image: url("./assets/certs-banner-bg-mobile.png");
         }
 
@@ -54,6 +55,28 @@
         >p {
             color: $tc-white;
             max-width: $md-max;
+        }
+    }
+
+    .freeBanner {
+        display: flex;
+        align-items: center;
+        padding: $space-lg $space-xxxxl;
+        margin: 0 0 $space-mx;
+        background-image: url("./assets/free-banner-bg.png");
+        background-size: cover;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+
+        @include ltemd {
+            padding: $space-lg $space-xxl;
+            margin-bottom: $space-xxl;
+            background-image: url("./assets/free-banner-bg-mobile.png");
+
+            >span {
+                font-size: 14px;
+                line-height: 20px;
+            }
         }
     }
 
