@@ -15,7 +15,6 @@ interface TCACertificatePreviewProps {
     completedDate?: string
     completionUuid?: string
     validateLink?: string
-    viewStyle?: 'large-container' | 'small-container'
 }
 
 const TCACertificatePreview: FC<TCACertificatePreviewProps> = (props: TCACertificatePreviewProps) => {
@@ -28,7 +27,6 @@ const TCACertificatePreview: FC<TCACertificatePreviewProps> = (props: TCACertifi
             <TCACertificate
                 certification={props.certification}
                 userName='Your Name'
-                viewStyle='large-container'
             />
         )
     }
@@ -43,7 +41,6 @@ const TCACertificatePreview: FC<TCACertificatePreviewProps> = (props: TCACertifi
                 tcHandle={props.tcHandle ?? ''}
                 userName={props.userName}
                 validateLink={props.validateLink}
-                viewStyle={props.viewStyle ?? 'large-container'}
                 elRef={props.certificateElRef}
             />
         )

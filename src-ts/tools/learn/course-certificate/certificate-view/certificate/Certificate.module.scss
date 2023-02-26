@@ -19,7 +19,7 @@
         flex-direction: column;
     }
 
-    .wrap:global(.large-container) & {
+    :global(.large-container) & {
         padding-left: calc($space-mx + $space-mxx);
     }
 

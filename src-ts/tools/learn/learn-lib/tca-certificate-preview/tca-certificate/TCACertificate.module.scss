@@ -183,62 +183,6 @@
     }
 }
 
-// Small view styles
-:global(.small-container) {
-    max-width: 420px;
-    max-height: 335px;
-
-    .details {
-        padding: $space-xxl;
-
-        .headerWrap {
-            svg {
-                max-width: 54px;
-                max-height: 54px;
-            }
-
-            .logos {
-
-                svg,
-                .logosDivider {
-                    max-height: 20px;
-                }
-            }
-        }
-
-        .certWrap {
-            max-width: 250px;
-
-            .certOwner {
-                font-size: 20px;
-                line-height: 20px;
-                margin-top: $space-xxl;
-                margin-bottom: $space-sm;
-            }
-
-            .certTitle {
-                font-size: 30px;
-                line-height: 30px;
-                margin: $space-xs 0 $space-xxl
-            }
-
-            .certText {
-                font-size: 9px;
-                line-height: 9px;
-                margin-bottom: 0;
-            }
-        }
-
-        .certInfo {
-            .sigWrap {
-                svg {
-                    max-width: 70px;
-                }
-            }
-        }
-    }
-}
-
 // print/download styles
 :global(.canvas-clone) {
     .certText {

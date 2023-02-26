@@ -1,45 +1,31 @@
 import { FC, MutableRefObject, useCallback, useEffect, useMemo, useRef } from 'react'
-import classNames from 'classnames'
 
 import {
-    FacebookSocialShareBtn,
-    fileDownloadCanvasAsImage,
     IconOutline,
-    LinkedinSocialShareBtn,
     LoadingSpinner,
-    NavigateBackFunction,
-    TwitterSocialShareBtn,
-    useNavigateBack,
     UserProfile,
 } from '../../../../lib'
 import {
     ActionButton,
+    CertificatePageLayout,
     TCACertificatePreview,
     TCACertification,
     TCACertificationValidationData,
-    useCertificateCanvas,
-    useCertificatePrint,
     useGetUserTCACompletedCertificationsMOCK,
     UserCompletedTCACertificationsProviderData,
     useValidateTCACertification,
 } from '../../learn-lib'
 import { getTCACertificationPath, getTCACertificationValidationUrl, getUserTCACertificateSsr } from '../../learn.routes'
 
-import styles from './CertificateView.module.scss'
-
-export type CertificateViewStyle = 'large-container' | undefined
-
 interface CertificateViewProps {
     certification: string,
-    hideActions?: boolean,
+    fullScreenCertLayout?: boolean,
     onCertificationNotCompleted: () => void
     profile: UserProfile,
-    viewStyle: CertificateViewStyle
 }
 
 const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) => {
 
-    const navigateBack: NavigateBackFunction = useNavigateBack()
     const tcaCertificationPath: string = getTCACertificationPath(props.certification)
     const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
 
@@ -76,26 +62,6 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         completedCertificateReady && certReady
     ), [completedCertificateReady, certReady])
 
-    const readyAndCompletedCertification: boolean = useMemo(() => (
-        ready && hasCompletedTheCertification
-    ), [hasCompletedTheCertification, ready])
-
-    const handleBackBtnClick: () => void = useCallback(() => {
-        navigateBack(tcaCertificationPath)
-    }, [tcaCertificationPath, navigateBack])
-
-    const getCertificateCanvas: () => Promise<HTMLCanvasElement | void> = useCertificateCanvas(certificateElRef)
-
-    const handleDownload: () => Promise<void> = useCallback(async () => {
-
-        const canvas: HTMLCanvasElement | void = await getCertificateCanvas()
-        if (!!canvas) {
-            fileDownloadCanvasAsImage(canvas, `${certificationTitle}.png`)
-        }
-
-    }, [certificationTitle, getCertificateCanvas])
-
-    const handlePrint: () => Promise<void> = useCertificatePrint(certificateElRef, certificationTitle)
 
     const validateLink: string = getTCACertificationValidationUrl(enrollment?.completionUuid as string)
 
@@ -113,60 +79,31 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         <>
             <LoadingSpinner hide={ready} />
 
-            {ready && readyAndCompletedCertification && (
-                <div className={styles.wrap}>
-                    <div className={styles['content-wrap']}>
-                        {!props.hideActions && (
-                            <div className={styles['btns-wrap']}>
-                                <ActionButton
-                                    icon={<IconOutline.ChevronLeftIcon />}
-                                    onClick={handleBackBtnClick}
-                                />
-                            </div>
-                        )}
-                        <div className={classNames(styles['certificate-wrap'], props.viewStyle)}>
-                            <TCACertificatePreview
-                                certification={certification as TCACertification}
-                                completionUuid={enrollment?.completionUuid ?? ''}
-                                userName={enrollment?.userName}
-                                tcHandle={props.profile.handle}
-                                completedDate={enrollment?.completedAt as string}
-                                certificateElRef={certificateElRef}
-                                validateLink={validateLink}
-                                viewStyle={props.viewStyle}
-                            />
-                        </div>
-                        {!props.hideActions && (
-                            <div className={styles['btns-wrap']}>
-                                <ActionButton
-                                    icon={<IconOutline.PrinterIcon />}
-                                    onClick={handlePrint}
-                                />
-                                <ActionButton
-                                    icon={<IconOutline.DownloadIcon />}
-                                    onClick={handleDownload}
-                                />
-                                <ActionButton
-                                    icon={<IconOutline.LinkIcon />}
-                                    onClick={handleLinkClick}
-                                />
-                                <FacebookSocialShareBtn
-                                    className={styles['share-btn']}
-                                    shareUrl={certUrl}
-                                />
-                                <LinkedinSocialShareBtn
-                                    className={styles['share-btn']}
-                                    shareUrl={certUrl}
-                                />
-                                <TwitterSocialShareBtn
-                                    className={styles['share-btn']}
-                                    shareUrl={certUrl}
-                                />
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
+            <CertificatePageLayout
+                certificateElRef={certificateElRef}
+                fallbackBackUrl={tcaCertificationPath}
+                fullScreenCertLayout={props.fullScreenCertLayout}
+                isCertificateCompleted={hasCompletedTheCertification}
+                isReady={ready}
+                ssrUrl={certUrl}
+                title={certificationTitle}
+                actions={(
+                    <ActionButton
+                        icon={<IconOutline.LinkIcon />}
+                        onClick={handleLinkClick}
+                    />
+                )}
+            >
+                <TCACertificatePreview
+                    certification={certification as TCACertification}
+                    completionUuid={enrollment?.completionUuid ?? ''}
+                    userName={enrollment?.userName}
+                    tcHandle={props.profile.handle}
+                    completedDate={enrollment?.completedAt as string}
+                    certificateElRef={certificateElRef}
+                    validateLink={validateLink}
+                />
+            </CertificatePageLayout>
         </>
     )
 }
