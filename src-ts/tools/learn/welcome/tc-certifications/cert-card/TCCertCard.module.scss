@@ -89,6 +89,11 @@
                 font-weight: 500;
                 font-size: 11px;
                 line-height: 10px;
+
+                @include ltesm {
+                    font-size: 11px;
+                    line-height: 10px;
+                }
             }
         }
     }
