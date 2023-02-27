@@ -55,6 +55,7 @@
 
 .externalLink {
     display: flex;
+    gap: $space-xs;
     height: 24px;
     align-items: center;
     color: $turq-160;
@@ -95,7 +96,7 @@
     }
 
 }
-    
+
 .wrap:global(.theme-sidebar) {
     background: $black-5;
     color: $tc-black;
