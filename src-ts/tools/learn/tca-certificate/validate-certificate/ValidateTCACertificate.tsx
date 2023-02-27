@@ -63,8 +63,8 @@ const ValidateTCACertificate: FC<{}> = () => {
 
     const courses: any = certification?.certificationResources
 
-    const learningOutcomes: ReactNode[] | undefined
-        = useMemo(() => certification?.learningOutcomes.map((lO: string) => <li>{lO}</li>), [certification])
+    const learnedOutcomes: ReactNode[] | undefined
+        = useMemo(() => certification?.learnedOutcomes?.map((lO: string) => <li key={lO}>{lO}</li>), [certification])
 
     const coursesGridItems: ReactNode[] | undefined
         = useMemo(() => courses?.map((course: any) => (
@@ -171,7 +171,7 @@ const ValidateTCACertificate: FC<{}> = () => {
                                 {enrollment?.userName}
                                 {' Learned?'}
                             </h2>
-                            <ul>{learningOutcomes}</ul>
+                            <ul>{learnedOutcomes}</ul>
 
                             <div className={styles.courses}>
                                 <h2>Courses Taken</h2>

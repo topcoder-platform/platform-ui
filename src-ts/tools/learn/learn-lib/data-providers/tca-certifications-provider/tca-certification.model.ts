@@ -18,6 +18,7 @@ export interface TCACertification {
     id: number
     introText: string
     learnerLevel: TCACertificationLearnLevel
+    learnedOutcomes: string[]
     learningOutcomes: string[]
     prerequisites: string[]
     providers: Array<TCACertificationProviderBase>
