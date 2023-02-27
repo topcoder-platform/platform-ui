@@ -15,8 +15,9 @@ export const FAQs: Array<FaqEntry> = [
     {
         description: `
             <p>
-                No, currently we don’t have any time constraints.
-                Once you purchase the certification, you can complete it at your own pace.
+                Once you enroll during the free trial period or during a paid period,
+                you can complete the certification at your own pace - no time constraints,
+                even when the free trial period is over.
             </p>
         `,
         title: 'After I enroll, do I have to complete the certification within a certain amount of time?',
