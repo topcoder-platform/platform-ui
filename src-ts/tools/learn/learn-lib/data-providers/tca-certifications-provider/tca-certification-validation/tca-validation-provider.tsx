@@ -9,6 +9,7 @@ export interface TCACertificationValidationData {
     certification: TCACertification | undefined
     enrollment: TCACertificationEnrollmentBase | undefined
     error: boolean
+    loading: boolean
     ready: boolean
 }
 
@@ -34,6 +35,7 @@ export function useValidateTCACertification(
         certification: data?.certification,
         enrollment: data?.enrollment,
         error: !!error,
-        ready: !!data,
+        loading: !(data || error),
+        ready: !!(data || error),
     }
 }

@@ -18,4 +18,8 @@
     svg {
         @include icon-xxl;
     }
+
+    @include ltemd {
+        @include icon-mx;
+    }
 }

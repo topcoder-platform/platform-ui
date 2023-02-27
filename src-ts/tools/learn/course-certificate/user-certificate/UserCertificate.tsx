@@ -1,22 +1,16 @@
-import { Dispatch, FC, MutableRefObject, SetStateAction, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Params, useParams, useSearchParams } from 'react-router-dom'
+import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import { Params, useParams } from 'react-router-dom'
 
 import {
     LoadingSpinner,
     profileGetPublicAsync,
     UserProfile,
 } from '../../../../lib'
-import { getViewStyleParamKey } from '../../learn.routes'
-import { CertificateView, CertificateViewStyle } from '../certificate-view'
-import { hideSiblings } from '../../learn-lib/functions'
-
-import styles from './UserCertificate.module.scss'
+import { CertificateView } from '../certificate-view'
 
 const UserCertificate: FC<{}> = () => {
 
-    const wrapElRef: MutableRefObject<HTMLElement | any> = useRef()
     const routeParams: Params<string> = useParams()
-    const [queryParams]: [URLSearchParams, any] = useSearchParams()
 
     const [profile, setProfile]: [
         UserProfile | undefined,
@@ -37,33 +31,18 @@ const UserCertificate: FC<{}> = () => {
         }
     }, [routeParams.memberHandle, setProfileReady])
 
-    useLayoutEffect(() => {
-        const el: HTMLElement = wrapElRef.current
-        if (!el) {
-            return
-        }
-
-        hideSiblings(el)
-        hideSiblings(el.parentElement as HTMLElement)
-        el.classList.add(styles['full-screen-cert'])
-    })
-
     return (
         <>
             <LoadingSpinner hide={profileReady} />
 
-            <div ref={wrapElRef}>
-                {profileReady && profile && (
-                    <CertificateView
-                        certification={certificationParam}
-                        profile={profile}
-                        provider={providerParam}
-                        onCertificationNotCompleted={() => { }}
-                        hideActions
-                        viewStyle={queryParams.get(getViewStyleParamKey()) as CertificateViewStyle}
-                    />
-                )}
-            </div>
+            {profileReady && profile && (
+                <CertificateView
+                    certification={certificationParam}
+                    profile={profile}
+                    provider={providerParam}
+                    fullScreenCertLayout
+                />
+            )}
         </>
     )
 }

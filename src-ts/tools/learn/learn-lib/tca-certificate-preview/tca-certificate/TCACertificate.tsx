@@ -21,7 +21,6 @@ interface TCACertificateProps {
     tcHandle?: string
     userName?: string
     validateLink?: string
-    viewStyle?: 'large-container' | 'small-container'
 }
 
 const TCACertificate: FC<TCACertificateProps> = (props: TCACertificateProps) => {
@@ -45,7 +44,7 @@ const TCACertificate: FC<TCACertificateProps> = (props: TCACertificateProps) => 
     return (
         <div
             {...elementSelector}
-            className={classNames(styles.wrap, props.viewStyle)}
+            className={styles.wrap}
             ref={props.elRef}
         >
             <div className={classNames(styles.theme, styles[`theme-${certificateType.toLowerCase()}`])}>

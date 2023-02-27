@@ -21,6 +21,7 @@
     @include ltemd {
         flex-direction: column;
         margin: 0 auto auto;
+        gap: $space-xxl;
     }
 }
 
@@ -38,8 +39,13 @@
     @include ltemd {
         flex-direction: row;
         &:last-child {
-            justify-content: center;
+            justify-content: space-between;
         }
+    }
+
+    &.disabled {
+        opacity: 0.3;
+        pointer-events: none;
     }
 }
 
@@ -67,8 +73,11 @@
     width: 880px;
     aspect-ratio: $tca-certif-aspect-ratio;
 
-    background: #fff;
     box-shadow: 0 20px 36px rgba($tc-black, 0.22);
+
+    .wrap:global(.cert-not-found-layout) & {
+        box-shadow: none;
+    }
 
     > * {
         position: absolute;
@@ -102,5 +111,28 @@
 
     svg {
         @include icon-xxl;
+    }
+
+    @include ltemd {
+        @include icon-mx;
+    }
+}
+
+// Certificate not found layout
+.wrap:global(.cert-not-found-layout) {
+    @include ltemd {
+        flex-direction: column;
+
+        .certificate-wrap, .certifInnerWrap {
+            aspect-ratio: 2.09146;
+        }
+
+        .content-wrap {
+            margin-bottom: 0;
+        }
+    }
+
+    .certifInnerWrap {
+        box-shadow: none;
     }
 }

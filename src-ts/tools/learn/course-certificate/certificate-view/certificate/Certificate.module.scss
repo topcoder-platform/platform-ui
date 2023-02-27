@@ -3,6 +3,7 @@
 .wrap {
     display: flex;
     height: 100%;
+    background: $tc-white;
 }
 
 .details {
@@ -19,7 +20,7 @@
         flex-direction: column;
     }
 
-    .wrap:global(.large-container) & {
+    :global(.large-container) & {
         padding-left: calc($space-mx + $space-mxx);
     }
 
