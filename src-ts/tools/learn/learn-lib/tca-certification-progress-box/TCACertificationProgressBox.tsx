@@ -127,12 +127,12 @@ const TCACertificationProgressBox: FC<TCACertificationProgressBoxProps> = (props
                         This course is part of a topcoder certification:
                     </div>
                     <div className={classNames(styles.certTitle, 'body-main-bold')}>
-                        {certification.title}
-                        {!!certifProgress && (
-                            <Link className={styles.externalLink} to={certifUrl}>
+                        {!!certifProgress ? (
+                            <Link className={styles.externalLink} to={certifUrl} target='_blank'>
+                                {certification.title}
                                 <IconOutline.ExternalLinkIcon />
                             </Link>
-                        )}
+                        ) : certification.title}
                     </div>
                 </div>
             </div>
