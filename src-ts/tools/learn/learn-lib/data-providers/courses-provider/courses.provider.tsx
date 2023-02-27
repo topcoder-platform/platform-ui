@@ -24,8 +24,13 @@ export function useGetCourses(
 
     const { data, error }: SWRResponse<ReadonlyArray<LearnCourse>> = useSWR(url, swrCacheConfig)
 
+    const course: LearnCourse | undefined = get(data, [0])
+
+    // sort modules by order property
+    course?.modules.sort((mA, mB) => mA.order - mB.order)
+
     return {
-        course: get(data, [0]),
+        course,
         loading: !data && !error,
         ready: !!data || !!error,
     }

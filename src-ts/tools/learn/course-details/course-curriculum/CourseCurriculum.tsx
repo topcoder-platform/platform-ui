@@ -1,9 +1,8 @@
 import { noop } from 'lodash'
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react'
 import { NavigateFunction, useNavigate, useSearchParams } from 'react-router-dom'
-import classNames from 'classnames'
 
-import { Button, UserProfile } from '../../../../lib'
+import { UserProfile } from '../../../../lib'
 import {
     CourseOutline,
     LearnCourse,
