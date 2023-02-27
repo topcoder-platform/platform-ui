@@ -49,6 +49,8 @@ const TCACertificationCompletedModal: FC<TCACertificationCompletedModalProps>
                     You have successfully completed the
                     {' '}
                     {props.certification.title}
+                    {' '}
+                    Certification
                     !
                 </h2>
                 <Button buttonStyle='outline' label='Check it out now!' onClick={handleClick} />
