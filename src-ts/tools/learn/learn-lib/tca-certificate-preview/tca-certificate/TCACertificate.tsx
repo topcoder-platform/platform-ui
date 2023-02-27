@@ -77,7 +77,7 @@ const TCACertificate: FC<TCACertificateProps> = (props: TCACertificateProps) => 
                                 <div className={styles.certInfoLeft}>
                                     <QRCodeSVG
                                         value={props.validateLink}
-                                        size={57}
+                                        size={75}
                                         className={styles.qrCode}
                                         includeMargin
                                     />
