@@ -135,7 +135,7 @@ const EnrollmentPage: FC<{}> = () => {
                 <PerksSection
                     style='clear'
                     items={perks}
-                    title='Enroll now with our introductory low pricing!'
+                    title='Enroll now for Free!'
                 />
 
                 <EnrolledModal
