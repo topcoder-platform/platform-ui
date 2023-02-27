@@ -1,4 +1,5 @@
 export * from './action-button'
+export * from './certificate-not-found-content'
 export * from './certificate-page-layout'
 export * from './collapsible-pane'
 export * from './completion-time-range'

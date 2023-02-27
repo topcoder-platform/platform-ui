@@ -1,13 +1,14 @@
 import {
     FC,
     MutableRefObject,
-    useEffect,
+    ReactNode,
     useMemo,
     useRef,
 } from 'react'
 
 import {
     AllCertificationsProviderData,
+    CertificateNotFoundContent,
     CertificatePageLayout,
     CoursesProviderData,
     useGetCertification,
@@ -20,13 +21,13 @@ import {
     getUserCertificateSsr,
 } from '../../learn.routes'
 import { UserProfile } from '../../../../lib'
+import { CertificateNotFound } from '../certificate-not-found'
 
 import Certificate from './certificate/Certificate'
 
 interface CertificateViewProps {
     certification: string
     fullScreenCertLayout?: boolean
-    onCertificationNotCompleted: () => void
     profile: UserProfile
     provider: string
 }
@@ -81,23 +82,14 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const ready: boolean = useMemo(() => (
         completedCertificateReady && courseReady && certificateReady
     ), [certificateReady, completedCertificateReady, courseReady])
+    const certificateNotFoundError: boolean = ready && !hasCompletedTheCertification
 
-    useEffect(() => {
+    function renderCertificate(): ReactNode {
         if (ready && !hasCompletedTheCertification) {
-            props.onCertificationNotCompleted()
+            return <CertificateNotFound />
         }
-    }, [coursePath, hasCompletedTheCertification, props, ready])
 
-    return (
-        <CertificatePageLayout
-            certificateElRef={certificateElRef}
-            fallbackBackUrl={coursePath}
-            fullScreenCertLayout={props.fullScreenCertLayout}
-            isCertificateCompleted={hasCompletedTheCertification}
-            isReady={ready}
-            ssrUrl={certUrl}
-            title={certificationTitle}
-        >
+        return (
             <Certificate
                 completedDate={completedCertificate?.completedDate ?? ''}
                 course={course?.title}
@@ -107,6 +99,25 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                 type={certificate?.certificationCategory.track}
                 userName={userName}
             />
+        )
+    }
+
+    return (
+        <CertificatePageLayout
+            certificateElRef={certificateElRef}
+            fallbackBackUrl={coursePath}
+            fullScreenCertLayout={!certificateNotFoundError && props.fullScreenCertLayout}
+            isCertificateCompleted={hasCompletedTheCertification}
+            isReady={ready}
+            ssrUrl={certUrl}
+            title={certificationTitle}
+            disableActions={ready && !hasCompletedTheCertification}
+            className={certificateNotFoundError ? 'cert-not-found-layout' : ''}
+            afterContent={certificateNotFoundError && (
+                <CertificateNotFoundContent className='desktop-hide' />
+            )}
+        >
+            {renderCertificate()}
         </CertificatePageLayout>
     )
 }

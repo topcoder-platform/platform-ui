@@ -35,7 +35,6 @@ const MyTCACertificate: FC<{}> = () => {
                 <CertificateView
                     certification={certificationParam}
                     profile={profile}
-                    onCertificationNotCompleted={navigateToCertification}
                 />
             )}
         </>

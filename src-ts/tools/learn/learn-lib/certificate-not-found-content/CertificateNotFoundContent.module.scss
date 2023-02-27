@@ -1,0 +1,43 @@
+@import '../../../../lib/styles/includes';
+
+.content {
+    color: $blue-25;
+    margin-top: $space-lg;
+
+    @include ltemd {
+        padding-left: $space-xxl;
+        padding-right: $space-xxl;
+    }
+
+    @include ltesm {
+        padding-left: $space-lg;
+        padding-right: $space-lg;
+    }
+
+    p, ol, li {
+        margin-top: $space-lg;
+    }
+    ol {
+        list-style: decimal;
+        padding-left: 16px;
+    }
+
+    ol li a {
+        display: flex;
+        align-items: center;
+        gap: $space-xs;
+        font-family: $font-roboto;
+        font-weight: bold;
+        font-size: 14px;
+        line-height: 14px;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: $tc-white;
+        margin-top: $space-sm;
+        svg {
+            display: block;
+            width: 14px;
+            height: 14px;
+        }
+    }
+}

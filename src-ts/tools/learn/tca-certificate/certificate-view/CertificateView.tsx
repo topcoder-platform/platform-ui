@@ -1,4 +1,4 @@
-import { FC, MutableRefObject, useCallback, useEffect, useMemo, useRef } from 'react'
+import { FC, MutableRefObject, ReactNode, useCallback, useRef } from 'react'
 
 import {
     IconOutline,
@@ -7,20 +7,19 @@ import {
 } from '../../../../lib'
 import {
     ActionButton,
+    CertificateNotFoundContent,
     CertificatePageLayout,
     TCACertificatePreview,
     TCACertification,
     TCACertificationValidationData,
-    useGetUserTCACompletedCertificationsMOCK,
-    UserCompletedTCACertificationsProviderData,
     useValidateTCACertification,
 } from '../../learn-lib'
 import { getTCACertificationPath, getTCACertificationValidationUrl, getUserTCACertificateSsr } from '../../learn.routes'
+import { CertificateNotFound } from '../certificate-not-found'
 
 interface CertificateViewProps {
     certification: string,
     fullScreenCertLayout?: boolean,
-    onCertificationNotCompleted: () => void
     profile: UserProfile,
 }
 
@@ -32,9 +31,13 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     const {
         certification,
         enrollment,
-        ready: certReady,
+        error: hasValidationError,
+        ready,
     }: TCACertificationValidationData
         = useValidateTCACertification(props.certification, props.profile.handle)
+
+    const hasCompletedTheCertification: boolean = !!certification && !!enrollment && !hasValidationError
+    const certificateNotFoundError: boolean = ready && !hasCompletedTheCertification
 
     function getCertTitle(user: string): string {
         return `${user} - ${certification?.title}`
@@ -48,32 +51,29 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
 
     const certificationTitle: string = getCertTitle(enrollment?.userName || props.profile.handle)
 
-    const {
-        certifications: [completedCertificate],
-        ready: completedCertificateReady,
-    }: UserCompletedTCACertificationsProviderData = useGetUserTCACompletedCertificationsMOCK(
-        props.profile.userId,
-        props.certification,
-    )
-
-    const hasCompletedTheCertification: boolean = !!completedCertificate
-
-    const ready: boolean = useMemo(() => (
-        completedCertificateReady && certReady
-    ), [completedCertificateReady, certReady])
-
-
     const validateLink: string = getTCACertificationValidationUrl(enrollment?.completionUuid as string)
 
     const handleLinkClick: () => void = useCallback(() => {
         window.open(validateLink, 'blank')
     }, [validateLink])
 
-    useEffect(() => {
-        if (ready && !hasCompletedTheCertification) {
-            props.onCertificationNotCompleted()
+    function renderCertificate(): ReactNode {
+        if (certificateNotFoundError) {
+            return <CertificateNotFound />
         }
-    }, [tcaCertificationPath, hasCompletedTheCertification, props, ready])
+
+        return (
+            <TCACertificatePreview
+                certification={certification as TCACertification}
+                completionUuid={enrollment?.completionUuid ?? ''}
+                userName={enrollment?.userName}
+                tcHandle={props.profile.handle}
+                completedDate={enrollment?.completedAt as string}
+                certificateElRef={certificateElRef}
+                validateLink={validateLink}
+            />
+        )
+    }
 
     return (
         <>
@@ -82,7 +82,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
             <CertificatePageLayout
                 certificateElRef={certificateElRef}
                 fallbackBackUrl={tcaCertificationPath}
-                fullScreenCertLayout={props.fullScreenCertLayout}
+                fullScreenCertLayout={!certificateNotFoundError && props.fullScreenCertLayout}
                 isCertificateCompleted={hasCompletedTheCertification}
                 isReady={ready}
                 ssrUrl={certUrl}
@@ -93,16 +93,12 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                         onClick={handleLinkClick}
                     />
                 )}
+                className={certificateNotFoundError ? 'cert-not-found-layout' : ''}
+                afterContent={certificateNotFoundError && (
+                    <CertificateNotFoundContent className='desktop-hide' />
+                )}
             >
-                <TCACertificatePreview
-                    certification={certification as TCACertification}
-                    completionUuid={enrollment?.completionUuid ?? ''}
-                    userName={enrollment?.userName}
-                    tcHandle={props.profile.handle}
-                    completedDate={enrollment?.completedAt as string}
-                    certificateElRef={certificateElRef}
-                    validateLink={validateLink}
-                />
+                {renderCertificate()}
             </CertificatePageLayout>
         </>
     )

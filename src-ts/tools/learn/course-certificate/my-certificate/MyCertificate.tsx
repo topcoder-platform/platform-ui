@@ -37,7 +37,6 @@ const MyCertificate: FC<{}> = () => {
                     certification={certificationParam}
                     profile={profile}
                     provider={providerParam}
-                    onCertificationNotCompleted={navigateToCourse}
                 />
             )}
         </>

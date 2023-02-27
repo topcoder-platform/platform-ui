@@ -34,6 +34,9 @@ interface CertificatePageLayoutProps {
     actions?: ReactNode
     certificateElRef: MutableRefObject<HTMLDivElement|undefined>
     children?: ReactNode
+    afterContent?: ReactNode
+    className?: string
+    disableActions?: boolean
     fallbackBackUrl?: string
     fullScreenCertLayout?: boolean
     isCertificateCompleted?: boolean
@@ -86,8 +89,8 @@ const CertificatePageLayout: FC<CertificatePageLayoutProps> = (props: Certificat
         <>
             <LoadingSpinner hide={props.isReady} />
 
-            {props.isReady && props.isCertificateCompleted && (
-                <div className={styles.wrap} ref={wrapElRef}>
+            {props.isReady && (
+                <div className={classNames(styles.wrap, props.className)} ref={wrapElRef}>
                     <div className={styles['content-wrap']}>
                         {!props.fullScreenCertLayout && (
                             <div className={styles['btns-wrap']}>
@@ -106,7 +109,14 @@ const CertificatePageLayout: FC<CertificatePageLayoutProps> = (props: Certificat
                             </div>
                         </div>
                         {!props.fullScreenCertLayout && (
-                            <div className={styles['btns-wrap']}>
+                            <div
+                                className={
+                                    classNames(
+                                        styles['btns-wrap'],
+                                        (!props.isCertificateCompleted || props.disableActions) && styles.disabled,
+                                    )
+                                }
+                            >
                                 <ActionButton
                                     icon={<IconOutline.PrinterIcon />}
                                     onClick={handlePrint}
@@ -131,6 +141,7 @@ const CertificatePageLayout: FC<CertificatePageLayoutProps> = (props: Certificat
                             </div>
                         )}
                     </div>
+                    {props.afterContent}
                 </div>
             )}
         </>

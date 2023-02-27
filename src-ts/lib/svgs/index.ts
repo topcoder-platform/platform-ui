@@ -21,6 +21,7 @@ import { ReactComponent as SocialIconYoutube } from './social-yt-icon.svg'
 import { ReactComponent as TooltipArrowIcon } from './tooltip-arrow.svg'
 import { ReactComponent as TcAcademyLogoSvg } from './tc-academy-logo.svg'
 import { ReactComponent as TCAcademyLogoWhiteSvg } from './tc-academy-logo-white.svg'
+import { ReactComponent as TCAcademyLogoMixedSvg } from './tc-academy-logo-mixed.svg'
 import { ReactComponent as TcLogoSvg } from './tc-logo.svg'
 import { ReactComponent as TCLogoSvg } from './tc-logo-white.svg'
 import { ReactComponent as FccLogoSvg } from './vendor-fcc-logo.svg'
@@ -49,6 +50,7 @@ export {
     IconCheck,
     TcAcademyLogoSvg,
     TCAcademyLogoWhiteSvg,
+    TCAcademyLogoMixedSvg,
     TcLogoSvg,
     TCLogoSvg,
     FccLogoSvg,

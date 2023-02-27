@@ -40,7 +40,6 @@ const UserCertificate: FC<{}> = () => {
                     certification={certificationParam}
                     profile={profile}
                     provider={providerParam}
-                    onCertificationNotCompleted={() => { }}
                     fullScreenCertLayout
                 />
             )}
