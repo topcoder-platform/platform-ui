@@ -6,7 +6,6 @@ import {
     SetStateAction,
     useCallback,
     useContext,
-    useEffect,
     useLayoutEffect,
     useRef,
     useState,
@@ -21,13 +20,10 @@ import {
 } from '../../../../lib'
 import {
     enrollTCACertificationAsync,
-    TCACertificationCheckCompleted,
-    TCACertificationProgress,
     TCACertificationProgressProviderData,
     TCACertificationProviderData,
     useGetTCACertification,
     useGetTCACertificationProgress,
-    useTCACertificationCheckCompleted,
 } from '../../learn-lib'
 import { perks } from '../certification-details-modal/certif-details-content/data'
 import { PerksSection } from '../perks-section'
@@ -60,7 +56,6 @@ const EnrollmentPage: FC<{}> = () => {
     const {
         progress,
         ready: progressReady,
-        refetch: refetchProgress,
         setCertificateProgress,
     }: TCACertificationProgressProviderData = useGetTCACertificationProgress(
         profile?.userId as unknown as string,
@@ -69,17 +64,6 @@ const EnrollmentPage: FC<{}> = () => {
     )
 
     const ready: boolean = profileReady && certificationReady && progressReady && !!profile
-
-    const firstResourceProgress: TCACertificationProgress['resourceProgresses'][0] | undefined
-        = progress?.resourceProgresses?.[0]
-
-    const {
-        ready: certCheckReady,
-    }: TCACertificationCheckCompleted = useTCACertificationCheckCompleted(
-        firstResourceProgress?.resourceProgressType ?? '',
-        firstResourceProgress?.resourceProgressId ?? '',
-        { enabled: !!firstResourceProgress?.resourceProgressType },
-    )
 
     if (ready && profile && !userInfo.current) {
         userInfo.current = { ...profile }
@@ -117,17 +101,8 @@ const EnrollmentPage: FC<{}> = () => {
 
     function closeEnrolledModal(): void {
         setIsEnrolledModalOpen(false)
-    }
-
-    useEffect(() => {
-        if (!certCheckReady || isEnrolledModalOpen) {
-            return
-        }
-
-        refetchProgress()
         navToCertificationDetails()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [certCheckReady, isEnrolledModalOpen])
+    }
 
     function renderMainContent(): ReactNode {
         return ready ? (
