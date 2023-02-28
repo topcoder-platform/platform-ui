@@ -59,4 +59,12 @@
     :global(.completed-qa) {
         background: $tc-qa-grad;
     }
+
+    :global(.completed-interview) {
+        background: $tc-interview-grad;
+    }
+
+    :global(.completed-security) {
+        background: $tc-security-grad;
+    }
 }
