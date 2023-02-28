@@ -1,9 +1,10 @@
 import { Dictionary } from 'lodash'
-import { FC, Fragment, ReactNode } from 'react'
+import { ChangeEvent, FC, Fragment, ReactNode, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { LearnCertification, LearnUserCertificationProgress } from '../../learn-lib'
 import { CoursesCard } from '../courses-card'
+import { FilterBar } from '../filter-bar'
 
 import styles from './AvailableCoursesList.module.scss'
 
@@ -13,6 +14,7 @@ interface AvailableCoursesListProps {
     certificationsGroups: Array<string>
     selectedCategory: string
     certificationsProgresses: ReadonlyArray<LearnUserCertificationProgress>
+    onSelectCategory: (e: ChangeEvent<HTMLInputElement>) => void
 }
 
 const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCoursesListProps) => {
@@ -41,6 +43,20 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
         </Fragment>
     )
 
+    // compute all the available category dropdown options
+    const certsCategoriesOptions: Array<{
+        label: string,
+        value: string,
+    }> = useMemo(() => [
+        { label: 'All Categories', orderIndex: -1, value: '' },
+        ...Object.keys(props.certsByCategory)
+            .sort()
+            .map(c => ({
+                label: c,
+                value: c,
+            })),
+    ], [props.certsByCategory])
+
     return (
         <div className={styles.wrap}>
             <div className={styles.coursesListHeaderWrap}>
@@ -52,6 +68,11 @@ const AvailableCoursesList: FC<AvailableCoursesListProps> = (props: AvailableCou
                         </span>
                     </h2>
 
+                    <FilterBar
+                        certsCategoriesOptions={certsCategoriesOptions}
+                        onSelectCategory={props.onSelectCategory}
+                        selectedCategory={props.selectedCategory}
+                    />
                 </div>
 
                 <div className={styles.teaseBanner}>

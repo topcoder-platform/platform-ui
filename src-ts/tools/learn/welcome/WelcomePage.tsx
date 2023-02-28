@@ -29,7 +29,6 @@ import '../../../lib/styles/index.scss'
 import { AvailableCoursesList } from './available-courses-list'
 import { WhatTCACanDo } from './what-tca-cando'
 import { TCCertifications } from './tc-certifications'
-import { FilterBar } from './filter-bar'
 import styles from './WelcomePage.module.scss'
 
 const PRIORITY_CATEGORIES: ReadonlyArray<string> = [
@@ -67,20 +66,6 @@ const WelcomePage: FC = () => {
         = useMemo(() => (
             groupBy(orderBy(allCertsData.certifications, 'title', 'asc'), 'certificationCategory.category')
         ), [allCertsData.certifications])
-
-    // compute all the available category dropdown options
-    const certsCategoriesOptions: Array<{
-        label: string,
-        value: string,
-    }> = useMemo(() => [
-        { label: 'All Categories', orderIndex: -1, value: '' },
-        ...Object.keys(certsByCategory)
-            .sort()
-            .map(c => ({
-                label: c,
-                value: c,
-            })),
-    ], [certsByCategory])
 
     // create and sort the certificates groups
     const certificationsGroups: Array<string> = useMemo(() => orderBy(
@@ -124,14 +109,6 @@ const WelcomePage: FC = () => {
 
                     <WhatTCACanDo />
 
-                    <FilterBar
-                        certsCategoriesOptions={certsCategoriesOptions}
-                        onSelectCategory={onSelectCategory}
-                        selectedCategory={selectedCategory}
-                    />
-
-                    <PageDivider />
-
                     <TCCertifications
                         certifications={allTCACertifications.certifications}
                         progress={certsProgress}
@@ -146,6 +123,7 @@ const WelcomePage: FC = () => {
                             certificationsGroups={certificationsGroups}
                             selectedCategory={selectedCategory}
                             certificationsProgresses={userCertsData.progresses}
+                            onSelectCategory={onSelectCategory}
                         />
                     )}
                 </div>
