@@ -33,7 +33,7 @@ import {
 } from '../../learn-lib'
 import { EnvironmentConfig } from '../../../../config'
 import { getTCACertificationValidationUrl } from '../../learn.routes'
-import { hideSiblings } from '../../learn-lib/functions'
+import { clearFCCCertificationTitle, hideSiblings } from '../../learn-lib/functions'
 
 import styles from './ValidateTCACertificate.module.scss'
 
@@ -70,7 +70,9 @@ const ValidateTCACertificate: FC<{}> = () => {
         = useMemo(() => courses?.map((course: any) => (
             <div className={styles.courseCard} key={course.freeCodeCampCertification.fccId}>
                 <CourseBadge type={certification?.certificationCategory.track as TCACertificateType} />
-                <p className='body-main-bold'>{course.freeCodeCampCertification.title}</p>
+                <p className='body-main-bold'>
+                    {clearFCCCertificationTitle(course.freeCodeCampCertification.title)}
+                </p>
             </div>
         )), [courses, certification])
 
