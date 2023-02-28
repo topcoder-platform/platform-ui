@@ -23,7 +23,7 @@ const EnrolledModal: FC<EnrolledModalProps> = (props: EnrolledModalProps) => {
         <BaseModal
             onClose={props.onClose}
             open={isOpen}
-            size='sm'
+            size='lg'
             classNames={{ modal: styles.enrolledModal, root: styles.modalRoot }}
         >
             <>
@@ -33,6 +33,7 @@ const EnrolledModal: FC<EnrolledModalProps> = (props: EnrolledModalProps) => {
                 <Button
                     buttonStyle='outline'
                     label='Go to the certification details'
+                    size='sm'
                     onClick={props.onClose}
                 />
             </>
