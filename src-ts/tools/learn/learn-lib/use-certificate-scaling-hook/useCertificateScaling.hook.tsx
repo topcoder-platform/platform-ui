@@ -4,6 +4,7 @@ export function useCertificateScaling(
     certificateRef?: MutableRefObject<HTMLDivElement | undefined>,
     originalSizeLg: number = 1250,
     originalSizeSm: number = 975,
+    scaleLimit: number = 1,
 ): void {
 
     // the certificate isn't responsive: should look the same on mobile and desktop
@@ -19,12 +20,12 @@ export function useCertificateScaling(
             // 975 and 1250 are the original container sizes,
             // and we're dividing by that to get the needed zoom level
             const ratioSize: number = window.innerWidth <= 745 ? originalSizeSm : originalSizeLg
-            const scaleLevel: number = Math.min(1, parentWidth / ratioSize)
+            const scaleLevel: number = Math.min(scaleLimit, parentWidth / ratioSize)
             Object.assign(certificateEl.style, { transform: `scale(${scaleLevel})`, transformOrigin: '0 0' })
         }
 
         window.addEventListener('resize', handleResize, false)
         handleResize()
         return () => window.removeEventListener('resize', handleResize, false)
-    }, [certificateRef, originalSizeLg, originalSizeSm])
+    }, [certificateRef, originalSizeLg, originalSizeSm, scaleLimit])
 }

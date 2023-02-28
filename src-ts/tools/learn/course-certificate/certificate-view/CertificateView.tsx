@@ -96,7 +96,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                 elRef={certificateElRef}
                 provider={course?.resourceProvider.name}
                 tcHandle={props.profile.handle}
-                type={certificate?.certificationCategory.track}
+                type={certificate?.certificationCategory?.track}
                 userName={userName}
             />
         )

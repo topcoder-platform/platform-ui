@@ -7,6 +7,7 @@
     display: flex;
 
     background: $tc-grad15;
+    overflow: hidden;
 }
 
 .content-wrap {
@@ -29,6 +30,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    z-index: 1;
+    position: relative;
 
     gap: $space-sm;
 
@@ -52,7 +55,7 @@
 .certificate-wrap {
     aspect-ratio: $tca-certif-aspect-ratio;
     width: 100%;
-    max-width: 880px;
+    max-width: 1216px;
     position: relative;
 
     &:global(.large-container) {

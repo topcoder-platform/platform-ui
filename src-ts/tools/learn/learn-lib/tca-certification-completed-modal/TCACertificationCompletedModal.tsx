@@ -41,7 +41,7 @@ const TCACertificationCompletedModal: FC<TCACertificationCompletedModalProps>
         <BaseModal
             onClose={handleClose}
             open={isOpen}
-            size='sm'
+            size='lg'
             classNames={{ modal: styles.completedModal, root: styles.modalRoot }}
         >
             <>
@@ -53,7 +53,7 @@ const TCACertificationCompletedModal: FC<TCACertificationCompletedModalProps>
                     Certification
                     !
                 </h2>
-                <Button buttonStyle='outline' label='Check it out now!' onClick={handleClick} />
+                <Button buttonStyle='outline' label='Check it out now!' size='sm' onClick={handleClick} />
             </>
 
         </BaseModal>

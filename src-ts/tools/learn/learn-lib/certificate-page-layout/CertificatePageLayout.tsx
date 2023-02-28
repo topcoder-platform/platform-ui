@@ -53,7 +53,12 @@ const CertificatePageLayout: FC<CertificatePageLayoutProps> = (props: Certificat
     const certificateWrapRef: MutableRefObject<HTMLDivElement | any> = useRef()
     const navigateBack: NavigateBackFunction = useNavigateBack()
 
-    useCertificateScaling(props.isReady ? certificateWrapRef : undefined, 880, 880)
+    useCertificateScaling(
+        props.isReady ? certificateWrapRef : undefined,
+        880,
+        880,
+        viewStyle ? 1 : Math.min(),
+    )
 
     const handleBackBtnClick: () => void = useCallback(() => {
         navigateBack(props.fallbackBackUrl ?? '')

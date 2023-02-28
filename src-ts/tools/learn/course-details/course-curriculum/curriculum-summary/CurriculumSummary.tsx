@@ -56,7 +56,7 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
                     <div className={styles.title}>
                         {title}
                     </div>
-                    <ProgressBar progress={progress ?? 0} />
+                    <ProgressBar progress={completed ? 100 : (progress ?? 0)} />
                 </>
             )}
 
