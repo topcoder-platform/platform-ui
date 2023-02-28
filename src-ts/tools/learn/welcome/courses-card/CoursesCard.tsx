@@ -90,7 +90,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
             <div className={styles.cardHeaderDividerWrap}>
                 {(isInProgress || isCompleted) && (
                     <ProgressBar
-                        progress={(props.progress?.courseProgressPercentage ?? 0) / 100}
+                        progress={(isCompleted ? 100 : (props.progress?.courseProgressPercentage ?? 0)) / 100}
                         track={props.certification.certificationCategory.track}
                     />
                 )}
