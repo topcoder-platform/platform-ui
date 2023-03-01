@@ -147,7 +147,7 @@ You will need to add the following line to your hosts file. The hosts file is no
 
 SSL is required for authentication to work properly.
 
-The `yarn start` command serves the site using the cert and key in the /ssl directory, which authorize the `https://local.topcoder-dev.com` URL. 
+The `yarn start` command serves the site using the cert and key in the /ssl directory, which authorize the `https://local.topcoder-dev.com`URL.
 
 By overriding the app to use <b>port 443</b>, you can use the authorized URL and trust the root CA to avoid SSL errors in the browser.
 
@@ -157,6 +157,7 @@ Easy way to overcome elevated permissions is to make use of:
 
 ```
 sudo setcap 'cap_net_bind_service=+ep' `which node`
+```
 
 For easier development, it is recommended that you add this certificate to your trusted root authorities and as a trused cert in your browser. Google your browser and OS for more info on how to trust cert authorities.
 

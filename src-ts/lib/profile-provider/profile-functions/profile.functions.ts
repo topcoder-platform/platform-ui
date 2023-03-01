@@ -28,17 +28,11 @@ export async function getLoggedInAsync(handle?: string): Promise<UserProfile | u
     return output
 }
 
-export async function getPublicAsync(handle?: string): Promise<UserProfile | undefined> {
-
-    // get the handle
-    if (!handle) {
-        return Promise.resolve(undefined)
-    }
+export async function getPublicAsync(handle: string): Promise<UserProfile | undefined> {
 
     // get the profile
     const profileResult: UserProfile = await profileStoreGet(handle)
 
-    // make the changes we need based on the token
     const output: UserProfile = profileFactoryCreate(profileResult)
     return output
 }
