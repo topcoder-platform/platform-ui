@@ -60,7 +60,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
     }
 
     const completionTimeRange: TCACertificationCompletionTimeRange = useHoursEstimateToRange(
-        props.certification.course.estimatedCompletionTimeValue,
+        props.certification.course?.estimatedCompletionTimeValue,
     )
 
     return (
