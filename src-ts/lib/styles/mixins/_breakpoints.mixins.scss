@@ -85,8 +85,26 @@
     }
 }
 
+@mixin ltexl {
+    @media (max-width: #{$xl-max}) {
+        @content;
+    }
+}
+
 @mixin xl {
     @media (min-width: #{$xl-min}) and (max-width: #{$xl-max}){
+        @content;
+    }
+}
+
+@mixin gtexl {
+    @media (min-width: #{$xl-min}) {
+        @content;
+    }
+}
+
+@mixin ltexxl {
+    @media (max-width: #{$xl-max}) {
         @content;
     }
 }

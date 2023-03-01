@@ -1,1 +1,1 @@
-export type LearnCertificateTrackType = 'QA'|'DEV'|'DATASCIENCE'|'DESIGN'|'INTERVIEW'|'SECURITY'
+export type LearnCertificateTrackType = 'QA' | 'DEV' | 'DATASCIENCE' | 'DESIGN' | 'DATABASE' | 'INTERVIEW' | 'SECURITY'

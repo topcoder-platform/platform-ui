@@ -1,49 +1,40 @@
-import { FC, MutableRefObject, useCallback, useEffect, useMemo, useRef } from 'react'
-import { NavigateFunction, useNavigate } from 'react-router-dom'
-import classNames from 'classnames'
-import html2canvas from 'html2canvas'
+import {
+    FC,
+    MutableRefObject,
+    ReactNode,
+    useMemo,
+    useRef,
+} from 'react'
 
 import {
-    FacebookSocialShareBtn,
-    fileDownloadCanvasAsImage,
-    IconOutline,
-    LinkedinSocialShareBtn,
-    LoadingSpinner,
-    TwitterSocialShareBtn,
-    UserProfile,
-} from '../../../../lib'
-import {
     AllCertificationsProviderData,
+    CertificateNotFoundContent,
+    CertificatePageLayout,
     CoursesProviderData,
     useGetCertification,
     useGetCourses,
     useGetUserCompletedCertifications,
     UserCompletedCertificationsProviderData,
 } from '../../learn-lib'
-import { getCoursePath, getUserCertificateSsr } from '../../learn.routes'
+import {
+    getCoursePath,
+    getUserCertificateSsr,
+} from '../../learn.routes'
+import { UserProfile } from '../../../../lib'
+import { CertificateNotFound } from '../certificate-not-found'
 
-import { ActionButton } from './action-button'
-import { Certificate } from './certificate'
-import { useCertificateScaling } from './use-certificate-scaling.hook'
-import styles from './CertificateView.module.scss'
-
-export type CertificateViewStyle = 'large-container' | undefined
+import Certificate from './certificate/Certificate'
 
 interface CertificateViewProps {
-    certification: string,
-    hideActions?: boolean,
-    onCertificationNotCompleted: () => void
-    profile: UserProfile,
-    provider: string,
-    viewStyle: CertificateViewStyle
+    certification: string
+    fullScreenCertLayout?: boolean
+    profile: UserProfile
+    provider: string
 }
 
 const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) => {
-
-    const navigate: NavigateFunction = useNavigate()
     const coursePath: string = getCoursePath(props.provider, props.certification)
     const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
-    const certificateWrapRef: MutableRefObject<HTMLDivElement | any> = useRef()
 
     const userName: string = useMemo(() => (
         [props.profile.firstName, props.profile.lastName].filter(Boolean)
@@ -56,13 +47,22 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         ready: courseReady,
     }: CoursesProviderData = useGetCourses(props.provider, props.certification)
 
+    const {
+        certification: certificate,
+        ready: certificateReady,
+    }: AllCertificationsProviderData = useGetCertification(
+        props.provider,
+        course?.certificationId ?? '',
+        { enabled: !!course?.certificationId },
+    )
+
     function getCertTitle(user: string): string {
         return `${user} - ${course?.title} Certification`
     }
 
     const certUrl: string = getUserCertificateSsr(
         props.provider,
-        props.certification,
+        certificate?.certification ?? '',
         props.profile.handle,
         getCertTitle(props.profile.handle),
     )
@@ -75,146 +75,50 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     }: UserCompletedCertificationsProviderData = useGetUserCompletedCertifications(
         props.profile.userId,
         props.provider,
-        props.certification,
+        certificate?.certification,
     )
     const hasCompletedTheCertification: boolean = !!completedCertificate
-
-    const {
-        certification: certificate,
-        ready: certificateReady,
-    }: AllCertificationsProviderData = useGetCertification(
-        props.provider,
-        course?.certificationId ?? '',
-        { enabled: !!course?.certificationId },
-    )
 
     const ready: boolean = useMemo(() => (
         completedCertificateReady && courseReady && certificateReady
     ), [certificateReady, completedCertificateReady, courseReady])
+    const certificateNotFoundError: boolean = ready && !hasCompletedTheCertification
 
-    const readyAndCompletedCertification: boolean = useMemo(() => (
-        ready && hasCompletedTheCertification
-    ), [hasCompletedTheCertification, ready])
-
-    useCertificateScaling(ready ? certificateWrapRef : undefined)
-
-    const handleBackBtnClick: () => void = useCallback(() => {
-        navigate(coursePath)
-    }, [coursePath, navigate])
-
-    const getCertificateCanvas: () => Promise<HTMLCanvasElement | void> = useCallback(async () => {
-
-        if (!certificateElRef.current) {
-            return undefined
-        }
-
-        return html2canvas(certificateElRef.current, {
-            // when canvas iframe is ready, remove text gradients
-            // as they're not supported in html2canvas
-            onclone: (doc: Document) => {
-                [].forEach.call(doc.querySelectorAll('.grad'), (el: HTMLDivElement) => {
-                    el.classList.remove('grad')
-                })
-            },
-            // scale (pixelRatio) doesn't matter for the final ceriticate, use 1
-            scale: 1,
-            // use the same (ideal) window size when rendering the certificate
-            windowHeight: 700,
-            windowWidth: 1024,
-        })
-    }, [])
-
-    const handleDownload: () => Promise<void> = useCallback(async () => {
-
-        const canvas: HTMLCanvasElement | void = await getCertificateCanvas()
-        if (!!canvas) {
-            fileDownloadCanvasAsImage(canvas, `${certificationTitle}.png`)
-        }
-
-    }, [certificationTitle, getCertificateCanvas])
-
-    const handlePrint: () => Promise<void> = useCallback(async () => {
-
-        const canvas: HTMLCanvasElement | void = await getCertificateCanvas()
-        if (!canvas) {
-            return
-        }
-
-        const printWindow: Window | null = window.open('')
-        if (!printWindow) {
-            return
-        }
-
-        printWindow.document.body.appendChild(canvas)
-        printWindow.document.title = certificationTitle
-        printWindow.focus()
-        printWindow.print()
-    }, [certificationTitle, getCertificateCanvas])
-
-    useEffect(() => {
+    function renderCertificate(): ReactNode {
         if (ready && !hasCompletedTheCertification) {
-            props.onCertificationNotCompleted()
+            return <CertificateNotFound />
         }
-    }, [coursePath, hasCompletedTheCertification, props, ready])
+
+        return (
+            <Certificate
+                completedDate={completedCertificate?.completedDate ?? ''}
+                course={course?.title}
+                elRef={certificateElRef}
+                provider={course?.resourceProvider.name}
+                tcHandle={props.profile.handle}
+                type={certificate?.certificationCategory?.track}
+                userName={userName}
+            />
+        )
+    }
 
     return (
-        <>
-            <LoadingSpinner hide={ready} />
-
-            {ready && readyAndCompletedCertification && (
-                <div className={styles.wrap}>
-                    <div className={styles['content-wrap']}>
-                        {!props.hideActions && (
-                            <div className={styles['btns-wrap']}>
-                                <ActionButton
-                                    icon={<IconOutline.ChevronLeftIcon />}
-                                    onClick={handleBackBtnClick}
-                                />
-                            </div>
-                        )}
-                        <div
-                            className={classNames(styles['certificate-wrap'], props.viewStyle)}
-                            ref={certificateWrapRef}
-                        >
-                            <Certificate
-                                course={course?.title}
-                                userName={userName}
-                                tcHandle={props.profile.handle}
-                                provider={course?.provider}
-                                completedDate={completedCertificate?.completedDate ?? ''}
-                                elRef={certificateElRef}
-                                type={certificate?.trackType}
-                                viewStyle={props.viewStyle}
-                            />
-                        </div>
-                        {!props.hideActions && (
-                            <div className={styles['btns-wrap']}>
-                                <ActionButton
-                                    icon={<IconOutline.PrinterIcon />}
-                                    onClick={handlePrint}
-                                />
-                                <ActionButton
-                                    icon={<IconOutline.DownloadIcon />}
-                                    onClick={handleDownload}
-                                />
-                                <FacebookSocialShareBtn
-                                    className={styles['share-btn']}
-                                    shareUrl={certUrl}
-                                />
-                                <LinkedinSocialShareBtn
-                                    className={styles['share-btn']}
-                                    shareUrl={certUrl}
-                                />
-                                <TwitterSocialShareBtn
-                                    className={styles['share-btn']}
-                                    shareUrl={certUrl}
-                                />
-                            </div>
-                        )}
-                    </div>
-                </div>
+        <CertificatePageLayout
+            certificateElRef={certificateElRef}
+            fallbackBackUrl={coursePath}
+            fullScreenCertLayout={!certificateNotFoundError && props.fullScreenCertLayout}
+            isCertificateCompleted={hasCompletedTheCertification}
+            isReady={ready}
+            ssrUrl={certUrl}
+            title={certificationTitle}
+            disableActions={ready && !hasCompletedTheCertification}
+            className={certificateNotFoundError ? 'cert-not-found-layout' : ''}
+            afterContent={certificateNotFoundError && (
+                <CertificateNotFoundContent className='desktop-hide' />
             )}
-        </>
+        >
+            {renderCertificate()}
+        </CertificatePageLayout>
     )
 }
 

@@ -2,18 +2,16 @@
 @import 'mixins';
 
 html {
-    --header-height: 80px;
-    --footer-height: 51px;
+    --header-height: 60px;
+    --footer-height: 96px;
     --breadcrumb-height: 64px;
 
-    @include ltemd {
-        --header-height: 64px;
-        --breadcrumb-height: 48px;
+    @media (max-width: 767px) {
+        --header-height: 48px;
     }
 
-    @include ltesm {
-        --header-height: 48px;
-        --footer-height: 101px;
+    @include ltemd {
+        --breadcrumb-height: 48px;
     }
 }
 

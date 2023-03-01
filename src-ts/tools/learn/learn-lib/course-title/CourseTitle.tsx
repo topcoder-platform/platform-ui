@@ -1,14 +1,15 @@
 import { FC, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { LearnCertificateTrackType } from '../all-certifications-provider'
+import { LearnCertificateTrackType, TCACertificationProviderBase } from '../data-providers'
 import { CourseBadge } from '../course-badge'
+import { ProvidersLogoList } from '../providers-logo-list'
 
 import styles from './CourseTitle.module.scss'
 
 interface CourseTitleProps {
     children?: ReactNode
-    credits?: string
+    provider?: string
     size?: 'md'|'lg'|'xl'
     title: string
     trackType?: LearnCertificateTrackType
@@ -38,11 +39,12 @@ const CourseTitle: FC<CourseTitleProps> = (props: CourseTitleProps) => {
                         {props.children}
                     </span>
                 </div>
-                {props.credits && (
+                {props.provider && (
                     <em className={classNames('quote-small', props.size)}>
-                        by
-                        {' '}
-                        {props.credits}
+                        <ProvidersLogoList
+                            providers={[{ name: props.provider } as TCACertificationProviderBase]}
+                            label='by'
+                        />
                     </em>
                 )}
                 <span className='desktop-hide'>

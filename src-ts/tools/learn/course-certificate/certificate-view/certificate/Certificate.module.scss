@@ -1,9 +1,9 @@
 @import '../../../../../lib/styles/includes';
-@import './includes';
 
 .wrap {
     display: flex;
     height: 100%;
+    background: $tc-white;
 }
 
 .details {
@@ -20,7 +20,7 @@
         flex-direction: column;
     }
 
-    .wrap:global(.large-container) & {
+    :global(.large-container) & {
         padding-left: calc($space-mx + $space-mxx);
     }
 
@@ -137,14 +137,14 @@
 
     svg {
         width: auto;
-        height: 100%;
     }
 }
 
 .divider {
     width: $border;
     background: $black-10;
-    margin: 0 $space-xxxxl;
+    margin: 0 $space-lg;
+    flex: 0 0 auto;
 }
 
 .vendor {

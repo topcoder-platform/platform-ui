@@ -2,6 +2,7 @@
 import { EnvironmentConfigModel } from './environment-config.model'
 
 const COMMUNITY_WEBSITE: string = 'https://www.topcoder-dev.com'
+const TCA_WEBSITE: string = 'https://platform-ui.topcoder-dev.com'
 
 export const EnvironmentConfigDefault: EnvironmentConfigModel = {
     ANALYTICS: {
@@ -36,11 +37,13 @@ export const EnvironmentConfigDefault: EnvironmentConfigModel = {
             'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJUb3Bjb2RlciBVc2VyIl0sImlzcyI6Imh0dHBzOi8vYXBpLnRvcGNvZGVyLWRldi5jb20iLCJoYW5kbGUiOiJ0ZXN0MSIsImV4cCI6MjU2MzA3NjY4OSwidXNlcklkIjoiNDAwNTEzMzMiLCJpYXQiOjE0NjMwNzYwODksImVtYWlsIjoidGVzdEB0b3Bjb2Rlci5jb20iLCJqdGkiOiJiMzNiNzdjZC1iNTJlLTQwZmUtODM3ZS1iZWI4ZTBhZTZhNGEifQ.jl6Lp_friVNwEP8nfsfmL-vrQFzOFp2IfM_HC7AwGcg',
     },
     TOPCODER_URLS: {
+        ACCOUNT_PROFILE: `${COMMUNITY_WEBSITE}/settings/profile`,
         ACCOUNT_SETTINGS: `${COMMUNITY_WEBSITE}/settings/account`,
         API_BASE: `${COMMUNITY_WEBSITE}/api`,
         BLOG_PAGE: `${COMMUNITY_WEBSITE}/blog`,
         CHALLENGES_PAGE: `${COMMUNITY_WEBSITE}/challenges`,
         GIGS_PAGE: `${COMMUNITY_WEBSITE}/gigs`,
+        TCA: `${TCA_WEBSITE}`,
         THRIVE_PAGE: `${COMMUNITY_WEBSITE}/thrive`,
         USER_PROFILE: `${COMMUNITY_WEBSITE}/members`,
         WP_CONTENT: `${COMMUNITY_WEBSITE}/wp-content`,

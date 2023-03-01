@@ -10,10 +10,18 @@
         display: flex;
         flex-direction: column;
         width: 100vw;
-        height: 100vh;
+        height: calc(var(--vh, 1vh) * 100);
         margin: auto;
         border-radius: 0;
         padding: $space-xxl $space-xxxxl $space-xxxxl;
+
+        &.modal-sm {
+            width: 361px;
+            min-width: auto;
+            @include ltemd {
+                width: 100vw;
+            }
+        }
 
         &.modal-md {
             width: 450px;
@@ -21,6 +29,14 @@
 
         &.modal-lg {
             width: 700px;
+        }
+
+        &.modal-body {
+            width: 90vw;
+            max-width: 1000px;
+            @include ltemd {
+                width: 100vw;
+            }
         }
 
         @include ltemd {

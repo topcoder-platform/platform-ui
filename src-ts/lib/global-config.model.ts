@@ -29,12 +29,14 @@ export interface GlobalConfig {
         CUSTOMER_TOKEN: string
     }
     TOPCODER_URLS: {
+        ACCOUNT_PROFILE: string
         ACCOUNT_SETTINGS: string
         API_BASE: string
         BLOG_PAGE: string
         CHALLENGES_PAGE: string
         GIGS_PAGE: string
         THRIVE_PAGE: string
+        TCA: string
         USER_PROFILE: string
         WP_CONTENT: string
     }

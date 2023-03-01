@@ -1,4 +1,4 @@
-import { FC, useContext, useEffect } from 'react'
+import { FC, ReactNode, useContext, useEffect } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 
 import { EnvironmentConfig } from '../../../config'
@@ -15,12 +15,15 @@ import {
     AllCertificationsProviderData,
     CoursesProviderData,
     CourseTitle,
+    TCACertificationCheckCompleted,
     useGetCertification,
     useGetCourses,
     useGetUserCertificationProgress,
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
+    useTCACertificationCheckCompleted,
+    useTcaCertificationModal,
 } from '../learn-lib'
 import { getCertificatePath, getCoursePath, LEARN_PATHS, rootRoute } from '../learn.routes'
 
@@ -55,10 +58,16 @@ const CourseCompletedPage: FC<{}> = () => {
         ready: certifReady,
     }: AllCertificationsProviderData = useGetCertification(
         providerParam,
-        textFormatGetSafeString(progress?.certificationId),
+        textFormatGetSafeString(progress?.fccCertificationId),
         {
-            enabled: progressReady && !!progress?.certificationId,
+            enabled: progressReady && !!progress?.fccCertificationId,
         },
+    )
+
+    const { certification: tcaCertificationName }: TCACertificationCheckCompleted = useTCACertificationCheckCompleted(
+        'FccCertificationProgress',
+        progress?.id ?? '',
+        { enabled: !!progress?.id },
     )
 
     const isLoggedIn: boolean = profileReady && !!profile
@@ -75,6 +84,8 @@ const CourseCompletedPage: FC<{}> = () => {
             url: LEARN_PATHS.completed,
         },
     ])
+
+    const tcaCertificationCompletedModal: ReactNode = useTcaCertificationModal(tcaCertificationName)
 
     useEffect(() => {
         if (ready && progress?.status !== UserCertificationProgressStatus.completed) {
@@ -107,8 +118,8 @@ const CourseCompletedPage: FC<{}> = () => {
                                     <CourseTitle
                                         size='xl'
                                         title={courseData.title}
-                                        credits={courseData.provider}
-                                        trackType={certification?.trackType}
+                                        provider={courseData.resourceProvider.name}
+                                        trackType={certification?.certificationCategory.track}
                                     />
                                 </div>
                                 <hr />
@@ -125,7 +136,12 @@ const CourseCompletedPage: FC<{}> = () => {
                                         size='sm'
                                         buttonStyle='secondary'
                                         label='View certificate'
-                                        route={getCertificatePath(courseData.provider, courseData.certification)}
+                                        route={(
+                                            getCertificatePath(
+                                                courseData.resourceProvider.name,
+                                                certificationParam,
+                                            )
+                                        )}
                                     />
                                     <Button
                                         size='sm'
@@ -151,6 +167,7 @@ const CourseCompletedPage: FC<{}> = () => {
                             </div>
                         </div>
                     </div>
+                    {tcaCertificationCompletedModal}
                 </>
             )}
         </>

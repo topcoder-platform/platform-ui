@@ -9,8 +9,13 @@ import { UserCertificationInProgress } from './user-certification-in-progress.mo
 import { LearnUserCertificationProgress, UserCertificationProgressStatus } from './user-certifications-functions'
 import { UserCertificationsProviderData } from './user-certifications-provider-data.model'
 
+interface GetUserCertificationsOptions {
+    enabled?: boolean
+}
+
 export function useGetUserCertifications(
     provider: string = 'freeCodeCamp',
+    options: GetUserCertificationsOptions = {} as GetUserCertificationsOptions,
 ): UserCertificationsProviderData {
     const profileContextData: ProfileContextData = useContext<ProfileContextData>(profileContext)
     const userId: number | undefined = profileContextData?.profile?.userId
@@ -25,7 +30,7 @@ export function useGetUserCertifications(
     const url: string = learnUrlGet('certification-progresses', params)
 
     const { data, error }: SWRResponse<ReadonlyArray<LearnUserCertificationProgress>> = useSWR(url, {
-        isPaused: () => !userId,
+        isPaused: () => !userId || options?.enabled === false,
     })
     const loading: boolean = !data && !error
 
@@ -57,6 +62,7 @@ export function useGetUserCertifications(
         completed,
         inProgress,
         loading: !!userId && loading,
+        progresses: data ?? [],
 
         // ready when:
         // profile context was initialized and

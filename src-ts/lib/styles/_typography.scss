@@ -53,10 +53,15 @@ h2 {
 h3 {
     font-size: 22px;
     line-height: 26px;
-    
+
     @include ltemd {
         font-size: 18px;
         line-height: 20px;
+    }
+
+    &.marketing {
+        font-size: 44px;
+        line-height: 44px;
     }
 }
 
@@ -134,13 +139,17 @@ h4 {
     font-family: $font-roboto;
     font-size: 16px;
     line-height: 24px;
+    &-medium {
+        @extend .body-main;
+        font-weight: $font-weight-medium;
+    }
     &-bold {
         @extend .body-main;
         font-weight: $font-weight-bold;
     }
 
     @include ltemd {
-        &, &-bold {
+        &, &-medium, &-bold {
             font-size: 14px;
             line-height: 20px;
         }
@@ -177,7 +186,7 @@ h4 {
     font-weight: $font-weight-semibold;
     font-size: 20px;
     line-height: 26px;
-    
+
     @include ltemd {
         font-size: 14px;
         line-height: 20px;
@@ -188,7 +197,7 @@ h4 {
     font-weight: $font-weight-normal;
     font-size: 20px;
     line-height: 26px;
-    
+
     @include ltemd {
         font-size: 14px;
         line-height: 20px;
@@ -201,7 +210,7 @@ h4 {
     padding: 0;
     font-size: 20px;
     line-height: 22px;
-    
+
     @include ltemd {
         font-size: 14px;
         line-height: 20px;
@@ -231,13 +240,15 @@ h4 {
 }
 
 .body-ultra-small,
-.body-ultra-small-medium {
+.body-ultra-small-medium,
+.body-ultra-small-bold {
     font-size: 12px;
     line-height: 18px;
     font-weight: $font-weight-normal;
 }
 
-.body-ultra-small-medium {
+.body-ultra-small-medium,
+.body-ultra-small-bold {
     font-weight: $font-weight-bold;
 }
 
@@ -276,6 +287,14 @@ h4 {
     font-family: $font-roboto;
     font-weight: $font-weight-normal;
     font-style: revert;
+}
+
+.quote-main {
+    font-size: 16px;
+    line-height: 26px;
+    font-family: $font-roboto;
+    font-weight: $font-weight-normal;
+    font-style: italic;
 }
 
 .label {

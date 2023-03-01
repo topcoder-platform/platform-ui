@@ -145,7 +145,6 @@ const Header: FC = () => {
 
     return (
         <>
-            <div id={navElementId} />
             <div
                 id={PageSubheaderPortalId}
                 className={classNames('full-width-relative', !ready && 'hidden')}

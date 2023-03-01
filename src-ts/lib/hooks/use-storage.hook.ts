@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useCallback, useState } from 'react'
+import { Dispatch, MutableRefObject, SetStateAction, useCallback, useRef, useState } from 'react'
 
 type StorageTypes = 'localStorage' | 'sessionStorage'
 
@@ -8,6 +8,7 @@ export function useStorage<T>(
     initialValue?: T,
 ): [T, Dispatch<SetStateAction<T>>] {
     const storage: Storage = window[storageType]
+    const wasKey: MutableRefObject<string> = useRef(storageKey)
 
     const readStoredValue: () => T = useCallback(() => {
         try {
@@ -23,7 +24,17 @@ export function useStorage<T>(
 
     // State to store our value
     // Pass initial state function to useState so logic is only executed once
-    const [storedValue, setStoredValue]: [T, Dispatch<SetStateAction<T>>] = useState(readStoredValue())
+    const rawStoredValue: T = readStoredValue()
+    const [storedValue, setStoredValue]: [T, Dispatch<SetStateAction<T>>] = useState(rawStoredValue)
+
+    // update value when storage key changes
+    if (wasKey.current !== storageKey) {
+        wasKey.current = storageKey
+
+        if (rawStoredValue !== storedValue) {
+            setTimeout(setStoredValue, 0, rawStoredValue)
+        }
+    }
 
     // Return a wrapped version of useState's setter function that
     // persists the new value to local or session storage.

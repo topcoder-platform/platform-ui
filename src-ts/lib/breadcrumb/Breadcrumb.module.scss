@@ -38,7 +38,12 @@
             display: inline-flex;
             align-items: center;
             padding: 0;
-
+            @include ltesm {
+                flex: 0 1 auto;
+                &:first-child {
+                    flex: 1 0 auto;
+                }
+            }
             a {
                 @extend .overline;
                 display: block;

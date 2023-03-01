@@ -1,0 +1,51 @@
+@import '../../../../../../lib/styles/includes';
+
+.stats {
+    display: flex;
+    align-items: center;
+    padding: 0px;
+    gap: $space-lg;
+
+    color: $black-60;
+
+    margin-top: $space-xs;
+    @media (max-width: 1150px) {
+        flex-wrap: wrap;
+    }
+    
+    @include ltelg {
+        gap: 0 5px;
+        margin-top: 0;
+    }
+
+    .stat {
+        display: flex;
+        align-items: center;
+        gap: $space-xs;
+        @include ltelg {
+            gap: 3px;
+        }
+
+        .icon {
+            width: 16px;
+            height: 16px;
+            color: $blue-140;
+            > svg {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+        }
+    }
+}
+
+.providers {
+    margin-top: $space-xs;
+    @include ltelg {
+        margin-top: 0;
+    }
+}
+
+.progress {
+    margin-top: $space-md;
+}

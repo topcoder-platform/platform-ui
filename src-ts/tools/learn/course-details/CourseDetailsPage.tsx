@@ -17,6 +17,7 @@ import {
     CoursesProviderData,
     CourseTitle,
     ResourceProviderData,
+    TCACertificationProgressBox,
     useGetCertification,
     useGetCourses,
     useGetResourceProvider,
@@ -28,7 +29,6 @@ import {
 import { getCoursePath } from '../learn.routes'
 
 import { CourseCurriculum } from './course-curriculum'
-import { PromoCourse } from './promo-course'
 import styles from './CourseDetailsPage.module.scss'
 
 const CourseDetailsPage: FC<{}> = () => {
@@ -46,16 +46,6 @@ const CourseDetailsPage: FC<{}> = () => {
     }: CoursesProviderData = useGetCourses(textFormatGetSafeString(routeParams.provider), routeParams.certification)
 
     const {
-        certificationProgress: progress,
-        ready: progressReady,
-        setCertificateProgress,
-    }: UserCertificationProgressProviderData = useGetUserCertificationProgress(
-        profile?.userId,
-        routeParams.provider,
-        routeParams.certification,
-    )
-
-    const {
         certification: certificate,
         ready: certificateReady,
     }: AllCertificationsProviderData = useGetCertification(
@@ -64,6 +54,16 @@ const CourseDetailsPage: FC<{}> = () => {
         {
             enabled: courseReady && !!course?.certificationId,
         },
+    )
+
+    const {
+        certificationProgress: progress,
+        ready: progressReady,
+        setCertificateProgress,
+    }: UserCertificationProgressProviderData = useGetUserCertificationProgress(
+        profile?.userId,
+        routeParams.provider,
+        certificate?.certification,
     )
 
     const ready: boolean = profileReady && courseReady && certificateReady && (!profile || progressReady)
@@ -93,7 +93,7 @@ const CourseDetailsPage: FC<{}> = () => {
                             {' '}
                             {course.title}
                             ,
-                            we&appos;d recommend you enroll in another course to continue your learning.
+                            we&apos;d recommend you enroll in another course to continue your learning.
                             You can view our other courses from the Topcoder Academy course page.
                         </p>
                     </div>
@@ -155,7 +155,7 @@ const CourseDetailsPage: FC<{}> = () => {
         )
     }
 
-    function getFooter(): ReactNode {
+    function getProviderCredits(): ReactNode {
 
         if (!resourceProvider) {
             return undefined
@@ -183,15 +183,21 @@ const CourseDetailsPage: FC<{}> = () => {
                 </div>
             )}
             <Breadcrumb items={breadcrumb} />
-            {ready && course && (
+            {ready && course && certificate && (
                 <>
                     <div className={styles.wrap}>
                         <div className={styles['intro-copy']}>
                             <CourseTitle
                                 size='lg'
                                 title={course.title}
-                                credits={course.provider}
-                                trackType={certificate?.trackType}
+                                provider={course.resourceProvider.name}
+                                trackType={certificate?.certificationCategory.track}
+                            />
+
+                            <TCACertificationProgressBox
+                                userId={profile?.userId}
+                                className={styles.tcaCertBanner}
+                                fccCertificateId={certificate.id}
                             />
 
                             <div
@@ -204,13 +210,12 @@ const CourseDetailsPage: FC<{}> = () => {
                             {getDescription()}
                             {getPrerequisites()}
                             {getCompletionSuggestion()}
-                            <div className={styles['coming-soon']}>
-                                <PromoCourse />
-                            </div>
+                            {getProviderCredits()}
                         </div>
 
                         <div className={styles.aside}>
                             <CourseCurriculum
+                                certification={routeParams.certification ?? ''}
                                 course={course}
                                 progress={progress}
                                 progressReady={progressReady}
@@ -219,7 +224,6 @@ const CourseDetailsPage: FC<{}> = () => {
                             />
                         </div>
                     </div>
-                    {getFooter()}
                 </>
             )}
         </ContentLayout>

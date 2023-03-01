@@ -1,6 +1,6 @@
 {
     "name": "@topcoder-platform/platform-ui",
-    "version": "2.0.7",
+    "version": "3.0.0",
     "private": true,
     "scripts": {
         "dev": "yarn react-app-rewired start",
@@ -42,6 +42,7 @@
         "moment": "^2.29.4",
         "moment-timezone": "^0.5.37",
         "prop-types": "^15.8.1",
+        "qrcode.react": "^3.1.0",
         "qs": "^6.11.0",
         "rc-checkbox": "^2.3.2",
         "react": "^18.2.0",

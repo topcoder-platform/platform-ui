@@ -1,0 +1,30 @@
+@import '../../../../lib/styles/includes';
+
+.coursesListFilters {
+    display: flex;
+    margin-left: auto;
+
+    gap: $space-xxl;
+
+    >* {
+        min-width: 326px;
+    }
+
+    > :global(.input-wrapper) {
+        width: 100%;
+
+        > :global(.input-el) {
+            margin: 0;
+        }
+    }
+
+    @include ltelg {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: $space-lg;
+    }
+
+    @include ltemd {
+        width: 100%;
+    }
+}

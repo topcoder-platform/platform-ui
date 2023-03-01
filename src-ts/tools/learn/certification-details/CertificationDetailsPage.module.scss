@@ -1,0 +1,23 @@
+@import '../../../lib/styles/includes';
+
+.text-section.text-section {
+    margin-top: 80px;
+
+    @include ltelg {
+        margin-top: $space-xxxxl;
+    }
+
+    > h2 {
+        margin-bottom: $space-xxl;
+    }
+
+    > ul {
+        list-style: disc;
+        padding-left: $space-xxl;
+        padding-left: $space-xxl;
+    }
+
+    &.no-top {
+        margin-top: 0;
+    }
+}

@@ -1,8 +1,10 @@
+import { get } from 'lodash'
 import useSWR, { SWRResponse } from 'swr'
 
 import { learnUrlGet } from '../../functions'
+import { TCACertificationEnrollmentBase } from '../tca-certifications-provider'
+import { LearnUserCertificationProgress } from '../user-certifications-provider'
 
-import { LearnUserCompletedCertification } from './user-completed-certification.model'
 import { UserCompletedCertificationsProviderData } from './user-completed-certifications-provider-data.model'
 
 export function useGetUserCompletedCertifications(
@@ -13,14 +15,19 @@ export function useGetUserCompletedCertifications(
 
     const url: string = learnUrlGet('completed-certifications', `${userId}`)
 
-    const { data, error }: SWRResponse<ReadonlyArray<LearnUserCompletedCertification>> = useSWR(url)
+    const { data, error }: SWRResponse<{
+        enrollments: ReadonlyArray<TCACertificationEnrollmentBase>,
+        courses: ReadonlyArray<LearnUserCertificationProgress>,
+    }> = useSWR(url)
 
-    let certifications: ReadonlyArray<LearnUserCompletedCertification> = data ?? []
+    let certifications: ReadonlyArray<LearnUserCertificationProgress> = []
 
-    if (provider || certification) {
-        certifications = certifications
-            .filter(c => (!provider || c.provider === provider)
-                && (!certification || c.certification === certification))
+    if (provider && certification) {
+        certifications = (data?.courses ?? [])
+            .filter(c => (
+                get(c, 'resourceProvider.name') === provider
+                && c.certification === certification
+            ))
     }
 
     return {

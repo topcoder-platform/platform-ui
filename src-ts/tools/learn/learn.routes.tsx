@@ -1,9 +1,18 @@
+import { EnvironmentConfig } from '../../config'
 import { authUrlLogin, lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
 
 import { toolTitle } from './Learn'
 import { LearnConfig } from './learn-config'
 
 const WelcomePage: LazyLoadedComponent = lazyLoad(() => import('./welcome'), 'WelcomePage')
+const CertificationDetailsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./certification-details'),
+    'CertificationDetailsPage',
+)
+const EnrollmentPage: LazyLoadedComponent = lazyLoad(
+    () => import('./certification-details/enrollment-page'),
+    'EnrollmentPage',
+)
 const CourseDetailsPage: LazyLoadedComponent = lazyLoad(() => import('./course-details'), 'CourseDetailsPage')
 const CourseCompletedPage: LazyLoadedComponent = lazyLoad(() => import('./course-completed'), 'CourseCompletedPage')
 const MyCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certificate'), 'MyCertificate')
@@ -11,6 +20,10 @@ const UserCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-cer
 const FreeCodeCamp: LazyLoadedComponent = lazyLoad(() => import('./free-code-camp'), 'FreeCodeCamp')
 const MyLearning: LazyLoadedComponent = lazyLoad(() => import('./my-learning'), 'MyLearning')
 const LandingLearn: LazyLoadedComponent = lazyLoad(() => import('./Learn'))
+const MyTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'MyTCACertificate')
+const UserTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'UserTCACertificate')
+const ValidateTCACertificate: LazyLoadedComponent
+    = lazyLoad(() => import('./tca-certificate'), 'ValidateTCACertificate')
 
 export enum LEARN_PATHS {
     certificate = '/certificate',
@@ -20,6 +33,8 @@ export enum LEARN_PATHS {
     fcc = '/learn/fcc',
     root = '/learn',
     startCourseRouteFlag = 'start-course',
+    tcaCertifications = '/tca-certifications',
+    tcaEnroll = '/enroll',
 }
 
 export const rootRoute: string = LEARN_PATHS.root
@@ -70,6 +85,14 @@ export function getUserCertificateSsr(
     return `${LearnConfig.CERT_DOMAIN}/${handle}/${provider}/${certification}/${encodeURI(title)}`
 }
 
+export function getUserTCACertificateSsr(
+    certification: string,
+    handle: string,
+    title: string,
+): string {
+    return `${LearnConfig.CERT_DOMAIN}/${handle}/tca/${certification}/${encodeURI(title)}`
+}
+
 export function getUserCertificateUrl(
     provider: string,
     certification: string,
@@ -82,6 +105,37 @@ export function getViewStyleParamKey(): string {
     return Object.keys(LearnConfig.CERT_ALT_PARAMS)[0]
 }
 
+export function getTCACertificationPath(certification: string): string {
+    return `${LEARN_PATHS.root}${LEARN_PATHS.tcaCertifications}/${certification}`
+}
+
+export function getTCACertificationEnrollPath(certification: string): string {
+    return `${LEARN_PATHS.root}${LEARN_PATHS.tcaCertifications}/${certification}${LEARN_PATHS.tcaEnroll}`
+}
+
+export function getTCACertificateUrl(
+    certification: string,
+): string {
+    return `${getTCACertificationPath(certification)}${LEARN_PATHS.certificate}`
+}
+
+export function getUserTCACertificateUrl(
+    certification: string,
+    handle: string,
+): string {
+    return `${getTCACertificationPath(certification)}/${handle}${LEARN_PATHS.certificate}`
+}
+
+export function getTCACertificationValidationUrl(
+    completionUuid: string,
+): string {
+    return `${EnvironmentConfig.TOPCODER_URLS.TCA}${LEARN_PATHS.root}/${completionUuid}`
+}
+
+export function getAuthenticateAndEnrollRoute(): string {
+    return `${authUrlLogin()}${encodeURIComponent(LEARN_PATHS.tcaEnroll)}`
+}
+
 export const learnRoutes: ReadonlyArray<PlatformRoute> = [
     {
         children: [
@@ -90,6 +144,18 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <WelcomePage />,
                 id: 'Welcome to Topcoder Academy',
                 route: '',
+            },
+            {
+                children: [],
+                element: <CertificationDetailsPage />,
+                id: 'Certification Details',
+                route: 'tca-certifications/:certification',
+            },
+            {
+                children: [],
+                element: <EnrollmentPage />,
+                id: 'Certification Details',
+                route: 'tca-certifications/:certification/enroll',
             },
             {
                 children: [],
@@ -126,6 +192,24 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <MyLearning />,
                 id: 'My Learning',
                 route: 'my-learning',
+            },
+            {
+                children: [],
+                element: <MyTCACertificate />,
+                id: 'My TCA Certification',
+                route: 'tca-certifications/:certification/certificate',
+            },
+            {
+                children: [],
+                element: <UserTCACertificate />,
+                id: 'User TCA Certification',
+                route: 'tca-certifications/:certification/:memberHandle/certificate',
+            },
+            {
+                children: [],
+                element: <ValidateTCACertificate />,
+                id: 'Validate TCA Certification - aka hiring manager view',
+                route: ':completionUuid',
             },
         ],
         element: <LandingLearn />,

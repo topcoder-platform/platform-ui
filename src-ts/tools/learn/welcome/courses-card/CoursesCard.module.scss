@@ -5,35 +5,130 @@
     border-radius: $space-sm;
     padding: $space-xxl;
 
-    gap: $space-lg;
+    gap: $space-sm;
     display: flex;
     flex-direction: column;
 
     width: 100%;
 
-    :global(.overline) {
-        color: $black-60;
+    @include ltemd {
+        padding: $space-lg;
+        min-height: auto;
     }
+}
 
-    &:global(.soon) {
-        :global(.badge-icon) {
-            opacity: 0.5;
+.completed {
+    background: $tc-white;
+    border: 2px solid $turq-75;
+}
+
+.cardHeader {
+    display: flex;
+
+    >div svg {
+        max-width: 48px;
+        max-height: 48px;
+
+        @include ltemd {
+            max-width: 40px;
+            max-height: 40px;
         }
     }
 
-    @include ltemd {
-        padding: $space-lg;
+    .cardHeaderTitleWrap {
+        display: flex;
+        flex-direction: column;
+        margin-left: $space-lg;
+
+        @include ltemd {
+            margin-left: $space-sm;
+        }
+
+        .subTitleWrap {
+            display: flex;
+            align-items: center;
+
+            @include ltesm {
+                display: grid;
+                grid-template-columns: 30px 1fr;
+            }
+
+            >svg {
+                color: $blue-140;
+                margin-right: $space-xs;
+            }
+
+            >em {
+                font-style: italic;
+                font-size: 14px;
+                line-height: 22px;
+                color: $black-60;
+                margin-right: $space-lg;
+
+                &:last-child {
+                    margin-right: 0;
+                }
+            }
+        }
     }
 }
 
-.text {
-    color: $black-100;
-    :global(.quote-small) {
-        color: #767676;
-    }
-}
-
-.bottom {
-    color: $blue-140;
+.cardHeaderDividerWrap {
     margin-top: auto;
+    margin-bottom: $space-lg;
+    padding-top: $space-sm;
+
+    .cardHeaderDivider {
+        height: 1px;
+        border-bottom: $border solid $black-10;
+        width: 100%;
+    }
+}
+
+.cardBody {
+    display: flex;
+    flex-direction: column;
+
+    .certProvider {
+        display: flex;
+        align-items: center;
+        color: $black-60;
+        font-style: italic;
+        font-size: 14px;
+        line-height: 22px;
+
+        >svg {
+            margin-left: $space-sm;
+            fill: #0A0A23;
+        }
+    }
+}
+
+.cardBottom {
+    color: $blue-140;
+
+    a:nth-child(2) {
+        margin-left: $space-sm;
+    }
+
+    .completedCTAs {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+
+        @include ltexs {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+}
+
+.infoText {
+    font-style: italic;
+    color: $black-60;
+    margin-right: $space-sm;
+
+    &:last-child {
+        margin-right: 0;
+    }
 }

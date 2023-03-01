@@ -1,0 +1,68 @@
+@import '../../../../../lib/styles/includes';
+
+.wrap {
+    hr {
+        margin: $space-xxl 0;
+    }
+}
+
+.header {
+    text-align: center;
+    
+    .freeLabel {
+        @include freeLabel;
+
+        margin-bottom: $space-sm;
+    }
+    
+    :global(.strike) {
+        text-decoration: line-through;
+        color: $black-40;
+        display: block;
+        font-size: 18px;
+        line-height: 22px;
+    }
+    
+    strong {
+        margin-top: $space-sm;
+        display: block;
+    }
+}
+
+.formTitle {
+    margin-bottom: $space-xs;
+}
+
+.noPaymentBanner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $space-lg;
+
+    width: 100%;
+    height: 320px;
+
+    background: $black-5;
+    border-radius: $space-sm;
+
+    margin-bottom: $space-xxl;
+
+    @include ltemd {
+        margin-top: $space-lg;
+    }
+}
+
+.form {
+    :global(.page-divider) {
+        display: none;
+    }
+    :global(.form-button-container) {
+        > :first-child:empty {
+            display: none;
+        }
+    }
+    :global(.button) {
+        width: 100%;
+    }
+}

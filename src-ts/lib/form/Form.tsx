@@ -4,6 +4,7 @@ import {
     Dispatch,
     FocusEvent,
     FormEvent,
+    ReactNode,
     RefObject,
     SetStateAction,
     useEffect,
@@ -31,6 +32,7 @@ import styles from './Form.module.scss'
 
 interface FormProps<ValueType, RequestType> {
     readonly action?: FormAction // only type submit will perform validation
+    readonly children?: ReactNode
     readonly formDef: FormDefinition
     readonly formValues?: ValueType
     readonly onChange?: (inputs: ReadonlyArray<FormInputModel>) => void,
@@ -219,6 +221,8 @@ const Form: <ValueType extends FormValue, RequestType extends FormValue>(props: 
                     onChange={onChange}
                 />
 
+                {props.children}
+
                 <div className={classNames(styles['form-footer'], 'form-footer')}>
                     {!!formError && (
                         <div
@@ -229,7 +233,7 @@ const Form: <ValueType extends FormValue, RequestType extends FormValue>(props: 
                             {formError}
                         </div>
                     )}
-                    <div className={styles['button-container']}>
+                    <div className={classNames('form-button-container', styles['button-container'])}>
                         <div className={styles['left-container']}>
                             {secondaryGroupButtons}
                         </div>

@@ -153,6 +153,12 @@ By overriding the app to use <b>port 443</b>, you can use the authorized URL and
 
 >**NOTE:** Mac users will require running the app with elevated permissions in order to use a port lower than 500.
 
+Easy way to overcome elevated permissions is to make use of:
+
+```
+sudo setcap 'cap_net_bind_service=+ep' `which node`
+```
+
 For easier development, it is recommended that you add this certificate to your trusted root authorities and as a trused cert in your browser. Google your browser and OS for more info on how to trust cert authorities.
 
 Otherwise, you will need to override the exception each time you load the site. Firefox users may need to user an incognito browser in order to override the exception.
