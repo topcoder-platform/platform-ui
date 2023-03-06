@@ -16,6 +16,7 @@ import {
     Button,
     ContentLayout,
     DefaultMemberIcon,
+    getVerificationStatusAsync,
     IconOutline,
     LoadingSpinner,
     profileGetPublicAsync,
@@ -53,6 +54,9 @@ const ValidateTCACertificate: FC<{}> = () => {
 
     const [profileReady, setProfileReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
+    const [isMemberVerified, setIsMemberVerified]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
     const {
         enrollment,
         ready: certReady,
@@ -82,11 +86,15 @@ const ValidateTCACertificate: FC<{}> = () => {
 
     useEffect(() => {
         if (enrollment?.userHandle) {
+            // get profile data for enrolled member
             profileGetPublicAsync(enrollment.userHandle)
                 .then(userProfile => {
                     setProfile(userProfile)
                     setProfileReady(true)
                 })
+            // check member's verification status
+            getVerificationStatusAsync(enrollment.userHandle)
+                .then(verified => setIsMemberVerified(verified))
         }
     }, [enrollment, setProfileReady])
 
@@ -131,19 +139,23 @@ const ValidateTCACertificate: FC<{}> = () => {
                                         <div className={styles.memberInfo}>
                                             <p className='body-large-bold'>{enrollment?.userName}</p>
                                             <p className='body-large-medium'>{profile.handle}</p>
-                                            <div className={styles.verifyStatus}>
-                                                <VerifiedMemberFlagSvg />
-                                                <span className='overline'>verified member</span>
-                                                <Tooltip
-                                                    trigger={(
-                                                        <IconOutline.InformationCircleIcon
-                                                            className={styles.toolTipIcon}
-                                                        />
-                                                    )}
-                                                    content={`This member is compliant with Topcoder policies
+                                            {
+                                                isMemberVerified ? (
+                                                    <div className={styles.verifyStatus}>
+                                                        <VerifiedMemberFlagSvg />
+                                                        <span className='overline'>verified member</span>
+                                                        <Tooltip
+                                                            trigger={(
+                                                                <IconOutline.InformationCircleIcon
+                                                                    className={styles.toolTipIcon}
+                                                                />
+                                                            )}
+                                                            content={`This member is compliant with Topcoder policies
                                                      and is a trusted member of the Topcoder community.`}
-                                                />
-                                            </div>
+                                                        />
+                                                    </div>
+                                                ) : undefined
+                                            }
                                         </div>
                                     </div>
                                     <p className={classNames(isModalView ? 'body-medium' : 'body-large')}>
