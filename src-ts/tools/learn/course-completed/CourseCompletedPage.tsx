@@ -15,6 +15,7 @@ import {
     AllCertificationsProviderData,
     CoursesProviderData,
     CourseTitle,
+    PageTitle,
     TCACertificationCheckCompleted,
     useGetCertification,
     useGetCourses,
@@ -100,6 +101,10 @@ const CourseCompletedPage: FC<{}> = () => {
 
     return (
         <>
+            <PageTitle>
+                {`${certification?.title ?? 'Certification'} Completed`}
+            </PageTitle>
+
             <LoadingSpinner hide={ready} />
 
             {ready && courseData && (

@@ -16,6 +16,7 @@ import {
     AllCertificationsProviderData,
     CoursesProviderData,
     CourseTitle,
+    PageTitle,
     ResourceProviderData,
     TCACertificationProgressBox,
     useGetCertification,
@@ -177,6 +178,8 @@ const CourseDetailsPage: FC<{}> = () => {
 
     return (
         <ContentLayout>
+            <PageTitle>{course?.title ?? 'Course Details'}</PageTitle>
+
             {!ready && (
                 <div className={styles.wrap}>
                     <LoadingSpinner />

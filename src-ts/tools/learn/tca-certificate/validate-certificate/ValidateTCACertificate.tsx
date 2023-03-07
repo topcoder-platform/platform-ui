@@ -25,6 +25,7 @@ import {
 } from '../../../../lib'
 import {
     CourseBadge,
+    PageTitle,
     TCACertificatePreview,
     TCACertificateType,
     TCACertification,
@@ -107,6 +108,9 @@ const ValidateTCACertificate: FC<{}> = () => {
 
     return (
         <>
+            <PageTitle>
+                {`${!!enrollment && `${enrollment.userName}'s `}${certification?.title} Certificate`}
+            </PageTitle>
             <LoadingSpinner hide={profileReady && certReady} />
 
             {profile && certification && (
