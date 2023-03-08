@@ -1,5 +1,5 @@
 import { FC, useMemo } from 'react'
-import { get } from 'lodash'
+import { get, orderBy } from 'lodash'
 
 import { IconOutline } from '../../../../lib'
 import {
@@ -7,6 +7,7 @@ import {
     LearnUserCertificationProgress,
     TCACertification,
     TCACertificationProvider,
+    TCACertificationResource,
 } from '../../learn-lib'
 
 import { CertificationSummary } from './certification-summary'
@@ -43,6 +44,10 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
         }, {} as ProvidersByIdCollection)
     ), [props.certification])
 
+    const sortedCertResources: TCACertificationResource[] = useMemo(() => (
+        orderBy(props.certification.certificationResources, 'displayOrder')
+    ), [props.certification.certificationResources])
+
     return (
         <div className={styles.wrap}>
             <div className={styles.headline}>
@@ -70,7 +75,7 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
 
             <div className={styles.container}>
                 <div className={styles.courses}>
-                    {props.certification.certificationResources.map(cert => (
+                    {sortedCertResources.map(cert => (
                         <CourseCard
                             certification={cert.freeCodeCampCertification}
                             progress={progressById[cert.freeCodeCampCertification.fccId]}
