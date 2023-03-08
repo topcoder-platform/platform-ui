@@ -53,7 +53,7 @@ const TCCertifications: FC<TCCertificationsProps> = (props: TCCertificationsProp
             <div className={styles.freeBanner}>
                 <strong className='body-large-bold'>FREE!</strong>
                 &nbsp;
-                <span className='body-large'>Certifications are free until April 30th.</span>
+                <span className='body-large'>Enrollment Ends on April 30th.</span>
             </div>
 
             <div className={styles.certsList}>
