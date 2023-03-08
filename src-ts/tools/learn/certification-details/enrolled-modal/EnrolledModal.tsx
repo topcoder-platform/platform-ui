@@ -23,7 +23,7 @@ const EnrolledModal: FC<EnrolledModalProps> = (props: EnrolledModalProps) => {
         <BaseModal
             onClose={props.onClose}
             open={isOpen}
-            size='lg'
+            size='sm'
             classNames={{ modal: styles.enrolledModal, root: styles.modalRoot }}
         >
             <>
