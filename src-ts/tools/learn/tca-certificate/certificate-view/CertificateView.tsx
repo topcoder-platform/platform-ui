@@ -9,6 +9,7 @@ import {
     ActionButton,
     CertificateNotFoundContent,
     CertificatePageLayout,
+    PageTitle,
     TCACertificatePreview,
     TCACertification,
     TCACertificationValidationData,
@@ -77,6 +78,10 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
 
     return (
         <>
+            <PageTitle>
+                {`${!!enrollment && `${enrollment.userName}'s `}${certification?.title} Certificate`}
+            </PageTitle>
+
             <LoadingSpinner hide={ready} />
 
             <CertificatePageLayout

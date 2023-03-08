@@ -2,13 +2,15 @@ import { FC } from 'react'
 import classNames from 'classnames'
 
 import { TCAcademyLogoMixedSvg, TcLogoSvg } from '../../../../lib'
-import { CertificateNotFoundContent } from '../../learn-lib'
+import { CertificateNotFoundContent, PageTitle } from '../../learn-lib'
 
 import { ReactComponent as BackgroundSvg } from './bg.svg'
 import styles from './CertificateNotFound.module.scss'
 
 const CertificateNotFound: FC<{}> = () => (
     <div className={styles.wrap}>
+        <PageTitle>Certificate Not Found</PageTitle>
+
         <BackgroundSvg />
         <div className={styles.details}>
             <div className={styles.detailsInner}>

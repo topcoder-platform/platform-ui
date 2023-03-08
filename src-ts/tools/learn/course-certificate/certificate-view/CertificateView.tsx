@@ -11,6 +11,7 @@ import {
     CertificateNotFoundContent,
     CertificatePageLayout,
     CoursesProviderData,
+    PageTitle,
     useGetCertification,
     useGetCourses,
     useGetUserCompletedCertifications,
@@ -103,22 +104,28 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     }
 
     return (
-        <CertificatePageLayout
-            certificateElRef={certificateElRef}
-            fallbackBackUrl={coursePath}
-            fullScreenCertLayout={!certificateNotFoundError && props.fullScreenCertLayout}
-            isCertificateCompleted={hasCompletedTheCertification}
-            isReady={ready}
-            ssrUrl={certUrl}
-            title={certificationTitle}
-            disableActions={ready && !hasCompletedTheCertification}
-            className={certificateNotFoundError ? 'cert-not-found-layout' : ''}
-            afterContent={certificateNotFoundError && (
-                <CertificateNotFoundContent className='desktop-hide' />
-            )}
-        >
-            {renderCertificate()}
-        </CertificatePageLayout>
+        <>
+            <PageTitle>
+                {`${props.profile.handle}'s ${course?.title} Certificate`}
+            </PageTitle>
+
+            <CertificatePageLayout
+                certificateElRef={certificateElRef}
+                fallbackBackUrl={coursePath}
+                fullScreenCertLayout={!certificateNotFoundError && props.fullScreenCertLayout}
+                isCertificateCompleted={hasCompletedTheCertification}
+                isReady={ready}
+                ssrUrl={certUrl}
+                title={certificationTitle}
+                disableActions={ready && !hasCompletedTheCertification}
+                className={certificateNotFoundError ? 'cert-not-found-layout' : ''}
+                afterContent={certificateNotFoundError && (
+                    <CertificateNotFoundContent className='desktop-hide' />
+                )}
+            >
+                {renderCertificate()}
+            </CertificatePageLayout>
+        </>
     )
 }
 

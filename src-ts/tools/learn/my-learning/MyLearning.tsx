@@ -1,6 +1,7 @@
 import { FC } from 'react'
 
 import { GenericPageMoved } from '../../../lib'
+import { PageTitle } from '../learn-lib'
 import { LEARN_PATHS } from '../learn.routes'
 
 /**
@@ -9,7 +10,10 @@ import { LEARN_PATHS } from '../learn.routes'
  */
 
 const MyLearning: FC<{}> = () => (
-    <GenericPageMoved pageTitle='Topcoder Academy' newPageUrl={LEARN_PATHS.root} />
+    <>
+        <PageTitle>Page Moved</PageTitle>
+        <GenericPageMoved pageTitle='Topcoder Academy' newPageUrl={LEARN_PATHS.root} />
+    </>
 )
 
 export default MyLearning

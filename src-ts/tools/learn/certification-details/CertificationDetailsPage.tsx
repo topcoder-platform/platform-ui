@@ -3,6 +3,7 @@ import { Params, useParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import {
+    PageTitle,
     TCACertificationProgressProviderData,
     TCACertificationProgressStatus,
     TCACertificationProviderData,
@@ -123,7 +124,9 @@ const CertificationDetailsPage: FC<{}> = () => {
             heroCTA={!isEnrolled && (
                 <EnrollCtaBtn certification={certification?.dashedName} />
             )}
-        />
+        >
+            <PageTitle>{certification?.title ?? 'Certification Details'}</PageTitle>
+        </PageLayout>
     )
 }
 

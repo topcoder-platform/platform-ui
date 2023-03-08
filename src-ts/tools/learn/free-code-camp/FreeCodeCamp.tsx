@@ -33,6 +33,7 @@ import {
     LearnModuleStatus,
     LearnUserCertificationProgress,
     LessonProviderData,
+    PageTitle,
     useGetCourses,
     useGetLesson,
     useGetUserCertificationProgress,
@@ -508,6 +509,10 @@ const FreeCodeCamp: FC<{}> = () => {
 
     return (
         <>
+            <PageTitle>
+                {`${module}: ${lesson?.title}`}
+            </PageTitle>
+
             <LoadingSpinner hide={ready} />
             <div className={styles.wrapBreadcrumb}>
                 <Breadcrumb items={breadcrumb} />
