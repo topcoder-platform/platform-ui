@@ -24,6 +24,7 @@ export interface ButtonProps {
     readonly onClick?: (event?: any) => void
     readonly rel?: string
     readonly route?: string
+    readonly routeState?: Record<string, any>
     readonly size?: ButtonSize
     readonly tabIndex?: number
     readonly target?: string
@@ -70,6 +71,7 @@ const Button: FC<ButtonProps> = (props: ButtonProps) => {
                 tabIndex={props.tabIndex}
                 title={props.title}
                 to={props.route}
+                state={props.routeState}
             >
                 {content}
             </Link>
