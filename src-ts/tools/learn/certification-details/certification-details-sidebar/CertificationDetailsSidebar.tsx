@@ -101,7 +101,7 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                         <span className='quote-main'>
                             <span className='strike'>$20&nbsp;</span>
                             <strong className={styles.freeLabel}>FREE</strong>
-                            <span className='body-main-bold'>&nbsp;Enrollment Ends on April 30th</span>
+                            <span className='body-main-bold'>&nbsp;enrollment ends on April 30th</span>
                         </span>
                     </li>
                 )}

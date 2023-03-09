@@ -21,7 +21,7 @@ const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarP
             <div className={styles.noPaymentBanner}>
                 <h3 className='details'>No payment required</h3>
                 <div className='body-medium'>
-                    Free Enrollment Ends on April 30th.
+                    Free enrollment ends on April 30th.
                 </div>
             </div>
             <Button
