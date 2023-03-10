@@ -10,7 +10,7 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
+import { NavigateFunction, Params, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
 import {
@@ -33,6 +33,7 @@ import {
     LearnModuleStatus,
     LearnUserCertificationProgress,
     LessonProviderData,
+    PageTitle,
     useGetCourses,
     useGetLesson,
     useGetUserCertificationProgress,
@@ -45,7 +46,12 @@ import {
     userCertificationProgressUpdateAsync,
     UserCertificationUpdateProgressActions,
 } from '../learn-lib'
-import { getCertificationCompletedPath, getCoursePath, getLessonPathFromModule } from '../learn.routes'
+import {
+    getCertificationCompletedPath,
+    getCoursePath,
+    getLessonPathFromModule,
+    getTCACertificationPath,
+} from '../learn.routes'
 
 import { FccFrame } from './fcc-frame'
 import { FccSidebar } from './fcc-sidebar'
@@ -97,16 +103,41 @@ const FreeCodeCamp: FC<{}> = () => {
     const ready: boolean = profileReady && courseDataReady && lessonReady && (!isLoggedIn || progressReady)
 
     const module: string = textFormatGetSafeString(lesson?.module.title)
-    const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
-        {
-            name: textFormatGetSafeString(lesson?.course.title),
-            url: getCoursePath(providerParam, certificationParam),
-        },
-        {
-            name: module,
-            url: getLessonPathFromModule(providerParam, certificationParam, module, lessonParam),
-        },
+
+    const location: any = useLocation()
+
+    const breadcrumbItems: BreadcrumbItemModel[] = useMemo(() => {
+        const bItems: BreadcrumbItemModel[] = [
+            {
+                name: textFormatGetSafeString(lesson?.course.title),
+                url: getCoursePath(providerParam, certificationParam),
+            },
+            {
+                name: module,
+                url: getLessonPathFromModule(providerParam, certificationParam, module, lessonParam),
+            },
+        ]
+
+        // if coming path is from TCA certification details page
+        // then we need to add the certification to the navi list
+        if (location.state?.tcaCertInfo) {
+            bItems.unshift({
+                name: location.state.tcaCertInfo.title,
+                url: getTCACertificationPath(location.state.tcaCertInfo.dashedName),
+            })
+        }
+
+        return bItems
+    }, [
+        certificationParam,
+        lesson,
+        lessonParam,
+        location.state,
+        module,
+        providerParam,
     ])
+
+    const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb(breadcrumbItems)
 
     const currentModuleData: LearnModule | undefined
         = useMemo(() => courseData?.modules.find(d => d.key === moduleParam), [courseData, moduleParam])
@@ -508,6 +539,10 @@ const FreeCodeCamp: FC<{}> = () => {
 
     return (
         <>
+            <PageTitle>
+                {`${module}: ${lesson?.title}`}
+            </PageTitle>
+
             <LoadingSpinner hide={ready} />
             <div className={styles.wrapBreadcrumb}>
                 <Breadcrumb items={breadcrumb} />

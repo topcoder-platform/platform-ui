@@ -2,7 +2,7 @@ import { FC } from 'react'
 import classNames from 'classnames'
 
 import { TCAcademyLogoWhiteSvg, TCLogoSvg } from '../../../../lib'
-import { CertificateNotFoundContent } from '../../learn-lib'
+import { CertificateNotFoundContent, PageTitle } from '../../learn-lib'
 
 import { ReactComponent as BackgroundSvg } from './bg.svg'
 import { ReactComponent as BadgeSvg } from './badge.svg'
@@ -10,6 +10,7 @@ import styles from './CertificateNotFound.module.scss'
 
 const CertificateNotFound: FC<{}> = () => (
     <div className={styles.wrap}>
+        <PageTitle>Certificate Not Found</PageTitle>
         <BackgroundSvg />
         <div className={styles.details}>
             <div className={classNames(styles.headerWrap, 'mobile-hide')}>

@@ -15,6 +15,7 @@ export const EnvironmentConfigProd: EnvironmentConfigModel = {
         FORUM_ACCESS_TOKEN: EnvironmentConfigDefault.API.FORUM_ACCESS_TOKEN,
         FORUM_V2: 'https://discussions.topcoder.com/api/v2',
         V3: 'https://api.topcoder.com/v3',
+        V4: 'https://api.topcoder.com/v4',
         V5: 'https://api.topcoder.com/v5',
     },
     AUTH: {

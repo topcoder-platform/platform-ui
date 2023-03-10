@@ -25,6 +25,7 @@ interface PageLayoutProps {
     mainContent: ReactNode
     heroCTA?: ReactNode
     sidebarContents: ReactNode
+    children?: ReactNode
 }
 
 const PageLayout: FC<PageLayoutProps> = (props: PageLayoutProps) => {
@@ -78,6 +79,7 @@ const PageLayout: FC<PageLayoutProps> = (props: PageLayoutProps) => {
                     <LoadingSpinner />
                 </div>
             )}
+            {props.children}
         </ContentLayout>
     )
 }

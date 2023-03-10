@@ -13,6 +13,7 @@ export const EnvironmentConfigDefault: EnvironmentConfigModel = {
         FORUM_ACCESS_TOKEN: 'va.JApNvUOx3549h20I6tnl1kOQDc75NDIp.0jG3dA.EE3gZgV',
         FORUM_V2: 'https://vanilla.topcoder-dev.com/api/v2',
         V3: 'https://api.topcoder-dev.com/v3',
+        V4: 'https://api.topcoder-dev.com/v4',
         V5: 'https://api.topcoder-dev.com/v5',
     },
     AUTH: {
@@ -23,6 +24,7 @@ export const EnvironmentConfigDefault: EnvironmentConfigModel = {
         PUBLIC_TOKEN: 'puba0825671e469d16f940c5a30dc738f11',
         SERVICE: 'platform-ui',
     },
+    MEMBER_VERIFY_LOOKER: 3322,
     REAUTH_OFFSET: 55,
     SPRIG: {
         ENVIRONMENT_ID: 'bUcousVQ0-yF',
