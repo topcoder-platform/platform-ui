@@ -1,6 +1,6 @@
 /* eslint-disable react/no-danger */
-import { FC, ReactNode, useContext } from 'react'
-import { Params, useParams } from 'react-router-dom'
+import { FC, ReactNode, useContext, useMemo } from 'react'
+import { Params, useLocation, useParams } from 'react-router-dom'
 
 import {
     Breadcrumb,
@@ -27,7 +27,7 @@ import {
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
 } from '../learn-lib'
-import { getCoursePath } from '../learn.routes'
+import { getCoursePath, getTCACertificationPath } from '../learn.routes'
 
 import { CourseCurriculum } from './course-curriculum'
 import styles from './CourseDetailsPage.module.scss'
@@ -69,13 +69,35 @@ const CourseDetailsPage: FC<{}> = () => {
 
     const ready: boolean = profileReady && courseReady && certificateReady && (!profile || progressReady)
 
-    const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
-        {
+    const location: any = useLocation()
 
-            name: textFormatGetSafeString(course?.title),
-            url: getCoursePath(routeParams.provider as string, textFormatGetSafeString(routeParams.certification)),
-        },
+    const breadcrumbItems: BreadcrumbItemModel[] = useMemo(() => {
+        const bItems: BreadcrumbItemModel[] = [
+            {
+
+                name: textFormatGetSafeString(course?.title),
+                url: getCoursePath(routeParams.provider as string, textFormatGetSafeString(routeParams.certification)),
+            },
+        ]
+
+        // if coming path is from TCA certification details page
+        // then we need to add the certification to the navi list
+        if (location.state?.tcaCertInfo) {
+            bItems.unshift({
+                name: location.state.tcaCertInfo.title,
+                url: getTCACertificationPath(location.state.tcaCertInfo.dashedName),
+            })
+        }
+
+        return bItems
+    }, [
+        course?.title,
+        routeParams.certification,
+        routeParams.provider,
+        location.state,
     ])
+
+    const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb(breadcrumbItems)
 
     function getDescription(): ReactNode {
 
