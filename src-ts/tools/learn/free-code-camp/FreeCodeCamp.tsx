@@ -351,7 +351,11 @@ const FreeCodeCamp: FC<{}> = () => {
                 certificationParam,
             )
 
-            navigate(completedPath)
+            navigate(completedPath, {
+                state: {
+                    tcaCertInfo: location.state?.tcaCertInfo,
+                },
+            })
             return
         }
 
