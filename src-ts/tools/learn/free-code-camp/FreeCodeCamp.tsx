@@ -164,12 +164,17 @@ const FreeCodeCamp: FC<{}> = () => {
             moduleParam,
             nextStep.dashedName,
         )
-        navigate(lessonPath)
+        navigate(lessonPath, {
+            state: {
+                tcaCertInfo: location.state?.tcaCertInfo,
+            },
+        })
     }, [
         certificationParam,
         currentModuleData,
         currentStepIndex,
         moduleParam,
+        location.state,
         navigate,
         providerParam,
     ])
