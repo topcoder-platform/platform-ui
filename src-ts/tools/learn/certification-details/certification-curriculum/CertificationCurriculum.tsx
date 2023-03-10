@@ -78,6 +78,7 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
                     {sortedCertResources.map(cert => (
                         <CourseCard
                             certification={cert.freeCodeCampCertification}
+                            course={cert.freeCodeCampCertification?.course}
                             progress={progressById[cert.freeCodeCampCertification.fccId]}
                             key={cert.id}
                             learnerLevel={cert.freeCodeCampCertification.learnerLevel}

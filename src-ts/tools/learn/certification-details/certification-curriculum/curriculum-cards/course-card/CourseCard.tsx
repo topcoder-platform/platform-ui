@@ -5,6 +5,7 @@ import {
     clearFCCCertificationTitle,
     CompletionTimeRange,
     LearnCertification,
+    LearnCourse,
     LearnLevelIcon,
     LearnUserCertificationProgress,
     ProvidersLogoList,
@@ -26,6 +27,7 @@ import styles from './CourseCard.module.scss'
 
 interface CourseCardProps {
     certification: LearnCertification
+    course?: LearnCourse
     progress: LearnUserCertificationProgress
     learnerLevel: TCACertificationLearnLevel
     provider: string
@@ -106,7 +108,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
     }
 
     const completionTimeRange: TCACertificationCompletionTimeRange = useHoursEstimateToRange(
-        props.certification.course?.estimatedCompletionTimeValue,
+        props.course?.estimatedCompletionTimeValue ?? 0,
     )
 
     return (
@@ -129,7 +131,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                                 <IconSolid.DocumentTextIcon />
                             </span>
                             <span className='quote-small'>
-                                {props.certification.course.modules.length}
+                                {props.course?.modules.length}
                                 {' modules'}
                             </span>
                         </li>
