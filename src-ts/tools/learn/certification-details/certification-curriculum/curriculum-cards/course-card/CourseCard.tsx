@@ -8,6 +8,7 @@ import {
     LearnLevelIcon,
     LearnUserCertificationProgress,
     ProvidersLogoList,
+    TCACertification,
     TCACertificationCompletionTimeRange,
     TCACertificationLearnLevel,
     TCACertificationProviderBase,
@@ -29,6 +30,7 @@ interface CourseCardProps {
     learnerLevel: TCACertificationLearnLevel
     provider: string
     isEnrolled: boolean
+    tcaCertification: TCACertification
 }
 
 const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
@@ -45,6 +47,12 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                                 props.provider,
                                 props.certification.certification,
                             )}
+                            routeState={{
+                                tcaCertInfo: {
+                                    dashedName: props.tcaCertification.dashedName,
+                                    title: props.tcaCertification.title,
+                                },
+                            }}
                         />
                         <Button
                             buttonStyle='primary'
@@ -68,6 +76,12 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                             props.certification.certification,
                             props.progress?.currentLesson,
                         )}
+                        routeState={{
+                            tcaCertInfo: {
+                                dashedName: props.tcaCertification.dashedName,
+                                title: props.tcaCertification.title,
+                            },
+                        }}
                     />
                 )
             default:
@@ -80,6 +94,12 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                             props.provider,
                             props.certification.certification,
                         )}
+                        routeState={{
+                            tcaCertInfo: {
+                                dashedName: props.tcaCertification.dashedName,
+                                title: props.tcaCertification.title,
+                            },
+                        }}
                     />
                 )
         }

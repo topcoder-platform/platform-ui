@@ -83,6 +83,7 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
                             learnerLevel={cert.freeCodeCampCertification.learnerLevel}
                             provider={get(providersById, [cert.resourceProviderId, 'name'])}
                             isEnrolled={props.isEnrolled}
+                            tcaCertification={props.certification}
                         />
                     ))}
                     <AssessmentCard
