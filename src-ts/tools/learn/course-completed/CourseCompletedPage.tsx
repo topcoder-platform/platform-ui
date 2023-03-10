@@ -1,5 +1,5 @@
-import { FC, ReactNode, useContext, useEffect } from 'react'
-import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
+import { FC, ReactNode, useContext, useEffect, useMemo } from 'react'
+import { NavigateFunction, Params, useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { EnvironmentConfig } from '../../../config'
 import {
@@ -26,7 +26,7 @@ import {
     useTCACertificationCheckCompleted,
     useTcaCertificationModal,
 } from '../learn-lib'
-import { getCertificatePath, getCoursePath, LEARN_PATHS, rootRoute } from '../learn.routes'
+import { getCertificatePath, getCoursePath, getTCACertificationPath, LEARN_PATHS, rootRoute } from '../learn.routes'
 
 import { ReactComponent as StarsSvg } from './stars.svg'
 import styles from './CourseCompletedPage.module.scss'
@@ -75,16 +75,37 @@ const CourseCompletedPage: FC<{}> = () => {
     const certificatesDataReady: boolean = progressReady && certifReady
     const ready: boolean = profileReady && courseDataReady && (!isLoggedIn || certificatesDataReady)
 
-    const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
-        {
-            name: courseData?.title ?? '',
-            url: coursePath,
-        },
-        {
-            name: 'Congratulations!',
-            url: LEARN_PATHS.completed,
-        },
+    const location: any = useLocation()
+
+    const breadcrumbItems: BreadcrumbItemModel[] = useMemo(() => {
+        const bItems: BreadcrumbItemModel[] = [
+            {
+                name: courseData?.title ?? '',
+                url: coursePath,
+            },
+            {
+                name: 'Congratulations!',
+                url: LEARN_PATHS.completed,
+            },
+        ]
+
+        // if coming path is from TCA certification details page
+        // then we need to add the certification to the navi list
+        if (location.state?.tcaCertInfo) {
+            bItems.unshift({
+                name: location.state.tcaCertInfo.title,
+                url: getTCACertificationPath(location.state.tcaCertInfo.dashedName),
+            })
+        }
+
+        return bItems
+    }, [
+        location.state,
+        courseData?.title,
+        coursePath,
     ])
+
+    const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb(breadcrumbItems)
 
     const tcaCertificationCompletedModal: ReactNode = useTcaCertificationModal(tcaCertificationName)
 
