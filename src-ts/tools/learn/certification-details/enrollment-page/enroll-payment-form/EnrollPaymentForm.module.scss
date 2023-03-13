@@ -1,0 +1,53 @@
+@use '../../../../../lib/styles/typography';
+@import '../../../../../lib/styles/includes';
+@import '../../../../../lib/styles/inputs';
+
+.payment-form {
+    .label {
+        @extend .body-ultra-small;
+        @extend .ultra-small-bold;
+        margin-bottom: $space-xs;
+    }
+
+    .cardElement {
+        @include formInputText;
+
+        input,
+        select {
+            @include formInputText;
+        }
+    }
+
+    .cardDate {
+        margin-right: $space-sm;
+    }
+
+    .input-wrap-wrapper {
+        display: flex;
+        margin-bottom: $space-sm;
+        > div {
+            flex: 1;
+        }
+    }
+
+    .checkbox-label {
+        @extend .body-main;
+        white-space: pre-wrap;
+        font-weight: 400;
+        .link {
+            @extend .body-main-link;
+            color: $link-blue-dark;
+            margin-left: $space-xs;
+            cursor: pointer;
+        }
+    }
+
+    .pay-button {
+        width: 100%;
+    }
+
+    .error {
+        color: $red-100;
+        margin-bottom: $space-xl;
+    }
+}

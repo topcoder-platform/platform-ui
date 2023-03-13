@@ -8,13 +8,13 @@
 
 .header {
     text-align: center;
-    
+
     .freeLabel {
         @include freeLabel;
 
         margin-bottom: $space-sm;
     }
-    
+
     :global(.strike) {
         text-decoration: line-through;
         color: $black-40;
@@ -22,14 +22,21 @@
         font-size: 18px;
         line-height: 22px;
     }
-    
+
     strong {
         margin-top: $space-sm;
         display: block;
     }
 }
 
-.formTitle {
+.priceLabel {
+    color: $blue-140;
+    font-family: $font-barlow-condensed;
+    font-weight: 500;
+    font-size: 44px;
+    line-height: 44px;
+    text-align: center;
+    text-transform: uppercase;
     margin-bottom: $space-xs;
 }
 
@@ -57,12 +64,18 @@
     :global(.page-divider) {
         display: none;
     }
+
     :global(.form-button-container) {
         > :first-child:empty {
             display: none;
         }
     }
+
     :global(.button) {
         width: 100%;
     }
+}
+
+.paymentSuccessIcon {
+    color: $green-100;
 }
