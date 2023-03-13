@@ -44,5 +44,6 @@ export interface GlobalConfig {
     UNIVERSAL_NAV: {
         URL: string
     }
-    MEMBER_VERIFY_LOOKER: number
+    MEMBER_VERIFY_LOOKER: number,
+    REACT_APP_ENABLE_TCA_CERT_MONETIZATION: boolean
 }

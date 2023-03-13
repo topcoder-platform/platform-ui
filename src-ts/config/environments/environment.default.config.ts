@@ -25,6 +25,7 @@ export const EnvironmentConfigDefault: EnvironmentConfigModel = {
         SERVICE: 'platform-ui',
     },
     MEMBER_VERIFY_LOOKER: 3322,
+    REACT_APP_ENABLE_TCA_CERT_MONETIZATION: process.env.REACT_APP_ENABLE_TCA_CERT_MONETIZATION as unknown as boolean || false,
     REAUTH_OFFSET: 55,
     SPRIG: {
         ENVIRONMENT_ID: 'bUcousVQ0-yF',

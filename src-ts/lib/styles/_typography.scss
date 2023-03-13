@@ -309,3 +309,7 @@ h4 {
     line-height: 20px;
     font-weight: $font-weight-medium;
 }
+
+.pointer-events-none {
+    pointer-events: none;
+}
