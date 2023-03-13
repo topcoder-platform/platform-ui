@@ -28,7 +28,7 @@ interface FieldDirtyState {
     cvvComplete: boolean
 }
 
-interface PermiumSubFormProps {
+interface EnrollPaymentFormProps {
     error: boolean
     formData: PermiumSubFormData
     isFormValid: boolean
@@ -40,7 +40,7 @@ interface PermiumSubFormProps {
 type CardChangeEvent
     = StripeCardExpiryElementChangeEvent | StripeCardNumberElementChangeEvent | StripeCardCvcElementChangeEvent
 
-const EnrollPaymentForm: React.FC<PermiumSubFormProps> = (props: PermiumSubFormProps) => {
+const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymentFormProps) => {
     const [cardNumberError, setCardNumberError]: [string, Dispatch<string>] = useState<string>('')
     const [cardExpiryError, setCardExpiryError]: [string, Dispatch<string>] = useState<string>('')
     const [cardCVVError, setCardCVVError]: [string, Dispatch<string>] = useState<string>('')

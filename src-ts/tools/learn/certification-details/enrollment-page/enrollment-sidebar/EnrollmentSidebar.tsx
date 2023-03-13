@@ -74,7 +74,7 @@ const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarP
             const paymentSheet: MemberEnrollPaymentSheet = await createMemberEnrollPaymentAsync({
                 priceIDs: [props.product?.default_price.id as string],
             })
-            // try confirm to confirm the payment
+            // try to confirm to confirm the payment
             // by using the provided card info
             const paymentResult: PaymentIntentResult | undefined
                 = await stripe?.confirmCardPayment(paymentSheet.clientSecret, {
