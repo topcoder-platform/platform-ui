@@ -12,7 +12,7 @@ export function useTcaCertificationModal(certificationName?: string, onClose: ()
         { enabled: !!certificationName },
     )
 
-    return (
+    return !!tcaCertification && (
         <TCACertificationCompletedModal
             certification={tcaCertification}
             isOpen={!!tcaCertification}
