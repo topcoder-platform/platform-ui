@@ -123,7 +123,7 @@ const CourseCompletedPage: FC<{}> = () => {
     return (
         <>
             <PageTitle>
-                {`${certification?.title ?? 'Certification'} Completed`}
+                {`${courseData?.title ?? 'Course'} Completed`}
             </PageTitle>
 
             <LoadingSpinner hide={ready} />
