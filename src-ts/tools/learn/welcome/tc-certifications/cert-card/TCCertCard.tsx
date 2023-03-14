@@ -62,6 +62,39 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
         return getCtaBtn('primary', 'Resume', getTCACertificationPath(dashedName))
     }
 
+    function renderStats(): ReactNode {
+        return (
+            <div className={styles.cardSubWrap}>
+                <div className={styles.subTitleItem}>
+                    <LearnLevelIcon level={props.certification.learnerLevel} />
+                    <span className={classNames('body-small', styles.infoText)}>
+                        {props.certification.learnerLevel}
+                    </span>
+                </div>
+                <div className={styles.subTitleItem}>
+                    <IconSolid.DocumentTextIcon width={16} height={16} />
+                    <span className={classNames('body-small', styles.infoText)}>
+                        {props.certification.coursesCount}
+                        {' courses'}
+                    </span>
+                </div>
+                <div className={styles.subTitleItem}>
+                    <IconSolid.ClockIcon width={16} height={16} />
+                    <span className={classNames('body-small', styles.durationWrap)}>
+                        <CompletionTimeRange range={props.certification.completionTimeRange} />
+                    </span>
+                </div>
+                {/* TODO: Uncomment this when paid certs come to prod! */}
+                {/* <div className={styles.subTitleItem}>
+                    <IconSolid.CurrencyDollarIcon width={16} height={16} />
+                    <span className={classNames('body-small', styles.infoText)}>
+                        {' One time payment'}
+                    </span>
+                </div> */}
+            </div>
+        )
+    }
+
     function renderProgressBar(): ReactNode {
         if (!isEnrolled && !isCompleted) {
             return <div className={styles.separatorBar} />
@@ -84,61 +117,16 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                     type={props.certification.certificationCategory.track}
                     level={props.certification.learnerLevel}
                 />
-                <div className={styles.cardTitleWrap}>
-                    <p className='body-large-medium'>{props.certification.title}</p>
-                    {
-                        isMobile ? (
-                            <>
-                                <div className={styles.cardSubWrap}>
-                                    <LearnLevelIcon level={props.certification.learnerLevel} />
-                                    <span className={classNames('body-small', styles.infoText)}>
-                                        {props.certification.learnerLevel}
-                                    </span>
-                                    <IconSolid.DocumentTextIcon width={16} height={16} />
-                                    <span className={classNames('body-small', styles.infoText)}>
-                                        {props.certification.coursesCount}
-                                        {' courses'}
-                                    </span>
-                                </div>
-                                <div className={styles.cardSubWrap}>
-                                    <IconSolid.ClockIcon width={16} height={16} />
-                                    <span className={classNames('body-small', styles.durationWrap)}>
-                                        <CompletionTimeRange range={props.certification.completionTimeRange} />
-                                    </span>
-                                    {/* TODO: Uncomment this when paid certs come to prod! */}
-                                    {/* <IconSolid.CurrencyDollarIcon width={16} height={16} />
-                        <span className={classNames('body-small', styles.infoText)}>
-                            {' One time payment'}
-                        </span> */}
-                                </div>
-                            </>
-                        ) : (
-                            <div className={styles.cardSubWrap}>
-                                <LearnLevelIcon level={props.certification.learnerLevel} />
-                                <span className={classNames('body-small', styles.infoText)}>
-                                    {props.certification.learnerLevel}
-                                </span>
-                                <IconSolid.DocumentTextIcon width={16} height={16} />
-                                <span className={classNames('body-small', styles.infoText)}>
-                                    {props.certification.coursesCount}
-                                    {' courses'}
-                                </span>
-                                <IconSolid.ClockIcon width={16} height={16} />
-                                <span className={classNames('body-small', styles.durationWrap)}>
-                                    <CompletionTimeRange range={props.certification.completionTimeRange} />
-                                </span>
-                                {/* TODO: Uncomment this when paid certs come to prod! */}
-                                {/* <IconSolid.CurrencyDollarIcon width={16} height={16} />
-                        <span className={classNames('body-small', styles.infoText)}>
-                            {' One time payment'}
-                        </span> */}
-                            </div>
-                        )
-                    }
-                </div>
-                <div className={styles.cardLabels}>
-                    <div className={styles.newLabel}>NEW</div>
-                    <div className={styles.freeLabel}>FREE</div>
+                <div className={styles.cardHeadline}>
+                    <div className={styles.cardTitleline}>
+                        <p className='body-large-medium'>{props.certification.title}</p>
+
+                        <div className={styles.cardLabels}>
+                            <div className={styles.newLabel}>NEW</div>
+                            <div className={styles.freeLabel}>FREE</div>
+                        </div>
+                    </div>
+                    {renderStats()}
                 </div>
             </div>
 
