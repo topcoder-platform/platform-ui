@@ -386,13 +386,18 @@ const FreeCodeCamp: FC<{}> = () => {
             firstIncompleteLesson.dashedName ?? '',
         )
 
-        navigate(nextLessonPath)
+        navigate(nextLessonPath, {
+            state: {
+                tcaCertInfo: location.state?.tcaCertInfo,
+            },
+        })
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, 30), [
         certificateProgress,
         certificationParam,
         courseData?.modules,
         providerParam,
+        location.state,
     ])
 
     useEffect(() => {
@@ -422,7 +427,11 @@ const FreeCodeCamp: FC<{}> = () => {
                     providerParam,
                     certificationParam,
                 )
-                navigate(completedPath)
+                navigate(completedPath, {
+                    state: {
+                        tcaCertInfo: location.state?.tcaCertInfo,
+                    },
+                })
             })
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
@@ -431,6 +440,7 @@ const FreeCodeCamp: FC<{}> = () => {
         profile?.handle,
         profile?.userId,
         providerParam,
+        location.state,
     ])
 
     useEffect(() => {
@@ -447,7 +457,11 @@ const FreeCodeCamp: FC<{}> = () => {
                     moduleParamData.lessons[0].dashedName,
                 )
 
-                navigate(lessonPath)
+                navigate(lessonPath, {
+                    state: {
+                        tcaCertInfo: location.state?.tcaCertInfo,
+                    },
+                })
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -458,6 +472,7 @@ const FreeCodeCamp: FC<{}> = () => {
         lessonParam,
         moduleParam,
         providerParam,
+        location.state,
     ])
 
     useEffect(() => {
@@ -513,7 +528,11 @@ const FreeCodeCamp: FC<{}> = () => {
             providerParam,
             certificationParam,
         )
-        navigate(coursePath)
+        navigate(coursePath, {
+            state: {
+                tcaCertInfo: location.state?.tcaCertInfo,
+            },
+        })
     }, [
         ready,
         certificateProgress,
@@ -522,6 +541,7 @@ const FreeCodeCamp: FC<{}> = () => {
         certificationParam,
         navigate,
         isLoggedIn,
+        location.state,
     ])
 
     /**
