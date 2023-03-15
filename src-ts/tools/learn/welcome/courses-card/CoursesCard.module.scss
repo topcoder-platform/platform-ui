@@ -47,18 +47,23 @@
         .subTitleWrap {
             display: flex;
             align-items: center;
+            gap: $space-sm;
+            flex-wrap: wrap;
 
-            @include ltesm {
-                display: grid;
-                grid-template-columns: 30px 1fr;
+            .subTitleItem {
+                display: flex;
+                align-items: center;
             }
 
-            >svg {
+            svg {
+                display: block;
+                flex: 0 0 auto;
                 color: $blue-140;
                 margin-right: $space-xs;
             }
 
-            >em {
+            em {
+                flex: 1 1 auto;
                 font-style: italic;
                 font-size: 14px;
                 line-height: 22px;
