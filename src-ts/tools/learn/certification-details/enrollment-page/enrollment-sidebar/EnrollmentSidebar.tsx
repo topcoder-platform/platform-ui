@@ -91,11 +91,13 @@ const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarP
                 }, 3000)
             } else {
                 // payment error!
+                // eslint-disable-next-line no-console
                 console.error('Enroll payment error', paymentResult.error)
                 setPaymentError(paymentResult.error.message as string)
                 setPayProcessing(false)
             }
         } catch (error: any) {
+            // eslint-disable-next-line no-console
             console.error('Enroll payment error', error)
             setPaymentError(error.message || error)
             setPayProcessing(false)

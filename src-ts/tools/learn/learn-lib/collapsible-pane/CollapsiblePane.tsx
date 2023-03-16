@@ -1,4 +1,3 @@
-import { noop } from 'lodash'
 import {
     Dispatch,
     FC,
@@ -25,20 +24,19 @@ interface CollapsiblePaneProps {
 }
 
 const CollapsiblePane: FC<CollapsiblePaneProps> = (props: CollapsiblePaneProps) => {
-    const { onToggle = noop }: CollapsiblePaneProps = props
     const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
     const elRef: MutableRefObject<HTMLElement | any> = useRef()
 
     const toggle: () => void = useCallback(() => {
         setIsOpen(!isOpen)
-        onToggle(!isOpen)
-    }, [isOpen, onToggle])
+        props.onToggle?.call(undefined, !isOpen)
+    }, [isOpen, props.onToggle])
 
     const close: () => void = useCallback(() => {
         setIsOpen(false)
-        onToggle(false)
-    }, [onToggle])
+        props.onToggle?.call(undefined, false)
+    }, [props.onToggle])
 
     useEffect(() => {
         setIsOpen(!!props.isOpen)

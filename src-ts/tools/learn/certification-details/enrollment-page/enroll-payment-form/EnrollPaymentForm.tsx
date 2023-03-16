@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useState } from 'react'
+import { Dispatch, FC, FocusEvent, SetStateAction, SyntheticEvent, useState } from 'react'
 import classNames from 'classnames'
 
 import {
@@ -40,7 +40,7 @@ interface EnrollPaymentFormProps {
 type CardChangeEvent
     = StripeCardExpiryElementChangeEvent | StripeCardNumberElementChangeEvent | StripeCardCvcElementChangeEvent
 
-const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymentFormProps) => {
+const EnrollPaymentForm: FC<EnrollPaymentFormProps> = (props: EnrollPaymentFormProps) => {
     const [cardNumberError, setCardNumberError]: [string, Dispatch<string>] = useState<string>('')
     const [cardExpiryError, setCardExpiryError]: [string, Dispatch<string>] = useState<string>('')
     const [cardCVVError, setCardCVVError]: [string, Dispatch<string>] = useState<string>('')
@@ -57,7 +57,11 @@ const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymen
 
     const getError: (data: any) => string = data => data?.error?.message || ''
 
-    const onOpenOrderContract: (event: React.SyntheticEvent) => void = event => {
+    function hideOrderContractModal(): void {
+        setIsOrderContractModalOpen(false)
+    }
+
+    function onOpenOrderContract(event: SyntheticEvent): void {
         event.preventDefault()
         event.stopPropagation()
         setIsOrderContractModalOpen(true)
@@ -70,21 +74,27 @@ const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymen
         </div>
     )
 
-    function cardElementOnChange(fieldName: string, data: CardChangeEvent, stateUpdater: Dispatch<string>): void {
-        const error: string = getError(data)
-        stateUpdater(error)
-        props.onUpdateField(fieldName, data.complete)
-        setFormDirtyState({
-            ...formDirtyState,
-            [fieldName]: true,
-        })
+    function cardElementOnChange(fieldName: string, stateUpdater: Dispatch<string>): (data: CardChangeEvent) => void {
+        return (data: CardChangeEvent) => {
+            const error: string = getError(data)
+            stateUpdater(error)
+            props.onUpdateField(fieldName, data.complete)
+            setFormDirtyState({
+                ...formDirtyState,
+                [fieldName]: true,
+            })
+        }
+    }
+
+    function handleTosCheckboxChange(event: FocusEvent<HTMLInputElement, Element>): void {
+        props.onUpdateField('subsContract', event.target.checked)
     }
 
     return (
         <div className={classNames(styles['payment-form'], props.isPayProcessing ? 'pointer-events-none' : '')}>
             <OrderContractModal
                 isOpen={isOrderContractModalOpen}
-                onClose={() => setIsOrderContractModalOpen(false)}
+                onClose={hideOrderContractModal}
             />
 
             <div className={styles.label}>Card Information</div>
@@ -92,6 +102,7 @@ const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymen
             <div className={styles['input-wrap-wrapper']}>
                 <InputWrapper
                     label='Card Number'
+                    // eslint-disable-next-line jsx-a11y/tabindex-no-positive
                     tabIndex={2}
                     type='text'
                     disabled={false}
@@ -105,7 +116,7 @@ const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymen
                                 base: styles.cardElement,
                             },
                         }}
-                        onChange={(event: StripeCardNumberElementChangeEvent) => cardElementOnChange('cardComplete', event, setCardNumberError)}
+                        onChange={cardElementOnChange('cardComplete', setCardNumberError)}
                     />
                 </InputWrapper>
             </div>
@@ -114,6 +125,7 @@ const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymen
                 <InputWrapper
                     className={styles.cardDate}
                     label='Date'
+                    // eslint-disable-next-line jsx-a11y/tabindex-no-positive
                     tabIndex={3}
                     type='text'
                     disabled={false}
@@ -127,11 +139,12 @@ const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymen
                             },
                             placeholder: 'MM/YY',
                         }}
-                        onChange={(event: StripeCardExpiryElementChangeEvent) => cardElementOnChange('expiryComplete', event, setCardExpiryError)}
+                        onChange={cardElementOnChange('expiryComplete', setCardExpiryError)}
                     />
                 </InputWrapper>
                 <InputWrapper
                     label='CVC'
+                    // eslint-disable-next-line jsx-a11y/tabindex-no-positive
                     tabIndex={3}
                     type='text'
                     disabled={false}
@@ -145,7 +158,7 @@ const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymen
                             },
                             placeholder: 'CCV',
                         }}
-                        onChange={(event: StripeCardCvcElementChangeEvent) => cardElementOnChange('cvvComplete', event, setCardCVVError)}
+                        onChange={cardElementOnChange('cvvComplete', setCardCVVError)}
                     />
                 </InputWrapper>
             </div>
@@ -153,10 +166,11 @@ const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymen
             <InputText
                 label={renderCheckboxLabel()}
                 name='order-contract'
+                // eslint-disable-next-line jsx-a11y/tabindex-no-positive
                 tabIndex={1}
                 type='checkbox'
                 checked={props.formData.subsContract}
-                onChange={event => props.onUpdateField('subsContract', event.target.checked)}
+                onChange={handleTosCheckboxChange}
             />
 
             {

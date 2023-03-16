@@ -141,7 +141,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         )
 
         progress = await userCertificationProgressUpdateAsync(
-            progress!.id,
+            progress?.id,
             UserCertificationUpdateProgressActions.acceptHonestyPolicy,
             {},
         )
@@ -173,7 +173,6 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
      * proceed as if the user just clicked "Start course" button
      */
     useEffect(() => {
-        // eslint-disable-next-line no-null/no-null
         if (props.progressReady && isLoggedIn && searchParams.get(LEARN_PATHS.startCourseRouteFlag) !== null) {
             handleStartCourseClick()
         }

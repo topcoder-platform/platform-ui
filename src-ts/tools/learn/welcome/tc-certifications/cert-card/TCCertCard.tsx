@@ -1,7 +1,7 @@
 import { FC, memo, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { Button, ButtonStyle, IconSolid, ProgressBar, useCheckIsMobile } from '../../../../../lib'
+import { Button, ButtonStyle, IconSolid, ProgressBar } from '../../../../../lib'
 import {
     CertificateBadgeIcon,
     CompletionTimeRange,
@@ -29,8 +29,6 @@ const getCtaBtn: (style: ButtonStyle, label: string, route: string) => ReactNode
 const EXCERPT_TEXT_LEN: number = 165
 
 const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
-    const isMobile: boolean = useCheckIsMobile()
-
     const desc: string = props.certification.description.slice(0, EXCERPT_TEXT_LEN)
 
     const { skills, providers, dashedName }: {

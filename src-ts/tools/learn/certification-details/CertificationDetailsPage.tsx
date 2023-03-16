@@ -80,7 +80,7 @@ const CertificationDetailsPage: FC<{}> = () => {
     }
 
     function renderMainContent(): ReactNode {
-        return ready ? (
+        return ready && certification ? (
             isNotEnrolledView ? (
                 <CertifDetailsContent certification={certification} sectionClassName={styles['text-section']}>
                     {renderCertificationCurriculum()}
@@ -102,15 +102,14 @@ const CertificationDetailsPage: FC<{}> = () => {
                     />
                 </>
             )
-        ) : null
+        ) : <></>
     }
 
     function renderSidebar(): ReactNode {
-        return (
+        return !!certification && (
             <CertificationDetailsSidebar
                 certification={certification}
                 enrolled={isEnrolled}
-                profile={profile}
                 certProgress={progress}
             />
         )
@@ -122,7 +121,7 @@ const CertificationDetailsPage: FC<{}> = () => {
             mainContent={renderMainContent()}
             certification={certification}
             heroCTA={!isEnrolled && (
-                <EnrollCtaBtn certification={certification?.dashedName} />
+                <EnrollCtaBtn certification={certification?.dashedName ?? ''} />
             )}
         >
             <PageTitle>{certification?.title ?? 'Certification Details'}</PageTitle>

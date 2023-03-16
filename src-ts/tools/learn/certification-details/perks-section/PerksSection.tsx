@@ -1,7 +1,7 @@
-import classNames from 'classnames'
 import { FC } from 'react'
+import classNames from 'classnames'
 
-import { type PerkItem } from '../data/perks.data'
+import { type PerkItem } from '../certification-details-modal/certif-details-content/data'
 
 import { getPerkIcon } from './icons-map'
 import styles from './PerksSection.module.scss'
@@ -9,11 +9,11 @@ import styles from './PerksSection.module.scss'
 interface PerksSectionProps {
     items: Array<PerkItem>
     title?: string
-    style?: 'clear'
+    theme?: 'clear'
 }
 
 const PerksSection: FC<PerksSectionProps> = (props: PerksSectionProps) => (
-    <div className={classNames(styles.wrap, props.style && styles[props.style])}>
+    <div className={classNames(styles.wrap, props.theme && styles[props.theme])}>
         <h2>{props.title ?? 'Why certify with Topcoder?'}</h2>
         <svg width='0' height='0'>
             <defs>
