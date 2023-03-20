@@ -96,6 +96,7 @@
         transform: translate(-50%, -50%);
         z-index: -1;
         animation: stars-fade-in-out 10s ease-in-out 0s infinite both;
+        pointer-events: none;
     
         @include ltemd {
             left: 50%;
