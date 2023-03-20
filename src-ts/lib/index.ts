@@ -11,6 +11,7 @@ export {
     authUrlLogin,
     authUrlLogout,
     authUrlSignup,
+    copyTextToClipboard,
     errorHandle,
     fileCreateFromCanvas,
     fileDownloadBlob,

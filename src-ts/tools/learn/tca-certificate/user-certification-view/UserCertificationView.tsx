@@ -6,6 +6,7 @@ import {
     useState,
 } from 'react'
 import { Params, useParams } from 'react-router-dom'
+import { EnvironmentConfig } from '../../../../config'
 
 import {
     getVerificationStatusAsync,
@@ -45,10 +46,10 @@ const UserCertificationView: FC<{}> = () => {
             `${routeParams.memberHandle}`,
         )
 
-    const validationUrl: string = getTCAUserCertificationUrl(
+    const validationUrl: string = `${EnvironmentConfig.TOPCODER_URLS.TCA}${getTCAUserCertificationUrl(
         `${routeParams.certification}`,
         `${routeParams.memberHandle}`,
-    )
+    )}`
 
     useEffect(() => {
         if (routeParams?.memberHandle) {
