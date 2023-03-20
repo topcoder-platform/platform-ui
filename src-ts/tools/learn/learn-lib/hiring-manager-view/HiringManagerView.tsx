@@ -1,6 +1,9 @@
 import {
     FC,
+    MutableRefObject,
     ReactNode,
+    useCallback,
+    useRef,
 } from 'react'
 import classNames from 'classnames'
 
@@ -8,6 +11,7 @@ import {
     Button,
     ContentLayout,
     DefaultMemberIcon,
+    fileDownloadCanvasAsImage,
     IconOutline,
     Tooltip,
     UserProfile,
@@ -21,6 +25,8 @@ import {
     TCACertificateType,
     TCACertification,
     TCACertificationResource,
+    useCertificateCanvas,
+    useCertificatePrint,
 } from '..'
 import { getTCACertificationPath } from '../../learn.routes'
 import { clearFCCCertificationTitle } from '../functions'
@@ -51,11 +57,36 @@ export interface HiringManagerViewProps {
 }
 
 const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewProps) => {
+    const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
+
     const {
         certificationResources: courses = [],
         learnedOutcomes,
         certificationCategory,
     }: TCACertification = (props.certification ?? {} as TCACertification)
+
+    const certificationTitle: string = `${props.userName} - ${props.certification?.title} Certificate`
+
+    const myProfileLink: string = `${EnvironmentConfig.TOPCODER_URLS.USER_PROFILE}/${props.userProfile?.handle}`
+
+    const certificationDetailsLink: string = getTCACertificationPath(
+        `${props.certification?.dashedName}`,
+    )
+
+    const getCertificateCanvas: () => Promise<HTMLCanvasElement | void>
+        = useCertificateCanvas(certificateElRef)
+
+    const handleDownload: () => Promise<void> = useCallback(async () => {
+
+        const canvas: HTMLCanvasElement | void = await getCertificateCanvas()
+        if (!!canvas) {
+            fileDownloadCanvasAsImage(canvas, `${certificationTitle}.png`)
+        }
+
+    }, [certificationTitle, getCertificateCanvas])
+
+    const handlePrint: () => Promise<void>
+        = useCertificatePrint(certificateElRef, certificationTitle ?? '')
 
     function renderCoursesGridItems(): ReactNode {
         return (
@@ -74,15 +105,6 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
             </div>
         )
     }
-
-    const myProfileLink: string = `${EnvironmentConfig.TOPCODER_URLS.USER_PROFILE}/${props.userProfile?.handle}`
-
-    const certificationDetailsLink: string = getTCACertificationPath(
-        `${props.certification?.dashedName}`,
-    )
-
-    function handleDownload(): void {}
-    function handlePrint(): void {}
 
     function renderHero(): ReactNode {
         if (!props.certification || !props.userProfile) {
@@ -144,6 +166,7 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                                     completedDate={props.completedAt}
                                     completionUuid={props.completionUuid}
                                     validateLink={props.validationUrl}
+                                    certificateElRef={certificateElRef}
                                 />
                                 <div className={styles.certActionBtns}>
                                     <ActionButton

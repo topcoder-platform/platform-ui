@@ -17,6 +17,7 @@ import {
     PageTitle,
     useGetCompletedTCACertificationEnrollment,
 } from '../../learn-lib'
+import { getTCAUserCertificationUrl } from '../../learn.routes'
 
 import { useGetUserProfile, UseGetUserProfileData } from './use-get-user-profile'
 
@@ -28,7 +29,7 @@ const UserCertificationView: FC<{}> = () => {
         profile,
         ready: profileReady,
         isOwnProfile,
-    }: UseGetUserProfileData = useGetUserProfile(routeParams.memberHandle);
+    }: UseGetUserProfileData = useGetUserProfile(routeParams.memberHandle)
 
     const [isMemberVerified, setIsMemberVerified]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -43,6 +44,11 @@ const UserCertificationView: FC<{}> = () => {
             `${routeParams.certification}`,
             `${routeParams.memberHandle}`,
         )
+
+    const validationUrl: string = getTCAUserCertificationUrl(
+        `${routeParams.certification}`,
+        `${routeParams.memberHandle}`,
+    )
 
     useEffect(() => {
         if (routeParams?.memberHandle) {
@@ -74,6 +80,7 @@ const UserCertificationView: FC<{}> = () => {
                         userProfile={profile}
                         userName={enrollment.userName}
                         isOwner={isOwnProfile}
+                        validationUrl={validationUrl}
                     />
                 </div>
             )}

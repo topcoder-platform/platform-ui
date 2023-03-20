@@ -130,6 +130,12 @@
     }
 }
 
+.heroCert {
+    body:not(:global(.canvas-clone)) & :global(.tca-cert-details-wrap) {
+        display: none;
+    }
+}
+
 .wrap {
     margin-top: $space-mxx;
     margin-bottom: 120px;
