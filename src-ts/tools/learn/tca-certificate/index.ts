@@ -1,4 +1,5 @@
 export * from './my-certificate'
 export * from './certificate-view'
 export * from './user-certificate'
+export * from './user-certification-view'
 export * from './validate-certificate'

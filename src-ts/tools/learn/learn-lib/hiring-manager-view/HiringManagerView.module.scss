@@ -29,7 +29,7 @@
     .heroInner {
         display: flex;
         gap: $space-mx;
-        margin-bottom: calc($space-mx * 2);
+        padding-bottom: calc($space-mx * 2);
         overflow: hidden;
         justify-content: center;
 
@@ -104,22 +104,35 @@
             }
         }
 
-        .heroCert {
+        .heroCertWrap {
             filter: drop-shadow(0px 20px 36px rgba(0, 0, 0, 0.22));
             flex: 1 1 auto;
             min-width: 360px;
             max-width: 480px;
+            position: relative;
             @include ltelg {
                 max-width: none;
+            }
+        }
+        .heroCert {
+            position: relative;
+            
+            .certActionBtns {
+                position: absolute;
+                bottom: $space-xxl;
+                right: $space-xxl;
+
+                .certActionBtn {
+                    color: $turq-160;
+                }
             }
         }
     }
 }
 
 .wrap {
-    display: flex;
-    flex-direction: column;
-    margin-top: calc($space-mx + $space-mx);
+    margin-top: $space-mxx;
+    margin-bottom: 120px;
 
     @include ltelg {
         margin-top: $space-mx;
@@ -131,7 +144,8 @@
 
     ul {
         list-style: disc;
-        margin: $space-xxl 0 $space-mx $space-xxl;
+        margin: 0 0 0 $space-xxl;
+        color: $tc-black;
     }
 
     .courses {
@@ -173,55 +187,51 @@
     }
 }
 
-.modalView {
-    .hero {
-        padding-top: $space-mx;
-        max-height: 440px;
-        min-height: 380px;
+.certActionBtns {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: $space-sm;
+    margin-top: $space-lg;
+}
 
-        @include ltesm {
-            max-height: none;
-        }
+.certActionBtn {
+    @include icon-mx;
+}
 
+.shareBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-xs;
 
-        .heroInner {
-            margin-bottom: 0;
-            flex-direction: row;
-            padding-right: $space-mx;
-
-            @include ltesm {
-                flex-direction: column;
-                padding-right: 0;
-            }
-
-            .heroLeft {
-                .member {
-                    margin-bottom: $space-xxxxl;
-
-                    >svg,
-                    >img {
-                        max-width: 88px;
-                        max-height: 88px;
-                    }
-                }
-
-                .certTitle {
-                    font-size: 40px;
-                    line-height: 40px;
-                }
-            }
-        }
+    &:global(.secondary) {
+        border: 2px solid;
     }
+}
 
-    .contentOuter {
-        max-width: none;
-
-        >div {
-            max-width: none !important;
-        }
-
-        .courses {
-            margin-bottom: 0;
-        }
+.colsWrap {
+    display: flex;
+    margin-top: $space-mxx;
+    margin-bottom: $space-mx;
+    h2 {
+        margin-bottom: $space-xxl;
     }
+}
+
+.colWrap {
+    &:last-child {
+        max-width: 430px;
+        flex: 0 1 auto;
+        padding-right: $space-xxxxl;
+    }
+    .shareBtn {
+        margin-top: $space-xxl;
+    }
+}
+
+.colSeparator {
+    background: $black-10;
+    width: 1px;
+    flex: 0 0 auto;
+    margin: 0 $space-xxxxl;
 }

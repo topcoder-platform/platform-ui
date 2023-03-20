@@ -14,18 +14,21 @@ import {
     VerifiedMemberFlagSvg,
 } from '../../../../lib'
 import {
+    ActionButton,
     CourseBadge,
+    SkillTags,
     TCACertificatePreview,
     TCACertificateType,
     TCACertification,
     TCACertificationResource,
 } from '..'
-import { EnvironmentConfig } from '../../../../config'
+import { getTCACertificationPath } from '../../learn.routes'
 import { clearFCCCertificationTitle } from '../functions'
+import { EnvironmentConfig } from '../../../../config'
 
 import styles from './HiringManagerView.module.scss'
 
-function renderBasicList(items: Array<string>): ReactNode {
+function renderBasicList(items: Array<string> = []): ReactNode {
     return (
         <ul className='body-main'>
             {items.map(item => (
@@ -41,6 +44,7 @@ export interface HiringManagerViewProps {
     completionUuid?: string
     isModalView?: boolean
     isMemberVerified?: boolean
+    isOwner?: boolean
     userProfile?: UserProfile
     userName?: string
     validationUrl?: string
@@ -71,12 +75,21 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
         )
     }
 
-    function visitFullProfile(): void {
-        window.open(`${EnvironmentConfig.TOPCODER_URLS.USER_PROFILE}/${props.userProfile?.handle}`, '_blank')
-    }
+    const myProfileLink: string = `${EnvironmentConfig.TOPCODER_URLS.USER_PROFILE}/${props.userProfile?.handle}`
 
-    return !!props.certification && !!props.userProfile ? (
-        <div className={props.isModalView ? styles.modalView : ''}>
+    const certificationDetailsLink: string = getTCACertificationPath(
+        `${props.certification?.dashedName}`,
+    )
+
+    function handleDownload(): void {}
+    function handlePrint(): void {}
+
+    function renderHero(): ReactNode {
+        if (!props.certification || !props.userProfile) {
+            return <></>
+        }
+
+        return (
             <div
                 className={classNames(
                     styles.hero,
@@ -123,36 +136,107 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                             </p>
                             <div className={styles.certTitle}>{props.certification.title}</div>
                         </div>
-                        <div className={styles.heroCert}>
-                            <TCACertificatePreview
-                                certification={props.certification}
-                                userName={props.userName}
-                                completedDate={props.completedAt}
-                                completionUuid={props.completionUuid}
-                                validateLink={props.validationUrl}
-                            />
+                        <div className={styles.heroCertWrap}>
+                            <div className={styles.heroCert}>
+                                <TCACertificatePreview
+                                    certification={props.certification}
+                                    userName={props.userName}
+                                    completedDate={props.completedAt}
+                                    completionUuid={props.completionUuid}
+                                    validateLink={props.validationUrl}
+                                />
+                                <div className={styles.certActionBtns}>
+                                    <ActionButton
+                                        icon={<IconOutline.ZoomInIcon />}
+                                        className={classNames(styles.certZoomBtn, styles.certActionBtn)}
+                                    />
+                                    {props.isOwner && (
+                                        <>
+                                            <ActionButton
+                                                className={classNames('desktop-hide', styles.certActionBtn)}
+                                                icon={<IconOutline.PrinterIcon />}
+                                                onClick={handlePrint}
+                                            />
+                                            <ActionButton
+                                                className={classNames('desktop-hide', styles.certActionBtn)}
+                                                icon={<IconOutline.DownloadIcon />}
+                                                onClick={handleDownload}
+                                            />
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                            {props.isOwner && (
+                                <div className={classNames('mobile-hide', styles.certActionBtns)}>
+                                    <ActionButton
+                                        className={styles.certActionBtn}
+                                        icon={<IconOutline.PrinterIcon />}
+                                        onClick={handlePrint}
+                                    />
+                                    <ActionButton
+                                        className={styles.certActionBtn}
+                                        icon={<IconOutline.DownloadIcon />}
+                                        onClick={handleDownload}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </ContentLayout>
             </div>
+        )
+    }
+
+    return !!props.certification && !!props.userProfile ? (
+        <div>
+            {renderHero()}
 
             <ContentLayout outerClass={props.isModalView ? styles.contentOuter : ''}>
                 <div className={styles.wrap}>
-                    <h2>
-                        {'What '}
-                        {props.userName}
-                        {' Learned?'}
-                    </h2>
-                    <ul>{renderBasicList(learnedOutcomes)}</ul>
-
-                    {renderCoursesGridItems()}
-                    {!props.isModalView && (
+                    {props.isOwner && (
                         <Button
-                            buttonStyle='link'
-                            label='Visit Full Profile'
-                            onClick={visitFullProfile}
+                            buttonStyle='primary'
+                            icon={IconOutline.ShareIcon}
+                            label='Share your Certification'
+                            route={certificationDetailsLink}
+                            className={styles.shareBtn}
                         />
                     )}
+
+                    <div className={styles.colsWrap}>
+                        <div className={styles.colWrap}>
+                            <h2>Concepts learned:</h2>
+
+                            {renderBasicList(learnedOutcomes)}
+                        </div>
+                        <div className={styles.colSeparator} />
+                        <div className={styles.colWrap}>
+                            <h2>Skills gained:</h2>
+
+                            <SkillTags
+                                skills={props.certification?.skills ?? []}
+                                theme='gray'
+                                label=''
+                                expandCount={props.certification?.skills?.length ?? 0}
+                            />
+
+                            <Button
+                                buttonStyle='secondary'
+                                label='View your topcoder profile'
+                                url={myProfileLink}
+                                target='_blank'
+                                className={styles.shareBtn}
+                            />
+                        </div>
+                    </div>
+
+                    {renderCoursesGridItems()}
+
+                    <Button
+                        buttonStyle='link'
+                        label='Certification details'
+                        route={certificationDetailsLink}
+                    />
                 </div>
             </ContentLayout>
         </div>
