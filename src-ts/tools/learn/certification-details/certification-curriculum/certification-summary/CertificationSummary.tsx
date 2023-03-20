@@ -1,13 +1,11 @@
 import { FC } from 'react'
 
-import { IconSolid } from '../../../../../lib'
 import { CertificateBadgeIcon, TCACertification } from '../../../learn-lib'
 
 import styles from './CertificationSummary.module.scss'
 
 interface CertificationSummaryProps {
     certification: TCACertification
-    isCompleted?: boolean
 }
 
 const CertificationSummary: FC<CertificationSummaryProps> = (props: CertificationSummaryProps) => (
@@ -22,11 +20,6 @@ const CertificationSummary: FC<CertificationSummaryProps> = (props: Certificatio
                 {props.certification.title}
             </span>
         </div>
-        {props.isCompleted && (
-            <div className={styles.completedIcon}>
-                <IconSolid.CheckCircleIcon />
-            </div>
-        )}
     </div>
 )
 
