@@ -1,0 +1,17 @@
+@import '../../../../../lib/styles/includes';
+
+
+.certificateModal {
+    &:global(.react-responsive-modal-modal) {
+        padding-top: 0;
+
+        :global(.modal-body) {
+            padding: 0;
+            overflow: hidden;
+            @include ltemd {
+                padding: 60px 10px 0;
+                background: linear-gradient(84.45deg, #05456D 2.12%, #0A7AC0 97.43%);
+            }
+        }
+    }
+}

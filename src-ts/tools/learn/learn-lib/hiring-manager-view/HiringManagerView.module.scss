@@ -1,5 +1,13 @@
 @import '../../../../lib/styles/includes';
 
+.contentWrap {
+    .innerContentWrap.innerContentWrap.innerContentWrap {
+        @include ltemd {
+            overflow: visible;
+        }
+    }
+}
+
 .hero {
     display: flex;
     flex-direction: column;
@@ -100,7 +108,8 @@
                 font-size: 64px;
                 line-height: 64px;
                 text-transform: uppercase;
-                margin-top: $space-lg;
+                margin-bottom: $space-lg;
+                max-width: 596px;
             }
         }
 
@@ -112,6 +121,9 @@
             position: relative;
             @include ltelg {
                 max-width: none;
+            }
+            @include ltemd {
+                min-width: auto;
             }
         }
         .heroCert {
@@ -143,6 +155,10 @@
     @include ltelg {
         margin-top: $space-mx;
     }
+    
+    @include ltemd {
+        margin-bottom: $space-lg;
+    }
 
     h2 {
         font-family: $font-barlow;
@@ -161,6 +177,22 @@
         background: $black-5;
         border-radius: $space-sm;
         margin-bottom: $space-mx;
+        
+        @include ltemd {
+            border-radius: 0;
+            margin-left: -$space-xxl;
+            margin-right: -$space-xxl;
+            margin-bottom: $space-xxxxl;
+        }
+
+        @include ltesm {
+            margin-left: -$space-lg;
+            margin-right: -$space-lg;
+        }
+
+        @media (max-width: 1150px) {
+            padding: $space-xxxxl $space-lg $space-lg;
+        }
 
         .coursesGrid {
             display: grid;
@@ -189,6 +221,11 @@
                     margin-right: $space-lg;
                 }
             }
+        }
+    }
+    .detailsBtn {
+        @include ltemd {
+            justify-content: center;
         }
     }
 }
@@ -222,6 +259,11 @@
     h2 {
         margin-bottom: $space-xxl;
     }
+    
+    @include ltemd {
+        flex-direction: column;
+        gap: $space-xxxxl;
+    }
 }
 
 .colWrap {
@@ -240,4 +282,8 @@
     width: 1px;
     flex: 0 0 auto;
     margin: 0 $space-xxxxl;
+    
+    @include ltemd {
+        display: none;
+    }
 }

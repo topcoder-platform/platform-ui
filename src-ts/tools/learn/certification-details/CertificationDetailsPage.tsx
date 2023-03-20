@@ -107,7 +107,7 @@ const CertificationDetailsPage: FC<{}> = () => {
                     <div className={styles['text-section']}>
                         <Button
                             buttonStyle='link'
-                            label='Certification Details'
+                            label='Certification Description'
                             onClick={toggleCertifDetailsModal}
                         />
                     </div>

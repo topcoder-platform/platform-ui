@@ -1,9 +1,12 @@
 import {
+    Dispatch,
     FC,
     MutableRefObject,
     ReactNode,
+    SetStateAction,
     useCallback,
     useRef,
+    useState,
 } from 'react'
 import classNames from 'classnames'
 
@@ -25,13 +28,16 @@ import {
     TCACertificateType,
     TCACertification,
     TCACertificationResource,
+    TCAShareCertificateModalData,
     useCertificateCanvas,
     useCertificatePrint,
+    useTCAShareCertificateModal,
 } from '..'
-import { getTCACertificationPath } from '../../learn.routes'
+import { getTCACertificationPath, getUserTCACertificateSsr } from '../../learn.routes'
 import { clearFCCCertificationTitle } from '../functions'
 import { EnvironmentConfig } from '../../../../config'
 
+import { CertificateModal } from './certificate-modal'
 import styles from './HiringManagerView.module.scss'
 
 function renderBasicList(items: Array<string> = []): ReactNode {
@@ -59,6 +65,9 @@ export interface HiringManagerViewProps {
 const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewProps) => {
     const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
 
+    const [certPreviewModalIsOpen, setCertPreviewModalIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
     const {
         certificationResources: courses = [],
         learnedOutcomes,
@@ -72,6 +81,13 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
     const certificationDetailsLink: string = getTCACertificationPath(
         `${props.certification?.dashedName}`,
     )
+
+    const ssrCertUrl: string = getUserTCACertificateSsr(
+        `${props.certification?.dashedName}`,
+        `${props.userProfile?.handle}`,
+        certificationTitle,
+    )
+    const shareModal: TCAShareCertificateModalData = useTCAShareCertificateModal(ssrCertUrl)
 
     const getCertificateCanvas: () => Promise<HTMLCanvasElement | void>
         = useCertificateCanvas(certificateElRef)
@@ -88,6 +104,14 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
     const handlePrint: () => Promise<void>
         = useCertificatePrint(certificateElRef, certificationTitle ?? '')
 
+    function handleShowCertPreviewModal(): void {
+        setCertPreviewModalIsOpen(true)
+    }
+
+    function handleHideCertPreviewModal(): void {
+        setCertPreviewModalIsOpen(false)
+    }
+
     function renderCoursesGridItems(): ReactNode {
         return (
             <div className={styles.courses}>
@@ -103,6 +127,20 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                     ))}
                 </div>
             </div>
+        )
+    }
+
+    function renderTCACertificatePreview(): ReactNode {
+        return (
+            <TCACertificatePreview
+                certification={props.certification}
+                userName={props.userName}
+                completedDate={props.completedAt}
+                completionUuid={props.completionUuid}
+                validateLink={props.validationUrl}
+                certificateElRef={certificateElRef}
+                maxScale={Math.min()}
+            />
         )
     }
 
@@ -151,27 +189,20 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                                     }
                                 </div>
                             </div>
-                            <p className={classNames(props.isModalView ? 'body-medium' : 'body-large')}>
-                                {props.userName}
-                                {' '}
-                                has successfully completed the certification
-                            </p>
                             <div className={styles.certTitle}>{props.certification.title}</div>
+                            <p className='body-large'>
+                                Certification was successfully completed.
+                            </p>
                         </div>
                         <div className={styles.heroCertWrap}>
                             <div className={styles.heroCert}>
-                                <TCACertificatePreview
-                                    certification={props.certification}
-                                    userName={props.userName}
-                                    completedDate={props.completedAt}
-                                    completionUuid={props.completionUuid}
-                                    validateLink={props.validationUrl}
-                                    certificateElRef={certificateElRef}
-                                />
+                                {renderTCACertificatePreview()}
+
                                 <div className={styles.certActionBtns}>
                                     <ActionButton
                                         icon={<IconOutline.ZoomInIcon />}
                                         className={classNames(styles.certZoomBtn, styles.certActionBtn)}
+                                        onClick={handleShowCertPreviewModal}
                                     />
                                     {props.isOwner && (
                                         <>
@@ -214,15 +245,19 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
         <div>
             {renderHero()}
 
-            <ContentLayout outerClass={props.isModalView ? styles.contentOuter : ''}>
+            <ContentLayout
+                contentClass={styles.contentWrap}
+                outerClass={styles.outerContentWrap}
+                innerClass={styles.innerContentWrap}
+            >
                 <div className={styles.wrap}>
                     {props.isOwner && (
                         <Button
                             buttonStyle='primary'
                             icon={IconOutline.ShareIcon}
                             label='Share your Certification'
-                            route={certificationDetailsLink}
                             className={styles.shareBtn}
+                            onClick={shareModal.show}
                         />
                     )}
 
@@ -256,12 +291,19 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                     {renderCoursesGridItems()}
 
                     <Button
+                        className={styles.detailsBtn}
                         buttonStyle='link'
                         label='Certification details'
                         route={certificationDetailsLink}
                     />
                 </div>
             </ContentLayout>
+            {shareModal.modal}
+            {certPreviewModalIsOpen && (
+                <CertificateModal open onClose={handleHideCertPreviewModal}>
+                    {renderTCACertificatePreview()}
+                </CertificateModal>
+            )}
         </div>
     ) : <></>
 }

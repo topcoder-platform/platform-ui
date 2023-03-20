@@ -50,10 +50,6 @@
     :global(.body-large) {
         margin-bottom: $space-xxl;
     }
-
-    @include ltemd {
-        padding-top: 0;
-    }
 }
 
 .btns-wrap {
@@ -62,6 +58,10 @@
     gap: $space-lg $space-sm;
     margin-top: $space-xxl;
     flex-wrap: wrap;
+    
+    @include ltemd {
+        justify-content: center;
+    }
 }
 
 .course-title {
