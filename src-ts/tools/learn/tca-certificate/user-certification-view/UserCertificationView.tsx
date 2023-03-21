@@ -1,30 +1,36 @@
 import {
     Dispatch,
     FC,
+    MutableRefObject,
     SetStateAction,
     useEffect,
+    useRef,
     useState,
 } from 'react'
 import { Params, useParams } from 'react-router-dom'
-import { EnvironmentConfig } from '../../../../config'
 
 import {
     getVerificationStatusAsync,
     LoadingSpinner,
 } from '../../../../lib'
 import {
+    CertificatePageLayout,
     CompletedTCACertificationEnrollmentData,
     HiringManagerView,
     PageTitle,
     useGetCompletedTCACertificationEnrollment,
 } from '../../learn-lib'
-import { getTCAUserCertificationUrl } from '../../learn.routes'
+import { EnvironmentConfig } from '../../../../config'
+import { getTCACertificationPath, getTCAUserCertificationUrl } from '../../learn.routes'
+import { CertificateNotFound } from '../certificate-not-found'
 
 import { useGetUserProfile, UseGetUserProfileData } from './use-get-user-profile'
 
 const UserCertificationView: FC<{}> = () => {
 
     const routeParams: Params<string> = useParams()
+    const tcaCertificationPath: string = getTCACertificationPath(`${routeParams.certification}`)
+    const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
 
     const {
         profile,
@@ -66,9 +72,15 @@ const UserCertificationView: FC<{}> = () => {
             <LoadingSpinner hide={profileReady && (error || enrollmentReady)} />
 
             {profile && error && (
-                <div className='full-height-frame'>
-                    404 not found
-                </div>
+                <CertificatePageLayout
+                    certificateElRef={certificateElRef}
+                    fallbackBackUrl={tcaCertificationPath}
+                    isReady
+                    className='cert-not-found-layout'
+                    ssrUrl=''
+                >
+                    <CertificateNotFound />
+                </CertificatePageLayout>
             )}
 
             {profile && certification && enrollment && (
