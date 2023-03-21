@@ -1,4 +1,4 @@
-export default async function copy(text: string): Promise<void> {
+export async function copyTextToClipboard(text: string): Promise<void> {
     try {
         return await navigator.clipboard.writeText(text)
     } catch (error) {}
@@ -23,4 +23,6 @@ export default async function copy(text: string): Promise<void> {
     }
 
     document.body.removeChild(textArea)
+
+    return undefined
 }

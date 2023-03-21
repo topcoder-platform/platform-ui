@@ -22,8 +22,12 @@ const MyLearning: LazyLoadedComponent = lazyLoad(() => import('./my-learning'), 
 const LandingLearn: LazyLoadedComponent = lazyLoad(() => import('./Learn'))
 const MyTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'MyTCACertificate')
 const UserTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'UserTCACertificate')
+
 const ValidateTCACertificate: LazyLoadedComponent
-    = lazyLoad(() => import('./tca-certificate'), 'ValidateTCACertificate')
+    = lazyLoad(() => import('./tca-certificate'), 'UuidCertificationView')
+
+const UserCertificationView: LazyLoadedComponent
+    = lazyLoad(() => import('./tca-certificate'), 'UserCertificationView')
 
 export enum LEARN_PATHS {
     certificate = '/certificate',
@@ -132,6 +136,13 @@ export function getTCACertificationValidationUrl(
     return `${EnvironmentConfig.TOPCODER_URLS.TCA}${LEARN_PATHS.root}/${completionUuid}`
 }
 
+export function getTCAUserCertificationUrl(
+    certification: string,
+    handle: string,
+): string {
+    return `${getTCACertificationPath(certification)}/${handle}/certification`
+}
+
 export function getAuthenticateAndEnrollRoute(): string {
     return `${authUrlLogin()}${encodeURIComponent(LEARN_PATHS.tcaEnroll)}`
 }
@@ -210,6 +221,12 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <ValidateTCACertificate />,
                 id: 'Validate TCA Certification - aka hiring manager view',
                 route: ':completionUuid',
+            },
+            {
+                children: [],
+                element: <UserCertificationView />,
+                id: 'Validate TCA Certification - aka hiring manager view',
+                route: 'tca-certifications/:certification/:memberHandle/certification',
             },
         ],
         element: <LandingLearn />,

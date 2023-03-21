@@ -1,8 +1,10 @@
 import { FC, ReactNode } from 'react'
+import classNames from 'classnames'
 
 import styles from './ActionButton.module.scss'
 
 interface ActionButtonProps {
+    className?: string
     icon: ReactNode
     onClick?: () => void
     target?: string
@@ -27,7 +29,10 @@ const ActionButton: FC<ActionButtonProps> = (props: ActionButtonProps) => {
     }
 
     return (
-        <div className={styles.wrap} onClick={props.onClick}>
+        <div
+            className={classNames(styles.wrap, props.className)}
+            onClick={props.onClick}
+        >
             {props.icon}
         </div>
     )

@@ -1,12 +1,10 @@
-import { FC, MutableRefObject, ReactNode, useCallback, useRef } from 'react'
+import { FC, MutableRefObject, ReactNode, useRef } from 'react'
 
 import {
-    IconOutline,
     LoadingSpinner,
     UserProfile,
 } from '../../../../lib'
 import {
-    ActionButton,
     CertificateNotFoundContent,
     CertificatePageLayout,
     PageTitle,
@@ -54,10 +52,6 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
 
     const validateLink: string = getTCACertificationValidationUrl(enrollment?.completionUuid as string)
 
-    const handleLinkClick: () => void = useCallback(() => {
-        window.open(validateLink, 'blank')
-    }, [validateLink])
-
     function renderCertificate(): ReactNode {
         if (certificateNotFoundError) {
             return <CertificateNotFound />
@@ -92,12 +86,6 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                 isReady={ready}
                 ssrUrl={certUrl}
                 title={certificationTitle}
-                actions={(
-                    <ActionButton
-                        icon={<IconOutline.LinkIcon />}
-                        onClick={handleLinkClick}
-                    />
-                )}
                 className={certificateNotFoundError ? 'cert-not-found-layout' : ''}
                 afterContent={certificateNotFoundError && (
                     <CertificateNotFoundContent className='desktop-hide' />

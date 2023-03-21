@@ -1,5 +1,13 @@
 @import '../../../../lib/styles/includes';
 
+.contentWrap {
+    .innerContentWrap.innerContentWrap.innerContentWrap {
+        @include ltemd {
+            overflow: visible;
+        }
+    }
+}
+
 .hero {
     display: flex;
     flex-direction: column;
@@ -29,7 +37,7 @@
     .heroInner {
         display: flex;
         gap: $space-mx;
-        margin-bottom: calc($space-mx * 2); 
+        padding-bottom: calc($space-mx * 2);
         overflow: hidden;
         justify-content: center;
 
@@ -97,32 +105,59 @@
             .certTitle {
                 font-family: $font-barlow-condensed;
                 font-weight: 600;
-                font-size: 64px;    
+                font-size: 64px;
                 line-height: 64px;
                 text-transform: uppercase;
-                margin-top: $space-lg;
+                margin-bottom: $space-lg;
+                max-width: 596px;
             }
         }
 
-        .heroCert {
+        .heroCertWrap {
             filter: drop-shadow(0px 20px 36px rgba(0, 0, 0, 0.22));
             flex: 1 1 auto;
             min-width: 360px;
             max-width: 480px;
+            position: relative;
             @include ltelg {
                 max-width: none;
+            }
+            @include ltemd {
+                min-width: auto;
+            }
+        }
+        .heroCert {
+            position: relative;
+            
+            .certActionBtns {
+                position: absolute;
+                bottom: $space-xxl;
+                right: $space-xxl;
+
+                .certActionBtn {
+                    color: $turq-160;
+                }
             }
         }
     }
 }
 
+.heroCert {
+    body:not(:global(.canvas-clone)) & :global(.tca-cert-details-wrap) {
+        display: none;
+    }
+}
+
 .wrap {
-    display: flex;
-    flex-direction: column;
-    margin-top: calc($space-mx + $space-mx);
+    margin-top: $space-mxx;
+    margin-bottom: 120px;
 
     @include ltelg {
         margin-top: $space-mx;
+    }
+    
+    @include ltemd {
+        margin-bottom: $space-lg;
     }
 
     h2 {
@@ -131,7 +166,8 @@
 
     ul {
         list-style: disc;
-        margin: $space-xxl 0 $space-mx $space-xxl;
+        margin: 0 0 0 $space-xxl;
+        color: $tc-black;
     }
 
     .courses {
@@ -141,6 +177,22 @@
         background: $black-5;
         border-radius: $space-sm;
         margin-bottom: $space-mx;
+        
+        @include ltemd {
+            border-radius: 0;
+            margin-left: -$space-xxl;
+            margin-right: -$space-xxl;
+            margin-bottom: $space-xxxxl;
+        }
+
+        @include ltesm {
+            margin-left: -$space-lg;
+            margin-right: -$space-lg;
+        }
+
+        @media (max-width: 1150px) {
+            padding: $space-xxxxl $space-lg $space-lg;
+        }
 
         .coursesGrid {
             display: grid;
@@ -171,57 +223,67 @@
             }
         }
     }
-}
-
-.modalView {
-    .hero {
-        padding-top: $space-mx;
-        max-height: 440px;
-        min-height: 380px;
-
-        @include ltesm {
-            max-height: none;
-        }
-
-
-        .heroInner {
-            margin-bottom: 0;
-            flex-direction: row;
-            padding-right: $space-mx;
-
-            @include ltesm {
-                flex-direction: column;
-                padding-right: 0;
-            }
-
-            .heroLeft {
-                .member {
-                    margin-bottom: $space-xxxxl;
-
-                    >svg,
-                    >img {
-                        max-width: 88px;
-                        max-height: 88px;
-                    }
-                }
-
-                .certTitle {
-                    font-size: 40px;
-                    line-height: 40px;
-                }
-            }
+    .detailsBtn {
+        @include ltemd {
+            justify-content: center;
         }
     }
+}
 
-    .contentOuter {
-        max-width: none;
+.certActionBtns {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: $space-sm;
+    margin-top: $space-lg;
+}
 
-        >div {
-            max-width: none !important;
-        }
+.certActionBtn {
+    @include icon-mx;
+}
 
-        .courses {
-            margin-bottom: 0;
-        }
+.shareBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-xs;
+
+    &:global(.secondary) {
+        border: 2px solid;
+    }
+}
+
+.colsWrap {
+    display: flex;
+    margin-top: $space-mxx;
+    margin-bottom: $space-mx;
+    h2 {
+        margin-bottom: $space-xxl;
+    }
+    
+    @include ltemd {
+        flex-direction: column;
+        gap: $space-xxxxl;
+    }
+}
+
+.colWrap {
+    &:last-child {
+        max-width: 430px;
+        flex: 0 1 auto;
+        padding-right: $space-xxxxl;
+    }
+    .shareBtn {
+        margin-top: $space-xxl;
+    }
+}
+
+.colSeparator {
+    background: $black-10;
+    width: 1px;
+    flex: 0 0 auto;
+    margin: 0 $space-xxxxl;
+    
+    @include ltemd {
+        display: none;
     }
 }

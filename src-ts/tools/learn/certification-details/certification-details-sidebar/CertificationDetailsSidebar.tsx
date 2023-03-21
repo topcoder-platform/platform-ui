@@ -1,7 +1,7 @@
 import { FC, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { Button, IconOutline, IconSolid, Tooltip } from '../../../../lib'
+import { IconOutline, IconSolid, Tooltip } from '../../../../lib'
 import {
     CompletionTimeRange,
     LearnLevelIcon,
@@ -12,7 +12,6 @@ import {
     TCACertificationProgress,
 } from '../../learn-lib'
 import { EnrollCtaBtn } from '../enroll-cta-btn'
-import { getTCACertificateUrl, getTCACertificationValidationUrl } from '../../learn.routes'
 
 import styles from './CertificationDetailsSidebar.module.scss'
 
@@ -37,9 +36,6 @@ function renderTooltipContents(icon: ReactNode, text: Array<string>): ReactNode 
 const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props: CertificationDetailsSidebarProps) => {
     const completed: boolean = !!props.certProgress?.completedAt
 
-    const validateLink: string
-        = getTCACertificationValidationUrl(props.certProgress?.completionUuid as string ?? '')
-
     return (
         <StickySidebar>
             <div className={styles['certificate-placeholder']}>
@@ -48,18 +44,8 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                     userName={props.certProgress?.userName}
                     tcHandle={props.certProgress?.userHandle}
                     completedDate={props.certProgress?.completedAt as unknown as string ?? ''}
-                    validateLink={validateLink}
                 />
             </div>
-            {completed && props.certification && (
-                <div className={styles.certCta}>
-                    <Button
-                        buttonStyle='primary'
-                        route={getTCACertificateUrl(props.certification.dashedName)}
-                        label='View Certificate'
-                    />
-                </div>
-            )}
             <ul className={styles['certification-details-list']}>
                 <li>
                     <span className={styles.icon}>
