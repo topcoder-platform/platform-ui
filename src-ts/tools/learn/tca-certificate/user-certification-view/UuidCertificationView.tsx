@@ -2,28 +2,27 @@ import { FC } from 'react'
 import { Params, useParams } from 'react-router-dom'
 
 import {
-    CompletedTCACertificationEnrollmentData,
-    useGetCompletedTCACertificationEnrollment,
+    TCACertification,
+    TCACertificationEnrollmentProviderData,
+    useTCACertificationEnrollment,
 } from '../../learn-lib'
 
 import { useGetUserProfile, UseGetUserProfileData } from './use-get-user-profile'
 import UserCertificationViewBase from './UserCertificationViewBase'
 
-const UserCertificationView: FC<{}> = () => {
+const UuidCertificationView: FC<{}> = () => {
 
     const routeParams: Params<string> = useParams()
 
-    const { profile }: UseGetUserProfileData = useGetUserProfile(routeParams.memberHandle)
-
     const {
         enrollment,
-        certification,
         error: enrollmentError,
-    }: CompletedTCACertificationEnrollmentData
-        = useGetCompletedTCACertificationEnrollment(
-            `${routeParams.certification}`,
-            `${routeParams.memberHandle}`,
-        )
+    }: TCACertificationEnrollmentProviderData
+        = useTCACertificationEnrollment(routeParams.completionUuid as string)
+
+    const { profile }: UseGetUserProfileData = useGetUserProfile(enrollment?.userHandle)
+
+    const certification: TCACertification | undefined = enrollment?.topcoderCertification
 
     return (
         <UserCertificationViewBase
@@ -35,4 +34,4 @@ const UserCertificationView: FC<{}> = () => {
     )
 }
 
-export default UserCertificationView
+export default UuidCertificationView

@@ -22,8 +22,9 @@ const MyLearning: LazyLoadedComponent = lazyLoad(() => import('./my-learning'), 
 const LandingLearn: LazyLoadedComponent = lazyLoad(() => import('./Learn'))
 const MyTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'MyTCACertificate')
 const UserTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'UserTCACertificate')
+
 const ValidateTCACertificate: LazyLoadedComponent
-    = lazyLoad(() => import('./tca-certificate'), 'ValidateTCACertificate')
+    = lazyLoad(() => import('./tca-certificate'), 'UuidCertificationView')
 
 const UserCertificationView: LazyLoadedComponent
     = lazyLoad(() => import('./tca-certificate'), 'UserCertificationView')

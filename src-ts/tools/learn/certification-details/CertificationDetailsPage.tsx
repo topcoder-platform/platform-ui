@@ -17,6 +17,7 @@ import {
     profileContext,
     ProfileContextData,
 } from '../../../lib'
+import { getTCAUserCertificationUrl } from '../learn.routes'
 
 import { CertificationDetailsSidebar } from './certification-details-sidebar'
 import { CertificationCurriculum } from './certification-curriculum'
@@ -24,7 +25,6 @@ import { EnrollCtaBtn } from './enroll-cta-btn'
 import { CertifDetailsContent, CertificationDetailsModal } from './certification-details-modal'
 import { PageLayout } from './page-layout'
 import styles from './CertificationDetailsPage.module.scss'
-import { getTCAUserCertificationUrl } from '../learn.routes'
 
 const CertificationDetailsPage: FC<{}> = () => {
     const routeParams: Params<string> = useParams()
