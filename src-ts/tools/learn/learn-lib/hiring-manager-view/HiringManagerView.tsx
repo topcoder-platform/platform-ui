@@ -280,7 +280,7 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
 
                             <Button
                                 buttonStyle='secondary'
-                                label='View your topcoder profile'
+                                label={props.isOwner ? 'View your topcoder profile' : 'View full topcoder profile'}
                                 url={myProfileLink}
                                 target='_blank'
                                 className={styles.shareBtn}
