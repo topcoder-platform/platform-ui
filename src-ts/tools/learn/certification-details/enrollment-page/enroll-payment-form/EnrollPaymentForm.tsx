@@ -1,10 +1,12 @@
 import { Dispatch, SetStateAction, useState } from 'react'
+import { trim } from 'lodash'
 import classNames from 'classnames'
 
 import {
     CardCvcElement,
     CardExpiryElement,
     CardNumberElement,
+
 } from '@stripe/react-stripe-js'
 import {
     StripeCardCvcElementChangeEvent,
@@ -26,6 +28,7 @@ interface FieldDirtyState {
     cardComplete: boolean
     expiryComplete: boolean
     cvvComplete: boolean
+    cardName: boolean
 }
 
 interface EnrollPaymentFormProps {
@@ -44,10 +47,12 @@ const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymen
     const [cardNumberError, setCardNumberError]: [string, Dispatch<string>] = useState<string>('')
     const [cardExpiryError, setCardExpiryError]: [string, Dispatch<string>] = useState<string>('')
     const [cardCVVError, setCardCVVError]: [string, Dispatch<string>] = useState<string>('')
+    const [cardNameError, setCardNameError]: [string, Dispatch<string>] = useState<string>('yesyt')
 
     const [formDirtyState, setFormDirtyState]: [FieldDirtyState, Dispatch<SetStateAction<FieldDirtyState>>]
         = useState<FieldDirtyState>({
             cardComplete: false,
+            cardName: false,
             cvvComplete: false,
             expiryComplete: false,
         })
@@ -78,6 +83,24 @@ const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymen
             ...formDirtyState,
             [fieldName]: true,
         })
+    }
+
+    function onNameOnCardUpdate(event: React.FocusEvent<HTMLInputElement, Element>): void {
+        const name: string = event.target.value
+
+        if (!formDirtyState.cardName) {
+            setFormDirtyState({
+                ...formDirtyState,
+                cardName: true,
+            })
+        }
+
+        if (!trim(name)) {
+            setCardNameError('Name On Card is required field.')
+        } else {
+            props.onUpdateField('cardName', name)
+            setCardNameError('')
+        }
     }
 
     return (
@@ -150,6 +173,20 @@ const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymen
                 </InputWrapper>
             </div>
 
+            <div className={styles['input-wrap-wrapper']}>
+                <InputText
+                    label='Name On Card'
+                    name='card-name'
+                    tabIndex={4}
+                    type='text'
+                    disabled={false}
+                    error={cardNameError}
+                    hideInlineErrors={false}
+                    dirty={formDirtyState.cardName}
+                    onChange={onNameOnCardUpdate}
+                />
+            </div>
+
             <InputText
                 label={renderCheckboxLabel()}
                 name='order-contract'
@@ -179,7 +216,7 @@ const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymen
                 type='button'
                 buttonStyle='primary'
                 name='pay-button'
-                label={`Pay ${props.formData.price} and enroll`}
+                label='Complete Enrollment'
                 disable={!props.isFormValid || props.isPayProcessing}
                 onClick={props.onPay}
             />

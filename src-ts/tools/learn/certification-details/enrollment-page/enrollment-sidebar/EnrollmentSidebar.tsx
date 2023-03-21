@@ -1,4 +1,5 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
+import { trim } from 'lodash'
 
 import { PaymentIntentResult, Stripe, StripeCardNumberElement, StripeElements } from '@stripe/stripe-js'
 import { loadStripe } from '@stripe/stripe-js/pure'
@@ -30,6 +31,7 @@ const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarP
 
     const [formFieldValues, setFormValues]: [any, Dispatch<SetStateAction<any>>] = useState<any>({
         cardComplete: false,
+        cardName: undefined,
         cvvComplete: false,
         expiryComplete: false,
         price: `$${price}`,
@@ -57,6 +59,7 @@ const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarP
             && formFieldValues.cvvComplete
             && formFieldValues.expiryComplete
             && formFieldValues.subsContract
+            && trim(formFieldValues.cardName)
     }
 
     /**
@@ -79,6 +82,9 @@ const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarP
             const paymentResult: PaymentIntentResult | undefined
                 = await stripe?.confirmCardPayment(paymentSheet.clientSecret, {
                     payment_method: {
+                        billing_details: {
+                            name: formFieldValues.cardName,
+                        },
                         card: elements?.getElement(CardNumberElement) as StripeCardNumberElement,
                     },
                 })
@@ -88,7 +94,7 @@ const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarP
                 setTimeout(() => {
                     props.onEnroll()
                     setPayProcessing(false)
-                }, 3000)
+                }, 1000)
             } else {
                 // payment error!
                 console.error('Enroll payment error', paymentResult.error)
@@ -112,7 +118,10 @@ const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarP
                                 $
                                 {price}
                             </div>
-                            <span className='strike'>$40</span>
+                            <span className='strike'>
+                                $
+                                {props.product?.metadata?.estimatedRetailPrice || ' n/a'}
+                            </span>
                             <span className='body-small-bold'>TOTAL PAYMENT</span>
                         </div>
                         <hr />
