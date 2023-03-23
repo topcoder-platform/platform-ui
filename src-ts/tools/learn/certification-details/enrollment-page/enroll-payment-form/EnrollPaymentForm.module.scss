@@ -3,10 +3,15 @@
 @import '../../../../../lib/styles/inputs';
 
 .payment-form {
-    .label {
-        @extend .body-ultra-small;
-        @extend .ultra-small-bold;
-        margin-bottom: $space-xs;
+    padding: $space-xxl;
+
+    @include ltemd {
+        padding: $space-lg;
+    }
+
+    > h3 {
+        margin-bottom: $space-xxl;
+        font-family: $font-barlow;
     }
 
     .cardElement {
@@ -44,10 +49,31 @@
 
     .pay-button {
         width: 100%;
+
+        @include ltemd {
+            margin-top: $space-lg;
+        }
     }
 
     .error {
-        color: $red-100;
+        background-color: $red-25;
+        padding: $space-lg;
+        border: 1px solid $red-120;
+        border-radius: 4px;
+        color: $red-120;
         margin-bottom: $space-xl;
+        display: flex;
+        align-items: flex-start;
+
+        .errorIcon {
+            width: 20px;
+            min-width: 20px;
+            margin-right: $space-sm;
+        }
+
+        .errorMsg {
+            display: flex;
+            flex-direction: column;
+        }
     }
 }

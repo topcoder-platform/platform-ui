@@ -5,7 +5,7 @@ import { PaymentIntentResult, Stripe, StripeCardNumberElement, StripeElements } 
 import { loadStripe } from '@stripe/stripe-js/pure'
 import { CardNumberElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
 
-import { Button, IconSolid } from '../../../../../lib'
+import { Button, IconOutline } from '../../../../../lib'
 import { StickySidebar } from '../../../learn-lib'
 import { EnvironmentConfig } from '../../../../../config'
 import { EnrollPaymentForm } from '../enroll-payment-form'
@@ -42,10 +42,12 @@ const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarP
     const elements: StripeElements | null = useElements()
 
     const [paymentError, setPaymentError]: [string, Dispatch<SetStateAction<string>>] = useState<string>('')
-    const [paymentSuccess, setPaymentSuccess]: [any | undefined, Dispatch<SetStateAction<any | undefined>>]
-        = useState<any | undefined>()
+    const [paymentSuccess, setPaymentSuccess]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
 
     const [payProcessing, setPayProcessing]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+
+    const tcaMonetizationEnabled: boolean = EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION || false
 
     function onUpdateField(fieldName: string, value: string | boolean): void {
         setFormValues({
@@ -97,11 +99,13 @@ const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarP
                 }, 1000)
             } else {
                 // payment error!
+                // eslint-disable-next-line no-console
                 console.error('Enroll payment error', paymentResult.error)
                 setPaymentError(paymentResult.error.message as string)
                 setPayProcessing(false)
             }
         } catch (error: any) {
+            // eslint-disable-next-line no-console
             console.error('Enroll payment error', error)
             setPaymentError(error.message || error)
             setPayProcessing(false)
@@ -109,11 +113,11 @@ const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarP
     }
 
     return (
-        <StickySidebar className={styles.wrap}>
+        <StickySidebar className={tcaMonetizationEnabled ? styles.wrapPayment : styles.wrap}>
             {
-                EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION ? (
+                tcaMonetizationEnabled ? (
                     <>
-                        <div className={styles.header}>
+                        <div className={styles.headerPayment}>
                             <div className={styles.priceLabel}>
                                 $
                                 {price}
@@ -124,19 +128,28 @@ const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarP
                             </span>
                             <span className='body-small-bold'>TOTAL PAYMENT</span>
                         </div>
-                        <hr />
                         <div className={styles.form}>
                             {
                                 paymentSuccess ? (
-                                    <IconSolid.CheckCircleIcon className={styles.paymentSuccessIcon} />
+                                    <div className={styles.paymentSuccess}>
+                                        <div className={styles.paymentSuccessInner}>
+                                            <IconOutline.CheckCircleIcon className={styles.successIcon} />
+                                            <span className='body-medium-bold'>Your payment was successful</span>
+                                            <p>
+                                                You will be redirected to the certification details page
+                                                where you can begin your journey!
+                                            </p>
+                                        </div>
+                                    </div>
                                 ) : (
                                     <EnrollPaymentForm
                                         formData={formFieldValues}
                                         onUpdateField={onUpdateField}
                                         onPay={onPay}
                                         isFormValid={isFormValid()}
-                                        error={!!paymentError}
+                                        error={paymentError}
                                         isPayProcessing={payProcessing}
+                                        price={price}
                                     />
                                 )
                             }

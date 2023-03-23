@@ -1,9 +1,7 @@
 @import '../../../../../lib/styles/includes';
 
-.wrap {
-    hr {
-        margin: $space-xxl 0;
-    }
+.wrapPayment {
+    padding: 0;
 }
 
 .header {
@@ -29,15 +27,37 @@
     }
 }
 
-.priceLabel {
-    color: $blue-140;
-    font-family: $font-barlow-condensed;
-    font-weight: 500;
-    font-size: 44px;
-    line-height: 44px;
+.headerPayment {
+    background: $tc-grad20;
     text-align: center;
-    text-transform: uppercase;
-    margin-bottom: $space-xs;
+    padding: $space-xxxxl 0;
+    border-top-left-radius: $space-sm;
+    border-top-right-radius: $space-sm;
+
+    .priceLabel {
+        color: $tc-white;
+        font-family: $font-barlow-condensed;
+        font-weight: 500;
+        font-size: 44px;
+        line-height: 44px;
+        text-align: center;
+        text-transform: uppercase;
+    }
+
+    :global(.strike) {
+        text-decoration: line-through;
+        color: $black-20;
+        display: block;
+        font-size: 18px;
+        line-height: 22px;
+        font-family: $font-barlow;
+        font-weight: $font-weight-semibold;
+        margin-bottom: $space-sm;
+    }
+
+    :global(.body-small-bold) {
+        color: $tc-white;
+    }
 }
 
 .noPaymentBanner {
@@ -76,6 +96,27 @@
     }
 }
 
-.paymentSuccessIcon {
-    color: $green-100;
+
+.paymentSuccess {
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    padding: $space-xxl;
+
+    .paymentSuccessInner {
+        background: $turq-15;
+        border: 1px solid $turq-160;
+        border-radius: 4px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: $space-xl $space-xl $space-mxx;
+        color: $turq-160;
+
+        .successIcon {
+            min-width: 40px;
+            width: 40px;
+            margin-bottom: $space-md;
+        }
+    }
 }
