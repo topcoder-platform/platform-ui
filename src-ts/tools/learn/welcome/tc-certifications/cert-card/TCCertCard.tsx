@@ -1,7 +1,7 @@
 import { FC, memo, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { Button, ButtonStyle, IconSolid, ProgressBar, useCheckIsMobile } from '../../../../../lib'
+import { Button, ButtonStyle, IconSolid, ProgressBar } from '../../../../../lib'
 import {
     CertificateBadgeIcon,
     CompletionTimeRange,
@@ -13,6 +13,7 @@ import {
     TCACertificationProviderBase,
 } from '../../../learn-lib'
 import { getTCACertificateUrl, getTCACertificationPath } from '../../../learn.routes'
+import { EnvironmentConfig } from '../../../../../config'
 
 import styles from './TCCertCard.module.scss'
 
@@ -29,7 +30,6 @@ const getCtaBtn: (style: ButtonStyle, label: string, route: string) => ReactNode
 const EXCERPT_TEXT_LEN: number = 165
 
 const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
-    const isMobile: boolean = useCheckIsMobile()
 
     const desc: string = props.certification.description.slice(0, EXCERPT_TEXT_LEN)
 
@@ -84,13 +84,6 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                         <CompletionTimeRange range={props.certification.completionTimeRange} />
                     </span>
                 </div>
-                {/* TODO: Uncomment this when paid certs come to prod! */}
-                {/* <div className={styles.subTitleItem}>
-                    <IconSolid.CurrencyDollarIcon width={16} height={16} />
-                    <span className={classNames('body-small', styles.infoText)}>
-                        {' One time payment'}
-                    </span>
-                </div> */}
             </div>
         )
     }
@@ -123,7 +116,8 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
 
                         <div className={styles.cardLabels}>
                             <div className={styles.newLabel}>NEW</div>
-                            <div className={styles.freeLabel}>FREE</div>
+                            {!EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION
+                                && <div className={styles.freeLabel}>FREE</div>}
                         </div>
                     </div>
                     {renderStats()}
