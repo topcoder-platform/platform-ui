@@ -40,8 +40,8 @@
             padding: 0;
             @include ltesm {
                 flex: 0 1 auto;
-                &:first-child {
-                    flex: 1 0 auto;
+                &:first-child:not(:global(.elipsis)) {
+                    flex: 1 0 0;
                 }
             }
             a {
