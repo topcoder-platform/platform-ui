@@ -165,12 +165,7 @@
 }
 
 .wrap {
-    margin-top: $space-mxx;
     margin-bottom: 120px;
-
-    @include ltelg {
-        margin-top: $space-mx;
-    }
     
     @include ltemd {
         margin-bottom: $space-lg;
@@ -262,6 +257,11 @@
     display: inline-flex;
     align-items: center;
     gap: $space-xs;
+
+    margin-top: $space-mxx;
+    @include ltelg {
+        margin-top: $space-mx;
+    }
 
     &:global(.secondary) {
         border: 2px solid;
