@@ -31,7 +31,7 @@ export function useTCACertificationEnrollment(
         enrollment: data,
         error: !!error,
         loading: !data,
-        ready: !!data,
+        ready: !!data || !!error,
     }
 }
 

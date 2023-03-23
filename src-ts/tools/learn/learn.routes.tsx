@@ -20,8 +20,7 @@ const UserCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-cer
 const FreeCodeCamp: LazyLoadedComponent = lazyLoad(() => import('./free-code-camp'), 'FreeCodeCamp')
 const MyLearning: LazyLoadedComponent = lazyLoad(() => import('./my-learning'), 'MyLearning')
 const LandingLearn: LazyLoadedComponent = lazyLoad(() => import('./Learn'))
-const MyTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'MyTCACertificate')
-const UserTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'UserTCACertificate')
+const UserTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'CertificateView')
 
 const ValidateTCACertificate: LazyLoadedComponent
     = lazyLoad(() => import('./tca-certificate'), 'UuidCertificationView')
@@ -121,12 +120,6 @@ export function getTCACertificationEnrollPath(certification: string): string {
 
 export function getTCACertificateUrl(
     certification: string,
-): string {
-    return `${getTCACertificationPath(certification)}${LEARN_PATHS.certificate}`
-}
-
-export function getUserTCACertificateUrl(
-    certification: string,
     handle: string,
 ): string {
     return `${getTCACertificationPath(certification)}/${handle}${LEARN_PATHS.certificate}`
@@ -211,12 +204,6 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <MyLearning />,
                 id: 'My Learning',
                 route: 'my-learning',
-            },
-            {
-                children: [],
-                element: <MyTCACertificate />,
-                id: 'My TCA Certification',
-                route: 'tca-certifications/:certification/certificate',
             },
             {
                 children: [],
