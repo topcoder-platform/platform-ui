@@ -14,7 +14,9 @@ const CertificateModal: FC<CertificateModalProps> = (props: CertificateModalProp
         classNames={{ modal: styles.certificateModal }}
         {...props}
     >
-        {props.children}
+        <div className={styles.wrap}>
+            {props.children}
+        </div>
     </BaseModal>
 )
 

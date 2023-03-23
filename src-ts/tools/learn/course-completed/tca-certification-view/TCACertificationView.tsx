@@ -1,9 +1,8 @@
 import { FC } from 'react'
 
-import { EnvironmentConfig } from '../../../../config'
 import { Button } from '../../../../lib'
 import { CourseTitle, LearnCourse, TCACertification } from '../../learn-lib'
-import { getCertificatePath, getTCACertificationPath, rootRoute } from '../../learn.routes'
+import { getTCACertificationPath } from '../../learn.routes'
 import { ReactComponent as StarsSvg } from '../stars.svg'
 import { TitleBadgeType } from '../../learn-lib/course-title/CourseTitle'
 import styles from '../CourseCompletedPage.module.scss'

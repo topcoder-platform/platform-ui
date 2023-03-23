@@ -5,6 +5,7 @@ import {
     ReactNode,
     SetStateAction,
     useCallback,
+    useLayoutEffect,
     useRef,
     useState,
 } from 'react'
@@ -34,7 +35,7 @@ import {
     useTCAShareCertificateModal,
 } from '..'
 import { getTCACertificationPath, getUserTCACertificateSsr } from '../../learn.routes'
-import { clearFCCCertificationTitle } from '../functions'
+import { clearFCCCertificationTitle, hideSiblings } from '../functions'
 import { EnvironmentConfig } from '../../../../config'
 
 import { CertificateModal } from './certificate-modal'
@@ -65,6 +66,7 @@ export interface HiringManagerViewProps {
 
 const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewProps) => {
     const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
+    const wrapElRef: MutableRefObject<HTMLElement | any> = useRef()
 
     const [certPreviewModalIsOpen, setCertPreviewModalIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -89,6 +91,8 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
         certificationTitle,
     )
     const shareModal: TCAShareCertificateModalData = useTCAShareCertificateModal(ssrCertUrl)
+
+    const renderShareActions: boolean = props.isOwner && !props.isModalView
 
     const getCertificateCanvas: () => Promise<HTMLCanvasElement | void>
         = useCertificateCanvas(certificateElRef)
@@ -200,29 +204,31 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                             <div className={styles.heroCert}>
                                 {renderTCACertificatePreview(certificateElRef)}
 
-                                <div className={styles.certActionBtns}>
-                                    <ActionButton
-                                        icon={<IconOutline.ZoomInIcon />}
-                                        className={classNames(styles.certZoomBtn, styles.certActionBtn)}
-                                        onClick={handleShowCertPreviewModal}
-                                    />
-                                    {props.isOwner && (
-                                        <>
-                                            <ActionButton
-                                                className={classNames('desktop-hide', styles.certActionBtn)}
-                                                icon={<IconOutline.PrinterIcon />}
-                                                onClick={handlePrint}
-                                            />
-                                            <ActionButton
-                                                className={classNames('desktop-hide', styles.certActionBtn)}
-                                                icon={<IconOutline.DownloadIcon />}
-                                                onClick={handleDownload}
-                                            />
-                                        </>
-                                    )}
-                                </div>
+                                {!props.isModalView && (
+                                    <div className={styles.certActionBtns}>
+                                        <ActionButton
+                                            icon={<IconOutline.ZoomInIcon />}
+                                            className={classNames(styles.certZoomBtn, styles.certActionBtn)}
+                                            onClick={handleShowCertPreviewModal}
+                                        />
+                                        {renderShareActions && (
+                                            <>
+                                                <ActionButton
+                                                    className={classNames('desktop-hide', styles.certActionBtn)}
+                                                    icon={<IconOutline.PrinterIcon />}
+                                                    onClick={handlePrint}
+                                                />
+                                                <ActionButton
+                                                    className={classNames('desktop-hide', styles.certActionBtn)}
+                                                    icon={<IconOutline.DownloadIcon />}
+                                                    onClick={handleDownload}
+                                                />
+                                            </>
+                                        )}
+                                    </div>
+                                )}
                             </div>
-                            {props.isOwner && (
+                            {renderShareActions && (
                                 <div className={classNames('mobile-hide', styles.certActionBtns)}>
                                     <ActionButton
                                         className={styles.certActionBtn}
@@ -243,8 +249,19 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
         )
     }
 
+    useLayoutEffect(() => {
+        const el: HTMLElement = wrapElRef.current
+        if (!el || !props.isModalView) {
+            return
+        }
+
+        hideSiblings(el.parentElement as HTMLElement)
+        hideSiblings(el.parentElement?.parentElement as HTMLElement)
+
+    })
+
     return !!props.certification && !!props.userProfile ? (
-        <div>
+        <div className={props.isModalView ? styles.modalView : ''} ref={wrapElRef}>
             {renderHero()}
 
             <ContentLayout
@@ -253,7 +270,7 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                 innerClass={styles.innerContentWrap}
             >
                 <div className={styles.wrap}>
-                    {props.isOwner && (
+                    {renderShareActions && (
                         <Button
                             buttonStyle='primary'
                             icon={IconOutline.ShareIcon}
@@ -280,24 +297,28 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                                 expandCount={props.certification?.skills?.length ?? 0}
                             />
 
-                            <Button
-                                buttonStyle='secondary'
-                                label={props.isOwner ? 'View your Topcoder profile' : 'View full Topcoder profile'}
-                                url={myProfileLink}
-                                target='_blank'
-                                className={styles.shareBtn}
-                            />
+                            {!props.isModalView && (
+                                <Button
+                                    buttonStyle='secondary'
+                                    label={props.isOwner ? 'View your Topcoder profile' : 'View full Topcoder profile'}
+                                    url={myProfileLink}
+                                    target='_blank'
+                                    className={styles.shareBtn}
+                                />
+                            )}
                         </div>
                     </div>
 
                     {renderCoursesGridItems()}
 
-                    <Button
-                        className={styles.detailsBtn}
-                        buttonStyle='link'
-                        label='Certification details'
-                        route={certificationDetailsLink}
-                    />
+                    {!props.isModalView && (
+                        <Button
+                            className={styles.detailsBtn}
+                            buttonStyle='link'
+                            label='Certification details'
+                            route={certificationDetailsLink}
+                        />
+                    )}
                 </div>
             </ContentLayout>
             {shareModal.modal}

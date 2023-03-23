@@ -303,3 +303,75 @@
         display: none;
     }
 }
+
+.modalView {
+    .hero {
+        padding-top: $space-mx;
+        min-height: 380px;
+
+        @include ltesm {
+            max-height: none;
+        }
+
+
+        .heroInner {
+            margin-bottom: 0;
+            flex-direction: row;
+            padding-right: $space-lg;
+            padding-bottom: $space-mx;
+
+            @include ltesm {
+                flex-direction: column;
+                padding-right: 0;
+            }
+
+            .heroLeft {
+                .member {
+                    margin-bottom: $space-xxxxl;
+
+                    >svg,
+                    >img {
+                        max-width: 88px;
+                        max-height: 88px;
+                    }
+                }
+
+                .certTitle {
+                    font-size: 40px;
+                    line-height: 40px;
+                }
+            }
+        }
+    }
+
+    .wrap {
+        margin-bottom: 0;
+    }
+    
+    .contentOuter {
+        max-width: none;
+
+        >div {
+            max-width: none !important;
+        }
+
+    }
+
+    .courses {
+        margin-bottom: 0;
+    }
+
+    .colsWrap {
+        margin-top: 0;
+    }
+    
+    .colWrap {
+        &:last-child {
+            max-width: 25%;
+            padding-right: 0;
+            @include ltemd {
+                max-width: 100%;
+            }
+        }
+    }
+}

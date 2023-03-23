@@ -1,5 +1,8 @@
 @import '../../../../../lib/styles/includes';
 
+.wrap {
+    position: relative;
+}
 
 .certificateModal {
     &:global(.react-responsive-modal-modal) {
