@@ -25,10 +25,10 @@ import { CertificateNotFound } from '../certificate-not-found'
 
 
 interface UserCertificationViewBaseProps {
-    enrollment?: TCACertificationEnrollmentBase
-    profile?: UserProfile
     certification?: TCACertification
+    enrollment?: TCACertificationEnrollmentBase
     enrollmentError?: boolean
+    profile?: UserProfile
 }
 
 const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: UserCertificationViewBaseProps) => {
@@ -57,9 +57,9 @@ const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: Us
             <PageTitle>
                 {`${!!props.enrollment && `${props.enrollment.userName}'s `}${props.certification?.title} Certificate`}
             </PageTitle>
-            <LoadingSpinner hide={props.profile && (props.enrollmentError || !!props.enrollment)} />
+            <LoadingSpinner hide={props.enrollmentError || (props.profile && !!props.enrollment)} />
 
-            {props.profile && props.enrollmentError && (
+            {props.enrollmentError && (
                 <CertificatePageLayout
                     certificateElRef={certificateElRef}
                     fallbackBackUrl={tcaCertificationPath}

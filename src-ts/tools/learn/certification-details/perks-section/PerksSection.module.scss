@@ -69,3 +69,22 @@
         margin-top: $space-sm;
     }
 }
+
+.perkExtraLink {
+    margin-top: $space-sm;
+
+    > * {
+        display: flex;
+        align-items: center;
+        gap: $space-xs;
+        color: $turq-160;
+        @include font-roboto;
+        font-weight: 700;
+        font-size: 14px;
+        line-height: 14px;
+        text-transform: uppercase;
+    }
+    svg {
+        @include icon-size(14);
+    }
+}
