@@ -28,6 +28,7 @@ interface UserCertificationViewBaseProps {
     certification?: TCACertification
     enrollment?: TCACertificationEnrollmentBase
     enrollmentError?: boolean
+    isPreview?: boolean
     profile?: UserProfile
 }
 
@@ -82,6 +83,7 @@ const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: Us
                         userName={props.enrollment.userName}
                         isOwner={isOwnProfile}
                         validationUrl={validationUrl}
+                        isPreview={props.isPreview}
                     />
                 </div>
             )}

@@ -48,6 +48,7 @@ const UserCertificationPreview: FC<{}> = () => {
                 enrollment={placeholderEnrollment}
                 certification={certification}
                 profile={placeholderUserProfile}
+                isPreview
             />
         </>
     )
