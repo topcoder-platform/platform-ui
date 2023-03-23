@@ -7,6 +7,7 @@ import {
     useRef,
     useState,
 } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 import {
     getVerificationStatusAsync,
@@ -32,11 +33,13 @@ interface UserCertificationViewBaseProps {
 }
 
 const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: UserCertificationViewBaseProps) => {
+    const [queryParams]: [URLSearchParams, any] = useSearchParams()
 
-    // const routeParams: Params<string> = useParams()
     const tcaCertificationPath: string = getTCACertificationPath(`${props.certification?.dashedName}`)
     const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
     const isOwnProfile: boolean = !!props.profile?.email
+
+    const isModalView: boolean = queryParams.get('view-style') === 'modal'
 
     const [isMemberVerified, setIsMemberVerified]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -82,6 +85,7 @@ const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: Us
                         userName={props.enrollment.userName}
                         isOwner={isOwnProfile}
                         validationUrl={validationUrl}
+                        isModalView={isModalView}
                     />
                 </div>
             )}
