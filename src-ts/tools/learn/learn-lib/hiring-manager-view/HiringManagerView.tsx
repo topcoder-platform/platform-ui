@@ -55,6 +55,7 @@ export interface HiringManagerViewProps {
     certification?: TCACertification
     completedAt?: string
     completionUuid?: string
+    isPreview?: boolean
     isModalView?: boolean
     isMemberVerified?: boolean
     isOwner?: boolean
@@ -158,6 +159,7 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                 className={classNames(
                     styles.hero,
                     styles[`hero-${certificationCategory?.track.toLowerCase() || 'dev'}`],
+                    props.isPreview && styles.asPreview,
                 )}
             >
                 <ContentLayout outerClass={props.isModalView ? styles.contentOuter : ''}>

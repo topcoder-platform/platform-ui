@@ -34,6 +34,22 @@
         background: url('./bg-curve-white.png') no-repeat center bottom / 100vw, $tc-qa-grad;
     }
 
+    &.asPreview {
+        position: relative;
+        z-index: 1;
+        &:before {
+            content: "";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('./bg-curve-white.png') no-repeat center bottom / 100vw, url('./preview-watermark.png') no-repeat top left / cover;
+            z-index: -1;
+        }
+    }
+    
     .heroInner {
         display: flex;
         gap: $space-mx;
@@ -149,12 +165,7 @@
 }
 
 .wrap {
-    margin-top: $space-mxx;
     margin-bottom: 120px;
-
-    @include ltelg {
-        margin-top: $space-mx;
-    }
     
     @include ltemd {
         margin-bottom: $space-lg;
@@ -246,6 +257,11 @@
     display: inline-flex;
     align-items: center;
     gap: $space-xs;
+
+    margin-top: $space-mxx;
+    @include ltelg {
+        margin-top: $space-mx;
+    }
 
     &:global(.secondary) {
         border: 2px solid;

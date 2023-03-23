@@ -1,7 +1,7 @@
 import { FC, memo, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { Button, ButtonStyle, IconSolid, ProgressBar, useCheckIsMobile } from '../../../../../lib'
+import { Button, ButtonStyle, IconSolid, ProgressBar } from '../../../../../lib'
 import {
     CertificateBadgeIcon,
     CompletionTimeRange,
@@ -12,7 +12,7 @@ import {
     TCACertificationProgress,
     TCACertificationProviderBase,
 } from '../../../learn-lib'
-import { getTCACertificateUrl, getTCACertificationPath } from '../../../learn.routes'
+import { getTCACertificationPath, getTCAUserCertificationUrl } from '../../../learn.routes'
 
 import styles from './TCCertCard.module.scss'
 
@@ -29,7 +29,6 @@ const getCtaBtn: (style: ButtonStyle, label: string, route: string) => ReactNode
 const EXCERPT_TEXT_LEN: number = 165
 
 const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
-    const isMobile: boolean = useCheckIsMobile()
 
     const desc: string = props.certification.description.slice(0, EXCERPT_TEXT_LEN)
 
@@ -49,10 +48,11 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
         }
 
         if (isCompleted) {
+            const certificatePath: string = getTCAUserCertificationUrl(dashedName, props.progress?.userHandle as string)
             return (
                 <div className={styles.completedCTAs}>
                     <div className={styles.certCTAButtons}>
-                        {getCtaBtn('primary', 'View Certificate', getTCACertificateUrl(dashedName))}
+                        {getCtaBtn('primary', 'View Certificate', certificatePath)}
                         {getCtaBtn('secondary', 'Details', getTCACertificationPath(dashedName))}
                     </div>
                 </div>
