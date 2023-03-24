@@ -12,6 +12,8 @@ import {
     TCACertificationProgress,
 } from '../../learn-lib'
 import { EnrollCtaBtn } from '../enroll-cta-btn'
+import { EnvironmentConfig } from '../../../../config'
+import { StripeProduct, useGetStripeProduct } from '../../learn-lib/data-providers/payments'
 
 import styles from './CertificationDetailsSidebar.module.scss'
 
@@ -33,8 +35,24 @@ function renderTooltipContents(icon: ReactNode, text: Array<string>): ReactNode 
     )
 }
 
+// eslint-disable-next-line complexity
 const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props: CertificationDetailsSidebarProps) => {
     const completed: boolean = !!props.certProgress?.completedAt
+
+    const tcaMonetizationEnabled: boolean = EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION || false
+
+    // fetch Stripe product data conditionally
+    const { product }: { product: StripeProduct | undefined }
+        = useGetStripeProduct(
+            tcaMonetizationEnabled && !completed && !props.certProgress
+                ? props.certification?.stripeProductId as string
+                : '',
+        )
+    const price: string
+        = Number((product?.default_price.unit_amount || 0) / 100)
+            .toFixed(2)
+
+    const suggestedRetailPrice: string = product?.metadata?.estimatedRetailPrice || '20'
 
     return (
         <StickySidebar>
@@ -85,9 +103,34 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                             <IconSolid.CurrencyDollarIcon />
                         </span>
                         <span className='quote-main'>
-                            <span className='strike'>$20&nbsp;</span>
-                            <strong className={styles.freeLabel}>FREE</strong>
-                            <span className='body-main-bold'>&nbsp;enrollment ends on April 30th</span>
+                            <span className='strike'>
+                                $
+                                {suggestedRetailPrice}
+                                &nbsp;
+                            </span>
+                            {tcaMonetizationEnabled ? (
+                                <>
+                                    <span>
+                                        $
+                                        {price}
+                                        &nbsp;
+                                    </span>
+                                    <span>one-time payment</span>
+                                    <Tooltip
+                                        content={renderTooltipContents(<IconSolid.CurrencyDollarIcon />, [
+                                            'One-off, non-recurring payment',
+                                        ])}
+                                        place='bottom'
+                                        trigger={<IconOutline.InformationCircleIcon />}
+                                        triggerOn='hover'
+                                    />
+                                </>
+                            ) : (
+                                <>
+                                    <strong className={styles.freeLabel}>FREE</strong>
+                                    <span className='body-main-bold'>&nbsp;enrollment ends on April 30th</span>
+                                </>
+                            )}
                         </span>
                     </li>
                 )}
