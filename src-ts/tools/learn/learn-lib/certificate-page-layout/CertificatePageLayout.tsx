@@ -10,13 +10,10 @@ import { useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import {
-    FacebookSocialShareBtn,
     fileDownloadCanvasAsImage,
     IconOutline,
-    LinkedinSocialShareBtn,
     LoadingSpinner,
     NavigateBackFunction,
-    TwitterSocialShareBtn,
     useNavigateBack,
 } from '../../../../lib'
 import { useCertificateScaling } from '../use-certificate-scaling-hook'
@@ -25,6 +22,7 @@ import { ActionButton } from '../action-button'
 import { hideSiblings } from '../functions'
 import { getViewStyleParamKey } from '../../learn.routes'
 import { TCAShareCertificateModalData, useTCAShareCertificateModal } from '../tca-share-certificate-modal'
+import { useCertificatePrint } from '../use-certificate-print-hook'
 
 import styles from './CertificatePageLayout.module.scss'
 
@@ -77,6 +75,9 @@ const CertificatePageLayout: FC<CertificatePageLayoutProps> = (props: Certificat
 
     }, [props.title, getCertificateCanvas])
 
+    const handlePrint: () => Promise<void>
+        = useCertificatePrint(props.certificateElRef, props.title ?? '')
+
     useLayoutEffect(() => {
         const el: HTMLElement = wrapElRef.current
         if (props.fullScreenCertLayout !== true || !el) {
@@ -120,6 +121,10 @@ const CertificatePageLayout: FC<CertificatePageLayoutProps> = (props: Certificat
                                     )
                                 }
                             >
+                                <ActionButton
+                                    icon={<IconOutline.PrinterIcon />}
+                                    onClick={handlePrint}
+                                />
                                 <ActionButton
                                     icon={<IconOutline.DownloadIcon />}
                                     onClick={handleDownload}
