@@ -20,8 +20,7 @@ const UserCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-cer
 const FreeCodeCamp: LazyLoadedComponent = lazyLoad(() => import('./free-code-camp'), 'FreeCodeCamp')
 const MyLearning: LazyLoadedComponent = lazyLoad(() => import('./my-learning'), 'MyLearning')
 const LandingLearn: LazyLoadedComponent = lazyLoad(() => import('./Learn'))
-const MyTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'MyTCACertificate')
-const UserTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'UserTCACertificate')
+const UserTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'CertificateView')
 
 const ValidateTCACertificate: LazyLoadedComponent
     = lazyLoad(() => import('./tca-certificate'), 'UuidCertificationView')
@@ -29,10 +28,12 @@ const ValidateTCACertificate: LazyLoadedComponent
 const UserCertificationView: LazyLoadedComponent
     = lazyLoad(() => import('./tca-certificate'), 'UserCertificationView')
 
+const UserCertificationPreview: LazyLoadedComponent
+    = lazyLoad(() => import('./tca-certificate'), 'UserCertificationPreview')
+
 export enum LEARN_PATHS {
     certificate = '/certificate',
     completed = '/learn/completed',
-    myCertificate = '/learn/my-certificate',
     myLearning = '/learn/my-learning',
     fcc = '/learn/fcc',
     root = '/learn',
@@ -119,12 +120,6 @@ export function getTCACertificationEnrollPath(certification: string): string {
 
 export function getTCACertificateUrl(
     certification: string,
-): string {
-    return `${getTCACertificationPath(certification)}${LEARN_PATHS.certificate}`
-}
-
-export function getUserTCACertificateUrl(
-    certification: string,
     handle: string,
 ): string {
     return `${getTCACertificationPath(certification)}/${handle}${LEARN_PATHS.certificate}`
@@ -141,6 +136,12 @@ export function getTCAUserCertificationUrl(
     handle: string,
 ): string {
     return `${getTCACertificationPath(certification)}/${handle}/certification`
+}
+
+export function getTCAUserCertificationPreviewUrl(
+    certification: string,
+): string {
+    return `${getTCACertificationPath(certification)}/preview`
 }
 
 export function getAuthenticateAndEnrollRoute(): string {
@@ -206,12 +207,6 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 children: [],
-                element: <MyTCACertificate />,
-                id: 'My TCA Certification',
-                route: 'tca-certifications/:certification/certificate',
-            },
-            {
-                children: [],
                 element: <UserTCACertificate />,
                 id: 'User TCA Certification',
                 route: 'tca-certifications/:certification/:memberHandle/certificate',
@@ -219,14 +214,20 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
             {
                 children: [],
                 element: <ValidateTCACertificate />,
-                id: 'Validate TCA Certification - aka hiring manager view',
+                id: 'Hiring manager view - uuid param',
                 route: ':completionUuid',
             },
             {
                 children: [],
                 element: <UserCertificationView />,
-                id: 'Validate TCA Certification - aka hiring manager view',
+                id: 'Hiring manager view',
                 route: 'tca-certifications/:certification/:memberHandle/certification',
+            },
+            {
+                children: [],
+                element: <UserCertificationPreview />,
+                id: 'Giring manager preview',
+                route: 'tca-certifications/:certification/preview',
             },
         ],
         element: <LandingLearn />,

@@ -1,6 +1,7 @@
 import { FC, memo, ReactNode } from 'react'
 import classNames from 'classnames'
 
+import { getTCACertificationPath, getTCAUserCertificationUrl } from '../../../learn.routes'
 import { Button, ButtonStyle, IconSolid, ProgressBar } from '../../../../../lib'
 import {
     CertificateBadgeIcon,
@@ -12,7 +13,6 @@ import {
     TCACertificationProgress,
     TCACertificationProviderBase,
 } from '../../../learn-lib'
-import { getTCACertificateUrl, getTCACertificationPath } from '../../../learn.routes'
 import { EnvironmentConfig } from '../../../../../config'
 
 import styles from './TCCertCard.module.scss'
@@ -49,10 +49,11 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
         }
 
         if (isCompleted) {
+            const certificatePath: string = getTCAUserCertificationUrl(dashedName, props.progress?.userHandle as string)
             return (
                 <div className={styles.completedCTAs}>
                     <div className={styles.certCTAButtons}>
-                        {getCtaBtn('primary', 'View Certificate', getTCACertificateUrl(dashedName))}
+                        {getCtaBtn('primary', 'View Certificate', certificatePath)}
                         {getCtaBtn('secondary', 'Details', getTCACertificationPath(dashedName))}
                     </div>
                 </div>

@@ -1,9 +1,7 @@
 import { FC, MutableRefObject, ReactNode, useRef } from 'react'
+import { Params, useParams } from 'react-router-dom'
 
-import {
-    LoadingSpinner,
-    UserProfile,
-} from '../../../../lib'
+import { LoadingSpinner } from '../../../../lib'
 import {
     CertificateNotFoundContent,
     CertificatePageLayout,
@@ -15,17 +13,23 @@ import {
 } from '../../learn-lib'
 import { getTCACertificationPath, getTCACertificationValidationUrl, getUserTCACertificateSsr } from '../../learn.routes'
 import { CertificateNotFound } from '../certificate-not-found'
+import { useGetUserProfile, UseGetUserProfileData } from '../user-certification-view/use-get-user-profile'
 
-interface CertificateViewProps {
-    certification: string,
-    fullScreenCertLayout?: boolean,
-    profile: UserProfile,
-}
+const CertificateView: FC<{}> = () => {
 
-const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) => {
-
-    const tcaCertificationPath: string = getTCACertificationPath(props.certification)
     const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
+
+    const routeParams: Params<string> = useParams()
+    const {
+        isOwnProfile,
+        ready: profileReady,
+    }: UseGetUserProfileData = useGetUserProfile(routeParams.memberHandle)
+
+    const userHandle: string = `${routeParams.memberHandle}`
+    const certificationParam: string = routeParams.certification ?? ''
+
+
+    const tcaCertificationPath: string = getTCACertificationPath(certificationParam)
 
     const {
         certification,
@@ -33,22 +37,22 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
         error: hasValidationError,
         ready,
     }: TCACertificationValidationData
-        = useValidateTCACertification(props.certification, props.profile.handle)
+        = useValidateTCACertification(certificationParam, userHandle)
 
     const hasCompletedTheCertification: boolean = !!certification && !!enrollment && !hasValidationError
-    const certificateNotFoundError: boolean = ready && !hasCompletedTheCertification
+    const certificateNotFoundError: boolean = profileReady && ready && !hasCompletedTheCertification
 
     function getCertTitle(user: string): string {
         return `${user} - ${certification?.title}`
     }
 
     const certUrl: string = getUserTCACertificateSsr(
-        props.certification,
-        props.profile.handle,
-        getCertTitle(props.profile.handle),
+        certificationParam,
+        userHandle,
+        getCertTitle(userHandle),
     )
 
-    const certificationTitle: string = getCertTitle(enrollment?.userName || props.profile.handle)
+    const certificationTitle: string = getCertTitle(enrollment?.userName || userHandle)
 
     const validateLink: string = getTCACertificationValidationUrl(enrollment?.completionUuid as string)
 
@@ -62,7 +66,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
                 certification={certification as TCACertification}
                 completionUuid={enrollment?.completionUuid ?? ''}
                 userName={enrollment?.userName}
-                tcHandle={props.profile.handle}
+                tcHandle={userHandle}
                 completedDate={enrollment?.completedAt as string}
                 certificateElRef={certificateElRef}
                 validateLink={validateLink}
@@ -78,21 +82,23 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
 
             <LoadingSpinner hide={ready} />
 
-            <CertificatePageLayout
-                certificateElRef={certificateElRef}
-                fallbackBackUrl={tcaCertificationPath}
-                fullScreenCertLayout={!certificateNotFoundError && props.fullScreenCertLayout}
-                isCertificateCompleted={hasCompletedTheCertification}
-                isReady={ready}
-                ssrUrl={certUrl}
-                title={certificationTitle}
-                className={certificateNotFoundError ? 'cert-not-found-layout' : ''}
-                afterContent={certificateNotFoundError && (
-                    <CertificateNotFoundContent className='desktop-hide' />
-                )}
-            >
-                {renderCertificate()}
-            </CertificatePageLayout>
+            {profileReady && (
+                <CertificatePageLayout
+                    certificateElRef={certificateElRef}
+                    fallbackBackUrl={tcaCertificationPath}
+                    fullScreenCertLayout={!certificateNotFoundError && !isOwnProfile}
+                    isCertificateCompleted={hasCompletedTheCertification}
+                    isReady={ready}
+                    ssrUrl={certUrl}
+                    title={certificationTitle}
+                    className={certificateNotFoundError ? 'cert-not-found-layout' : ''}
+                    afterContent={certificateNotFoundError && (
+                        <CertificateNotFoundContent className='desktop-hide' />
+                    )}
+                >
+                    {renderCertificate()}
+                </CertificatePageLayout>
+            )}
         </>
     )
 }

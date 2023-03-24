@@ -7,6 +7,7 @@ import {
     useRef,
     useState,
 } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 import {
     getVerificationStatusAsync,
@@ -23,20 +24,22 @@ import {
 import { getTCACertificationPath, getTCACertificationValidationUrl } from '../../learn.routes'
 import { CertificateNotFound } from '../certificate-not-found'
 
-
 interface UserCertificationViewBaseProps {
-    enrollment?: TCACertificationEnrollmentBase
-    profile?: UserProfile
     certification?: TCACertification
+    enrollment?: TCACertificationEnrollmentBase
     enrollmentError?: boolean
+    isPreview?: boolean
+    profile?: UserProfile
 }
 
 const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: UserCertificationViewBaseProps) => {
+    const [queryParams]: [URLSearchParams, any] = useSearchParams()
 
-    // const routeParams: Params<string> = useParams()
     const tcaCertificationPath: string = getTCACertificationPath(`${props.certification?.dashedName}`)
     const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
     const isOwnProfile: boolean = !!props.profile?.email
+
+    const isModalView: boolean = queryParams.get('view-style') === 'modal'
 
     const [isMemberVerified, setIsMemberVerified]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -57,9 +60,9 @@ const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: Us
             <PageTitle>
                 {`${!!props.enrollment && `${props.enrollment.userName}'s `}${props.certification?.title} Certificate`}
             </PageTitle>
-            <LoadingSpinner hide={props.profile && (props.enrollmentError || !!props.enrollment)} />
+            <LoadingSpinner hide={props.enrollmentError || (props.profile && !!props.enrollment)} />
 
-            {props.profile && props.enrollmentError && (
+            {props.enrollmentError && (
                 <CertificatePageLayout
                     certificateElRef={certificateElRef}
                     fallbackBackUrl={tcaCertificationPath}
@@ -82,6 +85,8 @@ const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: Us
                         userName={props.enrollment.userName}
                         isOwner={isOwnProfile}
                         validationUrl={validationUrl}
+                        isPreview={props.isPreview}
+                        isModalView={isModalView}
                     />
                 </div>
             )}
