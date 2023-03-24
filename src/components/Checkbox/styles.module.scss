@@ -1,0 +1,166 @@
+@import "styles/variables";
+
+.container {
+  position: relative;
+  display: block;
+  text-align: left;
+
+  &.single {
+    display: inline-block;
+  }
+
+  &.error {
+    .impostor {
+      border-color: #ef476f;
+    }
+  }
+}
+
+input.checkbox {
+  z-index: 1;
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0;
+  border: none;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  appearance: none;
+  background-color: transparent;
+  color: transparent;
+
+  &:checked {
+    + .impostor {
+      border: none;
+      line-height: 20px;
+      background-color: #0ab88a;
+      box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.29);
+
+      svg {
+        display: block;
+      }
+    }
+  }
+
+  &:disabled {
+    + .impostor {
+      background-color: #bbb;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.impostor {
+  z-index: 2;
+  position: relative;
+  display: inline-block;
+  vertical-align: -3px;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #aaa;
+  border-radius: 3px;
+  line-height: 18px;
+  user-select: none;
+  background-color: #fff;
+  color: transparent;
+
+  svg {
+    display: none;
+    position: absolute;
+    left: 4px;
+    top: 5px;
+    width: 15px;
+    height: auto;
+  }
+}
+
+.small {
+  input.checkbox {
+    width: 15px;
+    height: 15px;
+
+    &:checked {
+      + .impostor {
+        line-height: 15px;
+        box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.29);
+
+        svg {
+          display: block;
+        }
+      }
+    }
+  }
+
+  .impostor {
+    z-index: 2;
+    position: relative;
+    display: inline-block;
+    vertical-align: -3px;
+    width: 15px;
+    height: 15px;
+    line-height: 13px;
+
+    svg {
+      left: 3px;
+      top: 4px;
+      width: 12px;
+      height: auto;
+    }
+  }
+}
+
+.large {
+  input.checkbox {
+    width: 25px;
+    height: 25px;
+
+    &:checked {
+      + .impostor {
+        line-height: 25px;
+        box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.29);
+
+        svg {
+          left: 4px;
+          top: 6px;
+          width: 19px;
+          height: auto;
+        }
+      }
+    }
+  }
+
+  .impostor {
+    z-index: 2;
+    position: relative;
+    display: inline-block;
+    vertical-align: -8px;
+    width: 25px;
+    height: 25px;
+    line-height: 23px;
+
+    svg {
+      left: 3px;
+      top: 4px;
+      width: 12px;
+      height: auto;
+    }
+  }
+
+  &.error {
+    .impostor {
+      border-width: 2px;
+      line-height: 21px;
+    }
+  }
+}
+
+.label {
+  display: inline-block;
+  margin-left: 10px;
+
+  &:empty {
+    margin-left: 0;
+  }
+}

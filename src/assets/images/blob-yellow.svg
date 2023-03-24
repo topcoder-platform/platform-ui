@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="115px" height="75px" viewBox="0 0 115 75" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>4E19AD87-834F-4DB6-AFFB-EA530C3ACC5D</title>
+    <defs>
+        <linearGradient x1="50%" y1="-7.51191008%" x2="70.0751431%" y2="100%" id="blob-yellow-gradient">
+            <stop stop-color="#FFC43D" offset="0%"/>
+            <stop stop-color="#F37593" offset="100%"/>
+        </linearGradient>
+    </defs>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g transform="translate(-972.000000, -146.000000)" fill="url(#blob-yellow-gradient)">
+            <g transform="translate(360.000000, 146.000000)">
+                <path d="M711.65237,59.9203679 C741.715362,99.2432612 777.006701,45.662367 777.006701,-1.03011676 C777.006701,-47.7226005 746.132956,-93.438916 701.195677,-93.438916 C656.258398,-93.438916 611.006701,-70.0055734 611.006701,-23.3130896 C611.006701,23.3793941 681.589378,20.5974746 711.65237,59.9203679 Z" id="blob-yellow" transform="translate(694.006701, -9.938916) rotate(212.000000) translate(-694.006701, 9.938916) "/>
+            </g>
+        </g>
+    </g>
+</svg>

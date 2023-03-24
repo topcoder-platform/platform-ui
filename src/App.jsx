@@ -12,6 +12,8 @@ import { Suspense } from "react";
 
 const WorkItem = lazyLoad(() => import("./routes/WorkItems"));
 const IntakeForm = lazyLoad(() => import("./IntakeForm"));
+const GigsPage = lazyLoad(() => import("./routes/GigsPage"));
+const GigDetailsPage = lazyLoad(() => import("./routes/GigDetailsPage"));
 const UnderMaintenance = lazyLoad(() => import("./routes/UnderMaintenance"));
 
 
@@ -52,6 +54,14 @@ const App = () => {
                 <Route
                     element={<WorkItem />}
                     path="/self-service/work-items/:workItemId"
+                />
+                <Route
+                    element={<GigsPage />}
+                    path="/earn/gigs"
+                />
+                <Route
+                    element={<GigDetailsPage />}
+                    path="/earn/gigs/:externalId"
                 />
             </Routes>
         </Suspense>

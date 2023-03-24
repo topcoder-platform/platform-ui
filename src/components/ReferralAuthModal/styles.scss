@@ -1,0 +1,71 @@
+@import "../../styles/mixins";
+@import "../../styles/variables";
+
+.modal {
+  display: inline-flex !important;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 20px !important;
+  border-radius: 10px;
+  padding: 100px 40px !important;
+  width: auto !important;
+  background-color: #fff !important;
+
+  @include tablet {
+    width: 600px !important;
+  }
+}
+
+.modalOverlay {
+  background-color: $body-color !important;
+  opacity: 0.95 !important;
+}
+
+.content {
+  display: block;
+}
+
+.title {
+  @include barlow-condensed-medium;
+  font-size: 34px;
+  line-height: 38px;
+  text-transform: uppercase;
+  color: #1e94a3;
+}
+
+.message {
+  margin: 20px 0 0;
+  font-size: 20px;
+  line-height: 30px;
+  text-align: center;
+
+  @include tablet {
+    font-size: 24px;
+    line-height: 36px;
+  }
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0 0;
+}
+
+.button {
+  margin: 0 5px;
+}
+
+.hint {
+  margin: 10px 0 0;
+  @include roboto-regular;
+  font-size: 14px;
+  line-height: 26px;
+
+  a {
+    font-size: 16px;
+    line-height: 24px;
+    color: #0d61bf;
+    text-decoration: underline;
+  }
+}

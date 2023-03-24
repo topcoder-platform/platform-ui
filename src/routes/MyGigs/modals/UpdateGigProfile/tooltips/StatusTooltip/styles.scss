@@ -1,0 +1,28 @@
+@import "styles/variables";
+@import "styles/mixins";
+
+.status-tooltip {
+  width: 220px;
+  padding: 14px 12px 12px 14px;
+}
+
+.caption,
+.text  {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+}
+
+.caption {
+  @include roboto-medium;
+
+  margin-bottom: 2px;
+  text-transform: uppercase;
+}
+
+.text {
+  color: $tc-gray3;
+}
+
+.item + .item {
+  margin-top: 16px;
+}

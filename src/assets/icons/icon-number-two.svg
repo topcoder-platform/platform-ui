@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 41 39" enable-background="new 0 0 41 39" xml:space="preserve">
+<linearGradient id="icon-number-two-gradient" gradientUnits="userSpaceOnUse" x1="-895.1861" y1="526.4877" x2="-894.8555" y2="525.3568" gradientTransform="matrix(40 0 0 -38.5289 35821.6914 20285.7461)">
+	<stop  offset="0" style="stop-color:#9D41C9"/>
+	<stop  offset="1" style="stop-color:#50ADE8"/>
+</linearGradient>
+<path fill-rule="evenodd" clip-rule="evenodd" fill="url(#icon-number-two-gradient)" d="M15.692,37.4916
+	c11.7158-6.9499,19.4212-1.221,23.1277-10.9074S38.8667,3.47,26.1061,1.0044S5.3964,3.3311,1.3727,13.6012
+	S3.9762,44.4415,15.692,37.4916z"/>
+<text transform="matrix(1 0 0 1 15.5198 28.0535)" fill="#FFFFFF" font-family="'Barlow Condensed'" font-size="24px" font-weight="500">2</text>
+</svg>

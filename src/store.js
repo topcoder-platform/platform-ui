@@ -1,7 +1,7 @@
 /**
  * Configure Redux Store
  */
-import { applyMiddleware, createStore } from "redux";
+import { applyMiddleware, compose, createStore } from "redux";
 import { createPromise } from "redux-promise-middleware";
 import thunk from "redux-thunk";
 import { saveUpdatesMiddleware } from "./autoSaveBeforeLogin";
@@ -25,6 +25,6 @@ if (process.env.APPMODE !== "production") {
 
 // const persistedState = loadSavedFormCookie();
 
-const store = createStore(rootReducer, applyMiddleware(...middlewares));
+const store = createStore(rootReducer, compose(applyMiddleware(...middlewares)));
 
 export default store;

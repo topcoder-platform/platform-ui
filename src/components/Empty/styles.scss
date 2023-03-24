@@ -1,0 +1,35 @@
+@import "styles/variables";
+@import "styles/mixins";
+@import "styles/animations";
+
+.empty-wrapper {
+  width: 100%;
+  border-radius: $border-radius-lg;
+  background-color: #ffffff;
+  padding: 81px 0px 330px 0px;
+  min-width: 650px;
+  min-height: 551px;
+    .empty-inner {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        & > h6 {
+            font-size: 20px;
+            color: $tc-black;
+            line-height: 24px;
+            @include barlow-semibold;
+        }
+        & > span {
+            font-size: 16px;
+            color: $tc-black;
+            line-height: 26px;
+            margin-top: 30px;
+            @include roboto-regular;
+        }
+        & > button {
+            margin-top: 20px;
+            letter-spacing: 0.8px;
+        }
+    }
+}

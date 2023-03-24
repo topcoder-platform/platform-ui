@@ -1,0 +1,58 @@
+@import "styles/mixins";
+
+.container {
+}
+
+.checkbox {
+  margin-right: 5px;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 14px;
+
+  button {
+    display: inline;
+    margin: 0;
+    border: none !important;
+    padding: 0;
+    text-decoration: underline;
+    background-color: transparent;
+    outline: none !important;
+    box-shadow: none !important;
+    color: #0d61bf;
+    &:hover {
+      text-decoration: none;
+    }
+  }
+}
+
+.terms-field,
+.policy-field {
+  margin-top: 20px;
+
+  @include tablet {
+    margin-top: 0;
+  }
+}
+
+.terms-field {
+  position: relative;
+  white-space: nowrap;
+  margin-right: 20px;
+}
+
+.policy-field {
+  white-space: nowrap;
+}
+
+.terms-error {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  padding: 13px 0 0;
+  color: #ef476f;
+}

@@ -1,0 +1,43 @@
+@import "styles/variables";
+@import "styles/mixins";
+
+$filter-padding-x: 4 * $base-unit;
+$filter-padding-y: 3 * $base-unit;
+
+.filter {
+  padding: $filter-padding-y $filter-padding-x;
+  font-size: $font-size-sm;
+}
+
+.buckets {
+  margin-bottom: 18px;
+
+  > h3 {
+    margin-bottom: 15px;
+    font-size: inherit;
+    line-height: 19px;
+  }
+}
+
+.buckets {
+  &.vertical-list {
+    > div > div {
+      margin: $base-unit 0;
+    }
+  }
+  :global {
+    .count-badge {
+      display: inline-block;
+      margin: -2px 0 0 $base-unit;
+      padding: 2px 5px 0;
+      font-weight: bold;
+      font-size: 11px;
+      line-height: 14px;
+      text-align: center;
+      color: white;
+      vertical-align: middle;
+      background: #EF476F;
+      border-radius: 13px;
+    }
+  }
+}

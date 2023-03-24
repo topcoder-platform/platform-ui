@@ -1,0 +1,34 @@
+@import "styles/mixins";
+
+.container {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  padding: 47px 20px 100px;
+  min-height: calc(100vh - var(--navbarHeight));
+  background-color: #fff;
+}
+
+.page {
+  position: relative;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1280px;
+}
+
+.loadingIndicator {
+  margin: 0 auto;
+}
+
+.error {
+  margin: 0 auto;
+  padding: 20px 30px;
+  width: 100%;
+  max-width: 600px;
+  font-size: 24px;
+  text-align: center;
+  color: #f00;
+}

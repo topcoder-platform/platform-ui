@@ -174,7 +174,7 @@ const BasicInfoLegacy = ({
       <Page>
         <Breadcrumb items={breadcrumbs} />
         <WebsiteDesignBannerLegacy />
-        <PageContent styleName={"container"}>
+        <PageContent className={styles["container"]}>
           <div className={styles["title-wrapper"]}>
             <PageH2>BASIC INFO</PageH2>
           </div>

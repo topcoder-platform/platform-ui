@@ -1,0 +1,119 @@
+@import "styles/variables";
+@import "styles/mixins";
+
+.progress-tooltip {
+  padding: 12px;
+  padding-bottom: 18px;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+}
+
+.progress-tooltip-content {
+  position: relative;
+  width: 192px;
+  padding-left: 24px;
+}
+
+.progress-phase {
+  position: relative;
+
+  .name {
+    @include roboto-bold;
+
+    padding-top: 2px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+
+  &.pre-previous {
+    height: 13px;
+    min-height: auto;
+
+    .indicator {
+      padding-bottom: 2px;
+      background-image: linear-gradient(180deg, rgba($lightGreen, 0) 0%, $lightGreen 100%);
+    }
+  }
+
+  &.previous {
+    .indicator {
+      padding-top: 18px;
+      background-color: $lightGreen;
+
+      .before {
+        display: block;
+      }
+
+      .after {
+        display: none;
+      }
+    }
+
+    .name {
+      color: $lightGreen;
+    }
+
+    .note {
+      color: $tc-gray-30;
+    }
+
+    &.has-next {
+      padding-bottom: 24px;
+    }
+  }
+
+  &.next {
+    .indicator {
+      padding-top: 11px;
+      background-image: linear-gradient(180deg, $tc-gray-70 0%, rgba($tc-gray-70, 0.25) 100%);;
+
+      .before {
+        display: none;
+      }
+
+      .after {
+        display: block;
+      }
+    }
+
+    .name,
+    .note {
+      color: $white;
+    }
+  }
+
+  &.hidden {
+    display: none;
+  }
+}
+
+.indicator {
+  position: absolute;
+  top: 0;
+  left: -24px;
+  bottom: 0;
+  width: 16px;
+  padding-left: 5.5px;
+  padding-right: 5.5px;
+  background-clip: content-box;
+
+  .before,
+  .after {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 16px;
+  }
+
+  .after {
+    border: 5px solid $white;
+    border-radius: 50%;
+  }
+
+  &.hidden {
+    background: none !important;
+  }
+}

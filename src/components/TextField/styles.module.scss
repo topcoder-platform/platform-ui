@@ -1,0 +1,142 @@
+@import "styles/variables";
+@import "styles/mixins";
+
+.container {
+  position: relative;
+  background-color: #fff;
+
+  &.large {
+    padding: 12px 0 0;
+
+    label {
+      left: 8px;
+      top: 6px;
+      padding: 0 8px;
+    }
+
+    input.input {
+      padding: 13px 15px 15px;
+      height: 52px;
+      font-size: 16px;
+      line-height: 22px;
+
+      @include placeholder {
+        font-size: 16px;
+      }
+    }
+  }
+
+  &.medium {
+    label {
+      left: 11px;
+      top: -6px;
+    }
+
+    input.input {
+      padding: 8px 12px;
+      height: 40px;
+      font-size: 14px;
+      line-height: 22px;
+
+      @include placeholder {
+        font-size: 14px;
+      }
+    }
+  }
+
+  &.small {
+    label {
+      left: 7px;
+      top: -6px;
+    }
+
+    input.input {
+      padding: 4px 8px;
+      height: 30px;
+      font-size: 14px;
+      line-height: 20px;
+
+      @include placeholder {
+        font-size: 14px;
+      }
+    }
+  }
+
+  &.focused {
+    label {
+      color: $gui-kit-level-2;
+    }
+  }
+
+  &.invalid {
+    label {
+      color: $gui-kit-level-5;
+    }
+
+    input.input,
+    input.input:hover {
+      border-color: $gui-kit-level-5 !important;
+    }
+
+    &.large {
+      input.input,
+      input.input:hover {
+        border-width: 2px;
+        padding: 12px 14px 14px;
+      }
+    }
+  }
+
+  &.readonly {
+    label {
+      color: #aaa;
+    }
+    input {
+      border-color: #d4d4d4 !important;
+      color: #aaa;
+    }
+  }
+
+  &.disabled {
+    input:disabled {
+      border-color: #bbb;
+      background: #f4f4f4;
+      color: #bbb;
+    }
+  }
+
+  label {
+    display: block;
+    z-index: 1;
+    position: absolute;
+    padding: 0 3px;
+    font-size: 12px;
+    line-height: 12px;
+    background: #fff;
+    color: #aaaaaa;
+  }
+
+  input.input,
+  input.input:hover {
+    display: block;
+    margin: 0;
+    border: 1px solid #aaaaaa;
+    border-radius: 6px;
+    width: 100%;
+    line-height: 22px;
+    outline: none !important;
+    box-shadow: none !important;
+
+    @include placeholder {
+      color: #aaa;
+      text-transform: none;
+      opacity: 1;
+    }
+  }
+
+  .error {
+    margin: 10px 0 0 15px;
+    font-size: 14px;
+    color: #2A2A2A;
+  }
+}

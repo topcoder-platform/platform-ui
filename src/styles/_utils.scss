@@ -1,0 +1,14 @@
+:global {
+  .layout-wrapper {
+    display: flex;
+  }
+
+  #tooltips-container-id {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    z-index: 1001;
+  }
+}

@@ -1,0 +1,42 @@
+@import "styles/variables";
+@import "styles/mixins";
+
+.update-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 460px;
+  min-height: 420px;
+  padding: 60px;
+  background: url('../../../../assets/images/update-success-big.svg') no-repeat top right / auto, $white;
+  border-radius: 10px;
+
+  .title {
+    @include barlow-condensed-medium;
+
+    margin-bottom: 16px;
+    font-size: 34px;
+    color: $tc-turquoise-dark1;
+    line-height: 38px;
+
+    .icon {
+      display: block;
+      margin: 12px auto 16px;
+      fill: currentColor;
+    }
+  }
+
+  .text {
+    color: $tc-gray1;
+    line-height: 26px;
+  }
+
+  button {
+    margin-top: auto;
+    margin-bottom: 4px;
+    color: $tc-turquoise-dark3;
+    border-color: $tc-turquoise-dark3;
+  }
+}
+
+

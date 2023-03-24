@@ -23,10 +23,21 @@
         "typeRoots": [
             "./types",
             "./node_modules/@types"
-        ]
+        ],
+        "baseUrl": ".",
+        "paths": {
+            "constants/*": ["src/constants/*"],
+            "components/*": ["src/components/*"],
+            "utils/*": ["src/utils/*"],
+            "reducers/*": ["src/reducers/*"],
+            "services/*": ["src/services/*"],
+            "actions/*": ["src/actions/*"],
+            "styles/*": ["src/styles/*"],
+          }
     },
     "include": [
-        "src-ts"
+        "src-ts",
+        "src"
     ],
     "exclude": [
         "**/*.test.*",

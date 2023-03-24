@@ -1,0 +1,32 @@
+
+.container {
+  display: block;
+  width: 64px;
+  height: 64px;
+}
+
+.circle-outer {
+  fill: none;
+  stroke: #149efe;
+  stroke-width: 2;
+  animation: growing-circle 2s linear 0s infinite;
+}
+
+.circle-inner {
+  fill: none;
+  stroke: #e3e4e5;
+  stroke-width: 2;
+  animation: growing-circle 2s linear -1s infinite;
+}
+
+@keyframes growing-circle {
+  0% {
+    r: 9.375%;
+    opacity: 1;
+  }
+
+  100% {
+    r: 43.75%;
+    opacity: 0;
+  }
+}

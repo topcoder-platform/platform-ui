@@ -2,6 +2,9 @@
 
 @import "include";
 @import "reset";
+@import "variables";
+@import "mixins";
+@import "utils";
 
 .topcoder-platform-ui {
   @include font-barlow;
@@ -28,6 +31,27 @@
       flex: 1;
     }
   }
+
+  html,
+  body {
+    text-rendering: geometricPrecision;
+  }
+
+  body {
+    @include roboto-regular;
+    font-size: $font-size-base;
+    color: $body-color;
+    line-height: 1;
+  }
+
+  html {
+    display: flex;
+  }
+
+  body {
+    flex: 1;
+  }
+
 }
 
 body {

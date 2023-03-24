@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 20 20" enable-background="new 0 0 20 20" xml:space="preserve">
+<path fill="none" stroke="#26B3C5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M7.3,18.1
+	c-1.2897-2.6128-1.9073-5.5714-1.7847-8.55C5.3931,6.5714,6.0106,3.613,7.3,1"/>
+<path fill="none" stroke="#26B3C5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M11.8,18.1
+	c1.2897-2.6128,1.9073-5.5714,1.7847-8.55C13.7069,6.5714,13.0894,3.613,11.8,1"/>
+<circle fill="none" stroke="#26B3C5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" cx="10" cy="10" r="9"/>
+<line fill="none" stroke="#26B3C5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" x1="1" y1="9.55" x2="19" y2="9.55"/>
+<line fill="none" stroke="#26B3C5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" x1="1.9" y1="5.05" x2="17.2" y2="5.05"/>
+<line fill="none" stroke="#26B3C5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" x1="1.9" y1="14.05" x2="17.2" y2="14.05"/>
+</svg>

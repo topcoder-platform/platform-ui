@@ -1,0 +1,140 @@
+@import "styles/mixins";
+@import "styles/variables";
+
+.container {
+}
+
+.title {
+  margin: 0 0 36px;
+  @include barlow-condensed-medium;
+  font-size: 36px;
+  line-height: 36px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #26b3c5;
+
+  @include tablet {
+    padding: 0 30px;
+    font-size: 60px;
+    line-height: 60px;
+    text-align: center;
+  }
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  margin-bottom: 55px;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 52px;
+  letter-spacing: 0.8px;
+  color: #229174 !important;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-bottom: 1px solid $tc-gray5;
+
+  svg {
+    margin-right: 5px;
+    width: auto;
+    height: 12px;
+  }
+}
+
+.loadingIndicator {
+  margin: 0 auto;
+}
+
+.message {
+  margin: 30px 0 0;
+  font-size: 24px;
+  line-height: 36px;
+  text-align: center;
+}
+
+.hasProfileTitle {
+  margin: 0 0 8px;
+  @include barlow-semibold;
+  font-size: 16px;
+  line-height: 20px;
+  text-transform: uppercase;
+}
+
+.hasProfileIcon {
+  display: inline-block;
+  vertical-align: -3px;
+  margin-left: 5px;
+}
+
+.hasProfileMessage {
+  margin: 0;
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.form {
+  margin: 0 auto;
+  max-width: 880px;
+}
+
+.section {
+  margin: 35px 0 0;
+}
+
+.sectionTitle {
+  margin: 0 0 5px;
+  @include barlow-condensed-medium;
+  font-size: 34px;
+  line-height: 38px;
+  text-transform: uppercase;
+}
+
+.sectionDescription {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 22px;
+
+  a {
+    color: #0D61BF;
+    text-decoration: underline;
+  }
+}
+
+.fieldRowList {
+  margin: 20px 0 0;
+}
+
+.fieldRow {
+  @include tablet-lg {
+    display: grid;
+    grid-gap: 20px;
+    grid-template-columns: 1fr 1fr;
+    margin: 0 0 8px;
+  }
+}
+
+.field {
+  margin: 0 0 20px;
+  min-width: 0;
+
+  @include tablet-lg {
+    margin: 0;
+  }
+}
+
+.divider {
+  border-top: 1px dashed #000;
+  height: 0;
+}
+
+.termsAndPolicies {
+  border-top: 1px solid #E9E9E9;
+  padding: 23px 0 0;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 80px 0 50px;
+}

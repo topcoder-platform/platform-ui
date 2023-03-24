@@ -1,0 +1,38 @@
+@import "../../styles/variables";
+
+.layout {
+  flex: 1 1 0;
+  display: flex;
+  padding-top: 30px;
+
+  .sidebar {
+    flex: none;
+    width: var(--sideBarWidth, 270px);
+    min-height: calc(100vh - var(--navbarHeight, 60px));
+    background: $white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    .sidebar-content {
+      > hr {
+        margin: 0 20px;
+        border-color: $tc-gray-05;
+        opacity: 0.5;
+
+        &:last-child {
+          display: none;
+        }
+      }
+    }
+
+    .sidebar-footer {
+      margin: 0 auto;
+      margin-bottom: 125px;
+    }
+  }
+
+  .content {
+    flex: 1 1 auto;
+  }
+}

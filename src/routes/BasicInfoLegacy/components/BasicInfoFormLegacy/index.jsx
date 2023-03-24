@@ -86,7 +86,7 @@ const BasicInfoFormLegacy = ({
               const newNumOfPages = _.findIndex(items, (i) => i.value);
               updateNumOfPages(newNumOfPages + 1);
             }}
-            size="lg"
+            size="large"
             options={pageListOptions}
           />
         </div>

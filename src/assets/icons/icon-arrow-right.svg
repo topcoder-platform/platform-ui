@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg
+  version="1.1"
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  x="0px"
+  y="0px"
+  viewBox="0 0 8 12"
+  enable-background="new 0 0 8 12"
+  xml:space="preserve"
+>
+  <polygon
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+    fill="#137D60"
+    points="1.675,11.775 0.55,10.725 5.275,6
+	0.55,1.275 1.675,0.225 7.45,6 "
+  />
+</svg>

@@ -1,0 +1,190 @@
+@import "styles/variables";
+@import "styles/mixins";
+
+.update-resume {
+  position: relative;
+  width: 860px;
+  padding: 30px 40px;
+  background-color: $white;
+  border-radius: 10px;
+}
+
+.close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  margin-top: 30px;
+  margin-right: 30px;
+  outline: none;
+  background: none;
+  border: none;
+}
+
+.title,
+.text {
+  text-align: center
+}
+
+.title {
+  @include barlow-condensed-medium;
+
+  margin: 40px 0 16px;
+  font-size: 34px;
+  line-height: 38px;
+}
+
+.text {
+  @include roboto-medium;
+
+  font-size: $font-size-sm;
+  line-height: $line-height-base;
+
+  &.warnings {
+    color: $tc-red;
+  }
+}
+
+.profile {
+  display: flex;
+  margin: 40px 0;
+
+  .member {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 260px;
+    min-height: 410px;
+    padding: 20px 15px;
+    margin-right: 40px;
+    line-height: $line-height-base;
+    text-align: center;
+    background-color: $tc-blue-light4;
+    border-radius: $border-radius;
+
+    .photo {
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    .handle {
+      @include roboto-medium;
+
+      font-size: $font-size-sm;
+      color: $tc-link-blue;
+    }
+
+    .name {
+      @include roboto-medium;
+
+      margin-bottom: 4px;
+      line-height: 26px;
+    }
+
+    .email {
+      margin-bottom: 26px;
+      font-size: $font-size-sm;
+      word-break: break-all;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      margin-top: auto;
+      margin-bottom: 30px;
+
+      .dropdown {
+        position: relative;
+        width: 128px;
+        margin-right: 7px;
+
+        @include error-msg-not-change-container-height;
+        @include dropdown-show-label;
+      }
+
+      .icon {
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+
+  .details {
+    display: flex;
+    flex-wrap: wrap;
+    .resume-details {
+      font-size: 14px;
+      line-height: 18px;
+      & > a {
+        color: blue;
+        text-decoration: underline;
+      }
+    }
+
+    .resume {
+      align-self: flex-start;
+    }
+    .city,
+    .country
+    {
+      align-self: center;
+    }
+    .phone {
+      align-self: flex-end;
+    }
+
+    .resume,
+    .phone {
+      width: 100%;
+    }
+    .city,
+    .country {
+      width: 50%;
+    }
+
+    .city {
+      padding-right: 10px;
+    }
+    .country {
+      padding-left: 10px;
+    }
+
+
+    .resume,
+    .city,
+    .country,
+    .phone {
+      @include error-msg-not-change-container-height;
+      @include dropdown-show-label;
+      @include textinput-show-label;
+    }
+
+    .country {
+      :global(.Select-menu) {
+        max-height: 180px;
+      }
+    }
+  }
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  padding-top: 24px;
+  border-top: 1px solid $tc-gray5;
+
+  .link {
+    font-size: 13px;
+    color: $tc-link-blue;
+  }
+
+  button {
+    margin-left: auto;
+  }
+}

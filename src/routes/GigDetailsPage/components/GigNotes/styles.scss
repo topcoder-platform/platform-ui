@@ -1,0 +1,25 @@
+@import "../../../../styles/mixins";
+
+.container {
+  strong {
+    display: block;
+    font-weight: bold;
+
+    a {
+      text-decoration: underline;
+      color: #0D61BF;
+    }
+  }
+}
+
+.section-label {
+  @include barlow-condensed-medium;
+  font-size: 34px;
+  line-height: 38px;
+  text-transform: uppercase;
+}
+
+.section-contents {
+  margin-top: 10px;
+  line-height: 30px;
+}

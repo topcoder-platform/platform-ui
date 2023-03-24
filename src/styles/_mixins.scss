@@ -1,4 +1,7 @@
 // reusable mixins
+@import "mixins/typography";
+@import "mixins/media";
+@import "GUIKit/Includes";
 
 @mixin font-roboto {
   font-family: "Roboto", Arial, Helvetica, sans-serif;
@@ -68,4 +71,23 @@
 @mixin backButtonContainer {
   display: flex;
   flex: 1;
+}
+
+// Placeholder
+@mixin placeholder {
+  &::-webkit-input-placeholder {
+    @content;
+  }
+
+  &::-moz-placeholder {
+    @content;
+  }
+
+  &:-moz-placeholder {
+    @content;
+  }
+
+  &:-ms-input-placeholder {
+    @content;
+  }
 }

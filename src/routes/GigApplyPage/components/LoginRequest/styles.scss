@@ -1,0 +1,36 @@
+@import "styles/mixins";
+
+.container {
+  padding: 60px 20px;
+}
+
+.title {
+  @include barlow-condensed-medium;
+  font-size: 31px;
+  line-height: 33px;
+  text-align: center;
+  text-transform: uppercase;
+
+  @include tablet {
+    font-size: 48px;
+    line-height: 50px;
+  }
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  margin: 67px 0 0;
+}
+
+.hint {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 26px;
+  text-align: center;
+
+  a {
+    color: #0D61BF;
+    text-decoration: underline;
+  }
+}

@@ -1,0 +1,21 @@
+@import "styles/variables";
+@import "styles/mixins";
+
+.phase-point-tooltip {
+  width: 190px;
+  padding: 12px 7px 12px 14px;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+
+  .title {
+    @include roboto-medium;
+
+    margin-bottom: 4px;
+    color: $white;
+    text-transform: uppercase;
+  }
+
+  .text {
+    color: $tc-gray-30;
+  }
+}
