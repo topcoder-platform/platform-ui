@@ -14,7 +14,7 @@ import {
     StripeCardNumberElementChangeEvent,
 } from '@stripe/stripe-js'
 
-import { Button, InputText, LoadingSpinner, OrderContractModal } from '../../../../../lib'
+import { Button, IconOutline, InputText, LoadingSpinner, OrderContractModal } from '../../../../../lib'
 import { InputWrapper } from '../../../../../lib/form/form-groups/form-input/input-wrapper'
 
 import styles from './EnrollPaymentForm.module.scss'
@@ -32,12 +32,13 @@ interface FieldDirtyState {
 }
 
 interface EnrollPaymentFormProps {
-    error: boolean
+    error: string
     formData: PermiumSubFormData
     isFormValid: boolean
     onPay: () => void
     onUpdateField: (fieldName: string, value: string | boolean) => void
     isPayProcessing: boolean
+    price: string
 }
 
 type CardChangeEvent
@@ -110,7 +111,19 @@ const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymen
                 onClose={() => setIsOrderContractModalOpen(false)}
             />
 
-            <div className={styles.label}>Card Information</div>
+            <h3>Enter your payment information</h3>
+
+            {
+                props.error && (
+                    <div className={styles.error}>
+                        <IconOutline.ExclamationCircleIcon className={styles.errorIcon} />
+                        <div className={styles.errorMsg}>
+                            <strong>Your payment has been declined</strong>
+                            <span>{props.error}</span>
+                        </div>
+                    </div>
+                )
+            }
 
             <div className={styles['input-wrap-wrapper']}>
                 <InputWrapper
@@ -166,7 +179,7 @@ const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymen
                             classes: {
                                 base: styles.cardElement,
                             },
-                            placeholder: 'CCV',
+                            placeholder: 'Enter CVC',
                         }}
                         onChange={(event: StripeCardCvcElementChangeEvent) => cardElementOnChange('cvvComplete', event, setCardCVVError)}
                     />
@@ -197,14 +210,6 @@ const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymen
             />
 
             {
-                props.error && (
-                    <div className={styles.error}>
-                        Your card was declined. Please try a different card.
-                    </div>
-                )
-            }
-
-            {
                 props.isPayProcessing && (
                     <LoadingSpinner type='Overlay' />
                 )
@@ -216,7 +221,7 @@ const EnrollPaymentForm: React.FC<EnrollPaymentFormProps> = (props: EnrollPaymen
                 type='button'
                 buttonStyle='primary'
                 name='pay-button'
-                label='Complete Enrollment'
+                label={`Pay $${props.price} and enroll`}
                 disable={!props.isFormValid || props.isPayProcessing}
                 onClick={props.onPay}
             />

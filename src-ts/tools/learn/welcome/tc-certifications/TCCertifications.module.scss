@@ -93,3 +93,12 @@
         }
     }
 }
+
+.aloneTeaseBanner {
+    margin-bottom: $space-mxx !important;
+    border-radius: 8px;
+
+    @include ltemd {
+        margin-bottom: $space-xxl !important;
+    }
+}

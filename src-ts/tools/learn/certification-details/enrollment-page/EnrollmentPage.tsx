@@ -78,7 +78,7 @@ const EnrollmentPage: FC<{}> = () => {
     if (progressReady && !enrolledCheck.current) {
         enrolledCheck.current = true
         if (!!progress) {
-            navigate(getTCACertificationPath(certification.dashedName))
+            navigate(getTCACertificationPath(certification?.dashedName as string))
         }
     }
 
@@ -88,15 +88,17 @@ const EnrollmentPage: FC<{}> = () => {
                 return
             }
 
-            await enrollTCACertificationAsync(`${profile.userId}`, `${certification.id}`)
+            await enrollTCACertificationAsync(`${profile.userId}`, `${certification?.id}`)
                 .then(d => {
                     setIsEnrolledModalOpen(true)
                     setCertificateProgress(d)
                 })
         }, [certification?.id, profile, setCertificateProgress])
 
+    const tcaMonetizationEnabled: boolean = EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION || false
+
     function navToCertificationDetails(): void {
-        navigate(getTCACertificationPath(certification.dashedName))
+        navigate(getTCACertificationPath(certification?.dashedName as string))
     }
 
     function closeEnrolledModal(): void {
@@ -110,8 +112,8 @@ const EnrollmentPage: FC<{}> = () => {
                 <PerksSection
                     style='clear'
                     items={perks}
-                    title={EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION
-                        ? 'Enroll now with our introductory low pricing!'
+                    title={tcaMonetizationEnabled
+                        ? ''
                         : 'Enroll now for Free!'}
                 />
 
@@ -131,7 +133,7 @@ const EnrollmentPage: FC<{}> = () => {
 
     useLayoutEffect(() => {
         if (profileReady && !profile) {
-            navigate(getTCACertificationPath(certification.dashedName))
+            navigate(getTCACertificationPath(certification?.dashedName as string))
         }
     }, [profileReady, profile, navigate, certification?.dashedName])
 
@@ -141,6 +143,7 @@ const EnrollmentPage: FC<{}> = () => {
             mainContent={renderMainContent()}
             extraBreadCrumbs={enrollmentBreadcrumb}
             certification={certification}
+            hideWaveHeroText={tcaMonetizationEnabled}
         />
     )
 }
