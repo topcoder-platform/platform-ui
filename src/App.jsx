@@ -14,7 +14,6 @@ const WorkItem = lazyLoad(() => import("./routes/WorkItems"));
 const IntakeForm = lazyLoad(() => import("./IntakeForm"));
 const UnderMaintenance = lazyLoad(() => import("./routes/UnderMaintenance"));
 
-
 const App = () => {
 
   const { initialized } = useContext(profileContext)

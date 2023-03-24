@@ -4,6 +4,7 @@ export enum ToolTitle {
     settings = 'Account Settings',
     support = 'Support',
     tca = 'Topcoder Academy',
+    earn = 'Opportunity Feed',
     work = 'Self Service Challenges',
 }
 

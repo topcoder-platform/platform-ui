@@ -1,0 +1,144 @@
+@import "styles/variables";
+@import "styles/mixins";
+
+$filter-padding-x: 4 * $base-unit;
+$filter-padding-y: 3 * $base-unit;
+
+.filter {
+  padding: $filter-padding-y $filter-padding-x;
+  font-size: $font-size-sm;
+}
+
+.buckets,
+.challenge-types,
+.tracks,
+.total-prizes,
+.sub-communities {
+  margin-bottom: 18px;
+
+  > h3 {
+    margin-bottom: 15px;
+    font-size: inherit;
+    line-height: 19px;
+  }
+}
+
+.buckets {
+  &.vertical-list {
+    > div > div {
+      margin: $base-unit 0;
+    }
+  }
+  :global {
+    .count-badge {
+      display: inline-block;
+      margin: -2px 0 0 $base-unit;
+      padding: 2px 5px;
+      font-weight: bold;
+      font-size: 11px;
+      line-height: 11px;
+      text-align: center;
+      color: white;
+      vertical-align: middle;
+      background: #EF476F;
+      border-radius: 13px;
+    }
+  }
+}
+
+.challenge-types,
+.tracks,
+.sub-communities {
+  .vertical-list {
+    > span {
+      display: block;
+      margin: 2 * $base-unit 0;
+
+      > label {
+        display: inline-block;
+        margin-right: 2 * $base-unit;
+        margin-top: -2px;
+        vertical-align: middle;
+      }
+    }
+  }
+}
+
+.skills {
+  margin-bottom: 34px;
+
+  @include dropdown-hide-chevron;
+  @include dropdown-show-label;
+}
+
+.total-prizes {
+  margin-top: -12px;
+  margin-bottom: 23px;
+
+  > div {
+    display: inline-flex;
+    width: calc(50% - 6px);
+  }
+
+  .separator {
+    display: inline-block;
+    width: 4px;
+    height: 1px;
+    margin: 0 4px;
+    background: $body-color;
+    vertical-align: middle;
+  }
+
+  @include textinput-show-label;
+}
+
+.input-group {
+  position: relative;
+  margin-top: -12px;
+
+  :global(.textInputContainer) {
+    width: 100%;
+  }
+
+  input {
+    padding-right: 36px !important;
+  }
+
+  .suffix {
+    @include roboto-medium;
+
+    position: absolute;
+    top: 22px;
+    right: 10px;
+    font-size: 13px;
+    line-height: 22px;
+    color: $tc-gray-30;
+    pointer-events: none;
+  }
+}
+
+.recommended-challenges {
+  margin: 20px 0 25px;
+  font-size: $font-size-sm;
+  line-height: 30px;
+
+  .toggle {
+    display: inline-block;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+}
+
+.footer {
+  margin: 20px 0 45px;
+  text-align: center;
+
+  button {
+    width: 110px;
+  }
+
+  button + button {
+    margin-left: 9px;
+  }
+}
+

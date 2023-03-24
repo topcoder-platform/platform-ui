@@ -1,0 +1,52 @@
+@import "styles/variables";
+@import "styles/mixins";
+
+.medal {
+  &.place-1 {
+    color: $tc-gold;
+  }
+
+  &.place-2 {
+    color: $tc-silver;
+  }
+
+  &.place-3 {
+    color: $tc-bronze;
+  }
+
+  &.place-nth {
+    color: $tc-dark-blue-30;
+  }
+}
+
+.prize {
+  min-width: 24px;
+  margin-right: 24px;
+  padding-bottom: 10px;
+  box-shadow: inset 0 -3px currentColor;
+
+  .value,
+  .placement {
+    display: block;
+  }
+
+  .placement {
+    @include roboto-bold;
+
+    font-size: 10px;
+    line-height: 14px;
+    letter-spacing: 0.42px;
+
+    &::after {
+      content: attr(data-placement);
+    }
+  }
+
+  .value {
+    @include barlow-semibold;
+
+    font-size: 20px;
+    line-height: 24px;
+    color: $white;
+  }
+}

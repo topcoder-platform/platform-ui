@@ -1,0 +1,41 @@
+@import "../../../styles/variables";
+@import "../../../styles/mixins";
+
+$panel-padding-x: 24px;
+$panel-padding-y: 16px;
+
+.panel {
+  background: $white;
+  border-radius: $border-radius-lg;
+
+  @include down($mfe-screen-xs) {
+    padding: 0;
+    border-radius: 0;
+
+    .panel-header,
+    .panel-footer {
+      padding: 10px 20px;
+      border-radius: 0;
+    }
+
+    .panel-body {
+      padding: 0;
+    }
+  }
+}
+
+.panel-header {
+  padding: $panel-padding-y $panel-padding-x 0;
+  border-top-left-radius: $border-radius-lg;
+  border-top-right-radius: $border-radius-lg;
+}
+
+.panel-body {
+  padding: 0 $panel-padding-x;
+}
+
+.panel-footer {
+  padding: 0 $panel-padding-x $panel-padding-y;
+  border-bottom-left-radius: $border-radius-lg;
+  border-bottom-right-radius: $border-radius-lg;
+}

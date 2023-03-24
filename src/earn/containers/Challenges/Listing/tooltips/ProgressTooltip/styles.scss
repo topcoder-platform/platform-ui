@@ -1,0 +1,89 @@
+@import 'styles/variables';
+@import 'styles/mixins';
+
+$corner-radius: 2px;
+$tip-offset: 80px;
+$tip-space-10: $base-unit * 2;
+$tip-space-15: $base-unit * 3;
+$tip-space-35: $base-unit * 7;
+$tip-space-95: $base-unit * 19;
+$tip-radius-15: $corner-radius * 7 + 1;
+$tip-radius-4: $corner-radius * 2;
+
+div.progress-bar-tooltip {
+  @include roboto-regular;
+
+  color: $tc-white;
+  max-width: none;
+  padding: 0 $base-unit * 3;
+
+  .rc-tooltip-inner {
+    padding: 0 $base-unit * 3;
+  }
+
+  .tip {
+    word-wrap: none;
+    white-space: nowrap;
+
+    .phase {
+      display: inline-block;
+      line-height: $tip-space-15;
+      min-width: $tip-offset;
+      padding: 18px 0;
+      width: $tip-space-95;
+
+      &:last-child {
+        border-radius: 0 $tip-radius-4 $tip-radius-4 0;
+        padding-right: $tip-space-15;
+      }
+    }
+  }
+
+  .bar {
+    background: $tc-gray-70;
+    height: 8px;
+    margin: ($tip-space-10) - 3 0;
+    width: 100%;
+
+    &.last {
+      width: 0;
+    }
+
+    .inner-bar {
+      background: $lightGreen;
+      position: relative;
+      border-radius: $corner-radius * 4;
+      border: 1px solid $tc-gray-90;
+      top: -17px;
+      height: $tip-space-10 - 1;
+      z-index: 1;
+    }
+
+    .point {
+      background: $tc-gray-20;
+      border: 2px solid $tc-gray-90;
+      border-radius: $corner-radius * 9;
+      height: 16px;
+      left: -($base-unit - 2);
+      position: relative;
+      top: -4px;
+      width: 16px;
+      z-index: 2;
+    }
+
+    &.started {
+      .point {
+        background: $lightGreen;
+      }
+    }
+  }
+
+  .date {
+    font-weight: 400;
+    font-size: 12px;
+    color: $tc-gray-30;
+    letter-spacing: 0;
+    line-height: $tip-space-15;
+    text-shadow: none;
+  }
+}

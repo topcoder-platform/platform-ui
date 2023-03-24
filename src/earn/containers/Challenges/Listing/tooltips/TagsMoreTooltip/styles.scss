@@ -1,0 +1,17 @@
+@import "styles/variables";
+
+.tags-more {
+  padding: 10px 6px 6px 10px;
+  max-width: 206px;
+
+  > * {
+    margin-right: 4px;
+    margin-bottom: 4px;
+    padding: 6px 4px;
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0.5px;
+    color: $white;
+    background: $tc-gray-70;
+  }
+}

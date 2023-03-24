@@ -1,0 +1,109 @@
+/**
+ * Typography-related mixins:
+ *  - Font styles
+ */
+
+/// FONTS
+
+// Roboto
+@mixin roboto-thin {
+  font-family: "Roboto", Helvetica, Arial, sans-serif;
+  font-weight: 100;
+}
+
+@mixin roboto-light {
+  font-family: "Roboto", Helvetica, Arial, sans-serif;
+  font-weight: 300;
+}
+
+@mixin roboto-regular {
+  font-family: "Roboto", Helvetica, Arial, sans-serif;
+  font-weight: 400;
+}
+
+@mixin roboto-medium {
+  font-family: "Roboto", Helvetica, Arial, sans-serif;
+  font-weight: 500;
+}
+
+@mixin roboto-bold {
+  font-family: "Roboto", Helvetica, Arial, sans-serif;
+  font-weight: 700;
+}
+
+@mixin roboto-black {
+  font-family: "Roboto", Helvetica, Arial, sans-serif;
+  font-weight: 900;
+}
+
+// Barlow Condensed
+@mixin barlow-condensed-black {
+  font-family: "Barlow Condensed", Helvetica, Arial, sans-serif;
+  font-weight: 900;
+}
+
+@mixin barlow-condensed-bold {
+  font-family: "Barlow Condensed", Helvetica, Arial, sans-serif;
+  font-weight: 700;
+}
+
+@mixin barlow-condensed-semibold {
+  font-family: "Barlow Condensed", Helvetica, Arial, sans-serif;
+  font-weight: 600;
+}
+
+@mixin barlow-condensed-medium {
+  font-family: "Barlow Condensed", Helvetica, Arial, sans-serif;
+  font-weight: 500;
+}
+
+@mixin barlow-condensed-regular {
+  font-family: "Barlow Condensed", Helvetica, Arial, sans-serif;
+  font-weight: 400;
+}
+
+@mixin barlow-condensed-light {
+  font-family: "Barlow Condensed", Helvetica, Arial, sans-serif;
+  font-weight: 300;
+}
+
+@mixin barlow-condensed-thin {
+  font-family: "Barlow Condensed", Helvetica, Arial, sans-serif;
+  font-weight: 100;
+}
+
+// Barlow
+@mixin barlow-black {
+  font-family: "Barlow", Helvetica, Arial, sans-serif;
+  font-weight: 900;
+}
+
+@mixin barlow-bold {
+  font-family: "Barlow", Helvetica, Arial, sans-serif;
+  font-weight: 700;
+}
+
+@mixin barlow-semibold {
+  font-family: "Barlow", Helvetica, Arial, sans-serif;
+  font-weight: 600;
+}
+
+@mixin barlow-medium {
+  font-family: "Barlow", Helvetica, Arial, sans-serif;
+  font-weight: 500;
+}
+
+@mixin barlow-regular {
+  font-family: "Barlow", Helvetica, Arial, sans-serif;
+  font-weight: 400;
+}
+
+@mixin barlow-light {
+  font-family: "Barlow", Helvetica, Arial, sans-serif;
+  font-weight: 300;
+}
+
+@mixin barlow-thin {
+  font-family: "Barlow", Helvetica, Arial, sans-serif;
+  font-weight: 100;
+}

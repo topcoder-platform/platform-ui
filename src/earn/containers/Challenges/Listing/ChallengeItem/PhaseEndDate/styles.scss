@@ -1,0 +1,23 @@
+@import "styles/variables";
+@import "styles/mixins";
+
+.phase-message {
+  font-size: $font-size-sm;
+  line-height: 20px;
+  color: $tc-gray-70;
+}
+
+.time-left {
+  @include barlow-semibold;
+
+  line-height: 20px;
+
+  small {
+    @include roboto-regular;
+    font-size: $font-size-sm;
+  }
+
+  .uppercase {
+    text-transform: uppercase;
+  }
+}

@@ -1,0 +1,102 @@
+@import "../../../styles/variables";
+
+$menu-padding-x: 4 * $base-unit;
+$menu-padding-y: 20px;
+
+.menu {
+  padding: $menu-padding-y $menu-padding-x (3 * $base-unit);
+
+  &.logged-in {}
+
+  &.logged-out {
+    .menu-item-auth {
+      display: none;
+    }
+  }
+}
+
+.menu-item {
+  padding: 4px 0;
+  cursor: pointer;
+
+  .link {
+    display: flex;
+    align-items: center;
+    line-height: 26px;
+    outline: none;
+  }
+
+  .icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 16px;
+    text-align: left;
+  }
+
+  .text {}
+
+  .arrow {
+    width: 21px;
+    height: 21px;
+    margin-left: 8px;
+    line-height: 1;
+    text-align: center;
+    vertical-align: middle;
+
+    &.up {}
+    &.down {
+      transform: rotate(180deg);
+    }
+  }
+
+  &.active > .link {
+    font-weight: 500;
+  }
+
+  &.selected > .link {
+    color: $tc-turquoise-dark1;
+  }
+}
+
+.menu-item-main > .link {
+  margin-left: -20px;
+  margin-right: -20px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.menu-item-main.active > .link {
+  box-shadow: inset 4px 0 $tc-turquoise;
+}
+
+.menu-item-main > .link + ul,
+.menu-item-secondary > .link + ul {
+  display: none;
+}
+
+.menu-item-main.expanded > .link + ul,
+.menu-item-secondary.expanded > .link + ul {
+  display: block;
+  cursor: default;
+}
+
+.menu-item-secondary.active.collapsed {
+  color: $tc-turquoise-dark1;
+}
+
+.sub-menu {
+  padding-left: 24px + 16px;
+
+  .menu-item {
+    cursor: default;
+    .link {
+      cursor: pointer;
+      display: inline-block;
+    }
+  }
+
+}
+
+.sub-submenu {
+  padding-left: 20px;
+}

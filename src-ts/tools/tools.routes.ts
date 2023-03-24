@@ -1,6 +1,7 @@
 import { PlatformRoute } from '../lib'
 
 import { devCenterRoutes } from './dev-center'
+import { earnRoutes } from './earn-app'
 import { gamificationAdminRoutes } from './gamification-admin'
 import { learnRoutes } from './learn'
 import { workRoutes } from './work'
@@ -13,6 +14,7 @@ const toolRoutes: ReadonlyArray<PlatformRoute> = [
     ...devCenterRoutes,
     ...learnRoutes,
     ...gamificationAdminRoutes,
+    ...earnRoutes,
 ]
 
 export default toolRoutes
