@@ -10,13 +10,10 @@ import { useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import {
-    FacebookSocialShareBtn,
     fileDownloadCanvasAsImage,
     IconOutline,
-    LinkedinSocialShareBtn,
     LoadingSpinner,
     NavigateBackFunction,
-    TwitterSocialShareBtn,
     useNavigateBack,
 } from '../../../../lib'
 import { useCertificateScaling } from '../use-certificate-scaling-hook'
@@ -25,9 +22,9 @@ import { ActionButton } from '../action-button'
 import { hideSiblings } from '../functions'
 import { getViewStyleParamKey } from '../../learn.routes'
 import { TCAShareCertificateModalData, useTCAShareCertificateModal } from '../tca-share-certificate-modal'
+import { useCertificatePrint } from '../use-certificate-print-hook'
 
 import styles from './CertificatePageLayout.module.scss'
-import { useCertificatePrint } from '../use-certificate-print-hook'
 
 export type CertificatePageLayoutStyle = 'large-container'
 
