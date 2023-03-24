@@ -27,6 +27,7 @@ import { getViewStyleParamKey } from '../../learn.routes'
 import { TCAShareCertificateModalData, useTCAShareCertificateModal } from '../tca-share-certificate-modal'
 
 import styles from './CertificatePageLayout.module.scss'
+import { useCertificatePrint } from '../use-certificate-print-hook'
 
 export type CertificatePageLayoutStyle = 'large-container'
 
@@ -77,6 +78,9 @@ const CertificatePageLayout: FC<CertificatePageLayoutProps> = (props: Certificat
 
     }, [props.title, getCertificateCanvas])
 
+    const handlePrint: () => Promise<void>
+        = useCertificatePrint(props.certificateElRef, props.title ?? '')
+
     useLayoutEffect(() => {
         const el: HTMLElement = wrapElRef.current
         if (props.fullScreenCertLayout !== true || !el) {
@@ -120,6 +124,10 @@ const CertificatePageLayout: FC<CertificatePageLayoutProps> = (props: Certificat
                                     )
                                 }
                             >
+                                <ActionButton
+                                    icon={<IconOutline.PrinterIcon />}
+                                    onClick={handlePrint}
+                                />
                                 <ActionButton
                                     icon={<IconOutline.DownloadIcon />}
                                     onClick={handleDownload}
