@@ -1,5 +1,5 @@
 import { FC, useLayoutEffect } from 'react'
-import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
+import { NavigateFunction, Params, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import { LoadingSpinner } from '../../../../lib'
 import {
@@ -14,6 +14,7 @@ import UserCertificationViewBase from './UserCertificationViewBase'
 const UuidCertificationView: FC<{}> = () => {
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
+    const [queryParams]: [URLSearchParams, any] = useSearchParams()
 
     const {
         enrollment,
@@ -27,13 +28,14 @@ const UuidCertificationView: FC<{}> = () => {
     useLayoutEffect(() => {
         if (enrollmentReady && enrollment) {
             navigate(
-                getTCAUserCertificationUrl(
+                `${getTCAUserCertificationUrl(
                     certification?.dashedName as string,
                     enrollment.userHandle,
-                ),
+                )}?${queryParams.toString()}`,
+                { replace: true },
             )
         }
-    }, [certification?.dashedName, enrollment, enrollmentReady, navigate])
+    }, [certification?.dashedName, enrollment, enrollmentReady, navigate, queryParams])
 
     return (
         <>

@@ -2,6 +2,7 @@
 
 .wrap {
     position: relative;
+    overflow: hidden;
 }
 
 .certificateModal {
@@ -10,8 +11,8 @@
 
         :global(.modal-body) {
             padding: 0;
-            overflow: hidden;
-            @include ltemd {
+            display: block;
+            @include ltesm {
                 padding: 60px 10px 0;
                 background: linear-gradient(84.45deg, #05456D 2.12%, #0A7AC0 97.43%);
             }
