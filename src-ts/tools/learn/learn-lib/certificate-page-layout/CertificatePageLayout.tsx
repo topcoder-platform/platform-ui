@@ -132,7 +132,9 @@ const CertificatePageLayout: FC<CertificatePageLayoutProps> = (props: Certificat
                                 <ActionButton
                                     icon={<IconOutline.ShareIcon />}
                                     onClick={shareModal.show}
-                                />
+                                >
+                                    Share certificate
+                                </ActionButton>
                             </div>
                         )}
                     </div>

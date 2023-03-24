@@ -4,6 +4,7 @@ import classNames from 'classnames'
 import styles from './ActionButton.module.scss'
 
 interface ActionButtonProps {
+    children?: ReactNode
     className?: string
     icon: ReactNode
     onClick?: () => void
@@ -12,6 +13,11 @@ interface ActionButtonProps {
 }
 
 const ActionButton: FC<ActionButtonProps> = (props: ActionButtonProps) => {
+    const label: ReactNode = props.children && (
+        <span className={styles.label}>
+            {props.children}
+        </span>
+    )
 
     // if there is a url, this is a link button
     if (!!props.url) {
@@ -24,6 +30,7 @@ const ActionButton: FC<ActionButtonProps> = (props: ActionButtonProps) => {
                 target={props.target}
             >
                 {props.icon}
+                {label}
             </a>
         )
     }
@@ -34,6 +41,7 @@ const ActionButton: FC<ActionButtonProps> = (props: ActionButtonProps) => {
             onClick={props.onClick}
         >
             {props.icon}
+            {label}
         </div>
     )
 }
