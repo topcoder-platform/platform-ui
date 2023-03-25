@@ -22,7 +22,6 @@ const BasePage = ({
       <aside className={styles["sidebar"]}>
         <div className={styles["sidebar-content"]}>
           <div id="menu-id" />
-          <hr />
           {sidebarContent}
         </div>
         <div className={styles["sidebar-footer"]}>{sidebarFooter}</div>

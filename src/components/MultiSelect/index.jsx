@@ -50,10 +50,15 @@ const MultiSelect = ({
         <Select
           isClearable={clearable}
           isMulti
+          style2={true}
           onChange={onChange}
           onFocus={onFocus}
-          options={options}
+          options={options.map((o) => ({
+            value: o.id,
+            label: o.name,
+          }))}
           placeholder={placeholder}
+          setValue={value}
         />
       </div>
       {error && <div className={styles.error}>{error}</div>}

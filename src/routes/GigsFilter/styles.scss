@@ -1,12 +1,22 @@
 @import '../../styles/variables';
 @import '../../styles/mixins';
 
+.location-dropdown {
+  z-index: 5;
+}
+.skills-dropdown {
+  z-index: 4;
+}
 .container {
-  padding: 22px 20px;
+  padding: 0px 22px 20px;
 }
 
 .skillsSelect {
   margin-top: 32px;
+}
+
+.top-section {
+  margin-top: 0px;
 }
 
 .section {
