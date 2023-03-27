@@ -9,6 +9,7 @@ import MultiSelect from "../../components/MultiSelect";
 import actions from "../../actions/gigs/gigs/creators";
 import { getSelectedDropdownOption } from "../../utils/gigs";
 import { preventDefault } from "../../utils/gigs/misc";
+import Select from "react-select";
 
 /**
  * Displays filter controls for Gigs listing page.
@@ -41,11 +42,10 @@ const GigsFilter = () => {
   );
 
   const onChangeLocation = useCallback(
-    (options) => {
-      const option = getSelectedDropdownOption(options);
-      dispatch(actions.setLocation(option.value));
-    },
-    [dispatch]
+    (location) => {
+      dispatch(actions.setLocation(location.value));
+      [dispatch]
+    }
   );
 
   const onChangePaymentMax = useCallback(
@@ -90,22 +90,36 @@ const GigsFilter = () => {
 
   return (
     <form className={styles["container"]} action="#" onSubmit={preventDefault}>
-      <Dropdown
-        className={styles.locationDropdown}
-        label="Location"
-        onChange={onChangeLocation}
-        options={locationOptions}
-        searchable={true}
-        size="xs"
-      />
-      <MultiSelect
-        className={styles.skillsSelect}
-        label="Skills/Technologies"
-        onChange={onChangeSkills}
-        options={skillsAll}
-        placeholder="Type to add skill"
-        value={skills}
-      />
+    <div className={styles["top-section"]}>
+      <div className={styles["section-title"]}>Location</div>
+      <Select
+              style2={true}
+              onChange={(location) => onChangeLocation(location)}
+              options={locationOptions.map((o) => ({
+                value: o.label,
+                label: o.value,
+              }))}
+              className={styles["location-dropdown"]}
+              searchable={true}
+              defaultValue={locationOptions[0]}
+          />
+      </div>
+      <div className={styles["section"]}>
+        <div className={styles["section-title"]}>Skills/Technologies</div>
+          <Select
+              isClearable={true}
+              isMulti
+              style2={true}
+              onChange={onChangeSkills}
+              options={skillsAll.map((o) => ({
+                value: o.id,
+                label: o.name,
+              }))}
+              className={styles["skills-dropdown"]}
+              setValue={skills}
+              placeholder={"Type to add skill"}
+          />
+      </div>
       <div className={styles["section"]}>
         <div className={styles["section-title"]}>Weekly Payment</div>
         <div className={styles["payment-range"]}>
