@@ -1,7 +1,7 @@
 import styles from "./styles.scss";
 import React, { useCallback } from "react";
 import PT from "prop-types";
-import Button from "../Button";
+import GigsButton from "../GigsButton";
 import Modal from "../Modal";
 import { REFERRAL_PROGRAM_URL } from "../../constants/urls";
 import { makeLoginUrl, makeRegisterUrl } from "../../utils/gigs/url";
@@ -32,7 +32,7 @@ const ReferralAuthModal = ({ onClose, open }) => {
       <div className={styles["title"]}>Referral Program</div>
       <div className={styles["message"]}>Please login to receive your referral code.</div>
       <div className={styles["controls"]}>
-        <Button
+        <GigsButton
           className={styles.button}
           isPrimary
           shade="dark"
@@ -40,15 +40,15 @@ const ReferralAuthModal = ({ onClose, open }) => {
           onClick={onClickBtnLogin}
         >
           LOGIN
-        </Button>
-        <Button
+        </GigsButton>
+        <GigsButton
           className={styles.button}
           shade="dark"
           size="large"
           onClick={onClickBtnRegister}
         >
           REGISTER
-        </Button>
+        </GigsButton>
       </div>
       <div className={styles["hint"]}>
         Find out how the referral program works{" "}

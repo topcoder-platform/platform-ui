@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import PT from "prop-types";
 import store from "../../../../store";
 import LoadingCircles from "../../../../components/LoadingCircles";
-import Button from "../../../../components/Button";
+import GigsButton from "../../../../components/GigsButton";
 import ReferralAuthModal from "../../../../components/ReferralAuthModal";
 import * as userSelectors from "../../../../reducers/gigs/user/selectors";
 import * as userEffectors from "../../../../actions/gigs/user/effectors";
@@ -98,7 +98,7 @@ const ReferralBanner = ({ className }) => {
               <span className={styles["referral-link"]}>
                 {makeReferralUrl(referralId)}
               </span>
-              <Button
+              <GigsButton
                 isPrimary
                 isInverted
                 size="sm"
@@ -106,7 +106,7 @@ const ReferralBanner = ({ className }) => {
                 onClick={onClickBtnCopy}
               >
                 {copyBtnLabel}
-              </Button>
+              </GigsButton>
             </span>
           ) : (
             <span className={styles["referral-link-error"]}>
@@ -124,14 +124,14 @@ const ReferralBanner = ({ className }) => {
               for referring them!
             </span>
           </span>
-          <Button
+          <GigsButton
             isPrimary
             isInverted
             className={styles["refer-button"]}
             onClick={onClickBtnRefer}
           >
             REFER TO A FRIEND
-          </Button>
+          </GigsButton>
         </>
       )}
       <ReferralAuthModal onClose={onCloseModal} open={isModalOpen} />

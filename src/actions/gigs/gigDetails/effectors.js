@@ -4,17 +4,16 @@ import * as selectors from "../../../reducers/gigs/gigDetails/selectors";
 import * as services from "../../../services/gigs/gigDetails";
 import { loadSkills } from "../../../actions/gigs/gigs/effectors";
 import { isAbort } from "../../../utils/gigs/fetch";
+import { tokenGetAsync } from "../../../../src-ts/lib/functions/token-functions/"
 
 export const loadDetails = async (store, externalId) => {
   const { dispatch, getState } = store;
   const skillsPromise = loadSkills(store);
-  let tokens = null;
+  let user = null;
   try {
-    //TODO - fix with actual auth
-    //tokens = await getAuthUserTokens();
-    tokens=null;
+    user = await tokenGetAsync();
   } catch (error) {}
-  const [promise, controller] = services.fetchGig(externalId, tokens?.tokenV3);
+  const [promise, controller] = services.fetchGig(externalId, user?.token);
   dispatch(actions.loadDetailsPending(controller));
   let details = null;
   try {

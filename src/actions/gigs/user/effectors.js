@@ -2,6 +2,7 @@ import actions from "./creators";
 import * as selectors from "../../../reducers/gigs/user/selectors";
 import { fetchReferralData } from "../../../services/gigs/referral";
 import { delay } from "../../../utils/gigs/misc";
+import { profileGetLoggedInAsync } from '../../../../src-ts/lib/profile-provider/profile-functions/'
 
 /**
  * Loads user's referral data.
@@ -55,8 +56,7 @@ export const loadProfile = async (
   dispatch(actions.loadProfilePending());
   for (let i = 0; i < 3; i++) {
     try {
-      //TODO: Fill this in with uninav details
-      profile = null;
+      profile = await profileGetLoggedInAsync();
     } catch (err) {
       error = err;
     }

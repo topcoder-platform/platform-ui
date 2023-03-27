@@ -17,13 +17,13 @@ const GigsPage = () => {
   const isLoggedIn = useSelector(userSelectors.getIsLoggedIn);
   const gigsFilter = useMemo(() => <GigsFilter />, []);
 
-  /*useEffect(() => {
+  useEffect(() => {
     if (isLoggedIn) {
       return;
     } else {
       userEffectors.loadProfile(store);
     }
-  }, [isLoggedIn]);*/
+  }, [isLoggedIn]);
 
   return (
     <BasePage

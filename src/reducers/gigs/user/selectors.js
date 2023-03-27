@@ -2,9 +2,9 @@ export const getIsLoadingReferralData = (state) =>
   state.user.isLoadingReferralData;
 
 export const getIsLoggedIn = (state) =>
-  state.user && !state.user.isLoggingIn && !!state.user.profile;
+  !state.user.isLoggingIn && !!state.user.profile;
 
-export const getIsLoggingIn = (state) => state.user && state.user.isLoggingIn;
+export const getIsLoggingIn = (state) => state.user.isLoggingIn;
 
 export const getProfile = (state) => state.user.profile;
 

@@ -5,7 +5,7 @@ import { ReactComponent as IconArrowLeft } from "../../assets/icons/icon-arrow-l
 import { ReactComponent as IconArrowRight } from "../../assets/icons/icon-arrow-right.svg";
 import Dropdown from "../Dropdown";
 import styles from "./styles.module.scss";
-import Button from "../Button";
+import GigsButton from "../GigsButton";
 import { getSelectedDropdownOption } from "../../utils/gigs";
 
 /**
@@ -62,7 +62,7 @@ const Pagination = ({
   let pageEnd = Math.min(pageStart + 2, pageCount);
   if (pageStart > 1) {
     pageButtons.push(
-      <Button
+      <GigsButton
         key={pageStart - 1}
         className={styles.buttonPrev}
         onClick={onPageButtonClick}
@@ -70,26 +70,26 @@ const Pagination = ({
       >
         <IconArrowLeft className={styles.iconArrowLeft} />
         <span className={styles.buttonLabel}>PREVIOUS</span>
-      </Button>
+      </GigsButton>
     );
   }
   for (let n = pageStart; n <= pageEnd; n++) {
     pageButtons.push(
-      <Button
+      <GigsButton
         key={n}
-        className={styles.pageButton}
+        className={styles["pageButton"]}
         isSelected={n === pageNumber}
         onClick={onPageButtonClick}
         style="circle"
         value={n}
       >
         {n}
-      </Button>
+      </GigsButton>
     );
   }
   if (pageEnd < pageCount) {
     pageButtons.push(
-      <Button
+      <GigsButton
         key={pageEnd + 1}
         className={styles.buttonNext}
         onClick={onPageButtonClick}
@@ -97,7 +97,7 @@ const Pagination = ({
       >
         <span className={styles.buttonLabel}>NEXT</span>
         <IconArrowRight className={styles.iconArrowRight} />
-      </Button>
+      </GigsButton>
     );
   }
   return (

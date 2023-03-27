@@ -1,6 +1,7 @@
 import { composeReferralEmail } from "../../utils/gigs/referral";
 import { REFERRAL_API_URL } from "../../constants/urls";
 
+import { authInitializeAsync } from '../../../src-ts/lib/functions/authentication-functions'
 /**
  * Fetches referral data for specific email.
  *
@@ -31,20 +32,20 @@ export const fetchReferralData = async ({
   handle,
 }) => {
   //TODO: Fix uninav login token processing
-  const tokens = null;
+  const token = await authInitializeAsync()
   return fetch(
     `${REFERRAL_API_URL}/growsurf/participants?participantId=${email}`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${tokens.tokenV3}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ email, firstName, lastName, tcHandle: handle }),
     }
   ).then((response) => {
     if (response.status >= 300) {
-      throw new Error("Failed to fetch referral data");
+      throw new Error("Failed to fetch referral data" + email + " " + token);
     }
     return response.json();
   });

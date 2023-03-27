@@ -3,7 +3,7 @@ import modalStyles from "../../styles/_modal.scss";
 import React, { useCallback } from "react";
 import { navigate } from "@reach/router";
 import cn from "classnames";
-import Button from "../../components/Button";
+import GigsButton from "../../components/GigsButton";
 import LoadingCircles from "../../components/LoadingCircles";
 import Modal from "../../components/Modal";
 import { GIG_LIST_ROUTE } from "../../constants/routes";
@@ -49,21 +49,21 @@ const ReferralEmailModal = ({ error, isBusy, isUserError, onClose, open }) => {
               </div>
             ))}
           <div className={cn(modalStyles.controls, styles.controls)}>
-            <Button
+            <GigsButton
               isPrimary
               size="large"
               className={modalStyles.button}
               onClick={onClose}
             >
               CLOSE
-            </Button>
-            <Button
+            </GigsButton>
+            <GigsButton
               size="large"
               className={modalStyles.button}
               onClick={onClickBtnFindAnoherGig}
             >
               FIND ANOTHER GIG
-            </Button>
+            </GigsButton>
           </div>
         </>
       )}
