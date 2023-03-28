@@ -18,7 +18,7 @@ const ProgressPopup = ({
   open,
   setStep,
   handleClose = (e) => e,
-  styleName,
+  styledName,
   ...props
 }) => {
   const useOutsideAlerter = (ref) => {
@@ -52,7 +52,7 @@ const ProgressPopup = ({
       {open && (
         <div
           ref={wrapperRef}
-          className={cn(styles["progress-popup"], !!styleName ? styles[styleName] : undefined)}
+          className={cn(styles["progress-popup"], !!styledName ? styles[styledName] : undefined)}
           {...props}
         >
           <IconCross className={styles["close-btn"]} onClick={(e) => handleClose(e)} />

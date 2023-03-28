@@ -18,7 +18,7 @@ import { ReactComponent as IconThreeDots} from "../../assets/images/icon-three-d
 
 import styles from "./styles.module.scss";
 
-const Progress = ({ level, styleName, setStep, ...props }) => {
+const Progress = ({ level, styledName, setStep, ...props }) => {
   const [progressPopupOpen, setProgressPopupOpen] = useState(false);
   let maxCompletedStep = getCookie(MAX_COMPLETED_STEP) || 0;
   if (
@@ -35,7 +35,7 @@ const Progress = ({ level, styleName, setStep, ...props }) => {
   const trueLevel = _.find(levels, (l) => l.trueIndex === level);
 
   return (
-    <div className={cn(styles["onboard-progress"], !!styleName ? styles[styleName] : undefined)} {...props}>
+    <div className={cn(styles["onboard-progress"], !!styledName ? styles[styledName] : undefined)} {...props}>
       <div className={styles["level-container"]}>
         <div className={styles["level"]}>
           <span className={styles["level-num"]}>STEP {trueLevel.showIndex} </span>

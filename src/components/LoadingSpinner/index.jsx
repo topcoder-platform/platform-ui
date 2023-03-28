@@ -9,13 +9,13 @@ import cn from "classnames";
 import styles from "./styles.module.scss";
 import PuffLoader from "react-spinners/PuffLoader";
 
-const LoadingSpinner = ({ show = false, styleName }) => {
+const LoadingSpinner = ({ show = false, styledName }) => {
   return (
     <div
       className={cn(
         styles["loading-spinner"],
         styles[show ? "show" : "hide"],
-        !!styleName ? styles[styleName] : undefined
+        !!styledName ? styles[styledName] : undefined
       )}
     >
       <PuffLoader color={"#2196f3"} loading={true} size={100} />

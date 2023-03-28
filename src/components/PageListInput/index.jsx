@@ -15,13 +15,13 @@ import styles from "./styles.module.scss";
 const PageListInput = ({
   name,
   addListInputItem,
-  styleName,
+  styledName,
   children,
   canAdd,
   pageCost,
 }) => {
   return (
-    <div className={cn(styles["page-list-input"], !!styleName ? styles[styleName] : undefined)}>
+    <div className={cn(styles["page-list-input"], !!styledName ? styles[styledName] : undefined)}>
       <div>
         <div>{children}</div>
         <div className={styles["add-listinput-item-button"]}>

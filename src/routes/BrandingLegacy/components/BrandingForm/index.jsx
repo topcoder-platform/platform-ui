@@ -163,8 +163,8 @@ const BrandingForm = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">{"STYLE & THEME"}</PageP>
-          <PageP styleName="description">
+          <PageP styledName="title">{"STYLE & THEME"}</PageP>
+          <PageP styledName="description">
             What ideas do you have for the overall style and theme of your
             website? For example, modern and minimalist, bold and colorful, or
             muted and masculine. Describe the vibe and personality you have in
@@ -188,8 +188,8 @@ const BrandingForm = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">Inspiration</PageP>
-          <PageP styleName="description">
+          <PageP styledName="title">Inspiration</PageP>
+          <PageP styledName="description">
             Are there other websites you would like our designers to draw
             inspiration from? List websites you like and describe what you like
             about them.
@@ -254,8 +254,8 @@ const BrandingForm = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">COLORS</PageP>
-          <PageP styleName="description">
+          <PageP styledName="title">COLORS</PageP>
+          <PageP styledName="description">
             Pick up to three colors you'd like our designers to use. You can
             also include your specific brand colors.
           </PageP>
@@ -289,8 +289,8 @@ const BrandingForm = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">FONTS</PageP>
-          <PageP styleName="description">
+          <PageP styledName="title">FONTS</PageP>
+          <PageP styledName="description">
             Choose your general font style preference. If you have specific
             fonts that should be used, please share them.
           </PageP>
@@ -351,8 +351,8 @@ const BrandingForm = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">Other Assets (optional)</PageP>
-          <PageP styleName="description">
+          <PageP styledName="title">Other Assets (optional)</PageP>
+          <PageP styledName="description">
             Do you have any additional assets that would be helpful to our
             designers? For example, your current logo, branding direction,
             photos, illustrations, content, layout ideas, etc.
@@ -382,8 +382,8 @@ const BrandingForm = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">Anything to avoid? (optional)</PageP>
-          <PageP styleName="description">
+          <PageP styledName="title">Anything to avoid? (optional)</PageP>
+          <PageP styledName="description">
             If there are any themes, ideas, or specific directions our designers
             should avoid, please let us know. Be as descriptive as possible.
           </PageP>
@@ -404,8 +404,8 @@ const BrandingForm = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">Allow Stock Photos?</PageP>
-          <PageP styleName="description">
+          <PageP styledName="title">Allow Stock Photos?</PageP>
+          <PageP styledName="description">
             There may be additional costs for designs that use stock images.
             Our designers will include details for any stock images used, so you
             can buy them at the end of the project.{" "}
@@ -441,8 +441,8 @@ const BrandingForm = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">Final Deliverable SOURCE FILES</PageP>
-          <PageP styleName="description">
+          <PageP styledName="title">Final Deliverable SOURCE FILES</PageP>
+          <PageP styledName="description">
             If you want your final deliverables created with a specific design
             software, please specify.{" "}
           </PageP>

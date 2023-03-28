@@ -9,7 +9,7 @@ import cn from "classnames";
 import styles from "./styles.module.scss";
 import Chart from "react-apexcharts";
 
-const ProgressDonutChart = ({ progress, styleName, ...props }) => {
+const ProgressDonutChart = ({ progress, styledName, ...props }) => {
   // chart options to display donut chart
   const [chartOptions] = useState({
     chart: {
@@ -40,7 +40,7 @@ const ProgressDonutChart = ({ progress, styleName, ...props }) => {
     },
   });
   return (
-    <div className={cn(styles["progress-donut-chart"], !!styleName ? styles[styleName] : undefined)} {...props}>
+    <div className={cn(styles["progress-donut-chart"], !!styledName ? styles[styledName] : undefined)} {...props}>
       <div id="chart">
         <div className={styles["mobile-chart"]}>
           <Chart

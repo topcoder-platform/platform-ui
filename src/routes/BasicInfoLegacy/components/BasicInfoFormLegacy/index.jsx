@@ -50,8 +50,8 @@ const BasicInfoFormLegacy = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">PROJECT TITLE</PageP>
-          <PageP styleName="description">
+          <PageP styledName="title">PROJECT TITLE</PageP>
+          <PageP styledName="description">
             Give your project a descriptive title. This is what the designers
             will see when looking for your work.
           </PageP>
@@ -74,8 +74,8 @@ const BasicInfoFormLegacy = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">How many pages?</PageP>
-          <PageP styleName="description">
+          <PageP styledName="title">How many pages?</PageP>
+          <PageP styledName="description">
             How many pages (individual screens) would you like designed?
           </PageP>
         </div>
@@ -95,8 +95,8 @@ const BasicInfoFormLegacy = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">Device Types</PageP>
-          <PageP styleName="description">
+          <PageP styledName="title">Device Types</PageP>
+          <PageP styledName="description">
             Your project includes designs for computers. You can add tablet and/
             or mobile device sizes as well. Designing for multiple devices,
             sizes or types is referred to as Responsive Design.

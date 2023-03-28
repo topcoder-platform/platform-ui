@@ -182,15 +182,15 @@ const BasicInfoForm = ({
 
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">PROJECT TITLE</PageP>
+          <PageP styledName="title">PROJECT TITLE</PageP>
           {isWebsiteDesign && (
-            <PageP styleName="description">
+            <PageP styledName="description">
               Give your project a descriptive title. This is the name designers
               will see when looking for your work.
             </PageP>
           )}
           {(isDataExploration || isFindMeData || isDataAdvisory) && (
-            <PageP styleName="description">
+            <PageP styledName="description">
               Give your project a descriptive title. This is what the data
               scientists will see when looking for your work.
             </PageP>
@@ -218,8 +218,8 @@ const BasicInfoForm = ({
         <>
           <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">Share Your Data (optional)</PageP>
-              <PageP styleName="description">
+              <PageP styledName="title">Share Your Data (optional)</PageP>
+              <PageP styledName="description">
                 Add links (separate multiple links with commas) or upload your
                 data files here. Not ready or able to share? No problem, we'll
                 work with you on that later.
@@ -250,8 +250,8 @@ const BasicInfoForm = ({
 
           <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">{"what would you like to learn?"}</PageP>
-              <PageP styleName="description">
+              <PageP styledName="title">{"what would you like to learn?"}</PageP>
+              <PageP styledName="description">
                 Describe your data and what you would like to learn about it. If
                 you have a formal problem statement, please share it.
               </PageP>
@@ -293,8 +293,8 @@ const BasicInfoForm = ({
         <>
           <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">{"What Data Do You Need?"}</PageP>
-              <PageP styleName="description">
+              <PageP styledName="title">{"What Data Do You Need?"}</PageP>
+              <PageP styledName="description">
                 Briefly describe the analysis you want to do, and the type of
                 data you're looking for to do it. Be sure to include any
                 critical data requirements, such as specific geographies,
@@ -359,8 +359,8 @@ const BasicInfoForm = ({
 
           <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">{"Primary Data Challenge"}</PageP>
-              <PageP styleName="description">
+              <PageP styledName="title">{"Primary Data Challenge"}</PageP>
+              <PageP styledName="description">
                 Select the primary data challenge you're facing.
               </PageP>
             </div>
@@ -405,8 +405,8 @@ const BasicInfoForm = ({
 
           <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">Sample Data</PageP>
-              <PageP styleName="description">
+              <PageP styledName="title">Sample Data</PageP>
+              <PageP styledName="description">
                 Sample data helps us understand your data needs. Often this is a
                 simple CSV/Excel table that shows the data labels (usually the
                 title of each column or row) and two or more rows of example
@@ -441,8 +441,8 @@ const BasicInfoForm = ({
         <>
           <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">{"what’s your goal?"}</PageP>
-              <PageP styleName="description">
+              <PageP styledName="title">{"what’s your goal?"}</PageP>
+              <PageP styledName="description">
                 Describe what you want to do or learn with the help of data
                 science. What will this information or ability help improve?
                 Keep in mind that data science typically answers a question.
@@ -488,8 +488,8 @@ const BasicInfoForm = ({
 
           <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">What data do you have?</PageP>
-              <PageP styleName="description">
+              <PageP styledName="title">What data do you have?</PageP>
+              <PageP styledName="description">
                 The data you have available helps determine your data science
                 approach. Briefly describe the data you have in mind for your
                 project. What is it and how do you use it today? How much do you
@@ -555,8 +555,8 @@ const BasicInfoForm = ({
         <>
           <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">{"Description"}</PageP>
-              <PageP styleName="description">
+              <PageP styledName="title">{"Description"}</PageP>
+              <PageP styledName="description">
                 What is the purpose of your website? What do you want visitors
                 to be able to do, e.g., see your work? Contact you? You should
                 include a general description as well as goals of the website.
@@ -638,8 +638,8 @@ const BasicInfoForm = ({
 
           <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">Your industry</PageP>
-              <PageP styleName="description">
+              <PageP styledName="title">Your industry</PageP>
+              <PageP styledName="description">
                 Knowing your industry will help our designers understand you and
                 your audience. For example, some common industries are: Business
                 & Consulting, Construction, Entertainment & Arts, Healthcare,
@@ -671,8 +671,8 @@ const BasicInfoForm = ({
 
           <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">inspiration</PageP>
-              <PageP styleName="description">
+              <PageP styledName="title">inspiration</PageP>
+              <PageP styledName="description">
                 Are there websites that you love, from which our designers may
                 draw inspiration? Share the website URLs and tell us what you
                 like about them.
@@ -735,12 +735,12 @@ const BasicInfoForm = ({
           <PageDivider />
 
           <PageRow className={styles["form-row"]}>
-            <PageP styleName="title">STYLE &amp; THEME</PageP>
+            <PageP styledName="title">STYLE &amp; THEME</PageP>
           </PageRow>
 
           <PageRow className={styles["form-row"]}>
             <div className={classNames(styles["formFieldWrapper"], styles["style-picker"])}>
-              <PageP styleName="label">
+              <PageP styledName="label">
                 Let us know the visual styles you like or dislike (optional):
               </PageP>
               <div className={styles["styles"]}>
@@ -758,7 +758,7 @@ const BasicInfoForm = ({
               </div>
               <PageRow className={styles["form-row"]}>
                 <div>
-                  <PageP styleName="label">
+                  <PageP styledName="label">
                     Additional details about your look & feel preferences:
                   </PageP>
                 </div>
@@ -795,7 +795,7 @@ const BasicInfoForm = ({
 
           <PageRow className={styles["form-row"]}>
             <div className={classNames(styles["formFieldWrapper"], styles["color-picker"])}>
-              <PageP styleName="label">
+              <PageP styledName="label">
                 Choose colors you would like our designers to use in your site
                 design:
               </PageP>
@@ -810,7 +810,7 @@ const BasicInfoForm = ({
               </div>
               <PageRow className={styles["form-row"]}>
                 <div>
-                  <PageP styleName="label">
+                  <PageP styledName="label">
                     List any specific colors you would like used in your design:
                   </PageP>
                 </div>
@@ -839,8 +839,8 @@ const BasicInfoForm = ({
 
           <PageRow className={styles["form-row"]}>
             <div>
-              <PageP styleName="title">share your brand or style assets</PageP>
-              <PageP styleName="description">
+              <PageP styledName="title">share your brand or style assets</PageP>
+              <PageP styledName="description">
                 If you have them, gather and upload any assets that you think
                 might be helpful for our designers. Let us know if there is
                 anything you would like to communicate about these items. <br />
