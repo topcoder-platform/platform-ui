@@ -1,8 +1,8 @@
 import { createActions } from "redux-actions";
 import _ from "lodash";
-import service from "../services/challenges";
-import * as util from "../utils/challenge";
-import * as constants from "../constants";
+import service from "@earn/services/challenges";
+import * as util from "@earn/utils/challenge";
+import * as constants from "@earn/constants";
 
 async function doGetChallenges(filter, cancellationSignal) {
   return service.getChallenges(filter, cancellationSignal);
@@ -48,7 +48,7 @@ async function getChallenges(filter, signal) {
   let challenges;
   let total;
   let openForRegistrationCount;
-
+  console.log({challenges});
   const getChallengesByBucket = async (f) => {
     const promises = [];
     switch (f.bucket) {

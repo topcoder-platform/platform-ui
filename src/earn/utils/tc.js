@@ -4,7 +4,7 @@
 /* global window */
 
 import _ from "lodash";
-import config from "../../config";
+import config from "@config";
 import moment from "moment-timezone";
 import { isTokenExpired } from "./token";
 

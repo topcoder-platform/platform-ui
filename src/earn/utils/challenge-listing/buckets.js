@@ -3,7 +3,7 @@
  */
 
 import _ from "lodash";
-import { REVIEW_OPPORTUNITY_TYPES } from "../tc";
+import { REVIEW_OPPORTUNITY_TYPES } from "@earn/utils/tc";
 import { SORTS } from "./sort";
 
 export const BUCKETS = {

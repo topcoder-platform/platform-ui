@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
+import { useEffect, useRef } from "react";
 
 export const usePreviousLocation = () => {
   const location = useLocation();

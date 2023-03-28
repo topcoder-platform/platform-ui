@@ -58,7 +58,7 @@ function onGetChallengesFailure(state, { payload }) {
 export default handleActions(
   {
     GET_CHALLENGES_INIT: onGetChallengesInit,
-    GET_CHALLENGES_DONE: onGetChallengesDone,
+    GET_CHALLENGES_DONE_SUCCESS: onGetChallengesDone,
   },
   defaultState
 );

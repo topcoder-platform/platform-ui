@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from "@reach/router";
+import { useLocation } from "react-router-dom";
 
-import Menu from "../../components/Menu";
-import * as constants from "../../constants";
-import { getNameByPath } from "../../utils";
+import Menu from "@earn/components/Menu";
+import * as constants from "@earn/constants";
+import { getNameByPath } from "@earn/utils";
 
 const MenuContainer = () => {
   const [selectedMenuItemName, setSelectedMenuItemName] = useState(null);

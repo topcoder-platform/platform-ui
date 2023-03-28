@@ -1,7 +1,7 @@
 import React from "react";
 import PT from "prop-types";
-import Tooltip from "../../../../../components/Tooltip";
-import * as util from "../../../../../utils/challenge";
+import Tooltip from "@earn/components/Tooltip";
+import * as util from "@earn/utils/challenge";
 import _ from "lodash";
 import moment from "moment";
 

@@ -3,14 +3,14 @@ import _ from "lodash";
 import moment from "moment";
 import qs from "qs";
 
-import { decodeToken } from "../utils/token";
-import logger from "../utils/logger";
-import { setErrorIcon, ERROR_ICON_TYPES } from "../utils/errors";
-import { COMPETITION_TRACKS, getApiResponsePayload } from "../utils/tc";
+import { decodeToken } from "@earn/utils/token";
+import logger from "@earn/utils/logger";
+import { setErrorIcon, ERROR_ICON_TYPES } from "@earn/utils/errors";
+import { COMPETITION_TRACKS, getApiResponsePayload } from "@earn/utils/tc";
 import { getApi } from "./challenge-api";
 import { getService as getMembersService } from "./members";
 import { getService as getSubmissionsService } from "./submissions";
-import { buildQueryString } from "../utils/url";
+import { buildQueryString } from "@earn/utils/url";
 
 /**
  * Search challenges

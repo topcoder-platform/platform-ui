@@ -2,8 +2,8 @@ import api from "./api";
 import { decodeToken, } from "tc-auth-lib";
 import qs from "qs";
 import _ from "lodash";
-import * as util from "../utils/api";
-import { getAuthUserTokens } from "../utils/auth";
+import * as util from "@earn/utils/api";
+import { getAuthUserTokens } from "@earn/utils/auth";
 
 /**
  * @internal

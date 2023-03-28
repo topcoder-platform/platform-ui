@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import PT from "prop-types";
 import _ from "lodash";
-import RadioButton from "../../../components/RadioButton";
-import Checkbox from "../../../components/Checkbox";
-import DropdownTerms from "../../../components/DropdownTerms";
-import Toggle from "../../../components/Toggle";
-import Button from "../../../components/Button";
-import TextInput from "../../../components/TextInput";
-import * as utils from "../../../utils";
-import * as constants from "../../../constants";
+import RadioButton from "@earn/components/RadioButton";
+import Checkbox from "@earn/components/Checkbox";
+import DropdownTerms from "@earn/components/DropdownTerms";
+import Toggle from "@earn/components/Toggle";
+import Button from "@earn/components/Button";
+import TextInput from "@earn/components/TextInput";
+import * as utils from "@earn/utils";
+import * as constants from "@earn/constants";
 
 import "./styles.scss";
 

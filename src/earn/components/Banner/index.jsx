@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import BannerChevronUp from "../../../assets/icons/banner-chevron-up.svg";
+import BannerChevronUp from "@earn/assets/icons/banner-chevron-up.svg";
 
 import "./styles.scss";
 
-const Banner = () => {
+export const Banner = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const header =
     "Welcome to our BETA work listings site - Tell us what you think!";

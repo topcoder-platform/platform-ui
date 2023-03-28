@@ -1,10 +1,10 @@
 import React, { useRef, useEffect } from "react";
-import { navigate } from "@reach/router";
+import { navigate } from "react-router-dom";
 import PT from "prop-types";
 import _ from "lodash";
 
-import IconChevronUp from "../../../assets/icons/menu-chevron-up.svg";
-import { MenuSelection, getMenuIcon } from "../../utils";
+import IconChevronUp from "@earn/assets/icons/menu-chevron-up.svg";
+import { MenuSelection, getMenuIcon } from "@earn/utils";
 
 import "./styles.scss";
 

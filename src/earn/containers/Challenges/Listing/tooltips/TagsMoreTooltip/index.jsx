@@ -1,7 +1,7 @@
 import React from "react";
 import PT from "prop-types";
-import Tooltip from "../../../../../components/Tooltip";
-import Tag from "../../../../../components/Tag";
+import Tooltip from "@earn/components/Tooltip";
+import Tag from "@earn/components/Tag";
 
 import "./styles.scss";
 

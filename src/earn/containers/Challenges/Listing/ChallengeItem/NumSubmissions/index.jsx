@@ -1,6 +1,6 @@
 import React from "react";
 import PT from "prop-types";
-import IconSubmission from "../../../../../assets/icons/submission.svg";
+import IconSubmission from "@earn/assets/icons/submission.svg";
 
 import "./styles.scss";
 

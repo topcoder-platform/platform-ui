@@ -3,7 +3,7 @@
  * @desc Utility functions for the standard error handling.
  * @todo They will be moved to `topcoder-react-utils` soon.
  */
-import actions from "../actions/errors";
+import actions from "@earn/actions/errors";
 
 export const ERROR_ICON_TYPES = {
   NETWORK: "network",

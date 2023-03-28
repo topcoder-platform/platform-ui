@@ -5,9 +5,9 @@
  */
 
 import _ from "lodash";
-import config from "../../config";
-import { delay } from "../utils/time";
-import { setErrorIcon, ERROR_ICON_TYPES } from "../utils/errors";
+import config from "@config";
+import { delay } from "@earn/utils/time";
+import { setErrorIcon, ERROR_ICON_TYPES } from "@earn/utils/errors";
 
 /* The minimal delay [ms] between API calls. To avoid problems with the requests
  * rate limits configured in Topcoder APIs, we throttle requests rate at the

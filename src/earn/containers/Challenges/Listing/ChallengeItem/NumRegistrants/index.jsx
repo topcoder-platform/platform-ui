@@ -1,6 +1,6 @@
 import React from "react";
 import PT from "prop-types";
-import IconRegistrant from "../../../../../assets/icons/registrant.svg";
+import IconRegistrant from "@earn/assets/icons/registrant.svg";
 
 import "./styles.scss";
 

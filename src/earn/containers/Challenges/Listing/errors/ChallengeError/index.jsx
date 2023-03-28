@@ -1,5 +1,5 @@
 import React from "react";
-import IconNotFound from "assets/icons/not-found.png";
+import IconNotFound from "@earn/assets/icons/not-found.png";
 
 import "./styles.scss";
 

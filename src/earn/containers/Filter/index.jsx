@@ -2,8 +2,8 @@ import React, { useEffect, useRef } from "react";
 import PT from "prop-types";
 import { connect } from "react-redux";
 import ChallengeFilter from "./ChallengeFilter";
-import actions from "../../actions";
-import * as utils from "../../utils";
+import actions from "@earn/actions";
+import * as utils from "@earn/utils";
 
 const Filter = ({
   bucket,

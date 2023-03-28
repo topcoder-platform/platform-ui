@@ -5,7 +5,7 @@
  */
 import _ from "lodash";
 import qs from "qs";
-import { setErrorIcon, ERROR_ICON_TYPES } from "../utils/errors";
+import { setErrorIcon, ERROR_ICON_TYPES } from "@earn/utils/errors";
 import { getApi } from "./challenge-api";
 
 /**

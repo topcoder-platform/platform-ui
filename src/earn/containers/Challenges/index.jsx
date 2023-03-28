@@ -2,22 +2,26 @@ import React, { useEffect, useState } from "react";
 import PT from "prop-types";
 import { connect } from "react-redux";
 import Listing from "./Listing";
-import actions from "../../actions";
+import actions from "@earn/actions";
 // import ChallengeRecommendedError from "./Listing/errors/ChallengeRecommendedError";
-import * as constants from "../../constants";
-// import IconListView from "../../assets/icons/list-view.svg";
-// import IconCardView from "../../assets/icons/card-view.svg";
-import { Banner } from "@topcoder/micro-frontends-earn-app";
+import * as constants from "@earn/constants";
+// import IconListView from "@earn/assets/icons/list-view.svg";
+// import IconCardView from "@earn/assets/icons/card-view.svg";
+// import { Banner } from "@earn/components/Banner";
+import { get } from "lodash";
 
-import * as utils from "../../utils";
+import * as utils from "@earn/utils";
 import { useMediaQuery } from "react-responsive";
-import { useCssVariable } from "../../utils/hooks/useCssVariable";
+import { useCssVariable } from "@earn/utils/hooks/useCssVariable";
 import IconArrow from "../../assets/icons/arrow.svg";
 
 import "./styles.scss";
-import { useClickOutside } from "../../utils/hooks/useClickOutside";
+import { useClickOutside } from "@earn/utils/hooks/useClickOutside";
 import { LoadingSpinner } from "../../../../src-ts/lib";
+// import { sn } from '../../utils/styleNames';
 
+// const styleName = sn(styles);
+// console.log({styles});
 const Challenges = ({
   challenges,
   challengesMeta,
@@ -96,8 +100,8 @@ const Challenges = ({
   );
 
   return (
-    <div styleName="page">
-      <Banner />
+    <div styleName='page'>
+      {/* <Banner /> */}
 
       <div ref={menuRef}>
         <div
@@ -113,7 +117,7 @@ const Challenges = ({
               <IconArrow />
             </span>
           ) : (
-            <span styleName="view-mode">
+            <span styleName={'view-mode'}>
               {/*<button styleName="button-icon active">
                 <IconListView />
               </button>
@@ -132,7 +136,8 @@ const Challenges = ({
       {!!initialized && (
         <>
           {/*noRecommendedChallenges && <ChallengeRecommendedError />*/}
-          <Listing
+          listing
+          {/* <Listing
             challenges={challenges}
             loadingChallenges={loadingChallenges}
             search={search}
@@ -150,7 +155,7 @@ const Challenges = ({
             tags={tags}
             sortByLabels={sortByLabels}
             isLoggedIn={isLoggedIn}
-          />
+          /> */}
         </>
       )}
     </div>
@@ -176,23 +181,23 @@ Challenges.propTypes = {
   loadingChallenges: PT.bool,
 };
 
-const mapStateToProps = (state) => ({
+const mapStateToProps = ({earn: state}) => ({
   state: state,
-  search: state.filter.challenge.search,
-  page: state.filter.challenge.page,
-  perPage: state.filter.challenge.perPage,
-  sortBy: state.filter.challenge.sortBy,
-  total: state.challenges.total,
-  endDateStart: state.filter.challenge.endDateStart,
-  startDateEnd: state.filter.challenge.startDateEnd,
-  challenges: state.challenges.challenges,
-  challengesMeta: state.challenges.challengesMeta,
-  bucket: state.filter.challenge.bucket,
-  recommended: state.filter.challenge.recommended,
-  recommendedChallenges: state.challenges.recommendedChallenges,
-  initialized: state.challenges.initialized,
-  tags: state.filter.challenge.tags,
-  loadingChallenges: state.challenges.loadingChallenges,
+  search: get(state, 'filter.challenge.search'),
+  page: get(state, 'filter.challenge.page'),
+  perPage: get(state, 'filter.challenge.perPage'),
+  sortBy: get(state, 'filter.challenge.sortBy'),
+  total: get(state, 'challenges.total'),
+  endDateStart: get(state, 'filter.challenge.endDateStart'),
+  startDateEnd: get(state, 'filter.challenge.startDateEnd'),
+  challenges: get(state, 'challenges.challenges'),
+  challengesMeta: get(state, 'challenges.challengesMeta'),
+  bucket: get(state, 'filter.challenge.bucket'),
+  recommended: get(state, 'filter.challenge.recommended'),
+  recommendedChallenges: get(state, 'challenges.recommendedChallenges'),
+  initialized: get(state, 'challenges.initialized'),
+  tags: get(state, 'filter.challenge.tags'),
+  loadingChallenges: get(state, 'challenges.loadingChallenges'),
 });
 
 const mapDispatchToProps = {

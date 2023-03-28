@@ -18,7 +18,8 @@
         "cy:run": "cypress run --reporter junit",
         "cy:ci": "start-server-and-test 'serve -s build -n -p 3000' http://localhost:3000 'cy:run'",
         "report:coverage": "nyc report --reporter=html",
-        "report:coverage:text": "nyc report --reporter=text"
+        "report:coverage:text": "nyc report --reporter=text",
+        "postinstall": "cd src/earn && yarn install"
     },
     "dependencies": {
         "@datadog/browser-logs": "^4.21.2",
@@ -120,6 +121,7 @@
         "config": "^3.3.8",
         "cross-env": "^7.0.3",
         "cypress": "^10.10.0",
+        "css-loader": "3.5.3",
         "eslint": "^8.25.0",
         "eslint-config-airbnb": "^19.0.4",
         "eslint-config-react-app": "^7.0.1",

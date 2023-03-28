@@ -2,20 +2,20 @@ import React, { useRef } from "react";
 import PT from "prop-types";
 import _ from "lodash";
 import moment from "moment";
-import Panel from "../../../components/Panel";
+import Panel from "@earn/components/Panel";
 import ChallengeError from "../Listing/errors/ChallengeError";
-import Pagination from "../../../components/Pagination";
+import Pagination from "@earn/components/Pagination";
 import ChallengeItem from "./ChallengeItem";
-import TextInput from "../../../components/TextInput";
-import Dropdown from "../../../components/Dropdown";
-import DateRangePicker from "../../../components/DateRangePicker";
-import ChallengeLoading from "../../../components/challenge-listing/ChallengeLoading";
-import * as utils from "../../../utils";
+import TextInput from "@earn/components/TextInput";
+import Dropdown from "@earn/components/Dropdown";
+import DateRangePicker from "@earn/components/DateRangePicker";
+import ChallengeLoading from "@earn/components/challenge-listing/ChallengeLoading";
+import * as utils from "@earn/utils";
 
-import * as constants from "../../../constants";
-import IconSearch from "../../../assets/icons/search.svg";
-import IconClear from "../../../assets/icons/close-gray.svg";
-import Button from "../../../components/Button";
+import * as constants from "@earn/constants";
+import IconSearch from "@earn/assets/icons/search.svg";
+import IconClear from "@earn/assets/icons/close-gray.svg";
+import Button from "@earn/components/Button";
 
 import "./styles.scss";
 

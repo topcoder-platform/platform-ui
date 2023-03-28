@@ -1,19 +1,9 @@
 import moment from "moment";
 import "moment-duration-format";
 import _ from "lodash";
+import * as constants from "@earn/constants";
 import Joi from "joi";
-
 import { initialChallengeFilter } from "../reducers/filter";
-import {
-  CHALLENGE_SORT_BY_MOST_RECENT,
-  CURRENCY_SYMBOL,
-  FILTER_BUCKETS,
-  FILTER_CHALLENGE_TRACK_ABBREVIATIONS,
-  FILTER_CHALLENGE_TYPE_ABBREVIATIONS,
-  PAGINATION_PER_PAGES,
-  SORT_BY_SORT_ORDER,
-  SORT_ORDER,
-} from "../constants";
 
 Joi.optionalId = () => Joi.string().uuid();
 
@@ -41,14 +31,14 @@ Joi.perPage = () =>
       .integer()
       .min(1)
       .max(100)
-      .valid(...PAGINATION_PER_PAGES),
-    Joi.any().custom(() => PAGINATION_PER_PAGES[0])
+      .valid(...constants.PAGINATION_PER_PAGES),
+    Joi.any().custom(() => constants.PAGINATION_PER_PAGES[0])
   );
 
 Joi.bucket = () =>
   Joi.string().custom(
     (param) =>
-      FILTER_BUCKETS.find(
+      constants.FILTER_BUCKETS.find(
         (bucket) => param && param.toLowerCase() === bucket.toLowerCase()
       ) || null
   );
@@ -57,7 +47,7 @@ Joi.track = () =>
   Joi.string().custom(
     (param) =>
       _.findKey(
-        FILTER_CHALLENGE_TRACK_ABBREVIATIONS,
+        constants.FILTER_CHALLENGE_TRACK_ABBREVIATIONS,
         (trackAbbreviation) =>
           param && param.toLowerCase() === trackAbbreviation.toLowerCase()
       ) || null
@@ -67,7 +57,7 @@ Joi.type = () =>
   Joi.string().custom(
     (param) =>
       _.findKey(
-        FILTER_CHALLENGE_TYPE_ABBREVIATIONS,
+        constants.FILTER_CHALLENGE_TYPE_ABBREVIATIONS,
         (typeAbbreviation) =>
           param && param.toLowerCase() === typeAbbreviation.toLowerCase()
       ) || null
@@ -80,7 +70,7 @@ Joi.validDate = () =>
   );
 
 export function getCurrencySymbol(prizeSets) {
-  return CURRENCY_SYMBOL[_.get(prizeSets, "[0].prizes[0].type", "")];
+  return constants.CURRENCY_SYMBOL[_.get(prizeSets, "[0].prizes[0].type", "")];
 }
 
 export function getPlacementPrizes(prizeSets) {
@@ -187,10 +177,10 @@ export function createChallengeParams(filter) {
   return {
     ...params,
     types: params.types.map(
-      (type) => FILTER_CHALLENGE_TYPE_ABBREVIATIONS[type]
+      (type) => constants.FILTER_CHALLENGE_TYPE_ABBREVIATIONS[type]
     ),
     tracks: params.tracks.map(
-      (track) => FILTER_CHALLENGE_TRACK_ABBREVIATIONS[track]
+      (track) => constants.FILTER_CHALLENGE_TRACK_ABBREVIATIONS[track]
     ),
   };
 }
@@ -207,10 +197,10 @@ export function createChallengeCriteria(filter) {
     page: filter.page,
     perPage: filter.perPage,
     types: filter.types.map(
-      (type) => FILTER_CHALLENGE_TYPE_ABBREVIATIONS[type]
+      (type) => constants.FILTER_CHALLENGE_TYPE_ABBREVIATIONS[type]
     ),
     tracks: filter.tracks.map(
-      (track) => FILTER_CHALLENGE_TRACK_ABBREVIATIONS[track]
+      (track) => constants.FILTER_CHALLENGE_TRACK_ABBREVIATIONS[track]
     ),
     search: filter.search,
     tags: filter.tags,
@@ -220,7 +210,7 @@ export function createChallengeCriteria(filter) {
     endDateStart: filter.endDateStart,
     endDateEnd: filter.endDateEnd,
     sortBy: validateSortBy(filter.sortBy),
-    sortOrder: SORT_BY_SORT_ORDER[filter.sortBy],
+    sortOrder: constants.SORT_BY_SORT_ORDER[filter.sortBy],
     groups: filter.groups,
     events: filter.events,
     totalPrizesFrom: filter.totalPrizesFrom,
@@ -235,7 +225,7 @@ export function createChallengeCriteria(filter) {
 export function validateSortBy(sortBy) {
   return ["updated", "overview.totalPrizes", "name"].includes(sortBy)
     ? sortBy
-    : CHALLENGE_SORT_BY_MOST_RECENT;
+    : constants.CHALLENGE_SORT_BY_MOST_RECENT;
 }
 
 export function createOpenForRegistrationChallengeCriteria() {
@@ -258,8 +248,8 @@ export function createAllActiveChallengeCriteria() {
 export function createClosedChallengeCriteria() {
   return {
     status: "Completed",
-    sortBy: CHALLENGE_SORT_BY_MOST_RECENT,
-    sortOrder: SORT_ORDER.DESC,
+    sortBy: constants.CHALLENGE_SORT_BY_MOST_RECENT,
+    sortOrder: constants.SORT_ORDER.DESC,
   };
 }
 

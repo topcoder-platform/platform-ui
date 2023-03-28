@@ -1,8 +1,8 @@
 import React from "react";
 import PT from "prop-types";
-import Tooltip from "../../../../../components/Tooltip";
+import Tooltip from "@earn/components/Tooltip";
 import Prize from "./Prize";
-import * as utils from "../../../../../utils";
+import * as utils from "@earn/utils";
 
 import "./styles.scss";
 

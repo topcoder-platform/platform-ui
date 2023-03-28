@@ -8,12 +8,12 @@ import NumSubmissions from "./NumSubmissions";
 import Prize from "./Prize";
 import Tags from "./Tags";
 import PhaseEndDate from "./PhaseEndDate";
-import * as utils from "../../../../utils";
+import * as utils from "@earn/utils";
 import ProgressTooltip from "../tooltips/ProgressTooltip";
 import PlacementsTooltip from "../tooltips/PlacementsTooltip";
 import TagsMoreTooltip from "../tooltips/TagsMoreTooltip";
-import { CHALLENGES_URL } from "constants";
-import { Link } from "@reach/router";
+import { CHALLENGES_URL } from "@earn/constants";
+import { Link } from "react-router-dom";
 
 import "./styles.scss";
 

@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from "react";
 import PT from "prop-types";
 import _ from "lodash";
-import Tag from "../../../../../components/Tag";
-import * as util from "../../../../../utils/tag";
-import { useTargetSize } from "../../../../../utils/hooks/useTargetSize";
+import Tag from "@earn/components/Tag";
+import * as util from "@earn/utils/tag";
+import { useTargetSize } from "@earn/utils/hooks/useTargetSize";
 
 import "./styles.scss";
 

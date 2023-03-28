@@ -11,6 +11,7 @@ import myWorkReducer from "./myWork";
 import profileReducer from "./profile";
 import progressReducer from "./progress";
 import workReducer from "./work";
+import earnReducer from '../earn/reducers'
 
 // redux root reducer
 const rootReducer = combineReducers({
@@ -22,6 +23,8 @@ const rootReducer = combineReducers({
   myWork: myWorkReducer,
   profile: profileReducer,
   work: workReducer,
+  // earn App
+  earn: earnReducer,
 });
 
 export default rootReducer;

@@ -1,6 +1,6 @@
 import React from "react";
 import PT from "prop-types";
-import * as util from "../../../../../utils/icon";
+import * as util from "@earn/utils/icon";
 
 import "./styles.scss";
 

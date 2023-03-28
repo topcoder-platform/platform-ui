@@ -1,5 +1,5 @@
 import { createActions } from "redux-actions";
-import * as utils from "../utils";
+import * as utils from "@earn/utils";
 
 function updateFilter(partialUpdate) {
   return partialUpdate;

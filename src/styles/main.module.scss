@@ -1,7 +1,7 @@
 // This file should contain global styles for the microapp
 
-@import "include";
-@import "reset";
+@import "./include";
+@import "./reset";
 
 .topcoder-platform-ui {
   @include font-barlow;

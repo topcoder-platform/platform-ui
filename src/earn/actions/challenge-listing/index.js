@@ -5,7 +5,7 @@
 import _ from "lodash";
 import { createActions } from "redux-actions";
 import "isomorphic-fetch";
-import { getService } from "../../services/challenges";
+import { getService } from "@earn/services/challenges";
 
 /**
  * Gets possible challenge types.
