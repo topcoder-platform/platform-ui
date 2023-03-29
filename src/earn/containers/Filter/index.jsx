@@ -90,7 +90,7 @@ Filter.propTypes = {
   updateQuery: PT.func,
 };
 
-const mapStateToProps = (state) => ({
+const mapStateToProps = ({earn: state}) => ({
   state: state,
   bucket: state.filter.challenge.bucket,
   types: state.filter.challenge.types,

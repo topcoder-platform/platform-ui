@@ -18,14 +18,14 @@ export const getAuthUserTokens = async () => {
  * Get authenticated user profile.
  */
 export const getAuthUserProfile = () => {
-  const { auth } = store.getState();
+  const { auth } = store.getState().earn;
 
   if (auth.isProfileLoaded) {
     return Promise.resolve(auth.profile);
   } else {
     return new Promise((resolve, reject) => {
       store.subscribe(() => {
-        const { auth } = store.getState();
+        const { auth } = store.getState().earn;
 
         if (auth.isProfileLoaded) {
           if (auth.profile !== null) {

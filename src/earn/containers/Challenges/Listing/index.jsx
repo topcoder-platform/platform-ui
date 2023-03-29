@@ -13,8 +13,8 @@ import ChallengeLoading from "@earn/components/challenge-listing/ChallengeLoadin
 import * as utils from "@earn/utils";
 
 import * as constants from "@earn/constants";
-import IconSearch from "@earn/assets/icons/search.svg";
-import IconClear from "@earn/assets/icons/close-gray.svg";
+import IconSearch from "../../../assets/icons/search.svg";
+import IconClear from "../../../assets/icons/close-gray.svg";
 import Button from "@earn/components/Button";
 
 import "./styles.scss";

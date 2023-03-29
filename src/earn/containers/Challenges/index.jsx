@@ -7,7 +7,7 @@ import actions from "@earn/actions";
 import * as constants from "@earn/constants";
 // import IconListView from "@earn/assets/icons/list-view.svg";
 // import IconCardView from "@earn/assets/icons/card-view.svg";
-// import { Banner } from "@earn/components/Banner";
+import { Banner } from "@earn/components/Banner";
 import { get } from "lodash";
 
 import * as utils from "@earn/utils";
@@ -15,13 +15,10 @@ import { useMediaQuery } from "react-responsive";
 import { useCssVariable } from "@earn/utils/hooks/useCssVariable";
 import IconArrow from "../../assets/icons/arrow.svg";
 
-import "./styles.scss";
 import { useClickOutside } from "@earn/utils/hooks/useClickOutside";
 import { LoadingSpinner } from "../../../../src-ts/lib";
-// import { sn } from '../../utils/styleNames';
+import "./styles.scss";
 
-// const styleName = sn(styles);
-// console.log({styles});
 const Challenges = ({
   challenges,
   challengesMeta,
@@ -101,7 +98,7 @@ const Challenges = ({
 
   return (
     <div styleName='page'>
-      {/* <Banner /> */}
+      <Banner />
 
       <div ref={menuRef}>
         <div
@@ -136,8 +133,7 @@ const Challenges = ({
       {!!initialized && (
         <>
           {/*noRecommendedChallenges && <ChallengeRecommendedError />*/}
-          listing
-          {/* <Listing
+          <Listing
             challenges={challenges}
             loadingChallenges={loadingChallenges}
             search={search}
@@ -155,7 +151,7 @@ const Challenges = ({
             tags={tags}
             sortByLabels={sortByLabels}
             isLoggedIn={isLoggedIn}
-          /> */}
+          />
         </>
       )}
     </div>

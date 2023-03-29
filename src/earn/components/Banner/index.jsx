@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import BannerChevronUp from "@earn/assets/icons/banner-chevron-up.svg";
+import BannerChevronUp from "../../assets/icons/banner-chevron-up.svg";
 
 import "./styles.scss";
 

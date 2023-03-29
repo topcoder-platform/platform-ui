@@ -5,19 +5,21 @@ import React, { useEffect, useLayoutEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
 import Challenges from "../../containers/Challenges";
-// import Filter from "../../containers/Filter";
+import Filter from "../../containers/Filter";
 import { actions } from "@earn/actions";
 import * as utils from "@earn/utils";
 import store from "../../../store";
 import { initialChallengeFilter } from "../../reducers/filter";
 import _ from "lodash";
 import { initAuth } from '../../services/auth';
-// import { useMediaQuery } from "react-responsive";
-// import { useCssVariable } from "@earn/utils/hooks/useCssVariable";
+import { useMediaQuery } from "react-responsive";
+import { useCssVariable } from "@earn/utils/hooks/useCssVariable";
 
-// import "react-date-range/dist/theme/default.css";
-// import "react-date-range/dist/styles.css";
-// import "rc-tooltip/assets/bootstrap.css";
+import "react-date-range/dist/theme/default.css";
+import "react-date-range/dist/styles.css";
+import "rc-tooltip/assets/bootstrap.css";
+
+import styles from './styles.scss';
 
 export const ChallengeList = () => {
   const location = useLocation();
@@ -41,8 +43,8 @@ export const ChallengeList = () => {
       return;
     }
 
-    let search = location.href.split("?").length
-      ? "?" + location.href.split("?")[1]
+    let search = location.search.length
+      ? location.search
       : "";
     const params = utils.url.parseUrlQuery(search);
     const toUpdate = utils.challenge.createChallengeFilter(params);
@@ -52,7 +54,7 @@ export const ChallengeList = () => {
     if (!toUpdate.bucket) toUpdate.bucket = "";
 
     const updatedFilter = { ...initialChallengeFilter, ...toUpdate };
-    const currentFilter = store.getState().filter.challenge;
+    const currentFilter = store.getState().earn.filter.challenge;
     const diff = !_.isEqual(updatedFilter, currentFilter);
     if (diff) {
       store.dispatch(actions.filter.updateFilter(updatedFilter));
@@ -75,10 +77,10 @@ export const ChallengeList = () => {
   //   sidebarEl.classList.remove("show");
   // };
 
-  // const screenXs = useCssVariable("--mfe-screen-xs", (value) =>
-  //   parseInt(value)
-  // );
-  // const isScreenXs = useMediaQuery({ maxWidth: screenXs });
+  const screenXs = useCssVariable("--mfe-screen-xs", (value) =>
+    parseInt(value)
+  );
+  const isScreenXs = useMediaQuery({ maxWidth: screenXs });
 
   // useLayoutEffect(() => {
   //   showMenu(true);
@@ -89,25 +91,25 @@ export const ChallengeList = () => {
 
   return (
     <>
-      <div className="layout">
-        <aside className="sidebar" id="sidebar-id">
-          <div className="sidebar-content">
-            {/* {!isScreenXs && <div id="menu-id" />} */}
+      <div styleName="styles.layout">
+        <aside styleName="styles.sidebar" id="sidebar-id">
+          <div styleName="styles.sidebar-content">
+            {!isScreenXs && <div id="menu-id" />}
             <hr />
-            {/* <Filter /> */}
+            <Filter />
           </div>
-          <div className="sidebar-footer">
+          <div styleName="styles.sidebar-footer">
             {/* <FeedbackButton /> */}
           </div>
           {/* <button
             type="button"
-            className="close-button"
+            styleName="close-button"
             onClick={onHideSidebar}
           >
             &times;
           </button> */}
         </aside>
-        <div className="content">
+        <div styleName="styles.content">
           <Challenges />
         </div>
       </div>

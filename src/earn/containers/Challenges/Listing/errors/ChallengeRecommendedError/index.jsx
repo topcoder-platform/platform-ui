@@ -1,5 +1,5 @@
 import React from "react";
-import IconNotFound from "@earn/assets/icons/not-found-recommended.png";
+import IconNotFound from "../../../../../assets/icons/not-found-recommended.png";
 import "./styles.scss";
 
 const ChallengeRecommendedError = () => (

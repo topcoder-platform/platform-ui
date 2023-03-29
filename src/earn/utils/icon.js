@@ -1,13 +1,13 @@
 /* eslint-disable */
-import IconMyWork from '@earn/assets/icons/my-work.svg';
-import IconMyWorkActive from '@earn/assets/icons/my-work-green.svg';
-import IconFindWork from '@earn/assets/icons/find-work.svg';
-import IconFindWorkActive from '@earn/assets/icons/find-work-green.svg';
+import IconMyWork from '../assets/icons/my-work.svg';
+import IconMyWorkActive from '../assets/icons/my-work-green.svg';
+import IconFindWork from '../assets/icons/find-work.svg';
+import IconFindWorkActive from '../assets/icons/find-work-green.svg';
 
-import IconTrackDes from '@earn/assets/icons/track-des.svg'
-import IconTrackDev from '@earn/assets/icons/track-dev.svg'
-import IconTrackDS from '@earn/assets/icons/track-ds.svg'
-import IconTrackQA from '@earn/assets/icons/track-qa.svg'
+import IconTrackDes from '../assets/icons/track-des.svg'
+import IconTrackDev from '../assets/icons/track-dev.svg'
+import IconTrackDS from '../assets/icons/track-ds.svg'
+import IconTrackQA from '../assets/icons/track-qa.svg'
 
 import * as constants from '@earn/constants';
 
