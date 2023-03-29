@@ -1,6 +1,6 @@
 import styles from "./styles.scss";
 import React, { useCallback } from "react";
-import Button from "../../../../components/Button";
+import GigsButton from "../../../../components/GigsButton";
 import { makeLoginUrl, makeRegisterUrl } from "../../../../utils/gigs/url";
 
 const LoginRequest = () => {
@@ -12,9 +12,9 @@ const LoginRequest = () => {
     <div className={styles.container}>
       <div className={styles.title}>You must be a Topcoder member to apply!</div>
       <div className={styles.controls}>
-        <Button isPrimary size="large" onClick={onClickBtnLogin}>
+        <GigsButton isPrimary size="lg" onClick={onClickBtnLogin}>
           LOGIN
-        </Button>
+        </GigsButton>
       </div>
       <div className={styles.hint}>
         Not a member? Register <a href={makeRegisterUrl(window.location.href)}>here</a>

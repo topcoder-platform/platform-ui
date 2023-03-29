@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import React, { useContext, useLayoutEffect } from "react";
-import "react-responsive-modal/styles.css";
+import "./styles/react-responsive-modal/styles.scss";
 
 import { profileContext } from "../src-ts";
 

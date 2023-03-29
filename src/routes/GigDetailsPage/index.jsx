@@ -25,9 +25,9 @@ const GigDetailsPage = () => {
 
   useEffect(() => {
     effectors.loadDetails(store, externalId);
-    // return () => {
-    //   effectors.resetDetails(store);
-    // };
+    return () => {
+      effectors.resetDetails(store);
+    };
   }, [externalId]);
 
   useEffect(() => {
