@@ -28,21 +28,6 @@ module.exports = function (api) {
           generateScopedName,
         },
       ],
-      [
-        "inline-react-svg",
-        {
-          "svgo": {
-            plugins: [
-              {
-                name: 'preset-default',
-                params: {
-                  overrides: { cleanupIDs: false },
-                },
-              },
-            ],
-          }
-        }
-      ],
     ],
   };
 };
