@@ -25,9 +25,25 @@ export const ChallengeList = () => {
   const location = useLocation();
   const previousControllerRef = useRef();
 
+  function fetchChallenges() {
+    const controller = new AbortController();
+    const signal = controller.signal;
+    if (previousControllerRef.current) {
+      // abort the pending request
+      previousControllerRef.current.abort();
+    }
+    previousControllerRef.current = controller;
+
+    const challengesFilters = store.getState().earn.filter.challenge;
+    store.dispatch(actions.challenges.getChallengesInit());
+    store.dispatch(actions.challenges.getChallengesDone(challengesFilters, signal));
+  }
+  
   useEffect(() => {
     initAuth();
-    
+
+    // if not search query params are in the url,
+    // update url search params to match the store filters
     if (!location.search) {
       const currentFilter = store.getState().earn.filter.challenge;
       const diff = !_.isEqual(initialChallengeFilter, currentFilter);
@@ -43,16 +59,15 @@ export const ChallengeList = () => {
       return;
     }
 
-    let search = location.search.length
-      ? location.search
-      : "";
-    const params = utils.url.parseUrlQuery(search);
+    // get filters from the url search params
+    const params = utils.url.parseUrlQuery(location.search);
     const toUpdate = utils.challenge.createChallengeFilter(params);
 
     if (!toUpdate.types) toUpdate.types = [];
     if (!toUpdate.tracks) toUpdate.tracks = [];
     if (!toUpdate.bucket) toUpdate.bucket = "";
 
+    // update store fitler if url has different filters
     const updatedFilter = { ...initialChallengeFilter, ...toUpdate };
     const currentFilter = store.getState().earn.filter.challenge;
     const diff = !_.isEqual(updatedFilter, currentFilter);
@@ -60,17 +75,24 @@ export const ChallengeList = () => {
       store.dispatch(actions.filter.updateFilter(updatedFilter));
     }
 
-    const controller = new AbortController();
-    const signal = controller.signal;
-    if (previousControllerRef.current) {
-      // abort the pending request
-      previousControllerRef.current.abort();
-    }
-    previousControllerRef.current = controller;
-
-    store.dispatch(actions.challenges.getChallengesInit());
-    store.dispatch(actions.challenges.getChallengesDone(updatedFilter, signal));
+    fetchChallenges()
   }, [location]);
+
+  useEffect(() => {
+    let lastFilterState = store.getState().earn.filter.challenge;
+    const unsub = store.subscribe(() => {
+      const currentFilter = store.getState().earn.filter.challenge;
+      
+      if (_.isEqual(lastFilterState, currentFilter)) {
+        return;
+      }
+
+      lastFilterState = currentFilter;
+      fetchChallenges();
+    })
+
+    return () => unsub();
+  }, [])
 
   // const onHideSidebar = () => {
   //   const sidebarEl = document.getElementById("sidebar-id");

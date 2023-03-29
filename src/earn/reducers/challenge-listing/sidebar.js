@@ -6,11 +6,12 @@
 /* eslint-disable no-alert */
 
 import _ from "lodash";
-import actions from "@earn/actions/challenge-listing/sidebar";
-// import { logger } from 'topcoder-react-lib';
-import { BUCKETS } from "@earn/utils/challenge-listing/buckets";
 import { handleActions } from "redux-actions";
-import { updateQuery } from "@earn/utils/url";
+
+import actions from "../../actions/challenge-listing/sidebar";
+// import { logger } from 'topcoder-react-lib';
+import { BUCKETS } from "../../utils/challenge-listing/buckets";
+import { updateQuery } from "../../utils/url";
 
 // const MAX_FILTER_NAME_LENGTH = 35;
 

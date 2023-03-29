@@ -6,7 +6,7 @@ import {
   PAGINATION_MAX_PAGE_DISPLAY,
 } from "../../constants";
 import * as utils from "../../utils";
-import IconArrow from "../../assets/icons/arrow.svg";
+import { ReactComponent as IconArrow} from "../../assets/icons/arrow.svg";
 
 import "./styles.scss";
 

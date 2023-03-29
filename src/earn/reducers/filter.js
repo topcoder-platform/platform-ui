@@ -6,7 +6,7 @@ import {
   FILTER_CHALLENGE_TRACKS,
   FILTER_CHALLENGE_TYPES,
   PAGINATION_PER_PAGES,
-} from "@earn/constants";
+} from "../constants";
 
 const defaultState = {
   challenge: {

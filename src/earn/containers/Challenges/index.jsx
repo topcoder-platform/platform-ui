@@ -13,7 +13,7 @@ import { get } from "lodash";
 import * as utils from "@earn/utils";
 import { useMediaQuery } from "react-responsive";
 import { useCssVariable } from "@earn/utils/hooks/useCssVariable";
-import IconArrow from "../../assets/icons/arrow.svg";
+import { ReactComponent as IconArrow} from "../../assets/icons/arrow.svg";
 
 import { useClickOutside } from "@earn/utils/hooks/useClickOutside";
 import { LoadingSpinner } from "../../../../src-ts/lib";

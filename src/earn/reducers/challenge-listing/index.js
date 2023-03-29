@@ -3,15 +3,15 @@
  */
 
 import _ from "lodash";
-import actions from "@earn/actions/challenge-listing";
+import actions from "../../actions/challenge-listing";
 import { handleActions } from "redux-actions";
-import { combineReducers } from "@earn/utils/redux";
-import { updateQuery } from "@earn/utils/url";
+import { combineReducers } from "../../utils/redux";
+import { updateQuery } from "../../utils/url";
 import moment from "moment";
-import logger from "@earn/utils/logger";
+import logger from "../../utils/logger";
 
-import actionChallenge from "@earn/actions/challenge";
-import { REVIEW_OPPORTUNITY_TYPES } from "@earn/utils/tc";
+import actionChallenge from "../../actions/challenge";
+import { REVIEW_OPPORTUNITY_TYPES } from "../../utils/tc";
 import filterPanel from "./filter-panel";
 import sidebar from "./sidebar";
 

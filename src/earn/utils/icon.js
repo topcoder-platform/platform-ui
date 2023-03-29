@@ -1,13 +1,13 @@
 /* eslint-disable */
-import IconMyWork from '../assets/icons/my-work.svg';
-import IconMyWorkActive from '../assets/icons/my-work-green.svg';
-import IconFindWork from '../assets/icons/find-work.svg';
-import IconFindWorkActive from '../assets/icons/find-work-green.svg';
+import { ReactComponent as IconMyWork} from '../assets/icons/my-work.svg';
+import { ReactComponent as IconMyWorkActive} from '../assets/icons/my-work-green.svg';
+import { ReactComponent as IconFindWork} from '../assets/icons/find-work.svg';
+import { ReactComponent as IconFindWorkActive} from '../assets/icons/find-work-green.svg';
 
-import IconTrackDes from '../assets/icons/track-des.svg'
-import IconTrackDev from '../assets/icons/track-dev.svg'
-import IconTrackDS from '../assets/icons/track-ds.svg'
-import IconTrackQA from '../assets/icons/track-qa.svg'
+import { ReactComponent as IconTrackDes} from '../assets/icons/track-des.svg'
+import { ReactComponent as IconTrackDev} from '../assets/icons/track-dev.svg'
+import { ReactComponent as IconTrackDS} from '../assets/icons/track-ds.svg'
+import { ReactComponent as IconTrackQA} from '../assets/icons/track-qa.svg'
 
 import * as constants from '@earn/constants';
 

@@ -1,8 +1,8 @@
 import { createActions } from "redux-actions";
 import _ from "lodash";
-import service from "@earn/services/challenges";
-import * as util from "@earn/utils/challenge";
-import * as constants from "@earn/constants";
+import service from "../services/challenges";
+import * as util from "../utils/challenge";
+import * as constants from "../constants";
 
 async function doGetChallenges(filter, cancellationSignal) {
   return service.getChallenges(filter, cancellationSignal);

@@ -3,7 +3,7 @@
  */
 
 import _ from "lodash";
-import actions from "@earn/actions/challenge-listing/filter-panel";
+import actions from "../../actions/challenge-listing/filter-panel";
 import { handleActions } from "redux-actions";
 
 /**

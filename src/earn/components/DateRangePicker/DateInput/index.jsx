@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import PT from "prop-types";
 import _ from "lodash";
 import TextInput from "../../TextInput";
-import CalendarIcon from "../../../assets/icons/icon-calendar.svg";
+import { ReactComponent as CalendarIcon} from "../../../assets/icons/icon-calendar.svg";
 
 import "./styles.scss";
 
