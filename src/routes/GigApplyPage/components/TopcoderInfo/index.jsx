@@ -1,9 +1,9 @@
 import formStyles from "../ApplicationForm/styles.scss";
 import React from "react";
 import { useSelector } from "react-redux";
-import TextField from "components/TextField";
-import * as myGigsSelectors from "reducers/myGigsSelectors";
-import { makeProfileUrl } from "utils/url";
+import TextField from "../../../../components/TextField";
+import * as myGigsSelectors from "../../../../reducers/gigs/myGigsSelectors";
+import { makeProfileUrl } from "../../../../utils/gigs/url";
 
 const TopcoderInfo = () => {
   const { handle } = useSelector(myGigsSelectors.getProfile);

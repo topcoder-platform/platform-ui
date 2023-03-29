@@ -1,23 +1,23 @@
 import styles from "./styles.scss";
 import React, { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { navigate } from "@reach/router";
-import Button from "components/Button";
-import iconTick from "assets/images/tick-big.png";
-import IconSadFace from "assets/icons/icon-sad-face.svg";
-import * as applySelectors from "reducers/gigApply/selectors";
-import * as detailsSelectors from "reducers/gigDetails/selectors";
-import * as userSelectors from "reducers/user/selectors";
-import applyActions from "actions/gigApply/creators";
-import { GIG_LIST_ROUTE } from "constants/routes";
-import { makeGigApplicationStatusPath } from "utils/url";
-import { clearReferralCookie, setAppliedStorage } from "utils/referral";
+import { useNavigate } from "react-router-dom";
+import GigsButton from "../../../../components/GigsButton";
+import iconTick from "../../../../assets/images/tick-big.png";
+import { ReactComponent as IconSadFace } from "../../../../assets/icons/icon-sad-face.svg";
+import * as applySelectors from "../../../../reducers/gigs/gigApply/selectors";
+import * as detailsSelectors from "../../../../reducers/gigs/gigDetails/selectors";
+import * as userSelectors from "../../../../reducers/gigs/user/selectors";
+import applyActions from "../../../../actions/gigs/gigApply/creators";
+import { GIG_LIST_ROUTE } from "../../../../constants/routes";
+import { makeGigApplicationStatusPath } from "../../../../utils/gigs/url";
+import { clearReferralCookie, setAppliedStorage } from "../../../../utils/gigs/referral";
 
 const SubmissionResult = () => {
   const { data, error } = useSelector(applySelectors.getApplication);
   const { jobExternalId } = useSelector(detailsSelectors.getDetails);
   const profile = useSelector(userSelectors.getProfile);
-
+  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const onClickBtnApplyAgain = useCallback(() => {
@@ -32,11 +32,6 @@ const SubmissionResult = () => {
     navigate(makeGigApplicationStatusPath(jobExternalId));
   }, [jobExternalId]);
 
-  useEffect(() => {
-    return () => {
-      dispatch(applyActions.resetApplication());
-    };
-  }, [dispatch]);
 
   useEffect(() => {
     if (data) {
@@ -91,22 +86,22 @@ const SubmissionResult = () => {
         {error ? (
           <>
             {!error.notAllowed && (
-              <Button size="large" onClick={onClickBtnApplyAgain}>
+              <GigsButton size="lg" onClick={onClickBtnApplyAgain}>
                 APPLY AGAIN
-              </Button>
+              </GigsButton>
             )}
-            <Button isPrimary size="large" onClick={onClickBtnViewList}>
+            <GigsButton isPrimary size="lg" onClick={onClickBtnViewList}>
               VIEW OTHER GIGS
-            </Button>
+            </GigsButton>
           </>
         ) : (
           <>
-            <Button size="large" onClick={onClickBtnViewList}>
+            <GigsButton size="lg" onClick={onClickBtnViewList}>
               GO TO GIGS LIST
-            </Button>
-            <Button isPrimary size="large" onClick={onClickBtnViewStatus}>
+            </GigsButton>
+            <GigsButton isPrimary size="lg" onClick={onClickBtnViewStatus}>
               CHECK GIG APPLICATION STATUS
-            </Button>
+            </GigsButton>
           </>
         )}
       </div>

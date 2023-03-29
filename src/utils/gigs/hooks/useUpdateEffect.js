@@ -8,13 +8,13 @@ import { useEffect, useRef } from "react";
  * @param {Array} deps dependencies
  */
 export const useUpdateEffect = (effect, deps) => {
-  const isMountedRef = useRef(false);
+  const isMountedRef = useRef(0);
 
   useEffect(() => {
-    if (isMountedRef.current) {
+    if (isMountedRef.current>1) {
       return effect();
     } else {
-      isMountedRef.current = true;
+      isMountedRef.current = isMountedRef.current + 1;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);

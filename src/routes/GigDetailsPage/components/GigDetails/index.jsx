@@ -1,10 +1,10 @@
 import styles from "./styles.scss";
 import React, { useCallback, useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { navigate } from "@reach/router";
+import { useNavigate } from "react-router-dom";
 import cn from "classnames";
 import ReactHtmlParser from "react-html-parser";
-import Button from "../../../../components/Button";
+import GigsButton from "../../../../components/GigsButton";
 import { ReactComponent as IconLocation } from "../../../../assets/icons/icon-location-crimson.svg";
 import { ReactComponent as IconPayment } from "../../../../assets/icons/icon-payment.svg";
 import { ReactComponent as IconCalendar } from "../../../../assets/icons/icon-calendar-medium.svg";
@@ -21,8 +21,8 @@ import { formatPaymentAmount } from "../../../../utils/gigs/gigs/formatting";
 import { formatPlural } from "../../../../utils/gigs/formatting";
 import { makeGigApplyPath } from "../../../../utils/gigs/url";
 import { FREQUENCY_TO_PERIOD } from "../../../../constants/gigs";
-import { GIG_LIST_ROUTE } from "../../../../constants/routes";
 import { getAppliedStorage, removeAppliedStorage } from "../../../../utils/gigs/referral";
+import { ROUTES } from "../../../../constants/";
 
 // Cleanup HTML from style tags
 // so it won't affect other parts of the UI
@@ -40,7 +40,7 @@ const GigDetails = () => {
   const skillsError = useSelector(gigsSelectors.getSkillsError);
   const isLoggedIn = useSelector(userSelectors.getIsLoggedIn);
   const profile = useSelector(userSelectors.getProfile);
-
+  const navigate = useNavigate();
   const [isOpenLoginModal, setIsOpenLoginModal] = useState(false);
 
   const {
@@ -85,7 +85,7 @@ const GigDetails = () => {
   }, [isLoggedIn, jobExternalId]);
 
   const onClickBtnViewOther = useCallback(() => {
-    navigate(GIG_LIST_ROUTE);
+    navigate(ROUTES.GIG_LIST_ROUTE);
   }, []);
 
   const onCloseLoginModal = useCallback(() => {
@@ -190,19 +190,18 @@ const GigDetails = () => {
           <GigNotes />
           <div className={styles["controls"]}>
             {!synced && !appliedGig && (
-              <Button isPrimary size="large" onClick={onClickBtnApply}>
+              <GigsButton isPrimary size="lg" onClick={onClickBtnApply}>
                 APPLY TO THIS JOB
-              </Button>
+              </GigsButton>
             )}
-            <Button size="large" onClick={onClickBtnViewOther}>
+            <GigsButton size="lg" onClick={onClickBtnViewOther}>
               VIEW OTHER JOBS
-            </Button>
+            </GigsButton>
           </div>
         </div>
         <GigWidgets className={styles.widgets} />
       </div>
-      {/* TODO: Fix this to use the LoginModal already existing in platform-ui */}
-     {/* <LoginModal onClose={onCloseLoginModal} open={isOpenLoginModal} /> */}
+      <LoginModal onClose={onCloseLoginModal} open={isOpenLoginModal} />
     </div>
   );
 };

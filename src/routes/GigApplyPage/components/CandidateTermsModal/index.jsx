@@ -1,15 +1,15 @@
 import styles from "./styles.scss";
-import modalStyles from "styles/_modal.scss";
+import modalStyles from "../../../../styles/_modal.scss";
 import React from "react";
 import cn from "classnames";
-import Button from "components/Button";
-import Modal from "components/Modal";
+import Button from "../../../../components/Button";
+import Modal from "../../../../components/Modal";
 import {
   RECRUIT_CRM_GDPR_URL,
   RECRUIT_CRM_PRIVACY_POLICY_URL,
   RECRUIT_CRM_URL,
   TOPCODER_PRIVACY_POLICY_URL,
-} from "constants/urls";
+} from "../../../../constants/urls";
 
 const CandidateTermsModal = ({ onClose, open }) => {
   return (

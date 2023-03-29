@@ -42,9 +42,9 @@ const GigsFilter = () => {
   );
 
   const onChangeLocation = useCallback(
-    (location) => {
-      dispatch(actions.setLocation(location.value));
-      [dispatch]
+    (options) => {
+      const option = getSelectedDropdownOption(options);
+      dispatch(actions.setLocation(option.value));
     }
   );
 
@@ -78,7 +78,7 @@ const GigsFilter = () => {
 
   const onChangeSkills = useCallback(
     (skills) => {
-      dispatch(actions.setSkills([skills]));
+      dispatch(actions.setSkills(skills));
     },
     [dispatch]
   );
@@ -90,35 +90,27 @@ const GigsFilter = () => {
 
   return (
     <form className={styles["container"]} action="#" onSubmit={preventDefault}>
-    <div className={styles["top-section"]}>
-      <div className={styles["section-title"]}>Location</div>
-      <Select
-              style2={true}
-              onChange={(location) => onChangeLocation(location)}
-              options={locationOptions.map((o) => ({
-                value: o.label,
-                label: o.value,
-              }))}
-              className={styles["location-dropdown"]}
-              searchable={true}
-              defaultValue={locationOptions[0]}
-          />
+      <div className={styles["top-section"]}>
+        <Dropdown
+          className={styles.locationDropdown}
+          label="Location"
+          onChange={onChangeLocation}
+          options={locationOptions}
+          searchable={true}
+          size="xs"
+        />
       </div>
       <div className={styles["section"]}>
-        <div className={styles["section-title"]}>Skills/Technologies</div>
-          <Select
-              isClearable={true}
-              isMulti
-              style2={true}
-              onChange={onChangeSkills}
-              options={skillsAll.map((o) => ({
-                value: o.id,
-                label: o.name,
-              }))}
-              className={styles["skills-dropdown"]}
-              setValue={skills}
-              placeholder={"Type to add skill"}
-          />
+        <MultiSelect
+          className={styles.skillsSelect}
+          label="Skills/Technologies"
+          onChange={onChangeSkills}
+          options={skillsAll}
+          optLabelKey="name"
+          optValueKey="id"
+          placeholder="Type to add skill"
+          value={skills}
+        />
       </div>
       <div className={styles["section"]}>
         <div className={styles["section-title"]}>Weekly Payment</div>

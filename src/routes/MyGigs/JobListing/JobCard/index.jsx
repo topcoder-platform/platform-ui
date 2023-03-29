@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import PT from "prop-types";
-import { makeGigPath } from "utils/url";
+import { makeGigPath } from "../../../../utils/gigs/url";
 import ProgressBar from "./ProgressBar";
 import Ribbon from "../../../../components/Ribbon";
-import Button from "../../../../components/Button";
-import IconChevronDown from "assets/icons/button-chevron-down.svg";
+import GigsButton from "../../../../components/GigsButton";
+import { ReactComponent as IconChevronDown } from "../../../../assets/icons/button-chevron-down.svg";
 import ProgressTooltip from "./tooltips/ProgressTooltip";
 import NoteTooltip from "./tooltips/NoteTooltip";
 import EarnTooltip from "./tooltips/EarnTooltip";
@@ -16,12 +16,12 @@ import {
   PHASES_FOR_JOB_STATUS,
   MY_GIGS_STATUS_REMARK_TEXT,
 } from "../../../../constants";
-import { formatMoneyValue } from "../../../../utils";
-import { getDateRange } from "../../../../utils/myGig";
-import IconNote from "../../../../assets/icons/note.svg";
-import IconInfo from "../../../../assets/icons/ribbon-icon.svg";
+import { formatMoneyValue } from "../../../../utils/gigs";
+import { getDateRange } from "../../../../utils/gigs/myGig";
+import { ReactComponent as IconNote } from "../../../../assets/icons/note.svg";
+import { ReactComponent as IconInfo } from "../../../../assets/icons/ribbon-icon.svg";
 
-import "./styles.scss";
+import styles from "./styles.scss";
 
 const JobCard = ({ job }) => {
   const [expanded, setExpanded] = useState(false);
@@ -57,26 +57,20 @@ const JobCard = ({ job }) => {
 
   return (
     <div
-      styleName={`card job-card ${
-        job.label === MY_GIG_PHASE_LABEL.SELECTED ? "label-selected" : ""
-      } ${job.label === MY_GIG_PHASE_LABEL.OFFERED ? "label-offered" : ""} ${
-        job.label === MY_GIG_PHASE_LABEL.PLACED ? "label-placed" : ""
-      } ${
-        job.label === MY_GIG_PHASE_LABEL.WITHDRAWN ? "label-withdrawn" : ""
-      } ${
-        job.label === MY_GIG_PHASE_LABEL.COMPLETED ? "label-completed" : ""
-      } ${
-        job.label === MY_GIG_PHASE_LABEL.NOT_SELECTED
-          ? "label-not-selected"
-          : ""
-      }`}
+      className={[styles["card"], styles["job-card"],
+        job.label === MY_GIG_PHASE_LABEL.SELECTED ? styles["label-selected"] : "",
+        job.label === MY_GIG_PHASE_LABEL.OFFERED ? styles["label-offered"] : "",
+        job.label === MY_GIG_PHASE_LABEL.PLACED ? styles["label-placed"] : "",
+        job.label === MY_GIG_PHASE_LABEL.WITHDRAWN ? styles["label-withdrawn"] : "",
+        job.label === MY_GIG_PHASE_LABEL.COMPLETED ? styles["label-completed"] : "",
+        job.label === MY_GIG_PHASE_LABEL.NOT_SELECTED ? styles["label-not-selected"] : ""].join(" ")}
     >
       <Link
         to={makeGigPath(job.jobExternalId)}
         state={{ from: location.pathname + location.search }}
       >
-        <div styleName="card-header job-card-header">
-          <div styleName="ribbon">
+        <div className={[styles["card-header"], styles["job-card-header"]].join(" ")}>
+          <div className={styles["ribbon"]}>
             <Ribbon
               text={job.label}
               tooltip={({ children }) => (
@@ -85,74 +79,74 @@ const JobCard = ({ job }) => {
             />
           </div>
         </div>
-        <div styleName="card-body">
-          <div styleName="job-card-content">
-            <div styleName="content">
-              <h4 styleName="title">{job.title}</h4>
-              <ul styleName="job-items">
+        <div className={styles["card-body"]}>
+          <div className={styles["job-card-content"]}>
+            <div className={styles["content"]}>
+              <h4 className={styles["title"]}>{job.title}</h4>
+              <ul className={styles["job-items"]}>
                 <li>
-                  <div styleName="job-item">
+                  <div className={styles["job-item"]}>
                     {MY_GIGS_JOB_STATUS.COMPLETED === job.status && (
                       <>
-                        <div styleName="caption">Duration</div>
-                        <div styleName="text">
+                        <div className={styles["caption"]}>Duration</div>
+                        <div className={styles["text"]}>
                           {getDateRange(job.rbStartDate, job.rbEndDate)}
                         </div>
                       </>
                     )}
                     {MY_GIGS_JOB_STATUS.COMPLETED !== job.status && (
                       <>
-                        <div styleName="caption">Payment Range</div>
-                        <div styleName="text">{paymentInfo}</div>
+                        <div className={styles["caption"]}>Payment Range</div>
+                        <div className={styles["text"]}>{paymentInfo}</div>
                       </>
                     )}
                   </div>
                 </li>
                 <li>
-                  <div styleName="job-item">
+                  <div className={styles["job-item"]}>
                     {MY_GIGS_JOB_STATUS.COMPLETED === job.status && (
                       <>
-                        <div styleName="caption">
+                        <div className={styles["caption"]}>
                           <span>Total Earnings</span>
-                          <span styleName="earn-tip">
+                          <span className={styles["earn-tip"]}>
                             <EarnTooltip>
                               <IconInfo />
                             </EarnTooltip>
                           </span>
                         </div>
-                        <div styleName="text">{`${job.currency}${job.paymentTotal}`}</div>
+                        <div className={styles["text"]}>{`${job.currency}${job.paymentTotal}`}</div>
                       </>
                     )}
                     {MY_GIGS_JOB_STATUS.COMPLETED !== job.status && (
                       <>
-                        <div styleName="caption">Location</div>
-                        <div styleName="text">{job.location}</div>
+                        <div className={styles["caption"]}>Location</div>
+                        <div className={styles["text"]}>{job.location}</div>
                       </>
                     )}
                   </div>
                 </li>
                 {MY_GIGS_JOB_STATUS.COMPLETED !== job.status && (
                   <li>
-                    <div styleName="job-item">
-                      <div styleName="caption">Duration</div>
-                      <div styleName="text">
+                    <div className={styles["job-item"]}>
+                      <div className={styles["caption"]}>Duration</div>
+                      <div className={styles["text"]}>
                         {job.duration && `${job.duration} Weeks`}
                       </div>
                     </div>
                   </li>
                 )}
                 <li>
-                  <div styleName="job-item">
-                    <div styleName="caption">Hours</div>
-                    <div styleName="text">
+                  <div className={styles["job-item"]}>
+                    <div className={styles["caption"]}>Hours</div>
+                    <div className={styles["text"]}>
                       {job.hours && `${job.hours} hours / week`}
                     </div>
                   </div>
                 </li>
                 <li>
-                  <div styleName="job-item">
-                    <div styleName="caption">Working Hours</div>
-                    <div styleName="text">
+                  <div className={styles["job-item"]}>
+                    <div className={styles["caption"]}>Working Hours</div>
+                    <div className={styles["text"]}>
                       {job.workingHours && `${job.workingHours} hours`}
                     </div>
                   </div>
@@ -160,17 +154,16 @@ const JobCard = ({ job }) => {
               </ul>
             </div>
             <div
-              styleName={`right-side stand-by ${
-                !job.phaseAction ? "none" : ""
-              }`}
+              className={[styles["right-side"], styles["stand-by"],
+                !job.phaseAction ? styles["none"] : ""].join(" ")}
             >
-              {job.phaseAction && <Button size="lg">{job.phaseAction}</Button>}
+              {job.phaseAction && <GigsButton size="lg">{job.phaseAction}</GigsButton>}
             </div>
           </div>
         </div>
       </Link>
-      <div styleName="card-footer job-card-footer" ref={footerRef}>
-        <div styleName="note-container">
+      <div className={[styles["card-footer"], styles["job-card-footer"]].join(" ")} ref={footerRef}>
+        <div className={styles["note-container"]}>
           {(job.remark ||
             [
               MY_GIGS_JOB_STATUS.WITHDRAWN,
@@ -178,12 +171,12 @@ const JobCard = ({ job }) => {
               MY_GIGS_JOB_STATUS.COMPLETED,
             ].includes(job.status)) && (
             <NoteTooltip>
-              <i styleName="icon">
+              <i className={styles["icon"]}>
                 <IconNote />
               </i>
             </NoteTooltip>
           )}
-          <span styleName="note">
+          <span className={styles["note"]}>
             {[
               MY_GIGS_JOB_STATUS.WITHDRAWN,
               MY_GIGS_JOB_STATUS.WITHDRAWN_PRESCREEN,
@@ -199,8 +192,8 @@ const JobCard = ({ job }) => {
             MY_GIGS_JOB_STATUS.WITHDRAWN,
             MY_GIGS_JOB_STATUS.WITHDRAWN_PRESCREEN,
           ].includes(job.status) && (
-            <span styleName={`${expanded ? "show-less" : "show-more"}`}>
-              <Button
+            <span className={styles[`${expanded ? "show-less" : "show-more"}`]}>
+              <GigsButton
                 isText
                 showRightArrow
                 onClick={() => {
@@ -208,10 +201,10 @@ const JobCard = ({ job }) => {
                 }}
               >
                 {expanded ? "SHOW LESS" : "SHOW MORE"}
-                <span styleName="arrow-down">
+                <span className={styles["arrow-down"]}>
                   <IconChevronDown />
                 </span>
-              </Button>
+              </GigsButton>
             </span>
           )}
         </div>
@@ -223,7 +216,7 @@ const JobCard = ({ job }) => {
           MY_GIGS_JOB_STATUS.WITHDRAWN_PRESCREEN,
         ].includes(job.status) && (
           <div
-            styleName="progress-bar"
+          className={styles["progress-bar"]}
             style={{ display: expanded ? "" : "none" }}
           >
             <ProgressBar
@@ -235,7 +228,7 @@ const JobCard = ({ job }) => {
           </div>
         )}
       </div>
-      <div styleName="card-image" style={{ bottom: `${footerHeight}px` }} />
+      <div className={styles["card-image"]} style={{ bottom: `${footerHeight}px` }} />
     </div>
   );
 };

@@ -2,22 +2,23 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 // import { useLocation } from "@reach/router";
 import PT from "prop-types";
 import { connect } from "react-redux";
-import store from "store";
-import * as lookupSelectors from "reducers/lookupSelectors";
-import * as myGigsSelectors from "reducers/myGigsSelectors";
-import { navigate } from "@reach/router";
-import Modal from "components/Modal";
-import Button from "components/Button";
-import Loading from "components/Loading";
-import Empty from "components/Empty";
+import store from "../../store";
+import * as lookupSelectors from "../../reducers/gigs/lookupSelectors";
+import * as myGigsSelectors from "../../reducers/gigs/myGigsSelectors";
+import { useNavigate } from "react-router-dom";
+import GigsModal from "../../components/GigsModal";
+import GigsButton from "../../components/GigsButton";
+import Loading from "../../components/Loading";
+import Empty from "../../components/Empty";
 import JobListing from "./JobListing";
-import actions from "../../actions";
+import actions from "../../actions/gigs";
 import * as constants from "../../constants";
 
 import UpdateGigProfile from "./modals/UpdateGigProfile";
 import UpdateSuccess from "./modals/UpdateSuccess";
 
-import "./styles.scss";
+import styles from "./styles.scss";
+
 
 const MyGigs = ({
   myActiveGigs,
@@ -39,6 +40,7 @@ const MyGigs = ({
   getMyCompletedGigs,
   getMyArchivedGigs,
 }) => {
+  const navigate = useNavigate();
   const propsRef = useRef();
   propsRef.current = {
     getMyOpenGigs,
@@ -123,28 +125,28 @@ const MyGigs = ({
 
   return (
     <>
-      <div styleName="page">
-        <h1 styleName="title">
-          <span styleName="text">MY GIGS</span>
-          <div styleName="operation">
-            <Button
+      <div className={styles["page"]}>
+        <h1 className={styles["title"]}>
+          <span className={styles["text"]}>MY GIGS</span>
+          <div className={styles["operation"]}>
+            <GigsButton
               isPrimary
-              size="large"
+              size="lg"
               disabled={!(profile && profile.hasProfile)}
               onClick={() => {
                 setOpenUpdateProfile(true);
               }}
             >
               UPDATE GIG WORK PROFILE
-            </Button>
-            <Button
-              size="large"
+            </GigsButton>
+            <GigsButton
+              size="lg"
               onClick={() => {
                 navigate("/earn/gigs");
               }}
             >
               VIEW GIGS
-            </Button>
+            </GigsButton>
           </div>
         </h1>
         {!checkingGigs &&
@@ -167,7 +169,7 @@ const MyGigs = ({
           <Loading>We are processing your gigs data</Loading>
         )}
       </div>
-      <Modal open={openUpdateProfile}>
+      <GigsModal open={openUpdateProfile}>
         <UpdateGigProfile
           profile={profile}
           onSubmit={(profileEdit) => {
@@ -178,15 +180,15 @@ const MyGigs = ({
             setOpenUpdateProfile(false);
           }}
         />
-      </Modal>
-      <Modal open={openUpdateSuccess}>
+      </GigsModal>
+      <GigsModal open={openUpdateSuccess}>
         <UpdateSuccess
           onClose={() => {
             setOpenUpdateSuccess(false);
             updateProfileReset();
           }}
         />
-      </Modal>
+      </GigsModal>
     </>
   );
 };

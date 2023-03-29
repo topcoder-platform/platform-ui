@@ -2,22 +2,23 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { connect } from "react-redux";
 import PT from "prop-types";
-import Button from "components/Button";
-import FilePicker from "components/FilePicker";
-import TextInput from "components/TextInput";
-import Dropdown from "components/Dropdown";
-import UserPhoto from "components/UserPhoto";
-import IconClose from "assets/icons/close.svg";
-import IconInfo from "assets/icons/info.svg";
+import GigsButton from "../../../../components/GigsButton";
+import FilePicker from "../../../../components/FilePicker";
+import TextInput from "../../../../components/TextInput";
+import Dropdown from "../../../../components/Dropdown";
+import UserPhoto from "../../../../components/UserPhoto";
+import { ReactComponent as IconClose } from "../../../../assets/icons/close.svg";
+import { ReactComponent as IconInfo } from "../../../../assets/icons/info.svg";
 import StatusTooltip from "./tooltips/StatusTooltip";
-import actions from "../../../../actions";
+import actions from "../../../../actions/gigs";
 import _, { size, values } from "lodash";
 
 import { GIG_STATUS } from "../../../../constants";
-import * as utils from "utils";
-import { makeProfileUrl } from "utils/url";
+import config from "../../../../../config";
+import * as utils from "../../../../utils/gigs";
+import { makeProfileUrl } from "../../../../utils/gigs/url";
 
-import "./styles.scss";
+import styles from "./styles.scss";
 
 const UpdateGigProfile = ({
   profile,
@@ -180,29 +181,29 @@ const UpdateGigProfile = ({
   };
 
   return (
-    <div styleName="update-resume">
-      <button styleName="close" onClick={onClose}>
+    <div className={styles["update-resume"]}>
+      <button className={styles["close"]} onClick={onClose}>
         <IconClose />
       </button>
-      <h4 styleName="title">UPDATE RESUME</h4>
-      <p styleName="text warnings">
+      <h4 className={styles["title"]}>UPDATE RESUME</h4>
+      <p className={[styles["text"], styles["warnings"]].join(" ")}>
         Uploading a resume will change your resume for all jobs that you apply
         to.
       </p>
-      <div styleName="profile">
-        <div styleName="member">
-          <div styleName="photo">
+      <div className={styles["profile"]}>
+        <div className={styles["member"]}>
+          <div className={styles["photo"]}>
             <UserPhoto handle={profile.handle} photoURL={profile.photoURL} />
           </div>
-          <div styleName="handle">
+          <div className={styles["handle"]}>
             <a href={`${makeProfileUrl(profile.handle)}`}>{profile.handle}</a>
           </div>
-          <div styleName="name">
+          <div className={styles["name"]}>
             {profile.firstName} {profile.lastName}
           </div>
-          <div styleName="email">{profile.email}</div>
-          <div styleName="status">
-            <div styleName="dropdown">
+          <div className={styles["email"]}>{profile.email}</div>
+          <div className={styles["status"]}>
+            <div className={styles["dropdown"]}>
               <Dropdown
                 options={statusOptions}
                 size="xs"
@@ -215,9 +216,9 @@ const UpdateGigProfile = ({
             </StatusTooltip>
           </div>
         </div>
-        <div styleName="details">
+        <div className={styles["details"]}>
           {profile && profile.existingResume && (
-            <div styleName="resume-details">
+            <div className={styles["resume-details"]}>
               Please upload your resume/CV. Double-check that all of your tech
               skills are listed in your resume/CV.&nbsp;&nbsp;&nbsp;
               <a href={profile.existingResume.file_link} target="_blank">
@@ -225,7 +226,7 @@ const UpdateGigProfile = ({
               </a>
             </div>
           )}
-          <div styleName="resume">
+          <div className={styles["resume"]}>
             <FilePicker
               label="Drag & drop your resume or CV here - Please Omit Contact Information"
               required
@@ -236,7 +237,7 @@ const UpdateGigProfile = ({
               onFilePick={handleFilePick}
             />
           </div>
-          <div styleName="city">
+          <div className={styles["city"]}>
             <TextInput
               value={profileEdit.city}
               label="City"
@@ -245,7 +246,7 @@ const UpdateGigProfile = ({
               errorMsg={(!pristine && validation && validation.city) || ""}
             />
           </div>
-          <div styleName="country">
+          <div className={styles["country"]}>
             <Dropdown
               options={countryOptions}
               label="Country"
@@ -254,7 +255,7 @@ const UpdateGigProfile = ({
               errorMsg={(!pristine && validation && validation.country) || ""}
             />
           </div>
-          <div styleName="phone">
+          <div className={styles["phone"]}>
             <TextInput
               value={profileEdit.phone}
               label="Phone - Please have the Country Code Included"
@@ -265,21 +266,21 @@ const UpdateGigProfile = ({
           </div>
         </div>
       </div>
-      <div styleName="footer">
+      <div className={styles["footer"]}>
         <a
-          href={`${process.env.URL.BASE}/settings/profile#skills`}
-          styleName="link"
+          href={`${config.URL.BASE}/settings/profile#skills`}
+          className={styles["link"]}
         >
           Update your skills from Topcoder Profile page
         </a>
-        <Button
+        <GigsButton
           isPrimary
-          size="large"
+          size="lg"
           disabled={!submitEnabled}
           onClick={onSubmitProfile}
         >
           UPDATE PROFILE
-        </Button>
+        </GigsButton>
       </div>
     </div>
   );

@@ -4,10 +4,10 @@ import React, { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import debounce from "lodash/debounce";
 import cn from "classnames";
-import TextField from "components/TextField";
-import * as selectors from "reducers/gigApply/selectors";
-import actions from "actions/gigApply/creators";
-import { useUpdateEffect } from "utils/hooks/useUpdateEffect";
+import TextField from "../../../../components/TextField";
+import * as selectors from "../../../../reducers/gigs/gigApply/selectors";
+import actions from "../../../../actions/gigs/gigApply/creators";
+import { useUpdateEffect } from "../../../../utils/gigs/hooks/useUpdateEffect";
 
 const PayExpectations = () => {
   const payment = useSelector(selectors.getPayment);

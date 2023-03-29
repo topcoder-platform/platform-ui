@@ -1,9 +1,9 @@
 import React from "react";
 import PT from "prop-types";
 import Dropzone from "react-dropzone";
-import Button from "components/Button";
+import Button from "../../../../components/Button";
 
-import "./styles.scss";
+import styles from "./styles.scss";
 
 /**
  * FilestackFilePicker component
@@ -29,14 +29,14 @@ function ResumeFilePicker({
       >
         {({ getRootProps, getInputProps }) => (
           <section
-            styleName={`container ${errorMsg ? "hasError" : ""}`}
+            className={[styles.container, styles[`container ${errorMsg ? "hasError" : ""}`]].join(" ")}
             {...getRootProps()}
           >
             <input {...getInputProps(inputOptions)} />
             {fileName ? (
-              <p styleName="infoText withFile">{fileName}</p>
+              <p className={[styles.infoText, styles.withFile].join(" ")}>{fileName}</p>
             ) : (
-              <p styleName="infoText">
+              <p className={styles.infoText}>
                 {infoText}
                 <span>OR</span>
               </p>
@@ -45,7 +45,7 @@ function ResumeFilePicker({
           </section>
         )}
       </Dropzone>
-      {errorMsg ? <span styleName="errorMessage">{errorMsg}</span> : null}
+      {errorMsg ? <span className={styles.errorMessage}>{errorMsg}</span> : null}
     </>
   );
 }

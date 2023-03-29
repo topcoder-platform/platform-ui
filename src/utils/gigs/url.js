@@ -1,5 +1,6 @@
 import _ from "lodash";
 import qs from "qs";
+import config from "../../../config";
 import { GIG_LIST_ROUTE, MY_GIGS_LIST_ROUTE } from "../../constants/routes";
 import {
   FACEBOOK_URL,
@@ -116,7 +117,7 @@ export function makeLoginUrl(retUrl) {
   // If query parameters are not encoded twice all parameters except the first
   // are getting lost after returning from authentication flow.
   retUrl = `${path}${query ? `?${encodeURIComponent(query)}` : ""}`;
-  return `${process.env.URL.AUTH}?retUrl=${encodeURIComponent(retUrl)}`;
+  return `${config.URL.AUTH}?retUrl=${encodeURIComponent(retUrl)}`;
 }
 
 /**
@@ -126,7 +127,7 @@ export function makeLoginUrl(retUrl) {
  * @returns {string}
  */
 export function makeProfileUrl(handle) {
-  return `${process.env.URL.PLATFORM_WEBSITE_URL}/profile/${handle}`;
+  return `${config.URL.PLATFORM_WEBSITE_URL}/profile/${handle}`;
 }
 
 /**
@@ -156,7 +157,7 @@ export function makeRegisterUrl(
   let [path, query = ""] = retUrl.split("?");
   retUrl = `${path}${query ? `?${encodeURIComponent(query)}` : ""}`;
   return (
-    `${process.env.URL.AUTH}?retUrl=${encodeURIComponent(retUrl)}` +
+    `${config.URL.AUTH}?retUrl=${encodeURIComponent(retUrl)}` +
     `&mode=signUp&utm_source=${utmSource}&regSource=${regSource}`
   );
 }

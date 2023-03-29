@@ -3,7 +3,7 @@ import PT from "prop-types";
 import PhasePoint from "../PhasePoint";
 import PhasePointTooltip from "../../tooltips/PhasePointTooltip";
 
-import "./styles.scss";
+import styles from "./styles.scss";
 
 const PhaseBar = ({
   phase,
@@ -15,17 +15,16 @@ const PhaseBar = ({
 }) => {
   return (
     <div
-      styleName={`phase-bar ${passed || active ? "pass-active" : ""} ${
-        isFirstPhase ? "isFirstPhase" : ""
-      }`}
+      className={[styles["phase-bar"], passed || active ? styles["pass-active"] : "", 
+        isFirstPhase ? styles["isFirstPhase"] : ""].join(" ")}
     >
-      <div styleName="bar"></div>
+      <div className={styles["bar"]}></div>
       <PhasePointTooltip
         phase={phase}
         placement={tooltipPosition}
         width={tooltipWidth}
       >
-        <div styleName="point">
+        <div className={styles["point"]}>
           <PhasePoint text={phase} passed={passed} active={active} />
         </div>
       </PhasePointTooltip>

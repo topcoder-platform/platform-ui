@@ -1,6 +1,6 @@
-import * as applySelectors from "reducers/gigApply/selectors";
-import * as detailsSelectors from "reducers/gigDetails/selectors";
-import * as myGigsSelectors from "reducers/myGigsSelectors";
+import * as applySelectors from "../../reducers/gigs/gigApply/selectors";
+import * as detailsSelectors from "../../reducers/gigs/gigDetails/selectors";
+import * as myGigsSelectors from "../../reducers/gigs/myGigsSelectors";
 import { makeProfileUrl } from "./url";
 
 /**

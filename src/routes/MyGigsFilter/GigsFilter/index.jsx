@@ -2,9 +2,19 @@ import React, { useEffect, useRef } from "react";
 import PT from "prop-types";
 import _ from "lodash";
 import RadioButton from "../../../components/RadioButton";
-import * as utils from "../../../utils";
+import * as utils from "../../../utils/gigs";
 
-import "./styles.scss";
+import styles from "./styles.scss";
+
+export function createBadgeElement(htmlElement, content) {
+  const badgeElement = document.createElement("span");
+
+  badgeElement.classList.add(`${styles["count-badge"]}`);
+  badgeElement.textContent = content;
+  htmlElement.appendChild(badgeElement);
+
+  return badgeElement;
+}
 
 const GigsFilter = ({
   gigStatus,
@@ -22,7 +32,7 @@ const GigsFilter = ({
     }
 
     const openJobsElement = ref.current.children[0].children[1];
-    const badgeElement = utils.icon.createBadgeElement(
+    const badgeElement = createBadgeElement(
       openJobsElement,
       `${openJobsCount}`
     );

@@ -1,5 +1,5 @@
 import { createActions } from "redux-actions";
-import * as utils from "../utils";
+import * as utils from "../../utils/gigs";
 
 function updateGigFilter(partialUpdate) {
   return partialUpdate;

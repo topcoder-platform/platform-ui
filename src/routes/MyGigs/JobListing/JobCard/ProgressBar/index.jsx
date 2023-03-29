@@ -1,10 +1,10 @@
 import React from "react";
 import PT from "prop-types";
 import PhaseBar from "./PhaseBar";
-import * as utils from "../../../../../utils";
+import * as utils from "../../../../../utils/gigs";
 import * as constants from "../../../../../constants";
 
-import "./styles.scss";
+import styles from "./styles.scss";
 
 const ProgressBar = ({ phases, currentPhase, currentPhaseStatus, note }) => {
   const isPassed = (phase) =>
@@ -18,9 +18,9 @@ const ProgressBar = ({ phases, currentPhase, currentPhaseStatus, note }) => {
     currentPhaseStatus === constants.MY_GIG_PHASE_STATUS.ACTIVE;
 
   return (
-    <div styleName="progress">
-      <div styleName="progress-bar-wrapper">
-        <div styleName="progress-bar">
+    <div className={styles["progress"]}>
+      <div className={styles["progress-bar-wrapper"]}>
+        <div className={styles["progress-bar"]}>
           {(phases || []).map((phase, index) => (
             <PhaseBar
               key={phase}
@@ -36,7 +36,7 @@ const ProgressBar = ({ phases, currentPhase, currentPhaseStatus, note }) => {
           ))}
         </div>
       </div>
-      <p styleName="progress-note">{note}</p>
+      <p className={styles["progress-note"]}>{note}</p>
     </div>
   );
 };

@@ -5,6 +5,7 @@ export enum ToolTitle {
     support = 'Support',
     tca = 'Topcoder Academy',
     work = 'Self Service Challenges',
+    gigs = 'Gigs'
 }
 
 export const PageSubheaderPortalId: string = 'page-subheader-portal-el'

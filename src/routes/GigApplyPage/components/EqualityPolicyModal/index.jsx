@@ -1,9 +1,9 @@
 import styles from "./styles.scss";
-import modalStyles from "styles/_modal.scss";
+import modalStyles from "../../../../styles/_modal.scss";
 import React from "react";
 import cn from "classnames";
-import Button from "components/Button";
-import Modal from "components/Modal";
+import Button from "../../../../components/Button";
+import Modal from "../../../../components/Modal";
 
 const EqualityPolicyModal = ({ onClose, open }) => {
   return (

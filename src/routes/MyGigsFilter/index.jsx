@@ -2,8 +2,8 @@ import React from "react";
 import PT from "prop-types";
 import { connect } from "react-redux";
 import GigsFilter from "./GigsFilter";
-import actions from "../../actions";
-import { updateQuery } from "../../utils/url";
+import actions from "../../actions/gigs";
+import { updateQuery } from "../../utils/gigs/url";
 import * as constants from "../../constants";
 
 const MyGigsFilter = ({

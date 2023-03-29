@@ -4,7 +4,7 @@ import React, { useCallback } from "react";
 import PT from "prop-types";
 import cn from "classnames";
 import Button from "../../components/Button";
-import Modal from "../../components/Modal";
+import Modal from "../../components/GigsModal";
 import MediaQuery from "react-responsive";
 import blobYellow from "../../assets/images/blob-yellow.svg";
 import blobPurple from "../../assets/images/blob-purple.svg";

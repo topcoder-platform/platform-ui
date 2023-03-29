@@ -62,6 +62,9 @@ export const ROUTES = {
     "/self-service/work/new/website-design-legacy/page-details",
   WEBSITE_DESIGN_BRANDING_LEGACY:
     "/self-service/work/new/website-design-legacy/branding",
+  CHALLENGE_LIST_ROUTE: "/earn/find/challenges",
+  GIG_LIST_ROUTE: "/earn/gigs",
+  MY_GIGS_LIST_ROUTE: "/earn/my-gigs",
 };
 
 /**

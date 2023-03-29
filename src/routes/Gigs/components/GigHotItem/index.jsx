@@ -1,6 +1,6 @@
 import styles from "./styles.scss";
 import React from "react";
-import { Link } from "@reach/router";
+import { Link } from "react-router-dom";
 import PT from "prop-types";
 import cn from "classnames";
 import { ReactComponent as IconMark } from "../../../../assets/icons/icon-location-mark.svg";

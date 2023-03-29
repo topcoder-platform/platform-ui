@@ -47,7 +47,7 @@ module.exports = {
   },
   URL: {
     AUTH: process.env.URL_AUTH || "https://accounts-auth0.topcoder-dev.com",
-    BASE: process.env.URL_BASE || "https://local.topcoder-dev.com",
+    BASE: process.env.URL_BASE || "https://www.topcoder-dev.com",
     COMMUNITY_APP:
       process.env.URL_COMMUNITY_APP || "https://community-app.topcoder-dev.com",
     DISCUSSIONS:

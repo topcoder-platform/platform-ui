@@ -4,6 +4,7 @@ import { devCenterRoutes } from './dev-center'
 import { gamificationAdminRoutes } from './gamification-admin'
 import { learnRoutes } from './learn'
 import { workRoutes } from './work'
+import { gigsRoutes } from './gigs'
 
 const toolRoutes: ReadonlyArray<PlatformRoute> = [
     // NOTE: Order matters here bc the active tool
@@ -13,6 +14,7 @@ const toolRoutes: ReadonlyArray<PlatformRoute> = [
     ...devCenterRoutes,
     ...learnRoutes,
     ...gamificationAdminRoutes,
+    ...gigsRoutes,
 ]
 
 export default toolRoutes

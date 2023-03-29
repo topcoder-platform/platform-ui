@@ -8,7 +8,7 @@ div.container {
   height: auto !important;
   max-height: none;
   border-radius: 10px;
-
+  z-index: 1000;
   .title {
     position: relative;
     color: #9d41c9;

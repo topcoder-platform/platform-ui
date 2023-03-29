@@ -1,5 +1,5 @@
-@import "styles/variables";
-@import "styles/mixins";
+@import "../../../styles/variables";
+@import "../../../styles/mixins";
 
 $filter-padding-x: 4 * $base-unit;
 $filter-padding-y: 3 * $base-unit;
@@ -17,6 +17,19 @@ $filter-padding-y: 3 * $base-unit;
     font-size: inherit;
     line-height: 19px;
   }
+}
+.count-badge {
+  display: inline-block;
+  margin: -2px 0 0 $base-unit;
+  padding: 2px 5px 0;
+  font-weight: bold;
+  font-size: 11px;
+  line-height: 14px;
+  text-align: center;
+  color: white;
+  vertical-align: middle;
+  background: #EF476F;
+  border-radius: 13px;
 }
 
 .buckets {

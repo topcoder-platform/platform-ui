@@ -460,6 +460,7 @@ const onValidateUntouched = (state) => {
     if (field.isTouched) {
       continue;
     }
+    
     state = FIELD_VALIDATORS[name](state);
   }
   return state;

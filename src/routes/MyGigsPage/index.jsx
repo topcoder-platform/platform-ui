@@ -3,10 +3,9 @@ import { useLocation } from "react-router-dom";
 import BasePage from "../BasePage";
 import MyGigsFilter from "../MyGigsFilter";
 import MyGigs from "../MyGigs";
-import { FeedbackButton } from "@topcoder/micro-frontends-earn-app";
 import * as constants from "../../constants";
-import actions from "../../actions";
-import * as utils from "../../utils";
+import actions from "../../actions/gigs";
+import * as utils from "../../utils/gigs";
 import store from "../../store";
 import { initialGigFilter } from "../../reducers/gigs/filter";
 import _ from "lodash";
@@ -116,10 +115,9 @@ const MyGigsPage = () => {
   const myGigsFilter = useMemo(() => (isLoggedIn ? <MyGigsFilter /> : null), [
     isLoggedIn,
   ]);
-  const feedbackBtn = useMemo(() => <FeedbackButton />, []);
 
   return (
-    <BasePage sidebarContent={myGigsFilter} sidebarFooter={feedbackBtn}>
+    <BasePage sidebarContent={myGigsFilter} >
       <MyGigs />
     </BasePage>
   );

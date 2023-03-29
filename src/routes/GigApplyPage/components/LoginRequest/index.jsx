@@ -1,23 +1,23 @@
-import "./styles.scss";
+import styles from "./styles.scss";
 import React, { useCallback } from "react";
-import Button from "components/Button";
-import { makeLoginUrl, makeRegisterUrl } from "utils/url";
+import Button from "../../../../components/Button";
+import { makeLoginUrl, makeRegisterUrl } from "../../../../utils/gigs/url";
 
 const LoginRequest = () => {
   const onClickBtnLogin = useCallback(() => {
-    location.href = makeLoginUrl(location.href);
+    window.location.href = makeLoginUrl(window.location.href);
   }, []);
 
   return (
-    <div styleName="container">
-      <div styleName="title">You must be a Topcoder member to apply!</div>
-      <div styleName="controls">
+    <div className={styles.container}>
+      <div className={styles.title}>You must be a Topcoder member to apply!</div>
+      <div className={styles.controls}>
         <Button isPrimary size="large" onClick={onClickBtnLogin}>
           LOGIN
         </Button>
       </div>
-      <div styleName="hint">
-        Not a member? Register <a href={makeRegisterUrl(location.href)}>here</a>
+      <div className={styles.hint}>
+        Not a member? Register <a href={makeRegisterUrl(window.location.href)}>here</a>
         .
       </div>
     </div>

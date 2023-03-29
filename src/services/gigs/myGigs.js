@@ -1,5 +1,7 @@
 /* global process */
 import { get, keys, size, sortBy, values } from "lodash";
+import config from "../../../config";
+
 import {
   ACTIONS_AVAILABLE_FOR_MY_GIG_PHASE,
   AVAILABLE_REMARK_BY_JOB_STATUS,
@@ -9,10 +11,10 @@ import {
   PHASES_FOR_JOB_STATUS,
   MY_GIG_PHASE,
   GIG_STATUS,
-} from "../constants";
+} from "../../constants";
 import api from "./api";
 
-const PROFILE_URL = `${process.env.API_BASE_PATH}/profile`;
+const PROFILE_URL = `${config.API_BASE_PATH}/profile`;
 /**
  * Maps the data from api to data to be used by application
  * @param {Object} serverResponse data returned by the api
@@ -90,8 +92,8 @@ const mapMyGigsData = (serverResponse) => {
  */
 async function getMyGigs(status, page, perPage) {
   const response = await api.get(
-    `${process.env.API_BASE_PATH}/myJobApplications?status=${status}&page=${page}&perPage=${perPage}`,
-    process.env.URL.PLATFORM_WEBSITE_URL
+    `${config.API_BASE_PATH}/myJobApplications?status=${status}&page=${page}&perPage=${perPage}`,
+    config.URL.PLATFORM_WEBSITE_URL
   );
 
   return {
@@ -108,7 +110,7 @@ async function getMyGigs(status, page, perPage) {
 async function getProfile() {
   const profile = await api.get(
     PROFILE_URL,
-    process.env.URL.PLATFORM_WEBSITE_URL
+    config.URL.PLATFORM_WEBSITE_URL
   );
 
   return {
@@ -155,7 +157,7 @@ async function updateProfile(profile) {
   const response = await api.post(
     PROFILE_URL,
     formData,
-    process.env.URL.PLATFORM_WEBSITE_URL
+    config.URL.PLATFORM_WEBSITE_URL
   );
 
   // in case of error, throw the server error
@@ -168,8 +170,8 @@ async function updateProfile(profile) {
 
 async function startCheckingGigs(externalId) {
   const res = await api.get(
-    `${process.env.API_BASE_PATH}/job?externalId=${externalId}`,
-    process.env.URL.PLATFORM_WEBSITE_URL
+    `${config.API_BASE_PATH}/job?externalId=${externalId}`,
+    config.URL.PLATFORM_WEBSITE_URL
   );
   return res;
 }

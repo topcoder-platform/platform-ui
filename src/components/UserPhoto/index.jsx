@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import PT from "prop-types";
-import * as util from "../../utils/myGig";
+import * as util from "../../utils/gigs/myGig";
 
-import "./styles.scss";
+import styles from "./styles.scss";
 
 const UserPhoto = ({ handle, photoURL }) => {
   const imgSrc = useMemo(() => {

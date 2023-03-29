@@ -10,7 +10,6 @@ import * as userSelectors from "../../../../reducers/gigs/user/selectors";
 import * as userEffectors from "../../../../actions/gigs/user/effectors";
 import { makeReferralUrl } from "../../../../utils/gigs/url";
 import { REFERRAL_PROGRAM_URL } from "../../../../constants/urls";
-
 /**
  * Displays a referral banner with a message and a button. If user is logged in
  * displays referral link and a copy button.
@@ -45,13 +44,13 @@ const ReferralBanner = ({ className }) => {
     setHasCopiedLink(true);
   }, [referralId]);
 
-  const onClickBtnRefer = useCallback(() => {
+  const onClickBtnRefer = () => {
     setIsModalOpen(true);
-  }, []);
+  };
 
-  const onCloseModal = useCallback(() => {
+  const onCloseModal = () => {
     setIsModalOpen(false);
-  }, []);
+  };
 
   useEffect(() => {
     if (isLoggedIn && !referralId) {
@@ -79,7 +78,7 @@ const ReferralBanner = ({ className }) => {
   }, [hasCopiedLink]);
 
   return (
-    <div className={styles["container"]}>
+    <div className={[styles[className], styles["container"]].join(" ")}>
       {isLoggedIn ? (
         <span className={styles["referral-link-message"]}>
           <a

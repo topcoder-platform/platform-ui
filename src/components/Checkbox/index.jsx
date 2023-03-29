@@ -2,7 +2,7 @@ import styles from "./styles.module.scss";
 import React, { useCallback } from "react";
 import PT from "prop-types";
 import cn from "classnames";
-import IconTick from "assets/icons/icon-tick-white.svg";
+import { ReactComponent as IconTick } from "../../assets/icons/icon-tick-white.svg";
 
 /**
  * Displays checkbox with label.

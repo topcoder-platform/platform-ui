@@ -2,11 +2,12 @@
 import { keys } from "lodash";
 import * as utils from "../../utils/gigs";
 import config from "../../../config";
+import { authInitializeAsync } from '../../../src-ts/lib/functions/authentication-functions'
 
 async function doFetch(endpoint, options = {}, v3, baseUrl) {
   const headers = options.headers ? { ...options.headers } : {};
   //TODO: Add uninav token
-  const token = null;
+  const token = await authInitializeAsync()
   let url;
   if (baseUrl) {
     url = baseUrl;
@@ -17,7 +18,7 @@ async function doFetch(endpoint, options = {}, v3, baseUrl) {
   }
 
   if (token) {
-    headers.Authorization = `Bearer ${token.tokenV3}`;
+    headers.Authorization = `Bearer ${token}`;
   }
 
   return fetch(`${url}${endpoint}`, {

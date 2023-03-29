@@ -1,5 +1,6 @@
 import cookies from "browser-cookies";
 import { makeGigReferralUrl } from "./url";
+import config from "../../../config";
 
 /**
  * Creates an object that can be used to send referral email.
@@ -59,8 +60,8 @@ export const setReferralCookie = () => {
   const params = new URLSearchParams(window.location.search);
   const referralId = params.get("referralId");
   if (referralId) {
-    cookies.set(process.env.GROWSURF_COOKIE, JSON.stringify({ referralId }), {
-      ...process.env.GROWSURF_COOKIE_SETTINGS,
+    cookies.set(config.GROWSURF_COOKIE, JSON.stringify({ referralId }), {
+      ...config.GROWSURF_COOKIE_SETTINGS,
       domain: getHostDomain(),
     });
   }
@@ -70,7 +71,7 @@ export const setReferralCookie = () => {
  * Clear the cookie
  */
 export const clearReferralCookie = () => {
-  cookies.set(process.env.GROWSURF_COOKIE, "", {
+  cookies.set(config.GROWSURF_COOKIE, "", {
     maxAge: 0,
     domain: getHostDomain(),
     overwrite: true,
@@ -81,30 +82,30 @@ export const clearReferralCookie = () => {
  * Set applied Storage
  */
 export const setAppliedStorage = (id) => {
-  let ids = localStorage.getItem(process.env.APPLIED_GIGS) || "";
+  let ids = localStorage.getItem(config.APPLIED_GIGS) || "";
   let index = ids.indexOf(id);
   // Already cached the gig ID
   if (index >= 0) return;
   ids += (ids === "" ? "" : ",") + `${id}`;
-  localStorage.setItem(process.env.APPLIED_GIGS, ids);
+  localStorage.setItem(config.APPLIED_GIGS, ids);
 };
 
 /**
  * Remove cached gig Id from Storage
  */
 export const removeAppliedStorage = (id) => {
-  let ids = localStorage.getItem(process.env.APPLIED_GIGS) || "";
+  let ids = localStorage.getItem(config.APPLIED_GIGS) || "";
   ids = ids.split(",");
   let index = ids.indexOf(id);
   // the gig ID doesn't exist in local cache
   if (index < 0) return;
   ids.splice(index, 1);
-  localStorage.setItem(process.env.APPLIED_GIGS, ids.join(","));
+  localStorage.setItem(config.APPLIED_GIGS, ids.join(","));
 };
 
 /**
  * Get applied Cookie
  */
 export const getAppliedStorage = () => {
-  return localStorage.getItem(process.env.APPLIED_GIGS) || "";
+  return localStorage.getItem(config.APPLIED_GIGS) || "";
 };

@@ -4,15 +4,15 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import cn from "classnames";
 import debounce from "lodash/debounce";
-import Dropdown from "components/Dropdown";
-import TextField from "components/TextField";
-import * as myGigsSelectors from "reducers/myGigsSelectors";
-import * as lookupSelectors from "reducers/lookupSelectors";
-import * as applySelectors from "reducers/gigApply/selectors";
-import applyActions from "actions/gigApply/creators";
-import { getSelectedDropdownOption } from "utils";
-import { useUpdateEffect } from "utils/hooks/useUpdateEffect";
-import { DEBOUNCE_ON_CHANGE_TIME } from "constants";
+import Dropdown from "../../../../components/Dropdown";
+import TextField from "../../../../components/TextField";
+import * as myGigsSelectors from "../../../../reducers/gigs/myGigsSelectors";
+import * as lookupSelectors from "../../../../reducers/gigs/lookupSelectors";
+import * as applySelectors from "../../../../reducers/gigs/gigApply/selectors";
+import applyActions from "../../../../actions/gigs/gigApply/creators";
+import { getSelectedDropdownOption } from "../../../../utils/gigs";
+import { useUpdateEffect } from "../../../../utils/gigs/hooks/useUpdateEffect";
+import { DEBOUNCE_ON_CHANGE_TIME } from "../../../../constants";
 
 const PersonalInfo = () => {
   const countryOptionsAll = useSelector(lookupSelectors.getCountryOptions);

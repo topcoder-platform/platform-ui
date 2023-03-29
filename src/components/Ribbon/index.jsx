@@ -1,7 +1,7 @@
 import React from "react";
 import PT from "prop-types";
-import IconInfo from "assets/icons/ribbon-icon.svg";
-import "./styles.scss";
+import { ReactComponent as IconInfo } from "../../assets/icons/ribbon-icon.svg";
+import styles from "./styles.scss";
 
 const Ribbon = ({ text, tooltip }) => {
   const Tooltip = tooltip;

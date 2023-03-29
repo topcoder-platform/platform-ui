@@ -5,7 +5,8 @@ import React, { useState, useRef, useEffect } from "react";
 import PT from "prop-types";
 import cn from "classnames";
 import _ from "lodash";
-import "./styles.scss";
+import styles from "./styles.scss";
+import config from "../../../config";
 
 function TextInput({
   className,
@@ -23,7 +24,7 @@ function TextInput({
 }) {
   const [val, setVal] = useState(value);
   const delayedOnChange = useRef(
-    _.debounce((q, cb) => cb(q), process.env.GUIKIT.DEBOUNCE_ON_CHANGE_TIME) // eslint-disable-line no-undef
+    _.debounce((q, cb) => cb(q), config.GUIKIT.DEBOUNCE_ON_CHANGE_TIME) // eslint-disable-line no-undef
   ).current;
   const sizeStyle = size === "lg" ? "lgSize" : "xsSize";
 

@@ -5,9 +5,8 @@ import Dropdown from "../../../../components/Dropdown";
 import SearchField from "../../../../components/SearchField";
 import * as selectors from "../../../../reducers/gigs/gigs/selectors";
 import actions from "../../../../actions/gigs/gigs/creators";
-import { getSelectedDropdownOption } from "../../../../utils/gigs";
 import { SORT_BY, SORT_ORDER } from "../../../../constants/gigs";
-import Select from "react-select";
+import { getSelectedDropdownOption } from "../../../../utils";
 
 /**
  * Displays search field and sorting dropdown.
@@ -20,10 +19,13 @@ const GigListHeader = () => {
   const dispatch = useDispatch();
 
   const onChangeSorting = useCallback(
-    (selectedOption) => {
-      let [sortBy, sortOrder] = selectedOption.value.split("--");
-      dispatch(actions.setSorting({ sortBy, sortOrder }));
-      [dispatch]
+    (options) => {
+      let option = getSelectedDropdownOption(options);
+      let value = option?.value;
+      if (value) {
+        let [sortBy, sortOrder] = value.split("--");
+        dispatch(actions.setSorting({ sortBy, sortOrder }));
+      }
     }
   );
 
@@ -57,14 +59,14 @@ const GigListHeader = () => {
         placeholder="Search Gig Listing by Name"
         value={title}
       />
-      <Select
-              className={styles.sortingDropdown}
-              style2={true}
-              onChange={(selectedOption) => onChangeSorting(selectedOption)}
-              options={sortingOptions}
-              searchable={true}
-              defaultValue={sortingOptions[0]}
-          />
+      <Dropdown
+        className={styles.sortingDropdown}
+        label="Sort by"
+        onChange={onChangeSorting}
+        options={sortingOptions}
+        searchable={true}
+        size="xs"
+      />
     </div>
   );
 };

@@ -1,10 +1,11 @@
-import "./styles.scss";
+import styles from "./styles.scss";
 import React, { useCallback } from "react";
-import { navigate } from "@reach/router";
+import { useNavigate } from "react-router-dom";
 import Button from "../../../../components/Button";
 import { GIG_LIST_ROUTE } from "../../../../constants/routes";
 
 const GigsFulFill = () => {
+  const navigate = useNavigate();
   const onClickBtnViewOther = useCallback(() => {
     navigate(GIG_LIST_ROUTE);
   }, []);

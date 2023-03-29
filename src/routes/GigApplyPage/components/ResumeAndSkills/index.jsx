@@ -4,13 +4,13 @@ import React, { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import debounce from "lodash/debounce";
 import ResumeFilePicker from "../ResumeFilePicker";
-import MultiSelect from "components/MultiSelect";
-import * as myGigsSelectors from "reducers/myGigsSelectors";
-import * as gigsSelectors from "reducers/gigs/selectors";
-import * as applySelectors from "reducers/gigApply/selectors";
-import applyActions from "actions/gigApply/creators";
-import { useUpdateEffect } from "utils/hooks/useUpdateEffect";
-import { DEBOUNCE_ON_CHANGE_TIME } from "constants";
+import MultiSelect from "../../../../components/MultiSelect";
+import * as myGigsSelectors from "../../../../reducers/gigs/myGigsSelectors";
+import * as gigsSelectors from "../../../../reducers/gigs/gigs/selectors";
+import * as applySelectors from "../../../../reducers/gigs/gigApply/selectors";
+import applyActions from "../../../../actions/gigs/gigApply/creators";
+import { useUpdateEffect } from "../../../../utils/gigs/hooks/useUpdateEffect";
+import { DEBOUNCE_ON_CHANGE_TIME } from "../../../../constants";
 
 const ResumeAndSkills = () => {
   const existingResume = useSelector(myGigsSelectors.getExistingResume);

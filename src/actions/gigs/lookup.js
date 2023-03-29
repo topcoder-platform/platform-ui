@@ -1,5 +1,5 @@
 import { createActions } from "redux-actions";
-import service from "../services/lookup";
+import service from "../../services/gigs/lookup";
 
 /**
  * Gets all the countries.

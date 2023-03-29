@@ -3,14 +3,14 @@ import formStyles from "../ApplicationForm/styles.scss";
 import React, { useCallback, useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import cn from "classnames";
-import Dropdown from "components/Dropdown";
-import RadioButton from "components/RadioButton";
-import * as applySelectors from "reducers/gigApply/selectors";
-import * as detailsSelectors from "reducers/gigDetails/selectors";
-import * as myGigsSelectors from "reducers/myGigsSelectors";
-import applyActions from "actions/gigApply/creators";
-import { getSelectedDropdownOption } from "utils";
-import { formatPlural } from "utils/formatting";
+import Dropdown from "../../../../components/Dropdown";
+import GigsRadioButton from "../../../../components/GigsRadioButton";
+import * as applySelectors from "../../../../reducers/gigs/gigApply/selectors";
+import * as detailsSelectors from "../../../../reducers/gigs/gigDetails/selectors";
+import * as myGigsSelectors from "../../../../reducers/gigs/myGigsSelectors";
+import applyActions from "../../../../actions/gigs/gigApply/creators";
+import { getSelectedDropdownOption } from "../../../../utils/gigs";
+import { formatPlural } from "../../../../utils/gigs/formatting";
 
 const FinalQuestions = ({ className }) => {
   const hasProfile = useSelector(myGigsSelectors.getHasProfile);
@@ -84,7 +84,7 @@ const FinalQuestions = ({ className }) => {
             Are you able to work during the specified timezone? (
             <strong>{jobTimezone || "n/a"}</strong>) *
           </p>
-          <RadioButton
+          <GigsRadioButton
             className={styles.options}
             layout="horizontal"
             onChange={onChangeAgreedTimezone}
@@ -99,7 +99,7 @@ const FinalQuestions = ({ className }) => {
             <strong>{duration ? formatPlural(duration, "Week") : "n/a"}</strong>
             ) *
           </p>
-          <RadioButton
+          <GigsRadioButton
             className={styles.options}
             layout="horizontal"
             onChange={onChangeAgreedDuration}

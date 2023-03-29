@@ -247,3 +247,8 @@ export function getDynamicPriceAndTimeline(pages, devices) {
 export function currencyFormat(num) {
   return "$" + _.toString(num).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
 }
+
+/* Return single selected dropdown option*/
+export function getSelectedDropdownOption(options) {
+  return options.find((o) => o.selected);
+}

@@ -2,7 +2,7 @@ import React from "react";
 import PT from "prop-types";
 import Dropzone from "react-dropzone";
 import _ from "lodash";
-import Button from "../Button";
+import GigsButton from "../GigsButton";
 
 import styles from "./styles.scss";
 
@@ -61,7 +61,7 @@ const FilePicker = ({
   };
 
   return (
-    <div styleName="file-picker">
+    <div className={styles["file-picker"]}>
       <Dropzone
         onDrop={(acceptedFiles) => {
           if (acceptedFiles.length > 0) {
@@ -88,9 +88,9 @@ const FilePicker = ({
             {stage === "selected" && stageSelected}
             {stage === "uploaded" && stageUploaded}
 
-            <Button size="large" onClick={onClick}>
+            <GigsButton size="lg" onClick={onClick}>
               {stage === "select" ? "SELECT A FILE" : "REMOVE"}
-            </Button>
+            </GigsButton>
           </section>
         )}
       </Dropzone>

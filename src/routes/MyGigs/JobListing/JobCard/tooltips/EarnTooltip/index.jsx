@@ -2,11 +2,11 @@ import React from "react";
 import PT from "prop-types";
 import Tooltip from "../../../../../../components/Tooltip";
 
-import "./styles.scss";
+import styles from "./styles.scss";
 
 const EarnTooltip = ({ children }) => {
   const Content = () => (
-    <div styleName="earn-tooltip">
+    <div className={styles["earn-tooltip"]}>
       Amount may not reflect any pending payments
     </div>
   );

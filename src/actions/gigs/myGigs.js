@@ -4,8 +4,8 @@ import {
   PER_PAGE,
   CHECKING_GIG_TIMES,
   DELAY_CHECK_GIG_TIME,
-} from "../constants";
-import service from "../services/myGigs";
+} from "../../constants";
+import service from "../../services/gigs/myGigs";
 
 async function getMyActiveGigs(
   status = "active_jobs",

@@ -1,12 +1,12 @@
-import { getAuthUserTokens } from "@topcoder/mfe-header";
-import { RECRUIT_API_URL } from "constants/urls";
+import { tokenGetAsync } from "../../../src-ts/lib/functions/token-functions/"
+import { RECRUIT_API_URL } from "../../constants/urls";
 
 export const sendApplication = async (externalId, formData) => {
-  const { tokenV3 } = await getAuthUserTokens();
+  const user = await tokenGetAsync();
   const response = await fetch(`${RECRUIT_API_URL}/${externalId}/apply`, {
     method: "POST",
     credentials: "include",
-    headers: { Authorization: `Bearer ${tokenV3}` },
+    headers: { Authorization: `Bearer ${user?.token}` },
     body: formData,
   });
   if (response.status >= 300) {

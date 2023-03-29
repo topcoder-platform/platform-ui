@@ -1,14 +1,14 @@
-import store from "store";
+import store from "../../../store";
 import applyActions from "./creators";
-import * as applySelectors from "reducers/gigApply/selectors";
-import * as detailsSelectors from "reducers/gigDetails/selectors";
-import * as gigsSelectors from "reducers/gigs/selectors";
-import * as lookupSelectors from "reducers/lookupSelectors";
-import * as myGigsSelectors from "reducers/myGigsSelectors";
-import lookupActions from "actions/lookup";
-import * as detailsEffectors from "actions/gigDetails/effectors";
-import * as applyServices from "services/gigApply";
-import { composeApplication } from "utils/gigApply";
+import * as applySelectors from "../../../reducers/gigs/gigApply/selectors";
+import * as detailsSelectors from "../../../reducers/gigs/gigDetails/selectors";
+import * as gigsSelectors from "../../../reducers/gigs/gigs/selectors";
+import * as lookupSelectors from "../../../reducers/gigs/lookupSelectors";
+import * as myGigsSelectors from "../../../reducers/gigs/myGigsSelectors";
+import lookupActions from "../../../actions/gigs/lookup";
+import * as detailsEffectors from "../../../actions/gigs/gigDetails/effectors";
+import * as applyServices from "../../../services/gigs/gigApply";
+import { composeApplication } from "../../../utils/gigs/gigApply";
 
 /**
  * Loads gig details and countries. Must be called after the user's profile
@@ -53,6 +53,7 @@ export const sendApplication = async () => {
   const state = getState();
   dispatch(applyActions.validateUntouched());
   const isFormValid = applySelectors.getIsFormValid(state);
+  
   if (!isFormValid) {
     // stop the application by return directly
     return;

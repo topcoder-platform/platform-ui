@@ -1,20 +1,18 @@
 import React from "react";
 import PT from "prop-types";
-import IconCheck from "assets/icons/checkpoint.svg";
+import { ReactComponent as IconCheck } from "../../../../../../assets/icons/checkpoint.svg";
 
-import "./styles.scss";
+import styles from "./styles.scss";
 
 const PhasePoint = ({ text, passed, active }) => {
   return (
-    <div
-      styleName={`phase-point ${passed ? "passed" : ""} ${
-        active ? "active" : ""
-      }`}
+    <div className={[styles["phase-point"], passed ? styles["passed"] : "", 
+        active ? styles["active"] : ""].join(" ")}
     >
-      <div styleName="checkmark">
-        <IconCheck styleName="check" />
+      <div className={styles["checkmark"]}>
+        <IconCheck className={styles["check"]} />
       </div>
-      <span styleName="text">{text}</span>
+      <span className={styles["text"]}>{text}</span>
     </div>
   );
 };

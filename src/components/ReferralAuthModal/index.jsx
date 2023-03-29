@@ -2,7 +2,7 @@ import styles from "./styles.scss";
 import React, { useCallback } from "react";
 import PT from "prop-types";
 import GigsButton from "../GigsButton";
-import Modal from "../Modal";
+import GigsModal from "../GigsModal";
 import { REFERRAL_PROGRAM_URL } from "../../constants/urls";
 import { makeLoginUrl, makeRegisterUrl } from "../../utils/gigs/url";
 
@@ -23,7 +23,7 @@ const ReferralAuthModal = ({ onClose, open }) => {
   }, []);
 
   return (
-    <Modal
+    <GigsModal
       modalClassName={styles.modal}
       overlayClassName={styles.modalOverlay}
       onClose={onClose}
@@ -36,7 +36,7 @@ const ReferralAuthModal = ({ onClose, open }) => {
           className={styles.button}
           isPrimary
           shade="dark"
-          size="large"
+          size="lg"
           onClick={onClickBtnLogin}
         >
           LOGIN
@@ -44,7 +44,7 @@ const ReferralAuthModal = ({ onClose, open }) => {
         <GigsButton
           className={styles.button}
           shade="dark"
-          size="large"
+          size="lg"
           onClick={onClickBtnRegister}
         >
           REGISTER
@@ -57,7 +57,7 @@ const ReferralAuthModal = ({ onClose, open }) => {
         </a>
         .
       </div>
-    </Modal>
+    </GigsModal>
   );
 };
 

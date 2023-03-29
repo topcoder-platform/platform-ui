@@ -1,7 +1,7 @@
 import styles from "./styles.scss";
 import modalStyles from "../../styles/_modal.scss";
 import React, { useCallback } from "react";
-import { navigate } from "@reach/router";
+import { useNavigate } from "react-router-dom";
 import cn from "classnames";
 import GigsButton from "../../components/GigsButton";
 import LoadingCircles from "../../components/LoadingCircles";
@@ -9,6 +9,7 @@ import Modal from "../../components/Modal";
 import { GIG_LIST_ROUTE } from "../../constants/routes";
 
 const ReferralEmailModal = ({ error, isBusy, isUserError, onClose, open }) => {
+  const navigate = useNavigate();
   const onClickBtnFindAnoherGig = useCallback(() => {
     navigate(GIG_LIST_ROUTE);
   }, []);

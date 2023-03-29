@@ -1,11 +1,11 @@
 import styles from "./styles.scss";
 import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import Checkbox from "components/Checkbox";
+import Checkbox from "../../../../components/Checkbox";
 import CandidateTermsModal from "../CandidateTermsModal";
 import EqualityPolicyModal from "../EqualityPolicyModal";
-import * as selectors from "reducers/gigApply/selectors";
-import actions from "actions/gigApply/creators";
+import * as selectors from "../../../../reducers/gigs/gigApply/selectors";
+import actions from "../../../../actions/gigs/gigApply/creators";
 
 const TermsAndPolicies = ({ className }) => {
   const agreedTerms = useSelector(selectors.getAgreedTerms);
@@ -42,25 +42,25 @@ const TermsAndPolicies = ({ className }) => {
   }, [dispatch]);
 
   return (
-    <div className={className}>
-      <div styleName="links">
-        <div styleName="terms-field">
+    <div className={styles["className"]}>
+      <div className={styles.links}>
+        <div className={styles["terms-field"]}>
           <Checkbox
             className={styles.checkbox}
             checked={agreedTerms.value}
             isRequired
             name="agree"
-            size="large"
+            size="medium"
             onChange={onSetAgreedTerms}
             onFocus={onFocusAgreedTerms}
             error={agreedTerms.error}
           />{" "}
           I agree to <button onClick={onClickTerms}>Candidate Terms</button> *
           {agreedTerms.error && (
-            <div styleName="terms-error">{agreedTerms.error}</div>
+            <div className={styles["terms-error"]}>{agreedTerms.error}</div>
           )}
         </div>
-        <div styleName="policy-field">
+        <div className={styles["policy-field"]}>
           View Our Equal{" "}
           <button onClick={onClickPolicy}>Employment Opportunty Policy</button>
         </div>

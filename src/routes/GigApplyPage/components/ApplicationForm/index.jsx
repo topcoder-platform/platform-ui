@@ -1,11 +1,11 @@
 import styles from "./styles.scss";
 import React, { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "@reach/router";
-import IconCornerLeft from "assets/icons/icon-corner-left-green.svg";
-import IconTickCircled from "assets/icons/icon-tick-circled.svg";
-import Button from "components/Button";
-import LoadingCircles from "components/LoadingCircles";
+import { Link } from "react-router-dom";
+import { ReactComponent as IconCornerLeft } from "../../../../assets/icons/icon-corner-left-green.svg";
+import { ReactComponent as IconTickCircled } from "../../../../assets/icons/icon-tick-circled.svg";
+import GigsButton from "../../../../components/GigsButton";
+import LoadingCircles from "../../../../components/LoadingCircles";
 import PersonalInfo from "../PersonalInfo";
 import TopcoderInfo from "../TopcoderInfo";
 import PayExpectations from "../PayExpectations";
@@ -13,13 +13,13 @@ import ResumeAndSkills from "../ResumeAndSkills";
 import FinalQuestions from "../FinalQuestions";
 import TermsAndPolicies from "../TermsAndPolicies";
 import SubmissionResult from "../SubmissionResult";
-import * as myGigsSelectors from "reducers/myGigsSelectors";
-import * as detailsSelectors from "reducers/gigDetails/selectors";
-import * as applySelectors from "reducers/gigApply/selectors";
-import applyActions from "actions/gigApply/creators";
-import * as applyEffectors from "actions/gigApply/effectors";
-import { makeGigPath } from "utils/url";
-import { preventDefault } from "utils/misc";
+import * as myGigsSelectors from "../../../../reducers/gigs/myGigsSelectors";
+import * as detailsSelectors from "../../../../reducers/gigs/gigDetails/selectors";
+import * as applySelectors from "../../../../reducers/gigs/gigApply/selectors";
+import applyActions from "../../../../actions/gigs/gigApply/creators";
+import * as applyEffectors from "../../../../actions/gigs/gigApply/effectors";
+import { makeGigPath } from "../../../../utils/gigs/url";
+import { preventDefault } from "../../../../utils/gigs/misc";
 
 const SubmissionForm = () => {
   const hasProfile = useSelector(myGigsSelectors.getHasProfile);
@@ -29,7 +29,7 @@ const SubmissionForm = () => {
   }, []);
 
   return (
-    <form styleName="form" action="#" onSubmit={preventDefault}>
+    <form className={styles.form} action="#" onSubmit={preventDefault}>
       {hasProfile && (
         <div className={styles.hasProfileSection}>
           <div className={styles.hasProfileTitle}>
@@ -48,10 +48,10 @@ const SubmissionForm = () => {
       <ResumeAndSkills />
       <FinalQuestions />
       <TermsAndPolicies className={styles.termsAndPolicies} />
-      <div styleName="controls">
-        <Button isPrimary size="large" onClick={onClickBtnApply}>
+      <div className={styles.controls}>
+        <GigsButton isPrimary size="lg" onClick={onClickBtnApply}>
           APPLY TO THIS JOB
-        </Button>
+        </GigsButton>
       </div>
     </form>
   );
@@ -70,8 +70,8 @@ const ApplicationForm = () => {
   }, [dispatch]);
 
   return (
-    <div styleName="container">
-      <div styleName="title">{title}</div>
+    <div className={styles.container}>
+      <div className={styles.title}>{title}</div>
       <Link className={styles.backButton} to={makeGigPath(jobExternalId)}>
         <IconCornerLeft /> Gig Details
       </Link>
