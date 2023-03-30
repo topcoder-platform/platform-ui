@@ -1,6 +1,9 @@
 import { EnvironmentConfig } from '../../../../../../config'
 import { Page } from '../../../../../../lib'
 
+const challengesPath: string = `${EnvironmentConfig.API.V5}/challenges`
+const customerPaymentPath: string = `${EnvironmentConfig.API.V5}/customer-payments`
+
 export function createUrl(): string {
     return challengesPath
 }
@@ -24,6 +27,3 @@ export function updatePaymentUrl(id: string): string {
 export function createPaymentUrl(): string {
     return customerPaymentPath
 }
-
-const challengesPath: string = `${EnvironmentConfig.API.V5}/challenges`
-const customerPaymentPath: string = `${EnvironmentConfig.API.V5}/customer-payments`

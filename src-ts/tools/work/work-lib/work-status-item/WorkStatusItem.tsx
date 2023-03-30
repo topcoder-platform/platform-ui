@@ -14,7 +14,7 @@ const WorkStatusItem: (props: WorkStatusItemProps) => JSX.Element
         }
 
         const statusKey: (keyof typeof WorkStatus) | undefined = Object.entries(WorkStatus)
-            .find(([key, value]) => value === props.workStatus)
+            .find(([, value]) => value === props.workStatus)
             ?.[0] as keyof typeof WorkStatus
 
         return (

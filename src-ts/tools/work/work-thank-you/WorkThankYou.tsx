@@ -13,7 +13,7 @@ const WorkThankYou: () => JSX.Element = () => {
         // TODO in PROD-2441 - Whichever form clearing mechanism is coded in PROD-2441 should be called here.
     }
 
-    const onDone: () => Promise<void> = async () => {
+    function onDone(): void {
         navigate(selfServiceRootRoute)
     }
 
@@ -29,7 +29,7 @@ const WorkThankYou: () => JSX.Element = () => {
                         <p>Your payment has been processed successfully.</p>
 
                         <p>
-                            You can now go to the Dashboard to manage the work you've
+                            You can now go to the Dashboard to manage the work you&apos;ve
                             submitted.
                         </p>
 

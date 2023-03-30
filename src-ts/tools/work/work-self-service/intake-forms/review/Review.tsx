@@ -1,12 +1,13 @@
-import { CardNumberElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
-import { Stripe, StripeElements } from '@stripe/stripe-js'
+import { Dispatch, FC, SetStateAction, useContext, useEffect, useState } from 'react'
+import { toastr } from 'react-redux-toastr'
+import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
+
 // we need to load this from submodule instead of root
 // @see: https://www.npmjs.com/package/@stripe/stripe-js # Importing loadStripe without side effects
 // tslint:disable-next-line:no-submodule-imports
 import { loadStripe } from '@stripe/stripe-js/pure'
-import { Dispatch, FC, SetStateAction, useContext, useEffect, useState } from 'react'
-import { toastr } from 'react-redux-toastr'
-import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
+import { CardNumberElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
+import { Stripe, StripeElements } from '@stripe/stripe-js'
 
 import { EnvironmentConfig } from '../../../../../config'
 import {
@@ -60,11 +61,17 @@ const Review: FC = () => {
     const workId: string | undefined = useParams().workId
     const redirectUrl: string = `${WorkIntakeFormRoutes[WorkType.bugHunt].basicInfo}/${workId}`
 
-    const [challenge, setChallenge]: [Challenge | undefined, Dispatch<SetStateAction<Challenge | undefined>>] = useState()
+    const [challenge, setChallenge]: [
+        Challenge | undefined,
+        Dispatch<SetStateAction<Challenge | undefined>>
+    ] = useState()
     const [formData, setFormData]: [any, Dispatch<any>] = useState<any>({})
     const { profile }: ProfileContextData = useContext<ProfileContextData>(profileContext)
     // TODO: Move the state into payment form and this would require the onPay handler also moved to payment form
-    const [formFieldValues, setFormValues]: [FormFieldValues, Dispatch<SetStateAction<FormFieldValues>>] = useState<FormFieldValues>({
+    const [formFieldValues, setFormValues]: [
+        FormFieldValues,
+        Dispatch<SetStateAction<FormFieldValues>>
+    ] = useState<FormFieldValues>({
         cardComplete: false,
         country: '',
         cvvComplete: false,
@@ -122,7 +129,7 @@ const Review: FC = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [profile])
 
-    const onUpdateField: (fieldName: string, value: string | boolean) => void = (fieldName, value) => {
+    function onUpdateField(fieldName: string, value: string | boolean): void {
         setFormValues({
             ...formFieldValues,
             [fieldName]: value,
@@ -220,7 +227,13 @@ const Review: FC = () => {
 
             <div className={styles.content}>
                 <div className={styles.left}>
-                    <WorkDetailDetailsPane formData={formData} isReviewPage redirectUrl={redirectUrl} collapsible defaultOpen />
+                    <WorkDetailDetailsPane
+                        formData={formData}
+                        isReviewPage
+                        redirectUrl={redirectUrl}
+                        collapsible
+                        defaultOpen
+                    />
                     {
                         !isMobile && (
                             <InfoCard
