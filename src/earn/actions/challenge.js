@@ -5,7 +5,7 @@
 
 /* global CONFIG */
 import _ from "lodash";
-import config from "@config";
+import config from "@earn/config";
 import { createActions } from "redux-actions";
 import { decodeToken } from "../utils/token";
 import { getService as getChallengesService } from "../services/challenges";

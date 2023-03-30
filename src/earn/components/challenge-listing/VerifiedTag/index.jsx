@@ -1,7 +1,7 @@
 import React from "react";
-import { DevelopmentTrackEventTag } from "topcoder-react-ui-kit";
+import { DevelopmentTrackEventTag } from "@earn/components/UiKit";
 import VerifiedIcon from "@earn/assets/images/icon-verified.svg";
-import Tooltip from "components/Tooltip";
+import Tooltip from "@earn/components/Tooltip";
 import PT from "prop-types";
 import "./style.module.scss";
 import cn from "classnames";

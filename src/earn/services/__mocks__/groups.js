@@ -16,7 +16,7 @@
  */
 
 import _ from "lodash";
-import { config } from "topcoder-react-utils";
+import { config } from "@earn/config";
 import { getApi } from "./api";
 import logger from "../../utils/logger";
 
@@ -152,7 +152,7 @@ function handleApiResponse(response) {
  * groups map. This function intended only for internal use inside this module,
  * as it may mutate both arguments (hence, the corresponding ESLint rule is
  * disabled within this function), thus should be used only where it is safe.
- * For external use a similar function is provided by "utils/tc" module.
+ * For external use a similar function is provided by "@earn/utils/tc" module.
  * @param {Object} groups
  * @param {Object} group
  */

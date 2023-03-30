@@ -7,6 +7,8 @@ import { assign } from "lodash";
 import { getApiResponsePayload } from "../utils/tc";
 import { getApi } from "./challenge-api";
 
+import config from '@earn/config';
+
 async function getTags() {
   const v3 = true;
   const filter = {
@@ -45,7 +47,7 @@ async function getCommunityList() {
     `/community-app-assets/api/tc-communities${communityListQuery}`,
     {},
     null,
-    process.env.URL.COMMUNITY_APP
+    config.URL.COMMUNITY_APP
   );
   let communities = await response.json();
   return communities.filter(

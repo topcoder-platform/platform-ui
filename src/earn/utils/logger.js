@@ -20,7 +20,7 @@
 /* eslint-disable no-console */
 
 import _ from "lodash";
-import config from "@config";
+import config from "@earn/config";
 import store from "../../store";
 import { createAction } from "redux-actions";
 

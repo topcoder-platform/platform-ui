@@ -4,7 +4,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import PT from "prop-types";
 import _ from "lodash";
-import config from "@config";
+import config from "@earn/config";
 import "./styles.scss";
 
 import iconCheckL from "../../assets/icons/checkmark-large.png";

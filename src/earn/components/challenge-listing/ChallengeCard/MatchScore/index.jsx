@@ -1,6 +1,6 @@
 import PT from "prop-types";
 import React from "react";
-import { DevelopmentTrackEventTag } from "topcoder-react-ui-kit";
+import { DevelopmentTrackEventTag } from "@earn/components/UiKit";
 import "./style.scss";
 
 export default function MatchScore({ score }) {

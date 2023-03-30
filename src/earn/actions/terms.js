@@ -5,7 +5,7 @@
 import _ from "lodash";
 import { createActions } from "redux-actions";
 import { getService } from "../services/terms";
-import config from "@config";
+import config from "@earn/config";
 
 /**
  * Payload creator for TERMS/GET_TERMS_DONE action,

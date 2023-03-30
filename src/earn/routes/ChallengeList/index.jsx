@@ -39,9 +39,9 @@ export const ChallengeList = () => {
     store.dispatch(actions.challenges.getChallengesDone(challengesFilters, signal));
   }
   
-  useEffect(() => {
-    initAuth();
+  useEffect(() => { initAuth() }, [])
 
+  useEffect(() => {
     // if not search query params are in the url,
     // update url search params to match the store filters
     if (!location.search) {

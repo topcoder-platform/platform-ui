@@ -5,7 +5,7 @@
  */
 
 import _ from "lodash";
-import config from "@config";
+import config from "@earn/config";
 
 import { getService as getChallengeService } from "./challenges";
 import { getApi } from "./challenge-api";

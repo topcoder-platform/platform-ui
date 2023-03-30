@@ -8,7 +8,7 @@ import _ from "lodash";
 import {
   AV_SCAN_SCORER_REVIEW_TYPE_ID,
   PROVISIONAL_SCORING_COMPLETED_REVIEW_TYPE_ID,
-} from "@config";
+} from "@earn/config";
 
 function removeDecimal(num) {
   const re = new RegExp("^-?\\d+");

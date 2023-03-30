@@ -5,7 +5,7 @@
  */
 
 import _ from "lodash";
-import config from "@config";
+import config from "@earn/config";
 import { delay } from "@earn/utils/time";
 import { setErrorIcon, ERROR_ICON_TYPES } from "@earn/utils/errors";
 

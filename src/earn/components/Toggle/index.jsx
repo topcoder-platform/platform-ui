@@ -3,7 +3,7 @@
  */
 import React, { useRef, useState, useEffect } from "react";
 import PT from "prop-types";
-import config from "@config";
+import config from "@earn/config";
 import _ from "lodash";
 import "./style.scss";
 

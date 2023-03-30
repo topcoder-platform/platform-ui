@@ -6,7 +6,7 @@ import PT from "prop-types";
 import _ from "lodash";
 import Select from "react-select";
 import iconDown from "../../assets/icons/dropdown-arrow.png";
-import config from "@config";
+import config from "@earn/config";
 import "./styles.scss";
 
 function DropdownTerms({

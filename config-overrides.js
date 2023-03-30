@@ -46,7 +46,11 @@ module.exports = override(
                 ...config.resolve.alias,
                 '@config': resolve('config/'),
                 '@earn': resolve('src/earn/'),
-            }
+            },
+            fallback: {
+                ...config.resolve.fallback,
+                path: require.resolve("path-browserify"),
+            },
         }
     }),
 );

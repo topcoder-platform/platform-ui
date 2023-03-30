@@ -4,7 +4,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import PT from "prop-types";
 import _ from "lodash";
-import config from "@config";
+import config from "@earn/config";
 import "./styles.scss";
 
 function RadioButton({ options, onChange, size, errorMsg }) {

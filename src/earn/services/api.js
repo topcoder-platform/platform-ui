@@ -2,7 +2,7 @@ import { getAuthUserTokens } from "../utils/auth";
 import _, { keys } from "lodash";
 import * as utils from "../utils";
 
-import config from '@config';
+import config from '@earn/config';
 
 const { API } = config;
 
