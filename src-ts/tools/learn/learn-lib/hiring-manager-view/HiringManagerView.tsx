@@ -50,7 +50,6 @@ function renderBasicList(items: Array<string> = []): ReactNode {
         </ul>
     )
 }
-
 export interface HiringManagerViewProps {
     certification?: TCACertification
     completedAt?: string
@@ -301,7 +300,7 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                                 <Button
                                     buttonStyle='secondary'
                                     label={props.isOwner ? 'View your Topcoder profile' : 'View full Topcoder profile'}
-                                    url={myProfileLink}
+                                    url={props.isPreview ? '' : myProfileLink}
                                     target='_blank'
                                     className={styles.shareBtn}
                                 />
