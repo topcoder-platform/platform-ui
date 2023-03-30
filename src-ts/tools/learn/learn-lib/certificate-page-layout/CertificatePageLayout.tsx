@@ -10,28 +10,25 @@ import { useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import {
-    FacebookSocialShareBtn,
     fileDownloadCanvasAsImage,
     IconOutline,
-    LinkedinSocialShareBtn,
     LoadingSpinner,
     NavigateBackFunction,
-    TwitterSocialShareBtn,
     useNavigateBack,
 } from '../../../../lib'
 import { useCertificateScaling } from '../use-certificate-scaling-hook'
 import { useCertificateCanvas } from '../use-certificate-canvas-hook'
-import { useCertificatePrint } from '../use-certificate-print-hook'
 import { ActionButton } from '../action-button'
 import { hideSiblings } from '../functions'
 import { getViewStyleParamKey } from '../../learn.routes'
+import { TCAShareCertificateModalData, useTCAShareCertificateModal } from '../tca-share-certificate-modal'
+import { useCertificatePrint } from '../use-certificate-print-hook'
 
 import styles from './CertificatePageLayout.module.scss'
 
 export type CertificatePageLayoutStyle = 'large-container'
 
 interface CertificatePageLayoutProps {
-    actions?: ReactNode
     certificateElRef: MutableRefObject<HTMLDivElement|undefined>
     children?: ReactNode
     afterContent?: ReactNode
@@ -52,6 +49,8 @@ const CertificatePageLayout: FC<CertificatePageLayoutProps> = (props: Certificat
     const wrapElRef: MutableRefObject<HTMLElement | any> = useRef()
     const certificateWrapRef: MutableRefObject<HTMLDivElement | any> = useRef()
     const navigateBack: NavigateBackFunction = useNavigateBack()
+
+    const shareModal: TCAShareCertificateModalData = useTCAShareCertificateModal(props.ssrUrl)
 
     useCertificateScaling(
         props.isReady ? certificateWrapRef : undefined,
@@ -130,23 +129,17 @@ const CertificatePageLayout: FC<CertificatePageLayoutProps> = (props: Certificat
                                     icon={<IconOutline.DownloadIcon />}
                                     onClick={handleDownload}
                                 />
-                                {props.actions}
-                                <FacebookSocialShareBtn
-                                    className={styles['share-btn']}
-                                    shareUrl={props.ssrUrl}
-                                />
-                                <LinkedinSocialShareBtn
-                                    className={styles['share-btn']}
-                                    shareUrl={props.ssrUrl}
-                                />
-                                <TwitterSocialShareBtn
-                                    className={styles['share-btn']}
-                                    shareUrl={props.ssrUrl}
-                                />
+                                <ActionButton
+                                    icon={<IconOutline.ShareIcon />}
+                                    onClick={shareModal.show}
+                                >
+                                    Share certificate
+                                </ActionButton>
                             </div>
                         )}
                     </div>
                     {props.afterContent}
+                    {shareModal.modal}
                 </div>
             )}
         </>

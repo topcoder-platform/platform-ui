@@ -1,10 +1,12 @@
 import { Dispatch, FC, FocusEvent, SetStateAction, SyntheticEvent, useState } from 'react'
+import { trim } from 'lodash'
 import classNames from 'classnames'
 
 import {
     CardCvcElement,
     CardExpiryElement,
     CardNumberElement,
+
 } from '@stripe/react-stripe-js'
 import {
     StripeCardCvcElementChangeEvent,
@@ -12,7 +14,7 @@ import {
     StripeCardNumberElementChangeEvent,
 } from '@stripe/stripe-js'
 
-import { Button, InputText, LoadingSpinner, OrderContractModal } from '../../../../../lib'
+import { Button, IconOutline, InputText, LoadingSpinner, OrderContractModal } from '../../../../../lib'
 import { InputWrapper } from '../../../../../lib/form/form-groups/form-input/input-wrapper'
 
 import styles from './EnrollPaymentForm.module.scss'
@@ -26,15 +28,17 @@ interface FieldDirtyState {
     cardComplete: boolean
     expiryComplete: boolean
     cvvComplete: boolean
+    cardName: boolean
 }
 
 interface EnrollPaymentFormProps {
-    error: boolean
+    error: string
     formData: PermiumSubFormData
     isFormValid: boolean
     onPay: () => void
     onUpdateField: (fieldName: string, value: string | boolean) => void
     isPayProcessing: boolean
+    price: string
 }
 
 type CardChangeEvent
@@ -44,10 +48,12 @@ const EnrollPaymentForm: FC<EnrollPaymentFormProps> = (props: EnrollPaymentFormP
     const [cardNumberError, setCardNumberError]: [string, Dispatch<string>] = useState<string>('')
     const [cardExpiryError, setCardExpiryError]: [string, Dispatch<string>] = useState<string>('')
     const [cardCVVError, setCardCVVError]: [string, Dispatch<string>] = useState<string>('')
+    const [cardNameError, setCardNameError]: [string, Dispatch<string>] = useState<string>('yesyt')
 
     const [formDirtyState, setFormDirtyState]: [FieldDirtyState, Dispatch<SetStateAction<FieldDirtyState>>]
         = useState<FieldDirtyState>({
             cardComplete: false,
+            cardName: false,
             cvvComplete: false,
             expiryComplete: false,
         })
@@ -90,6 +96,24 @@ const EnrollPaymentForm: FC<EnrollPaymentFormProps> = (props: EnrollPaymentFormP
         props.onUpdateField('subsContract', event.target.checked)
     }
 
+    function onNameOnCardUpdate(event: React.FocusEvent<HTMLInputElement, Element>): void {
+        const name: string = event.target.value
+
+        if (!formDirtyState.cardName) {
+            setFormDirtyState({
+                ...formDirtyState,
+                cardName: true,
+            })
+        }
+
+        if (!trim(name)) {
+            setCardNameError('Name On Card is required field.')
+        } else {
+            props.onUpdateField('cardName', name)
+            setCardNameError('')
+        }
+    }
+
     return (
         <div className={classNames(styles['payment-form'], props.isPayProcessing ? 'pointer-events-none' : '')}>
             <OrderContractModal
@@ -97,7 +121,19 @@ const EnrollPaymentForm: FC<EnrollPaymentFormProps> = (props: EnrollPaymentFormP
                 onClose={hideOrderContractModal}
             />
 
-            <div className={styles.label}>Card Information</div>
+            <h3>Enter your payment information</h3>
+
+            {
+                props.error && (
+                    <div className={styles.error}>
+                        <IconOutline.ExclamationCircleIcon className={styles.errorIcon} />
+                        <div className={styles.errorMsg}>
+                            <strong>Your payment has been declined</strong>
+                            <span>{props.error}</span>
+                        </div>
+                    </div>
+                )
+            }
 
             <div className={styles['input-wrap-wrapper']}>
                 <InputWrapper
@@ -156,11 +192,25 @@ const EnrollPaymentForm: FC<EnrollPaymentFormProps> = (props: EnrollPaymentFormP
                             classes: {
                                 base: styles.cardElement,
                             },
-                            placeholder: 'CCV',
+                            placeholder: 'Enter CVC',
                         }}
                         onChange={cardElementOnChange('cvvComplete', setCardCVVError)}
                     />
                 </InputWrapper>
+            </div>
+
+            <div className={styles['input-wrap-wrapper']}>
+                <InputText
+                    label='Name On Card'
+                    name='card-name'
+                    tabIndex={4}
+                    type='text'
+                    disabled={false}
+                    error={cardNameError}
+                    hideInlineErrors={false}
+                    dirty={formDirtyState.cardName}
+                    onChange={onNameOnCardUpdate}
+                />
             </div>
 
             <InputText
@@ -174,14 +224,6 @@ const EnrollPaymentForm: FC<EnrollPaymentFormProps> = (props: EnrollPaymentFormP
             />
 
             {
-                props.error && (
-                    <div className={styles.error}>
-                        Your card was declined. Please try a different card.
-                    </div>
-                )
-            }
-
-            {
                 props.isPayProcessing && (
                     <LoadingSpinner type='Overlay' />
                 )
@@ -193,7 +235,7 @@ const EnrollPaymentForm: FC<EnrollPaymentFormProps> = (props: EnrollPaymentFormP
                 type='button'
                 buttonStyle='primary'
                 name='pay-button'
-                label={`Pay ${props.formData.price} and enroll`}
+                label={`Pay $${props.price} and enroll`}
                 disable={!props.isFormValid || props.isPayProcessing}
                 onClick={props.onPay}
             />

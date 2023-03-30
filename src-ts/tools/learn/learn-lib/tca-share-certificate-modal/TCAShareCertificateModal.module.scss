@@ -1,0 +1,75 @@
+@import '../../../../lib/styles/includes';
+
+.shareCertificateModal {
+    &:global(.react-responsive-modal-modal) {
+        &:global(.modal-md) {
+            width: 600px;
+        }
+        :global(.react-responsive-modal-closeButton) {
+            color: $turq-160;
+        }
+        :global(.modal-body) {
+            gap: $space-lg;
+        }
+    }
+
+    .share-btn:global(.button.icon) {
+        @include icon-mxx;
+        border-radius: 50%;
+        color: $blue-140;
+
+        border: $border solid currentColor;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        padding: $space-sm;
+
+        &:hover {
+            background: transparent;
+        }
+
+        svg {
+            @include icon-xxl;
+
+            > path {
+                fill: currentColor;
+            }
+        }
+
+        @include ltemd {
+            @include icon-mx;
+        }
+    }
+}
+
+.shareBtnsWrap {
+    display: flex;
+    gap: $space-lg;
+}
+
+.shareUrl {
+    display: flex;
+    gap: $space-lg;
+    background: $black-5;
+    padding: $space-sm $space-lg;
+    border-radius: $space-sm;
+
+    input {
+        flex: 1 1 auto;
+        display: block;
+        border: 0 none;
+        padding: 0;
+        background: transparent;
+        color: $link-blue-dark;
+        font: inherit;
+    }
+
+    .icon {
+        @include icon-xxl;
+        color: $turq-160;
+
+        cursor: pointer;
+    }
+}

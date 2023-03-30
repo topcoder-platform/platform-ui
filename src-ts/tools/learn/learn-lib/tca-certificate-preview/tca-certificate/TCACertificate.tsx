@@ -70,42 +70,40 @@ const TCACertificate: FC<TCACertificateProps> = (props: TCACertificateProps) => 
                             {props.certification.title}
                         </div>
                     </div>
-                    {
-                        props.completedDate && props.validateLink && (
-                            <div className={styles.certInfo}>
-                                <div className={styles.certInfoLeft}>
-                                    <QRCodeSVG
-                                        value={props.validateLink}
-                                        size={75}
-                                        className={styles.qrCode}
-                                        includeMargin
-                                    />
-                                    <div className={styles.certInfoLeftData}>
-                                        <span>Date of certification</span>
-                                        <span className='ultra-small-medium'>{completedDate}</span>
-                                        <span>Valid through</span>
-                                        <span className={classNames('ultra-small-medium', styles.gridSeparator)}>
-                                            {expireDate}
-                                        </span>
-                                        <span>Serial Number</span>
-                                        <span className='ultra-small-medium'>{props.completionUuid}</span>
-                                        <span>Validate at</span>
-                                        <span className='ultra-small-medium'>{props.validateLink}</span>
-                                    </div>
+                    {props.completedDate && props.validateLink && (
+                        <div className={classNames('tca-cert-details-wrap', styles.certInfo)}>
+                            <div className={styles.certInfoLeft}>
+                                <QRCodeSVG
+                                    value={props.validateLink}
+                                    size={75}
+                                    className={styles.qrCode}
+                                    includeMargin
+                                />
+                                <div className={styles.certInfoLeftData}>
+                                    <span>Date of certification</span>
+                                    <span className='ultra-small-medium'>{completedDate}</span>
+                                    <span>Valid through</span>
+                                    <span className={classNames('ultra-small-medium', styles.gridSeparator)}>
+                                        {expireDate}
+                                    </span>
+                                    <span>Serial Number</span>
+                                    <span className='ultra-small-medium'>{props.completionUuid}</span>
+                                    <span>Validate at</span>
+                                    <span className='ultra-small-medium'>{props.validateLink}</span>
                                 </div>
-                                {
-                                    displaySignature && (
-                                        <div className={styles.sigWrap}>
-                                            <DougSigSvg />
-                                            <div className={styles.divider} />
-                                            <span>Doug Hanson</span>
-                                            <span>CEO, Topcoder</span>
-                                        </div>
-                                    )
-                                }
                             </div>
-                        )
-                    }
+                            {
+                                displaySignature && (
+                                    <div className={styles.sigWrap}>
+                                        <DougSigSvg />
+                                        <div className={styles.divider} />
+                                        <span>Doug Hanson</span>
+                                        <span>CEO, Topcoder</span>
+                                    </div>
+                                )
+                            }
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

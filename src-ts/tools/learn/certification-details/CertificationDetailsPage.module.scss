@@ -21,3 +21,16 @@
         margin-top: 0;
     }
 }
+
+.certifCompleted {
+    display: flex;
+    align-items: center;
+    margin-bottom: $space-mx;
+    gap: $space-lg;
+    
+    @include ltemd {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: $space-xxxxl;
+    }
+}

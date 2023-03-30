@@ -15,7 +15,7 @@ export function useGetStripeProduct(productId: string): StripeProductData {
     )
     const swrCacheConfig: SWRConfiguration = useSwrCache(url)
 
-    const { data: product, error }: SWRResponse<StripeProduct> = useSWR(url, swrCacheConfig)
+    const { data: product, error }: SWRResponse<StripeProduct> = useSWR(productId ? url : undefined, swrCacheConfig)
 
     return {
         loading: !product && !error,

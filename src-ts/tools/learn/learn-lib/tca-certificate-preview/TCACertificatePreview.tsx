@@ -6,7 +6,7 @@ import { TCACertification, useCertificateScaling } from '..'
 import { TCACertificate } from './tca-certificate'
 import styles from './TCACertificatePreview.module.scss'
 
-interface TCACertificatePreviewProps {
+export interface TCACertificatePreviewProps {
     className?: string
     certificateElRef?: MutableRefObject<HTMLElement | any>
     certification: TCACertification
@@ -15,12 +15,13 @@ interface TCACertificatePreviewProps {
     completedDate?: string
     completionUuid?: string
     validateLink?: string
+    maxScale?: number
 }
 
 const TCACertificatePreview: FC<TCACertificatePreviewProps> = (props: TCACertificatePreviewProps) => {
     const certificateWrapRef: MutableRefObject<HTMLDivElement | any> = useRef()
 
-    useCertificateScaling(certificateWrapRef, 880, 880)
+    useCertificateScaling(certificateWrapRef, 880, 880, props.maxScale)
 
     function getPlaceholder(): ReactNode {
         return (

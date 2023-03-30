@@ -18,7 +18,6 @@ interface CertificationCurriculumProps {
     certification?: TCACertification
     certsProgress?: ReadonlyArray<LearnUserCertificationProgress>
     isEnrolled: boolean
-    isCompleted: boolean
 }
 
 interface ProgressByIdCollection {
@@ -94,7 +93,6 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
                 </div>
                 <CertificationSummary
                     certification={props.certification}
-                    isCompleted={props.isCompleted}
                 />
             </div>
         </div>

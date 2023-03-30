@@ -1,6 +1,7 @@
 import { FC, memo, ReactNode } from 'react'
 import classNames from 'classnames'
 
+import { getTCACertificationPath, getTCAUserCertificationUrl } from '../../../learn.routes'
 import { Button, ButtonStyle, IconSolid, ProgressBar } from '../../../../../lib'
 import {
     CertificateBadgeIcon,
@@ -12,7 +13,7 @@ import {
     TCACertificationProgress,
     TCACertificationProviderBase,
 } from '../../../learn-lib'
-import { getTCACertificateUrl, getTCACertificationPath } from '../../../learn.routes'
+import { EnvironmentConfig } from '../../../../../config'
 
 import styles from './TCCertCard.module.scss'
 
@@ -47,10 +48,11 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
         }
 
         if (isCompleted) {
+            const certificatePath: string = getTCAUserCertificationUrl(dashedName, props.progress?.userHandle as string)
             return (
                 <div className={styles.completedCTAs}>
                     <div className={styles.certCTAButtons}>
-                        {getCtaBtn('primary', 'View Certificate', getTCACertificateUrl(dashedName))}
+                        {getCtaBtn('primary', 'View Certificate', certificatePath)}
                         {getCtaBtn('secondary', 'Details', getTCACertificationPath(dashedName))}
                     </div>
                 </div>
@@ -82,13 +84,6 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                         <CompletionTimeRange range={props.certification.completionTimeRange} />
                     </span>
                 </div>
-                {/* TODO: Uncomment this when paid certs come to prod! */}
-                {/* <div className={styles.subTitleItem}>
-                    <IconSolid.CurrencyDollarIcon width={16} height={16} />
-                    <span className={classNames('body-small', styles.infoText)}>
-                        {' One time payment'}
-                    </span>
-                </div> */}
             </div>
         )
     }
@@ -121,7 +116,8 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
 
                         <div className={styles.cardLabels}>
                             <div className={styles.newLabel}>NEW</div>
-                            <div className={styles.freeLabel}>FREE</div>
+                            {!EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION
+                                && <div className={styles.freeLabel}>FREE</div>}
                         </div>
                     </div>
                     {renderStats()}

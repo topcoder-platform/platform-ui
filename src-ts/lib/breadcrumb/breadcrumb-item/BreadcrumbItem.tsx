@@ -21,6 +21,7 @@ const BreadcrumbItem: FC<BreadcrumbItemProps> = (props: BreadcrumbItemProps) => 
         <li
             key={props.index}
             onClick={onClick}
+            className={props.item.isElipsis ? 'elipsis' : ''}
         >
             <Link
                 className={classNames(props.item.isElipsis && styles.elipsis)}

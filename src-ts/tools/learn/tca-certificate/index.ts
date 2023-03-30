@@ -1,4 +1,4 @@
-export * from './my-certificate'
+export * from './user-certification-view'
+
+// used only by SSR
 export * from './certificate-view'
-export * from './user-certificate'
-export * from './validate-certificate'

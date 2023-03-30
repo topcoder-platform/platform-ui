@@ -96,6 +96,8 @@ const EnrollmentPage: FC<{}> = () => {
                 })
         }, [certification?.id, profile, setCertificateProgress])
 
+    const tcaMonetizationEnabled: boolean = EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION || false
+
     function navToCertificationDetails(): void {
         navigate(getTCACertificationPath(certificationDashedName))
     }
@@ -111,8 +113,8 @@ const EnrollmentPage: FC<{}> = () => {
                 <PerksSection
                     theme='clear'
                     items={perks}
-                    title={EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION
-                        ? 'Enroll now with our introductory low pricing!'
+                    title={tcaMonetizationEnabled
+                        ? ''
                         : 'Enroll now for Free!'}
                 />
 
@@ -142,6 +144,7 @@ const EnrollmentPage: FC<{}> = () => {
             mainContent={renderMainContent()}
             extraBreadCrumbs={enrollmentBreadcrumb}
             certification={certification}
+            hideWaveHeroText={tcaMonetizationEnabled}
         />
     )
 }

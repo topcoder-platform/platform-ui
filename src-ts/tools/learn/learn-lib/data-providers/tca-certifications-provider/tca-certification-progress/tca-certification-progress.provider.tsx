@@ -75,7 +75,8 @@ export function useTCACertificationCheckCompleted(
 
     const { data, error }: SWRResponse<TCACertificationCompletedResponse>
     = useSWR<TCACertificationCompletedResponse>(url, {
-        fetcher: () => learnXhrPutAsync<{}, TCACertificationCompletedResponse>(url, {}),
+        fetcher: () => learnXhrPutAsync<{}, TCACertificationCompletedResponse>(url, {})
+            .then(d => (d || {} as TCACertificationCompletedResponse)),
         isPaused: () => options?.enabled === false,
     })
 
