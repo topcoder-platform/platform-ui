@@ -28,7 +28,6 @@ const CertificateView: FC<{}> = () => {
     const userHandle: string = `${routeParams.memberHandle}`
     const certificationParam: string = routeParams.certification ?? ''
 
-
     const tcaCertificationPath: string = getTCACertificationPath(certificationParam)
 
     const {
