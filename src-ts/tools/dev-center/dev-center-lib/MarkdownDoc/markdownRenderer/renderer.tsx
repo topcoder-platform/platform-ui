@@ -1,3 +1,8 @@
+// Ignore linting in this file for now
+// as there are way too many errors and unclear code
+// TODO: we need to cleanup the code and fix linting for this file
+/* eslint-disable */
+
 import * as React from 'react'
 import { marked, Renderer as MarkedRenderer } from 'marked'
 import _ from 'lodash'

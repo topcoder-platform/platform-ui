@@ -36,19 +36,19 @@ export function renderMarkdown(
                     .replace(/`/g, '')
                     .trim(),
             }
-            : { title, s }
+            : { s: '', title: '' }
     }
 
     const { title, s }: ReturnType<typeof getTitle> = getTitle(markdown)
-    markdown = title ? s : markdown
+    const markdownTitle: string = title ? s : markdown
 
     const opts: MarkdownRenderOptions = { ...defaultOptions, ...options }
     const result: ReturnType<Renderer['render']> = renderer.render(
-        markdown,
+        markdownTitle,
         opts,
     )
     const { toc }: { toc: NonNullable<MarkdownRenderOptions['toc']> }
         = opts as { toc: NonNullable<MarkdownRenderOptions['toc']> }
 
-    return { doc: result, toc, title }
+    return { doc: result, title, toc }
 }

@@ -1,5 +1,4 @@
-export * from './LayoutDocHeader'
+export { default as LayoutDocHeader } from './LayoutDocHeader'
 export * from './markdownRenderer'
 
-export * from './MarkdownDoc'
-export { default } from './MarkdownDoc'
+export { default as MarkdownDoc } from './MarkdownDoc'

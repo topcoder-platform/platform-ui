@@ -13,15 +13,21 @@ interface DevCenterCardProps {
     titleClass: string
 }
 
-const DevCenterCard: FC<DevCenterCardProps> = ({ icon, cornerIcon, title, titleClass, description, button, className = '' }) => (
-    <div className={classNames(styles.card, className)}>
-        <div className={styles.cornerImage}>{cornerIcon}</div>
+const DevCenterCard: FC<DevCenterCardProps> = props => (
+    <div className={classNames(styles.card, props.className)}>
+        <div className={styles.cornerImage}>
+            {props.cornerIcon}
+        </div>
         <div className={styles.cardContainer}>
-            {icon}
+            {props.icon}
             <div className={styles.titleSection}>
-                <h4 className={classNames(styles.title, titleClass)}>{title}</h4>
-                <span className={classNames('body-main ', styles.summary)}>{description}</span>
-                {button && button}
+                <h4 className={classNames(styles.title, props.titleClass)}>
+                    {props.title}
+                </h4>
+                <span className={classNames('body-main ', styles.summary)}>
+                    {props.description}
+                </span>
+                {props.button || false}
             </div>
         </div>
 

@@ -7,16 +7,12 @@ interface LayoutDocHeaderProps {
     title?: string
 }
 
-export const LayoutDocHeader: React.FC<LayoutDocHeaderProps> = props => {
-    const { title = '', subtitle = '' }: LayoutDocHeaderProps = props
-
-    return (
-        <header>
-            <h1 className={styles.title}>{title}</h1>
-            <hr className={styles.divider} />
-            <h2 className={styles.subtitle}>{subtitle}</h2>
-        </header>
-    )
-}
+const LayoutDocHeader: React.FC<LayoutDocHeaderProps> = props => (
+    <header>
+        <h1 className={styles.title}>{props.title}</h1>
+        <hr className={styles.divider} />
+        <h2 className={styles.subtitle}>{props.subtitle}</h2>
+    </header>
+)
 
 export default LayoutDocHeader

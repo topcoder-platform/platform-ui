@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { noop } from 'lodash'
 
 import {
     MarkdownResult,
@@ -42,7 +43,7 @@ export default function useMarkdown({ uri }: UseMarkdownProps): {
             .then(text => {
                 setMarkdown(text)
             })
-            .catch(() => {})
+            .catch(noop)
     }, [uri])
 
     React.useEffect(() => {

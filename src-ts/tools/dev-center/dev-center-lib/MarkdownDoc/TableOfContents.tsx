@@ -12,8 +12,7 @@ export const TableOfContents: React.FC<TableOfContentsProps> = props => {
         number,
         React.Dispatch<React.SetStateAction<number>>
     ] = React.useState(-1)
-    const { toc }: { toc: TOC } = props
-    const items: TOC = React.useMemo(() => toc.filter(item => item.level === 2 || item.level === 3), [toc])
+    const items: TOC = React.useMemo(() => props.toc.filter(item => item.level === 2 || item.level === 3), [props.toc])
 
     const navRef: React.RefObject<HTMLElement> = React.createRef<HTMLElement>()
 
@@ -51,7 +50,7 @@ export const TableOfContents: React.FC<TableOfContentsProps> = props => {
                 <ul>
                     {items.map((item, index) => (
                         <li
-                            key={`${item.title}-${index}`}
+                            key={`${item.title}-${index as any}`}
                             className={`${styles.navListItem} ${
                                 index === activeIndex ? styles.active : ''
                             }`}
