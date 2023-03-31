@@ -1,5 +1,4 @@
 import PT from "prop-types";
-import React from "react";
 import Markdown from "react-markdown";
 
 export default function SpecificationComponent({ bodyText, format }) {
