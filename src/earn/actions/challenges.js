@@ -48,7 +48,7 @@ async function getChallenges(filter, signal) {
   let challenges;
   let total;
   let openForRegistrationCount;
-  console.log({challenges});
+
   const getChallengesByBucket = async (f) => {
     const promises = [];
     switch (f.bucket) {

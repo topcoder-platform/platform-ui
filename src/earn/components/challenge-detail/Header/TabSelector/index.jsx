@@ -244,7 +244,7 @@ ChallengeViewSelector.defaultProps = {
 ChallengeViewSelector.propTypes = {
   isLoggedIn: PT.bool,
   challenge: PT.shape({
-    legacyId: PT.string,
+    legacyId: PT.oneOfType([PT.string, PT.number]),
     legacy: PT.shape({
       forumId: PT.number,
     }),

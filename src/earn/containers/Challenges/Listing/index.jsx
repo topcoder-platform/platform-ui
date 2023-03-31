@@ -142,7 +142,7 @@ const Listing = ({
           </div>
         </div>
       </Panel.Header>
-      {loadingChallenges && _.times(3, () => <ChallengeLoading />)}
+      {loadingChallenges && _.times(3, () => <ChallengeLoading key={Math.random()} />)}
       {!loadingChallenges &&
         (challenges.length ? (
           <Panel.Body>

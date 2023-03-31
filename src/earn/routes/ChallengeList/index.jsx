@@ -14,6 +14,7 @@ import _ from "lodash";
 import { initAuth } from '../../services/auth';
 import { useMediaQuery } from "react-responsive";
 import { useCssVariable } from "@earn/utils/hooks/useCssVariable";
+import { ContentLayout } from "../../../../src-ts/lib";
 
 import "react-date-range/dist/theme/default.css";
 import "react-date-range/dist/styles.css";
@@ -112,7 +113,7 @@ export const ChallengeList = () => {
   // }, [isScreenXs]);
 
   return (
-    <>
+  <ContentLayout>
       <div styleName="styles.layout">
         <aside styleName="styles.sidebar" id="sidebar-id">
           <div styleName="styles.sidebar-content">
@@ -136,7 +137,7 @@ export const ChallengeList = () => {
         </div>
       </div>
       <div id="tooltips-container-id" />
-    </>
+    </ContentLayout>
   );
 };
 

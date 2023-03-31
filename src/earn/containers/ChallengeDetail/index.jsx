@@ -50,6 +50,7 @@ import {
   SUBTRACKS,
   CHALLENGE_STATUS,
 } from "../../utils/tc";
+import { withRouter } from "../../utils/router";
 import * as constants from "../../constants";
 import { getService as getContentfulService } from "../../services/contentful";
 // import {
@@ -227,12 +228,15 @@ class ChallengeDetailPageContainer extends React.Component {
       challenge,
       // loadingRecommendedChallengesUUID,
       history,
+      location,
       loadChallengeDetails,
       loadFullChallengeDetails,
       isLoadingChallenge,
       isLoadingTerms,
     } = this.props;
 
+
+    // TODO: Replace `history` with useNavigate(), `history` is deprecated in react-router v6
     if (
       challenge.isLegacyChallenge &&
       !history.location.pathname.includes(challenge.id)
@@ -257,7 +261,7 @@ class ChallengeDetailPageContainer extends React.Component {
     //   getAllRecommendedChallenges(auth.tokenV3, recommendedTechnology);
     // }
 
-    const query = new URLSearchParams(history.location.search);
+    const query = new URLSearchParams(location.search);
     const isReloading = isLoadingChallenge || isLoadingTerms;
     if (query.get("reload") && !isReloading) {
       history.replace(history.location.pathname, history.state);
@@ -298,7 +302,7 @@ class ChallengeDetailPageContainer extends React.Component {
                 content.Article.includes.Asset,
                 (a) =>
                   item.fields.featuredImage !== null &&
-                  a.sys.id === item.fields.featuredImage.sys.id
+                  a.sys.id === item.fields.featuredImage?.sys.id
               );
               if (asset)
                 _.assign(item.fields.featuredImage, {
@@ -512,7 +516,7 @@ class ChallengeDetailPageContainer extends React.Component {
             <ChallengeDetailsView
               challenge={challenge}
               challengesUrl={challengesUrl}
-              communitiesList={communitiesList.data}
+              communitiesList={communitiesList?.data ?? []}
               description={challenge.name}
               detailedRequirements={challenge.description}
               terms={terms}
@@ -694,7 +698,7 @@ ChallengeDetailPageContainer.propTypes = {
   challengeTypesMap: PT.shape().isRequired,
   challengesUrl: PT.string,
   checkpointResults: PT.arrayOf(PT.shape()),
-  checkpointResultsUi: PT.shape().isRequired,
+  checkpointResultsUi: PT.shape(),
   checkpoints: PT.shape(),
   // recommendedChallenges: PT.shape().isRequired,
   communityId: PT.string,
@@ -702,7 +706,7 @@ ChallengeDetailPageContainer.propTypes = {
     data: PT.arrayOf(PT.object).isRequired,
     loadingUuid: PT.string.isRequired,
     timestamp: PT.number.isRequired,
-  }).isRequired,
+  }),
   getCommunitiesList: PT.func.isRequired,
   getTypes: PT.func.isRequired,
   isLoadingChallenge: PT.bool,
@@ -745,8 +749,7 @@ ChallengeDetailPageContainer.propTypes = {
   // expandedTags: PT.arrayOf(PT.number).isRequired,
   // expandTag: PT.func.isRequired,
   // loadingRecommendedChallengesUUID: PT.string.isRequired,
-  history: PT.shape().isRequired,
-  openForRegistrationChallenges: PT.shape().isRequired,
+  openForRegistrationChallenges: PT.arrayOf(PT.shape()).isRequired,
 };
 
 function mapStateToProps({earn: state}, props) {
@@ -840,7 +843,7 @@ function mapStateToProps({earn: state}, props) {
       })
     );
   }
-  console.log('HEREEEE', props)
+
   return {
     filter: state.filter,
     auth: state.auth,
@@ -849,14 +852,11 @@ function mapStateToProps({earn: state}, props) {
     // recommendedChallenges: cl.recommendedChallenges,
     // loadingRecommendedChallengesUUID: cl.loadingRecommendedChallengesUUID,
     expandedTags: cl.expandedTags,
-    challengeId: String(props.match?.params.challengeId),
-    challengesUrl: props.challengesUrl,
     challengeTypesMap: state.challengeListing.challengeTypesMap,
     checkpointResults: checkpoints.checkpointResults,
     checkpointResultsUi: state.page.challengeDetails.checkpoints,
     checkpoints,
-    communityId: props.communityId,
-    communitiesList: state.tcCommunities?.list ?? [],
+    communitiesList: state.tcCommunities?.list,
     domain: state.domain,
     isLoadingChallenge: Boolean(state.challenge.loadingDetailsForChallengeId),
     isLoadingFullChallenge: Boolean(
@@ -909,55 +909,58 @@ const mapDispatchToProps = (dispatch) => {
       dispatch(lookupActions.getAllCountriesInit());
       dispatch(lookupActions.getAllCountriesDone(tokenV3));
     },
+
     getReviewTypes: (tokenV3) => {
       dispatch(lookupActions.getReviewTypesInit());
       dispatch(lookupActions.getReviewTypesDone(tokenV3));
     },
+
     loadChallengeDetails: (tokens, challengeId, loadFullChallengeDetails) => {
       const a = actions.challenge;
       dispatch(a.getBasicDetailsInit(challengeId));
       dispatch(
-        a.getBasicDetailsDone(challengeId, tokens.tokenV3, tokens.tokenV2)
-      ).then((res) => {
-        const ch = res.payload;
+        a.getBasicDetails(challengeId, tokens.tokenV3, tokens.tokenV2)
+      ).then(({action}) => {
+        const ch = action.payload;
         if (ch.track === COMPETITION_TRACKS.DES) {
           const p =
             ch.phases || [].filter((x) => x.name === "Checkpoint Review");
           if (p.length && !p[0].isOpen) {
             dispatch(a.fetchCheckpointsInit());
-            dispatch(a.fetchCheckpointsDone(tokens.tokenV2, ch.legacyId));
+            dispatch(a.fetchCheckpoints(tokens.tokenV2, ch.legacyId));
           } else dispatch(a.dropCheckpoints());
         } else dispatch(a.dropCheckpoints());
         if (ch.status === CHALLENGE_STATUS.COMPLETED) {
           dispatch(a.loadResultsInit(ch.legacyId));
           dispatch(
-            a.loadResultsDone(tokens, ch.legacyId, ch.track.toLowerCase())
+            a.loadResults(tokens, ch.legacyId, ch.track.toLowerCase())
           );
         } else dispatch(a.dropResults());
 
         loadFullChallengeDetails(tokens, challengeId);
-        return res;
+        return action;
       });
     },
+
     loadFullChallengeDetails: (tokens, challengeId) => {
       const a = actions.challenge;
 
       dispatch(a.getFullDetailsInit(challengeId));
       dispatch(
-        a.getFullDetailsDone(challengeId, tokens.tokenV3, tokens.tokenV2)
-      ).then((res) => {
-        return res;
-      });
+        a.getFullDetails(challengeId, tokens.tokenV3, tokens.tokenV2)
+      ).then(res => res);
     },
+
     registerForChallenge: (auth, challengeId) => {
       const a = actions.challenge;
       dispatch(a.registerInit());
-      dispatch(a.registerDone(auth, challengeId));
+      dispatch(a.register(auth, challengeId));
     },
+
     reloadChallengeDetails: (tokens, challengeId) => {
       const a = actions.challenge;
       dispatch(
-        a.getFullDetailsDone(challengeId, tokens.tokenV3, tokens.tokenV2)
+        a.getFullDetails(challengeId, tokens.tokenV3, tokens.tokenV2)
       ).then((challengeDetails) => {
         if (challengeDetails.track === COMPETITION_TRACKS.DES) {
           const p =
@@ -965,7 +968,7 @@ const mapDispatchToProps = (dispatch) => {
             [].filter((x) => x.name === "Checkpoint Review");
           if (p.length && !p[0].isOpen) {
             dispatch(
-              a.fetchCheckpointsDone(tokens.tokenV2, challengeDetails.legacyId)
+              a.fetchCheckpoints(tokens.tokenV2, challengeDetails.legacyId)
             );
           }
         }
@@ -977,17 +980,17 @@ const mapDispatchToProps = (dispatch) => {
     unregisterFromChallenge: (auth, challengeId) => {
       const a = actions.challenge;
       dispatch(a.unregisterInit());
-      dispatch(a.unregisterDone(auth, challengeId));
+      dispatch(a.unregister(auth, challengeId));
     },
     loadResults: (auth, challengeId, type) => {
       const a = actions.challenge;
       dispatch(a.loadResultsInit(challengeId));
-      dispatch(a.loadResultsDone(auth, challengeId, type));
+      dispatch(a.loadResults(auth, challengeId, type));
     },
     fetchCheckpoints: (tokens, challengeId) => {
       const a = actions.challenge;
       dispatch(a.fetchCheckpointsInit());
-      dispatch(a.fetchCheckpointsDone(tokens.tokenV2, challengeId));
+      dispatch(a.fetchCheckpoints(tokens.tokenV2, challengeId));
     },
     toggleCheckpointFeedback: (id, open) => {
       const {
@@ -1013,18 +1016,18 @@ const mapDispatchToProps = (dispatch) => {
       const uuid = shortId();
       const a = actions.challenge;
       dispatch(a.updateChallengeInit(uuid));
-      dispatch(a.updateChallengeDone(uuid, challenge, tokenV3));
+      dispatch(a.updateChallenge(uuid, challenge, tokenV3));
     },
     loadMMSubmissions: (challengeId, tokenV3) => {
       const a = actions.challenge;
       dispatch(a.getMmSubmissionsInit(challengeId));
-      dispatch(a.getMmSubmissionsDone(challengeId, tokenV3));
+      dispatch(a.getMmSubmissions(challengeId, tokenV3));
     },
     loadSubmissionInformation: (challengeId, submissionId, tokenV3) => {
       const a = actions.challenge;
       dispatch(a.getSubmissionInformationInit(challengeId, submissionId));
       dispatch(
-        a.getSubmissionInformationDone(challengeId, submissionId, tokenV3)
+        a.getSubmissionInformation(challengeId, submissionId, tokenV3)
       );
     },
     expandTag: (id) => {
@@ -1039,4 +1042,4 @@ const ChallengeDetailContainer = connect(
   mapDispatchToProps
 )(ChallengeDetailPageContainer);
 
-export default ChallengeDetailContainer;
+export default withRouter(ChallengeDetailContainer);

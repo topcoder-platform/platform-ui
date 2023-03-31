@@ -59,7 +59,7 @@ MetaTags.defaultProps = {
 
 MetaTags.propTypes = {
   description: PT.string.isRequired,
-  domain: PT.string.isRequired,
+  domain: PT.string,
   image: PT.string,
   siteName: PT.string,
   socialDescription: PT.string,

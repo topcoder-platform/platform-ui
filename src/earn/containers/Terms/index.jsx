@@ -179,7 +179,7 @@ TermsPageContainer.propTypes = {
   viewOnly: PT.bool,
 };
 
-function mapStateToProps(state, props) {
+function mapStateToProps({earn: state}, props) {
   const { entity } = props;
   return {
     agreeingTerm: state.terms.agreeingTerm,

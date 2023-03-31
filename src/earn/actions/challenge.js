@@ -81,7 +81,7 @@ function getBasicDetailsInit(challengeId) {
  * @param {String} tokenV2 Topcoder v2 auth token.
  * @return {Action}
  */
-function getBasicDetailsDone(challengeId, tokenV3, tokenV2) {
+function getBasicDetails(challengeId, tokenV3, tokenV2) {
   const service = getChallengesService(tokenV3, tokenV2);
   const v3Promise = service.getBasicChallengeDetails(challengeId);
   return v3Promise;
@@ -105,7 +105,7 @@ function getFullDetailsInit(challengeId) {
  * @param {String} tokenV2 Topcoder v2 auth token.
  * @return {Action}
  */
-function getFullDetailsDone(challengeId, tokenV3, tokenV2) {
+function getFullDetails(challengeId, tokenV3, tokenV2) {
   const service = getChallengesService(tokenV3, tokenV2);
   const v3Promise = service.getFullChallengeDetails(challengeId);
   return v3Promise;
@@ -131,7 +131,7 @@ function getSubmissionsInit(challengeId) {
  * @param {String} tokenV3 Topcoder auth token v3.
  * @return {Action}
  */
-function getSubmissionsDone(challengeId, tokenV3) {
+function getSubmissions(challengeId, tokenV3) {
   const user = decodeToken(tokenV3);
   const submissionsService = getSubmissionService(tokenV3);
   const filters = {
@@ -171,7 +171,7 @@ function getMMSubmissionsInit(challengeId) {
  * @param {String} tokenV3  Topcoder auth token v3.
  * @return {Action}
  */
-function getMMSubmissionsDone(challengeId, tokenV3) {
+function getMMSubmissions(challengeId, tokenV3) {
   const filter = { challengeId };
   const submissionsService = getSubmissionService(tokenV3);
 
@@ -208,7 +208,7 @@ function registerInit() {}
  * @param {String} challengeId Challenge ID.
  * @return {Action}
  */
-function registerDone(auth, challengeId) {
+function register(auth, challengeId) {
   return (
     getChallengesService(auth.tokenV3)
       .register(challengeId)
@@ -221,7 +221,7 @@ function registerDone(auth, challengeId) {
             setTimeout(
               () =>
                 resolve(
-                  getFullDetailsDone(challengeId, auth.tokenV3, auth.tokenV2)
+                  getFullDetails(challengeId, auth.tokenV3, auth.tokenV2)
                 ),
               config.CHALLENGE_DETAILS_REFRESH_DELAY
             )
@@ -247,7 +247,7 @@ function unregisterInit() {}
  * @param {String} challengeId Challenge ID.
  * @return {Action}
  */
-function unregisterDone(auth, challengeId) {
+function unregister(auth, challengeId) {
   return (
     getChallengesService(auth.tokenV3)
       .unregister(challengeId)
@@ -260,7 +260,7 @@ function unregisterDone(auth, challengeId) {
             setTimeout(
               () =>
                 resolve(
-                  getFullDetailsDone(challengeId, auth.tokenV3, auth.tokenV2)
+                  getFullDetails(challengeId, auth.tokenV3, auth.tokenV2)
                 ),
               config.CHALLENGE_DETAILS_REFRESH_DELAY
             )
@@ -290,7 +290,7 @@ function loadResultsInit(challengeId) {
  * @param {String} type Challenge type.
  * @return {Action}
  */
-function loadResultsDone(auth, challengeId, type) {
+function loadResults(auth, challengeId, type) {
   return getApi("V2")
     .fetch(`/${type}/challenges/result/${challengeId}`)
     .then((response) => response.json())
@@ -314,7 +314,7 @@ function fetchCheckpointsInit() {}
  * @param {String} tokenV2 Topcoder v2 auth token.
  * @param {String} challengeId Challenge ID.
  */
-function fetchCheckpointsDone(tokenV2, challengeId) {
+function fetchCheckpoints(tokenV2, challengeId) {
   const endpoint = `/design/challenges/checkpoint/${challengeId}`;
   return getApi("V2")
     .fetch(endpoint)
@@ -365,7 +365,7 @@ function toggleCheckpointFeedback(id, open) {
  * {@link module:actions.challenge.getFullDetailsInit} and
  * {@link module:actions.challenge.getFullDetailsDone}. We need to refactor this.
  * @param {String} uuid UUID of the operation (the same should be passed into
- *  the corresponding {@link module:actions.challenge.updateChallengeDone}).
+ *  the corresponding {@link module:actions.challenge.updateChallenge}).
  * @return {Action}
  */
 function updateChallengeInit(uuid) {
@@ -386,7 +386,7 @@ function updateChallengeInit(uuid) {
  * @param {String} tokenV3 Topcoder v3 auth token.
  * @return {Action}
  */
-function updateChallengeDone(uuid, challenge, tokenV3) {
+function updateChallenge(uuid, challenge, tokenV3) {
   return getChallengesService(tokenV3)
     .updateChallenge(challenge)
     .then((res) => ({ uuid, res }));
@@ -408,7 +408,7 @@ function getActiveChallengesCountInit() {}
  *  also count private challenges related to this user.
  * @return {Action}
  */
-function getActiveChallengesCountDone(handle, tokenV3) {
+function getActiveChallengesCount(handle, tokenV3) {
   return getChallengesService(tokenV3).getActiveChallengesCount(handle);
 }
 
@@ -432,7 +432,7 @@ function getSubmissionInformationInit(challengeId, submissionId) {
  * @param {String} tokenV3 Topcoder auth token v3.
  * @return {Action}
  */
-function getSubmissionInformationDone(challengeId, submissionId, tokenV3) {
+function getSubmissionInformation(challengeId, submissionId, tokenV3) {
   const filter = { challengeId };
   const submissionsService = getSubmissionService(tokenV3);
 
@@ -450,7 +450,7 @@ function getSubmissionInformationDone(challengeId, submissionId, tokenV3) {
   });
 }
 
-function getChallengeDone(challengeId) {
+function getChallenge(challengeId) {
   return challengeService.getChallenge(challengeId);
 }
 
@@ -477,30 +477,30 @@ export default createActions({
     DROP_CHECKPOINTS: dropCheckpoints,
     DROP_RESULTS: dropResults,
     FETCH_CHECKPOINTS_INIT: fetchCheckpointsInit,
-    FETCH_CHECKPOINTS_DONE: fetchCheckpointsDone,
+    FETCH_CHECKPOINTS: fetchCheckpoints,
     GET_BASIC_DETAILS_INIT: getBasicDetailsInit,
-    GET_BASIC_DETAILS_DONE: getBasicDetailsDone,
+    GET_BASIC_DETAILS: getBasicDetails,
     GET_FULL_DETAILS_INIT: getFullDetailsInit,
-    GET_FULL_DETAILS_DONE: getFullDetailsDone,
+    GET_FULL_DETAILS: getFullDetails,
     GET_SUBMISSIONS_INIT: getSubmissionsInit,
-    GET_SUBMISSIONS_DONE: getSubmissionsDone,
+    GET_SUBMISSIONS: getSubmissions,
     LOAD_RESULTS_INIT: loadResultsInit,
-    LOAD_RESULTS_DONE: loadResultsDone,
+    LOAD_RESULTS: loadResults,
     REGISTER_INIT: registerInit,
-    REGISTER_DONE: registerDone,
+    REGISTER: register,
     TOGGLE_CHECKPOINT_FEEDBACK: toggleCheckpointFeedback,
     UNREGISTER_INIT: unregisterInit,
-    UNREGISTER_DONE: unregisterDone,
+    UNREGISTER: unregister,
     UPDATE_CHALLENGE_INIT: updateChallengeInit,
-    UPDATE_CHALLENGE_DONE: updateChallengeDone,
+    UPDATE_CHALLENGE: updateChallenge,
     GET_ACTIVE_CHALLENGES_COUNT_INIT: getActiveChallengesCountInit,
-    GET_ACTIVE_CHALLENGES_COUNT_DONE: getActiveChallengesCountDone,
+    GET_ACTIVE_CHALLENGES_COUNT: getActiveChallengesCount,
     GET_MM_SUBMISSIONS_INIT: getMMSubmissionsInit,
-    GET_MM_SUBMISSIONS_DONE: getMMSubmissionsDone,
+    GET_MM_SUBMISSIONS: getMMSubmissions,
     GET_SUBMISSION_INFORMATION_INIT: getSubmissionInformationInit,
-    GET_SUBMISSION_INFORMATION_DONE: getSubmissionInformationDone,
+    GET_SUBMISSION_INFORMATION: getSubmissionInformation,
     GET_CHALLENGE_INIT: _.noop,
-    GET_CHALLENGE_DONE: getChallengeDone,
+    GET_CHALLENGE: getChallenge,
     GET_IS_REGISTERED: getIsRegistered,
   },
 });

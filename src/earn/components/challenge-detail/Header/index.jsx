@@ -544,5 +544,5 @@ ChallengeHeader.propTypes = {
   isLoadingChallenge: PT.bool.isRequired,
   isMenuOpened: PT.bool,
   mySubmissions: PT.arrayOf(PT.shape()).isRequired,
-  openForRegistrationChallenges: PT.shape().isRequired,
+  openForRegistrationChallenges: PT.arrayOf(PT.shape()).isRequired,
 };
