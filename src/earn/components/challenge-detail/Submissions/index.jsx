@@ -825,7 +825,7 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-function mapStateToProps(state) {
+function mapStateToProps({earn: state}) {
   return {
     submissionHistoryOpen: state.page.challengeDetails.submissionHistoryOpen,
     submissionTestcaseOpen: state.page.challengeDetails.submissionTestcaseOpen,

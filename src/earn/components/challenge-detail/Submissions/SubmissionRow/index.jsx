@@ -167,7 +167,7 @@ SubmissionRow.propTypes = {
       provisionalScore: PT.oneOfType([PT.number, PT.string]),
       finalScore: PT.oneOfType([PT.number, PT.string]),
       initialScore: PT.oneOfType([PT.number, PT.string]),
-      status: PT.string.isRequired,
+      status: PT.string,
       submissionId: PT.string.isRequired,
       submissionTime: PT.string.isRequired,
     })

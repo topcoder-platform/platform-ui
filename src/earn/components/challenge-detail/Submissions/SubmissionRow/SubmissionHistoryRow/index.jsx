@@ -91,7 +91,7 @@ SubmissionHistoryRow.propTypes = {
   isMM: PT.bool.isRequired,
   submission: PT.number.isRequired,
   finalScore: PT.oneOfType([PT.number, PT.string]),
-  status: PT.string.isRequired,
+  status: PT.string,
   provisionalScore: PT.oneOfType([PT.number, PT.string]),
   submissionTime: PT.string.isRequired,
   isReviewPhaseComplete: PT.bool,

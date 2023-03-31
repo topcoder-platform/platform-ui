@@ -400,7 +400,7 @@ export default class Registrants extends React.Component {
             const final = this.getFinal(r);
 
             return (
-              <div styleName="row" key={r.memberHandle} role="row">
+              <div styleName="row" key={r.created} role="row">
                 {!isDesign && (
                   <div styleName="col-2">
                     <div styleName="sm-only title">Rating</div>
