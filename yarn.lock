@@ -14261,8 +14261,8 @@ unique-string@^2.0.0:
     crypto-random-string "^2.0.0"
 
 "universal-navigation@https://github.com/topcoder-platform/universal-navigation":
-  version "1.0.4"
-  resolved "https://github.com/topcoder-platform/universal-navigation#332405d1b9fcf780460fdde1ae81c5fe0fbcb41a"
+  version "1.0.12"
+  resolved "https://github.com/topcoder-platform/universal-navigation#92b8a638a901dedc0b59edb121161d9dabc8333a"
 
 universalify@^0.2.0:
   version "0.2.0"
