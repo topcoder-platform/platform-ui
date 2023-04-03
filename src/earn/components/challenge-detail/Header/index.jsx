@@ -14,7 +14,6 @@ import PT from "prop-types";
 import React from "react";
 import config from "@earn/config";
 import { DangerButton, PrimaryButton } from "@earn/components/UiKit";
-import { Link } from "@earn/components/UiKit";
 import { COMPETITION_TRACKS } from "@earn/utils/tc";
 import { phaseEndDate } from "@earn/utils/challenge-listing/helper";
 
@@ -29,6 +28,7 @@ import DeadlinesPanel from "./DeadlinesPanel";
 import TabSelector from "./TabSelector";
 
 import style from "./style.module.scss";
+import { Link } from "react-router-dom";
 
 /* Holds day and hour range in ms. */
 const HOUR_MS = 60 * 60 * 1000;

@@ -1,7 +1,6 @@
 
 export const Tag = ({children}) => (
     <div className="mock-uikit-Tag">
-        <div>Tag</div>
         {children}
     </div>
 )
@@ -53,18 +52,6 @@ export const QATrackEventTag = ({children}) => (
         {children}
     </div>
 )
-export const DangerButton = ({children}) => (
-    <div className="mock-uikit-DangerButton">
-        <div>DangerButton</div>
-        {children}
-    </div>
-)
-export const PrimaryButton = ({children}) => (
-    <div className="mock-uikit-PrimaryButton">
-        <div>PrimaryButton</div>
-        {children}
-    </div>
-)
 export const Modal = ({children}) => (
     <div className="mock-uikit-Modal">
         <div>Modal</div>
@@ -89,3 +76,5 @@ export const Link = ({children}) => (
         {children}
     </div>
 )
+
+export * from './Button'
