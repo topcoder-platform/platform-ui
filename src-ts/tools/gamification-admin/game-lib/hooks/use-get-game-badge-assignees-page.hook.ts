@@ -19,7 +19,9 @@ export function useGetGameBadgeAssigneesPage(badge: GameBadge, sort: Sort): Infi
             order_type: sort.direction,
         }
 
-        const badgeEndpointUrl: URL = new URL(`${EnvironmentConfig.API.V5}/gamification/badges/${badge.id}/assignees?${new URLSearchParams(params)}`)
+        const badgeEndpointUrl: URL = new URL(
+            `${EnvironmentConfig.API.V5}/gamification/badges/${badge.id}/assignees?${new URLSearchParams(params)}`,
+        )
 
         return badgeEndpointUrl.toString()
     }

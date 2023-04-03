@@ -1,4 +1,4 @@
-/* eslint-disable arrow-body-style */
+/* eslint-disable */
 // TODO: enable when unassign feature is ready
 // import { Button, ButtonProps, useCheckIsMobile } from '../../../../../../../lib'
 import { MemberBadgeAward } from '../../../../../game-lib'
