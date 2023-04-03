@@ -1,0 +1,45 @@
+/**
+ * Ghost button (transparent background, blue text).
+ */
+@import "@earn/styles/variables";
+@import "./default";
+
+@mixin button {
+  background: transparent;
+  border-color: transparent;
+  color: $tc-dark-blue-110;
+}
+
+.button.disabled {
+  @include button;
+
+  color: $tc-gray-80;
+}
+
+.button.link,
+.button.regular {
+  @include button;
+
+  &:visited {
+    color: $tc-dark-blue-110;
+  }
+
+  &:focus {
+    box-shadow: 0 0 2px 1px $tc-dark-blue-30;
+    border-color: $tc-dark-blue-70;
+    outline: none;
+  }
+
+  &:hover {
+    background-image: none;
+    border-color: transparent;
+    color: $tc-dark-blue-70;
+  }
+
+  &:active {
+    background-image: none;
+    box-shadow: none;
+    border-color: transparent;
+    color: $tc-dark-blue;
+  }
+}

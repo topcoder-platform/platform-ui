@@ -4,6 +4,11 @@ import { toolTitle } from './EarnApp'
 
 const EarnAppRoot: LazyLoadedComponent = lazyLoad(() => import('./EarnApp'))
 
+const ChallengeSubmissions: LazyLoadedComponent = lazyLoad(
+    () => import('../../../src/earn/routes/ChallengeSubmissions'),
+    'ChallengeSubmissions',
+)
+
 const ChallengeDetails: LazyLoadedComponent = lazyLoad(
     () => import('../../../src/earn/routes/ChallengeDetails'),
     'ChallengeDetails',
@@ -33,8 +38,14 @@ export const earnRoutes: ReadonlyArray<PlatformRoute> = [
             {
                 children: [],
                 element: <ChallengeDetails />,
-                id: 'Challenges Listing Page',
+                id: 'Challenge Details Page',
                 route: 'find/challenges/:challengeId',
+            },
+            {
+                children: [],
+                element: <ChallengeSubmissions />,
+                id: 'Challenges Submissions Page',
+                route: 'find/challenges/:challengeId/*',
             },
         ],
         element: <EarnAppRoot />,

@@ -1,0 +1,27 @@
+@import '@earn/styles/variables';
+@import '@earn/styles/mixins';
+
+$submission-space-10: $base-unit * 2;
+$submission-space-20: $base-unit * 4;
+$submission-space-25: $base-unit * 5;
+$submission-space-50: $base-unit * 10;
+
+.submission-row {
+  width: 100%;
+  font-size: 15px;
+  color: $tc-black;
+  font-weight: 400;
+
+  td {
+    vertical-align: middle;
+    padding: $submission-space-20;
+    background: $tc-white;
+    border-top: 1px solid $tc-gray-10;
+    line-height: 12px;
+
+    &.dev-details {
+      background: $tc-gray-neutral-light;
+      padding-right: 60px;
+    }
+  }
+}

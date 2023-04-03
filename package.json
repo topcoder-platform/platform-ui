@@ -91,6 +91,8 @@
         "draft-js-markdown-shortcuts-plugin": "^0.3.0",
         "draft-js-export-html": "^1.2.0",
         "react-color": "^2.13.8",
+        "react-css-super-themr": "^2.2.0",
+        "filestack-react": "^2.0.0",
         "turndown": "^4.0.2"
     },
     "devDependencies": {
