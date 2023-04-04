@@ -19,6 +19,18 @@ const ChallengeList: LazyLoadedComponent = lazyLoad(
     'ChallengeList',
 )
 
+const GigsHome: LazyLoadedComponent
+    = lazyLoad(() => import('../../../src/routes/GigsPage'))
+
+const GigsDetail: LazyLoadedComponent
+    = lazyLoad(() => import('../../../src/routes/GigDetailsPage'))
+
+const GigsApply: LazyLoadedComponent
+    = lazyLoad(() => import('../../../src/routes/GigApplyPage'))
+
+const MyGigs: LazyLoadedComponent
+    = lazyLoad(() => import('../../../src/routes/MyGigsPage'))
+    
 export enum EARN_APP_PATHS {
     root = '/earn',
 }
@@ -46,6 +58,30 @@ export const earnRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <ChallengeSubmissions />,
                 id: 'Challenges Submissions Page',
                 route: 'find/challenges/:challengeId/*',
+            },
+            {
+                children: [],
+                element: <GigsHome />,
+                id: 'Gigs Listing Page',
+                route: 'gigs',
+            },
+            {
+                children: [],
+                element: <GigsDetail />,
+                id: 'Gigs Detail Page',
+                route: 'gigs/:externalId',
+            },
+            {
+                children: [],
+                element: <GigsApply />,
+                id: 'Gigs Apply Page',
+                route: 'gigs/:externalId/apply',
+            },
+            {
+                children: [],
+                element: <MyGigs />,
+                id: 'My Gigs Page',
+                route: 'my-gigs',
             },
         ],
         element: <EarnAppRoot />,

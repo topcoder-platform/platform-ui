@@ -46,7 +46,7 @@ const onUpdateParams = debounce(
     effectors.loadGigsPage(store);
     effectors.updateUrlQuery(store);
   },
-  2000,
+  1000,
   { leading: false }
 );
 
