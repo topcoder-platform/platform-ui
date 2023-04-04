@@ -90,6 +90,9 @@ const Header: FC = () => {
             navElementId,
             {
                 handleNavigation: navigationHandler,
+                integrations: {
+                    sprig: 'disable',
+                },
                 onReady() { setReady(true) },
                 signIn() { window.location.href = authUrlLogin() },
                 signOut() { window.location.href = authUrlLogout },
