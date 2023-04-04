@@ -548,7 +548,7 @@ const FreeCodeCamp: FC<{}> = () => {
      * Complete course shortcut for admins
      */
     function adminCompleteCourse(): void {
-        // eslint-disable-next-line no-restricted-globals
+        // eslint-disable-next-line no-restricted-globals, no-alert
         const confirmed: boolean = confirm('Hey, you\'re about to auto-complete this entire course. Are you sure?')
 
         if (!certificateProgress?.id || !confirmed) {

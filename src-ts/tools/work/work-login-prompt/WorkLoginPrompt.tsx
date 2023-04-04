@@ -16,7 +16,7 @@ interface WorkLoginPromptProps {
   previousPageUrl: string
 }
 
-const WorkLoginPrompt: FC<WorkLoginPromptProps> = ({ previousPageUrl }: WorkLoginPromptProps) => {
+const WorkLoginPrompt: FC<WorkLoginPromptProps> = props => {
 
     const routeData: RouteContextData = useContext(routeContext)
     const location: Location = useLocation()
@@ -28,10 +28,8 @@ const WorkLoginPrompt: FC<WorkLoginPromptProps> = ({ previousPageUrl }: WorkLogi
         window.location.href = signUpUrl
     }
 
-    const onBack: () => void = () => {
-        navigate(
-            previousPageUrl,
-        )
+    function onBack(): void {
+        navigate(props.previousPageUrl)
     }
 
     return (

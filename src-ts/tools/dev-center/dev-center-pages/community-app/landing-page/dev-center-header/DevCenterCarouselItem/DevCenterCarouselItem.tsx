@@ -6,14 +6,16 @@ import { CarouselItem } from '../carousel-content.config'
 
 import styles from './DevCenterCarouselItem.module.scss'
 
-const DevCenterCarouselItem: FC<{ item: CarouselItem }> = ({ item }) => (
+const DevCenterCarouselItem: FC<{ item: CarouselItem }> = props => (
     <div className={styles.card}>
         <div className={styles.titleContainer}>
-            {item.isNewFeature && <DevCenterTag text='New Feature' />}
-            <h2 className={styles.headline}>{item.headline}</h2>
-            <span className={classNames(styles.summary, 'medium-subtitle')}>{item.summary}</span>
+            {props.item.isNewFeature && <DevCenterTag text='New Feature' />}
+            <h2 className={styles.headline}>{props.item.headline}</h2>
+            <span className={classNames(styles.summary, 'medium-subtitle')}>
+                {props.item.summary}
+            </span>
         </div>
-        <img src={item.image} className={styles.image} alt='' />
+        <img src={props.item.image} className={styles.image} alt='' />
     </div>
 )
 

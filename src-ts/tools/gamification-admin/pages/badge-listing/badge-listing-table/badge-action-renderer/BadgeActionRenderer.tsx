@@ -30,10 +30,10 @@ const BadgeActionRenderer: (badge: GameBadge) => JSX.Element
 
         return (
             <div className={styles['badge-actions']}>
-                {actionButtons.map((button, index) => (
+                {actionButtons.map(button => (
                     <Button
                         {...buttonProps}
-                        key={index}
+                        key={button.label}
                         label={button.label}
                         route={badgeDetailPath(badge.id, button.view)}
                     />

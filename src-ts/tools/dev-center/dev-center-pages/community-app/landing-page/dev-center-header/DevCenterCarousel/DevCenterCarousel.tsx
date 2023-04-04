@@ -14,7 +14,9 @@ const DevCenterCarousel: FC = () => (
             showArrows={false}
             isRTL={false}
         >
-            {CarouselContent.map((item, key) => <DevCenterCarouselItem item={item} key={key} />)}
+            {CarouselContent.map((item, key) => (
+                <DevCenterCarouselItem item={item} key={key as any} />
+            ))}
         </Carousel>
     </div>
 )

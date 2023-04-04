@@ -8,9 +8,9 @@ interface IconWrapperProps {
   icon: JSX.Element
 }
 
-const IconWrapper: FC<IconWrapperProps> = ({ className, icon }: IconWrapperProps) => (
-    <div className={classNames(styles.iconWrapper, className)}>
-        <>{icon}</>
+const IconWrapper: FC<IconWrapperProps> = (props: IconWrapperProps) => (
+    <div className={classNames(styles.iconWrapper, props.className)}>
+        <>{props.icon}</>
     </div>
 )
 

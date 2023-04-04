@@ -1,4 +1,5 @@
 import * as React from 'react'
+import classNames from 'classnames'
 
 import { Button, copyTextToClipboard, IconOutline } from '../../../../lib'
 
@@ -10,15 +11,17 @@ interface CopyButtonProps {
 }
 
 export const CopyButton: React.FC<CopyButtonProps> = props => {
-    const { text = '', className = '' }: CopyButtonProps = props
+    function handleCopyClick(): void {
+        copyTextToClipboard(props.text ?? '')
+    }
 
     return (
         <Button
             size='xl'
             buttonStyle='icon'
-            className={`${styles['copy-btn']} ${className}`}
+            className={classNames(styles['copy-btn'], props.className)}
             icon={IconOutline.DocumentDuplicateIcon}
-            onClick={() => copyTextToClipboard(text)}
+            onClick={handleCopyClick}
         />
     )
 }

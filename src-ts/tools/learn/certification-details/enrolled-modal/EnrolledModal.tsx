@@ -1,7 +1,6 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 
 import { BaseModal, Button } from '../../../../lib'
-import { TCACertification } from '../../learn-lib'
 
 import styles from './EnrolledModal.module.scss'
 

@@ -10,12 +10,19 @@ interface RadioProps {
     selected?: boolean
 }
 
-const RadioButton: FC<RadioProps> = ({ icon, name, selected, isRecommended }: RadioProps) => (
-    <div className={cn(styles['bug-delivery-radio'], { [styles.selected]: selected, [styles.recommended]: isRecommended })}>
+const RadioButton: FC<RadioProps> = (props: RadioProps) => (
+    <div
+        className={
+            cn(
+                styles['bug-delivery-radio'],
+                { [styles.selected]: props.selected, [styles.recommended]: props.isRecommended },
+            )
+        }
+    >
         <>
-            {icon}
-            <div className={styles.name}>{name}</div>
-            {isRecommended && <div className={styles['recommended-text-wrapper']}>Recommended</div>}
+            {props.icon}
+            <div className={styles.name}>{props.name}</div>
+            {props.isRecommended && <div className={styles['recommended-text-wrapper']}>Recommended</div>}
         </>
     </div>
 )

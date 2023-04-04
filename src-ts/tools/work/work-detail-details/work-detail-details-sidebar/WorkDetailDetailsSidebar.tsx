@@ -14,23 +14,34 @@ const WorkDetailDetailsSidebar: FC<{}> = () => {
         = useState<boolean>(false)
 
     // TODO: update the Button component so it can handle links that don't have arrows
-    function handleClick(event: MouseEvent<HTMLAnchorElement>, setter: Dispatch<SetStateAction<boolean>>): void {
-        event.preventDefault()
-        setter(true)
+    function getClickHandler(setter: Dispatch<SetStateAction<boolean>>): (event: MouseEvent) => void {
+        return (event: MouseEvent): void => {
+            event.preventDefault()
+            setter(true)
+        }
     }
 
     return (
         <>
-            <OrderContractModal isOpen={isOrderContractModalOpen} onClose={() => setIsOrderContractModalOpen(false)} />
-            <PrivacyPolicyModal isOpen={isPrivacyPolicyModalOpen} onClose={() => setIsPrivacyPolicyModalOpen(false)} />
-            <TermsModal isOpen={isTermsModalOpne} onClose={() => setIsTermsModalOpen(false)} />
+            <OrderContractModal
+                isOpen={isOrderContractModalOpen}
+                onClose={function handleOrderClose() { setIsOrderContractModalOpen(false) }}
+            />
+            <PrivacyPolicyModal
+                isOpen={isPrivacyPolicyModalOpen}
+                onClose={function handlePPClose() { setIsPrivacyPolicyModalOpen(false) }}
+            />
+            <TermsModal
+                isOpen={isTermsModalOpne}
+                onClose={function handleTermsClose() { setIsTermsModalOpen(false) }}
+            />
 
             <div className={styles.wrap}>
                 <h4>supporting information</h4>
                 <a
                     className={styles.link}
                     href={window.location.href}
-                    onClick={e => handleClick(e, setIsOrderContractModalOpen)}
+                    onClick={getClickHandler(setIsOrderContractModalOpen)}
                     rel='noopener noreferrer'
                     role='button'
                     tabIndex={0}
@@ -40,7 +51,7 @@ const WorkDetailDetailsSidebar: FC<{}> = () => {
                 <a
                     className={styles.link}
                     href={window.location.href}
-                    onClick={e => handleClick(e, setIsPrivacyPolicyModalOpen)}
+                    onClick={getClickHandler(setIsPrivacyPolicyModalOpen)}
                     rel='noopener noreferrer'
                     role='button'
                     tabIndex={0}
@@ -50,7 +61,7 @@ const WorkDetailDetailsSidebar: FC<{}> = () => {
                 <a
                     className={styles.link}
                     href={window.location.href}
-                    onClick={e => handleClick(e, setIsTermsModalOpen)}
+                    onClick={getClickHandler(setIsTermsModalOpen)}
                     rel='noopener noreferrer'
                     role='button'
                     tabIndex={0}

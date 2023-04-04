@@ -12,7 +12,8 @@ export interface AwardedMembersTabProps {
 }
 
 const AwardedMembersTab: FC<AwardedMembersTabProps> = (props: AwardedMembersTabProps) => {
-    const [sort, setSort]: [Sort, Dispatch<SetStateAction<Sort>>] = useState<Sort>(tableGetDefaultSort(awardedMembersColumns))
+    const [sort, setSort]: [Sort, Dispatch<SetStateAction<Sort>>]
+        = useState<Sort>(tableGetDefaultSort(awardedMembersColumns))
 
     const [columns]: [
         ReadonlyArray<TableColumn<MemberBadgeAward>>,

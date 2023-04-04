@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import { FC } from 'react'
 
 import { Breadcrumb, BreadcrumbItemModel } from '../../../../../lib'
 import { WorkType } from '../../../work-lib'
@@ -10,16 +10,16 @@ interface IntakeFormsBreadcrumbProps {
     workType: WorkType,
 }
 
-const IntakeFormsBreadcrumb: FC<IntakeFormsBreadcrumbProps> = ({ basicInfoRoute, reviewRoute, workType }) => {
+const IntakeFormsBreadcrumb: FC<IntakeFormsBreadcrumbProps> = props => {
     const breadcrumbs: Array<BreadcrumbItemModel> = [
-        { url: dashboardRoute, name: 'My Work' },
-        { url: selfServiceStartRoute, name: 'Start Work' },
-        { url: basicInfoRoute, name: workType },
+        { name: 'My Work', url: dashboardRoute },
+        { name: 'Start Work', url: selfServiceStartRoute },
+        { name: props.workType, url: props.basicInfoRoute },
     ]
 
-    if (reviewRoute) {
+    if (props.reviewRoute) {
         breadcrumbs.push(
-            { url: reviewRoute, name: 'Review & Payment' },
+            { name: 'Review & Payment', url: props.reviewRoute },
         )
     }
 

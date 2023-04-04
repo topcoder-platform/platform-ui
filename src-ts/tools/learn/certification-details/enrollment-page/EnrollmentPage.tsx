@@ -52,6 +52,7 @@ const EnrollmentPage: FC<{}> = () => {
         certification,
         ready: certificationReady,
     }: TCACertificationProviderData = useGetTCACertification(dashedName as string)
+    const certificationDashedName: string = certification?.dashedName ?? ''
 
     // fetch Stripe product data
     const { product }: { product: StripeProduct | undefined }
@@ -74,11 +75,11 @@ const EnrollmentPage: FC<{}> = () => {
         userInfo.current = { ...profile }
     }
 
-    // if is enrolled already, redirect back to certification
+    // if user is enrolled already, redirect back to certification
     if (progressReady && !enrolledCheck.current) {
         enrolledCheck.current = true
         if (!!progress) {
-            navigate(getTCACertificationPath(certification?.dashedName as string))
+            navigate(getTCACertificationPath(certificationDashedName))
         }
     }
 
@@ -98,7 +99,7 @@ const EnrollmentPage: FC<{}> = () => {
     const tcaMonetizationEnabled: boolean = EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION || false
 
     function navToCertificationDetails(): void {
-        navigate(getTCACertificationPath(certification?.dashedName as string))
+        navigate(getTCACertificationPath(certificationDashedName))
     }
 
     function closeEnrolledModal(): void {
@@ -110,7 +111,7 @@ const EnrollmentPage: FC<{}> = () => {
         return ready ? (
             <>
                 <PerksSection
-                    style='clear'
+                    theme='clear'
                     items={perks}
                     title={tcaMonetizationEnabled
                         ? ''
@@ -127,15 +128,15 @@ const EnrollmentPage: FC<{}> = () => {
 
     function renderSidebar(): ReactNode {
         return (
-            <EnrollmentSidebar profile={profile} onEnroll={startEnrollFlow} product={product} />
+            <EnrollmentSidebar onEnroll={startEnrollFlow} product={product} />
         )
     }
 
     useLayoutEffect(() => {
         if (profileReady && !profile) {
-            navigate(getTCACertificationPath(certification?.dashedName as string))
+            navigate(getTCACertificationPath(certificationDashedName))
         }
-    }, [profileReady, profile, navigate, certification?.dashedName])
+    }, [profileReady, profile, navigate, certificationDashedName])
 
     return (
         <PageLayout

@@ -26,10 +26,9 @@ export interface TabsNavbarProps {
 
 const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
 
-    const { defaultActive, onChange, tabs }: TabsNavbarProps = props
-
+    const [tabOpened, setTabOpened]: [string | undefined, Dispatch<SetStateAction<string | undefined>>]
+        = useState<string | undefined>(props.defaultActive)
     const tabRefs: MutableRefObject<Array<HTMLElement>> = useRef([] as Array<HTMLElement>)
-    const [tabOpened, setTabOpened]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>(props.defaultActive)
     const [offset, setOffset]: [number, Dispatch<SetStateAction<number>>] = useState<number>(0)
     const [menuIsVisible, setMenuIsVisible]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
     const triggerRef: MutableRefObject<any> = useRef(undefined)
@@ -52,30 +51,33 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
         props.tabs,
     ])
 
-    const handleActivateTab: (tabId: string) => void = useCallback((tabId: string) => {
+    const handleActivateTab: (tabId: string) => () => void = useCallback((tabId: string) => () => {
         setTabOpened(tabId)
-        onChange(tabId)
+        props.onChange.call(undefined, tabId)
         updateOffset(tabId)
     }, [
-        onChange,
+        props.onChange,
         updateOffset,
     ])
 
-    useLayoutEffect(() => {
+    function toggleMenuIsVisible(): void {
+        setMenuIsVisible((menuWasVisible: boolean) => !menuWasVisible)
+    }
 
+    useLayoutEffect(() => {
         const query: URLSearchParams = new URLSearchParams(window.location.search)
         const initialTab: string | null = query.get('tab')
 
-        if (initialTab && tabs.find(tab => tab.id === initialTab)) {
-            handleActivateTab(initialTab)
-        } else if (defaultActive) {
-            setTabOpened(defaultActive)
-            updateOffset(defaultActive)
+        if (initialTab && props.tabs.find(tab => tab.id === initialTab)) {
+            handleActivateTab(initialTab)()
+        } else if (props.defaultActive) {
+            setTabOpened(props.defaultActive)
+            updateOffset(props.defaultActive)
         }
     }, [
-        defaultActive,
+        props.defaultActive,
         handleActivateTab,
-        tabs,
+        props.tabs,
         updateOffset,
     ])
 
@@ -88,13 +90,13 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
             ref={ref}
             className={classNames(styles['tab-item'], activeTabId === tab.id && 'active')}
             key={tab.id}
-            onClick={() => handleActivateTab(tab.id)}
+            onClick={handleActivateTab(tab.id)}
         >
             <span className={styles['tab-label']}>
                 {tab.title}
             </span>
-            {tab.badges?.map((badge, id) => (
-                <span className={classNames(styles['tab-badge'], badge.type)} key={id}>
+            {tab.badges?.map(badge => (
+                <span className={classNames(styles['tab-badge'], badge.type)} key={badge.type}>
                     {badge.count}
                 </span>
             ))}
@@ -113,7 +115,7 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
                         menuIsVisible && styles['menu-is-visible'],
                     )
                 }
-                onClick={() => setMenuIsVisible((menuWasVisible: boolean) => !menuWasVisible)}
+                onClick={toggleMenuIsVisible}
                 ref={triggerRef}
             >
                 {renderTabItem(activeTab)}

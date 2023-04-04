@@ -2,7 +2,7 @@ import { ReactNode } from 'react'
 
 import { IconOutline } from '../../../../lib'
 import { IconCertifSvg } from '../../learn-lib'
-import { PerkIconsType, PerkItem } from '../data/perks.data'
+import { PerkIconsType, PerkItem } from '../certification-details-modal/certif-details-content/data'
 
 export const iconsMap: {[key in PerkIconsType]: ReactNode} = {
     'currency-dolary': <IconOutline.CurrencyDollarIcon />,

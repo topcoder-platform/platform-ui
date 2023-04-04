@@ -14,14 +14,19 @@ interface BatchAwardTabProps {
 
 const BatchAwardTab: FC<BatchAwardTabProps> = (props: BatchAwardTabProps) => {
 
-    const [showBadgeAssigned, setShowBadgeAssigned]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [showBadgeAssigned, setShowBadgeAssigned]: [
+        boolean,
+        Dispatch<SetStateAction<boolean>>
+    ] = useState<boolean>(false)
 
-    // eslint-disable-next-line no-null/no-null
-    const [files, setFiles]: [FileList | null, Dispatch<SetStateAction<FileList | null>>] = useState<FileList | null>(null)
+    const [files, setFiles]: [
+        FileList | undefined,
+        Dispatch<SetStateAction<FileList | undefined>>
+    ] = useState<FileList | undefined>(undefined)
 
     const [errorText, setErrorText]: [string, Dispatch<SetStateAction<string>>] = useState<string>('')
 
-    function onFilePick(fileList: FileList | null): void {
+    function onFilePick(fileList: FileList | undefined): void {
         if (fileList && fileList[0] && fileList[0].type !== 'text/csv') {
             setErrorText('Only CSV files are allowed.')
         } else {
@@ -34,7 +39,7 @@ const BatchAwardTab: FC<BatchAwardTabProps> = (props: BatchAwardTabProps) => {
         batchAssignRequestAsync(files?.item(0) as File)
             .then(() => {
                 setShowBadgeAssigned(true)
-                setFiles(null)
+                setFiles(undefined)
             })
             .catch(e => {
                 let message: string = e.message
@@ -46,13 +51,29 @@ const BatchAwardTab: FC<BatchAwardTabProps> = (props: BatchAwardTabProps) => {
             })
     }
 
+    function handleModalClose(): void {
+        setShowBadgeAssigned(false)
+        props.onBatchAssign()
+    }
+
     return (
         <div className={styles.tabWrap}>
             <h3>Batch Award</h3>
             <div className={styles.batchFormWrap}>
                 <div>
-                    <p>If you would like to assign multiple people to multiple badges, this area is for you. Download the template below, populate the file with your data, and upload that file to the right once completed.</p>
-                    <a target='_blank' href='/gamification-admin/bulk.sample.csv' download='bulk.sample.csv' className={styles.templateLink}>Download template CSV</a>
+                    <p>
+                        If you would like to assign multiple people to multiple badges,
+                        this area is for you. Download the template below, populate the
+                        file with your data, and upload that file to the right once completed.
+                    </p>
+                    <a
+                        target='_blank'
+                        href='/gamification-admin/bulk.sample.csv'
+                        download='bulk.sample.csv'
+                        className={styles.templateLink}
+                    >
+                        Download template CSV
+                    </a>
                 </div>
                 <div className={styles.batchForm}>
                     <InputFilePicker
@@ -84,10 +105,7 @@ const BatchAwardTab: FC<BatchAwardTabProps> = (props: BatchAwardTabProps) => {
                     <BadgeAssignedModal
                         badge={props.badge}
                         isOpen={showBadgeAssigned}
-                        onClose={() => {
-                            setShowBadgeAssigned(false)
-                            props.onBatchAssign()
-                        }}
+                        onClose={handleModalClose}
                     />
                 )
             }

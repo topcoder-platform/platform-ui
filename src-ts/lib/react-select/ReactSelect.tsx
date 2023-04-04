@@ -33,17 +33,17 @@ const ReactSelect: React.FC<ReactSelectProps> = props => {
                     : provided.boxShadow,
             minHeight: '22px',
         }),
-        indicatorContainer: (provided: any) => ({
+        indicatorContainer: () => ({
             padding: '0',
-        }),
-        indicatorSeparator: () => ({
-            display: 'none',
         }),
         indicatorsContainer: (provided: any) => ({
             ...provided,
             height: '30px',
             marginTop: '-5px',
             width: '30px',
+        }),
+        indicatorSeparator: () => ({
+            display: 'none',
         }),
         input: (provided: any) => ({
             ...provided,
@@ -95,6 +95,10 @@ const ReactSelect: React.FC<ReactSelectProps> = props => {
         }),
     }
 
+    function noOptionsMessage(): string | undefined {
+        return props.noOptionsText
+    }
+
     return (
         <div className={styles['select-wrapper']}>
             <Select
@@ -108,7 +112,7 @@ const ReactSelect: React.FC<ReactSelectProps> = props => {
                 onFocus={props.onFocus}
                 placeholder={props.placeholder}
                 onInputChange={props.onInputChange}
-                noOptionsMessage={() => props.noOptionsText}
+                noOptionsMessage={noOptionsMessage}
                 isDisabled={props.disabled}
             />
         </div>

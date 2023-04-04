@@ -23,14 +23,15 @@ export function useOnHoverElement(
 ): UseHoverElementValue | {} {
     const counter: MutableRefObject<number> = useRef(0)
 
-    const handleHover: (ev: RMouseEvent<Element, MouseEvent>) => void = useCallback((ev: RMouseEvent<Element, MouseEvent>) => {
-        const nextVal: number = Math.max(0, counter.current + (ev.type === 'mouseenter' ? 1 : -1))
-        if (!!nextVal !== !!counter.current) {
-            cb(nextVal > 0)
-        }
+    const handleHover: (ev: RMouseEvent<Element, MouseEvent>) => void
+        = useCallback((ev: RMouseEvent<Element, MouseEvent>) => {
+            const nextVal: number = Math.max(0, counter.current + (ev.type === 'mouseenter' ? 1 : -1))
+            if (!!nextVal !== !!counter.current) {
+                cb(nextVal > 0)
+            }
 
-        counter.current = nextVal
-    }, [cb])
+            counter.current = nextVal
+        }, [cb])
 
     return enabled ? {
         onMouseEnter: handleHover,

@@ -14,34 +14,28 @@ interface InfoCardProps {
     title?: string,
 }
 
-const InfoCard: FC<InfoCardProps> = ({
-    children,
-    color = 'info',
-    defaultOpen = true,
-    isCollapsible = false,
-    styleNames = [],
-    title,
-}: InfoCardProps) => {
+const InfoCard: FC<InfoCardProps> = (props: InfoCardProps) => {
 
-    const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(defaultOpen)
-    const additionalStyles: Array<{ [key: string]: any }> = styleNames.map(style => styles[style])
-    const collapsibleClass: string = isCollapsible ? styles.collapsible : styles.notCollapsible
-    const showSpacing: boolean = isOpen && !!title && !!children
+    const [isOpen, setIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(props.defaultOpen ?? false)
+    const additionalStyles: Array<string> = (props.styleNames ?? []).map(style => styles[style])
+    const collapsibleClass: string = props.isCollapsible ? styles.collapsible : styles.notCollapsible
+    const showSpacing: boolean = isOpen && !!props.title && !!props.children
 
     useEffect(() => {
-        setIsOpen(defaultOpen)
-    }, [defaultOpen])
+        setIsOpen(props.defaultOpen ?? false)
+    }, [props.defaultOpen])
 
     return (
-        <div className={classNames(styles.card, styles[color], collapsibleClass, ...additionalStyles)}>
-            {renderHeader(isCollapsible, isOpen, setIsOpen, title || '')}
+        <div className={classNames(styles.card, styles[props.color ?? 'info'], collapsibleClass, ...additionalStyles)}>
+            {renderHeader(props.isCollapsible ?? false, isOpen, setIsOpen, props.title || '')}
 
             {showSpacing && (
                 <div className={styles.spacing} />
             )}
 
             {isOpen
-                && <div className={styles.content}>{children}</div>}
+                && <div className={styles.content}>{props.children}</div>}
         </div>
     )
 }
@@ -53,13 +47,17 @@ function renderHeader(
     title: string,
 ): JSX.Element {
 
-    const arrowClass: string = isOpen ? styles.up : undefined
+    const arrowClass: string | undefined = isOpen ? styles.up : undefined
+
+    function handleClose(): void {
+        setIsOpen(!isOpen)
+    }
 
     if (isCollapsible) {
         return (
             <div
                 className={classNames(styles.title, styles.collapsible)}
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={handleClose}
                 role='button'
                 tabIndex={0}
             >

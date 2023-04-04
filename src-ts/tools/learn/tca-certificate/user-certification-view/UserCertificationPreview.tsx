@@ -17,7 +17,8 @@ const placeholderUserProfile: UserProfile = {
 } as UserProfile
 
 const placeholderEnrollment: TCACertificationEnrollmentBase = {
-    completedAt: new Date().toISOString(),
+    completedAt: new Date()
+        .toISOString(),
     completionUuid: 'certificate-number',
     userHandle: 'your_handle',
     userName: 'Your Name',

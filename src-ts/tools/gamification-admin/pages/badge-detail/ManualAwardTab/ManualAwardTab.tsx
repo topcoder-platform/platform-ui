@@ -17,12 +17,21 @@ export interface ManualAwardTabProps {
 
 const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => {
 
-    const [selectedMembers, setSelectedMembers]: [Array<MembersAutocompeteResult>, Dispatch<SetStateAction<Array<MembersAutocompeteResult>>>]
+    const [selectedMembers, setSelectedMembers]: [
+        Array<MembersAutocompeteResult>,
+        Dispatch<SetStateAction<Array<MembersAutocompeteResult>>>
+    ]
         = useState<Array<MembersAutocompeteResult>>([])
 
-    const [showBadgeAssigned, setShowBadgeAssigned]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [showBadgeAssigned, setShowBadgeAssigned]: [
+        boolean,
+        Dispatch<SetStateAction<boolean>>
+    ] = useState<boolean>(false)
 
-    const [badgeAssignError, setBadgeAssignError]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
+    const [badgeAssignError, setBadgeAssignError]: [
+        string | undefined,
+        Dispatch<SetStateAction<string | undefined>>
+    ] = useState<string | undefined>()
 
     function onAward(): void {
         const csv: string = generateCSV(
@@ -37,7 +46,10 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
             .catch(e => {
                 let message: string = e.message
                 if (e.errors && e.errors[0] && e.errors[0].path === 'user_id') {
-                    const handleOrId: string = find(selectedMembers, { userId: e.errors[0].value })?.handle || e.errors[0].value
+                    const handleOrId: string = find(
+                        selectedMembers,
+                        { userId: e.errors[0].value },
+                    )?.handle || e.errors[0].value
                     message = `Member ${handleOrId} already owns this badge.`
                 }
 
@@ -45,11 +57,19 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
             })
     }
 
+    function handleModalClose(): void {
+        setShowBadgeAssigned(false)
+        props.onManualAssign()
+    }
+
     return (
         <div className={styles.tabWrap}>
             <h3>Manual Award</h3>
             <div className={styles.manualFormWrap}>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Neque ullamcorper neque sed orci, enim amet, sed.</p>
+                <p>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    Neque ullamcorper neque sed orci, enim amet, sed.
+                </p>
                 <div className={styles.manualForm}>
                     <InputHandleAutocomplete
                         label='Select Member'
@@ -77,10 +97,7 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
                     <BadgeAssignedModal
                         badge={props.badge}
                         isOpen={showBadgeAssigned}
-                        onClose={() => {
-                            setShowBadgeAssigned(false)
-                            props.onManualAssign()
-                        }}
+                        onClose={handleModalClose}
                     />
                 )
             }

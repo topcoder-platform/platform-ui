@@ -10,14 +10,14 @@ import styles from './PerksSection.module.scss'
 interface PerksSectionProps {
     items: Array<PerkItem>
     title?: string
-    style?: 'clear'
+    theme?: 'clear'
 }
 
 const PerksSection: FC<PerksSectionProps> = (props: PerksSectionProps) => {
     const routeParams: Params<string> = useParams()
 
     return (
-        <div className={classNames(styles.wrap, props.style && styles[props.style])}>
+        <div className={classNames(styles.wrap, props.theme && styles[props.theme])}>
             <h2>{props.title ?? 'Why certify with Topcoder?'}</h2>
             <svg width='0' height='0'>
                 <defs>

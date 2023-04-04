@@ -14,7 +14,7 @@ const AboutYourProjectInfoCard: React.FC = () => (
                 You can expect members of our community to ask you questions about
                 this work.
             </strong>
-            &nbsp; From your Work Summary page you’ll see if you have any
+            &nbsp; From your Work Summary page you&apos;ll see if you have any
             outstanding Messages, indicated by a red icon. Please answer questions
             from our members in a timely and thorough manner. This will help them
             deliver high quality results for you on time!
@@ -24,8 +24,8 @@ const AboutYourProjectInfoCard: React.FC = () => (
                 Topcoder experts will curate the best solutions for you.
             </strong>
             &nbsp; This saves you time and energy wading through submissions that
-            perhaps aren't of value to you. When your high-quality submissions are
-            ready, you'll be notified to download your assets, rate your Topcoder
+            perhaps aren&apos;t of value to you. When your high-quality submissions are
+            ready, you&apos;ll be notified to download your assets, rate your Topcoder
             experience, and officially close out this work.
         </li>
     </>

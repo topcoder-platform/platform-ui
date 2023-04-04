@@ -54,6 +54,14 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
         toggleMenu()
     }
 
+    function toggleIfNotDisabled(): void {
+        if (props.disabled) {
+            return
+        }
+
+        toggleMenu()
+    }
+
     useClickOutside(triggerRef.current, () => setMenuIsVisible(false))
 
     return (
@@ -68,7 +76,7 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
             hideInlineErrors={props.hideInlineErrors}
             ref={triggerRef}
         >
-            <div className={styles.selected} onClick={() => !props.disabled && toggleMenu()}>
+            <div className={styles.selected} onClick={toggleIfNotDisabled}>
                 <span className='body-small'>{selectedOption ? label(selectedOption) : ''}</span>
                 <span className={styles['selected-icon']}>
                     <IconOutline.ChevronDownIcon />

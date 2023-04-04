@@ -7,9 +7,9 @@ interface PageDividerProps {
     styleNames?: Array<string>
 }
 
-const PageDivider: FC<PageDividerProps> = ({ styleNames = [] }) => {
+const PageDivider: FC<PageDividerProps> = (props: PageDividerProps) => {
 
-    const additionalStyles: Array<{ [key: string]: any }> = styleNames.map(style => styles[style])
+    const additionalStyles: Array<string> = (props.styleNames ?? []).map(style => styles[style])
 
     return <div className={cn('page-divider', styles.divider, ...additionalStyles)} />
 }

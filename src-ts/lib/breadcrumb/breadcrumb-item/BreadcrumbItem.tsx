@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import { Link } from 'react-router-dom'
+import classNames from 'classnames'
 
 import styles from '../Breadcrumb.module.scss'
 
@@ -23,7 +24,7 @@ const BreadcrumbItem: FC<BreadcrumbItemProps> = (props: BreadcrumbItemProps) => 
             className={props.item.isElipsis ? 'elipsis' : ''}
         >
             <Link
-                className={props.item.isElipsis ? styles.elipsis : ''}
+                className={classNames(props.item.isElipsis && styles.elipsis)}
                 to={props.item.url}
             >
                 {props.item.name}

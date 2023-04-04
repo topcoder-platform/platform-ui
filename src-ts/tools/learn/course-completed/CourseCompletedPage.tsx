@@ -76,12 +76,23 @@ const CourseCompletedPage: FC<{}> = () => {
         { enabled: !!tcaCertificationName },
     )
 
-    const isLoggedIn: boolean = profileReady && !!profile
-    const certificatesDataReady: boolean = progressReady && certifReady
-    const tcaCertReady: boolean = progressReady && (!progress?.id || !!tcaCertifCompletedCheckReady)
-    const ready: boolean = profileReady && courseDataReady && (
-        !isLoggedIn || (certificatesDataReady && tcaCertReady)
-    )
+    const ready: boolean = useMemo(() => {
+        const isLoggedIn: boolean = profileReady && !!profile
+        const certificatesDataReady: boolean = progressReady && certifReady
+        const tcaCertReady: boolean = progressReady && (!progress?.id || !!tcaCertifCompletedCheckReady)
+
+        return profileReady && courseDataReady && (
+            !isLoggedIn || (certificatesDataReady && tcaCertReady)
+        )
+    }, [
+        certifReady,
+        courseDataReady,
+        profile,
+        profileReady,
+        progress?.id,
+        progressReady,
+        tcaCertifCompletedCheckReady,
+    ])
 
     const location: any = useLocation()
 

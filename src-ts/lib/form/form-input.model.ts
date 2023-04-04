@@ -13,7 +13,14 @@ export interface FormCard {
     mostPopular?: boolean
     price: number,
     sections: Array<{
-        rows: Array<{ icon?: string, infoIcon?: boolean, label?: string, text?: string, tooltipText?: string, valueIcon?: string, }>
+        rows: Array<{
+            icon?: string,
+            infoIcon?: boolean,
+            label?: string,
+            text?: string,
+            tooltipText?: string,
+            valueIcon?: string,
+        }>
     }>,
     title: string,
 }

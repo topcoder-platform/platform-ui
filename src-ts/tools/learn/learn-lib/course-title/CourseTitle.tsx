@@ -39,7 +39,10 @@ const CourseTitle: FC<CourseTitleProps> = (props: CourseTitleProps) => {
         <div className={classNames(styles.wrap, props.size)}>
             <div className={classNames('badge-icon', props.size)}>
                 {props.badgeType === TitleBadgeType.tcaCertification ? (
-                    <CertificateBadgeIcon type={props.trackType ?? 'DEV'} level={props.learnLevel!} />
+                    <CertificateBadgeIcon
+                        type={props.trackType ?? 'DEV'}
+                        level={props.learnLevel as TCACertificationLearnLevel}
+                    />
                 ) : (
                     <CourseBadge type={props.trackType ?? 'DEV'} />
                 )}

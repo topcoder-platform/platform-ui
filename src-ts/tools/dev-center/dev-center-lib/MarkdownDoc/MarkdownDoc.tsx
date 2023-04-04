@@ -9,14 +9,10 @@ interface MarkdownDocProps {
     toc: TOC
 }
 
-export const MarkdownDoc: React.FC<MarkdownDocProps> = props => {
-    const { doc, toc, disableToc = false }: MarkdownDocProps = props
-
-    return (
-        <LayoutDoc disableToc={disableToc} toc={toc}>
-            {doc}
-        </LayoutDoc>
-    )
-}
+const MarkdownDoc: React.FC<MarkdownDocProps> = props => (
+    <LayoutDoc disableToc={props.disableToc ?? false} toc={props.toc}>
+        {props.doc}
+    </LayoutDoc>
+)
 
 export default MarkdownDoc

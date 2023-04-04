@@ -1,12 +1,14 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
 import { BaseModal, Form, FormDefinition, formGetInputFields, FormInputModel, formOnReset } from '../../../../lib'
+import { FormValue } from '../../../../lib/form/form-functions'
 import { Challenge } from '../../work-lib'
 
 import { workFeedbackFormDef } from './work-feedback-form.config'
 import styles from './WorkFeedback.module.scss'
 
 interface WorkFeedbackProps {
+    // eslint-disable-next-line react/no-unused-prop-types
     challenge: Challenge
     onClose: () => void
     saveSurvey: (feedback: any) => void
@@ -20,17 +22,18 @@ interface Feedback {
 
 const WorkFeedback: FC<WorkFeedbackProps> = (props: WorkFeedbackProps) => {
 
-    const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>] = useState<FormDefinition>({ ...workFeedbackFormDef })
+    const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
+        = useState<FormDefinition>({ ...workFeedbackFormDef })
 
     function requestGenerator(inputs: ReadonlyArray<FormInputModel>): Array<Feedback> {
         return inputs
             .map((input: FormInputModel) => ({
                 name: input.instructions || input.label as string,
                 value: input.value,
-            }))
+            } as Feedback))
     }
 
-    async function saveAsync(feedback: Array<Feedback>): Promise<void> {
+    async function saveAsync(feedback: FormValue): Promise<void> {
         props.saveSurvey(feedback)
         onClose()
     }

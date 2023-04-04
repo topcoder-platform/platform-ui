@@ -19,12 +19,12 @@ export function useClickOutside(
 
     useEffect(() => {
         if (!enabled) {
-            return
+            return undefined
         }
 
         if (!el) {
             document.removeEventListener('click', handleClick)
-            return
+            return undefined
         }
 
         document.addEventListener('click', handleClick)

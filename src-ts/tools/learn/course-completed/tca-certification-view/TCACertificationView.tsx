@@ -10,7 +10,9 @@ import styles from '../CourseCompletedPage.module.scss'
 interface TCACertificationViewProps {
     courseData: LearnCourse
     certification?: TCACertification
+    // eslint-disable-next-line react/no-unused-prop-types
     certificationParam: string
+    // eslint-disable-next-line react/no-unused-prop-types
     userHandle?: string
 }
 

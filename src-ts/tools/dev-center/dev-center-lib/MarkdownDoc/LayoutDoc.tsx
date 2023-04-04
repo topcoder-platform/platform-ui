@@ -10,21 +10,17 @@ interface LayoutDocProps {
     toc: TOC
 }
 
-export const LayoutDoc: React.FC<LayoutDocProps> = props => {
-    const { children, toc, disableToc }: LayoutDocProps = props
-
-    return (
-        <main className={styles.main}>
-            <div
-                className={`${styles.mainContent} ${
-                    disableToc ? styles.disableToc : ''
-                }`}
-            >
-                {children}
-            </div>
-            {disableToc ? undefined : <TableOfContents toc={toc} />}
-        </main>
-    )
-}
+export const LayoutDoc: React.FC<LayoutDocProps> = props => (
+    <main className={styles.main}>
+        <div
+            className={`${styles.mainContent} ${
+                props.disableToc ? styles.disableToc : ''
+            }`}
+        >
+            {props.children}
+        </div>
+        {props.disableToc ? undefined : <TableOfContents toc={props.toc} />}
+    </main>
+)
 
 export default LayoutDoc

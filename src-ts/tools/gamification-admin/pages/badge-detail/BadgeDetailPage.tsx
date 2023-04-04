@@ -1,6 +1,16 @@
 /* eslint-disable import/no-unresolved */
 import { noop, trim } from 'lodash'
-import { ChangeEvent, createRef, Dispatch, FC, KeyboardEvent, RefObject, SetStateAction, useEffect, useState } from 'react'
+import {
+    ChangeEvent,
+    createRef,
+    Dispatch,
+    FC,
+    KeyboardEvent,
+    RefObject,
+    SetStateAction,
+    useEffect,
+    useState,
+} from 'react'
 import { Params, useLocation, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { KeyedMutator, useSWRConfig } from 'swr'
@@ -9,9 +19,29 @@ import ContentEditable from 'react-contenteditable'
 import MarkdownIt from 'markdown-it'
 import sanitizeHtml from 'sanitize-html'
 
-import { Breadcrumb, BreadcrumbItemModel, Button, ButtonProps, ContentLayout, IconOutline, IconSolid, LoadingSpinner, PageDivider, Sort, tableGetDefaultSort, TabsNavbar, TabsNavItem } from '../../../../lib'
+import {
+    Breadcrumb,
+    BreadcrumbItemModel,
+    Button,
+    ButtonProps,
+    ContentLayout,
+    IconOutline,
+    IconSolid,
+    LoadingSpinner,
+    PageDivider,
+    Sort,
+    tableGetDefaultSort,
+    TabsNavbar,
+    TabsNavItem,
+} from '../../../../lib'
 import { GamificationConfig } from '../../game-config'
-import { BadgeDetailPageHandler, GameBadge, useGamificationBreadcrumb, useGetGameBadgeDetails, useGetGameBadgesPage } from '../../game-lib'
+import {
+    BadgeDetailPageHandler,
+    GameBadge,
+    useGamificationBreadcrumb,
+    useGetGameBadgeDetails,
+    useGetGameBadgesPage,
+} from '../../game-lib'
 import { BadgeActivatedModal } from '../../game-lib/modals/badge-activated-modal'
 import { badgeListingColumns } from '../badge-listing/badge-listing-table'
 
@@ -65,20 +95,26 @@ const BadgeDetailPage: FC = () => {
 
     const fileInputRef: RefObject<HTMLInputElement> = createRef<HTMLInputElement>()
 
-    // eslint-disable-next-line no-null/no-null
-    const [newImageFile, setNewImageFile]: [FileList | null, Dispatch<SetStateAction<FileList | null>>] = useState<FileList | null>(null)
+    const [newImageFile, setNewImageFile]: [FileList | undefined, Dispatch<SetStateAction<FileList | undefined>>]
+        = useState<FileList | undefined>(undefined)
 
-    const [fileDataURL, setFileDataURL]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
+    const [fileDataURL, setFileDataURL]: [string | undefined, Dispatch<SetStateAction<string | undefined>>]
+        = useState<string | undefined>()
 
-    const [isBadgeDescEditingMode, setIsBadgeDescEditingMode]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [isBadgeDescEditingMode, setIsBadgeDescEditingMode]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
 
     // badgeListingMutate will reset badge listing page cache when called
     const sort: Sort = tableGetDefaultSort(badgeListingColumns)
     const { mutate: badgeListingMutate }: { mutate: KeyedMutator<any> } = useGetGameBadgesPage(sort)
 
-    const [badgeNameErrorText, setBadgeNameErrorText]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
+    const [badgeNameErrorText, setBadgeNameErrorText]: [
+        string | undefined,
+        Dispatch<SetStateAction<string | undefined>>
+    ] = useState<string | undefined>()
 
-    const [showActivatedModal, setShowActivatedModal]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [showActivatedModal, setShowActivatedModal]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
 
     const { cache, mutate }: FullConfiguration = useSWRConfig()
 
@@ -135,6 +171,7 @@ const BadgeDetailPage: FC = () => {
                         onClick: onActivateBadge,
                     })
                     break
+                default: break
             }
         }
     }, [
@@ -256,6 +293,28 @@ const BadgeDetailPage: FC = () => {
         badgeListingMutate()
     }
 
+    function handleBadgeEditClick(): void {
+        fileInputRef.current?.click()
+    }
+
+    function cancelEditBadge(): void {
+        setIsBadgeDescEditingMode(false)
+    }
+
+    function hideActivateModal(): void {
+        setShowActivatedModal(false)
+    }
+
+    function handleContentEditFocus(): void {
+        setIsBadgeDescEditingMode(true)
+    }
+
+    function handleContentChange(): void {
+        if (badgeNameErrorText) {
+            setBadgeNameErrorText(undefined)
+        }
+    }
+
     function validateFilePicked(e: ChangeEvent<HTMLInputElement>): void {
         if (e.target.files?.length) {
             if (GamificationConfig.ACCEPTED_BADGE_MIME_TYPES.includes(e.target.files[0].type)) {
@@ -327,9 +386,12 @@ const BadgeDetailPage: FC = () => {
                                         buttonStyle='icon'
                                         icon={IconOutline.PencilIcon}
                                         className={styles.filePickerPencil}
-                                        onClick={() => fileInputRef.current?.click()}
+                                        onClick={handleBadgeEditClick}
                                     />
-                                    <img src={fileDataURL || badgeDetailsHandler.data?.badge_image_url} alt='badge media preview' />
+                                    <img
+                                        src={fileDataURL || badgeDetailsHandler.data?.badge_image_url}
+                                        alt='badge media preview'
+                                    />
                                     <input
                                         type='file'
                                         ref={fileInputRef}
@@ -343,7 +405,7 @@ const BadgeDetailPage: FC = () => {
                                     <ContentEditable
                                         innerRef={badgeNameRef}
                                         html={badgeDetailsHandler.data?.badge_name as string}
-                                        onChange={() => (badgeNameErrorText ? setBadgeNameErrorText(undefined) : '')}
+                                        onChange={handleContentChange}
                                         onKeyDown={onNameEditKeyDown}
                                         onBlur={onSaveBadgeName}
                                         onFocus={onBadgeNameEditFocus}
@@ -364,11 +426,17 @@ const BadgeDetailPage: FC = () => {
                                                 html={
                                                     isBadgeDescEditingMode
                                                         ? badgeDetailsHandler.data?.badge_description as string
-                                                        : md.render(badgeDetailsHandler.data?.badge_description as string)
+                                                        : md.render(
+                                                            badgeDetailsHandler.data?.badge_description as string,
+                                                        )
                                                 }
                                                 onChange={noop}
-                                                onFocus={() => setIsBadgeDescEditingMode(true)}
-                                                className={isBadgeDescEditingMode ? styles.badgeEditableMode : styles.badgeEditable}
+                                                onFocus={handleContentEditFocus}
+                                                className={
+                                                    isBadgeDescEditingMode
+                                                        ? styles.badgeEditableMode
+                                                        : styles.badgeEditable
+                                                }
                                             />
                                             {
                                                 isBadgeDescEditingMode && (
@@ -377,7 +445,7 @@ const BadgeDetailPage: FC = () => {
                                                             label='Cancel'
                                                             buttonStyle='secondary'
                                                             size='xs'
-                                                            onClick={() => setIsBadgeDescEditingMode(false)}
+                                                            onClick={cancelEditBadge}
                                                         />
                                                         <Button
                                                             label='Save'
@@ -405,7 +473,7 @@ const BadgeDetailPage: FC = () => {
                 && (
                     <BadgeActivatedModal
                         isOpen={showActivatedModal}
-                        onClose={() => setShowActivatedModal(false)}
+                        onClose={hideActivateModal}
                         badge={badgeDetailsHandler.data}
                     />
                 )

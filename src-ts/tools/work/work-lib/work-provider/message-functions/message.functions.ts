@@ -18,7 +18,7 @@ export async function getAndSetForWorkItemsAsync(workItems: Array<Work>, handle:
 
     // create a map of the results
     const resultsMap: { [workId: string]: GetUnreadMessageCountResponse } = {}
-    results.forEach(item => resultsMap[item.workId] = item)
+    results.forEach(item => { resultsMap[item.workId] = item })
 
     // map the messages to the work items
     return workItems

@@ -15,8 +15,6 @@ interface WorkDetailHighlightsProps {
 
 const WorkDetailHighlights: FC<WorkDetailHighlightsProps> = (props: WorkDetailHighlightsProps) => {
 
-    const { work }: WorkDetailHighlightsProps = props
-
     const highlights: ReadonlyArray<{
         icon: JSX.Element,
         info?: number | string
@@ -24,27 +22,27 @@ const WorkDetailHighlights: FC<WorkDetailHighlightsProps> = (props: WorkDetailHi
     }> = [
         {
             icon: <IconOutline.CalendarIcon />,
-            info: textFormatDateLocaleShortString(work.submittedDate),
+            info: textFormatDateLocaleShortString(props.work.submittedDate),
             name: 'Submitted',
         },
         {
             icon: <IconOutline.CurrencyDollarIcon />,
-            info: textFormatMoneyLocaleString(work.cost),
+            info: textFormatMoneyLocaleString(props.work.cost),
             name: 'Cost (USD)',
         },
         {
             icon: <IconOutline.UserGroupIcon />,
-            info: work.participantsCount,
+            info: props.work.participantsCount,
             name: 'Participants',
         },
         {
             icon: <IconOutline.DocumentTextIcon />,
-            info: work.solutionsCount,
+            info: props.work.solutionsCount,
             name: 'Solutions Received',
         },
         {
             icon: <IconOutline.IdentificationIcon />,
-            info: work.id,
+            info: props.work.id,
             name: 'Work id',
         },
     ]
@@ -53,7 +51,7 @@ const WorkDetailHighlights: FC<WorkDetailHighlightsProps> = (props: WorkDetailHi
         .map((item, index) => (
             <div
                 className={styles.highlight}
-                key={index}
+                key={index as any}
             >
 
                 <div className={styles.icon}>

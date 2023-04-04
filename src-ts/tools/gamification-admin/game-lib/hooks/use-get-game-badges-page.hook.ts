@@ -20,7 +20,9 @@ export function useGetGameBadgesPage(sort: Sort): InfinitePageHandler<GameBadge>
             organization_id: GamificationConfig.ORG_ID,
         }
 
-        const badgeEndpointUrl: URL = new URL(`${EnvironmentConfig.API.V5}/gamification/badges?${new URLSearchParams(params)}`)
+        const badgeEndpointUrl: URL = new URL(
+            `${EnvironmentConfig.API.V5}/gamification/badges?${new URLSearchParams(params)}`,
+        )
 
         return badgeEndpointUrl.toString()
     }

@@ -24,12 +24,16 @@ const TableSort: FC<TableSortProps> = (props: TableSortProps) => {
         ? IconOutline.SwitchVerticalIcon
         : props.sort.direction === 'asc' ? IconOutline.SortAscendingIcon : IconOutline.SortDescendingIcon
 
+    function handleClick(): void {
+        props.toggleSort(props.propertyName as string)
+    }
+
     return (
         <Button
             buttonStyle='icon'
             className={props.iconClass}
             icon={icon}
-            onClick={() => props.toggleSort(props.propertyName as string)}
+            onClick={handleClick}
             size='sm'
         />
     )

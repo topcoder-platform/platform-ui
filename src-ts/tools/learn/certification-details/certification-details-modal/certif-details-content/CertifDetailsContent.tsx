@@ -19,7 +19,7 @@ function renderBasicList(items: Array<string>): ReactNode {
 }
 
 interface CertifDetailsContentProps {
-    certification: TCACertification
+    certification?: TCACertification
     children?: ReactNode
     sectionClassName?: string
 }
@@ -31,7 +31,7 @@ const CertifDetailsContent: FC<CertifDetailsContentProps> = (props: CertifDetail
         return (
             <div className={sectionClassName}>
                 <h2>What I Will Learn?</h2>
-                {renderBasicList(props.certification.learningOutcomes)}
+                {renderBasicList(props.certification?.learningOutcomes ?? [])}
             </div>
         )
     }
@@ -40,7 +40,7 @@ const CertifDetailsContent: FC<CertifDetailsContentProps> = (props: CertifDetail
         return (
             <div className={sectionClassName}>
                 <h2>Prerequisites</h2>
-                {props.certification.prerequisites?.length ? (
+                {props.certification?.prerequisites?.length ? (
                     renderBasicList(props.certification.prerequisites)
                 ) : (
                     <p className='body-main'>

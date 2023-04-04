@@ -15,7 +15,7 @@ import { AssessmentCard, CourseCard } from './curriculum-cards'
 import styles from './CertificationCurriculum.module.scss'
 
 interface CertificationCurriculumProps {
-    certification: TCACertification
+    certification?: TCACertification
     certsProgress?: ReadonlyArray<LearnUserCertificationProgress>
     isEnrolled: boolean
 }
@@ -37,17 +37,17 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
     ), [props.certsProgress])
 
     const providersById: ProvidersByIdCollection = useMemo(() => (
-        props.certification.resourceProviders.reduce((all, provider) => {
+        (props.certification?.resourceProviders ?? []).reduce((all, provider) => {
             all[provider.id] = provider
             return all
         }, {} as ProvidersByIdCollection)
     ), [props.certification])
 
     const sortedCertResources: TCACertificationResource[] = useMemo(() => (
-        orderBy(props.certification.certificationResources, 'displayOrder')
-    ), [props.certification.certificationResources])
+        orderBy(props.certification?.certificationResources, 'displayOrder')
+    ), [props.certification?.certificationResources])
 
-    return (
+    return props.certification ? (
         <div className={styles.wrap}>
             <div className={styles.headline}>
                 <h2 className='details'>
@@ -83,7 +83,7 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
                             learnerLevel={cert.freeCodeCampCertification.learnerLevel}
                             provider={get(providersById, [cert.resourceProviderId, 'name'])}
                             isEnrolled={props.isEnrolled}
-                            tcaCertification={props.certification}
+                            tcaCertification={props.certification as TCACertification}
                         />
                     ))}
                     <AssessmentCard
@@ -96,7 +96,7 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
                 />
             </div>
         </div>
-    )
+    ) : <></>
 }
 
 export default CertificationCurriculum
