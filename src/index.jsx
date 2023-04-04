@@ -38,33 +38,31 @@ root.render(
             <ProfileProvider>
 
                 <BrowserRouter>
+                    <RouteProvider
+                        rootCustomer={routeRootCustomer}
+                        rootLoggedOut={routeRootLoggedOut}
+                        rootLoggedOutFC={WorkNotLoggedIn}
+                        rootMember={routeRootMember}
+                        toolsRoutes={[...toolsRoutes]}
+                        utilsRoutes={[...utilsRoutes]}
+                    >
+                        <StrictMode>
+                            <AppNextGen />
+                        </StrictMode>
+                    </RouteProvider>
 
-                <RouteProvider
-                    rootCustomer={routeRootCustomer}
-                    rootLoggedOut={routeRootLoggedOut}
-                    rootLoggedOutFC={WorkNotLoggedIn}
-                    rootMember={routeRootMember}
-                    toolsRoutes={[...toolsRoutes]}
-                    utilsRoutes={[...utilsRoutes]}
-                >
-                    <StrictMode>
-                    <AppNextGen />
-                    </StrictMode>
-                </RouteProvider>
-
-                <App />
-                <ReduxToastr
-                    timeOut={3000}
-                    newestOnTop={false}
-                    preventDuplicates
-                    position="top-right"
-                    getState={(state) => state.toastr}
-                    transitionIn="fadeIn"
-                    transitionOut="fadeOut"
-                    progressBar
-                    closeOnToastrClick
-                />
-
+                    <App />
+                    <ReduxToastr
+                        timeOut={3000}
+                        newestOnTop={false}
+                        preventDuplicates
+                        position="top-right"
+                        getState={(state) => state.toastr}
+                        transitionIn="fadeIn"
+                        transitionOut="fadeOut"
+                        progressBar
+                        closeOnToastrClick
+                    />
                 </BrowserRouter>
 
                 <PageFooter />

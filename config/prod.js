@@ -20,7 +20,9 @@ module.exports = {
 
   API: {
     V5: "https://api.topcoder.com/v5",
+    V4: "https://api.topcoder.com/v4",
     V3: "https://api.topcoder.com/v3",
+    V2: "https://api.topcoder.com/v2",
   },
 
   STRIPE: {

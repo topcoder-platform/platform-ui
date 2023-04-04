@@ -7,10 +7,10 @@ import cn from "classnames";
 import React from "react";
 import styles from "./styles.module.scss";
 
-const FormInputTextArea = ({ styleName, ...props }) => {
+const FormInputTextArea = ({ styledName, ...props }) => {
   return (
     <textarea
-      className={cn(styles["form-input-textarea"], !!styleName ? styles[styleName] : undefined)}
+      className={cn(styles["form-input-textarea"], !!styledName ? styles[styledName] : undefined)}
       {...props}
       cols={10}
       value={props.value || ''}

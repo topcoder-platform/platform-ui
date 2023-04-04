@@ -130,7 +130,7 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
         )
     }
 
-    function renderTCACertificatePreview(): ReactNode {
+    function renderTCACertificatePreview(ref?: MutableRefObject<HTMLDivElement | any>): ReactNode {
         return (
             <TCACertificatePreview
                 certification={props.certification}
@@ -138,7 +138,7 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                 completedDate={props.completedAt}
                 completionUuid={props.completionUuid}
                 validateLink={props.validationUrl}
-                certificateElRef={certificateElRef}
+                certificateElRef={ref}
                 maxScale={Math.min()}
             />
         )
@@ -196,7 +196,7 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                         </div>
                         <div className={styles.heroCertWrap}>
                             <div className={styles.heroCert}>
-                                {renderTCACertificatePreview()}
+                                {renderTCACertificatePreview(certificateElRef)}
 
                                 <div className={styles.certActionBtns}>
                                     <ActionButton

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="15px" height="10px" viewBox="0 0 12 8" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>banner chevron</title>
+    <defs>
+        <polygon id="path-1" points="9.4 6.8 5.4 2.8 1.4 6.8 0 5.4 5.4 0 10.8 5.4"></polygon>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="#fff" fill-rule="evenodd">
+        <g id="01_2_Find-Work-Challenges-Non-Logged-In" transform="translate(-139.000000, -114.000000)">
+            <g id="icons/arrow/small-up-copy" transform="translate(139.600000, 114.600000)">
+                <mask id="mask-2" fill="white">
+                    <use xlink:href="#path-1"></use>
+                </mask>
+                <use id="icon-color" fill="#fff" xlink:href="#path-1"></use>
+            </g>
+        </g>
+    </g>
+</svg>

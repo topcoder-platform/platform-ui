@@ -1,0 +1,95 @@
+:global {
+  .layout {
+    position: relative;
+    display: flex;
+
+    .sidebar {
+      flex: none;
+      width: var(--sideBarWidth, 270px);
+      min-height: calc(100vh - var(--navbarHeight, 60px));
+      background: $white;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+
+      .sidebar-content {
+        > hr {
+          margin: 0 20px;
+          border-color: $tc-gray-05;
+          opacity: 0.5;
+
+          &:first-child,
+          &:last-child {
+            display: none;
+          }
+        }
+      }
+
+      .sidebar-footer {
+        margin: 0 20px;
+        margin-bottom: 125px;
+      }
+
+      &.show {
+        display: block;
+      }
+    }
+
+    .content {
+      flex: 1 1 auto;
+    }
+
+    .close-button {
+      display: none;
+    }
+
+    @include down($mfe-screen-xs) {
+      .sidebar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        display: none;
+        width: 100%;
+        margin-top: 90px;
+        background-color: $tc-white;
+        z-index: 20;
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: calc(-90px - var(--navbarHeight, 60px));
+          left: 0;
+          right: 0;
+          bottom: 100%;
+          background-color: rgba($tc-gray-90, 0.6);
+          z-index: 19;
+        }
+      }
+
+      .close-button {
+        display: block;
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 32px;
+        height: 32px;
+        font-size: 32px;
+        padding: 0;
+        color: inherit;
+        appearance: none;
+        background: none;
+        border: 0;
+      }
+    }
+  }
+
+  #tooltips-container-id {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    z-index: 1001;
+  }
+}

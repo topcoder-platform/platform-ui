@@ -8,9 +8,9 @@ import PT from "prop-types";
 import cn from "classnames";
 import styles from "./styles.module.scss";
 
-const PageContent = ({ children, styleName, ...props }) => {
+const PageContent = ({ children, styledName, ...props }) => {
   return (
-    <div className={cn(styles["page-content"], !!styleName ? styles[styleName] : undefined)} {...props}>
+    <div className={cn(styles["page-content"], !!styledName ? styles[styledName] : undefined)} {...props}>
       {children}
     </div>
   );

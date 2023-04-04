@@ -7,9 +7,9 @@ import PT from "prop-types";
 import cn from "classnames";
 import styles from "./styles.module.scss";
 
-const PageUl = ({ children, styleName, ...props }) => {
+const PageUl = ({ children, styledName, ...props }) => {
   return (
-    <ul className={cn(styles["page-ul"], !!styleName ? styles[styleName] : undefined)} {...props}>
+    <ul className={cn(styles["page-ul"], !!styledName ? styles[styledName] : undefined)} {...props}>
       {children}
     </ul>
   );

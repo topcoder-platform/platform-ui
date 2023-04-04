@@ -45,8 +45,8 @@ const WebsitePurposeForm = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">Your industry</PageP>
-          <PageP styleName="description">
+          <PageP styledName="title">Your industry</PageP>
+          <PageP styledName="description">
             Knowing your industry will help our designers understand your
             audience, and the basic visual direction and overall tone to take
             for your website design.
@@ -71,14 +71,14 @@ const WebsitePurposeForm = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">DESCRIPTION</PageP>
-          <PageP styleName="description">
+          <PageP styledName="title">DESCRIPTION</PageP>
+          <PageP styledName="description">
             What is the purpose of your website? What do you want visitors to be
             able to do, e.g., see your work? Contact you? You can include a
             general description as well as goals of the website.{" "}
           </PageP>
           <br />
-          <PageP styleName="description">
+          <PageP styledName="description">
             <strong>Example:</strong> <br />A dog walking website that allows
             visitors to select dog walkers and schedule dog walking appointments
           </PageP>
@@ -99,15 +99,15 @@ const WebsitePurposeForm = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">USERS</PageP>
-          <PageP styleName="description">
+          <PageP styledName="title">USERS</PageP>
+          <PageP styledName="description">
             Describe your target audience—are they pharmaceutical reps?
             Middle-aged mechanical engineers? Beekeepers? Write their user
             story, using the format, “As a &lt;type of users&gt;, I want
             &lt;some goal&gt;, so that &lt;some reason&gt;.”
           </PageP>
           <br />
-          <PageP styleName="description">
+          <PageP styledName="description">
             <strong>Example:</strong> <br />
             “As a dog owner, I want someone trustworthy to walk my dog, so that
             he feels loved when I'm at work.“
@@ -129,8 +129,8 @@ const WebsitePurposeForm = ({
       <PageDivider />
       <PageRow className={styles["form-row"]}>
         <div>
-          <PageP styleName="title">EXISTING WEBSITE?</PageP>
-          <PageP styleName="description">
+          <PageP styledName="title">EXISTING WEBSITE?</PageP>
+          <PageP styledName="description">
             If you have an existing website, please enter it here. Are we
             designing additional pages for your existing website? Or are we
             redesigning your current website? Please add additional information

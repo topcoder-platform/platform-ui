@@ -1,0 +1,143 @@
+// Headings
+
+h1 { @include tc-heading-xl; }
+h2 { @include tc-heading-lg; }
+h3 { @include tc-heading-md; }
+h4 { @include tc-heading-sm; }
+h5 { @include tc-heading-xs; }
+h6 { @include tc-heading-xs; }
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 { color: inherit; }
+
+/* Label text styles. */
+
+@mixin tc-label-xl {
+  @include roboto-medium;
+
+  color: $tc-black;
+  font-size: 20px;
+  line-height: 25px;
+}
+
+@mixin tc-label-lg {
+  @include roboto-medium;
+
+  color: $tc-black;
+  font-size: 15px;
+  line-height: 20px;
+}
+
+@mixin tc-label-md {
+  @include roboto-medium;
+
+  color: $tc-black;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+@mixin tc-label-sm {
+  @include roboto-regular;
+
+  color: $tc-black;
+  font-size: 12px;
+  line-height: 15px;
+}
+
+@mixin tc-label-xs {
+  @include roboto-regular;
+
+  color: $tc-black;
+  font-size: 11px;
+  line-height: 15px;
+}
+
+/* Body text styles. */
+
+@mixin tc-body-lg {
+  @include roboto-regular;
+
+  color: $tc-gray-80;
+  font-size: 20px;
+  line-height: 25px;
+}
+
+@mixin tc-body-md {
+  @include roboto-regular;
+
+  color: $tc-gray-80;
+  font-size: 15px;
+  line-height: 25px;
+}
+
+@mixin tc-body-sm {
+  @include roboto-regular;
+
+  color: $tc-gray-80;
+  font-size: 13px;
+  line-height: 25px;
+}
+
+@mixin tc-body-xs {
+  @include roboto-regular;
+
+  color: $tc-gray-80;
+  font-size: 11px;
+  line-height: 20px;
+}
+
+/* Heading text styles. */
+
+@mixin tc-heading-xl {
+  @include roboto-light;
+
+  color: $tc-black;
+  font-size: 36px;
+  line-height: 45px;
+}
+
+@mixin tc-heading-lg {
+  @include roboto-regular;
+
+  color: $tc-black;
+  font-size: 28px;
+  line-height: 35px;
+}
+
+@mixin tc-heading-md {
+  @include roboto-regular;
+
+  color: $tc-black;
+  font-size: 20px;
+  line-height: 30px;
+}
+
+@mixin tc-heading-sm {
+  @include roboto-bold;
+
+  color: $tc-black;
+  font-size: 15px;
+  line-height: 25px;
+}
+
+@mixin tc-heading-xs {
+  @include roboto-bold;
+
+  color: $tc-black;
+  font-size: 13px;
+  line-height: 25px;
+}
+
+/* Titles text styles. */
+
+@mixin tc-title {
+  @include roboto-light;
+
+  color: $tc-black;
+  font-size: 42px;
+  line-height: 50px;
+}

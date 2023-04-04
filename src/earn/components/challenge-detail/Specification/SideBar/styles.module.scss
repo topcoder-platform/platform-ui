@@ -1,0 +1,192 @@
+@import "mixins";
+
+.no-margin-top {
+  margin-top: -10px !important;
+}
+
+.challenge-spec-sidebar {
+  background: $tc-dark-blue-10;
+  width: 245px;
+  margin: (11 * $base-unit) 0;
+  padding: 4 * $base-unit;
+
+  @include md {
+    margin: (8 * $base-unit) 0;
+  }
+
+  @include xs-to-sm {
+    margin: 0;
+    width: 100%;
+  }
+}
+
+.term {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+
+  a {
+    cursor: pointer;
+  }
+}
+
+.tooltip-container {
+  display: flex;
+}
+
+.tctooltip {
+  background: $tc-green-110;
+  font-style: roboto;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 20px;
+  color: $tc-white;
+  padding: 0 6px;
+  border-radius: 10px;
+  margin: 0 5px;
+  cursor: pointer;
+}
+
+.tctooltiptext {
+  background: $tc-gray-90;
+  border-radius: 6px;
+  padding: 5px;
+
+  h4 {
+    @include roboto-bold;
+
+    white-space: nowrap;
+    font-size: 13px;
+    line-height: 20px;
+    margin: 5px 0;
+    color: $tc-white;
+  }
+
+  p {
+    @include roboto-regular;
+
+    font-size: 13px;
+    color: $tc-gray-10;
+    line-height: 20px;
+    margin: 0 0 5px;
+    width: 150px;
+  }
+}
+
+.tooltiptextreview {
+  margin: 0 0 0 -140px;
+}
+
+.tooltiptextapproval {
+  margin: 0 0 0 -80px;
+}
+
+.challenge-sidebar-inner {
+  > :first-child {
+    margin-top: 0;
+  }
+
+  > div {
+    margin-top: 6 * $base-unit;
+  }
+
+  p {
+    padding-top: 2px;
+    padding-bottom: 7px;
+  }
+
+  h2 {
+    @include roboto-bold;
+
+    font-size: 13px;
+    color: $tc-gray-90;
+    line-height: 20px;
+    padding-bottom: 2px;
+  }
+
+  h3 {
+    @include roboto-bold;
+
+    font-size: 13px;
+    color: $tc-gray-90;
+    line-height: 20px;
+    margin-top: 4 * $base-unit;
+  }
+
+  h3:first-of-type {
+    margin-top: 2 * $base-unit;
+  }
+
+  .link-like-paragraph {
+    @include linkLikeParagraph;
+  }
+
+  .legacy-challenge-id {
+    h3 {
+      color: $tc-gray-10;
+      font-style: italic;
+    }
+
+    text-align: left;
+  }
+
+  ol {
+    @include roboto-regular;
+
+    margin: 0 0 5px;
+    counter-reset: item;
+    font-size: 13px;
+    color: $tc-gray-90;
+    line-height: 20px;
+    display: table;
+    padding-top: 8px;
+
+    li {
+      list-style-type: none;
+      font-weight: 400;
+      counter-increment: item;
+      display: table-row;
+
+      @include linkStyle;
+    }
+
+    li::before {
+      display: table-cell;
+      font-weight: 700;
+      text-align: right;
+      content: counter(item) ".";
+      padding: 0 10px 0 0;
+    }
+  }
+
+  ul {
+    @include roboto-regular;
+
+    margin: 0 0 5px;
+    font-size: 13px;
+    color: $tc-gray-90;
+    line-height: 20px;
+    display: table;
+    padding-top: 8px;
+
+    li {
+      list-style-type: none;
+      font-weight: 400;
+      display: table-row;
+
+      @include linkStyle;
+    }
+
+    li::before {
+      display: table-cell;
+      font-weight: 700;
+      text-align: right;
+      content: "-";
+      padding: 0 10px 0 0;
+    }
+  }
+
+  .source-files-list {
+    margin-bottom: 3 * $base-unit;
+  }
+}

@@ -14,7 +14,7 @@ const FormField = ({
   placeholder = "",
   onChange = (f) => f,
   className,
-  styleName,
+  styledName,
   disabled,
   helperText,
   ...props
@@ -29,7 +29,7 @@ const FormField = ({
       className={cn(
         styles["form-field-wrapper"],
         className || "",
-        !!styleName ? styles[styleName] : undefined,
+        !!styledName ? styles[styledName] : undefined,
         helperText ? styles["helper"] : null
       )}
     >

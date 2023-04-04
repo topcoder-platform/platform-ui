@@ -1,0 +1,184 @@
+@import '@earn/styles/variables';
+@import '@earn/styles/mixins';
+
+$submang-space-140: $base-unit * 28;
+$submang-space-50: $base-unit * 10;
+$submang-space-35: $base-unit * 7;
+$submang-space-30: $base-unit * 6;
+$submang-space-25: $base-unit * 5;
+$submang-space-20: $base-unit * 4;
+$gray-color: $tc-gray-40;
+$light-gray-color: $tc-gray-neutral-light;
+
+.btn-wrap {
+  text-align: center;
+  color: white;
+}
+
+.add-sub-btn {
+  margin: 10px auto;
+}
+
+.submission-management {
+  padding-bottom: 40px;
+}
+
+.submission-management-content {
+  padding: $submang-space-20 $submang-space-140;
+
+  @include md {
+    padding: $submang-space-20 $submang-space-35;
+  }
+
+  @include xs-to-sm {
+    padding: 0;
+  }
+
+  .content-head {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 400;
+    font-size: 15px;
+    color: $tc-gray-50;
+    line-height: $submang-space-25;
+    margin-top: $submang-space-50;
+    margin-bottom: $base-unit;
+
+    @include xs-to-sm {
+      flex-direction: column;
+      margin-top: $submang-space-20;
+      padding: 0 15px;
+    }
+
+    .title {
+      font-size: 20px;
+      color: $tc-gray-80;
+      line-height: $submang-space-30;
+    }
+
+    .round-ends {
+      font-size: 15px;
+      color: $tc-black;
+      line-height: $submang-space-30;
+
+      @include xs-to-sm {
+        margin-top: 10px;
+        margin-bottom: 15px;
+      }
+
+      span.ends-label {
+        color: $tc-gray-50;
+
+        @include xs-to-sm {
+          display: block;
+          margin-bottom: -10px;
+        }
+      }
+    }
+  }
+
+  .recommend-info {
+    font-weight: 400;
+    color: $tc-gray-50;
+    line-height: $submang-space-25;
+    margin-bottom: $submang-space-30;
+
+    @include xs-to-sm {
+      padding: 0 15px;
+    }
+  }
+}
+
+.submission-management-header {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-weight: 400;
+  padding: $submang-space-25 $submang-space-50;
+  background: $light-gray-color;
+  border-bottom: 1px solid $tc-gray-neutral-dark;
+
+  @include md {
+    padding: $submang-space-25 $submang-space-35;
+  }
+
+  @include xs-to-sm {
+    flex-direction: column;
+    padding: $submang-space-20 15px;
+  }
+
+  .left-col {
+    padding-right: 200px;
+
+    @include xs-to-sm {
+      padding-right: 0;
+    }
+
+    .name {
+      font-size: 28px;
+      color: $tc-black;
+      line-height: $submang-space-35;
+    }
+
+    .back-btn {
+      background: none;
+      color: $gray-color;
+      font-size: 20px;
+      line-height: $submang-space-25;
+      margin-top: 5px;
+      display: inline-block;
+      padding: 0;
+      border: none;
+      font-weight: 400;
+      text-transform: initial;
+
+      &:focus {
+        outline: none;
+      }
+    }
+  }
+
+  .right-col {
+    @include roboto-regular;
+
+    min-width: 100px;
+
+    @include xs-to-sm {
+      margin-top: 10px;
+
+      p,
+      div {
+        display: inline-block;
+      }
+    }
+
+    .round {
+      font-size: 15px;
+      color: $tc-gray-80;
+      line-height: $submang-space-25;
+    }
+
+    .time-left {
+      font-size: 20px;
+      color: $tc-gray-80;
+      line-height: $submang-space-30;
+
+      @include xs-to-sm {
+        font-size: 15px;
+        font-weight: bold;
+        line-height: $submang-space-25;
+        margin-left: 5px;
+      }
+    }
+
+    .left-label {
+      font-size: 13px;
+      color: $tc-gray-50;
+      line-height: $submang-space-20;
+
+      @include xs-to-sm {
+        margin-left: 5px;
+      }
+    }
+  }
+}

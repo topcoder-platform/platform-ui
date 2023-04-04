@@ -9,9 +9,9 @@ import PT from "prop-types";
 import React from "react";
 import styles from "./styles.module.scss";
 
-const Page = ({ children, styleName, ...props }) => {
+const Page = ({ children, styledName, ...props }) => {
   return (
-    <div className={cn(styles["page"], !!styleName ? styles[styleName] : undefined)} {...props}>
+    <div className={cn(styles["page"], !!styledName ? styles[styledName] : undefined)} {...props}>
       {children}
     </div>
   );

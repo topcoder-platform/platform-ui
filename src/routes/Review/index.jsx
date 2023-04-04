@@ -213,7 +213,7 @@ const Review = ({
           }))}
         />
         {banner}
-        <PageContent styleName={"container"}>
+        <PageContent styledName={"container"}>
           <ServicePrice
             hideTitle
             showIcon={showIcon}

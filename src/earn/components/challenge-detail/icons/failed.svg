@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <g id="Challenge-Details---Desktop" fill="none" fill-rule="evenodd" stroke="none" stroke-width="1">
+    <g id="04_1_Review_Status" transform="translate(-588 -799)">
+      <g id="icon-failed" transform="translate(588 799)">
+        <g id="ban">
+          <path id="Path" fill="#FFF" d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8Z"/>
+          <path id="Shape" fill-rule="nonzero" stroke="#F52C14" stroke-width="2" d="M8 1C4.152 1 1 4.152 1 8s3.152 7 7 7 7-3.152 7-7-3.152-7-7-7Z"/>
+        </g>
+        <g id="e-remove" fill="#F52C14" stroke="#F52C14" stroke-width=".5" transform="translate(5 5)">
+          <path id="Path" d="M5.825.175a.6.6 0 0 0-.848 0L3.004 2.15 1.03.175a.6.6 0 0 0-.847.848l1.973 1.973L.183 4.97a.6.6 0 1 0 .847.847l1.974-1.973 1.973 1.973a.6.6 0 0 0 .848-.847L3.85 2.996l1.974-1.973a.6.6 0 0 0 0-.848Z"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

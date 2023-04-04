@@ -7,11 +7,11 @@ import cn from "classnames";
 import React from "react";
 import styles from "./styles.module.scss";
 
-const FormInputText = ({ styleName, ...props }) => {
+const FormInputText = ({ styledName, ...props }) => {
   return (
     <input
       type="text"
-      className={cn(styles["form-input-text"], !!styleName ? styles[styleName] : undefined)}
+      className={cn(styles["form-input-text"], !!styledName ? styles[styledName] : undefined)}
       {...props}
     />
   );

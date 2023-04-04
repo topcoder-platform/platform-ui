@@ -1,0 +1,37 @@
+@import "@earn/styles/mixins";
+
+.container {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  padding: 80px 0 40px;
+  background: #fff;
+  min-height: calc(100vh - var(--navbarHeight, 60px));
+
+  @include md-to-lg {
+    padding-bottom: 0;
+  }
+
+  @include xs-to-lg {
+    padding: 10px;
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+
+    @include md-to-lg {
+      width: 100%;
+    }
+
+    @include xl {
+      width: 1242px;
+    }
+
+    .not-permitted {
+      background-color: white;
+      text-align: center;
+      padding: 40px;
+    }
+  }
+}

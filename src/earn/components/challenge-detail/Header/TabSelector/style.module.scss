@@ -1,0 +1,68 @@
+@import "@earn/styles/mixins";
+
+.challenge-view-selector {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  position: relative;
+
+  @include xs-to-sm {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow: auto;
+  }
+
+  .challenge-selector-common {
+    font-family: roboto, sans-serif;
+    font-size: 13px;
+    line-height: 30px;
+    margin: 10px 20px 0;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .challenge-selected-view {
+    font-weight: 700;
+    color: $tc-dark-blue;
+    border-bottom: 3px solid $tc-dark-blue;
+  }
+
+  .challenge-unselected-view {
+    font-weight: 400;
+    color: $tc-gray-70;
+    border-bottom: 3px hidden $tc-white;
+  }
+}
+
+.container {
+  margin-top: 4 * $base-unit;
+  position: relative;
+}
+
+.mask {
+  height: 100%;
+  position: absolute;
+  width: 30px;
+  z-index: 100;
+}
+
+.mask.left {
+  display: none;
+  background: linear-gradient(
+    -90deg,
+    rgba(250, 250, 251, 0) 3%,
+    #fafafb 49%,
+    #fafafb 98%
+  );
+  left: 0;
+}
+
+.mask.right {
+  background: linear-gradient(
+    90deg,
+    rgba(250, 250, 251, 0) 3%,
+    #fafafb 49%,
+    #fafafb 98%
+  );
+  right: 0;
+}

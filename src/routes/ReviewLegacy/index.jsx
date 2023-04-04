@@ -213,7 +213,7 @@ const ReviewLegacy = ({
       <Page>
         <Breadcrumb items={breadcrumbs} />
         {banner}
-        <PageContent styleName={"container"}>
+        <PageContent styledName={"container"}>
           <div className={styles["title-wrapper"]}>
             <PageH2>REVIEW & PAYMENT</PageH2>
           </div>

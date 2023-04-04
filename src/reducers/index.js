@@ -13,6 +13,7 @@ import progressReducer from "./progress";
 import workReducer from "./work";
 
 import filter from "./gigs/filter";
+import earnReducer from '../earn/reducers'
 import gigApply from "./gigs/gigApply";
 import gigDetails from "./gigs/gigDetails";
 import gigs from "./gigs/gigs";
@@ -32,6 +33,8 @@ const rootReducer = combineReducers({
   work: workReducer,
   filter,
   gigApply,
+  // earn App
+  earn: earnReducer,
   gigDetails,
   gigs,
   lookup,

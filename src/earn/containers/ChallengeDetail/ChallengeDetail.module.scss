@@ -1,0 +1,38 @@
+@import "@earn/styles/mixins";
+
+.outer-container {
+  background: $tc-gray-neutral-dark;
+  width: 100%;
+
+  @include xs-to-sm {
+    padding: 8px 10px 20px;
+  }
+
+  @include md {
+    padding: 30px 14px 30px 20px;
+  }
+
+  @include lg-to-xl {
+    padding: 30px 64px;
+  }
+}
+
+.challenge-detail-container {
+  background: $tc-white;
+  border-radius: 3 * $corner-radius;
+  max-width: 1240px;
+  width: 100%;
+  margin: auto;
+}
+
+.page {
+  @include roboto-regular;
+
+  background: $tc-white;
+  border-radius: 3 * $corner-radius;
+  margin: auto;
+  max-width: 1240px;
+  padding: 4 * $base-unit;
+  text-align: center;
+  width: 100%;
+}
