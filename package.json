@@ -26,6 +26,7 @@
         "@sprig-technologies/sprig-browser": "^2.20.1",
         "@stripe/react-stripe-js": "1.13.0",
         "@stripe/stripe-js": "1.41.0",
+        "@types/testing-library__jest-dom": "^5.14.5",
         "apexcharts": "^3.36.0",
         "axios": "^1.1.2",
         "browser-cookies": "^1.2.0",
