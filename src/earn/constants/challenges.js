@@ -15,6 +15,8 @@ export const FILTER_BUCKETS = [
   "All Active Challenges",
   "Open for Registration",
   "Closed Challenges",
+  "My Challenges",
+  "Open for Review"
 ];
 
 export const FILTER_CHALLENGE_TYPES = ["Challenge", "First2Finish", "Task"];
@@ -33,8 +35,8 @@ export const FILTER_CHALLENGE_TRACKS = [
 ];
 
 export const FILTER_CHALLENGE_TRACK_ABBREVIATIONS = {
-  Design: "DES",
-  Development: "DEV",
+  Design: "Des",
+  Development: "Dev",
   "Data Science": "DS",
   "Quality Assurance": "QA",
 };

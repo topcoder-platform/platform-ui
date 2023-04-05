@@ -6,6 +6,7 @@ import Panel from "@earn/components/Panel";
 import ChallengeError from "../Listing/errors/ChallengeError";
 import Pagination from "@earn/components/Pagination";
 import ChallengeItem from "./ChallengeItem";
+import ReviewItem from "./ReviewItem";
 import TextInput from "@earn/components/TextInput";
 import Dropdown from "@earn/components/Dropdown";
 import DateRangePicker from "@earn/components/DateRangePicker";
@@ -151,24 +152,44 @@ const Listing = ({
                 key={challenge.id}
                 styleName={index % 2 === 0 ? "even" : "odd"}
               >
-                <ChallengeItem
-                  challenge={challenge}
-                  onClickTag={(tag) => {
-                    const filterChange = {
-                      tags: [tag],
-                      page: 1,
-                    };
-                    updateFilter(filterChange);
-                  }}
-                  onClickTrack={(track) => {
-                    const filterChange = {
-                      tracks: [track],
-                      page: 1,
-                    };
-                    updateFilter(filterChange);
-                  }}
-                  isLoggedIn={isLoggedIn}
-                />
+                  {challenge.type != "Contest Review" ?
+                    <ChallengeItem
+                      challenge={challenge}
+                      onClickTag={(tag) => {
+                        const filterChange = {
+                          tags: [tag],
+                          page: 1,
+                        };
+                        updateFilter(filterChange);
+                      }}
+                      onClickTrack={(track) => {
+                        const filterChange = {
+                          tracks: [track],
+                          page: 1,
+                        };
+                        updateFilter(filterChange);
+                      }}
+                      isLoggedIn={isLoggedIn}
+                    />
+                  :
+                    <ReviewItem
+                      challenge={challenge}
+                      onClickTag={(tag) => {
+                        const filterChange = {
+                          tags: [tag],
+                          page: 1,
+                        };
+                        updateFilter(filterChange);
+                      }}
+                      onClickTrack={(track) => {
+                        const filterChange = {
+                          tracks: [track],
+                          page: 1,
+                        };
+                        updateFilter(filterChange);
+                      }}
+                      isLoggedIn={isLoggedIn}
+                    />}
               </div>
             ))}
           </Panel.Body>

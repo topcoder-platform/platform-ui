@@ -11,6 +11,7 @@ import { getApi } from "./challenge-api";
 import { getService as getMembersService } from "./members";
 import { getService as getSubmissionsService } from "./submissions";
 import { buildQueryString } from "@earn/utils/url";
+import config from '@earn/config';
 
 /**
  * Search challenges
@@ -25,6 +26,23 @@ async function getChallenges(filter, cancellationSignal) {
     cancellationSignal
   );
 }
+
+
+/**
+ * Get review opportunities
+ *
+ * @return {Array<Object>} challenges
+ */
+ async function getReviewOpportunities(cancellationSignal) {
+  const { API } = config;
+  return api.get(
+    //TODO - this should be moved to v5
+    `/reviewOpportunities/?limit=1000&offset=0`,
+    API.V3,
+    cancellationSignal
+  );
+}
+
 
 export function getFilterUrl(backendFilter, frontFilter) {
   const ff = _.clone(frontFilter);
@@ -981,4 +999,5 @@ export function getService(tokenV3, tokenV2) {
 
 export default {
   getChallenges,
+  getReviewOpportunities
 };

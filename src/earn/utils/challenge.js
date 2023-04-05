@@ -4,6 +4,7 @@ import _ from "lodash";
 import * as constants from "@earn/constants";
 import Joi from "joi";
 import { initialChallengeFilter } from "../reducers/filter";
+import { decodeToken } from "@earn/utils/token";
 
 Joi.optionalId = () => Joi.string().uuid();
 
@@ -196,6 +197,7 @@ export function createChallengeCriteria(filter) {
   return {
     page: filter.page,
     perPage: filter.perPage,
+    memberId: filter.memberId,
     types: filter.types.map(
       (type) => constants.FILTER_CHALLENGE_TYPE_ABBREVIATIONS[type]
     ),
@@ -248,6 +250,16 @@ export function createAllActiveChallengeCriteria() {
 export function createClosedChallengeCriteria() {
   return {
     status: "Completed",
+    sortBy: constants.CHALLENGE_SORT_BY_MOST_RECENT,
+    sortOrder: constants.SORT_ORDER.DESC,
+  };
+}
+
+export function createMyChallengeCriteria(memberId) {
+  return {
+    status: "Active",
+    //TODO - get the logged in member ID
+    memberId: memberId,
     sortBy: constants.CHALLENGE_SORT_BY_MOST_RECENT,
     sortOrder: constants.SORT_ORDER.DESC,
   };
