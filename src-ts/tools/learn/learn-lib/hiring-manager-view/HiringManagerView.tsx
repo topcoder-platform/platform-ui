@@ -6,6 +6,7 @@ import {
     SetStateAction,
     useCallback,
     useLayoutEffect,
+    useMemo,
     useRef,
     useState,
 } from 'react'
@@ -50,6 +51,7 @@ function renderBasicList(items: Array<string> = []): ReactNode {
         </ul>
     )
 }
+
 export interface HiringManagerViewProps {
     certification?: TCACertification
     completedAt?: string
@@ -91,7 +93,9 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
     )
     const shareModal: TCAShareCertificateModalData = useTCAShareCertificateModal(ssrCertUrl)
 
-    const renderShareActions: boolean = props.isOwner && !props.isModalView
+    const renderShareActions: boolean = useMemo(() => (
+        !!props.isOwner && !props.isModalView
+    ), [props.isOwner, props.isModalView])
 
     const getCertificateCanvas: () => Promise<HTMLCanvasElement | void>
         = useCertificateCanvas(certificateElRef)
