@@ -136,4 +136,8 @@ module.exports = {
    * and unregister.  Used to allow API sufficent time to update.
    */
   CHALLENGE_DETAILS_REFRESH_DELAY: 3000,
+
+  CDN: {
+    PUBLIC: 'https://community-app-cdn.topcoder.com',
+  },
 };

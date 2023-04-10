@@ -141,4 +141,9 @@ module.exports = {
    * and unregister.  Used to allow API sufficent time to update.
    */
   CHALLENGE_DETAILS_REFRESH_DELAY: 3000,
+
+    /* CDN configuration. */
+    CDN: {
+      PUBLIC: 'https://d1aahxkjiobka8.cloudfront.net',
+    },
 };

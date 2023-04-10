@@ -2,35 +2,72 @@
  * A single deadline card.
  */
 
-import moment from "moment";
-import PT from "prop-types";
-import React from "react";
+import moment from 'moment';
+import PT from 'prop-types';
+import React from 'react';
+import CalendarIcon from '@earn/assets/images/icon-calendar-2.svg';
+import CalendarIconActive from '@earn/assets/images/icon-calendar-2-active.svg';
+import TimeIcon from '@earn/assets/images/icon-time.svg';
+import TimeIconActive from '@earn/assets/images/icon-time-active.svg';
 
-import "./style.module.scss";
+import './style.scss';
 
 /* Date/time format to use in the card. */
-const FORMAT = "MMM DD, HH:mm";
-const FORMAT_YEAR = "MMM DD YYYY, HH:mm";
+const FORMAT_YEAR = 'MMM DD, YYYY';
+const TIME = 'HH:mm';
 
-export default function Card({ past, time, title }) {
-  const time2 = moment(time);
-  const past2 = past === null ? time2.isBefore(moment()) : past;
+export default function Card({
+  title, start, end, showRange,
+}) {
+  const startMoment = moment(start);
+  const endMoment = moment(end);
+  const past = endMoment.isBefore(moment());
   return (
-    <div styleName={past2 ? "past" : "open"}>
-      <p styleName="title">{title}</p>
-      <p styleName="date">
-        {time2.format(time2.year() !== moment().year() ? FORMAT_YEAR : FORMAT)}
+    <div styleName={past ? 'past' : 'open'}>
+      <p styleName="title">
+        {title}
+      </p>
+      <p styleName="sections">
+        {showRange ? (
+          <section styleName="section">
+            <span styleName="section-title">Starts</span>
+            <p styleName="date">
+              { past ? <CalendarIcon /> : <CalendarIconActive /> }
+              <span>
+                {startMoment.format(FORMAT_YEAR)}
+              </span>
+            </p>
+            <p styleName="time">
+              { past ? <TimeIcon /> : <TimeIconActive /> }
+              <span>
+                {startMoment.format(TIME)}
+              </span>
+            </p>
+          </section>
+        ) : null}
+        <section styleName="section">
+          {showRange ? <span styleName="section-title">Ends</span> : null}
+          <p styleName="date">
+            { past ? <CalendarIcon /> : <CalendarIconActive /> }
+            <span>
+              {endMoment.format(FORMAT_YEAR)}
+            </span>
+          </p>
+          <p styleName="time">
+            { past ? <TimeIcon /> : <TimeIconActive /> }
+            <span>
+              {endMoment.format(TIME)}
+            </span>
+          </p>
+        </section>
       </p>
     </div>
   );
 }
 
-Card.defaultProps = {
-  past: null,
-};
-
 Card.propTypes = {
-  past: PT.bool,
   title: PT.string.isRequired,
-  time: PT.string.isRequired,
+  start: PT.string.isRequired,
+  end: PT.string.isRequired,
+  showRange: PT.bool.isRequired,
 };

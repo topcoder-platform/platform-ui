@@ -32,3 +32,19 @@ export function combineReducers(...reducers) {
     return nextState;
   };
 }
+/**
+ * Given any Flux Standard Action (FSA) with promise as the payload, it returns
+ * a promise which resolves into the FSA result object.
+ * @param {Object} action
+ * @return Promise which resolves to the operation result.
+ */
+ export function resolveAction(action) {
+  return action.payload.then(data => ({
+    ...action,
+    payload: data,
+  }), error => ({
+    ...action,
+    payload: error,
+    error: true,
+  }));
+}

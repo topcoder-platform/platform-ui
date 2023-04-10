@@ -1,0 +1,776 @@
+/* stylelint-disable no-descending-specificity */
+@import '@earn/styles/mixins';
+
+.challengeAction {
+  margin: $base-unit 0;
+  min-width: 0;
+  width: 100%;
+  border-radius: 50px !important;
+  height: 48px;
+  padding: 0 25px !important;
+}
+
+.challenge-ops-container .submitButton {
+  margin: 5px;
+  min-width: 0;
+  border-radius: 50px !important;
+  height: 48px;
+  background: #137d60 !important;
+  color: #fff !important;
+  white-space: nowrap;
+  padding: 12px 24px !important;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  letter-spacing: 0.008em;
+
+  @include xs-to-sm {
+    width: fit-content;
+  }
+}
+
+.challenge-ops-container .submitButtonDisabled {
+  margin: 5px;
+  min-width: 0;
+  border-radius: 50px !important;
+  height: 48px;
+  padding: 12px 24px !important;
+  color: #767676 !important;
+  background: #f4f4f4 !important;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  letter-spacing: 0.008em;
+
+  @include xs-to-sm {
+    width: fit-content;
+  }
+}
+
+.challenge-ops-container .unregisterButton {
+  margin: 5px;
+  min-width: 0;
+  border-radius: 50px !important;
+  height: 48px;
+  padding: 12px 24px !important;
+  color: #137d60 !important;
+  border: 2px solid #137d60 !important;
+  background: #fff !important;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  letter-spacing: 0.008em;
+
+  @include xs-to-sm {
+    width: fit-content;
+  }
+}
+
+.challenge-ops-container .unregisterButtonDisabled {
+  margin: 5px;
+  min-width: 0;
+  border-radius: 50px !important;
+  height: 48px;
+  padding: 12px 24px !important;
+  color: #767676 !important;
+  border: 2px solid #f4f4f4;
+  background: #fff !important;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  letter-spacing: 0.008em;
+
+  @include xs-to-sm {
+    width: fit-content;
+  }
+}
+
+.challenge-ops-container .registerBtn {
+  margin: 5px;
+  min-width: 0;
+  border-radius: 50px !important;
+  height: 48px;
+  padding: 12px 24px !important;
+  background-color: #137d60 !important;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  letter-spacing: 0.008em;
+
+  @include xs-to-sm {
+    width: fit-content;
+  }
+}
+
+.challenge-ops-container .submitButton:hover,
+.challenge-ops-container .registerBtn:hover {
+  color: #fff !important;
+  background: #219174 !important;
+  border-color: #219174 !important;
+}
+
+.challenge-ops-container .unregisterButton:hover {
+  color: #219174 !important;
+  border-color: #219174 !important;
+  background: #fff !important;
+}
+
+.challenge-ops-container .submitButton:active,
+.challenge-ops-container .registerBtn:active {
+  color: #fff !important;
+  background: #0d664e !important;
+  border-color: #0d664e !important;
+}
+
+.challenge-ops-container .unregisterButton:active {
+  outline: none !important;
+  box-shadow: none !important;
+  color: #0d664e !important;
+  border-color: #0d664e !important;
+  background: #fff !important;
+}
+
+.challenge-ops-container .submitButton:focus,
+.challenge-ops-container .submitButton:focus-within,
+.challenge-ops-container .submitButton:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: #0d664e;
+}
+
+.challenge-ops-container .registerBtn:focus,
+.challenge-ops-container .registerBtn:focus-within,
+.challenge-ops-container .registerBtn:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: #0d664e;
+}
+
+.challenge-ops-container .unregisterButton:focus,
+.challenge-ops-container .unregisterButton:focus-within,
+.challenge-ops-container .unregisterButton:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: #0d664e;
+}
+
+.challenge-ops-container {
+  display: flex;
+  margin-top: 32px;
+  margin-right: 18px;
+  text-transform: uppercase;
+
+  button {
+    text-transform: uppercase;
+  }
+
+  @include xs-to-sm {
+    margin: auto;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    div,
+    a {
+      width: fit-content !important;
+    }
+  }
+}
+
+.challenge-ops-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  @include xs-to-sm {
+    width: 100%;
+    margin-top: 24px;
+    margin-bottom: 34px;
+  }
+}
+
+@mixin design-accent-bg {
+  .design-accent-background {
+    background-color: $tc-dark-blue;
+  }
+}
+
+@mixin develop-accent-bg {
+  .develop-accent-background {
+    background-color: $tc-green;
+  }
+}
+
+@mixin datasci-accent-bg {
+  .datasci-accent-background {
+    background-color: $tc-orange;
+  }
+}
+
+@mixin design-accent-clr {
+  .design-accent-color {
+    color: $tc-dark-blue;
+  }
+}
+
+@mixin develop-accent-clr {
+  .develop-accent-color {
+    color: $tc-green;
+  }
+}
+
+@mixin datasci-accent-clr {
+  .datasci-accent-color {
+    color: $tc-orange;
+  }
+}
+
+@mixin design-accent-btm-border {
+  .design-accent-bottom-border {
+    border-bottom: 3px solid $tc-dark-blue;
+  }
+}
+
+@mixin develop-accent-btm-border {
+  .develop-accent-bottom-border {
+    border-bottom: 3px solid $tc-green;
+  }
+}
+
+@mixin datasci-accent-btm-border {
+  .datasci-accent-bottom-border {
+    border-bottom: 3px solid $tc-orange;
+  }
+}
+
+.type-tag {
+  display: inline-block;
+
+  a {
+    color: $tc-white;
+
+    &:active,
+    &:focus,
+    &:hover {
+      color: $tc-white;
+    }
+  }
+
+  &.CH {
+    a {
+      background: $track-code-green;
+
+      &:active,
+      &:focus,
+      &:hover {
+        background-color: $track-code-green;
+      }
+    }
+  }
+
+  &.F2F {
+    a {
+      background: $track-code-blue;
+
+      &:active,
+      &:focus,
+      &:hover {
+        background-color: $track-code-blue;
+      }
+    }
+  }
+
+  &.TSK {
+    a {
+      background: $track-code-turquose;
+
+      &:active,
+      &:focus,
+      &:hover {
+        background-color: $track-code-turquose;
+      }
+    }
+  }
+}
+
+.event-tag {
+  display: inline-block;
+
+  &.CH {
+    a {
+      background-color: $track-code-green-light;
+      color: $track-code-green;
+
+      &:active,
+      &:focus,
+      &:hover {
+        background-color: $track-code-green-light;
+        color: $track-code-green;
+      }
+    }
+  }
+
+  &.F2F {
+    a {
+      background-color: $track-code-blue-light;
+      color: $track-code-blue;
+
+      &:active,
+      &:focus,
+      &:hover {
+        background-color: $track-code-blue-light;
+        color: $track-code-blue;
+      }
+    }
+  }
+
+  &.TSK {
+    a {
+      background-color: $track-code-turquose-light;
+      color: $track-code-turquose;
+
+      &:active,
+      &:focus,
+      &:hover {
+        background-color: $track-code-turquose-light;
+        color: $track-code-turquose;
+      }
+    }
+  }
+}
+
+.qa {
+  :global {
+    a {
+      background-color: #0ab88a !important;
+
+      &:hover {
+        background-color: darken(#0ab88a, 10%) !important;
+      }
+    }
+  }
+}
+
+.challenge-outer-container {
+  background: $tc-white;
+  border-radius: (3 * $corner-radius) (3 * $corner-radius) 0 0;
+
+  @include xs-to-md {
+    padding: 4px 4px 0 0;
+  }
+
+  .important-detail {
+    @include xs-to-md {
+      padding: 15px 15px 0;
+    }
+
+    @include md {
+      padding: 20px 20px 0;
+    }
+
+    @include lg-to-xl {
+      padding: 20px 19px 0 27px;
+    }
+
+    .challenge-header {
+      @include barlow-bold;
+
+      font-weight: 600;
+      font-size: 34px;
+      color: $tco-black;
+      line-height: 40px;
+      letter-spacing: -0.78px;
+      margin-bottom: 5px;
+      margin-left: 16px;
+      margin-top: 14px;
+
+      @include xs-to-md {
+        font-size: 20px;
+        line-height: 25px;
+        margin-right: 43px;
+        letter-spacing: 0;
+      }
+
+      @include lg-to-xl {
+        margin-right: 60px;
+      }
+
+      @include md {
+        margin-right: -4px;
+      }
+    }
+
+    .tag-container {
+      display: flex;
+      align-items: center;
+      margin-left: 15px;
+      padding-top: 4px;
+
+      @include xs-to-md {
+        width: 100%;
+        flex-wrap: wrap;
+        margin-top: 18px;
+      }
+
+      span a:hover {
+        background-color: #d4d4d4 !important;
+      }
+    }
+
+    .recommend-container {
+      display: flex;
+      align-items: center;
+      margin-left: -5px;
+      margin-bottom: 2px;
+
+      @include xs-to-md {
+        margin-left: -16px;
+        margin-top: 8px;
+      }
+    }
+
+    .recommend-tag {
+      @include roboto-bold;
+
+      margin-left: 17px;
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 14px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      text-transform: uppercase;
+
+      &.link {
+        @include roboto-bold;
+
+        cursor: pointer;
+        color: #137d60;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+
+      &.separator {
+        width: 1px;
+        background: #979797;
+      }
+    }
+
+    @include design-accent-bg;
+    @include develop-accent-bg;
+    @include datasci-accent-bg;
+    @include design-accent-clr;
+    @include develop-accent-clr;
+    @include datasci-accent-clr;
+
+    .miscTag {
+      color: $tc-gray-80;
+      background-color: $tc-gray-neutral-dark;
+      cursor: pointer;
+    }
+
+    .prizes-ops-container {
+      background-color: $tc-white;
+      border: 2px solid $tc-gray-20;
+      border-bottom: none;
+      border-top-right-radius: 6px;
+      border-top-left-radius: 6px;
+      margin-top: 16px;
+      margin-left: 5px;
+      margin-right: 14px;
+      padding-bottom: 48px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: stretch;
+
+      @include xs-to-sm {
+        flex-direction: row;
+        height: auto;
+        padding-bottom: 0;
+      }
+
+      .prizes-outer-container {
+        flex: 4;
+
+        .prizes-title {
+          @include barlow-bold;
+
+          font-size: 18px;
+          line-height: 22px;
+          color: $tco-black;
+          text-transform: uppercase;
+          margin-left: 22px;
+
+          @include xs-to-md {
+            font-size: 16px;
+            font-weight: 600;
+            margin-left: 10px;
+            text-align: center;
+          }
+
+          margin-top: 14px;
+        }
+
+        .prizes-container {
+          display: flex;
+          align-content: center;
+          flex-wrap: wrap;
+          margin-left: 24px;
+          margin-top: 36px;
+          width: 85%;
+
+          @include xs-to-md {
+            width: 100%;
+            justify-content: center;
+          }
+
+          .prize-fill {
+            margin: 15px 48px 0 0;
+            display: flex;
+            flex: 0 1 calc(15% - 8px);
+
+            @include xs-to-md {
+              min-width: 100px;
+              margin-right: 32px;
+            }
+
+            .prize-card {
+              display: flex;
+              border-bottom: 0;
+              border-radius: 20px;
+              width: 40px;
+              height: 40px;
+              margin-right: 8px;
+              background-color: #e0faf3;
+              justify-content: center;
+              flex-direction: column;
+              text-align: center;
+
+              @include xs-to-md {
+                width: 32px;
+                height: 32px;
+              }
+
+              .prize-rank {
+                @include roboto-regular;
+
+                font-size: 16px;
+                font-weight: 500;
+                color: $tco-black;
+                letter-spacing: 0;
+                line-height: 20px;
+                margin-bottom: 5px;
+
+                .rank-ordinal {
+                  color: $tco-black;
+                }
+
+                @include xs-to-md {
+                  font-size: 12px;
+                  margin-top: 3px;
+                }
+              }
+            }
+
+            .prize-money {
+              @include roboto-medium;
+
+              font-size: 24px;
+              font-weight: 500;
+              color: #2a2a2a;
+              letter-spacing: -0.5px;
+              line-height: 32px;
+              margin-bottom: 5px;
+
+              .prize-currency {
+                color: #2a2a2a;
+              }
+
+              @include xs-to-md {
+                font-size: 14px;
+                line-height: 30px;
+              }
+            }
+
+            .prize-card[id='rank1'] {
+              border-bottom: 0;
+              background-color: #ffd84d;
+            }
+
+            .prize-card[id='rank2'] {
+              border-bottom: 0;
+              background-color: #d1d0cf;
+            }
+
+            .prize-card[id='rank3'] {
+              border-bottom: 0;
+              background-color: #d98f64;
+            }
+          }
+        }
+
+        .bonus-div {
+          @include roboto-regular;
+
+          text-align: left;
+          color: $tc-black;
+          line-height: 25px;
+          margin: 25px 25px 0;
+          padding-bottom: 20px;
+
+          .bonus-text {
+            .bonus-highlight {
+              font-weight: 500;
+            }
+
+            @include design-accent-clr;
+            @include develop-accent-clr;
+            @include datasci-accent-clr;
+          }
+        }
+      }
+    }
+
+    .deadlines-view {
+      border-radius: 0 0 8px 8px;
+      border: 0 hidden $tc-white;
+      overflow: hidden;
+      margin: 0 14px 0 5px;
+
+      .deadlines-overview {
+        background-color: #555;
+        align-items: center;
+        justify-content: space-between;
+        height: 60px;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+        display: flex;
+        padding-right: 16px;
+
+        &.opened {
+          border-radius: 0 !important;
+        }
+
+        @include xs-to-md {
+          padding: 0 16px;
+        }
+
+        .deadlines-overview-text {
+          @include roboto-regular;
+
+          display: flex;
+          justify-content: flex-start;
+          color: $tc-white;
+          line-height: 20px;
+          padding: 24px 23px;
+          font-size: 15px;
+
+          @include xs-to-md {
+            flex-direction: column;
+            padding: 0;
+          }
+
+          .next-deadline {
+            word-wrap: normal;
+            border-right: $tc-gray-50 solid 1px;
+            padding-right: 10px;
+            display: inline;
+
+            @include xs-to-md {
+              border-right: none;
+            }
+          }
+
+          .completed,
+          .draft {
+            border-right: none;
+          }
+
+          .current-phase {
+            overflow-wrap: normal;
+
+            @include xs-to-md {
+              padding-left: 0;
+              margin-top: 4px;
+            }
+          }
+
+          .deadline-highlighted {
+            color: $tc-white;
+            font-weight: 700;
+          }
+        }
+
+        .deadlines-collapser {
+          cursor: pointer;
+          margin-top: 2px;
+
+          .collapse-text {
+            svg {
+              transform: rotate(180deg);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.left-arrow {
+  fill: #137d60;
+  position: absolute;
+  left: 35%;
+  right: 35%;
+  top: 35%;
+  bottom: 25%;
+}
+
+.title-wrapper {
+  align-items: center;
+  display: flex;
+  left: -25px;
+  position: relative;
+  top: -5px;
+  margin: 0 32px;
+
+  @include xs-to-md {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-left: 15px;
+  }
+}
+
+.back-arrow {
+  width: 32px;
+  height: 24px;
+  border: 1.5px solid #137d60;
+  border-radius: 24px;
+  padding: 4px 8px;
+  margin-bottom: 10px;
+  position: relative;
+
+  @include xs-to-md {
+    margin-left: 15px;
+  }
+}
+
+.matchScoreWrap {
+  width: 100%;
+  margin-right: -2px;
+  padding: 0;
+}
+
+.qaTrackEventTag {
+  color: #0ab88a;
+  background: #c1f5e7;
+
+  &:active,
+  &:focus,
+  &:hover {
+    color: lighten(#0ab88a, 2%);
+    background: darken(#c1f5e7, 5%);
+  }
+
+  &:visited {
+    color: lighten(#0ab88a, 2%);
+  }
+}

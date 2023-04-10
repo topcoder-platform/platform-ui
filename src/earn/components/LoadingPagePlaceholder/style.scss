@@ -1,0 +1,24 @@
+@import "@earn/styles/mixins";
+
+.background {
+  background: $tc-gray-neutral-dark;
+  bottom: 0;
+  left: 0;
+  padding: 6 * $base-unit;
+  position: absolute;
+  right: 0;
+  top: 0;
+
+  @include xs-to-sm {
+    padding: $base-unit;
+  }
+}
+
+.page {
+  background: $tc-white;
+  border-radius: 3 * $corner-radius;
+  margin: auto;
+  max-width: 1240px;
+  padding: 2 * $base-unit;
+  width: 100%;
+}
