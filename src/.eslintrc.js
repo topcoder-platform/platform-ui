@@ -270,5 +270,5 @@ module.exports = {
             'never',
         ],
         'sort-keys': 'error'
-    },
+    }
 };
