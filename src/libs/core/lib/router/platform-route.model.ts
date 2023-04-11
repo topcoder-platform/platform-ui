@@ -4,7 +4,6 @@ export interface PlatformRoute {
     children?: Array<PlatformRoute>
     disabled?: boolean
     element: JSX.Element
-    hidden?: boolean
     id?: string
     rolesRequired?: Array<string>
     route: string

@@ -21,12 +21,12 @@ module.exports = {
         { plugin: BabelRcPlugin },
         { plugin: CracoCSSModules },
     ],
-    
+
     webpack: {
         alias: {
             // aliases used in JS/TS
             '~': resolve('src'),
-            
+
             // aliases used in SCSS files
             '@earn': resolve('src/apps/earn/src'),
             '@libs/ui/styles': resolve('src/libs/ui/lib/styles'),

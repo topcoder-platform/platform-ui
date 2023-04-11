@@ -10,7 +10,7 @@ All future user interfaces at Topcoder will be implemented here. Pre-existing us
 - [Local Development](#local-development)
 - [Application Structure](#application-structure)
 - [Coding Practices](#coding-practices)
-- [Tools](#tools)
+- [All Apps](#applications-hosted-under-platform-ui)
 
 ---
 
@@ -73,7 +73,7 @@ e.g.: `PROD-001 #comment adding readme notes #time 45m`
 # Local Development
 
 - [Local Environment Setup](#local-environment-setup)
-- [Tool-specific Setup](#tool-specific-setup)
+- [App specific Setup](#app-specific-setup)
 - [Yarn Commands](#yarn-commands)
 
 ## Local Environment Setup
@@ -169,37 +169,16 @@ For easier development, it is recommended that you add this certificate to your 
 
 Otherwise, you will need to override the exception each time you load the site. Firefox users may need to user an incognito browser in order to override the exception.
 
-### Personal Config
 
-1. Add [hostname] to [`/src/config/environments/app-host-environment.type.ts`](/src-ts/config/environments/app-host-environment.type.ts)
-2. Copy an existing config from [`/src-ts/config/environments/environment.*.config.ts`](/src-ts/config/environments/environment.brooke.config.ts)
-3. Rename new config `environment.[hostname].config.ts`
-4. Rename config variable to `EnvironmentConfig[HostName]`
-5. Set the `ENV` variable to `[hostname]`
-6. Add the switch case for the host name to [`/src-ts/config/environments/environment.config.ts`](/src-ts/config/environments/environment.config.ts)
-7. Prior to starting the server, set your host name:
-```% export REACT_APP_HOST_ENV=[hostname]```
+## App specific setup
 
->**NOTE:** Individual tools (e.g. [Learn tool](/src/apps/learn/README.md)) can have their own configuration, which can be configured the same way as the global config.
-
-#### For further convenience
-
-1. Copy start-ssl-*.sh
-2. Rename to start-ssl-[hostname].sh
-3. Set the REACT_APP_HOST_ENV=[hostname]
-4. Add "start:[hostname]": "sh start-ssl-[hostname].sh" to scripts in package.json
-
-
-## Tool-specific setup
-
-Each [Tool](#tools) can have its own setup requirements. Please see each tool's [README](#tools) for further information.
+Each [Application](#applications-hosted-under-platform-ui) can have its own setup requirements. Please see each apps's [README](#applications-hosted-under-platform-ui) for further information.
 
 ## yarn Commands
 
 | Command                      | Description                                                                              |
 | ---------------------        | -------------------------------------------------------------------------------------    |
 | `yarn start`                 | Serve dev mode build with the default config                                             |
-| `yarn start:<dev>`           | Serve dev mode build with dev's personal config                                          |
 | `yarn build`                 | Build dev mode build with the default config and outputs static files in /build          |
 | `yarn build:prod`            | Build prod mode build with the prod config and outputs static files in /build            |
 | `yarn demo`                  | Serves the built files (by running yarn:build) for local testing                         |
@@ -210,124 +189,93 @@ Each [Tool](#tools) can have its own setup requirements. Please see each tool's 
 | `yarn cy:run`                | Run e2e tests once in local command with the site is running                             |
 | `yarn cy:ci`                 | Run e2e tests once by circle ci                                                          |
 | `yarn report:coverage`       | Generate e2e coverage report in html format                                              |
-| `yarn report:coverage:text`  | Generate e2e coverage report in text format                                       |
+| `yarn report:coverage:text`  | Generate e2e coverage report in text format                                              |
 
 # Application Structure
 
+- [The Platform App](#the-platform-app)
 - [Folder Structure](#folder-structure)
-- [Adding a Tool or Util](#adding-a-tool-or-util)
+- [Typescript Versus Javascript](#ts-versus-js)
+- [Adding a new Platform UI application](#adding-a-new-platform-ui-application)
+
+# The Platform App
+
+Under "src/apps/platform" is to be found the "mainframe" of the platform application.
+This application only loads and serves all the other applications, and serves as the main router of the whole platform UI.
+It also renders the [Universal Navigation](https://github.com/topcoder-platform/universal-navigation)'s header & footer.
 
 ## Folder Structure
 
-The folder structure of the app has the following goals:
+The goal for the PlatformUI is to eventually host as many apps from the Topcoder environment as possible.
+To accomodate this, each individual app has it's own "workspace" that is to be found under "src/apps".
+They can share components and common utilities by using libraries created under "src/libs", eg. "src/libs/ui".
 
-- Hierarchy represents dependence
-- Limit nesting
-- Limit the number of folders w/in a given parent
-- Easy to find items (familiar to React engineers)
-- Short names
-- Ubiquitous language
+The global (common) configuration files of the applications are to be found under "src/config/environments".
 
-### /src & /src-ts
+Note that we have some aliases defined in `craco.confg.js` and `tsconfig.paths.json`. These are defined for easier imports:
+- `~` refers to 'src', so imports can be much cleaner: `import { Button } from  '~/libs/ui'`
+- in scss, you can point to the global ui styles, mixins & variables by using `@import '@libs/ui/styles/includes';`
+- you can define a new allias for a new app, eg. the earn app has it's own alias, and it can be used as `@import '@earn/styles/variables';`
 
-The Work Tool is currently migrating from javascript to typescript. That's why in the root of the repository there are two source folders(`src` and `src-ts`).
+### TS versus JS
+At the moment, a few applications are imported from different codebases as they are, only a few updates have been made to them, hence they are written in javascript rather than typescript.
+**The goal** is to have all applications transitioned to typescript eventuall.
+So, if you write any new component/any new application, please use typescript, as we'll eventually deprecate the JS code.
 
->**NOTE:** All work should be done in the /src-ts directory unless expressly instructed otherwise.
+### /src/apps
 
-### /src-ts/config
+This is where all the applications under platform-ui will be created and live. Each application can have it's own configuration & setup.
 
-Definitions of configurations for a specific host environment. See the [Personal Config](#personal-config) section for further info.
+### /src/config
 
-### /src-ts/header
+Global (common) configurations shared between all apps under platform-ui
+Import with `~/config`;
 
-Defines the entire header panel of the UI:
-
-- Logo
-- Tool Selectors
-- Utility Selectors
-
-### /src-ts/lib
+### /src-ts/libs
 
 Shared code that should be stable and should not be modified unless expressly
 intending to modify the *entire* Platform UI.
 
-When using items in this directory, there are only 3 permissable locations
-from which to import:
-
-.ts or tsx:
-- /src-ts/lib
-
-.tsx
-- /src-ts/lib/styles/index.scss
-
-.scss
-- /src-ts/lib/styles/includes
-- /src-ts/lib/styles/typography
-- /src-ts/lib/styles/variables
+As obvious as it may sound, but within the libraries themselves, we should **not**, import anything from the apps fodlers.
+The libraries should be standalone, at most they should rely on other libraries (eg. libs/core will import from libs/ui pages related to Auth).
 
 See the [Styling](#styling) section for more details about stylesheets
 
-### /src-ts/tools
+>**NOTE:** Apps should not import modules from anywhere other than libs. If it is necessary to import from outside the libs, the shared code should generally be moved to a lib under libs.
 
-The majority of development should happen in subdirectories of the tools directory.
+## Adding a new Platform UI application
 
-The Tool Selectors on the site [Header](#src-tsheader) correlate 1:1 to directories within the tools directory.
-
-The name of a tool's directory should correlate w/the name of the tool and its url.
-
-```
-i.e. /src-ts/tools/[tool-name] == platform-ui.topcoder.com/[tool-name]
-e.g. /src-ts/tools/work == platform-ui.topcoder.com/work
-```
-
->**NOTE:** Tools should not import modules from any directories other than lib. If it is necessary to import from outside the lib, the shared code should generally be moved to lib.
-
-### /src-ts/utils
-
-This directory includes shared utilities that are not specific to a tool (e.g. Profile Settings.)
-
-The Utility Selectors in the site [Header](#src-tsheader) correlate 1:1 to directories within the utils directory.
-
-The name of a util's directory should correlate w/the name of the util and its url.
+All of the routes for a given app (including root, section, and subsection routes) should be
+defined in a top-level file in it's own app folder.
 
 ```
-i.e. /src-ts/utils/[util-name] == platform-ui.topcoder.com/[util-name]
-e.g. /src-ts/utils/profile == platform-ui.topcoder.com/profile
+i.e. [appName]Routes in /src/apps/[app-name]/src/[app-name].routes.ts
+
+e.g. learnRoutes in /src/apps/learn/src/learn.routes.tsx
+e.g. selfServiceRoutes in src/apps/self-service/src/self-service.routes.tsx
 ```
 
->**NOTE:** Utils should not import modules from any directories other than lib. If it is necessary to import from outside the lib, the shared code should generally be moved to lib.
-
-## Adding a Tool or Util
-
-All of the routes for a given tool or util (including root, section, and subsection routes) should be
-defined in a top-level file in the tool/util folder.
+These routes then need to be imported in the Plaform App's [platformRoutes](./src/apps/platform/src/platform.routes.tsx):
 
 ```
-i.e. [toolName]Routes in /src-ts/tools/[tool-name]/[tool-name].routes.ts
-i.e. [utilName]Routes in src-ts/utils/[util-name]/[util-name].routes.ts
+import { learnRoutes } from '~/apps/learn'
+import { selfServiceRoutes } from '~/apps/self-service'
 
-e.g. workRoutes in /src-ts/tools/work/work.routes.tsx
-e.g. settingsRoutes in src-ts/tools/settings/settings.routes.tsx
+
+export const appRoutes: Array<PlatformRoute> = [
+    ...selfServiceRoutes,
+    ...learnRoutes,
+]
 ```
-
-These routes then need to be added to the routes file for the parent tools/utils:
-
-```
-/src-ts/tools/tools.routes.ts
-/src-ts/utils/utils.routes.ts
-```
-
-Simply adding the routes to one of thes files above will register the tool/util
-with the application and will display the new component.
 
 ### Lazy loading and code splitting
 
-When loading a route component, please use the `lazyLoad()` method defined in the application lib.
+When loading a route component, please use the `lazyLoad()` method defined in `~/libs/core`.
 
-| param | description|
-| ----- | ---------- |
-| `moduleImport: () => Promise<any>` | Function which imports the desired module |
-| `namedExport?: string` | The name of the exported module (if the module has named exports) |
+| param                              | description                                                           |
+| ---------------------------------- | --------------------------------------------------------------------- |
+| `moduleImport: () => Promise<any>` | Function which imports the desired module                             |
+| `namedExport?: string`            | The name of the exported module (if the module has named exports)      |
 
 Eg:
 ```
@@ -354,18 +302,15 @@ export const learnRoutes: Array<PlatformRoute> = [
 
 The PlatformRoute model has several useful options:
 
-| property | description |
-| ---------------- | ---------------------------------------- |
-| `children: Array<PlatformRoute>` | The children property defines subsections that will inherit the url path from the parent. |
-| `element: JSX.Element` | The element property is the JSX element that should appear at the specified URL. |
-| `disabled?: boolean` | When a route is marked as disabled, it will not be registered and will the URL will return a 404. |
-| `hide?: boolean` | When a route is hidden, it will be registered and the URL will be available through deep-linking but will not be visible in either the Tools or Utils Selectors. This is useful for handling redirects for obsolete routes. |
-| `authRequired?: boolean` | Requiring authentication for a route means that users who are not logged in will be redirected to the Login Form when they try to access the route. |
-| `route: string` | The route property is the path to the route, relative to its parent(s). |
-| `title: string` | The title property is the text that will appear in the Tools or Utils Selectors (this is irrelevant on hidden routes). |
-| `rolesRequired: Array<string>` | Requiring roles for a route means that users who do not own the roles will be presented with restricted page when they try to access the route. |
-
-
+| property                              | description                                                                                                                                                |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `children: Array<PlatformRoute>`      | The children property defines subsections that will inherit the url path from the parent.                                                                  |
+| `element: JSX.Element`                | The element property is the JSX element that should appear at the specified URL.                                                                           |
+| `disabled?: boolean`                  | When a route is marked as disabled, it will not be registered and will the URL will return a 404.                                                          |
+| `authRequired?: boolean`              | Requiring authentication for a route means that users who are not logged in will be redirected to the Login Form when they try to access the route.        |
+| `route: string`                       | The route property is the path to the route, relative to its parent(s).                                                                                    |
+| `title: string`                       | The title property is the used for routes identification                                                                                                   |
+| `rolesRequired: Array<string>`        | Requiring roles for a route means that users who do not own the roles will be presented with restricted page when they try to access the route.            |
 
 
 
@@ -378,9 +323,8 @@ The PlatformRoute model has several useful options:
 
 ### Rules
 
-Javascript rules: [src/.eslintrc.js](src/.eslintrc.js)
-
-Typescript rules: [src-ts/.eslintrc.js](src-ts/.eslintrc.js)
+Typescript rules: [src/.eslintrc.js](src/.eslintrc.js)
+Javascript rules are set as "overrides" under the same linting rules: [src/.eslintrc.js](src/.eslintrc.js)
 
 
 ### Command Line
@@ -459,27 +403,29 @@ e.g. styles.scss
 }
 ```
 
-Shared stylesheets are located in `src-ts/lib/styles/`. We use variables and mixins for handling padding, colors and breakpoints in the application, among others. To reference these in your SCSS files, simply add the following line at the top of your file.
+Shared stylesheets are located in `src/libs/ui/lib/styles/`.
+We use variables and mixins for handling padding, colors and breakpoints in the application, among others. To reference these in your SCSS files, simply add the needed lines at the top of your file.
 
 ```
-@import '[path to]/lib/styles/includes';
-@import '[path to]/lib/styles/typography';
-@import '[path to]/lib/styles/variables';
+@import '@libs/ui/styles/includes';
+@import '@libs/ui/styles/typography';
+@import '@libs/ui/styles/variables';
 ```
 
 ### Colors & Gradients
 
-Colors and Gradients are defined as variables in `src-ts/lib/styles/_palette.scss`.
+Colors and Gradients are defined as variables in `src/libs/ui/lib/styles/_palette.scss`.
 
 >**WARNING:** Do not use any colors that are not already defined in the palette. If a mockup you are working from has a different color, find the color in the palette that is closest.
 
 ### Padding
 
-Padding for various screen sizes are defined as variables in `src-ts/lib/styles/_layout.scss`. This file also contains a mixin called `pagePaddings` that determines the correct padding to use for the current screen size based on breakpoints.
+Padding for various screen sizes are defined as variables in `src/libs/ui/lib/styles/_layout.scss`.
+This file also contains a mixin called `pagePaddings` that determines the correct padding to use for the current screen size based on breakpoints.
 
 ### Breakpoints
 
-Breakpoint mixins are defined in `src-ts/lib/styles/_breakpoints.scss` and can be used to apply different styling based on the screen width.
+Breakpoint mixins are defined in `src/libs/ui/lib/styles/_breakpoints.scss` and can be used to apply different styling based on the screen width.
 
 Here is an example that applies a different height value than the default to a css class selector if the screen is considered small (376px - 464px).
 
@@ -530,7 +476,7 @@ For specifying mobile CSS, you can use @include ltemd:
 ### Heroicons
 We use the SVG icons library [Heroicons](https://heroicons.com/), where each icon is available in an `outline` or `solid` version.
 
-We import both sets of icons in the file `src-ts/lib/svgs/index.ts`.
+We import both sets of icons in the file `src/libs/ui/lib/components/svgs/index.ts`.
 ```
 import * as IconOutline from '@heroicons/react/outline'
 import * as IconSolid from '@heroicons/react/solid'
@@ -540,27 +486,31 @@ Then, to use an icon from either of these sets, you would import the correspondi
 
 e.g.:
 ```
+import { IconOutline } from '~/libs/ui'
+
+...
+
 <IconOutline.InformationCircleIcon width={28} height={28} />
 ```
 
 ### Custom SVGs
-Custom SVGs can also be imported and used directly as a React component. Save your SVG in its own index (i.e. "barrel" file within your tool (e.g. /src-ts/tools/my-tool/my-tool/lib/svgs), and then import the SVG into the barrel file as a component:
+Custom SVGs can also be imported and used directly as a React component. Save your SVG in its own index (i.e. "barrel" file within your app (e.g. /src/apps/my-app/src/lib/svgs), and then import the SVG into the barrel file as a component:
 ```
 import { ReactComponent as CustomSVG } from './customSvg.svg'
 ```
 
-The export the svg from the barrel file to be used w/in your tool:
+The export the svg from the barrel file to be used w/in your app:
 ```
 export { CustomSVG }
 ```
-See the /src-ts/lib/svgs for an example.
+See the /src/libs/ui/lib/components/svgs for an example.
 
->**NOTE:** Custom SVGs should be saved w/in a given tool. Only global SVGs should be in the main /lib/svgs directory.
+>**NOTE:** Custom SVGs should be saved w/in a given app. Only global SVGs should be in the main /src/libs/ui/lib/components/svgs directory.
 
 ### Styling Icons
 
 You can style an SVG icon by overwritting its properties through CSS (height, width, fill, etc.).
-There are also existing mixins located in `src-ts/lib/styles/_icons.scss` with pre-defined widths and heights for various icon sizes.
+There are also existing mixins located in `src/libs/ui/lib/styles/_icons.scss` with pre-defined widths and heights for various icon sizes.
 
 e.g.:
 ```
@@ -592,39 +542,47 @@ e.g.:
 
 
 
-# Tools
+# Applications hosted under Platform UI
 
-The following summarizes the various [tools](#adding-a-tool-or-util) in the Platform UI.
+The following summarizes the various [apps](#adding-a-new-platform-ui-application) in the Platform UI.
 
 - [Dev Center](#dev-center)
+- [Earn](#earn)
 - [Gamification Admin](#gamification-admin)
 - [Learn](#learn)
-- [Work](#work)
+- [Self Service](#self-service)
 
 ## Dev Center
 
 A community-led project to document how to work with Topcoder internal applications.
 
-[Dev Center README](./src-ts/tools/dev-center/README.md)
-[Dev Center Routes](./src-ts/tools/dev-center/dev-center.routes.tsx)
+[Dev Center README](./src/apps/dev-center/README.md)
+[Dev Center Routes](./src/apps/dev-center/src/dev-center.routes.tsx)
+
+## Earn
+
+The application that displays the list of challenges & gigs: opportunity feed
+
+[Earn README](./src/apps/earn/README.md)
+[Earn Routes](./src/apps/earn/src/earn.routes.tsx)
 
 ## Gamification Admin
 
 Application that allows administrators to CRUD badges and de/assign them to specific users.
 
-[Gamification Admin README TBD](./src-ts/tools/gamification-admin/README.md)
-[Gamification Admin Routes](./src-ts/tools/gamification-admin/gamification-admin.routes.tsx)
+[Gamification Admin README TBD](./src/apps/gamification-admin/README.md)
+[Gamification Admin Routes](./src/apps/gamification-admin/src/gamification-admin.routes.tsx)
 
 ## Learn
 
 Application that serves 3rd-party educational content.
 
-[Learn README](./src-ts/tools/learn/README.md)
-[Learn Routes](./src-ts/tools/learn/learn.routes.tsx)
+[Learn README](./src/apps/learn/README.md)
+[Learn Routes](./src/apps/learn/src/learn.routes.tsx)
 
-## Work
+## Self Service
 
 Application that allows customers to submit/start challenges self-service.
 
-[Work README TBD](./src-ts/tools/work/README.md)
-[Work Routes](./src-ts/tools/work/work.routes.tsx)
+[Work README TBD](./src/apps/self-service/README.md)
+[Work Routes](./src/apps/self-service/src/self-service.routes.tsx)

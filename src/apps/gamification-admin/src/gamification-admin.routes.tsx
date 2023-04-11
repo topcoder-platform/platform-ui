@@ -36,7 +36,6 @@ export const gamificationAdminRoutes: ReadonlyArray<PlatformRoute> = [
             },
         ],
         element: <GamificationAdmin />,
-        hidden: true,
         id: toolTitle,
         rolesRequired: [
             UserRole.gamificationAdmin,

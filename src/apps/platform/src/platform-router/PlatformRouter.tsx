@@ -3,7 +3,7 @@ import { Routes } from 'react-router-dom'
 
 import { routerContext, RouterContextData } from '~/libs/core'
 
-const AppRouter: FC<{}> = () => {
+const PlatformRouter: FC<{}> = () => {
     const { allRoutes, getRouteElement }: RouterContextData = useContext(routerContext)
 
     const routeElements: Array<ReactElement> = allRoutes
@@ -16,4 +16,4 @@ const AppRouter: FC<{}> = () => {
     )
 }
 
-export default AppRouter
+export default PlatformRouter

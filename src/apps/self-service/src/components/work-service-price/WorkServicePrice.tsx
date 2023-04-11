@@ -18,7 +18,7 @@ export interface WorkServicePriceProps {
   stickerPrice?: number
 }
 
-const ServicePrice: FC<WorkServicePriceProps> = (props: WorkServicePriceProps) => (
+const WorkServicePrice: FC<WorkServicePriceProps> = (props: WorkServicePriceProps) => (
     <div className={styles.container}>
         <div className={styles.inline}>
             {!!props.showIcon && !!props.icon && (
@@ -60,4 +60,4 @@ const ServicePrice: FC<WorkServicePriceProps> = (props: WorkServicePriceProps) =
     </div>
 )
 
-export default ServicePrice
+export default WorkServicePrice

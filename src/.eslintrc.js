@@ -272,5 +272,29 @@ module.exports = {
             'never',
         ],
         'sort-keys': 'error'
-    }
+    },
+    // linting rules for jsx files
+    overrides: [{
+        files: ["./apps/**/*.jsx", "./apps/**/*.js"],
+        extends: [
+            'react-app',
+            'react-app/jest',
+        ],
+        parserOptions: {
+            useJSXTextNode: true,
+            jsx: true,
+            sourceType: 'module',
+        },
+        plugins: [
+            'react',
+        ],
+        settings: {
+            react: {
+                version: 'detect',
+            },
+        },
+        rules: {
+            'no-useless-escape': 0,
+        },
+    }]
 };

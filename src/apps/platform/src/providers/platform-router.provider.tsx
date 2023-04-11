@@ -4,18 +4,18 @@ import { learnRootRoute } from '~/apps/learn'
 import { RouterProvider } from '~/libs/core'
 import { selfServiceRootRoute } from '~/apps/self-service'
 
-import { appRoutes } from './app-routes'
+import { platformRoutes } from '../platform.routes'
 
-interface AppRouterProviderProps {
+interface PlatformRouterProviderProps {
     children: ReactNode
 }
 
-export const AppRouterProvider: FC<AppRouterProviderProps> = props => (
+export const PlatformRouterProvider: FC<PlatformRouterProviderProps> = props => (
     <RouterProvider
         rootCustomer={learnRootRoute}
         rootLoggedOut={selfServiceRootRoute}
         rootMember={learnRootRoute}
-        allRoutes={appRoutes}
+        allRoutes={platformRoutes}
     >
         {props.children}
     </RouterProvider>

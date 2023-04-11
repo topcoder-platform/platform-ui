@@ -2,7 +2,7 @@ import { FC, ReactNode } from 'react'
 
 import { ProfileProvider } from '~/libs/core'
 
-import { AppRouterProvider } from '../router/App-router.provider'
+import { PlatformRouterProvider } from './platform-router.provider'
 
 interface ProvidersProps {
     children: ReactNode
@@ -10,9 +10,9 @@ interface ProvidersProps {
 
 const Providers: FC<ProvidersProps> = props => (
     <ProfileProvider>
-        <AppRouterProvider>
+        <PlatformRouterProvider>
             {props.children}
-        </AppRouterProvider>
+        </PlatformRouterProvider>
     </ProfileProvider>
 )
 
