@@ -1,0 +1,21 @@
+@use '../../../../../styles/typography';
+@import '../../../../../styles/includes';
+
+.form-input-textarea {
+    @include font-roboto;
+    @extend .body-small;
+    color: $black-60;
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+    resize: vertical;
+    margin-left: calc(-1 * $border);
+    overflow: hidden;
+    padding: $border;
+
+    &::placeholder {
+        color: $black-60;
+        opacity: 1;
+        text-transform: none;
+    }
+}

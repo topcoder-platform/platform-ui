@@ -1,0 +1,24 @@
+@import "@libs/ui/styles/variables/palette";
+@import "@libs/ui/styles/includes";
+
+.tabWrap {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 260px;
+
+    .manualFormWrap {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $space-xxxxl;
+        margin-top: $space-xxl;
+
+        @include ltemd {
+            grid-template-columns: 1fr;
+        }
+
+        .manualForm {
+            display: flex;
+            flex-direction: column;
+        }
+    }
+}

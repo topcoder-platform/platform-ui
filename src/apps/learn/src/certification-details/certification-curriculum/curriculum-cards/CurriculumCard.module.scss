@@ -1,0 +1,144 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    border-radius: $space-sm;
+    background: $black-5;
+    padding: $space-xxl;
+
+    display: flex;
+    gap: $space-xxl;
+
+    @media (max-width: 1150px) {
+        padding: $space-lg;
+        flex-direction: column;
+        gap: $space-lg;
+    }
+}
+
+.statusCol {
+    margin: -$space-xxl;
+    margin-right: 0;
+
+    border-radius: $space-sm 0px 0px $space-sm;
+    overflow: hidden;
+
+    width: 64px;
+    flex: 0 0 auto;
+    display: flex;
+
+    @media (max-width: 1150px) {
+        display: none;
+    }
+}
+
+.statusBox {
+    margin-left: auto;
+    @include icon-xxxxl;
+    border-radius: $space-xs;
+    display: flex;
+    overflow: hidden;
+}
+
+.statusIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: $tc-white;
+    color: $black-40;
+    flex: 1 1 auto;
+
+    &.inProgress {
+        color: $turq-100;
+    }
+
+    &.completed {
+        background: $turq-100;
+        color: $tc-white;
+    }
+
+    > svg {
+        display: flex;
+        @include icon-xxxxl;
+
+        @include ltelg {
+            @include icon-xxl;
+        }
+    }
+}
+
+.inner {
+    flex: 1 1 auto;
+
+    display: flex;
+    align-items: flex-start;
+    gap: $space-lg;
+
+    @include ltelg {
+        gap: $space-sm;
+    }
+}
+
+.badge {
+    width: $space-mxx;
+    height: $space-mxx;
+    flex: 0 0 auto;
+
+    @include ltelg {
+        width: $space-mx;
+        height: $space-mx;
+    }
+
+    svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+.contentWrap {
+    color: $black-100;
+    flex: 1 1 auto;
+}
+
+.headline {
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+
+    .cta {
+        margin-left: auto;
+        justify-content: flex-end;
+
+        @media (max-width: 1250px) {
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 1150px) {
+            display: none;
+        }
+    }
+}
+
+.cta, .bottomActions, .bottomCta {
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+}
+
+.bottomActions {
+    @media (min-width: 1150px) {
+        display: none;
+    }
+}
+
+.bottomCta {
+    flex-direction: row-reverse;
+}
+
+.content {
+    margin-top: $space-xs;
+    @include ltelg {
+        margin-top: 0;
+    }
+}

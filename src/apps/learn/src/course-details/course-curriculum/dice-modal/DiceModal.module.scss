@@ -1,0 +1,13 @@
+@import '@libs/ui/styles/includes';
+
+.diceModal {
+
+    p {
+        margin-bottom: $space-lg;
+
+        &.buttonContainer {
+            display: flex;
+            justify-content: center;
+        }
+    }
+}

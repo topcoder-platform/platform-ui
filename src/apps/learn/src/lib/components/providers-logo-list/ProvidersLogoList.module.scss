@@ -1,0 +1,29 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+    text-transform: none;
+
+    @include ltelg {
+        align-items: flex-start;
+    }
+
+    .providersWrap {
+        display: flex;
+        align-items: center;
+        gap: $space-lg;
+        margin-top: -3px;
+
+        @include ltelg {
+            flex-direction: column;
+            gap: 0;
+        }
+
+        > svg {
+            height: 22px;
+            display: block;
+        }
+    }
+}

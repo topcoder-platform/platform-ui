@@ -1,0 +1,35 @@
+// This file should contain global styles for the microapp
+
+@import "include";
+@import "reset";
+
+.topcoder-platform-ui {
+  @include font-barlow;
+  color: #555;
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  flex: 1 1 auto;
+}
+
+:global {
+  #root {
+    margin: 0 auto;
+    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+
+    .root-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      flex: 1;
+    }
+  }
+}
+
+body {
+  background-color: $tc-white;
+}

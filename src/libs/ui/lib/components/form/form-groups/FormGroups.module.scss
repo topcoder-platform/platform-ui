@@ -1,0 +1,11 @@
+@import "../../../styles/includes";
+
+.form-groups {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-content: center;
+
+    @include ltemd {
+        grid-template-columns: 1fr !important;
+    }
+}

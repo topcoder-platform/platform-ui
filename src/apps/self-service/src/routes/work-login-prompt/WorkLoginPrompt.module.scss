@@ -1,0 +1,23 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  align-items: center;
+  flex: 1 1;
+
+  .btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: $space-mx;
+    font-size: $space-lg;
+    line-height: $space-lg;
+
+    .separator {
+      margin-left: $space-lg;
+      margin-right: $space-lg;
+    }
+  }
+}

@@ -1,0 +1,47 @@
+@use '@libs/ui/styles/typography';
+@import '@libs/ui/styles/includes';
+
+.summary {
+    display: flex;
+    gap: $space-lg;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.icon {
+    color: $black-60;
+    svg {
+        @include icon-size(26);
+        @include ltemd {
+            @include icon-size(20);
+        }
+    }
+}
+
+.count {
+    color: $blue-140;
+    font-size: 48px;
+    line-height: 40px;
+    @include font-weight-medium;
+
+    @include ltemd {
+        font-size: 27px;
+        line-height: 28px;
+    }
+}
+
+.count-label {
+    @extend .body-main;
+    color: $black-100;
+}
+
+.stat-item {
+    display: flex;
+    gap: $space-xs;
+    align-items: center;
+    > :global(.sub) {
+        display: flex;
+        gap: $space-xs;
+        align-items: flex-end;
+    }
+}

@@ -1,0 +1,27 @@
+@import '@libs/ui/styles/includes';
+
+.hero-wrap {
+    svg:global(.tca-logo) {
+        margin-bottom: $space-xxl;
+        max-width: calc(100% - 70px);
+    }
+
+    :global(.hero-card-col) {
+        width: 43.5%;
+        max-width: 600px;
+
+        @include ltemd {
+            width: 100%;
+            max-width: none;
+        }
+    }
+}
+
+.courses-section {
+    padding: $space-xxxxl 0;
+    position: relative;
+
+    @include ltemd {
+        padding-top: $space-xxl;
+    }
+}

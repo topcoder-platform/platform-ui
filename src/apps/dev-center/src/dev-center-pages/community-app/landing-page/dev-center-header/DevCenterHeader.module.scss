@@ -1,0 +1,70 @@
+@import '@libs/ui/styles/includes';
+
+.outerContainer {
+    width: 100%;
+    min-height: 535px;
+    background-image: url("Header BG.png");
+    background-size: 100% 535px;
+    background-repeat: no-repeat;
+
+    @include ltemd {
+        background-size: 100% 400px;
+    }
+    
+    .innerContainer {
+        display: flex;
+        width: 100%;
+        justify-content: space-evenly;
+
+        @include lg {
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 32px;
+            
+        }
+    
+        @include ltemd {
+            flex-direction: column;
+            align-items: center;
+            
+            margin-bottom: 32px;
+        }
+
+        .leftContent {
+
+            .title {
+                @include font-tc-white;
+                font-size: 80px;
+                line-height: 72px;
+                padding-top: 88px;
+    
+                @include ltemd {
+                    font-size: 42px;
+                    line-height: 40px;
+                    padding-top: $space-xxl;
+                }
+            }
+            
+            .subtitle {
+                margin-top: $space-xxl;
+                display: block;
+                @include font-tc-white;
+                line-height: 20px;
+                letter-spacing: 0.5px;
+                text-transform: capitalize;
+                @include font-weight-medium;
+            }
+        }
+    
+        .rightContent {
+            margin-top: $space-xxxxl;
+    
+            @include ltemd {
+                text-align: center;
+                align-items: center;
+                width: 100%;
+            }
+        }
+    }
+}
+

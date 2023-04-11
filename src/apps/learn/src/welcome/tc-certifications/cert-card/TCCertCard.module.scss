@@ -1,0 +1,171 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    display: flex;
+    flex-direction: column;
+    background-color: $black-5;
+    padding: $space-xxxxl $space-xxl;
+    border-radius: 8px;
+    overflow: auto;
+
+    @include ltesm {
+        padding: $space-xxl $space-lg;
+    }
+
+    .cardHeader {
+        display: flex;
+        align-items: center;
+
+        > svg {
+            flex: 0 0 auto;
+        }
+
+        @include ltemd {
+            align-items: flex-start;
+
+            > svg {
+                max-width: 60px;
+                max-height: 56px;
+            }
+        }
+
+        .cardHeadline {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+            margin-left: $space-xxl;
+
+            @include ltesm {
+                margin-left: $space-lg;
+            }
+
+            .cardSubWrap {
+                display: flex;
+                align-items: center;
+                gap: $space-sm;
+                flex-wrap: wrap;
+
+                .subTitleItem {
+                    display: flex;
+                    align-items: center;
+                }
+
+                svg {
+                    margin-right: $space-xs;
+                    color: $blue-140;
+                }
+
+                .durationWrap {
+                    font-style: italic;
+                    font-size: 14px;
+                    line-height: 22px;
+                    color: $black-60;
+
+                    @include ltemd {
+                        font-size: 12px;
+                    }
+                }
+            }
+        }
+
+        .cardTitleline {
+            display: flex;
+            align-items: flex-start;
+            > p {
+                text-align: left;
+            }
+
+            .cardLabels {
+                margin-left: auto;
+            }
+        }
+
+        .cardLabels {
+            display: flex;
+            height: 32px;
+            align-items: center;
+            gap: $space-sm;
+
+            .newLabel {
+                font-weight: 500;
+                font-size: 11px;
+                line-height: 10px;
+                border-radius: 2px;
+                background-color: $green-140;
+                padding: 3px $space-xs;
+                color: $tc-white;
+            }
+
+            .freeLabel {
+                @include freeLabel;
+
+                padding: 3px $space-xs;
+                font-weight: 500;
+                font-size: 11px;
+                line-height: 10px;
+
+                @include ltesm {
+                    font-size: 11px;
+                    line-height: 10px;
+                }
+            }
+        }
+    }
+}
+
+.completed {
+    background: $tc-white;
+    border: 2px solid $turq-75;
+}
+
+.separatorBar {
+    border-bottom: 2px solid $black-10;
+    margin: $space-xl 0 $space-xxl;
+}
+
+.progressBar {
+    margin: $space-lg 0 $space-xxl;
+}
+
+.providers {
+    >span {
+        font-style: italic;
+        color: $black-60;
+        font-weight: normal;
+    }
+}
+
+.cardBottom {
+    margin-top: $space-lg;
+
+    .completedCTAs {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+
+        @include ltesm {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    .certCTAButtons {
+        a:first-child {
+            margin-right: $space-sm;
+        }
+    }
+}
+
+.infoText {
+    font-style: italic;
+    color: $black-60;
+    margin-right: $space-sm;
+
+    @include ltemd {
+        margin-right: 50px;
+    }
+
+    &:last-child {
+        margin-right: 0;
+    }
+}

@@ -1,0 +1,80 @@
+@import "../../../styles/mixins";
+
+.container {
+  display: block;
+}
+
+.gig-hotlist {
+  display: flex;
+  flex-direction: column;
+  margin: 5px 0;
+  background-color: #fff;
+
+  &:empty {
+    margin: 0;
+    height: 0;
+    overflow: hidden;
+  }
+
+  @include tablet-lg {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-left: -10px;
+    margin-right: -10px;
+  }
+
+  @include desktop {
+    margin-left: -15px;
+    margin-right: -15px;
+  }
+}
+
+.gig-hot {
+  flex: 0 0 auto;
+  display: flex;
+  padding-top: 5px;
+
+  &:first-child {
+    padding-top: 0;
+  }
+
+  @include tablet-lg() {
+    width: 50%;
+    padding: 0 10px;
+
+    &:nth-child(n+3) {
+      padding-top: 20px;
+    }
+  }
+
+  @include desktop {
+    width: 33.333333%;
+    padding: 0 15px;
+
+    &:nth-child(n) {
+      padding: 0 15px;
+    }
+  }
+}
+
+.gigHotItem {
+  flex: 1 1 0;
+}
+
+.gigItem {
+  border-bottom: 1px solid #e9e9e9;
+
+  &:first-child {
+    border-top: 1px solid #e9e9e9;
+  }
+}
+
+// used to preserve the even/odd coloring of gig rows
+.row-color-preserver {
+  height: 0;
+  overflow: hidden;
+
+  + .gigItem {
+    border-top: 1px solid #e9e9e9;
+  }
+}

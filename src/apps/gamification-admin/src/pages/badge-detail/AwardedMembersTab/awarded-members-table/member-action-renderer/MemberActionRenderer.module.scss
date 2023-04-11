@@ -1,0 +1,28 @@
+@import "@libs/ui/styles/includes";
+@import "@libs/ui/styles/variables";
+
+.badge-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-top: $space-lg;
+  padding-right: $space-sm;
+
+  @include ltemd {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  a {
+    margin-right: $space-sm;
+
+    @include ltemd {
+      margin-right: 0;
+      margin-bottom: $space-sm;
+    }
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}

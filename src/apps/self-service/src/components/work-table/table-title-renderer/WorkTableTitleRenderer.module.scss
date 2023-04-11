@@ -1,0 +1,40 @@
+@use '@libs/ui/styles/typography';
+@import '@libs/ui/styles/includes';
+
+.work-table-title-container {
+    display: flex;
+    min-width: 250px;
+
+    svg {
+        min-width: 32px;
+        margin-right: $space-lg;
+    }
+
+    .work-table-title {
+        flex: 1 1 auto;
+        overflow: hidden;
+    }
+    
+    .title {
+        @extend .medium-subtitle;
+        @include font-black-100;
+
+        @include text-clamp;
+    }
+    
+    .description {
+        @extend .ultra-small;
+        margin-top: 6px;
+        @include text-clamp(3);
+    }
+
+    .qa-icon {
+      margin: 0px 12px 0px 0px;
+      background: $tc-grad18;
+
+      svg {
+        min-width: unset;
+        margin: 0px;
+      }
+    }
+}

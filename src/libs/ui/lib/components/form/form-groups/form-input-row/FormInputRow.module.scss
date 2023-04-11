@@ -1,0 +1,36 @@
+@import '../../../../l../../styles/includes';
+@import '../../../../l../../styles/typography';
+
+.row-wrap {
+    h4 {
+        border-top: $border-xs solid $black-10;
+    
+        &.input-title-0 {
+            border: none;
+        }
+    }
+}
+
+
+.input-row {
+    display: flex;
+    align-items: center;
+    column-gap: $space-xxl;
+    padding: 0;
+
+    .input-instructions {
+        flex: 1;
+
+        &.rating {
+            color: $black-100;
+            @extend .body-main;
+            margin-bottom: calc($space-lg + 2px);
+        }
+    }
+
+    @include ltemd {
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+    }
+}

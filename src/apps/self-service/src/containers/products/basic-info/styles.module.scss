@@ -1,0 +1,103 @@
+@import "@libs/ui/styles/includes";
+@import "../../../styles/include";
+
+.footerContent {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+
+  @include ltemd {
+    flex-direction: row;
+    gap: 16px;
+  }
+
+  .footer-right {
+    display: flex;
+    gap: 16px;
+
+    .rotated {
+      transform: rotate(-90deg);
+    }
+
+    .save-icon {
+      display: none;
+    }
+
+    @include mobile {
+      flex-direction: row;
+    }
+
+    button {
+      &.saveForLater {
+        span {
+          @include ltemd {
+            display: none;
+          }
+        }
+
+        svg {
+          @include gtelg {
+            display: none;
+          }
+        }
+      }
+
+      &.reviewAndSubmit {
+
+        .desktop {
+          @include ltemd {
+            display: none;
+          }
+        }
+      }
+    }
+  }
+}
+
+.backButtonWrapper {
+  @include backButtonWrapper;
+  margin-top: 0;
+}
+
+@include mobile {
+
+  button {
+    svg {
+      display: block !important;
+
+      @include gtelg {
+        display: inline-block !important;
+      }
+    }
+  }
+
+  .save-button-text {
+    display: none;
+  }
+
+  .review-button-text {
+    display: none;
+  }
+}
+
+@include mobile {
+
+  button {
+    svg {
+      display: block !important;
+
+      @include gtelg {
+        display: inline-block !important;
+      }
+    }
+  }
+
+  .save-button-text {
+    display: none;
+  }
+
+  .review-button-text {
+    display: none;
+  }
+}

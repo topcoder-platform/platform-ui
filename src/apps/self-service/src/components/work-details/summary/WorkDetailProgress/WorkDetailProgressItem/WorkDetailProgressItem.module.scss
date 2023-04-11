@@ -1,0 +1,95 @@
+@import '@libs/ui/styles/includes';
+
+$dot-size: calc($space-lg + $space-xxl);
+
+.progress-bar-list-item {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    &:last-child {
+        flex: 1;
+    }
+
+    .label {
+        display: block;
+        margin-top: $space-sm;
+        margin-left: calc(-1 * calc($dot-size + 3px));
+        width: auto;
+        text-align: center;
+        color: $black-60;
+        margin: 0;
+
+        span {
+            display: block;
+        }
+
+        .date {
+            display: block;
+            margin-top: $space-xs;
+        }
+    }
+
+    .dots {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: $dot-size;
+        height: $dot-size;
+        margin-bottom: $space-sm;
+        @extend .bg-black-10;
+        border: $space-xs solid $black-20;
+        border-radius: 50%;
+        box-sizing: border-box;
+        color: $black-60;
+        z-index: 10;
+    }
+
+    &:not(:last-child):after {
+        content: '';
+        display: block;
+        position: absolute;
+        top: $space-lg;
+        left: 54%;
+        width: 100%;
+        height: $space-sm;
+        @extend .bg-black-20;
+        z-index: 1;
+    }
+
+    &.active {
+
+        .dots {
+            color: $tc-white;
+            @extend .bg-purple-100;
+            border-color: $purple-100;
+        }
+
+        .label {
+            color: $black-100;
+        }
+
+        &:after {
+            @extend .bg-purple-100;
+        }
+    }
+
+    &.select {
+
+        .dots {
+            color: $purple-100;
+            border-color: $purple-100;
+            @extend .bg-tc-white;
+        }
+
+        .label {
+            color: $black-100;
+
+            .name {
+                color: $purple-100;
+            }
+        }
+    }
+}

@@ -1,0 +1,148 @@
+@import "../../../styles/include";
+
+.footerContent {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+
+  .footer-right {
+    display: flex;
+    gap: 16px;
+  }
+}
+
+.container {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+
+  .splitView {
+    display: grid;
+    grid-template-columns: 1fr 562px;
+    column-gap: 24px;
+
+    @include mobile {
+      grid-template-columns: 1fr;
+    }
+
+    .reviewContainer {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  .paymentWrapper {
+
+    .infoBox {
+      display: flex;
+      flex-direction: column;
+      row-gap: 24px;
+      font-size: 16px;
+      line-height: 26px;
+
+      .confirmationBox {
+        @include confirmationBox;
+      }
+
+      .title {
+        text-transform: uppercase;
+        font-size: 20px;
+      }
+
+      .importantInfo {
+        font-size: 16px;
+      }
+    }
+
+    .paymentBox {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border: 1px solid $gray-10;
+      border-radius: 8px;
+      margin-top: 18px;
+      padding: 24px;
+      row-gap: 8px;
+
+      .total {
+        @include font-barlow-condensed;
+        color: $aqua;
+        font-size: 48px;
+        position: relative;
+
+        .originalPrice {
+          position: absolute;
+          bottom: 0;
+          left: -55px;
+          text-decoration: line-through;
+          font-size: 24px;
+        }
+      }
+
+      .totalInfo {
+        text-transform: uppercase;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .pageDivider {
+        margin-top: -10px;
+      }
+
+      .paymentButtonContainer,
+      .wideButton {
+        width: 100%;
+      }
+    }
+  }
+}
+
+.backButtonWrapper {
+  @include backButtonWrapper;
+}
+
+.confirmationBox {
+  margin-top: 32px;
+  @include confirmationBox;
+}
+
+.infoAlert {
+  @include font-barlow;
+  display: flex;
+  padding: 16px;
+  background: #E0FAF3;
+  border-radius: 8px;
+  margin: 16px 0;
+  font-size: 16px;
+  line-height: 26px;
+}
+
+.inline {
+  display: inline-block;
+}
+
+.error {
+  font-size: 14px;
+  color: $red-120;
+}
+
+.hideMobile {
+  @include mobile {
+    display: none;
+  }
+}
+
+.showOnlyMobile {
+  display: none;
+
+  @include mobile {
+    display: block;
+  }
+}
+
+.title-wrapper {
+  @include mobile {
+    display: none;
+  }
+}

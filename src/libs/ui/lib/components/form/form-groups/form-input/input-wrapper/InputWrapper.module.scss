@@ -1,0 +1,169 @@
+@use '../../../../../styles/typography';
+@import '../../../../../styles/includes';
+
+$form-pad-top: calc($space-md - $border);
+$error-line-height: 14px;
+
+.input-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+
+    &.rating {
+
+        &:focus {
+            outline: none;
+        }
+    }
+
+}
+
+.input {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: $space-sm $form-pad-top $border-xs $form-pad-top;
+    height: calc($space-xxl * 2);
+    background: $tc-white;
+    border: $border-xs solid $black-40;
+    box-sizing: border-box;
+    border-radius: $space-xs;
+    margin-bottom: calc($error-line-height + $space-xs);
+    position: relative;
+
+    &.rating {
+        border-color: transparent;
+    }
+
+    &.checkbox {
+        border-color: transparent;
+        padding-left: 0;
+
+        .label {
+            color: $tc-black;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            .checkbox-label {
+                margin-left: $space-sm;
+                flex: 1;
+            }
+        }
+    }
+
+    &:not(.rating):not(.checkbox) {
+
+        &:hover,
+        &.focus {
+            border-color: $turq-160;
+
+            &.input-error {
+                border-color: $red-100;
+            }
+
+            textarea {
+                box-shadow: none;
+            }
+        }
+    }
+
+    &.focus:not(.checkbox),
+    &.input-error {
+        border-width: $border;
+        padding: calc($space-sm - $border-xs) calc($form-pad-top - $border-xs) 0 calc($form-pad-top - $border-xs);
+    }
+
+    &.disabled {
+        background-color: $black-10;
+        background: $black-10;
+        border-color: $black-40;
+        pointer-events: none;
+    }
+
+    &.input-error {
+        border-color: $red-100;
+        margin-bottom: 0;
+        color: $red-100;
+
+        .label {
+            display: flex;
+            flex-direction: column;
+            top: calc(50% - $form-pad-top/2);
+            color: $turq-160;
+            margin-bottom: $space-xs;
+            width: 100%;
+            // extend ultra-small and override some properties
+            @extend .ultra-small;
+            font-weight: $font-weight-medium;
+            line-height: calc($space-md - $border);
+            font-style: normal;
+            white-space: nowrap;
+
+            .label-and-hint {
+                display: flex;
+                justify-content: flex-start;
+                align-items: center;
+
+                .hint {
+                    color: $black-60;
+                    padding-left: $border;
+                    font-weight: $font-weight-normal;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+            }
+        }
+    }
+
+    .label {
+        display: flex;
+        flex-direction: column;
+        top: calc(50% - $form-pad-top/2);
+        color: $turq-160;
+        margin-bottom: $space-xs;
+        width: 100%;
+        // extend ultra-small and override some properties
+        @extend .ultra-small;
+        font-weight: $font-weight-medium;
+        line-height: calc($space-md - $border);
+        font-style: normal;
+        white-space: nowrap;
+
+        .label-and-hint {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+
+            .hint {
+                color: $black-60;
+                padding-left: $border;
+                font-weight: $font-weight-normal;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        }
+    }
+
+    @include ltemd {
+        margin-bottom: 0;
+    }
+}
+
+.error {
+    display: flex;
+    align-items: center;
+    color: $red-100;
+    // extend body ultra small and override it
+    @extend .ultra-small;
+    line-height: $error-line-height;
+    margin-top: $space-xs;
+
+    svg {
+        @include icon-md;
+        fill: $red-100;
+        margin-right: $space-xs;
+    }
+}

@@ -1,0 +1,54 @@
+@import "@libs/ui/styles/variables";
+@import "@libs/ui/styles/includes";
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    .badge {
+        display: flex;
+        align-items: center;
+        margin-bottom: $space-xxl;
+        
+        @include ltemd {
+            margin-bottom: 0;
+        }
+
+        .badge-image {
+            width: 43px;
+            height: 43px;
+            margin-right: $space-xl;
+        }
+
+        .badge-image-disabled {
+            width: 43px;
+            height: 43px;
+            margin-right: $space-xl;
+            opacity: 0.5;
+            filter: grayscale(1);
+        }
+
+        .badge-name {
+            font-size: 16px;
+        }
+    }
+
+    .actions-wrap {
+        display: flex;
+        flex-direction: column;
+
+        .actions {
+            display: flex;
+            align-items: center;
+
+            @include ltemd {
+                justify-content: flex-end;
+            }
+
+            a {
+                margin-right: $space-md;
+            }
+        }
+    }
+}

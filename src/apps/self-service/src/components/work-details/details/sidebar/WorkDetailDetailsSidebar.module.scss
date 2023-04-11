@@ -1,0 +1,22 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    min-width: 323px;
+    padding-left: $space-xxxxl;
+  
+    border-left: $border-xs solid $black-10;
+    margin-left: $space-xxxxl;
+    color: $black-100;
+}
+
+.link {
+    display: block;
+    @include font-roboto;
+    @include font-weight-bold;
+    font-size: 14px;
+    line-height: 14px;
+    color: $turq-160;
+    margin-top: $space-lg;
+    cursor: pointer;
+    text-transform: uppercase;
+}

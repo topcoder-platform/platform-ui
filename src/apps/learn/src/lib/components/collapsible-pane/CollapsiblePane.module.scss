@@ -1,0 +1,75 @@
+@use '@libs/ui/styles/typography';
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    flex: 1 1 0;
+
+    &:global(.to-left) {
+        flex-direction: row-reverse;
+    }
+
+    &:global(.collapsed) {
+        .content {
+            display: none;
+        }
+    }
+
+    @include ltemd {
+        &:global(.to-left) {
+            flex-direction: column-reverse;
+        }
+    }
+}
+
+.pane-outline {
+    width: 32px;
+    height: 100%;
+    border-radius: 0 $space-lg $space-lg 0;
+    padding: $space-lg 0;
+    background: $blue-140;
+
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+
+    color: $tc-white;
+
+    cursor: pointer;
+
+    @extend .overline;
+    flex: 0 0 auto;
+
+    > svg {
+        @include icon-lg;
+        pointer-events: none;
+    }
+
+    @include gtelg {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+    }
+    
+    @include ltemd {
+        width: 100%;
+        height: auto;
+        padding: $space-sm $space-lg;
+        border-radius: 0 0 $space-lg $space-lg;
+        margin-top: -1px;
+
+        svg {
+            transform: rotate(90deg);
+        }
+    }
+}
+
+.content {
+    background: $tc-grad15;
+    padding: $space-lg;
+    color: $tc-white;
+    overflow: auto;
+
+    @include scrollbar;
+}

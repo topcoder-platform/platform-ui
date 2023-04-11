@@ -1,0 +1,50 @@
+@import "@libs/ui/styles/includes";
+@import "../../styles/variables";
+
+.linkBlock {
+    display: flex;
+    align-items: center;
+    margin: $space-xxl 0;
+    background-color: $blue-10;
+    border-radius: 4px;
+}
+
+.label {
+    flex: none;
+    padding: $space-md $space-lg;
+
+    @include font-roboto;
+    @include font-weight-bold;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 1px;
+    color: $black-100;
+}
+
+.divider {
+    flex: none;
+    align-self: stretch;
+    border: 1px solid $tc-white;
+}
+
+.link {
+    flex: auto;
+    padding: $space-md $space-lg;
+
+    a {
+        @include font-roboto;
+        @include font-weight-medium;
+        font-size: 16px;
+        line-height: 24px;
+        color: $link-blue-dark;
+
+        word-break: break-all;
+    }
+}
+
+@include ltelg {
+    .label,
+    .divider {
+        display: none;
+    }
+}

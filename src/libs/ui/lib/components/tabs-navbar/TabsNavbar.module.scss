@@ -1,0 +1,125 @@
+@import '../../styles/includes';
+@import '../../styles/typography';
+
+.tabs-wrapper {
+    position: relative;
+    margin-bottom: $space-md;
+    border-bottom: 1px solid $black-20;
+    background: $blue-10;
+}
+
+.menu-trigger {
+    display: flex;
+    align-items: center;
+    padding-right: $space-md;
+
+    .tab-item {
+        .tab-label {
+            @include font-weight-bold;
+        }
+    }
+
+    svg {
+        @include icon-xxxl;
+        margin-left: auto;
+        color: $turq-160;
+        transition: 0.15s ease-in-out;
+    }
+
+    &.menu-is-visible {
+        svg {
+            transform: rotate(180deg);
+        }
+    }
+
+    @include ltemd {
+        &:not(.menu-is-visible) {
+            + .menu-wrapper {
+                display: none;
+            }
+        }
+    }
+}
+
+.menu-wrapper {
+    display: flex;
+    background: $blue-10;
+
+    @include ltemd {
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        z-index: 1;
+
+        .tab-item {
+            border-top: 1px solid $black-20;
+        }
+    }
+}
+
+.tab-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    padding: $space-md $space-lg calc($space-md - 2px);
+    color: $black-80;
+    cursor: pointer;
+
+    &:global(.active) {
+        color: $black-100;
+        background-color: $blue-25;
+
+        .tab-label {
+            @include font-weight-bold;
+        }
+    }
+
+    &:hover:not(:global(.active)) {
+        color: $black-100;
+        background-color: $blue-15;
+    }
+}
+
+.tab-label {
+    @extend .medium-tab;
+}
+
+.tab-badge {
+    @extend .medium-subtitle;
+    display: flex;
+    padding: 0 $border;
+    border-radius: $space-sm;
+    color: $tc-white;
+    min-width: 24px;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+
+    &:global(.info) {
+        background: $blue-100;
+    }
+
+    &:global(.important) {
+        background: $red-100;
+    }
+}
+
+.active-icon {
+    display: flex;
+    position: absolute;
+
+    top: 100%;
+    left: 0;
+    transform: translateX(-50%);
+
+    transition: left 0.15s ease-in-out;
+    > svg path:last-child {
+        fill: $blue-25;
+    }
+    @include ltemd {
+        display: none;
+    }
+}

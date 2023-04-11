@@ -1,0 +1,36 @@
+@import '../../styles/includes';
+
+.content {
+    flex: 1 1 auto;
+    display: flex;
+
+    .content-outer {
+        max-width: $xxl-min;
+        @include pagePaddings;
+        margin: 0 auto;
+        width: 100%;
+        display: flex;
+
+        .content-inner {
+            margin: 0 auto;
+            flex: 1;
+            max-width: $xxl-min;
+            display: flex;
+            flex-direction: column;
+            overflow: auto;
+
+            .page-header {
+                display: flex;
+                align-items: center;
+                border-bottom: $border solid $black-5;
+                margin-top: $space-sm;
+                padding: $space-xxl 0;
+
+                h1 {
+                    flex: 1;
+                    color: $black-100;
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,12 @@
+@import "@libs/ui/styles/variables";
+@import "@libs/ui/styles/includes";
+
+.memberAwardedAt {
+  font-size: 16px;
+  font-weight: $font-weight-normal;
+  text-align: left;
+
+  @include ltemd {
+    font-size: 14px;
+  }
+}

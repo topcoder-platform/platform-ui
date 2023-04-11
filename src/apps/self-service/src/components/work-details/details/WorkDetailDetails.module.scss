@@ -1,0 +1,10 @@
+.wrap {
+  display: flex;
+  padding-bottom: 32px;
+}
+
+.detailsContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}

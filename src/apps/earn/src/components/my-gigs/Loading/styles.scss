@@ -1,0 +1,43 @@
+@import "../../../styles/variables";
+@import "../../../styles/mixins";
+
+.loading-wrapper {
+  width: 100%;
+  border-radius: $border-radius-lg;
+  padding: 223px 0px;
+    .loading-inner {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        & > h6 {
+            margin-top: 15px;
+            font-size: 20px;
+            color: $tc-turquoise-dark1;
+            line-height: 24px;
+            @include barlow-bold;
+        }
+        & > span {
+            font-size: 16px;
+            color: $tc-gray1;
+            line-height: 26px;
+            margin-top: 5px;
+            @include roboto-regular;
+        }
+        svg {
+            path:first-child {
+                fill: $tc-gray4;
+                opacity: 1;
+            }
+            path:last-child {
+                animation: rotate 0.8s linear infinite;
+                transform-origin: 50% 50%;
+            }
+        }
+    }
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg);}
+    to { transform: rotate(360deg); }
+}

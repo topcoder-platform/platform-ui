@@ -1,0 +1,40 @@
+@import '../../../styles/includes';
+
+.container {
+    line-height: 20px;
+
+    ol {
+        padding: 0;
+        list-style: none;
+    }
+
+    h4 {
+        margin: 20px 0;
+    }
+
+    p {
+        margin-bottom: 20px;
+
+        &.sm {
+            font-size: 14px;
+        }
+    }
+
+    ul {
+        &:global(.disc) {
+            list-style-type: disc;
+            list-style: disc;
+
+            li {
+                padding-left: 0;
+                margin-left: 20px;
+            }
+        }
+    }
+
+
+    a {
+        text-decoration: underline;
+        color: $link-blue-light;
+    }
+}

@@ -1,0 +1,56 @@
+@import '../../../styles/includes';
+@import '../../../styles/typography';
+
+:global(.react-responsive-modal-root) {
+    :global(.react-responsive-modal-overlay),
+    :global(.react-responsive-modal-modal) {
+        animation-fill-mode:forwards !important;
+    }
+
+}
+
+.modal-header {
+    padding: 5px 0 0;
+}
+
+.spacer {
+    margin: 24px 0;
+}
+
+.buttonsWrap {
+    position: relative;
+    background: $tc-white;
+}
+
+.buttonContainer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+.modal-body {
+    flex: 1 1 auto;
+    overflow: auto;
+    margin: 0 -1*$space-xxxxl -1*$space-xxxxl;
+    padding: 0 $space-xxxxl $space-xxxxl;
+
+    display: flex;
+    flex-direction: column;
+
+    @extend .body-main;
+    & :global(.button-container) {
+        @extend .buttonContainer;
+        margin-top: 24px;
+    }
+
+    @include ltemd {
+        margin: 0 -1*$space-lg -1*$space-lg;
+        padding: 0 $space-lg $space-lg;
+    }
+
+    :global(.button-container) {
+        margin-top: $space-sm;
+    }
+}

@@ -143,6 +143,12 @@ You will need to add the following line to your hosts file. The hosts file is no
 
 >**NOTE**: The site must run on port 443 in order for auth0 to work and for the site to load properly. Mac users will need to run the app with elevated permissions.
 
+Run following command to allow node to run apps on ports lowert than 500:
+
+```
+sudo setcap 'cap_net_bind_service=+ep' `which node`
+```
+
 ### Local SSL
 
 SSL is required for authentication to work properly.
@@ -165,7 +171,7 @@ Otherwise, you will need to override the exception each time you load the site. 
 
 ### Personal Config
 
-1. Add [hostname] to [`/src-ts/config/environments/app-host-environment.type.ts`](/src-ts/config/environments/app-host-environment.type.ts)
+1. Add [hostname] to [`/src/config/environments/app-host-environment.type.ts`](/src-ts/config/environments/app-host-environment.type.ts)
 2. Copy an existing config from [`/src-ts/config/environments/environment.*.config.ts`](/src-ts/config/environments/environment.brooke.config.ts)
 3. Rename new config `environment.[hostname].config.ts`
 4. Rename config variable to `EnvironmentConfig[HostName]`
@@ -174,7 +180,7 @@ Otherwise, you will need to override the exception each time you load the site. 
 7. Prior to starting the server, set your host name:
 ```% export REACT_APP_HOST_ENV=[hostname]```
 
->**NOTE:** Individual tools (e.g. [Learn tool](/src-ts/tools/learn/README.md)) can have their own configuration, which can be configured the same way as the global config.
+>**NOTE:** Individual tools (e.g. [Learn tool](/src/apps/learn/README.md)) can have their own configuration, which can be configured the same way as the global config.
 
 #### For further convenience
 

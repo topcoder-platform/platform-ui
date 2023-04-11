@@ -1,0 +1,205 @@
+/// COLORS
+
+
+
+/**
+ * The standard TC UI pallete. Always prefer to use these constants to set
+ * colors in your stylesheets.
+ */
+/* Grayscale colors. */
+$tc-gray-90: #2a2a2b;
+$tc-gray-80: #404041;
+$tc-gray-70: #555;
+$tc-gray-75: #006dea;
+$tc-gray-60: #6b6b6b;
+$tc-gray-50: #808080;
+$tc-gray-40: #959596;
+$tc-gray-30: #aaaaab;
+$tc-gray-20: #c0c0c0;
+$tc-gray-10: #d5d5d5;
+$tc-gray-05: #e0e0e0;
+$tc-gray-neutral-dark: #ebebeb;
+$tc-gray-neutral-light: #fafafb;
+$tc-black: #2A2A2A;
+$tc-white: #fff;
+
+$tc-gray1: #555555;
+$tc-gray2: #7f7f7f;
+$tc-gray3: #aaaaaa;
+$tc-gray4: #d4d4d4;
+$tc-gray5: #e9e9e9;
+$tc-gray6: #f4f4f4;
+$tc-gray7: #fbfbfb;
+
+$tc-blue: #2c95d7;
+$tc-blue-light1: #50ade8;
+$tc-blue-light2: #83c5ee;
+$tc-blue-light3: #c6e6ea;
+$tc-blue-light4: #eaf6fd;
+$tc-blue-dark1: #2984bd;
+$tc-blue-dark2: #16679a;
+
+/* Accents & Shades. */
+$tc-dark-blue-110: #006ad7;
+$tc-dark-blue-105: #006feb;
+$tc-dark-blue-100: #0681ff;
+$tc-dark-blue-70: #55a5ff;
+$tc-dark-blue-30: #cee6ff;
+$tc-dark-blue-10: #f4f9ff;
+
+/* Light Blue - design color code. */
+$tc-light-blue-110: #0076a5;
+$tc-light-blue-100: #15acec;
+$tc-light-blue-70: #63c4f1;
+$tc-light-blue-30: #bce6f9;
+$tc-light-blue-10: #e9f6fc;
+
+/* Warm Orange - data science color code. */
+$tc-orange-110: #ba4c00;
+$tc-orange-100: #fd7d00;
+$tc-orange-70: #ffa45d;
+$tc-orange-30: #ffe3cf;
+$tc-orange-10: #fff0eb;
+
+/* Red - used for warnings/ */
+$tc-red-110: #ea1900;
+$tc-red-100: #f52c14;
+$tc-red-70: #ff5a4c;
+$tc-red-30: #ffd4d0;
+$tc-red-10: #fff4f4;
+$tc-red: #ef476f;
+$tc-red-light1: #f37593;
+$tc-red-light2: #f7a3b7;
+$tc-red-light3: #fbd1db;
+$tc-red-dark1: #be405e;
+$tc-red-dark2: #8c384c;
+
+/* Yellow. */
+$tc-yellow-110: #f2c900;
+$tc-yellow-100: #fde400;
+$tc-yellow-70: #fbee88;
+$tc-yellow-30: #fff8ca;
+$tc-yellow-10: #fffde5;
+
+/* Greens - development color code. */
+$tc-green-120: #258205;
+$tc-green-110: #328732;
+$tc-green-100: #5cc900;
+$tc-green-70: #94db4e;
+$tc-green-30: #cef0af;
+$tc-green-10: #effae4;
+$tc-green: #63f963;
+$tc-green-light1: #8afb8a;
+$tc-green-light2: #b0fcb1;
+$tc-green-light3: #d8fdd8;
+$tc-green-dark1: #4cc94c;
+$tc-green-dark2: #35ac35;
+
+/* Turquoise */
+$tc-turquoise: #06d6a0;
+$tc-turquoise-light1: #45e1b8;
+$tc-turquoise-light2: #82eacf;
+$tc-turquoise-light3: #c1f5e7;
+$tc-turquoise-light4: #e0faf3;
+$tc-turquoise-dark1: #0ab88a;
+$tc-turquoise-dark2: #219174;
+$tc-turquoise-dark3: #137d60;
+
+/* Purples. */
+$tc-purple-120: #8231a9;
+$tc-purple-110: #753488;
+$tc-purple-100: #914da5;
+$tc-purple-70: #b57ad8;
+$tc-purple-30: #e2c6f3;
+$tc-purple-20: #e6cff1;
+$tc-purple-10: #f8f2fb;
+
+/* TC Metal colors - Badges.
+*
+* For metals the level 100 is the base metal color; 110 is for text inside
+* the metal-colored areas; and 130 is for small text inside metal-colored
+* areas, for better visibility. */
+$tc-gold-130: #9a6d00;
+$tc-gold-110: #c99014;
+$tc-gold-100: #ffd84d;
+
+$tc-silver-130: #554e48;
+$tc-silver-110: #716d67;
+$tc-silver-100: #d1d0cf;
+
+$tc-bronze-130: #733d17;
+$tc-bronze-110: #854e29;
+$tc-bronze-100: #d98f64;
+
+/* Pastel colors, used for levels. */
+$tc-pastel-green: #12c188;
+$tc-pastel-blue: #5656f4;
+$tc-pastel-yellow: #feb900;
+$tc-pastel-crimson: #e90c5a;
+
+/* Color aliases. */
+
+/* Base metal colors. */
+$tc-gold: $tc-gold-100;
+$tc-silver: $tc-silver-100;
+$tc-bronze: $tc-bronze-100;
+
+/* Brand colors. */
+$tc-dark-blue: $tc-dark-blue-100;
+$tc-light-blue: $tc-light-blue-100;
+$tc-green: $tc-green-100;
+$tc-purple: $tc-purple-100;
+$tc-yellow: $tc-yellow-100;
+$tc-orange: $tc-orange-100;
+$tc-red: $tc-red-100;
+
+/* Community achievement color codes. */
+$tc-level-1: $tc-gray-50;
+$tc-level-2: $tc-pastel-green;
+$tc-level-3: $tc-pastel-blue;
+$tc-level-4: $tc-pastel-yellow;
+$tc-level-5: $tc-pastel-crimson;
+
+/* Links */
+$tc-link-blue: #0d61bf;
+$tc-link-blue-light: #5fb7ee;
+
+/// FONTS
+
+$font-size-base: 16px;
+$font-size-sm: 14px;
+$font-size-xs: 12px;
+
+$line-height-base: 22px;
+$line-height-sm: 19px;
+$line-height-xs: 16px;
+
+/// APP
+$base-unit: 5px;
+
+$body-color: $tc-gray-90;
+$white: $tc-white;
+$green: #229174;
+$green2: #287d61;
+$green3: $tc-turquoise;
+$darkGreen: $tc-turquoise-dark3;
+$lightGreen: $tc-turquoise-dark1;
+$lightGreen2: $tc-turquoise;
+$blue: #2c95d7;
+$gray1: #fbfbfb;
+$gray2: #f4f4f4;
+$gray3: #e9e9e9;
+
+$border-radius: 6px;
+$border-radius-sm: 5px;
+$border-radius-lg: 8px;
+
+$control-border-color: $tc-gray-30;
+$control-border-radius: $border-radius;
+
+$page-padding-x: 7 * $base-unit;
+$page-padding-y: 32px;
+
+$screen-xxl: 1366px;
+
+$shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.03);

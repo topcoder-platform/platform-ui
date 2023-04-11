@@ -1,0 +1,71 @@
+// reusable mixins
+
+@mixin font-roboto {
+  font-family: "Roboto", Arial, Helvetica, sans-serif;
+}
+
+@mixin font-barlow-condensed {
+  font-family: "Barlow Condensed", Arial, Helvetica, sans-serif;
+}
+
+@mixin font-barlow {
+  font-family: "Barlow", Arial, Helvetica, sans-serif;
+}
+
+@mixin mobile {
+  @media (max-width: 1199px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 1200px) {
+    @content;
+  }
+}
+
+@mixin confirmationBox {
+  background: $orange-25;
+  border-radius: 8px;
+  margin: 16px 0;
+  line-height: 26px;
+  padding: 16px;
+  font-size: 16px
+}
+
+@mixin formInputText {
+  background-color: $black-0  !important;
+  border: 0 !important;
+  box-sizing: border-box !important;
+  color: #444 !important;
+  font-size: 18px !important;
+  height: 32px !important;
+  margin-bottom: 10px !important;
+  outline: none !important;
+  padding: 0 15px !important;
+  width: 100% !important;
+
+  &::placeholder {
+    color: $black-40  !important;
+    font-size: 18px !important;
+    text-transform: none !important;
+  }
+
+  &:focus {
+    box-shadow: none !important;
+  }
+
+  &:disabled {
+    background-color: $grey-bg  !important;
+  }
+}
+
+@mixin backButtonWrapper {
+  min-width: 12px;
+  margin-top: 0px;
+}
+
+@mixin backButtonContainer {
+  display: flex;
+  flex: 1;
+}

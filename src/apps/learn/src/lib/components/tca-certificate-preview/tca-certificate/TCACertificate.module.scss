@@ -1,0 +1,192 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    background-color: $tc-white;
+    height: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+.background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+// TODO: add cross track theme
+.theme {
+    display: flex;
+    height: 100%;
+    color: $black-100;
+    background-repeat: no-repeat;
+    background-size: cover;
+
+    :global(.large-container) & {
+        background-size: 100% 100%;
+    }
+
+    &-dev {
+        .certTitle {
+            color: $tc-dev-track-color;
+        }
+
+        :global(.grad) {
+            @include grad-text-color($tc-dev-grad);
+        }
+    }
+
+    &-datascience {
+        .certTitle {
+            color: $tc-datascience-track-color;
+        }
+
+        :global(.grad) {
+            @include grad-text-color($tc-datascience-grad);
+        }
+    }
+
+    &-design {
+        .certTitle {
+            color: $tc-design-track-color;
+        }
+
+        :global(.grad) {
+            @include grad-text-color($tc-design-grad);
+        }
+    }
+
+    &-qa {
+        .certTitle {
+            color: $tc-qa-track-color;
+        }
+
+        :global(.grad) {
+            @include grad-text-color($tc-qa-grad);
+        }
+    }
+}
+
+.details {
+    width: 55%;
+    padding: calc($space-mx + $space-lg);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+
+    .headerWrap {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+
+        >svg {
+            width: 120px;
+            height: 120px;
+        }
+
+        .logos {
+            display: flex;
+
+            .logosDivider {
+                width: 2px;
+                height: 40px;
+                background-color: $tc-white;
+                opacity: 0.3;
+                margin: 0 $space-lg;
+            }
+        }
+    }
+
+    .certWrap {
+        display: flex;
+        flex-direction: column;
+        margin: auto 0;
+
+        .certOwner {
+            font-family: $font-barlow;
+            font-weight: $font-weight-semibold;
+            font-size: 34px;
+            line-height: 32px;
+            color: $black-100;
+            margin-bottom: $space-xl;
+        }
+
+        .certText {
+            font-size: 13px;
+            margin-bottom: $space-sm;
+        }
+
+        .certTitle {
+            font-family: $font-barlow-condensed;
+            font-weight: $font-weight-semibold;
+            font-size: 80px;
+            line-height: 72px;
+            text-transform: uppercase;
+        }
+    }
+}
+
+.certInfo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .certInfoLeft {
+        display: flex;
+        align-items: center;
+
+        .qrCode {
+            margin-right: $space-lg;
+            opacity: 0.7;
+            border: 0.5px solid #D4D4D4;
+            border-radius: 2px;
+            background-color: $tc-white;
+        }
+
+        .certInfoLeftData {
+            display: grid;
+            grid-template-columns: 88px 1fr;
+
+            >span {
+                font-size: 9px;
+                line-height: 11px;
+            }
+
+            .gridSeparator {
+                margin-bottom: $space-sm;
+            }
+        }
+    }
+
+    .sigWrap {
+        display: flex;
+        flex-direction: column;
+
+        .divider {
+            height: 2px;
+            background: $black-10;
+            border-radius: 1px;
+            margin: $space-xs 0;
+        }
+
+        >span {
+            font-size: 9px;
+            line-height: 11px;
+        }
+    }
+}
+
+:global(.large-container) {
+    .certWrap {
+        max-width: 800px;
+    }
+}
+
+// print/download styles
+:global(.canvas-clone) {
+    .certText {
+        margin-bottom: $space-xxxl !important;
+    }
+}

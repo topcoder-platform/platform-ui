@@ -1,0 +1,20 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    margin-bottom: calc($space-lg + $space-xxl);
+    padding: $space-lg $space-xxl $space-xxl;
+    border-radius: $space-sm;
+    @extend .bg-black-5;
+    color: $black-100;
+
+    h3 {
+        margin-bottom: $space-lg;
+        color: $black-100;
+    }
+}
+
+.line {
+    + .line {
+        margin-top: $space-lg;
+    }
+}

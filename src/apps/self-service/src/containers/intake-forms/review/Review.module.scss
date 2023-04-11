@@ -1,0 +1,57 @@
+@use '@libs/ui/styles/typography';
+@import '@libs/ui/styles/includes';
+
+.review-container {
+    .content {
+        padding: 0 $space-xxxxl;
+        margin-top: $space-xxl;
+        display: grid;
+        grid-template-columns: 1fr 562px;
+        column-gap: 24px;
+        @include ltemd {
+            grid-template-columns: 1fr;
+            padding: 0 $space-lg;
+        }
+        .left {
+            flex: 1;
+            border-top: 2px solid $black-10;
+            padding-top: $space-xxl;
+        }
+        .right {
+            flex-basis: 32%;
+            .payment-form-wrapper {
+                border: 2px solid $black-20;
+                border-radius: 8px;
+                padding: $space-xxl;
+                @include ltemd {
+                    padding: $space-xl;
+                }
+                .form-header {
+                    text-align: center;
+                    padding-bottom: $space-xxl;
+                    border-bottom: 1px solid $black-20;
+                    margin-bottom: $space-xxl;
+                    .price {
+                        color: $teal-120;
+                        margin-bottom: $space-sm;
+                    }
+                    .label {
+                        @extend .overline;
+                    }
+                }
+            }
+            @include ltemd {
+                flex-basis: 100%;
+            }
+        }
+    }
+
+    .button-wrapper {
+        margin: 0 $space-xxxxl $space-xxxxl $space-xxxxl;
+    }
+
+    .bug-hunt-icon {
+        background: $tc-grad18;
+        margin-left: 0;
+    }
+}
