@@ -546,11 +546,20 @@ e.g.:
 
 The following summarizes the various [apps](#adding-a-new-platform-ui-application) in the Platform UI.
 
+- [Platform App](#platform-app)
 - [Dev Center](#dev-center)
 - [Earn](#earn)
 - [Gamification Admin](#gamification-admin)
 - [Learn](#learn)
 - [Self Service](#self-service)
+
+## Platform App
+
+This is the "router" app under the whole sum of all Platform UI applications. It will just load all applications and serve one based on the specific route
+It also renders the [Universal Navigation](https://github.com/topcoder-platform/universal-navigation)'s header & footer.
+
+[Platform README](./src/apps/platform/README.md)
+[Platform Routes](./src/apps/platform/src/platform.routes.tsx)
 
 ## Dev Center
 
