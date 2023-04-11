@@ -1,4 +1,4 @@
-@import "@earn/styles/mixins";
+@import '~styles/mixins';
 
 .container {
   border: 1px solid $tc-gray-neutral-dark;
@@ -68,6 +68,8 @@
   font-size: 13px;
   line-height: 15px;
   margin-right: 24px;
+  white-space: nowrap;
+  margin-top: 5px;
 
   @include xs {
     margin-left: -20px;

@@ -400,6 +400,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      [a.dropResults]: state => ({ ...state, results: null }),
      [a.getDetailsInit]: onGetDetailsInit,
      [a.getDetailsDone]: onGetDetailsDone,
+     [`${a.getDetailsDone}_SUCCESS`]: onGetDetailsDone,
      [a.getSubmissionsInit]: onGetSubmissionsInit,
      [a.getSubmissionsDone]: onGetSubmissionsDone,
      [a.getMmSubmissionsInit]: onGetMMSubmissionsInit,

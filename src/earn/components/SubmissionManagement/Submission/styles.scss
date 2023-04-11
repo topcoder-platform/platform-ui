@@ -1,0 +1,202 @@
+@import '~styles/mixins';
+$submission-space-10: $base-unit * 2;
+$submission-space-20: $base-unit * 4;
+$submission-space-25: $base-unit * 5;
+$submission-space-50: $base-unit * 10;
+
+.submission-row {
+  width: 100%;
+  font-size: 15px;
+  color: $tc-black;
+  font-weight: 400;
+
+  @include xs-to-sm {
+    display: block;
+    position: relative;
+    padding: 10px 0;
+  }
+
+  td {
+    // vertical-align: middle;
+    padding: 16px;
+    background: $tc-white;
+    border-top: 1px solid $tc-gray-10;
+    color: $tc-black;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 22px;
+
+    .mobile-header {
+      display: none;
+
+      @include xs-to-md {
+        display: block;
+        color: #767676;
+        font-size: 11px;
+        line-height: 14px;
+        text-transform: uppercase;
+        text-align: left;
+        justify-content: flex-start;
+      }
+    }
+
+    @include xs-to-lg {
+      padding: $submission-space-10;
+    }
+
+    @include xs-to-sm {
+      display: block;
+      border: none;
+    }
+
+    &.no-submission {
+      line-height: $submission-space-20;
+      padding: $submission-space-50 $submission-space-20;
+      text-align: center;
+    }
+
+    &.dev-details {
+      padding: 16px;
+
+      @include xs-to-md {
+        padding: 0 10px;
+      }
+    }
+  }
+
+  .preview-col {
+    @include xs-to-sm {
+      float: left;
+    }
+
+    .design-img {
+      width: 90px;
+      height: 90px;
+
+      @include xs-to-sm {
+        width: 80px;
+        height: 80px;
+      }
+    }
+
+    .dev-img {
+      width: 40px;
+      height: 40px;
+    }
+  }
+
+  .id-col {
+    font-weight: 700;
+    width: 32%;
+
+    @include xs-to-sm {
+      width: 80%;
+    }
+  }
+
+  .type-col {
+    width: 21%;
+
+    @include xs-to-sm {
+      width: 80%;
+    }
+  }
+
+  .date-col {
+    width: 20%;
+    color: $tc-black;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 22px;
+
+    @include xs-to-sm {
+      padding: 0 10px;
+      width: 80%;
+    }
+  }
+
+  .v5-id {
+    font-weight: 400;
+    line-height: 22px;
+  }
+
+  .status-col {
+    text-align: center;
+
+    button {
+      background: none;
+      border: none;
+      padding: 0;
+
+      .pending {
+        text-transform: initial;
+        font-size: 15px;
+        color: $tc-gray-40;
+        line-height: $submission-space-20;
+      }
+    }
+  }
+
+  .action-col {
+    text-align: center;
+    min-width: 120px;
+
+    @include xs-to-sm {
+      position: absolute;
+      right: 0;
+      top: 10px;
+      padding: 10px 0;
+      min-width: 100px;
+      text-align: right;
+
+      svg {
+        width: 14px;
+        height: 14px;
+      }
+    }
+
+    .delete-icon {
+      margin: 0 0 0 24px;
+
+      @include xs-to-sm {
+        margin-left: 15px;
+      }
+    }
+
+    button {
+      margin-left: 15px;
+      margin-top: 3px;
+      background: none;
+      border: 0;
+      font-size: 0;
+      padding: 0;
+      line-height: 0;
+      display: inline-block;
+
+      &:focus {
+        outline: none;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+      }
+    }
+
+    .expand-icon {
+      transition: all 1.5s;
+      margin-left: 24px;
+
+      @include xs-to-sm {
+        margin-left: 15px;
+      }
+
+      &.expanded {
+        transform: rotate(180deg);
+      }
+    }
+  }
+
+  .status-col button:focus {
+    outline: none;
+  }
+}

@@ -1,19 +1,31 @@
-import LoadingIndicator from "@earn/components/LoadingIndicator";
-import PT from "prop-types";
-import React from "react";
-import { Modal, PrimaryButton } from "@earn/components/UiKit";
+import LoadingIndicator from '@earn/components/LoadingIndicator';
+import PT from 'prop-types';
+import React from 'react';
+import { PrimaryButton } from '@earn/components/challenge-detail/buttons';
+import Modal from '@earn/components/challenge-detail/Modal'
 
-import style from "./styles.module.scss";
+import style from './style.scss';
 
-export default function SaveConfirmationModal({ onDone, saving }) {
+export default function SaveConfirmationModal({
+  onDone,
+  saving,
+}) {
   return (
-    <Modal theme={{ container: style.container }}>
-      <h1 styleName="title">Saving The Challenge</h1>
-      {saving ? (
-        <LoadingIndicator />
-      ) : (
-        <PrimaryButton onClick={onDone}>Done</PrimaryButton>
-      )}
+    <Modal
+      theme={{ container: style.container }}
+    >
+      <h1 styleName="title">
+        Saving The Challenge
+      </h1>
+      {
+        saving ? <LoadingIndicator /> : (
+          <PrimaryButton
+            onClick={onDone}
+          >
+            Done
+          </PrimaryButton>
+        )
+      }
     </Modal>
   );
 }

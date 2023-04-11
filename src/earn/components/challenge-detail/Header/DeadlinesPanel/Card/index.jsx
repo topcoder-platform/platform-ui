@@ -5,10 +5,10 @@
 import moment from 'moment';
 import PT from 'prop-types';
 import React from 'react';
-import CalendarIcon from '@earn/assets/images/icon-calendar-2.svg';
-import CalendarIconActive from '@earn/assets/images/icon-calendar-2-active.svg';
-import TimeIcon from '@earn/assets/images/icon-time.svg';
-import TimeIconActive from '@earn/assets/images/icon-time-active.svg';
+import { ReactComponent as CalendarIcon } from '@earn/assets/images/icon-calendar-2.svg';
+import { ReactComponent as CalendarIconActive } from '@earn/assets/images/icon-calendar-2-active.svg';
+import { ReactComponent as TimeIcon } from '@earn/assets/images/icon-time.svg';
+import { ReactComponent as TimeIconActive } from '@earn/assets/images/icon-time-active.svg';
 
 import './style.scss';
 

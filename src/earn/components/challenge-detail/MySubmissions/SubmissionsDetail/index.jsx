@@ -2,17 +2,18 @@
   Component renders my submission detail
 */
 
-import React from "react";
-import PT from "prop-types";
-import _ from "lodash";
-import cn from "classnames";
-import sortList from "@earn/utils/challenge-detail/sort";
+import React from 'react';
+import PT from 'prop-types';
+import _ from 'lodash';
+import cn from 'classnames';
+import sortList from '@earn/utils/challenge-detail/sort';
+import Tooltip from '@earn/components/Tooltip';
+import { ReactComponent as IconClose } from '@earn/assets/images/icon-close-green.svg';
 
-import { ReactComponent as ArrowDown } from "../../../../assets/images/arrow-down.svg";
-import IconComplete from "../../icons/completed.svg";
-import IconQueued from "../../icons/queued.svg";
-import IconFail from "../../icons/failed.svg";
-import "./styles.module.scss";
+import { ReactComponent as ArrowDown } from '@earn/assets/images/arrow-down.svg';
+import { ReactComponent as IconFail } from '../../icons/failed.svg';
+import './styles.scss';
+
 
 class SubmissionsDetailView extends React.Component {
   constructor(props) {
@@ -31,13 +32,10 @@ class SubmissionsDetailView extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    const {
-      submission: { review },
-      submissionsSort,
-    } = this.props;
+    const { submission: { review }, submissionsSort } = this.props;
     if (
-      !_.isEqual(prevProps.submission.review, review) ||
-      !_.isEqual(prevProps.submissionsSort, submissionsSort)
+      !_.isEqual(prevProps.submission.review, review)
+      || !_.isEqual(prevProps.submissionsSort, submissionsSort)
     ) {
       this.updateSortedSubmissions();
     }
@@ -47,7 +45,9 @@ class SubmissionsDetailView extends React.Component {
    * Get submission sort parameter
    */
   getSubmissionsSortParam() {
-    const { submissionsSort } = this.props;
+    const {
+      submissionsSort,
+    } = this.props;
     let { sort } = submissionsSort;
     const { field } = submissionsSort;
     if (!field) {
@@ -58,7 +58,7 @@ class SubmissionsDetailView extends React.Component {
     }
 
     if (!sort) {
-      sort = "desc"; // default order for submission sorting
+      sort = 'desc'; // default order for submission sorting
     }
 
     return {
@@ -77,17 +77,15 @@ class SubmissionsDetailView extends React.Component {
     if (reviewType) {
       return reviewType.name;
     }
-    return "";
+    return '';
   }
 
   /**
    * Update sorted submission array
    */
   updateSortedSubmissions() {
-    const {
-      submission: { review },
-    } = this.props;
-    const sortedSubmissions = _.cloneDeep(review);
+    const { submission: { review } } = this.props;
+    const sortedSubmissions = _.cloneDeep(review || []);
     this.sortSubmissions(sortedSubmissions);
     this.setState({ sortedSubmissions });
   }
@@ -106,22 +104,22 @@ class SubmissionsDetailView extends React.Component {
       let valueB = 0;
       let valueIsString = false;
       switch (field) {
-        case "Review Type": {
+        case 'Review Type': {
           valueA = this.getReviewName(a);
           valueB = this.getReviewName(b);
           break;
         }
-        case "Reviewer": {
-          valueA = "TC System";
-          valueB = "TC System";
+        case 'Reviewer': {
+          valueA = 'TC System';
+          valueB = 'TC System';
           break;
         }
-        case "Score": {
+        case 'Score': {
           valueA = a.score;
           valueB = b.score;
           break;
         }
-        case "Status": {
+        case 'Status': {
           valueA = a.status;
           valueB = b.status;
           valueIsString = true;
@@ -131,8 +129,8 @@ class SubmissionsDetailView extends React.Component {
       }
 
       if (valueIsString === false) {
-        if (valueA === "-") valueA = 0;
-        if (valueB === "-") valueB = 0;
+        if (valueA === '-') valueA = 0;
+        if (valueB === '-') valueB = 0;
       }
 
       return {
@@ -149,204 +147,236 @@ class SubmissionsDetailView extends React.Component {
     const { sortedSubmissions } = this.state;
 
     const { field, sort } = this.getSubmissionsSortParam();
-    const revertSort = sort === "desc" ? "asc" : "desc";
+    const revertSort = (sort === 'desc') ? 'asc' : 'desc';
 
     if (_.isNumber(finalScore)) {
       if (finalScore > 0) {
         finalScore = finalScore.toFixed(2);
       }
     } else {
-      finalScore = "-";
+      finalScore = '-';
     }
     return (
       <div styleName="wrapper">
-        <div styleName="table-header table-row">
-          <button onClick={onCancel} type="button" styleName="btn-back">
-            <ArrowDown styleName="back-icon" />
-            <span> My Submissions</span>
-          </button>
-          <div styleName="table-title">
-            <span>Submission Details: </span>
-            <span styleName="title-detail">
-              {submission.id} ({submission.submissionId})
-            </span>
+        <div styleName="header">
+          <h2 styleName="title">Submission Details</h2>
+          <div styleName="icon" role="presentation" onClick={() => onCancel()}>
+            <IconClose />
           </div>
         </div>
-        <div styleName="table-tabs table-row">
-          <div styleName="tab-item tab-item-selected">
-            <span>Review Summary</span>
+        <hr styleName="hr" />
+        <div styleName="inner-content">
+          <div styleName="sub-header">
+            <span>Submission: </span>
+            <span styleName="title-detail">{submission.id} ({submission.submissionId})</span>
           </div>
-          <div styleName="tab-item">
-            <span>Artifacts</span>
-          </div>
-        </div>
-        <div styleName="table-row table-content-header">
-          <div
-            styleName={cn("table-column column-1", {
-              "is-highlight": field === "Review Type",
-            })}
-          >
-            <button
-              type="button"
-              styleName="header-sort"
-              onClick={() => {
-                onSortChange({
-                  field: "Review Type",
-                  sort: field === "Review Type" ? revertSort : "desc",
-                });
-              }}
+          <div styleName="table-row table-content-header">
+            <div
+              styleName={cn(
+                'table-column column-1',
+              )}
             >
-              <span>Review Type</span>
-              <div
-                styleName={cn("col-arrow", {
-                  "col-arrow-sort-asc":
-                    field === "Review Type" && sort === "asc",
-                  "col-arrow-is-sorting": field === "Review Type",
-                })}
+              <button
+                type="button"
+                styleName="header-sort"
+                onClick={() => {
+                  onSortChange({
+                    field: 'Review Type',
+                    sort: (field === 'Review Type') ? revertSort : 'desc',
+                  });
+                }}
               >
-                <ArrowDown />
-              </div>
-            </button>
-          </div>
-          <div
-            styleName={cn("table-column", {
-              "is-highlight": field === "Reviewer",
-            })}
-          >
-            <button
-              type="button"
-              styleName="header-sort"
-              onClick={() => {
-                onSortChange({
-                  field: "Reviewer",
-                  sort: field === "Reviewer" ? revertSort : "desc",
-                });
-              }}
-            >
-              <span>Reviewer</span>
-              <div
-                styleName={cn("col-arrow", {
-                  "col-arrow-sort-asc": field === "Reviewer" && sort === "asc",
-                  "col-arrow-is-sorting": field === "Reviewer",
-                })}
-              >
-                <ArrowDown />
-              </div>
-            </button>
-          </div>
-          <div
-            styleName={cn("table-column", {
-              "is-highlight": field === "Score",
-            })}
-          >
-            <button
-              type="button"
-              styleName="header-sort"
-              onClick={() => {
-                onSortChange({
-                  field: "Score",
-                  sort: field === "Score" ? revertSort : "desc",
-                });
-              }}
-            >
-              <span>Score</span>
-              <div
-                styleName={cn("col-arrow", {
-                  "col-arrow-sort-asc": field === "Score" && sort === "asc",
-                  "col-arrow-is-sorting": field === "Score",
-                })}
-              >
-                <ArrowDown />
-              </div>
-            </button>
-          </div>
-          <div
-            styleName={cn("table-column", {
-              "is-highlight": field === "Status",
-            })}
-          >
-            <button
-              type="button"
-              styleName="header-sort"
-              onClick={() => {
-                onSortChange({
-                  field: "Status",
-                  sort: field === "Status" ? revertSort : "desc",
-                });
-              }}
-            >
-              <span>Status</span>
-              <div
-                styleName={cn("col-arrow", {
-                  "col-arrow-sort-asc": field === "Status" && sort === "asc",
-                  "col-arrow-is-sorting": field === "Status",
-                })}
-              >
-                <ArrowDown />
-              </div>
-            </button>
-          </div>
-        </div>
-        {sortedSubmissions.map((review) => {
-          let { score } = review;
-          if (_.isNumber(score)) {
-            if (score > 0) {
-              score = score.toFixed(2);
-            }
-          } else {
-            score = "-";
-          }
-          return (
-            <div key={review.id} styleName="table-row">
-              <div
-                styleName={cn("table-column column-1", {
-                  "is-highlight": field === "Review Type",
-                })}
-              >
-                <span>{this.getReviewName(review)}</span>
-              </div>
-              <div
-                styleName={cn("table-column", {
-                  "is-highlight": field === "Reviewer",
-                })}
-              >
-                <span>TC System</span>
-              </div>
-              <div
-                styleName={cn("table-column", {
-                  "is-highlight": field === "Score",
-                })}
-              >
-                {score < 0 ? <IconFail /> : <span>{score}</span>}
-              </div>
-              <div
-                styleName={cn("table-column", {
-                  "is-highlight": field === "Status",
-                })}
-              >
-                {review.status === "completed" ? (
-                  <IconComplete />
-                ) : (
-                  <IconFail />
-                )}
-              </div>
+                <span>Review Type</span>
+                {
+                  field === 'Review Type' && (
+                    <div
+                      styleName={cn(
+                        'col-arrow',
+                        'col-arrow-is-sorting',
+                        {
+                          'col-arrow-sort-asc': (sort === 'asc'),
+                        },
+                      )}
+                    ><ArrowDown />
+                    </div>
+                  )
+                }
+              </button>
             </div>
-          );
-        })}
-        <div styleName="table-row table-content-footer">
-          <div styleName="table-column column-1">
-            <span>Final Score</span>
+            <div
+              styleName={cn(
+                'table-column',
+              )}
+            >
+              <button
+                type="button"
+                styleName="header-sort"
+                onClick={() => {
+                  onSortChange({
+                    field: 'Reviewer',
+                    sort: (field === 'Reviewer') ? revertSort : 'desc',
+                  });
+                }}
+              >
+                <span>Reviewer</span>
+                {
+                  field === 'Reviewer' && (
+                    <div
+                      styleName={cn(
+                        'col-arrow',
+                        'col-arrow-is-sorting',
+                        {
+                          'col-arrow-sort-asc': (sort === 'asc'),
+                        },
+                      )}
+                    ><ArrowDown />
+                    </div>
+                  )
+                }
+              </button>
+            </div>
+            <div
+              styleName={cn(
+                'table-column',
+              )}
+            >
+              <button
+                type="button"
+                styleName="header-sort"
+                onClick={() => {
+                  onSortChange({
+                    field: 'Score',
+                    sort: (field === 'Score') ? revertSort : 'desc',
+                  });
+                }}
+              >
+                <span>Score</span>
+                {
+                  field === 'Score' && (
+                    <div
+                      styleName={cn(
+                        'col-arrow',
+                        'col-arrow-is-sorting',
+                        {
+                          'col-arrow-sort-asc': (sort === 'asc'),
+                        },
+                      )}
+                    ><ArrowDown />
+                    </div>
+                  )
+                }
+              </button>
+            </div>
+            <div
+              styleName={cn(
+                'table-column',
+              )}
+            >
+              <button
+                type="button"
+                styleName="header-sort"
+                onClick={() => {
+                  onSortChange({
+                    field: 'Status',
+                    sort: (field === 'Status') ? revertSort : 'desc',
+                  });
+                }}
+              >
+                <span>Status</span>
+                {
+                  field === 'Status' && (
+                    <div
+                      styleName={cn(
+                        'col-arrow',
+                        'col-arrow-is-sorting',
+                        {
+                          'col-arrow-sort-asc': (sort === 'asc'),
+                        },
+                      )}
+                    ><ArrowDown />
+                    </div>
+                  )
+                }
+              </button>
+            </div>
           </div>
-          <div styleName="table-column" />
-          <div styleName="table-column">
-            <span>{finalScore}</span>
-          </div>
-          <div styleName="table-column">
-            {submission.provisionalScoringIsCompleted ? (
-              <IconComplete />
-            ) : (
-              <IconQueued />
-            )}
+          {
+            sortedSubmissions.map((review) => {
+              let { score } = review;
+              if (_.isNumber(score)) {
+                if (score > 0) {
+                  score = score.toFixed(2);
+                }
+              } else {
+                score = '-';
+              }
+              return (
+                <div key={review.id} styleName="table-row">
+                  <div
+                    styleName={cn(
+                      'table-column column-1',
+                    )}
+                  >
+                    <div styleName="mobile-header">Review Type</div>
+                    <span>{this.getReviewName(review)}</span>
+                  </div>
+                  <div
+                    styleName={cn(
+                      'table-column',
+                    )}
+                  >
+                    <div styleName="mobile-header">Reviewer</div>
+                    <span>TC System</span>
+                  </div>
+                  <div
+                    styleName={cn(
+                      'table-column',
+                    )}
+                  >
+                    <div styleName="mobile-header">Score</div>
+
+                    {(score < 0) ? (
+                      <Tooltip content="Failed Submission" className="toolTipPadding">
+                        <IconFail />
+                      </Tooltip>
+                    ) : (<span>{score}</span>)}
+                  </div>
+                  <div
+                    styleName={cn(
+                      'table-column',
+                    )}
+                  >
+                    <div styleName="mobile-header">Status</div>
+
+                    {(review.status === 'completed') ? (
+                      <span styleName="status-complete">Complete</span>
+                    ) : (
+                      <span styleName="status-failed">Failed</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          }
+          <div styleName="table-row table-content-footer">
+            <div styleName="table-column column-1">
+              <div styleName="mobile-header">Review Type</div>
+              <span>Final Score</span>
+            </div>
+            <div styleName="table-column">
+              <div styleName="mobile-header">Reviewer</div>
+              <span>N/A</span>
+            </div>
+            <div styleName="table-column">
+              <div styleName="mobile-header">Score</div>
+              <span>{finalScore || 'N/A'}</span>
+            </div>
+            <div styleName="table-column">
+              <div styleName="mobile-header">Status</div>
+              {submission.provisionalScoringIsCompleted ? (
+                <span styleName="status-complete">Complete</span>
+              ) : (<span styleName="status-in-queue">In Queue</span>)}
+            </div>
           </div>
         </div>
       </div>

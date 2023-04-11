@@ -10,11 +10,11 @@ import React, { useState } from 'react';
 import PT from 'prop-types';
 import cn from 'classnames';
 import { TABS as DETAIL_TABS } from '@earn/actions/page/challenge-details';
-import { config } from "@earn/config";
+import config from "@earn/config";
 import { useMediaQuery } from 'react-responsive';
-import ArrowIcon from '@earn/assets/images/ico-arrow-down.svg';
-import CloseIcon from '@earn/assets/images/icon-close-green.svg';
-import SortIcon from '@earn/assets/images/icon-sort-mobile.svg';
+import { ReactComponent as  ArrowIcon } from '@earn/assets/images/ico-arrow-down.svg';
+import { ReactComponent as CloseIcon } from '@earn/assets/images/icon-close-green.svg';
+import { ReactComponent as SortIcon } from '@earn/assets/images/icon-sort-mobile.svg';
 
 import style from './style.scss';
 

@@ -9,7 +9,7 @@
 import _ from 'lodash';
 import React from 'react';
 import PT from 'prop-types';
-import { config } from "@earn/config";
+import config from "@earn/config";
 
 import {
   Tag,
@@ -148,5 +148,5 @@ ChallengeTags.propTypes = {
   technPlatforms: PT.arrayOf(PT.string),
   setChallengeListingFilter: PT.func.isRequired,
   challengeType: PT.shape().isRequired,
-  openForRegistrationChallenges: PT.arrayOf(PT.shape()).isRequired,
+  openForRegistrationChallenges: PT.shape().isRequired,
 };

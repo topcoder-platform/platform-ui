@@ -20,10 +20,10 @@ import {
   getTimeLeft,
 } from '@earn/utils/challenge-detail/helper';
 
-import LeftArrow from '@earn/assets/images/arrow-prev.svg';
+import { ReactComponent as LeftArrow } from '@earn/assets/images/arrow-prev.svg';
 
-import ArrowUp from '@earn/assets/images/icon-arrow-up.svg';
-import ArrowDown from '@earn/assets/images/icon-arrow-down.svg';
+import { ReactComponent as ArrowUp } from '@earn/assets/images/icon-arrow-up.svg';
+import { ReactComponent as ArrowDown } from '@earn/assets/images/icon-arrow-down.svg';
 
 import Prizes from './Prizes';
 import ChallengeTags from './ChallengeTags';
@@ -90,7 +90,6 @@ export default function ChallengeHeader(props) {
 
   const placementPrizes = _.find(prizeSets, { type: 'placement' });
   const { prizes } = placementPrizes || [];
-
   const checkpointPrizes = _.find(prizeSets, { type: 'checkpoint' });
   let numberOfCheckpointsPrizes = 0;
   let topCheckPointPrize = 0;
@@ -340,7 +339,7 @@ export default function ChallengeHeader(props) {
             <h2 styleName="prizes-title">
               Key Information
             </h2>
-            <Prizes prizes={prizes && prizes.length ? prizes : [0]} pointPrizes={pointPrizes} />
+            <Prizes prizes={prizes && prizes.length ? prizes : []} pointPrizes={pointPrizes} />
             {
                 bonusType ? (
                   <div id={`bonus-${trackLower}`} styleName="bonus-div">
@@ -561,7 +560,7 @@ ChallengeHeader.propTypes = {
   hasFirstPlacement: PT.bool.isRequired,
   isMenuOpened: PT.bool,
   mySubmissions: PT.arrayOf(PT.shape()).isRequired,
-  openForRegistrationChallenges: PT.arrayOf(PT.shape()).isRequired,
+  openForRegistrationChallenges: PT.shape().isRequired,
   onSort: PT.func.isRequired,
   viewAsTable: PT.bool.isRequired,
 };
