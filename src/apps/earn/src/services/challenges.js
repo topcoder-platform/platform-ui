@@ -3,14 +3,17 @@ import _ from "lodash";
 import moment from "moment";
 import qs from "qs";
 
+import { EnvironmentConfig } from "~/config";
+
 import { decodeToken } from "../utils/token";
 import logger from "../utils/logger";
 import { setErrorIcon, ERROR_ICON_TYPES } from "../utils/errors";
 import { COMPETITION_TRACKS, getApiResponsePayload } from "../utils/tc";
+import { buildQueryString } from "../utils/url";
+
 import { getApi } from "./challenge-api";
 import { getService as getMembersService } from "./members";
 import { getService as getSubmissionsService } from "./submissions";
-import { buildQueryString } from "../utils/url";
 
 /**
  * Search challenges
@@ -25,6 +28,23 @@ async function getChallenges(filter, cancellationSignal) {
     cancellationSignal
   );
 }
+
+
+/**
+ * Get review opportunities
+ *
+ * @return {Array<Object>} challenges
+ */
+ async function getReviewOpportunities(cancellationSignal) {
+  const { API } = EnvironmentConfig;
+  return api.get(
+    //TODO - this should be moved to v5
+    `/reviewOpportunities/?limit=1000&offset=0`,
+    API.V3,
+    cancellationSignal
+  );
+}
+
 
 export function getFilterUrl(backendFilter, frontFilter) {
   const ff = _.clone(frontFilter);
@@ -981,4 +1001,5 @@ export function getService(tokenV3, tokenV2) {
 
 export default {
   getChallenges,
+  getReviewOpportunities
 };

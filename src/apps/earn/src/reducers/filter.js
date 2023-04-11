@@ -24,6 +24,7 @@ const defaultState = {
     sortBy: CHALLENGE_SORT_BY_MOST_RECENT,
     totalPrizesFrom: 0,
     totalPrizesTo: 10000,
+    memberId: null,
     // ---
 
     bucket: FILTER_BUCKETS[1],

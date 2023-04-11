@@ -18,6 +18,7 @@ import { ReactComponent as IconClear} from "../../../assets/icons/close-gray.svg
 import Button from "../../../components/Button";
 
 import styles from "./styles.scss";
+import ReviewItem from "./ReviewItem";
 import { styled as styledCss } from "../../../utils";
 const styled = styledCss(styles);
 
@@ -67,7 +68,7 @@ const Listing = ({
     const sidebarEl = document.getElementById("sidebar-id");
     sidebarEl.classList.add("show");
   };
-  
+
   const onPageNumberClick = useCallback((value) => (
     updateFilter({ page: value })
   ), [updateFilter]);
@@ -172,24 +173,44 @@ const Listing = ({
                 key={challenge.id}
                 className={styled(index % 2 === 0 ? "even" : "odd")}
               >
-                <ChallengeItem
-                  challenge={challenge}
-                  onClickTag={(tag) => {
-                    const filterChange = {
-                      tags: [tag],
-                      page: 1,
-                    };
-                    updateFilter(filterChange);
-                  }}
-                  onClickTrack={(track) => {
-                    const filterChange = {
-                      tracks: [track],
-                      page: 1,
-                    };
-                    updateFilter(filterChange);
-                  }}
-                  isLoggedIn={isLoggedIn}
-                />
+                  {challenge.type != "Contest Review" ?
+                    <ChallengeItem
+                      challenge={challenge}
+                      onClickTag={(tag) => {
+                        const filterChange = {
+                          tags: [tag],
+                          page: 1,
+                        };
+                        updateFilter(filterChange);
+                      }}
+                      onClickTrack={(track) => {
+                        const filterChange = {
+                          tracks: [track],
+                          page: 1,
+                        };
+                        updateFilter(filterChange);
+                      }}
+                      isLoggedIn={isLoggedIn}
+                    />
+                  :
+                    <ReviewItem
+                      challenge={challenge}
+                      onClickTag={(tag) => {
+                        const filterChange = {
+                          tags: [tag],
+                          page: 1,
+                        };
+                        updateFilter(filterChange);
+                      }}
+                      onClickTrack={(track) => {
+                        const filterChange = {
+                          tracks: [track],
+                          page: 1,
+                        };
+                        updateFilter(filterChange);
+                      }}
+                      isLoggedIn={isLoggedIn}
+                    />}
               </div>
             ))}
           </Panel.Body>
