@@ -1,13 +1,12 @@
-import React from "react";
 import PT from "prop-types";
 import * as utils from "@earn/utils";
 
-import "./styles.scss";
+import styles from "./styles.scss";
 
 const Prize = ({ totalPrizes, currencySymbol }) => (
-  <div styleName="prize">
-    <span styleName="text">Purse</span>
-    <span styleName="value">
+  <div className={styles.prize}>
+    <span className={styles.text}>Purse</span>
+    <span className={styles.value}>
       {utils.formatMoneyValue(totalPrizes, currencySymbol)}
     </span>
   </div>

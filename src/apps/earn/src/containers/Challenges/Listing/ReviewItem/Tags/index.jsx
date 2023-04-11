@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import PT from "prop-types";
 import _ from "lodash";
 import Tag from "@earn/components/Tag";
 import * as util from "@earn/utils/tag";
 import { useTargetSize } from "@earn/utils/hooks/useTargetSize";
 
-import "./styles.scss";
+import styles from "./styles.scss";
 
 const Tags = ({ tags, onClickTag, tooltip, isSelfService }) => {
   const Tooltip = tooltip;
@@ -41,7 +41,7 @@ const Tags = ({ tags, onClickTag, tooltip, isSelfService }) => {
   const invisibleTags = collapsed ? tags.slice(n) : [];
 
   return (
-    <div styleName="tags" ref={ref}>
+    <div className={styles.tags} ref={ref}>
       {isSelfService && <Tag tag="On Demand" onClick={_.noop} />}
       {visibleTags.map((tag) => (
         <Tag tag={tag} key={tag} onClick={onClickTag} />

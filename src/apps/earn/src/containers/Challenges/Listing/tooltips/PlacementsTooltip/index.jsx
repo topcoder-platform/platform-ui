@@ -1,5 +1,3 @@
-import React from "react";
-import PT from "prop-types";
 import Tooltip from "../../../../../components/Tooltip";
 import Prize from "./Prize";
 import * as utils from "../../../../../utils";

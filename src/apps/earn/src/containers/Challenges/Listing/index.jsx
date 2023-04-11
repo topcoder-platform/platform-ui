@@ -17,8 +17,8 @@ import { ReactComponent as IconSearch} from "../../../assets/icons/search.svg";
 import { ReactComponent as IconClear} from "../../../assets/icons/close-gray.svg";
 import Button from "../../../components/Button";
 
-import styles from "./styles.scss";
 import ReviewItem from "./ReviewItem";
+import styles from "./styles.scss";
 import { styled as styledCss } from "../../../utils";
 const styled = styledCss(styles);
 

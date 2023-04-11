@@ -1,11 +1,10 @@
-import React from "react";
 import PT from "prop-types";
 import { ReactComponent as IconRegistrant} from "../../../../../assets/icons/registrant.svg";
 
-import "./styles.scss";
+import styles from "./styles.scss";
 
 const NumRegistrants = ({ numOfRegistrants }) => (
-  <div styleName="registrants">
+  <div className={styles.registrants}>
     <IconRegistrant /> {numOfRegistrants}
   </div>
 );

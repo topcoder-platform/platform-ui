@@ -1,8 +1,8 @@
-import React from "react";
 import PT from "prop-types";
+import classNames from "classnames";
 import * as utils from "@earn/utils";
 
-import "./styles.scss";
+import styles from "./styles.scss";
 
 const PhaseEndDate = ({ challenge, tooltip }) => {
   const active = challenge.status === "Active";
@@ -20,13 +20,13 @@ const PhaseEndDate = ({ challenge, tooltip }) => {
       Late by
       <span
         style={{ color: "#EF476F" }}
-        styleName="uppercase"
+        className={styles.uppercase}
       >{` ${phaseTimeLeft.text}`}</span>
     </span>
   ) : (
     <span style={{ color: timeLeftColor }}>
       <span
-        styleName={typeof phaseTimeLeft.time === "number" && "uppercase"}
+        className={typeof phaseTimeLeft.time === "number" && classNames(styles.uppercase)}
       >{`${phaseTimeLeft.text} `}</span>
       {phaseTimeLeft.late === false && <small>to go</small>}
     </span>
@@ -36,11 +36,11 @@ const PhaseEndDate = ({ challenge, tooltip }) => {
 
   return (
     <span>
-      <span styleName="phase-message">
+      <span className={styles['phase-message']}>
         {`${phaseMessage}`} {`${active ? "Ends" : "Ended"}`}:
       </span>{" "}
       <Tooltip>
-        <span styleName="time-left">
+        <span className={styles['time-left']}>
           {active && hasStatusPhase ? timeLeftMessage : endDate}
         </span>
       </Tooltip>

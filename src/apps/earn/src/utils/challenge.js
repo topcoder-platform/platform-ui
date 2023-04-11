@@ -4,7 +4,6 @@ import _ from "lodash";
 import * as constants from "../constants";
 import Joi from "joi";
 import { initialChallengeFilter } from "../reducers/filter";
-import { decodeToken } from "@earn/utils/token";
 
 Joi.optionalId = () => Joi.string().uuid();
 
