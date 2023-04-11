@@ -36,7 +36,6 @@ const getCtaBtn: (style: ButtonStyle, label: string, route: string) => ReactNode
 const EXCERPT_TEXT_LEN: number = 165
 
 const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
-
     const desc: string = props.certification.description.slice(0, EXCERPT_TEXT_LEN)
 
     const { skills, providers, dashedName }: {

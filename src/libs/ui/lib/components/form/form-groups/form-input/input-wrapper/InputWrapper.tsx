@@ -1,4 +1,11 @@
-import { Dispatch, forwardRef, ForwardRefExoticComponent, ReactNode, SetStateAction, useState } from 'react'
+import {
+    Dispatch,
+    forwardRef,
+    ForwardRefExoticComponent,
+    ReactNode,
+    SetStateAction,
+    useState,
+} from 'react'
 import classNames from 'classnames'
 
 import { IconSolid } from '../../../../svgs'
@@ -20,9 +27,11 @@ interface InputWrapperProps {
     readonly type: 'checkbox' | 'password' | 'rating' | 'text' | 'textarea'
 }
 
-const InputWrapper: ForwardRefExoticComponent<InputWrapperProps & {ref?: React.ForwardedRef<HTMLDivElement>}> = forwardRef<HTMLDivElement, InputWrapperProps>((props: InputWrapperProps, ref) => {
+const InputWrapper: ForwardRefExoticComponent<InputWrapperProps & { ref?: React.Ref<HTMLDivElement> }>
+= forwardRef<HTMLDivElement, InputWrapperProps>((props: InputWrapperProps, ref) => {
 
-    const [focusStyle, setFocusStyle]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
+    const [focusStyle, setFocusStyle]: [string | undefined, Dispatch<SetStateAction<string | undefined>>]
+        = useState<string | undefined>()
 
     const isShowError: () => boolean = () => !!props.error && !!props.dirty && !props.hideInlineErrors
     const showError: boolean = isShowError()
@@ -42,6 +51,14 @@ const InputWrapper: ForwardRefExoticComponent<InputWrapperProps & {ref?: React.F
         </div>
     )
 
+    function clearFocusStyle(): void {
+        setFocusStyle(undefined)
+    }
+
+    function setStyleForFocus(): void {
+        setFocusStyle(styles.focus)
+    }
+
     return (
         <div
             className={classNames(styles['input-wrapper'], 'input-wrapper', styles[props.type])}
@@ -51,8 +68,8 @@ const InputWrapper: ForwardRefExoticComponent<InputWrapperProps & {ref?: React.F
 
             <div
                 className={formFieldClasses}
-                onBlur={() => setFocusStyle(undefined)}
-                onFocus={() => setFocusStyle(styles.focus)}
+                onBlur={clearFocusStyle}
+                onFocus={setStyleForFocus}
             >
                 <label
                     className={styles.label}

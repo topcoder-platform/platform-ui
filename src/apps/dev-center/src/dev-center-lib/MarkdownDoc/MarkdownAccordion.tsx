@@ -1,37 +1,43 @@
-import * as React from 'react'
+import {
+    Children,
+    Dispatch,
+    FC, isValidElement, ReactNode, SetStateAction, useState,
+} from 'react'
 
 import { IconSolid, useWindowSize, Breakpoints } from '~/libs/ui'
 
 import styles from './MarkdownAccordion.module.scss'
 
 interface MarkdownAccordionProps {
-    children: React.ReactNode
+    children: ReactNode
 }
 
-export const MarkdownAccordion: React.FC<MarkdownAccordionProps> = props => {
-    const { children: childrenProp }: MarkdownAccordionProps = props
+export const MarkdownAccordion: FC<MarkdownAccordionProps> = props => {
 
     const [collapsed, setCollapsed]: [
         boolean,
-        React.Dispatch<React.SetStateAction<boolean>>
-    ] = React.useState<boolean>(false)
+        Dispatch<SetStateAction<boolean>>
+    ] = useState<boolean>(false)
     const size: ReturnType<typeof useWindowSize> = useWindowSize()
 
     if (size && size.width > Breakpoints.lgMax) {
-        return <>{childrenProp}</>
+        return <>{props.children}</>
     }
 
-    const [header, ...children]: ReturnType<typeof React.Children.toArray>
-        = React.Children.toArray(childrenProp)
+    const [header, ...childs]: ReturnType<typeof Children.toArray>
+        = Children.toArray(props.children)
+
+    function handleClickOutline(): void {
+        if (isValidElement(header)) {
+            setCollapsed(!collapsed)
+        }
+    }
+
     return (
         <div className={`${styles.accordion}`}>
             <div
                 className={`${styles['pane-outline']}`}
-                onClick={() => {
-                    if (React.isValidElement(header)) {
-                        setCollapsed(!collapsed)
-                    }
-                }}
+                onClick={handleClickOutline}
             >
                 {header}
                 {collapsed ? (
@@ -41,7 +47,7 @@ export const MarkdownAccordion: React.FC<MarkdownAccordionProps> = props => {
                 )}
             </div>
 
-            {!collapsed && children}
+            {!collapsed && childs}
         </div>
     )
 }

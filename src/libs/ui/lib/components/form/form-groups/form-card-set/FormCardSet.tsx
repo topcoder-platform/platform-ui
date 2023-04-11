@@ -37,7 +37,7 @@ const FormCardSet: React.FC<FormCardSetProps> = (props: FormCardSetProps) => {
 
     const getButton: (card: FormCard, selected: boolean) => JSX.Element = (card, selected) => (
         <Button
-            onClick={evt => props.onChange(evt)}
+            onClick={props.onChange}
             label={selected ? 'Selected' : 'Choose package'}
             buttonStyle={selected ? 'primary' : 'secondary'}
             type={selected ? 'button' : 'submit'}

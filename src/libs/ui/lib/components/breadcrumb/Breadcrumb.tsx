@@ -28,6 +28,7 @@ const Breadcrumb: FC<BreadcrumbProps> = (props: BreadcrumbProps) => {
                                     <BreadcrumbItem
                                         index={index + 1}
                                         item={item}
+                                        // eslint-disable-next-line react/no-array-index-key
                                         key={index}
                                     />
                                 ))
@@ -63,6 +64,7 @@ const Breadcrumb: FC<BreadcrumbProps> = (props: BreadcrumbProps) => {
                             <BreadcrumbItem
                                 index={index + 1}
                                 item={item}
+                                // eslint-disable-next-line react/no-array-index-key
                                 key={index}
                             />
                         ))}

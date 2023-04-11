@@ -25,7 +25,7 @@ const WorkLoginPrompt: FC<WorkLoginPromptProps> = props => {
     const location: Location = useLocation()
     const navigate: NavigateFunction = useNavigate()
     const customReturnUrl: string | undefined = useParams().retUrl
-    
+
     useEffect(() => {
         if (props.isLoggedIn) {
             navigate(props.nextPageUrl || ROUTES.DASHBOARD_PAGE);

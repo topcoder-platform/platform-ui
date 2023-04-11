@@ -10,7 +10,11 @@ import { UserProfile } from '../user-profile.model'
 import { ProfileContextData } from './profile-context-data.model'
 import profileContext, { defaultProfileContextData } from './profile.context'
 
-export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { children: ReactNode }) => {
+export interface ProfileProviderProps {
+    children: ReactNode
+}
+
+export const ProfileProvider: FC<ProfileProviderProps> = (props: ProfileProviderProps) => {
 
     const [profileContextData, setProfileContextData]:
         [ProfileContextData, Dispatch<SetStateAction<ProfileContextData>>]
@@ -61,7 +65,7 @@ export const ProfileProvider: FC<{ children: ReactNode }> = ({ children }: { chi
 
     return (
         <profileContext.Provider value={profileContextData}>
-            {children}
+            {props.children}
         </profileContext.Provider>
     )
 }

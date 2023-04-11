@@ -1,4 +1,13 @@
-import { createRef, Dispatch, FC, RefObject, SetStateAction, useEffect, useState } from 'react'
+import {
+    ChangeEvent,
+    createRef,
+    Dispatch,
+    FC,
+    RefObject,
+    SetStateAction,
+    useEffect,
+    useState,
+} from 'react'
 
 import { Button } from '../../../../button'
 import { useCheckIsMobile } from '../../../../../hooks'
@@ -13,6 +22,7 @@ interface InputFilePickerProps {
     }
     readonly name: string
     readonly onChange: (fileList: FileList | undefined) => void
+    // eslint-disable-next-line react/no-unused-prop-types
     readonly value?: InputValue
 }
 
@@ -22,7 +32,8 @@ const InputFilePicker: FC<InputFilePickerProps> = (props: InputFilePickerProps) 
 
     const fileInputRef: RefObject<HTMLInputElement> = createRef<HTMLInputElement>()
 
-    const [files, setFiles]: [FileList | undefined, Dispatch<SetStateAction<FileList | undefined>>] = useState<FileList | undefined>(undefined)
+    const [files, setFiles]: [FileList | undefined, Dispatch<SetStateAction<FileList | undefined>>]
+        = useState<FileList | undefined>(undefined)
     const [fileName, setFileName]: [string | undefined, Dispatch<SetStateAction<string | undefined>>]
         = useState<string | undefined>()
 
@@ -37,6 +48,21 @@ const InputFilePicker: FC<InputFilePickerProps> = (props: InputFilePickerProps) 
         fileName,
     ])
 
+    function handleButtonClick(): void {
+        if (fileName && fileInputRef.current) {
+            setFiles(undefined)
+            fileInputRef.current.value = ''
+            props.onChange(undefined)
+        } else {
+            fileInputRef.current?.click()
+        }
+    }
+
+    function handleOnChange(event: ChangeEvent<HTMLInputElement>): void {
+        setFiles(event.target.files ?? undefined)
+        props.onChange(event.target.files ?? undefined)
+    }
+
     return (
         <div className={styles.filePicker}>
             {
@@ -46,15 +72,7 @@ const InputFilePicker: FC<InputFilePickerProps> = (props: InputFilePickerProps) 
                 buttonStyle='secondary'
                 className={styles.filePickerButton}
                 label={fileName ? 'Clear' : 'Browse'}
-                onClick={() => {
-                    if (fileName && fileInputRef.current) {
-                        setFiles(undefined)
-                        fileInputRef.current.value = ''
-                        props.onChange(undefined)
-                    } else {
-                        fileInputRef.current?.click()
-                    }
-                }}
+                onClick={handleButtonClick}
                 size={isMobile ? 'xs' : 'sm'}
             />
             <input
@@ -63,10 +81,7 @@ const InputFilePicker: FC<InputFilePickerProps> = (props: InputFilePickerProps) 
                 accept={props.fileConfig?.acceptFileType || '*'}
                 className={styles.filePickerInput}
                 ref={fileInputRef}
-                onChange={event => {
-                    setFiles(event.target.files ?? undefined)
-                    props.onChange(event.target.files ?? undefined)
-                }}
+                onChange={handleOnChange}
                 size={props.fileConfig?.maxFileSize || Infinity}
             />
         </div>

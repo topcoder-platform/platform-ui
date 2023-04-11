@@ -1,137 +1,106 @@
-import * as React from 'react'
+import { identity } from 'lodash'
+import {
+    Dispatch,
+    FC,
+    MutableRefObject,
+    ReactNode,
+    RefObject,
+    SetStateAction,
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+} from 'react'
 
 import { useWindowSize } from '~/libs/ui'
 import { CopyButton } from '../CopyButton'
 
 import styles from './MarkdownCode.module.scss'
 
-interface MarkdownCodeProps {
-    children: React.ReactNode
-    code: string
-    lang?: string
-}
-
-export const MarkdownCode: React.FC<MarkdownCodeProps> = props => {
-    const { children, code, lang }: MarkdownCodeProps = props
-    const isTerminal: boolean = lang === 'terminal' || lang === 'console'
-    const [showLineNumbers, setShowLineNumbers]: [
-        boolean,
-        React.Dispatch<React.SetStateAction<boolean>>
-    ] = React.useState(!isTerminal)
-    const ref: React.RefObject<HTMLDivElement> = React.useRef<HTMLDivElement>(null)
-
-    const handleLineNumberVisibilityChange: (visibility: boolean) => void
-        = React.useCallback(
-            (visibility: boolean) => {
-                if (!isTerminal) {
-                    setShowLineNumbers(visibility)
-                }
-            },
-            [isTerminal],
-        )
-
-    return (
-        <div
-            className={`${styles.codeBlock} ${showLineNumbers ? styles['show-line-numbers'] : ''} hljs`}
-            ref={ref}
-        >
-            <LineNumbers
-                codeRef={ref}
-                showLineNumbers={showLineNumbers}
-                onVisibilityChange={handleLineNumberVisibilityChange}
-            />
-            {children}
-            <CopyButton className={styles['copy-btn']} text={code} />
-        </div>
-    )
-}
-
 interface LineNumbersProps {
-    codeRef: React.RefObject<HTMLDivElement>
+    codeRef: RefObject<HTMLDivElement>
     onVisibilityChange: (visibility: boolean) => void
     showLineNumbers: boolean
 }
 
-const LineNumbers: (props: LineNumbersProps) => React.ReactElement | null
-    = (props: LineNumbersProps): React.ReactElement | null => {
+const LineNumbers: FC<LineNumbersProps> = props => {
 
-        const { codeRef, showLineNumbers, onVisibilityChange }: LineNumbersProps
-            = props
-        const [lineNumbers, setLineNumbers]: [
-            Array<number>,
-            React.Dispatch<React.SetStateAction<Array<number>>>
-        ] = React.useState([1])
+    const [lineNumbers, setLineNumbers]: [
+        Array<number>,
+        Dispatch<SetStateAction<Array<number>>>
+    ] = useState([1])
 
-        const size: ReturnType<typeof useWindowSize> = useWindowSize()
+    const size: ReturnType<typeof useWindowSize> = useWindowSize()
 
-        // OnResizing
-        const debounceTimer: React.MutableRefObject<
-            ReturnType<typeof setTimeout> | undefined
-        > = React.useRef<ReturnType<typeof setTimeout>>()
-        React.useEffect(() => {
-            if (!size.width || !codeRef.current) {
-                return
-            }
+    // OnResizing
+    const debounceTimer: MutableRefObject<
+        ReturnType<typeof setTimeout> | undefined
+    > = useRef<ReturnType<typeof setTimeout>>()
 
-            if (debounceTimer.current) {
-                clearTimeout(debounceTimer.current)
-                debounceTimer.current = undefined
-            }
-
-            const pre: HTMLPreElement | null = codeRef.current.querySelector('pre')
-            if (!pre) {
-                return
-            }
-
-            const innerText: string = pre.innerText
-            const clientWidth: number = pre.clientWidth
-
-            const handleResizing: () => void = () => {
-                const result: Array<number> = computeLineNumbers(
-                    innerText,
-                    clientWidth,
-                )
-
-                if (result.length < 2) {
-                    onVisibilityChange(false)
-                } else {
-                    onVisibilityChange(true)
-                }
-
-                setLineNumbers(result)
-            }
-
-            debounceTimer.current = setTimeout(() => {
-                debounceTimer.current = undefined
-                handleResizing()
-            }, 100)
-
-            return () => {
-                clearTimeout(debounceTimer.current)
-            }
-        }, [size.width, onVisibilityChange, codeRef])
-
-        if (!showLineNumbers) {
-            return null
+    useEffect(() => {
+        if (!size.width || !props.codeRef.current) {
+            return undefined
         }
 
-        return (
-            <div className={styles.lineNumbers}>
-                {lineNumbers.map((n, index) => {
-                    const prev: number = index > 0 ? lineNumbers[index - 1] : -1
-                    return (
-                        <div
-                            key={`line-${index}`}
-                            className={`${styles.num} ${prev === n ? styles.hidden : ''
-                            }`}
-                        >
-                            {n}
-                        </div>
-                    )
-                })}
-            </div>
-        )
+        if (debounceTimer.current) {
+            clearTimeout(debounceTimer.current)
+            debounceTimer.current = undefined
+        }
+
+        const pre: HTMLPreElement | null = props.codeRef.current.querySelector('pre')
+        if (!pre) {
+            return undefined
+        }
+
+        const innerText: string = pre.innerText
+        const clientWidth: number = pre.clientWidth
+
+        const handleResizing: () => void = () => {
+            const result: Array<number> = computeLineNumbers(
+                innerText,
+                clientWidth,
+            )
+
+            if (result.length < 2) {
+                props.onVisibilityChange.call(undefined, false)
+            } else {
+                props.onVisibilityChange.call(undefined, true)
+            }
+
+            setLineNumbers(result)
+        }
+
+        debounceTimer.current = setTimeout(() => {
+            debounceTimer.current = undefined
+            handleResizing()
+        }, 100)
+
+        return () => {
+            clearTimeout(debounceTimer.current)
+        }
+    }, [size.width, props.onVisibilityChange, props.codeRef])
+
+    if (!props.showLineNumbers) {
+        return <></>
     }
+
+    return (
+        <div className={styles.lineNumbers}>
+            {lineNumbers.map((n, index) => {
+                const prev: number = index > 0 ? lineNumbers[index - 1] : -1
+                return (
+                    <div
+                        key={identity(`line-${index}`)}
+                        className={`${styles.num} ${prev === n ? styles.hidden : ''
+                        }`}
+                    >
+                        {n}
+                    </div>
+                )
+            })}
+        </div>
+    )
+}
 
 function measureText(text: string, canvas: HTMLCanvasElement): number {
     const context: CanvasRenderingContext2D | null = canvas.getContext('2d')
@@ -165,6 +134,46 @@ function computeLineNumbers(text: string, width: number): Array<number> {
     result.pop() // EOL character
 
     return result
+}
+
+interface MarkdownCodeProps {
+    children: ReactNode
+    code: string
+    lang?: string
+}
+
+export const MarkdownCode: FC<MarkdownCodeProps> = props => {
+    const isTerminal: boolean = props.lang === 'terminal' || props.lang === 'console'
+    const [showLineNumbers, setShowLineNumbers]: [
+        boolean,
+        Dispatch<SetStateAction<boolean>>
+    ] = useState(!isTerminal)
+    const ref: RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null)
+
+    const handleLineNumberVisibilityChange: (visibility: boolean) => void
+        = useCallback(
+            (visibility: boolean) => {
+                if (!isTerminal) {
+                    setShowLineNumbers(visibility)
+                }
+            },
+            [isTerminal],
+        )
+
+    return (
+        <div
+            className={`${styles.codeBlock} ${showLineNumbers ? styles['show-line-numbers'] : ''} hljs`}
+            ref={ref}
+        >
+            <LineNumbers
+                codeRef={ref}
+                showLineNumbers={showLineNumbers}
+                onVisibilityChange={handleLineNumberVisibilityChange}
+            />
+            {props.children}
+            <CopyButton className={styles['copy-btn']} text={props.code} />
+        </div>
+    )
 }
 
 export default MarkdownCode

@@ -33,7 +33,6 @@ const UserCertificationPreview: LazyLoadedComponent
 export enum LEARN_PATHS {
     certificate = '/certificate',
     completed = '/learn/completed',
-    myCertificate = '/learn/my-certificate',
     myLearning = '/learn/my-learning',
     fcc = '/learn/fcc',
     root = '/learn',

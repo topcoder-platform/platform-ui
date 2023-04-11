@@ -160,10 +160,8 @@ function getPriceDesignLegacy(price: WorkPrice, pageCount?: number, deviceCount?
         + (safePageCount * (safeDeviceCount - 1) * (price.perPage || 1))
 }
 
-function getPrizeSets(priceConfig: WorkPrice, packageName?: PricePackageName | undefined): Array<WorkPrize> {
-    if (!packageName) {
-        packageName = priceConfig.usePromo ? 'promo' : 'base'
-    }
+function getPrizeSets(priceConfig: WorkPrice, packageNameParam?: PricePackageName | undefined): Array<WorkPrize> {
+    const packageName: PricePackageName = packageNameParam ?? (priceConfig.usePromo ? 'promo' : 'base')
 
     const pricePackage: WorkPriceBreakdown | undefined = priceConfig.packages?.[packageName]
 

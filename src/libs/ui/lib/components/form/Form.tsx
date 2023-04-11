@@ -44,7 +44,10 @@ interface FormProps<ValueType, RequestType> {
     readonly shouldDisableButton?: (isPrimaryGroup: boolean, index: number) => boolean
 }
 
-const Form: <ValueType extends FormValue, RequestType extends FormValue>(props: FormProps<ValueType, RequestType>) => JSX.Element
+const Form: <
+    ValueType extends FormValue,
+    RequestType extends FormValue
+>(props: FormProps<ValueType, RequestType>) => JSX.Element
     = <ValueType extends FormValue, RequestType extends FormValue>(props: FormProps<ValueType, RequestType>) => {
 
         const [formDef, setFormDef]: [FormDefinition, Dispatch<SetStateAction<FormDefinition>>]
@@ -60,8 +63,10 @@ const Form: <ValueType extends FormValue, RequestType extends FormValue>(props: 
             = useState<RefObject<HTMLFormElement>>(createRef<HTMLFormElement>())
 
         // This will hold all the inputs
-        const [inputs, setInputs]: [Array<FormInputModel>, Dispatch<SetStateAction<Array<FormInputModel>>>] = useState<Array<FormInputModel>>(formGetInputFields(formDef.groups || []))
-        const [isFormInvalid, setFormInvalid]: [boolean, Dispatch<boolean>] = useState<boolean>(inputs.filter(item => !!item.error).length > 0)
+        const [inputs, setInputs]: [Array<FormInputModel>, Dispatch<SetStateAction<Array<FormInputModel>>>]
+            = useState<Array<FormInputModel>>(formGetInputFields(formDef.groups || []))
+        const [isFormInvalid, setFormInvalid]: [boolean, Dispatch<boolean>]
+            = useState<boolean>(inputs.filter(item => !!item.error).length > 0)
 
         useEffect(() => {
             if (!formRef.current?.elements) {
@@ -129,7 +134,14 @@ const Form: <ValueType extends FormValue, RequestType extends FormValue>(props: 
 
         async function onSubmitAsync(event: FormEvent<HTMLFormElement>): Promise<void> {
             const values: RequestType = props.requestGenerator(inputs)
-            formOnSubmitAsync<RequestType>(props.action || 'submit', event, formDef, values, props.save, props.onSuccess)
+            formOnSubmitAsync<RequestType>(
+                props.action || 'submit',
+                event,
+                formDef,
+                values,
+                props.save,
+                props.onSuccess,
+            )
                 .then(() => {
                     if (!props.resetFormAfterSave) {
                         setFormKey(Date.now())
@@ -149,22 +161,17 @@ const Form: <ValueType extends FormValue, RequestType extends FormValue>(props: 
 
         formInitializeValues(inputs, props.formValues)
 
-        const setOnClickOnReset: (button: FormButton) => FormButton = button => {
+        const setOnClickOnReset: (button: FormButton) => FormButton = button => (
             // if this is a reset button, set its onclick to reset
-            if (!!button.isReset) {
-                button = {
-                    ...button,
-                    onClick: onReset,
-                }
-            }
+            !button.isReset ? button : { ...button, onClick: onReset }
+        )
 
-            return button
-        }
+        const createButtonGroup: (groups: ReadonlyArray<FormButton>, isPrimaryGroup: boolean) => Array<JSX.Element>
+        = (groups, isPrimaryGroup) => groups.map((button, index) => {
+            Object.assign(button, setOnClickOnReset(button))
 
-        const createButtonGroup: (groups: ReadonlyArray<FormButton>, isPrimaryGroup: boolean) => Array<JSX.Element> = (groups, isPrimaryGroup) => groups.map((button, index) => {
-            button = setOnClickOnReset(button)
-
-            const disabled: boolean = (button.isSubmit && isFormInvalid) || !!props.shouldDisableButton?.(isPrimaryGroup, index)
+            const disabled: boolean = (button.isSubmit && isFormInvalid)
+                || !!props.shouldDisableButton?.(isPrimaryGroup, index)
 
             return (
                 <Button

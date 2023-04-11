@@ -23,6 +23,10 @@ const PrivacyPolicyModal: FC<PrivacyPolicyModalProps>
             setIsSupportOpen(true)
         }
 
+        function hideSupportModal(): void {
+            setIsSupportOpen(false)
+        }
+
         useEffect(() => {
             document.addEventListener('open:support', openSupportModal)
             return () => document.removeEventListener('open:support', openSupportModal)
@@ -33,7 +37,7 @@ const PrivacyPolicyModal: FC<PrivacyPolicyModalProps>
                 <ProfileProvider>
                     <ContactSupportModal
                         isOpen={isSupportOpen}
-                        onClose={() => setIsSupportOpen(false)}
+                        onClose={hideSupportModal}
                     />
                 </ProfileProvider>
 

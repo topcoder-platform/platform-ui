@@ -29,9 +29,14 @@ interface InputRatingProps {
 
 const InputRating: FC<InputRatingProps> = (props: InputRatingProps) => {
 
-    const [rating, setRating]: [number | undefined, Dispatch<SetStateAction<number | undefined>>] = useState<number | undefined>(!!props.value ? (+props.value / 2) : undefined)
+    const [rating, setRating]: [number | undefined, Dispatch<SetStateAction<number | undefined>>]
+        = useState<number | undefined>(!!props.value ? (+props.value / 2) : undefined)
 
     const inputRef: RefObject<HTMLInputElement> = createRef<HTMLInputElement>()
+
+    function handleRating(index: number): () => void {
+        return setRating.bind(undefined, index)
+    }
 
     const stars: Array<JSX.Element> = []
     // ratings are base 10, but we're only showing 5 stars,
@@ -44,7 +49,7 @@ const InputRating: FC<InputRatingProps> = (props: InputRatingProps) => {
                 className={className}
                 icon={IconSolid.StarIcon}
                 name={`${index}`}
-                onClick={() => setRating(index)}
+                onClick={handleRating}
                 size='xl'
                 tabIndex={-1}
                 elementType='div'

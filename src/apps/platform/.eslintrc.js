@@ -20,7 +20,7 @@ module.exports = {
     },
     plugins: [
         '@typescript-eslint',
-        'no-null',
+        'unicorn',
         'ordered-imports',
         'react',
         'react-hooks'
@@ -34,6 +34,7 @@ module.exports = {
         }
     },
     rules: {
+        '@typescript-eslint/ban-ts-comment': 'off',
         '@typescript-eslint/ban-types': [
             'error',
             {
@@ -49,7 +50,7 @@ module.exports = {
                 allowExpressions: true
             }
         ],
-        '@typescript-eslint/no-explicit-any': 'error',
+        '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/no-inferrable-types': 'off',
         '@typescript-eslint/no-shadow': 'error',
         '@typescript-eslint/no-unused-vars': 'error',
@@ -88,9 +89,10 @@ module.exports = {
             'error',
             'prefer-single'
         ],
-        'jsx-a11y/click-events-have-key-events': 'warn',
-        'jsx-a11y/no-noninteractive-element-interactions': 'warn',
-        'jsx-a11y/no-static-element-interactions': 'warn',
+        'jsx-a11y/click-events-have-key-events': 'off',
+        'jsx-a11y/no-noninteractive-element-interactions': 'off',
+        'jsx-a11y/no-static-element-interactions': 'off',
+        'jsx-a11y/label-has-associated-control': 'off',
         'jsx-a11y/tabindex-no-positive': [
             'warn'
         ],
@@ -106,7 +108,6 @@ module.exports = {
         ],
         'no-extra-boolean-cast': 'off',
         'no-nested-ternary': 'off',
-        'no-null/no-null': 'error',
         'no-param-reassign': [
             'error',
             {
@@ -180,6 +181,7 @@ module.exports = {
                 ],
             },
         ],
+        'no-empty': ["error", { "allowEmptyCatch": true }],
         'padded-blocks': 'off',
         'padding-line-between-statements': [
             'error',
@@ -262,12 +264,14 @@ module.exports = {
         'react/jsx-props-no-spreading': [
             0
         ],
+        'react/no-danger': 'off',
         'react/react-in-jsx-scope': 'off',
         'react/require-default-props': 'off',
         'semi': [
             'error',
             'never',
         ],
-        'sort-keys': 'error'
+        'sort-keys': 'error',
+        'unicorn/no-null': 'error'
     },
 };

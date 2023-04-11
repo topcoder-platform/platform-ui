@@ -9,7 +9,10 @@ import { FormValue } from './form-value.model'
 
 export type ValidationEvent = 'blur' | 'change' | 'submit' | 'initial'
 
-export function getInputElement(formElements: HTMLFormControlsCollection, fieldName: string): HTMLInputElement | undefined {
+export function getInputElement(
+    formElements: HTMLFormControlsCollection,
+    fieldName: string,
+): HTMLInputElement | undefined {
     return formElements.namedItem(fieldName) as HTMLInputElement
 }
 
@@ -79,6 +82,12 @@ export function onReset<T extends FormValue>(inputs: ReadonlyArray<FormInputMode
     })
 }
 
+type CustomFormValidator = (
+    formElements: HTMLFormControlsCollection,
+    event: ValidationEvent,
+    inputs: ReadonlyArray<FormInputModel>,
+) => boolean
+
 export async function onSubmitAsync<T extends FormValue>(
     action: FormAction,
     event: FormEvent<HTMLFormElement>,
@@ -86,7 +95,7 @@ export async function onSubmitAsync<T extends FormValue>(
     formValue: T,
     save: (value: T) => Promise<void>,
     onSuccess?: () => void,
-    customValidateForm?: (formElements: HTMLFormControlsCollection, event: ValidationEvent, inputs: ReadonlyArray<FormInputModel>) => boolean,
+    customValidateForm?: CustomFormValidator,
 ): Promise<void> {
 
     event.preventDefault()

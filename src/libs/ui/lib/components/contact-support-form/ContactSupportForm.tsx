@@ -29,7 +29,7 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
 
     useEffect(() => {
         if (!loading && saveOnSuccess) {
-            props.onSave.call(null)
+            props.onSave.call(undefined)
         }
     }, [loading, saveOnSuccess, props.onSave])
 

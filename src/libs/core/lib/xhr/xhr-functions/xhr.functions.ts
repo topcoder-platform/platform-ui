@@ -41,12 +41,22 @@ export async function patchAsync<T, R>(url: string, data: T, xhrInstance: AxiosI
     return output.data
 }
 
-export async function postAsync<T, R>(url: string, data: T, config?: AxiosRequestConfig<T>, xhrInstance: AxiosInstance = globalInstance): Promise<R> {
+export async function postAsync<T, R>(
+    url: string,
+    data: T,
+    config?: AxiosRequestConfig<T>,
+    xhrInstance: AxiosInstance = globalInstance,
+): Promise<R> {
     const output: AxiosResponse<R> = await xhrInstance.post(url, data, config)
     return output.data
 }
 
-export async function putAsync<T, R>(url: string, data: T, config?: AxiosRequestConfig<T>, xhrInstance: AxiosInstance = globalInstance): Promise<R> {
+export async function putAsync<T, R>(
+    url: string,
+    data: T,
+    config?: AxiosRequestConfig<T>,
+    xhrInstance: AxiosInstance = globalInstance,
+): Promise<R> {
     const output: AxiosResponse<R> = await xhrInstance.put(url, data, config)
     return output.data
 }

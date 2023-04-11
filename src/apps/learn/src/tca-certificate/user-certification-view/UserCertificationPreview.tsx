@@ -1,14 +1,10 @@
-import { FC, useContext, useLayoutEffect } from 'react'
-import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
+import { FC } from 'react'
+import { Params, useParams } from 'react-router-dom'
 
+import { UserProfile } from '~/libs/core'
 import { LoadingSpinner } from '~/libs/ui'
-import { profileContext, ProfileContextData, UserProfile } from '~/libs/core'
 
-import {
-    TCACertificationEnrollmentBase,
-    TCACertificationProviderData,
-    useGetTCACertification,
-} from '../../lib'
+import { TCACertificationEnrollmentBase, TCACertificationProviderData, useGetTCACertification } from '../../lib'
 
 import UserCertificationViewBase from './UserCertificationViewBase'
 
@@ -21,31 +17,23 @@ const placeholderUserProfile: UserProfile = {
 const placeholderEnrollment: TCACertificationEnrollmentBase = {
     completedAt: new Date()
         .toISOString(),
-    completionUuid: 'test-uuid',
+    completionUuid: 'certificate-number',
     userHandle: 'your_handle',
     userName: 'Your Name',
 } as TCACertificationEnrollmentBase
 
 const UserCertificationPreview: FC<{}> = () => {
-    const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
-    const navigate: NavigateFunction = useNavigate()
-
     const routeParams: Params<string> = useParams()
 
     const {
         certification,
+        ready,
     }: TCACertificationProviderData
         = useGetTCACertification(`${routeParams.certification}`)
 
-    useLayoutEffect(() => {
-        if (profileReady && !profile) {
-            navigate('..')
-        }
-    }, [navigate, profile, profileReady])
-
     return (
         <>
-            <LoadingSpinner hide={profileReady} />
+            <LoadingSpinner hide={ready} />
 
             <UserCertificationViewBase
                 enrollment={placeholderEnrollment}

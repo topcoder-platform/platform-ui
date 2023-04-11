@@ -7,10 +7,10 @@ import { WorkContextData } from './work-context-data.model'
 import { Work, workGetAllAsync } from './work-functions'
 import { default as workContext, defaultWorkContextData } from './work.context'
 
-export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { children: ReactNode }) => {
+export const WorkProvider: FC<{ children: ReactNode }> = props => {
 
     const initialized = useRef(false);
-    
+
     const [workContextData, setWorkContextData]: [WorkContextData, Dispatch<SetStateAction<WorkContextData>>]
         = useState<WorkContextData>(defaultWorkContextData)
 
@@ -22,7 +22,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
         if (!!workContextData.initialized || !profile) {
             return
         }
-        
+
 
         function remove(workId: string, work: Array<Work>): void {
             const workList: Array<Work> = [...work]
@@ -121,7 +121,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
 
     return (
         <workContext.Provider value={workContextData}>
-            {children}
+            {props.children}
         </workContext.Provider>
     )
 }

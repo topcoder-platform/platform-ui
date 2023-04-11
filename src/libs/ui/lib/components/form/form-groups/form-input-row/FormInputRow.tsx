@@ -12,46 +12,45 @@ interface FormInputRowProps {
     input: FormInputModel
 }
 
-const FormInputRow: (props: FormInputRowProps) => JSX.Element = (props: FormInputRowProps) => {
-
-    const { children, index, input }: FormInputRowProps = props
+const FormInputRow: (props: FormInputRowProps) => JSX.Element
+= (props: FormInputRowProps) => {
 
     // if there is no title or instructions, just return the children
-    if (!input.instructions && !input.title) {
+    if (!props.input.instructions && !props.input.title) {
         return (
             <>
-                {children}
+                {props.children}
             </>
         )
     }
 
-    const title: JSX.Element = !input.title
+    const title: JSX.Element = !props.input.title
         ? <></>
         : (
-            <h4 className={styles[`input-title-${index}`]}>
-                {input.title}
+            <h4 className={styles[`input-title-${props.index}`]}>
+                {props.input.title}
             </h4>
         )
 
-    const inputRow: JSX.Element = !input.instructions
+    const inputRow: JSX.Element = !props.input.instructions
         ? (
             <div>
-                {children}
+                {props.children}
             </div>
         )
         : (
             <div className={styles['input-row']}>
                 <div className={classNames(
                     styles['input-instructions'],
-                    styles[input.type],
+                    styles[props.input.type],
                     'body-small',
                     'font-black-40',
                 )}
                 >
-                    {input.instructions}
+                    {props.input.instructions}
                 </div>
                 <div className={styles.input}>
-                    {children}
+                    {props.children}
                 </div>
             </div>
         )

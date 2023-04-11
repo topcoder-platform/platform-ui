@@ -19,15 +19,18 @@ export interface LoadingSpinnerProps {
     type?: LoadingSpinnerType
 }
 
-const LoadingSpinner: FC<LoadingSpinnerProps> = props => {
-
+const LoadingSpinner: FC<LoadingSpinnerProps> = (props: LoadingSpinnerProps) => {
     if (!!props.hide) {
         return <></>
     }
 
     const isOverlay: boolean = props.type === 'Overlay'
     return (
-        <div className={classNames(styles['loading-spinner'], styles.show, { [styles.overlay]: isOverlay }, props.className)}>
+        <div
+            className={
+                classNames(styles['loading-spinner'], styles.show, { [styles.overlay]: isOverlay }, props.className)
+            }
+        >
             <PuffLoader color='#2196f3' loading size={100} />
         </div>
     )

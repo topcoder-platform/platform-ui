@@ -7,6 +7,7 @@ import {
     SetStateAction,
     useCallback,
     useLayoutEffect,
+    useMemo,
     useRef,
     useState,
 } from 'react'
@@ -96,7 +97,9 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
     )
     const shareModal: TCAShareCertificateModalData = useTCAShareCertificateModal(ssrCertUrl)
 
-    const renderShareActions: boolean = !!props.isOwner && !props.isModalView
+    const renderShareActions: boolean = useMemo(() => (
+        !!props.isOwner && !props.isModalView
+    ), [props.isOwner, props.isModalView])
 
     const getCertificateCanvas: () => Promise<HTMLCanvasElement | void>
         = useCertificateCanvas(certificateElRef)
