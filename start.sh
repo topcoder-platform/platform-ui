@@ -1,3 +1,6 @@
+# NOTE: DO NOT run this file directly,
+# please run `yarn start` instead!
+
 export ESLINT_NO_DEV_ERRORS=true
 export HTTPS=true
 export SSL_CRT_FILE=ssl/server.crt
