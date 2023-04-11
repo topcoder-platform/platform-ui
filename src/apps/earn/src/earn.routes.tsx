@@ -1,5 +1,4 @@
 import { ToolTitle } from '~/config'
-
 import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
 
 const EarnAppRoot: LazyLoadedComponent = lazyLoad(() => import('./EarnApp'))
@@ -34,7 +33,7 @@ const GigsApply: LazyLoadedComponent = lazyLoad(
 const MyGigs: LazyLoadedComponent = lazyLoad(
     () => import('./routes/MyGigsPage'),
 )
-    
+
 export enum EARN_APP_PATHS {
     root = '/earn',
     gigs = '/earn/gigs',

@@ -1,5 +1,5 @@
-import { EnvironmentConfig } from "~/config"
-import { Page } from "~/libs/ui"
+import { EnvironmentConfig } from '~/config'
+import { Page } from '~/libs/ui'
 
 const challengesPath: string = `${EnvironmentConfig.API.V5}/challenges`
 const customerPaymentPath: string = `${EnvironmentConfig.API.V5}/customer-payments`

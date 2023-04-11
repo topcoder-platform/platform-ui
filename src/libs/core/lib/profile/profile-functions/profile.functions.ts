@@ -1,4 +1,4 @@
-import { tokenGetAsync, userGetDiceStatusAsync, TokenModel } from '../../auth'
+import { tokenGetAsync, TokenModel, userGetDiceStatusAsync } from '../../auth'
 import { EditNameRequest } from '../edit-name-request.model'
 import { UserProfile } from '../user-profile.model'
 import { UserVerify } from '../user-verify.model'

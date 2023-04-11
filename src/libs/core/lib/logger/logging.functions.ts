@@ -1,12 +1,11 @@
 import { datadogLogs } from '@datadog/browser-logs'
+import { EnvironmentConfig, GlobalConfig } from '~/config'
 
-import { GlobalConfig, EnvironmentConfig } from '~/config'
-
-let initialized: boolean = false;
+let initialized: boolean = false
 
 export function initialize(config: GlobalConfig): void {
     if (initialized) {
-        return;
+        return
     }
 
     // if we don't have a token and service,
@@ -22,19 +21,19 @@ export function initialize(config: GlobalConfig): void {
         service: config.LOGGING.SERVICE,
         silentMultipleInit: true,
     })
-    
-    initialized = true;
+
+    initialized = true
     info(`initialized logging for ${config.ENV}`)
 }
 
 export function error(message: string, messageContext?: object): void {
-    initialize(EnvironmentConfig);
+    initialize(EnvironmentConfig)
 
     datadogLogs.logger.error(message, messageContext)
 }
 
 export function info(message: string, messageContext?: object): void {
-    initialize(EnvironmentConfig);
+    initialize(EnvironmentConfig)
 
     datadogLogs.logger.info(message, messageContext)
 }

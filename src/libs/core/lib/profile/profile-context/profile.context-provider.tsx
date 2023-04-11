@@ -1,7 +1,6 @@
 import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react'
 
 import { userUpdatePasswordAsync } from '../../auth'
-
 import { ChangePasswordRequest } from '../change-password-request.model'
 import { EditNameRequest } from '../edit-name-request.model'
 import { profileEditNameAsync, profileGetLoggedInAsync } from '../profile-functions'

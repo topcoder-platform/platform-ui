@@ -10,9 +10,9 @@ import {
     WorkStatusFilter,
 } from '../../lib'
 import { workDetailOrDraftRoute } from '../../self-service.routes'
+import { WorkNoResults } from '../../components/work-table'
 
 import { WorkListColumnField, workListColumns } from './work-table.config'
-import { WorkNoResults } from '../../components/work-table'
 
 interface WorkTableProps {
     workItems: ReadonlyArray<Work> | undefined
@@ -41,7 +41,7 @@ const WorkTable: FC<WorkTableProps> = props => {
             filteredColumns.splice(filteredColumns.findIndex(c => c.label === WorkListColumnField.status), 1)
         }
 
-        return filteredColumns;
+        return filteredColumns
     }, [props.statusFilter])
 
     useEffect(() => { clearCachedChallengeId() }, [])

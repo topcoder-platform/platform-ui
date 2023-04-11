@@ -1,6 +1,6 @@
-
 import { xhrGetAsync, xhrPatchAsync } from '../../../xhr'
 import { AuthUser } from '../../authentication-functions/auth-user.model'
+
 import { user as userEndpoint } from './user-endpoint.config'
 
 export interface MfaStatusResult {

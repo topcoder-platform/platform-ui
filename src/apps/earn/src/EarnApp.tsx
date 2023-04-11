@@ -1,11 +1,10 @@
 import { FC, useContext } from 'react'
 import { Outlet, Routes } from 'react-router-dom'
-
-import { RouterContextData, routerContext } from '~/libs/core'
-
-import { toolTitle } from './earn.routes'
 import { Provider } from 'react-redux'
 
+import { routerContext, RouterContextData } from '~/libs/core'
+
+import { toolTitle } from './earn.routes'
 import store from './store'
 
 const EarnApp: FC<{}> = () => {

@@ -31,7 +31,7 @@ import {
 } from '../../../lib'
 import { WorkServicePrice } from '../../../components/work-service-price'
 import { WorkTypeBanner } from '../../../components/work-type-banner'
-import { workDashboardRoute, selfServiceStartRoute } from '../../../self-service.routes'
+import { selfServiceStartRoute, workDashboardRoute } from '../../../self-service.routes'
 import { IntakeFormsBreadcrumb } from '../intake-forms-breadcrumb'
 
 import { BugHuntFormConfig } from './bug-hunt.form.config'

@@ -1,6 +1,7 @@
 import { FC } from 'react'
 
 import { BaseModal, Button, PageDivider, useCheckIsMobile } from '~/libs/ui'
+
 import { GameBadge } from '../../game-badge.model'
 
 import styles from './BadgeAssignedModal.module.scss'

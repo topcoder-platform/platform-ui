@@ -16,8 +16,6 @@ import {
     useGetStripeProduct,
 } from '../../lib'
 import { EnrollCtaBtn } from '../enroll-cta-btn'
-import { EnvironmentConfig } from '../../../../config'
-import { StripeProduct, useGetStripeProduct } from '../../learn-lib/data-providers/payments'
 
 import styles from './CertificationDetailsSidebar.module.scss'
 

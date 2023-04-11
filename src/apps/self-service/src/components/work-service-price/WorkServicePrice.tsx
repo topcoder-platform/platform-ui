@@ -1,10 +1,11 @@
 import { FC } from 'react'
+import classNames from 'classnames'
 
 import { IconWrapper, textFormatMoneyLocaleString } from '~/libs/ui'
 
-import styles from './WorkServicePrice.module.scss'
 import { HelpIcon } from '../help-icon'
-import classNames from 'classnames'
+
+import styles from './WorkServicePrice.module.scss'
 
 export interface WorkServicePriceProps {
   duration: number,

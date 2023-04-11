@@ -1,4 +1,5 @@
 import { Context, createContext, ReactElement } from 'react'
+
 import { PlatformRoute } from '../platform-route.model'
 
 export interface RouterContextData {

@@ -2,16 +2,16 @@ import { FC, useContext, useEffect } from 'react'
 import { Location, NavigateFunction, useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import {
+    BackArrowIcon,
     Button,
     PageDivider,
-    BackArrowIcon,
 } from '~/libs/ui'
-import { RouterContextData, authUrlLogin, routerContext } from '~/libs/core'
+import { authUrlLogin, routerContext, RouterContextData } from '~/libs/core'
 
 import { ROUTES } from '../../config'
+import { setProgressItem } from '../../actions/progress'
 
 import styles from './WorkLoginPrompt.module.scss'
-import { setProgressItem } from '../../actions/progress'
 
 interface WorkLoginPromptProps {
   isLoggedIn?: boolean
@@ -28,10 +28,10 @@ const WorkLoginPrompt: FC<WorkLoginPromptProps> = props => {
 
     useEffect(() => {
         if (props.isLoggedIn) {
-            navigate(props.nextPageUrl || ROUTES.DASHBOARD_PAGE);
-            setProgressItem(5);
+            navigate(props.nextPageUrl || ROUTES.DASHBOARD_PAGE)
+            setProgressItem(5)
         }
-    }, [navigate, props.isLoggedIn, props.nextPageUrl]);
+    }, [navigate, props.isLoggedIn, props.nextPageUrl])
 
     function signUp(): void {
         const signUpUrl: string = routeData.getSignupUrl(
@@ -43,7 +43,7 @@ const WorkLoginPrompt: FC<WorkLoginPromptProps> = props => {
     }
 
     function onBack(): void {
-        navigate(props.previousPageUrl ?? "/self-service/work/new/website-design-legacy/page-details")
+        navigate(props.previousPageUrl ?? '/self-service/work/new/website-design-legacy/page-details')
     }
 
     return (

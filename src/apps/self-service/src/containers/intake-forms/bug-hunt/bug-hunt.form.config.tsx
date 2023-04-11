@@ -13,7 +13,6 @@ import { ChallengeMetadataName, ChallengeMetadataTitle } from '../../../lib'
 import { SupportInfoCard } from '../support-info-card'
 import { BugHuntPricingConfig } from '../../../config'
 
-
 export const BugHuntFormConfig: FormDefinition = {
     buttons: {
         primaryGroup: [

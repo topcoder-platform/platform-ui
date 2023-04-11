@@ -1,5 +1,4 @@
 import { sprig, SprigAPI } from '@sprig-technologies/sprig-browser'
-
 import { EnvironmentConfig } from '~/config'
 
 const Sprig: SprigAPI = sprig.configure({

@@ -1,4 +1,14 @@
-import { Dispatch, FC, ReactNode, SetStateAction, useContext, useEffect, useRef, useState } from 'react'
+import {
+    Dispatch,
+    FC,
+    MutableRefObject,
+    ReactNode,
+    SetStateAction,
+    useContext,
+    useEffect,
+    useRef,
+    useState,
+} from 'react'
 
 import { logError, profileContext, ProfileContextData, UserProfile } from '~/libs/core'
 
@@ -9,7 +19,7 @@ import { default as workContext, defaultWorkContextData } from './work.context'
 
 export const WorkProvider: FC<{ children: ReactNode }> = props => {
 
-    const initialized = useRef(false);
+    const initialized: MutableRefObject<boolean> = useRef(false)
 
     const [workContextData, setWorkContextData]: [WorkContextData, Dispatch<SetStateAction<WorkContextData>>]
         = useState<WorkContextData>(defaultWorkContextData)
@@ -22,7 +32,6 @@ export const WorkProvider: FC<{ children: ReactNode }> = props => {
         if (!!workContextData.initialized || !profile) {
             return
         }
-
 
         function remove(workId: string, work: Array<Work>): void {
             const workList: Array<Work> = [...work]
@@ -75,6 +84,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = props => {
                         work: output,
                     }
                     setWorkContextData(messageContextData)
+                    // eslint-disable-next-line no-await-in-loop
                     nextSet = await workGetAllAsync(safeProfile, pageNumber += 1)
                 }
 
@@ -111,7 +121,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = props => {
         }
 
         if (!initialized.current) {
-            initialized.current = true;
+            initialized.current = true
             getAndSetWork()
         }
     }, [

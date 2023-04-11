@@ -1,5 +1,6 @@
 import { EnvironmentConfig } from '~/config'
 import { xhrPostAsync } from '~/libs/core'
+
 import { GameBadge } from '../../game-lib'
 
 import { UpdateBadgeRequest } from './updated-badge-request.model'

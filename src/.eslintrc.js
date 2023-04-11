@@ -49,7 +49,7 @@ module.exports = {
                 allowExpressions: true
             }
         ],
-        '@typescript-eslint/no-explicit-any': 'warn',
+        '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/no-inferrable-types': 'off',
         '@typescript-eslint/no-shadow': 'error',
         '@typescript-eslint/no-unused-vars': 'error',
@@ -264,6 +264,7 @@ module.exports = {
         'react/jsx-props-no-spreading': [
             0
         ],
+        'react/no-danger': 'off',
         'react/react-in-jsx-scope': 'off',
         'react/require-default-props': 'off',
         'semi': [

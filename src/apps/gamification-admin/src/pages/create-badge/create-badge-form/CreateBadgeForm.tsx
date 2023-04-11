@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { Form, FormDefinition, FormValue, formGetInputModel, FormInputModel } from '~/libs/ui'
+import { Form, FormDefinition, formGetInputModel, FormInputModel, FormValue } from '~/libs/ui'
 
 import { GamificationConfig } from '../../../game-config'
 import { GameBadge } from '../../../game-lib'

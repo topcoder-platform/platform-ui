@@ -5,9 +5,9 @@ import { Outlet, Routes } from 'react-router-dom'
 import { routerContext, RouterContextData } from '~/libs/core'
 import '~/libs/ui/lib/styles/index.scss'
 
-import store from '../../store'
 import { WorkProvider } from '../../lib'
 import { workDashboardRouteId } from '../../self-service.routes'
+import store from '../../store'
 
 const SelfServiceMyWork: FC<{}> = () => {
     const { getChildRoutes }: RouterContextData = useContext(routerContext)

@@ -1,4 +1,4 @@
-import { useContext } from 'react'
+import { FC, useContext } from 'react'
 
 import { RestrictedPage } from '~/libs/ui'
 
@@ -10,7 +10,7 @@ interface RestrictedRouteProps {
     rolesRequired?: Array<string>
 }
 
-const RestrictedRoute: (props: RestrictedRouteProps) => JSX.Element = props => {
+const RestrictedRoute: FC<RestrictedRouteProps> = props => {
 
     const profileContextData: ProfileContextData = useContext(profileContext)
     const { profile, initialized }: ProfileContextData = profileContextData

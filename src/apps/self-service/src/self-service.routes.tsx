@@ -1,7 +1,8 @@
+/* eslint-disable max-len */
 import { Navigate } from 'react-router-dom'
 
 import { ToolTitle } from '~/config'
-import { LazyLoadedComponent, PlatformRoute, lazyLoad } from '~/libs/core'
+import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
 
 import { Work, WorkIntakeFormRoutes, WorkStatus, WorkType } from './lib'
 
@@ -94,32 +95,32 @@ export const selfServiceRoutes: ReadonlyArray<PlatformRoute> = [
             // Edit work item
             {
                 element: <SelfServiceWorkItem />,
-                route: '/work-items/:workItemId'
+                route: '/work-items/:workItemId',
             },
             // WIZZARD
             {
                 element: <SelectWorkType />,
-                route: 'wizard'
+                route: 'wizard',
             },
             {
                 element: <DataAdvisory />,
-                route: `${workRootRoute}/new/data-advisory/*`
+                route: `${workRootRoute}/new/data-advisory/*`,
             },
             {
                 element: <DataExploration />,
-                route: `${workRootRoute}/new/data-exploration/*`
+                route: `${workRootRoute}/new/data-exploration/*`,
             },
             {
                 element: <FindMeData />,
-                route: `${workRootRoute}/new/find-me-data/*`
+                route: `${workRootRoute}/new/find-me-data/*`,
             },
             {
                 element: <WebsiteDesign />,
-                route: `${workRootRoute}/new/website-design/*`
+                route: `${workRootRoute}/new/website-design/*`,
             },
             {
                 element: <WebsiteDesignLegacy />,
-                route: `${workRootRoute}/new/website-design-legacy/*`
+                route: `${workRootRoute}/new/website-design-legacy/*`,
             },
             // Bug Hunt
             {

@@ -1,4 +1,5 @@
 import { TabsNavItem } from '~/libs/ui'
+
 import { WorkStatus, WorkStatusFilter } from '../../lib'
 
 export const workDashboardTabs: ReadonlyArray<TabsNavItem> = [

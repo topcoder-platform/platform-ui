@@ -1,5 +1,6 @@
 import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
 
 import { routerContext, RouterContextData } from '~/libs/core'
 import { ButtonProps, ContentLayout, LoadingSpinner, tabNavItemBadgeSet, TabsNavbar, TabsNavItem } from '~/libs/ui'
@@ -17,10 +18,9 @@ import { clearAutoSavedForm, clearCachedChallengeId } from '../../utils/autoSave
 import { getWorkDashboardRoute, selfServiceStartRoute } from '../../self-service.routes'
 import { WorkTable } from '../work-table'
 import { WorkNoResults } from '../../components/work-table'
+import { resetIntakeForm } from '../../actions/form'
 
 import { workDashboardTabs } from './work-nav.config'
-import { useDispatch } from 'react-redux'
-import { resetIntakeForm } from '../../actions/form'
 
 const WorkDashboard: FC<{}> = () => {
     const dispatch: Dispatch<any> = useDispatch()
@@ -131,7 +131,7 @@ const WorkDashboard: FC<{}> = () => {
                 )}
             </div>
         </ContentLayout>
-        
+
     )
 }
 

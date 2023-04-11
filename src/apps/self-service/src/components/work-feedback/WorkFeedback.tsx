@@ -9,10 +9,13 @@ import {
     formOnReset,
     FormValue,
 } from '~/libs/ui'
+
 import { Challenge } from '../../lib'
 
 import { workFeedbackFormDef } from './work-feedback-form.config'
 import styles from './WorkFeedback.module.scss'
+
+type ReqGeneratorFn = (inputs: ReadonlyArray<FormInputModel>) => FormValue
 
 interface WorkFeedbackProps {
     // eslint-disable-next-line react/no-unused-prop-types
@@ -62,7 +65,7 @@ const WorkFeedback: FC<WorkFeedbackProps> = (props: WorkFeedbackProps) => {
             <div className={styles['form-wrapper']}>
                 <Form
                     formDef={formDef}
-                    requestGenerator={requestGenerator as unknown as (inputs: ReadonlyArray<FormInputModel>) => FormValue}
+                    requestGenerator={requestGenerator as unknown as ReqGeneratorFn}
                     save={saveAsync}
                 />
             </div>

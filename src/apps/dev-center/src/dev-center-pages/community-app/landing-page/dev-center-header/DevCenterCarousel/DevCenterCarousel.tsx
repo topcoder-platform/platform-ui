@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { FC } from 'react'
 import Carousel from 'react-elastic-carousel'
 

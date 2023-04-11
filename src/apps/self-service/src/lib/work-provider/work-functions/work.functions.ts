@@ -1,7 +1,11 @@
 import { PaymentMethodResult, Stripe, StripeCardNumberElement } from '@stripe/stripe-js'
-
 import { UserProfile } from '~/libs/core'
-import { FormCard, GenericDataObject, Page, textFormatMoneyLocaleString } from '~/libs/ui'
+import {
+    FormCard,
+    GenericDataObject,
+    Page,
+    textFormatMoneyLocaleString,
+} from '~/libs/ui'
 
 import { BugHuntPricingConfig } from '../../../config'
 

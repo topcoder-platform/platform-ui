@@ -3,10 +3,11 @@ import { Provider } from 'react-redux'
 import { Outlet, Routes } from 'react-router-dom'
 
 import { ContentLayout } from '~/libs/ui'
-import store from '../../store'
+import { routerContext, RouterContextData } from '~/libs/core'
+
 import { WorkProvider } from '../../lib'
 import { intakeFormsRouteId } from '../../self-service.routes'
-import { RouterContextData, routerContext } from '~/libs/core'
+import store from '../../store'
 
 const SelfServiceIntake: FC<{}> = () => {
     const { getChildRoutes }: RouterContextData = useContext(routerContext)

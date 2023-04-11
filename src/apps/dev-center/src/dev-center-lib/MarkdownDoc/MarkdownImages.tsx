@@ -85,6 +85,7 @@ const MarkdownImages: React.FC<MarkdownImagesProps> = props => {
     }
 
     return props.children.length > 1 ? (
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         <Carousel
             itemsToShow={1}

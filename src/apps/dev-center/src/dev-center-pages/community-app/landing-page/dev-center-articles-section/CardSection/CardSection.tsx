@@ -16,8 +16,14 @@ const CardSection: FC = () => {
 
     useEffect(() => {
         const client: ContentfulClientApi = createClient({
-            accessToken: process.env.REACT_APP_CONTENTFUL_EDU_CDN_API_KEY ?? 'EXl1Y8-6VFyHBqJqlxGp2LKmyNJJPutDbKH977G07eg',
-            space: process.env.REACT_APP_CONTENTFUL_EDU_SPACE_ID ?? 'piwi0eufbb2g',
+            accessToken: (
+                process.env.REACT_APP_CONTENTFUL_EDU_CDN_API_KEY
+                ?? 'EXl1Y8-6VFyHBqJqlxGp2LKmyNJJPutDbKH977G07eg'
+            ),
+            space: (
+                process.env.REACT_APP_CONTENTFUL_EDU_SPACE_ID
+                ?? 'piwi0eufbb2g'
+            ),
         })
         Promise.all(
             ArticlesUrl.map(async (articleUrl, idx): Promise<ThriveArticle | BlogPost | undefined> => {

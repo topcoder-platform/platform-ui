@@ -4,7 +4,7 @@ import {
     FC, isValidElement, ReactNode, SetStateAction, useState,
 } from 'react'
 
-import { IconSolid, useWindowSize, Breakpoints } from '~/libs/ui'
+import { Breakpoints, IconSolid, useWindowSize } from '~/libs/ui'
 
 import styles from './MarkdownAccordion.module.scss'
 

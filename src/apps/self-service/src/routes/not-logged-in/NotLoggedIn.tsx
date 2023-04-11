@@ -8,14 +8,14 @@ import {
 } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 
-import { ProfileContextData, profileContext } from '~/libs/core'
+import { profileContext, ProfileContextData } from '~/libs/core'
 import { Button, ContentLayout, LoadingSpinner } from '~/libs/ui'
 
-import { workDashboardRoute, selfServiceStartRoute } from '../../self-service.routes'
+import { selfServiceStartRoute, workDashboardRoute } from '../../self-service.routes'
+import { clearAutoSavedForm, clearCachedChallengeId } from '../../utils/autoSaveBeforeLogin'
 
 import WelcomeImage from './welcome.png'
 import styles from './NotLoggedIn.module.scss'
-import { clearAutoSavedForm, clearCachedChallengeId } from '../../utils/autoSaveBeforeLogin'
 
 const NotLoggedIn: FC<{}> = () => {
 
@@ -78,4 +78,4 @@ const NotLoggedIn: FC<{}> = () => {
     )
 }
 
-export default NotLoggedIn;
+export default NotLoggedIn

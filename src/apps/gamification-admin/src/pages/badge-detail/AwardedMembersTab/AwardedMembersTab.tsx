@@ -1,10 +1,11 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
 import { InfinitePageHandler, Sort, Table, TableColumn, tableGetDefaultSort } from '~/libs/ui'
+
 import { GameBadge, MemberBadgeAward } from '../../../game-lib'
 import { useGetGameBadgeAssigneesPage } from '../../../game-lib/hooks/use-get-game-badge-assignees-page.hook'
-import { awardedMembersColumns } from './awarded-members-table/awarded-members-table.config'
 
+import { awardedMembersColumns } from './awarded-members-table/awarded-members-table.config'
 import styles from './AwardedMembersTab.module.scss'
 
 export interface AwardedMembersTabProps {

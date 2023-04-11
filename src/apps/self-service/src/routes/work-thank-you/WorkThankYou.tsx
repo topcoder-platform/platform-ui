@@ -1,6 +1,7 @@
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 
 import { Button } from '~/libs/ui'
+
 import { selfServiceRootRoute } from '../../self-service.routes'
 
 import styles from './WorkThankYou.module.scss'

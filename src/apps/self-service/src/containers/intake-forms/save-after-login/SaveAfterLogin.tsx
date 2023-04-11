@@ -2,6 +2,7 @@ import { FC, useEffect } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 
 import { GenericDataObject, LoadingSpinner } from '~/libs/ui'
+
 import { Challenge, workCreateAsync, WorkIntakeFormRoutes, WorkType, workUpdateAsync } from '../../../lib'
 import { selfServiceStartRoute } from '../../../self-service.routes'
 

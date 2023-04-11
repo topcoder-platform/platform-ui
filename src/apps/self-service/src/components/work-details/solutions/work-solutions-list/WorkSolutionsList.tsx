@@ -2,8 +2,8 @@ import { FC } from 'react'
 import moment from 'moment'
 
 import { Work, WorkSolution } from '../../../../lib'
-
 import { WorkSolutionsListItem } from '../work-solutions-list-item'
+
 import styles from './WorkSolutionsList.module.scss'
 
 interface WorkSolutionsListProps {

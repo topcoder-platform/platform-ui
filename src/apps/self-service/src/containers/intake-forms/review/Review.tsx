@@ -8,7 +8,6 @@ import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js/pure'
 import { CardNumberElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
 import { Stripe, StripeElements } from '@stripe/stripe-js'
-
 import { EnvironmentConfig } from '~/config'
 import {
     BackArrowIcon,

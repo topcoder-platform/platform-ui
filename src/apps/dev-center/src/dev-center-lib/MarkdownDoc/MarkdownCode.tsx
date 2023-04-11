@@ -13,6 +13,7 @@ import {
 } from 'react'
 
 import { useWindowSize } from '~/libs/ui'
+
 import { CopyButton } from '../CopyButton'
 
 import styles from './MarkdownCode.module.scss'

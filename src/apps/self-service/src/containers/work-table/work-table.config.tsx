@@ -8,7 +8,6 @@ import {
 } from '../../components/work-table'
 import { WorkStatusRenderer } from '../../components/work-table/status-renderer'
 
-
 function messageBadgeRenderer(work: Work): JSX.Element {
     return WorkBadgeRenderer({
         count: work.messageCount,

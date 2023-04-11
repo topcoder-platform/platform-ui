@@ -14,14 +14,14 @@ import { Location, Route, useLocation } from 'react-router-dom'
 import { LoadingSpinner } from '~/libs/ui'
 
 import { authUrlLogin } from '../../auth'
-import RestrictedRoute from '../restricted.route'
 import { routeGetActive, routeGetSignupUrl } from '../routes-functions'
 import { PlatformRoute } from '../platform-route.model'
 import { profileContext, ProfileContextData } from '../../profile'
+import RestrictedRoute from '../restricted.route'
 
 import {
-    RouterContextData,
     routerContext,
+    RouterContextData,
     routerContextDefaultData,
 } from './router.context'
 

@@ -1,6 +1,7 @@
-import React, { FC } from 'react'
+import { FC } from 'react'
 
 import { InfoCard } from '~/libs/ui'
+
 import {
     bugHuntExample1Img,
     bugHuntExample1Pdf,

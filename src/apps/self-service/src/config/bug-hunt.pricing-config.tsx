@@ -1,4 +1,4 @@
-import { FormCard } from "~/libs/ui"
+import { FormCard } from '~/libs/ui'
 
 export const BugHuntPricingConfig: Array<FormCard> = [
     {
