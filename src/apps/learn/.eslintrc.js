@@ -20,7 +20,7 @@ module.exports = {
     },
     plugins: [
         '@typescript-eslint',
-        'no-null',
+        'unicorn',
         'ordered-imports',
         'react',
         'react-hooks'
@@ -104,9 +104,10 @@ module.exports = {
             'error',
             120,
         ],
+        'no-empty': ["error", { "allowEmptyCatch": true }],
         'no-extra-boolean-cast': 'off',
         'no-nested-ternary': 'off',
-        'no-null/no-null': 'error',
+        'unicorn/no-null': 'error',
         'no-param-reassign': [
             'error',
             {

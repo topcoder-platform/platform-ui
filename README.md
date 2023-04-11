@@ -196,28 +196,21 @@ Each [Tool](#tools) can have its own setup requirements. Please see each tool's 
 
 ## yarn Commands
 
-| Command               | Description                                                                           |
-| --------------------- | ------------------------------------------------------------------------------------- |
-| `yarn start`          | Serve dev mode build with the default config |
-| `yarn start:<dev>`    | Serve dev mode build with dev's personal config |
-| `yarn build`          | Build dev mode build with the default config and outputs static files in /builds |
-| `yarn build:prod`     | Build prod mode build with the prod config and outputs static files in /builds |
-| `yarn lint:ts`        | Run eslint against ts/x files and outputs report |
-| `yarn lint:ts:fix`    | Run eslint against ts/x files, fixes auto-fixable issues, and  outputs report |
-| `yarn lint:js`        | Run eslint against js/x files and outputs report |
-| `yarn lint:js:fix`    | Run eslint against js/x files, fixes auto-fixable issues, and  outputs report |
-| `yarn lint`           | Run eslint against js/x and ts/x files and outputs report |
-| `yarn lint:fix`       | Run eslint against js/x and ts/x files, fixes auto-fixable issues, and  outputs report |
-| `yarn test`           | Run unit tests, watching for changes and re-running per your specifications |
-| `yarn test:no-watch`  | Run unit tests once, without watching for changes or re-running |
-| `yarn cy:run`         | Run e2e tests once in local command with the site is running    |
-| `yarn cy:ci`          | Run e2e tests once by circle ci                                 |
-| `yarn report:coverage`| Generate e2e coverage report in html format                     |
-| `yarn report:coverage:text`  | Generate e2e coverage report in text format              |
-
-
-
-
+| Command                      | Description                                                                              |
+| ---------------------        | -------------------------------------------------------------------------------------    |
+| `yarn start`                 | Serve dev mode build with the default config                                             |
+| `yarn start:<dev>`           | Serve dev mode build with dev's personal config                                          |
+| `yarn build`                 | Build dev mode build with the default config and outputs static files in /build          |
+| `yarn build:prod`            | Build prod mode build with the prod config and outputs static files in /build            |
+| `yarn demo`                  | Serves the built files (by running yarn:build) for local testing                         |
+| `yarn lint`                  | Run eslint against js/x and ts/x files and outputs report                                |
+| `yarn lint:fix`              | Run eslint against js/x and ts/x files, fixes auto-fixable issues, and  outputs report   |
+| `yarn test`                  | Run unit tests, watching for changes and re-running per your specifications              |
+| `yarn test:no-watch`         | Run unit tests once, without watching for changes or re-running                          |
+| `yarn cy:run`                | Run e2e tests once in local command with the site is running                             |
+| `yarn cy:ci`                 | Run e2e tests once by circle ci                                                          |
+| `yarn report:coverage`       | Generate e2e coverage report in html format                                              |
+| `yarn report:coverage:text`  | Generate e2e coverage report in text format                                       |
 
 # Application Structure
 
