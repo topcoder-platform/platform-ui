@@ -87,20 +87,6 @@ async function updateCache() {
 }
 */
 
-/**
- * Gets the index of assets and entries via Community App CDN.
- * @param {Number} version Optional. The version of index to fetch. Defaults to
- *  the latest index version.
- * @return {Promise}
- */
-/*
-async function getIndex() {
-  if (isomorphy.isServerSide()) return ss.getIndex();
-  await updateCache();
-  return cachedIndex;
-}
-*/
-
 class Service {
   /**
    * Creates a new Service instance.

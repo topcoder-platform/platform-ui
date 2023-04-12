@@ -1,16 +1,25 @@
 import PT from "prop-types";
 
+import ArrowDown from '../../../assets/images/icon-arrow-down-black.svg';
+import ArrowUp from '../../../assets/images/icon-arrow-up-black.svg';
+
 import styles from "./styles.module.scss";
 import { styled as styledCss } from "../../../utils";
 const styled = styledCss(styles)
 
 function Checkpoints(props) {
-  const { checkpoints, toggleCheckpointFeedback } = props;
-  const { checkpointResults, generalFeedback } = checkpoints;
+  const {
+    checkpoints,
+    toggleCheckpointFeedback,
+  } = props;
+  const {
+    checkpointResults,
+    generalFeedback,
+  } = checkpoints;
 
   return (
     <div className={styled("challenge-detail-checkpoints")}>
-      <div className={styled("challenge-checkpoint-list")}>
+      {/* <div className={styled("challenge-checkpoint-list")}>
         {checkpointResults &&
           checkpointResults.map((item, index) => (
             <button
@@ -25,15 +34,16 @@ function Checkpoints(props) {
               }}
               type="button"
             >
-              #{item.submissionId}
+              #
+              {item.submissionId}
             </button>
           ))}
-      </div>
+      </div> */}
       <div className={styled("challenge-checkpoint-detail")}>
         <h2>Checkpoint Winners & General Feedback</h2>
         <p
-          dangerouslySetInnerHTML={{
-            __html: generalFeedback || "",
+          dangerouslySetInnerHTML={{ // eslint-disable-line react/no-danger
+            __html: generalFeedback || '',
           }}
         />
         {checkpointResults &&
@@ -55,19 +65,23 @@ function Checkpoints(props) {
                   {item.submissionId}
                 </span>
                 <span className={styled("challenge-checkpoint-expander")}>
-                  {item.expanded ? "-" : "+"}
+                  {item.expanded ? <ArrowUp /> : <ArrowDown />}
                 </span>
               </button>
-              {item.expanded && (
+              {
+                item.expanded
+                && (
                 <p
                   className={styled("challenge-checkpoint-feedback")}
                   dangerouslySetInnerHTML={{
                     __html: item.feedback || "<span>Empty Feedback</span>",
                   }}
                 />
-              )}
+                )
+              }
             </div>
-          ))}
+          ))
+        }
       </div>
     </div>
   );

@@ -7,15 +7,45 @@ import PT from "prop-types";
 
 import { phaseEndDate, phaseStartDate } from "../../../../utils/challenge-listing/helper";
 import Card from "./Card";
-import styles from "./style.module.scss";
+import styles from "./style.scss";
 import { styled as styledCss } from "@earn/utils";
 const styled = styledCss(styles)
 
 export default function DeadlinesPanel({ deadlines }) {
-  /* Calculates challenge start time. */
-  let start = deadlines[0] || {};
-  start = phaseStartDate(start);
-  const started = moment(start).isBefore();
+  let hasSubmissionPhase = false;
+
+  const getCardProps = (deadline, index) => {
+    let { name } = deadline;
+    let showRange = true;
+    name = name.replace(/\bCheckpoint\b/, 'Checkpoint');
+    if (/.+submission/i.test(name)) {
+      hasSubmissionPhase = true;
+      name = name.replace(/submission/i, 'Submission');
+    } else {
+      switch (name) {
+        case 'Submission':
+          name = hasSubmissionPhase ? 'Final Submission' : 'Submission';
+          break;
+        case 'Review':
+          name = hasSubmissionPhase ? 'Final Review' : name;
+          break;
+        case 'Appeals':
+          name = hasSubmissionPhase ? 'Appeals Due' : name;
+          break;
+        default:
+      }
+    }
+    if (index === deadlines.length - 1) {
+      showRange = false;
+    }
+
+    const start = phaseStartDate(deadline);
+    const end = phaseEndDate(deadline);
+
+    return {
+      name, start, end, showRange,
+    };
+  };
 
   return (
     <div className={styled("panel")} tabIndex="0" role="tabpanel">
@@ -23,29 +53,29 @@ export default function DeadlinesPanel({ deadlines }) {
         Timezone:
         {moment.tz.guess()}
       </p>
-      <Card
-        past={started}
-        time={start}
-        title={started ? "Started" : "Starts"}
-      />
-      {deadlines.map((d, index) => (
-        <Card
-          key={d.name}
-          time={phaseEndDate(d)}
-          title={index === deadlines.length - 1 ? "Winners" : d.name}
-        />
-      ))}
+      { deadlines.map((d, index) => {
+        const {
+          name, start, end, showRange,
+        } = getCardProps(d, index);
+        return (
+          <Card
+            key={d.name}
+            title={name}
+            start={start}
+            end={end}
+            showRange={showRange}
+          />
+        );
+      })}
     </div>
   );
 }
 
 DeadlinesPanel.propTypes = {
-  deadlines: PT.arrayOf(
-    PT.shape({
-      actualEndDate: PT.string,
-      actualStartDate: PT.string,
-      scheduledEndDate: PT.string,
-      scheduledStartDate: PT.string,
-    })
-  ).isRequired,
+  deadlines: PT.arrayOf(PT.shape({
+    actualEndDate: PT.string,
+    actualStartDate: PT.string,
+    scheduledEndDate: PT.string,
+    scheduledStartDate: PT.string,
+  })).isRequired,
 };

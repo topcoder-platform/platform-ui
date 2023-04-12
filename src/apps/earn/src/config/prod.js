@@ -139,4 +139,7 @@ module.exports = {
 
   // the server api base path
   GIGS_API_BASE_PATH: process.env.GIGS_API_BASE_PATH || "/gigs-app/api/my-gigs",
+  CDN: {
+    PUBLIC: 'https://community-app-cdn.topcoder.com',
+  },
 };

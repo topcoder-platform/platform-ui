@@ -153,4 +153,8 @@ module.exports = {
     expires: 30, // days
   },
   APPLIED_GIGS: "_applied_gigs",
+  /* CDN configuration. */
+  CDN: {
+      PUBLIC: 'https://d1aahxkjiobka8.cloudfront.net',
+  },
 };

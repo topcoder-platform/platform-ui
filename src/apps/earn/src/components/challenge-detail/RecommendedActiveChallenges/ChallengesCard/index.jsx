@@ -1,23 +1,23 @@
-import React from "react";
-import _ from "lodash";
-import PT from "prop-types";
-import { Link } from "../../../../components/UiKit";
-import moment from "moment";
-import { TABS as DETAIL_TABS } from "../../../../actions/page/challenge-details";
+import React from 'react';
+import _ from 'lodash';
+import PT from 'prop-types';
+import { Link } from 'topcoder-react-utils';
+import moment from 'moment';
+import { TABS as DETAIL_TABS } from 'actions/page/challenge-details';
 import {
   getEndDate,
   PRIZE_MODE,
   getPrizePurseUI,
   getTimeLeft,
-} from "../../../../utils/challenge-detail/helper";
+} from 'utils/challenge-detail/helper';
 
-import TrackIcon from "../../../../components/TrackIcon";
-import Tags from "../../../challenge-listing/Tags";
-import ChallengeStatus from "../../../challenge-listing/ChallengeCard/Status";
-import TrackAbbreviationTooltip from "../../../challenge-listing/Tooltips/TrackAbbreviationTooltip";
+import TrackIcon from 'components/TrackIcon';
+import Tags from '../../../challenge-listing/Tags';
+import ChallengeStatus from '../../../challenge-listing/ChallengeCard/Status';
+import TrackAbbreviationTooltip from '../../../challenge-listing/Tooltips/TrackAbbreviationTooltip';
+import { styled as styledCss } from "../../../utils";
 
-import styles from "./style.module.scss";
-import { styled as styledCss } from "@earn/utils";
+import styles from './style.scss';
 const styled = styledCss(styles)
 
 export default function ChallengesCard({
@@ -32,12 +32,16 @@ export default function ChallengesCard({
   expandTag,
   isLoggedIn,
 }) {
-  const { id, phases, track } = challenge;
+  const {
+    id,
+    phases,
+    track,
+  } = challenge;
 
   const challengeDetailLink = `${challengesUrl}/${id}`;
 
   const statusPhase = phases
-    .filter((p) => p.name !== "Registration")
+    .filter(p => p.name !== 'Registration')
     .sort((a, b) => moment(a.scheduledEndDate).diff(b.scheduledEndDate))[0];
 
   return (
@@ -49,18 +53,17 @@ export default function ChallengesCard({
           expand={() => expandTag(challenge.id)}
           challengesUrl={challengesUrl}
         />
-        <div className={styled("content-bottom")}>
-          <div className={styled("challenge-track")}>
-            <TrackAbbreviationTooltip track={track} type={challengeType}>
-              <span className={styled("track-icon")}>
+        <div styleName="content-bottom">
+          <div styleName="challenge-track">
+            <TrackAbbreviationTooltip
+              track={track}
+              type={challengeType}
+            >
+              <span styleName="track-icon">
                 <TrackIcon
                   track={track}
                   type={challengeType}
-                  tcoEligible={
-                    challenge.events && challenge.events.length > 0
-                      ? challenge.events[0].key
-                      : ""
-                  }
+                  tcoEligible={challenge.events && challenge.events.length > 0 ? challenge.events[0].key : ''}
                   isDataScience={challenge.isDataScience}
                   challengesUrl={challengesUrl}
                 />
@@ -74,16 +77,15 @@ export default function ChallengesCard({
               to={challengeDetailLink}
               className={styled("challenge-title")}
               openNewTab
-            >
-              <p>{challenge.name}</p>
+            ><p>{challenge.name}</p>
             </Link>
-            <div className={styled("endtime-prize-container")}>
-              <span className={styled("end-date")}>
-                {challenge.status === "Active" ? "Ends " : "Ended "}
+            <div styleName="endtime-prize-container">
+              <span styleName="end-date">
+                {challenge.status === 'Active' ? 'Ends ' : 'Ended '}
                 {getEndDate(challenge)}
               </span>
-              <div className={styled("prizes")}>
-                {getPrizePurseUI(challenge, prizeMode, true, "Prize Purse")}
+              <div styleName="prizes">
+                {getPrizePurseUI(challenge, prizeMode, true, 'Prize Purse')}
               </div>
             </div>
             <ChallengeStatus
@@ -94,24 +96,24 @@ export default function ChallengesCard({
               openChallengesInNewTabs
               selectChallengeDetailsTab={_.noop}
               userHandle={userHandle}
-              className={styles["challenge-status-container"]}
+              className={styles['challenge-status-container']}
               isLoggedIn={isLoggedIn}
             />
           </div>
         </div>
       </div>
 
-      <div className={styled("bottom")}>
-        <span>{getTimeLeft(statusPhase, "to register").text}</span>
+      <div styleName="bottom">
+        <span>{getTimeLeft(statusPhase, 'to register').text}</span>
       </div>
     </div>
   );
 }
 
 ChallengesCard.defaultProps = {
-  className: "",
+  className: '',
   prizeMode: PRIZE_MODE.MONEY_USD,
-  userHandle: "",
+  userHandle: '',
   expandedTags: [],
   expandTag: null,
 };

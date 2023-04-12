@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import { useRef } from "react";
 
 import { initAuth } from '../../services/auth';
-import ChallengeDetail from "../../containers/ChallengeDetail";
+import ChallengeDetailContainer from "../../containers/ChallengeDetail";
 
 const ChallengeDetails = ({auth}) => {
   const { challengeId } = useParams()
@@ -17,7 +17,7 @@ const ChallengeDetails = ({auth}) => {
   return (
     <>
       {auth.isAuthInitialized && (
-        <ChallengeDetail challengeId={challengeId} />
+        <ChallengeDetailContainer challengeId={challengeId} />
       )}
     </>
   );

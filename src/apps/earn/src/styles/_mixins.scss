@@ -2,6 +2,21 @@
 @import "mixins/media";
 @import "GUIKit/Includes";
 
+/* @media */
+$screem-md: 1376px;
+$screen-sm: 768px;
+$screen-max: 1376px;
+
+/* track color */
+$track-code-green: #35ac35;
+$track-code-green-light: #d8fdd8;
+$track-code-blue: #2984bd;
+$track-code-blue-light: #bae1f9;
+$track-code-turquose: #0ab88a;
+$track-code-turquose-light: #c1f5e7;
+
+$tco-black: #2a2a2a;
+
 /* member rating colors */
 $member-gray: #555;
 $member-green: #258205;
