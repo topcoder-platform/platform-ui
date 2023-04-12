@@ -1,5 +1,6 @@
 import { createActions } from "redux-actions";
 import _ from "lodash";
+import { getService } from "../services/challenges";
 import service from "../services/challenges";
 import * as util from "../utils/challenge";
 import * as constants from "../constants";
@@ -46,7 +47,7 @@ async function getMyChallenges(filter, signal) {
 }
 
 async function getReviewOpportunities(filter, signal) {
-  const reviewOpportunities = await service.getReviewOpportunities(signal);
+  const reviewOpportunities = await getService().getReviewOpportunities(signal);
   
   //Convert from the reviewOpportunity into a challenge object for display in the UI
   const challenges = reviewOpportunities.result.content.map((item) => {

@@ -19,6 +19,35 @@ import { getService as getSubmissionsService } from "./submissions";
 import { buildQueryString } from "@earn/utils/url";
 import config from '@earn/config';
 
+/**
+ * Search challenges
+ *
+ * @return {Array<Object>} challenges
+ */
+ async function getChallenges(filter, cancellationSignal) {
+  const challengeQuery = buildQueryString(filter, true);
+  return api.get(
+    `/challenges/${challengeQuery}`,
+    undefined,
+    cancellationSignal
+  );
+}
+
+
+/**
+ * Get review opportunities
+ *
+ * @return {Array<Object>} challenges
+ */
+ async function getReviewOpportunities(cancellationSignal) {
+  const { API } = config;
+  return api.get(
+    //TODO - this should be moved to v5
+    `/reviewOpportunities/?limit=1000&offset=0`,
+    API.V3,
+    cancellationSignal
+  );
+}
  
  export function getFilterUrl(backendFilter, frontFilter) {
    const ff = _.clone(frontFilter);
@@ -863,5 +892,7 @@ import config from '@earn/config';
    return lastInstance;
  }
  
- /* Using default export would be confusing in this case. */
- export default undefined;
+ export default {
+  getChallenges,
+  getReviewOpportunities
+};
