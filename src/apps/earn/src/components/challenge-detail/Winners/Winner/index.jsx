@@ -3,7 +3,7 @@ import PT from 'prop-types';
 import { getService } from '@earn/services/submissions';
 import React, { useEffect, useState } from 'react';
 import _ from 'lodash';
-import config from '@config';
+import config from '@earn/config';
 import { formatOrdinals, numberWithCommas } from '@earn/utils/challenge-detail/helper';
 import { getMMSubmissionId } from '@earn/utils/submissions';
 import { ReactComponent as DownloadIcon } from '../../../SubmissionManagement/Icons/IconSquareDownload.svg';

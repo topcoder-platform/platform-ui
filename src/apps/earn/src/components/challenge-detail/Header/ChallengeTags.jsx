@@ -149,5 +149,5 @@ ChallengeTags.propTypes = {
   technPlatforms: PT.arrayOf(PT.string),
   setChallengeListingFilter: PT.func.isRequired,
   challengeType: PT.shape().isRequired,
-  openForRegistrationChallenges: PT.shape().isRequired,
+  openForRegistrationChallenges: PT.arrayOf(PT.shape()).isRequired,
 };

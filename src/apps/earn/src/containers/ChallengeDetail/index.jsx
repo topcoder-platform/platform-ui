@@ -783,7 +783,6 @@ ChallengeDetailPageContainer.propTypes = {
   // expandedTags: PT.arrayOf(PT.number).isRequired,
   // expandTag: PT.func.isRequired,
   // loadingRecommendedChallengesUUID: PT.string.isRequired,
-  history: PT.shape().isRequired,
   openForRegistrationChallenges: PT.arrayOf(PT.shape()).isRequired,
   statisticsData: PT.arrayOf(PT.shape()),
 };

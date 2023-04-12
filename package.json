@@ -170,7 +170,6 @@
         "eslint-import-resolver-typescript": "^3.2.5",
         "eslint-plugin-cypress": "^2.12.1",
         "eslint-plugin-import": "^2.25.3",
-        "eslint-plugin-jsx-a11y": "^6.7.1",
         "eslint-plugin-ordered-imports": "^0.6.0",
         "eslint-plugin-react": "^7.28.0",
         "eslint-plugin-react-hooks": "^4.3.0",
