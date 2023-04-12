@@ -12,9 +12,9 @@ import { isMM as checkIsMM, isRDM as checkIsRDM } from '@earn/utils/challenge';
 import LoadingPagePlaceholder from '@earn/components/LoadingPagePlaceholder';
 import pageActions from '@earn/actions/page';
 import ChallengeHeader from '@earn/components/challenge-detail/Header';
-import challengeListingActions from '@earn/actions/challenge-listing';
-import challengeListingSidebarActions from '@earn/actions/challenge-listing/sidebar';
-import challengeListingFilterPanelActions from '@earn/actions/challenge-listing/filter-panel';
+import challengeListingActions from '@earn/actions/challenge-detail';
+import challengeListingSidebarActions from '@earn/actions/challenge-detail/sidebar';
+import challengeListingFilterPanelActions from '@earn/actions/challenge-detail/filter-panel';
 import Registrants from '@earn/components/challenge-detail/Registrants';
 import shortId from 'shortid';
 import Submissions from '@earn/components/challenge-detail/Submissions';
@@ -24,7 +24,6 @@ import MMDashboardGraph from '@earn/components/challenge-detail/MMDashboard/Grap
 import ChallengeDetailsView from '@earn/components/challenge-detail/Specification';
 import RecommendedThriveArticles from '@earn/components/challenge-detail/ThriveArticles';
 import LoadingIndicator from '@earn/components/LoadingIndicator';
-import { withRouter } from "../../utils/router";
 
 // eslint-disable-next-line max-len
 // import RecommendedActiveChallenges from 'components/challenge-detail/RecommendedActiveChallenges';
@@ -221,6 +220,8 @@ class ChallengeDetailPageContainer extends React.Component {
       loadChallengeDetails(auth, challengeId);
     }
 
+    fetchChallengeStatistics(auth, challengeId);
+
     if (!allCountries.length) {
       getAllCountries(auth.tokenV3);
     }
@@ -234,7 +235,6 @@ class ChallengeDetailPageContainer extends React.Component {
     if (!reviewTypes.length) {
       getReviewTypes(auth.tokenV3);
     }
-    //fetchChallengeStatistics(auth, challengeId);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -353,6 +353,7 @@ class ChallengeDetailPageContainer extends React.Component {
       unregisterFromChallenge,
       unregistering,
       updateChallenge,
+      isMenuOpened,
       loadMMSubmissions,
       mmSubmissions,
       loadingMMSubmissionsForChallengeId,
@@ -496,6 +497,7 @@ class ChallengeDetailPageContainer extends React.Component {
               checkpoints={checkpoints}
               hasRegistered={challenge.isRegistered}
               hasFirstPlacement={hasFirstPlacement}
+              isMenuOpened={isMenuOpened}
               challengeTypesMap={challengeTypesMap}
               submissionEnded={submissionEnded}
               mySubmissions={challenge.isRegistered ? mySubmissions : []}
@@ -704,6 +706,7 @@ ChallengeDetailPageContainer.defaultProps = {
   terms: [],
   allCountries: [],
   reviewTypes: [],
+  isMenuOpened: false,
   loadingMMSubmissionsForChallengeId: '',
   mmSubmissions: [],
   mySubmissions: [],
@@ -761,6 +764,7 @@ ChallengeDetailPageContainer.propTypes = {
   unregisterFromChallenge: PT.func.isRequired,
   unregistering: PT.bool.isRequired,
   updateChallenge: PT.func.isRequired,
+  isMenuOpened: PT.bool,
   loadingMMSubmissionsForChallengeId: PT.string,
   mmSubmissions: PT.arrayOf(PT.shape()),
   loadMMSubmissions: PT.func.isRequired,
@@ -773,6 +777,7 @@ ChallengeDetailPageContainer.propTypes = {
   // expandedTags: PT.arrayOf(PT.number).isRequired,
   // expandTag: PT.func.isRequired,
   // loadingRecommendedChallengesUUID: PT.string.isRequired,
+  history: PT.shape().isRequired,
   openForRegistrationChallenges: PT.arrayOf(PT.shape()).isRequired,
   statisticsData: PT.arrayOf(PT.shape()),
 };
@@ -1044,4 +1049,4 @@ const ChallengeDetailContainer = connect(
   mergeProps,
 )(ChallengeDetailPageContainer);
 
-export default withRouter(ChallengeDetailContainer);
+export default ChallengeDetailContainer;

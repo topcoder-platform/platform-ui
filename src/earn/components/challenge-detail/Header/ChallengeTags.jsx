@@ -34,7 +34,7 @@ export default function ChallengeTags(props) {
     setChallengeListingFilter,
     openForRegistrationChallenges,
   } = props;
-
+  alert(JSON.stringify(challengeType));
   const filteredChallenge = _.find(openForRegistrationChallenges, { id: challengeId });
   const matchSkills = filteredChallenge ? filteredChallenge.match_skills || [] : [];
   const matchScore = filteredChallenge ? filteredChallenge.jaccard_index || [] : 0;

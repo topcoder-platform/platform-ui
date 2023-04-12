@@ -1,4 +1,4 @@
-import { default as GenericButton } from '../Button';
+import { default as GenericButton } from '@earn/components/challenge-detail/GenericButton';
 import { themr } from 'react-css-super-themr';
 
 import defaultTag from './default.scss';
