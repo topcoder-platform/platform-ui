@@ -10,11 +10,10 @@ import { isMM as checkIsMM, isRDM as checkIsRDM } from '@earn/utils/challenge';
 import _ from 'lodash';
 import { connect } from 'react-redux';
 import config from '@earn/config';
-import * as submissionUtils from '@earn/services/submission';
+import * as submissionUtils from '@earn/utils/submission';
 
 import { getService } from '@earn/services/submissions';
 import { isTokenExpired } from "@earn/utils/token";
-import cn from 'classnames';
 import Button from '../Button';
 import { ReactComponent as DateSortIcon } from '@earn/assets/images/icon-date-sort.svg';
 import { ReactComponent as SortIcon } from '@earn/assets/images/icon-sort.svg';
