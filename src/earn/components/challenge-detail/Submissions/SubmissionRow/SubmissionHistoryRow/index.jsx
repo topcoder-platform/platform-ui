@@ -4,77 +4,108 @@
  * SubmissionHistoryRow component.
  */
 
-import React from "react";
-import PT from "prop-types";
-import moment from "moment";
+import React from 'react';
+import PT from 'prop-types';
+import { getService } from '@earn/services/submissions';
+import moment from 'moment';
+import { CHALLENGE_STATUS } from '@earn/utils/tc';
+import FailedSubmissionTooltip from '../../FailedSubmissionTooltip';
 // import Completed from '../../../icons/completed.svg';
-import Failed from "../../../icons/failed.svg";
-import InReview from "../../../icons/in-review.svg";
-import Queued from "../../../icons/queued.svg";
+import { ReactComponent as InReview } from '../../../icons/in-review.svg';
+import { ReactComponent as Queued } from '../../../icons/queued.svg';
+import { ReactComponent as DownloadIcon } from '../../../../SubmissionManagement/Icons/IconSquareDownload.svg';
 
-import "./style.module.scss";
+import './style.scss';
 
 export default function SubmissionHistoryRow({
   isMM,
+  isRDM,
   submission,
   finalScore,
   provisionalScore,
   submissionTime,
   isReviewPhaseComplete,
-  onShowPopup,
-  submissionId,
   status,
-  member,
+  challengeStatus,
+  auth,
+  numWinners,
+  submissionId,
+  isLoggedIn,
 }) {
   const getInitialReviewResult = () => {
-    if (provisionalScore && provisionalScore < 0) return <Failed />;
+    if (provisionalScore && provisionalScore < 0) return <FailedSubmissionTooltip />;
     switch (status) {
-      case "completed":
+      case 'completed':
         return provisionalScore;
-      case "in-review":
+      case 'in-review':
         return <InReview />;
-      case "queued":
+      case 'queued':
         return <Queued />;
-      case "failed":
-        return <Failed />;
+      case 'failed':
+        return <FailedSubmissionTooltip />;
       default:
-        return provisionalScore;
+        return provisionalScore === '-' ? 'N/A' : provisionalScore;
     }
   };
   const getFinalScore = () => {
     if (isMM && finalScore && finalScore > -1 && isReviewPhaseComplete) {
       return finalScore;
     }
-    return "-";
+    return 'N/A';
   };
 
   return (
     <div styleName="container">
       <div styleName="row no-border">
-        {isMM ? <div styleName="col-1 col child" /> : null}
-        <div styleName="col-2 col child">{submission}</div>
+        <div styleName="col-1 col">
+          <div styleName="mobile-header">SUBMISSION</div>
+          <span>{submission}</span>
+        </div>
+        <div styleName="col-2 col">
+          <div styleName="mobile-header">FINAL SCORE</div>
+          <div>
+            {getFinalScore()}
+          </div>
+        </div>
         <div styleName="col-3 col">
-          <div styleName="col child">{getFinalScore()}</div>
-          <div styleName="col child">{getInitialReviewResult()}</div>
-        </div>
-        <div styleName={`col-4 col history-time ${isMM ? "mm" : ""}`}>
-          <div styleName="col child">
-            {moment(submissionTime).format("DD MMM YYYY")}{" "}
-            {moment(submissionTime).format("HH:mm:ss")}
+          <div styleName="mobile-header">PROVISIONAL SCORE</div>
+          <div>
+            {getInitialReviewResult()}
           </div>
         </div>
-        {isMM && (
-          <div styleName="col-5 col">
-            <div
-              role="button"
-              tabIndex={0}
-              styleName="col child"
-              onClick={() => onShowPopup(true, submissionId, member)}
-            >
-              View Details
+        <div styleName={`col-4 col ${isMM ? 'mm' : ''}`}>
+          <div styleName="mobile-header">TIME</div>
+          <div>
+            {moment(submissionTime).format('DD MMM YYYY')} {moment(submissionTime).format('HH:mm:ss')}
+          </div>
+        </div>
+        {
+          isLoggedIn && (isMM || isRDM)
+          && (numWinners > 0 || challengeStatus === CHALLENGE_STATUS.COMPLETED) && (
+            <div styleName="col-2 col center">
+              <div styleName="mobile-header">Action</div>
+              <button
+                onClick={() => {
+                  // download submission
+                  const submissionsService = getService(auth.m2mToken);
+                  submissionsService.downloadSubmission(submissionId)
+                    .then((blob) => {
+                      const url = window.URL.createObjectURL(new Blob([blob]));
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.setAttribute('download', `submission-${submissionId}.zip`);
+                      document.body.appendChild(link);
+                      link.click();
+                      link.parentNode.removeChild(link);
+                    });
+                }}
+                type="button"
+              >
+                <DownloadIcon />
+              </button>
             </div>
-          </div>
-        )}
+          )
+        }
       </div>
     </div>
   );
@@ -84,17 +115,27 @@ SubmissionHistoryRow.defaultProps = {
   finalScore: null,
   provisionalScore: null,
   isReviewPhaseComplete: false,
+  isLoggedIn: false,
 };
 
 SubmissionHistoryRow.propTypes = {
-  member: PT.string.isRequired,
   isMM: PT.bool.isRequired,
+  isRDM: PT.bool.isRequired,
   submission: PT.number.isRequired,
-  finalScore: PT.oneOfType([PT.number, PT.string]),
-  status: PT.string,
-  provisionalScore: PT.oneOfType([PT.number, PT.string]),
+  finalScore: PT.oneOfType([
+    PT.number,
+    PT.string,
+  ]),
+  status: PT.string.isRequired,
+  provisionalScore: PT.oneOfType([
+    PT.number,
+    PT.string,
+  ]),
   submissionTime: PT.string.isRequired,
+  challengeStatus: PT.string.isRequired,
   isReviewPhaseComplete: PT.bool,
+  auth: PT.shape().isRequired,
+  numWinners: PT.number.isRequired,
   submissionId: PT.string.isRequired,
-  onShowPopup: PT.func.isRequired,
+  isLoggedIn: PT.bool,
 };

@@ -4,7 +4,7 @@ import React from 'react';
 import PT from 'prop-types';
 import _ from 'lodash';
 
-import Tooltip from '@earn/components/Tooltip';
+import Tooltip from '@earn/components/challenge-detail/Tooltip';
 import { Link } from 'react-router-dom';
 import config from '@earn/config';
 

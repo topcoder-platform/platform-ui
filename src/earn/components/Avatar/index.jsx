@@ -2,7 +2,7 @@ import PT from 'prop-types';
 import React from 'react';
 import cn from 'classnames';
 
-import { ReactComponent as DefaultUserAvatar } from '../../assets/images/default-user-avatar.svg';
+import { ReactComponent as DefaultUserAvatar } from '@earn/assets/images/default-user-avatar.svg';
 
 import styles from './Avatar.module.scss';
 

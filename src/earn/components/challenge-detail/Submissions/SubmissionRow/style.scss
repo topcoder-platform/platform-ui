@@ -1,0 +1,431 @@
+@import "@earn/styles/mixins";
+
+.modal {
+  background: #fff;
+  border-radius: 4;
+  max-height: 95vh;
+  overflow: hidden;
+  padding: 40;
+  width: 800px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  transform: translate((calc(50vw - 50%), calc(50vh - 50%)));
+  z-index: 999;
+
+  &.download {
+    width: 900px;
+  }
+}
+
+.history {
+  padding-bottom: 10px;
+  border-radius: 8px;
+  margin: 25px 32px 32px;
+
+  .table-body {
+    max-height: 49vh;
+    overflow-y: auto;
+
+    @media screen and (max-width: $screen-sm) {
+      max-height: 65vh;
+    }
+  }
+
+  @include xs-to-sm {
+    margin: 0 0;
+  }
+}
+
+.history-head {
+  display: flex;
+  margin-top: 24px;
+  width: 100%;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e9e9e9;
+
+  .col {
+    text-transform: uppercase;
+
+    @include roboto-medium;
+
+    color: #2a2a2a;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 22px;
+    text-align: left;
+
+    &.col-1 {
+      flex: 0;
+    }
+
+    &.col-2 {
+      flex: 30;
+    }
+
+    &.col-3 {
+      flex: 30;
+    }
+
+    &.col-4 {
+      flex: 32;
+    }
+
+    &.col-5 {
+      flex: 28;
+    }
+
+    &.center {
+      text-align: center;
+    }
+  }
+
+  @include xs-to-sm {
+    display: none;
+  }
+}
+
+.wrapper-as-table {
+  @include xs-to-sm {
+    min-width: 1920px !important;
+  }
+
+  .row {
+    @include xs-to-sm {
+      flex-direction: row !important;
+      border-top: 1px solid $tc-gray-10 !important;
+      margin-left: 0 !important;
+      margin-top: 0 !important;
+      margin-right: 0 !important;
+      padding-top: 16px !important;
+      padding-bottom: 16px !important;
+    }
+  }
+}
+
+.wrapper {
+  a { cursor: pointer; }
+
+  .row {
+    font-size: 13px;
+    color: $tc-gray-70;
+    display: flex;
+    border-bottom: 1px solid $tc-gray-10;
+
+    @include xs-to-sm {
+      flex-direction: column;
+      border-top: 1px solid #e9e9e9;
+      border-bottom: 0;
+      margin-left: 0;
+      margin-top: 25px;
+      margin-right: 15px;
+    }
+
+    &.no-border {
+      border: none;
+    }
+  }
+
+  .history {
+    .history-head {
+      font-weight: 500;
+      font-size: 13px;
+      color: $tc-gray-50;
+      width: 100%;
+      display: flex;
+
+      @include xs-to-sm {
+        display: none;
+      }
+
+      .col-2 {
+        color: black;
+      }
+
+      .col-3 {
+        flex: 32;
+      }
+
+      .col-4 {
+        flex: 35;
+      }
+
+      @include xs-to-sm {
+        display: none;
+      }
+    }
+  }
+
+  div.col {
+    padding: 16px 0;
+
+    @include xs-to-sm {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+  }
+
+  .col-view-as-table {
+    @include xs-to-sm {
+      @include roboto-medium;
+
+      color: #2a2a2a;
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 22px;
+      text-align: left;
+    }
+
+    &.col-1 {
+      @include xs-to-sm {
+        flex: 39 !important;
+      }
+    }
+
+    &.col-2 {
+      @include xs-to-sm {
+        flex: 37 !important;
+      }
+    }
+
+    &.col-3 {
+      @include xs-to-sm {
+        flex: 74 !important;
+      }
+    }
+
+    &.col-4 {
+      @include xs-to-sm {
+        flex: 15 !important;
+      }
+    }
+
+    &.col-5 {
+      @include xs-to-sm {
+        flex: 22 !important;
+      }
+    }
+
+    &.col-6 {
+      @include xs-to-sm {
+        flex: 38 !important;
+      }
+    }
+
+    &.col-7 {
+      @include xs-to-sm {
+        flex: 35 !important;
+      }
+    }
+
+    &.col-8 {
+      @include xs-to-sm {
+        flex: 25 !important;
+      }
+    }
+  }
+
+  .col {
+    @include roboto-medium;
+
+    color: #2a2a2a;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 22px;
+    text-align: left;
+
+    &.col-1 {
+      flex: 20;
+      display: flex;
+
+      @include xs-to-sm {
+        flex: 15;
+        display: block;
+      }
+    }
+
+    &.col-2 {
+      flex: 20;
+      text-align: left;
+      color: $tc-gray-50;
+      padding-left: 10px;
+      display: flex;
+
+      @include xs-to-sm {
+        padding-left: 0;
+      }
+    }
+
+    &.col-3 {
+      flex: 20;
+      display: flex;
+      color: $tc-gray-50;
+
+      @include xs-to-sm {
+        flex: 42;
+        display: block;
+        text-align: left;
+      }
+
+      &.time {
+        width: 100%;
+        display: block;
+      }
+    }
+
+    &.col-4 {
+      flex: 20;
+      color: $tc-gray-50;
+
+      @include xs-to-sm {
+        flex: 10;
+      }
+    }
+
+    &.col-5 {
+      flex: 20;
+    }
+
+    &.col-6 {
+      flex: 20;
+    }
+
+    &.col-7 {
+      flex: 20;
+    }
+
+    &.col-8 {
+      flex: 13;
+    }
+
+    .text {
+      cursor: pointer;
+      color: #0d61bf;
+    }
+  }
+
+  .handle {
+    color: $tc-dark-blue;
+  }
+}
+
+.tooltip {
+  font-size: 14px;
+  margin: 10px 10px 0 10px;
+  padding-top: 5px;
+}
+
+.level-1 {
+  color: $member-gray !important;
+}
+
+.level-2 {
+  color: $member-green !important;
+}
+
+.level-3 {
+  color: $member-blue !important;
+}
+
+.level-4 {
+  color: $member-yellow !important;
+}
+
+.level-5 {
+  color: $member-red !important;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 25px;
+
+  .title {
+    @include barlow-medium;
+
+    font-weight: 600;
+    color: #2a2a2a;
+    font-size: 18px;
+    line-height: 22px;
+    text-transform: uppercase;
+  }
+
+  .icon {
+    cursor: pointer;
+    margin-top: 5px;
+  }
+}
+
+hr {
+  opacity: 0.5;
+}
+
+.submission-text {
+  @include roboto-regular;
+
+  font-size: 16px;
+  color: #2a2a2a;
+  line-height: 24px;
+  margin-top: 24px;
+
+  span {
+    font-weight: 700;
+  }
+}
+
+.close-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.close-btn {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  background-color: #137d60;
+  padding: 8px 24px;
+  width: 91px;
+  border-radius: 24px;
+
+  span {
+    @include roboto-bold;
+
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 24px;
+    color: #fff;
+  }
+
+  @include xs-to-sm {
+    border-top: 1px solid #e9e9e9;
+    position: sticky;
+  }
+}
+
+.view-as-table-header {
+  display: none !important;
+
+  @include xs-to-sm {
+    display: none !important;
+  }
+}
+
+.mobile-header {
+  display: none;
+
+  @include xs-to-sm {
+    display: block;
+    margin-top: 16px;
+    font-size: 11px;
+    line-height: 14px;
+
+    @include barlow-bold;
+
+    font-weight: 600;
+    color: #767676;
+    text-align: left;
+  }
+}
