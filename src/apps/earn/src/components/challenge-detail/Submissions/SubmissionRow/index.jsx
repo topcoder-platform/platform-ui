@@ -3,150 +3,215 @@
  * SubmissionRow component.
  */
 
-import React from "react";
-import PT from "prop-types";
-import _ from "lodash";
-import moment from "moment";
-import { getRatingLevel } from "../../../../utils/tc";
-import config from "../../../../config";
+import React from 'react';
+import PT from 'prop-types';
+import _ from 'lodash';
+import { CHALLENGE_STATUS, getRatingLevel } from '@earn/utils/tc';
+import Modal from '../../Modal'
+import { ReactComponent as IconClose } from '@earn/assets/images/icon-close-green.svg';
+import moment from 'moment';
 
-import { ReactComponent as ArrowNext } from "../../../../assets/images/arrow-next.svg";
-import Failed from "../../icons/failed.svg";
-import InReview from "../../icons/in-review.svg";
-import Queued from "../../icons/queued.svg";
-import SubmissionHistoryRow from "./SubmissionHistoryRow";
+import FailedSubmissionTooltip from '../FailedSubmissionTooltip';
+import { ReactComponent as InReview } from '../../icons/in-review.svg';
+import { ReactComponent as Queued } from '../../icons/queued.svg';
+import SubmissionHistoryRow from './SubmissionHistoryRow';
 
-import styles from "./style.module.scss";
+import styles from "./style.scss";
 import { styled as styledCss } from "@earn/utils";
 const styled = styledCss(styles)
 
 export default function SubmissionRow({
-  isMM,
-  openHistory,
-  member,
-  submissions,
-  score,
-  toggleHistory,
-  isReviewPhaseComplete,
-  finalRank,
-  provisionalRank,
-  onShowPopup,
-  rating,
+  isMM, isRDM, openHistory, member, submissions, score, toggleHistory, challengeStatus,
+  isReviewPhaseComplete, finalRank, provisionalRank, onShowPopup, rating, viewAsTable,
+  numWinners, auth, isLoggedIn,
 }) {
-  const { submissionTime, provisionalScore, status } = submissions[0];
+  const {
+    submissionTime, provisionalScore, status, submissionId,
+  } = submissions[0];
   let { finalScore } = submissions[0];
-  finalScore =
-    (!finalScore && finalScore < 0) || !isReviewPhaseComplete
-      ? "-"
-      : finalScore;
+  finalScore = (!finalScore && finalScore < 0) || !isReviewPhaseComplete ? '-' : finalScore;
   let initialScore;
   if (provisionalScore >= 0 || provisionalScore === -1) {
     initialScore = provisionalScore;
   }
 
   const getInitialReviewResult = () => {
-    const s = isMM ? _.get(score, "provisional", initialScore) : initialScore;
-    if (s && s < 0) return <Failed />;
+    const s = isMM ? _.get(score, 'provisional', initialScore) : initialScore;
+    if (s && s < 0) return <FailedSubmissionTooltip />;
     switch (status) {
-      case "completed":
+      case 'completed':
         return s;
-      case "in-review":
+      case 'in-review':
         return <InReview />;
-      case "queued":
+      case 'queued':
         return <Queued />;
-      case "failed":
-        return <Failed />;
+      case 'failed':
+        return <FailedSubmissionTooltip />;
       default:
         return s;
     }
   };
 
   const getFinalReviewResult = () => {
-    const s =
-      isMM && isReviewPhaseComplete
-        ? _.get(score, "final", finalScore)
-        : finalScore;
+    const s = isMM && isReviewPhaseComplete ? _.get(score, 'final', finalScore) : finalScore;
     if (isReviewPhaseComplete) {
       if (s && s < 0) return 0;
       return s;
     }
-    return "-";
+    return 'N/A';
   };
 
   return (
-    <div className={styled("container")}>
-      <div className={styled("row")}>
-        {isMM ? (
-          <div className={styled("col-1 col")}>
-            <div className={styled("col col-left")}>
-              {isReviewPhaseComplete ? finalRank || "-" : "-"}
-            </div>
-            <div className={styled("col")}>{provisionalRank || "-"}</div>
-          </div>
-        ) : null}
-        <div className={styled("col-2 col")}>
-          <span className={styled(`col level-${getRatingLevel(rating)}`)}>
-            {rating || "-"}
+    <div styleName={`wrapper ${viewAsTable ? 'wrapper-as-table' : ''} `}>
+      <div styleName="row">
+        {
+          isMM ? (
+            <React.Fragment>
+              <div styleName={`col-1 col ${viewAsTable ? 'col-view-as-table' : ''}`}>
+                <div styleName={viewAsTable ? 'view-as-table-header' : 'mobile-header'}>FINAL RANK</div>
+                {
+                    isReviewPhaseComplete ? finalRank || 'N/A' : 'N/A'
+                  }
+              </div>
+              <div styleName={viewAsTable ? 'view-as-table-header' : 'mobile-header'}>PROVISIONAL RANK</div>
+              <div styleName={`col-2 col ${viewAsTable ? 'col-view-as-table' : ''}`}>
+                <div>
+                  { provisionalRank || 'N/A' }
+                </div>
+              </div>
+            </React.Fragment>
+          ) : null
+        }
+        <div styleName={`col-3 col ${viewAsTable ? 'col-view-as-table' : ''}`}>
+          <div styleName={viewAsTable ? 'view-as-table-header' : 'mobile-header'}>RATING</div>
+          <span styleName={`col level-${getRatingLevel(rating)}`}>
+            {rating || '-'}
           </span>
+        </div>
+        <div styleName={`col-4 col ${viewAsTable ? 'col-view-as-table' : ''}`}>
+          <div styleName={viewAsTable ? 'view-as-table-header' : 'mobile-header'}>USERNAME</div>
           <a
-            href={`${config.URL.PLATFORM_WEBSITE}/profile/${member}`}
-            target={`${_.includes(window.origin, "www") ? "_self" : "_blank"}`}
+            href={`${window.origin}/members/${member}`}
+            target={`${_.includes(window.origin, 'www') ? '_self' : '_blank'}`}
             rel="noopener noreferrer"
             className={styled(`col level-${getRatingLevel(rating)}`)}
           >
-            {member || "-"}
+            {member || '-'}
           </a>
         </div>
-        <div className={styled("col-3 col")}>
-          <div className={styled("col col-left")}>{getFinalReviewResult()}</div>
-          <div className={styled("col")}>{getInitialReviewResult()}</div>
-          <div className={styled("col time")}>
-            {moment(submissionTime).format("DD MMM YYYY")}{" "}
-            {moment(submissionTime).format("HH:mm:ss")}
+        <div styleName={`col-5 col ${viewAsTable ? 'col-view-as-table' : ''}`}>
+          <div styleName={viewAsTable ? 'view-as-table-header' : 'mobile-header'}>FINAL SCORE</div>
+          <div>
+            {getFinalReviewResult()}
           </div>
         </div>
-        <div className={styled("col-4 col")}>
-          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-          <a onClick={toggleHistory} onKeyPress={toggleHistory}>
-            <span>
-              <span className={styled("text")}>History ({submissions.length})</span>
-              {openHistory ? (
-                <ArrowNext className={styled("icon down")} />
-              ) : (
-                <ArrowNext className={styled("icon")} />
-              )}
+        <div styleName={`col-6 col ${viewAsTable ? 'col-view-as-table' : ''}`}>
+          <div styleName={viewAsTable ? 'view-as-table-header' : 'mobile-header'}>PROVISIONAL SCORE</div>
+          <div>
+            {getInitialReviewResult() ? getInitialReviewResult() : 'N/A'}
+          </div>
+        </div>
+        <div styleName={`col-7 col ${viewAsTable ? 'col-view-as-table' : ''}`}>
+          <div styleName={viewAsTable ? 'view-as-table-header' : 'mobile-header'}>SUBMISSION DATE</div>
+          <div styleName="time">
+            {moment(submissionTime).format('DD MMM YYYY')} {moment(submissionTime).format('HH:mm:ss')}
+          </div>
+        </div>
+        <div styleName={`col-8 col ${viewAsTable ? 'col-view-as-table' : ''}`}>
+          <div styleName={viewAsTable ? 'view-as-table-header' : 'mobile-header'}>ACTIONS</div>
+          <a
+            onClick={toggleHistory}
+            onKeyPress={toggleHistory}
+          >
+            <span styleName="text">
+              History (
+              {submissions.length}
+              )
             </span>
           </a>
         </div>
       </div>
-      {openHistory && (
-        <div className={styled("history")}>
-          <div>
-            <div className={styled("row no-border history-head")}>
-              {isMM ? <div className={styled("col-1 col")} /> : null}
-              <div className={styled("col-2 col")}>Submission</div>
-              <div className={styled("col-3 col")}>
-                <div className={styled("col")} />
-                <div className={styled("col")}>Final</div>
-                <div className={styled("col")}>Provisional</div>
+      { openHistory && (
+        <Modal
+          onCancel={toggleHistory}
+          theme={{ container: `${style.modal} ${isMM && (numWinners > 0 || challengeStatus === CHALLENGE_STATUS.COMPLETED) ? style.download : ''}` }}
+        >
+          <div styleName="history">
+            <div styleName="header">
+              <h2 styleName="title">Submission History</h2>
+              <div styleName="icon" role="presentation" onClick={toggleHistory}>
+                <IconClose />
               </div>
-              <div className={styled(`col-4 col ${isMM ? "mm" : ""}`)}>Time</div>
-              {isMM && <div className={styled("col-5 col")}>&nbsp;</div>}
+            </div>
+            <hr />
+            <div styleName="submission-text">
+              Latest Submission: <span>{submissionId}</span>
+            </div>
+            <div>
+              <div styleName="row no-border history-head">
+                { isMM ? <div styleName="col-1 col" /> : null }
+                <div styleName="col-2 col">
+                  Submission
+                </div>
+                <div styleName="col-3 col">
+                  <div styleName="col" />
+                  <div styleName="col">
+                    Final Score
+                  </div>
+                </div>
+                <div styleName="col-4 col">
+                  <div styleName="col">
+                    Provisional Score
+                  </div>
+                </div>
+                <div styleName="col-5 col">
+                  Time
+                </div>
+                {
+                  (isMM || isRDM)
+                  && (numWinners > 0 || challengeStatus === CHALLENGE_STATUS.COMPLETED) && (
+                    <div styleName="col-2 col center">
+                      Action
+                    </div>
+                  )
+                }
+                {
+                  isMM && isLoggedIn && (
+                    <div styleName="col">&nbsp;</div>
+                  )
+                }
+              </div>
+            </div>
+            <div styleName="table-body">
+              {
+                submissions.map((submissionHistory, index) => (
+                  <SubmissionHistoryRow
+                    isReviewPhaseComplete={isReviewPhaseComplete}
+                    isMM={isMM}
+                    isRDM={isRDM}
+                    challengeStatus={challengeStatus}
+                    submission={submissions.length - index}
+                    {...submissionHistory}
+                    key={submissionHistory.submissionId}
+                    onShowPopup={onShowPopup}
+                    member={member}
+                    numWinners={numWinners}
+                    auth={auth}
+                    isLoggedIn={isLoggedIn}
+                    submissionId={submissionHistory.submissionId}
+                  />
+                ))
+              }
+            </div>
+            <div styleName="close-wrapper">
+              <div styleName="close-btn" onClick={toggleHistory} role="presentation">
+                <span>CLOSE</span>
+              </div>
             </div>
           </div>
-          {submissions.map((submissionHistory, index) => (
-            <SubmissionHistoryRow
-              isReviewPhaseComplete={isReviewPhaseComplete}
-              isMM={isMM}
-              submission={submissions.length - index}
-              {...submissionHistory}
-              key={submissionHistory.submissionId}
-              onShowPopup={onShowPopup}
-              member={member}
-            />
-          ))}
-        </div>
-      )}
+        </Modal>
+      )
+          }
     </div>
   );
 }
@@ -158,25 +223,41 @@ SubmissionRow.defaultProps = {
   finalRank: null,
   provisionalRank: null,
   rating: null,
+  isLoggedIn: false,
 };
 
 SubmissionRow.propTypes = {
   isMM: PT.bool.isRequired,
+  isRDM: PT.bool.isRequired,
   openHistory: PT.bool.isRequired,
   member: PT.string.isRequired,
-  submissions: PT.arrayOf(
-    PT.shape({
-      provisionalScore: PT.oneOfType([PT.number, PT.string]),
-      finalScore: PT.oneOfType([PT.number, PT.string]),
-      initialScore: PT.oneOfType([PT.number, PT.string]),
-      status: PT.string,
-      submissionId: PT.string.isRequired,
-      submissionTime: PT.string.isRequired,
-    })
-  ).isRequired,
+  challengeStatus: PT.string.isRequired,
+  submissions: PT.arrayOf(PT.shape({
+    provisionalScore: PT.oneOfType([
+      PT.number,
+      PT.string,
+    ]),
+    finalScore: PT.oneOfType([
+      PT.number,
+      PT.string,
+    ]),
+    initialScore: PT.oneOfType([
+      PT.number,
+      PT.string,
+    ]),
+    status: PT.string.isRequired,
+    submissionId: PT.string.isRequired,
+    submissionTime: PT.string.isRequired,
+  })).isRequired,
   score: PT.shape({
-    final: PT.oneOfType([PT.number, PT.string]),
-    provisional: PT.oneOfType([PT.number, PT.string]),
+    final: PT.oneOfType([
+      PT.number,
+      PT.string,
+    ]),
+    provisional: PT.oneOfType([
+      PT.number,
+      PT.string,
+    ]),
   }),
   rating: PT.number,
   toggleHistory: PT.func,
@@ -184,4 +265,8 @@ SubmissionRow.propTypes = {
   finalRank: PT.number,
   provisionalRank: PT.number,
   onShowPopup: PT.func.isRequired,
+  viewAsTable: PT.bool.isRequired,
+  isLoggedIn: PT.bool,
+  numWinners: PT.number.isRequired,
+  auth: PT.shape().isRequired,
 };

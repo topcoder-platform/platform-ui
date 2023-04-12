@@ -3,7 +3,7 @@
  */
 
 import { themr } from 'react-css-super-themr';
-import { default as ProtoButton } from '../Button';
+import { default as ProtoButton } from '@earn/components/challenge-detail/GenericButton';
 
 import dangerTheme from './themes/danger.scss';
 import defaultTheme from './themes/default.scss';

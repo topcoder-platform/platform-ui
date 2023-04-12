@@ -229,6 +229,8 @@ class ChallengeDetailPageContainer extends React.Component {
       loadChallengeDetails(auth, challengeId);
     }
 
+    fetchChallengeStatistics(auth, challengeId);
+
     if (!allCountries.length) {
       getAllCountries();
     }
@@ -242,7 +244,6 @@ class ChallengeDetailPageContainer extends React.Component {
     if (!reviewTypes.length) {
       getReviewTypes(auth.tokenV3);
     }
-    //fetchChallengeStatistics(auth, challengeId);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -366,6 +367,7 @@ class ChallengeDetailPageContainer extends React.Component {
       unregisterFromChallenge,
       unregistering,
       updateChallenge,
+      isMenuOpened,
       loadMMSubmissions,
       mmSubmissions,
       loadingMMSubmissionsForChallengeId,
@@ -501,6 +503,7 @@ class ChallengeDetailPageContainer extends React.Component {
               checkpoints={checkpoints}
               hasRegistered={challenge.isRegistered}
               hasFirstPlacement={hasFirstPlacement}
+              isMenuOpened={isMenuOpened}
               challengeTypesMap={challengeTypesMap}
               submissionEnded={submissionEnded}
               mySubmissions={challenge.isRegistered ? mySubmissions : []}
@@ -709,6 +712,7 @@ ChallengeDetailPageContainer.defaultProps = {
   terms: [],
   allCountries: [],
   reviewTypes: [],
+  isMenuOpened: false,
   loadingMMSubmissionsForChallengeId: '',
   mmSubmissions: [],
   mySubmissions: [],
@@ -766,6 +770,7 @@ ChallengeDetailPageContainer.propTypes = {
   unregisterFromChallenge: PT.func.isRequired,
   unregistering: PT.bool.isRequired,
   updateChallenge: PT.func.isRequired,
+  isMenuOpened: PT.bool,
   loadingMMSubmissionsForChallengeId: PT.string,
   mmSubmissions: PT.arrayOf(PT.shape()),
   loadMMSubmissions: PT.func.isRequired,
@@ -778,6 +783,7 @@ ChallengeDetailPageContainer.propTypes = {
   // expandedTags: PT.arrayOf(PT.number).isRequired,
   // expandTag: PT.func.isRequired,
   // loadingRecommendedChallengesUUID: PT.string.isRequired,
+  history: PT.shape().isRequired,
   openForRegistrationChallenges: PT.arrayOf(PT.shape()).isRequired,
   statisticsData: PT.arrayOf(PT.shape()),
 };

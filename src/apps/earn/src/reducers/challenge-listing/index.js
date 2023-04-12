@@ -87,6 +87,7 @@ function onUnregisterDone(state, { error, payload }) {
  */
 function onGetChallengeTypesDone(state, action) {
   if (action.error) logger.error(action.payload);
+  alert("Challenge types: " + JSON.stringify(action.payload));
   return {
     ...state,
     challengeTypes: action.error ? [] : action.payload,
