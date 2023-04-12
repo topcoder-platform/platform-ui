@@ -7,7 +7,7 @@ import React from 'react';
 import PT from 'prop-types';
 import Tooltip from '@earn/components/challenge-detail/Tooltip';
 import { ReactComponent as Failed } from '../../icons/failed.svg';
-import './style.scss';
+import styles from './style.scss';
 
 function onPopupAlign(TooltipNode) {
   const inner = TooltipNode.querySelector('.rc-tooltip-inner');
@@ -21,7 +21,7 @@ function FailedSubmissionTooltip({
   content,
 }) {
   return (
-    <div styleName="failed-submission-tooltip">
+    <div className={styles['failed-submission-tooltip']}>
       <Tooltip content={content} placeArrow={onPopupAlign} position="top" className="tooltip-overlay toolTipPadding">
         <Failed />
       </Tooltip>

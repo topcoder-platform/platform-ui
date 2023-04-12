@@ -22,9 +22,9 @@ import { ReactComponent as ZoomIcon } from '../../../SubmissionManagement/Icons/
 import { styled as styledCss } from "../../../../utils";
 
 // import SearchIcon from '../../../SubmissionManagement/Icons/IconSearch.svg';
-import style from './styles.scss';
+import styles from './styles.scss';
 
-const styled = styledCss(style)
+const styled = styledCss(styles)
 
 class SubmissionsListView extends React.Component {
   constructor(props) {
@@ -189,12 +189,12 @@ class SubmissionsListView extends React.Component {
     };
 
     return (
-      <div styleName="wrapper">
-        <div styleName="submission-table">
-          <div styleName="submission-table-header submission-table-row">
-            <div styleName="submission-table-column column-1">
+      <div className={styles.wrapper}>
+        <div className={styles['submission-table']}>
+          <div className={styled('submission-table-header submission-table-row')}>
+            <div className={styled('submission-table-column column-1')}>
               <div
-                styleName={cn(
+                className={styled(
                   'submission-table-column column-1-1',
                   {
                     'is-highlight': field === 'Submission ID',
@@ -214,7 +214,7 @@ class SubmissionsListView extends React.Component {
                 >
                   <span>Submission ID</span>
                   <div
-                    styleName={cn(
+                    className={styled(
                       'col-arrow',
                       {
                         'col-arrow-sort-asc': (field === 'Submission ID') && (sort === 'asc'),
@@ -226,7 +226,7 @@ class SubmissionsListView extends React.Component {
                 </button>
               </div>
               <div
-                styleName={cn(
+                className={styled(
                   'submission-table-column column-1-2',
                   {
                     'is-highlight': field === 'Status',
@@ -246,7 +246,7 @@ class SubmissionsListView extends React.Component {
                 >
                   <span>Status</span>
                   <div
-                    styleName={cn(
+                    className={styled(
                       'col-arrow',
                       {
                         'col-arrow-sort-asc': (field === 'Status') && (sort === 'asc'),
@@ -260,7 +260,7 @@ class SubmissionsListView extends React.Component {
             </div>
             <div className={styled("submission-table-column column-2")}>
               <div
-                styleName={cn(
+                className={styled(
                   'submission-table-column column-2-1',
                   {
                     'is-highlight': field === 'Final',
@@ -280,7 +280,7 @@ class SubmissionsListView extends React.Component {
                 >
                   <span>Final Score</span>
                   <div
-                    styleName={cn(
+                    className={styled(
                       'col-arrow',
                       {
                         'col-arrow-sort-asc': (field === 'Final') && (sort === 'asc'),
@@ -292,7 +292,7 @@ class SubmissionsListView extends React.Component {
                 </button>
               </div>
               <div
-                styleName={cn(
+                className={styled(
                   'submission-table-column column-2-2',
                   {
                     'is-highlight': field === 'Provision',
@@ -312,7 +312,7 @@ class SubmissionsListView extends React.Component {
                 >
                   <span>Provision Score</span>
                   <div
-                    styleName={cn(
+                    className={styled(
                       'col-arrow',
                       {
                         'col-arrow-sort-asc': (field === 'Provision') && (sort === 'asc'),
@@ -324,7 +324,7 @@ class SubmissionsListView extends React.Component {
                 </button>
               </div>
               <div
-                styleName={cn(
+                className={styled(
                   'submission-table-column column-2-3',
                   {
                     'is-highlight': field === 'Time',
@@ -344,7 +344,7 @@ class SubmissionsListView extends React.Component {
                 >
                   <span>Time</span>
                   <div
-                    styleName={cn(
+                    className={styled(
                       'col-arrow',
                       {
                         'col-arrow-sort-asc': (field === 'Time') && (sort === 'asc'),
@@ -355,8 +355,8 @@ class SubmissionsListView extends React.Component {
                   </div>
                 </button>
               </div>
-              <div styleName="submission-table-column column-2-4">
-                <span styleName="actions-col">ACTIONS</span>
+              <div className={styled('submission-table-column column-2-4')}>
+                <span className={styles['actions-col']}>ACTIONS</span>
               </div>
             </div>
           </div>
@@ -378,46 +378,46 @@ class SubmissionsListView extends React.Component {
                 provisionalScore = 'N/A';
               }
               return (
-                <div key={mySubmission.submissionId} styleName="submission-table-row">
+                <div key={mySubmission.submissionId} className={styles['submission-table-row']}>
                   <div
-                    styleName={cn(
+                    className={styled(
                       'submission-table-column column-1',
                     )}
                   >
                     <div
-                      styleName={cn(
+                      className={styled(
                         'submission-table-column column-1-1',
                       )}
                     >
-                      <div styleName="mobile-header">Submission Id</div>
+                      <div className={styles['mobile-header']}>Submission Id</div>
                       <span>{mySubmission.id}</span>
                     </div>
                     <div
-                      styleName={cn(
+                      className={styled(
                         'submission-table-column column-1-2 status-row',
                       )}
                     >
-                      <div styleName="mobile-header">Status</div>
+                      <div className={styles['mobile-header']}>Status</div>
                       {mySubmission.provisionalScoringIsCompleted ? (
-                        <span styleName="accepted">Accepted</span>
-                      ) : <span styleName="queue">In Queue</span>}
+                        <span className={styles.accepted}>Accepted</span>
+                      ) : <span className={styles.queue}>In Queue</span>}
                     </div>
                   </div>
-                  <div styleName="submission-table-column column-2">
+                  <div className={styled('submission-table-column column-2')}>
                     <div
-                      styleName={cn(
+                      className={styled(
                         'submission-table-column column-2-1 final-score-row',
                       )}
                     >
-                      <div styleName="mobile-header">Final Score</div>
+                      <div className={styles['mobile-header']}>Final Score</div>
                       {(finalScore < 0) ? (<IconFail />) : (<span>{finalScore}</span>)}
                     </div>
                     <div
-                      styleName={cn(
+                      className={styled(
                         'submission-table-column column-2-2 provisional-score-row',
                       )}
                     >
-                      <div styleName="mobile-header">Provisional Score</div>
+                      <div className={styles['mobile-header']}>Provisional Score</div>
                       {(provisionalScore < 0) ? (
                         <Tooltip content="Failed Submission" className="toolTipPadding">
                           <IconFail />
@@ -425,14 +425,14 @@ class SubmissionsListView extends React.Component {
                       ) : (<span>{provisionalScore}</span>)}
                     </div>
                     <div
-                      styleName={cn(
+                      className={styled(
                         'submission-table-column column-2-3 time-row',
                       )}
                     >
-                      <div styleName="mobile-header">Time</div>
+                      <div className={styles['mobile-header']}>Time</div>
                       <span>{moment(mySubmission.submissionTime).format('MMM DD, YYYY HH:mm:ss')}</span>
                     </div>
-                    <div styleName="submission-table-column column-2-4">
+                    <div className={styled('submission-table-column column-2-4')}>
                       <button
                         onClick={() => {
                           // download submission
@@ -454,11 +454,11 @@ class SubmissionsListView extends React.Component {
                       </button>
 
                       <button onClick={() => selectSubmission(mySubmission)} type="button">
-                        <ZoomIcon styleName="icon-zoom" />
+                        <ZoomIcon className={styles['icon-zoom']} />
                       </button>
 
                       {/* <button onClick={() => this.toggleModal(mySubmission)} type="button">
-                        <SearchIcon styleName="icon-search" />
+                        <SearchIcon className={styles['icon-search']} />
                       </button> */}
                     </div>
                   </div>
@@ -469,7 +469,7 @@ class SubmissionsListView extends React.Component {
         </div>
         <PrimaryButton
           theme={{
-            button: isButtonDisabled ? style.challengeActionDisabled : style.challengeAction,
+            button: isButtonDisabled ? styles.challengeActionDisabled : styles.challengeAction,
           }}
           disabled={isButtonDisabled}
           to={`${challengesUrl}/${challengeId}/submit`}
@@ -478,33 +478,33 @@ class SubmissionsListView extends React.Component {
         </PrimaryButton>
         {
           openModal && (
-            <Modal onCancel={this.toggleModal} theme={style}>
-              <div styleName="mySubModal">
-                <div styleName="header">
-                  <h2 styleName="title">Submission Details</h2>
-                  <div styleName="icon" role="presentation" onClick={() => this.toggleHistory({})}>
+            <Modal onCancel={this.toggleModal} theme={styles}>
+              <div className={styles.mySubModal}>
+                <div className={styles.header}>
+                  <h2 className={styles.title}>Submission Details</h2>
+                  <div className={styles.icon} role="presentation" onClick={() => this.toggleHistory({})}>
                     <IconClose />
                   </div>
                 </div>
                 <hr />
-                <div styleName="submission-text">
+                <div className={styles['submission-text']}>
                   Submission: <span>{selectedSubmission.submissionId}</span>
                 </div>
-                <div styleName="detail-row">
-                  <div styleName="col-1 col">
+                <div className={styles['detail-row']}>
+                  <div className={styled('col-1 col')}>
                     Review Type
                   </div>
-                  <div styleName="col-2 col">
+                  <div className={styled('col-2 col')}>
                     Reviewer
                   </div>
-                  <div styleName="col-3 col">
+                  <div className={styled('col-3 col')}>
                     Score
                   </div>
-                  <div styleName="col-4 col">
+                  <div className={styled('col-4 col')}>
                     Status
                   </div>
                 </div>
-                <div styleName="close-btn" onClick={() => this.toggleHistory({})} role="presentation">
+                <div className={styles['close-btn']} onClick={() => this.toggleHistory({})} role="presentation">
                   <span>CLOSE</span>
                 </div>
               </div>

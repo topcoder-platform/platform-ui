@@ -410,11 +410,11 @@ class SubmissionsComponent extends React.Component {
 
     if (track.toLowerCase() === 'design') {
       return challenge.submissionViewable === 'true' ? (
-        <div styleName="container view">
-          <div styleName="title">
+        <div className={styled('container view')}>
+          <div className={styles.title}>
             ROUND 2 (FINAL) SUBMISSIONS
           </div>
-          <div styleName="content">
+          <div className={styles.content}>
             {
                 sortedSubmissions.map(renderSubmission)
               }
@@ -422,7 +422,7 @@ class SubmissionsComponent extends React.Component {
           {
               checkpoints.length > 0
               && (
-                <div styleName="title">
+                <div className={styles.title}>
                   ROUND 1 (CHECKPOINT) SUBMISSIONS
                 </div>
               )
@@ -430,7 +430,7 @@ class SubmissionsComponent extends React.Component {
           {
               checkpoints.length > 0
               && (
-                <div styleName="content">
+                <div className={styles.content}>
                   {
                     checkpoints.map(renderSubmission)
                   }
@@ -440,15 +440,15 @@ class SubmissionsComponent extends React.Component {
         </div>
       )
         : (
-          <div styleName="container no-view">
-            <Lock styleName="lock" />
-            <div styleName="lock-title">
+          <div className={styled('container no-view')}>
+            <Lock className={styles.lock} />
+            <div className={styles['lock-title']}>
               Private Challenge
             </div>
-            <div styleName="lock-subtitle">
+            <div className={styles['lock-subtitle']}>
               Submissions are not viewable for this challenge
             </div>
-            <span styleName="lock-desc">
+            <span className={styles['lock-desc']}>
               There are many reason why the submissions may not be viewable, such
               as the allowance of stock art, or a client&apos;s desire to keep the work private.
             </span>
@@ -457,39 +457,39 @@ class SubmissionsComponent extends React.Component {
     }
 
     if (!_.isEmpty(loadingMMSubmissionsForChallengeId)) {
-      return <div styleName="loading"><LoadingIndicator /></div>;
+      return <div className={styles.loading}><LoadingIndicator /></div>;
     }
 
     return (
-      <div styleName={`container dev ${isMM ? 'mm' : 'non-mm'}`}>
+      <div className={styled(`container dev ${isMM ? 'mm' : 'non-mm'}`)}>
         {
           isMM ? (
-            <div styleName="view-as">
-              <span styleName="title">View as</span>
+            <div className={styles['view-as']}>
+              <span className={styles.title}>View as</span>
               {
                 viewAsTable ? (
                   <React.Fragment>
-                    <ViewAsListInactive styleName="list-icon" onClick={() => setViewAsTable(false)} />
-                    <ViewAsTableActive styleName="table-icon" onClick={() => setViewAsTable(true)} />
+                    <ViewAsListInactive className={styles['list-icon']} onClick={() => setViewAsTable(false)} />
+                    <ViewAsTableActive className={styles['table-icon']} onClick={() => setViewAsTable(true)} />
                   </React.Fragment>
                 ) : (
                   <React.Fragment>
-                    <ViewAsListActive styleName="list-icon" onClick={() => setViewAsTable(false)} />
-                    <ViewAsTableInactive styleName="table-icon" onClick={() => setViewAsTable(true)} />
+                    <ViewAsListActive className={styles['list-icon']} onClick={() => setViewAsTable(false)} />
+                    <ViewAsTableInactive className={styles['table-icon']} onClick={() => setViewAsTable(true)} />
                   </React.Fragment>
                 )
               }
             </div>
           ) : null
         }
-        <div styleName={`${viewAsTable ? 'view-as-table' : ''}`}>
+        <div className={styled(`${viewAsTable ? 'view-as-table' : ''}`)}>
           {
             ((numWinners > 0 || challenge.status === CHALLENGE_STATUS.COMPLETED)
             && (isMM || isRDM) && isLoggedIn) && (
-              <div styleName="block-download-all">
+              <div className={styles['block-download-all']}>
                 <button
                   disabled={downloadingAll}
-                  styleName="download MM"
+                  className={styled('download MM')}
                   onClick={() => {
                     // download submission
                     this.setState({
@@ -538,7 +538,7 @@ class SubmissionsComponent extends React.Component {
           }
           {
             !isMM && (
-              <div styleName="head">
+              <div className={styles.head}>
                 {
                   !isF2F && !isBugHunt && (
                     <button
@@ -550,11 +550,11 @@ class SubmissionsComponent extends React.Component {
                         });
                         this.setState({ ...sortOptionClicked, ratingClicked: true });
                       }}
-                      styleName="col-2 header-sort"
+                      className={styled('col-2 header-sort')}
                     >
                       <span>Rating</span>
                       <div
-                        styleName={cn(
+                        className={styled(
                           'col-arrow',
                           {
                             'col-arrow-sort-asc': (field === 'Rating') && (sort === 'asc'),
@@ -575,11 +575,11 @@ class SubmissionsComponent extends React.Component {
                     });
                     this.setState({ ...sortOptionClicked, usernameClicked: true });
                   }}
-                  styleName="col-3 header-sort"
+                  className={styled('col-3 header-sort')}
                 >
                   <span>Username</span>
                   <div
-                    styleName={cn(
+                    className={styled(
                       'col-arrow',
                       {
                         'col-arrow-sort-asc': (field === 'Username') && (sort === 'asc'),
@@ -598,11 +598,11 @@ class SubmissionsComponent extends React.Component {
                     });
                     this.setState({ ...sortOptionClicked, dateClicked: true });
                   }}
-                  styleName="col-4 header-sort"
+                  className={styled('col-4 header-sort')}
                 >
                   <span>Submission Date</span>
                   <div
-                    styleName={cn(
+                    className={styled(
                       'col-arrow',
                       {
                         'col-arrow-sort-asc': (field === 'Submission Date') && (sort === 'asc'),
@@ -621,11 +621,11 @@ class SubmissionsComponent extends React.Component {
                     });
                     this.setState({ ...sortOptionClicked, initialScoreClicked: true });
                   }}
-                  styleName="col-5 header-sort"
+                  className={styled('col-5 header-sort')}
                 >
                   <span>Initial Score</span>
                   <div
-                    styleName={cn(
+                    className={styled(
                       'col-arrow',
                       {
                         'col-arrow-sort-asc': (field === 'Initial Score') && (sort === 'asc'),
@@ -644,11 +644,11 @@ class SubmissionsComponent extends React.Component {
                     });
                     this.setState({ ...sortOptionClicked, finalScoreClicked: true });
                   }}
-                  styleName="col-6 header-sort"
+                  className={styled('col-6 header-sort')}
                 >
                   <span>Final Score</span>
                   <div
-                    styleName={cn(
+                    className={styled(
                       'col-arrow',
                       {
                         'col-arrow-sort-asc': (field === 'Final Score') && (sort === 'asc'),
@@ -663,8 +663,8 @@ class SubmissionsComponent extends React.Component {
           }
           {
             isMM && (
-              <div styleName={`sub-head ${viewAsTable ? 'sub-head-table' : ''}`}>
-                <div styleName="col-1 col">
+              <div className={styled(`sub-head ${viewAsTable ? 'sub-head-table' : ''}`)}>
+                <div className={styled('col-1 col')}>
                   <button
                     type="button"
                     onClick={() => {
@@ -674,11 +674,11 @@ class SubmissionsComponent extends React.Component {
                       });
                       this.setState({ ...sortOptionClicked, finalRankClicked: true });
                     }}
-                    styleName="col header-sort"
+                    className={styled('col header-sort')}
                   >
                     <span>FINAL RANK</span>
                     <div
-                      styleName={cn(
+                      className={styled(
                         'col-arrow',
                         {
                           'col-arrow-sort-asc': (field === 'Final Rank') && (sort === 'asc'),
@@ -689,7 +689,7 @@ class SubmissionsComponent extends React.Component {
                     </div>
                   </button>
                 </div>
-                <div styleName="col-2 col">
+                <div className={styled('col-2 col')}>
                   <button
                     type="button"
                     onClick={() => {
@@ -699,11 +699,11 @@ class SubmissionsComponent extends React.Component {
                       });
                       this.setState({ ...sortOptionClicked, provisionalRankClicked: true });
                     }}
-                    styleName="col header-sort"
+                    className={styled('col header-sort')}
                   >
                     <span>PROVISIONAL RANK</span>
                     <div
-                      styleName={cn(
+                      className={styled(
                         'col-arrow',
                         {
                           'col-arrow-sort-asc': (field === 'Provisional Rank') && (sort === 'asc'),
@@ -714,7 +714,7 @@ class SubmissionsComponent extends React.Component {
                     </div>
                   </button>
                 </div>
-                <div styleName="col-3 col">
+                <div className={styled('col-3 col')}>
                   <button
                     type="button"
                     onClick={() => {
@@ -724,11 +724,11 @@ class SubmissionsComponent extends React.Component {
                       });
                       this.setState({ ...sortOptionClicked, ratingClicked: true });
                     }}
-                    styleName="header-sort"
+                    className={styles['header-sort']}
                   >
                     <span>RATING</span>
                     <div
-                      styleName={cn(
+                      className={styled(
                         'col-arrow',
                         {
                           'col-arrow-sort-asc': (field === 'Rating') && (sort === 'asc'),
@@ -739,7 +739,7 @@ class SubmissionsComponent extends React.Component {
                     </div>
                   </button>
                 </div>
-                <div styleName="col-4 col">
+                <div className={styled('col-4 col')}>
                   <button
                     type="button"
                     onClick={() => {
@@ -749,11 +749,11 @@ class SubmissionsComponent extends React.Component {
                       });
                       this.setState({ ...sortOptionClicked, usernameClicked: true });
                     }}
-                    styleName="col header-sort"
+                    className={styled('col header-sort')}
                   >
                     <span>USERNAME</span>
                     <div
-                      styleName={cn(
+                      className={styled(
                         'col-arrow',
                         {
                           'col-arrow-sort-asc': (field === 'Username') && (sort === 'asc'),
@@ -764,7 +764,7 @@ class SubmissionsComponent extends React.Component {
                     </div>
                   </button>
                 </div>
-                <div styleName="col-5 col">
+                <div className={styled('col-5 col')}>
                   <button
                     type="button"
                     onClick={() => {
@@ -774,11 +774,11 @@ class SubmissionsComponent extends React.Component {
                       });
                       this.setState({ ...sortOptionClicked, finalScoreClicked: true });
                     }}
-                    styleName="col header-sort"
+                    className={styled('col header-sort')}
                   >
                     <span>FINAL SCORE</span>
                     <div
-                      styleName={cn(
+                      className={styled(
                         'col-arrow',
                         {
                           'col-arrow-sort-asc': (field === 'Final Score') && (sort === 'asc'),
@@ -789,7 +789,7 @@ class SubmissionsComponent extends React.Component {
                     </div>
                   </button>
                 </div>
-                <div styleName="col-6 col">
+                <div className={styled('col-6 col')}>
                   <button
                     type="button"
                     onClick={() => {
@@ -799,11 +799,11 @@ class SubmissionsComponent extends React.Component {
                       });
                       this.setState({ ...sortOptionClicked, provisionalScoreClicked: true });
                     }}
-                    styleName="col header-sort"
+                    className={styled('col header-sort')}
                   >
                     <span>PROVISIONAL SCORE</span>
                     <div
-                      styleName={cn(
+                      className={styled(
                         'col-arrow',
                         {
                           'col-arrow-sort-asc': (field === 'Provisional Score') && (sort === 'asc'),
@@ -814,7 +814,7 @@ class SubmissionsComponent extends React.Component {
                     </div>
                   </button>
                 </div>
-                <div styleName="col-7 col">
+                <div className={styled('col-7 col')}>
                   <button
                     type="button"
                     onClick={() => {
@@ -824,11 +824,11 @@ class SubmissionsComponent extends React.Component {
                       });
                       this.setState({ ...sortOptionClicked, dateClicked: true });
                     }}
-                    styleName="col header-sort"
+                    className={styled('col header-sort')}
                   >
                     <span>TIME</span>
                     <div
-                      styleName={cn(
+                      className={styled(
                         'col-arrow',
                         {
                           'col-arrow-sort-asc': (field === 'Time') && (sort === 'asc'),
@@ -839,7 +839,7 @@ class SubmissionsComponent extends React.Component {
                     </div>
                   </button>
                 </div>
-                <div styleName="col-8 col">
+                <div className={styled('col-8 col')}>
                   <span>ACTIONS</span>
                 </div>
               </div>
@@ -875,36 +875,36 @@ class SubmissionsComponent extends React.Component {
           {
             !isMM && (
               sortedSubmissions.map(s => (
-                <div key={_.get(s.registrant, 'memberHandle', '') + s.created} styleName="row">
+                <div key={_.get(s.registrant, 'memberHandle', '') + s.created} className={styles.row}>
                   {
                     !isF2F && !isBugHunt && (
                       <React.Fragment>
-                        <div styleName="mobile-header">RATING</div>
-                        <div styleName={`col-2 level-${getRatingLevel(_.get(s.registrant, 'rating', 0))}`}>
+                        <div className={styles['mobile-header']}>RATING</div>
+                        <div className={styled(`col-2 level-${getRatingLevel(_.get(s.registrant, 'rating', 0))}`)}>
                           { (s.registrant && !_.isNil(s.registrant.rating)) ? s.registrant.rating : '-'}
                         </div>
                       </React.Fragment>
                     )
                   }
-                  <div styleName="col-3">
-                    <div styleName="mobile-header">USERNAME</div>
+                  <div className={styles['col-3']}>
+                    <div className={styles['mobile-header']}>USERNAME</div>
                     <a
                       href={`${window.origin}/members/${_.get(s.registrant, 'memberHandle', '')}`}
                       target={`${_.includes(window.origin, 'www') ? '_self' : '_blank'}`}
                       rel="noopener noreferrer"
-                      styleName={`handle level-${getRatingLevel(_.get(s.registrant, 'rating', 0))}`}
+                      className={styled(`handle level-${getRatingLevel(_.get(s.registrant, 'rating', 0))}`)}
                     >
                       {_.get(s.registrant, 'memberHandle', '')}
                     </a>
                   </div>
-                  <div styleName="col-4">
-                    <div styleName="mobile-header">SUBMISSION DATE</div>
+                  <div className={styles['col-4']}>
+                    <div className={styles['mobile-header']}>SUBMISSION DATE</div>
                     <p>
                       {moment(s.created).format('MMM DD, YYYY HH:mm')}
                     </p>
                   </div>
-                  <div styleName="col-5">
-                    <div styleName="mobile-header">INITIAL SCORE</div>
+                  <div className={styles['col-5']}>
+                    <div className={styles['mobile-header']}>INITIAL SCORE</div>
                     <p>
                       {
                         (!_.isEmpty(s.review) && !_.isEmpty(s.review[0]) && s.review[0].score)
@@ -913,8 +913,8 @@ class SubmissionsComponent extends React.Component {
                       }
                     </p>
                   </div>
-                  <div styleName="col-6">
-                    <div styleName="mobile-header">FINAL SCORE</div>
+                  <div className={styles['col-6']}>
+                    <div className={styles['mobile-header']}>FINAL SCORE</div>
                     <p>
                       {
                         (s.reviewSummation && s.reviewSummation[0].aggregateScore)
@@ -928,14 +928,14 @@ class SubmissionsComponent extends React.Component {
             )
           }
           {
-          isMM && <div styleName="bottom-line" />
+          isMM && <div className={styles['bottom-line']} />
         }
         </div>
         {isMM && (
-          <div styleName="btn-add-submission">
+          <div className={styles['btn-add-submission']}>
             <Button
               disabled={!hasRegistered || unregistering || submissionEnded || isLegacyMM}
-              theme={{ button: style.challengeAction }}
+              theme={{ button: styles.challengeAction }}
               to={`${challengesUrl}/${challengeId}/submit`}
             >
               Add Submission

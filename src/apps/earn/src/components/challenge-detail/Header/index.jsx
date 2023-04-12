@@ -30,10 +30,10 @@ import ChallengeTags from './ChallengeTags';
 import DeadlinesPanel from './DeadlinesPanel';
 import TabSelector from './TabSelector';
 
-import style from './style.scss';
+import styles from './style.scss';
 import { styled as styledCss } from "../../../utils";
 
-const styled = styledCss(style)
+const styled = styledCss(styles)
 
 /* Holds day and hour range in ms. */
 const HOUR_MS = 60 * 60 * 1000;
@@ -244,7 +244,7 @@ export default function ChallengeHeader(props) {
   switch ((status || '').toLowerCase()) {
     case 'completed':
       nextDeadlineMsg = (
-        <div styleName="completed">
+        <div className={styles.completed}>
           The challenge is finished.
         </div>
       );
@@ -256,7 +256,7 @@ export default function ChallengeHeader(props) {
         <div>
           Status:
           &zwnj;
-          <span styleName="deadline-highlighted">
+          <span className={styles['deadline-highlighted']}>
             {_.upperFirst(_.lowerCase(status))}
           </span>
         </div>
@@ -278,17 +278,17 @@ export default function ChallengeHeader(props) {
     || registrationEnded || hasSubmissions || isLegacyMM;
 
   return (
-    <div styleName="challenge-outer-container">
-      <div styleName="important-detail">
-        <div styleName="title-wrapper" aria-hidden={isMenuOpened}>
-          <Link to={challengesUrl} aria-label="Back to challenge list" styleName="back-arrow">
-            <LeftArrow styleName="left-arrow" />
+    <div className={styles['challenge-outer-container']}>
+      <div className={styles['important-detail']}>
+        <div className={styles['title-wrapper']} aria-hidden={isMenuOpened}>
+          <Link to={challengesUrl} aria-label="Back to challenge list" className={styles['back-arrow']}>
+            <LeftArrow className={styles['left-arrow']} />
           </Link>
           <div>
-            <h1 styleName="challenge-header">
+            <h1 className={styles['challenge-header']}>
               {name}
             </h1>
-            <div styleName="tag-container">
+            <div className={styles['tag-container']}>
               <ChallengeTags
                 isSelfService={challenge.legacy.selfService}
                 challengeId={challengeId}
@@ -301,10 +301,10 @@ export default function ChallengeHeader(props) {
                 openForRegistrationChallenges={openForRegistrationChallenges}
               />
               {(hasRecommendedChallenges || hasThriveArticles) && (
-              <div styleName="recommend-container">
+              <div className={styles['recommend-container']}>
                 {hasRecommendedChallenges && (
                 <div
-                  styleName="recommend-tag link"
+                  className={styled('recommend-tag link')}
                   role="button"
                   tabIndex={0}
                   onClick={
@@ -317,12 +317,12 @@ export default function ChallengeHeader(props) {
                 )}
 
                 {hasRecommendedChallenges && hasThriveArticles && (
-                <div styleName="recommend-tag separator" />
+                <div className={styled('recommend-tag separator')} />
                 )}
 
                 {hasThriveArticles && (
                 <div
-                  styleName="recommend-tag link"
+                  className={styled('recommend-tag link')}
                   role="button"
                   tabIndex={0}
                   onClick={
@@ -337,20 +337,20 @@ export default function ChallengeHeader(props) {
             </div>
           </div>
         </div>
-        <div styleName="prizes-ops-container">
-          <div styleName="prizes-outer-container">
-            <h2 styleName="prizes-title">
+        <div className={styles['prizes-ops-container']}>
+          <div className={styles['prizes-outer-container']}>
+            <h2 className={styles['prizes-title']}>
               Key Information
             </h2>
             <Prizes prizes={prizes && prizes.length ? prizes : []} pointPrizes={pointPrizes} />
             {
                 bonusType ? (
-                  <div id={`bonus-${trackLower}`} styleName="bonus-div">
+                  <div id={`bonus-${trackLower}`} className={styles['bonus-div']}>
                     {
                       bonusType === 'Bonus'
                         ? (
-                          <p styleName="bonus-text">
-                            <span styleName={`bonus-highlight ${trackLower}-accent-color`}>
+                          <p className={styles['bonus-text']}>
+                            <span className={styled(`bonus-highlight ${trackLower}-accent-color`)}>
                               BONUS:
                               {' '}
                               {numberOfCheckpointsPrizes}
@@ -359,7 +359,7 @@ export default function ChallengeHeader(props) {
                             CHECKPOINTS AWARDED WORTH
                             &zwnj;
                             <span
-                              styleName={`bonus-highlight ${trackLower}-accent-color`}
+                              className={styled(`bonus-highlight ${trackLower}-accent-color`)}
                             >
                               $
                               {topCheckPointPrize}
@@ -369,8 +369,8 @@ export default function ChallengeHeader(props) {
                           </p>
                         )
                         : (
-                          <p styleName="bonus-text">
-                            <span styleName={`bonus-highlight ${trackLower}-accent-color`}>
+                          <p className={styles['bonus-text']}>
+                            <span className={styled(`bonus-highlight ${trackLower}-accent-color`)}>
                               RELIABILITY BONUS: $
                               {reliabilityBonus.toFixed()}
                             </span>
@@ -382,9 +382,9 @@ export default function ChallengeHeader(props) {
               }
             {
                 drPoints ? (
-                  <div styleName="bonus-div">
-                    <p styleName="bonus-text">
-                      <span styleName={`bonus-highlight ${trackLower}-accent-color`}>
+                  <div className={styles['bonus-div']}>
+                    <p className={styles['bonus-text']}>
+                      <span className={styled(`bonus-highlight ${trackLower}-accent-color`)}>
                         POINTS:
                         {drPoints}
                       </span>
@@ -402,8 +402,8 @@ export default function ChallengeHeader(props) {
                   onClick={unregisterFromChallenge}
                   theme={{
                     button: unregisterButtonDisabled
-                      ? style.unregisterButtonDisabled
-                      : style.unregisterButton,
+                      ? styles.unregisterButtonDisabled
+                      : styles.unregisterButton,
                   }}
                 >
                   Unregister
@@ -412,7 +412,7 @@ export default function ChallengeHeader(props) {
                 <PrimaryButton
                   disabled={registerButtonDisabled}
                   theme={{
-                    button: registerButtonDisabled ? style.submitButtonDisabled : style.registerBtn,
+                    button: registerButtonDisabled ? styles.submitButtonDisabled : styles.registerBtn,
                   }}
                   forceA
                   onClick={registerForChallenge}
@@ -422,7 +422,7 @@ export default function ChallengeHeader(props) {
               )}
               <PrimaryButton
                 disabled={disabled}
-                theme={{ button: disabled ? style.submitButtonDisabled : style.submitButton }}
+                theme={{ button: disabled ? styles.submitButtonDisabled : styles.submitButton }}
                 to={`${challengesUrl}/${challengeId}/submit`}
               >
                 Submit
@@ -431,7 +431,7 @@ export default function ChallengeHeader(props) {
                 track === COMPETITION_TRACKS.DES && hasRegistered && !unregistering
                   && hasSubmissions && (
                   <PrimaryButton
-                    theme={{ button: style.submitButton }}
+                    theme={{ button: styles.submitButton }}
                     to={`${challengesUrl}/${challengeId}/my-submissions`}
                   >
                     View Submissions
@@ -441,16 +441,16 @@ export default function ChallengeHeader(props) {
             </div>
           </div>
         </div>
-        <div styleName="deadlines-view">
-          <div styleName={`deadlines-overview ${showDeadlineDetail ? 'opened' : ''}`}>
-            <div styleName="deadlines-overview-text">
+        <div className={styles['deadlines-view']}>
+          <div className={styled(`deadlines-overview ${showDeadlineDetail ? 'opened' : ''}`)}>
+            <div className={styles['deadlines-overview-text']}>
               {nextDeadlineMsg}
               {
                   (status || '').toLowerCase() === 'active'
                   && (
-                  <div styleName="current-phase">
+                  <div className={styles['current-phase']}>
                     {currentPhases && `${currentPhases.name} Ends In: `}
-                    <span styleName="deadline-highlighted">
+                    <span className={styles['deadline-highlighted']}>
                       {timeDiff.text}
                     </span>
                   </div>
@@ -466,12 +466,12 @@ export default function ChallengeHeader(props) {
             >
               {showDeadlineDetail
                 ? (
-                  <span styleName="collapse-text">
+                  <span className={styles['collapse-text']}>
                     <ArrowDown />
                   </span>
                 )
                 : (
-                  <span styleName="collapse-text">
+                  <span className={styles['collapse-text']}>
                     <ArrowUp />
                   </span>
                 )

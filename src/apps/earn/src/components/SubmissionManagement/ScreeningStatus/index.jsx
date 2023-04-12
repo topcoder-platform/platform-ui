@@ -15,7 +15,11 @@
 import _ from 'lodash';
 import React from 'react';
 import PT from 'prop-types';
-import './styles.scss';
+
+import { styled as styledCss } from '@earn/utils';
+
+import styles from './styles.scss';
+const styled = styledCss(styles);
 
 export default function ScreeningStatus(props) {
   const {
@@ -51,11 +55,11 @@ export default function ScreeningStatus(props) {
   };
   return (
     <button onClick={() => onShowDetails(submissionId)} type="button">
-      <div styleName={`screening-status ${setClassName()}`}>
+      <div className={styled(`screening-status ${setClassName()}`)}>
         {/* status */}
         {hasStatus && !hasPending
           ? (
-            <span styleName={`status ${setStatusClassName()}`}>
+            <span className={styled(`status ${setStatusClassName()}`)}>
               {hasStatus.substring(0, hasStatus.indexOf('ed'))}
             </span>
           )
@@ -68,7 +72,7 @@ export default function ScreeningStatus(props) {
         {/* warning */}
         {
           hasWarnings && (
-            <span styleName="warning">
+            <span className={styles.warning}>
               {`${warnLength} `}
               {warnLength > 1 ? ' warnings' : 'warning'}
             </span>

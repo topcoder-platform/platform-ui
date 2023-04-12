@@ -32,16 +32,16 @@ export default function RecommendedActiveChallenges({
   ));
 
   return (
-    <div id="recommendedActiveChallenges" styleName="container">
-      <div styleName="header-container">
-        <div styleName="header">
+    <div id="recommendedActiveChallenges" className={styles.container}>
+      <div className={styles['header-container']}>
+        <div className={styles.header}>
           Recommended Active Challenges
         </div>
-        <div styleName="right-url">
+        <div className={styles['right-url']}>
           <a href={`${challengesUrl}?bucket=openForRegistration`} rel="noopener noreferrer" target="_blank">All Active Challenges</a>
         </div>
       </div>
-      <div styleName="challenges">
+      <div className={styles.challenges}>
         {items}
       </div>
     </div>

@@ -24,7 +24,7 @@ import { PrimaryButton } from 'topcoder-react-ui-kit';
 import { phaseEndDate } from 'utils/challenge-listing/helper';
 import SubmissionsTable from '../SubmissionsTable';
 
-import style from './styles.scss';
+import styles from './styles.scss';
 
 export default function SubmissionManagement(props) {
   const {
@@ -72,32 +72,32 @@ export default function SubmissionManagement(props) {
     onShowDetails,
   };
   return (
-    <div styleName="submission-management">
-      <div styleName="submission-management-header">
-        <div styleName="left-col">
+    <div className={styles['submission-management']}>
+      <div className={styles['submission-management-header']}>
+        <div className={styles['left-col']}>
           <Link
             to={challengeUrl}
             aria-label="Back to challenge list"
-            styleName="back-btn"
+            className={styles['back-btn']}
           >
             <LeftArrow />
           </Link>
 
-          <h4 styleName="name">
+          <h4 className={styles.name}>
             {challenge.name}
           </h4>
         </div>
       </div>
-      <div styleName="submission-management-content">
-        <div styleName="content-head">
-          <p styleName="title">
+      <div className={styles['submission-management-content']}>
+        <div className={styles['content-head']}>
+          <p className={styles.title}>
             Manage your submissions
           </p>
 
           {/* {
              isDesign && currentPhase && (
-               <p styleName="round-ends">
-                 <span styleName="ends-label">
+               <p className={styles['round-ends']}>
+                 <span className={styles['ends-label']}>
                    {currentPhase.name}
                    {' '}
                    Ends:
@@ -108,20 +108,20 @@ export default function SubmissionManagement(props) {
              )
            } */}
         </div>
-        <div styleName="subTitle">
+        <div className={styles.subTitle}>
           {
              currentPhase && (
-             <p styleName="round">
+             <p className={styles.round}>
                Current Deadline:{' '}
                <span>{currentPhase.name}</span>
              </p>
              )
            }
-          <span styleName="seperator" />
+          <span className={styles.seperator} />
           {
              challenge.status !== 'Completed' ? (
                <div>
-                 <p styleName="round">
+                 <p className={styles.round}>
                    Current Deadline Ends: {' '}
                    <span>
                      {days > 0 && (`${days}D`)}
@@ -135,7 +135,7 @@ export default function SubmissionManagement(props) {
                  </p>
                </div>
              ) : (
-               <p styleName="time-left">
+               <p className={styles['time-left']}>
                  The challenge has ended
                </p>
              )
@@ -143,7 +143,7 @@ export default function SubmissionManagement(props) {
         </div>
         {
            isDesign && (
-             <p styleName="recommend-info">
+             <p className={styles['recommend-info']}>
                {/* eslint-disable-next-line max-len */}
                We always recommend to download your submission to check you uploaded the correct .zip files&nbsp;
                {/* eslint-disable-next-line max-len */}
@@ -156,7 +156,7 @@ export default function SubmissionManagement(props) {
          }
         {
            isDevelop && (
-             <p styleName="recommend-info">
+             <p className={styles['recommend-info']}>
                {/* eslint-disable-next-line max-len */}
                We always recommend to download your submission to check you uploaded the correct .zip files&nbsp;
                {/* eslint-disable-next-line max-len */}
@@ -182,10 +182,10 @@ export default function SubmissionManagement(props) {
          }
       </div>
       {now.isBefore(submissionEndDate) && (
-      <div styleName="btn-wrap">
+      <div className={styles['btn-wrap']}>
         <PrimaryButton
           theme={{
-            button: style['add-sub-btn'],
+            button: styles['add-sub-btn'],
           }}
           to={`${challengeUrl}/submit`}
         >

@@ -26,10 +26,10 @@ export default function Card({
   return (
     <div className={styled(past ? "past" : "open")}>
       <p className={styled("title")}>{title}</p>
-      <p styleName="sections">
+      <p className={styles.sections}>
         {showRange ? (
-          <section styleName="section">
-            <span styleName="section-title">Starts</span>
+          <section className={styles.section}>
+            <span className={styles['section-title']}>Starts</span>
             <p className={styled("date")}>
               { past ? <CalendarIcon /> : <CalendarIconActive /> }
               <span>
@@ -44,15 +44,15 @@ export default function Card({
             </p>
           </section>
         ) : null}
-        <section styleName="section">
-          {showRange ? <span styleName="section-title">Ends</span> : null}
-          <p styleName="date">
+        <section className={styles.section}>
+          {showRange ? <span className={styles['section-title']}>Ends</span> : null}
+          <p className={styles.date}>
             { past ? <CalendarIcon /> : <CalendarIconActive /> }
             <span>
               {endMoment.format(FORMAT_YEAR)}
             </span>
           </p>
-          <p styleName="time">
+          <p className={styles.time}>
             { past ? <TimeIcon /> : <TimeIconActive /> }
             <span>
               {endMoment.format(TIME)}

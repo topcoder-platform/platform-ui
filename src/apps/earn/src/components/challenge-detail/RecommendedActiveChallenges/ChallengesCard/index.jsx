@@ -53,13 +53,13 @@ export default function ChallengesCard({
           expand={() => expandTag(challenge.id)}
           challengesUrl={challengesUrl}
         />
-        <div styleName="content-bottom">
-          <div styleName="challenge-track">
+        <div className={styles['content-bottom']}>
+          <div className={styles['challenge-track']}>
             <TrackAbbreviationTooltip
               track={track}
               type={challengeType}
             >
-              <span styleName="track-icon">
+              <span className={styles['track-icon']}>
                 <TrackIcon
                   track={track}
                   type={challengeType}
@@ -79,12 +79,12 @@ export default function ChallengesCard({
               openNewTab
             ><p>{challenge.name}</p>
             </Link>
-            <div styleName="endtime-prize-container">
-              <span styleName="end-date">
+            <div className={styles['endtime-prize-container']}>
+              <span className={styles['end-date']}>
                 {challenge.status === 'Active' ? 'Ends ' : 'Ended '}
                 {getEndDate(challenge)}
               </span>
-              <div styleName="prizes">
+              <div className={styles.prizes}>
                 {getPrizePurseUI(challenge, prizeMode, true, 'Prize Purse')}
               </div>
             </div>
@@ -103,7 +103,7 @@ export default function ChallengesCard({
         </div>
       </div>
 
-      <div styleName="bottom">
+      <div className={styles.bottom}>
         <span>{getTimeLeft(statusPhase, 'to register').text}</span>
       </div>
     </div>

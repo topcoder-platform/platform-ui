@@ -7,8 +7,10 @@
 
 import PT from 'prop-types';
 import shortid from 'shortid';
+import { styled as styledCss } from '@earn/utils';
 
-import './styles.scss';
+import styles from './styles.scss';
+const styled = styledCss(styles);
 
 export default function ScreeningDetails(props) {
   const {
@@ -65,8 +67,8 @@ export default function ScreeningDetails(props) {
   let warnings = [];
   if (screeningObject.warnings) {
     warnings = screeningObject.warnings.map((warning, i) => (
-      <div styleName="screening-warning" key={shortid.generate()}>
-        <div styleName="warning-bold">
+      <div className={styles['screening-warning']} key={shortid.generate()}>
+        <div className={styles['warning-bold']}>
           <span>
             Warning
           </span>
@@ -80,31 +82,31 @@ export default function ScreeningDetails(props) {
     ));
   }
   return (
-    <div styleName="screening-details">
-      <div styleName="screening-details-head">
-        <p styleName={`status-title ${setStatusInfo().classname}`}>
+    <div className={styles['screening-details']}>
+      <div className={styles['screening-details-head']}>
+        <p className={styled(`status-title ${setStatusInfo().classname}`)}>
           {setStatusInfo().title}
         </p>
         {/*
            NOTE: TonyJ asked to remove the OR links from the page to keep
            users within the new Topcoder site as much as we can. Not wiping
            out the code just in case we decide to bring it back later.
-         <a href={onlineReviewUrl} styleName="online-review-link">
+         <a href={onlineReviewUrl} className={styles['online-review-link']}>
            Online Review
          </a>
          */}
       </div>
       <p>
         {setStatusInfo().message}
-        <a href={helpPageUrl} styleName="help-link">
+        <a href={helpPageUrl} className={styles['help-link']}>
           {' '}Need help?
         </a>
       </p>
-      <div styleName="screening-warning">
+      <div className={styles['screening-warning']}>
         {warnings}
         {((hasStatusFailed) || (hasStatusPassed && hasWarnings))
            && (
-           <p styleName="more-info">
+           <p className={styles['more-info']}>
              Need more info on how to pass screening?
              Go to help to read Rules & Policies.
            </p>

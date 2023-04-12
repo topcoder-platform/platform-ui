@@ -7,7 +7,7 @@ import PT from 'prop-types';
 import RCTooltip from 'rc-tooltip';
 
 import 'rc-tooltip/assets/bootstrap.css';
-import './style.scss';
+import styles from './style.scss';
 
 function Tooltip({
   position,

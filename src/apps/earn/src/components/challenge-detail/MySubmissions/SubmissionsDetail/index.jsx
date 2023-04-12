@@ -12,7 +12,9 @@ import { ReactComponent as IconClose } from '@earn/assets/images/icon-close-gree
 
 import { ReactComponent as ArrowDown } from '@earn/assets/images/arrow-down.svg';
 import { ReactComponent as IconFail } from '../../icons/failed.svg';
-import './styles.scss';
+import { styled as styledCss } from '@earn/utils';
+import styles from './styles.scss';
+const styled = styledCss(styles);
 
 
 class SubmissionsDetailView extends React.Component {
@@ -157,28 +159,26 @@ class SubmissionsDetailView extends React.Component {
       finalScore = '-';
     }
     return (
-      <div styleName="wrapper">
-        <div styleName="header">
-          <h2 styleName="title">Submission Details</h2>
-          <div styleName="icon" role="presentation" onClick={() => onCancel()}>
+      <div className={styles.wrapper}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>Submission Details</h2>
+          <div className={styles.icon} role="presentation" onClick={() => onCancel()}>
             <IconClose />
           </div>
         </div>
-        <hr styleName="hr" />
-        <div styleName="inner-content">
-          <div styleName="sub-header">
+        <hr className={styles.hr} />
+        <div className={styles['inner-content']}>
+          <div className={styles['sub-header']}>
             <span>Submission: </span>
-            <span styleName="title-detail">{submission.id} ({submission.submissionId})</span>
+            <span className={styles['title-detail']}>{submission.id} ({submission.submissionId})</span>
           </div>
-          <div styleName="table-row table-content-header">
+          <div className={styled('table-row table-content-header')}>
             <div
-              styleName={cn(
-                'table-column column-1',
-              )}
+              className={styled('table-column column-1')}
             >
               <button
                 type="button"
-                styleName="header-sort"
+                className={styles['header-sort']}
                 onClick={() => {
                   onSortChange({
                     field: 'Review Type',
@@ -190,7 +190,7 @@ class SubmissionsDetailView extends React.Component {
                 {
                   field === 'Review Type' && (
                     <div
-                      styleName={cn(
+                      className={styled(
                         'col-arrow',
                         'col-arrow-is-sorting',
                         {
@@ -204,13 +204,13 @@ class SubmissionsDetailView extends React.Component {
               </button>
             </div>
             <div
-              styleName={cn(
+              className={styled(
                 'table-column',
               )}
             >
               <button
                 type="button"
-                styleName="header-sort"
+                className={styles['header-sort']}
                 onClick={() => {
                   onSortChange({
                     field: 'Reviewer',
@@ -222,7 +222,7 @@ class SubmissionsDetailView extends React.Component {
                 {
                   field === 'Reviewer' && (
                     <div
-                      styleName={cn(
+                      className={styled(
                         'col-arrow',
                         'col-arrow-is-sorting',
                         {
@@ -236,13 +236,13 @@ class SubmissionsDetailView extends React.Component {
               </button>
             </div>
             <div
-              styleName={cn(
+              className={styled(
                 'table-column',
               )}
             >
               <button
                 type="button"
-                styleName="header-sort"
+                className={styles['header-sort']}
                 onClick={() => {
                   onSortChange({
                     field: 'Score',
@@ -254,7 +254,7 @@ class SubmissionsDetailView extends React.Component {
                 {
                   field === 'Score' && (
                     <div
-                      styleName={cn(
+                      className={styled(
                         'col-arrow',
                         'col-arrow-is-sorting',
                         {
@@ -268,13 +268,13 @@ class SubmissionsDetailView extends React.Component {
               </button>
             </div>
             <div
-              styleName={cn(
+              className={styled(
                 'table-column',
               )}
             >
               <button
                 type="button"
-                styleName="header-sort"
+                className={styles['header-sort']}
                 onClick={() => {
                   onSortChange({
                     field: 'Status',
@@ -286,7 +286,7 @@ class SubmissionsDetailView extends React.Component {
                 {
                   field === 'Status' && (
                     <div
-                      styleName={cn(
+                      className={styled(
                         'col-arrow',
                         'col-arrow-is-sorting',
                         {
@@ -311,29 +311,29 @@ class SubmissionsDetailView extends React.Component {
                 score = '-';
               }
               return (
-                <div key={review.id} styleName="table-row">
+                <div key={review.id} className={styles['table-row']}>
                   <div
-                    styleName={cn(
+                    className={styled(
                       'table-column column-1',
                     )}
                   >
-                    <div styleName="mobile-header">Review Type</div>
+                    <div className={styles['mobile-header']}>Review Type</div>
                     <span>{this.getReviewName(review)}</span>
                   </div>
                   <div
-                    styleName={cn(
+                    className={styled(
                       'table-column',
                     )}
                   >
-                    <div styleName="mobile-header">Reviewer</div>
+                    <div className={styles['mobile-header']}>Reviewer</div>
                     <span>TC System</span>
                   </div>
                   <div
-                    styleName={cn(
+                    className={styled(
                       'table-column',
                     )}
                   >
-                    <div styleName="mobile-header">Score</div>
+                    <div className={styles['mobile-header']}>Score</div>
 
                     {(score < 0) ? (
                       <Tooltip content="Failed Submission" className="toolTipPadding">
@@ -342,40 +342,40 @@ class SubmissionsDetailView extends React.Component {
                     ) : (<span>{score}</span>)}
                   </div>
                   <div
-                    styleName={cn(
+                    className={styled(
                       'table-column',
                     )}
                   >
-                    <div styleName="mobile-header">Status</div>
+                    <div className={styles['mobile-header']}>Status</div>
 
                     {(review.status === 'completed') ? (
-                      <span styleName="status-complete">Complete</span>
+                      <span className={styles['status-complete']}>Complete</span>
                     ) : (
-                      <span styleName="status-failed">Failed</span>
+                      <span className={styles['status-failed']}>Failed</span>
                     )}
                   </div>
                 </div>
               );
             })
           }
-          <div styleName="table-row table-content-footer">
-            <div styleName="table-column column-1">
-              <div styleName="mobile-header">Review Type</div>
+          <div className={styled('table-row table-content-footer')}>
+            <div className={styled('table-column column-1')}>
+              <div className={styles['mobile-header']}>Review Type</div>
               <span>Final Score</span>
             </div>
-            <div styleName="table-column">
-              <div styleName="mobile-header">Reviewer</div>
+            <div className={styles['table-column']}>
+              <div className={styles['mobile-header']}>Reviewer</div>
               <span>N/A</span>
             </div>
-            <div styleName="table-column">
-              <div styleName="mobile-header">Score</div>
+            <div className={styles['table-column']}>
+              <div className={styles['mobile-header']}>Score</div>
               <span>{finalScore || 'N/A'}</span>
             </div>
-            <div styleName="table-column">
-              <div styleName="mobile-header">Status</div>
+            <div className={styles['table-column']}>
+              <div className={styles['mobile-header']}>Status</div>
               {submission.provisionalScoringIsCompleted ? (
-                <span styleName="status-complete">Complete</span>
-              ) : (<span styleName="status-in-queue">In Queue</span>)}
+                <span className={styles['status-complete']}>Complete</span>
+              ) : (<span className={styles['status-in-queue']}>In Queue</span>)}
             </div>
           </div>
         </div>

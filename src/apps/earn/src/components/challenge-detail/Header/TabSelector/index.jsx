@@ -21,8 +21,8 @@ import { styled as styledCss } from "@earn/utils";
 const styled = styledCss(styles)
 
 function getSelectorStyle(selectedView, currentView) {
-  return `challenge-selector-common ${(selectedView === currentView
-    ? 'challenge-selected-view' : 'challenge-unselected-view')}`;
+  return styled(`challenge-selector-common ${(selectedView === currentView
+    ? 'challenge-selected-view' : 'challenge-unselected-view')}`);
 }
 
 export default function ChallengeViewSelector(props) {
@@ -179,7 +179,7 @@ export default function ChallengeViewSelector(props) {
         aria-selected={selectedView === DETAIL_TABS.DETAILS}
         onClick={(e) => { handleSelectorClicked(e, DETAIL_TABS.DETAILS); }}
         onKeyPress={(e) => { handleSelectorClicked(e, DETAIL_TABS.DETAILS); }}
-        styleName={getSelectorStyle(selectedView, DETAIL_TABS.DETAILS)}
+        className={styled(getSelectorStyle(selectedView, DETAIL_TABS.DETAILS))}
       >
         DETAILS
       </a>
@@ -198,7 +198,7 @@ export default function ChallengeViewSelector(props) {
             className={getSelectorStyle(selectedView, DETAIL_TABS.REGISTRANTS)}
           >
             REGISTRANTS
-            <span styleName="num">{numOfRegistrants}</span>
+            <span className={styles.num}>{numOfRegistrants}</span>
           </a>
         ) : null
       }
@@ -211,10 +211,10 @@ export default function ChallengeViewSelector(props) {
           aria-selected={selectedView === DETAIL_TABS.CHECKPOINTS}
           onClick={(e) => { handleSelectorClicked(e, DETAIL_TABS.CHECKPOINTS); }}
           onKeyPress={(e) => { handleSelectorClicked(e, DETAIL_TABS.CHECKPOINTS); }}
-          styleName={getSelectorStyle(selectedView, DETAIL_TABS.CHECKPOINTS)}
+          className={styled(getSelectorStyle(selectedView, DETAIL_TABS.CHECKPOINTS))}
         >
           CHECKPOINTS
-          <span styleName="num">{checkpointCount}</span>
+          <span className={styles.num}>{checkpointCount}</span>
         </a>
         )
       }
@@ -226,10 +226,10 @@ export default function ChallengeViewSelector(props) {
             aria-selected={selectedView === DETAIL_TABS.SUBMISSIONS}
             onClick={(e) => { handleSelectorClicked(e, DETAIL_TABS.SUBMISSIONS); }}
             onKeyPress={(e) => { handleSelectorClicked(e, DETAIL_TABS.SUBMISSIONS); }}
-            styleName={getSelectorStyle(selectedView, DETAIL_TABS.SUBMISSIONS)}
+            className={styled(getSelectorStyle(selectedView, DETAIL_TABS.SUBMISSIONS))}
           >
             SUBMISSIONS
-            <span styleName="num">{numOfSub}</span>
+            <span className={styles.num}>{numOfSub}</span>
           </a>
         ) : null
       }
@@ -241,10 +241,10 @@ export default function ChallengeViewSelector(props) {
             aria-selected={selectedView === DETAIL_TABS.MY_SUBMISSIONS}
             onClick={(e) => { handleSelectorClicked(e, DETAIL_TABS.MY_SUBMISSIONS); }}
             onKeyPress={(e) => { handleSelectorClicked(e, DETAIL_TABS.MY_SUBMISSIONS); }}
-            styleName={getSelectorStyle(selectedView, DETAIL_TABS.MY_SUBMISSIONS)}
+            className={styled(getSelectorStyle(selectedView, DETAIL_TABS.MY_SUBMISSIONS))}
           >
             MY SUBMISSIONS
-            <span styleName="num">{mySubmissions.length}</span>
+            <span className={styles.num}>{mySubmissions.length}</span>
           </a>
         ) : null
       }
@@ -268,10 +268,10 @@ export default function ChallengeViewSelector(props) {
             aria-selected={selectedView === DETAIL_TABS.WINNERS}
             onClick={(e) => { handleSelectorClicked(e, DETAIL_TABS.WINNERS); }}
             onKeyPress={(e) => { handleSelectorClicked(e, DETAIL_TABS.WINNERS); }}
-            styleName={getSelectorStyle(selectedView, DETAIL_TABS.WINNERS)}
+            className={styled(getSelectorStyle(selectedView, DETAIL_TABS.WINNERS))}
           >
             WINNERS
-            <span styleName="num">{numWinners}</span>
+            <span className={styles.num}>{numWinners}</span>
           </a>
         ) : null
       }
@@ -282,7 +282,7 @@ export default function ChallengeViewSelector(props) {
               discuss.map(d => (
                 <a
                   href={d.url}
-                  styleName={getSelectorStyle(selectedView, DETAIL_TABS.CHALLENGE_FORUM)}
+                  className={styled(getSelectorStyle(selectedView, DETAIL_TABS.CHALLENGE_FORUM))}
                   target="_blank"
                   rel="oopener noreferrer"
                 >
@@ -295,7 +295,7 @@ export default function ChallengeViewSelector(props) {
             return (
               <a
                 href={`${config.URL.FORUMS}${forumEndpoint}`}
-                styleName={getSelectorStyle(selectedView, DETAIL_TABS.CHALLENGE_FORUM)}
+                className={styled(getSelectorStyle(selectedView, DETAIL_TABS.CHALLENGE_FORUM))}
                 target="_blank"
                 rel="oopener noreferrer"
               >
@@ -314,7 +314,7 @@ export default function ChallengeViewSelector(props) {
             aria-selected={selectedView === DETAIL_TABS.MM_DASHBOARD}
             onClick={(e) => { handleSelectorClicked(e, DETAIL_TABS.MM_DASHBOARD); }}
             onKeyPress={(e) => { handleSelectorClicked(e, DETAIL_TABS.MM_DASHBOARD); }}
-            styleName={getSelectorStyle(selectedView, DETAIL_TABS.MM_DASHBOARD)}
+            className={styled(getSelectorStyle(selectedView, DETAIL_TABS.MM_DASHBOARD))}
           >
             DASHBOARD
           </a>
@@ -330,46 +330,46 @@ export default function ChallengeViewSelector(props) {
 
   return (
     <div
-      styleName="container"
+      className={styles.container}
       onScroll={handleScroll}
     >
       {
         !desktop && (
-          <div styleName="mobile-wrapper">
-            <div styleName="challenge-view-selector-mobile">
+          <div className={styles['mobile-wrapper']}>
+            <div className={styles['challenge-view-selector-mobile']}>
               <div
-                styleName="mobile-tab-container"
+                className={styles['mobile-tab-container']}
                 role="presentation"
                 onClick={() => setIsTabClosed(!isTabClosed)}
               >
-                <div styleName="mobile-tab-left-content">
-                  <p styleName="title">{currentSelected}</p>
+                <div className={styles['mobile-tab-left-content']}>
+                  <p className={styles.title}>{currentSelected}</p>
                   {
                     currentSelected === DETAIL_TABS.REGISTRANTS && numOfRegistrants && (
-                      <span styleName="mobile-tab-num">{numOfRegistrants}</span>
+                      <span className={styles['mobile-tab-num']}>{numOfRegistrants}</span>
                     )
                   }
                   {
                     currentSelected === DETAIL_TABS.SUBMISSIONS && numOfSub && isLoggedIn && (
-                      <span styleName="mobile-tab-num">{numOfSub}</span>
+                      <span className={styles['mobile-tab-num']}>{numOfSub}</span>
                     )
                   }
                   {
                     currentSelected === DETAIL_TABS.MY_SUBMISSIONS && hasRegistered
                     && isMM && mySubmissions && (
-                      <span styleName="mobile-tab-num">{mySubmissions.length}</span>
+                      <span className={styles['mobile-tab-num']}>{mySubmissions.length}</span>
                     )
                   }
                   {
                     currentSelected === DETAIL_TABS.WINNERS && numWinners
                     && (
-                      <span styleName="mobile-tab-num">{numWinners}</span>
+                      <span className={styles['mobile-tab-num']}>{numWinners}</span>
                     )
                   }
                 </div>
                 <div
                   role="presentation"
-                  styleName={cn('icon', { down: !isTabClosed })}
+                  className={styled('icon', { down: !isTabClosed })}
                   onClick={() => setIsTabClosed(!isTabClosed)}
                 >
                   <ArrowIcon />
@@ -377,7 +377,7 @@ export default function ChallengeViewSelector(props) {
               </div>
               {
           !isTabClosed && (
-            <div styleName="mobile-tab-expanded">
+            <div className={styles['mobile-tab-expanded']}>
               {tabDetail}
             </div>
           )
@@ -386,7 +386,7 @@ export default function ChallengeViewSelector(props) {
             {
               isSubmissionTabSelected && !viewAsTable && (
                 <div
-                  styleName="mobile-sort-icon"
+                  className={styles['mobile-sort-icon']}
                   role="button"
                   tabIndex={0}
                   onClick={() => setExpanded(!expanded)}
@@ -397,26 +397,26 @@ export default function ChallengeViewSelector(props) {
             }
             {
               expanded && (
-                <div styleName="sort-overlay">
-                  <div styleName="sort-header">
+                <div className={styles['sort-overlay']}>
+                  <div className={styles['sort-header']}>
                     <p>SORT</p>
                     <div role="button" onClick={() => setExpanded(false)} tabIndex={0}>
                       <CloseIcon />
                     </div>
                   </div>
-                  <div styleName="sort-body">
+                  <div className={styles['sort-body']}>
                     {
                       sortOptions.map(option => (
                         <div
                           key={`sort-option-${option.name}`}
-                          styleName="sort-item"
+                          className={styles['sort-item']}
                           onClick={() => {
                             setSelectedSortOption(option.name);
                             onSort(currentSelected, option);
                             setExpanded(false);
                           }}
                         >
-                          <span styleName={`${option.name === selectedSortOption ? 'bold' : ''}`}>{option.name}</span>
+                          <span className={styled(`${option.name === selectedSortOption ? 'bold' : ''}`)}>{option.name}</span>
                         </div>
                       ))
                     }
@@ -429,7 +429,7 @@ export default function ChallengeViewSelector(props) {
       }
       {
         desktop && (
-          <div styleName="challenge-view-selector">
+          <div className={styles['challenge-view-selector']}>
             {tabDetail}
           </div>
         )

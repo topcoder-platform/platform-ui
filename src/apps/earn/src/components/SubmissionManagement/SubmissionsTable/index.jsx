@@ -22,7 +22,7 @@ import moment from 'moment';
 import { COMPETITION_TRACKS } from 'utils/tc';
 import Submission from '../Submission';
 import ScreeningDetails from '../ScreeningDetails';
-import './styles.scss';
+import styles from './styles.scss';
 
 export default function SubmissionsTable(props) {
   const {
@@ -41,8 +41,8 @@ export default function SubmissionsTable(props) {
   const submissionsWithDetails = [];
   if (!submissionObjects || submissionObjects.length === 0) {
     submissionsWithDetails.push((
-      <tr key={999} styleName="submission-row">
-        <td colSpan="6" styleName="no-submission">
+      <tr key={999} className={styles['submission-row']}>
+        <td colSpan="6" className={styles['no-submission']}>
           You have no submission uploaded so far.
         </td>
       </tr>
@@ -70,10 +70,10 @@ export default function SubmissionsTable(props) {
       submissionsWithDetails.push(submission);
 
       const submissionDetail = (
-        <tr key={subObject.id} styleName="submission-row">
+        <tr key={subObject.id} className={styles['submission-row']}>
           {showDetails[subObject.id]
             && (
-            <td colSpan="6" styleName="dev-details">
+            <td colSpan="6" className={styles['dev-details']}>
               <ScreeningDetails
                 screeningObject={subObject.screening}
                 helpPageUrl={helpPageUrl}
@@ -89,7 +89,7 @@ export default function SubmissionsTable(props) {
   }
 
   return (
-    <div styleName="submissions-table">
+    <div className={styles['submissions-table']}>
       <table>
         <thead>
           <tr>
@@ -103,11 +103,11 @@ export default function SubmissionsTable(props) {
               Submission Date
             </th>
             {track === COMPETITION_TRACKS.DES && (
-            <th styleName="status">
+            <th className={styles.status}>
               Screening Status
             </th>
             )}
-            <th styleName="actions">
+            <th className={styles.actions}>
               Actions
             </th>
           </tr>

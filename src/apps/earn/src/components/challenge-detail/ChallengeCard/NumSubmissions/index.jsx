@@ -14,7 +14,7 @@ import { COMPETITION_TRACKS } from 'utils/tc';
  * the standard approach for our code! */
 import SubmissionsIcon from '../../Icons/SubmissionsIcon';
 
-import './style.scss';
+import styles from './style.scss';
 
 export default function NumSubmissions({
   challenge: {
@@ -43,10 +43,10 @@ export default function NumSubmissions({
     link = `${config.URL.BASE}/challenge-details/${id}/?type=develop#viewRegistrant`;
   }
   return (
-    <div styleName="container">
+    <div className={styles.container}>
       <Tooltip
         content={(
-          <div styleName="tooltip">
+          <div className={styles.tooltip}>
             {tip}
           </div>
         )}
@@ -56,12 +56,12 @@ export default function NumSubmissions({
             selectChallengeDetailsTab((numOfSub && isLoggedIn)
               ? DETAIL_TABS.SUBMISSIONS : DETAIL_TABS.DETAILS)
           )}
-          styleName="link"
+          className={styles.link}
           to={link}
           openNewTab={openChallengesInNewTabs}
         >
           <SubmissionsIcon />
-          <span styleName="number">
+          <span className={styles.number}>
             {numOfSub}
           </span>
         </Link>

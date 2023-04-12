@@ -8,7 +8,7 @@ import PT from 'prop-types';
 import React from 'react';
 import Tooltip from '../../../Tooltip';
 import Tip from './Tip';
-import './style.scss';
+import styles from './style.scss';
 
 export default function Prize({
   bonuses,
@@ -27,8 +27,8 @@ export default function Prize({
     />
   );
   const prizeUI = (
-    <div styleName="prize" aria-hidden="true">
-      <span styleName="symbol">
+    <div className={styles.prize} aria-hidden="true">
+      <span className={styles.symbol}>
         {prizeUnitSymbol}
       </span>
       {totalPrize.toLocaleString()}
@@ -55,7 +55,7 @@ export default function Prize({
         )
         : (prizeUI)
       )}
-      <div styleName="label" aria-hidden="true">
+      <div className={styles.label} aria-hidden="true">
         {label}
       </div>
     </div>

@@ -627,7 +627,7 @@ class ChallengeDetailPageContainer extends React.Component {
             !isEmpty && selectedTab === DETAIL_TABS.MM_DASHBOARD
             && (!statisticsData || statisticsData.length === 0)
             && (
-              <div styleName="page">
+              <div className={styles.page}>
                 {
                   !statisticsData ? <LoadingIndicator /> : 'Dashboard data is not available!'
                 }

@@ -22,8 +22,10 @@ import DeleteIcon from '../Icons/IconTrashSimple.svg';
 import DownloadIcon from '../Icons/IconSquareDownload.svg';
 import ExpandIcon from '../Icons/IconMinimalDown.svg';
 import ScreeningStatus from '../ScreeningStatus';
+import { styled as styledCss } from '@earn/utils';
 
-import './styles.scss';
+import styles from './styles.scss';
+const styled = styledCss(styles);
 
 export default function Submission(props) {
   const {
@@ -41,24 +43,24 @@ export default function Submission(props) {
   const safeForDownloadCheck = safeForDownload(submissionObject.url);
 
   return (
-    <tr styleName="submission-row">
-      <td styleName="id-col">
-        <span styleName="mobile-header">ID</span>
+    <tr className={styles['submission-row']}>
+      <td className={styles['id-col']}>
+        <span className={styles['mobile-header']}>ID</span>
         {submissionObject.legacySubmissionId}
-        <div styleName="v5-id">{submissionObject.id}</div>
+        <div className={styles['v5-id']}>{submissionObject.id}</div>
       </td>
-      <td styleName="type-col">
-        <span styleName="mobile-header">TYPE</span>
+      <td className={styles['type-col']}>
+        <span className={styles['mobile-header']}>TYPE</span>
         {submissionObject.type}
       </td>
-      <td styleName="date-col">
-        <span styleName="mobile-header">Submission Date</span>
+      <td className={styles['date-col']}>
+        <span className={styles['mobile-header']}>Submission Date</span>
         {formatDate(submissionObject.created)}
       </td>
       {
          track === COMPETITION_TRACKS.DES && (
-           <td styleName="status-col">
-             <span styleName="mobile-header">Screening Status</span>
+           <td className={styles['status-col']}>
+             <span className={styles['mobile-header']}>Screening Status</span>
              {safeForDownloadCheck !== true ? safeForDownloadCheck : submissionObject.screening
                && (
                  <ScreeningStatus
@@ -70,7 +72,7 @@ export default function Submission(props) {
            </td>
          )
        }
-      <td styleName="action-col">
+      <td className={styles['action-col']}>
         <div>
           <button
             onClick={() => onDownloadSubmission(submissionObject.id)}
@@ -92,7 +94,7 @@ export default function Submission(props) {
              && track === COMPETITION_TRACKS.DES
              && safeForDownloadCheck === true && (
              <button
-               styleName="delete-icon"
+               className={styles['delete-icon']}
                onClick={() => onDelete(submissionObject.id)}
                disabled={!allowDelete}
                type="button"
@@ -102,7 +104,7 @@ export default function Submission(props) {
           )
           }
           <button
-            styleName={`expand-icon ${(showScreeningDetails ? 'expanded' : '')}`}
+            className={styled(`expand-icon ${(showScreeningDetails ? 'expanded' : '')}`)}
             onClick={() => onShowDetails(submissionObject.id)}
             type="button"
           >

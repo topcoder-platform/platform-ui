@@ -8,7 +8,7 @@ import rehypeStringify from 'rehype-stringify';
 import remarkFrontmatter from 'remark-frontmatter';
 import rehypeRaw from 'rehype-raw';
 import remarkBreaks from 'remark-breaks';
-import style from './styles.scss';
+import styles from './styles.scss';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import 'katex/dist/katex.min.css';
@@ -30,7 +30,7 @@ export default function SpecificationComponent({
           remarkBreaks,
         ]}
         rehypePlugins={[rehypeKatex, rehypeStringify, rehypeRaw]}
-        className={style.container}
+        className={styles.container}
       >
         {bodyText}
       </ReactMarkdown>
@@ -43,7 +43,7 @@ export default function SpecificationComponent({
         __html: bodyText,
       }}
     /* eslint-enable react/no-danger */
-      /* styleName="rawHtml" */
+      /* className={styles.rawHtml} */
     />
   );
 }

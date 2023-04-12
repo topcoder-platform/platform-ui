@@ -30,14 +30,14 @@ export default function Winners({
 }) {
   const [downloadingAll, setDownloadingAll] = useState(false);
   return (
-    <div styleName="container">
+    <div className={styles.container}>
       {
         ((winners.length > 0 || challengeStatus === CHALLENGE_STATUS.COMPLETED)
         && (isMM || isRDM) && isLoggedIn) && (
-          <div styleName="block-download-all">
+          <div className={styles['block-download-all']}>
             <button
               disabled={downloadingAll}
-              styleName="download MM"
+              className={styled('download MM')}
               onClick={() => {
                 // download submission
                 setDownloadingAll(true);

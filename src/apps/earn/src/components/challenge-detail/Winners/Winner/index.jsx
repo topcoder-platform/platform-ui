@@ -9,8 +9,8 @@ import { getMMSubmissionId } from '@earn/utils/submissions';
 import { ReactComponent as DownloadIcon } from '../../../SubmissionManagement/Icons/IconSquareDownload.svg';
 import { styled as styledCss } from "@earn/utils";
 
-import style from './style.scss';
-const styled = styledCss(style);
+import styles from './style.scss';
+const styled = styledCss(styles);
 
 function getId(submissions, placement) {
   return submissions.find(s => s.placement === placement).submissionId;
@@ -46,21 +46,21 @@ export default function Winner({
   if (prizes[prizeIndex]) prize = prizes[prizeIndex].value;
 
   return (
-    <div styleName="winner">
-      <div styleName="left">
-        <div styleName={`placement ${(winner.placement && winner.placement < 4) ? `placement-${winner.placement}` : ''}`}>
+    <div className={styles.winner}>
+      <div className={styles.left}>
+        <div className={styled(`placement ${(winner.placement && winner.placement < 4) ? 'placement-' + winner.placement : ''}`)}>
           <span>{formatOrdinals(winner.placement)}</span>
         </div>
-        <div styleName="info">
-          <div styleName="avatar-prize">
+        <div className={styles.info}>
+          <div className={styles['avatar-prize']}>
             <Avatar
-              theme={{ avatar: style.avatar }}
+              theme={{ avatar: styles.avatar }}
               url={avatarUrl}
             />
             <div>
               <a
                 href={`${windowOrigin}/members/${winner.handle}`}
-                styleName="handle"
+                className={styles.handle}
                 target={`${_.includes(windowOrigin, 'www') ? '_self' : '_blank'}`}
               >
                 {winner.handle}
@@ -70,7 +70,7 @@ export default function Winner({
           {
             submissionId
             && (
-            <div styleName="id">
+            <div className={styles.id}>
               ID:
               <span>
                 #
@@ -82,13 +82,13 @@ export default function Winner({
         </div>
       </div>
 
-      <div styleName="right">
-        <div styleName="prize">
+      <div className={styles.right}>
+        <div className={styles.prize}>
           $
           {numberWithCommas(prize)}
         </div>
       </div>
-      <div styleName="download-container">
+      <div className={styles['download-container']}>
         {
         ((!winner.submissionDownloadLink || !viewable) && (isMM || isRDM) && isLoggedIn) && (
           <button
@@ -117,7 +117,7 @@ export default function Winner({
           && (
           <a
             href={isDesign ? `${config.URL.STUDIO}/?module=DownloadSubmission&sbmid=${submissionId}` : winner.submissionDownloadLink}
-            styleName="download"
+            className={styles.download}
             target="_blank"
             challenge
             rel="noopener noreferrer"
@@ -128,7 +128,7 @@ export default function Winner({
         }
         {
           /*
-          <div styleName="date">
+          <div className={styles.date}>
             <span>Submitted&nbsp;on:</span>&zwnj;
             &zwnj;<span>{moment(winner.submissionDate).format('MMM DD, YYYY HH:mm')}</span>
           </div>

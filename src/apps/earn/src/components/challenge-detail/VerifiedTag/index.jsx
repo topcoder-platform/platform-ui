@@ -2,8 +2,11 @@ import { DevelopmentTrackEventTag } from '@earn/components/challenge-detail/tags
 import VerifiedIcon from '@earn/assets/images/icon-verified.svg';
 import Tooltip from '@earn/components/challenge-detail/Tooltip';
 import PT from 'prop-types';
-import './style.scss';
+import { styled as styledCss } from '@earn/utils';
+import styles from './style.scss';
 import cn from 'classnames';
+
+const styled = styledCss(styles);
 
 /**
  * Verified Tag Componenet
@@ -12,7 +15,7 @@ export default function VerifiedTag({
   challengesUrl, item, onClick, recommended,
 }) {
   const verifiedTagTooltip = skill => (
-    <div styleName="tctooltiptext">
+    <div className={styles.tctooltiptext}>
       <p>{skill} is verified based <br /> on past challenges you won</p>
     </div>
   );
@@ -26,7 +29,7 @@ export default function VerifiedTag({
   };
 
   return (
-    <div styleName="recommended-challenge-tooltip">
+    <div className={styles['recommended-challenge-tooltip']}>
       <Tooltip
         id="recommended-tip"
         content={verifiedTagTooltip(item)}
@@ -38,8 +41,8 @@ export default function VerifiedTag({
           role="button"
           to={tagRedirectLink(item)}
         >
-          <VerifiedIcon styleName="verified-tag" />
-          <span styleName={cn({ 'verified-tag-text': recommended })}>{item}</span>
+          <VerifiedIcon className={styles['verified-tag']} />
+          <span className={styled(cn({ 'verified-tag-text': recommended )})}>{item}</span>
         </DevelopmentTrackEventTag>
       </Tooltip>
     </div>

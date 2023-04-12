@@ -3,12 +3,12 @@
  */
 
 import LoadingIndicator from '@earn/components/LoadingIndicator';
-import './style.scss';
+import styles from './style.scss';
 
 export default function LoadingPagePlaceholder() {
   return (
-    <div styleName="background">
-      <div styleName="page">
+    <div className={styles.background}>
+      <div className={styles.page}>
         <LoadingIndicator />
       </div>
     </div>

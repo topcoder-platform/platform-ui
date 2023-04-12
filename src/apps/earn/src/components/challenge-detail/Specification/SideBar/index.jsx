@@ -136,10 +136,10 @@ export default function SideBar({
               <h3>
                 Final Review:
               </h3>
-              <span styleName="link-like-paragraph tooltip-container">
+              <span className={styled('link-like-paragraph tooltip-container')}>
                 {reviewTypeTitle}
                 <Tooltip id="review-tip" content={reviewTip} trigger={['hover', 'focus']}>
-                  <div styleName="tctooltip">
+                  <div className={styles.tctooltip}>
                     <TooltipIcon />
                   </div>
                 </Tooltip>
@@ -147,7 +147,7 @@ export default function SideBar({
               <h3>
                 Approval:
               </h3>
-              <span styleName="link-like-paragraph tooltip-container">
+              <span className={styled('link-like-paragraph tooltip-container')}>
                 User Sign-Off
                 <Tooltip
                   id="approval-tip"
@@ -155,7 +155,7 @@ export default function SideBar({
                   className={styles['tooltip-overlay']}
                   trigger={['hover', 'focus']}
                 >
-                  <div styleName="tctooltip">
+                  <div className={styles.tctooltip}>
                     <TooltipIcon />
                   </div>
                 </Tooltip>
@@ -172,7 +172,7 @@ export default function SideBar({
               {
                 isDevelop && environment && environment.length > 0
                 && (
-                  <p styleName="link-like-paragraph">
+                  <p className={styles['link-like-paragraph']}>
                     <a href={`${environment}`}>
                       Environment
                     </a>
@@ -182,7 +182,7 @@ export default function SideBar({
               {
                 isDevelop && codeRepo && codeRepo.length > 0
                 && (
-                  <p styleName="link-like-paragraph">
+                  <p className={styles['link-like-paragraph']}>
                     <a href={`${codeRepo}`}>
                       Code Repository
                     </a>
@@ -192,7 +192,7 @@ export default function SideBar({
               {
                 screeningScorecardId > 0
                 && (
-                  <p styleName="link-like-paragraph">
+                  <p className={styles['link-like-paragraph']}>
                     <a href={`${scorecardURL}${screeningScorecardId}`}>
                       Screening Scorecard
                     </a>
@@ -202,7 +202,7 @@ export default function SideBar({
               {
                 reviewScorecardId > 0 && !isDesign
                 && (
-                  <span styleName="link-like-paragraph tooltip-container">
+                  <span className={styled('link-like-paragraph tooltip-container')}>
                     <a href={`${scorecardURL}${reviewScorecardId}`}>
                       Review Scorecard
                     </a>
@@ -212,7 +212,7 @@ export default function SideBar({
                       className={styles['tooltip-overlay']}
                       trigger={['hover', 'focus']}
                     >
-                      <div styleName="tctooltip">
+                      <div className={styles.tctooltip}>
                         <TooltipIcon />
                       </div>
                     </Tooltip>
@@ -221,7 +221,7 @@ export default function SideBar({
               }
               {
                 !isDesign && (
-                  <span styleName="link-like-paragraph tooltip-container">
+                  <span className={styled('link-like-paragraph tooltip-container')}>
                     <a
                       href={config.URL.INFO.USABLECODEDEV}
                       title="Useable Code Rules"
@@ -236,7 +236,7 @@ export default function SideBar({
                       className={styles['tooltip-overlay']}
                       trigger={['hover', 'focus']}
                     >
-                      <div styleName="tctooltip">
+                      <div className={styles.tctooltip}>
                         <TooltipIcon />
                       </div>
                     </Tooltip>
@@ -292,7 +292,7 @@ export default function SideBar({
                   This will be what you upload.
                 </li>
               </ol>
-              <p styleName="link-like-paragraph">
+              <p className={styles['link-like-paragraph']}>
                 Trouble formatting your submission or want to learn more?
                 &zwnj;
                 <a href={faqURL}>
@@ -302,7 +302,7 @@ export default function SideBar({
               <h3>
                 Fonts, Stock Photos, and Icons:
               </h3>
-              <p styleName="link-like-paragraph">
+              <p className={styles['link-like-paragraph']}>
                 All fonts, stock photos, and icons within your design must be declared
                 when you submit. DO NOT include any 3rd party files in your
                 submission or source files. Read about the
@@ -316,7 +316,7 @@ export default function SideBar({
               <h3>
                 Screening:
               </h3>
-              <p styleName="link-like-paragraph">
+              <p className={styles['link-like-paragraph']}>
                 All submissions are screened for eligibility before the challenge
                 holder picks winners. Don&#39;t let your hard work go to waste.
                 Learn more about how to
@@ -331,7 +331,7 @@ export default function SideBar({
                 CHALLENGE LINKS:
               </h2>
               {(forumLink || !_.isEmpty(discuss)) && (
-                <p styleName="link-like-paragraph">
+                <p className={styles['link-like-paragraph']}>
                   Questions?
                   &zwnj;
                   {_.isEmpty(discuss) && (
@@ -346,7 +346,7 @@ export default function SideBar({
                 </p>
               )}
               {!_.isEmpty(discuss) && discuss.map(d => (
-                <p styleName="link-like-paragraph">
+                <p className={styles['link-like-paragraph']}>
                   <a
                     href={d.url}
                     target="_blank"
@@ -363,7 +363,7 @@ export default function SideBar({
               {
                 fileTypes
                 && (
-                  <ul styleName="source-files-list">
+                  <ul className={styles['source-files-list']}>
                     {
                       fileTypes.value && fileTypes.value.length > 0
                         ? JSON.parse(fileTypes.value)
@@ -377,13 +377,13 @@ export default function SideBar({
                   </ul>
                 )
               }
-              <p styleName="link-like-paragraph">
+              <p className={styles['link-like-paragraph']}>
                 You must include all source files with your submission.
               </p>
               <h2>
                 SUBMISSION LIMIT:
               </h2>
-              <p styleName="link-like-paragraph">
+              <p className={styles['link-like-paragraph']}>
                 {
                   submissionLimit
                     ? submissionLimitDisplay : (
@@ -403,10 +403,10 @@ export default function SideBar({
               <h2>
                 CHALLENGE TERMS:
               </h2>
-              <div styleName="link-like-paragraph">
+              <div className={styles['link-like-paragraph']}>
                 {
                   terms.map(t => (
-                    <div styleName="term" key={t.id}>
+                    <div className={styles.term} key={t.id}>
                       <Link
                         to={`${challengesUrl}/terms/detail/${t.id}`}
                       >
@@ -423,7 +423,7 @@ export default function SideBar({
           <h2>
             TOOLBOX:
           </h2>
-          <span styleName="link-like-paragraph tooltip-container">
+          <span className={styled('link-like-paragraph tooltip-container')}>
             <a
               href={config.URL.INFO.EXTENSIONVSCODE}
               title="Topcoder Extension for VSCode"
@@ -438,7 +438,7 @@ export default function SideBar({
               className={styles['tooltip-overlay']}
               trigger={['hover', 'focus']}
             >
-              <div styleName="tctooltip">
+              <div className={styles.tctooltip}>
                 <TooltipIcon />
               </div>
             </Tooltip>

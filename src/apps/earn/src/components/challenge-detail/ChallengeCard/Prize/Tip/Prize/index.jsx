@@ -1,6 +1,9 @@
 import PT from 'prop-types';
 import React from 'react';
-import './style.scss';
+import { styled as styledCss } from '@earn/utils';
+import styles from './style.scss';
+
+const styled = styledCss(styles);
 
 const suffixes = ['th', 'st', 'nd', 'rd'];
 const getOrdinalSuffix = (n) => {
@@ -21,9 +24,9 @@ export default function Prize({
   let medalStyleName = 'medal';
   if (place <= 3) medalStyleName += ` place-${place}`;
   return (
-    <div styleName="prize" aria-label={`${place}${getOrdinalSuffix(place)} prize is ${prizeUnitSymbol}${prize.toLocaleString()}`}>
+    <div className={styles.prize} aria-label={`${place}${getOrdinalSuffix(place)} prize is ${prizeUnitSymbol}${prize.toLocaleString()}`}>
       <span aria-hidden="true">
-        <span styleName={medalStyleName}>
+        <span className={styled(medalStyleName)}>
           {place}
         </span>
         {prizeUnitSymbol}

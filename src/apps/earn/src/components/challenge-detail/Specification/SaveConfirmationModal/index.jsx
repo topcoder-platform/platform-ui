@@ -3,7 +3,7 @@ import PT from 'prop-types';
 import { PrimaryButton } from '@earn/components/challenge-detail/buttons';
 import Modal from '@earn/components/challenge-detail/Modal'
 
-import style from './style.scss';
+import styles from './style.scss';
 
 export default function SaveConfirmationModal({
   onDone,
@@ -11,9 +11,9 @@ export default function SaveConfirmationModal({
 }) {
   return (
     <Modal
-      theme={{ container: style.container }}
+      theme={{ container: styles.container }}
     >
-      <h1 styleName="title">
+      <h1 className={styles.title}>
         Saving The Challenge
       </h1>
       {

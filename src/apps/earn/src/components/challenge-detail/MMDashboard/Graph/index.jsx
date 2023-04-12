@@ -177,7 +177,7 @@ export default function Graph({ statisticsData, baseline, awardLine }) {
   };
 
   return (
-    <div styleName="graph-container">
+    <div className={styles['graph-container']}>
       <HighchartsReact
         highcharts={Highcharts}
         options={options}

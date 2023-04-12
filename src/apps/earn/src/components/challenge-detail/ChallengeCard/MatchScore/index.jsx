@@ -1,11 +1,12 @@
 import PT from 'prop-types';
 import React from 'react';
 import { DevelopmentTrackEventTag } from '@earn/components/challenge-detail/tags';
-import './style.scss';
+
+import styles from './style.scss';
 
 export default function MatchScore({ score }) {
   return (
-    <div styleName="matchScoreTag">
+    <div className={styles.matchScoreTag}>
       <DevelopmentTrackEventTag>
         {score}% match
       </DevelopmentTrackEventTag>

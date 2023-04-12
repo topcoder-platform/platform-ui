@@ -2,7 +2,7 @@ import React from 'react';
 import PT from 'prop-types';
 import Bonus from './Bonus';
 import Prize from './Prize';
-import './style.scss';
+import styles from './style.scss';
 
 export default function Tip({
   bonuses,
@@ -32,7 +32,7 @@ export default function Tip({
   ));
 
   return (
-    <div styleName="prizes-tooltip">
+    <div className={styles['prizes-tooltip']}>
       <div style={{ overflow: 'auto' }}>
         <h1>
           Prizes
@@ -41,7 +41,7 @@ export default function Tip({
       </div>
       {
         points ? (
-          <div styleName="points">
+          <div className={styles.points}>
             <h1>
               Points
             </h1>
@@ -51,7 +51,7 @@ export default function Tip({
       }
       {
         bonuses.length ? (
-          <div styleName="bonuses">
+          <div className={styles.bonuses}>
             <h1>
               Bonuses
             </h1>

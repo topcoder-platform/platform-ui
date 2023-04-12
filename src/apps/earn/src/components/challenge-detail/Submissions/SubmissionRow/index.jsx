@@ -62,19 +62,19 @@ export default function SubmissionRow({
   };
 
   return (
-    <div styleName={`wrapper ${viewAsTable ? 'wrapper-as-table' : ''} `}>
-      <div styleName="row">
+    <div className={styled(`wrapper ${viewAsTable ? 'wrapper-as-table' : ''} `)}>
+      <div className={styles.row}>
         {
           isMM ? (
             <React.Fragment>
-              <div styleName={`col-1 col ${viewAsTable ? 'col-view-as-table' : ''}`}>
-                <div styleName={viewAsTable ? 'view-as-table-header' : 'mobile-header'}>FINAL RANK</div>
+              <div className={styled(`col-1 col ${viewAsTable ? 'col-view-as-table' : ''}`)}>
+                <div className={styled(viewAsTable ? 'view-as-table-header' : 'mobile-header')}>FINAL RANK</div>
                 {
                     isReviewPhaseComplete ? finalRank || 'N/A' : 'N/A'
                   }
               </div>
-              <div styleName={viewAsTable ? 'view-as-table-header' : 'mobile-header'}>PROVISIONAL RANK</div>
-              <div styleName={`col-2 col ${viewAsTable ? 'col-view-as-table' : ''}`}>
+              <div className={styled(viewAsTable ? 'view-as-table-header' : 'mobile-header')}>PROVISIONAL RANK</div>
+              <div className={styled(`col-2 col ${viewAsTable ? 'col-view-as-table' : ''}`)}>
                 <div>
                   { provisionalRank || 'N/A' }
                 </div>
@@ -82,14 +82,14 @@ export default function SubmissionRow({
             </React.Fragment>
           ) : null
         }
-        <div styleName={`col-3 col ${viewAsTable ? 'col-view-as-table' : ''}`}>
-          <div styleName={viewAsTable ? 'view-as-table-header' : 'mobile-header'}>RATING</div>
-          <span styleName={`col level-${getRatingLevel(rating)}`}>
+        <div className={styled(`col-3 col ${viewAsTable ? 'col-view-as-table' : ''}`)}>
+          <div className={styled(viewAsTable ? 'view-as-table-header' : 'mobile-header')}>RATING</div>
+          <span className={styled(`col level-${getRatingLevel(rating)}`)}>
             {rating || '-'}
           </span>
         </div>
-        <div styleName={`col-4 col ${viewAsTable ? 'col-view-as-table' : ''}`}>
-          <div styleName={viewAsTable ? 'view-as-table-header' : 'mobile-header'}>USERNAME</div>
+        <div className={styled(`col-4 col ${viewAsTable ? 'col-view-as-table' : ''}`)}>
+          <div className={styled(viewAsTable ? 'view-as-table-header' : 'mobile-header')}>USERNAME</div>
           <a
             href={`${window.origin}/members/${member}`}
             target={`${_.includes(window.origin, 'www') ? '_self' : '_blank'}`}
@@ -99,31 +99,31 @@ export default function SubmissionRow({
             {member || '-'}
           </a>
         </div>
-        <div styleName={`col-5 col ${viewAsTable ? 'col-view-as-table' : ''}`}>
-          <div styleName={viewAsTable ? 'view-as-table-header' : 'mobile-header'}>FINAL SCORE</div>
+        <div className={styled(`col-5 col ${viewAsTable ? 'col-view-as-table' : ''}`)}>
+          <div className={styled(viewAsTable ? 'view-as-table-header' : 'mobile-header')}>FINAL SCORE</div>
           <div>
             {getFinalReviewResult()}
           </div>
         </div>
-        <div styleName={`col-6 col ${viewAsTable ? 'col-view-as-table' : ''}`}>
-          <div styleName={viewAsTable ? 'view-as-table-header' : 'mobile-header'}>PROVISIONAL SCORE</div>
+        <div className={styled(`col-6 col ${viewAsTable ? 'col-view-as-table' : ''}`)}>
+          <div className={styled(viewAsTable ? 'view-as-table-header' : 'mobile-header')}>PROVISIONAL SCORE</div>
           <div>
             {getInitialReviewResult() ? getInitialReviewResult() : 'N/A'}
           </div>
         </div>
-        <div styleName={`col-7 col ${viewAsTable ? 'col-view-as-table' : ''}`}>
-          <div styleName={viewAsTable ? 'view-as-table-header' : 'mobile-header'}>SUBMISSION DATE</div>
-          <div styleName="time">
+        <div className={styled(`col-7 col ${viewAsTable ? 'col-view-as-table' : ''}`)}>
+          <div className={styled(viewAsTable ? 'view-as-table-header' : 'mobile-header')}>SUBMISSION DATE</div>
+          <div className={styles.time}>
             {moment(submissionTime).format('DD MMM YYYY')} {moment(submissionTime).format('HH:mm:ss')}
           </div>
         </div>
-        <div styleName={`col-8 col ${viewAsTable ? 'col-view-as-table' : ''}`}>
-          <div styleName={viewAsTable ? 'view-as-table-header' : 'mobile-header'}>ACTIONS</div>
+        <div className={styled(`col-8 col ${viewAsTable ? 'col-view-as-table' : ''}`)}>
+          <div className={styled(viewAsTable ? 'view-as-table-header' : 'mobile-header')}>ACTIONS</div>
           <a
             onClick={toggleHistory}
             onKeyPress={toggleHistory}
           >
-            <span styleName="text">
+            <span className={styles.text}>
               History (
               {submissions.length}
               )
@@ -134,55 +134,55 @@ export default function SubmissionRow({
       { openHistory && (
         <Modal
           onCancel={toggleHistory}
-          theme={{ container: `${style.modal} ${isMM && (numWinners > 0 || challengeStatus === CHALLENGE_STATUS.COMPLETED) ? style.download : ''}` }}
+          theme={{ container: `${styles.modal} ${isMM && (numWinners > 0 || challengeStatus === CHALLENGE_STATUS.COMPLETED) ? styles.download : ''}` }}
         >
-          <div styleName="history">
-            <div styleName="header">
-              <h2 styleName="title">Submission History</h2>
-              <div styleName="icon" role="presentation" onClick={toggleHistory}>
+          <div className={styles.history}>
+            <div className={styles.header}>
+              <h2 className={styles.title}>Submission History</h2>
+              <div className={styles.icon} role="presentation" onClick={toggleHistory}>
                 <IconClose />
               </div>
             </div>
             <hr />
-            <div styleName="submission-text">
+            <div className={styles['submission-text']}>
               Latest Submission: <span>{submissionId}</span>
             </div>
             <div>
-              <div styleName="row no-border history-head">
-                { isMM ? <div styleName="col-1 col" /> : null }
-                <div styleName="col-2 col">
+              <div className={styled('row no-border history-head')}>
+                { isMM ? <div className={styled('col-1 col')} /> : null }
+                <div className={styled('col-2 col')}>
                   Submission
                 </div>
-                <div styleName="col-3 col">
-                  <div styleName="col" />
-                  <div styleName="col">
+                <div className={styled('col-3 col')}>
+                  <div className={styles.col} />
+                  <div className={styles.col}>
                     Final Score
                   </div>
                 </div>
-                <div styleName="col-4 col">
-                  <div styleName="col">
+                <div className={styled('col-4 col')}>
+                  <div className={styles.col}>
                     Provisional Score
                   </div>
                 </div>
-                <div styleName="col-5 col">
+                <div className={styled('col-5 col')}>
                   Time
                 </div>
                 {
                   (isMM || isRDM)
                   && (numWinners > 0 || challengeStatus === CHALLENGE_STATUS.COMPLETED) && (
-                    <div styleName="col-2 col center">
+                    <div className={styled('col-2 col center')}>
                       Action
                     </div>
                   )
                 }
                 {
                   isMM && isLoggedIn && (
-                    <div styleName="col">&nbsp;</div>
+                    <div className={styles.col}>&nbsp;</div>
                   )
                 }
               </div>
             </div>
-            <div styleName="table-body">
+            <div className={styles['table-body']}>
               {
                 submissions.map((submissionHistory, index) => (
                   <SubmissionHistoryRow
@@ -203,8 +203,8 @@ export default function SubmissionRow({
                 ))
               }
             </div>
-            <div styleName="close-wrapper">
-              <div styleName="close-btn" onClick={toggleHistory} role="presentation">
+            <div className={styles['close-wrapper']}>
+              <div className={styles['close-btn']} onClick={toggleHistory} role="presentation">
                 <span>CLOSE</span>
               </div>
             </div>

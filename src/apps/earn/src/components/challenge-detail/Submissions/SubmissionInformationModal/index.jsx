@@ -75,32 +75,32 @@ class SubmissionInformationModal extends React.Component {
         {
           !isLoadingSubmissionInformation && (
             <React.Fragment>
-              <div styleName="submission-information-title">Advanced Details</div>
+              <div className={styles['submission-information-title']}>Advanced Details</div>
               {
                 submissionBasicInfo ? (
-                  <div styleName="submission-information-details">
-                    <div styleName="submission-information-details-row1">
-                      <span styleName="submission-information-details-title">Submission:&nbsp;</span>
-                      <span styleName="submission-information-details-id">{submissionInformation.id}</span>
+                  <div className={styles['submission-information-details']}>
+                    <div className={styles['submission-information-details-row1']}>
+                      <span className={styles['submission-information-details-title']}>Submission:&nbsp;</span>
+                      <span className={styles['submission-information-details-id']}>{submissionInformation.id}</span>
                     </div>
-                    <div styleName="submission-information-details-row2">
-                      <div styleName="details-header">
-                        <div styleName="header-item">Final Score</div>
-                        <div styleName="header-item">Provissional Score</div>
-                        <div styleName="header-item">Time</div>
+                    <div className={styles['submission-information-details-row2']}>
+                      <div className={styles['details-header']}>
+                        <div className={styles['header-item']}>Final Score</div>
+                        <div className={styles['header-item']}>Provissional Score</div>
+                        <div className={styles['header-item']}>Time</div>
                       </div>
-                      <div styleName="details-grid">
+                      <div className={styles['details-grid']}>
                         <div
-                          styleName="details-item"
+                          className={styles['details-item']}
                         >
                           {(!submissionBasicInfo.finalScore && submissionBasicInfo.finalScore !== 0) || !isReviewPhaseComplete ? '-' : submissionBasicInfo.finalScore}
                         </div>
                         <div
-                          styleName="details-item"
+                          className={styles['details-item']}
                         >
                           {(!submissionBasicInfo.provisionalScore && submissionBasicInfo.provisionalScore !== 0) ? '-' : submissionBasicInfo.provisionalScore}
                         </div>
-                        <div styleName="details-item">
+                        <div className={styles['details-item']}>
                           {moment(submissionBasicInfo.submissionTime)
                             .format('DD MMM YYYY')} {moment(submissionBasicInfo.submissionTime)
                               .format('HH:mm:ss')}
@@ -109,7 +109,7 @@ class SubmissionInformationModal extends React.Component {
                     </div>
                   </div>
                 ) : (
-                  <div styleName="submission-information-error">
+                  <div className={styles['submission-information-error']}>
                     You don&#39;t have permission to view the advanced details for this submission
                   </div>
                 )
@@ -117,13 +117,13 @@ class SubmissionInformationModal extends React.Component {
               {
                 testcases.length > 0 && (
                   <React.Fragment>
-                    <div styleName="testcase-title">
+                    <div className={styles['testcase-title']}>
                       Test cases executed
                     </div>
                     {
                       _.map(testcases, (item, index) => (
-                        <div styleName="testcase-items" key={`Test case #${index + 1}`}>
-                          <div styleName="testcase-header">
+                        <div className={styles['testcase-items']} key={`Test case #${index + 1}`}>
+                          <div className={styles['testcase-header']}>
                             <div>Test case #{index + 1}</div>
                             <span onClick={() => toggleTestcase(index)} role="button" tabIndex={0}>
                               {
@@ -133,10 +133,10 @@ class SubmissionInformationModal extends React.Component {
                           </div>
                           {
                             _.keys(item).length > 0 && (
-                              <div styleName={`testcase-grid ${this.getTestCaseOpen(index) ? 'active' : ''}`}>
+                              <div className={styled(`testcase-grid ${this.getTestCaseOpen(index) ? 'active' : ''}`)}>
                                 {
                                   _.map(_.keys(item), (key, caseIndex) => (
-                                    <div styleName="testcase-row" key={`case-${caseIndex}-${key}`}>
+                                    <div className={styles['testcase-row']} key={`case-${caseIndex}-${key}`}>
                                       {
                                         this.renderCase(key, item[key])
                                       }
@@ -152,8 +152,8 @@ class SubmissionInformationModal extends React.Component {
                   </React.Fragment>
                 )
               }
-              <div styleName="submission-information-buttons">
-                <div styleName="submission-information-button-close">
+              <div className={styles['submission-information-buttons']}>
+                <div className={styles['submission-information-button-close']}>
                   <PrimaryButton onClick={() => onClose(false)}>Dismiss</PrimaryButton>
                 </div>
               </div>

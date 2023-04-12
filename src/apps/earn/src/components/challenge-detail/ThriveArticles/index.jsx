@@ -7,8 +7,8 @@ import moment from 'moment';
 import { ReactComponent as CalendarIcon } from '@earn/assets/images/calendar.svg';
 import { styled as styledCss } from "../../../utils";
 
-import style from './style.scss';
-const styled = styledCss(style);
+import styles from './style.scss';
+const styled = styledCss(styles);
 
 export default function ThriveArticles({ articles }) {
   const formatTitle = (title) => {
@@ -26,11 +26,11 @@ export default function ThriveArticles({ articles }) {
     : `${config.URL.THRIVE}${config.TC_EDU_ARTICLES_PATH}/${article.slug || article.title}`);
 
   const items = map(articles, (a, idx) => (
-    <div styleName="article" key={idx}>
-      <div styleName="article-left">
-        <div styleName="article-read-time">{a.fields.readTime}</div>
-        <div styleName="article-title"><a href={getPageUrl(a.fields)} target="_blank" rel="noopener noreferrer" title={a.fields.title}>{formatTitle(a.fields.title)}</a></div>
-        <div styleName="article-create-time"><CalendarIcon />{moment(a.creationDate).format('MMM DD, YYYY')}</div>
+    <div className={styles.article} key={idx}>
+      <div className={styles['article-left']}>
+        <div className={styles['article-read-time']}>{a.fields.readTime}</div>
+        <div className={styles['article-title']}><a href={getPageUrl(a.fields)} target="_blank" rel="noopener noreferrer" title={a.fields.title}>{formatTitle(a.fields.title)}</a></div>
+        <div className={styles['article-create-time']}><CalendarIcon />{moment(a.creationDate).format('MMM DD, YYYY')}</div>
       </div>
       <div
         className={styled("article-right")}
@@ -41,15 +41,15 @@ export default function ThriveArticles({ articles }) {
     </div>
   ));
   return (
-    <div id="recommendedThriveArticles" styleName="container">
-      <hr styleName="hr" />
-      <div styleName="header-container">
-        <div styleName="header">
+    <div id="recommendedThriveArticles" className={styles.container}>
+      <hr className={styles.hr} />
+      <div className={styles['header-container']}>
+        <div className={styles.header}>
           Recommended THRIVE Articles
         </div>
         <Button
           theme={{
-            button: style.button,
+            button: styles.button,
           }}
           openNewTab
           to={config.URL.THRIVE}
@@ -58,7 +58,7 @@ export default function ThriveArticles({ articles }) {
           {/* <a href={config.URL.THRIVE} rel="noopener noreferrer" target="_blank"></a> */}
         </Button>
       </div>
-      <div styleName="articles">
+      <div className={styles.articles}>
         {items}
       </div>
     </div>

@@ -15,7 +15,7 @@ import Modal from '../Modal'
 
 import SubmissionsList from './SubmissionsList';
 import SubmissionsDetail from './SubmissionsDetail';
-import style from './styles.scss';
+import styles from './styles.scss';
 
 const buttonThemes = {
   tc,
@@ -71,14 +71,14 @@ class MySubmissionsView extends React.Component {
     const { selectedSubmission, submissionsSortDetail } = this.state;
 
     if (!_.isEmpty(loadingMMSubmissionsForChallengeId)) {
-      return <div className={style.loading}><LoadingIndicator /></div>;
+      return <div className={styles.loading}><LoadingIndicator /></div>;
     }
 
     return (
-      <div className={style.wrapper}>
-        <div className={style.content}>
+      <div className={styles.wrapper}>
+        <div className={styles.content}>
           { selectedSubmission && (
-          <Modal onCancel={() => this.setState({ selectedSubmission: null })} theme={style}>
+          <Modal onCancel={() => this.setState({ selectedSubmission: null })} theme={styles}>
             <SubmissionsDetail
               onCancel={() => this.setState({ selectedSubmission: null })}
               submission={selectedSubmission}
@@ -87,7 +87,7 @@ class MySubmissionsView extends React.Component {
               onSortChange={sort => this.setState({ submissionsSortDetail: sort })}
             />
 
-            <div className={style.buttons}>
+            <div className={styles.buttons}>
               <PrimaryButton
                 onClick={() => this.setState({ selectedSubmission: null })}
                 theme={{

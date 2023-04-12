@@ -14,7 +14,7 @@ import { COMPETITION_TRACKS } from 'utils/tc';
  * the standard approach for our code! */
 import RegistrantsIcon from '../../Icons/RegistrantsIcon';
 
-import './style.scss';
+import styles from './style.scss';
 
 export default function NumRegistrants({
   challenge: {
@@ -38,10 +38,10 @@ export default function NumRegistrants({
     link = `${config.URL.BASE}/challenge-details/${id}/?type=develop#viewRegistrant`;
   }
   return (
-    <span styleName="container">
+    <span className={styles.container}>
       <Tooltip
         content={(
-          <div styleName="tooltip">
+          <div className={styles.tooltip}>
             {tip}
           </div>
         )}
@@ -52,13 +52,13 @@ export default function NumRegistrants({
             selectChallengeDetailsTab(numOfReg
               ? DETAIL_TABS.REGISTRANTS : DETAIL_TABS.DETAILS)
           )}
-          styleName="link"
+          className={styles.link}
           to={link}
           openNewTab={openChallengesInNewTabs}
           aria-label={`Number of registrants ${numOfReg}`}
         >
           <RegistrantsIcon />
-          <span styleName="number">
+          <span className={styles.number}>
             {numOfReg}
           </span>
         </Link>

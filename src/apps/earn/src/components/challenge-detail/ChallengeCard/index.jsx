@@ -16,7 +16,10 @@ import ChallengeStatus from './Status';
 import TrackAbbreviationTooltip from '../Tooltips/TrackAbbreviationTooltip';
 import MatchScore from './MatchScore';
 import { calculateScore } from '../../../utils/challenge-listing/helper';
-import './style.scss';
+import { styled as styledCss } from '@earn/utils';
+import styles from './style.scss';
+
+const styled = styledCss(styles);
 
 /* TODO: Note that this component uses a dirty trick to cheat linter and to be
  * able to modify an argument: it aliases challenge prop, then mutates it in
@@ -53,9 +56,9 @@ function ChallengeCard({
   const isRecommendedChallenge = !!challenge.jaccard_index;
 
   return (
-    <div ref={domRef} styleName="challengeCard">
-      <div styleName="left-panel">
-        <div styleName="challenge-track">
+    <div ref={domRef} className={styles.challengeCard}>
+      <div className={styles['left-panel']}>
+        <div className={styles['challenge-track']}>
           <TrackAbbreviationTooltip
             track={track}
             type={challengeType}
@@ -70,18 +73,18 @@ function ChallengeCard({
           </TrackAbbreviationTooltip>
         </div>
 
-        <div styleName={isRegistrationOpen ? 'challenge-details with-register-button' : 'challenge-details'}>
-          <div styleName="challenge-detail-header">
+        <div className={styled(isRegistrationOpen ? 'challenge-details with-register-button' : 'challenge-details')}>
+          <div className={styles['challenge-detail-header']}>
             <Link
               onClick={() => selectChallengeDetailsTab(DETAIL_TABS.DETAILS)}
               to={challengeDetailLink}
-              styleName="challenge-title"
+              className={styles['challenge-title']}
               openNewTab={openChallengesInNewTabs}
             ><p>{challenge.name}</p>
             </Link>
           </div>
-          <div styleName="details-footer">
-            <span styleName="date">
+          <div className={styles['details-footer']}>
+            <span className={styles.date}>
               {challenge.status === 'Active' ? 'Ends ' : 'Ended '}
               {getEndDate(challenge)}
             </span>
@@ -123,8 +126,8 @@ function ChallengeCard({
           </div>
         </div>
       </div>
-      <div styleName="right-panel">
-        <div styleName={isRegistrationOpen ? 'prizes with-register-button' : 'prizes'}>
+      <div className={styles['right-panel']}>
+        <div className={styled(isRegistrationOpen ? 'prizes with-register-button' : 'prizes')}>
           {getPrizePointsUI(challenge)}
         </div>
 

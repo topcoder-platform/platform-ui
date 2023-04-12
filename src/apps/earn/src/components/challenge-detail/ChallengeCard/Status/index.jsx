@@ -15,10 +15,13 @@ import ChallengeProgressBar from '../../ChallengeProgressBar';
 import ProgressBarTooltip from '../../Tooltips/ProgressBarTooltip';
 import UserAvatarTooltip from '../../Tooltips/UserAvatarTooltip';
 import ForumIcon from '../../Icons/forum.svg';
-import './style.scss';
+import { styled as styledCss } from '@earn/utils';
+import styles from './style.scss';
 
 import NumRegistrants from '../NumRegistrants';
 import NumSubmissions from '../NumSubmissions';
+
+const styled = styledCss(styles);
 
 // Constants
 const MAX_VISIBLE_WINNERS = 3;
@@ -95,7 +98,7 @@ export default function ChallengeStatus(props) {
         return (
           /* TODO: No, should not reuse avatar for displaying "+1" in
            * a circle. Should be a separate component for that. */
-          <div styleName="avatar-container" key={winner.handle}>
+          <div className={styles['avatar-container']} key={winner.handle}>
             <LeaderboardAvatar
               key={winner.handle}
               member={winner}
@@ -111,7 +114,7 @@ export default function ChallengeStatus(props) {
       }
       const userProfile = getProfile(winner);
       return (
-        <div styleName="avatar-container" key={winner.handle}>
+        <div className={styles['avatar-container']} key={winner.handle}>
           <UserAvatarTooltip user={userProfile}>
             <LeaderboardAvatar member={winner} />
           </UserAvatarTooltip>
@@ -153,13 +156,13 @@ export default function ChallengeStatus(props) {
       <a
         href={detailLink}
         onClick={() => false}
-        styleName="register-button"
+        className={styles['register-button']}
         target={openChallengesInNewTabs ? '_blank' : undefined}
         rel="noreferrer"
       >
         { timeDiff.late
           ? (
-            <span styleName="late">
+            <span className={styles.late}>
               {timeNote} <br />{lateNote}
             </span>
           ) : (
@@ -168,7 +171,7 @@ export default function ChallengeStatus(props) {
             </span>
           )
         }
-        <span styleName={`to-register ${timeDiff.late ? 'third-line' : ''}`}>
+        <span className={styled(`to-register ${timeDiff.late ? 'third-line' : ''}`)}>
           to Register
         </span>
       </a>
@@ -185,8 +188,8 @@ export default function ChallengeStatus(props) {
     return (
       <div>
         {renderLeaderboard()}
-        <span styleName="challenge-stats">
-          <div styleName="spacing">
+        <span className={styles['challenge-stats']}>
+          <div className={styles.spacing}>
             <NumRegistrants
               challenge={challenge}
               challengesUrl={challengesUrl}
@@ -195,7 +198,7 @@ export default function ChallengeStatus(props) {
               openChallengesInNewTabs={openChallengesInNewTabs}
             />
           </div>
-          <div styleName="spacing">
+          <div className={styles.spacing}>
             <NumSubmissions
               challenge={challenge}
               challengesUrl={challengesUrl}
@@ -208,8 +211,8 @@ export default function ChallengeStatus(props) {
           {
             challenge.myChallenge
             && (
-              <div styleName="spacing">
-                <a styleName="link-forum past" href={`${FORUM_URL}${forumId}`}>
+              <div className={styles.spacing}>
+                <a className={styled('link-forum past')} href={`${FORUM_URL}${forumId}`}>
                   <ForumIcon />
                 </a>
               </div>
@@ -248,12 +251,12 @@ export default function ChallengeStatus(props) {
     const showRegisterInfo = (challenge.currentPhaseNames || []).includes('Registration') && !users[userId];
 
     return (
-      <div styleName={showRegisterInfo ? 'challenge-progress with-register-button' : 'challenge-progress'}>
-        <span styleName="current-phase">
+      <div className={styled(showRegisterInfo ? 'challenge-progress with-register-button' : 'challenge-progress')}>
+        <span className={styles['current-phase']}>
           {phaseMessage}
         </span>
-        <span styleName="challenge-stats">
-          <div styleName="spacing">
+        <span className={styles['challenge-stats']}>
+          <div className={styles.spacing}>
             <NumRegistrants
               challenge={challenge}
               challengesUrl={challengesUrl}
@@ -262,7 +265,7 @@ export default function ChallengeStatus(props) {
               openChallengesInNewTabs={openChallengesInNewTabs}
             />
           </div>
-          <div styleName="spacing">
+          <div className={styles.spacing}>
             <NumSubmissions
               challenge={challenge}
               challengesUrl={challengesUrl}
@@ -275,8 +278,8 @@ export default function ChallengeStatus(props) {
           {
             myChallenge
             && (
-              <div styleName="spacing">
-                <a styleName="link-forum" href={`${FORUM_URL}${forumId}`}>
+              <div className={styles.spacing}>
+                <a className={styles['link-forum']} href={`${FORUM_URL}${forumId}`}>
                   <ForumIcon />
                 </a>
               </div>
@@ -306,7 +309,7 @@ export default function ChallengeStatus(props) {
   const completed = challenge.status === 'Completed';
   const status = completed ? 'completed' : '';
   return (
-    <div className={className} styleName={`challenge-status ${status}`}>
+    <div className={styled(`${className} challenge-status ${status}`)}>
       {completed ? completedChallenge() : activeChallenge()}
     </div>
   );

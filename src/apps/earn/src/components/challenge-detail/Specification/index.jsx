@@ -22,9 +22,9 @@ import SpecificationComponent from './SpecificationComponent';
 import SaveConfirmationModal from './SaveConfirmationModal';
 import SideBar from './SideBar';
 
-import style from "./styles.scss";
+import styles from "./styles.scss";
 import { styled as styledCss } from "../../../utils";
-const styled = styledCss(style)
+const styled = styledCss(styles)
 
 export default function ChallengeDetailsView(props) {
   const {
@@ -137,7 +137,7 @@ export default function ChallengeDetailsView(props) {
 
   /* TODO: This render markup is monstrous - should be refactored. */
   return (
-    <div styleName="container">
+    <div className={styles.container}>
       {
         isSaving ? (
           <SaveConfirmationModal
@@ -151,7 +151,7 @@ export default function ChallengeDetailsView(props) {
           <Sticky innerZ={100}>
             <DangerButton
               onClick={() => setSpecsTabState(SPECS_TAB_STATES.EDIT)}
-              theme={{ button: style.hiddenSaveButton }}
+              theme={{ button: styles.hiddenSaveButton }}
             >
               Don&apos;t press it!
             </DangerButton>
@@ -172,9 +172,9 @@ export default function ChallengeDetailsView(props) {
           </div>
         ) : null
       }
-      <div styleName="challenge-details-view">
-        <div styleName="challenge-specifications">
-          <div styleName={`challenge-specs-main ${accentedStyle}`}>
+      <div className={styles['challenge-details-view']}>
+        <div className={styles['challenge-specifications']}>
+          <div className={styled(`challenge-specs-main ${accentedStyle}`)}>
             {
               track.toLowerCase() !== 'design'
                 ? (
@@ -227,7 +227,7 @@ export default function ChallengeDetailsView(props) {
                       <article>
                         {
                           selfService && (
-                            <p styleName="note">
+                            <p className={styles.note}>
                               <strong>
                                 On Demand Challenges are customer-initiated single round design challenges.
                               </strong>
@@ -289,7 +289,7 @@ export default function ChallengeDetailsView(props) {
                           )
                         }
                         <p />
-                        <p styleName="note">
+                        <p className={styles.note}>
                           Please read the challenge specification carefully and
                           watch the forums for any questions or feedback
                           concerning this challenge. It is important that you

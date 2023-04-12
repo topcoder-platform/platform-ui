@@ -1,7 +1,10 @@
 import React from 'react';
 import PT from 'prop-types';
+import { styled as styledCss } from '@earn/utils';
 
-import './styles.scss';
+import styles from './styles.scss';
+const styled = styledCss(styles);
+
 
 /**
  * Displays a button.
@@ -24,15 +27,14 @@ const Button = ({
   value,
 }) => (
   <button
-    className={className}
     data-value={value}
-    styleName={`button ${style ? `button-${style}` : ''} ${
+    className={styled(`${className} button ${style ? `button-${style}` : ''} ${
       isPrimary ? 'button-primary' : ''
     } ${isInverted ? 'button-inverted' : ''} ${
       shade ? `button-${shade}` : ''
     } ${isText ? 'button-text' : ''} ${size ? `button-${size}` : ''} ${
       isSelected ? 'is-selected' : ''
-    }`}
+    }`)}
     onClick={onClick}
     tabIndex={0}
     type="button"

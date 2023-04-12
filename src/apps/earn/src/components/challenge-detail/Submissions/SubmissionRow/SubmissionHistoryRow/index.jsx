@@ -57,26 +57,26 @@ export default function SubmissionHistoryRow({
   };
 
   return (
-    <div styleName="container">
-      <div styleName="row no-border">
-        <div styleName="col-1 col">
-          <div styleName="mobile-header">SUBMISSION</div>
+    <div className={styles.container}>
+      <div className={styled('row no-border')}>
+        <div className={styled('col-1 col')}>
+          <div className={styles['mobile-header']}>SUBMISSION</div>
           <span>{submission}</span>
         </div>
-        <div styleName="col-2 col">
-          <div styleName="mobile-header">FINAL SCORE</div>
+        <div className={styled('col-2 col')}>
+          <div className={styles['mobile-header']}>FINAL SCORE</div>
           <div>
             {getFinalScore()}
           </div>
         </div>
-        <div styleName="col-3 col">
-          <div styleName="mobile-header">PROVISIONAL SCORE</div>
+        <div className={styled('col-3 col')}>
+          <div className={styles['mobile-header']}>PROVISIONAL SCORE</div>
           <div>
             {getInitialReviewResult()}
           </div>
         </div>
-        <div styleName={`col-4 col ${isMM ? 'mm' : ''}`}>
-          <div styleName="mobile-header">TIME</div>
+        <div className={styled(`col-4 col ${isMM ? 'mm' : ''}`)}>
+          <div className={styles['mobile-header']}>TIME</div>
           <div>
             {moment(submissionTime).format('DD MMM YYYY')} {moment(submissionTime).format('HH:mm:ss')}
           </div>
@@ -84,8 +84,8 @@ export default function SubmissionHistoryRow({
         {
           isLoggedIn && (isMM || isRDM)
           && (numWinners > 0 || challengeStatus === CHALLENGE_STATUS.COMPLETED) && (
-            <div styleName="col-2 col center">
-              <div styleName="mobile-header">Action</div>
+            <div className={styled('col-2 col center')}>
+              <div className={styles['mobile-header']}>Action</div>
               <button
                 onClick={() => {
                   // download submission

@@ -284,8 +284,8 @@ export default class Registrants extends React.Component {
        && challenge.round2Introduction;
     const places = prizes.length;
     return (
-      <div styleName={`container ${twoRounds ? 'design' : ''}`} role="table" aria-label="Registrants">
-        <div styleName="head" role="row">
+      <div className={styled(`container ${twoRounds ? 'design' : ''}`)} role="table" aria-label="Registrants">
+        <div className={styles.head} role="row">
           {
              !isDesign && (
                <button
@@ -297,11 +297,11 @@ export default class Registrants extends React.Component {
                    });
                    this.setState({ ...sortOptionClicked, ratingClicked: true });
                  }}
-                 styleName="col-2 table-header"
+                 className={styled('col-2 table-header')}
                >
                  <span role="columnheader">Rating</span>
                  <div
-                   styleName={cn(
+                   className={styled(
                      'col-arrow',
                      {
                        'col-arrow-sort-asc': (field === 'Rating') && (sort === 'asc'),
@@ -327,7 +327,7 @@ export default class Registrants extends React.Component {
           >
             <span role="columnheader">Username</span>
             <div
-              styleName={cn(
+              className={styled(
                 'col-arrow',
                 {
                   'col-arrow-sort-asc': (field === 'Username') && (sort === 'asc'),
@@ -350,7 +350,7 @@ export default class Registrants extends React.Component {
           >
             <span role="columnheader">Registration Date</span>
             <div
-              styleName={cn(
+              className={styled(
                 'col-arrow',
                 {
                   'col-arrow-sort-asc': (field === 'Registration Date') && (sort === 'asc'),
@@ -362,7 +362,7 @@ export default class Registrants extends React.Component {
           </button>
           {twoRounds && (
           <button
-            styleName="col-5 table-header"
+            className={styled('col-5 table-header')}
             onClick={() => {
               onSortChange({
                 field: 'Round 1 Submitted Date',
@@ -374,7 +374,7 @@ export default class Registrants extends React.Component {
           >
             <span role="columnheader">Round 1 Submitted Date</span>
             <div
-              styleName={cn(
+              className={styled(
                 'col-arrow',
                 {
                   'col-arrow-sort-asc': (field === 'Round 1 Submitted Date') && (sort === 'asc'),
@@ -398,7 +398,7 @@ export default class Registrants extends React.Component {
           >
             <span role="columnheader">{twoRounds ? 'Round 2 Submitted Date' : 'Submitted Date'}</span>
             <div
-              styleName={cn(
+              className={styled(
                 'col-arrow',
                 {
                   'col-arrow-sort-asc': (field === 'Submitted Date') && (sort === 'asc'),
@@ -409,7 +409,7 @@ export default class Registrants extends React.Component {
             </div>
           </button>
         </div>
-        <div styleName="body" role="rowgroup">
+        <div className={styles.body} role="rowgroup">
           {
              sortedRegistrants.map((r) => {
                const placement = getPlace(results, r.memberHandle, places);
@@ -420,16 +420,16 @@ export default class Registrants extends React.Component {
                const final = this.getFinal(r);
 
                return (
-                 <div styleName="row" key={r.memberHandle} role="row">
+                 <div className={styles.row} key={r.memberHandle} role="row">
                    {
                      !isDesign && (
-                       <div styleName="col-2">
-                         <div styleName="sm-only title">
+                       <div className={styles['col-2']}>
+                         <div className={styled('sm-only title')}>
                            Rating
                          </div>
                          <div>
                            <span
-                             styleName={`level-${getRatingLevel(_.get(r, 'rating', 0))}`}
+                             className={styled(`level-${getRatingLevel(_.get(r, 'rating', 0))}`)}
                              role="cell"
                            >
                              { (!_.isNil(r.rating) && r.rating !== 0) ? r.rating : '-'}
@@ -438,22 +438,22 @@ export default class Registrants extends React.Component {
                        </div>
                      )
                    }
-                   <div styleName="col-3">
-                     <div styleName="sm-only title">
+                   <div className={styles['col-3']}>
+                     <div className={styled('sm-only title')}>
                        USERNAME
                      </div>
                      <span role="cell">
                        <a
                          href={`${window.origin}/members/${r.memberHandle}`}
-                         styleName={isDesign ? '' : `level-${getRatingLevel(_.get(r, 'rating', 0))}`}
+                         className={styled(isDesign ? '' : `level-${getRatingLevel(_.get(r, 'rating', 0))}`)}
                          target={`${_.includes(window.origin, 'www') ? '_self' : '_blank'}`}
                        >
                          {r.memberHandle}
                        </a>
                      </span>
                    </div>
-                   <div styleName="col-4">
-                     <div styleName="sm-only title">
+                   <div className={styles['col-4']}>
+                     <div className={styled('sm-only title')}>
                        Registration Date
                      </div>
                      <span role="cell">{formatDate(r.created)}</span>
@@ -461,8 +461,8 @@ export default class Registrants extends React.Component {
                    {
                      twoRounds
                      && (
-                     <div styleName="col-5">
-                       <div styleName="sm-only title">
+                     <div className={styles['col-5']}>
+                       <div className={styled('sm-only title')}>
                          Round 1 Submitted Date
                        </div>
                        <div>
@@ -471,14 +471,14 @@ export default class Registrants extends React.Component {
                          </span>
                          {
                            passedCheckpoint(checkpoints, r.memberHandle, checkpointResults)
-                           && <CheckMark styleName="passed" />
+                           && <CheckMark className={styles.passed} />
                          }
                        </div>
                      </div>
                      )
                    }
-                   <div styleName="col-6">
-                     <div styleName="sm-only title">
+                   <div className={styles['col-6']}>
+                     <div className={styled('sm-only title')}>
                        {twoRounds ? 'Round 2 ' : ''}
                        Submitted Date
                      </div>
@@ -487,7 +487,7 @@ export default class Registrants extends React.Component {
                          {formatDate(final)}
                        </span>
                        {placement > 0 && (
-                       <span role="cell" styleName={`placement ${placement < 4 ? `placement-${placement}` : ''}`}>
+                       <span role="cell" className={styled(`placement ${placement < 4 ? `placement-${placement}` : ''}`)}>
                          {placement}
                        </span>
                        )}

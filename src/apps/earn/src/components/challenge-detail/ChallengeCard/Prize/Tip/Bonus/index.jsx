@@ -6,7 +6,7 @@
 
 import PT from 'prop-types';
 import React from 'react';
-import './style.scss';
+import styles from './style.scss';
 
 export default function Bonus({
   name,
@@ -14,9 +14,9 @@ export default function Bonus({
   prizeUnitSymbol,
 }) {
   return (
-    <div styleName="bonus" aria-label={`${name} bonus is ${prizeUnitSymbol}${prize.toLocaleString()}`}>
+    <div className={styles.bonus} aria-label={`${name} bonus is ${prizeUnitSymbol}${prize.toLocaleString()}`}>
       <span aria-hidden="true">
-        <span styleName="name">
+        <span className={styles.name}>
           {name}
         </span>
         {prizeUnitSymbol}
