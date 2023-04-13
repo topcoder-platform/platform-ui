@@ -11,6 +11,10 @@ const localIdentName = isProd
 const resolve = dir => path.resolve(__dirname, dir);
 
 module.exports = {
+    eslint: {
+        enable: false,
+    },
+    
     style: {
         modules: {
             localIdentName,
