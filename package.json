@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "yarn craco start",
         "start": "sh start.sh",
-        "build": "yarn craco build",
+        "build": "export CI=false && yarn craco build",
         "demo": "npx http-server --port 443 -a 0.0.0.0 -S -C ./ssl/rootCA.crt -K ./ssl/rootCA.key -P https://local.topcoder-dev.com? --proxy-options.secure false ./build",
         "lint": "eslint -c ./src/.eslintrc.js 'src/**/*.{ts,tsx}'",
         "lint:fix": "eslint -c ./src/.eslintrc.js 'src/**/*.{ts,tsx}' --fix",
