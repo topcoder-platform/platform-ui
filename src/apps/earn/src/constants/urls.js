@@ -1,3 +1,4 @@
+import { EnvironmentConfig } from "~/config";
 import config from "../config";
 
 export const PROXY_API_BASE_URL = config.PROXY_API + config.GIGS_API_BASE_PATH;
@@ -5,8 +6,8 @@ export const GIG_DETAILS_API_URL = `${PROXY_API_BASE_URL}/job`;
 export const RECRUIT_API_URL = `${config.URL.BASE}/api/recruit/jobs`;
 export const REFERRAL_API_URL = `${config.URL.COMMUNITY_APP}/api`;
 export const REFERRAL_PROGRAM_URL = `${config.URL.BASE}/community/gig-referral`;
-export const GIG_LIST_URL = config.URL.PLATFORM_WEBSITE_URL + config.GIG_LIST_PATH;
-  
+export const GIG_LIST_URL = `${EnvironmentConfig.PLATFORMUI_URL}/earn/gigs`;
+
 export const GIGS_FORUM_URL = `${config.URL.DISCUSSIONS}/categories/gig-work-discusssions`;
 export const PROFILE_URL = `${config.URL.BASE}/settings/profile`;
 export const LINKEDIN_URL = "https://www.linkedin.com/sharing/share-offsite/?url=";

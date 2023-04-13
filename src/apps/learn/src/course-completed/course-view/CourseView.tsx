@@ -1,7 +1,7 @@
 import { FC } from 'react'
 
-import { EnvironmentConfig } from '~/config'
 import { Button } from '~/libs/ui'
+import { EnvironmentConfig } from '~/config'
 
 import { CourseTitle, LearnCertification, LearnCourse } from '../../lib'
 import { getCertificatePath, rootRoute } from '../../learn.routes'
@@ -69,7 +69,7 @@ const CourseView: FC<CourseViewProps> = (props: CourseViewProps) => (
             <Button
                 buttonStyle='link'
                 label='See your updated profile'
-                url={`${EnvironmentConfig.TOPCODER_URLS.USER_PROFILE}/${props.userHandle}`}
+                url={`${EnvironmentConfig.URLS.USER_PROFILE}/${props.userHandle}`}
                 target='_blank'
             />
         </div>

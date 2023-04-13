@@ -122,7 +122,7 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
 
                         <div className={styles.cardLabels}>
                             <div className={styles.newLabel}>NEW</div>
-                            {!EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION
+                            {!EnvironmentConfig.ENABLE_TCA_CERT_MONETIZATION
                                 && <div className={styles.freeLabel}>FREE</div>}
                         </div>
                     </div>

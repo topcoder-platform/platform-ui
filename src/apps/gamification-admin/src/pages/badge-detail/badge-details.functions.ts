@@ -1,4 +1,4 @@
-import { GamificationConfig } from '../../game-config'
+import { CSV_HEADER } from '../../config'
 import { GameBadge } from '../../game-lib'
 
 import { submitRequestAsync as submitBatchAssignRequestAsync } from './batch-assign-badge.store'
@@ -11,7 +11,7 @@ export async function submitRequestAsync(request: UpdateBadgeRequest): Promise<G
 }
 
 export function generateCSV(input: Array<Array<string | number>>): string {
-    input.unshift(GamificationConfig.CSV_HEADER)
+    input.unshift(CSV_HEADER)
 
     return input.map(row => row.join(','))
         .join('\n')

@@ -37,7 +37,7 @@ const TCCertifications: FC<TCCertificationsProps> = (props: TCCertificationsProp
 
     const certificationsCount: number = props.certifications.length
 
-    const tcaCertMonetization: boolean = !!EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION
+    const tcaCertMonetization: boolean = !!EnvironmentConfig.ENABLE_TCA_CERT_MONETIZATION
 
     return (
         <div className={styles.wrap}>

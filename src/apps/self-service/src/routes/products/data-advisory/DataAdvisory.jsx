@@ -1,13 +1,12 @@
 import { useContext } from "react";
 import { Route, Routes } from "react-router-dom";
 
-import { EnvironmentConfig } from "~/config";
 import { profileContext } from "~/libs/core";
 
 import { ReactComponent as DataAdvisoryIcon } from "../../../assets/images/data-advisory-icon.svg";
 import { BasicInfo, Review } from "../../../containers/products";
 import { WorkLoginPrompt } from "../../work-login-prompt";
-import { webWorkTypes } from "../../../config";
+import { webWorkTypes, SIGN_IN_URL } from "../../../config";
 import { FeaturedWorkTypeBanner, HelpBanner } from "../../../components/banners";
 import { WorkType } from "../../../lib";
 
@@ -61,7 +60,7 @@ export default function DataAdvisory() {
           nextPageUrl={
             isLoggedIn
               ? "/self-service/work/new/data-advisory/thank-you"
-              : EnvironmentConfig.SIGN_IN_URL
+              : SIGN_IN_URL
           }
           icon={<DataAdvisoryIcon />}
           showIcon

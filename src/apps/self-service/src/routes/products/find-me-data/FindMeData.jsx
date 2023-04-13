@@ -1,11 +1,10 @@
 import { useContext } from "react";
 import { Route, Routes } from "react-router-dom";
 
-import { EnvironmentConfig } from "~/config";
 import { profileContext } from "~/libs/core";
 
 import { ReactComponent as FindMeDataIcon } from "../../../assets/images/find-me-data-icon.svg";
-import { webWorkTypes } from "../../../config";
+import { SIGN_IN_URL, webWorkTypes } from "../../../config";
 import { WorkType } from "../../../lib";
 import { BasicInfo, Review } from "../../../containers/products";
 import { WorkLoginPrompt } from "../../work-login-prompt";
@@ -61,7 +60,7 @@ export default function FindMeData() {
           nextPageUrl={
             isLoggedIn
               ? "/self-service/work/new/find-me-data/thank-you"
-              : EnvironmentConfig.SIGN_IN_URL
+              : SIGN_IN_URL
           }
           icon={<FindMeDataIcon />}
           showIcon

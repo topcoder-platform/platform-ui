@@ -6,8 +6,8 @@ import { GetUnreadMessageCountResponse } from './get-unread-message-count-respon
 export async function getUnreadCountAsync(workId: string, handle: string): Promise<GetUnreadMessageCountResponse> {
 
     const url: string = [
-        `${EnvironmentConfig.API.FORUM_V2}/groups/${workId}/member/${handle}`,
-        `access_token=${EnvironmentConfig.API.FORUM_ACCESS_TOKEN}`,
+        `${EnvironmentConfig.VANILLA_FORUM.V2_URL}/groups/${workId}/member/${handle}`,
+        `access_token=${EnvironmentConfig.VANILLA_FORUM.ACCESS_TOKEN}`,
     ].join('?')
 
     const response: { unreadNotifications: number } = await xhrGetAsync(url)

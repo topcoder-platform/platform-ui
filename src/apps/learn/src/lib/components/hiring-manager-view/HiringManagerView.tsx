@@ -84,7 +84,7 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
 
     const certificationTitle: string = `${props.userName} - ${props.certification?.title} Certificate`
 
-    const myProfileLink: string = `${EnvironmentConfig.TOPCODER_URLS.USER_PROFILE}/${props.userProfile?.handle}`
+    const myProfileLink: string = `${EnvironmentConfig.URLS.USER_PROFILE}/${props.userProfile?.handle}`
 
     const certificationDetailsLink: string = getTCACertificationPath(
         `${props.certification?.dashedName}`,

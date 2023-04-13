@@ -98,7 +98,7 @@ const EnrollmentPage: FC<{}> = () => {
                 })
         }, [certification?.id, profile, setCertificateProgress])
 
-    const tcaMonetizationEnabled: boolean = EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION || false
+    const tcaMonetizationEnabled: boolean = EnvironmentConfig.ENABLE_TCA_CERT_MONETIZATION || false
 
     function navToCertificationDetails(): void {
         navigate(getTCACertificationPath(certificationDashedName))

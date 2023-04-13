@@ -31,6 +31,28 @@ import imgRedBlueGradient from "../../assets/images/products/product-main-photos
 
 import countries from "./countries";
 import styles from "./styles.module.scss";
+import { EnvironmentConfig } from "~/config";
+
+export const SIGN_IN_URL = EnvironmentConfig.ENV === 'dev'
+    ? 'https://accounts-auth0.topcoder-dev.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder-dev.com%2Fself-service%2Fwizard&regSource=selfService'
+    : 'https://accounts-auth0.topcoder.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder.com%2Fself-service%2Fwizard&regSource=selfService';
+
+export const SIGN_UP_URL = EnvironmentConfig.ENV === 'dev'
+    ? 'https://accounts-auth0.topcoder-dev.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder-dev.com%2Fself-service%2Fwizard&regSource=selfService&mode=signUp'
+    : 'https://accounts-auth0.topcoder.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder.com%2Fself-service%2Fwizard&regSource=selfService&mode=signUp'
+
+export const VANILLA_EMBED_JS = EnvironmentConfig.ENV === 'dev'
+    ? 'https://vanilla.topcoder-dev.com/js/embed.js'
+    : 'https://discussions.topcoder.com/js/embed.js';
+export const VANILLA_EMBED_TYPE = 'mfe';
+export const VANILLA_FORUM_API = EnvironmentConfig.VANILLA_FORUM.V2_URL;
+export const VANILLA_ACCESS_TOKEN = EnvironmentConfig.VANILLA_FORUM.ACCESS_TOKEN;
+
+/**
+ * Expire time period of auto saved intake form: 24 hours
+ */
+export const AUTO_SAVED_COOKIE_EXPIRED_IN = 24 * 60
+export const TIME_ZONE = 'Europe/London'
 
 export const ROUTES = {
     INTAKE_FORM: "/self-service/wizard",
@@ -52,7 +74,7 @@ export const ROUTES = {
     WEBSITE_DESIGN_BRANDING_LEGACY:
       "/self-service/work/new/website-design-legacy/branding",
   };
-  
+
 
 export const AUTO_SAVE_FORM = "AUTO_SAVE_FORM";
 
@@ -244,15 +266,15 @@ export const WORK_TIMELINE = [
         color: "#12C188",
         date: (work) => {
             let phase = work.phases.find((phase) => phase.name === "Approval");
-            
+
             if (!phase) {
                 phase = work.phases.find((phase) => phase.name === "Review");
             }
-            
+
             if (!phase) {
                 phase = work.phases.find((phase) => phase.name === "Appeals");
             }
-            
+
             if (!phase) {
                 phase = work.phases.find((phase) => phase.name === "Appeals Response");
             }
@@ -270,11 +292,11 @@ export const WORK_TIMELINE = [
         },
         completed: (work) => {
             let phase = work.phases.find((phase) => phase.name === "Approval");
-            
+
             if (!phase) {
                 phase = work.phases.find((phase) => phase.name === "Review");
             }
-            
+
             if (!phase) {
                 phase = work.phases.find((phase) => phase.name === "Appeals Response");
             }
@@ -291,7 +313,7 @@ export const WORK_TIMELINE = [
         color: "#2C95D7",
         date: (work) => {
             let phase = work.phases.find((phase) => phase.name === "Approval");
-            
+
             if (!phase) {
                 phase = work.phases.find((phase) => phase.name === "Appeals Response");
             }
@@ -301,24 +323,24 @@ export const WORK_TIMELINE = [
             const active =
             WORK_STATUS_ORDER[work.status] >=
             WORK_STATUS_ORDER[WORK_STATUSES.Completed.value];
-            
+
             const customerFeedbacked =
             work.metadata &&
             work.metadata.find((item) => item.name === "customerFeedback");
-            
+
             return active && !customerFeedbacked;
         },
         completed: (work) => {
             let phase = work.phases.find((phase) => phase.name === "Approval");
-            
+
             const customerFeedbacked =
             work.metadata &&
             work.metadata.find((item) => item.name === "customerFeedback");
-            
+
             const isReviewPhaseEnded = phase && (
                 moment(workUtil.phaseEndDate(phase)).isBefore() || !customerFeedbacked
             );
-            
+
             return (
                 isReviewPhaseEnded && work.status === WORK_STATUSES.Completed.value
             );
@@ -337,11 +359,11 @@ export const WORK_TIMELINE = [
             const active =
             WORK_STATUS_ORDER[work.status] >=
             WORK_STATUS_ORDER[WORK_STATUSES.Completed.value];
-            
+
             const customerFeedbacked =
             work.metadata &&
             work.metadata.find((item) => item.name === "customerFeedback");
-            
+
             return active && customerFeedbacked;
         },
         completed: (work) => {
@@ -386,7 +408,7 @@ export const WORK_TIMELINE = [
         },
     },
 ];
-    
+
 export const SURVEY_QUESTIONS = [
     {
         name: "How happy are you with the quality of work?",

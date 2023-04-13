@@ -6,7 +6,7 @@ import moment from 'moment';
 import _ from 'lodash';
 import { convertNow as convertMoney } from '@earn/services/money';
 import * as filter from './filter.js';
-import { config } from '@earn/config';
+import config from '@earn/config';
 import Prize from '@earn/components/challenge-detail/ChallengeCard/Prize';
 import { BUCKETS, getBuckets } from '@earn/utils/challenge-listing/buckets';
 import { phaseEndDate } from '@earn/utils/challenge-listing/helper';

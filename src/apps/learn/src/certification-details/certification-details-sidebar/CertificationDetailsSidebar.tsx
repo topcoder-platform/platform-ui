@@ -41,7 +41,7 @@ function renderTooltipContents(icon: ReactNode, text: Array<string>): ReactNode 
 const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props: CertificationDetailsSidebarProps) => {
     const completed: boolean = !!props.certProgress?.completedAt
 
-    const tcaMonetizationEnabled: boolean = EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION || false
+    const tcaMonetizationEnabled: boolean = EnvironmentConfig.ENABLE_TCA_CERT_MONETIZATION || false
 
     // fetch Stripe product data conditionally
     const { product }: { product: StripeProduct | undefined }

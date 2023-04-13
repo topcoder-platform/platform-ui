@@ -1,18 +1,20 @@
 import { sprig, SprigAPI } from '@sprig-technologies/sprig-browser'
 import { EnvironmentConfig } from '~/config'
 
-const Sprig: SprigAPI = sprig.configure({
+const sprigEnvId: string | undefined = EnvironmentConfig.SPRIG.ENVIRONMENT_ID
+
+const Sprig: SprigAPI | undefined = sprigEnvId ? sprig.configure({
     environmentId: EnvironmentConfig.SPRIG.ENVIRONMENT_ID,
-})
+}) : undefined
 
 export function triggerForUser(surveyName: string, userId?: number): void {
 
     if (!userId) {
-        Sprig.track(surveyName)
+        Sprig?.track(surveyName)
         return
     }
 
-    Sprig.identifyAndTrack({
+    Sprig?.identifyAndTrack({
         anonymousId: '',
         eventName: surveyName,
         metadata: undefined,

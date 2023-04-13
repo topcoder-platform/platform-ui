@@ -1,10 +1,9 @@
 import { useContext } from "react";
 import { Routes, Route } from "react-router-dom";
 
-import { EnvironmentConfig } from "~/config";
 import { profileContext } from "~/libs/core";
 
-import { webWorkTypes } from "../../../config";
+import { SIGN_IN_URL, webWorkTypes } from "../../../config";
 import { ReactComponent as DataExplorationIcon } from "../../../assets/images/data-exploration-icon.svg";
 import { Review } from "../../../containers/products";
 import { BasicInfo } from "../../../containers/products";
@@ -15,7 +14,7 @@ import { WorkLoginPrompt } from "../../work-login-prompt";
 export default function DataExploration() {
   const { profile } = useContext(profileContext);
   const isLoggedIn = !!profile;
-  
+
   const dataExploration = webWorkTypes.find(
     (workType) => workType.type === WorkType.data
   );
@@ -61,7 +60,7 @@ export default function DataExploration() {
           nextPageUrl={
             isLoggedIn
               ? "/self-service/work/new/data-exploration/thank-you"
-              : EnvironmentConfig.SIGN_IN_URL
+              : SIGN_IN_URL
           }
           icon={<DataExplorationIcon />}
           showIcon

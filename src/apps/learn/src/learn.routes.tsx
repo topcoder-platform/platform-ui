@@ -128,7 +128,7 @@ export function getTCACertificateUrl(
 export function getTCACertificationValidationUrl(
     completionUuid: string,
 ): string {
-    return `${EnvironmentConfig.TOPCODER_URLS.TCA}${LEARN_PATHS.root}/${completionUuid}`
+    return `${EnvironmentConfig.PLATFORMUI_URL}${LEARN_PATHS.root}/${completionUuid}`
 }
 
 export function getTCAUserCertificationUrl(

@@ -4,10 +4,7 @@
 /* eslint-disable no-param-reassign */
 import _ from "lodash";
 
-import {
-  AV_SCAN_SCORER_REVIEW_TYPE_ID,
-  PROVISIONAL_SCORING_COMPLETED_REVIEW_TYPE_ID,
-} from "../config";
+import config from "../config";
 
 function removeDecimal(num) {
   const re = new RegExp("^-?\\d+");
@@ -127,7 +124,7 @@ export function processMMSubmissions(submissions) {
     }
     const validReviews = _.reject(submission.review, [
       "typeId",
-      AV_SCAN_SCORER_REVIEW_TYPE_ID,
+      config.AV_SCAN_SCORER_REVIEW_TYPE_ID,
     ]);
     validReviews.sort((a, b) => {
       const dateA = new Date(a.created);
@@ -136,7 +133,7 @@ export function processMMSubmissions(submissions) {
     });
 
     const provisionalScoringIsCompleted = _.some(submission.review, {
-      typeId: PROVISIONAL_SCORING_COMPLETED_REVIEW_TYPE_ID,
+      typeId: config.PROVISIONAL_SCORING_COMPLETED_REVIEW_TYPE_ID,
     });
 
     const provisionalScore = toFixed(_.get(validReviews, "[0].score", "-"), 5);

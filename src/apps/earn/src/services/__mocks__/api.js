@@ -5,7 +5,7 @@
 import _ from "lodash";
 import "isomorphic-fetch";
 
-import config from "../../config";
+import { EnvironmentConfig } from "~/config";
 
 /**
  * API service object. It is reused for both Topcoder API v2 and v3,
@@ -116,14 +116,14 @@ const lastApiInstances = {};
  * @return {Api} API service object.
  */
 export function getApi(version, token) {
-  if (!version || !config.API[version]) {
+  if (!version || !EnvironmentConfig.API[version]) {
     throw new Error(`${version} is not a valid API version`);
   }
   if (
     !lastApiInstances[version] ||
     lastApiInstances[version].private.token !== token
   ) {
-    lastApiInstances[version] = new Api(config.API[version], token);
+    lastApiInstances[version] = new Api(EnvironmentConfig.API[version], token);
   }
   return lastApiInstances[version];
 }

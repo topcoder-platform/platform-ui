@@ -47,7 +47,7 @@ const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarP
 
     const [payProcessing, setPayProcessing]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
-    const tcaMonetizationEnabled: boolean = EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION || false
+    const tcaMonetizationEnabled: boolean = EnvironmentConfig.ENABLE_TCA_CERT_MONETIZATION || false
 
     function onUpdateField(fieldName: string, value: string | boolean): void {
         setFormValues({

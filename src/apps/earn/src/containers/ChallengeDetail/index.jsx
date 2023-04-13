@@ -11,7 +11,7 @@ import shortId from "shortid";
 import PT from "prop-types";
 import { connect } from "react-redux";
 
-import config from "../../config";
+import { EnvironmentConfig } from "~/config";
 
 import actions from "../../actions";
 // import communityActions from "../../actions/tc-communities";
@@ -330,7 +330,7 @@ class ChallengeDetailPageContainer extends React.Component {
     } = this.props;
     if (!auth.tokenV3) {
       const utmSource = communityId || 'community-app-main';
-      window.location.href = `${config.URL.AUTH}/member?retUrl=${encodeURIComponent(window.location.href)}&utm_source=${utmSource}&regSource=challenges`;
+      window.location.href = `${EnvironmentConfig.AUTH.ACCOUNTS_APP_CONNECTOR}/member?retUrl=${encodeURIComponent(window.location.href)}&utm_source=${utmSource}&regSource=challenges`;
     } else if (_.every(terms, 'agreed')) {
       registerForChallenge(auth, challengeId);
     } else {

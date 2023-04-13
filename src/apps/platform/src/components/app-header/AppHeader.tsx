@@ -14,7 +14,7 @@ import { NavigateFunction, useNavigate } from 'react-router-dom'
 import type { AuthUser as NavAuthUser, TcUniNavFn } from 'universal-navigation'
 import classNames from 'classnames'
 
-import { PageSubheaderPortalId } from '~/config'
+import { EnvironmentConfig, PageSubheaderPortalId } from '~/config'
 import {
     authUrlLogin,
     authUrlLogout,
@@ -28,7 +28,7 @@ import {
 import UniNavSnippet from './universal-nav-snippet'
 
 declare let tcUniNav: TcUniNavFn
-UniNavSnippet('https://uni-nav.topcoder-dev.com/v1/tc-universal-nav.js')
+UniNavSnippet(EnvironmentConfig.URLS.UNIVERSAL_NAV)
 
 interface NavigationRequest {
     label: string

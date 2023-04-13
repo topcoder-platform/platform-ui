@@ -5,9 +5,8 @@ import moment from "moment";
 import "moment-timezone";
 import _ from "lodash";
 
-import { EnvironmentConfig } from "~/config";
 
-import { ACTIONS } from "../config";
+import { ACTIONS, TIME_ZONE } from "../config";
 
 const initialState = {
   pagePrice: 0,
@@ -29,7 +28,7 @@ const initialState = {
 };
 
 const formReducer = (state = initialState, action) => {
-  const updatedAt = moment().tz(EnvironmentConfig.TIME_ZONE).format();
+  const updatedAt = moment().tz(TIME_ZONE).format();
   switch (action.type) {
     case ACTIONS.FORM.SAVE_FORM:
       return {

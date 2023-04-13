@@ -1,11 +1,12 @@
 import React from "react";
 import PT from "prop-types";
 import moment from "moment";
+import { EnvironmentConfig } from "~/config";
+
 import { PrimaryButton } from "../../../components/Buttons";
 import SubmissionTable from "./SubmissionTable";
 import LoadingIndicator from "../../../components/LoadingIndicator";
 import * as util from "../../../utils/challenge";
-import config from "../../../config";
 
 import styles from "./styles.scss";
 import { styled as styledCss } from "../../../utils";
@@ -55,7 +56,7 @@ const MySubmissions = ({
         <div className={styled("left-col")}>
           <h4 className={styled("name")}>{challengeName}</h4>
           <a
-            href={`${config.URL.PLATFORM_WEBSITE}/earn/challenges/${challengeId}`}
+            href={`${EnvironmentConfig.PLATFORMUI_URL}/earn/challenges/${challengeId}`}
             className={styled("back-btn")}
           >
             &lt; Back
@@ -127,7 +128,7 @@ const MySubmissions = ({
             theme={{
               button: styles["add-sub-btn"],
             }}
-            to={`${config.URL.PLATFORM_WEBSITE}/earn/challenges/${challengeId}/submit`}
+            to={`${EnvironmentConfig.PLATFORMUI_URL}/earn/challenges/${challengeId}/submit`}
           >
             {!isDevelop || !submissions || submissions.length === 0
               ? "Add Submission"

@@ -12,7 +12,7 @@ import { getService as getSubmissionService } from "../services/submissions";
 import { getApi } from "../services/challenge-api";
 import * as submissionUtil from "../utils/submission";
 
-const { PAGE_SIZE } = 50;
+const { PAGE_SIZE } = config;
 
 /**
  * Private. Loads from the backend all data matching some conditions.
@@ -21,7 +21,7 @@ const { PAGE_SIZE } = 50;
  *  "offset" ones. Returns loaded data as an array.
  * @param {Number} page Optional. Next page of data to load.
  * @param {Number} perPage Optional. The size of the page content to load.
- * @param {Array} prev Optional. data loaded so far.
+ * @param {Array<string>} prev Optional. data loaded so far.
  */
 function getAll(getter, page = 1, perPage = PAGE_SIZE, prev) {
   /* Amount of submissions to fetch in one API call. 50 is the current maximum
@@ -386,7 +386,7 @@ function getSubmissionInformationDone(challengeId, submissionId, tokenV3) {
   return getAll(params => submissionsService.getSubmissions(filter, params), 1, 500)
     .then((submissions) => {
       const submission = _.find(submissions, { id: submissionId });
-      _.remove(submission.review, review => review.typeId === CONFIG.AV_SCAN_SCORER_REVIEW_TYPE_ID);
+      _.remove(submission.review, review => review.typeId === config.AV_SCAN_SCORER_REVIEW_TYPE_ID);
       return { submissionId, submission };
     });
 }

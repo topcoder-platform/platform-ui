@@ -1,12 +1,13 @@
 import PT from "prop-types";
 import _ from "lodash";
+import { EnvironmentConfig } from "~/config";
+
 import { PrimaryButton } from "../Buttons";
 import { ReactComponent as TopcoderLogo } from "../../assets/icons/logo_topcoder.svg";
 import { ACCESS_DENIED_REASON } from "../../constants";
-import config from '../../config';
+import { styled as styledCss } from "../../utils";
 
 import styles from "./styles.module.scss";
-import { styled as styledCss } from "../../utils";
 const styled = styledCss(styles)
 
 const AccessDenied = ({ cause, redirectLink, children }) => {
@@ -21,10 +22,10 @@ const AccessDenied = ({ cause, redirectLink, children }) => {
           <div className={styled("msg")}>
             <a
               className="tc-btn-md tc-btn-primary"
-              href={`${config.URL.AUTH}/member`}
+              href={`${EnvironmentConfig.AUTH.ACCOUNTS_APP_CONNECTOR}/member`}
               onClick={(event) => {
                 const retUrl = encodeURIComponent(window.location.href);
-                window.location = `${config.URL.AUTH}/member?retUrl=${retUrl}`;
+                window.location = `${EnvironmentConfig.AUTH.ACCOUNTS_APP_CONNECTOR}/member?retUrl=${retUrl}`;
                 event.preventDefault();
               }}
             >

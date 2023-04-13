@@ -1,6 +1,7 @@
 import _ from "lodash";
 import qs from "qs";
-import config from "../config";
+import { EnvironmentConfig } from "~/config";
+
 import {
   GIG_LIST_URL,
   GIG_LIST_ROUTE,
@@ -116,7 +117,7 @@ export function makeLoginUrl(retUrl) {
   // If query parameters are not encoded twice all parameters except the first
   // are getting lost after returning from authentication flow.
   retUrl = `${path}${query ? `?${encodeURIComponent(query)}` : ""}`;
-  return `${config.URL.AUTH}?retUrl=${encodeURIComponent(retUrl)}`;
+  return `${EnvironmentConfig.AUTH.ACCOUNTS_APP_CONNECTOR}?retUrl=${encodeURIComponent(retUrl)}`;
 }
 
 /**
@@ -134,7 +135,7 @@ export function makeRegisterUrl(
   let [path, query = ""] = retUrl.split("?");
   retUrl = `${path}${query ? `?${encodeURIComponent(query)}` : ""}`;
   return (
-    `${config.URL.AUTH}?retUrl=${encodeURIComponent(retUrl)}` +
+    `${EnvironmentConfig.AUTH.ACCOUNTS_APP_CONNECTOR}?retUrl=${encodeURIComponent(retUrl)}` +
     `&mode=signUp&utm_source=${utmSource}&regSource=${regSource}`
   );
 }
@@ -214,5 +215,5 @@ export function makeTwitterUrl(shareUrl) {
  * @returns {string}
  */
 export function makeProfileUrl(handle) {
-  return `${config.URL.PLATFORM_WEBSITE}/profile/${handle}`;
+  return `${EnvironmentConfig.PLATFORMUI_URL}/profile/${handle}`;
 }

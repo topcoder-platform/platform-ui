@@ -4,17 +4,16 @@
 import PT from "prop-types";
 import { useEffect } from "react";
 
-import { EnvironmentConfig } from "~/config";
-
 import styles from "./styles.module.scss";
+import { VANILLA_EMBED_JS, VANILLA_EMBED_TYPE } from "../../config";
 
 const Forum = ({ challengeId }) => {
   useEffect(() => {
     const script = document.createElement("script");
 
-    window.vanilla_embed_type = EnvironmentConfig.VANILLA_EMBED_TYPE;
+    window.vanilla_embed_type = VANILLA_EMBED_TYPE;
     window.vanilla_category_id = challengeId;
-    script.src = EnvironmentConfig.VANILLA_EMBED_JS;
+    script.src = VANILLA_EMBED_JS;
     script.async = true;
 
     document.body.appendChild(script);

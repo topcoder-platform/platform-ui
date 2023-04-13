@@ -35,7 +35,7 @@ import {
     TabsNavItem,
 } from '~/libs/ui'
 
-import { GamificationConfig } from '../../game-config'
+import { ACCEPTED_BADGE_MIME_TYPES, MAX_BADGE_IMAGE_FILE_SIZE } from '../../config'
 import {
     BadgeDetailPageHandler,
     GameBadge,
@@ -318,7 +318,7 @@ const BadgeDetailPage: FC = () => {
 
     function validateFilePicked(e: ChangeEvent<HTMLInputElement>): void {
         if (e.target.files?.length) {
-            if (GamificationConfig.ACCEPTED_BADGE_MIME_TYPES.includes(e.target.files[0].type)) {
+            if (ACCEPTED_BADGE_MIME_TYPES.includes(e.target.files[0].type)) {
                 setNewImageFile(e.target.files)
             } else {
                 toast.error(`Not allowed file type: ${e.target.files[0].type}`)
@@ -397,8 +397,8 @@ const BadgeDetailPage: FC = () => {
                                         type='file'
                                         ref={fileInputRef}
                                         className={styles.filePickerInput}
-                                        accept={GamificationConfig.ACCEPTED_BADGE_MIME_TYPES}
-                                        size={GamificationConfig.MAX_BADGE_IMAGE_FILE_SIZE}
+                                        accept={ACCEPTED_BADGE_MIME_TYPES}
+                                        size={MAX_BADGE_IMAGE_FILE_SIZE}
                                         onChange={validateFilePicked}
                                     />
                                 </div>

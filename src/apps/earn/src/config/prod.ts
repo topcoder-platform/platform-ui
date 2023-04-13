@@ -1,11 +1,9 @@
-module.exports = {
+import { EarnConfig } from "./EarnConfig.model";
+
+const ProdEarnConfig: EarnConfig = {
   GUIKIT: {
     DEBOUNCE_ON_CHANGE_TIME: 150,
   },
-  /**
-   * URL of Topcoder Community Website
-   */
-  TOPCODER_COMMUNITY_WEBSITE_URL: "https://topcoder.com",
 
   /* Max number of recommended challenges */
   CHALLENGE_DETAILS_MAX_NUMBER_RECOMMENDED_CHALLENGES: 3,
@@ -13,18 +11,15 @@ module.exports = {
    * URL of Topcoder Connect Website
    */
   SERVER_API_KEY: "aa9ccf36-3936-450c-9983-097ddba51bef",
-  CONNECT_WEBSITE_URL: "https://connect.topcoder.com",
 
   URL: {
     ARENA: "https://arena.topcoder.com",
-    APP: "https://community-app.topcoder.com",
 
     /* This is the same value as above, but it is used by topcoder-react-lib,
      * as a more verbose name for the param. */
     COMMUNITY_APP: "https://community-app.topcoder.com",
 
     PLATFORM_WEBSITE: "https://platform.topcoder.com",
-    AUTH: "https://accounts-auth0.topcoder.com",
     BASE: "https://www.topcoder.com",
     HOME: "/my-dashboard",
     BLOG: "https://www.topcoder.com/blog",
@@ -44,9 +39,6 @@ module.exports = {
     PAYMENT_TOOL: "https://payment.topcoder.com",
     STUDIO: "https://studio.topcoder.com",
     IOS: "https://ios.topcoder.com",
-
-    /* Connector URL of the TC accounts App. */
-    ACCOUNTS_APP_CONNECTOR: "https://accounts-auth0.topcoder.com/",
 
     TCO: "https://www.topcoder.com/tco",
     TCO17: "https://tco17.topcoder.com/",
@@ -110,13 +102,6 @@ module.exports = {
   TC_EDU_ARTICLES_PATH: "/articles",
   ENABLE_RECOMMENDER: true,
 
-  API: {
-    V5: "https://api.topcoder.com/v5",
-    V4: "https://api.topcoder-dev.com/v4",
-    V3: "https://api.topcoder-dev.com/v3",
-    V2: "https://api.topcoder-dev.com/v2",
-  },
-
   MOCK_TERMS_SERVICE: false,
   AV_SCAN_SCORER_REVIEW_TYPE_ID: "55bbb17d-aac2-45a6-89c3-a8d102863d05",
   PROVISIONAL_SCORING_COMPLETED_REVIEW_TYPE_ID: "df51ca7d-fb0a-4147-9569-992fcf5aae48",
@@ -142,4 +127,16 @@ module.exports = {
   CDN: {
     PUBLIC: 'https://community-app-cdn.topcoder.com',
   },
+  PROXY_API: process.env.PROXY_API || "https://platform.topcoder.com",
+  RECRUIT_API: process.env.RECRUIT_API || "https://www.topcoder.com",
+  APPLIED_GIGS: "_applied_gigs",
+
+  GROWSURF_COOKIE: "_tc_gigs_ref",
+  GROWSURF_COOKIE_SETTINGS: {
+      secure: true,
+      domain: "",
+      expires: 30, // days
+  },
 };
+
+export default ProdEarnConfig;

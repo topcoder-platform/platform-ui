@@ -93,6 +93,8 @@ Use the [VS Code](https://code.visualstudio.com/download) IDE for MFE developmen
 ### nvm
 Use the node version manager [nvm](https://github.com/nvm-sh/nvm/blob/master/README.md) to easily and safely manage the required version of NodeJS (aka, node). Download and install it per the instructions for your development operating system. Installing a version of node via `nvm` will also install `npm`.
 
+>**NOTE:** If the nvm command is not working it might be because the installation failed to update your paths variable properly. To try and fix this try installing nvm again using sudo.
+
 Once nvm is installed, run:
 
 >% nvm install <insert node version>
@@ -128,7 +130,7 @@ You will need to add the following line to your hosts file. The hosts file is no
 ```
 ### Serving
 
-1. Open a bash shell
+1. Open a terminal
 2. Run the following commands
 
 >% git clone https://github.com/topcoder-platform/platform-ui.git

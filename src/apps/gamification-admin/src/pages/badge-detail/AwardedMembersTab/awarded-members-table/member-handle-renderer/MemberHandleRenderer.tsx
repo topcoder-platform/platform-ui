@@ -1,5 +1,5 @@
-import { EnvironmentConfig } from '~/config'
 import { IconOutline } from '~/libs/ui'
+import { EnvironmentConfig } from '~/config'
 
 import { MemberBadgeAward } from '../../../../../game-lib'
 
@@ -8,7 +8,7 @@ import styles from './MemberHandleRenderer.module.scss'
 const MemberHandleRenderer: (memberAward: MemberBadgeAward) => JSX.Element
 = (memberAward: MemberBadgeAward): JSX.Element => {
     function handleOpenLink(): void {
-        window.open(`${EnvironmentConfig.TOPCODER_URLS.USER_PROFILE}/${memberAward.user_handle}`, '_blank')
+        window.open(`${EnvironmentConfig.URLS.USER_PROFILE}/${memberAward.user_handle}`, '_blank')
     }
 
     return (

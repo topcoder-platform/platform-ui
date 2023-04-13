@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import classNames from 'classnames'
 
-import { EnvironmentConfig } from '~/config'
+import { THRIVE_PAGE } from '~/apps/dev-center/src/config'
 import { IconSolid } from '~/libs/ui'
 
 import { DevCenterTag } from '../../dev-center-tag'
@@ -54,7 +54,7 @@ function getArticleDetails(article: ThriveArticle | BlogPost): ArticleDetails {
     const regex: RegExp = /(<([^>]+)>)/gi
     const summary: string = content.replace(regex, '') // Remove html from the content string
     const url: string = isThrive
-        ? `${EnvironmentConfig.TOPCODER_URLS.THRIVE_PAGE}/articles/${thriveArticle.slug}`
+        ? `${THRIVE_PAGE}/articles/${thriveArticle.slug}`
         : blogPost.link
     const author: string = !isThrive ? blogPost.creator : ''
     const image: string = isThrive

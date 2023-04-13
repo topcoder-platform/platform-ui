@@ -1,11 +1,7 @@
 export interface GlobalConfig {
-    ANALYTICS: {
-        SEGMENT_KEY?: string
-        TAG_MANAGER_ID?: string
-    }
+    TOPCODER_URL: string
+    PLATFORMUI_URL: string
     API: {
-        FORUM_ACCESS_TOKEN: string
-        FORUM_V2: string
         V3: string
         V4: string
         V5: string
@@ -13,37 +9,30 @@ export interface GlobalConfig {
     AUTH: {
         ACCOUNTS_APP_CONNECTOR: string
     }
-    DISABLED_TOOLS?: Array<string>
     ENV: 'dev' | 'prod'
     LOGGING: {
-        PUBLIC_TOKEN: string
+        PUBLIC_TOKEN: string | undefined
         SERVICE: string
     }
     REAUTH_OFFSET: number
     SPRIG: {
-        ENVIRONMENT_ID: string
+        ENVIRONMENT_ID: string | undefined
     }
     STRIPE: {
-        ADMIN_TOKEN: string
+        ADMIN_TOKEN: string | undefined
         API_KEY: string
-        API_VERSION: string
-        CUSTOMER_TOKEN: string
+        API_VERSION: string | undefined
+        CUSTOMER_TOKEN: string | undefined
     }
-    TOPCODER_URLS: {
-        ACCOUNT_PROFILE: string
-        ACCOUNT_SETTINGS: string
-        API_BASE: string
-        BLOG_PAGE: string
-        CHALLENGES_PAGE: string
-        GIGS_PAGE: string
-        THRIVE_PAGE: string
-        TCA: string
+    URLS: {
         USER_PROFILE: string
-        WP_CONTENT: string
-    }
-    UNIVERSAL_NAV: {
-        URL: string
+        ACCOUNT_SETTINGS: string
+        UNIVERSAL_NAV: string
     }
     MEMBER_VERIFY_LOOKER: number,
-    REACT_APP_ENABLE_TCA_CERT_MONETIZATION: boolean
+    ENABLE_TCA_CERT_MONETIZATION: boolean
+    VANILLA_FORUM: {
+        ACCESS_TOKEN: string
+        V2_URL: string
+    }
 }

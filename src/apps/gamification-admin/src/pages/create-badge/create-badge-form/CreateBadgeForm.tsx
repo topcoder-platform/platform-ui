@@ -2,7 +2,7 @@ import { FC } from 'react'
 
 import { Form, FormDefinition, formGetInputModel, FormInputModel, FormValue } from '~/libs/ui'
 
-import { GamificationConfig } from '../../../game-config'
+import { ORG_ID } from '../../../config'
 import { GameBadge } from '../../../game-lib'
 
 import { CreateBadgeFormField } from './create-badge-form.config'
@@ -28,7 +28,7 @@ const CreateBadgeForm: FC<CreateBadgeFormProps> = (props: CreateBadgeFormProps) 
             badgeName,
             badgeStatus: 'Active', // not used currently thus fixed field
             files,
-            orgID: GamificationConfig.ORG_ID,
+            orgID: ORG_ID,
         }
     }
 

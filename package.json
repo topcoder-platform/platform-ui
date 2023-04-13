@@ -144,6 +144,7 @@
         "@types/react-helmet": "^6.1.6",
         "@types/react-redux-toastr": "^7.6.2",
         "@types/react-router-dom": "^5.3.3",
+        "@types/redux-actions": "2.6.2",
         "@types/sanitize-html": "^2.6.2",
         "@types/segment-analytics": "^0.0.34",
         "@types/systemjs": "^6.1.1",

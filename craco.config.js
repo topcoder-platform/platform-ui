@@ -26,9 +26,13 @@ module.exports = {
         alias: {
             // aliases used in JS/TS
             '~': resolve('src'),
-
-            // aliases used in SCSS files
             '@earn': resolve('src/apps/earn/src'),
+            '@learn': resolve('src/apps/learn/src'),
+            '@devCenter': resolve('src/apps/dev-center/src'),
+            '@gamificationAdmin': resolve('src/apps/gamification-admin/src'),
+
+            '@platform': resolve('src/apps/platform/src'),
+            // aliases used in SCSS files
             '@libs/ui/styles': resolve('src/libs/ui/lib/styles'),
         },
     }

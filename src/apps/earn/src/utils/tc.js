@@ -5,6 +5,7 @@
 import _ from "lodash";
 import moment from "moment-timezone";
 
+import { EnvironmentConfig } from "~/config";
 import config from "../config";
 
 import { isTokenExpired } from "./token";
@@ -156,7 +157,7 @@ export function getAuthTokens(req = {}) {
  */
 export function goToLogin(utmSource = "") {
   const retUrl = encodeURIComponent(window.location.href);
-  window.location = `${config.URL.AUTH}/member?retUrl=${retUrl}&utm_source=${utmSource}`;
+  window.location = `${EnvironmentConfig.AUTH.ACCOUNTS_APP_CONNECTOR}/member?retUrl=${retUrl}&utm_source=${utmSource}`;
 }
 
 /**

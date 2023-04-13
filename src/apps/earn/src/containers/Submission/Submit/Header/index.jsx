@@ -1,5 +1,6 @@
 import PT from "prop-types";
-import config from "../../../../config";
+
+import { EnvironmentConfig } from "~/config";
 
 import styles from "./styles.scss";
 
@@ -7,7 +8,7 @@ const Header = ({ title, challengeId }) => {
   return (
     <div className={styles.header}>
       <a
-        href={`${config.URL.PLATFORM_WEBSITE}/earn/challenges/${challengeId}`}
+        href={`${EnvironmentConfig.PLATFORMUI_URL}/earn/challenges/${challengeId}`}
       >
         <span>&#x2039;</span>
         <p>Back to challenge</p>

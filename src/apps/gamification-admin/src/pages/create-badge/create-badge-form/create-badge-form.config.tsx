@@ -2,7 +2,7 @@ import { noop } from 'lodash'
 
 import { FormDefinition, IconOutline, validatorRequired } from '~/libs/ui'
 
-import { GamificationConfig } from '../../../game-config'
+import { ACCEPTED_BADGE_MIME_TYPES, MAX_BADGE_IMAGE_FILE_SIZE } from '../../../config'
 
 export enum CreateBadgeFormField {
     badgeActive = 'badgeActive',
@@ -37,8 +37,8 @@ export const createBadgeFormDef: FormDefinition = {
             inputs: [
                 {
                     fileConfig: {
-                        acceptFileType: GamificationConfig.ACCEPTED_BADGE_MIME_TYPES,
-                        maxFileSize: GamificationConfig.MAX_BADGE_IMAGE_FILE_SIZE,
+                        acceptFileType: ACCEPTED_BADGE_MIME_TYPES,
+                        maxFileSize: MAX_BADGE_IMAGE_FILE_SIZE,
                     },
                     name: CreateBadgeFormField.file,
                     type: 'image-picker',

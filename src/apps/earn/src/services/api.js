@@ -1,10 +1,10 @@
-import { getAuthUserTokens } from "../utils/auth";
 import _, { keys } from "lodash";
+
+import { EnvironmentConfig } from "~/config";
+
+import { getAuthUserTokens } from "../utils/auth";
 import * as utils from "../utils";
 
-import config from '../config';
-
-const { API } = config;
 
 async function doFetch(endpoint, options = {}, v3, baseUrl) {
   const headers = options.headers ? { ...options.headers } : {};
@@ -13,9 +13,9 @@ async function doFetch(endpoint, options = {}, v3, baseUrl) {
   if (baseUrl) {
     url = baseUrl;
   } else if (v3) {
-    url = API.V3;
+    url = EnvironmentConfig.API.V3;
   } else {
-    url = API.V5;
+    url = EnvironmentConfig.API.V5;
   }
 
   if (token) {
@@ -90,7 +90,7 @@ async function patch(endpoint, body) {
  * @return {Promise}
  */
 async function upload(endpoint, options, onProgress) {
-  const base = API.V5;
+  const base = EnvironmentConfig.API.V5;
   const { tokenV3 } = await getAuthUserTokens();
   const headers = options.headers ? _.clone(options.headers) : {};
   if (tokenV3) headers.Authorization = `Bearer ${tokenV3}`;

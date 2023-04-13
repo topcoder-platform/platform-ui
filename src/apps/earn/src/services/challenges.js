@@ -8,7 +8,8 @@ import _ from "lodash";
 import moment from "moment";
 import qs from "qs";
 
-import config from "../config";
+import { EnvironmentConfig } from "~/config";
+
 import api from "./api";
 import { buildQueryString } from "../utils/url";
 import { decodeToken } from "../utils/token";
@@ -41,7 +42,7 @@ import { getService as getSubmissionsService } from "./submissions";
  * @return {Array<Object>} challenges
  */
  async function getReviewOpportunities(cancellationSignal) {
-  const { API } = config;
+  const { API } = EnvironmentConfig;
   return api.get(
     //TODO - this should be moved to v5
     `/reviewOpportunities/?limit=1000&offset=0`,

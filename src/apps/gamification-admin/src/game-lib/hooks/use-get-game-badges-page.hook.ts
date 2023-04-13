@@ -1,8 +1,8 @@
 import { EnvironmentConfig } from '~/config'
 import { InfinitePageDao, InfinitePageHandler, Sort, useGetInfinitePage } from '~/libs/ui'
 
-import { GamificationConfig } from '../../game-config'
 import { GameBadge } from '../game-badge.model'
+import { ORG_ID, PAGE_SIZE } from '../../config'
 
 export function useGetGameBadgesPage(sort: Sort): InfinitePageHandler<GameBadge> {
 
@@ -14,11 +14,11 @@ export function useGetGameBadgesPage(sort: Sort): InfinitePageHandler<GameBadge>
         }
 
         const params: Record<string, string> = {
-            limit: `${GamificationConfig.PAGE_SIZE}`,
-            offset: `${index * GamificationConfig.PAGE_SIZE}`,
+            limit: `${PAGE_SIZE}`,
+            offset: `${index * PAGE_SIZE}`,
             order_by: sort.fieldName,
             order_type: sort.direction,
-            organization_id: GamificationConfig.ORG_ID,
+            organization_id: ORG_ID,
         }
 
         const badgeEndpointUrl: URL = new URL(

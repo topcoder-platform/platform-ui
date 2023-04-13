@@ -40,7 +40,7 @@ const DiceModal: FC<DiceModalProps> = (props: DiceModalProps) => {
                         buttonStyle='primary'
                         label='Account Settings'
                         target='_blank'
-                        url={EnvironmentConfig.TOPCODER_URLS.ACCOUNT_SETTINGS}
+                        url={EnvironmentConfig.URLS.ACCOUNT_SETTINGS}
                     />
                 </p>
                 <p>
