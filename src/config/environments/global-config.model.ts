@@ -9,7 +9,7 @@ export interface GlobalConfig {
     AUTH: {
         ACCOUNTS_APP_CONNECTOR: string
     }
-    ENV: 'dev' | 'prod'
+    ENV: 'dev' | 'prod' | 'qa'
     LOGGING: {
         PUBLIC_TOKEN: string | undefined
         SERVICE: string

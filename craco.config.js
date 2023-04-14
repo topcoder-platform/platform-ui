@@ -1,5 +1,6 @@
 const path = require('path');
 const CracoCSSModules = require('craco-css-modules');
+const CracoEnvPlugin = require('craco-plugin-env')
 const BabelRcPlugin = require('@jackwilsdon/craco-use-babelrc');
 
 const isProd = process.env.APPMODE === "production";
@@ -20,6 +21,9 @@ module.exports = {
     plugins: [
         { plugin: BabelRcPlugin },
         { plugin: CracoCSSModules },
+        { plugin: CracoEnvPlugin, options: {
+            envDir: './.environments',
+        } },
     ],
 
     webpack: {

@@ -1,9 +1,16 @@
 /* eslint-disable @typescript-eslint/typedef */
+import { get } from 'lodash'
+
 import { getReactEnv } from './react-env'
 
-export const ENV = getReactEnv<'prod' | 'dev'>('ENV', 'dev')
+export const ENV = getReactEnv<'prod' | 'dev' | 'qa'>('HOST_ENV', 'dev')
 
-export const TC_DOMAIN: string = ENV === 'dev' ? 'topcoder-dev.com' : 'topcoder.com'
+export const TC_DOMAIN: string = get({
+    dev: 'topcoder-dev.com',
+    prod: 'topcoder.com',
+    qa: 'topcoder-qa.com',
+}, ENV, 'topcoder.com')
+
 export const TOPCODER_URL: string = `https://www.${TC_DOMAIN}`
 export const PLATFORMUI_URL: string = `https://platform-ui.${TC_DOMAIN}`
 
