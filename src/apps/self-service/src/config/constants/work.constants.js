@@ -33,17 +33,17 @@ import countries from "./countries";
 import styles from "./styles.module.scss";
 import { EnvironmentConfig } from "~/config";
 
-export const SIGN_IN_URL = EnvironmentConfig.ENV === 'dev'
-    ? 'https://accounts-auth0.topcoder-dev.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder-dev.com%2Fself-service%2Fwizard&regSource=selfService'
-    : 'https://accounts-auth0.topcoder.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder.com%2Fself-service%2Fwizard&regSource=selfService';
+export const SIGN_IN_URL = EnvironmentConfig.ENV === 'prod'
+    ? 'https://accounts-auth0.topcoder.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder.com%2Fself-service%2Fwizard&regSource=selfService'
+    : 'https://accounts-auth0.topcoder-dev.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder-dev.com%2Fself-service%2Fwizard&regSource=selfService';
 
-export const SIGN_UP_URL = EnvironmentConfig.ENV === 'dev'
-    ? 'https://accounts-auth0.topcoder-dev.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder-dev.com%2Fself-service%2Fwizard&regSource=selfService&mode=signUp'
-    : 'https://accounts-auth0.topcoder.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder.com%2Fself-service%2Fwizard&regSource=selfService&mode=signUp'
+export const SIGN_UP_URL = EnvironmentConfig.ENV === 'prod'
+    ? 'https://accounts-auth0.topcoder.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder.com%2Fself-service%2Fwizard&regSource=selfService&mode=signUp'
+    : 'https://accounts-auth0.topcoder-dev.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder-dev.com%2Fself-service%2Fwizard&regSource=selfService&mode=signUp';
 
-export const VANILLA_EMBED_JS = EnvironmentConfig.ENV === 'dev'
-    ? 'https://vanilla.topcoder-dev.com/js/embed.js'
-    : 'https://discussions.topcoder.com/js/embed.js';
+export const VANILLA_EMBED_JS = EnvironmentConfig.ENV === 'prod'
+    ? 'https://discussions.topcoder.com/js/embed.js'
+    : 'https://vanilla.topcoder-dev.com/js/embed.js';
 export const VANILLA_EMBED_TYPE = 'mfe';
 export const VANILLA_FORUM_API = EnvironmentConfig.VANILLA_FORUM.V2_URL;
 export const VANILLA_ACCESS_TOKEN = EnvironmentConfig.VANILLA_FORUM.ACCESS_TOKEN;
