@@ -11,6 +11,12 @@ const DevEarnConfig: EarnConfig = {
 
     SERVER_API_KEY: "79b2d5eb-c1fd-42c4-9391-6b2c9780d591",
 
+    API: {
+        V2: 'https://api.topcoder-dev.com/v2',
+        V3: 'https://api.topcoder-dev.com/v3',
+        V4: 'https://api.topcoder-dev.com/v4',
+        V5: 'https://api.topcoder-dev.com/v5',
+    },
     URL: {
         COMMUNITY_APP: "https://community-app.topcoder-dev.com",
 

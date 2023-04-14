@@ -87,7 +87,9 @@ import ogMMChallenge from
 /* A fallback image, just in case we missed some corner case. */
 import ogImage from "../../assets/images/social.png";
 
-import './styles.scss';
+import styles from "./styles.scss";
+import { styled as styledCss } from "../../utils";
+const styled = styledCss(styles)
 
 /* Holds various time ranges in milliseconds. */
 const MIN = 60 * 1000;
@@ -183,6 +185,15 @@ class ChallengeDetailPageContainer extends React.Component {
 
     this.onToggleDeadlines = this.onToggleDeadlines.bind(this);
     this.registerForChallenge = this.registerForChallenge.bind(this);
+  }
+  componentDidCatch(error, errorInfo) {
+    alert("Component did catch");
+    // Catch errors in any components below and re-render with error message
+    this.setState({
+      error: error,
+      errorInfo: errorInfo,
+    });
+    // You can also log error messages to an error reporting service here
   }
 
   componentDidMount() {
@@ -463,16 +474,14 @@ class ChallengeDetailPageContainer extends React.Component {
       const userHandle = (auth.user || {}).handle;
       hasFirstPlacement = _.some(winners, { placement: 1, handle: userHandle });
     }
-
     const submissionEnded = status === CHALLENGE_STATUS.COMPLETED
     || (!_.some(phases, { name: 'Submission', isOpen: true })
       && !_.some(phases, { name: 'Checkpoint Submission', isOpen: true }));
-
     return (
-      <div styleName="outer-container">
-        <div styleName="challenge-detail-container" role="main">
+      <div className={styled('outer-container')}>
+        <div className={styled('challenge-detail-container')} role="main">
           { Boolean(isEmpty) && (
-            <div styleName="page">
+            <div className={styled('page')}>
               Challenge #
               {challengeId}
               {' '}
@@ -641,7 +650,7 @@ class ChallengeDetailPageContainer extends React.Component {
             !isEmpty && selectedTab === DETAIL_TABS.MM_DASHBOARD
             && (!statisticsData || statisticsData.length === 0)
             && (
-              <div styleName="page">
+              <div className={styled('page')}>
                 {
                   !statisticsData ? <LoadingIndicator /> : 'Dashboard data is not available!'
                 }
@@ -714,7 +723,7 @@ class ChallengeDetailPageContainer extends React.Component {
 }
 
 ChallengeDetailPageContainer.defaultProps = {
-  challengesUrl: '/challenges',
+  challengesUrl: '/earn/challenges',
   challengeTypes: [],
   checkpointResults: null,
   checkpoints: {},
@@ -959,7 +968,7 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(a.loadResultsDone(tokens, ch.legacyId, ch.track.toLowerCase()));
           } else dispatch(a.dropResults());
           return res;
-        });
+        }).catch(() => []);
     },
     registerForChallenge: (auth, challengeId) => {
       const a = actions.challenge;

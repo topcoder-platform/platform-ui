@@ -51,6 +51,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
   */
  function onGetDetailsDone(state, action) {
    if (action.error) {
+     alert("ERROR");
      logger.error('Failed to get challenge details!', action.payload);
      fireErrorMessage(
        'ERROR: Failed to load the challenge',
@@ -401,6 +402,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      [a.getDetailsInit]: onGetDetailsInit,
      [a.getDetailsDone]: onGetDetailsDone,
      [`${a.getDetailsDone}_SUCCESS`]: onGetDetailsDone,
+     [`${a.getDetailsDone}_ERROR`]: onGetDetailsDone,
      [a.getSubmissionsInit]: onGetSubmissionsInit,
      [a.getSubmissionsDone]: onGetSubmissionsDone,
      [a.getMmSubmissionsInit]: onGetMMSubmissionsInit,
@@ -433,7 +435,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      [a.getSubmissionInformationInit]: onGetSubmissionInformationInit,
      [a.getSubmissionInformationDone]: onGetSubmissionInformationDone,
      [a.fetchChallengeStatisticsInit]: state => state,
-     [a.fetchChallengeStatisticsDone]: onFetchChallengeStatisticsDone,
+     [a.fetchChallengeStatisticsDone + "_SUCCESS"]: onFetchChallengeStatisticsDone,
    }, _.defaults(initialState, {
      details: null,
      loadingCheckpoints: false,

@@ -37,6 +37,7 @@ export default function SideBar({
   reviewScorecardId,
   screeningScorecardId,
 }) {
+  alert("Terms:" + terms);
   const scorecardURL = `${config.URL.ONLINE_REVIEW}/review/actions/ViewScorecard?scid=`;
   const faqURL = config.URL.INFO.DESIGN_CHALLENGE_SUBMISSION;
   let submissionLimitDisplay = 'Unlimited';

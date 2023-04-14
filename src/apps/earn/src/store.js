@@ -5,6 +5,7 @@ import { applyMiddleware, compose, createStore } from "redux";
 import { createPromise } from "redux-promise-middleware";
 import thunk from "redux-thunk";
 import rootReducer from "./reducers";
+import { setErrorsStore } from "./utils/errors";
 
 const middlewares = [
   // if payload of action is promise it would split action into 3 states
@@ -24,5 +25,7 @@ if (process.env.APPMODE !== "production") {
 // const persistedState = loadSavedFormCookie();
 
 const store = createStore(rootReducer, compose(applyMiddleware(...middlewares)));
+
+setErrorsStore(store);
 
 export default store;

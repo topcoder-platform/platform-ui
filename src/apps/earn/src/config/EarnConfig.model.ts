@@ -67,6 +67,12 @@ export interface EarnConfig {
   TC_EDU_ARTICLES_PATH: string
   ENABLE_RECOMMENDER: boolean
 
+  API: {
+    V2: string,
+    V3: string,
+    V4: string,
+    V5: string,
+  },
   MOCK_TERMS_SERVICE: boolean
   AV_SCAN_SCORER_REVIEW_TYPE_ID: string
   PROVISIONAL_SCORING_COMPLETED_REVIEW_TYPE_ID: string
