@@ -3,7 +3,7 @@ import challenges from "./challenges";
 import filter from "./filter";
 import lookup from "./lookup";
 import challenge from "./challenge";
-import challengeListing from "./challenge-listing";
+import challengeListing from './challenge-listing';
 import page from "./page";
 import terms from "./terms";
 import auth from "./auth";

@@ -24,6 +24,7 @@ import termsActions from "../../actions/terms";
 import challengeDetailsActions, {
   TABS as DETAIL_TABS,
 } from "../../actions/page/challenge-details";
+import LoadingPagePlaceholder from '@earn/components/LoadingPagePlaceholder';
 
 
 import { isMM as checkIsMM, isRDM as checkIsRDM } from '@earn/utils/challenge';
@@ -86,11 +87,7 @@ import ogMMChallenge from
 /* A fallback image, just in case we missed some corner case. */
 import ogImage from "../../assets/images/social.png";
 
-import { LoadingSpinner } from "~/libs/ui";
-
-import styles from "./ChallengeDetail.module.scss";
-import { styled as styledCss } from "../../utils";
-const styled = styledCss(styles)
+import './styles.scss';
 
 /* Holds various time ranges in milliseconds. */
 const MIN = 60 * 1000;
@@ -203,6 +200,7 @@ class ChallengeDetailPageContainer extends React.Component {
       getAllCountries,
       getReviewTypes,
     } = this.props;
+
     if (
       (challenge.id !== challengeId)
 
@@ -232,7 +230,7 @@ class ChallengeDetailPageContainer extends React.Component {
     fetchChallengeStatistics(auth, challengeId);
 
     if (!allCountries.length) {
-      getAllCountries();
+      getAllCountries(auth.tokenV3);
     }
 
     getCommunitiesList(auth);
@@ -256,19 +254,12 @@ class ChallengeDetailPageContainer extends React.Component {
       challenge,
       // loadingRecommendedChallengesUUID,
       history,
-      location,
       selectedTab,
-      loadChallengeDetails,
       onSelectorClicked,
     } = this.props;
 
-
-    // TODO: Replace `history` with useNavigate(), `history` is deprecated in react-router v6
-    if (
-      challenge.isLegacyChallenge &&
-      !history.location.pathname.includes(challenge.id)
-    ) {
-      history.location.pathname = `/earn/challenges/${challenge.id}`; // eslint-disable-line no-param-reassign
+    if (challenge.isLegacyChallenge && !history.location.pathname.includes(challenge.id)) {
+      history.location.pathname = `/challenges/${challenge.id}`; // eslint-disable-line no-param-reassign
       history.push(history.location.pathname, history.state);
     }
 
@@ -277,6 +268,21 @@ class ChallengeDetailPageContainer extends React.Component {
       onSelectorClicked(DETAIL_TABS.DETAILS);
     }
 
+    // const recommendedTechnology = getRecommendedTags(challenge);
+    // if (
+    //   challenge
+    //   && challenge.id === challengeId
+    //   && !loadingRecommendedChallengesUUID
+    //   && (
+    //     !recommendedChallenges[recommendedTechnology]
+    //     || (
+    //       Date.now() - recommendedChallenges[recommendedTechnology].lastUpdateOfActiveChallenges
+    //       > 10 * MIN
+    //     )
+    //   )
+    // ) {
+    //   getAllRecommendedChallenges(auth.tokenV3, recommendedTechnology);
+    // }
 
     const { thriveArticles } = this.state;
     const userId = _.get(this, 'props.auth.user.userId');
@@ -300,7 +306,7 @@ class ChallengeDetailPageContainer extends React.Component {
         // format image file data
           _.forEach(content.Article.items, (item) => {
             // eslint-disable-next-line max-len
-            const asset = _.find(content.Article.includes.Asset, a => item.fields.featuredImage !== null && a.sys.id === item.fields.featuredImage.sys.id);
+            const asset = _.find(content.Article.includes.Asset, a => item.fields.featuredImage !== null && a.sys.id === item.fields.featuredImage?.sys.id);
             if (asset) _.assign(item.fields.featuredImage, { file: asset.fields.file });
           });
           this.setState({
@@ -444,7 +450,7 @@ class ChallengeDetailPageContainer extends React.Component {
     const isLegacyMM = isMM && Boolean(challenge.roundId);
 
     if (isLoadingChallenge || isLoadingTerms) {
-      return <LoadingSpinner />;
+      return <LoadingPagePlaceholder />;
     }
 
     let winners = challenge.winners || [];
@@ -463,21 +469,29 @@ class ChallengeDetailPageContainer extends React.Component {
       && !_.some(phases, { name: 'Checkpoint Submission', isOpen: true }));
 
     return (
-      <div className={styled("outer-container")}>
-        <div className={styled("challenge-detail-container")} role="main">
-          {Boolean(isEmpty) && (
-            <div className={styled("page")}>Challenge #{challengeId} does not exist!</div>
+      <div styleName="outer-container">
+        <div styleName="challenge-detail-container" role="main">
+          { Boolean(isEmpty) && (
+            <div styleName="page">
+              Challenge #
+              {challengeId}
+              {' '}
+              does not exist!
+            </div>
           )}
-          {!isEmpty && (
-            <MetaTags
-              description={description}
-              image={getOgImage(challenge)}
-              siteName="Topcoder"
-              socialDescription={description}
-              socialTitle={`${prizesStr}${challenge.name}`}
-              title={title}
-            />
-          )}
+          {
+            !isEmpty
+            && (
+              <MetaTags
+                description={description}
+                image={getOgImage(challenge)}
+                siteName="Topcoder"
+                socialDescription={description}
+                socialTitle={`${prizesStr}${challenge.name}`}
+                title={title}
+              />
+            )
+          }
           {
             !isEmpty
             && (
@@ -503,8 +517,8 @@ class ChallengeDetailPageContainer extends React.Component {
               checkpoints={checkpoints}
               hasRegistered={challenge.isRegistered}
               hasFirstPlacement={hasFirstPlacement}
-              isMenuOpened={isMenuOpened}
               challengeTypesMap={challengeTypesMap}
+              isMenuOpened={isMenuOpened}
               submissionEnded={submissionEnded}
               mySubmissions={challenge.isRegistered ? mySubmissions : []}
               openForRegistrationChallenges={openForRegistrationChallenges}
@@ -627,7 +641,7 @@ class ChallengeDetailPageContainer extends React.Component {
             !isEmpty && selectedTab === DETAIL_TABS.MM_DASHBOARD
             && (!statisticsData || statisticsData.length === 0)
             && (
-              <div className={styles.page}>
+              <div styleName="page">
                 {
                   !statisticsData ? <LoadingIndicator /> : 'Dashboard data is not available!'
                 }
@@ -700,7 +714,7 @@ class ChallengeDetailPageContainer extends React.Component {
 }
 
 ChallengeDetailPageContainer.defaultProps = {
-  challengesUrl: "/earn/challenges",
+  challengesUrl: '/challenges',
   challengeTypes: [],
   checkpointResults: null,
   checkpoints: {},
@@ -738,7 +752,7 @@ ChallengeDetailPageContainer.propTypes = {
     data: PT.arrayOf(PT.object).isRequired,
     loadingUuid: PT.string.isRequired,
     timestamp: PT.number.isRequired,
-  }),
+  }).isRequired,
   getCommunitiesList: PT.func.isRequired,
   getTypes: PT.func.isRequired,
   isLoadingChallenge: PT.bool,
@@ -783,16 +797,17 @@ ChallengeDetailPageContainer.propTypes = {
   // expandedTags: PT.arrayOf(PT.number).isRequired,
   // expandTag: PT.func.isRequired,
   // loadingRecommendedChallengesUUID: PT.string.isRequired,
-  openForRegistrationChallenges: PT.arrayOf(PT.shape()).isRequired,
+  history: PT.shape().isRequired,
+  openForRegistrationChallenges: PT.shape().isRequired,
   statisticsData: PT.arrayOf(PT.shape()),
 };
 
 function mapStateToProps(state, props) {
   const cl = state.challengeListing;
-  const { lookup: { countries: allCountries, reviewTypes } } = state;
+  const { lookup: { allCountries, reviewTypes } } = state;
   let { challenge: { mmSubmissions } } = state;
   const { auth } = state;
-  const challenge =  state.challenge && state.challenge.details || {};
+  const challenge = state.challenge.details || {};
   let mySubmissions = [];
   if (challenge.registrants) {
     challenge.registrants = challenge.registrants.map(registrant => ({
@@ -844,7 +859,7 @@ function mapStateToProps(state, props) {
     }
   }
   const { page: { challengeDetails: { feedbackOpen } } } = state;
-  const checkpoints = state.challenge?.checkpoints || {};
+  const checkpoints = state.challenge.checkpoints || {};
   if (feedbackOpen.id && checkpoints.checkpointResults) {
     checkpoints.checkpointResults = checkpoints.checkpointResults.map(result => ({
       ...result,
@@ -858,6 +873,7 @@ function mapStateToProps(state, props) {
     // recommendedChallenges: cl.recommendedChallenges,
     // loadingRecommendedChallengesUUID: cl.loadingRecommendedChallengesUUID,
     expandedTags: cl.expandedTags,
+    challengeId: props.challengeId,
     challengesUrl: props.challengesUrl,
     challengeTypesMap: state.challengeListing.challengeTypesMap,
     checkpointResults: checkpoints.checkpointResults,
@@ -869,7 +885,7 @@ function mapStateToProps(state, props) {
     isLoadingChallenge: Boolean(state.challenge.loadingDetailsForChallengeId),
     isLoadingTerms: _.isEqual(state.terms.loadingTermsForEntity, {
       type: 'challenge',
-      id: props.match?.params.challengeId,
+      id: props.challengeId,
     }),
     loadingCheckpointResults: state.challenge.loadingCheckpoints,
     loadingResultsForChallengeId: state.challenge.loadingResultsForChallengeId,
@@ -889,7 +905,7 @@ function mapStateToProps(state, props) {
       Boolean(state.challenge.loadingSubmissionInformationForSubmissionId),
     submissionInformation: state.challenge.submissionInformation,
     mmSubmissions,
-    allCountries,
+    allCountries: state.lookup.allCountries,
     mySubmissions,
     reviewTypes,
     openForRegistrationChallenges: state.challengeListing.openForRegistrationChallenges,
@@ -916,9 +932,9 @@ const mapDispatchToProps = (dispatch) => {
       dispatch(ca.getListInit(uuid));
       dispatch(ca.getListDone(uuid, auth));
     },
-    getAllCountries: () => {
+    getAllCountries: (tokenV3) => {
       dispatch(lookupActions.getAllCountriesInit());
-      dispatch(lookupActions.getAllCountries());
+      dispatch(lookupActions.getAllCountriesDone(tokenV3));
     },
     getReviewTypes: (tokenV3) => {
       dispatch(lookupActions.getReviewTypesInit());
@@ -1054,4 +1070,4 @@ const ChallengeDetailContainer = connect(
   mergeProps,
 )(ChallengeDetailPageContainer);
 
-export default withRouter(ChallengeDetailContainer);
+export default ChallengeDetailContainer;

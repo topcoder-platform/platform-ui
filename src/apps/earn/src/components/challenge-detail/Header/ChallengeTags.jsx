@@ -12,7 +12,7 @@ import config from "../../../config";
 import {
   Tag,
   DevelopmentTrackTag,
-} from "../../UiKit";
+} from "../Tags";
 
 import { COMPETITION_TRACKS } from "../../../utils/tc";
 import VerifiedTag from "../../challenge-listing/VerifiedTag";

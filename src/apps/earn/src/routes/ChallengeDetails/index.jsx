@@ -5,7 +5,8 @@ import { useRef } from "react";
 import { initAuth } from '../../services/auth';
 import ChallengeDetailContainer from "../../containers/ChallengeDetail";
 
-const ChallengeDetails = ({auth}) => {
+const ChallengeDetails = (props) => {
+  const { auth } = props;
   const { challengeId } = useParams()
   const init = useRef(false)
 
@@ -17,7 +18,7 @@ const ChallengeDetails = ({auth}) => {
   return (
     <>
       {auth.isAuthInitialized && (
-        <ChallengeDetailContainer challengeId={challengeId} />
+        <ChallengeDetailContainer {...props} challengeId={challengeId} />
       )}
     </>
   );

@@ -2,7 +2,7 @@ import React from 'react';
 import PT from 'prop-types';
 import { map } from 'lodash';
 import config from '@earn/config';
-import Button from '@earn/components/challenge-detail/Button';
+import { Button } from '@earn/components/challenge-detail/buttons';
 import moment from 'moment';
 import { ReactComponent as CalendarIcon } from '@earn/assets/images/calendar.svg';
 import { styled as styledCss } from "../../../utils";

@@ -84,7 +84,6 @@ export default function ChallengeHeader(props) {
     track,
   } = challenge;
   const showDeadlineDetail = showDeadlineDetailProp;
-
   const tags = challenge.tags || [];
 
   const allPhases = _.filter(challenge.phases || [], p => p.name !== 'Post-Mortem');
@@ -276,7 +275,6 @@ export default function ChallengeHeader(props) {
   const registerButtonDisabled = registering || registrationEnded || isLegacyMM;
   const unregisterButtonDisabled = unregistering
     || registrationEnded || hasSubmissions || isLegacyMM;
-
   return (
     <div className={styles['challenge-outer-container']}>
       <div className={styles['important-detail']}>
