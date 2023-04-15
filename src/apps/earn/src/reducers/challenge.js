@@ -396,7 +396,6 @@ import { COMPETITION_TRACKS } from '../utils/tc';
   */
  function create(initialState) {
    const a = actions.challenge;
-   alert
    return handleActions({
      [a.dropCheckpoints]: state => ({ ...state, checkpoints: null }),
      [a.dropResults]: state => ({ ...state, results: null }),
