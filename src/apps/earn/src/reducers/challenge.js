@@ -396,6 +396,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
   */
  function create(initialState) {
    const a = actions.challenge;
+   alert
    return handleActions({
      [a.dropCheckpoints]: state => ({ ...state, checkpoints: null }),
      [a.dropResults]: state => ({ ...state, results: null }),
@@ -417,7 +418,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
        },
      }),
      [a.registerInit]: state => ({ ...state, registering: true }),
-     [a.registerDone]: onRegisterDone,
+     [`${a.registerDone}_SUCCESS`]: onRegisterDone,
      [a.unregisterInit]: state => ({ ...state, unregistering: true }),
      [a.unregisterDone]: onUnregisterDone,
      [a.loadResultsInit]: onLoadResultsInit,
