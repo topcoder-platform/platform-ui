@@ -1,0 +1,142 @@
+@import '../../styles/includes';
+
+.btn {
+    @include font-roboto;
+    @include font-weight-bold;
+    @include resetBtnStyle;
+
+    display: inline-flex;
+    cursor: pointer;
+    box-sizing: border-box;
+
+    justify-content: center;
+    align-items: center;
+    gap: $pad-1;
+
+    font-size: $pad-3;
+    line-height: $pad-6;
+
+    letter-spacing: 0.008em;
+    text-transform: uppercase;
+
+    --btn-variant: #{$turq-160};
+    --btn-variant--hover: #{$turq-140};
+    --btn-variant--active: #{$turq-180};
+
+    // Define button sizes
+    &:global(.btn-size-sm) {
+        @include pad(0, 4);
+        border-radius: $pad-6;
+    }
+    &, &:global(.btn-size-md) {
+        @include pad(1, 5);
+        border-radius: $pad-8;
+    }
+    &:global(.btn-size-lg) {
+        @include pad(2, 6);
+        border-radius: $pad-10;
+        font-size: $pad-3 + 2px;
+    }
+    &:global(.btn-size-xl) {
+        @include pad(3, 6);
+        border-radius: $pad-12;
+        font-size: $pad-4;
+    }
+    &:global(.btn-size-full) {
+        width: 100%;
+    }
+
+    // Define variants
+    &:global(.btn-variant-danger) {
+        --btn-variant: #{$red-140};
+        --btn-variant--hover: #{lighten($red-140, 10%)};
+        --btn-variant--active: #{darken($red-140, 10%)};
+    }
+    &:global(.btn-variant-warning) {
+        --btn-variant: #{$orange-140};
+        --btn-variant--hover: #{lighten($orange-140, 10%)};
+        --btn-variant--active: #{darken($orange-140, 10%)};
+    }
+
+    &:disabled, &:global(.disabled) {
+        pointer-events: none;
+    }
+}
+
+// Define button types
+.btn:global(.btn-type-primary) {
+    background: var(--btn-variant);
+    color: $tc-white;
+
+    &:hover, &:global(.hover) {
+        background: var(--btn-variant--hover);
+    }
+
+    &:active, &:global(.active) {
+        background: var(--btn-variant--active);
+    }
+
+    &:disabled, &:global(.disabled) {
+        background: $black-5;
+        color: $black-60;
+    }
+
+    &:global(.btn-type-negative) {
+        color: var(--btn-variant);
+        background: $tc-white;
+
+        &:hover, &:global(.hover) {
+            color: var(--btn-variant--hover);
+        }
+
+        &:active, &:global(.active) {
+            color: var(--btn-variant--active);
+        }
+
+        &:disabled, &:global(.disabled) {
+            color: $black-60;
+        }
+    }
+}
+
+.btn:global(.btn-type-secondary) {
+    box-shadow: inset 0 0 0 $border var(--btn-variant);
+    color: var(--btn-variant);
+    background: $tc-white;
+
+    &:hover, &:global(.hover) {
+        box-shadow: inset 0 0 0 $border var(--btn-variant--hover);
+        background: $tc-white;
+        color: var(--btn-variant--hover);
+    }
+
+    &:active, &:global(.active) {
+        box-shadow: inset 0 0 0 $border var(--btn-variant--active);
+        background: $tc-white;
+        color: var(--btn-variant--active);
+    }
+
+    &:disabled, &:global(.disabled) {
+        box-shadow: inset 0 0 0 $border $black-5;
+        color: $black-60;
+    }
+
+    &:global(.btn-type-negative) {
+        box-shadow: inset 0 0 0 $border $tc-white;
+        color: $tc-white;
+        background: transparent;
+
+        &:hover, &:global(.hover) {
+            background: rgba($tc-white, 0.05);
+        }
+
+        &:active, &:global(.active) {
+            background: rgba($tc-white, 0.1);
+        }
+
+        &:disabled, &:global(.disabled) {
+            box-shadow: inset 0 0 0 $border $black-40;
+            color: $black-60;
+        }
+    }
+}

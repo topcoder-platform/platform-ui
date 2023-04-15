@@ -1,0 +1,39 @@
+@import '../../../styles/includes';
+
+.icon-btn {
+    :global(.btn-icon) {
+        &:first-child {
+            margin-left: -$pad-1;
+        }
+        &:last-child {
+            margin-right: -$pad-1;
+        }
+    }
+    &:global(.btn-size-sm) {
+        :global(.btn-icon) {
+            &:first-child {
+                margin-left: -$pad-2;
+            }
+            &:last-child {
+                margin-right: -$pad-2;
+            }
+        }
+    }
+
+    // Define button sizes
+    &:global(.btn-size-sm),
+    &, &:global(.btn-size-md),
+    &:global(.btn-size-lg) {
+        :global(.btn-icon) {
+            @include padY(1);
+            @include icon-size(16);
+        }
+    }
+
+    &:global(.btn-size-xl) {
+        :global(.btn-icon) {
+            @include icon-size(22);
+        }
+    }
+
+}

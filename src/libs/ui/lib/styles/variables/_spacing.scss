@@ -20,3 +20,64 @@ $space-xxxl: calc(7 * $space-xs); // 28
 $space-xxxxl: calc(8 * $space-xs); // 32
 $space-mx: calc(8 * $space-xs + $space-sm); // 40
 $space-mxx: calc(12 * $space-xs); // 48
+
+$pad: 4px;
+$pad-1: calc(1 * $pad);
+$pad-2: calc(2 * $pad);
+$pad-3: calc(3 * $pad);
+$pad-4: calc(4 * $pad);
+$pad-5: calc(5 * $pad);
+$pad-6: calc(6 * $pad);
+$pad-7: calc(7 * $pad);
+$pad-8: calc(8 * $pad);
+$pad-9: calc(9 * $pad);
+$pad-10: calc(10 * $pad);
+$pad-11: calc(11 * $pad);
+$pad-12: calc(12 * $pad);
+$pad-13: calc(13 * $pad);
+$pad-14: calc(14 * $pad);
+$pad-15: calc(15 * $pad);
+
+@mixin pad($n, $m) {
+    @if $m {
+        padding: $n * $pad $m * $pad;
+    } @else {
+        padding: $n * $pad;
+    }
+}
+
+@mixin padLeft($n) {
+    padding-left: $n * $pad;
+}
+
+@mixin padRight($n) {
+    padding-left: $n * $pad;
+}
+
+@mixin padX($n, $m:null) {
+    padding-left: $n * $pad;
+
+    @if $m != null {
+        padding-right: $m * $pad;
+    } @else {
+        padding-right: $n * $pad;
+    }
+}
+
+@mixin padTop($n) {
+    padding-top: $n * $pad;
+}
+
+@mixin padBottom($n) {
+    padding-bottom: $n * $pad;
+}
+
+@mixin padY($n, $m:null) {
+    padding-top: $n * $pad;
+
+    @if $m != null {
+        padding-top: $m * $pad;
+    } @else {
+        padding-bottom: $n * $pad;
+    }
+}
