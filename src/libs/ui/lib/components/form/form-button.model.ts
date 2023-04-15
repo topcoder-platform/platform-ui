@@ -1,6 +1,6 @@
 import { FC, SVGProps } from 'react'
 
-import { ButtonSize, ButtonTypes } from '../ui-button'
+import { ButtonSize, ButtonTypes } from '../button'
 
 export interface FormButton {
     readonly buttonStyle?: ButtonTypes

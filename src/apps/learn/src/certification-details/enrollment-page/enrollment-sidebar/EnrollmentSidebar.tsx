@@ -5,7 +5,7 @@ import { PaymentIntentResult, Stripe, StripeCardNumberElement, StripeElements } 
 import { loadStripe } from '@stripe/stripe-js/pure'
 import { CardNumberElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
 import { EnvironmentConfig } from '~/config'
-import { IconOutline, UiButton } from '~/libs/ui'
+import { IconOutline, Button } from '~/libs/ui'
 
 import { EnrollPaymentForm } from '../enroll-payment-form'
 import {
@@ -169,7 +169,7 @@ const EnrollmentSidebar: FC<EnrollmentSidebarProps> = (props: EnrollmentSidebarP
                                     Free enrollment ends on April 30th.
                                 </div>
                             </div>
-                            <UiButton
+                            <Button
                                 primary
                                 onClick={props.onEnroll}
                                 label='Complete Enrollment'

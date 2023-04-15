@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { LinkButton } from '../../ui-button'
+import { LinkButton } from '../../button'
 import { SocialShareLinkedIn } from '../../svgs'
 
 interface TwitterSocialShareBtnProps {

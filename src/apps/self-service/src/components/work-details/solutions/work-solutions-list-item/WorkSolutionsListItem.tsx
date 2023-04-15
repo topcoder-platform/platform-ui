@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { UiButton } from '~/libs/ui'
+import { Button } from '~/libs/ui'
 
 import { WorkSolution } from '../../../../lib'
 
@@ -23,7 +23,7 @@ const WorkSolutionsListItem: FC<WorkSolutionsListItemProps> = (props: WorkSoluti
                 <span>{props.solution.createdBy}</span>
             </div>
 
-            <UiButton
+            <Button
                 secondary
                 tabIndex={-1}
                 label='Download'

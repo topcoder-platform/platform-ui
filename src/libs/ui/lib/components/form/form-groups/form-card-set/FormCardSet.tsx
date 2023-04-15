@@ -6,7 +6,7 @@ import {
     IconOutline,
     IconSolid,
     Tooltip,
-    UiButton,
+    Button,
 } from '../../..'
 import { textFormatMoneyLocaleString } from '../../../../functions'
 import { useCheckIsMobile } from '../../../../hooks'
@@ -36,7 +36,7 @@ const FormCardSet: React.FC<FormCardSetProps> = (props: FormCardSetProps) => {
     }
 
     const getButton: (card: FormCard, selected: boolean) => JSX.Element = (card, selected) => (
-        <UiButton
+        <Button
             {...{ [selected ? 'primary' : 'secondary']: true }}
             onClick={props.onChange as any}
             label={selected ? 'Selected' : 'Choose package'}

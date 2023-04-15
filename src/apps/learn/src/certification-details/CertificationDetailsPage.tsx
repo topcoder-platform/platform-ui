@@ -2,7 +2,7 @@ import { Dispatch, FC, ReactNode, SetStateAction, useContext, useState } from 'r
 import { Link, Params, useParams } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { IconOutline, UiButton } from '~/libs/ui'
+import { IconOutline, Button } from '~/libs/ui'
 import { profileContext, ProfileContextData } from '~/libs/core'
 
 import {
@@ -68,7 +68,7 @@ const CertificationDetailsPage: FC<{}> = () => {
                     Congratulations! You earned the certification.
                 </div>
                 <Link to={getTCAUserCertificationUrl(certification?.dashedName ?? '', progress?.userHandle ?? '')}>
-                    <UiButton
+                    <Button
                         className='nw'
                         primary
                         label='View & share your certification'
@@ -106,7 +106,7 @@ const CertificationDetailsPage: FC<{}> = () => {
                     {isCompleted && renderCertificationCompleted()}
                     {renderCertificationCurriculum()}
                     <div className={styles['text-section']}>
-                        <UiButton
+                        <Button
                             icon={IconOutline.ArrowRightIcon}
                             iconToRight
                             link

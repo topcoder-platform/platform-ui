@@ -19,7 +19,7 @@ import {
     LoadingSpinner,
     surveyTriggerForUser,
     textFormatGetSafeString,
-    UiButton,
+    Button,
 } from '~/libs/ui'
 import {
     logError,
@@ -580,7 +580,7 @@ const FreeCodeCamp: FC<{}> = () => {
                 <Breadcrumb items={breadcrumb} />
                 {
                     lesson && profile?.roles?.includes(UserRole.tcaAdmin) && (
-                        <UiButton
+                        <Button
                             secondary
                             className={styles.completeCourseBtn}
                             size='sm'

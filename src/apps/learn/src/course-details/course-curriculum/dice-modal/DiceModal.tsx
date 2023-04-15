@@ -1,7 +1,7 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 
 import { EnvironmentConfig } from '~/config'
-import { BaseModal, UiButton } from '~/libs/ui'
+import { BaseModal, Button } from '~/libs/ui'
 
 import styles from './DiceModal.module.scss'
 
@@ -37,7 +37,7 @@ const DiceModal: FC<DiceModalProps> = (props: DiceModalProps) => {
                 </p>
                 <p className={styles.buttonContainer}>
                     <a href={EnvironmentConfig.URLS.ACCOUNT_SETTINGS} target='_blank' rel='noreferrer'>
-                        <UiButton
+                        <Button
                             primary
                             label='Account Settings'
                             size='lg'
@@ -50,7 +50,7 @@ const DiceModal: FC<DiceModalProps> = (props: DiceModalProps) => {
                 </p>
                 <p className={styles.buttonContainer}>
                     <a href={window.location.href}>
-                        <UiButton
+                        <Button
                             secondary
                             label='Refresh Settings'
                             onClick={props.onClose}

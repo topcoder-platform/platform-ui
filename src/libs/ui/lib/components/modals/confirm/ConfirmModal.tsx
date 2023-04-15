@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { ModalProps } from 'react-responsive-modal'
 
-import { UiButton } from '../../ui-button'
+import { Button } from '../../button'
 import { BaseModal } from '../base-modal'
 
 export interface ConfirmModalProps extends ModalProps {
@@ -17,14 +17,14 @@ const ConfirmModal: FC<ConfirmModalProps> = (props: ConfirmModalProps) => (
     >
         {props.children}
         <div className='button-container'>
-            <UiButton
+            <Button
                 secondary
                 label='Cancel'
                 onClick={props.onClose}
                 size='xl'
                 tabIndex={1}
             />
-            <UiButton
+            <Button
                 primary
                 label={props.action || 'Confirm'}
                 onClick={props.onConfirm}

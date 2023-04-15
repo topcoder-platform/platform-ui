@@ -1,7 +1,7 @@
 import { find } from 'lodash'
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
-import { UiButton } from '~/libs/ui'
+import { Button } from '~/libs/ui'
 
 import { GameBadge, InputHandleAutocomplete, MembersAutocompeteResult } from '../../../game-lib'
 import { BadgeAssignedModal } from '../../../game-lib/modals/badge-assigned-modal'
@@ -81,7 +81,7 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
                         dirty={!!badgeAssignError}
                     />
                     <div className={styles.actionsWrap}>
-                        <UiButton
+                        <Button
                             secondary
                             label='Award'
                             className={styles.awardBtn}

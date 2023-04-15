@@ -18,7 +18,7 @@ import {
     StripeCardExpiryElementChangeEvent,
     StripeCardNumberElementChangeEvent,
 } from '@stripe/stripe-js'
-import { InputText, InputWrapper, OrderContractModal, ReactSelect, UiButton } from '~/libs/ui'
+import { InputText, InputWrapper, OrderContractModal, ReactSelect, Button } from '~/libs/ui'
 import { profileContext, ProfileContextData } from '~/libs/core'
 
 import { COUNTRIES_OPTIONS } from './constants'
@@ -248,7 +248,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 )
             }
 
-            <UiButton
+            <Button
                 className={styles['pay-button']}
                 size='xl'
                 type='button'

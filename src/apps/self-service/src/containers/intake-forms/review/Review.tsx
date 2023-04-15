@@ -15,7 +15,7 @@ import {
     InfoCard,
     LoadingSpinner,
     PageDivider,
-    UiButton,
+    Button,
     useCheckIsMobile,
 } from '~/libs/ui'
 import { profileContext, ProfileContextData } from '~/libs/core'
@@ -281,7 +281,7 @@ const Review: FC = () => {
 
             <div className={styles['button-wrapper']}>
                 <PageDivider />
-                <UiButton type='button' secondary icon={BackArrowIcon} onClick={navigateToBasicInfo} />
+                <Button type='button' secondary icon={BackArrowIcon} onClick={navigateToBasicInfo} />
             </div>
         </div>
     )

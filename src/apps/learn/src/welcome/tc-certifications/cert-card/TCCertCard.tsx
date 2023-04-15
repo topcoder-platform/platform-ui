@@ -7,7 +7,7 @@ import {
     ButtonTypes,
     IconSolid,
     ProgressBar,
-    UiButton,
+    Button,
 } from '~/libs/ui'
 
 import { getTCACertificationPath, getTCAUserCertificationUrl } from '../../../learn.routes'
@@ -32,7 +32,7 @@ interface TCCertCardProps {
 const getCtaBtn: (style: ButtonTypes, label: string, route: string) => ReactNode
     = (style: ButtonTypes, label: string, route: string) => (
         <Link to={route}>
-            <UiButton {...{ [style]: true }} size='md' label={label} />
+            <Button {...{ [style]: true }} size='md' label={label} />
         </Link>
     )
 

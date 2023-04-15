@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 
-import { BaseModal, UiButton } from '~/libs/ui'
+import { BaseModal, Button } from '~/libs/ui'
 
 import styles from './EnrolledModal.module.scss'
 
@@ -29,7 +29,7 @@ const EnrolledModal: FC<EnrolledModalProps> = (props: EnrolledModalProps) => {
                 <h2 className='details'>
                     You have successfully enrolled!
                 </h2>
-                <UiButton
+                <Button
                     secondary
                     negative
                     label='Go to the certification details'

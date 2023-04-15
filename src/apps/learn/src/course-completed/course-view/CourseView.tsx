@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { Link } from 'react-router-dom'
 
-import { IconOutline, UiButton } from '~/libs/ui'
+import { IconOutline, Button } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
 
 import { CourseTitle, LearnCertification, LearnCourse } from '../../lib'
@@ -48,14 +48,14 @@ const CourseView: FC<CourseViewProps> = (props: CourseViewProps) => (
                     props.certificationParam,
                 )}
             >
-                <UiButton
+                <Button
                     size='md'
                     secondary
                     label='View certificate'
                 />
             </Link>
             <Link to={rootRoute}>
-                <UiButton
+                <Button
                     size='md'
                     primary
                     label='Start a new course'
@@ -74,7 +74,7 @@ const CourseView: FC<CourseViewProps> = (props: CourseViewProps) => (
                 target='_blank'
                 rel='noreferrer'
             >
-                <UiButton
+                <Button
                     link
                     icon={IconOutline.ArrowRightIcon}
                     iconToRight

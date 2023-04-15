@@ -19,7 +19,7 @@ import {
     InputWrapper,
     LoadingSpinner,
     OrderContractModal,
-    UiButton,
+    Button,
 } from '~/libs/ui'
 
 import styles from './EnrollPaymentForm.module.scss'
@@ -234,7 +234,7 @@ const EnrollPaymentForm: FC<EnrollPaymentFormProps> = (props: EnrollPaymentFormP
                 )
             }
 
-            <UiButton
+            <Button
                 primary
                 className={styles['pay-button']}
                 size='xl'

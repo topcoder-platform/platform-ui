@@ -4,5 +4,5 @@ export {
     type ButtonTypes,
 } from './base-button'
 
-export { default as UiButton, type ButtonProps } from './Button'
+export { default as Button, type ButtonProps } from './Button'
 export * from './link-button'

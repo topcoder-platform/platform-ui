@@ -1,7 +1,7 @@
 import { FC, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { ButtonProps, UiButton } from '../ui-button'
+import { ButtonProps, Button } from '../button'
 
 import styles from './ContentLayout.module.scss'
 
@@ -31,7 +31,7 @@ const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => (
 
                         {!!props.buttonConfig && (
                             <div>
-                                <UiButton
+                                <Button
                                     {...props.buttonConfig}
                                     primary
                                     size='lg'

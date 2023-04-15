@@ -10,7 +10,7 @@ import {
     useState,
 } from 'react'
 
-import { UiButton } from '../../../../ui-button'
+import { Button } from '../../../../button'
 import { IconSolid } from '../../../../svgs'
 import { InputWrapper } from '../input-wrapper'
 import '../../../../../styles/index.scss'
@@ -45,7 +45,7 @@ const InputRating: FC<InputRatingProps> = (props: InputRatingProps) => {
     for (let index: number = 2; index <= 10; index++) {
         const className: string = !!rating && rating >= index ? 'orange-100' : 'black-20'
         const element: JSX.Element = (
-            <UiButton
+            <Button
                 className={className}
                 icon={IconSolid.StarIcon}
                 name={`${index}`}

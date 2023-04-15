@@ -2,7 +2,7 @@ import { FC, SVGProps } from 'react'
 
 import { Sort } from '../../pagination'
 import { IconOutline } from '../../svgs'
-import { UiButton } from '../../ui-button'
+import { Button } from '../../button'
 
 interface TableSortProps {
     iconClass: string
@@ -29,7 +29,7 @@ const TableSort: FC<TableSortProps> = (props: TableSortProps) => {
     }
 
     return (
-        <UiButton
+        <Button
             className={props.iconClass}
             icon={icon}
             onClick={handleClick}

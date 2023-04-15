@@ -1,7 +1,7 @@
 import { FC, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
-import { IconSolid, ProgressBar, UiButton } from '~/libs/ui'
+import { IconSolid, ProgressBar, Button } from '~/libs/ui'
 
 import {
     clearFCCCertificationTitle,
@@ -53,7 +53,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                                 title: props.tcaCertification.title,
                             } }}
                         >
-                            <UiButton
+                            <Button
                                 secondary
                                 size='sm'
                                 label='Details'
@@ -65,7 +65,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                                 props.certification.certification,
                             )}
                         >
-                            <UiButton
+                            <Button
                                 primary
                                 size='sm'
                                 label='View Certificate'
@@ -86,7 +86,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                             title: props.tcaCertification.title,
                         } }}
                     >
-                        <UiButton
+                        <Button
                             primary
                             size='sm'
                             label='Resume'
@@ -105,7 +105,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                             title: props.tcaCertification.title,
                         } }}
                     >
-                        <UiButton
+                        <Button
                             primary
                             size='sm'
                             label='Details'

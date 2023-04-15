@@ -2,7 +2,7 @@ import { toast } from 'react-toastify'
 import { Dispatch, SetStateAction, useContext, useState } from 'react'
 
 import {
-    UiButton,
+    Button,
     ConfirmModal,
     IconOutline,
     Tooltip,
@@ -45,7 +45,7 @@ const WorkDeleteButtonRenderer: (work: Work) => JSX.Element | undefined
                     content='Delete'
                     place='bottom'
                     trigger={(
-                        <UiButton
+                        <Button
                             icon={IconOutline.TrashIcon}
                             onClick={toggleConfirmation}
                             tabIndex={-1}

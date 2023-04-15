@@ -32,7 +32,7 @@ import {
     tableGetDefaultSort,
     TabsNavbar,
     TabsNavItem,
-    UiButton,
+    Button,
 } from '~/libs/ui'
 
 import { ACCEPTED_BADGE_MIME_TYPES, MAX_BADGE_IMAGE_FILE_SIZE } from '../../config'
@@ -383,7 +383,7 @@ const BadgeDetailPage: FC = () => {
                         <>
                             <div className={styles.badge}>
                                 <div className={styles.badgeImage}>
-                                    <UiButton
+                                    <Button
                                         size='lg'
                                         icon={IconOutline.PencilIcon}
                                         className={styles.filePickerPencil}
@@ -442,13 +442,13 @@ const BadgeDetailPage: FC = () => {
                                             {
                                                 isBadgeDescEditingMode && (
                                                     <div className={styles.badgeEditActions}>
-                                                        <UiButton
+                                                        <Button
                                                             label='Cancel'
                                                             secondary
                                                             size='sm'
                                                             onClick={cancelEditBadge}
                                                         />
-                                                        <UiButton
+                                                        <Button
                                                             label='Save'
                                                             primary
                                                             size='sm'

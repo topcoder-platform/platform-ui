@@ -1,6 +1,6 @@
 import { ChangeEvent, createRef, Dispatch, FC, RefObject, SetStateAction, useEffect, useState } from 'react'
 
-import { IconOutline, UiButton } from '../../../..'
+import { IconOutline, Button } from '../../../..'
 import { InputValue } from '../../../form-input.model'
 
 import styles from './InputImagePicker.module.scss'
@@ -55,7 +55,7 @@ const InputImagePicker: FC<InputImagePickerProps> = (props: InputImagePickerProp
 
     return (
         <div className={styles.filePicker}>
-            <UiButton
+            <Button
                 size='lg'
                 icon={IconOutline.PencilIcon}
                 className={styles.filePickerPencil}

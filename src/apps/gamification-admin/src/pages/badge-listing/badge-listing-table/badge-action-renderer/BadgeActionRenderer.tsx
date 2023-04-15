@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-import { UiButton, useCheckIsMobile } from '~/libs/ui'
+import { Button, useCheckIsMobile } from '~/libs/ui'
 
 import { GameBadge } from '../../../../game-lib'
 import { badgeDetailPath } from '../../../../gamification-admin.routes'
@@ -30,7 +30,7 @@ const BadgeActionRenderer: (badge: GameBadge) => JSX.Element
             <div className={styles['badge-actions']}>
                 {actionButtons.map(button => (
                     <Link to={badgeDetailPath(badge.id, button.view)}>
-                        <UiButton
+                        <Button
                             secondary
                             size={isMobile ? 'sm' : 'md'}
                             key={button.label}

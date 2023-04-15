@@ -12,7 +12,7 @@ import {
 } from 'react'
 import classNames from 'classnames'
 
-import { UiButton } from '../ui-button'
+import { Button } from '../button'
 import { IconOutline } from '../svgs'
 import '../../styles/index.scss'
 
@@ -174,7 +174,7 @@ const Form: <
                 || !!props.shouldDisableButton?.(isPrimaryGroup, index)
 
             return (
-                <UiButton
+                <Button
                     {...button}
                     {...{ [button.buttonStyle ?? 'primary']: true }}
                     size='lg'

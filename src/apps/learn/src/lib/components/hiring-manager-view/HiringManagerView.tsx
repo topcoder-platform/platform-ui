@@ -20,7 +20,7 @@ import {
     fileDownloadCanvasAsImage,
     IconOutline,
     Tooltip,
-    UiButton,
+    Button,
     VerifiedMemberFlagSvg,
 } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
@@ -279,7 +279,7 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
             >
                 <div className={styles.wrap}>
                     {renderShareActions && (
-                        <UiButton
+                        <Button
                             primary
                             icon={IconOutline.ShareIcon}
                             label='Share your Certification'
@@ -312,7 +312,7 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                                     target='_blank'
                                     rel='noreferrer'
                                 >
-                                    <UiButton
+                                    <Button
                                         secondary
                                         label={(
                                             props.isOwner ? 'View your Topcoder profile' : 'View full Topcoder profile'
@@ -329,7 +329,7 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
 
                     {!props.isModalView && (
                         <Link to={certificationDetailsLink}>
-                            <UiButton
+                            <Button
                                 icon={IconOutline.ArrowRightIcon}
                                 iconToRight
                                 className={styles.detailsBtn}

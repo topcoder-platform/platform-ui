@@ -1,6 +1,6 @@
 import { FC, ReactNode, useMemo } from 'react'
 
-import { ProgressBar, textFormatDateLocaleShortString, UiButton } from '~/libs/ui'
+import { ProgressBar, textFormatDateLocaleShortString, Button } from '~/libs/ui'
 
 import { CurriculumSummary as CurriculumSummaryStats, LearnCourse } from '../../../lib'
 
@@ -40,7 +40,7 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
                     {' '}
                     {textFormatDateLocaleShortString(new Date(props.completedDate))}
                 </span>
-                <UiButton
+                <Button
                     secondary
                     size='sm'
                     label='View certificate'
@@ -69,7 +69,7 @@ const CurriculumSummary: FC<CurriculumSummaryProps> = (props: CurriculumSummaryP
                 />
 
                 <div className={styles.button}>
-                    <UiButton
+                    <Button
                         {...{ [completed ? 'secondary' : 'primary']: true }}
                         size='lg'
                         label={mainBtnLabel}

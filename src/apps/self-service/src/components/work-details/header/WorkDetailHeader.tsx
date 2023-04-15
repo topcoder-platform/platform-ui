@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { UiButton } from '~/libs/ui'
+import { Button } from '~/libs/ui'
 
 import { Work, workCreateFromChallenge, WorkStatus } from '../../../lib'
 
@@ -28,7 +28,7 @@ const WorkDetailHeader: FC<WorkDetailHeaderProps> = (props: WorkDetailHeaderProp
             </h1>
 
             {work.status === WorkStatus.ready && (
-                <UiButton
+                <Button
                     primary
                     onClick={props.markAsDone}
                     label='Mark as Done'

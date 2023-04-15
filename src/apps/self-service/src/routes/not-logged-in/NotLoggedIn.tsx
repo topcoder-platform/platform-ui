@@ -9,7 +9,7 @@ import {
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 
 import { profileContext, ProfileContextData } from '~/libs/core'
-import { ContentLayout, LoadingSpinner, UiButton } from '~/libs/ui'
+import { ContentLayout, LoadingSpinner, Button } from '~/libs/ui'
 
 import { selfServiceStartRoute, workDashboardRoute } from '../../self-service.routes'
 import { clearAutoSavedForm, clearCachedChallengeId } from '../../utils/autoSaveBeforeLogin'
@@ -66,7 +66,7 @@ const NotLoggedIn: FC<{}> = () => {
                         Start something great today.
                     </p>
 
-                    <UiButton
+                    <Button
                         secondary
                         size='lg'
                         label='Create work'

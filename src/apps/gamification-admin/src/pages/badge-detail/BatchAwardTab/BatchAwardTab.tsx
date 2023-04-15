@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
-import { IconSolid, InputFilePicker, UiButton } from '~/libs/ui'
+import { IconSolid, InputFilePicker, Button } from '~/libs/ui'
 
 import { GameBadge } from '../../../game-lib'
 import { BadgeAssignedModal } from '../../../game-lib/modals/badge-assigned-modal'
@@ -91,7 +91,7 @@ const BatchAwardTab: FC<BatchAwardTabProps> = (props: BatchAwardTabProps) => {
                         </div>
                     )}
                     <div className={styles.actionsWrap}>
-                        <UiButton
+                        <Button
                             secondary
                             size='lg'
                             label='Award'

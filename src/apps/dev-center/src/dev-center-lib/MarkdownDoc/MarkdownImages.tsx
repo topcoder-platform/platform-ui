@@ -2,7 +2,7 @@ import * as React from 'react'
 import { identity } from 'lodash'
 import Carousel from 'react-elastic-carousel'
 
-import { IconSolid, UiButton } from '~/libs/ui'
+import { IconSolid, Button } from '~/libs/ui'
 
 import styles from './MarkdownImages.module.scss'
 import './MarkdownImages.css'
@@ -52,7 +52,7 @@ const MarkdownImages: React.FC<MarkdownImagesProps> = props => {
     }: RenderPaginationProps): JSX.Element {
         return (
             <div className={styles.footer}>
-                <UiButton
+                <Button
                     size='xl'
                     className={styles.prev}
                     icon={IconSolid.ChevronLeftIcon}
@@ -69,7 +69,7 @@ const MarkdownImages: React.FC<MarkdownImagesProps> = props => {
                         />
                     )
                 })}
-                <UiButton
+                <Button
                     size='xl'
                     className={styles.next}
                     icon={IconSolid.ChevronRightIcon}

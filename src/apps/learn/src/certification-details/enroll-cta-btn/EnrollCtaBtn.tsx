@@ -1,7 +1,7 @@
 import { FC, useCallback, useContext } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 
-import { UiButton } from '~/libs/ui'
+import { Button } from '~/libs/ui'
 import { profileContext, ProfileContextData } from '~/libs/core'
 
 import { getAuthenticateAndEnrollRoute, getTCACertificationEnrollPath } from '../../learn.routes'
@@ -41,7 +41,7 @@ const EnrollCtaBtn: FC<EnrollCtaBtnProps> = (props: EnrollCtaBtnProps) => {
 
     return (
         <>
-            <UiButton
+            <Button
                 primary
                 size='lg'
                 label={isLoggedIn ? 'Enroll Now' : 'Log in to enroll'}

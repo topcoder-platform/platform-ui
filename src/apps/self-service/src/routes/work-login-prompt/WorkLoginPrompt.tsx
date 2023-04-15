@@ -5,7 +5,7 @@ import {
     BackArrowIcon,
     LinkButton,
     PageDivider,
-    UiButton,
+    Button,
 } from '~/libs/ui'
 import { authUrlLogin, routerContext, RouterContextData } from '~/libs/core'
 
@@ -67,7 +67,7 @@ const WorkLoginPrompt: FC<WorkLoginPromptProps> = props => {
                             to={authUrlLogin(customReturnUrl)}
                         />
                         <span className={styles.separator}>OR</span>
-                        <UiButton
+                        <Button
                             primary
                             size='lg'
                             label='SIGN UP'
@@ -79,7 +79,7 @@ const WorkLoginPrompt: FC<WorkLoginPromptProps> = props => {
             <PageDivider />
             <div className={styles.footerContent}>
                 <div>
-                    <UiButton
+                    <Button
                         secondary
                         size='lg'
                         icon={BackArrowIcon}
