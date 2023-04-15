@@ -186,15 +186,6 @@ class ChallengeDetailPageContainer extends React.Component {
     this.onToggleDeadlines = this.onToggleDeadlines.bind(this);
     this.registerForChallenge = this.registerForChallenge.bind(this);
   }
-  componentDidCatch(error, errorInfo) {
-    alert("Component did catch");
-    // Catch errors in any components below and re-render with error message
-    this.setState({
-      error: error,
-      errorInfo: errorInfo,
-    });
-    // You can also log error messages to an error reporting service here
-  }
 
   componentDidMount() {
     const {

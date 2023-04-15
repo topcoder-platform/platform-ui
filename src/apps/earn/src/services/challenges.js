@@ -10,7 +10,7 @@ import qs from "qs";
 
 import { EnvironmentConfig } from "~/config";
 
-import api from "./lib/api";
+import api from "./api";
 import { buildQueryString } from "../utils/url";
 import { decodeToken } from "../utils/token";
 import logger from "../utils/logger";
