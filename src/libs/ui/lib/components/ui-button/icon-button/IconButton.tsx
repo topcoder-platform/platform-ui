@@ -1,19 +1,19 @@
-import { FC, ReactNode } from 'react'
+import { FC, ReactNode, SVGProps } from 'react'
 import { omit } from 'lodash'
 import classNames from 'classnames'
 
-import Button, { ButtonProps } from '../Button'
+import { BaseButton, BaseButtonProps } from '../base-button'
 
 import styles from './IconButton.module.scss'
 
-export interface IconButtonProps extends ButtonProps {
-    icon: ReactNode
+export interface IconButtonProps extends BaseButtonProps {
+    icon?: FC<SVGProps<SVGSVGElement>>
     iconToLeft?: boolean
     iconToRight?: boolean
 }
 
 const IconButton: FC<IconButtonProps> = props => {
-    const buttonProps: ButtonProps = omit(props, [
+    const buttonProps: BaseButtonProps = omit(props, [
         'icon',
         'iconToLeft',
         'iconToRight',
@@ -21,22 +21,23 @@ const IconButton: FC<IconButtonProps> = props => {
         'children',
     ])
 
+    const Icon: FC<SVGProps<SVGSVGElement>> = props.icon!
     const icon: ReactNode = !!props.icon && (
         <div className='btn-icon'>
-            {props.icon}
+            <Icon />
         </div>
     )
 
     return (
-        <Button
+        <BaseButton
             {...buttonProps}
             className={classNames(props.className, styles['icon-btn'])}
         >
-            {props.iconToLeft && icon}
+            {(props.iconToLeft || !props.iconToRight) && icon}
             {!!props.label && <span>{props.label}</span>}
-            {!props.iconToLeft && !props.iconToRight && icon}
+            {!!props.children && <span>{props.children}</span>}
             {props.iconToRight && icon}
-        </Button>
+        </BaseButton>
     )
 }
 

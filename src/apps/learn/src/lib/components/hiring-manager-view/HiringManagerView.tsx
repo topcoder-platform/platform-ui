@@ -11,15 +11,16 @@ import {
     useRef,
     useState,
 } from 'react'
+import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
 import {
-    Button,
     ContentLayout,
     DefaultMemberIcon,
     fileDownloadCanvasAsImage,
     IconOutline,
     Tooltip,
+    UiButton,
     VerifiedMemberFlagSvg,
 } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
@@ -278,12 +279,13 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
             >
                 <div className={styles.wrap}>
                     {renderShareActions && (
-                        <Button
-                            buttonStyle='primary'
+                        <UiButton
+                            primary
                             icon={IconOutline.ShareIcon}
                             label='Share your Certification'
                             className={styles.shareBtn}
                             onClick={shareModal.show}
+                            size='lg'
                         />
                     )}
 
@@ -305,13 +307,20 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                             />
 
                             {!props.isModalView && (
-                                <Button
-                                    buttonStyle='secondary'
-                                    label={props.isOwner ? 'View your Topcoder profile' : 'View full Topcoder profile'}
-                                    url={props.isPreview ? '' : myProfileLink}
+                                <a
+                                    href={props.isPreview ? '#profile-preview' : myProfileLink}
                                     target='_blank'
-                                    className={styles.shareBtn}
-                                />
+                                    rel='noreferrer'
+                                >
+                                    <UiButton
+                                        secondary
+                                        label={(
+                                            props.isOwner ? 'View your Topcoder profile' : 'View full Topcoder profile'
+                                        )}
+                                        size='lg'
+                                        className={styles.shareBtn}
+                                    />
+                                </a>
                             )}
                         </div>
                     </div>
@@ -319,12 +328,16 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                     {renderCoursesGridItems()}
 
                     {!props.isModalView && (
-                        <Button
-                            className={styles.detailsBtn}
-                            buttonStyle='link'
-                            label='Certification details'
-                            route={certificationDetailsLink}
-                        />
+                        <Link to={certificationDetailsLink}>
+                            <UiButton
+                                icon={IconOutline.ArrowRightIcon}
+                                iconToRight
+                                className={styles.detailsBtn}
+                                link
+                                label='Certification details'
+                                size='xl'
+                            />
+                        </Link>
                     )}
                 </div>
             </ContentLayout>

@@ -16,10 +16,10 @@ import { toast } from 'react-toastify'
 import {
     Breadcrumb,
     BreadcrumbItemModel,
-    Button,
     LoadingSpinner,
     surveyTriggerForUser,
     textFormatGetSafeString,
+    UiButton,
 } from '~/libs/ui'
 import {
     logError,
@@ -580,10 +580,10 @@ const FreeCodeCamp: FC<{}> = () => {
                 <Breadcrumb items={breadcrumb} />
                 {
                     lesson && profile?.roles?.includes(UserRole.tcaAdmin) && (
-                        <Button
-                            buttonStyle='secondary'
+                        <UiButton
+                            secondary
                             className={styles.completeCourseBtn}
-                            size='xs'
+                            size='sm'
                             label='Complete Course'
                             onClick={adminCompleteCourse}
                         />

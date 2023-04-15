@@ -1,12 +1,13 @@
 import { FC, memo, ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { EnvironmentConfig } from '~/config'
 import {
-    Button,
     ButtonStyle,
     IconSolid,
     ProgressBar,
+    UiButton,
 } from '~/libs/ui'
 
 import { getTCACertificationPath, getTCAUserCertificationUrl } from '../../../learn.routes'
@@ -30,7 +31,9 @@ interface TCCertCardProps {
 
 const getCtaBtn: (style: ButtonStyle, label: string, route: string) => ReactNode
     = (style: ButtonStyle, label: string, route: string) => (
-        <Button buttonStyle={style} size='sm' label={label} route={route} />
+        <Link to={route}>
+            <UiButton {...{ [style]: true }} size='md' label={label} />
+        </Link>
     )
 
 const EXCERPT_TEXT_LEN: number = 165

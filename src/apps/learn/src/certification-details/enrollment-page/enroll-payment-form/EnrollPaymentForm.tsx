@@ -14,12 +14,12 @@ import {
     StripeCardNumberElementChangeEvent,
 } from '@stripe/stripe-js'
 import {
-    Button,
     IconOutline,
     InputText,
     InputWrapper,
     LoadingSpinner,
     OrderContractModal,
+    UiButton,
 } from '~/libs/ui'
 
 import styles from './EnrollPaymentForm.module.scss'
@@ -234,14 +234,14 @@ const EnrollPaymentForm: FC<EnrollPaymentFormProps> = (props: EnrollPaymentFormP
                 )
             }
 
-            <Button
+            <UiButton
+                primary
                 className={styles['pay-button']}
-                size='lg'
+                size='xl'
                 type='button'
-                buttonStyle='primary'
                 name='pay-button'
                 label={`Pay $${props.price} and enroll`}
-                disable={!props.isFormValid || props.isPayProcessing}
+                disabled={!props.isFormValid || props.isPayProcessing}
                 onClick={props.onPay}
             />
         </div>

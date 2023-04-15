@@ -19,6 +19,10 @@ const CertificationDetailsPage: LazyLoadedComponent = lazyLoad(
     () => import('./certification-details'),
     'CertificationDetailsPage',
 )
+const EnrollmentPage: LazyLoadedComponent = lazyLoad(
+    () => import('./certification-details/enrollment-page'),
+    'EnrollmentPage',
+)
 const UserTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'CertificateView')
 
 const ValidateTCACertificate: LazyLoadedComponent
@@ -163,12 +167,12 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                 id: 'Certification Details',
                 route: 'tca-certifications/:certification',
             },
-            // {
-            //     children: [],
-            //     element: <EnrollmentPage />,
-            //     id: 'Certification Details',
-            //     route: 'tca-certifications/:certification/enroll',
-            // },
+            {
+                children: [],
+                element: <EnrollmentPage />,
+                id: 'Certification Details',
+                route: 'tca-certifications/:certification/enroll',
+            },
             {
                 children: [],
                 element: <CourseDetailsPage />,

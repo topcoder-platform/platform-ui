@@ -2,6 +2,8 @@
 
 .icon-btn {
     :global(.btn-icon) {
+        display: flex;
+        align-items: center;
         &:first-child {
             margin-left: -$pad-1;
         }

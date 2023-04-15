@@ -22,15 +22,14 @@ type Story = StoryObj<typeof IconButton>;
 
 export const LeftIcon: Story = {
     args: {
-        icon: <IconSolid.ArrowLeftIcon />,
-        iconToLeft: true,
+        icon: IconSolid.ArrowLeftIcon,
         label: 'Button',
         primary: true,
     },
 }
 export const RightIcon: Story = {
     args: {
-        icon: <IconSolid.ArrowRightIcon />,
+        icon: IconSolid.ArrowRightIcon,
         iconToRight: true,
         label: 'Button',
         primary: true,
@@ -38,7 +37,7 @@ export const RightIcon: Story = {
 }
 export const OnlyIcon: Story = {
     args: {
-        icon: <IconSolid.CheckIcon />,
+        icon: IconSolid.CheckIcon,
         primary: true,
     },
 }

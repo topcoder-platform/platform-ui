@@ -1,6 +1,7 @@
 import { FC, ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 
-import { Button, IconSolid, ProgressBar } from '~/libs/ui'
+import { IconSolid, ProgressBar, UiButton } from '~/libs/ui'
 
 import {
     clearFCCCertificationTitle,
@@ -42,68 +43,74 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
             case UserCertificationProgressStatus.completed:
                 return (
                     <>
-                        <Button
-                            buttonStyle='secondary'
-                            size='xs'
-                            label='Details'
-                            route={getCoursePath(
+                        <Link
+                            to={getCoursePath(
                                 props.provider,
                                 props.certification.certification,
                             )}
-                            routeState={{
-                                tcaCertInfo: {
-                                    dashedName: props.tcaCertification.dashedName,
-                                    title: props.tcaCertification.title,
-                                },
-                            }}
-                        />
-                        <Button
-                            buttonStyle='primary'
-                            size='xs'
-                            label='View Certificate'
-                            route={getCertificatePath(
+                            state={{ tcaCertInfo: {
+                                dashedName: props.tcaCertification.dashedName,
+                                title: props.tcaCertification.title,
+                            } }}
+                        >
+                            <UiButton
+                                secondary
+                                size='sm'
+                                label='Details'
+                            />
+                        </Link>
+                        <Link
+                            to={getCertificatePath(
                                 props.provider,
                                 props.certification.certification,
                             )}
-                        />
+                        >
+                            <UiButton
+                                primary
+                                size='sm'
+                                label='View Certificate'
+                            />
+                        </Link>
                     </>
                 )
             case UserCertificationProgressStatus.inProgress:
                 return (
-                    <Button
-                        buttonStyle='primary'
-                        size='xs'
-                        label='Resume'
-                        route={getLessonPathFromCurrentLesson(
+                    <Link
+                        to={getLessonPathFromCurrentLesson(
                             props.provider,
                             props.certification.certification,
                             props.progress?.currentLesson,
                         )}
-                        routeState={{
-                            tcaCertInfo: {
-                                dashedName: props.tcaCertification.dashedName,
-                                title: props.tcaCertification.title,
-                            },
-                        }}
-                    />
+                        state={{ tcaCertInfo: {
+                            dashedName: props.tcaCertification.dashedName,
+                            title: props.tcaCertification.title,
+                        } }}
+                    >
+                        <UiButton
+                            primary
+                            size='sm'
+                            label='Resume'
+                        />
+                    </Link>
                 )
             default:
                 return (
-                    <Button
-                        buttonStyle='secondary'
-                        size='xs'
-                        label='Details'
-                        route={getCoursePath(
+                    <Link
+                        to={getCoursePath(
                             props.provider,
                             props.certification.certification,
                         )}
-                        routeState={{
-                            tcaCertInfo: {
-                                dashedName: props.tcaCertification.dashedName,
-                                title: props.tcaCertification.title,
-                            },
-                        }}
-                    />
+                        state={{ tcaCertInfo: {
+                            dashedName: props.tcaCertification.dashedName,
+                            title: props.tcaCertification.title,
+                        } }}
+                    >
+                        <UiButton
+                            primary
+                            size='sm'
+                            label='Details'
+                        />
+                    </Link>
                 )
         }
     }

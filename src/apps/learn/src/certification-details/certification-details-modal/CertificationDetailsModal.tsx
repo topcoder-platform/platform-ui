@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 
-import { BaseModal, Button } from '~/libs/ui'
+import { BaseModal, UiButton } from '~/libs/ui'
 
 import { TCACertification } from '../../lib'
 
@@ -29,10 +29,11 @@ const CertificationDetailsModal: FC<CertificationDetailsModalProps> = (props: Ce
             size='body'
             title={`${props.certification.title} Details`}
             buttons={(
-                <Button
-                    buttonStyle='primary'
+                <UiButton
+                    primary
                     label='Close'
                     onClick={props.onClose}
+                    size='lg'
                 />
             )}
         >

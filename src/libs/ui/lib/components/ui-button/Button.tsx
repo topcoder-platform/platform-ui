@@ -1,58 +1,25 @@
 /* eslint-disable react/button-has-type */
-import { ButtonHTMLAttributes, EventHandler, FC, MouseEvent, ReactNode } from 'react'
-import classNames from 'classnames'
+import { FC, ReactNode } from 'react'
 
-import styles from './Button.module.scss'
+import { BaseButton, BaseButtonProps } from './base-button'
+import { IconButton, IconButtonProps } from './icon-button'
 
-export enum ButtonSize {
-    small = 'sm',
-    medium = 'md',
-    large = 'lg',
-    xLarge = 'xl',
-}
+export type ButtonSize = 'sm'| 'md'| 'lg'| 'xl'
 export enum ButtonVariants {
     danger = 'danger',
     warning = 'warning',
 }
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends IconButtonProps, BaseButtonProps {
     children?: ReactNode
-    className?: string
-    disabled?: boolean
-    label?: ReactNode
-    loading?: boolean
-    onClick?: EventHandler<MouseEvent>
-    primary?: boolean
-    secondary?: boolean
-    negative?: boolean
-    size?: ButtonSize
-    fullWidth?: boolean
-    variant?: ButtonVariants
 }
 
-const Button: FC<ButtonProps> = props => {
-
-    const className: string = classNames(styles.btn, props.className, {
-        'btn-disabled': props.disabled,
-        'btn-loading': props.loading,
-        'btn-size-full': props.fullWidth,
-        [`btn-size-${props.size}`]: !!props.size,
-        'btn-type-negative': props.negative,
-        'btn-type-primary': props.primary,
-        'btn-type-secondary': props.secondary,
-        [`btn-variant-${props.variant}`]: !!props.variant,
-    })
+const UiButton: FC<ButtonProps> = props => {
+    const Button: FC<IconButtonProps> | FC<BaseButtonProps> = props.icon ? IconButton : BaseButton
 
     return (
-        <button
-            className={className}
-            type={props.type ?? 'button'}
-            disabled={props.disabled}
-            onClick={props.onClick}
-        >
-            {props.label ?? props.children}
-        </button>
+        <Button {...props} />
     )
 }
 
-export default Button
+export default UiButton

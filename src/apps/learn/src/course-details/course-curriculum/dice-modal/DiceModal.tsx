@@ -1,7 +1,7 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 
 import { EnvironmentConfig } from '~/config'
-import { BaseModal, Button } from '~/libs/ui'
+import { BaseModal, UiButton } from '~/libs/ui'
 
 import styles from './DiceModal.module.scss'
 
@@ -36,24 +36,27 @@ const DiceModal: FC<DiceModalProps> = (props: DiceModalProps) => {
                     Please go to Account Settings to configure your account.
                 </p>
                 <p className={styles.buttonContainer}>
-                    <Button
-                        buttonStyle='primary'
-                        label='Account Settings'
-                        target='_blank'
-                        url={EnvironmentConfig.URLS.ACCOUNT_SETTINGS}
-                    />
+                    <a href={EnvironmentConfig.URLS.ACCOUNT_SETTINGS} target='_blank' rel='noreferrer'>
+                        <UiButton
+                            primary
+                            label='Account Settings'
+                            size='lg'
+                        />
+                    </a>
                 </p>
                 <p>
                     When you have completed configuring your account,
                     click below to refresh your settings.
                 </p>
                 <p className={styles.buttonContainer}>
-                    <Button
-                        buttonStyle='secondary'
-                        label='Refresh Settings'
-                        onClick={props.onClose}
-                        url={window.location.href}
-                    />
+                    <a href={window.location.href}>
+                        <UiButton
+                            secondary
+                            label='Refresh Settings'
+                            onClick={props.onClose}
+                            size='lg'
+                        />
+                    </a>
                 </p>
             </div>
 

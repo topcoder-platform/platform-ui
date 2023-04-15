@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
-import { BaseModal, Button } from '~/libs/ui'
+import { BaseModal, UiButton } from '~/libs/ui'
 
 import styles from './TcAcademyPolicyModal.module.scss'
 
@@ -69,13 +69,13 @@ const TcAcademyPolicyModal: FC<TcAcademyPolicyModalProps> = (props: TcAcademyPol
             </div>
             <hr />
             <div className='button-container'>
-                <Button
-                    buttonStyle='primary'
+                <UiButton
+                    primary
                     label='I Agree'
                     onClick={handleConfirm}
                     tabIndex={-1}
-                    size='lg'
-                    disable={loading}
+                    size='xl'
+                    disabled={loading}
                 />
             </div>
         </BaseModal>

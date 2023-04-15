@@ -1,6 +1,7 @@
 import { FC } from 'react'
+import { Link } from 'react-router-dom'
 
-import { Button } from '~/libs/ui'
+import { IconOutline, UiButton } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
 
 import { CourseTitle, LearnCertification, LearnCourse } from '../../lib'
@@ -41,23 +42,25 @@ const CourseView: FC<CourseViewProps> = (props: CourseViewProps) => (
             To view other courses, press the  &quot;Start a new course&quot; button below.
         </p>
         <div className={styles['btns-wrap']}>
-            <Button
-                size='sm'
-                buttonStyle='secondary'
-                label='View certificate'
-                route={(
-                    getCertificatePath(
-                        props.courseData.resourceProvider.name,
-                        props.certificationParam,
-                    )
+            <Link
+                to={getCertificatePath(
+                    props.courseData.resourceProvider.name,
+                    props.certificationParam,
                 )}
-            />
-            <Button
-                size='sm'
-                buttonStyle='primary'
-                label='Start a new course'
-                route={rootRoute}
-            />
+            >
+                <UiButton
+                    size='md'
+                    secondary
+                    label='View certificate'
+                />
+            </Link>
+            <Link to={rootRoute}>
+                <UiButton
+                    size='md'
+                    primary
+                    label='Start a new course'
+                />
+            </Link>
         </div>
         <p className='body-main'>
             Completed courses in the Academy will reflect on your Topcoder profile.
@@ -66,12 +69,19 @@ const CourseView: FC<CourseViewProps> = (props: CourseViewProps) => (
             learning courses.
         </p>
         <div className={styles['btns-wrap']}>
-            <Button
-                buttonStyle='link'
-                label='See your updated profile'
-                url={`${EnvironmentConfig.URLS.USER_PROFILE}/${props.userHandle}`}
+            <a
+                href={`${EnvironmentConfig.URLS.USER_PROFILE}/${props.userHandle}`}
                 target='_blank'
-            />
+                rel='noreferrer'
+            >
+                <UiButton
+                    link
+                    icon={IconOutline.ArrowRightIcon}
+                    iconToRight
+                    size='lg'
+                    label='See your updated profile'
+                />
+            </a>
         </div>
     </div>
 )

@@ -1,7 +1,8 @@
 import { FC, memo, ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { Button, FccLogoBlackSvg, IconSolid, ProgressBar } from '~/libs/ui'
+import { FccLogoBlackSvg, IconSolid, ProgressBar, UiButton } from '~/libs/ui'
 
 import {
     clearFCCCertificationTitle,
@@ -47,16 +48,28 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                 return (
                     <div className={styles.completedCTAs}>
                         <div>
-                            <Button buttonStyle='primary' size='xs' label='View Certificate' route={certifRoute} />
-                            <Button buttonStyle='secondary' size='xs' label='Details' route={detailsRoute} />
+                            <Link to={certifRoute}>
+                                <UiButton primary size='sm' label='View Certificate' />
+                            </Link>
+                            <Link to={detailsRoute}>
+                                <UiButton secondary size='sm' label='Details' />
+                            </Link>
 
                         </div>
                     </div>
                 )
             case UserCertificationProgressStatus.inProgress:
-                return <Button buttonStyle='primary' size='xs' label='Resume' route={resumeRoute} />
+                return (
+                    <Link to={resumeRoute}>
+                        <UiButton primary size='sm' label='Resume' />
+                    </Link>
+                )
             default:
-                return <Button buttonStyle='secondary' size='xs' label='Details' route={detailsRoute} />
+                return (
+                    <Link to={detailsRoute}>
+                        <UiButton secondary size='sm' label='Details' />
+                    </Link>
+                )
         }
     }
 

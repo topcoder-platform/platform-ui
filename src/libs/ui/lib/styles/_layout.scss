@@ -34,7 +34,7 @@ html {
 body {
     background-color: $tc-white;
 }
-  
+
 
 hr {
     color: $black-10;
@@ -79,6 +79,10 @@ hr {
             display: none;
         }
     }
+}
+
+.nw {
+    white-space: nowrap;
 }
 
 .hidden {

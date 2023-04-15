@@ -1,8 +1,8 @@
 import { Dispatch, FC, ReactNode, SetStateAction, useContext, useState } from 'react'
-import { Params, useParams } from 'react-router-dom'
+import { Link, Params, useParams } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { Button } from '~/libs/ui'
+import { IconOutline, UiButton } from '~/libs/ui'
 import { profileContext, ProfileContextData } from '~/libs/core'
 
 import {
@@ -67,11 +67,14 @@ const CertificationDetailsPage: FC<{}> = () => {
                 <div className='body-large-bold'>
                     Congratulations! You earned the certification.
                 </div>
-                <Button
-                    buttonStyle='primary'
-                    label='View & share your certification'
-                    route={getTCAUserCertificationUrl(certification?.dashedName ?? '', progress?.userHandle ?? '')}
-                />
+                <Link to={getTCAUserCertificationUrl(certification?.dashedName ?? '', progress?.userHandle ?? '')}>
+                    <UiButton
+                        className='nw'
+                        primary
+                        label='View & share your certification'
+                        size='lg'
+                    />
+                </Link>
             </div>
         )
     }
@@ -103,9 +106,12 @@ const CertificationDetailsPage: FC<{}> = () => {
                     {isCompleted && renderCertificationCompleted()}
                     {renderCertificationCurriculum()}
                     <div className={styles['text-section']}>
-                        <Button
-                            buttonStyle='link'
+                        <UiButton
+                            icon={IconOutline.ArrowRightIcon}
+                            iconToRight
+                            link
                             label='Certification Description'
+                            size='xl'
                             onClick={toggleCertifDetailsModal}
                         />
                     </div>
