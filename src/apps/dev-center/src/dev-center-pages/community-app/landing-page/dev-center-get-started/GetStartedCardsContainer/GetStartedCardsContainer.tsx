@@ -1,6 +1,7 @@
 import { FC } from 'react'
+import { Link } from 'react-router-dom'
 
-import { Button } from '~/libs/ui'
+import { UiButton } from '~/libs/ui'
 
 import { ApiCornerIcon, ApiIcon, CommunityAppCornerIcon, CommunityAppIcon } from '../../../../../assets/i'
 import { DevCenterCard } from '../../dev-center-card'
@@ -15,7 +16,11 @@ const GetStartedCardsContainer: FC = () => (
             title='Community App'
             titleClass={styles.communityTitle}
             description='Learn about Topcoder Community App and run started code.'
-            button={<Button route='/dev-center/getting-started' label='get started' className={styles.button} />}
+            button={(
+                <Link to='/dev-center/getting-started'>
+                    <UiButton primary size='lg' label='get started' className={styles.button} />
+                </Link>
+            )}
         />
         <DevCenterCard
             cornerIcon={<ApiCornerIcon />}

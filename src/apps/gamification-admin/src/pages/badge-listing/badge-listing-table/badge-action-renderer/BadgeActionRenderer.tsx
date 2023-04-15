@@ -1,4 +1,6 @@
-import { Button, ButtonProps, useCheckIsMobile } from '~/libs/ui'
+import { Link } from 'react-router-dom'
+
+import { UiButton, useCheckIsMobile } from '~/libs/ui'
 
 import { GameBadge } from '../../../../game-lib'
 import { badgeDetailPath } from '../../../../gamification-admin.routes'
@@ -9,11 +11,6 @@ const BadgeActionRenderer: (badge: GameBadge) => JSX.Element
     = (badge: GameBadge): JSX.Element => {
 
         const isMobile: boolean = useCheckIsMobile()
-
-        const buttonProps: ButtonProps = {
-            buttonStyle: 'secondary',
-            size: isMobile ? 'xs' : 'sm',
-        }
 
         const actionButtons: Array<{
             label: string
@@ -32,12 +29,14 @@ const BadgeActionRenderer: (badge: GameBadge) => JSX.Element
         return (
             <div className={styles['badge-actions']}>
                 {actionButtons.map(button => (
-                    <Button
-                        {...buttonProps}
-                        key={button.label}
-                        label={button.label}
-                        route={badgeDetailPath(badge.id, button.view)}
-                    />
+                    <Link to={badgeDetailPath(badge.id, button.view)}>
+                        <UiButton
+                            secondary
+                            size={isMobile ? 'sm' : 'md'}
+                            key={button.label}
+                            label={button.label}
+                        />
+                    </Link>
                 ))}
             </div>
         )

@@ -1,7 +1,7 @@
 import * as React from 'react'
 import classNames from 'classnames'
 
-import { Button, copyTextToClipboard, IconOutline } from '~/libs/ui'
+import { copyTextToClipboard, IconOutline, UiButton } from '~/libs/ui'
 
 import styles from './CopyButton.module.scss'
 
@@ -16,9 +16,8 @@ export const CopyButton: React.FC<CopyButtonProps> = props => {
     }
 
     return (
-        <Button
+        <UiButton
             size='xl'
-            buttonStyle='icon'
             className={classNames(styles['copy-btn'], props.className)}
             icon={IconOutline.DocumentDuplicateIcon}
             onClick={handleCopyClick}

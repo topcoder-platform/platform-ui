@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { BaseModal, Button, PageDivider, useCheckIsMobile } from '~/libs/ui'
+import { BaseModal, PageDivider, UiButton, useCheckIsMobile } from '~/libs/ui'
 
 import { GameBadge } from '../../game-badge.model'
 
@@ -46,9 +46,10 @@ const BadgeAssignedModal: FC<BadgeAssignedModalProps> = (props: BadgeAssignedMod
                         isMobile && <PageDivider />
                     }
                     <div className={styles.actions}>
-                        <Button
+                        <UiButton
                             label='Close'
-                            buttonStyle='primary'
+                            size='lg'
+                            primary
                             onClick={onClose}
                         />
                     </div>

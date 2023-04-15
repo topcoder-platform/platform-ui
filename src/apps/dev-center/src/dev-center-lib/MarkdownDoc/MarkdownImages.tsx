@@ -2,7 +2,7 @@ import * as React from 'react'
 import { identity } from 'lodash'
 import Carousel from 'react-elastic-carousel'
 
-import { Button, IconSolid } from '~/libs/ui'
+import { IconSolid, UiButton } from '~/libs/ui'
 
 import styles from './MarkdownImages.module.scss'
 import './MarkdownImages.css'
@@ -52,12 +52,11 @@ const MarkdownImages: React.FC<MarkdownImagesProps> = props => {
     }: RenderPaginationProps): JSX.Element {
         return (
             <div className={styles.footer}>
-                <Button
-                    buttonStyle='icon'
+                <UiButton
                     size='xl'
                     className={styles.prev}
                     icon={IconSolid.ChevronLeftIcon}
-                    disable={carouselRef?.current?.state.activePage === 0}
+                    disabled={carouselRef?.current?.state.activePage === 0}
                     onClick={handlePrev}
                 />
                 {pages.map(page => {
@@ -70,12 +69,11 @@ const MarkdownImages: React.FC<MarkdownImagesProps> = props => {
                         />
                     )
                 })}
-                <Button
-                    buttonStyle='icon'
+                <UiButton
                     size='xl'
                     className={styles.next}
                     icon={IconSolid.ChevronRightIcon}
-                    disable={
+                    disabled={
                         carouselRef?.current?.state.activePage === props.length - 1
                     }
                     onClick={handleNext}

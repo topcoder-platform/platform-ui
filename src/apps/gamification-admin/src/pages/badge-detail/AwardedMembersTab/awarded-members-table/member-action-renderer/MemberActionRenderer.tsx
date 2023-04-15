@@ -1,6 +1,6 @@
 /* eslint-disable */
 // TODO: enable when unassign feature is ready
-// import { Button, ButtonProps, useCheckIsMobile } from '~/libs/ui'
+// import { ButtonProps, UiButton, useCheckIsMobile } from '~/libs/ui'
 import { MemberBadgeAward } from '../../../../../game-lib'
 
 import styles from './MemberActionRenderer.module.scss'
@@ -31,7 +31,7 @@ const MemberActionRenderer: (memberAward: MemberBadgeAward) => JSX.Element
             <div className={styles['badge-actions']}>
                 {/* {actionButtons.map((button, index) => {
                 return (
-                    <Button
+                    <UiButton
                         {...buttonProps}
                         key={index}
                         label={button.label}

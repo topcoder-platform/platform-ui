@@ -22,7 +22,6 @@ import sanitizeHtml from 'sanitize-html'
 import {
     Breadcrumb,
     BreadcrumbItemModel,
-    Button,
     ButtonProps,
     ContentLayout,
     IconOutline,
@@ -33,6 +32,7 @@ import {
     tableGetDefaultSort,
     TabsNavbar,
     TabsNavItem,
+    UiButton,
 } from '~/libs/ui'
 
 import { ACCEPTED_BADGE_MIME_TYPES, MAX_BADGE_IMAGE_FILE_SIZE } from '../../config'
@@ -383,8 +383,8 @@ const BadgeDetailPage: FC = () => {
                         <>
                             <div className={styles.badge}>
                                 <div className={styles.badgeImage}>
-                                    <Button
-                                        buttonStyle='icon'
+                                    <UiButton
+                                        size='lg'
                                         icon={IconOutline.PencilIcon}
                                         className={styles.filePickerPencil}
                                         onClick={handleBadgeEditClick}
@@ -442,15 +442,16 @@ const BadgeDetailPage: FC = () => {
                                             {
                                                 isBadgeDescEditingMode && (
                                                     <div className={styles.badgeEditActions}>
-                                                        <Button
+                                                        <UiButton
                                                             label='Cancel'
-                                                            buttonStyle='secondary'
-                                                            size='xs'
+                                                            secondary
+                                                            size='sm'
                                                             onClick={cancelEditBadge}
                                                         />
-                                                        <Button
+                                                        <UiButton
                                                             label='Save'
-                                                            size='xs'
+                                                            primary
+                                                            size='sm'
                                                             onClick={onSaveBadgeDesc}
                                                         />
                                                     </div>
