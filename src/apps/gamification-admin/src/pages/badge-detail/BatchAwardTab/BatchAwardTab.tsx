@@ -93,6 +93,7 @@ const BatchAwardTab: FC<BatchAwardTabProps> = (props: BatchAwardTabProps) => {
                     <div className={styles.actionsWrap}>
                         <UiButton
                             secondary
+                            size='lg'
                             label='Award'
                             className={styles.awardBtn}
                             disabled={!files?.length}

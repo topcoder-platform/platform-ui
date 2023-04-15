@@ -13,7 +13,7 @@
         }
     }
 
-    .share-btn:global(.button.icon) {
+    .share-btn {
         @include icon-mxx;
         border-radius: 50%;
         color: $blue-140;
@@ -30,10 +30,10 @@
             background: transparent;
         }
 
-        svg {
+        :global(.btn-icon) {
             @include icon-xxl;
 
-            > path {
+            svg > path {
                 fill: currentColor;
             }
         }

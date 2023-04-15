@@ -4,7 +4,7 @@ import classNames from 'classnames'
 
 import { EnvironmentConfig } from '~/config'
 import {
-    ButtonStyle,
+    ButtonTypes,
     IconSolid,
     ProgressBar,
     UiButton,
@@ -29,8 +29,8 @@ interface TCCertCardProps {
     progress: TCACertificationProgress
 }
 
-const getCtaBtn: (style: ButtonStyle, label: string, route: string) => ReactNode
-    = (style: ButtonStyle, label: string, route: string) => (
+const getCtaBtn: (style: ButtonTypes, label: string, route: string) => ReactNode
+    = (style: ButtonTypes, label: string, route: string) => (
         <Link to={route}>
             <UiButton {...{ [style]: true }} size='md' label={label} />
         </Link>

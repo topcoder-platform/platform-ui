@@ -86,6 +86,7 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
                             label='Award'
                             className={styles.awardBtn}
                             disabled={!selectedMembers.length}
+                            size='lg'
                             onClick={onAward}
                         />
                     </div>

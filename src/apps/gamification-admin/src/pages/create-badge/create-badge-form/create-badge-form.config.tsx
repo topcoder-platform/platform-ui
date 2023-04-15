@@ -25,7 +25,7 @@ export const createBadgeFormDef: FormDefinition = {
         ],
         secondaryGroup: [
             {
-                buttonStyle: 'icon-bordered',
+                buttonStyle: 'secondary',
                 icon: IconOutline.ChevronLeftIcon,
                 route: '/gamification-admin',
                 size: 'lg',

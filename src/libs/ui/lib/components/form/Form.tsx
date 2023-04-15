@@ -12,7 +12,7 @@ import {
 } from 'react'
 import classNames from 'classnames'
 
-import { Button } from '../button'
+import { UiButton } from '../ui-button'
 import { IconOutline } from '../svgs'
 import '../../styles/index.scss'
 
@@ -174,10 +174,12 @@ const Form: <
                 || !!props.shouldDisableButton?.(isPrimaryGroup, index)
 
             return (
-                <Button
+                <UiButton
                     {...button}
+                    {...{ [button.buttonStyle ?? 'primary']: true }}
+                    size='lg'
                     key={button.label || `button-${index}`}
-                    disable={disabled}
+                    disabled={disabled}
                     tabIndex={button.notTabble ? -1 : index + (inputs?.length || 0) + (formDef.tabIndexStart || 0)}
                 />
             )

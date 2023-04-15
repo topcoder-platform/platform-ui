@@ -9,8 +9,8 @@ import {
     useState,
 } from 'react'
 
-import { Button } from '../../../../button'
 import { useCheckIsMobile } from '../../../../../hooks'
+import { UiButton } from '../../../../ui-button'
 import { InputValue } from '../../../form-input.model'
 
 import styles from './InputFilePicker.module.scss'
@@ -68,12 +68,12 @@ const InputFilePicker: FC<InputFilePickerProps> = (props: InputFilePickerProps) 
             {
                 fileName && <p className={styles.fileName}>{fileName}</p>
             }
-            <Button
-                buttonStyle='secondary'
+            <UiButton
+                secondary
                 className={styles.filePickerButton}
                 label={fileName ? 'Clear' : 'Browse'}
                 onClick={handleButtonClick}
-                size={isMobile ? 'xs' : 'sm'}
+                size={isMobile ? 'sm' : 'md'}
             />
             <input
                 name={props.name}

@@ -1,9 +1,9 @@
 import { FC, SVGProps } from 'react'
 
-import { ButtonSize, ButtonStyle, ButtonType } from '../button'
+import { ButtonSize, ButtonTypes } from '../ui-button'
 
 export interface FormButton {
-    readonly buttonStyle?: ButtonStyle
+    readonly buttonStyle?: ButtonTypes
     hidden?: boolean,
     icon?: FC<SVGProps<SVGSVGElement>>
     readonly isReset?: boolean
@@ -13,6 +13,6 @@ export interface FormButton {
     onClick?: (event?: any) => void
     readonly route?: string
     readonly size?: ButtonSize
-    readonly type?: ButtonType
+    readonly type?: 'button'|'submit'
     readonly url?: string
 }

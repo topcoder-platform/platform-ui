@@ -2,11 +2,11 @@ import React, { FocusEvent, SVGProps } from 'react'
 import cn from 'classnames'
 
 import {
-    Button,
     IconCheck,
     IconOutline,
     IconSolid,
     Tooltip,
+    UiButton,
 } from '../../..'
 import { textFormatMoneyLocaleString } from '../../../../functions'
 import { useCheckIsMobile } from '../../../../hooks'
@@ -36,12 +36,12 @@ const FormCardSet: React.FC<FormCardSetProps> = (props: FormCardSetProps) => {
     }
 
     const getButton: (card: FormCard, selected: boolean) => JSX.Element = (card, selected) => (
-        <Button
-            onClick={props.onChange}
+        <UiButton
+            {...{ [selected ? 'primary' : 'secondary']: true }}
+            onClick={props.onChange as any}
             label={selected ? 'Selected' : 'Choose package'}
-            buttonStyle={selected ? 'primary' : 'secondary'}
             type={selected ? 'button' : 'submit'}
-            size='sm'
+            size='md'
             icon={selected ? IconCheck : undefined}
             id={card.id}
             name={props.name}

@@ -4,6 +4,7 @@
     :global(.btn-icon) {
         display: flex;
         align-items: center;
+        justify-content: center;
         &:first-child {
             margin-left: -$pad-1;
         }

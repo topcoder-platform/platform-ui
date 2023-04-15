@@ -1,6 +1,6 @@
 import React, { Dispatch, SetStateAction, useState } from 'react'
 
-import { Button, ContactSupportModal, InfoCard, useCheckIsMobile } from '~/libs/ui'
+import { UiButton, ContactSupportModal, InfoCard, useCheckIsMobile } from '~/libs/ui'
 
 import styles from './SupportInfoCard.module.scss'
 
@@ -34,7 +34,9 @@ const SupportInfoCard: React.FC = () => {
                     We’d love to talk with you about all of our services.
                 </div>
                 <div className={styles.supportButton}>
-                    <Button
+                    <UiButton
+                        primary
+                        size='lg'
                         label='Contact Support'
                         onClick={openSupportModal}
                     />

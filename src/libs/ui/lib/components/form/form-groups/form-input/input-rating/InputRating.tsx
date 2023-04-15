@@ -3,13 +3,14 @@ import {
     createRef,
     Dispatch,
     FC,
+    MouseEvent,
     RefObject,
     SetStateAction,
     useEffect,
     useState,
 } from 'react'
 
-import { Button } from '../../../../button'
+import { UiButton } from '../../../../ui-button'
 import { IconSolid } from '../../../../svgs'
 import { InputWrapper } from '../input-wrapper'
 import '../../../../../styles/index.scss'
@@ -34,8 +35,8 @@ const InputRating: FC<InputRatingProps> = (props: InputRatingProps) => {
 
     const inputRef: RefObject<HTMLInputElement> = createRef<HTMLInputElement>()
 
-    function handleRating(index: number): () => void {
-        return setRating.bind(undefined, index)
+    function handleRating(ev: MouseEvent<HTMLButtonElement>): () => void {
+        return setRating.bind(undefined, parseInt((ev.target as HTMLButtonElement)?.name ?? '', 10))
     }
 
     const stars: Array<JSX.Element> = []
@@ -44,15 +45,15 @@ const InputRating: FC<InputRatingProps> = (props: InputRatingProps) => {
     for (let index: number = 2; index <= 10; index++) {
         const className: string = !!rating && rating >= index ? 'orange-100' : 'black-20'
         const element: JSX.Element = (
-            <Button
-                buttonStyle='icon'
+            <UiButton
                 className={className}
                 icon={IconSolid.StarIcon}
                 name={`${index}`}
                 onClick={handleRating}
                 size='xl'
                 tabIndex={-1}
-                elementType='div'
+                // TODO: check if needed?
+                // elementType='div'
             />
         )
         stars.push(element)

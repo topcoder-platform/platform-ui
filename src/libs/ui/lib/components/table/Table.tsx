@@ -1,7 +1,7 @@
 import { Dispatch, MouseEvent, SetStateAction, useEffect, useState } from 'react'
 import classNames from 'classnames'
 
-import { Button } from '../button'
+import { UiButton } from '../ui-button'
 import { Sort } from '../pagination'
 import { IconOutline } from '../svgs'
 import { Tooltip } from '../tooltip'
@@ -182,8 +182,9 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 {
                     !!props.moreToLoad && !!props.onLoadMoreClick && (
                         <div className={styles.loadBtnWrap}>
-                            <Button
-                                buttonStyle='tertiary'
+                            <UiButton
+                                primary
+                                negative
                                 label='Load More'
                                 size='lg'
                                 onClick={props.onLoadMoreClick}

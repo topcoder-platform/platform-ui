@@ -1,5 +1,4 @@
 export * from './breadcrumb'
-export * from './button'
 export * from './content-layout'
 export * from './default-member-icon'
 // NOTE: for some reason, modals needs to be imported prior to form

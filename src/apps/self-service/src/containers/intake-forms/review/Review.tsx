@@ -11,11 +11,11 @@ import { Stripe, StripeElements } from '@stripe/stripe-js'
 import { EnvironmentConfig } from '~/config'
 import {
     BackArrowIcon,
-    Button,
     IconOutline,
     InfoCard,
     LoadingSpinner,
     PageDivider,
+    UiButton,
     useCheckIsMobile,
 } from '~/libs/ui'
 import { profileContext, ProfileContextData } from '~/libs/core'
@@ -281,7 +281,7 @@ const Review: FC = () => {
 
             <div className={styles['button-wrapper']}>
                 <PageDivider />
-                <Button type='button' buttonStyle='icon-bordered' icon={BackArrowIcon} onClick={navigateToBasicInfo} />
+                <UiButton type='button' secondary icon={BackArrowIcon} onClick={navigateToBasicInfo} />
             </div>
         </div>
     )

@@ -3,8 +3,9 @@ import { Location, NavigateFunction, useLocation, useNavigate, useParams } from 
 
 import {
     BackArrowIcon,
-    Button,
+    LinkButton,
     PageDivider,
+    UiButton,
 } from '~/libs/ui'
 import { authUrlLogin, routerContext, RouterContextData } from '~/libs/core'
 
@@ -59,12 +60,16 @@ const WorkLoginPrompt: FC<WorkLoginPromptProps> = props => {
                     </p>
 
                     <div className={styles.btn}>
-                        <Button
+                        <LinkButton
+                            primary
+                            size='lg'
                             label='LOG IN'
-                            url={authUrlLogin(customReturnUrl)}
+                            to={authUrlLogin(customReturnUrl)}
                         />
                         <span className={styles.separator}>OR</span>
-                        <Button
+                        <UiButton
+                            primary
+                            size='lg'
                             label='SIGN UP'
                             onClick={signUp}
                         />
@@ -74,10 +79,10 @@ const WorkLoginPrompt: FC<WorkLoginPromptProps> = props => {
             <PageDivider />
             <div className={styles.footerContent}>
                 <div>
-                    <Button
-                        size='md'
+                    <UiButton
+                        secondary
+                        size='lg'
                         icon={BackArrowIcon}
-                        buttonStyle='secondary'
                         onClick={onBack}
                     />
                 </div>

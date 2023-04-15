@@ -1,11 +1,11 @@
-import { Button } from "~/libs/ui"
+import { UiButton } from "~/libs/ui"
 
 export const DangerButton = (props) => (
-    <Button
-        buttonStyle='secondary'
+    <UiButton
+        secondary
         disable={props.disabled}
         className={props.className}
-        route={props.to}
         label={props.children}
+        variant='danger'
     />
 )

@@ -1,6 +1,6 @@
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 
-import { Button } from '~/libs/ui'
+import { UiButton } from '~/libs/ui'
 
 import { selfServiceRootRoute } from '../../self-service.routes'
 
@@ -39,7 +39,9 @@ const WorkThankYou: () => JSX.Element = () => {
                             page.
                         </p>
                     </div>
-                    <Button
+                    <UiButton
+                        primary
+                        size='lg'
                         label='Go to Dashboard'
                         onClick={onDone}
                     />

@@ -51,9 +51,9 @@
 
     // Define variants
     &:global(.btn-variant-danger) {
-        --btn-variant: #{$red-140};
-        --btn-variant--hover: #{lighten($red-140, 10%)};
-        --btn-variant--active: #{darken($red-140, 10%)};
+        --btn-variant: #{$red-110};
+        --btn-variant--hover: #{lighten($red-110, 10%)};
+        --btn-variant--active: #{darken($red-110, 10%)};
     }
     &:global(.btn-variant-warning) {
         --btn-variant: #{$orange-140};

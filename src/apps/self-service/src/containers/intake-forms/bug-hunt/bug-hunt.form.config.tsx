@@ -32,7 +32,7 @@ export const BugHuntFormConfig: FormDefinition = {
         ],
         secondaryGroup: [
             {
-                buttonStyle: 'icon-bordered',
+                buttonStyle: 'secondary',
                 icon: BackArrowIcon,
                 onClick: noop,
                 type: 'button',
