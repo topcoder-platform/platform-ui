@@ -3,7 +3,7 @@
 .sticky-container {
     @include ltelg {
         @include contentWidth;
-        padding-top: $space-xxl;
+        padding-top: $sp-6;
     }
 
     @include gtelg {
@@ -19,11 +19,11 @@
     }
 
     @include ltexxl {
-        right: $space-xxxxl;
+        right: $sp-8;
     }
 
     @include xxl {
-        right: calc(50vw - calc($xxl-min/2 - $space-xxl));
+        right: calc(50vw - calc($xxl-min/2 - $sp-6));
     }
 
 }
@@ -31,18 +31,18 @@
 .wrap {
     background: $tc-white;
     border: $border-xs solid $black-20;
-    border-radius: $space-sm;
+    border-radius: $sp-2;
 
     width: 100%;
     margin: 0 auto;
 
-    padding: $space-xxl;
+    padding: $sp-6;
 
     position: sticky;
     top: 40px;
 
     @include ltemd {
-        padding: $space-lg;
+        padding: $sp-4;
         position: relative;
         top: 0;
     }

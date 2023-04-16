@@ -5,7 +5,7 @@
   flex-direction: row;
   align-items: flex-start;
   padding: 0px 0px 0px 0px;
-  gap: $space-xxl;
+  gap: $sp-6;
 
 
   height: 104px;
@@ -148,22 +148,22 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    padding: $space-lg 0px;
+    padding: $sp-4 0px;
     color: $tc-white;
 
     position: static;
-    left: $space-xxxxl;
+    left: $sp-8;
     top: 0px;
 
     /* Inside auto layout */
     flex: none;
     order: 0;
     flex-grow: 1;
-    margin: 0px $space-xxxl;
+    margin: 0px $sp-7;
 
     @include ltemd {
-      margin: 0px $space-lg;
-      padding: $space-sm 0px;
+      margin: 0px $sp-4;
+      padding: $sp-2 0px;
     }
 
     .heroHeader {
@@ -188,10 +188,10 @@
         display: flex;
         flex-direction: row;
         align-items: flex-start;
-        margin-right: $space-lg;
+        margin-right: $sp-4;
 
         position: static;
-        width: $space-mx;
+        width: $sp-10;
         left: 0px;
         top: 0px;
       }
@@ -201,7 +201,7 @@
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        row-gap: $space-lg;
+        row-gap: $sp-4;
         padding: 0px;
 
         position: static;
@@ -221,12 +221,12 @@
         }
 
         .heroHeaderTitle {
-          height: $space-xxxxl;
+          height: $sp-8;
           font-family: 'Barlow Condensed';
           font-style: normal;
           font-weight: 600;
           font-size: 34px;
-          line-height: $space-xxxxl;
+          line-height: $sp-8;
           text-transform: uppercase;
           color: #FFFFFF;
 
@@ -238,18 +238,18 @@
 
           @include ltemd {
             font-size: 28px;
-            line-height: $space-xxxxl;
+            line-height: $sp-8;
             width: 288px;
           }
         }
 
         .heroHeaderSubtitle {
-          height: $space-xxl;          
+          height: $sp-6;          
           font-family: 'Roboto';
           font-style: normal;
           font-weight: 700;
           font-size: 16px;
-          line-height: $space-xxl;          
+          line-height: $sp-6;          
           color: #FFFFFF;
 
           /* Inside auto layout */
@@ -260,7 +260,7 @@
 
           @include ltemd {
             font-size: 14px;
-            line-height: $space-xl;
+            line-height: $sp-5;
             width: 288px;
             height: 60px;
           }
@@ -280,7 +280,7 @@
       font-style: normal;
       font-weight: normal;
       font-size: 24px;
-      line-height: $space-xxxxl;
+      line-height: $sp-8;
       /* or 133% */
 
       /* gray/white */
@@ -288,7 +288,7 @@
 
       /* Inside auto layout */
       order: 1;
-      margin: $space-lg 0px;
+      margin: $sp-4 0px;
       flex: none;
       align-self: stretch;
       flex-grow: 0;

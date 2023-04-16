@@ -13,7 +13,7 @@
         height: calc(var(--vh, 1vh) * 100);
         margin: auto;
         border-radius: 0;
-        padding: $space-xxl $space-xxxxl $space-xxxxl;
+        padding: $sp-6 $sp-8 $sp-8;
 
         &.modal-sm {
             width: 361px;
@@ -41,20 +41,20 @@
 
         @include ltemd {
             max-width: 450px;
-            padding: $space-xxl $space-lg;
+            padding: $sp-6 $sp-4;
         }
 
         @include gtemd {
             width: auto;
             height: auto;
-            border-radius: $space-sm;
+            border-radius: $sp-2;
             max-height: 93vh;
             min-width: 450px;
         }
 
         .react-responsive-modal-closeButton {
-            top: $space-xl;
-            padding: $space-xs;
+            top: $sp-5;
+            padding: $sp-1;
             border-radius: 50%;
 
             svg {

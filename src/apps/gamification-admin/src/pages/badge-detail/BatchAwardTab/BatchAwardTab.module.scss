@@ -12,8 +12,8 @@ $error-line-height: 14px;
     .batchFormWrap {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: $space-xxxxl;
-        margin-top: $space-xxl;
+        gap: $sp-8;
+        margin-top: $sp-6;
 
         @include ltemd {
             grid-template-columns: 1fr;
@@ -23,7 +23,7 @@ $error-line-height: 14px;
             text-transform: uppercase;
             color: $turq-160;
             font-weight: $font-weight-bold;
-            margin-top: $space-lg;
+            margin-top: $sp-4;
             display: inline-block;
         }
 
@@ -38,17 +38,17 @@ $error-line-height: 14px;
                 // extend body ultra small and override it
                 @extend .ultra-small;
                 line-height: $error-line-height;
-                margin-top: $space-xs;
+                margin-top: $sp-1;
 
                 svg {
                     @include icon-md;
                     fill: $red-100;
-                    margin-right: $space-xs;
+                    margin-right: $sp-1;
                 }
             }
 
             .actionsWrap {
-                margin-top: $space-xxl;
+                margin-top: $sp-6;
             }
         }
     }

@@ -2,20 +2,20 @@
 
 .content {
     color: $blue-25;
-    margin-top: $space-lg;
+    margin-top: $sp-4;
 
     @include ltemd {
-        padding-left: $space-xxl;
-        padding-right: $space-xxl;
+        padding-left: $sp-6;
+        padding-right: $sp-6;
     }
 
     @include ltesm {
-        padding-left: $space-lg;
-        padding-right: $space-lg;
+        padding-left: $sp-4;
+        padding-right: $sp-4;
     }
 
     p, ol, li {
-        margin-top: $space-lg;
+        margin-top: $sp-4;
     }
     ol {
         list-style: decimal;
@@ -25,7 +25,7 @@
     ol li a {
         display: flex;
         align-items: center;
-        gap: $space-xs;
+        gap: $sp-1;
         font-family: $font-roboto;
         font-weight: bold;
         font-size: 14px;
@@ -33,7 +33,7 @@
         letter-spacing: 0.03em;
         text-transform: uppercase;
         color: $tc-white;
-        margin-top: $space-sm;
+        margin-top: $sp-2;
         svg {
             display: block;
             width: 14px;

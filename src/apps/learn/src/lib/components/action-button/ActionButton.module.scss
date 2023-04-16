@@ -1,9 +1,9 @@
 @import '@libs/ui/styles/includes';
 
 .wrap {
-    min-width: $space-mxx;
-    height: $space-mxx;
-    border-radius: calc($space-mxx/2);
+    min-width: $sp-12;
+    height: $sp-12;
+    border-radius: calc($sp-12/2);
 
     color: $tc-white;
     border: $border solid currentColor;
@@ -11,9 +11,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: $space-xs;
+    gap: $sp-1;
 
-    padding: $space-sm;
+    padding: $sp-2;
 
     cursor: pointer;
 
@@ -34,5 +34,5 @@
     font-size: 16px;
     line-height: 18px;
     letter-spacing: 0.008em;
-    padding-right: $space-xs;
+    padding-right: $sp-1;
 }

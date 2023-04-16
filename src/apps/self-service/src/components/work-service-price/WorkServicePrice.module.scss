@@ -1,7 +1,7 @@
 @import '@libs/ui/styles/includes';
 
 .container {
-  margin-top: $space-xl;
+  margin-top: $sp-5;
 
   .inline {
     display: flex;
@@ -50,7 +50,7 @@
   .stickerPrice {
     color: $black-80;
     text-decoration: line-through;
-    margin-right: $space-xs;
+    margin-right: $sp-1;
   }
 
   .separator {
@@ -76,7 +76,7 @@
   .help {
     display: flex;
     align-items: center;
-    margin-left: $space-sm;
+    margin-left: $sp-2;
     color: $turq-160;
 
     .help-icon {

@@ -4,12 +4,12 @@
     display: flex;
     flex-direction: column;
     background-color: $black-5;
-    padding: $space-xxxxl $space-xxl;
+    padding: $sp-8 $sp-6;
     border-radius: 8px;
     overflow: auto;
 
     @include ltesm {
-        padding: $space-xxl $space-lg;
+        padding: $sp-6 $sp-4;
     }
 
     .cardHeader {
@@ -33,16 +33,16 @@
             display: flex;
             flex-direction: column;
             flex: 1 1 auto;
-            margin-left: $space-xxl;
+            margin-left: $sp-6;
 
             @include ltesm {
-                margin-left: $space-lg;
+                margin-left: $sp-4;
             }
 
             .cardSubWrap {
                 display: flex;
                 align-items: center;
-                gap: $space-sm;
+                gap: $sp-2;
                 flex-wrap: wrap;
 
                 .subTitleItem {
@@ -51,7 +51,7 @@
                 }
 
                 svg {
-                    margin-right: $space-xs;
+                    margin-right: $sp-1;
                     color: $blue-140;
                 }
 
@@ -84,7 +84,7 @@
             display: flex;
             height: 32px;
             align-items: center;
-            gap: $space-sm;
+            gap: $sp-2;
 
             .newLabel {
                 font-weight: 500;
@@ -92,14 +92,14 @@
                 line-height: 10px;
                 border-radius: 2px;
                 background-color: $green-140;
-                padding: 3px $space-xs;
+                padding: 3px $sp-1;
                 color: $tc-white;
             }
 
             .freeLabel {
                 @include freeLabel;
 
-                padding: 3px $space-xs;
+                padding: 3px $sp-1;
                 font-weight: 500;
                 font-size: 11px;
                 line-height: 10px;
@@ -120,11 +120,11 @@
 
 .separatorBar {
     border-bottom: 2px solid $black-10;
-    margin: $space-xl 0 $space-xxl;
+    margin: $sp-5 0 $sp-6;
 }
 
 .progressBar {
-    margin: $space-lg 0 $space-xxl;
+    margin: $sp-4 0 $sp-6;
 }
 
 .providers {
@@ -136,7 +136,7 @@
 }
 
 .cardBottom {
-    margin-top: $space-lg;
+    margin-top: $sp-4;
 
     .completedCTAs {
         display: flex;
@@ -151,7 +151,7 @@
 
     .certCTAButtons {
         a:first-child {
-            margin-right: $space-sm;
+            margin-right: $sp-2;
         }
     }
 }
@@ -159,7 +159,7 @@
 .infoText {
     font-style: italic;
     color: $black-60;
-    margin-right: $space-sm;
+    margin-right: $sp-2;
 
     @include ltemd {
         margin-right: 50px;

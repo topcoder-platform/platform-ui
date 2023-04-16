@@ -4,14 +4,14 @@
 .linkBlock {
     display: flex;
     align-items: center;
-    margin: $space-xxl 0;
+    margin: $sp-6 0;
     background-color: $blue-10;
     border-radius: 4px;
 }
 
 .label {
     flex: none;
-    padding: $space-md $space-lg;
+    padding: $sp-3 $sp-4;
 
     @include font-roboto;
     @include font-weight-bold;
@@ -29,7 +29,7 @@
 
 .link {
     flex: auto;
-    padding: $space-md $space-lg;
+    padding: $sp-3 $sp-4;
 
     a {
         @include font-roboto;

@@ -15,17 +15,17 @@
     }
 
     .cardContainer {
-        margin-left: $space-xxxl;
-        margin-top: $space-xxxl;
-        margin-bottom: $space-xl;
+        margin-left: $sp-7;
+        margin-top: $sp-7;
+        margin-bottom: $sp-5;
         display: flex;
         flex-direction: row;
-        gap: $space-lg;
+        gap: $sp-4;
         
 
         @include ltemd {
-            margin-top: $space-xl;
-            margin-left: $space-xl;
+            margin-top: $sp-5;
+            margin-left: $sp-5;
             gap: 14px;
         }
     
@@ -38,7 +38,7 @@
                 line-height: 34px;
                 @include font-weight-medium;
 
-                margin-bottom: $space-sm;
+                margin-bottom: $sp-2;
 
                 @include ltemd {
                     font-size: 22px;
@@ -47,7 +47,7 @@
             }
 
             .summary {
-                margin-bottom: $space-lg;
+                margin-bottom: $sp-4;
 
                 @include ltemd {
                     font-size: 14px;

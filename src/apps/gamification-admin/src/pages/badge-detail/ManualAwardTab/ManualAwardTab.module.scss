@@ -9,8 +9,8 @@
     .manualFormWrap {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: $space-xxxxl;
-        margin-top: $space-xxl;
+        gap: $sp-8;
+        margin-top: $sp-6;
 
         @include ltemd {
             grid-template-columns: 1fr;

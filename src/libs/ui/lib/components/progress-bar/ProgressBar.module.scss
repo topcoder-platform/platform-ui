@@ -2,8 +2,8 @@
 
 .wrap {
     background: $black-10;
-    border-radius: $space-xs;
-    height: $space-lg;
+    border-radius: $sp-1;
+    height: $sp-4;
     width: 100%;
     display: flex;
 
@@ -33,7 +33,7 @@
         .completedText {
             position: absolute;
             top: 1px;
-            left: $space-xs;
+            left: $sp-1;
             font-family: $font-barlow;
             font-style: normal;
             font-weight: $font-weight-bold;

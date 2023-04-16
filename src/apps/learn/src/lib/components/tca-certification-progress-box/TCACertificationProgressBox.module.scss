@@ -2,18 +2,18 @@
 
 .wrap {
     border: $border dashed $blue-140;
-    border-radius: $space-sm;
+    border-radius: $sp-2;
 
-    padding: $space-xxl;
+    padding: $sp-6;
 
     @include ltemd {
-        padding: $space-lg;
+        padding: $sp-4;
     }
 }
 
 .header {
     display: flex;
-    gap: $space-lg;
+    gap: $sp-4;
     align-items: flex-start;
 
     svg {
@@ -27,7 +27,7 @@
         }
 
         :global(.body-main-bold) {
-            margin-top: $space-xs;
+            margin-top: $sp-1;
         }
     }
 }
@@ -35,16 +35,16 @@
 .certTitle {
     display: flex;
     align-items: flex-start;
-    gap: $space-xs;
+    gap: $sp-1;
 }
 
 .desc {
-    margin-top: $space-lg;
+    margin-top: $sp-4;
 }
 
 .link {
     display: block;
-    margin-top: $space-lg;
+    margin-top: $sp-4;
     font-family: $font-roboto;
     font-size: 12px;
     line-height: 14px;
@@ -55,7 +55,7 @@
 
 .externalLink {
     display: flex;
-    gap: $space-xs;
+    gap: $sp-1;
     height: 24px;
     align-items: center;
     color: $turq-160;
@@ -70,10 +70,10 @@
     align-items: center;
 
     background: $black-5;
-    border-radius: $space-sm;
+    border-radius: $sp-2;
 
-    margin-top: $space-lg;
-    padding: $space-sm;
+    margin-top: $sp-4;
+    padding: $sp-2;
     padding-left: 0;
 
     .icon {
@@ -101,7 +101,7 @@
     background: $black-5;
     color: $tc-black;
     border: 0 none;
-    padding: $space-lg;
+    padding: $sp-4;
 
     .header {
         > svg {

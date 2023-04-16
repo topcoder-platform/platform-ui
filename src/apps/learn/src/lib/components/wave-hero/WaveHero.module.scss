@@ -8,8 +8,8 @@
         padding-bottom: 100px;
 
         @include ltelg {
-            background-size: 100vw $space-lg, auto;
-            padding-bottom: $space-mx;
+            background-size: 100vw $sp-4, auto;
+            padding-bottom: $sp-10;
         }
 
         &:global(.light) {
@@ -24,7 +24,7 @@
             background-size: 1440px 40px, auto;
             padding-bottom: 84px;
             @include ltelg {
-                background-size: 100vw $space-lg, auto;
+                background-size: 100vw $sp-4, auto;
                 padding-bottom: 60px;
             }
             @include ltemd {
@@ -34,28 +34,28 @@
     }
 
     &-inner {
-        padding: calc($space-mx * 2) 0 $space-lg;
+        padding: calc($sp-10 * 2) 0 $sp-4;
 
         .hero-wrap:global(.grey) & {
-            padding-top: $space-xxxxl;
+            padding-top: $sp-8;
             padding-bottom: 0;
         }
 
         @include contentWidth;
 
         @include ltelg {
-            padding-bottom: $space-mx;
+            padding-bottom: $sp-10;
         }
 
         @include ltemd {
-            padding-top: calc($space-mx * 4);
-            padding-bottom: $space-xxl;
+            padding-top: calc($sp-10 * 4);
+            padding-bottom: $sp-6;
         }
     }
 
     &-content {
         display: flex;
-        gap: calc($space-mx * 2);
+        gap: calc($sp-10 * 2);
 
         color: $tc-white;
 
@@ -66,7 +66,7 @@
             h1 {
                 font-size: 80px;
                 line-height: 72px;
-                margin-bottom: $space-xxxxl;
+                margin-bottom: $sp-8;
 
                 @include ltemd {
                     font-size: 42px;
@@ -76,11 +76,11 @@
         }
 
         @include ltelg {
-            gap: $space-mx;
+            gap: $sp-10;
         }
 
         @include ltemd {
-            gap: $space-xxl;
+            gap: $sp-6;
             flex-direction: column;
         }
     }
@@ -91,7 +91,7 @@
 
     &-text {
         @extend .body-large;
-        margin-top: $space-sm;
+        margin-top: $sp-2;
         max-width: 910px;
     }
 }

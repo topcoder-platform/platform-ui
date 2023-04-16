@@ -13,13 +13,13 @@
 .content {
     display: flex;
     align-items: center;
-    gap: $space-sm;
+    gap: $sp-2;
 
     @include ltelg {
         flex-direction: column;
         align-items: flex-start;
-        gap: $space-xs;
-        margin-top: $space-sm;
+        gap: $sp-1;
+        margin-top: $sp-2;
     }
 
     :global(.quote-small) {
@@ -29,7 +29,7 @@
 }
 
 .tag {
-    padding: 2px $space-xs 0;
+    padding: 2px $sp-1 0;
     background: $blue-140;
     border-radius: $border;
 

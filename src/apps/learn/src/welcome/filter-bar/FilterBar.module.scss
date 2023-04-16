@@ -4,7 +4,7 @@
     display: flex;
     margin-left: auto;
 
-    gap: $space-xxl;
+    gap: $sp-6;
 
     >* {
         min-width: 326px;
@@ -21,7 +21,7 @@
     @include ltelg {
         flex-direction: column;
         align-items: flex-start;
-        gap: $space-lg;
+        gap: $sp-4;
     }
 
     @include ltemd {

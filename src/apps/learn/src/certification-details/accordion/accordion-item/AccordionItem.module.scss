@@ -1,7 +1,7 @@
 @import '@libs/ui/styles/includes';
 
 .item {
-    padding: $space-lg $space-xxl;
+    padding: $sp-4 $sp-6;
     border-top: $border solid $black-10;
     &:last-child {
         border-bottom: $border solid $black-10;
@@ -27,7 +27,7 @@
 }
 
 .itemDesc {
-    margin-top: $space-lg;
+    margin-top: $sp-4;
 }
 
 .itemArrowIcon {

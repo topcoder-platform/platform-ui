@@ -1,25 +1,25 @@
 @import '@libs/ui/styles/includes';
 
 .wrap {
-    border-radius: $space-sm;
+    border-radius: $sp-2;
     background: $black-5;
-    padding: $space-xxl;
+    padding: $sp-6;
 
     display: flex;
-    gap: $space-xxl;
+    gap: $sp-6;
 
     @media (max-width: 1150px) {
-        padding: $space-lg;
+        padding: $sp-4;
         flex-direction: column;
-        gap: $space-lg;
+        gap: $sp-4;
     }
 }
 
 .statusCol {
-    margin: -$space-xxl;
+    margin: -$sp-6;
     margin-right: 0;
 
-    border-radius: $space-sm 0px 0px $space-sm;
+    border-radius: $sp-2 0px 0px $sp-2;
     overflow: hidden;
 
     width: 64px;
@@ -34,7 +34,7 @@
 .statusBox {
     margin-left: auto;
     @include icon-xxxxl;
-    border-radius: $space-xs;
+    border-radius: $sp-1;
     display: flex;
     overflow: hidden;
 }
@@ -72,21 +72,21 @@
 
     display: flex;
     align-items: flex-start;
-    gap: $space-lg;
+    gap: $sp-4;
 
     @include ltelg {
-        gap: $space-sm;
+        gap: $sp-2;
     }
 }
 
 .badge {
-    width: $space-mxx;
-    height: $space-mxx;
+    width: $sp-12;
+    height: $sp-12;
     flex: 0 0 auto;
 
     @include ltelg {
-        width: $space-mx;
-        height: $space-mx;
+        width: $sp-10;
+        height: $sp-10;
     }
 
     svg {
@@ -104,7 +104,7 @@
 .headline {
     display: flex;
     align-items: center;
-    gap: $space-sm;
+    gap: $sp-2;
 
     .cta {
         margin-left: auto;
@@ -123,7 +123,7 @@
 .cta, .bottomActions, .bottomCta {
     display: flex;
     align-items: center;
-    gap: $space-sm;
+    gap: $sp-2;
 }
 
 .bottomActions {
@@ -137,7 +137,7 @@
 }
 
 .content {
-    margin-top: $space-xs;
+    margin-top: $sp-1;
     @include ltelg {
         margin-top: 0;
     }

@@ -8,7 +8,7 @@
 .main-wrap {
     height: calc($content-height - $breadcrumb-height);
     width: 100%;
-    margin-bottom: -$space-lg;
+    margin-bottom: -$sp-4;
     background: $tc-white;
 
     display: flex;
@@ -17,7 +17,7 @@
 
     @include ltemd {
         flex-direction: column;
-        gap: $space-lg;
+        gap: $sp-4;
         height: auto;
     }
 }
@@ -27,7 +27,7 @@
     display: flex;
     flex-direction: column;
 
-    padding-left: $space-xxxxl;
+    padding-left: $sp-8;
     overflow: auto;
 
     @include ltemd {
@@ -36,7 +36,7 @@
 }
 
 .content-wrap {
-    padding: $space-mx 0 $space-xxxxl;
+    padding: $sp-10 0 $sp-8;
     position: relative;
     flex: 1;
     @include contentWidth;
@@ -44,19 +44,19 @@
     margin: 0 auto;
     
     p {
-        margin-top: $space-xxl;
+        margin-top: $sp-6;
     }
 
     :global(.body-large) {
-        margin-bottom: $space-xxl;
+        margin-bottom: $sp-6;
     }
 }
 
 .btns-wrap {
     display: flex;
     align-items: center;
-    gap: $space-lg $space-sm;
-    margin-top: $space-xxl;
+    gap: $sp-4 $sp-2;
+    margin-top: $sp-6;
     flex-wrap: wrap;
     
     @include ltemd {

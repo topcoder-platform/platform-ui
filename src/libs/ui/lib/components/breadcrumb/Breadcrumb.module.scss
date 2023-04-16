@@ -7,14 +7,14 @@
 }
 
 .breadcrumb {
-    padding: $space-md 0;
+    padding: $sp-3 0;
     max-width: $xxl-min;
     margin: 0 auto;
     @include pagePaddings;
 
     @include ltemd {
-        padding-top: $space-xs;
-        padding-bottom: $space-xs;
+        padding-top: $sp-1;
+        padding-bottom: $sp-1;
     }
 
     ol {
@@ -47,7 +47,7 @@
             a {
                 @extend .overline;
                 display: block;
-                padding: $space-md;
+                padding: $sp-3;
                 color: $black-80;
                 cursor: pointer;
 
@@ -63,8 +63,8 @@
             &:not(:last-child)::after {
                 content: '';
                 display: inline-block;
-                width: $space-sm;
-                height: $space-sm;
+                width: $sp-2;
+                height: $sp-2;
                 border-style: solid;
                 border-width: $border-xs $border-xs 0 0;
                 border-color: $black-60;

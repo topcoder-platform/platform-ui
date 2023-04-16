@@ -4,11 +4,11 @@
     display: flex;
     align-items: center;
     padding: 0px;
-    gap: $space-lg;
+    gap: $sp-4;
 
     color: $black-60;
 
-    margin-top: $space-xs;
+    margin-top: $sp-1;
     @media (max-width: 1150px) {
         flex-wrap: wrap;
     }
@@ -21,7 +21,7 @@
     .stat {
         display: flex;
         align-items: center;
-        gap: $space-xs;
+        gap: $sp-1;
         @include ltelg {
             gap: 3px;
         }
@@ -40,12 +40,12 @@
 }
 
 .providers {
-    margin-top: $space-xs;
+    margin-top: $sp-1;
     @include ltelg {
         margin-top: 0;
     }
 }
 
 .progress {
-    margin-top: $space-md;
+    margin-top: $sp-3;
 }

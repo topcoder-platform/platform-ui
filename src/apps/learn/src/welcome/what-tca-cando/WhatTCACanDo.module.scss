@@ -5,12 +5,12 @@
     flex-direction: column;
     background-color: $black-5;
     border-radius: 8px;
-    padding: $space-xxxxl;
-    margin-bottom: $space-xxxxl;
+    padding: $sp-8;
+    margin-bottom: $sp-8;
 
     @include ltemd {
-        padding: $space-lg;
-        margin-bottom: $space-sm;
+        padding: $sp-4;
+        margin-bottom: $sp-2;
     }
 
     .collapseTrigger {
@@ -18,7 +18,7 @@
         justify-content: space-between;
 
         h2 {
-            margin-bottom: $space-lg;
+            margin-bottom: $sp-4;
 
             @include ltemd {
                 max-width: 290px;
@@ -34,8 +34,8 @@
     .cards {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: $space-lg;
-        margin-top: $space-lg;
+        gap: $sp-4;
+        margin-top: $sp-4;
 
         @include ltemd {
             grid-template-columns: 1fr;
@@ -44,22 +44,22 @@
         .card {
             display: flex;
             flex-direction: column;
-            padding: $space-xxl $space-xxl $space-xxxxl;
+            padding: $sp-6 $sp-6 $sp-8;
             background-color: $tc-white;
             border-radius: 8px;
 
             @include ltemd {
-                padding: $space-lg $space-lg $space-xl;
+                padding: $sp-4 $sp-4 $sp-5;
             }
 
             .cardTitle {
                 display: flex;
                 align-items: center;
-                margin-bottom: $space-lg;
+                margin-bottom: $sp-4;
 
                 >svg {
                     color: $blue-110;
-                    margin-right: $space-sm;
+                    margin-right: $sp-2;
                 }
             }
         }

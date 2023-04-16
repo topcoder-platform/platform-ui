@@ -9,10 +9,10 @@
   
   display: flex;
   align-items: center;
-  gap: $space-lg;
+  gap: $sp-4;
 
   position: relative;
-  padding: $space-lg 0;
+  padding: $sp-4 0;
   border-top: $border-xs solid $black-10;
 
   &:last-child {
@@ -34,7 +34,7 @@
   .name {
     margin-right: auto;
     span + span {
-      margin-left: $space-xs;
+      margin-left: $sp-1;
     }
   }
 }

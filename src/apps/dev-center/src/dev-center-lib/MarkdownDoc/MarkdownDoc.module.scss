@@ -45,7 +45,7 @@
     color: inherit;
     text-transform: uppercase;
 
-    margin: $space-xxl 0 $space-lg;
+    margin: $sp-6 0 $sp-4;
     counter-reset: devCenterHeading2;
 }
 
@@ -57,7 +57,7 @@
     color: inherit;
     text-transform: uppercase;
 
-    margin: 80px 0 $space-xxl;
+    margin: 80px 0 $sp-6;
     counter-increment: devCenterHeading2;
     counter-reset: devCenterHeading3;
 
@@ -75,7 +75,7 @@
     line-height: 26px;
     color: inherit;
     text-transform: uppercase;
-    margin: 10px 0 $space-xxl;
+    margin: 10px 0 $sp-6;
     counter-increment: devCenterHeading3;
 
     &::before {
@@ -85,14 +85,14 @@
     }
 
     &:first-child {
-        margin-top: $space-xxl;
+        margin-top: $sp-6;
     }
 }
 
 .divider {
     hr {
         width: 100%;
-        margin: $space-lg 0;
+        margin: $sp-4 0;
         border: 1px solid $black-10;
         border-radius: 2px;
     }
@@ -101,7 +101,7 @@
 .paragraph {
     font: inherit;
     color: inherit;
-    margin: $space-xxl 0 0;
+    margin: $sp-6 0 0;
 }
 
 .orderedList,
@@ -110,7 +110,7 @@
     > ul {
         font: inherit;
         color: inherit;
-        margin: 0 0 $space-xxl;
+        margin: 0 0 $sp-6;
 
         padding-left: 24px;
         > li {
@@ -161,6 +161,6 @@
     .heading2 {
         font-size: 20px;
         line-height: 22px;
-        margin: $space-xxl 0 $space-xxl;
+        margin: $sp-6 0 $sp-6;
     }
 }

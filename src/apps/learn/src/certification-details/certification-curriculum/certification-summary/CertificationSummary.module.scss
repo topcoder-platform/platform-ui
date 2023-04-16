@@ -3,7 +3,7 @@
 .wrap {
     display: flex;
     align-items: center;
-    gap: $space-lg;
+    gap: $sp-4;
 
 
     > svg {
@@ -13,7 +13,7 @@
 
     :global(.body-large-bold) {
         > span {
-            margin-top: $space-sm;
+            margin-top: $sp-2;
             display: block;
         }
     }

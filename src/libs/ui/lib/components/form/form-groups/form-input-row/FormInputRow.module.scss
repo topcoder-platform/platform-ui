@@ -15,7 +15,7 @@
 .input-row {
     display: flex;
     align-items: center;
-    column-gap: $space-xxl;
+    column-gap: $sp-6;
     padding: 0;
 
     .input-instructions {
@@ -24,7 +24,7 @@
         &.rating {
             color: $black-100;
             @extend .body-main;
-            margin-bottom: calc($space-lg + 2px);
+            margin-bottom: calc($sp-4 + 2px);
         }
     }
 

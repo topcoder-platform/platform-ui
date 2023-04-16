@@ -18,8 +18,8 @@
     color: inherit;
     text-transform: uppercase;
 
-    padding: 0 0 0 $space-xxxl;
-    margin: 0 0 $space-xxl;
+    padding: 0 0 0 $sp-7;
+    margin: 0 0 $sp-6;
 }
 
 .navListItem {
@@ -52,9 +52,9 @@
 }
 
 .navListItem-link-padding-level2 {
-    padding: $space-sm 0 $space-sm $space-xxxl;
+    padding: $sp-2 0 $sp-2 $sp-7;
 }
 
 .navListItem-link-padding-level3 {
-    padding: $space-sm 0 $space-sm $space-xxxxl;
+    padding: $sp-2 0 $sp-2 $sp-8;
 }

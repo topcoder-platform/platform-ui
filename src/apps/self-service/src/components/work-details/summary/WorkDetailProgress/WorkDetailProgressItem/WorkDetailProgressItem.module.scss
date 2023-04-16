@@ -1,6 +1,6 @@
 @import '@libs/ui/styles/includes';
 
-$dot-size: calc($space-lg + $space-xxl);
+$dot-size: calc($sp-4 + $sp-6);
 
 .progress-bar-list-item {
     position: relative;
@@ -15,7 +15,7 @@ $dot-size: calc($space-lg + $space-xxl);
 
     .label {
         display: block;
-        margin-top: $space-sm;
+        margin-top: $sp-2;
         margin-left: calc(-1 * calc($dot-size + 3px));
         width: auto;
         text-align: center;
@@ -28,7 +28,7 @@ $dot-size: calc($space-lg + $space-xxl);
 
         .date {
             display: block;
-            margin-top: $space-xs;
+            margin-top: $sp-1;
         }
     }
 
@@ -38,9 +38,9 @@ $dot-size: calc($space-lg + $space-xxl);
         justify-content: center;
         width: $dot-size;
         height: $dot-size;
-        margin-bottom: $space-sm;
+        margin-bottom: $sp-2;
         @extend .bg-black-10;
-        border: $space-xs solid $black-20;
+        border: $sp-1 solid $black-20;
         border-radius: 50%;
         box-sizing: border-box;
         color: $black-60;
@@ -51,10 +51,10 @@ $dot-size: calc($space-lg + $space-xxl);
         content: '';
         display: block;
         position: absolute;
-        top: $space-lg;
+        top: $sp-4;
         left: 54%;
         width: 100%;
-        height: $space-sm;
+        height: $sp-2;
         @extend .bg-black-20;
         z-index: 1;
     }

@@ -2,13 +2,13 @@
 
 .wrap {
     background: $black-5;
-    padding: $space-xxxxl;
+    padding: $sp-8;
     padding-right: 92px;
-    border-radius: $space-sm;
+    border-radius: $sp-2;
 
     color: $black-100;
     @include ltelg {
-        padding: $space-xxl $space-lg;
+        padding: $sp-6 $sp-4;
     }
 
     &.clear {
@@ -18,32 +18,32 @@
 }
 
 .perksList {
-    margin-top: $space-xxxxl;
+    margin-top: $sp-8;
     @include ltelg {
-        margin-top: $space-xxl;
+        margin-top: $sp-6;
     }
 
     li {
         display: flex;
         align-items: flex-start;
-        gap: $space-lg;
+        gap: $sp-4;
 
-        margin-top: $space-xxl;
+        margin-top: $sp-6;
         @include ltelg {
-            gap: $space-sm;
+            gap: $sp-2;
         }
     }
 }
 
 .perkIcon {
     display: flex;
-    width: $space-mxx;
-    height: $space-mxx;
+    width: $sp-12;
+    height: $sp-12;
     flex: 0 0 auto;
 
     @include ltelg {
-        width: $space-xxxxl;
-        height: $space-xxxxl;
+        width: $sp-8;
+        height: $sp-8;
     }
 
     svg {
@@ -66,17 +66,17 @@
 
 .perkContent {
     p {
-        margin-top: $space-sm;
+        margin-top: $sp-2;
     }
 }
 
 .perkExtraLink {
-    margin-top: $space-sm;
+    margin-top: $sp-2;
 
     > * {
         display: flex;
         align-items: center;
-        gap: $space-xs;
+        gap: $sp-1;
         color: $turq-160;
         @include font-roboto;
         font-weight: 700;

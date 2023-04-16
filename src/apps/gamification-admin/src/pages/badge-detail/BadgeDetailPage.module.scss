@@ -13,12 +13,12 @@ $badgePreviewImage: 72px;
     .error {
         background-color: $black-5;
         color: red;
-        padding: $space-sm;
+        padding: $sp-2;
     }
 
     .badge {
         display: flex;
-        margin-top: $space-xxxxl;
+        margin-top: $sp-8;
 
         @include ltemd {
             flex-direction: column;
@@ -26,9 +26,9 @@ $badgePreviewImage: 72px;
 
         .badgeImage {
             position: relative;
-            border-radius: $space-sm;
+            border-radius: $sp-2;
             background-color: $black-5;
-            margin-right: $space-xxxxl;
+            margin-right: $sp-8;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -39,7 +39,7 @@ $badgePreviewImage: 72px;
 
             @include ltemd {
                 margin-right: 0;
-                margin-bottom: $space-xxl;
+                margin-bottom: $sp-6;
                 width: 100%;
             }
 
@@ -68,7 +68,7 @@ $badgePreviewImage: 72px;
             .badgeName {
                 font-family: $font-roboto;
                 font-weight: $font-weight-bold;
-                padding: $space-sm;
+                padding: $sp-2;
                 font-size: 24px;
                 line-height: 32px;
 
@@ -95,17 +95,17 @@ $badgePreviewImage: 72px;
                 // extend body ultra small and override it
                 @extend .ultra-small;
                 line-height: $error-line-height;
-                margin-top: $space-xs;
+                margin-top: $sp-1;
             
                 svg {
                     @include icon-md;
                     fill: $red-100;
-                    margin-right: $space-xs;
+                    margin-right: $sp-1;
                 }
             }
 
             .badgeDesc {
-                margin-top: $space-sm;
+                margin-top: $sp-2;
 
                 .badgeEditWrap {
                     display: flex;
@@ -113,7 +113,7 @@ $badgePreviewImage: 72px;
 
                     .badgeEditable,
                     .badgeEditableMode {
-                        padding: $space-sm;
+                        padding: $sp-2;
                         border-radius: 3px;
                         border: 2px solid $tc-white;
 
@@ -139,10 +139,10 @@ $badgePreviewImage: 72px;
                     .badgeEditActions {
                         display: flex;
                         justify-content: flex-end;
-                        margin-top: $space-sm;
+                        margin-top: $sp-2;
 
                         button:first-child {
-                            margin-right: $space-sm;
+                            margin-right: $sp-2;
                         }
                     }
                 }
@@ -151,10 +151,10 @@ $badgePreviewImage: 72px;
     }
 
     .activeTabElement {
-        margin-top: $space-xxxxl;
+        margin-top: $sp-8;
 
         @include ltemd {
-            margin-top: $space-md;
+            margin-top: $sp-3;
         }
     }
 }

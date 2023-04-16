@@ -16,7 +16,7 @@
 
     @include ltemd {
         flex-direction: column;
-        gap: $space-lg;
+        gap: $sp-4;
         height: auto;
         flex: 99 1 auto;
         margin-bottom: 0;
@@ -28,12 +28,12 @@
     display: flex;
     flex-direction: column;
 
-    padding-left: $space-xxxxl;
+    padding-left: $sp-8;
 
     hr {
-        margin-left: $space-xxxxl;
-        margin-right: $space-xxxxl;
-        width: calc(100% - 2 * $space-xxxxl);
+        margin-left: $sp-8;
+        margin-right: $sp-8;
+        width: calc(100% - 2 * $sp-8);
     }
 
     @include ltemd {
@@ -41,9 +41,9 @@
         flex: 1 1 auto;
 
         hr {
-            margin-left: $space-lg;
-            margin-right: $space-lg;
-            width: calc(100% - 2 * $space-lg);
+            margin-left: $sp-4;
+            margin-right: $sp-4;
+            width: calc(100% - 2 * $sp-4);
         }
     }
 }
@@ -53,17 +53,17 @@
 
     .completeCourseBtn {
         position: absolute;
-        right: $space-xxxxl;
-        bottom: $space-xl;
+        right: $sp-8;
+        bottom: $sp-5;
 
         @include ltesm {
-            right: $space-sm;
-            bottom: $space-md;
+            right: $sp-2;
+            bottom: $sp-3;
         }
 
         @include md {
-            right: $space-sm;
-            bottom: $space-lg;
+            right: $sp-2;
+            bottom: $sp-4;
         }
     }
 }

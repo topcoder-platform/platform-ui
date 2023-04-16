@@ -4,7 +4,7 @@
 .bug-delivery-radio {
     border: 1px solid $black-100;
     border-radius: 4px;
-    padding-top: $space-lg;
+    padding-top: $sp-4;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -34,13 +34,13 @@
     }
     &.recommended {
       .name {
-        margin-bottom: $space-xl;
+        margin-bottom: $sp-5;
       }
     }
     .name {
         @extend .body-large-bold;
-        margin-top: $space-sm;
-        margin-bottom: $space-xxxxl;
+        margin-top: $sp-2;
+        margin-bottom: $sp-8;
     }
     .recommended-text-wrapper {
       @extend .overline;
@@ -48,8 +48,8 @@
       text-align: center;
       background-color: $black-100;
       color: $tc-white;
-      padding: $space-xs $space-sm;
-      border-radius: 0 0 $space-xs $space-xs;
+      padding: $sp-1 $sp-2;
+      border-radius: 0 0 $sp-1 $sp-1;
       width: 100%;
     }
 }

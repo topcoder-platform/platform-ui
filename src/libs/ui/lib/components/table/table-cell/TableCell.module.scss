@@ -4,17 +4,17 @@
 .td {
     max-width: 450px;
     @extend .medium-subtitle;
-    padding: $space-lg;
+    padding: $sp-4;
     background: $black-5;
     word-break: break-word;
     vertical-align: top;
 
     &:first-child {
-        border-radius: $space-sm 0 0 $space-sm;
+        border-radius: $sp-2 0 0 $sp-2;
     }
 
     &:last-child {
-        border-radius: 0 $space-sm $space-sm 0;
+        border-radius: 0 $sp-2 $sp-2 0;
     }
 
     &:nth-last-child(2) {
@@ -23,7 +23,7 @@
 
     &.action {
         text-align: center;
-        padding: $space-sm;
+        padding: $sp-2;
     }
 
     &.date,

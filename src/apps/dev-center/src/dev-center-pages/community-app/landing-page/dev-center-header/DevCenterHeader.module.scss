@@ -41,12 +41,12 @@
                 @include ltemd {
                     font-size: 42px;
                     line-height: 40px;
-                    padding-top: $space-xxl;
+                    padding-top: $sp-6;
                 }
             }
             
             .subtitle {
-                margin-top: $space-xxl;
+                margin-top: $sp-6;
                 display: block;
                 @include font-tc-white;
                 line-height: 20px;
@@ -57,7 +57,7 @@
         }
     
         .rightContent {
-            margin-top: $space-xxxxl;
+            margin-top: $sp-8;
     
             @include ltemd {
                 text-align: center;

@@ -1,32 +1,32 @@
 @import '../variables/spacing';
 
 @mixin pagePaddings {
-    padding-left: $space-xxxxl;
-    padding-right: $space-xxxxl;
+    padding-left: $sp-8;
+    padding-right: $sp-8;
 
     @include ltemd {
-        padding-left: $space-xxl;
-        padding-right: $space-xxl;
+        padding-left: $sp-6;
+        padding-right: $sp-6;
     }
 
     @include ltesm {
-        padding-left: $space-lg;
-        padding-right: $space-lg;
+        padding-left: $sp-4;
+        padding-right: $sp-4;
     }
 }
 
 @mixin substractPagePaddings {
-    margin-left: -$space-xxxxl;
-    margin-right: -$space-xxxxl;
+    margin-left: -$sp-8;
+    margin-right: -$sp-8;
 
     @include ltemd {
-        margin-left: -$space-xxl;
-        margin-right: -$space-xxl;
+        margin-left: -$sp-6;
+        margin-right: -$sp-6;
     }
 
     @include ltesm {
-        margin-left: -$space-lg;
-        margin-right: -$space-lg;
+        margin-left: -$sp-4;
+        margin-right: -$sp-4;
     }
 }
 
@@ -75,7 +75,7 @@
     font-weight: $font-weight-bold;
     font-style: normal;
     background-color: $orange-100;
-    padding: 2px $space-sm;
+    padding: 2px $sp-2;
     border-radius: 4px;
     color: $black-100;
     display: inline-block;

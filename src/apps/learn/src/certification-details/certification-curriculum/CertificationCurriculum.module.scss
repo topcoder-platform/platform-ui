@@ -1,7 +1,7 @@
 @import '@libs/ui/styles/includes';
 
 .wrap {
-    padding: $space-xxxxl;
+    padding: $sp-8;
     background: linear-gradient(84.45deg, $blue-160 2.12%, $blue-110 97.43%);
     border-radius: 8px;
     color: $tc-white;
@@ -9,17 +9,17 @@
 
     @include ltemd {
         border-radius: 0;
-        margin-left: -$space-xxl;
-        margin-right: -$space-xxl;
+        margin-left: -$sp-6;
+        margin-right: -$sp-6;
     }
 
     @include ltesm {
-        margin-left: -$space-lg;
-        margin-right: -$space-lg;
+        margin-left: -$sp-4;
+        margin-right: -$sp-4;
     }
 
     @media (max-width: 1150px) {
-        padding: $space-xxxxl $space-lg $space-lg;
+        padding: $sp-8 $sp-4 $sp-4;
     }
 }
 
@@ -36,7 +36,7 @@
 
         display: flex;
         align-items: baseline;
-        gap: $space-lg;
+        gap: $sp-4;
 
         @media (max-width: 1250px) {
             flex-wrap: wrap;
@@ -45,7 +45,7 @@
 
         @include ltelg {
             margin-left: 0;
-            margin-top: $space-xxl;
+            margin-top: $sp-6;
         }
     }
 }
@@ -53,7 +53,7 @@
 .headlineDetailsItem {
     display: flex;
     align-items: baseline;
-    gap: $space-xs;
+    gap: $sp-1;
 
     .icon {
         height: 38px;
@@ -96,18 +96,18 @@
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 100%);
     border: 2px dashed rgba(255, 255, 255, 0.6);
     border-radius: 8px;
-    padding: $space-xxxxl;
+    padding: $sp-8;
 
-    margin-top: $space-xxl;
+    margin-top: $sp-6;
     @media (max-width: 1150px) {
-        padding: $space-lg;
+        padding: $sp-4;
     }
 }
 
 .courses {
     display: flex;
     flex-direction: column;
-    gap: $space-lg;
+    gap: $sp-4;
 
-    margin-bottom: $space-mx;
+    margin-bottom: $sp-10;
 }

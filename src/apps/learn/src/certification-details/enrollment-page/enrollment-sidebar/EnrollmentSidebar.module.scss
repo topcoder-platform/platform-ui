@@ -10,7 +10,7 @@
     .freeLabel {
         @include freeLabel;
 
-        margin-bottom: $space-sm;
+        margin-bottom: $sp-2;
     }
 
     :global(.strike) {
@@ -22,7 +22,7 @@
     }
 
     strong {
-        margin-top: $space-sm;
+        margin-top: $sp-2;
         display: block;
     }
 }
@@ -30,9 +30,9 @@
 .headerPayment {
     background: $tc-grad20;
     text-align: center;
-    padding: $space-xxxxl 0;
-    border-top-left-radius: $space-sm;
-    border-top-right-radius: $space-sm;
+    padding: $sp-8 0;
+    border-top-left-radius: $sp-2;
+    border-top-right-radius: $sp-2;
 
     .priceLabel {
         color: $tc-white;
@@ -52,7 +52,7 @@
         line-height: 22px;
         font-family: $font-barlow;
         font-weight: $font-weight-semibold;
-        margin-bottom: $space-sm;
+        margin-bottom: $sp-2;
     }
 
     :global(.body-small-bold) {
@@ -65,18 +65,18 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: $space-lg;
+    gap: $sp-4;
 
     width: 100%;
     height: 320px;
 
     background: $black-5;
-    border-radius: $space-sm;
+    border-radius: $sp-2;
 
-    margin-bottom: $space-xxl;
+    margin-bottom: $sp-6;
 
     @include ltemd {
-        margin-top: $space-lg;
+        margin-top: $sp-4;
     }
 }
 
@@ -100,7 +100,7 @@
 .paymentSuccess {
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
-    padding: $space-xxl;
+    padding: $sp-6;
 
     .paymentSuccessInner {
         background: $turq-15;
@@ -110,13 +110,13 @@
         flex-direction: column;
         align-items: center;
         text-align: center;
-        padding: $space-xl $space-xl $space-mxx;
+        padding: $sp-5 $sp-5 $sp-12;
         color: $turq-160;
 
         .successIcon {
             min-width: 40px;
             width: 40px;
-            margin-bottom: $space-md;
+            margin-bottom: $sp-3;
         }
     }
 }

@@ -3,11 +3,11 @@
 .skills {
     display: flex;
     flex-wrap: wrap;
-    margin-top: $space-sm;
+    margin-top: $sp-2;
 
     >div {
-        margin-right: $space-sm;
-        margin-bottom: $space-sm;
+        margin-right: $sp-2;
+        margin-bottom: $sp-2;
 
         &:last-child {
             margin-right: 0;
@@ -18,7 +18,7 @@
 .infoText {
     font-style: italic;
     color: $black-60;
-    margin-right: $space-sm;
+    margin-right: $sp-2;
 
     &:last-child {
         margin-right: 0;

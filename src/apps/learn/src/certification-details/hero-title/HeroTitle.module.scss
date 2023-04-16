@@ -3,12 +3,12 @@
 .wrap {
     display: flex;
     align-items: flex-start;
-    gap: $space-xxl;
-    margin-bottom: $space-lg;
+    gap: $sp-6;
+    margin-bottom: $sp-4;
 }
 
 .text {
     h1 {
-        margin-bottom: $space-sm;
+        margin-bottom: $sp-2;
     }
 }

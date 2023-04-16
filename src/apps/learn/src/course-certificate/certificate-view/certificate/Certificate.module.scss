@@ -8,7 +8,7 @@
 
 .details {
     width: 55%;
-    padding: calc($space-mx + $space-lg);
+    padding: calc($sp-10 + $sp-4);
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -21,7 +21,7 @@
     }
 
     :global(.large-container) & {
-        padding-left: calc($space-mx + $space-mxx);
+        padding-left: calc($sp-10 + $sp-12);
     }
 
     h2 {
@@ -35,7 +35,7 @@
         font-size: 48px;
         line-height: 50px;
         color: $tc-black;
-        margin-top: $space-sm;
+        margin-top: $sp-2;
     }
 
     h1 {
@@ -90,13 +90,13 @@
 }
 
 .username {
-    margin-top: calc($space-mx + $space-sm);
+    margin-top: calc($sp-10 + $sp-2);
 }
 
 .tc-handle {
     color: $turq-140;
 
-    margin-top: $space-xl;
+    margin-top: $sp-5;
 }
 
 .badges {
@@ -143,7 +143,7 @@
 .divider {
     width: $border;
     background: $black-10;
-    margin: 0 $space-lg;
+    margin: 0 $sp-4;
     flex: 0 0 auto;
 }
 
@@ -157,7 +157,7 @@
 }
 
 .vendor-logo {
-    margin-top: $space-sm;
+    margin-top: $sp-2;
     display: flex;
     justify-content: flex-end;
 

@@ -9,7 +9,7 @@
     background-color: $black-5;
     border-radius: 4px;
     width: 100%;
-    padding: $space-xxxxl;
+    padding: $sp-8;
     position: relative;
 
     @include ltemd {
@@ -17,7 +17,7 @@
     }
 
     .fileName {
-        margin-bottom: $space-sm;
+        margin-bottom: $sp-2;
         text-align: center;
     }
 

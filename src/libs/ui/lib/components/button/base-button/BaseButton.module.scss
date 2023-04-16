@@ -11,10 +11,10 @@
 
     justify-content: center;
     align-items: center;
-    gap: $pad-1;
+    gap: $sp-1;
 
-    font-size: $pad-3;
-    line-height: $pad-6;
+    font-size: $sp-3;
+    line-height: $sp-6;
 
     letter-spacing: 0.008em;
     text-transform: uppercase;
@@ -29,21 +29,21 @@
     // Define button sizes
     &:global(.btn-size-sm) {
         @include pad(0, 4);
-        border-radius: $pad-6;
+        border-radius: $sp-6;
     }
     &, &:global(.btn-size-md) {
         @include pad(1, 5);
-        border-radius: $pad-8;
+        border-radius: $sp-8;
     }
     &:global(.btn-size-lg) {
         @include pad(2, 6);
-        border-radius: $pad-10;
-        font-size: $pad-3 + 2px;
+        border-radius: $sp-10;
+        font-size: $sp-3 + 2px;
     }
     &:global(.btn-size-xl) {
         @include pad(3, 6);
-        border-radius: $pad-12;
-        font-size: $pad-4;
+        border-radius: $sp-12;
+        font-size: $sp-4;
     }
     &:global(.btn-size-full) {
         width: 100%;

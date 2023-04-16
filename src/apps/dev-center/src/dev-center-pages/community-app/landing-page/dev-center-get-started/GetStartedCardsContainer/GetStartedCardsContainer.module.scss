@@ -4,13 +4,13 @@
     display: flex;
     flex-direction: row;
     justify-content: center;
-    margin-top: $space-xxxxl;
-    gap: $space-xxxxl;
+    margin-top: $sp-8;
+    gap: $sp-8;
 
     @include ltemd {
         flex-direction: column;
         align-items: center;
-        margin-top: $space-xxl;
+        margin-top: $sp-6;
     }
 
     .communityTitle {

@@ -5,8 +5,8 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding-top: $space-lg;
-  padding-right: $space-sm;
+  padding-top: $sp-4;
+  padding-right: $sp-2;
 
   @include ltemd {
     flex-direction: column;
@@ -14,11 +14,11 @@
   }
 
   a {
-    margin-right: $space-sm;
+    margin-right: $sp-2;
 
     @include ltemd {
       margin-right: 0;
-      margin-bottom: $space-sm;
+      margin-bottom: $sp-2;
     }
 
     &:last-child {

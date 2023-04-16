@@ -4,12 +4,12 @@
 .container {
   display: flex;
   flex-direction: column;
-  padding-top: $space-xxxxl;
+  padding-top: $sp-8;
 
   .badges-table-header {
     display: flex;
     justify-content: space-between;
-    padding-bottom: $space-lg;
+    padding-bottom: $sp-4;
     color: $black-60;
     @include font-barlow;
     @include font-weight-semibold;
@@ -42,7 +42,7 @@
     .badge-row {
       display: flex;
       justify-content: space-between;
-      padding: $space-lg $space-xxl;
+      padding: $sp-4 $sp-6;
 
       @include ltemd {
         flex-direction: column;
@@ -60,13 +60,13 @@
         .badge-image {
           width: 48px;
           height: 48px;
-          margin-right: $space-xl;
+          margin-right: $sp-5;
         }
 
         .badge-image-disabled {
           width: 48px;
           height: 48px;
-          margin-right: $space-xl;
+          margin-right: $sp-5;
           opacity: 0.5;
           filter: grayscale(1);
         }
@@ -84,11 +84,11 @@
         align-items: center;
 
         @include ltemd {
-          margin: $space-sm 0;
+          margin: $sp-2 0;
         }
 
         .action-btn {
-          margin-right: $space-sm;
+          margin-right: $sp-2;
 
           &:last-child {
             margin-right: 0;

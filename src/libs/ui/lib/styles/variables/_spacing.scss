@@ -1,83 +1,24 @@
 @import './layouts';
 
-/* Left Col includes the header logo link and the sections container */
-$left-col-width-md: $header-height;
-$left-col-width-lg: calc(1.2 * $header-height);
-$left-col-width-xl: calc(1.3 * $header-height);
-
-/* TODO: determine which UI library to use and replace below */
-
-/* Padding */
 $border-xs: 1px;
 $border: 2px;
-$space-xs: calc(2 * $border); // 4
-$space-sm: calc(2 * $space-xs); // 8
-$space-md: calc(3 * $space-xs); // 12
-$space-lg: calc(4 * $space-xs); // 16
-$space-xl: calc(5 * $space-xs); // 20
-$space-xxl: calc(6 * $space-xs); // 24
-$space-xxxl: calc(7 * $space-xs); // 28
-$space-xxxxl: calc(8 * $space-xs); // 32
-$space-mx: calc(8 * $space-xs + $space-sm); // 40
-$space-mxx: calc(12 * $space-xs); // 48
 
-$pad: 4px;
-$pad-1: calc(1 * $pad);
-$pad-2: calc(2 * $pad);
-$pad-3: calc(3 * $pad);
-$pad-4: calc(4 * $pad);
-$pad-5: calc(5 * $pad);
-$pad-6: calc(6 * $pad);
-$pad-7: calc(7 * $pad);
-$pad-8: calc(8 * $pad);
-$pad-9: calc(9 * $pad);
-$pad-10: calc(10 * $pad);
-$pad-11: calc(11 * $pad);
-$pad-12: calc(12 * $pad);
-$pad-13: calc(13 * $pad);
-$pad-14: calc(14 * $pad);
-$pad-15: calc(15 * $pad);
-
-@mixin pad($n, $m) {
-    @if $m {
-        padding: $n * $pad $m * $pad;
-    } @else {
-        padding: $n * $pad;
-    }
-}
-
-@mixin padLeft($n) {
-    padding-left: $n * $pad;
-}
-
-@mixin padRight($n) {
-    padding-left: $n * $pad;
-}
-
-@mixin padX($n, $m:null) {
-    padding-left: $n * $pad;
-
-    @if $m != null {
-        padding-right: $m * $pad;
-    } @else {
-        padding-right: $n * $pad;
-    }
-}
-
-@mixin padTop($n) {
-    padding-top: $n * $pad;
-}
-
-@mixin padBottom($n) {
-    padding-bottom: $n * $pad;
-}
-
-@mixin padY($n, $m:null) {
-    padding-top: $n * $pad;
-
-    @if $m != null {
-        padding-top: $m * $pad;
-    } @else {
-        padding-bottom: $n * $pad;
-    }
-}
+$sp: 4px;
+$sp-1: calc(1 * $sp); // 4px
+$sp-2: calc(2 * $sp); // 8px
+$sp-3: calc(3 * $sp); // 12px
+$sp-35: calc(3.5 * $sp); // 14px
+$sp-4: calc(4 * $sp); // 16px
+$sp-45: calc(4.5 * $sp); // 18px
+$sp-5: calc(5 * $sp); // 20px
+$sp-55: calc(5.5 * $sp); // 22px
+$sp-6: calc(6 * $sp); // 24px
+$sp-7: calc(7 * $sp); // 28px
+$sp-8: calc(8 * $sp); // 32px
+$sp-9: calc(9 * $sp); // 36px
+$sp-10: calc(10 * $sp); // 40px
+$sp-11: calc(11 * $sp); // 44px
+$sp-12: calc(12 * $sp); // 48px
+$sp-13: calc(13 * $sp); // 52px
+$sp-14: calc(14 * $sp); // 56px
+$sp-15: calc(15 * $sp); // 60px

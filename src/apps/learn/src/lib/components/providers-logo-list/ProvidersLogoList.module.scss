@@ -3,7 +3,7 @@
 .wrap {
     display: flex;
     align-items: center;
-    gap: $space-sm;
+    gap: $sp-2;
     text-transform: none;
 
     @include ltelg {
@@ -13,7 +13,7 @@
     .providersWrap {
         display: flex;
         align-items: center;
-        gap: $space-lg;
+        gap: $sp-4;
         margin-top: -3px;
 
         @include ltelg {

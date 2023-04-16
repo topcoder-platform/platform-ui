@@ -3,8 +3,8 @@
 .wrap {
     display: flex;
     flex-direction: column;
-    margin-bottom: $space-xxxxl;
-    margin-top: $space-xxl;
+    margin-bottom: $sp-8;
+    margin-top: $sp-6;
 
     @include ltemd {
         margin-bottom: 0;
@@ -18,8 +18,8 @@
             font-family: $font-roboto;
             background: $blue-100;
 
-            padding: 0 $space-sm;
-            margin-left: $space-sm;
+            padding: 0 $sp-2;
+            margin-left: $sp-2;
             border-radius: 50px;
             color: $tc-white;
         }
@@ -29,22 +29,22 @@
         display: flex;
         flex-direction: column;
         position: relative;
-        padding: $space-xxxxl;
-        margin: $space-mx 0 0;
+        padding: $sp-8;
+        margin: $sp-10 0 0;
         background-image: url("./assets/certs-banner-bg.png");
         background-size: cover;
         border-top-left-radius: 8px;
         border-top-right-radius: 8px;
 
         @include ltemd {
-            padding: 88px $space-lg $space-lg;
-            margin: $space-lg 0 0;
+            padding: 88px $sp-4 $sp-4;
+            margin: $sp-4 0 0;
             background-image: url("./assets/certs-banner-bg-mobile.png");
         }
 
         >h2 {
             color: $tc-white;
-            margin-bottom: $space-lg;
+            margin-bottom: $sp-4;
             font-family: $font-barlow;
             font-size: 24px;
 
@@ -62,16 +62,16 @@
     .freeBanner {
         display: flex;
         align-items: center;
-        padding: $space-lg $space-xxxxl;
-        margin: 0 0 $space-mx;
+        padding: $sp-4 $sp-8;
+        margin: 0 0 $sp-10;
         background-image: url("./assets/free-banner-bg.png");
         background-size: cover;
         border-bottom-left-radius: 8px;
         border-bottom-right-radius: 8px;
 
         @include ltemd {
-            padding: $space-lg $space-xxl;
-            margin-bottom: $space-xxl;
+            padding: $sp-4 $sp-6;
+            margin-bottom: $sp-6;
             background-image: url("./assets/free-banner-bg-mobile.png");
 
             >span {
@@ -84,7 +84,7 @@
     .certsList {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: $space-xxl;
+        gap: $sp-6;
 
         // NOTE: these are not app defined breakpoints
         // but they are required for the grid to look at it's best
@@ -95,10 +95,10 @@
 }
 
 .aloneTeaseBanner {
-    margin-bottom: $space-mxx !important;
+    margin-bottom: $sp-12 !important;
     border-radius: 8px;
 
     @include ltemd {
-        margin-bottom: $space-xxl !important;
+        margin-bottom: $sp-6 !important;
     }
 }

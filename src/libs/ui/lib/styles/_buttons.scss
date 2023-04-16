@@ -3,6 +3,8 @@
 @import 'variables/spacing';
 @import 'variables/palette';
 
+// TODO: clear out the use of this file and remove it in favor of ui/components/button component
+
 .button-primary-hover {
     background-color: $turq-140;
     border-color: $turq-140;
@@ -51,27 +53,27 @@
 
     &.button-xs {
         line-height: 20px;
-        padding: 0 $space-lg;
+        padding: 0 $sp-4;
         font-size: 12px;
     }
 
     &.button-sm {
-        padding: $border $space-xl;
+        padding: $border $sp-5;
         font-size: 13px;
     }
 
     &.button-md {
-        padding: 3*$border $space-xl;
+        padding: 3*$border $sp-5;
         font-size: 13px;
     }
 
     &.button-lg {
-        padding: $space-sm $space-xxl;
+        padding: $sp-2 $sp-6;
         font-size: 14px;
     }
 
     &.button-xl {
-        padding: $space-md $space-xxl;
+        padding: $sp-3 $sp-6;
         font-size: 16px;
 
         svg {
@@ -176,9 +178,9 @@
         }
 
         svg {
-            margin-left: $space-xs;
-            height: $space-lg;
-            width: $space-lg;
+            margin-left: $sp-1;
+            height: $sp-4;
+            width: $sp-4;
         }
     }
 
@@ -191,7 +193,7 @@
     &.icon-bordered,
     &.icon {
         margin: 0;
-        padding: $space-sm calc($space-sm - $border-xs) $space-xs $space-sm;
+        padding: $sp-2 calc($sp-2 - $border-xs) $sp-1 $sp-2;
         border: 0;
         background: none;
         color: $turq-160;
@@ -220,7 +222,7 @@
 
         & {
             border: 1px solid $turq-160;
-            padding: $space-lg;
+            padding: $sp-4;
             border-radius: 50px;
         }
     }

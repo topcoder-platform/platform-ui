@@ -3,7 +3,7 @@
 
 .summary {
     display: flex;
-    gap: $space-lg;
+    gap: $sp-4;
     align-items: center;
     flex-wrap: wrap;
 }
@@ -37,11 +37,11 @@
 
 .stat-item {
     display: flex;
-    gap: $space-xs;
+    gap: $sp-1;
     align-items: center;
     > :global(.sub) {
         display: flex;
-        gap: $space-xs;
+        gap: $sp-1;
         align-items: flex-end;
     }
 }

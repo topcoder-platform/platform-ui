@@ -2,12 +2,12 @@
 @import '@libs/ui/styles/typography';
 
 .section-header {
-    margin-top: $space-xxl;
+    margin-top: $sp-6;
 }
 
 .certificate-placeholder {
     display: flex;
-    border-radius: $space-sm;
+    border-radius: $sp-2;
     border: $border-xs solid $black-20;
     background: $black-5;
     overflow: hidden;
@@ -15,12 +15,12 @@
 }
 
 .certification-details-list {
-    margin-top: $space-xxl;
+    margin-top: $sp-6;
 
     li {
         display: flex;
         align-items: center;
-        margin-top: $space-sm;
+        margin-top: $sp-2;
 
         .icon {
             width: 24px;
@@ -28,7 +28,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: $space-sm;
+            margin-right: $sp-2;
             color: $blue-140;
 
             >svg {
@@ -41,7 +41,7 @@
         :global(.tooltip-icon) {
             width: 16px;
             height: 16px;
-            margin-left: $space-sm;
+            margin-left: $sp-2;
         }
 
         :global(.quote-main) {
@@ -69,13 +69,13 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-top: $space-sm;
+    margin-top: $sp-2;
     max-width: 325px;
 
     li {
         background: $black-5;
-        border-radius: $space-xs;
-        padding: 0 $space-sm;
+        border-radius: $sp-1;
+        padding: 0 $sp-2;
         line-height: 22px;
         font-size: 14px;
         color: $black-80;
@@ -84,7 +84,7 @@
 }
 
 .providers {
-    margin-top: $space-sm;
+    margin-top: $sp-2;
 
     >span {
         @extend .body-small-medium;
@@ -104,13 +104,13 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    margin-top: $space-xxl;
+    margin-top: $sp-6;
 }
 
 .tag {
     display: block;
-    padding: $space-xs calc($space-sm + $border);
-    border-radius: $space-xs;
+    padding: $sp-1 calc($sp-2 + $border);
+    border-radius: $sp-1;
     color: $tc-white;
 
     &.enrolled {

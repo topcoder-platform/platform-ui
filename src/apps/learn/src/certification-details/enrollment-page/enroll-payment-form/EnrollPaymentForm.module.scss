@@ -3,14 +3,14 @@
 @import '@libs/ui/styles/inputs';
 
 .payment-form {
-    padding: $space-xxl;
+    padding: $sp-6;
 
     @include ltemd {
-        padding: $space-lg;
+        padding: $sp-4;
     }
 
     > h3 {
-        margin-bottom: $space-xxl;
+        margin-bottom: $sp-6;
         font-family: $font-barlow;
     }
 
@@ -24,12 +24,12 @@
     }
 
     .cardDate {
-        margin-right: $space-sm;
+        margin-right: $sp-2;
     }
 
     .input-wrap-wrapper {
         display: flex;
-        margin-bottom: $space-sm;
+        margin-bottom: $sp-2;
         > div {
             flex: 1;
         }
@@ -42,7 +42,7 @@
         .link {
             @extend .body-main-link;
             color: $link-blue-dark;
-            margin-left: $space-xs;
+            margin-left: $sp-1;
             cursor: pointer;
         }
     }
@@ -51,24 +51,24 @@
         width: 100%;
 
         @include ltemd {
-            margin-top: $space-lg;
+            margin-top: $sp-4;
         }
     }
 
     .error {
         background-color: $red-25;
-        padding: $space-lg;
+        padding: $sp-4;
         border: 1px solid $red-120;
         border-radius: 4px;
         color: $red-120;
-        margin-bottom: $space-xl;
+        margin-bottom: $sp-5;
         display: flex;
         align-items: flex-start;
 
         .errorIcon {
             width: 20px;
             min-width: 20px;
-            margin-right: $space-sm;
+            margin-right: $sp-2;
         }
 
         .errorMsg {

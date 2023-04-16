@@ -27,13 +27,13 @@
 .pane-outline {
     width: 32px;
     height: 100%;
-    border-radius: 0 $space-lg $space-lg 0;
-    padding: $space-lg 0;
+    border-radius: 0 $sp-4 $sp-4 0;
+    padding: $sp-4 0;
     background: $blue-140;
 
     display: flex;
     align-items: center;
-    gap: $space-sm;
+    gap: $sp-2;
 
     color: $tc-white;
 
@@ -55,8 +55,8 @@
     @include ltemd {
         width: 100%;
         height: auto;
-        padding: $space-sm $space-lg;
-        border-radius: 0 0 $space-lg $space-lg;
+        padding: $sp-2 $sp-4;
+        border-radius: 0 0 $sp-4 $sp-4;
         margin-top: -1px;
 
         svg {
@@ -67,7 +67,7 @@
 
 .content {
     background: $tc-grad15;
-    padding: $space-lg;
+    padding: $sp-4;
     color: $tc-white;
     overflow: auto;
 

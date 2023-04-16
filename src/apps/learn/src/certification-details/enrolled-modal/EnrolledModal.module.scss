@@ -22,14 +22,14 @@
         min-height: 224px;
 
         :global(.modal-body) {
-            padding: $space-xxl;
+            padding: $sp-6;
             margin: 0;
 
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
             align-items: flex-start;
-            gap: $space-xxl;
+            gap: $sp-6;
 
             @include ltemd {
                 justify-content: center;

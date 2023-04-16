@@ -8,21 +8,21 @@
         display: flex;
         flex-direction: column;
         position: relative;
-        padding: $space-xxxxl;
-        margin: $space-xxl 0 $space-mx;
+        padding: $sp-8;
+        margin: $sp-6 0 $sp-10;
         background-image: url("./assets/courses-banner-bg.png");
         background-size: cover;
         border-radius: 8px;
 
         @include ltemd {
-            padding: 88px $space-lg $space-lg;
-            margin: 0 0 $space-xxl;
+            padding: 88px $sp-4 $sp-4;
+            margin: 0 0 $sp-6;
             background-image: url("./assets/courses-banner-bg-mobile.png");
         }
 
         >h2 {
             color: $tc-white;
-            margin-bottom: $space-lg;
+            margin-bottom: $sp-4;
             font-family: $font-barlow;
 
             @include ltemd {
@@ -40,15 +40,15 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding-bottom: $space-lg;
+        padding-bottom: $sp-4;
 
         @include ltemd {
             flex-direction: column;
             align-items: flex-start;
-            padding-bottom: $space-xxl;
+            padding-bottom: $sp-6;
 
             h2 {
-                margin: $space-md 0 $space-xxl;
+                margin: $sp-3 0 $sp-6;
             }
         }
 
@@ -60,8 +60,8 @@
                 font-family: $font-roboto;
                 background: $blue-100;
 
-                padding: 0 $space-sm;
-                margin-left: $space-sm;
+                padding: 0 $sp-2;
+                margin-left: $sp-2;
                 border-radius: 50px;
                 color: $tc-white;
             }
@@ -72,8 +72,8 @@
 .coursesList {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: $space-xl;
-    padding: $space-xxl 0 $space-mx;
+    gap: $sp-5;
+    padding: $sp-6 0 $sp-10;
 
     &:last-child {
         border-bottom: none;
@@ -87,6 +87,6 @@
 
     @include ltemd {
         grid-template-columns: repeat(1, 1fr);
-        padding: $space-lg 0 $space-xxl;
+        padding: $sp-4 0 $sp-6;
     }
 }

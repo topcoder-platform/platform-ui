@@ -2,10 +2,10 @@
 
 .wrap {
     min-width: 323px;
-    padding-left: $space-xxxxl;
+    padding-left: $sp-8;
   
     border-left: $border-xs solid $black-10;
-    margin-left: $space-xxxxl;
+    margin-left: $sp-8;
     color: $black-100;
 }
 
@@ -16,7 +16,7 @@
     font-size: 14px;
     line-height: 14px;
     color: $turq-160;
-    margin-top: $space-lg;
+    margin-top: $sp-4;
     cursor: pointer;
     text-transform: uppercase;
 }

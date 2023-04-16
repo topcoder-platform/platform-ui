@@ -4,17 +4,17 @@
     margin-top: 80px;
 
     @include ltelg {
-        margin-top: $space-xxxxl;
+        margin-top: $sp-8;
     }
 
     > h2 {
-        margin-bottom: $space-xxl;
+        margin-bottom: $sp-6;
     }
 
     > ul {
         list-style: disc;
-        padding-left: $space-xxl;
-        padding-left: $space-xxl;
+        padding-left: $sp-6;
+        padding-left: $sp-6;
     }
 
     &.no-top {
@@ -25,12 +25,12 @@
 .certifCompleted {
     display: flex;
     align-items: center;
-    margin-bottom: $space-mx;
-    gap: $space-lg;
+    margin-bottom: $sp-10;
+    gap: $sp-4;
     
     @include ltemd {
         flex-direction: column;
         align-items: flex-start;
-        margin-bottom: $space-xxxxl;
+        margin-bottom: $sp-8;
     }
 }

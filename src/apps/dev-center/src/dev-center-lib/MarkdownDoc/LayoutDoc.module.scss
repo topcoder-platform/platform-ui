@@ -4,12 +4,12 @@
 .main {
     display: flex;
     width: 100%;
-    margin: $space-xxxxl 0;
+    margin: $sp-8 0;
 }
 
 .mainContent {
     width: calc(100% - $side-nav-width);
-    padding: 0 $space-xxxxl 0 0;
+    padding: 0 $sp-8 0 0;
     min-height: calc(100vh - 520px);
 
     &.disableToc {
@@ -20,7 +20,7 @@
 
 @include ltelg {
     .main {
-        margin: $space-xxl 0;
+        margin: $sp-6 0;
 
         > .mainContent {
             width: 100%;

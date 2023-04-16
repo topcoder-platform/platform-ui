@@ -9,7 +9,7 @@
     color: inherit;
     text-transform: uppercase;
 
-    padding: 0 0 $space-lg;
+    padding: 0 0 $sp-4;
 }
 
 .divider {
@@ -28,12 +28,12 @@
     color: $black-60;
     text-transform: uppercase;
 
-    padding: $space-lg 0 0;
+    padding: $sp-4 0 0;
 }
 
 @include ltelg {
     .header {
-        padding: $space-lg 0 0;
+        padding: $sp-4 0 0;
     }
 
     .title {

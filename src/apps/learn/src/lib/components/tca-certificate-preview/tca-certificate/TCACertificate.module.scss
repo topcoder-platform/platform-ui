@@ -71,7 +71,7 @@
 
 .details {
     width: 55%;
-    padding: calc($space-mx + $space-lg);
+    padding: calc($sp-10 + $sp-4);
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -94,7 +94,7 @@
                 height: 40px;
                 background-color: $tc-white;
                 opacity: 0.3;
-                margin: 0 $space-lg;
+                margin: 0 $sp-4;
             }
         }
     }
@@ -110,12 +110,12 @@
             font-size: 34px;
             line-height: 32px;
             color: $black-100;
-            margin-bottom: $space-xl;
+            margin-bottom: $sp-5;
         }
 
         .certText {
             font-size: 13px;
-            margin-bottom: $space-sm;
+            margin-bottom: $sp-2;
         }
 
         .certTitle {
@@ -138,7 +138,7 @@
         align-items: center;
 
         .qrCode {
-            margin-right: $space-lg;
+            margin-right: $sp-4;
             opacity: 0.7;
             border: 0.5px solid #D4D4D4;
             border-radius: 2px;
@@ -155,7 +155,7 @@
             }
 
             .gridSeparator {
-                margin-bottom: $space-sm;
+                margin-bottom: $sp-2;
             }
         }
     }
@@ -168,7 +168,7 @@
             height: 2px;
             background: $black-10;
             border-radius: 1px;
-            margin: $space-xs 0;
+            margin: $sp-1 0;
         }
 
         >span {
@@ -187,6 +187,6 @@
 // print/download styles
 :global(.canvas-clone) {
     .certText {
-        margin-bottom: $space-xxxl !important;
+        margin-bottom: $sp-7 !important;
     }
 }

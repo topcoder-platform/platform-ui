@@ -11,13 +11,13 @@
 .column {
     &:first-child {
         @include ltemd {
-            padding-bottom: $space-lg;
+            padding-bottom: $sp-4;
         }
     }
 
     @include gtemd {
         flex: 50%;
-        padding-right: $space-mxx;
+        padding-right: $sp-12;
     }
 }
 
@@ -33,7 +33,7 @@
 }
 
 .exampleImg {
-    padding: $space-xs $border;
+    padding: $sp-1 $border;
     max-height: 100%
 }
 
@@ -42,5 +42,5 @@
     line-height: 22px;
     text-transform: uppercase;
     font-weight: 600;
-    padding-bottom: $space-sm;
+    padding-bottom: $sp-2;
 }

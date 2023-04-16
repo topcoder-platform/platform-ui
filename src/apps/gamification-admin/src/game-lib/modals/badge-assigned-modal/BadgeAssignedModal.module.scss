@@ -9,7 +9,7 @@
     .badge {
         display: flex;
         align-items: center;
-        margin-bottom: $space-xxl;
+        margin-bottom: $sp-6;
         
         @include ltemd {
             margin-bottom: 0;
@@ -18,13 +18,13 @@
         .badge-image {
             width: 43px;
             height: 43px;
-            margin-right: $space-xl;
+            margin-right: $sp-5;
         }
 
         .badge-image-disabled {
             width: 43px;
             height: 43px;
-            margin-right: $space-xl;
+            margin-right: $sp-5;
             opacity: 0.5;
             filter: grayscale(1);
         }
@@ -47,7 +47,7 @@
             }
 
             a {
-                margin-right: $space-md;
+                margin-right: $sp-3;
             }
         }
     }

@@ -21,7 +21,7 @@
     @include ltemd {
         width: 100%;
         height: auto;
-        border-radius: 0 0 $space-lg $space-lg;
+        border-radius: 0 0 $sp-4 $sp-4;
         margin-top: -1px;
     }
 }
@@ -32,6 +32,6 @@
     border-bottom: 2px solid $black-10;
 
     &:first-of-type:not(:first-child) {
-        margin-top: $space-mxx;
+        margin-top: $sp-12;
     }
 }

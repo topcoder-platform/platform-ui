@@ -1,20 +1,20 @@
 @import '@libs/ui/styles/includes';
 
 .card {
-    padding-left: $space-xxl;
-    padding-right: $space-xxl;
+    padding-left: $sp-6;
+    padding-right: $sp-6;
     width: 100%;
 
     @include ltemd {
-        padding-left: $space-lg;
-        padding-right: $space-lg;
+        padding-left: $sp-4;
+        padding-right: $sp-4;
     }
 
     .titleContainer{
-        margin-top: $space-xxxxl;
+        margin-top: $sp-8;
 
         @include ltemd {
-            margin-top: $space-xxl;
+            margin-top: $sp-6;
         }
 
         .headline {
@@ -22,7 +22,7 @@
             font-size: 26px;
             
             text-align: left;
-            margin-bottom: $space-xs;
+            margin-bottom: $sp-1;
         }
 
         .summary {
@@ -32,7 +32,7 @@
     }
 
     .image {
-        margin-top: $space-xxl;
+        margin-top: $sp-6;
         pointer-events: none;
     }
 }

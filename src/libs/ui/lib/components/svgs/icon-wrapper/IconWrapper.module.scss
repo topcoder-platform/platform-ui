@@ -3,9 +3,9 @@
 .iconWrapper {
   @include icon-mxx;
 
-  margin: 0 $space-lg $space-lg $space-lg;
+  margin: 0 $sp-4 $sp-4 $sp-4;
   background: $tc-grad12;
-  border-radius: $space-xxl;
+  border-radius: $sp-6;
   display: flex;
   align-items: center;
   justify-content: center;

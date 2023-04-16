@@ -14,12 +14,12 @@ export interface ButtonProps extends IconButtonProps, BaseButtonProps {
     children?: ReactNode
 }
 
-const UiButton: FC<ButtonProps> = props => {
-    const Button: FC<IconButtonProps> | FC<BaseButtonProps> = props.icon ? IconButton : BaseButton
+const Button: FC<ButtonProps> = props => {
+    const ButtonComponent: FC<IconButtonProps> | FC<BaseButtonProps> = props.icon ? IconButton : BaseButton
 
     return (
-        <Button {...props} />
+        <ButtonComponent {...props} />
     )
 }
 
-export default UiButton
+export default Button

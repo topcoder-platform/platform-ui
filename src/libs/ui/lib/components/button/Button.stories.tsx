@@ -14,7 +14,7 @@ const meta: Meta<FC<ButtonProps & IconButtonProps & BaseButtonProps>> = {
     },
     component: Button,
     tags: ['autodocs'],
-    title: 'Button',
+    title: 'Design System/Atoms/Button',
 }
 
 export default meta

@@ -11,11 +11,11 @@
 .hero {
     display: flex;
     flex-direction: column;
-    padding-top: calc($space-mx * 2);
+    padding-top: calc($sp-10 * 2);
     color: $tc-white;
 
     @include ltelg {
-        padding-top: $space-mx;
+        padding-top: $sp-10;
     }
 
     &-dev {
@@ -52,8 +52,8 @@
     
     .heroInner {
         display: flex;
-        gap: $space-mx;
-        padding-bottom: calc($space-mx * 2);
+        gap: $sp-10;
+        padding-bottom: calc($sp-10 * 2);
         overflow: hidden;
         justify-content: center;
 
@@ -70,7 +70,7 @@
             .member {
                 display: flex;
                 align-items: center;
-                margin-bottom: $space-mx;
+                margin-bottom: $sp-10;
 
                 >svg,
                 >img {
@@ -88,25 +88,25 @@
                     display: flex;
                     flex-direction: column;
                     align-items: flex-start;
-                    margin-left: $space-lg;
+                    margin-left: $sp-4;
 
                     :global(.body-large-bold) {
                         font-size: 32px;
-                        margin-bottom: $space-sm;
+                        margin-bottom: $sp-2;
                     }
 
                     .verifyStatus {
                         display: flex;
                         align-items: center;
                         min-width: 185px;
-                        margin-top: $space-sm;
+                        margin-top: $sp-2;
 
                         >svg {
                             max-width: 24px;
                         }
 
                         span {
-                            margin: 0 $space-sm;
+                            margin: 0 $sp-2;
                         }
 
                         .toolTipIcon {
@@ -124,7 +124,7 @@
                 font-size: 64px;
                 line-height: 64px;
                 text-transform: uppercase;
-                margin-bottom: $space-lg;
+                margin-bottom: $sp-4;
                 max-width: 596px;
             }
         }
@@ -147,8 +147,8 @@
             
             .certActionBtns {
                 position: absolute;
-                bottom: $space-xxl;
-                right: $space-xxl;
+                bottom: $sp-6;
+                right: $sp-6;
 
                 .certActionBtn {
                     color: $turq-160;
@@ -168,7 +168,7 @@
     margin-bottom: 120px;
     
     @include ltemd {
-        margin-bottom: $space-lg;
+        margin-bottom: $sp-4;
     }
 
     h2 {
@@ -177,39 +177,39 @@
 
     ul {
         list-style: disc;
-        margin: 0 0 0 $space-xxl;
+        margin: 0 0 0 $sp-6;
         color: $tc-black;
     }
 
     .courses {
         display: flex;
         flex-direction: column;
-        padding: $space-xl $space-xxxxl;
+        padding: $sp-5 $sp-8;
         background: $black-5;
-        border-radius: $space-sm;
-        margin-bottom: $space-mx;
+        border-radius: $sp-2;
+        margin-bottom: $sp-10;
         
         @include ltemd {
             border-radius: 0;
-            margin-left: -$space-xxl;
-            margin-right: -$space-xxl;
-            margin-bottom: $space-xxxxl;
+            margin-left: -$sp-6;
+            margin-right: -$sp-6;
+            margin-bottom: $sp-8;
         }
 
         @include ltesm {
-            margin-left: -$space-lg;
-            margin-right: -$space-lg;
+            margin-left: -$sp-4;
+            margin-right: -$sp-4;
         }
 
         @media (max-width: 1150px) {
-            padding: $space-xxxxl $space-lg $space-lg;
+            padding: $sp-8 $sp-4 $sp-4;
         }
 
         .coursesGrid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: $space-xl;
-            margin-top: $space-xxl;
+            gap: $sp-5;
+            margin-top: $sp-6;
 
             @include ltelg {
                 grid-template-columns: 1fr 1fr;
@@ -221,15 +221,15 @@
 
             .courseCard {
                 background-color: $tc-white;
-                border-radius: $space-sm;
-                padding: $space-lg;
+                border-radius: $sp-2;
+                padding: $sp-4;
                 display: flex;
                 align-items: center;
 
                 svg {
                     width: 48px;
                     height: 48px;
-                    margin-right: $space-lg;
+                    margin-right: $sp-4;
                 }
             }
         }
@@ -245,8 +245,8 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: $space-sm;
-    margin-top: $space-lg;
+    gap: $sp-2;
+    margin-top: $sp-4;
 }
 
 .certActionBtn {
@@ -256,11 +256,11 @@
 .shareBtn {
     display: inline-flex;
     align-items: center;
-    gap: $space-xs;
+    gap: $sp-1;
 
-    margin-top: $space-mxx;
+    margin-top: $sp-12;
     @include ltelg {
-        margin-top: $space-mx;
+        margin-top: $sp-10;
     }
 
     &:global(.secondary) {
@@ -270,15 +270,15 @@
 
 .colsWrap {
     display: flex;
-    margin-top: $space-mxx;
-    margin-bottom: $space-mx;
+    margin-top: $sp-12;
+    margin-bottom: $sp-10;
     h2 {
-        margin-bottom: $space-xxl;
+        margin-bottom: $sp-6;
     }
     
     @include ltemd {
         flex-direction: column;
-        gap: $space-xxxxl;
+        gap: $sp-8;
     }
 }
 
@@ -286,10 +286,10 @@
     &:last-child {
         max-width: 430px;
         flex: 0 1 auto;
-        padding-right: $space-xxxxl;
+        padding-right: $sp-8;
     }
     .shareBtn {
-        margin-top: $space-xxl;
+        margin-top: $sp-6;
     }
 }
 
@@ -297,7 +297,7 @@
     background: $black-10;
     width: 1px;
     flex: 0 0 auto;
-    margin: 0 $space-xxxxl;
+    margin: 0 $sp-8;
     
     @include ltemd {
         display: none;
@@ -306,7 +306,7 @@
 
 .modalView {
     .hero {
-        padding-top: $space-mx;
+        padding-top: $sp-10;
         min-height: 380px;
 
         @include ltesm {
@@ -317,8 +317,8 @@
         .heroInner {
             margin-bottom: 0;
             flex-direction: row;
-            padding-right: $space-lg;
-            padding-bottom: $space-mx;
+            padding-right: $sp-4;
+            padding-bottom: $sp-10;
 
             @include ltesm {
                 flex-direction: column;
@@ -327,7 +327,7 @@
 
             .heroLeft {
                 .member {
-                    margin-bottom: $space-xxxxl;
+                    margin-bottom: $sp-8;
 
                     >svg,
                     >img {

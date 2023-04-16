@@ -6,10 +6,10 @@
   @include font-roboto;
 
   display: flex;
-  padding: $space-sm;
+  padding: $sp-2;
   background-color: $tc-black;
   color: $black-5;
-  border-radius: $space-sm;
+  border-radius: $sp-2;
   opacity: 1 !important;
   box-shadow: 0 1px 5px $tips-shadow;
   text-transform: none;

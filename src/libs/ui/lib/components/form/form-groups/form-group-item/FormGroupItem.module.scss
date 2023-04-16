@@ -15,7 +15,7 @@
 
     @include ltemd {
         flex-direction: column;
-        padding: $space-xxl 0 $space-sm 0;
+        padding: $sp-6 0 $sp-2 0;
         padding-top: 0;
         padding-bottom: 0;
     }
@@ -35,7 +35,7 @@
         .group-item-instructions {
             @extend .body-small;
             @include font-roboto;
-            margin-top: $space-xxl;
+            margin-top: $sp-6;
         }
     }
 
@@ -44,7 +44,7 @@
         margin-top: 46px;
 
         @include ltemd {
-            margin-top: $space-xxl;
+            margin-top: $sp-6;
         }
     }
 
@@ -52,13 +52,13 @@
         display: inline;
 
         .group-item-instructions {
-            margin-top: $space-xxl;
-            margin-bottom: $space-mxx;
+            margin-top: $sp-6;
+            margin-bottom: $sp-12;
         }
 
     }
 
     .full-width-items {
-        margin-top: $space-xxxl;
+        margin-top: $sp-7;
     }
 }

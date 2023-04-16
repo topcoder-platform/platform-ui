@@ -2,7 +2,7 @@
 
 .hero-wrap {
     svg:global(.tca-logo) {
-        margin-bottom: $space-xxl;
+        margin-bottom: $sp-6;
         max-width: calc(100% - 70px);
     }
 
@@ -18,10 +18,10 @@
 }
 
 .courses-section {
-    padding: $space-xxxxl 0;
+    padding: $sp-8 0;
     position: relative;
 
     @include ltemd {
-        padding-top: $space-xxl;
+        padding-top: $sp-6;
     }
 }

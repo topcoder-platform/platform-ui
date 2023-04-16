@@ -9,7 +9,7 @@
             color: $turq-160;
         }
         :global(.modal-body) {
-            gap: $space-lg;
+            gap: $sp-4;
         }
     }
 
@@ -24,7 +24,7 @@
         align-items: center;
         justify-content: center;
 
-        padding: $space-sm;
+        padding: $sp-2;
 
         &:hover {
             background: transparent;
@@ -46,15 +46,15 @@
 
 .shareBtnsWrap {
     display: flex;
-    gap: $space-lg;
+    gap: $sp-4;
 }
 
 .shareUrl {
     display: flex;
-    gap: $space-lg;
+    gap: $sp-4;
     background: $black-5;
-    padding: $space-sm $space-lg;
-    border-radius: $space-sm;
+    padding: $sp-2 $sp-4;
+    border-radius: $sp-2;
 
     input {
         flex: 1 1 auto;
