@@ -157,7 +157,7 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                         styles.tag,
                         completed
                             ? styles[
-                            `completed-${props.certification.certificationCategory.track.toLowerCase() || 'dev'}`
+                                `completed-${props.certification.certificationCategory.track.toLowerCase() || 'dev'}`
                             ]
                             : styles.enrolled,
                     )}
