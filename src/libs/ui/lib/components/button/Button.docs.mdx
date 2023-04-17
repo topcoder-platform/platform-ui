@@ -1,0 +1,66 @@
+import { Canvas, Meta, Story, Controls } from '@storybook/blocks';
+
+import * as ButtonStories from './Button.stories';
+
+<Meta of={ButtonStories} />
+
+# Button
+
+Button is a clickable interactive element that triggers a response.
+
+You can place text and icons inside of a button.
+
+Buttons are often used for form submissions and to toggle elements into view.
+
+## Usage
+
+The component comes as different types such as `primary`, `secondary`, `link`;
+different variants such as `negative`, `danger` and `warning`;
+and have different sizes which you can use to alter the look and feel of the button.
+
+### Button Types
+
+<Canvas>
+    <Story of={ButtonStories.Primary} />
+    <Story of={ButtonStories.Secondary} />
+    <Story of={ButtonStories.Link} />
+</Canvas>
+
+### Button Sizes
+
+<Canvas>
+    <Story of={ButtonStories.PrimarySmSize} />
+    <Story of={ButtonStories.PrimaryMdSize} />
+    <Story of={ButtonStories.PrimaryLgSize} />
+    <Story of={ButtonStories.PrimaryXlSize} />
+</Canvas>
+
+### Button Variants
+
+#### Negative
+<Canvas>
+    <Story of={ButtonStories.PrimaryDanger} />
+    <Story of={ButtonStories.SecondaryDanger} />
+    <Story of={ButtonStories.LinkDanger} />
+</Canvas>
+
+#### Danger
+<Canvas>
+    <Story of={ButtonStories.PrimaryDanger} />
+    <Story of={ButtonStories.SecondaryDanger} />
+    <Story of={ButtonStories.LinkDanger} />
+</Canvas>
+
+#### Warning
+<Canvas>
+    <Story of={ButtonStories.PrimaryWarning} />
+    <Story of={ButtonStories.SecondaryWarning} />
+    <Story of={ButtonStories.LinkWarning} />
+</Canvas>
+
+## Inputs
+
+Button has the following properties:
+
+<Canvas of={ButtonStories.Primary} />
+<Controls />

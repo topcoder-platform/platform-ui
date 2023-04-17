@@ -16,8 +16,8 @@
     "cy:ci": "start-server-and-test 'serve -s build -n -p 3000' http://localhost:3000 'cy:run'",
     "report:coverage": "nyc report --reporter=html",
     "report:coverage:text": "nyc report --reporter=text",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "sb": "storybook dev -p 6006",
+    "build:sb": "storybook build"
   },
   "dependencies": {
     "@datadog/browser-logs": "^4.21.2",
