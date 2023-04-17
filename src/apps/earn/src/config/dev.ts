@@ -17,6 +17,14 @@ const DevEarnConfig: EarnConfig = {
         V4: 'https://api.topcoder-dev.com/v4',
         V5: 'https://api.topcoder-dev.com/v5',
     },
+    /* Filestack configuration for uploading Submissions
+    * These are for the development back end */
+    FILESTACK: {
+        API_KEY: 'AzFINuQoqTmqw0QEoaw9az',
+        REGION: 'us-east-1',
+        SUBMISSION_CONTAINER: 'topcoder-dev-submissions-dmz',
+    },
+
     URL: {
         COMMUNITY_APP: "https://community-app.topcoder-dev.com",
 
@@ -117,13 +125,7 @@ const DevEarnConfig: EarnConfig = {
         DEFAULT_SPACE_NAME: "default",
         DEFAULT_ENVIRONMENT: "master",
     },
-    /* Filestack configuration for uploading Submissions
-    * These are for the development back end */
-    FILESTACK: {
-        API_KEY: process.env.FILESTACK_API_KEY,
-        REGION: "us-east-1",
-        SUBMISSION_CONTAINER: process.env.FILESTACK_SUBMISSION_CONTAINER
-    },
+
     /* Time in MS to wait before refreshing challenge details after register
     * and unregister.  Used to allow API sufficent time to update.
     */

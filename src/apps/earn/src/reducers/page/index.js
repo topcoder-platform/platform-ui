@@ -8,7 +8,9 @@
 
 import { combineReducers } from "redux";
 import challengeDetails from "./challenge-details";
+import submission from "./submission";
 
 export default combineReducers({
   challengeDetails,
+  submission
 });

@@ -3,7 +3,7 @@ import _ from "lodash";
 import { EnvironmentConfig } from "~/config";
 
 import { PrimaryButton } from "../Buttons";
-import { ReactComponent as TopcoderLogo } from "../../assets/icons/logo_topcoder.svg";
+import { ReactComponent as TopcoderLogo } from "@earn/assets/icons/logo_topcoder.svg";
 import { ACCESS_DENIED_REASON } from "../../constants";
 import { styled as styledCss } from "../../utils";
 

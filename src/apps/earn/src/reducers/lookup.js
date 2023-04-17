@@ -23,6 +23,7 @@ function onGetCommunityListInit(state) {
 }
 
 function onGetCommunityListDone(state, { error, payload }) {
+  alert("onGetCommunityListDone");
   if (error) {
     return { ...state, subCommunities: [] };
   }
@@ -284,7 +285,7 @@ function create(initialState = {}) {
     {
       [a.getTagsDone]: onGetTagsDone,
       [a.getCommunityListInit]: onGetCommunityListInit,
-      [a.getCommunityListDone]: onGetCommunityListDone,
+      [`${a.onGetCommunityListDone}_SUCCESS`]: onGetCommunityListDone,
       [a.getTypesInit]: (state) => state,
       [a.getTypesDone]: onGetTypesDone,
       [a.getManufacturersInit]: onGetManufacturersInit,
