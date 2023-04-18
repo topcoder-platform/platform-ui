@@ -11,16 +11,16 @@ import {
     useRef,
     useState,
 } from 'react'
-import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
 import {
+    Button,
     ContentLayout,
     DefaultMemberIcon,
     fileDownloadCanvasAsImage,
     IconOutline,
+    LinkButton,
     Tooltip,
-    Button,
     VerifiedMemberFlagSvg,
 } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
@@ -307,20 +307,17 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                             />
 
                             {!props.isModalView && (
-                                <a
-                                    href={props.isPreview ? '#profile-preview' : myProfileLink}
+                                <LinkButton
+                                    secondary
+                                    label={(
+                                        props.isOwner ? 'View your Topcoder profile' : 'View full Topcoder profile'
+                                    )}
+                                    size='lg'
+                                    className={styles.shareBtn}
+                                    to={props.isPreview ? '#profile-preview' : myProfileLink}
                                     target='_blank'
                                     rel='noreferrer'
-                                >
-                                    <Button
-                                        secondary
-                                        label={(
-                                            props.isOwner ? 'View your Topcoder profile' : 'View full Topcoder profile'
-                                        )}
-                                        size='lg'
-                                        className={styles.shareBtn}
-                                    />
-                                </a>
+                                />
                             )}
                         </div>
                     </div>
@@ -328,16 +325,15 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                     {renderCoursesGridItems()}
 
                     {!props.isModalView && (
-                        <Link to={certificationDetailsLink}>
-                            <Button
-                                icon={IconOutline.ArrowRightIcon}
-                                iconToRight
-                                className={styles.detailsBtn}
-                                link
-                                label='Certification details'
-                                size='xl'
-                            />
-                        </Link>
+                        <LinkButton
+                            icon={IconOutline.ArrowRightIcon}
+                            iconToRight
+                            className={styles.detailsBtn}
+                            link
+                            label='Certification details'
+                            size='xl'
+                            to={certificationDetailsLink}
+                        />
                     )}
                 </div>
             </ContentLayout>

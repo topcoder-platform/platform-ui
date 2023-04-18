@@ -1,8 +1,8 @@
 import { Dispatch, FC, ReactNode, SetStateAction, useContext, useState } from 'react'
-import { Link, Params, useParams } from 'react-router-dom'
+import { Params, useParams } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { IconOutline, Button } from '~/libs/ui'
+import { Button, IconOutline, LinkButton } from '~/libs/ui'
 import { profileContext, ProfileContextData } from '~/libs/core'
 
 import {
@@ -67,14 +67,13 @@ const CertificationDetailsPage: FC<{}> = () => {
                 <div className='body-large-bold'>
                     Congratulations! You earned the certification.
                 </div>
-                <Link to={getTCAUserCertificationUrl(certification?.dashedName ?? '', progress?.userHandle ?? '')}>
-                    <Button
-                        className='nw'
-                        primary
-                        label='View & share your certification'
-                        size='lg'
-                    />
-                </Link>
+                <LinkButton
+                    className='nw'
+                    primary
+                    label='View & share your certification'
+                    size='lg'
+                    to={getTCAUserCertificationUrl(certification?.dashedName ?? '', progress?.userHandle ?? '')}
+                />
             </div>
         )
     }

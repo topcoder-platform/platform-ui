@@ -1,0 +1,37 @@
+import { Canvas, Meta, Story, Controls } from '@storybook/blocks';
+
+import * as LinkButtonStories from './LinkButton.stories';
+
+<Meta of={LinkButtonStories} name="Overview" />
+
+# Link Button
+The `LinkButton` is just an extension of the [Button](?path=/docs/components-button--overview) component, so all applicable styles and properties from [Button](?path=/docs/components-button--overview) also apply for `LinkButton`.
+
+
+## Usage
+Use link button for redirecting the user to a different url: within the same app or external url.
+
+Please use the `to` property for your url, no matter if it's internal or external link.
+
+The component will parse the `to` property, and if it starts with `http://` or `https://` it will use an `a` element instead of `Link`.
+
+### Internal Link
+Uses react-router-dom's `<Link>` for linking when the `to` property is a relative url:
+<Canvas>
+    <Story of={LinkButtonStories['_hidden_Primary']} />
+    <Story of={LinkButtonStories['_hidden_Secondary']} />
+    <Story of={LinkButtonStories['_hidden_Link']} />
+</Canvas>
+
+### External Link
+Uses the native `<a>` element for linking when the `to` property starts with `http://` or `https://`:
+<Canvas>
+    <Story of={LinkButtonStories['_hidden_ExternalLink']} />
+</Canvas>
+
+## Inputs
+
+Button has the following properties:
+
+<Canvas of={LinkButtonStories['_hidden_Primary']} />
+<Controls />

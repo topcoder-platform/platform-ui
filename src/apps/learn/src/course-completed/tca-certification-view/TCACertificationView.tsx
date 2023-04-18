@@ -1,7 +1,6 @@
 import { FC } from 'react'
-import { Link } from 'react-router-dom'
 
-import { Button } from '~/libs/ui'
+import { LinkButton } from '~/libs/ui'
 
 import { CourseTitle, LearnCourse, TCACertification, TitleBadgeType } from '../../lib'
 import { getTCACertificationPath } from '../../learn.routes'
@@ -44,13 +43,12 @@ const TCACertificationView: FC<TCACertificationViewProps> = (props: TCACertifica
             Follow the link below to view and share your certification with prospective employers or friends.
         </p>
         <div className={styles['btns-wrap']}>
-            <Link to={getTCACertificationPath(props.certification?.dashedName ?? '')}>
-                <Button
-                    size='md'
-                    primary
-                    label='View the certification details'
-                />
-            </Link>
+            <LinkButton
+                size='md'
+                primary
+                label='View the certification details'
+                to={getTCACertificationPath(props.certification?.dashedName ?? '')}
+            />
         </div>
     </div>
 )

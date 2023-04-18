@@ -184,7 +184,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                         <div className={styles.loadBtnWrap}>
                             <Button
                                 primary
-                                negative
+                                light
                                 label='Load More'
                                 size='lg'
                                 onClick={props.onLoadMoreClick}

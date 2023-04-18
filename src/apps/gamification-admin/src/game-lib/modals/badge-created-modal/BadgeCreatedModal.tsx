@@ -1,7 +1,6 @@
 import { FC } from 'react'
-import { Link } from 'react-router-dom'
 
-import { BaseModal, PageDivider, Button, useCheckIsMobile } from '~/libs/ui'
+import { BaseModal, Button, LinkButton, PageDivider, useCheckIsMobile } from '~/libs/ui'
 
 import { badgeDetailPath } from '../../../gamification-admin.routes'
 import { GameBadge } from '../../game-badge.model'
@@ -48,13 +47,12 @@ const BadgeCreatedModal: FC<BadgeCreatedModalProps> = (props: BadgeCreatedModalP
                         isMobile && <PageDivider />
                     }
                     <div className={styles.actions}>
-                        <Link to={badgeDetailPath(props.badge.id)}>
-                            <Button
-                                label='View'
-                                primary
-                                size='lg'
-                            />
-                        </Link>
+                        <LinkButton
+                            label='View'
+                            primary
+                            size='lg'
+                            to={badgeDetailPath(props.badge.id)}
+                        />
                         <Button
                             label='Create a new badge'
                             secondary

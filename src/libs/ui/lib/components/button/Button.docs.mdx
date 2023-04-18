@@ -2,7 +2,7 @@ import { Canvas, Meta, Story, Controls } from '@storybook/blocks';
 
 import * as ButtonStories from './Button.stories';
 
-<Meta of={ButtonStories} />
+<Meta of={ButtonStories} name="Overview" />
 
 # Button
 
@@ -14,11 +14,11 @@ Buttons are often used for form submissions and to toggle elements into view.
 
 ## Usage
 
-The component comes as different types such as `primary`, `secondary`, `link`;
+The component comes as different styles such as `primary`, `secondary`, `link`;
 different variants such as `negative`, `danger` and `warning`;
 and have different sizes which you can use to alter the look and feel of the button.
 
-### Button Types
+### Button Styles
 
 <Canvas>
     <Story of={ButtonStories.Primary} />
@@ -29,33 +29,33 @@ and have different sizes which you can use to alter the look and feel of the but
 ### Button Sizes
 
 <Canvas>
-    <Story of={ButtonStories.PrimarySmSize} />
-    <Story of={ButtonStories.PrimaryMdSize} />
-    <Story of={ButtonStories.PrimaryLgSize} />
-    <Story of={ButtonStories.PrimaryXlSize} />
+    <Story of={ButtonStories['_hidden_PrimarySmSize']} />
+    <Story of={ButtonStories['_hidden_PrimaryMdSize']} />
+    <Story of={ButtonStories['_hidden_PrimaryLgSize']} />
+    <Story of={ButtonStories['_hidden_PrimaryXlSize']} />
 </Canvas>
 
 ### Button Variants
 
-#### Negative
+#### Light Buttons
 <Canvas>
-    <Story of={ButtonStories.PrimaryDanger} />
-    <Story of={ButtonStories.SecondaryDanger} />
-    <Story of={ButtonStories.LinkDanger} />
+    <Story of={ButtonStories['_hidden_LightPrimary']} />
+    <Story of={ButtonStories['_hidden_LightSecondary']} />
+    <Story of={ButtonStories['_hidden_LightLink']} />
 </Canvas>
 
 #### Danger
 <Canvas>
-    <Story of={ButtonStories.PrimaryDanger} />
-    <Story of={ButtonStories.SecondaryDanger} />
-    <Story of={ButtonStories.LinkDanger} />
+    <Story of={ButtonStories['_hidden_PrimaryDanger']} />
+    <Story of={ButtonStories['_hidden_SecondaryDanger']} />
+    <Story of={ButtonStories['_hidden_LinkDanger']} />
 </Canvas>
 
-#### Warning
+### Button with Icon
 <Canvas>
-    <Story of={ButtonStories.PrimaryWarning} />
-    <Story of={ButtonStories.SecondaryWarning} />
-    <Story of={ButtonStories.LinkWarning} />
+    <Story of={ButtonStories.OnlyIcon} />
+    <Story of={ButtonStories.WithIconLeft} />
+    <Story of={ButtonStories.WithIconRight} />
 </Canvas>
 
 ## Inputs

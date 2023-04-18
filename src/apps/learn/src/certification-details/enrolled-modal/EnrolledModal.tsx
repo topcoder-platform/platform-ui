@@ -31,7 +31,7 @@ const EnrolledModal: FC<EnrolledModalProps> = (props: EnrolledModalProps) => {
                 </h2>
                 <Button
                     secondary
-                    negative
+                    light
                     label='Go to the certification details'
                     size='md'
                     onClick={props.onClose}

@@ -1,7 +1,6 @@
 import { FC, ReactNode } from 'react'
-import { Link } from 'react-router-dom'
 
-import { IconSolid, ProgressBar, Button } from '~/libs/ui'
+import { IconSolid, LinkButton, ProgressBar } from '~/libs/ui'
 
 import {
     clearFCCCertificationTitle,
@@ -43,7 +42,10 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
             case UserCertificationProgressStatus.completed:
                 return (
                     <>
-                        <Link
+                        <LinkButton
+                            secondary
+                            size='sm'
+                            label='Details'
                             to={getCoursePath(
                                 props.provider,
                                 props.certification.certification,
@@ -52,30 +54,24 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                                 dashedName: props.tcaCertification.dashedName,
                                 title: props.tcaCertification.title,
                             } }}
-                        >
-                            <Button
-                                secondary
-                                size='sm'
-                                label='Details'
-                            />
-                        </Link>
-                        <Link
+                        />
+                        <LinkButton
+                            primary
+                            size='sm'
+                            label='View Certificate'
                             to={getCertificatePath(
                                 props.provider,
                                 props.certification.certification,
                             )}
-                        >
-                            <Button
-                                primary
-                                size='sm'
-                                label='View Certificate'
-                            />
-                        </Link>
+                        />
                     </>
                 )
             case UserCertificationProgressStatus.inProgress:
                 return (
-                    <Link
+                    <LinkButton
+                        primary
+                        size='sm'
+                        label='Resume'
                         to={getLessonPathFromCurrentLesson(
                             props.provider,
                             props.certification.certification,
@@ -85,17 +81,14 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                             dashedName: props.tcaCertification.dashedName,
                             title: props.tcaCertification.title,
                         } }}
-                    >
-                        <Button
-                            primary
-                            size='sm'
-                            label='Resume'
-                        />
-                    </Link>
+                    />
                 )
             default:
                 return (
-                    <Link
+                    <LinkButton
+                        primary
+                        size='sm'
+                        label='Details'
                         to={getCoursePath(
                             props.provider,
                             props.certification.certification,
@@ -104,13 +97,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                             dashedName: props.tcaCertification.dashedName,
                             title: props.tcaCertification.title,
                         } }}
-                    >
-                        <Button
-                            primary
-                            size='sm'
-                            label='Details'
-                        />
-                    </Link>
+                    />
                 )
         }
     }

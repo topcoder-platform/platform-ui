@@ -67,7 +67,7 @@
 }
 
 // Define button types
-.btn:global(.btn-type-primary) {
+.btn:global(.btn-style-primary) {
     background: var(--btn-variant);
     color: $tc-white;
 
@@ -84,7 +84,7 @@
         color: $black-60;
     }
 
-    &:global(.btn-negative) {
+    &:global(.btn-light) {
         color: var(--btn-variant);
         background: $tc-white;
 
@@ -102,7 +102,7 @@
     }
 }
 
-.btn:global(.btn-type-secondary) {
+.btn:global(.btn-style-secondary) {
     box-shadow: inset 0 0 0 $border var(--btn-variant);
     color: var(--btn-variant);
     background: $tc-white;
@@ -124,7 +124,7 @@
         color: $black-60;
     }
 
-    &:global(.btn-negative) {
+    &:global(.btn-light) {
         box-shadow: inset 0 0 0 $border $tc-white;
         color: $tc-white;
         background: transparent;
@@ -144,7 +144,7 @@
     }
 }
 
-.btn:global(.btn-type-link) {
+.btn:global(.btn-style-link) {
     @include padX(0);
     color: var(--btn-variant);
 
@@ -160,7 +160,7 @@
         color: $black-60;
     }
 
-    &:global(.btn-negative) {
+    &:global(.btn-light) {
         color: $tc-white;
 
         &:hover, &:global(.hover) {

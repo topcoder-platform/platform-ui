@@ -5,7 +5,7 @@ import { omit, pick } from 'lodash'
 import Button, { ButtonProps } from '../Button'
 
 export type LinkButtonProps = ButtonProps & LinkProps & {
-    to?: To
+    to: To
 }
 
 const linkPropsList: string[] = [

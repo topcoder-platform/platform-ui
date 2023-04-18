@@ -18,7 +18,7 @@ export interface BaseButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
     primary?: boolean
     secondary?: boolean
     link?: boolean
-    negative?: boolean
+    light?: boolean
     size?: ButtonSize
     fullWidth?: boolean
     variant?: ButtonVariants
@@ -28,13 +28,13 @@ const BaseButton: FC<BaseButtonProps> = props => {
 
     const className: string = classNames(styles.btn, props.className, {
         'btn-disabled': props.disabled,
+        'btn-light': props.light,
         'btn-loading': props.loading,
-        'btn-negative': props.negative,
         'btn-size-full': props.fullWidth,
         [`btn-size-${props.size}`]: !!props.size,
-        'btn-type-link': props.link,
-        'btn-type-primary': props.primary,
-        'btn-type-secondary': props.secondary,
+        'btn-style-link': props.link,
+        'btn-style-primary': props.primary,
+        'btn-style-secondary': props.secondary,
         [`btn-variant-${props.variant}`]: !!props.variant,
     })
 
