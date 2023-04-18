@@ -9,8 +9,10 @@
 import { combineReducers } from "redux";
 import challengeDetails from "./challenge-details";
 import submission from "./submission";
+import submission_management from "./submission_management";
 
 export default combineReducers({
   challengeDetails,
-  submission
+  submission,
+  submission_management
 });

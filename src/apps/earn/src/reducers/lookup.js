@@ -23,7 +23,6 @@ function onGetCommunityListInit(state) {
 }
 
 function onGetCommunityListDone(state, { error, payload }) {
-  alert("onGetCommunityListDone");
   if (error) {
     return { ...state, subCommunities: [] };
   }

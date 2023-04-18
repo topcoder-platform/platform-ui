@@ -111,7 +111,7 @@
   * Default values for Props
   */
  SubmissionsPageContainer.defaultProps = {
-   challengesUrl: '/challenges',
+   challengesUrl: '/earn/challenges',
    uploadProgress: 0,
  };
  

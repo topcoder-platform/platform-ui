@@ -154,9 +154,8 @@ function fpSet(state, id, map) {
  */
 function create(initialState) {
   const a = actions.page.submission;
-
   return handleActions({
-    [a.submitDone]: onSubmitDone,
+    [a.submitDone + "_SUCCESS"]: onSubmitDone,
     [a.submitInit]: onSubmitInit,
     [a.submitReset]: onSubmitReset,
     [a.uploadProgress]: onUploadProgress,

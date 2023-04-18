@@ -51,7 +51,6 @@ import { COMPETITION_TRACKS } from '../utils/tc';
   */
  function onGetDetailsDone(state, action) {
    if (action.error) {
-     alert("ERROR");
      logger.error('Failed to get challenge details!', action.payload);
      fireErrorMessage(
        'ERROR: Failed to load the challenge',
@@ -404,7 +403,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      [`${a.getDetailsDone}_SUCCESS`]: onGetDetailsDone,
      [`${a.getDetailsDone}_ERROR`]: onGetDetailsDone,
      [a.getSubmissionsInit]: onGetSubmissionsInit,
-     [a.getSubmissionsDone]: onGetSubmissionsDone,
+     [`${a.getSubmissionsDone}_SUCCESS`]: onGetSubmissionsDone,
      [a.getMmSubmissionsInit]: onGetMMSubmissionsInit,
      [a.getMmSubmissionsDone]: onGetMMSubmissionsDone,
      [smpActions.smp.deleteSubmissionDone]: (state, { payload }) => ({

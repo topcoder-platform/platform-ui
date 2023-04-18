@@ -8,7 +8,7 @@
 import _ from 'lodash';
 import { createActions } from 'redux-actions';
 import config from '@earn/config';
-import * as Api from "@earn/services/api";
+import { getApi } from "@earn/services/lib/api";
 
 /**
  * Payload creator for the action that actually performs submission operation.
@@ -22,7 +22,7 @@ import * as Api from "@earn/services/api";
  * @return Promise
  */
 function submitDone(tokenV3, tokenV2, submissionId, body, track, progress) {
-  const api = new Api(config.API.V5, tokenV3);
+  const api = getApi('V5', tokenV3);
   const url = '/submissions/';
   return api.upload(url, {
     body,

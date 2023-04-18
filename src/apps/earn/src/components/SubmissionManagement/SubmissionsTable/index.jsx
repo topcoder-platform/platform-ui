@@ -19,7 +19,7 @@ import React from 'react';
 import PT from 'prop-types';
 import shortid from 'shortid';
 import moment from 'moment';
-import { COMPETITION_TRACKS } from 'utils/tc';
+import { COMPETITION_TRACKS } from '@earn/utils/tc';
 import Submission from '../Submission';
 import ScreeningDetails from '../ScreeningDetails';
 import styles from './styles.scss';
