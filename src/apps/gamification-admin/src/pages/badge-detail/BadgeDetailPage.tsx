@@ -22,6 +22,7 @@ import sanitizeHtml from 'sanitize-html'
 import {
     Breadcrumb,
     BreadcrumbItemModel,
+    Button,
     ButtonProps,
     ContentLayout,
     IconOutline,
@@ -32,7 +33,6 @@ import {
     tableGetDefaultSort,
     TabsNavbar,
     TabsNavItem,
-    Button,
 } from '~/libs/ui'
 
 import { ACCEPTED_BADGE_MIME_TYPES, MAX_BADGE_IMAGE_FILE_SIZE } from '../../config'

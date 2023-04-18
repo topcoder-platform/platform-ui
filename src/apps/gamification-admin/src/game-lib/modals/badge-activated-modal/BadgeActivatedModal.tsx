@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { BaseModal, PageDivider, Button, useCheckIsMobile } from '~/libs/ui'
+import { BaseModal, Button, PageDivider, useCheckIsMobile } from '~/libs/ui'
 
 import { GameBadge } from '../../game-badge.model'
 

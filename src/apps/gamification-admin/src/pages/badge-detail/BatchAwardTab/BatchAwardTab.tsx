@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
-import { IconSolid, InputFilePicker, Button } from '~/libs/ui'
+import { Button, IconSolid, InputFilePicker } from '~/libs/ui'
 
 import { GameBadge } from '../../../game-lib'
 import { BadgeAssignedModal } from '../../../game-lib/modals/badge-assigned-modal'

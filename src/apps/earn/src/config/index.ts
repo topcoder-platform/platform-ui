@@ -1,10 +1,10 @@
-import { get } from "lodash";
+import { get } from 'lodash'
 
-import { EarnConfig } from "./EarnConfig.model";
-import { EnvironmentConfig } from "~/config";
+import { EnvironmentConfig } from '~/config'
 
-import ProdEarnConfig from "./prod";
-import DevEarnConfig from "./dev";
+import { EarnConfig } from './EarnConfig.model'
+import DevEarnConfig from './dev'
+import ProdEarnConfig from './prod'
 
 // for security reason don't let to require any arbitrary file defined in process.env
 const config: EarnConfig = get({
@@ -13,4 +13,4 @@ const config: EarnConfig = get({
     qa: DevEarnConfig,
 }, EnvironmentConfig.ENV, DevEarnConfig)
 
-export default config;
+export default config

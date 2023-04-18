@@ -1,6 +1,6 @@
 import { ChangeEvent, createRef, Dispatch, FC, RefObject, SetStateAction, useEffect, useState } from 'react'
 
-import { IconOutline, Button } from '../../../..'
+import { Button, IconOutline } from '../../../..'
 import { InputValue } from '../../../form-input.model'
 
 import styles from './InputImagePicker.module.scss'

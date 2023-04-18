@@ -1,3 +1,5 @@
+/* eslint-disable sort-keys */
+
 interface GuiKITConfig {
     DEBOUNCE_ON_CHANGE_TIME: 150
 }

@@ -2,7 +2,7 @@ import * as React from 'react'
 import { identity } from 'lodash'
 import Carousel from 'react-elastic-carousel'
 
-import { IconSolid, Button } from '~/libs/ui'
+import { Button, IconSolid } from '~/libs/ui'
 
 import styles from './MarkdownImages.module.scss'
 import './MarkdownImages.css'

@@ -9,7 +9,7 @@ import {
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 
 import { profileContext, ProfileContextData } from '~/libs/core'
-import { ContentLayout, LoadingSpinner, Button } from '~/libs/ui'
+import { Button, ContentLayout, LoadingSpinner } from '~/libs/ui'
 
 import { selfServiceStartRoute, workDashboardRoute } from '../../self-service.routes'
 import { clearAutoSavedForm, clearCachedChallengeId } from '../../utils/autoSaveBeforeLogin'

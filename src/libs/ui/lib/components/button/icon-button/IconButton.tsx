@@ -21,7 +21,7 @@ const IconButton: FC<IconButtonProps> = props => {
         'children',
     ])
 
-    const Icon: FC<SVGProps<SVGSVGElement>> = props.icon!
+    const Icon: FC<SVGProps<SVGSVGElement>> = props.icon as unknown as FC<SVGProps<SVGSVGElement>>
     const icon: ReactNode = !!props.icon && (
         <div className='btn-icon'>
             <Icon />

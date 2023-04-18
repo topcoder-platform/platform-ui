@@ -11,11 +11,11 @@ import { Stripe, StripeElements } from '@stripe/stripe-js'
 import { EnvironmentConfig } from '~/config'
 import {
     BackArrowIcon,
+    Button,
     IconOutline,
     InfoCard,
     LoadingSpinner,
     PageDivider,
-    Button,
     useCheckIsMobile,
 } from '~/libs/ui'
 import { profileContext, ProfileContextData } from '~/libs/core'

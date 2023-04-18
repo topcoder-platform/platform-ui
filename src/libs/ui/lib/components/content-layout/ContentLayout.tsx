@@ -1,7 +1,7 @@
 import { FC, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { ButtonProps, Button } from '../button'
+import { Button, ButtonProps } from '../button'
 
 import styles from './ContentLayout.module.scss'
 

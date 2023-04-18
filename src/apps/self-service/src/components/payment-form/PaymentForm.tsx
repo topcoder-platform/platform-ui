@@ -18,7 +18,7 @@ import {
     StripeCardExpiryElementChangeEvent,
     StripeCardNumberElementChangeEvent,
 } from '@stripe/stripe-js'
-import { InputText, InputWrapper, OrderContractModal, ReactSelect, Button } from '~/libs/ui'
+import { Button, InputText, InputWrapper, OrderContractModal, ReactSelect } from '~/libs/ui'
 import { profileContext, ProfileContextData } from '~/libs/core'
 
 import { COUNTRIES_OPTIONS } from './constants'

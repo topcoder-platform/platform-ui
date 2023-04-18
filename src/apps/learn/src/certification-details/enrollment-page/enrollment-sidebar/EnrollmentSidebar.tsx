@@ -5,7 +5,7 @@ import { PaymentIntentResult, Stripe, StripeCardNumberElement, StripeElements } 
 import { loadStripe } from '@stripe/stripe-js/pure'
 import { CardNumberElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
 import { EnvironmentConfig } from '~/config'
-import { IconOutline, Button } from '~/libs/ui'
+import { Button, IconOutline } from '~/libs/ui'
 
 import { EnrollPaymentForm } from '../enroll-payment-form'
 import {
