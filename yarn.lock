@@ -2803,9 +2803,9 @@
     "@sinonjs/commons" "^1.7.0"
 
 "@sprig-technologies/sprig-browser@^2.20.1":
-  version "2.20.1"
-  resolved "https://registry.yarnpkg.com/@sprig-technologies/sprig-browser/-/sprig-browser-2.20.1.tgz#4c655052dc02514370e92886724cc740337b7d16"
-  integrity sha512-Qkt1yEhSz9FIXpDMjMzWklscF0HmKCmLebYDvVpJxqbEeYzCEQjzeD4WW5RTpvCgyuwzXT0At4Xx9UijCWAS8Q==
+  version "2.22.1"
+  resolved "https://registry.yarnpkg.com/@sprig-technologies/sprig-browser/-/sprig-browser-2.22.1.tgz#7e020a1edb477170c8e173f1551aeae25cc94d76"
+  integrity sha512-0REMrzo+4Axoz79xNQI/vwQoxwPsRZfXL2FnBd+6NHltWpkcfr9DzAlnn6j4KA9lOI76cyROpqSpYBN7Pa1Plw==
 
 "@storybook/addon-actions@7.0.5", "@storybook/addon-actions@^7.0.5":
   version "7.0.5"

@@ -14,14 +14,14 @@
  */
 
 import _ from 'lodash';
-import LoadingIndicator from 'components/LoadingIndicator';
+import LoadingIndicator from '@earn/components/LoadingIndicator';
 import React from 'react';
 import PT from 'prop-types';
 import moment from 'moment';
-import { Link } from 'topcoder-react-utils';
-import LeftArrow from 'assets/images/arrow-prev-green.svg';
-import { PrimaryButton } from 'topcoder-react-ui-kit';
-import { phaseEndDate } from 'utils/challenge-listing/helper';
+import { Link } from 'react-router-dom';
+import { ReactComponent as LeftArrow } from '@earn/assets/images/arrow-prev-green.svg';
+import { PrimaryButton } from '@earn/components/Buttons';
+import { phaseEndDate } from '@earn/utils/challenge-listing/helper';
 import SubmissionsTable from '../SubmissionsTable';
 
 import styles from './styles.scss';

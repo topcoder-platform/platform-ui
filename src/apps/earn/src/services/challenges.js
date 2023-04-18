@@ -17,7 +17,7 @@ import logger from "../utils/logger";
 import { setErrorIcon, ERROR_ICON_TYPES } from "../utils/errors";
 import { COMPETITION_TRACKS, getApiResponsePayload } from "../utils/tc";
 
-import { getApi } from "./challenge-api";
+import { getApi } from "./lib/api";
 import { getService as getMembersService } from "./members";
 import { getService as getSubmissionsService } from "./submissions";
 
@@ -430,7 +430,6 @@ import { getService as getSubmissionsService } from "./submissions";
      let isLegacyChallenge = false;
      let isRegistered = false;
      const userDetails = { roles: [] };
-
      // condition based on ROUTE used for Review Opportunities, change if needed
      if (/^[\d]{5,8}$/.test(challengeId)) {
        isLegacyChallenge = true;

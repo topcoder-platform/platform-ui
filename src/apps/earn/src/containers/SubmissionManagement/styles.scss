@@ -1,4 +1,3 @@
-@import '@earn/styles/variables';
 @import '@earn/styles/mixins';
 
 $sm-space-10: $base-unit * 2;
@@ -9,8 +8,7 @@ $sm-space-40: $base-unit * 8;
 .outer-container {
   background: $tc-gray-10;
   padding: 24px;
-  max-width: 2056px;
-  margin: 0 auto;
+  width: 100%;
 
   @include xs-to-sm {
     padding: 15px;
@@ -30,16 +28,48 @@ $sm-space-40: $base-unit * 8;
 
   background: #fff;
   margin: auto;
-  min-height: calc(100vh - var(--navbarHeight, 60px) - 24px * 2);
+}
 
+.add-sub-btn {
+  @include roboto-bold;
+
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 24px;
+  border-radius: 50px !important;
+  background: #137d60 !important;
+  color: #fff !important;
+  text-transform: uppercase;
+
+  @include xs-to-md {
+    font-size: 14px;
+    line-height: 20px;
+  }
+}
+
+.add-sub-btn-warning {
+  @include roboto-bold;
+
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 24px;
+  border-radius: 50px !important;
+  background: $tc-red-70 !important;
+  color: #fff !important;
+  text-transform: uppercase;
+
+  @include xs-to-md {
+    font-size: 14px;
+    line-height: 20px;
+  }
 }
 
 .modal-content {
   @include roboto-regular;
 
   text-align: center;
-  padding-top: $sm-space-15;
-  padding-bottom: $sm-space-15;
+  border-radius: 8px;
+  padding: 20px 0;
 
   .are-you-sure {
     font-weight: 400;
@@ -73,4 +103,8 @@ $sm-space-40: $base-unit * 8;
       display: none;
     }
   }
+}
+
+.modalContainer {
+  border-radius: 8px;
 }

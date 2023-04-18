@@ -21,11 +21,9 @@ export function setErrorsStore(s) {
  * it will show a modal error diaglog with styling until the user clicks OK.
  */
 export function fireErrorMessage(title, details) {
-  if (store) {
-    window.setImmediate(() => {
-      store.dispatch(actions.errors.newError(title, details));
-    });
-  }
+  window.setImmediate(() => {
+    store.dispatch(actions.errors.newError(title, details));
+  });
 }
 
 /**

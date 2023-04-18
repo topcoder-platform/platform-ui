@@ -14,13 +14,13 @@
 import _ from 'lodash';
 import moment from 'moment';
 import React from 'react';
-import { COMPETITION_TRACKS, CHALLENGE_STATUS, safeForDownload } from 'utils/tc';
+import { COMPETITION_TRACKS, CHALLENGE_STATUS, safeForDownload } from '@earn/utils/tc';
 
 import PT from 'prop-types';
 
-import DeleteIcon from '../Icons/IconTrashSimple.svg';
-import DownloadIcon from '../Icons/IconSquareDownload.svg';
-import ExpandIcon from '../Icons/IconMinimalDown.svg';
+import { ReactComponent as DeleteIcon } from '../Icons/IconTrashSimple.svg';
+import { ReactComponent as DownloadIcon } from '../Icons/IconSquareDownload.svg';
+import { ReactComponent as ExpandIcon } from '../Icons/IconMinimalDown.svg';
 import ScreeningStatus from '../ScreeningStatus';
 import { styled as styledCss } from '@earn/utils';
 

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useParams } from "react-router-dom";
 
 import { lazyLoad } from "~/libs/core";
 
@@ -16,17 +16,17 @@ const SubmissionManagement = lazyLoad(
   () => import('../../containers/SubmissionManagement'),
 )
 
-
-export const ChallengeSubmissions = () => {
+export const ChallengeSubmissions = (props) => {
   const alert = useSelector((state) => state.errors.alerts[0]);
+  const { challengeId } = useParams()
 
   useEffect(() => { initAuth() }, [])
 
   return (
     <>
       <Routes>
-        <Route exact element={<Submission />} path='submit' />
-        <Route exact element={<SubmissionManagement />} path='my-submissions' />
+        <Route exact element={<Submission {...props} challengeId={challengeId}/>} path='submit' />
+        <Route exact element={<SubmissionManagement {...props} challengeId={challengeId}/>} path='my-submissions' />
       </Routes>
       <div id="tooltips-container-id" />
       {alert && (

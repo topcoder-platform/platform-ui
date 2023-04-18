@@ -264,7 +264,7 @@ function create(initialState) {
   return handleActions(
     {
       [actions.terms.getTermsInit]: onGetTermsInit,
-      [actions.terms.getTermsDone]: onGetTermsDone,
+      [actions.terms.getTermsDone + "_SUCCESS"]: onGetTermsDone,
       [actions.terms.getTermDetailsInit]: (state, { payload }) => ({
         ...state,
         getTermDetailsFailure: false,
@@ -272,7 +272,7 @@ function create(initialState) {
         details: null,
         termId: payload,
       }),
-      [actions.terms.getTermDetailsDone]: onGetTermDetailsDone,
+      [actions.terms.getTermDetailsDone + "_SUCCESS"]: onGetTermDetailsDone,
       [actions.terms.getDocuSignUrlInit]: (state, { payload }) => ({
         ...state,
         getDocuSignUrlFailure: false,

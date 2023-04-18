@@ -1,272 +1,262 @@
-import React, { useEffect, useLayoutEffect, useRef } from "react";
-import PT from "prop-types";
-import { connect } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { PrimaryButton } from "../../components/Buttons";
-import AccessDenied from "../../components/AccessDenied";
-import LoadingIndicator from "../../components/LoadingIndicator";
-import { ACCESS_DENIED_REASON, CHALLENGES_URL } from "../../constants";
-import Submit from "./Submit";
-import actions from "../../actions";
-import { isLegacyId, isUuid } from "../../utils/challenge";
-import { logIn } from "../../utils/auth";
-import { withRouter } from "../../utils/router";
-
-const Submission = ({
-  id,
-  challengeId,
-  challengeName,
-  isRegistered,
-  phases,
-  status,
-  winners,
-  groups,
-  isAuthInitialized,
-  communityList,
-  isCommunityListLoaded,
-  getCommunityList,
-  isLoadingChallenge,
-  isChallengeLoaded,
-
-  track,
-  agreed,
-  filePickers,
-  submissionFilestackData,
-  userId,
-  handle,
-
-  errorMsg,
-  isSubmitting,
-  submitDone,
-  uploadProgress,
-
-  getIsRegistered,
-  getChallenge,
-  submit,
-  resetForm,
-  setAgreed,
-  setFilePickerError,
-  setFilePickerFileName,
-  setFilePickerUploadProgress,
-  setFilePickerDragged,
-  setSubmissionFilestackData,
-  checkIsLoggedOut,
-  setAuth,
-}) => {
-  const navigate = useNavigate();
-  const propsRef = useRef();
-  propsRef.current = {
-    id,
-    challengeId,
-    getCommunityList,
-    setAuth,
-    getChallenge,
-  };
-
-  useLayoutEffect(() => {
-    if (isLegacyId(propsRef.current.id) || isUuid(propsRef.current.id)) {
-      propsRef.current.getCommunityList();
-      propsRef.current.setAuth();
-      propsRef.current.getChallenge(propsRef.current.id);
-    } else {
-      navigate(CHALLENGES_URL);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isChallengeLoaded && isLegacyId(propsRef.current.id)) {
-      navigate(`${CHALLENGES_URL}/${propsRef.current.challengeId}/submit`);
-    }
-  }, [isChallengeLoaded]);
-
-  if (isLoadingChallenge || !isAuthInitialized) {
-    return <LoadingIndicator />;
-  }
-
-  if (!isChallengeLoaded) {
-    return null;
-  }
-
-  if (!isRegistered) {
-    return (
-      <AccessDenied cause={ACCESS_DENIED_REASON.NOT_AUTHORIZED}>
-        <PrimaryButton to={`${CHALLENGES_URL}/${challengeId}`}>
-          Go to Challenge Details
-        </PrimaryButton>
-      </AccessDenied>
-    );
-  }
-
-  const handleSubmit = async (data) => {
-    const isLoggedOut = checkIsLoggedOut();
-    if (isLoggedOut) {
-      window.sessionStorage && window.sessionStorage.clear();
-      logIn();
-    } else {
-      const registered = await getIsRegistered(challengeId, userId);
-      if (registered) submit(data);
-    }
-  };
-
-  return (
-    <Submit
-      challengeId={challengeId}
-      challengeName={challengeName}
-      phases={phases}
-      status={status}
-      winners={winners}
-      groups={groups}
-      handle={handle}
-      communityList={communityList}
-      isCommunityListLoaded={isCommunityListLoaded}
-      track={track}
-      agreed={agreed}
-      filePickers={filePickers}
-      submissionFilestackData={submissionFilestackData}
-      userId={userId}
-      errorMsg={errorMsg}
-      isSubmitting={isSubmitting}
-      submitDone={submitDone}
-      uploadProgress={uploadProgress}
-      resetForm={resetForm}
-      setAgreed={setAgreed}
-      setFilePickerError={setFilePickerError}
-      setFilePickerFileName={setFilePickerFileName}
-      setFilePickerUploadProgress={setFilePickerUploadProgress}
-      setFilePickerDragged={setFilePickerDragged}
-      setSubmissionFilestackData={setSubmissionFilestackData}
-      submit={handleSubmit}
-    />
-  );
-};
-
-Submission.defaultProps = {};
-
-Submission.propTypes = {
-  id: PT.string,
-  challengeId: PT.string,
-  challengeName: PT.string,
-  isRegistered: PT.bool,
-  phases: PT.arrayOf(PT.shape()),
-  status: PT.string,
-  winners: PT.arrayOf(PT.shape()),
-  groups: PT.arrayOf(PT.shape()),
-  isAuthInitialized: PT.bool,
-  communityList: PT.arrayOf(PT.shape()),
-  isCommunityListLoaded: PT.bool,
-  getCommunityList: PT.func,
-  isLoadingChallenge: PT.bool,
-  isChallengeLoaded: PT.bool,
-
-  track: PT.string,
-  agreed: PT.bool,
-  filePickers: PT.arrayOf(PT.shape()),
-  submissionFilestackData: PT.shape(),
-  userId: PT.number,
-  handle: PT.string,
-
-  errorMsg: PT.string,
-  isSubmitting: PT.bool,
-  submitDone: PT.bool,
-  uploadProgress: PT.number,
-
-  getChallenge: PT.func,
-  getIsRegistered: PT.func,
-  submit: PT.func,
-  resetForm: PT.func,
-  setAgreed: PT.func,
-  setFilePickerError: PT.func,
-  setFilePickerFileName: PT.func,
-  setFilePickerUploadProgress: PT.func,
-  setFilePickerDragged: PT.func,
-  setSubmissionFilestackData: PT.func,
-  setAuth: PT.func,
-  checkIsLoggedOut: PT.func,
-};
-
-const mapStateToProps = (state, ownProps) => {
-  const challenge = state?.challenge?.challenge;
-
-  return {
-    id: ownProps.params.challengeId,
-    challengeId: challenge?.id,
-    challengeName: challenge?.name,
-    isRegistered: challenge?.isRegistered,
-    phases: challenge?.phases,
-    status: challenge?.status,
-    winners: challenge?.winners,
-    groups: challenge?.groups,
-    handle: state.auth.user ? state.auth.user.handle : "",
-    isAuthInitialized: state.auth.isAuthInitialized,
-    communityList: state.lookup.subCommunities,
-    isCommunityListLoaded: state.lookup.isSubCommunitiesLoaded,
-    isLoadingChallenge: state.challenge?.isLoadingChallenge,
-    isChallengeLoaded: state.challenge?.isChallengeLoaded,
-
-    track: challenge?.track,
-    agreed: state.submission.agreed,
-    filePickers: state.submission.filePickers,
-    submissionFilestackData: state.submission.submissionFilestackData,
-    userId: state.auth.user ? state.auth.user.userId : null,
-
-    errorMsg: state.submission.submitErrorMsg,
-    isSubmitting: state.submission.isSubmitting,
-    submitDone: state.submission.submitDone,
-    uploadProgress: state.submission.uploadProgress,
-  };
-};
-
-const mapDispatchToProps = (dispatch) => {
-  const onProgress = (event) =>
-    dispatch(actions.submission.submit.uploadProgress(event));
-
-  return {
-    getCommunityList: () => {
-      dispatch(actions.lookup.getCommunityListDone());
-    },
-    setAuth: () => {
-      dispatch(actions.auth.setAuthDone());
-    },
-    checkIsLoggedOut: () => {
-      const action = dispatch(actions.auth.checkIsLoggedOut());
-      return action?.payload?.isLoggedOut;
-    },
-    getIsRegistered: async (challengeId, userId) => {
-      const action = await dispatch(
-        actions.challenge.getIsRegistered(challengeId, userId)
-      );
-      return action?.payload?.isRegistered;
-    },
-    getChallenge: (challengeId) => {
-      dispatch(actions.challenge.getChallengeInit(challengeId));
-      dispatch(actions.challenge.getChallenge(challengeId));
-    },
-    submit: (data) => {
-      dispatch(actions.submission.submit.submitInit());
-      dispatch(actions.submission.submit.submitDone(data, onProgress));
-    },
-    setAgreed: (agreed) => {
-      dispatch(actions.submission.submit.setAgreed(agreed));
-    },
-    setFilePickerError: (id, error) => {
-      dispatch(actions.submission.submit.setFilePickerError(id, error));
-    },
-    setFilePickerFileName: (id, fileName) => {
-      dispatch(actions.submission.submit.setFilePickerFileName(id, fileName));
-    },
-    setFilePickerDragged: (id, dragged) => {
-      dispatch(actions.submission.submit.setFilePickerDragged(id, dragged));
-    },
-    setFilePickerUploadProgress: (id, p) => {
-      dispatch(actions.submission.submit.setFilePickerUploadProgress(id, p));
-    },
-    setSubmissionFilestackData: (id, data) => {
-      dispatch(actions.submission.submit.setSubmissionFilestackData(id, data));
-    },
-    resetForm: () => {
-      dispatch(actions.submission.submit.submitReset());
-    },
-  };
-};
-
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Submission));
+/**
+ * containers.page.challenge-details.submission Container
+ * <SubmissionsPageContainer>
+ *
+ * Description:
+ *   Connects the Redux store to the Challenge Submissions display components.
+ *   Passes the relevent state and setters as properties to the UI components.
+ */
+ import actions from '@earn/actions/page/submission';
+ import { actions as api } from '@earn/actions';
+ import config from "@earn/config"
+ import { isMM } from '@earn/utils/challenge';
+ import communityActions from '@earn/actions/tc-communities';
+ import { PrimaryButton } from "@earn/components/Buttons";
+ import shortId from 'shortid';
+ import React from 'react';
+ import PT from 'prop-types';
+ import { connect } from 'react-redux';
+ import SubmissionsPage from './SubmissionPage';
+ import { ACCESS_DENIED_REASON } from "../../constants";
+ import AccessDenied from "../../components/AccessDenied";
+ import LoadingIndicator from "@earn/components/LoadingIndicator";
+ /*import { sprig } from '@sprig-technologies/sprig-browser/dist';
+ 
+ export const Sprig = sprig.configure({
+   environmentId: config.SPRIG_ENVIRONMENT_ID,
+ });*/
+ 
+ /**
+  * SubmissionsPage Container
+  */
+ class SubmissionsPageContainer extends React.Component {
+   constructor(props) {
+     super(props);
+     this.handleSubmit = this.handleSubmit.bind(this);
+   }
+ 
+   componentDidMount() {
+     const {
+       auth,
+       getCommunitiesList,
+       challengeId,
+       loadChallengeDetails,
+     } = this.props;
+ 
+     loadChallengeDetails(auth, challengeId);
+     getCommunitiesList(auth);
+   }
+ 
+   componentWillReceiveProps() {
+     const {
+       challenge,
+       history,
+     } = this.props;
+ 
+     const { details } = challenge;
+ 
+     if (details && details.isLegacyChallenge && !history.location.pathname.includes(details.id)) {
+       history.push(`/earn/challenges/${details.id}/submit`, history.state);
+     }
+   }
+ 
+   /* A child component has called their submitForm() prop, prepare the passed
+      form data for submission and create a submit action */
+   handleSubmit(body) {
+     const {
+       tokenV2,
+       tokenV3,
+       submit,
+       challengeId,
+       challenge,
+       track,
+     } = this.props;
+ 
+     // On final upload, the survey should appear
+     //Sprig('track', 'onUploadSubmission');
+     submit(tokenV3, tokenV2, challengeId, body, isMM(challenge) ? 'DEVELOP' : track);
+   }
+ 
+   render() {
+     const {
+       isRegistered,
+       challengeId,
+       challengeName,
+     } = this.props;
+ 
+     if (!challengeName) {
+       return <LoadingIndicator />;
+     }
+ 
+     if (!isRegistered && challengeName) {
+       return (
+         <React.Fragment>
+           <AccessDenied cause={ACCESS_DENIED_REASON.NOT_AUTHORIZED}>
+             <PrimaryButton to={`/earn/challenges/${challengeId}`}>Go to Challenge Details</PrimaryButton>
+           </AccessDenied>
+         </React.Fragment>
+       );
+     }
+ 
+     return (
+       <SubmissionsPage
+         {...this.props}
+         submitForm={this.handleSubmit}
+       />
+     );
+   }
+ }
+ 
+ /**
+  * Default values for Props
+  */
+ SubmissionsPageContainer.defaultProps = {
+   challengesUrl: '/earn/challenges',
+   uploadProgress: 0,
+ };
+ 
+ /* Reusable prop validation for Filestack data objects */
+ const filestackDataProp = PT.shape({
+   filename: PT.string.isRequired,
+   mimetype: PT.string.isRequired,
+   size: PT.number.isRequired,
+   key: PT.string.isRequired,
+   container: PT.string.isRequired,
+ });
+ 
+ /**
+  * Prop Validation
+  */
+ SubmissionsPageContainer.propTypes = {
+   auth: PT.shape().isRequired,
+   phases: PT.arrayOf(PT.object).isRequired,
+   communitiesList: PT.shape({
+     data: PT.arrayOf(PT.object).isRequired,
+     loadingUuid: PT.string.isRequired,
+     timestamp: PT.number.isRequired,
+   }).isRequired,
+   getCommunitiesList: PT.func.isRequired,
+   /* Older stuff */
+   userId: PT.string.isRequired,
+   challengesUrl: PT.string,
+   tokenV2: PT.string.isRequired,
+   tokenV3: PT.string.isRequired,
+   submit: PT.func.isRequired,
+   challengeId: PT.string.isRequired,
+   track: PT.string.isRequired,
+   challenge: PT.shape().isRequired,
+   status: PT.string.isRequired,
+   isRegistered: PT.bool.isRequired,
+   groups: PT.arrayOf(PT.shape()).isRequired,
+   errorMsg: PT.string.isRequired,
+   isSubmitting: PT.bool.isRequired,
+   submitDone: PT.bool.isRequired,
+   resetForm: PT.func.isRequired,
+   challengeName: PT.string.isRequired,
+   uploadProgress: PT.number,
+   agreed: PT.bool.isRequired,
+   setAgreed: PT.func.isRequired,
+   filePickers: PT.arrayOf(PT.shape({
+     id: PT.string.isRequired,
+     error: PT.string.isRequired,
+     fileName: PT.string.isRequired,
+     uploadProgress: PT.number,
+   }).isRequired).isRequired,
+   setFilePickerError: PT.func.isRequired,
+   setFilePickerFileName: PT.func.isRequired,
+   setFilePickerUploadProgress: PT.func.isRequired,
+   setFilePickerDragged: PT.func.isRequired,
+   notesLength: PT.number.isRequired,
+   updateNotesLength: PT.func.isRequired,
+   setSubmissionFilestackData: PT.func.isRequired,
+   submissionFilestackData: filestackDataProp.isRequired,
+   winners: PT.arrayOf(PT.object).isRequired,
+   loadChallengeDetails: PT.func.isRequired,
+   history: PT.shape().isRequired,
+ };
+ 
+ /**
+  * Standard redux function, passes redux state into Container as props.
+  * Is passed to connect(), not called directly.
+  * @param {Object} state Redux state
+  * @param {Object} ownProps
+  * @return {Object}
+  */
+ const mapStateToProps = (state, ownProps) => {
+   const { submission } = state.page;
+   const details = state.challenge.details || {};
+   return {
+     auth: state.auth,
+     phases: details.phases || [],
+     communitiesList: state.tcCommunities?.list,
+     /* Older stuff below. */
+     userId: state.auth.user ? state.auth.user.userId : '',
+     handle: state.auth.user ? state.auth.user.handle : '',
+     challengeId: String(ownProps.challengeId),
+     challengeName: details.name,
+     challengesUrl: ownProps.challengesUrl,
+     tokenV2: state.auth.tokenV2,
+     tokenV3: state.auth.tokenV3,
+     track: details.track,
+     challenge: state.challenge,
+     status: details.status,
+     isRegistered: details.isRegistered,
+     groups: details.groups,
+     isSubmitting: submission.isSubmitting,
+     submitDone: submission.submitDone,
+     errorMsg: submission.submitErrorMsg,
+     uploadProgress: submission.uploadProgress,
+     agreed: submission.agreed,
+     filePickers: submission.filePickers,
+     notesLength: submission.notesLength,
+     submissionFilestackData: submission.submissionFilestackData,
+     winners: details.winners,
+   };
+ };
+ 
+ /**
+  * Standard redux function, passes redux actions into Container as props.
+  * Is passed to connect(), not called directly.
+  * @param {Function} dispatch Function to dispatch action to reducers
+  * @return {Object}
+  */
+ function mapDispatchToProps(dispatch) {
+   const a = actions.page.submission;
+   const ca = communityActions.tcCommunity;
+   const progress = data => dispatch(a.uploadProgress(data));
+ 
+   return {
+     getCommunitiesList: (auth) => {
+       const uuid = shortId();
+       dispatch(ca.getListInit(uuid));
+       dispatch(ca.getListDone(uuid, auth));
+     },
+     submit: (tokenV3, tokenV2, submissionId, body, track) => {
+       dispatch(a.submitInit());
+       dispatch(a.submitDone(tokenV3, tokenV2, submissionId, body, track, progress));
+     },
+     resetForm: () => {
+       dispatch(a.submitReset());
+     },
+     setAgreed: agreed => dispatch(a.setAgreed(agreed)),
+     setFilePickerError: (id, error) => dispatch(a.setFilePickerError(id, error)),
+     setFilePickerFileName: (id, fileName) => dispatch(a.setFilePickerFileName(id, fileName)),
+     setFilePickerDragged: (id, dragged) => dispatch(a.setFilePickerDragged(id, dragged)),
+     setFilePickerUploadProgress: (id, p) => dispatch(a.setFilePickerUploadProgress(id, p)),
+     updateNotesLength: length => dispatch(a.updateNotesLength(length)),
+     setSubmissionFilestackData: (id, data) => dispatch(a.setSubmissionFilestackData(id, data)),
+     loadChallengeDetails: (tokens, challengeId) => {
+       const challengeAction = api.challenge;
+       dispatch(challengeAction.getDetailsInit(challengeId));
+       dispatch(challengeAction.getDetailsDone(challengeId, tokens.tokenV3, tokens.tokenV2));
+     },
+   };
+ }
+ 
+ const Container = connect(
+   mapStateToProps,
+   mapDispatchToProps,
+ )(SubmissionsPageContainer);
+ 
+ export default Container;
+ 

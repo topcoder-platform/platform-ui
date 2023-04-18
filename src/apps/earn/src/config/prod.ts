@@ -11,7 +11,12 @@ const ProdEarnConfig: EarnConfig = {
    * URL of Topcoder Connect Website
    */
   SERVER_API_KEY: "aa9ccf36-3936-450c-9983-097ddba51bef",
-
+  API: {
+    V2: 'https://api.topcoder-dev.com/v2',
+    V3: 'https://api.topcoder-dev.com/v3',
+    V4: 'https://api.topcoder-dev.com/v4',
+    V5: 'https://api.topcoder-dev.com/v5',
+  },  
   URL: {
     ARENA: "https://arena.topcoder.com",
 
