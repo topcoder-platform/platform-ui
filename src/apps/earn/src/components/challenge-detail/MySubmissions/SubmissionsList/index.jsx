@@ -3,18 +3,18 @@
 */
 
 import React from 'react';
-import cn from 'classnames';
 import _ from 'lodash';
 import moment from 'moment';
-import { PrimaryButton } from '@earn/components/challenge-detail/buttons';
-import Modal from '@earn/components/challenge-detail/Modal'
 import PT from 'prop-types';
+
+import { LinkButton } from '~/libs/ui';
+import Modal from '@earn/components/challenge-detail/Modal'
 import { getService } from '@earn/services/submissions';
 import sortList from '@earn/utils/challenge-detail/sort';
-
 import { ReactComponent as IconClose } from '@earn/assets/images/icon-close-green.svg';
 import { ReactComponent as DateSortIcon } from '@earn/assets/images/icon-date-sort.svg';
 import { ReactComponent as SortIcon } from '@earn/assets/images/icon-sort.svg';
+
 import Tooltip from '../../Tooltip';
 import { ReactComponent as IconFail } from '../../icons/failed.svg';
 import { ReactComponent as DownloadIcon } from '../../../SubmissionManagement/Icons/IconSquareDownload.svg';
@@ -467,15 +467,14 @@ class SubmissionsListView extends React.Component {
             })
           }
         </div>
-        <PrimaryButton
-          theme={{
-            button: isButtonDisabled ? styles.challengeActionDisabled : styles.challengeAction,
-          }}
+        <LinkButton
+          primary
+          size='md'
           disabled={isButtonDisabled}
           to={`${challengesUrl}/${challengeId}/submit`}
         >
           Add Submission
-        </PrimaryButton>
+        </LinkButton>
         {
           openModal && (
             <Modal onCancel={this.toggleModal} theme={styles}>

@@ -30,7 +30,7 @@ MyGigsFilter.propTypes = {
   openJobsCount: PT.number,
 };
 
-const mapStateToProps = (state) => (console.log('heeere', state), {
+const mapStateToProps = (state) => ({
   state: state,
   gigStatus: state.filter.gig.status,
   openJobsCount: state.myGigs[constants.GIGS_FILTER_STATUSES.OPEN_JOBS].total,

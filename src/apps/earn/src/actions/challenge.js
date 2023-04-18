@@ -9,6 +9,7 @@ import { createActions } from "redux-actions";
 import { decodeToken } from "../utils/token";
 import { getService as getChallengesService } from "../services/challenges";
 import { getService as getSubmissionService } from "../services/submissions";
+import challengeService from "../services/challenge";
 import { getApi } from "../services/challenge-api";
 import * as submissionUtil from "../utils/submission";
 
@@ -79,7 +80,7 @@ function getDetailsInit(challengeId) {
  * @param {String} tokenV2 Topcoder v2 auth token.
  * @return {Action}
  */
-function getDetailsDone(challengeId, tokenV3, tokenV2) {
+function getDetailsDone({challengeId, tokenV3, tokenV2}) {
   const service = getChallengesService(tokenV3, tokenV2);
   const v3Promise = service.getChallengeDetails(challengeId);
   return v3Promise;
@@ -105,7 +106,7 @@ function getSubmissionsInit(challengeId) {
  * @param {String} tokenV3 Topcoder auth token v3.
  * @return {Action}
  */
-function getSubmissionsDone(challengeId, tokenV3) {
+function getSubmissionsDone({challengeId, tokenV3}) {
   const user = decodeToken(tokenV3);
   const submissionsService = getSubmissionService(tokenV3);
   const filters = {
@@ -188,7 +189,7 @@ function registerDone(auth, challengeId) {
     // Uses a delay to allow API time to update
     .then(() => new Promise(
       resolve => setTimeout(
-        () => resolve(getDetailsDone(challengeId, auth.tokenV3, auth.tokenV2)),
+        () => resolve(getDetailsDone({challengeId, tokenV3: auth.tokenV3, tokenV2: auth.tokenV2})),
         config.CHALLENGE_DETAILS_REFRESH_DELAY,
       ),
     ));
@@ -219,7 +220,7 @@ function unregisterDone(auth, challengeId) {
     // Uses a delay to allow API time to update
     .then(() => new Promise(
       resolve => setTimeout(
-        () => resolve(getDetailsDone(challengeId, auth.tokenV3, auth.tokenV2)),
+        () => resolve(getDetailsDone({challengeId, tokenV3: auth.tokenV3, tokenV2: auth.tokenV2})),
         config.CHALLENGE_DETAILS_REFRESH_DELAY,
       ),
     ));

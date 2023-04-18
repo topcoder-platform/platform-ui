@@ -5,10 +5,12 @@ import _ from "lodash";
 import PT from "prop-types";
 import React from "react";
 
-import { Modal, PrimaryButton, Button } from "../../../../components/UiKit";
+import { UiButton } from "~/libs/ui";
+import { styled as styledCss } from "@earn/utils";
+
+import { Modal } from "../../../../components/UiKit";
 
 import styles from "./style.scss";
-import { styled as styledCss } from "@earn/utils";
 const styled = styledCss(styles)
 
 const theme = {
@@ -66,12 +68,12 @@ export default class EditModal extends React.Component {
             </div>
           </div>
           <div className={styled("buttons-container")}>
-            <Button onClick={() => this.setState({ previewURL: st.editURL })}>
+            <UiButton secondary size='md' onClick={() => this.setState({ previewURL: st.editURL })}>
               Preview
-            </Button>
-            <PrimaryButton onClick={() => onSave(st.editURL, st.size)}>
+            </UiButton>
+            <UiButton primary size='md' onClick={() => onSave(st.editURL, st.size)}>
               Save
-            </PrimaryButton>
+            </UiButton>
           </div>
           {st.previewURL ? (
             <div className={styled("preview")}>

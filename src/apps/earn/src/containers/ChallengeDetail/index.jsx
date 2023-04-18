@@ -943,7 +943,7 @@ const mapDispatchToProps = (dispatch) => {
     loadChallengeDetails: (tokens, challengeId) => {
       const a = actions.challenge;
       dispatch(a.getDetailsInit(challengeId));
-      dispatch(a.getDetailsDone(challengeId, tokens.tokenV3, tokens.tokenV2))
+      dispatch(a.getDetailsDone({challengeId, tokenV3: tokens.tokenV3, tokenV2: tokens.tokenV2}))
         .then((res) => {
           const ch = res.value;
           if (ch.track === COMPETITION_TRACKS.DES) {
@@ -968,7 +968,7 @@ const mapDispatchToProps = (dispatch) => {
     },
     reloadChallengeDetails: (tokens, challengeId) => {
       const a = actions.challenge;
-      dispatch(a.getDetailsDone(challengeId, tokens.tokenV3, tokens.tokenV2))
+      dispatch(a.getDetailsDone({challengeId, tokenV3: tokens.tokenV3, tokenV2: tokens.tokenV2}))
         .then((challengeDetails) => {
           if (challengeDetails.track === COMPETITION_TRACKS.DES) {
             const p = challengeDetails.phases || []

@@ -1,10 +1,11 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import PT from "prop-types";
-import { DangerButton } from "../Buttons";
+import { UiButton } from "~/libs/ui";
+import { styled as styledCss } from "@earn/utils";
+
 import Modal from "../GigsModal";
 
 import styles from "./styles.scss";
-import { styled as styledCss } from "@earn/utils";
 const styled = styledCss(styles)
 
 const ErrorMessage = ({ title, details, onOk }) => {
@@ -26,14 +27,17 @@ const ErrorMessage = ({ title, details, onOk }) => {
         <a href="mailto:support@topcoder.com">support@topcoder.com</a>
         &zwnj; to help us resolve it as soon as possible.
       </p>
-      <DangerButton
+      <UiButton
+        secondary
+        variant="danger"
+        size="md"
         onClick={(e) => {
           e.preventDefault();
           onOk();
         }}
       >
         OK
-      </DangerButton>
+      </UiButton>
     </Modal>
   );
 };

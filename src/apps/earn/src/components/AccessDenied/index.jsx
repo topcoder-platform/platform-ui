@@ -1,9 +1,10 @@
 import PT from "prop-types";
 import _ from "lodash";
-import { EnvironmentConfig } from "~/config";
 
-import { PrimaryButton } from "../Buttons";
+import { EnvironmentConfig } from "~/config";
+import { LinkButton } from "~/libs/ui";
 import { ReactComponent as TopcoderLogo } from "@earn/assets/icons/logo_topcoder.svg";
+
 import { ACCESS_DENIED_REASON } from "../../constants";
 import { styled as styledCss } from "../../utils";
 
@@ -48,7 +49,7 @@ const AccessDenied = ({ cause, redirectLink, children }) => {
         <div className={styled("access-denied")}>
           <TopcoderLogo />
           <div className={styled("msg")}>You have not submitted to this challenge</div>
-          <PrimaryButton to={redirectLink}>Back to the challenge</PrimaryButton>
+          <LinkButton primary size='md' to={redirectLink}>Back to the challenge</LinkButton>
         </div>
       );
     default:

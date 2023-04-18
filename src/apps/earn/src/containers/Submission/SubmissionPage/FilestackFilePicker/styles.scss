@@ -1,10 +1,5 @@
 @import "@earn/styles/mixins";
 
-.button {
-  background: #137d60 !important;
-  border-radius: 50px !important;
-}
-
 .container {
   display: flex;
   flex-direction: column;
@@ -112,12 +107,6 @@
   .mandatory {
     font-size: 10px;
     color: #0b71e6;
-  }
-
-  @include xs-to-md {
-    button {
-      padding: 10px;
-    }
   }
 
   .error-container {

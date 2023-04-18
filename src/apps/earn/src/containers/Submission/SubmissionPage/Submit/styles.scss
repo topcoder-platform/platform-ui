@@ -257,25 +257,3 @@
   display: flex;
   justify-content: flex-end;
 }
-
-.button {
-  @include roboto-bold;
-
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 24px;
-  border-radius: 50px !important;
-  background: #137d60 !important;
-  color: #fff !important;
-}
-
-.buttonDisabled {
-  @include roboto-bold;
-
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 24px;
-  border-radius: 50px !important;
-  color: #767676 !important;
-  background: #f4f4f4 !important;
-}

@@ -66,7 +66,10 @@ import { COMPETITION_TRACKS } from '../utils/tc';
    const details = action.payload;
 
    // condition based on ROUTE used for Review Opportunities, change if needed
-   const challengeId = state.loadingDetailsForChallengeId;
+   const challengeId = state.loadingDetailsForChallengeId || (
+        state.details && _.toString(state.details.id)
+   );
+
    let compareChallenge = details.id;
    if (challengeId.length >= 5 && challengeId.length <= 8) {
      compareChallenge = details.legacyId;
@@ -449,7 +452,6 @@ function onGetIsRegistered(state, { error, payload }) {
      [a.dropCheckpoints]: state => ({ ...state, checkpoints: null }),
      [a.dropResults]: state => ({ ...state, results: null }),
      [a.getDetailsInit]: onGetDetailsInit,
-     [a.getDetailsDone]: onGetDetailsDone,
      [`${a.getDetailsDone}_SUCCESS`]: onGetDetailsDone,
      [`${a.getDetailsDone}_ERROR`]: onGetDetailsDone,
      [a.getSubmissionsInit]: onGetSubmissionsInit,
@@ -588,10 +590,10 @@ function onGetIsRegistered(state, { error, payload }) {
          tokens.tokenV3,
          tokens.tokenV2,
        )),
-       resolveAction(actions.challenge.getSubmissionsDone(
+       resolveAction(actions.challenge.getSubmissionsDone({
          challengeId,
-         tokens.tokenV2,
-       )),
+         tokenV3: tokens.tokenV2,
+       })),
      ]).then(([challenge, submissions]) => {
        state = {
          ...state,

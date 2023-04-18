@@ -22,11 +22,13 @@ export interface BaseButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
     size?: ButtonSize
     fullWidth?: boolean
     variant?: ButtonVariants
+    active?: boolean
 }
 
 const BaseButton: FC<BaseButtonProps> = props => {
 
     const className: string = classNames(styles.btn, props.className, {
+        'btn-active': props.active,
         'btn-disabled': props.disabled,
         'btn-light': props.light,
         'btn-loading': props.loading,

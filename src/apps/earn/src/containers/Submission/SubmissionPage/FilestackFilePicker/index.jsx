@@ -14,12 +14,13 @@ import _ from 'lodash';
 import React from 'react';
 import PT from 'prop-types';
 import { client as filestack } from 'filestack-react';
-import { PrimaryButton } from '@earn/components/Buttons';
+
+import { UiButton } from '~/libs/ui';
 import config from '@earn/config';
 import errors from '@earn/actions/errors';
+import { styled as styledCss } from "@earn/utils";
 
 import styles from "./styles.scss";
-import { styled as styledCss } from "@earn/utils";
 const styled = styledCss(styles)
 
 const { fireErrorMessage } = errors;
@@ -213,9 +214,13 @@ class FilestackFilePicker extends React.Component {
               </div>
             )
           }
-          <PrimaryButton onClick={this.onClickPick} theme={{ button: styles.button }}>
+          <UiButton
+            onClick={this.onClickPick}
+            primary
+            size='lg'
+          >
             {isChallengeBelongToTopgearGroup ? 'Set URL' : 'SELECT A FILE'}
-          </PrimaryButton>
+          </UiButton>
           {!isChallengeBelongToTopgearGroup && (
             <div
               onClick={() => {

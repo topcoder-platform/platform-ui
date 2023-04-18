@@ -8,20 +8,15 @@
 import _ from 'lodash';
 import moment from 'moment';
 import 'moment-duration-format';
-import { isMM } from '@earn/utils/challenge';
-
 import PT from 'prop-types';
-import React from 'react';
-import { PrimaryButton } from '@earn/components/challenge-detail/buttons';
-import Link from '../Link';
+
+import { isMM } from '@earn/utils/challenge';
+import { IconOutline, LinkButton, UiButton } from '~/libs/ui';
 import { COMPETITION_TRACKS } from '@earn/utils/tc';
 import { phaseEndDate } from '@earn/utils/challenge-listing/helper';
 import {
   getTimeLeft,
 } from '@earn/utils/challenge-detail/helper';
-
-import { ReactComponent as LeftArrow } from '@earn/assets/images/arrow-prev.svg';
-
 import { ReactComponent as ArrowUp } from '@earn/assets/images/icon-arrow-up.svg';
 import { ReactComponent as ArrowDown } from '@earn/assets/images/icon-arrow-down.svg';
 
@@ -32,7 +27,6 @@ import TabSelector from './TabSelector';
 
 import styles from './style.scss';
 import { styled as styledCss } from "../../../utils";
-import { LinkButton, UiButton } from '~/libs/ui';
 
 const styled = styledCss(styles)
 
@@ -280,9 +274,13 @@ export default function ChallengeHeader(props) {
     <div className={styles['challenge-outer-container']}>
       <div className={styles['important-detail']}>
         <div className={styles['title-wrapper']} aria-hidden={isMenuOpened}>
-          <Link to={challengesUrl} aria-label="Back to challenge list" className={styles['back-arrow']}>
-            <LeftArrow className={styles['left-arrow']} />
-          </Link>
+          <LinkButton
+            to={challengesUrl}
+            aria-label="Back to challenge list"
+            icon={IconOutline.ChevronLeftIcon}
+            secondary
+            size='md'
+          />
           <div>
             <h1 className={styles['challenge-header']}>
               {name}
@@ -424,12 +422,13 @@ export default function ChallengeHeader(props) {
               {
                 track === COMPETITION_TRACKS.DES && hasRegistered && !unregistering
                   && hasSubmissions && (
-                  <PrimaryButton
-                    theme={{ button: styles.submitButton }}
+                  <LinkButton
+                    primary
+                    size="md"
                     to={`${challengesUrl}/${challengeId}/my-submissions`}
                   >
                     View Submissions
-                  </PrimaryButton>
+                  </LinkButton>
                 )
               }
             </div>

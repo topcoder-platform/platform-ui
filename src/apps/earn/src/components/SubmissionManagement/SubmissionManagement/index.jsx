@@ -14,14 +14,13 @@
  */
 
 import _ from 'lodash';
-import LoadingIndicator from '@earn/components/LoadingIndicator';
-import React from 'react';
 import PT from 'prop-types';
 import moment from 'moment';
-import { Link } from 'react-router-dom';
-import { ReactComponent as LeftArrow } from '@earn/assets/images/arrow-prev-green.svg';
-import { PrimaryButton } from '@earn/components/Buttons';
+
+import { IconOutline, LinkButton } from '~/libs/ui';
+import LoadingIndicator from '@earn/components/LoadingIndicator';
 import { phaseEndDate } from '@earn/utils/challenge-listing/helper';
+
 import SubmissionsTable from '../SubmissionsTable';
 
 import styles from './styles.scss';
@@ -75,13 +74,13 @@ export default function SubmissionManagement(props) {
     <div className={styles['submission-management']}>
       <div className={styles['submission-management-header']}>
         <div className={styles['left-col']}>
-          <Link
+          <LinkButton
+            secondary
+            icon={IconOutline.ChevronLeftIcon}
+            iconToLeft
             to={challengeUrl}
             aria-label="Back to challenge list"
-            className={styles['back-btn']}
-          >
-            <LeftArrow />
-          </Link>
+          />
 
           <h4 className={styles.name}>
             {challenge.name}
@@ -183,17 +182,16 @@ export default function SubmissionManagement(props) {
       </div>
       {now.isBefore(submissionEndDate) && (
       <div className={styles['btn-wrap']}>
-        <PrimaryButton
-          theme={{
-            button: styles['add-sub-btn'],
-          }}
+        <LinkButton
+          primary
+          size='lg'
           to={`${challengeUrl}/submit`}
         >
           {
                (!isDevelop || !submissions || submissions.length === 0)
                  ? 'Add Submission' : 'Update Submission'
              }
-        </PrimaryButton>
+        </LinkButton>
       </div>
       )}
     </div>

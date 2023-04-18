@@ -11,10 +11,10 @@ import _ from 'lodash';
 import { connect } from 'react-redux';
 import config from '@earn/config';
 import * as submissionUtils from '@earn/utils/submission';
+import { LinkButton } from '~/libs/ui';
 
 import { getService } from '@earn/services/submissions';
 import { isTokenExpired } from "@earn/utils/token";
-import Button from '../Button';
 import { ReactComponent as DateSortIcon } from '@earn/assets/images/icon-date-sort.svg';
 import { ReactComponent as SortIcon } from '@earn/assets/images/icon-sort.svg';
 import { getSubmissionId } from '@earn/utils/submissions';
@@ -932,13 +932,14 @@ class SubmissionsComponent extends React.Component {
         </div>
         {isMM && (
           <div className={styles['btn-add-submission']}>
-            <Button
+            <LinkButton
+              primary
+              size='lg'
               disabled={!hasRegistered || unregistering || submissionEnded || isLegacyMM}
-              theme={{ button: styles.challengeAction }}
               to={`${challengesUrl}/${challengeId}/submit`}
             >
               Add Submission
-            </Button>
+            </LinkButton>
           </div>
         )}
         {

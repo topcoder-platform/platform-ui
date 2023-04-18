@@ -4,6 +4,7 @@ import { PrimaryButton } from '@earn/components/challenge-detail/buttons';
 import Modal from '@earn/components/challenge-detail/Modal'
 
 import styles from './style.scss';
+import { UiButton } from '~/libs/ui';
 
 export default function SaveConfirmationModal({
   onDone,
@@ -18,11 +19,13 @@ export default function SaveConfirmationModal({
       </h1>
       {
         saving ? <LoadingIndicator /> : (
-          <PrimaryButton
+          <UiButton
+            primary
+            size='md'
             onClick={onDone}
           >
             Done
-          </PrimaryButton>
+          </UiButton>
         )
       }
     </Modal>

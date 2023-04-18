@@ -1,4 +1,5 @@
 @import "@earn/styles/mixins";
+@import "@libs/ui/styles/includes";
 
 .container {
   @include roboto-regular;
@@ -119,30 +120,8 @@
     flex-wrap: nowrap;
     display: flex;
     justify-content: center;
+    gap: $sp-3;
   }
-}
-
-.button {
-  @include roboto-bold;
-
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 24px;
-  border-radius: 50px !important;
-  background: #137d60 !important;
-  color: #fff !important;
-}
-
-.buttonOutlined {
-  @include roboto-bold;
-
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 24px;
-  border-radius: 50px !important;
-  background: #fff !important;
-  color: #137d60 !important;
-  border: 2px solid #137d60;
 }
 
 @keyframes spin {

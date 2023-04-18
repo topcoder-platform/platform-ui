@@ -21,22 +21,6 @@ $light-gray-color: $tc-gray-neutral-light;
   }
 }
 
-.add-sub-btn {
-  @include roboto-bold;
-
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 24px;
-  border-radius: 50px !important;
-  background: #137d60 !important;
-  color: #fff !important;
-  text-transform: uppercase;
-
-  @include xs-to-md {
-    font-size: 14px;
-    line-height: 20px;
-  }
-}
 
 .add-sub-btn-warning {
   @include roboto-bold;

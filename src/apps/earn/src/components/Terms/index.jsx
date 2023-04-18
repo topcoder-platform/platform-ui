@@ -9,7 +9,9 @@ import React from "react";
 import PT from "prop-types";
 import FocusTrap from "focus-trap-react";
 
-import { Modal, PrimaryButton, Button } from "../UiKit";
+import { UiButton } from "~/libs/ui";
+
+import { Modal } from "../UiKit";
 import LoadingIndicator from "../LoadingIndicator";
 import TermDetails from "./TermDetails";
 
@@ -299,8 +301,9 @@ export default class Terms extends React.Component {
                 details.agreeabilityType === "Electronically-agreeable" ? (
                   <div className={styled("buttons")}>
                     {selectedTerm.agreed ? (
-                      <PrimaryButton
-                        theme={styles}
+                      <UiButton
+                        primary
+                        size='md'
                         onClick={(e) => {
                           this.nextTerm(e);
                           if (this.vScrollArea) {
@@ -309,10 +312,12 @@ export default class Terms extends React.Component {
                         }}
                       >
                         Next
-                      </PrimaryButton>
+                      </UiButton>
                     ) : (
                       <div>
-                        <PrimaryButton
+                        <UiButton
+                          primary
+                          size='md'
                           disabled={agreeingTerm === details.id}
                           onClick={() => {
                             agreeTerm(details.id);
@@ -320,13 +325,12 @@ export default class Terms extends React.Component {
                               this.vScrollArea.scrollTop = 0;
                             }
                           }}
-                          theme={styles}
                         >
                           I Agree
-                        </PrimaryButton>
-                        <Button onClick={onCancel} theme={styles}>
+                        </UiButton>
+                        <UiButton secondary size='md' onClick={onCancel}>
                           I Disagree
-                        </Button>
+                        </UiButton>
                       </div>
                     )}
                   </div>

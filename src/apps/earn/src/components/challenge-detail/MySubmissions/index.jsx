@@ -5,13 +5,14 @@
 import React from 'react';
 import PT from 'prop-types';
 import _ from 'lodash';
+
 import { goToLogin } from '@earn/utils/tc';
 import LoadingIndicator from '@earn/components/LoadingIndicator';
-import tc from '../buttons/themed/tc.scss';
-
 import { isTokenExpired } from "@earn/utils/token";
-import { PrimaryButton } from '../buttons';
+import { UiButton } from '~/libs/ui';
+
 import Modal from '../Modal'
+import tc from '../buttons/themed/tc.scss';
 
 import SubmissionsList from './SubmissionsList';
 import SubmissionsDetail from './SubmissionsDetail';
@@ -88,14 +89,13 @@ class MySubmissionsView extends React.Component {
             />
 
             <div className={styles.buttons}>
-              <PrimaryButton
+              <UiButton
+                primary
                 onClick={() => this.setState({ selectedSubmission: null })}
-                theme={{
-                  button: buttonThemes.tc['primary-green-md'],
-                }}
+                size='md'
               >
                 Close
-              </PrimaryButton>
+              </UiButton>
             </div>
           </Modal>
           )}

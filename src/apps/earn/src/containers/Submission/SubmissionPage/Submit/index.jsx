@@ -11,7 +11,6 @@
 import _ from 'lodash';
 import React from 'react';
 import PT from 'prop-types';
-import { PrimaryButton } from '@earn/components/Buttons';
 import config from '@earn/config';
 import LoadingIndicator from '@earn/components/LoadingIndicator';
 import { COMPETITION_TRACKS } from '@earn/utils/tc';
@@ -21,6 +20,7 @@ import FilestackFilePicker from '../FilestackFilePicker';
 import Uploading from '../Uploading';
 import styles from "./styles.scss";
 import { styled as styledCss } from "@earn/utils";
+import { UiButton } from '~/libs/ui';
 const styled = styledCss(styles)
 
 /**
@@ -298,13 +298,14 @@ class Submit extends React.Component {
             </div>
             <hr className={styled('hr')} />
             <div className={styled('submitArea')}>
-              <PrimaryButton
+              <UiButton
+                primary
                 type="submit"
                 disabled={disabled}
-                theme={{ button: disabled ? styles.buttonDisabled : styles.button }}
+                size='lg'
               >
                 SUBMIT
-              </PrimaryButton>
+              </UiButton>
             </div>
           </form>
         </div>

@@ -8,10 +8,8 @@
  */
  import actions from '@earn/actions/page/submission';
  import { actions as api } from '@earn/actions';
- import config from "@earn/config"
  import { isMM } from '@earn/utils/challenge';
  import communityActions from '@earn/actions/tc-communities';
- import { PrimaryButton } from "@earn/components/Buttons";
  import shortId from 'shortid';
  import React from 'react';
  import PT from 'prop-types';
@@ -20,12 +18,13 @@
  import { ACCESS_DENIED_REASON } from "../../constants";
  import AccessDenied from "../../components/AccessDenied";
  import LoadingIndicator from "@earn/components/LoadingIndicator";
+import { LinkButton } from '~/libs/ui';
  /*import { sprig } from '@sprig-technologies/sprig-browser/dist';
- 
+
  export const Sprig = sprig.configure({
    environmentId: config.SPRIG_ENVIRONMENT_ID,
  });*/
- 
+
  /**
   * SubmissionsPage Container
   */
@@ -33,8 +32,9 @@
    constructor(props) {
      super(props);
      this.handleSubmit = this.handleSubmit.bind(this);
+     this.authInitRef = React.createRef(false);
    }
- 
+
    componentDidMount() {
      const {
        auth,
@@ -42,24 +42,32 @@
        challengeId,
        loadChallengeDetails,
      } = this.props;
- 
+
      loadChallengeDetails(auth, challengeId);
      getCommunitiesList(auth);
    }
- 
+
    componentWillReceiveProps() {
      const {
+        auth,
        challenge,
        history,
+       loadChallengeDetails,
+       challengeId,
      } = this.props;
- 
+
      const { details } = challenge;
- 
+
      if (details && details.isLegacyChallenge && !history.location.pathname.includes(details.id)) {
        history.push(`/earn/challenges/${details.id}/submit`, history.state);
      }
+
+     if (!this.authInitRef.current && auth.isAuthInitialized && !challenge.details) {
+        this.authInitRef.current = true;
+        loadChallengeDetails(auth, challengeId);
+     }
    }
- 
+
    /* A child component has called their submitForm() prop, prepare the passed
       form data for submission and create a submit action */
    handleSubmit(body) {
@@ -71,33 +79,39 @@
        challenge,
        track,
      } = this.props;
- 
+
      // On final upload, the survey should appear
      //Sprig('track', 'onUploadSubmission');
      submit(tokenV3, tokenV2, challengeId, body, isMM(challenge) ? 'DEVELOP' : track);
    }
- 
+
    render() {
      const {
        isRegistered,
        challengeId,
        challengeName,
      } = this.props;
- 
+
      if (!challengeName) {
        return <LoadingIndicator />;
      }
- 
+
      if (!isRegistered && challengeName) {
        return (
          <React.Fragment>
            <AccessDenied cause={ACCESS_DENIED_REASON.NOT_AUTHORIZED}>
-             <PrimaryButton to={`/earn/challenges/${challengeId}`}>Go to Challenge Details</PrimaryButton>
+             <LinkButton
+                primary
+                to={`/earn/challenges/${challengeId}`}
+                size='lg'
+            >
+                Go to Challenge Details
+            </LinkButton>
            </AccessDenied>
          </React.Fragment>
        );
      }
- 
+
      return (
        <SubmissionsPage
          {...this.props}
@@ -106,7 +120,7 @@
      );
    }
  }
- 
+
  /**
   * Default values for Props
   */
@@ -114,7 +128,7 @@
    challengesUrl: '/earn/challenges',
    uploadProgress: 0,
  };
- 
+
  /* Reusable prop validation for Filestack data objects */
  const filestackDataProp = PT.shape({
    filename: PT.string.isRequired,
@@ -123,7 +137,7 @@
    key: PT.string.isRequired,
    container: PT.string.isRequired,
  });
- 
+
  /**
   * Prop Validation
   */
@@ -174,7 +188,7 @@
    loadChallengeDetails: PT.func.isRequired,
    history: PT.shape().isRequired,
  };
- 
+
  /**
   * Standard redux function, passes redux state into Container as props.
   * Is passed to connect(), not called directly.
@@ -213,7 +227,7 @@
      winners: details.winners,
    };
  };
- 
+
  /**
   * Standard redux function, passes redux actions into Container as props.
   * Is passed to connect(), not called directly.
@@ -224,7 +238,7 @@
    const a = actions.page.submission;
    const ca = communityActions.tcCommunity;
    const progress = data => dispatch(a.uploadProgress(data));
- 
+
    return {
      getCommunitiesList: (auth) => {
        const uuid = shortId();
@@ -245,18 +259,17 @@
      setFilePickerUploadProgress: (id, p) => dispatch(a.setFilePickerUploadProgress(id, p)),
      updateNotesLength: length => dispatch(a.updateNotesLength(length)),
      setSubmissionFilestackData: (id, data) => dispatch(a.setSubmissionFilestackData(id, data)),
-     loadChallengeDetails: (tokens, challengeId) => {
+     loadChallengeDetails: (auth, challengeId) => {
        const challengeAction = api.challenge;
        dispatch(challengeAction.getDetailsInit(challengeId));
-       dispatch(challengeAction.getDetailsDone(challengeId, tokens.tokenV3, tokens.tokenV2));
+       dispatch(challengeAction.getDetailsDone({challengeId, tokenV3: auth.tokenV3, tokenV2: auth.tokenV2}));
      },
    };
  }
- 
+
  const Container = connect(
    mapStateToProps,
    mapDispatchToProps,
  )(SubmissionsPageContainer);
- 
+
  export default Container;
- 

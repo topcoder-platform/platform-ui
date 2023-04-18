@@ -6,11 +6,9 @@
  *   back to challenge details.
  */
 import PT from 'prop-types';
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { ReactComponent as LeftArrow } from '@earn/assets/images/arrow-prev-green.svg';
 import styles from "./styles.scss";
 import { styled as styledCss } from "@earn/utils";
+import { IconOutline, LinkButton } from '~/libs/ui';
 const styled = styledCss(styles)
 
 /**
@@ -22,12 +20,17 @@ const Header = ({
   title,
 }) => (
   <div className={styled('header')}>
-    <Link to={`${challengesUrl}/${challengeId}`} className={styled('header-link')}>
-      <LeftArrow className={styled('left-arrow')} />
-      <p>
-        {title}
-      </p>
-    </Link>
+    <div className={styled('header-link')}>
+        <LinkButton
+            secondary
+            to={`${challengesUrl}/${challengeId}`}
+            icon={IconOutline.ChevronLeftIcon}
+            iconToLeft
+        />
+        <p>
+            {title}
+        </p>
+    </div>
   </div>
 );
 

@@ -8,14 +8,15 @@
  */
 import React from 'react';
 import PT from 'prop-types';
+
 import { ReactComponent as UploadSuccess } from '@earn/assets/images/upload-success.svg';
 import { ReactComponent as UploadLoading } from '@earn/assets/images/upload-loading.svg';
 import { ReactComponent as UploadFail } from '@earn/assets/images/upload-fail.svg';
-import { PrimaryButton } from '@earn/components/Buttons';
-import Button from '@earn/components/Button';
 import { COMPETITION_TRACKS } from '@earn/utils/tc';
-import styles from "./styles.scss";
 import { styled as styledCss } from "@earn/utils";
+import { LinkButton, UiButton } from '~/libs/ui';
+
+import styles from "./styles.scss";
 const styled = styledCss(styles)
 
 const Uploading = ({
@@ -135,18 +136,20 @@ const Uploading = ({
          error
            && (
            <div className={styled('button-container')}>
-             <Button
+             <UiButton
                onClick={() => reset()}
-               theme={{ button: styles.buttonOutlined }}
+               secondary
+               size='lg'
              >
                Cancel
-             </Button>
-             <PrimaryButton
+             </UiButton>
+             <UiButton
+               primary
                onClick={() => retry()}
-               theme={{ button: styles.button }}
+               size='lg'
              >
                Try Again
-             </PrimaryButton>
+             </UiButton>
            </div>
            )
        }
@@ -165,35 +168,39 @@ const Uploading = ({
            <div className={styled('button-container')}>
              { track === COMPETITION_TRACKS.DES ? (
                <span>
-                 <Button
+                 <UiButton
                    onClick={() => reset()}
-                   theme={{ button: styles.buttonOutlined }}
+                   secondary
+                   size='lg'
                  >
                    Add Another Submission
-                 </Button>
-                 <PrimaryButton
+                 </UiButton>
+                 <LinkButton
+                   primary
+                   size='lg'
                    to={`${challengesUrl}/${challengeId}/my-submissions`}
                    onClick={() => back()}
-                   theme={{ button: styles.button }}
                  >
                    My Submissions
-                 </PrimaryButton>
+                 </LinkButton>
                </span>
              ) : (
                <React.Fragment>
-                 <Button
+                 <UiButton
                    onClick={() => reset()}
-                   theme={{ button: styles.buttonOutlined }}
+                   secondary
+                   size='lg'
                  >
                    ADD SUBMISSION
-                 </Button>
-                 <PrimaryButton
+                 </UiButton>
+                 <LinkButton
+                   primary
                    to={`${challengesUrl}/${challengeId}/my-submissions`}
                    onClick={() => back()}
-                   theme={{ button: styles.button }}
+                   size='lg'
                  >
                    MY SUBMISSIONS
-                 </PrimaryButton>
+                 </LinkButton>
                </React.Fragment>
              )}
            </div>

@@ -3,14 +3,16 @@ import _ from 'lodash';
 import React from 'react';
 import PT from 'prop-types';
 import moment from 'moment';
-import { PrimaryButton } from '../../buttons';
-import Modal from '../../Modal'
+
+import { UiButton } from '~/libs/ui';
 import { ReactComponent as ArrowUp } from '@earn/assets/images/icon-arrow-up.svg';
 import { ReactComponent as ArrowDown } from '@earn/assets/images/icon-arrow-down.svg';
 import LoadingIndicator from '@earn/components/LoadingIndicator';
+import { styled as styledCss } from "@earn/utils";
+
+import Modal from '../../Modal'
 
 import styles from "./style.scss";
-import { styled as styledCss } from "@earn/utils";
 const styled = styledCss(styles)
 
 class SubmissionInformationModal extends React.Component {
@@ -154,7 +156,7 @@ class SubmissionInformationModal extends React.Component {
               }
               <div className={styles['submission-information-buttons']}>
                 <div className={styles['submission-information-button-close']}>
-                  <PrimaryButton onClick={() => onClose(false)}>Dismiss</PrimaryButton>
+                  <UiButton primary size="md" onClick={() => onClose(false)}>Dismiss</UiButton>
                 </div>
               </div>
             </React.Fragment>

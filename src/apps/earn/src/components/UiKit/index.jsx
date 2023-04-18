@@ -64,17 +64,3 @@ export const GhostButton = ({children}) => (
         {children}
     </div>
 )
-export const Button = ({children}) => (
-    <div className="mock-uikit-Button">
-        <div>Button</div>
-        {children}
-    </div>
-)
-export const Link = ({children}) => (
-    <div className="mock-uikit-Button">
-        <div>Button</div>
-        {children}
-    </div>
-)
-
-export * from './Button'

@@ -7,6 +7,7 @@ import PT from "prop-types";
 import React from "react";
 import Sticky from "react-stickynode";
 
+import { UiButton } from "~/libs/ui";
 import { Button } from "../../UiKit";
 import Select from "../../Select";
 import { EDITOR_BLOCK_STYLE_MAP } from "../../../utils/editor";
@@ -92,8 +93,9 @@ export default class Toolbar extends React.Component {
     const disableStyling = !st.editor;
     const { connector, nodeId, onSave } = this.props;
 
-    const createStyleButton = (label, name, active, theme) => (
-      <Button
+    const createStyleButton = (label, name, active, className) => (
+      <UiButton
+        secondary
         active={active}
         disabled={disableStyling}
         onMouseDown={(e) => {
@@ -102,10 +104,10 @@ export default class Toolbar extends React.Component {
           this.setState({ [name]: newStyle.has(name) });
         }}
         size="sm"
-        theme={{ button: theme }}
+        className={className}
       >
         {label}
-      </Button>
+      </UiButton>
     );
 
     return (
@@ -138,14 +140,14 @@ export default class Toolbar extends React.Component {
             </div>
           ) : null}
 
-          <Button
-            // disabled={!this.props.connector.modified}
+          <UiButton
+            disabled={!this.props.connector.modified}
             onClick={() => onSave()}
-            size="sm"
-            theme={{ button: styles.basic }}
+            size="md"
+            className={styles.basic}
           >
             Save
-          </Button>
+          </UiButton>
           <div className={styled("separator")} />
 
           <div className={styled("separator")} />
@@ -163,17 +165,17 @@ export default class Toolbar extends React.Component {
 
           <div className={styled("separator")} />
 
-          <Button
+          <UiButton
             disabled={disableStyling}
             onMouseDown={(e) => {
               e.preventDefault();
               this.setState({ pickingTextColor: !st.pickingTextColor });
             }}
-            size="sm"
-            theme={{ button: styles.basic }}
+            size="md"
+            className={styles.basic}
           >
             Color
-          </Button>
+          </UiButton>
           <ColorPicker
             onChange={(color) => {
               const editor = st.editor || connector.previousEditor;
@@ -193,15 +195,15 @@ export default class Toolbar extends React.Component {
            * to customize permitted operations via editor props, thus not
            * removing the button code. */
           /*
-              <Button
+              <UiButton
                 disabled={disableStyling}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   this.setState({ pickingHighlightColor: !st.pickingHighlightColor });
                 }}
-                size="sm"
-                theme={{ button: style.basic }}
-              >Highlight</Button>
+                size="md"
+                className={style.basic}
+              >Highlight</UiButton>
               <ColorPicker
                 onChange={(color) => {
                   const editor = st.editor || this.props.connector.previousEditor;
@@ -218,29 +220,29 @@ export default class Toolbar extends React.Component {
 
           <div className={styled("separator")} />
 
-          <Button
+          <UiButton
             disabled={disableStyling}
             onMouseDown={(e) => {
               e.preventDefault();
               st.editor.insertLink(" Link", "http://", true);
             }}
-            size="sm"
-            theme={{ button: styles.basic }}
+            size="md"
+            className={styles.basic}
           >
             Insert Link
-          </Button>
+          </UiButton>
 
-          <Button
+          <UiButton
             disabled={disableStyling}
             onMouseDown={(e) => {
               e.preventDefault();
               st.editor.insertImage("http://", true);
             }}
-            size="sm"
-            theme={{ button: styles.basic }}
+            size="md"
+            className={styles.basic}
           >
             Insert Image
-          </Button>
+          </UiButton>
 
           <div className={styled("select-wrapper")}>
             <Select
@@ -265,7 +267,7 @@ export default class Toolbar extends React.Component {
           {/* I guess, we gonna drop the inline Markdown option. Just for
            * a case, let's keep the button code around for a bit longer. */
           /*
-              <Button
+              <UiButton
                 active={st.markdown}
                 disabled
                 onMouseDown={(e) => {
@@ -274,9 +276,9 @@ export default class Toolbar extends React.Component {
                   this.setState({ markdown: active });
                   this.props.connector.toggleInlineMarkdown(active);
                 }}
-                size="sm"
-                theme={{ button: style.basic }}
-              >Inline Markdown</Button>
+                size="md"
+                className={style.basic}
+              >Inline Markdown</UiButton>
             */}
         </div>
       </Sticky>

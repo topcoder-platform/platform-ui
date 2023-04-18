@@ -14,7 +14,6 @@ import config from '@earn/config';
 import { isMM } from '@earn/utils/challenge';
 
 import PT from 'prop-types';
-import { DangerButton } from '@earn/components/challenge-detail/buttons';
 import { SPECS_TAB_STATES } from '@earn/actions/page/challenge-details';
 import SpecificationComponent from './SpecificationComponent';
 // import { editorStateToHTML } from 'utils/editor';
@@ -24,6 +23,7 @@ import SideBar from './SideBar';
 
 import styles from "./styles.scss";
 import { styled as styledCss } from "../../../utils";
+import { UiButton } from '~/libs/ui';
 const styled = styledCss(styles)
 
 export default function ChallengeDetailsView(props) {
@@ -149,12 +149,14 @@ export default function ChallengeDetailsView(props) {
       {
         canEdit && !editMode ? (
           <Sticky innerZ={100}>
-            <DangerButton
+            <UiButton
+              secondary
+              variant="danger"
               onClick={() => setSpecsTabState(SPECS_TAB_STATES.EDIT)}
-              theme={{ button: styles.hiddenSaveButton }}
+              className={styles.hiddenSaveButton}
             >
               Don&apos;t press it!
-            </DangerButton>
+            </UiButton>
           </Sticky>
         ) : null
       }

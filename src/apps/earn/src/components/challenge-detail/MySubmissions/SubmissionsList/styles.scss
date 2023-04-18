@@ -65,49 +65,6 @@
   margin-top: 5px;
 }
 
-.challengeAction {
-  min-width: 0;
-  width: 181px;
-  margin-top: 25px !important;
-  align-self: center;
-  background-color: #137d60 !important;
-  border-radius: 50px !important;
-  padding: 12px 24px;
-  text-transform: uppercase;
-
-  @include roboto-bold;
-
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 24px;
-  color: #fff !important;
-  border: 0;
-
-  &:hover {
-    background-color: lighten(#137d60, 5%) !important;
-    background-image: none !important;
-  }
-}
-
-.challengeActionDisabled {
-  min-width: 0;
-  width: 181px;
-  margin-top: 25px !important;
-  align-self: center;
-  background: #f4f4f4 !important;
-  border-radius: 50px !important;
-  padding: 12px 24px;
-  text-transform: uppercase;
-
-  @include roboto-bold;
-
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 24px;
-  color: #767676 !important;
-  border: 0;
-}
-
 .submission-table {
   @include roboto-medium;
 
