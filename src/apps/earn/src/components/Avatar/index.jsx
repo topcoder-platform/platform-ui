@@ -1,25 +1,12 @@
-import PT from 'prop-types';
-import React from 'react';
-import cn from 'classnames';
-
 import { ReactComponent as DefaultUserAvatar } from '@earn/assets/images/default-user-avatar.svg';
+import React from 'react';
+import { themr } from 'react-css-super-themr';
+import ProtoAvatar from '../ProtoAvatar';
 
-import styles from './Avatar.module.scss';
+import theme from './style.scss';
 
-export default function Avatar({ className, url }) {
-    const classNames = cn(className, styles.avatar)
-
-    return url
-        ? <img alt="Avatar" src={url} className={classNames} />
-        : <DefaultUserAvatar className={classNames} />;
+function Avatar(props) {
+  return <ProtoAvatar DefaultAvatar={DefaultUserAvatar} {...props} />;
 }
 
-Avatar.defaultProps = {
-    className: null,
-    url: null,
-};
-
-Avatar.propTypes = {
-    className: PT.string,
-    url: PT.string,
-};
+export default themr('Avatar', theme)(Avatar);

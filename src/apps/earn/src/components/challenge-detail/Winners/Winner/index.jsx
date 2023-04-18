@@ -1,4 +1,4 @@
-import Avatar from '@earn/components/challenge-detail/Avatar';
+import Avatar from '@earn/components/Avatar';
 import PT from 'prop-types';
 import { getService } from '@earn/services/submissions';
 import React, { useEffect, useState } from 'react';
