@@ -11,29 +11,6 @@
   }
 }
 
-.button {
-  @include roboto-bold;
-
-  align-self: center !important;
-  position: relative !important;
-  white-space: nowrap !important;
-  border-color: #137d60 !important;
-  color: #137d60 !important;
-  margin: 0 !important;
-  border-radius: 24px !important;
-  border-width: 2px !important;
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  line-height: 24px;
-  letter-spacing: 0.2px;
-  min-height: 32px !important;
-  padding: 3px 17px !important;
-
-  @include xs-to-sm {
-    align-self: flex-start !important;
-  }
-}
-
 .container {
   @include roboto-regular;
 

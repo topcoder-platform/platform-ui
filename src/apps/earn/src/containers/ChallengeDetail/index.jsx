@@ -934,7 +934,7 @@ const mapDispatchToProps = (dispatch) => {
     },
     getAllCountries: (tokenV3) => {
       dispatch(lookupActions.getAllCountriesInit());
-      dispatch(lookupActions.getAllCountriesDone(tokenV3));
+      dispatch(lookupActions.getAllCountries(tokenV3));
     },
     getReviewTypes: (tokenV3) => {
       dispatch(lookupActions.getReviewTypesInit());

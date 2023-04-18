@@ -3,7 +3,7 @@ import React, { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
-import { UiButton } from "~/libs/ui";
+import { LinkButton, UiButton } from "~/libs/ui";
 
 import { ReactComponent as IconCornerLeft } from "../../../assets/icons/icon-corner-left-green.svg";
 import { ReactComponent as IconTickCircled } from "../../../assets/icons/icon-tick-circled.svg";
@@ -74,9 +74,15 @@ const ApplicationForm = () => {
   return (
     <div className={styles.container}>
       <div className={styles.title}>{title}</div>
-      <Link className={styles.backButton} to={makeGigPath(jobExternalId)}>
-        <IconCornerLeft /> Gig Details
-      </Link>
+      <LinkButton
+        to={makeGigPath(jobExternalId)}
+        link
+        icon={IconCornerLeft}
+        iconToLeft
+        className={styles.backButton}
+      >
+        Gig Details
+      </LinkButton>
       {isSending ? (
         <>
           <LoadingCircles className={styles.loadingIndicator} />

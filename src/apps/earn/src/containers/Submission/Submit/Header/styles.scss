@@ -18,17 +18,11 @@
 
   a {
     font-size: 18px;
-    color: $tc-gray-60;
     font-weight: 300;
     display: flex;
     align-items: center;
-
-    span {
-      font-size: 54px;
-      display: block;
-      position: relative;
-      top: -3px;
-      margin-right: 6px;
+    > :global(.btn-style-link) {
+        color: $tc-gray-60;
     }
   }
 

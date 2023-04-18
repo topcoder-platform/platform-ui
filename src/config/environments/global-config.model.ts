@@ -34,5 +34,5 @@ export interface GlobalConfig {
     VANILLA_FORUM: {
         ACCESS_TOKEN: string
         V2_URL: string
-    }
+    },
 }

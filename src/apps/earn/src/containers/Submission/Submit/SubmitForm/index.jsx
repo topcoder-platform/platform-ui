@@ -13,8 +13,9 @@ import React, { useEffect, useRef } from "react";
 import PT from "prop-types";
 import _ from "lodash";
 
+import { UiButton } from "~/libs/ui";
+
 import config from '../../../../config';
-import { PrimaryButton } from "../../../../components/Buttons";
 import LoadingIndicator from "../../../../components/LoadingIndicator";
 import { COMPETITION_TRACKS } from "../../../../constants";
 import FilePicker from "../FilePicker";
@@ -52,6 +53,7 @@ const SubmitForm = ({
   setSubmissionFilestackData,
   submit,
 }) => {
+    console.log('HEREEEEEE2', submissionFilestackData);
   const propsRef = useRef();
   propsRef.current = { resetForm };
 
@@ -286,7 +288,9 @@ const SubmitForm = ({
               I UNDERSTAND AND AGREE
             </div>
           </div>
-          <PrimaryButton
+          <UiButton
+            primary
+            size='lg'
             type="submit"
             disabled={
               !agreed ||
@@ -296,7 +300,7 @@ const SubmitForm = ({
             }
           >
             Submit
-          </PrimaryButton>
+          </UiButton>
         </div>
       </form>
     </div>

@@ -23,17 +23,8 @@
 
 .backButton {
   display: flex;
-  align-items: center;
   margin-bottom: 55px;
-  font-weight: 700;
   font-size: 14px;
-  line-height: 52px;
-  letter-spacing: 0.8px;
-  color: #229174 !important;
-  text-transform: uppercase;
-  text-decoration: none;
-  border-bottom: 1px solid $tc-gray5;
-
   svg {
     margin-right: 5px;
     width: auto;

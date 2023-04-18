@@ -10,17 +10,18 @@
  */
 /* eslint-env browser */
 
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import PT from "prop-types";
 import _ from "lodash";
 import { client as filestack } from "filestack-react";
-import { PrimaryButton } from "../../../../components/Buttons";
+
 import { fireErrorMessage } from "../../../../utils/logger";
 import config from "../../../../config";
 import * as util from "../../../../utils/submission";
 
 import styles from "./styles.scss";
 import { styled as styledCss } from "@earn/utils";
+import { UiButton } from "~/libs/ui";
 const styled = styledCss(styles)
 
 const FilePicker = ({
@@ -170,9 +171,9 @@ const FilePicker = ({
             />
           </div>
         )}
-        <PrimaryButton onClick={onClickPick}>
+        <UiButton primary size='lg' onClick={onClickPick}>
           {isChallengeBelongToTopgearGroup ? "Set URL" : "Pick a File"}
-        </PrimaryButton>
+        </UiButton>
 
         {!isChallengeBelongToTopgearGroup && (
           <div

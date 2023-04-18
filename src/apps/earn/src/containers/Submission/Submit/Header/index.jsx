@@ -1,19 +1,20 @@
 import PT from "prop-types";
 
-import { EnvironmentConfig } from "~/config";
-
 import styles from "./styles.scss";
+import { IconOutline, LinkButton } from "~/libs/ui";
 
 const Header = ({ title, challengeId }) => {
   return (
     <div className={styles.header}>
-      <a
-        href={`${EnvironmentConfig.PLATFORMUI_URL}/earn/challenges/${challengeId}`}
-      >
-        <span>&#x2039;</span>
-        <p>Back to challenge</p>
-      </a>
-      <h1>{title}</h1>
+        <LinkButton
+            link
+            icon={IconOutline.ArrowLeftIcon}
+            to={`/earn/challenges/${challengeId}`}
+            size='lg'
+        >
+            Back to challenge
+        </LinkButton>
+        <h1>{title}</h1>
     </div>
   );
 };

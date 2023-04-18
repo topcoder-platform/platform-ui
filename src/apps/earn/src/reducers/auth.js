@@ -26,6 +26,7 @@ function onProfileLoaded(state, action) {
   return {
     ...state,
     authenticating: false,
+    isProfileLoaded: true,
     profile: action.payload,
   };
 }
@@ -71,6 +72,7 @@ function create(initialState) {
       tokenV3: "",
       user: null,
       isAuthInitialized: false,
+      isProfileLoaded: false,
     })
   );
 }

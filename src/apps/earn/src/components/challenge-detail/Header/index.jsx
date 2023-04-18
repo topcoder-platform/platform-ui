@@ -32,6 +32,7 @@ import TabSelector from './TabSelector';
 
 import styles from './style.scss';
 import { styled as styledCss } from "../../../utils";
+import { LinkButton, UiButton } from '~/libs/ui';
 
 const styled = styledCss(styles)
 
@@ -394,37 +395,32 @@ export default function ChallengeHeader(props) {
           <div className={styled("challenge-ops-wrapper")}>
             <div className={styled("challenge-ops-container")}>
               {hasRegistered ? (
-                <PrimaryButton
+                <UiButton
                   disabled={unregisterButtonDisabled}
-                  forceA
                   onClick={unregisterFromChallenge}
-                  theme={{
-                    button: unregisterButtonDisabled
-                      ? styles.unregisterButtonDisabled
-                      : styles.unregisterButton,
-                  }}
+                  secondary
+                  size='xl'
                 >
                   Unregister
-                </PrimaryButton>
+                </UiButton>
               ) : (
-                <PrimaryButton
-                  disabled={registerButtonDisabled}
-                  theme={{
-                    button: registerButtonDisabled ? styles.submitButtonDisabled : styles.registerBtn,
-                  }}
-                  forceA
-                  onClick={registerForChallenge}
+                <UiButton
+                    primary
+                    disabled={registerButtonDisabled}
+                    onClick={registerForChallenge}
+                    size='xl'
                 >
                   Register
-                </PrimaryButton>
+                </UiButton>
               )}
-              <PrimaryButton
+              <LinkButton
+                primary
                 disabled={disabled}
-                theme={{ button: disabled ? styles.submitButtonDisabled : styles.submitButton }}
+                size='xl'
                 to={`${challengesUrl}/${challengeId}/submit`}
               >
                 Submit
-              </PrimaryButton>
+              </LinkButton>
               {
                 track === COMPETITION_TRACKS.DES && hasRegistered && !unregistering
                   && hasSubmissions && (

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Route, Routes } from "react-router-dom";
 
@@ -5,6 +6,7 @@ import { lazyLoad } from "~/libs/core";
 
 import ErrorMessage from '../../components/ErrorMessage'
 import { clearErrorMesssage } from "../../utils/logger";
+import { initAuth } from "../../services/auth";
 
 const Submission = lazyLoad(
   () => import('../../containers/Submission'),
@@ -17,7 +19,9 @@ const SubmissionManagement = lazyLoad(
 
 export const ChallengeSubmissions = () => {
   const alert = useSelector((state) => state.errors.alerts[0]);
-    
+
+  useEffect(() => { initAuth() }, [])
+
   return (
     <>
       <Routes>

@@ -113,9 +113,9 @@ const ProdEarnConfig: EarnConfig = {
     DEFAULT_ENVIRONMENT: "master",
   },
   FILESTACK: {
-    API_KEY: process.env.FILESTACK_API_KEY,
-    REGION: "us-east-1",
-    SUBMISSION_CONTAINER: process.env.FILESTACK_SUBMISSION_CONTAINER
+    API_KEY: process.env.FILESTACK_API_KEY ?? process.env.REACT_APP_FILESTACK_API_KEY,
+    REGION: process.env.FILESTACK_REGION ?? process.env.REACT_APP_FILESTACK_REGION ?? "us-east-1",
+    SUBMISSION_CONTAINER: process.env.FILESTACK_SUBMISSION_CONTAINER ?? process.env.REACT_APP_FILESTACK_SUBMISSION_CONTAINER,
   },
   /* Time in MS to wait before refreshing challenge details after register
    * and unregister.  Used to allow API sufficent time to update.

@@ -19,7 +19,7 @@ import { fireErrorMessage } from "../utils/errors";
 import mySubmissionsManagement from "./my-submissions-management";
 import { COMPETITION_TRACKS } from '../utils/tc';
 
- 
+
  /**
   * Handles CHALLENGE/GET_DETAILS_INIT action.
   * @param {Object} state
@@ -39,7 +39,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      loadingDetailsForChallengeId: challengeId,
    };
  }
- 
+
  /**
   * Handles CHALLENGE/GET_DETAILS_DONE action.
   * Note, that it silently discards received details if the ID of received
@@ -62,20 +62,20 @@ import { COMPETITION_TRACKS } from '../utils/tc';
        loadingDetailsForChallengeId: '',
      };
    }
- 
+
    const details = action.payload;
- 
+
    // condition based on ROUTE used for Review Opportunities, change if needed
    const challengeId = state.loadingDetailsForChallengeId;
    let compareChallenge = details.id;
    if (challengeId.length >= 5 && challengeId.length <= 8) {
      compareChallenge = details.legacyId;
    }
- 
+
    if (_.toString(compareChallenge) !== challengeId) {
      return state;
    }
- 
+
    return {
      ...state,
      details,
@@ -83,7 +83,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      loadingDetailsForChallengeId: '',
    };
  }
- 
+
  /**
   * Handles CHALLENGE/GET_SUBMISSION_INIT action.
   * @param {Object} state
@@ -97,7 +97,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      mySubmissions: { challengeId: '', v2: null },
    };
  }
- 
+
  /**
   * Handles challengeActions.fetchSubmissionsDone action.
   * @param {Object} state Previous state.
@@ -112,17 +112,17 @@ import { COMPETITION_TRACKS } from '../utils/tc';
        mySubmissions: { challengeId: '', v2: null },
      };
    }
- 
+
    const { challengeId, submissions } = action.payload;
    if (challengeId !== state.loadingSubmissionsForChallengeId) return state;
- 
+
    return {
      ...state,
      loadingSubmissionsForChallengeId: '',
      mySubmissions: { challengeId, v2: submissions },
    };
  }
- 
+
  /**
   * Handles CHALLENGE/GET_MM_SUBMISSION_INIT action.
   * @param {Object} state
@@ -136,7 +136,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      mmSubmissions: [],
    };
  }
- 
+
  /**
   * Handles CHALLENGE/GET_MM_SUBMISSION_DONE action.
   * @param {Object} state Previous state.
@@ -151,7 +151,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
        mmSubmissions: [],
      };
    }
- 
+
    const { challengeId, submissions } = action.payload;
    if (challengeId.toString() !== state.loadingMMSubmissionsForChallengeId) return state;
    return {
@@ -160,7 +160,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      mmSubmissions: submissions,
    };
  }
- 
+
  /**
   * Handles challengeActions.fetchCheckpointsDone action.
   * @param {Object} state Previous state.
@@ -182,7 +182,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
    }
    return state;
  }
- 
+
  /**
   * Handles CHALLENGE/LOAD_RESULTS_INIT action.
   * @param {Object} state
@@ -192,7 +192,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
  function onLoadResultsInit(state, { payload }) {
    return { ...state, loadingResultsForChallengeId: payload };
  }
- 
+
  /**
   * Handles CHALLENGE/LOAD_RESULTS_DONE action.
   * @param {Object} state
@@ -219,7 +219,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      resultsLoadedForChallengeId: action.payload.challengeId,
    };
  }
- 
+
  /**
   * Handles CHALLENGE/REGISTER_DONE action.
   * @param {Object} state
@@ -241,7 +241,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      loadingDetailsForChallengeId: _.toString(state.details.id),
    }, action);
  }
- 
+
  /**
   * Handles CHALLENGE/UNREGISTER_DONE action.
   * @param {Object} state
@@ -263,7 +263,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      loadingDetailsForChallengeId: _.toString(state.details.id),
    }, action);
  }
- 
+
  /**
   * Handles CHALLENGE/UPDATE_CHALLENGE_INIT.
   * @param {Object} state Old state.
@@ -273,7 +273,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
  function onUpdateChallengeInit(state, { payload }) {
    return { ...state, updatingChallengeUuid: payload };
  }
- 
+
  /**
   * Handles CHALLENGE/UPDATE_CHALLENGE_DONE.
   * @param {Object} state Old state.
@@ -287,7 +287,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      return state;
    }
    if (payload.uuid !== state.updatingChallengeUuid) return state;
- 
+
    /* Due to the normalization of challenge APIs responses done when a challenge
     * is loaded, many pieces of our code expect different information in a format
     * different from API v3 response, thus if we just save entire payload.res
@@ -301,7 +301,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      'round2Introduction',
      'submissionGuidelines',
    ]);
- 
+
    return {
      ...state,
      details: {
@@ -311,7 +311,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      updatingChallengeUuid: '',
    };
  }
- 
+
  /**
   * Handles CHALLENGE/GET_ACTIVE_CHALLENGES_COUNT_DONE action.
   * @param {Object} state Old state.
@@ -324,10 +324,10 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      logger.error('Failed to get active challenges count', payload);
      return state;
    }
- 
+
    return ({ ...state, activeChallengesCount: payload });
  }
- 
+
  /**
   * Handles CHALLENGE/GET_SUBMISSION_INFORMATION_INIT action.
   * @param {Object} state
@@ -342,7 +342,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      submissionInformation: null,
    };
  }
- 
+
  /**
   * Handles CHALLENGE/GET_SUBMISSION_INFORMATION_DONE action.
   * @param {Object} state Previous state.
@@ -357,17 +357,17 @@ import { COMPETITION_TRACKS } from '../utils/tc';
        submissionInformation: null,
      };
    }
- 
+
    const { submissionId, submission } = action.payload;
    if (submissionId !== state.loadingSubmissionInformationForSubmissionId) return state;
- 
+
    return {
      ...state,
      loadingSubmissionInformationForSubmissionId: '',
      submissionInformation: submission,
    };
  }
- 
+
  /**
   * Handles CHALLENGE/GET_CHALLENGE_STATISTICS_DONE action.
   * @param {Object} state Previous state.
@@ -381,13 +381,63 @@ import { COMPETITION_TRACKS } from '../utils/tc';
        statisticsData: null,
      };
    }
- 
+
    return {
      ...state,
      statisticsData: action.payload,
    };
  }
- 
+
+function onGetChallengeInit(state) {
+    return {
+        ...state,
+        isLoadingChallenge: true,
+        isChallengeLoaded: false,
+    };
+}
+
+function onGetChallengeDone(state, { error, payload }) {
+    if (error) {
+        logger.error("Failed to get challenge details!", payload);
+        fireErrorMessage(
+            "ERROR: Failed to load the challenge",
+            "Please, try again a bit later"
+        );
+        return { ...state, isLoadingChallenge: false, isChallengeLoaded: false };
+    }
+
+    return {
+        ...state,
+        challenge: { ...payload },
+        isLoadingChallenge: false,
+        isChallengeLoaded: true,
+    };
+}
+
+/**
+ * Update isRegistered to before challenge submit
+ * @param {Object} state Old state.
+ * @param {Object} actions Action error/payload.
+ * @param {Object} action Action.
+ */
+function onGetIsRegistered(state, { error, payload }) {
+    if (error) {
+        logger.error("Failed to get the user's registration status!", payload);
+        fireErrorMessage(
+            "ERROR: Failed to submit",
+            "Please, try again a bit later"
+        );
+        return state;
+    }
+    return {
+        ...state,
+        challenge: {
+            ...state.challenge,
+            isRegistered: payload.isRegistered,
+        },
+    };
+}
+
  /**
   * Creates a new Challenge reducer with the specified initial state.
   * @param {Object} initialState Optional. Initial state.
@@ -402,9 +452,9 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      [a.getDetailsDone]: onGetDetailsDone,
      [`${a.getDetailsDone}_SUCCESS`]: onGetDetailsDone,
      [a.getSubmissionsInit]: onGetSubmissionsInit,
-     [a.getSubmissionsDone]: onGetSubmissionsDone,
+     [`${[a.getSubmissionsDone]}_SUCCESS`]: onGetSubmissionsDone,
      [a.getMmSubmissionsInit]: onGetMMSubmissionsInit,
-     [a.getMmSubmissionsDone]: onGetMMSubmissionsDone,
+     [`${[a.getMmSubmissionsDone]}_SUCCESS`]: onGetMMSubmissionsDone,
      [smpActions.smp.deleteSubmissionDone]: (state, { payload }) => ({
        ...state,
        mySubmissions: {
@@ -415,25 +465,28 @@ import { COMPETITION_TRACKS } from '../utils/tc';
        },
      }),
      [a.registerInit]: state => ({ ...state, registering: true }),
-     [a.registerDone]: onRegisterDone,
+     [`${a.registerDone}_SUCCESS`]: onRegisterDone,
      [a.unregisterInit]: state => ({ ...state, unregistering: true }),
-     [a.unregisterDone]: onUnregisterDone,
+     [`${[a.unregisterDone]}_SUCCESS`]: onUnregisterDone,
      [a.loadResultsInit]: onLoadResultsInit,
-     [a.loadResultsDone]: onLoadResultsDone,
+     [`${[a.loadResultsDone]}_SUCCESS`]: onLoadResultsDone,
      [a.fetchCheckpointsInit]: state => ({
        ...state,
        checkpoints: null,
        loadingCheckpoints: true,
      }),
-     [a.fetchCheckpointsDone]: onFetchCheckpointsDone,
+     [`${[a.fetchCheckpointsDone]}_SUCCESS`]: onFetchCheckpointsDone,
      [a.updateChallengeInit]: onUpdateChallengeInit,
-     [a.updateChallengeDone]: onUpdateChallengeDone,
+     [`${[a.updateChallengeDone]}_SUCCESS`]: onUpdateChallengeDone,
      [a.getActiveChallengesCountInit]: state => state,
-     [a.getActiveChallengesCountDone]: onGetActiveChallengesCountDone,
+     [`${[a.getActiveChallengesCountDone]}_SUCCESS`]: onGetActiveChallengesCountDone,
      [a.getSubmissionInformationInit]: onGetSubmissionInformationInit,
-     [a.getSubmissionInformationDone]: onGetSubmissionInformationDone,
+     [`${[a.getSubmissionInformationDone]}_SUCCESS`]: onGetSubmissionInformationDone,
      [a.fetchChallengeStatisticsInit]: state => state,
-     [a.fetchChallengeStatisticsDone]: onFetchChallengeStatisticsDone,
+     [`${[a.fetchChallengeStatisticsDone]}_SUCCESS`]: onFetchChallengeStatisticsDone,
+     [a.getChallengeInit]: onGetChallengeInit,
+     [`${a.getChallenge}_SUCCESS`]: onGetChallengeDone,
+     [`${a.getIsRegistered}_SUCCESS`]: onGetIsRegistered,
    }, _.defaults(initialState, {
      details: null,
      loadingCheckpoints: false,
@@ -453,7 +506,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
      statisticsData: null,
    }));
  }
- 
+
  /**
   * Factory which creates a new reducer with its initial state tailored to the
   * given options object, if specified (for server-side rendering). If options
@@ -471,21 +524,21 @@ import { COMPETITION_TRACKS } from '../utils/tc';
   */
  export function factory(options = {}) {
    /* Server-side rendering of Submission Management Page. */
- 
+
    /* TODO: This shares some common logic with the next "if" block, which
     * should be re-used there. */
    /* TODO: For completely server-side rendering it is also necessary to load
     * terms, etc. */
- 
+
    const tokens = {
      tokenV2: _.get(options.auth, 'tokenV2'),
      tokenV3: _.get(options.auth, 'tokenV3'),
    };
- 
+
    let state = {};
    const challengeId = _.get(options, 'challenge.challengeDetails.id');
    const mySubmission = _.get(options, 'challenge.challengeDetails.mySubmission');
- 
+
    if (challengeId && !mySubmission) {
      return resolveAction(actions.challenge.getDetailsDone(
        challengeId,
@@ -526,7 +579,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
        { mySubmissionsManagement },
      ));
    }
- 
+
    if (challengeId && mySubmission) {
      return Promise.all([
        resolveAction(actions.challenge.getDetailsDone(
@@ -551,14 +604,14 @@ import { COMPETITION_TRACKS } from '../utils/tc';
        { mySubmissionsManagement },
      ));
    }
- 
+
    /* Otherwise this part of Redux state is initialized empty. */
    return Promise.resolve(combineReducers(
      create(state),
      { mySubmissionsManagement },
    ));
  }
- 
+
  /**
   * @static
   * @member default

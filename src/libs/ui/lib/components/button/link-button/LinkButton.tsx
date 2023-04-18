@@ -38,8 +38,12 @@ const LinkButton: FC<LinkButtonProps> = props => {
 
     const button: ReactNode = <Button {...buttonProps} />
 
+    if (props.disabled) {
+        return button
+    }
+
     if (typeof props.to === 'string' && props.to.match(/^https?:\/\//i)) {
-        return <a href={props.to as string} {...aProps}>{button}</a>
+        return <a href={(props.to) as string} {...aProps}>{button}</a>
     }
 
     return <Link {...linkProps} to={props.to as To}>{button}</Link>

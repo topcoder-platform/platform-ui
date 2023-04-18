@@ -2,6 +2,9 @@ import { useRef, useCallback, useMemo } from "react";
 import PT from "prop-types";
 import _ from "lodash";
 import moment from "moment";
+
+import { UiButton } from "~/libs/ui";
+
 import Panel from "../../../components/Panel";
 import ChallengeError from "../Listing/errors/ChallengeError";
 import Pagination from "../../../components/Pagination";
@@ -11,11 +14,9 @@ import Dropdown from "../../../components/Dropdown";
 import DateRangePicker from "../../../components/DateRangePicker";
 import ChallengeLoading from "../../../components/challenge-listing/ChallengeLoading";
 import * as utils from "../../../utils";
-
 import * as constants from "../../../constants";
 import { ReactComponent as IconSearch} from "../../../assets/icons/search.svg";
 import { ReactComponent as IconClear} from "../../../assets/icons/close-gray.svg";
-import Button from "../../../components/Button";
 
 import ReviewItem from "./ReviewItem";
 import styles from "./styles.scss";
@@ -160,7 +161,7 @@ const Listing = ({
             />
           </div>
           <div className={styled("filter-button")}>
-            <Button onClick={onShowSidebar}>FILTER</Button>
+            <UiButton secondary size='md' onClick={onShowSidebar}>FILTER</UiButton>
           </div>
         </div>
       </Panel.Header>
