@@ -189,3 +189,10 @@ export const _hidden_LinkDanger: Story = {
         variant: 'danger',
     },
 }
+export const _hidden_FullWidth: Story = {
+    args: {
+        fullWidth: true,
+        label: 'Full Width Button',
+        primary: true,
+    },
+}
