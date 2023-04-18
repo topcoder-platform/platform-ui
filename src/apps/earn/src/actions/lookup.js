@@ -4,11 +4,11 @@
  */
  import { createActions } from "redux-actions";
  import service, { getService } from "../services/lookup";
- 
+
  async function getTags() {
    return service.getTags();
  }
- 
+
  async function getCommunityList() {
    return service.getCommunityList();
  }
@@ -16,14 +16,14 @@
   * device api PAGE_SIZE
   */
  export const PAGE_SIZE = 100;
- 
+
  /**
   * @static
   * @desc Creates an action that signals beginning of getting all deveice types
   * @return {Action}
   */
  function getTypesInit() {}
- 
+
  /**
   * @static
   * @desc Creates an action that get all deveice types
@@ -32,14 +32,14 @@
  function getTypesDone() {
    return getService().getTypes();
  }
- 
+
  /**
   * @static
   * @desc Creates an action that signals beginning of getting all manufacturers
   * @return {Action}
   */
  function getManufacturersInit() {}
- 
+
  /**
   * @static
   * @desc Creates an action that get all deveice manufacturers
@@ -49,7 +49,7 @@
  function getManufacturersDone(type) {
    return getService().getManufacturers(type);
  }
- 
+
  /**
   * @static
   * @desc Creates an action that signals beginning of getting models
@@ -61,7 +61,7 @@
      page,
    };
  }
- 
+
  /**
   * @static
   * @desc Creates an action that get all deveice models
@@ -73,7 +73,7 @@
  function getModelsDone(page, type, manufacturer) {
    return getService().getDevices(page, PAGE_SIZE, type, manufacturer);
  }
- 
+
  /**
   * @static
   * @desc Creates an action that signals beginning of getting operation systems
@@ -86,7 +86,7 @@
      page,
    };
  }
- 
+
  /**
   * @static
   * @desc Creates an action that get all operation systems
@@ -99,14 +99,14 @@
  function getOsesDone(page, type, manufacturer, model) {
    return getService().getDevices(page, PAGE_SIZE, type, manufacturer, model);
  }
- 
+
  /**
   * @static
   * @desc Creates an action that signals beginning of getting all skill tags.
   * @return {Action}
   */
  function getSkillTagsInit() {}
- 
+
  /**
   * @static
   * @desc Creates an action that gets all skill tags.
@@ -124,14 +124,14 @@
    };
    return getService().getTags(params);
  }
- 
+
  /**
   * @static
   * @desc Creates an action that signals beginning of getting all countries.
   * @return {Action}
   */
  function getCountriesInit() {}
- 
+
  /**
   * @static
   * @desc Creates an action that gets all countries.
@@ -140,14 +140,14 @@
  function getCountriesDone() {
    return getService().getCountries();
  }
- 
+
  /**
   * @static
   * @desc Creates an action that signals beginning of getting all review types.
   * @return {Action}
   */
  function getReviewTypesInit() {}
- 
+
  /**
   * @static
   * @desc Creates an action that gets all review types.
@@ -157,24 +157,24 @@
  function getReviewTypesDone(tokenV3) {
    return getService(tokenV3).getReviewTypes();
  }
- 
+
  /**
   * @static
   * @desc Creates an action that signals beginning of getting all countries api version 5.
   * @return {Action}
   */
  function getAllCountriesInit() {}
- 
+
  /**
   * @static
   * @desc Creates an action that gets all countries api version 5.
   * @param {String} tokenV3 Optional. Auth token for Topcoder API v3.
   * @return {Action}
   */
- function getAllCountriesDone(tokenV3) {
+ function getAllCountries(tokenV3) {
    return getService(tokenV3).getAllCountries();
  }
- 
+
  export default createActions({
    LOOKUP: {
      GET_TAGS_DONE: getTags,
@@ -194,6 +194,6 @@
      GET_REVIEW_TYPES_INIT: getReviewTypesInit,
      GET_REVIEW_TYPES_DONE: getReviewTypesDone,
      GET_ALL_COUNTRIES_INIT: getAllCountriesInit,
-     GET_ALL_COUNTRIES_DONE: getAllCountriesDone,
+     GET_ALL_COUNTRIES: getAllCountries,
    },
  });
