@@ -265,10 +265,24 @@ const FreeCodeCamp: FC<{}> = () => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const handleFccLessonComplete: (challengeUuid: string) => void = useCallback(debounce((challengeUuid: string) => {
+        let lessonName: string = ''
+        let moduleName: string = ''
+
+        // Search in course's meta data, to determine the correct lesson name and module name based on the challengeUuid
+        courseData!.modules.forEach(m => {
+            const lessonData: LearnLesson | undefined = m.lessons.find(l => l.id === challengeUuid)
+
+            if (!lessonData) {
+                return
+            }
+
+            lessonName = lessonData.dashedName
+            moduleName = m.dashedName
+        })
 
         const currentLesson: { [key: string]: string } = {
-            lesson: lessonParam,
-            module: moduleParam,
+            lesson: lessonName,
+            module: moduleName,
             uuid: challengeUuid,
         }
 
