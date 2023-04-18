@@ -4,7 +4,9 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import cn from "classnames";
 import ReactHtmlParser from "react-html-parser";
-import GigsButton from "../../GigsButton";
+
+import { UiButton } from "~/libs/ui";
+
 import { ReactComponent as IconLocation } from "../../../assets/icons/icon-location-crimson.svg";
 import { ReactComponent as IconPayment } from "../../../assets/icons/icon-payment.svg";
 import { ReactComponent as IconCalendar } from "../../../assets/icons/icon-calendar-medium.svg";
@@ -188,13 +190,13 @@ const GigDetails = () => {
           <GigNotes />
           <div className={styles["controls"]}>
             {!synced && !appliedGig && (
-              <GigsButton isPrimary size="lg" onClick={onClickBtnApply}>
+              <UiButton primary size="lg" onClick={onClickBtnApply}>
                 APPLY TO THIS JOB
-              </GigsButton>
+              </UiButton>
             )}
-            <GigsButton size="lg" onClick={onClickBtnViewOther}>
+            <UiButton secondary size="lg" onClick={onClickBtnViewOther}>
               VIEW OTHER JOBS
-            </GigsButton>
+            </UiButton>
           </div>
         </div>
         <GigWidgets className={styles.widgets} />

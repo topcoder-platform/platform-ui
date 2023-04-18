@@ -1,8 +1,9 @@
+import cn from "classnames";
+
+import { UiButton } from "~/libs/ui";
+
 import styles from "./styles.scss";
 import modalStyles from "../../../styles/_modal.scss";
-import React from "react";
-import cn from "classnames";
-import Button from "../../Button";
 import Modal from "../../GigsModal";
 import {
   RECRUIT_CRM_GDPR_URL,
@@ -58,14 +59,14 @@ const CandidateTermsModal = ({ onClose, open }) => {
         </p>
       </div>
       <div className={cn(modalStyles.controls, styles.controls)}>
-        <Button
-          isPrimary
+        <UiButton
+          primary
           size="lg"
           className={modalStyles.button}
           onClick={onClose}
         >
           CLOSE
-        </Button>
+        </UiButton>
       </div>
     </Modal>
   );

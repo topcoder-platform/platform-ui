@@ -1,11 +1,11 @@
-import styles from "./styles.scss";
-import modalStyles from "../../styles/_modal.scss";
 import { useCallback } from "react";
+import MediaQuery from "react-responsive";
 import PT from "prop-types";
 import cn from "classnames";
-import Button from "../../components/Button";
+
+import { UiButton } from "~/libs/ui";
+
 import Modal from "../../components/GigsModal";
-import MediaQuery from "react-responsive";
 import blobYellow from "../../assets/images/blob-yellow.svg";
 import blobPurple from "../../assets/images/blob-purple.svg";
 import progressBar from "../../assets/images/progress-bar.svg";
@@ -14,6 +14,9 @@ import ProgressBarXS from "../../assets/images/progress-bar-mobile.svg";
 import thinkingFaceMobile from "../../assets/images/thinking-face-mobile.svg";
 import thinkingFace from "../../assets/images/thinking-face-laptop-tablet.svg";
 import { makeLoginUrl, makeRegisterUrl } from "../../utils/url";
+import modalStyles from "../../styles/_modal.scss";
+
+import styles from "./styles.scss";
 
 function LoginModal({ onClose, open }) {
   const onClickBtnRegister = useCallback(() => {
@@ -56,9 +59,9 @@ function LoginModal({ onClose, open }) {
           <img src={ProgressBarXS} className={styles.progressBar} alt="" />
         </MediaQuery>
         <div className={cn(modalStyles.controls, styles.controls)}>
-          <Button isPrimary size="large" onClick={onClickBtnRegister}>
+          <UiButton primary size="md" onClick={onClickBtnRegister}>
             REGISTER NOW
-          </Button>
+          </UiButton>
         </div>
         <p className={styles.regTxt}>
           Already a member? <a href={makeLoginUrl(window.location.href)}>Login here</a>

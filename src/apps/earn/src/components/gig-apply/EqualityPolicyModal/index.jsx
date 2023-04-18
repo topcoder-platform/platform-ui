@@ -1,9 +1,11 @@
-import styles from "./styles.scss";
-import modalStyles from "../../../styles/_modal.scss";
-import React from "react";
 import cn from "classnames";
-import Button from "../../Button";
+
+import { UiButton } from "~/libs/ui";
+
 import Modal from "../../GigsModal";
+import modalStyles from "../../../styles/_modal.scss";
+
+import styles from "./styles.scss";
 
 const EqualityPolicyModal = ({ onClose, open }) => {
   return (
@@ -27,14 +29,14 @@ const EqualityPolicyModal = ({ onClose, open }) => {
         </p>
       </div>
       <div className={cn(modalStyles.controls, styles.controls)}>
-        <Button
-          isPrimary
+        <UiButton
+          primary
           size="lg"
           className={modalStyles.button}
           onClick={onClose}
         >
           CLOSE
-        </Button>
+        </UiButton>
       </div>
     </Modal>
   );

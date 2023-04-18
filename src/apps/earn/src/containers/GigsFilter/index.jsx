@@ -1,14 +1,17 @@
-import styles from "./styles.scss";
 import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+
+import { UiButton } from "~/libs/ui";
+
 import * as selectors from "../../reducers/gigs/selectors";
-import Button from "../../components/Button";
 import CurrencyField from "../../components/CurrencyField";
 import Dropdown from "../../components/Dropdown";
 import MultiSelect from "../../components/MultiSelect";
 import actions from "../../actions/gigs/creators";
 import { getSelectedDropdownOption } from "../../utils";
 import { preventDefault } from "../../utils/misc";
+
+import styles from "./styles.scss";
 
 /**
  * Displays filter controls for Gigs listing page.
@@ -148,8 +151,8 @@ const GigsFilter = () => {
         {error && <div className={styles["payment-error"]}>{error}</div>}
       </div>
       <div className={styles["controls"]}>
-        <Button onClick={onClickClearBtn}>CLEAR FILTER</Button>
-        {/* <Button>SAVE FILTER</Button> */}
+        <UiButton onClick={onClickClearBtn} secondary fullWidth>CLEAR FILTER</UiButton>
+        {/* <UiButton>SAVE FILTER</UiButton> */}
       </div>
     </form>
   );

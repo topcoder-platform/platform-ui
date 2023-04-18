@@ -2,7 +2,9 @@ import modalStyles from "../../styles/_modal.scss";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import cn from "classnames";
-import GigsButton from "../GigsButton";
+
+import { UiButton } from "~/libs/ui";
+
 import { LoadingCircles } from "~/libs/ui";
 import Modal from "../GigsModal";
 import { GIG_LIST_ROUTE } from "../../constants";
@@ -51,21 +53,21 @@ const ReferralEmailModal = ({ error, isBusy, isUserError, onClose, open }) => {
               </div>
             ))}
           <div className={cn(modalStyles.controls, styles.controls)}>
-            <GigsButton
-              isPrimary
-              size="large"
+            <UiButton
+              primary
+              size="md"
               className={modalStyles.button}
               onClick={onClose}
             >
               CLOSE
-            </GigsButton>
-            <GigsButton
-              size="large"
+            </UiButton>
+            <UiButton
+              size="md"
               className={modalStyles.button}
               onClick={onClickBtnFindAnoherGig}
             >
               FIND ANOTHER GIG
-            </GigsButton>
+            </UiButton>
           </div>
         </>
       )}

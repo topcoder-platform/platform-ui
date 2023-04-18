@@ -2,9 +2,11 @@ import styles from "./styles.scss";
 import React, { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+
+import { UiButton } from "~/libs/ui";
+
 import { ReactComponent as IconCornerLeft } from "../../../assets/icons/icon-corner-left-green.svg";
 import { ReactComponent as IconTickCircled } from "../../../assets/icons/icon-tick-circled.svg";
-import GigsButton from "../../GigsButton";
 import PersonalInfo from "../PersonalInfo";
 import TopcoderInfo from "../TopcoderInfo";
 import PayExpectations from "../PayExpectations";
@@ -49,9 +51,9 @@ const SubmissionForm = () => {
       <FinalQuestions />
       <TermsAndPolicies className={styles.termsAndPolicies} />
       <div className={styles.controls}>
-        <GigsButton isPrimary size="lg" onClick={onClickBtnApply}>
+        <UiButton primary size="lg" onClick={onClickBtnApply}>
           APPLY TO THIS JOB
-        </GigsButton>
+        </UiButton>
       </div>
     </form>
   );

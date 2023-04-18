@@ -1,14 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PT from "prop-types";
 import _ from "lodash";
+
+import { UiButton } from "~/libs/ui";
+
 import RadioButton from "../../../components/RadioButton";
 import Checkbox from "../../../components/Checkbox";
 import DropdownTerms from "../../../components/DropdownTerms";
-import Toggle from "../../../components/Toggle";
-import Button from "../../../components/Button";
 import TextInput from "../../../components/TextInput";
 import * as utils from "../../../utils";
-import * as constants from "../../../constants";
 
 import styles from "./styles.scss";
 import { styled as styledCss } from "../../../utils";
@@ -309,8 +309,8 @@ const ChallengeFilter = ({
         </div>
       )*/}
       <div className={styled("footer")}>
-        <Button onClick={clearFilter}>CLEAR FILTER</Button>
-        {/*<Button onClick={saveFilter}>SAVE FILTER</Button>*/}
+        <UiButton onClick={clearFilter} secondary fullWidth>CLEAR FILTER</UiButton>
+        {/*<UiButton onClick={saveFilter}>SAVE FILTER</UiButton>*/}
       </div>
     </div>
   );

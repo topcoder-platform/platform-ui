@@ -1,7 +1,8 @@
 import React from "react";
 import PT from "prop-types";
 import Dropzone from "react-dropzone";
-import Button from "../../Button";
+
+import { UiButton } from "~/libs/ui";
 
 import styles from "./styles.scss";
 
@@ -41,7 +42,7 @@ function ResumeFilePicker({
                 <span>OR</span>
               </p>
             )}
-            <Button>{buttonText}</Button>
+            <UiButton secondary size='md'>{buttonText}</UiButton>
           </section>
         )}
       </Dropzone>

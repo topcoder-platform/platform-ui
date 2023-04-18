@@ -1,8 +1,9 @@
 import styles from "./styles.scss";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import Button from "../../Button";
-import { LoadingCircles } from "~/libs/ui";
+
+import { LoadingCircles, UiButton } from "~/libs/ui";
+
 import GigSocialLinks from "../GigSocialLinks";
 import * as userSelectors from "../../../reducers/user/selectors";
 import * as detailsSelectors from "../../../reducers/gig-details/selectors";
@@ -14,7 +15,7 @@ const GigReferralLink = ({ className }) => {
   const isLoadingReferralData = useSelector(
     userSelectors.getIsLoadingReferralData
   );
-  const referralId = useSelector(userSelectors.getReferralId);
+  const referralId = useSelector(userSelectors.getReferralId)
 
   const [hasCopiedLink, setHasCopiedLink] = useState(false);
   const copyTimeoutRef = useRef(0);
@@ -70,15 +71,15 @@ const GigReferralLink = ({ className }) => {
               value={makeGigReferralUrl(externalId, referralId)}
             />
             <div className={styles["buttons"]}>
-              <Button
-                isPrimary
-                isInverted
-                size="large"
+              <UiButton
+                primary
+                // isInverted
+                size="md"
                 className={styles["copy-button"]}
                 onClick={onClickBtnCopy}
               >
                 {copyBtnLabel}
-              </Button>
+              </UiButton>
               <GigSocialLinks
                 className={styles.socialLinks}
                 label="Share on:"

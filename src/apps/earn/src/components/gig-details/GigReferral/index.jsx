@@ -1,8 +1,10 @@
 import styles from "./styles.scss";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import cn from "classnames";
-import Button from "../../Button";
+
+import { UiButton } from "~/libs/ui";
+
 import GigReferralLink from "../GigReferralLink";
 import GigSocialLinks from "../GigSocialLinks";
 import ReferralAuthModal from "../../ReferralAuthModal";
@@ -150,16 +152,16 @@ const GigReferral = ({ className }) => {
           onChange={onChangeInputEmail}
           value={email}
         />
-        <Button
-          isPrimary
-          isInverted
-          size="large"
+        <UiButton
+          primary
+          light
+          size="md"
           className={styles.sendButton}
           disabled={isBtnSendDisabled}
           onClick={onClickBtnSend}
         >
           SEND
-        </Button>
+        </UiButton>
       </form>
       <ReferralAuthModal onClose={onCloseAuthModal} open={isOpenAuthModal} />
       <ReferralEmailModal
