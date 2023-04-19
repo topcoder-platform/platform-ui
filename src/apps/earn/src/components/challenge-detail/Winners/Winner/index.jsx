@@ -152,7 +152,7 @@ Winner.propTypes = {
   viewable: PT.bool.isRequired,
   winner: PT.shape({
     handle: PT.string.isRequired,
-    placement: PT.number.isRequired,
+    placement: PT.string.isRequired,
     photoURL: PT.any,
     submissionDownloadLink: PT.any,
   }).isRequired,
