@@ -44,7 +44,7 @@ const SingleColumnItem: React.FC<ItemRowProps> = (props: ItemRowProps) => (
             }
             <div className={styles['full-width-items']}>{props.formInputs}</div>
         </div>
-        <PageDivider styleNames={[!props.hasMultipleGroups ? 'spacingSmall' : '']} />
+        <PageDivider smMargins={!props.hasMultipleGroups} />
     </>
 )
 
@@ -71,7 +71,7 @@ const TwoColumnItem: React.FC<ItemRowProps> = (props: ItemRowProps) => (
         </div>
         {
             props.renderDividers !== false && (
-                <PageDivider styleNames={[!props.hasMultipleGroups ? 'spacingSmall' : '']} />
+                <PageDivider smMargins={!props.hasMultipleGroups} />
             )
         }
     </>

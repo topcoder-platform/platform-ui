@@ -4,14 +4,14 @@ import classNames from "classnames";
 import { useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
 
-import { Breadcrumb, Button, ContactSupportModal, LoadingSpinner } from "~/libs/ui";
+import { Breadcrumb, Button, ContactSupportModal, LoadingSpinner, PageDivider } from "~/libs/ui";
 
 import { triggerAutoSave } from "../../actions/autoSave";
 import { saveWorkType, toggleSupportModal } from "../../actions/form";
 import { setProgressItem } from "../../actions/progress";
 import { WorkTypeConfigs } from "../../lib";
 import { ROUTES, projectAndProfessionalWork, webWorkTypes, workTypes } from "../../config";
-import { PageContent, PageDivider, PageH2 } from "../../components/page-elements";
+import { PageContent, PageH2 } from "../../components/page-elements";
 import Slider from "../../components/Slider";
 
 import styles from "./SelectWorkType.module.scss";

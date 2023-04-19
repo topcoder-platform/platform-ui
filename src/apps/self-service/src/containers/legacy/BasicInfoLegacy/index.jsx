@@ -2,7 +2,14 @@ import React, { useEffect, useState } from "react";
 import { connect, useSelector, useDispatch } from "react-redux";
 import _ from "lodash";
 
-import { Breadcrumb, Button, ContactSupportModal, IconOutline, LoadingSpinner } from "~/libs/ui";
+import {
+    Breadcrumb,
+    Button,
+    ContactSupportModal,
+    IconOutline,
+    LoadingSpinner,
+    PageDivider,
+} from "~/libs/ui";
 
 import { Progress, WebsiteDesignBannerLegacy } from "../../../components/legacy";
 import { PageOptions, ROUTES } from "../../../config";
@@ -24,7 +31,7 @@ import {
 } from "../../../utils";
 
 import { useNavigate } from "react-router-dom";
-import { PageContent, PageDivider, PageFoot, PageH2 } from "../../../components/page-elements";
+import { PageContent, PageFoot, PageH2 } from "../../../components/page-elements";
 
 /**
  * Basic Info Page

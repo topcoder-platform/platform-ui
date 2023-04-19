@@ -2,13 +2,13 @@ import _ from "lodash";
 import PT from "prop-types";
 import { useEffect, useState } from "react";
 
-import { Button } from "~/libs/ui";
+import { Button, PageDivider } from "~/libs/ui";
 
 /**
  * Tab element
  */
 import { ColorOptions, FormField, FormInputText, FormInputTextArea } from "../../../../../components/form-elements";
-import { PageDivider, PageH3, PageP, PageRow } from "../../../../../components/page-elements";
+import { PageH3, PageP, PageRow } from "../../../../../components/page-elements";
 import { WorkServicePrice } from "../../../../../components/work-service-price";
 import { RadioButton } from "../../../../../components/radio-button";
 import {

@@ -1,5 +1,4 @@
 export { default as PageContent } from './PageContent';
-export { default as PageDivider } from './PageDivider';
 export { default as PageFoot } from './PageFoot';
 export { default as PageH2 } from './PageH2';
 export { default as PageH3 } from './PageH3';

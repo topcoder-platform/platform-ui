@@ -36,7 +36,11 @@
         :global(.btn-icon) {
             @include padY(1);
             @include icon-size(16);
+        }
+    }
 
+    &:global(.btn-size-lg) {
+        :global(.btn-icon) {
             @include iconOnly {
                 @include icon-size(24);
             }

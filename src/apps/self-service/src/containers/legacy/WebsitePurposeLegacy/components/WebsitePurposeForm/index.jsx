@@ -2,12 +2,12 @@ import PT from "prop-types";
 /**
  * Tab element
  */
-import { ReactSelect } from "~/libs/ui";
+import { PageDivider, ReactSelect } from "~/libs/ui";
 
 import { IndustryList } from "../../../../../config";
 import styles from "./styles.module.scss";
 import { WorkServicePrice } from "../../../../../components/work-service-price";
-import { PageDivider, PageP, PageRow } from "../../../../../components/page-elements";
+import { PageP, PageRow } from "../../../../../components/page-elements";
 import { FormField, FormInputText, FormInputTextArea } from "../../../../../components/form-elements";
 
 const WebsitePurposeForm = ({

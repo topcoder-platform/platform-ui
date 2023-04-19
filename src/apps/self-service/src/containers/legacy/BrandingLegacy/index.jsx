@@ -3,13 +3,13 @@ import { useContext, useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
 
 import { profileContext } from "~/libs/core";
-import { Breadcrumb, Button, IconOutline, LoadingSpinner } from "~/libs/ui";
+import { Breadcrumb, Button, IconOutline, LoadingSpinner, PageDivider } from "~/libs/ui";
 
 import { triggerAutoSave } from "../../../actions/autoSave";
 import { resetIntakeForm, saveBranding } from "../../../actions/form";
 import { setProgressItem } from "../../../actions/progress";
 import { Progress, WebsiteDesignBannerLegacy } from "../../../components/legacy";
-import { PageContent, PageDivider, PageFoot, PageH2 } from "../../../components/page-elements";
+import { PageContent, PageFoot, PageH2 } from "../../../components/page-elements";
 import { ROUTES } from "../../../config";
 import { getDynamicPriceAndTimelineEstimate } from "../../../utils";
 

@@ -9,9 +9,10 @@ import {
   ContactSupportModal,
   IconOutline,
   LoadingSpinner,
+  PageDivider,
 } from "~/libs/ui";
 
-import { PageContent, PageDivider, PageFoot } from "../../../components/page-elements";
+import { PageContent, PageFoot } from "../../../components/page-elements";
 import {
   PageOptions,
   PrimaryDataChallengeOptions,

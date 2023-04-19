@@ -4,7 +4,7 @@ import { FC } from 'react'
 
 import { Decorator, Meta, StoryObj } from '@storybook/react'
 
-import { IconSolid } from '../svgs'
+import { IconOutline, IconSolid } from '../svgs'
 
 import { IconButtonProps } from './icon-button'
 import { BaseButtonProps } from './base-button'
@@ -189,6 +189,14 @@ export const _hidden_LinkDanger: Story = {
         variant: 'danger',
     },
 }
+export const _hidden_RoundButton: Story = {
+    args: {
+        icon: IconOutline.ChevronDownIcon,
+        primary: true,
+        variant: 'round',
+    },
+}
+
 export const _hidden_FullWidth: Story = {
     args: {
         fullWidth: true,

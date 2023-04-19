@@ -7,7 +7,14 @@ import { connect, useDispatch, useSelector } from "react-redux";
 import _ from "lodash";
 
 import { EnvironmentConfig } from "~/config";
-import { Breadcrumb, Button, IconOutline, LoadingSpinner, OrderContractModal } from "~/libs/ui";
+import {
+    Breadcrumb,
+    Button,
+    IconOutline,
+    LoadingSpinner,
+    OrderContractModal,
+    PageDivider,
+} from "~/libs/ui";
 
 import { MAX_COMPLETED_STEP } from "../../../config";
 import { resetIntakeForm } from "../../../actions/form";
@@ -23,7 +30,7 @@ import {
   currencyFormat,
 } from "../../../utils";
 import { WorkType } from "../../../lib";
-import { PageContent, PageDivider, PageFoot } from "../../../components/page-elements";
+import { PageContent, PageFoot } from "../../../components/page-elements";
 import { clearCachedChallengeId, loadChallengeId, setCookie } from "../../../utils/autoSaveBeforeLogin";
 import { WorkServicePrice } from "../../../components/work-service-price";
 

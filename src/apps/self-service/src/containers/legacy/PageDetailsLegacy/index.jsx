@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
 
-import { Breadcrumb, Button, IconOutline, LoadingSpinner } from "~/libs/ui";
+import { Breadcrumb, Button, IconOutline, LoadingSpinner, PageDivider } from "~/libs/ui";
 
 import { ROUTES } from "../../../config";
 import { getDynamicPriceAndTimelineEstimate } from "../../../utils";
@@ -10,7 +10,7 @@ import { triggerAutoSave } from "../../../actions/autoSave";
 import { resetIntakeForm, savePageDetails } from "../../../actions/form";
 import { setProgressItem } from "../../../actions/progress";
 import { Progress, WebsiteDesignBannerLegacy } from "../../../components/legacy";
-import { PageContent, PageDivider, PageFoot, PageH2 } from "../../../components/page-elements";
+import { PageContent, PageFoot, PageH2 } from "../../../components/page-elements";
 
 import PageDetailsForm from "./components/PageDetailsForm";
 import styles from "./styles.module.scss";

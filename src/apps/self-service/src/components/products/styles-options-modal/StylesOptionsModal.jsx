@@ -8,10 +8,10 @@ import _ from "lodash";
 import { ReactComponent as LikeIcon } from "../../../assets/images/thumbsup.svg";
 import { ReactComponent as DislikeIcon } from "../../../assets/images/thumbsdown.svg";
 import { Modal } from "../../modal";
-import { PageDivider } from "../../page-elements";
 import useCheckMobileScreen from "../../../hooks/useCheckMobileScreen";
 
 import styles from "./styles.module.scss";
+import { PageDivider } from "~/libs/ui";
 
 const StylesOptionsModal = ({
   onDismiss,

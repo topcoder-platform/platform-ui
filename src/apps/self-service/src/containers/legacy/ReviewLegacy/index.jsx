@@ -7,7 +7,7 @@ import { Elements, useElements, useStripe } from "@stripe/react-stripe-js";
 import _ from "lodash";
 
 import { EnvironmentConfig } from "~/config";
-import { Breadcrumb, Button, IconOutline, LoadingSpinner, OrderContractModal } from "~/libs/ui";
+import { Breadcrumb, Button, IconOutline, LoadingSpinner, OrderContractModal, PageDivider } from "~/libs/ui";
 
 import { resetIntakeForm } from "../../../actions/form";
 import { MAX_COMPLETED_STEP, ROUTES } from "../../../config";
@@ -21,7 +21,7 @@ import {
   setCookie,
   clearCachedChallengeId,
 } from "../../../utils/autoSaveBeforeLogin";
-import { PageContent, PageDivider, PageFoot, PageH2 } from "../../../components/page-elements";
+import { PageContent, PageFoot, PageH2 } from "../../../components/page-elements";
 import { Progress } from "../../../components/legacy";
 import { WorkServicePrice } from "../../../components/work-service-price";
 import AboutYourProject from "../../products/review/components/AboutYourProject";
