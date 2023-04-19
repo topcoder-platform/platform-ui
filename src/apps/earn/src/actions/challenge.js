@@ -9,9 +9,9 @@ import { createActions } from "redux-actions";
 import { decodeToken } from "../utils/token";
 import { getService as getChallengesService } from "../services/challenges";
 import { getService as getSubmissionService } from "../services/submissions";
-import challengeService from "../services/challenge";
 import { getApi } from "../services/challenge-api";
 import * as submissionUtil from "../utils/submission";
+import challenge from "../reducers/challenge";
 
 const { PAGE_SIZE } = config;
 

@@ -70,6 +70,7 @@ function onGetMySubmissionsInit(state) {
 }
 
 function onGetMySubmissionsDone(state, { error, payload }) {
+  alert("onGetMySubmissionsDone" + JSON.stringify(payload));
   if (error) {
     logger.error("Failed to get user's submissions for the challenge", payload);
     return {
@@ -95,7 +96,7 @@ const reducer = handleActions(
       DELETE_SUBMISSION_INIT: onDeleteSubmissionInit,
       DELETE_SUBMISSION_DONE: onDeleteSubmissionDone,
       GET_MY_SUBMISSIONS_INIT: onGetMySubmissionsInit,
-      GET_MY_SUBMISSIONS_DONE: onGetMySubmissionsDone,
+      GET_MY_SUBMISSIONS_DONE_SUCCESS: onGetMySubmissionsDone,
     },
   },
   defaultState

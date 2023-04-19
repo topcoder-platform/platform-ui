@@ -50,6 +50,7 @@ import { COMPETITION_TRACKS } from '../utils/tc';
   * @return {Object} New state.
   */
  function onGetDetailsDone(state, action) {
+   
    if (action.error) {
      logger.error('Failed to get challenge details!', action.payload);
      fireErrorMessage(

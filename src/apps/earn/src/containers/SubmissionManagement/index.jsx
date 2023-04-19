@@ -19,11 +19,13 @@
  import actions from '@earn/actions';
  import { getService } from '@earn/services/submissions';
  import smpActions from '../../actions/page/submission_management';
- import style from './styles.scss';
-import { UiButton } from '~/libs/ui';
-
+ import { UiButton } from '~/libs/ui';
+ import styles from "./styles.scss";
+ import { styled as styledCss } from "../../utils";
+ const styled = styledCss(styles)
+ 
  const theme = {
-   container: style.modalContainer,
+   container: styles.modalContainer,
  };
 
  // The container component
@@ -54,6 +56,10 @@ import { UiButton } from '~/libs/ui';
        || (_.toString(challenge.id) !== _.toString(challengeId))) {
        loadChallengeDetails(authTokens, challengeId);
      }
+     else{
+       alert("Not loading challenge details");
+       loadChallengeDetails(authTokens, challengeId);
+     }
 
      if (challengeId !== loadingSubmissionsForChallengeId) {
        loadMySubmissions(authTokens, challengeId);
@@ -74,7 +80,6 @@ import { UiButton } from '~/libs/ui';
 
      if (!this.authInitRef.current && authTokens.isAuthInitialized) {
         this.authInitRef.current = true;
-
         if (!challenge
             || (_.toString(challenge.id) !== _.toString(challengeId))) {
             loadChallengeDetails(authTokens, challengeId);
@@ -146,7 +151,7 @@ import { UiButton } from '~/libs/ui';
 
      const { submissions } = this.state;
 
-     if (challenge && !challenge.isRegistered) return <AccessDenied redirectLink={`${challengesUrl}/${challenge.id}`} cause={ACCESS_DENIED_REASON.HAVE_NOT_SUBMITTED_TO_THE_CHALLENGE} />;
+     //if (challenge && !challenge.isRegistered) return <AccessDenied redirectLink={`${challengesUrl}/${challenge.id}`} cause={ACCESS_DENIED_REASON.HAVE_NOT_SUBMITTED_TO_THE_CHALLENGE} />;
 
      const isEmpty = _.isEmpty(challenge);
      const smConfig = {
@@ -172,8 +177,8 @@ import { UiButton } from '~/libs/ui';
      };
 
      return (
-       <div styleName="outer-container">
-         <div styleName="submission-management-container" role="main">
+       <div className={styled('outer-container')}>
+         <div className={styled('submission-management-container')} role="main">
            {!isEmpty
              && (
              <SubmissionManagement
@@ -194,17 +199,17 @@ import { UiButton } from '~/libs/ui';
              onCancel={deleting ? _.noop : onCancelSubmissionDelete}
              theme={theme}
            >
-             <div styleName="modal-content">
-               <p styleName="are-you-sure">
+             <div className={styled('modal-content')}>
+               <p className={styled('are-you-sure')}>
                  Are you sure you want to delete
                  submission
                  {' '}
-                 <span styleName="id">
+                 <span className={styled('id')}>
                    {toBeDeletedId}
                  </span>
                  ?
                </p>
-               <p styleName="remove-warn">
+               <p className={styled('remove-warn')}>
                  This will permanently remove all
                  files from our servers and can’t be undone.
                  You’ll have to upload all the files again in order to restore it.
@@ -217,14 +222,12 @@ import { UiButton } from '~/libs/ui';
                   * element from the beginning to ensure that the image is
                   * downloaded in background, and will be shown immediately,
                   * when needed. */
-                 className={deleting ? '' : 'hidden'}
-                 styleName="deletingIndicator"
+                 className={styled('deletingIndicator', deleting ? '' : 'hidden')}
                >
                  <LoadingIndicator />
                </div>
                <div
-                 className={deleting ? 'hidden' : ''}
-                 styleName="action-btns"
+                 className={styled('action-btns', deleting ? 'hidden' : '')}
                >
                  <UiButton
                    primary

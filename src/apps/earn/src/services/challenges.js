@@ -447,7 +447,6 @@ import { getService as getSubmissionsService } from "./submissions";
        registrants = _.map(registrants, r => ({
          ...r, colorStyle: 'color: #151516',
        }));
-
        /* Prepare data to logged user */
        if (memberId) {
          isRegistered = _.some(registrants, r => `${r.memberId}` === `${memberId}`);

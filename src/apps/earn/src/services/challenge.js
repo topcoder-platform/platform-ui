@@ -87,7 +87,7 @@ async function getChallenge(challengeId) {
   let registrants = [];
   const { tokenV3 } = await getAuthUserTokens();
   const memberId = tokenV3 ? decodeToken(tokenV3).userId : null;
-
+  alert("In service getChallenge");
   if (/^[\d]{5,8}$/.test(challengeId)) {
     isLegacyChallenge = true;
     challenge = await getChallengeDetails("/challenges/", {
