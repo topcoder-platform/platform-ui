@@ -2,7 +2,7 @@ import styles from "./styles.scss";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 
-import { LoadingCircles, UiButton } from "~/libs/ui";
+import { LoadingCircles, Button } from "~/libs/ui";
 
 import GigSocialLinks from "../GigSocialLinks";
 import * as userSelectors from "../../../reducers/user/selectors";
@@ -71,7 +71,7 @@ const GigReferralLink = ({ className }) => {
               value={makeGigReferralUrl(externalId, referralId)}
             />
             <div className={styles["buttons"]}>
-              <UiButton
+              <Button
                 primary
                 // isInverted
                 size="md"
@@ -79,7 +79,7 @@ const GigReferralLink = ({ className }) => {
                 onClick={onClickBtnCopy}
               >
                 {copyBtnLabel}
-              </UiButton>
+              </Button>
               <GigSocialLinks
                 className={styles.socialLinks}
                 label="Share on:"

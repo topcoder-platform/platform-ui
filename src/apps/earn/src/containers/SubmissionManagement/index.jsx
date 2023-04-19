@@ -19,11 +19,11 @@
  import actions from '@earn/actions';
  import { getService } from '@earn/services/submissions';
  import smpActions from '../../actions/page/submission_management';
- import { UiButton } from '~/libs/ui';
+ import { Button } from '~/libs/ui';
  import styles from "./styles.scss";
  import { styled as styledCss } from "../../utils";
  const styled = styledCss(styles)
- 
+
  const theme = {
    container: styles.modalContainer,
  };
@@ -229,14 +229,14 @@
                <div
                  className={styled('action-btns', deleting ? 'hidden' : '')}
                >
-                 <UiButton
+                 <Button
                    primary
                    size='lg'
                    onClick={() => onCancelSubmissionDelete()}
                  >
                    Cancel
-                 </UiButton>
-                 <UiButton
+                 </Button>
+                 <Button
                    secondary
                    variant='danger'
                    size='lg'
@@ -248,7 +248,7 @@
                    }
                  >
                    Delete Submission
-                 </UiButton>
+                 </Button>
                </div>
              </div>
            </Modal>

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import PT from "prop-types";
 import _ from "lodash";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 import RadioButton from "../../../components/RadioButton";
 import Checkbox from "../../../components/Checkbox";
@@ -309,8 +309,8 @@ const ChallengeFilter = ({
         </div>
       )*/}
       <div className={styled("footer")}>
-        <UiButton onClick={clearFilter} secondary fullWidth>CLEAR FILTER</UiButton>
-        {/*<UiButton onClick={saveFilter}>SAVE FILTER</UiButton>*/}
+        <Button onClick={clearFilter} secondary fullWidth>CLEAR FILTER</Button>
+        {/*<Button onClick={saveFilter}>SAVE FILTER</Button>*/}
       </div>
     </div>
   );

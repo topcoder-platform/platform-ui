@@ -14,7 +14,7 @@ import { ReactComponent as UploadLoading } from '@earn/assets/images/upload-load
 import { ReactComponent as UploadFail } from '@earn/assets/images/upload-fail.svg';
 import { COMPETITION_TRACKS } from '@earn/utils/tc';
 import { styled as styledCss } from "@earn/utils";
-import { LinkButton, UiButton } from '~/libs/ui';
+import { LinkButton, Button } from '~/libs/ui';
 
 import styles from "./styles.scss";
 const styled = styledCss(styles)
@@ -136,20 +136,20 @@ const Uploading = ({
          error
            && (
            <div className={styled('button-container')}>
-             <UiButton
+             <Button
                onClick={() => reset()}
                secondary
                size='lg'
              >
                Cancel
-             </UiButton>
-             <UiButton
+             </Button>
+             <Button
                primary
                onClick={() => retry()}
                size='lg'
              >
                Try Again
-             </UiButton>
+             </Button>
            </div>
            )
        }
@@ -168,13 +168,13 @@ const Uploading = ({
            <div className={styled('button-container')}>
              { track === COMPETITION_TRACKS.DES ? (
                <span>
-                 <UiButton
+                 <Button
                    onClick={() => reset()}
                    secondary
                    size='lg'
                  >
                    Add Another Submission
-                 </UiButton>
+                 </Button>
                  <LinkButton
                    primary
                    size='lg'
@@ -186,13 +186,13 @@ const Uploading = ({
                </span>
              ) : (
                <React.Fragment>
-                 <UiButton
+                 <Button
                    onClick={() => reset()}
                    secondary
                    size='lg'
                  >
                    ADD SUBMISSION
-                 </UiButton>
+                 </Button>
                  <LinkButton
                    primary
                    to={`${challengesUrl}/${challengeId}/my-submissions`}

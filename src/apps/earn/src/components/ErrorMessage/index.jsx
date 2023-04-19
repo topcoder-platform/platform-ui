@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import PT from "prop-types";
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 import { styled as styledCss } from "@earn/utils";
 
 import Modal from "../GigsModal";
@@ -27,7 +27,7 @@ const ErrorMessage = ({ title, details, onOk }) => {
         <a href="mailto:support@topcoder.com">support@topcoder.com</a>
         &zwnj; to help us resolve it as soon as possible.
       </p>
-      <UiButton
+      <Button
         secondary
         variant="danger"
         size="md"
@@ -37,7 +37,7 @@ const ErrorMessage = ({ title, details, onOk }) => {
         }}
       >
         OK
-      </UiButton>
+      </Button>
     </Modal>
   );
 };

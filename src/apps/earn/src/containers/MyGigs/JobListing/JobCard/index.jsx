@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import PT from "prop-types";
 
-import { IconOutline, UiButton } from "~/libs/ui";
+import { IconOutline, Button } from "~/libs/ui";
 
 import { makeGigPath } from "../../../../utils/url";
 import Ribbon from "../../../../components/my-gigs/Ribbon";
@@ -162,7 +162,7 @@ const JobCard = ({ job }) => {
                 !job.phaseAction && styles["none"]
               )}
             >
-              {job.phaseAction && <UiButton secondary size="lg" disabled>{job.phaseAction}</UiButton>}
+              {job.phaseAction && <Button secondary size="lg" disabled>{job.phaseAction}</Button>}
             </div>
           </div>
         </div>
@@ -198,7 +198,7 @@ const JobCard = ({ job }) => {
             MY_GIGS_JOB_STATUS.WITHDRAWN_PRESCREEN,
           ].includes(job.status) && (
             <span className={styles[`${expanded ? "show-less" : "show-more"}`]}>
-              <UiButton
+              <Button
                 link
                 icon={IconOutline.ChevronDownIcon}
                 iconToRight

@@ -35,13 +35,6 @@ $listing-checkbox-blue: #2c95d7;
 $listing-white: #fff;
 $listing-avatar-white: #f0f0f0;
 
-// Replace the bourbon background with simple linear gradient - we only use this for the buttons;
-@mixin background-gradient($start, $stop) {
-  background: $start;
-  background: linear-gradient(to top, $start 0%, $stop 100%);
-  filter: progid:dximagetransform.microsoft.gradient(startColorstr='$start', endColorstr='$stop', GradientType=0); /* IE6-9 */
-}
-
 // Placeholder
 @mixin placeholder {
   &::-webkit-input-placeholder {

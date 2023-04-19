@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import PT from "prop-types";
 
-import { LoadingSpinner, UiButton } from "~/libs/ui";
+import { LoadingSpinner, Button } from "~/libs/ui";
 
 import store from "../../../store";
 import ReferralAuthModal from "../../ReferralAuthModal";
@@ -98,14 +98,14 @@ const ReferralBanner = ({ className }) => {
               <span className={styles["referral-link"]}>
                 {makeReferralUrl(referralId)}
               </span>
-              <UiButton
+              <Button
                 primary
                 light
                 size="sm"
                 onClick={onClickBtnCopy}
               >
                 {copyBtnLabel}
-              </UiButton>
+              </Button>
             </span>
           ) : (
             <span className={styles["referral-link-error"]}>
@@ -123,14 +123,14 @@ const ReferralBanner = ({ className }) => {
               for referring them!
             </span>
           </span>
-          <UiButton
+          <Button
             primary
             light
             onClick={onClickBtnRefer}
             size="md"
           >
             REFER TO A FRIEND
-          </UiButton>
+          </Button>
         </>
       )}
       <ReferralAuthModal onClose={onCloseModal} open={isModalOpen} />

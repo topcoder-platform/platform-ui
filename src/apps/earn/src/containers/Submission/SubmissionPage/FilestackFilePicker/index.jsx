@@ -15,7 +15,7 @@ import React from 'react';
 import PT from 'prop-types';
 import { client as filestack } from 'filestack-react';
 
-import { UiButton } from '~/libs/ui';
+import { Button } from '~/libs/ui';
 import config from '@earn/config';
 import errors from '@earn/actions/errors';
 import { styled as styledCss } from "@earn/utils";
@@ -214,13 +214,13 @@ class FilestackFilePicker extends React.Component {
               </div>
             )
           }
-          <UiButton
+          <Button
             onClick={this.onClickPick}
             primary
             size='lg'
           >
             {isChallengeBelongToTopgearGroup ? 'Set URL' : 'SELECT A FILE'}
-          </UiButton>
+          </Button>
           {!isChallengeBelongToTopgearGroup && (
             <div
               onClick={() => {

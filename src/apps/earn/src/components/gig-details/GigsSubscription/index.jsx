@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 import Modal from "../../GigsModal";
 import * as services from "../../../services/gig-subscription";
@@ -74,7 +74,7 @@ const GigSubscription = ({ className }) => {
           value={email}
           onChange={onChangeInput}
         />
-        <UiButton
+        <Button
           className={styles.button}
           primary
           size="md"
@@ -82,7 +82,7 @@ const GigSubscription = ({ className }) => {
           disabled={isBtnDisabled}
         >
           SUBSCRIBE
-        </UiButton>
+        </Button>
       </form>
       <Modal
         modalClassName={[styles["modal"], modalStyles["modal"]].join(' ')}
@@ -97,9 +97,9 @@ const GigSubscription = ({ className }) => {
           {error ? error : "You are now subscribed."}
         </div>
         <div className={modalStyles.controls}>
-          <UiButton primary size="md" onClick={onClickBtnClose}>
+          <Button primary size="md" onClick={onClickBtnClose}>
             CLOSE
-          </UiButton>
+          </Button>
         </div>
       </Modal>
     </div>

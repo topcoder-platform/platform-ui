@@ -1,6 +1,6 @@
 import PT from "prop-types";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 import { ReactComponent as IconUpdateSuccess } from "../../../../assets/icons/update-success.svg";
 
@@ -14,9 +14,9 @@ const UpdateSuccess = ({ onClose }) => {
         RESUME UPDATED!
       </h4>
       <p className={styles["text"]}>Your resume has been successfuly updated.</p>
-      <UiButton primary size="lg" onClick={onClose}>
+      <Button primary size="lg" onClick={onClose}>
         CLOSE
-      </UiButton>
+      </Button>
     </div>
   );
 };

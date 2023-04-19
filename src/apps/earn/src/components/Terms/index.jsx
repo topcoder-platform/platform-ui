@@ -9,7 +9,7 @@ import React from "react";
 import PT from "prop-types";
 import FocusTrap from "focus-trap-react";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 import { Modal } from "../UiKit";
 import LoadingIndicator from "../LoadingIndicator";
@@ -301,7 +301,7 @@ export default class Terms extends React.Component {
                 details.agreeabilityType === "Electronically-agreeable" ? (
                   <div className={styled("buttons")}>
                     {selectedTerm.agreed ? (
-                      <UiButton
+                      <Button
                         primary
                         size='md'
                         onClick={(e) => {
@@ -312,10 +312,10 @@ export default class Terms extends React.Component {
                         }}
                       >
                         Next
-                      </UiButton>
+                      </Button>
                     ) : (
                       <div>
-                        <UiButton
+                        <Button
                           primary
                           size='md'
                           disabled={agreeingTerm === details.id}
@@ -327,10 +327,10 @@ export default class Terms extends React.Component {
                           }}
                         >
                           I Agree
-                        </UiButton>
-                        <UiButton secondary size='md' onClick={onCancel}>
+                        </Button>
+                        <Button secondary size='md' onClick={onCancel}>
                           I Disagree
-                        </UiButton>
+                        </Button>
                       </div>
                     )}
                   </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import PT from "prop-types";
 import { connect } from "react-redux";
 
-import { LinkButton, UiButton } from "~/libs/ui";
+import { LinkButton, Button } from "~/libs/ui";
 
 import * as lookupSelectors from "../../reducers/lookupSelectors";
 import * as myGigsSelectors from "../../reducers/my-gigs/selectors";
@@ -129,7 +129,7 @@ const MyGigs = ({
         <h1 className={styles["title"]}>
           <span className={styles["text"]}>MY GIGS</span>
           <div className={styles["operation"]}>
-            <UiButton
+            <Button
               primary
               size="lg"
               disabled={!(profile && profile.hasProfile)}

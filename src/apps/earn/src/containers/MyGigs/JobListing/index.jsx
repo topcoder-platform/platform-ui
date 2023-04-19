@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import PT from "prop-types";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 import JobCard from "./JobCard";
 import { useScrollLock } from "../../../utils/hooks";
@@ -61,7 +61,7 @@ const JobListing = ({ jobs, loadMore, total, numLoaded, gigStatus, page }) => {
 
       {numLoaded < total && page * constants.PER_PAGE < total && (
         <div className={styles["load-more"]}>
-          <UiButton secondary size="md" onClick={handleLoadMoreClick}>LOAD MORE</UiButton>
+          <Button secondary size="md" onClick={handleLoadMoreClick}>LOAD MORE</Button>
         </div>
       )}
     </div>

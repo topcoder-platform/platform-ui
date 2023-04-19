@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import PT from "prop-types";
 import _, { size, values } from "lodash";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 import FilePicker from "../../../../components/my-gigs/FilePicker";
 import TextInput from "../../../../components/TextInput";
@@ -274,14 +274,14 @@ const UpdateGigProfile = ({
         >
           Update your skills from Topcoder Profile page
         </a>
-        <UiButton
+        <Button
           primary
           size="lg"
           disabled={!submitEnabled}
           onClick={onSubmitProfile}
         >
           UPDATE PROFILE
-        </UiButton>
+        </Button>
       </div>
     </div>
   );

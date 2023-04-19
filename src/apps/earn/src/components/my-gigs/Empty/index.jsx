@@ -1,6 +1,6 @@
 import PT from "prop-types";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 import {
   MY_GIGS_STATUS_EMPTY_TEXT,
@@ -17,13 +17,13 @@ const Empty = ({ gigStatus }) => {
           <span>Interested in getting a gig?</span>
         )}
         {gigStatus == GIGS_FILTER_STATUSES.OPEN_JOBS && (
-          <UiButton
+          <Button
             primary
             size="md"
             to="/earn/gigs"
           >
             VIEW GIGS
-          </UiButton>
+          </Button>
         )}
       </div>
     </div>

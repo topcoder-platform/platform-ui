@@ -2,7 +2,7 @@ import styles from "./styles.scss";
 import { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { LinkButton, UiButton } from "~/libs/ui";
+import { LinkButton, Button } from "~/libs/ui";
 
 import iconTick from "../../../assets/images/tick-big.png";
 import { ReactComponent as IconSadFace } from "../../../assets/icons/icon-sad-face.svg";
@@ -77,9 +77,9 @@ const SubmissionResult = () => {
         {error ? (
           <>
             {!error.notAllowed && (
-              <UiButton size="lg" onClick={onClickBtnApplyAgain}>
+              <Button size="lg" onClick={onClickBtnApplyAgain}>
                 APPLY AGAIN
-              </UiButton>
+              </Button>
             )}
             <LinkButton primary size="lg" to={GIG_LIST_ROUTE}>
               VIEW OTHER GIGS

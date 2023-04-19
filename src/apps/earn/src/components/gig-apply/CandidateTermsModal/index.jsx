@@ -1,6 +1,6 @@
 import cn from "classnames";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 import styles from "./styles.scss";
 import modalStyles from "../../../styles/_modal.scss";
@@ -59,14 +59,14 @@ const CandidateTermsModal = ({ onClose, open }) => {
         </p>
       </div>
       <div className={cn(modalStyles.controls, styles.controls)}>
-        <UiButton
+        <Button
           primary
           size="lg"
           className={modalStyles.button}
           onClick={onClose}
         >
           CLOSE
-        </UiButton>
+        </Button>
       </div>
     </Modal>
   );

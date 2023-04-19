@@ -11,7 +11,7 @@ import 'moment-duration-format';
 import PT from 'prop-types';
 
 import { isMM } from '@earn/utils/challenge';
-import { IconOutline, LinkButton, UiButton } from '~/libs/ui';
+import { IconOutline, LinkButton, Button } from '~/libs/ui';
 import { COMPETITION_TRACKS } from '@earn/utils/tc';
 import { phaseEndDate } from '@earn/utils/challenge-listing/helper';
 import {
@@ -392,23 +392,23 @@ export default function ChallengeHeader(props) {
           <div className={styled("challenge-ops-wrapper")}>
             <div className={styled("challenge-ops-container")}>
               {hasRegistered ? (
-                <UiButton
+                <Button
                   disabled={unregisterButtonDisabled}
                   onClick={unregisterFromChallenge}
                   secondary
                   size='xl'
                 >
                   Unregister
-                </UiButton>
+                </Button>
               ) : (
-                <UiButton
+                <Button
                     primary
                     disabled={registerButtonDisabled}
                     onClick={registerForChallenge}
                     size='xl'
                 >
                   Register
-                </UiButton>
+                </Button>
               )}
               <LinkButton
                 primary

@@ -3,7 +3,7 @@ import PT from "prop-types";
 import _ from "lodash";
 import moment from "moment";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 import Panel from "../../../components/Panel";
 import ChallengeError from "../Listing/errors/ChallengeError";
@@ -161,7 +161,7 @@ const Listing = ({
             />
           </div>
           <div className={styled("filter-button")}>
-            <UiButton secondary size='md' onClick={onShowSidebar}>FILTER</UiButton>
+            <Button secondary size='md' onClick={onShowSidebar}>FILTER</Button>
           </div>
         </div>
       </Panel.Header>

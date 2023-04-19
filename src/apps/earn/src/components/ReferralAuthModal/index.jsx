@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import PT from "prop-types";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 import GigsModal from "../GigsModal";
 import { REFERRAL_PROGRAM_URL } from "../../constants";
@@ -35,20 +35,20 @@ const ReferralAuthModal = ({ onClose, open }) => {
       <div className={styles["title"]}>Referral Program</div>
       <div className={styles["message"]}>Please login to receive your referral code.</div>
       <div className={styles["controls"]}>
-        <UiButton
+        <Button
           primary
           size="lg"
           onClick={onClickBtnLogin}
         >
           LOGIN
-        </UiButton>
-        <UiButton
+        </Button>
+        <Button
           secondary
           size="lg"
           onClick={onClickBtnRegister}
         >
           REGISTER
-        </UiButton>
+        </Button>
       </div>
       <div className={styles["hint"]}>
         Find out how the referral program works{" "}

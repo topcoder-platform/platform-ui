@@ -3,7 +3,7 @@ import React, { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
-import { LinkButton, UiButton } from "~/libs/ui";
+import { LinkButton, Button } from "~/libs/ui";
 
 import { ReactComponent as IconCornerLeft } from "../../../assets/icons/icon-corner-left-green.svg";
 import { ReactComponent as IconTickCircled } from "../../../assets/icons/icon-tick-circled.svg";
@@ -51,9 +51,9 @@ const SubmissionForm = () => {
       <FinalQuestions />
       <TermsAndPolicies className={styles.termsAndPolicies} />
       <div className={styles.controls}>
-        <UiButton primary size="lg" onClick={onClickBtnApply}>
+        <Button primary size="lg" onClick={onClickBtnApply}>
           APPLY TO THIS JOB
-        </UiButton>
+        </Button>
       </div>
     </form>
   );

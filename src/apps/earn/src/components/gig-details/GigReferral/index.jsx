@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import cn from "classnames";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 import GigReferralLink from "../GigReferralLink";
 import GigSocialLinks from "../GigSocialLinks";
@@ -152,7 +152,7 @@ const GigReferral = ({ className }) => {
           onChange={onChangeInputEmail}
           value={email}
         />
-        <UiButton
+        <Button
           primary
           light
           size="md"
@@ -161,7 +161,7 @@ const GigReferral = ({ className }) => {
           onClick={onClickBtnSend}
         >
           SEND
-        </UiButton>
+        </Button>
       </form>
       <ReferralAuthModal onClose={onCloseAuthModal} open={isOpenAuthModal} />
       <ReferralEmailModal

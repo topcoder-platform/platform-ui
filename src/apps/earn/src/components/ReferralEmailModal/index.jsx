@@ -3,7 +3,7 @@ import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import cn from "classnames";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 import { LoadingCircles } from "~/libs/ui";
 import Modal from "../GigsModal";
@@ -53,21 +53,21 @@ const ReferralEmailModal = ({ error, isBusy, isUserError, onClose, open }) => {
               </div>
             ))}
           <div className={cn(modalStyles.controls, styles.controls)}>
-            <UiButton
+            <Button
               primary
               size="md"
               className={modalStyles.button}
               onClick={onClose}
             >
               CLOSE
-            </UiButton>
-            <UiButton
+            </Button>
+            <Button
               size="md"
               className={modalStyles.button}
               onClick={onClickBtnFindAnoherGig}
             >
               FIND ANOTHER GIG
-            </UiButton>
+            </Button>
           </div>
         </>
       )}

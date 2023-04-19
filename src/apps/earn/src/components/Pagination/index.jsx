@@ -2,7 +2,7 @@ import { useCallback, useMemo } from "react";
 import PT from "prop-types";
 import cn from "classnames";
 
-import { IconOutline, UiButton } from "~/libs/ui";
+import { IconOutline, Button } from "~/libs/ui";
 
 import Dropdown from "../Dropdown";
 import { getSelectedDropdownOption } from "../../utils";
@@ -63,7 +63,7 @@ const Pagination = ({
   let pageEnd = Math.min(pageStart + 2, pageCount);
   if (pageStart > 1) {
     pageButtons.push(
-      <UiButton
+      <Button
           key={pageStart - 1}
           onClick={onPageButtonClick}
           data-value={pageNumber - 1}
@@ -77,7 +77,7 @@ const Pagination = ({
   }
   for (let n = pageStart; n <= pageEnd; n++) {
     pageButtons.push(
-      <UiButton
+      <Button
         secondary
         key={n}
         active={n === pageNumber}
@@ -90,7 +90,7 @@ const Pagination = ({
   }
   if (pageEnd < pageCount) {
     pageButtons.push(
-      <UiButton
+      <Button
         key={pageEnd + 1}
         onClick={onPageButtonClick}
         data-value={pageNumber + 1}

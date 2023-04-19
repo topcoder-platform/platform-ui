@@ -5,7 +5,7 @@ import _ from "lodash";
 import PT from "prop-types";
 import React from "react";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 import { styled as styledCss } from "@earn/utils";
 
 import { Modal } from "../../../../components/UiKit";
@@ -68,12 +68,12 @@ export default class EditModal extends React.Component {
             </div>
           </div>
           <div className={styled("buttons-container")}>
-            <UiButton secondary size='md' onClick={() => this.setState({ previewURL: st.editURL })}>
+            <Button secondary size='md' onClick={() => this.setState({ previewURL: st.editURL })}>
               Preview
-            </UiButton>
-            <UiButton primary size='md' onClick={() => onSave(st.editURL, st.size)}>
+            </Button>
+            <Button primary size='md' onClick={() => onSave(st.editURL, st.size)}>
               Save
-            </UiButton>
+            </Button>
           </div>
           {st.previewURL ? (
             <div className={styled("preview")}>

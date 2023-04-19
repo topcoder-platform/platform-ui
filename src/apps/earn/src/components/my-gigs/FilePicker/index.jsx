@@ -2,7 +2,7 @@ import PT from "prop-types";
 import Dropzone from "react-dropzone";
 import _ from "lodash";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 import styles from "./styles.scss";
 
@@ -88,9 +88,9 @@ const FilePicker = ({
             {stage === "selected" && stageSelected}
             {stage === "uploaded" && stageUploaded}
 
-            <UiButton secondary size="lg" onClick={onClick}>
+            <Button secondary size="lg" onClick={onClick}>
               {stage === "select" ? "SELECT A FILE" : "REMOVE"}
-            </UiButton>
+            </Button>
           </section>
         )}
       </Dropzone>
