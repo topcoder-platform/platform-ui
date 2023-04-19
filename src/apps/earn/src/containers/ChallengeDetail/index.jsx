@@ -903,7 +903,7 @@ function mapStateToProps(state, props) {
     savingChallenge: Boolean(state.challenge.updatingChallengeUuid),
 
     /* TODO: Carefully move default value to defaultProps. */
-    selectedTab: state.page.challengeDetails.selectedTab || 'details',
+    selectedTab: props.selectedTab || 'details',
 
     specsTabState: state.page.challengeDetails.specsTabState,
     terms: state.terms.terms,
