@@ -22,7 +22,7 @@ import { compressFiles } from '@earn/utils/files';
 
 import sortList from '@earn/utils/challenge-detail/sort';
 import challengeDetailsActions from '@earn/actions/page/challenge-details';
-import LoadingIndicator from '@earn/components/LoadingIndicator';
+import { LoadingCircles } from "~/libs/ui";
 import { goToLogin, getRatingLevel, CHALLENGE_STATUS } from '@earn/utils/tc';
 import { ReactComponent as Lock } from '../icons/lock.svg';
 import { ReactComponent as ViewAsListActive } from '../icons/view-as-list-active.svg';
@@ -456,7 +456,7 @@ class SubmissionsComponent extends React.Component {
     }
 
     if (!_.isEmpty(loadingMMSubmissionsForChallengeId)) {
-      return <div className={styles.loading}><LoadingIndicator /></div>;
+      return <div className={styles.loading}><LoadingCircles /></div>;
     }
 
     return (
