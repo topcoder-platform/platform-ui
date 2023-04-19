@@ -424,7 +424,7 @@ export default function ChallengeHeader(props) {
                   && hasSubmissions && (
                   <LinkButton
                     primary
-                    size="md"
+                    size="xl"
                     to={`${challengesUrl}/${challengeId}/my-submissions`}
                   >
                     View Submissions
