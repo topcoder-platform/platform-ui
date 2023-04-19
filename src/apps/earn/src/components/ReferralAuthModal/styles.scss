@@ -1,3 +1,4 @@
+@import '@libs/ui/styles/includes';
 @import "../../styles/mixins";
 @import "../../styles/variables";
 
@@ -51,10 +52,7 @@
   display: flex;
   justify-content: center;
   margin: 40px 0 0;
-}
-
-.button {
-  margin: 0 5px;
+  gap: $sp-3;
 }
 
 .hint {

@@ -8,7 +8,6 @@ import React from "react";
 import Sticky from "react-stickynode";
 
 import { UiButton } from "~/libs/ui";
-import { Button } from "../../UiKit";
 import Select from "../../Select";
 import { EDITOR_BLOCK_STYLE_MAP } from "../../../utils/editor";
 

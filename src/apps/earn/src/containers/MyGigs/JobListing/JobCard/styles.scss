@@ -181,19 +181,6 @@
     justify-content: center;
     padding-bottom: 42px;
 
-    button {
-      text-transform: uppercase;
-    }
-
-    &.stand-by {
-      button {
-        color: $tc-gray-70;
-        background-color: $gray1;
-        border-color: $gray2;
-        cursor: default;
-      }
-    }
-
     &.follow-up-by-email {
       button {
         border: none;
@@ -259,22 +246,10 @@
   .show-less {
     flex: none;
     margin-left: auto;
-
-    button {
-      padding: 16px 0;
-      line-height: $line-height-xs;
-    }
-
-    .arrow-down {
-      display: inline-block;
-      margin-left: 7px;
-    }
   }
 
-  .show-less {
-    .arrow-down {
-      transform: rotate(180deg);
-    }
+  .show-less :global(.btn-icon) {
+    transform: rotate(180deg);
   }
 
   .progress-bar {

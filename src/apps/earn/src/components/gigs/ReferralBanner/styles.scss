@@ -1,3 +1,4 @@
+@import "@libs/ui/styles/includes";
 @import "../../../styles/mixins";
 
 .container {
@@ -12,10 +13,6 @@
     width: 30px;
     height: 30px;
   }
-}
-
-.refer-button {
-  flex: 0 0 auto;
 }
 
 .referral-message,
@@ -56,6 +53,7 @@
   border-radius: 2px;
   padding: 4px 12px;
   min-height: 30px;
+  gap: $sp-3;
 }
 
 .referral-link {
@@ -68,11 +66,6 @@
     color: #fff;
     text-decoration: underline;
   }
-}
-
-.copy-button {
-  display: inline-block;
-  margin-left: 10px;
 }
 
 .input {

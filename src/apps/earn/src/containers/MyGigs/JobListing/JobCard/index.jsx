@@ -1,18 +1,15 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import PT from "prop-types";
+
+import { IconOutline, UiButton } from "~/libs/ui";
+
 import { makeGigPath } from "../../../../utils/url";
-import ProgressBar from "./ProgressBar";
 import Ribbon from "../../../../components/my-gigs/Ribbon";
-import GigsButton from "../../../../components/GigsButton";
-import { ReactComponent as IconChevronDown } from "../../../../assets/icons/button-chevron-down.svg";
-import ProgressTooltip from "./tooltips/ProgressTooltip";
-import NoteTooltip from "./tooltips/NoteTooltip";
-import EarnTooltip from "./tooltips/EarnTooltip";
 import {
-  MY_GIG_PHASE_LABEL,
-  MY_GIG_PHASE_ACTION,
-  MY_GIGS_JOB_STATUS,
+    MY_GIG_PHASE_LABEL,
+    MY_GIG_PHASE_ACTION,
+    MY_GIGS_JOB_STATUS,
   PHASES_FOR_JOB_STATUS,
   MY_GIGS_STATUS_REMARK_TEXT,
 } from "../../../../constants";
@@ -21,7 +18,12 @@ import { getDateRange } from "../../../../utils/my-gig";
 import { ReactComponent as IconNote } from "../../../../assets/icons/note.svg";
 import { ReactComponent as IconInfo } from "../../../../assets/icons/ribbon-icon.svg";
 
+import ProgressTooltip from "./tooltips/ProgressTooltip";
+import NoteTooltip from "./tooltips/NoteTooltip";
+import EarnTooltip from "./tooltips/EarnTooltip";
+import ProgressBar from "./ProgressBar";
 import styles from "./styles.scss";
+import classNames from "classnames";
 
 const JobCard = ({ job }) => {
   const [expanded, setExpanded] = useState(false);
@@ -154,10 +156,13 @@ const JobCard = ({ job }) => {
               </ul>
             </div>
             <div
-              className={[styles["right-side"], styles["stand-by"],
-                !job.phaseAction ? styles["none"] : ""].join(" ")}
+              className={classNames(
+                styles["right-side"],
+                styles["stand-by"],
+                !job.phaseAction && styles["none"]
+              )}
             >
-              {job.phaseAction && <GigsButton size="lg">{job.phaseAction}</GigsButton>}
+              {job.phaseAction && <UiButton secondary size="lg" disabled>{job.phaseAction}</UiButton>}
             </div>
           </div>
         </div>
@@ -193,18 +198,13 @@ const JobCard = ({ job }) => {
             MY_GIGS_JOB_STATUS.WITHDRAWN_PRESCREEN,
           ].includes(job.status) && (
             <span className={styles[`${expanded ? "show-less" : "show-more"}`]}>
-              <GigsButton
-                isText
-                showRightArrow
-                onClick={() => {
-                  setExpanded(!expanded);
-                }}
-              >
-                {expanded ? "SHOW LESS" : "SHOW MORE"}
-                <span className={styles["arrow-down"]}>
-                  <IconChevronDown />
-                </span>
-              </GigsButton>
+              <UiButton
+                link
+                icon={IconOutline.ChevronDownIcon}
+                iconToRight
+                onClick={() => setExpanded(!expanded)}
+                label={expanded ? "SHOW LESS" : "SHOW MORE"}
+              />
             </span>
           )}
         </div>

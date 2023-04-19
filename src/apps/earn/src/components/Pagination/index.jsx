@@ -1,12 +1,13 @@
-import React, { useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import PT from "prop-types";
 import cn from "classnames";
-import { ReactComponent as IconArrowLeft } from "../../assets/icons/icon-arrow-left.svg";
-import { ReactComponent as IconArrowRight } from "../../assets/icons/icon-arrow-right.svg";
+
+import { IconOutline, UiButton } from "~/libs/ui";
+
 import Dropdown from "../Dropdown";
-import styles from "./styles.scss";
-import GigsButton from "../GigsButton";
 import { getSelectedDropdownOption } from "../../utils";
+
+import styles from "./styles.scss";
 
 /**
  * Displays pagination with menu to choose page size.
@@ -62,42 +63,43 @@ const Pagination = ({
   let pageEnd = Math.min(pageStart + 2, pageCount);
   if (pageStart > 1) {
     pageButtons.push(
-      <GigsButton
-        key={pageStart - 1}
-        className={styles.buttonPrev}
-        onClick={onPageButtonClick}
-        value={pageNumber - 1}
-      >
-        <IconArrowLeft className={styles.iconArrowLeft} />
-        <span className={styles.buttonLabel}>PREVIOUS</span>
-      </GigsButton>
+      <UiButton
+          key={pageStart - 1}
+          onClick={onPageButtonClick}
+          data-value={pageNumber - 1}
+          secondary
+          size="md"
+          icon={IconOutline.ChevronLeftIcon}
+          iconToLeft
+          label='PREVIOUS'
+      />
     );
   }
   for (let n = pageStart; n <= pageEnd; n++) {
     pageButtons.push(
-      <GigsButton
+      <UiButton
+        secondary
         key={n}
-        className={styles["pageButton"]}
-        isSelected={n === pageNumber}
+        active={n === pageNumber}
         onClick={onPageButtonClick}
-        buttonStyle="circle"
-        value={n}
-      >
-        {n}
-      </GigsButton>
+        data-value={n}
+        label={n}
+        variant="round"
+      />
     );
   }
   if (pageEnd < pageCount) {
     pageButtons.push(
-      <GigsButton
+      <UiButton
         key={pageEnd + 1}
-        className={styles.buttonNext}
         onClick={onPageButtonClick}
-        value={pageNumber + 1}
-      >
-        <span className={styles.buttonLabel}>NEXT</span>
-        <IconArrowRight className={styles.iconArrowRight} />
-      </GigsButton>
+        data-value={pageNumber + 1}
+        secondary
+        size="md"
+        icon={IconOutline.ChevronRightIcon}
+        iconToRight
+        label='NEXT'
+      />
     );
   }
   return (

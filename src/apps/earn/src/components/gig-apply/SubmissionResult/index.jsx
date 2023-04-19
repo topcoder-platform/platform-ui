@@ -1,8 +1,9 @@
 import styles from "./styles.scss";
-import React, { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import GigsButton from "../../GigsButton";
+
+import { LinkButton, UiButton } from "~/libs/ui";
+
 import iconTick from "../../../assets/images/tick-big.png";
 import { ReactComponent as IconSadFace } from "../../../assets/icons/icon-sad-face.svg";
 import * as applySelectors from "../../../reducers/gig-apply/selectors";
@@ -17,21 +18,11 @@ const SubmissionResult = () => {
   const { data, error } = useSelector(applySelectors.getApplication);
   const { jobExternalId } = useSelector(detailsSelectors.getDetails);
   const profile = useSelector(userSelectors.getProfile);
-  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const onClickBtnApplyAgain = useCallback(() => {
     dispatch(applyActions.resetApplication());
   }, [dispatch]);
-
-  const onClickBtnViewList = useCallback(() => {
-    navigate(GIG_LIST_ROUTE);
-  }, []);
-
-  const onClickBtnViewStatus = useCallback(() => {
-    navigate(makeGigApplicationStatusPath(jobExternalId));
-  }, [jobExternalId]);
-
 
   useEffect(() => {
     if (data) {
@@ -86,22 +77,22 @@ const SubmissionResult = () => {
         {error ? (
           <>
             {!error.notAllowed && (
-              <GigsButton size="lg" onClick={onClickBtnApplyAgain}>
+              <UiButton size="lg" onClick={onClickBtnApplyAgain}>
                 APPLY AGAIN
-              </GigsButton>
+              </UiButton>
             )}
-            <GigsButton isPrimary size="lg" onClick={onClickBtnViewList}>
+            <LinkButton primary size="lg" to={GIG_LIST_ROUTE}>
               VIEW OTHER GIGS
-            </GigsButton>
+            </LinkButton>
           </>
         ) : (
           <>
-            <GigsButton size="lg" onClick={onClickBtnViewList}>
+            <LinkButton size="lg" to={GIG_LIST_ROUTE}>
               GO TO GIGS LIST
-            </GigsButton>
-            <GigsButton isPrimary size="lg" onClick={onClickBtnViewStatus}>
+            </LinkButton>
+            <LinkButton primary size="lg" to={makeGigApplicationStatusPath(jobExternalId)}>
               CHECK GIG APPLICATION STATUS
-            </GigsButton>
+            </LinkButton>
           </>
         )}
       </div>

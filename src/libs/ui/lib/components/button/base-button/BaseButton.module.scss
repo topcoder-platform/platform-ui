@@ -1,5 +1,7 @@
 @import '../../../styles/includes';
 
+$btn-secondary-border-width: $border;
+
 .btn {
     @include font-roboto;
     @include font-weight-bold;
@@ -66,7 +68,31 @@
         --btn-variant--active: #{darken($link-blue-dark, 10%)};
     }
 
-    &:disabled, &:global(.disabled) {
+    &:global(.btn-variant-round) {
+        @include pad(0);
+        &:global(.btn-size-sm) {
+            width: $sp-6;
+            height: $sp-6;
+        }
+        &, &:global(.btn-size-md) {
+            width: $sp-8;
+            height: $sp-8;
+        }
+        &:global(.btn-size-lg) {
+            width: $sp-10;
+            height: $sp-10;
+        }
+        &:global(.btn-size-xl) {
+            width: $sp-12;
+            height: $sp-12;
+        }
+    }
+
+    &:global(.btn-active) {
+        pointer-events: none;
+    }
+
+    &:disabled, &:global(.btn-disabled) {
         pointer-events: none;
     }
 }
@@ -76,15 +102,15 @@
     background: var(--btn-variant);
     color: $tc-white;
 
-    &:hover, &:global(.hover) {
+    &:hover, &:global(.btn-hover) {
         background: var(--btn-variant--hover);
     }
 
-    &:active, &:global(.active) {
+    &:active, &:global(.btn-active) {
         background: var(--btn-variant--active);
     }
 
-    &:disabled, &:global(.disabled) {
+    &:disabled, &:global(.btn-disabled) {
         background: $black-5;
         color: $black-60;
     }
@@ -93,57 +119,57 @@
         color: var(--btn-variant);
         background: $tc-white;
 
-        &:hover, &:global(.hover) {
+        &:hover, &:global(.btn-hover) {
             color: var(--btn-variant--hover);
         }
 
-        &:active, &:global(.active) {
+        &:active, &:global(.btn-active) {
             color: var(--btn-variant--active);
         }
 
-        &:disabled, &:global(.disabled) {
+        &:disabled, &:global(.btn-disabled) {
             color: $black-60;
         }
     }
 }
 
 .btn:global(.btn-style-secondary) {
-    box-shadow: inset 0 0 0 $border var(--btn-variant);
+    box-shadow: inset 0 0 0 $btn-secondary-border-width var(--btn-variant);
     color: var(--btn-variant);
     background: $tc-white;
 
-    &:hover, &:global(.hover) {
-        box-shadow: inset 0 0 0 $border var(--btn-variant--hover);
+    &:hover, &:global(.btn-hover) {
+        box-shadow: inset 0 0 0 $btn-secondary-border-width var(--btn-variant--hover);
         background: $tc-white;
         color: var(--btn-variant--hover);
     }
 
-    &:active, &:global(.active) {
-        box-shadow: inset 0 0 0 $border var(--btn-variant--active);
+    &:active, &:global(.btn-active) {
+        box-shadow: inset 0 0 0 $btn-secondary-border-width var(--btn-variant--active);
         background: $tc-white;
         color: var(--btn-variant--active);
     }
 
-    &:disabled, &:global(.disabled) {
-        box-shadow: inset 0 0 0 $border $black-5;
+    &:disabled, &:global(.btn-disabled) {
+        box-shadow: inset 0 0 0 $btn-secondary-border-width $black-5;
         color: $black-60;
     }
 
     &:global(.btn-light) {
-        box-shadow: inset 0 0 0 $border $tc-white;
+        box-shadow: inset 0 0 0 $btn-secondary-border-width $tc-white;
         color: $tc-white;
         background: transparent;
 
-        &:hover, &:global(.hover) {
+        &:hover, &:global(.btn-hover) {
             background: rgba($tc-white, 0.05);
         }
 
-        &:active, &:global(.active) {
+        &:active, &:global(.btn-active) {
             background: rgba($tc-white, 0.1);
         }
 
-        &:disabled, &:global(.disabled) {
-            box-shadow: inset 0 0 0 $border $black-40;
+        &:disabled, &:global(.btn-disabled) {
+            box-shadow: inset 0 0 0 $btn-secondary-border-width $black-40;
             color: $black-60;
         }
     }
@@ -161,30 +187,30 @@
         text-transform: none;
     }
 
-    &:hover, &:global(.hover) {
+    &:hover, &:global(.btn-hover) {
         color: var(--btn-variant--hover);
     }
 
-    &:active, &:global(.active) {
+    &:active, &:global(.btn-active) {
         color: var(--btn-variant--active);
     }
 
-    &:disabled, &:global(.disabled) {
+    &:disabled, &:global(.btn-disabled) {
         color: $black-60;
     }
 
     &:global(.btn-light) {
         color: $tc-white;
 
-        &:hover, &:global(.hover) {
+        &:hover, &:global(.btn-hover) {
             background: rgba($tc-white, 0.05);
         }
 
-        &:active, &:global(.active) {
+        &:active, &:global(.btn-active) {
             background: rgba($tc-white, 0.1);
         }
 
-        &:disabled, &:global(.disabled) {
+        &:disabled, &:global(.btn-disabled) {
             color: $black-60;
         }
     }

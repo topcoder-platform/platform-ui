@@ -32,12 +32,12 @@ export const fetchReferralData = async ({
   handle,
 }) => {
   return api.post(
-    `/growsurf/participants?participantId=${email}`, {
+    `/growsurf/participants?participantId=${email}`, JSON.stringify({
       email,
       firstName,
       lastName,
       tcHandle: handle,
-    }, REFERRAL_API_URL).then((response) => {
+    }), REFERRAL_API_URL).then((response) => {
       if (response.status >= 300) {
         throw new Error("Failed to fetch referral data" + email);
       }
