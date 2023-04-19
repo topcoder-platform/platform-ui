@@ -5,12 +5,12 @@ import _ from "lodash";
 
 import {
   Breadcrumb,
+  Button,
   ContactSupportModal,
+  IconOutline,
   LoadingSpinner,
-  SaveForLaterIcon,
 } from "~/libs/ui";
 
-import { Button, BUTTON_SIZE, BUTTON_TYPE } from "../../../components/button";
 import { PageContent, PageDivider, PageFoot } from "../../../components/page-elements";
 import {
   PageOptions,
@@ -26,7 +26,6 @@ import {
 import { WorkType } from "../../../lib";
 import { triggerAutoSave, triggerCookieClear } from "../../../actions/autoSave";
 import { setProgressItem } from "../../../actions/progress";
-import { ReactComponent as BackIcon } from "../../../assets/images/icon-back-arrow.svg";
 
 import { BasicInfoForm } from "../../../components/products/basic-info-form";
 import {
@@ -271,37 +270,35 @@ const BasicInfo = ({
           <div className={styles["footerContent"]}>
             <div>
               <Button
-                size={BUTTON_SIZE.MEDIUM}
-                type={BUTTON_TYPE.SECONDARY}
+                size='lg'
+                secondary
                 onClick={onBack}
-              >
-                <div className={styles["backButtonWrapper"]}>
-                  <BackIcon />
-                </div>
-              </Button>
+                icon={IconOutline.ChevronLeftIcon}
+                iconToLeft
+              />
             </div>
             <div className={styles["footer-right"]}>
               {isLoggedIn && (
                 <Button
+                  secondary
                   className={styles["saveForLater"]}
                   disabled={!isFormValid}
-                  size={BUTTON_SIZE.MEDIUM}
-                  type={BUTTON_TYPE.SECONDARY}
+                  size="lg"
                   onClick={() => saveForm(true)}
+                  icon={IconOutline.SaveIcon}
+                  iconToLeft
                 >
-                  <SaveForLaterIcon />
                   <span>SAVE FOR LATER</span>
                 </Button>
               )}
               <Button
+                primary
                 className={styles["reviewAndSubmit"]}
                 disabled={!isFormValid}
-                size={BUTTON_SIZE.MEDIUM}
+                size="lg"
                 onClick={onNext}
               >
-                <span>
-                  <span className={styles["desktop"]}>REVIEW &amp;</span> SUBMIT
-                </span>
+                <span className={styles["desktop"]}>REVIEW &amp;</span> SUBMIT
               </Button>
             </div>
           </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { connect, useSelector, useDispatch } from "react-redux";
 import _ from "lodash";
 
-import { Breadcrumb, ContactSupportModal, LoadingSpinner } from "~/libs/ui";
+import { Breadcrumb, Button, ContactSupportModal, IconOutline, LoadingSpinner } from "~/libs/ui";
 
 import { Progress, WebsiteDesignBannerLegacy } from "../../../components/legacy";
 import { PageOptions, ROUTES } from "../../../config";
@@ -15,7 +15,6 @@ import {
 } from "../../../actions/form";
 import { triggerAutoSave } from "../../../actions/autoSave";
 import { setProgressItem } from "../../../actions/progress";
-import { ReactComponent as BackIcon } from "../../../assets/images/icon-back-arrow.svg";
 import BasicInfoFormLegacy from "./components/BasicInfoFormLegacy";
 import styles from "./styles.module.scss";
 import {
@@ -26,7 +25,6 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import { PageContent, PageDivider, PageFoot, PageH2 } from "../../../components/page-elements";
-import { BUTTON_SIZE, BUTTON_TYPE, Button } from "../../../components/button";
 
 /**
  * Basic Info Page
@@ -196,19 +194,18 @@ const BasicInfoLegacy = ({
           <div className={styles["footerContent"]}>
             <div>
               <Button
-                size={BUTTON_SIZE.MEDIUM}
-                type={BUTTON_TYPE.SECONDARY}
+                size='lg'
+                secondary
                 onClick={onBack}
-              >
-                <div className={styles["backButtonWrapper"]}>
-                  <BackIcon />
-                </div>
-              </Button>
+                icon={IconOutline.ChevronLeftIcon}
+                iconToLeft
+              />
             </div>
             <div className={styles["footer-right"]}>
               <Button
+                primary
                 disabled={!isFormValid}
-                size={BUTTON_SIZE.MEDIUM}
+                size='lg'
                 onClick={onNext}
               >
                 NEXT

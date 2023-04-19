@@ -1,5 +1,11 @@
 @import '../../../styles/includes';
 
+@mixin iconOnly {
+    &:first-child:last-child {
+        @content;
+    }
+}
+
 .icon-btn {
     :global(.btn-icon) {
         display: flex;
@@ -30,6 +36,10 @@
         :global(.btn-icon) {
             @include padY(1);
             @include icon-size(16);
+
+            @include iconOnly {
+                @include icon-size(24);
+            }
         }
     }
 
