@@ -12,15 +12,10 @@ import { isTokenExpired } from "@earn/utils/token";
 import { UiButton } from '~/libs/ui';
 
 import Modal from '../Modal'
-import tc from '../buttons/themed/tc.scss';
 
 import SubmissionsList from './SubmissionsList';
 import SubmissionsDetail from './SubmissionsDetail';
 import styles from './styles.scss';
-
-const buttonThemes = {
-  tc,
-};
 
 class MySubmissionsView extends React.Component {
   constructor(props) {

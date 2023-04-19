@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import styles from './BaseButton.module.scss'
 
 export type ButtonSize = 'sm'| 'md'| 'lg'| 'xl'
-export type ButtonVariants = 'danger' | 'warning'
+export type ButtonVariants = 'danger' | 'warning' | 'linkblue'
 export type ButtonTypes = 'primary' | 'secondary'
 
 export interface BaseButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

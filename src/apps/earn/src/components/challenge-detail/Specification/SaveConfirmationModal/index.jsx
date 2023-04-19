@@ -1,10 +1,10 @@
 import LoadingIndicator from '@earn/components/LoadingIndicator';
 import PT from 'prop-types';
-import { PrimaryButton } from '@earn/components/challenge-detail/buttons';
+
+import { UiButton } from '~/libs/ui';
 import Modal from '@earn/components/challenge-detail/Modal'
 
 import styles from './style.scss';
-import { UiButton } from '~/libs/ui';
 
 export default function SaveConfirmationModal({
   onDone,

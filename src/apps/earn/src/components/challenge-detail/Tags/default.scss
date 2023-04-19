@@ -6,6 +6,7 @@
 .button {
   @include roboto-bold;
 
+  text-transform: none;
   align-items: center;
   background-color: $tc-gray-neutral-dark;
   border: none;

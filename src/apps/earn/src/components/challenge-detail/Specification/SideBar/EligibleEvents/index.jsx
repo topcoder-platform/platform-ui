@@ -2,7 +2,6 @@ import PT from 'prop-types';
 
 import { ReactComponent as Tco19LogoBlack } from '@earn/assets/images/tco19_logo_black.svg';
 
-import Link from '@earn/components/challenge-detail/Link';
 import { styled as styledCss } from "../../../../../utils";
 
 import styles from "./style.scss";
@@ -23,12 +22,13 @@ export default function EligibleEvents({ eventDetails }) {
       <p className={styled("link-like-paragraph")}>
         {/* TODO: It is not good to compose the event URL like this, as
           * in general there is not guaranteed to be correct. */}
-        <Link
-          openNewTab
-          to={`//${eventDetails.eventName}.topcoder.com`}
+        <a
+          target='_blank'
+          rel='noopener noreferrer'
+          href={`//${eventDetails.eventName}.topcoder.com`}
         >
           {content}
-        </Link>
+        </a>
       </p>
     </div>
   );

@@ -304,10 +304,9 @@ export default function ChallengeHeader(props) {
                   className={styled('recommend-tag link')}
                   role="button"
                   tabIndex={0}
-                  onClick={
-                          () => {
-                            document.getElementById('recommendedActiveChallenges').scrollIntoView();
-                          }}
+                  onClick={() => {
+                    document.getElementById('recommendedActiveChallenges').scrollIntoView();
+                  }}
                 >
                   Recommended Challenges
                 </div>

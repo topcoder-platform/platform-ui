@@ -60,6 +60,11 @@
         --btn-variant--hover: #{lighten($orange-140, 10%)};
         --btn-variant--active: #{darken($orange-140, 10%)};
     }
+    &:global(.btn-variant-linkblue) {
+        --btn-variant: #{$link-blue-dark};
+        --btn-variant--hover: #{lighten($link-blue-dark, 10%)};
+        --btn-variant--active: #{darken($link-blue-dark, 10%)};
+    }
 
     &:disabled, &:global(.disabled) {
         pointer-events: none;
@@ -144,9 +149,17 @@
     }
 }
 
+.btn:global(.btn-style-inlinelink) {
+    text-transform: none;
+}
+
 .btn:global(.btn-style-link) {
     @include padX(0);
     color: var(--btn-variant);
+
+    &:global(.btn-variant-linkblue) {
+        text-transform: none;
+    }
 
     &:hover, &:global(.hover) {
         color: var(--btn-variant--hover);

@@ -42,7 +42,12 @@ const LinkButton: FC<LinkButtonProps> = props => {
         return button
     }
 
-    if (typeof props.to === 'string' && props.to.match(/^#|https?:\/\//i)) {
+    const useAnchor: boolean = typeof props.to === 'string' && (
+        !!props.to.match(/^#|https?:\/\//i)
+        || props.target === '_blank'
+    )
+
+    if (useAnchor) {
         return <a href={(props.to) as string} {...aProps}>{button}</a>
     }
 
