@@ -76,6 +76,8 @@ const FreeCodeCamp: FC<{}> = () => {
         = useState(textFormatGetSafeString(routeParams.module))
     const [lessonParam, setLessonParam]: [string, Dispatch<SetStateAction<string>>]
         = useState(textFormatGetSafeString(routeParams.lesson))
+    const [fccFrameReady, setFccFrameReady]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState(false)
 
     const {
         certificationProgress: certificateProgress,
@@ -205,6 +207,8 @@ const FreeCodeCamp: FC<{}> = () => {
     }
 
     const handleFccLessonReady: (lessonPath: string) => void = useCallback((lessonPath: string) => {
+        // mark fcc frame as being ready once we get the first "lesson ready"
+        setFccFrameReady(true)
 
         const [nLessonPath, modulePath, coursePath]: Array<string> = lessonPath.replace(/\/$/, '')
             .split('/')
@@ -622,12 +626,16 @@ const FreeCodeCamp: FC<{}> = () => {
                             onNavigate={handleNavigate}
                         />
                         <hr />
-                        <FccFrame
-                            lesson={lesson}
-                            onFccLessonChange={handleFccLessonReady}
-                            onFccLessonComplete={handleFccLessonComplete}
-                            onFccLastLessonNavigation={handleFccLastLessonNavigation}
-                        />
+
+                        <div className={styles['course-iframe']}>
+                            <LoadingSpinner className={styles['course-frame-loader']} hide={fccFrameReady} />
+                            <FccFrame
+                                lesson={lesson}
+                                onFccLessonChange={handleFccLessonReady}
+                                onFccLessonComplete={handleFccLessonComplete}
+                                onFccLastLessonNavigation={handleFccLastLessonNavigation}
+                            />
+                        </div>
                     </div>
                 </div>
             )}
