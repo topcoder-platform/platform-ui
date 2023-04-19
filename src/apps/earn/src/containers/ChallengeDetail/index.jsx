@@ -24,7 +24,7 @@ import termsActions from "../../actions/terms";
 import challengeDetailsActions, {
   TABS as DETAIL_TABS,
 } from "../../actions/page/challenge-details";
-import LoadingPagePlaceholder from '@earn/components/LoadingPagePlaceholder';
+import { LoadingCircles } from "~/libs/ui";
 
 
 import { isMM as checkIsMM, isRDM as checkIsRDM } from '@earn/utils/challenge';
@@ -452,7 +452,15 @@ class ChallengeDetailPageContainer extends React.Component {
     const isLegacyMM = isMM && Boolean(challenge.roundId);
 
     if (isLoadingChallenge || isLoadingTerms) {
-      return <LoadingPagePlaceholder />;
+      return (
+        <div className={styled('outer-container')}>
+          <div className={styled('challenge-detail-container')} role="main">
+          <div className={styled('page')}>
+            <LoadingCircles className={styled('loading-indicator')}/>
+          </div>
+          </div>
+        </div>
+      );
     }
 
     let winners = challenge.winners || [];
