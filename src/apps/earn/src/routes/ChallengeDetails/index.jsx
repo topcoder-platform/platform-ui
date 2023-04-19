@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { connect } from "react-redux";
 import { useRef } from "react";
 import qs from 'qs';
+import _ from "lodash";
 
 import { initAuth } from '../../services/auth';
 import ChallengeDetailContainer from "../../containers/ChallengeDetail";
