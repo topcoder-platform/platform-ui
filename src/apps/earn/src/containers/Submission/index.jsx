@@ -9,7 +9,6 @@
  import actions from '@earn/actions/page/submission';
  import { actions as api } from '@earn/actions';
  import { isMM } from '@earn/utils/challenge';
- import communityActions from '@earn/actions/tc-communities';
  import shortId from 'shortid';
  import React from 'react';
  import PT from 'prop-types';
@@ -38,13 +37,11 @@ import { LinkButton } from '~/libs/ui';
    componentDidMount() {
      const {
        auth,
-       getCommunitiesList,
        challengeId,
        loadChallengeDetails,
      } = this.props;
 
      loadChallengeDetails(auth, challengeId);
-     getCommunitiesList(auth);
    }
 
    componentWillReceiveProps() {
@@ -240,11 +237,6 @@ import { LinkButton } from '~/libs/ui';
    const progress = data => dispatch(a.uploadProgress(data));
 
    return {
-     getCommunitiesList: (auth) => {
-       const uuid = shortId();
-       dispatch(ca.getListInit(uuid));
-       dispatch(ca.getListDone(uuid, auth));
-     },
      submit: (tokenV3, tokenV2, submissionId, body, track) => {
        dispatch(a.submitInit());
        dispatch(a.submitDone(tokenV3, tokenV2, submissionId, body, track, progress));

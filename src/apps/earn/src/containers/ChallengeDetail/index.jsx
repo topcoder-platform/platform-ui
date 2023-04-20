@@ -14,8 +14,6 @@ import { connect } from "react-redux";
 import { EnvironmentConfig } from "~/config";
 
 import actions from "../../actions";
-// import communityActions from "../../actions/tc-communities";
-import communityActions from '../../actions/tc-communities';
 import pageActions from "../../actions/page";
 import challengeListingActions from "../../actions/challenge-listing";
 import challengeListingSidebarActions from "../../actions/challenge-listing/sidebar";
@@ -191,7 +189,6 @@ class ChallengeDetailPageContainer extends React.Component {
     const {
       auth,
       challenge,
-      getCommunitiesList,
       loadChallengeDetails,
       fetchChallengeStatistics,
       challengeId,
@@ -234,9 +231,6 @@ class ChallengeDetailPageContainer extends React.Component {
     if (!allCountries.length) {
       getAllCountries(auth.tokenV3);
     }
-
-    getCommunitiesList(auth);
-
     if (_.isEmpty(challengeTypesMap)) {
       getTypes();
     }
@@ -291,7 +285,6 @@ class ChallengeDetailPageContainer extends React.Component {
     const nextUserId = _.get(nextProps, 'auth.user.userId');
 
     if (userId !== nextUserId) {
-      nextProps.getCommunitiesList(nextProps.auth);
       reloadChallengeDetails(nextProps.auth, challengeId);
     }
 
@@ -761,7 +754,6 @@ ChallengeDetailPageContainer.propTypes = {
     loadingUuid: PT.string.isRequired,
     timestamp: PT.number.isRequired,
   }).isRequired,
-  getCommunitiesList: PT.func.isRequired,
   getTypes: PT.func.isRequired,
   isLoadingChallenge: PT.bool,
   isLoadingTerms: PT.bool,
@@ -922,7 +914,6 @@ function mapStateToProps(state, props) {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  const ca = communityActions.tcCommunity;
   const lookupActions = actions.lookup;
   return {
     // getAllRecommendedChallenges: (tokenV3, recommendedTechnology) => {
@@ -935,11 +926,6 @@ const mapDispatchToProps = (dispatch) => {
     //     ),
     //   );
     // },
-    getCommunitiesList: (auth) => {
-      const uuid = shortId();
-      dispatch(ca.getListInit(uuid));
-      dispatch(ca.getListDone(uuid, auth));
-    },
     getAllCountries: (tokenV3) => {
       dispatch(lookupActions.getAllCountriesInit());
       dispatch(lookupActions.getAllCountries(tokenV3));
