@@ -171,7 +171,7 @@
        },
        onlineReviewUrl: `${config.URL.ONLINE_REVIEW}/review/actions/ViewProjectDetails?pid=${challengeId}`,
        challengeUrl: `${challengesUrl}/${challengeId}`,
-       addSumissionUrl: `${config.URL.BASE}/challenges/${challengeId}/submit`,
+       addSumissionUrl: `${config.URL.BASE}/earn/challenges/${challengeId}/submit`,
        helpPageUrl: config.URL.HELP,
      };
 
