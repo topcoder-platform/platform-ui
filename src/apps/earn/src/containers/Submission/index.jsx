@@ -233,7 +233,6 @@ import { LinkButton } from '~/libs/ui';
   */
  function mapDispatchToProps(dispatch) {
    const a = actions.page.submission;
-   const ca = communityActions.tcCommunity;
    const progress = data => dispatch(a.uploadProgress(data));
 
    return {
