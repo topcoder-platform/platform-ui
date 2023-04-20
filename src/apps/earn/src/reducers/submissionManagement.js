@@ -70,7 +70,6 @@ function onGetMySubmissionsInit(state) {
 }
 
 function onGetMySubmissionsDone(state, { error, payload }) {
-  alert("onGetMySubmissionsDone" + JSON.stringify(payload));
   if (error) {
     logger.error("Failed to get user's submissions for the challenge", payload);
     return {

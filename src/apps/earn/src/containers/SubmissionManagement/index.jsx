@@ -57,7 +57,6 @@
        loadChallengeDetails(authTokens, challengeId);
      }
      else{
-       alert("Not loading challenge details");
        loadChallengeDetails(authTokens, challengeId);
      }
 
