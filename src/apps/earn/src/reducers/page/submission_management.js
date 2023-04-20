@@ -48,7 +48,7 @@ function create(initialState = {}) {
       deletionSucceed: true,
     }),
 
-    'SMP/DELETE_SUBMISSION_DONE': (state, { payload }) => ({
+    'SMP/DELETE_SUBMISSION_DONE_SUCCESS': (state, { payload }) => ({
       ...state,
       deletingSubmission: false,
       showModal: false,
