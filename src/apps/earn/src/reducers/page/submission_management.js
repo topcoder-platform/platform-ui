@@ -61,6 +61,7 @@ function create(initialState = {}) {
     showModal: false,
     toBeDeletedId: '',
     deletionSucceed: false,
+    deletingSubmission: false
   }));
 }
 

@@ -9,6 +9,7 @@ import myGigs from "./my-gigs";
 import page from "./page/challenge-details";
 import submission from "./submission";
 import submissionManagement from "./submissionManagement";
+import smp from "./smp";
 
 export const actions = {
   challenges,
@@ -16,6 +17,7 @@ export const actions = {
   myGigs,
   submission,
   submissionManagement,
+  ...smp,
   ...challenge,
   ...challengeListing,
   ...auth,

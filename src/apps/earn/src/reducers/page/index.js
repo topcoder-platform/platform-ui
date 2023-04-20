@@ -12,7 +12,7 @@ import submission from "./submission";
 import submission_management from "./submission_management";
 
 export default combineReducers({
+  submission_management,
   challengeDetails,
-  submission,
-  submission_management
+  submission
 });

@@ -14,7 +14,7 @@
  import PT from 'prop-types';
  import { safeForDownload } from '@earn/utils/tc';
  import { connect } from 'react-redux';
- import { Modal } from "@earn/components/UiKit";
+ import Modal from "@earn/components/Modal";
  import config from '@earn/config';
  import actions from '@earn/actions';
  import { getService } from '@earn/services/submissions';
@@ -302,27 +302,26 @@
      ? mySubmissions.v2 : null;
    const allPhases = state.challenge.details?.phases || [];
    const submissionPhase = allPhases.find(phase => ['Submission', 'Checkpoint Submission'].includes(phase.name) && phase.isOpen) || {};
-
    return {
      challengeId: String(challengeId),
      challenge: state.challenge.details,
      challengesUrl: props.challengesUrl,
-
-     deleting: state.submissionManagement.deletingSubmission,
+     
+     deleting: state.page.submission_management.deletingSubmission,
 
      isLoadingChallenge: Boolean(state.challenge.loadingDetailsForChallengeId),
 
      loadingSubmissionsForChallengeId:
        state.challenge.loadingSubmissionsForChallengeId || '',
      mySubmissions,
-
+    
      submissionPhaseStartDate: submissionPhase.actualStartDate || submissionPhase.scheduledStartDate || '',
 
-     showDetails: state.submissionManagement.showDetails,
+     showDetails: state.page.submission_management.showDetails,
 
-     showModal: state.submissionManagement.showModal,
-     toBeDeletedId: state.submissionManagement.toBeDeletedId,
-     deletionSucceed: state.submissionManagement.deletionSucceed,
+     showModal: state.page.submission_management.showModal,
+     toBeDeletedId: state.page.submission_management.toBeDeletedId,
+     deletionSucceed: state.page.submission_management.deletionSucceed,
 
      authTokens: state.auth,
      registrants: state.challenge.details?.registrants,
@@ -344,12 +343,9 @@
    },
 
    onSubmissionDeleteConfirmed: (challengeId, submissionId) => {
-     dispatch(actions.smp.deleteSubmissionInit());
-     dispatch(actions.smp.deleteSubmissionDone(challengeId, submissionId));
-   },
-
-   onDownloadSubmission: (...payload) => {
-     dispatch(actions.smp.downloadSubmission(...payload));
+     const a = actions.smp;
+     dispatch(a.deleteSubmissionInit());
+     dispatch(a.deleteSubmissionDone(challengeId, submissionId));
    },
 
    loadChallengeDetails: (tokens, challengeId) => {
