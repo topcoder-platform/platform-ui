@@ -1,17 +1,22 @@
 import { FC } from 'react'
-import cn from 'classnames'
+import classNames from 'classnames'
 
 import styles from './PageDivider.module.scss'
 
 interface PageDividerProps {
-    styleNames?: Array<string>
+    className?: string
+    smMargins?: boolean
 }
 
 const PageDivider: FC<PageDividerProps> = (props: PageDividerProps) => {
+    const className: string = classNames(
+        props.className,
+        'page-divider',
+        styles.divider,
+        props.smMargins && styles.spacingSmall,
+    )
 
-    const additionalStyles: Array<string> = (props.styleNames ?? []).map(style => styles[style])
-
-    return <div className={cn('page-divider', styles.divider, ...additionalStyles)} />
+    return <div className={className} />
 }
 
 export default PageDivider

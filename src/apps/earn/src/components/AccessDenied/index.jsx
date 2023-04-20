@@ -12,6 +12,7 @@ import styles from "./styles.module.scss";
 const styled = styledCss(styles)
 
 const AccessDenied = ({ cause, redirectLink, children }) => {
+  const retUrl = encodeURIComponent(window.location.href);
   switch (cause) {
     case ACCESS_DENIED_REASON.NOT_AUTHENTICATED: {
       return (
@@ -21,17 +22,13 @@ const AccessDenied = ({ cause, redirectLink, children }) => {
             You must be authenticated to access this page.
           </div>
           <div className={styled("msg")}>
-            <a
-              className="tc-btn-md tc-btn-primary"
-              href={`${EnvironmentConfig.AUTH.ACCOUNTS_APP_CONNECTOR}/member`}
-              onClick={(event) => {
-                const retUrl = encodeURIComponent(window.location.href);
-                window.location = `${EnvironmentConfig.AUTH.ACCOUNTS_APP_CONNECTOR}/member?retUrl=${retUrl}`;
-                event.preventDefault();
-              }}
+            <LinkButton
+                primary
+                size="md"
+                to={`${EnvironmentConfig.AUTH.ACCOUNTS_APP_CONNECTOR}/member?retUrl=${retUrl}`}
             >
               Log In Here
-            </a>
+            </LinkButton>
           </div>
         </div>
       );

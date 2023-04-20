@@ -1,10 +1,10 @@
 import LoadingIndicator from '@earn/components/LoadingIndicator';
 import PT from 'prop-types';
-import { PrimaryButton } from '@earn/components/challenge-detail/buttons';
+
+import { Button } from '~/libs/ui';
 import Modal from '@earn/components/challenge-detail/Modal'
 
 import styles from './style.scss';
-import { UiButton } from '~/libs/ui';
 
 export default function SaveConfirmationModal({
   onDone,
@@ -19,13 +19,13 @@ export default function SaveConfirmationModal({
       </h1>
       {
         saving ? <LoadingIndicator /> : (
-          <UiButton
+          <Button
             primary
             size='md'
             onClick={onDone}
           >
             Done
-          </UiButton>
+          </Button>
         )
       }
     </Modal>

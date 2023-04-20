@@ -1,22 +1,24 @@
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { connect } from "react-redux";
 import PT from "prop-types";
-import GigsButton from "../../../../components/GigsButton";
+import _, { size, values } from "lodash";
+
+import { Button } from "~/libs/ui";
+
 import FilePicker from "../../../../components/my-gigs/FilePicker";
 import TextInput from "../../../../components/TextInput";
 import Dropdown from "../../../../components/Dropdown";
 import UserPhoto from "../../../../components/my-gigs/UserPhoto";
 import { ReactComponent as IconClose } from "../../../../assets/icons/close.svg";
 import { ReactComponent as IconInfo } from "../../../../assets/icons/info.svg";
-import StatusTooltip from "./tooltips/StatusTooltip";
 import actions from "../../../../actions";
-import _, { size, values } from "lodash";
 
 import { GIG_STATUS } from "../../../../constants";
 import config from "../../../../config";
 import * as utils from "../../../../utils";
 import { makeProfileUrl } from "../../../../utils/url";
 
+import StatusTooltip from "./tooltips/StatusTooltip";
 import styles from "./styles.scss";
 
 const UpdateGigProfile = ({
@@ -272,14 +274,14 @@ const UpdateGigProfile = ({
         >
           Update your skills from Topcoder Profile page
         </a>
-        <GigsButton
-          isPrimary
+        <Button
+          primary
           size="lg"
           disabled={!submitEnabled}
           onClick={onSubmitProfile}
         >
           UPDATE PROFILE
-        </GigsButton>
+        </Button>
       </div>
     </div>
   );

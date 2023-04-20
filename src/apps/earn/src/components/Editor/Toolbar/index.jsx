@@ -7,8 +7,7 @@ import PT from "prop-types";
 import React from "react";
 import Sticky from "react-stickynode";
 
-import { UiButton } from "~/libs/ui";
-import { Button } from "../../UiKit";
+import { Button } from "~/libs/ui";
 import Select from "../../Select";
 import { EDITOR_BLOCK_STYLE_MAP } from "../../../utils/editor";
 
@@ -94,7 +93,7 @@ export default class Toolbar extends React.Component {
     const { connector, nodeId, onSave } = this.props;
 
     const createStyleButton = (label, name, active, className) => (
-      <UiButton
+      <Button
         secondary
         active={active}
         disabled={disableStyling}
@@ -107,7 +106,7 @@ export default class Toolbar extends React.Component {
         className={className}
       >
         {label}
-      </UiButton>
+      </Button>
     );
 
     return (
@@ -140,14 +139,14 @@ export default class Toolbar extends React.Component {
             </div>
           ) : null}
 
-          <UiButton
+          <Button
             disabled={!this.props.connector.modified}
             onClick={() => onSave()}
             size="md"
             className={styles.basic}
           >
             Save
-          </UiButton>
+          </Button>
           <div className={styled("separator")} />
 
           <div className={styled("separator")} />
@@ -165,7 +164,7 @@ export default class Toolbar extends React.Component {
 
           <div className={styled("separator")} />
 
-          <UiButton
+          <Button
             disabled={disableStyling}
             onMouseDown={(e) => {
               e.preventDefault();
@@ -175,7 +174,7 @@ export default class Toolbar extends React.Component {
             className={styles.basic}
           >
             Color
-          </UiButton>
+          </Button>
           <ColorPicker
             onChange={(color) => {
               const editor = st.editor || connector.previousEditor;
@@ -195,7 +194,7 @@ export default class Toolbar extends React.Component {
            * to customize permitted operations via editor props, thus not
            * removing the button code. */
           /*
-              <UiButton
+              <Button
                 disabled={disableStyling}
                 onMouseDown={(e) => {
                   e.preventDefault();
@@ -203,7 +202,7 @@ export default class Toolbar extends React.Component {
                 }}
                 size="md"
                 className={style.basic}
-              >Highlight</UiButton>
+              >Highlight</Button>
               <ColorPicker
                 onChange={(color) => {
                   const editor = st.editor || this.props.connector.previousEditor;
@@ -220,7 +219,7 @@ export default class Toolbar extends React.Component {
 
           <div className={styled("separator")} />
 
-          <UiButton
+          <Button
             disabled={disableStyling}
             onMouseDown={(e) => {
               e.preventDefault();
@@ -230,9 +229,9 @@ export default class Toolbar extends React.Component {
             className={styles.basic}
           >
             Insert Link
-          </UiButton>
+          </Button>
 
-          <UiButton
+          <Button
             disabled={disableStyling}
             onMouseDown={(e) => {
               e.preventDefault();
@@ -242,7 +241,7 @@ export default class Toolbar extends React.Component {
             className={styles.basic}
           >
             Insert Image
-          </UiButton>
+          </Button>
 
           <div className={styled("select-wrapper")}>
             <Select
@@ -267,7 +266,7 @@ export default class Toolbar extends React.Component {
           {/* I guess, we gonna drop the inline Markdown option. Just for
            * a case, let's keep the button code around for a bit longer. */
           /*
-              <UiButton
+              <Button
                 active={st.markdown}
                 disabled
                 onMouseDown={(e) => {
@@ -278,7 +277,7 @@ export default class Toolbar extends React.Component {
                 }}
                 size="md"
                 className={style.basic}
-              >Inline Markdown</UiButton>
+              >Inline Markdown</Button>
             */}
         </div>
       </Sticky>

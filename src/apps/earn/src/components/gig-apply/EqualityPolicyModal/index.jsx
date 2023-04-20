@@ -1,6 +1,6 @@
 import cn from "classnames";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 import Modal from "../../GigsModal";
 import modalStyles from "../../../styles/_modal.scss";
@@ -29,14 +29,14 @@ const EqualityPolicyModal = ({ onClose, open }) => {
         </p>
       </div>
       <div className={cn(modalStyles.controls, styles.controls)}>
-        <UiButton
+        <Button
           primary
           size="lg"
           className={modalStyles.button}
           onClick={onClose}
         >
           CLOSE
-        </UiButton>
+        </Button>
       </div>
     </Modal>
   );

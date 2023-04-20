@@ -467,14 +467,16 @@ class SubmissionsListView extends React.Component {
             })
           }
         </div>
-        <LinkButton
-          primary
-          size='md'
-          disabled={isButtonDisabled}
-          to={`${challengesUrl}/${challengeId}/submit`}
-        >
-          Add Submission
-        </LinkButton>
+          <div className={styles['btn-add-submission']}>
+            <LinkButton
+                primary
+                size='lg'
+                disabled={isButtonDisabled}
+                to={`${challengesUrl}/${challengeId}/submit`}
+            >
+                Add Submission
+            </LinkButton>
+        </div>
         {
           openModal && (
             <Modal onCancel={this.toggleModal} theme={styles}>

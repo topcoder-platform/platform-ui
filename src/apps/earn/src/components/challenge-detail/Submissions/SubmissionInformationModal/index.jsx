@@ -4,7 +4,7 @@ import React from 'react';
 import PT from 'prop-types';
 import moment from 'moment';
 
-import { UiButton } from '~/libs/ui';
+import { Button } from '~/libs/ui';
 import { ReactComponent as ArrowUp } from '@earn/assets/images/icon-arrow-up.svg';
 import { ReactComponent as ArrowDown } from '@earn/assets/images/icon-arrow-down.svg';
 import LoadingIndicator from '@earn/components/LoadingIndicator';
@@ -156,7 +156,7 @@ class SubmissionInformationModal extends React.Component {
               }
               <div className={styles['submission-information-buttons']}>
                 <div className={styles['submission-information-button-close']}>
-                  <UiButton primary size="md" onClick={() => onClose(false)}>Dismiss</UiButton>
+                  <Button primary size="md" onClick={() => onClose(false)}>Dismiss</Button>
                 </div>
               </div>
             </React.Fragment>

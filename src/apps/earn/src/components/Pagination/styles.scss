@@ -1,3 +1,4 @@
+@import '@libs/ui/styles/includes';
 @import "../../styles/mixins";
 @import "../../styles/variables";
 
@@ -22,61 +23,12 @@
 .pageButtons {
   position: relative;
   display: flex;
+  align-items: center;
+  gap: $sp-1;
   margin-left: auto;
   padding-left: 20px;
 
   @include desktop {
     padding-left: 40px;
-  }
-}
-
-.pageButton {
-  flex: 0 0 auto;
-  margin-left: 10px;
-
-  &:first-child {
-    margin-left: 0;
-  }
-}
-
-.buttonPrev,
-.buttonNext {
-  display: flex;
-  align-items: center;
-}
-
-.buttonPrev {
-  flex: 0 0 auto;
-}
-
-.buttonNext {
-  flex: 0 0 auto;
-  margin-left: 10px;
-}
-
-.buttonLabel {
-  display: none;
-
-  @include desktop {
-    display: inline-block;
-  }
-}
-
-.iconArrowLeft,
-.iconArrowRight {
-  display: inline-block;
-  width: 7px;
-  height: 12px;
-}
-
-.iconArrowLeft {
-  @include desktop {
-    margin-right: 3px;
-  }
-}
-
-.iconArrowRight {
-  @include desktop {
-    margin-left: 3px;
   }
 }

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 import * as selectors from "../../reducers/gigs/selectors";
 import CurrencyField from "../../components/CurrencyField";
@@ -151,8 +151,8 @@ const GigsFilter = () => {
         {error && <div className={styles["payment-error"]}>{error}</div>}
       </div>
       <div className={styles["controls"]}>
-        <UiButton onClick={onClickClearBtn} secondary fullWidth>CLEAR FILTER</UiButton>
-        {/* <UiButton>SAVE FILTER</UiButton> */}
+        <Button onClick={onClickClearBtn} secondary fullWidth>CLEAR FILTER</Button>
+        {/* <Button>SAVE FILTER</Button> */}
       </div>
     </form>
   );

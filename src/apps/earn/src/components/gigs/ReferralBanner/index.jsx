@@ -2,14 +2,15 @@ import styles from "./styles.scss";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import PT from "prop-types";
+
+import { LoadingSpinner, Button } from "~/libs/ui";
+
 import store from "../../../store";
-import GigsButton from "../../GigsButton";
 import ReferralAuthModal from "../../ReferralAuthModal";
 import * as userSelectors from "../../../reducers/user/selectors";
 import * as userEffectors from "../../../actions/user/effectors";
 import { makeReferralUrl } from "../../../utils/url";
 import { REFERRAL_PROGRAM_URL } from "../../../constants";
-import { LoadingSpinner } from "~/libs/ui";
 /**
  * Displays a referral banner with a message and a button. If user is logged in
  * displays referral link and a copy button.
@@ -97,15 +98,14 @@ const ReferralBanner = ({ className }) => {
               <span className={styles["referral-link"]}>
                 {makeReferralUrl(referralId)}
               </span>
-              <GigsButton
-                isPrimary
-                isInverted
+              <Button
+                primary
+                light
                 size="sm"
-                className={styles["copy-button"]}
                 onClick={onClickBtnCopy}
               >
                 {copyBtnLabel}
-              </GigsButton>
+              </Button>
             </span>
           ) : (
             <span className={styles["referral-link-error"]}>
@@ -123,14 +123,14 @@ const ReferralBanner = ({ className }) => {
               for referring them!
             </span>
           </span>
-          <GigsButton
-            isPrimary
-            isInverted
-            className={styles["refer-button"]}
+          <Button
+            primary
+            light
             onClick={onClickBtnRefer}
+            size="md"
           >
             REFER TO A FRIEND
-          </GigsButton>
+          </Button>
         </>
       )}
       <ReferralAuthModal onClose={onCloseModal} open={isModalOpen} />

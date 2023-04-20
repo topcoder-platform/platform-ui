@@ -1,18 +1,17 @@
 import { useNavigate } from "react-router-dom";
 import classNames from "classnames";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
 
-import { Breadcrumb, ContactSupportModal, LoadingSpinner } from "~/libs/ui";
+import { Breadcrumb, Button, ContactSupportModal, LoadingSpinner, PageDivider } from "~/libs/ui";
 
 import { triggerAutoSave } from "../../actions/autoSave";
 import { saveWorkType, toggleSupportModal } from "../../actions/form";
 import { setProgressItem } from "../../actions/progress";
-import { Button, BUTTON_SIZE } from "../../components/button";
 import { WorkTypeConfigs } from "../../lib";
 import { ROUTES, projectAndProfessionalWork, webWorkTypes, workTypes } from "../../config";
-import { PageContent, PageDivider, PageH2 } from "../../components/page-elements";
+import { PageContent, PageH2 } from "../../components/page-elements";
 import Slider from "../../components/Slider";
 
 import styles from "./SelectWorkType.module.scss";
@@ -56,8 +55,9 @@ const WorkTypeCard = ({
 
       {!!ctaButtonOnClick && (
         <Button
-          size={BUTTON_SIZE.MEDIUM}
-          type="secondary"
+          size="lg"
+          primary
+          light
           className={styles.workTypeCardCtaButton}
         >
           learn more
@@ -91,9 +91,10 @@ const WorkTypeCardWide = ({
         {!!ctaText && !!ctaButtonOnClick && (
           <Button
             onClick={ctaButtonOnClick}
-            size={BUTTON_SIZE.MEDIUM}
-            type="secondary"
+            size="lg"
+            primary
             className={styles.workTypeCardCtaButton}
+            light
           >
             {ctaText}
           </Button>

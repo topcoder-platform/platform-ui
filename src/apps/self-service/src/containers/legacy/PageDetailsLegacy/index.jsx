@@ -1,18 +1,16 @@
 import { useNavigate } from "react-router-dom";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
 
-import { Breadcrumb, LoadingSpinner } from "~/libs/ui";
+import { Breadcrumb, Button, IconOutline, LoadingSpinner, PageDivider } from "~/libs/ui";
 
 import { ROUTES } from "../../../config";
 import { getDynamicPriceAndTimelineEstimate } from "../../../utils";
 import { triggerAutoSave } from "../../../actions/autoSave";
 import { resetIntakeForm, savePageDetails } from "../../../actions/form";
 import { setProgressItem } from "../../../actions/progress";
-import { ReactComponent as BackIcon } from "../../../assets/images/icon-back-arrow.svg";
 import { Progress, WebsiteDesignBannerLegacy } from "../../../components/legacy";
-import { PageContent, PageDivider, PageFoot, PageH2 } from "../../../components/page-elements";
-import { BUTTON_SIZE, BUTTON_TYPE, Button } from "../../../components/button";
+import { PageContent, PageFoot, PageH2 } from "../../../components/page-elements";
 
 import PageDetailsForm from "./components/PageDetailsForm";
 import styles from "./styles.module.scss";
@@ -121,19 +119,18 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem, isLoggedIn }) => 
           <div className={styles["footerContent"]}>
             <div>
               <Button
-                size={BUTTON_SIZE.MEDIUM}
-                type={BUTTON_TYPE.SECONDARY}
+                size='lg'
+                secondary
                 onClick={onBack}
-              >
-                <div className={styles["backButtonWrapper"]}>
-                  <BackIcon />
-                </div>
-              </Button>
+                icon={IconOutline.ChevronLeftIcon}
+                iconToLeft
+              />
             </div>
             <div className={styles["footer-right"]}>
               <Button
-                disabled={!isFormValid()}
-                size={BUTTON_SIZE.MEDIUM}
+                primary
+                disabled={!isFormValid}
+                size='lg'
                 onClick={onNext}
               >
                 NEXT

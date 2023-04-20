@@ -6,7 +6,8 @@
 import cn from "classnames";
 import PT from "prop-types";
 
-import { Button, BUTTON_SIZE, BUTTON_TYPE } from "../../button";
+import { Button } from "~/libs/ui";
+
 import { currencyFormat } from "../../../utils";
 import styles from "./styles.module.scss";
 
@@ -31,7 +32,7 @@ const PageListInput = ({
             {canAdd && (
               <div>
                 <p className={styles["pageText"]}>NEED ANOTHER PAGE?</p>
-                <Button type={BUTTON_TYPE.SECONDARY} size={BUTTON_SIZE.MEDIUM}>
+                <Button secondary size="lg">
                   ADD PAGE: +{currencyFormat(pageCost)}
                 </Button>
               </div>

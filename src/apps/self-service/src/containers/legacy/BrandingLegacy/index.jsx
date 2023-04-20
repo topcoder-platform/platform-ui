@@ -1,17 +1,15 @@
 import { useNavigate } from "react-router-dom";
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
 
 import { profileContext } from "~/libs/core";
-import { Breadcrumb, LoadingSpinner } from "~/libs/ui";
+import { Breadcrumb, Button, IconOutline, LoadingSpinner, PageDivider } from "~/libs/ui";
 
 import { triggerAutoSave } from "../../../actions/autoSave";
 import { resetIntakeForm, saveBranding } from "../../../actions/form";
 import { setProgressItem } from "../../../actions/progress";
-import { ReactComponent as BackIcon } from "../../../assets/images/icon-back-arrow.svg";
 import { Progress, WebsiteDesignBannerLegacy } from "../../../components/legacy";
-import { Button, BUTTON_SIZE, BUTTON_TYPE } from "../../../components/button";
-import { PageContent, PageDivider, PageFoot, PageH2 } from "../../../components/page-elements";
+import { PageContent, PageFoot, PageH2 } from "../../../components/page-elements";
 import { ROUTES } from "../../../config";
 import { getDynamicPriceAndTimelineEstimate } from "../../../utils";
 
@@ -143,23 +141,23 @@ const BrandingLegacy = ({ saveBranding, setProgressItem, isLoggedIn }) => {
           saveBranding={saveBranding}
         />
 
+
         <PageFoot>
           <div className={styles["footerContent"]}>
             <div>
               <Button
-                size={BUTTON_SIZE.MEDIUM}
-                type={BUTTON_TYPE.SECONDARY}
+                size='lg'
+                secondary
                 onClick={onBack}
-              >
-                <div className={styles["backButtonWrapper"]}>
-                  <BackIcon />
-                </div>
-              </Button>
+                icon={IconOutline.ChevronLeftIcon}
+                iconToLeft
+              />
             </div>
             <div className={styles["footer-right"]}>
               <Button
+                primary
                 disabled={!isFormValid}
-                size={BUTTON_SIZE.MEDIUM}
+                size='lg'
                 onClick={onNext}
               >
                 NEXT

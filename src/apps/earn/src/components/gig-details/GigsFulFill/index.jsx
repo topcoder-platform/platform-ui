@@ -3,7 +3,7 @@ import  { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { GIG_LIST_ROUTE } from "../../../constants/routes";
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 const GigsFulFill = () => {
   const navigate = useNavigate();
@@ -14,9 +14,9 @@ const GigsFulFill = () => {
     <div className={styles["container"]}>
       <h3>THIS GIG HAS BEEN FULFILLED</h3>
       <div className={styles["action"]}>
-        <UiButton secondary size="md" onClick={onClickBtnViewOther}>
+        <Button secondary size="md" onClick={onClickBtnViewOther}>
           VIEW OTHER GIGS
-        </UiButton>
+        </Button>
       </div>
     </div>
   );

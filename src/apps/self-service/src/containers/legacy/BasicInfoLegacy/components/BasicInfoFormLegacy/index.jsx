@@ -1,13 +1,14 @@
 import PT from "prop-types";
 import _ from "lodash";
-import React from "react";
+
+import { PageDivider } from "~/libs/ui";
 /**
  * Basic Info Form component
  */
 import { HELP_BANNER } from "../../../../../config";
 import DeviceTypes from "../DeviceTypes";
 import { WorkServicePrice } from "../../../../../components/work-service-price";
-import { PageDivider, PageP, PageRow } from "../../../../../components/page-elements";
+import { PageP, PageRow } from "../../../../../components/page-elements";
 import { FormField, FormInputText } from "../../../../../components/form-elements";
 import { RadioButton } from "../../../../../components/radio-button";
 import { HelpBanner } from "../../../../../components/banners";

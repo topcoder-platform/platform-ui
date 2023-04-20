@@ -9,17 +9,6 @@
     display: flex;
     flex-direction: column;
   }
-
-  button {
-    cursor: pointer;
-    border: none;
-    outline: none;
-    font: inherit;
-    color: inherit;
-    padding: 0;
-    background: transparent;
-    text-transform: uppercase;
-  }
 }
 
 .actions-col {
@@ -49,6 +38,10 @@
   font-weight: 500;
   font-size: 14px;
   line-height: 22px;
+}
+
+.btn-add-submission {
+  text-align: center;
 }
 
 .h2 {

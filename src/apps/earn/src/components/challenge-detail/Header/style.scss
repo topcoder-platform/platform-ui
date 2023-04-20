@@ -104,7 +104,7 @@
 .type-tag {
   display: inline-block;
 
-  a {
+  button {
     color: $tc-white;
 
     &:active,
@@ -115,7 +115,7 @@
   }
 
   &.CH {
-    a {
+    button {
       background: $track-code-green;
 
       &:active,
@@ -127,7 +127,7 @@
   }
 
   &.F2F {
-    a {
+    button {
       background: $track-code-blue;
 
       &:active,
@@ -139,7 +139,7 @@
   }
 
   &.TSK {
-    a {
+    button {
       background: $track-code-turquose;
 
       &:active,
@@ -155,7 +155,7 @@
   display: inline-block;
 
   &.CH {
-    a {
+    button {
       background-color: $track-code-green-light;
       color: $track-code-green;
 
@@ -169,7 +169,7 @@
   }
 
   &.F2F {
-    a {
+    button {
       background-color: $track-code-blue-light;
       color: $track-code-blue;
 
@@ -183,7 +183,7 @@
   }
 
   &.TSK {
-    a {
+    button {
       background-color: $track-code-turquose-light;
       color: $track-code-turquose;
 

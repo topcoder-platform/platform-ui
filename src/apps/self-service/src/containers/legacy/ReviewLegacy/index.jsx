@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toastr } from "react-redux-toastr";
@@ -7,13 +7,12 @@ import { Elements, useElements, useStripe } from "@stripe/react-stripe-js";
 import _ from "lodash";
 
 import { EnvironmentConfig } from "~/config";
-import { Breadcrumb, LoadingSpinner, OrderContractModal } from "~/libs/ui";
+import { Breadcrumb, Button, IconOutline, LoadingSpinner, OrderContractModal, PageDivider } from "~/libs/ui";
 
 import { resetIntakeForm } from "../../../actions/form";
 import { MAX_COMPLETED_STEP, ROUTES } from "../../../config";
 import { triggerAutoSave } from "../../../actions/autoSave";
 import { setProgressItem } from "../../../actions/progress";
-import { ReactComponent as BackIcon } from "../../../assets/images/icon-back-arrow.svg";
 import * as services from "../../../services/payment";
 import { activateChallenge } from "../../../services/challenge";
 import { getDynamicPriceAndTimelineEstimate, currencyFormat } from "../../../utils";
@@ -22,12 +21,11 @@ import {
   setCookie,
   clearCachedChallengeId,
 } from "../../../utils/autoSaveBeforeLogin";
-import { PageContent, PageDivider, PageFoot, PageH2 } from "../../../components/page-elements";
+import { PageContent, PageFoot, PageH2 } from "../../../components/page-elements";
 import { Progress } from "../../../components/legacy";
 import { WorkServicePrice } from "../../../components/work-service-price";
 import AboutYourProject from "../../products/review/components/AboutYourProject";
 import PaymentForm from "../../products/review/components/PaymentForm";
-import { BUTTON_SIZE, BUTTON_TYPE, Button } from "../../../components/button";
 
 import ReviewTableLegacy from "./components/ReviewTableLegacy";
 import styles from "./styles.module.scss";
@@ -257,8 +255,9 @@ const ReviewLegacy = ({
 
               <div className={styles["paymentButtonContainer"]}>
                 <Button
+                  primary
                   disabled={!isFormValid || isLoading}
-                  size={BUTTON_SIZE.MEDIUM}
+                  size='lg'
                   onClick={onNext}
                   className={styles["wideButton"]}
                 >
@@ -276,14 +275,12 @@ const ReviewLegacy = ({
           <div className={styles["footerContent"]}>
             <div>
               <Button
-                size={BUTTON_SIZE.MEDIUM}
-                type={BUTTON_TYPE.SECONDARY}
+                size='lg'
+                secondary
                 onClick={onBack}
-              >
-                <div className={styles["backButtonWrapper"]}>
-                  <BackIcon />
-                </div>
-              </Button>
+                icon={IconOutline.ChevronLeftIcon}
+                iconToLeft
+              />
             </div>
           </div>
         </PageFoot>

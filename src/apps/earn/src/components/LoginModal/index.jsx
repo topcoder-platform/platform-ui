@@ -3,7 +3,7 @@ import MediaQuery from "react-responsive";
 import PT from "prop-types";
 import cn from "classnames";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 import Modal from "../../components/GigsModal";
 import blobYellow from "../../assets/images/blob-yellow.svg";
@@ -59,9 +59,9 @@ function LoginModal({ onClose, open }) {
           <img src={ProgressBarXS} className={styles.progressBar} alt="" />
         </MediaQuery>
         <div className={cn(modalStyles.controls, styles.controls)}>
-          <UiButton primary size="md" onClick={onClickBtnRegister}>
+          <Button primary size="md" onClick={onClickBtnRegister}>
             REGISTER NOW
-          </UiButton>
+          </Button>
         </div>
         <p className={styles.regTxt}>
           Already a member? <a href={makeLoginUrl(window.location.href)}>Login here</a>

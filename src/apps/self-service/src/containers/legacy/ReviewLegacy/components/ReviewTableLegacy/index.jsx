@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import _ from "lodash";
 import classNames from "classnames";
 
+import { PageDivider } from "~/libs/ui";
+
 import { ReactComponent as ArrowIcon } from "../../../../../assets/images/icon-arrow.svg";
 import { PROGRESS_LEVELS } from "../../../../../config/constants/products/website-design-legacy";
-import { PageDivider } from "../../../../../components/page-elements";
 
 import styles from "./styles.module.scss";
 

@@ -23,7 +23,7 @@ import SideBar from './SideBar';
 
 import styles from "./styles.scss";
 import { styled as styledCss } from "../../../utils";
-import { UiButton } from '~/libs/ui';
+import { Button } from '~/libs/ui';
 const styled = styledCss(styles)
 
 export default function ChallengeDetailsView(props) {
@@ -149,14 +149,14 @@ export default function ChallengeDetailsView(props) {
       {
         canEdit && !editMode ? (
           <Sticky innerZ={100}>
-            <UiButton
+            <Button
               secondary
               variant="danger"
               onClick={() => setSpecsTabState(SPECS_TAB_STATES.EDIT)}
               className={styles.hiddenSaveButton}
             >
               Don&apos;t press it!
-            </UiButton>
+            </Button>
           </Sticky>
         ) : null
       }

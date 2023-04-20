@@ -3,9 +3,12 @@
  */
 import { useState } from "react";
 import cn from "classnames";
+
+import { Button } from "~/libs/ui";
+
 import { ReactComponent as ArrowIcon} from "../../../assets/images/icon-arrow.svg";
+
 import moduleStyles from "./styles.module.scss";
-import { Button } from "../../button";
 
 const HelpBanner = ({
   title,
@@ -38,7 +41,7 @@ const HelpBanner = ({
       {open && children && <div className={moduleStyles["description"]}>{children}</div>}
       {open && contactSupport && (
         <p className={moduleStyles["supportButton"]}>
-          <Button onClick={contactSupport}>Contact support</Button>
+          <Button primary size='md' onClick={contactSupport}>Contact support</Button>
         </p>
       )}
     </div>

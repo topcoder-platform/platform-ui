@@ -1,20 +1,20 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-// import { useLocation } from "@reach/router";
 import PT from "prop-types";
 import { connect } from "react-redux";
-import { useNavigate } from "react-router-dom";
+
+import { LinkButton, Button } from "~/libs/ui";
+
 import * as lookupSelectors from "../../reducers/lookupSelectors";
 import * as myGigsSelectors from "../../reducers/my-gigs/selectors";
 import GigsModal from "../../components/GigsModal";
-import GigsButton from "../../components/GigsButton";
 import Loading from "../../components/my-gigs/Loading";
 import Empty from "../../components/my-gigs/Empty";
-import JobListing from "./JobListing";
 import store from "../../store";
 import { GIGS_FILTER_STATUSES } from '../../constants';
 import myGigs from "../../actions/my-gigs";
 import lookup from "../../actions/lookup";
 
+import JobListing from "./JobListing";
 import UpdateGigProfile from "./modals/UpdateGigProfile";
 import UpdateSuccess from "./modals/UpdateSuccess";
 
@@ -41,7 +41,6 @@ const MyGigs = ({
   getMyCompletedGigs,
   getMyArchivedGigs,
 }) => {
-  const navigate = useNavigate();
   const propsRef = useRef();
   propsRef.current = {
     getMyOpenGigs,
@@ -130,24 +129,19 @@ const MyGigs = ({
         <h1 className={styles["title"]}>
           <span className={styles["text"]}>MY GIGS</span>
           <div className={styles["operation"]}>
-            <GigsButton
-              isPrimary
+            <Button
+              primary
               size="lg"
               disabled={!(profile && profile.hasProfile)}
-              onClick={() => {
-                setOpenUpdateProfile(true);
-              }}
-            >
-              UPDATE GIG WORK PROFILE
-            </GigsButton>
-            <GigsButton
+              onClick={() => setOpenUpdateProfile(true)}
+              label="UPDATE GIG WORK PROFILE"
+            />
+            <LinkButton
+              secondary
               size="lg"
-              onClick={() => {
-                navigate("/earn/gigs");
-              }}
-            >
-              VIEW GIGS
-            </GigsButton>
+              to="/earn/gigs"
+              label="VIEW GIGS"
+            />
           </div>
         </h1>
         {!checkingGigs &&

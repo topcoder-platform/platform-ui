@@ -4,10 +4,6 @@
 @import "utils";
 
 :global {
-  :not(.challenge-listing-container) {
-    @import "legacy-buttons";
-  }
-
   html,
   body {
     text-rendering: geometricPrecision;

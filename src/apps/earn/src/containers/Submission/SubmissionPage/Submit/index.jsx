@@ -20,7 +20,7 @@ import FilestackFilePicker from '../FilestackFilePicker';
 import Uploading from '../Uploading';
 import styles from "./styles.scss";
 import { styled as styledCss } from "@earn/utils";
-import { UiButton } from '~/libs/ui';
+import { Button } from '~/libs/ui';
 const styled = styledCss(styles)
 
 /**
@@ -298,14 +298,14 @@ class Submit extends React.Component {
             </div>
             <hr className={styled('hr')} />
             <div className={styled('submitArea')}>
-              <UiButton
+              <Button
                 primary
                 type="submit"
                 disabled={disabled}
                 size='lg'
               >
                 SUBMIT
-              </UiButton>
+              </Button>
             </div>
           </form>
         </div>

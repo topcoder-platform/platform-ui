@@ -9,18 +9,13 @@ import _ from 'lodash';
 import { goToLogin } from '@earn/utils/tc';
 import LoadingIndicator from '@earn/components/LoadingIndicator';
 import { isTokenExpired } from "@earn/utils/token";
-import { UiButton } from '~/libs/ui';
+import { Button } from '~/libs/ui';
 
 import Modal from '../Modal'
-import tc from '../buttons/themed/tc.scss';
 
 import SubmissionsList from './SubmissionsList';
 import SubmissionsDetail from './SubmissionsDetail';
 import styles from './styles.scss';
-
-const buttonThemes = {
-  tc,
-};
 
 class MySubmissionsView extends React.Component {
   constructor(props) {
@@ -89,13 +84,13 @@ class MySubmissionsView extends React.Component {
             />
 
             <div className={styles.buttons}>
-              <UiButton
+              <Button
                 primary
                 onClick={() => this.setState({ selectedSubmission: null })}
                 size='md'
               >
                 Close
-              </UiButton>
+              </Button>
             </div>
           </Modal>
           )}

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import cn from "classnames";
 import ReactHtmlParser from "react-html-parser";
 
-import { UiButton } from "~/libs/ui";
+import { Button } from "~/libs/ui";
 
 import { ReactComponent as IconLocation } from "../../../assets/icons/icon-location-crimson.svg";
 import { ReactComponent as IconPayment } from "../../../assets/icons/icon-payment.svg";
@@ -190,13 +190,13 @@ const GigDetails = () => {
           <GigNotes />
           <div className={styles["controls"]}>
             {!synced && !appliedGig && (
-              <UiButton primary size="lg" onClick={onClickBtnApply}>
+              <Button primary size="lg" onClick={onClickBtnApply}>
                 APPLY TO THIS JOB
-              </UiButton>
+              </Button>
             )}
-            <UiButton secondary size="lg" onClick={onClickBtnViewOther}>
+            <Button secondary size="lg" onClick={onClickBtnViewOther}>
               VIEW OTHER JOBS
-            </UiButton>
+            </Button>
           </div>
         </div>
         <GigWidgets className={styles.widgets} />

@@ -2,19 +2,24 @@ import { useNavigate } from "react-router-dom";
 import { Elements, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js/pure";
 import { toastr } from "react-redux-toastr";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
 import _ from "lodash";
 
 import { EnvironmentConfig } from "~/config";
-import { Breadcrumb, LoadingSpinner, OrderContractModal } from "~/libs/ui";
+import {
+    Breadcrumb,
+    Button,
+    IconOutline,
+    LoadingSpinner,
+    OrderContractModal,
+    PageDivider,
+} from "~/libs/ui";
 
 import { MAX_COMPLETED_STEP } from "../../../config";
-import { Button, BUTTON_SIZE, BUTTON_TYPE } from "../../../components/button";
 import { resetIntakeForm } from "../../../actions/form";
 import { triggerAutoSave, triggerCookieClear } from "../../../actions/autoSave";
 import { setProgressItem } from "../../../actions/progress";
-import { ReactComponent as BackIcon } from "../../../assets/images/icon-back-arrow.svg";
 import * as services from "../../../services/payment";
 import { activateChallenge } from "../../../services/challenge";
 import {
@@ -25,7 +30,7 @@ import {
   currencyFormat,
 } from "../../../utils";
 import { WorkType } from "../../../lib";
-import { PageContent, PageDivider, PageFoot } from "../../../components/page-elements";
+import { PageContent, PageFoot } from "../../../components/page-elements";
 import { clearCachedChallengeId, loadChallengeId, setCookie } from "../../../utils/autoSaveBeforeLogin";
 import { WorkServicePrice } from "../../../components/work-service-price";
 
@@ -256,8 +261,9 @@ const Review = ({
 
               <div className={styles["paymentButtonContainer"]}>
                 <Button
+                  primary
                   disabled={!isFormValid || isLoading}
-                  size={BUTTON_SIZE.MEDIUM}
+                  size="lg"
                   onClick={onNext}
                   className={styles["wideButton"]}
                 >
@@ -276,14 +282,12 @@ const Review = ({
           <div className={styles["footerContent"]}>
             <div>
               <Button
-                size={BUTTON_SIZE.MEDIUM}
-                type={BUTTON_TYPE.SECONDARY}
+                size='lg'
+                secondary
                 onClick={onBack}
-              >
-                <div className={styles["backButtonWrapper"]}>
-                  <BackIcon />
-                </div>
-              </Button>
+                icon={IconOutline.ChevronLeftIcon}
+                iconToLeft
+              />
             </div>
           </div>
         </PageFoot>

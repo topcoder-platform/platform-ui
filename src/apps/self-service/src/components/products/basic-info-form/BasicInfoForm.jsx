@@ -7,6 +7,8 @@ import classNames from "classnames";
 import PT from "prop-types";
 import _ from "lodash";
 
+import { PageDivider } from "~/libs/ui";
+
 import { HelpBanner } from "../../banners";
 import { HelpIcon } from "../../help-icon";
 import { RadioButton } from "../../radio-button";
@@ -18,7 +20,7 @@ import { ReactComponent as AddWebsiteIcon } from "../../../assets/images/add-web
 import { StylesOptionsModal } from "../styles-options-modal";
 import { StyleOptions } from "../style-options";
 import { WorkServicePrice } from "../../work-service-price";
-import { PageDivider, PageP, PageRow } from "../../page-elements";
+import { PageP, PageRow } from "../../page-elements";
 import { WorkType, WorkTypeCategoryDesignIcon } from "../../../lib";
 
 import styles from "./styles.module.scss";

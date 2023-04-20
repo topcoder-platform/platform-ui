@@ -1,11 +1,12 @@
 /* eslint-disable react/button-has-type */
 import { ButtonHTMLAttributes, EventHandler, FC, MouseEvent, ReactNode } from 'react'
+import { pickBy } from 'lodash'
 import classNames from 'classnames'
 
 import styles from './BaseButton.module.scss'
 
 export type ButtonSize = 'sm'| 'md'| 'lg'| 'xl'
-export type ButtonVariants = 'danger' | 'warning'
+export type ButtonVariants = 'danger' | 'warning' | 'linkblue' | 'round'
 export type ButtonTypes = 'primary' | 'secondary'
 
 export interface BaseButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -26,6 +27,8 @@ export interface BaseButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
 }
 
 const BaseButton: FC<BaseButtonProps> = props => {
+    // allow data-props to be passed down to the button
+    const dataProps: Partial<BaseButtonProps> = pickBy(props, (v, k) => k.startsWith('data-'))
 
     const className: string = classNames(styles.btn, props.className, {
         'btn-active': props.active,
@@ -42,6 +45,7 @@ const BaseButton: FC<BaseButtonProps> = props => {
 
     return (
         <button
+            {...dataProps}
             className={className}
             type={props.type ?? 'button'}
             disabled={props.disabled}

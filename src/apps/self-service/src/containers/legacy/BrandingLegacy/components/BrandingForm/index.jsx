@@ -1,12 +1,14 @@
 import _ from "lodash";
 import PT from "prop-types";
 import { useEffect, useState } from "react";
+
+import { Button, PageDivider } from "~/libs/ui";
+
 /**
  * Tab element
  */
-import { Button, BUTTON_SIZE, BUTTON_TYPE } from "../../../../../components/button";
 import { ColorOptions, FormField, FormInputText, FormInputTextArea } from "../../../../../components/form-elements";
-import { PageDivider, PageH3, PageP, PageRow } from "../../../../../components/page-elements";
+import { PageH3, PageP, PageRow } from "../../../../../components/page-elements";
 import { WorkServicePrice } from "../../../../../components/work-service-price";
 import { RadioButton } from "../../../../../components/radio-button";
 import {
@@ -234,8 +236,8 @@ const BrandingForm = ({
             </div>
           ))}
           <Button
-            type={BUTTON_TYPE.SECONDARY}
-            size={BUTTON_SIZE.MEDIUM}
+            secondary
+            size='lg'
             onClick={addWebsite}
           >
             ADD ANOTHER WEBSITE

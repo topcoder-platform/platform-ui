@@ -2,9 +2,10 @@ import PT from "prop-types";
 /**
  * Page Details Form component
  */
+import { PageDivider } from "~/libs/ui";
 
 import { WorkServicePrice } from "../../../../../components/work-service-price";
-import { PageDivider, PageH3, PageListInput, PageP, PageRow } from "../../../../../components/page-elements";
+import { PageH3, PageListInput, PageP, PageRow } from "../../../../../components/page-elements";
 import { HelpBanner } from "../../../../../components/banners";
 import { FormField, FormInputText, FormInputTextArea } from "../../../../../components/form-elements";
 
