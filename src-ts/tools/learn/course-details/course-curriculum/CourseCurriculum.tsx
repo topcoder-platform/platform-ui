@@ -21,6 +21,7 @@ import {
     getLessonPathFromCurrentLesson,
     LEARN_PATHS,
 } from '../../learn.routes'
+import { LearnConfig } from '../../learn-config'
 
 import { CurriculumSummary } from './curriculum-summary'
 import { TcAcademyPolicyModal } from './tc-academy-policy-modal'
@@ -98,7 +99,11 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
 
         // if the user is wipro and s/he hasn't set up DICE,
         // let the user know
-        if (props.profile?.isWipro && !props.profile.diceEnabled) {
+        if (
+            LearnConfig.REQUIRE_DICE_ID
+            && props.profile?.isWipro
+            && !props.profile.diceEnabled
+        ) {
             setIsDiceModalOpen(true)
             return
         }

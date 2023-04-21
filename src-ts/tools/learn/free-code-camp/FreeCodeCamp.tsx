@@ -52,6 +52,7 @@ import {
     getLessonPathFromModule,
     getTCACertificationPath,
 } from '../learn.routes'
+import { LearnConfig } from '../learn-config'
 
 import { FccFrame } from './fcc-frame'
 import { FccSidebar } from './fcc-sidebar'
@@ -534,7 +535,7 @@ const FreeCodeCamp: FC<{}> = () => {
         // and if the user has accepted the academic honesty policy,
         // the user is permitted to take the course, so there's nothing to do.
         if (isLoggedIn
-            && (!profile?.isWipro || !!profile?.diceEnabled)
+            && (!LearnConfig.REQUIRE_DICE_ID || !profile?.isWipro || !!profile?.diceEnabled)
             && !!certificateProgress?.academicHonestyPolicyAcceptedAt) {
             return
         }
