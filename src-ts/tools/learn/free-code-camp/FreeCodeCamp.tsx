@@ -39,7 +39,6 @@ import {
     useGetUserCertificationProgress,
     useLearnBreadcrumb,
     userCertificationProgressAutocompleteCourse,
-    userCertificationProgressCompleteCourseAsync,
     UserCertificationProgressProviderData,
     userCertificationProgressStartAsync,
     UserCertificationProgressStatus,
@@ -54,6 +53,7 @@ import {
 } from '../learn.routes'
 import { LearnConfig } from '../learn-config'
 
+import { useCheckAndMarkCourseCompleted } from './hooks/use-mark-course-completed'
 import { FccFrame } from './fcc-frame'
 import { FccSidebar } from './fcc-sidebar'
 import { TitleNav } from './title-nav'
@@ -419,48 +419,13 @@ const FreeCodeCamp: FC<{}> = () => {
         location.state,
     ])
 
-    useEffect(() => {
-
-        // if we don't yet have the user's handle,
-        // or if the cert isn't complete,
-        // or the cert isn't in progress,
-        // there's nothing to do
-        if (
-            !profile?.handle
-            || certificateProgress?.certificationProgressPercentage !== 100
-            || certificateProgress?.status !== UserCertificationProgressStatus.inProgress
-        ) {
-            return
-        }
-
-        // it's safe to complete the course
-        userCertificationProgressCompleteCourseAsync(
-            certificateProgress.id,
-            certificationParam,
-            profile.handle,
-            providerParam,
-        )
-            .then(setCertificateProgress)
-            .then(() => {
-                const completedPath: string = getCertificationCompletedPath(
-                    providerParam,
-                    certificationParam,
-                )
-                navigate(completedPath, {
-                    state: {
-                        tcaCertInfo: location.state?.tcaCertInfo,
-                    },
-                })
-            })
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
-        certificateProgress,
-        certificationParam,
-        profile?.handle,
-        profile?.userId,
+    useCheckAndMarkCourseCompleted(
+        !!profile?.userId,
         providerParam,
-        location.state,
-    ])
+        certificateProgress,
+        profile?.handle,
+        setCertificateProgress,
+    )
 
     useEffect(() => {
         if (courseDataReady && courseData) {
