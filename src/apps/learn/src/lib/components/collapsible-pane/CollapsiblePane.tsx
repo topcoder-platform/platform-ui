@@ -11,7 +11,8 @@ import {
 } from 'react'
 import classNames from 'classnames'
 
-import { IconSolid, useClickOutside } from '~/libs/ui'
+import { IconSolid } from '~/libs/ui'
+import { useClickOutside } from '~/libs/shared'
 
 import styles from './CollapsiblePane.module.scss'
 

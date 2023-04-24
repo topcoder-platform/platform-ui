@@ -16,8 +16,8 @@ import {
     InfoCard,
     LoadingSpinner,
     PageDivider,
-    useCheckIsMobile,
 } from '~/libs/ui'
+import { useCheckIsMobile } from '~/libs/shared'
 import { profileContext, ProfileContextData } from '~/libs/core'
 
 import { WorkDetailDetailsPane } from '../../../components/work-details'

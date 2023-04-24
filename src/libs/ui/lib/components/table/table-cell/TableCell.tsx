@@ -1,7 +1,8 @@
 import { MouseEvent } from 'react'
 import classNames from 'classnames'
 
-import { textFormatDateLocaleShortString, textFormatMoneyLocaleString } from '../../../functions'
+import { textFormatDateLocaleShortString, textFormatMoneyLocaleString } from '~/libs/shared/lib/utils'
+
 import { TableCellType } from '../table-cell.type'
 
 import styles from './TableCell.module.scss'

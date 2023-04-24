@@ -1,7 +1,8 @@
 import * as React from 'react'
 import classNames from 'classnames'
 
-import { Button, copyTextToClipboard, IconOutline } from '~/libs/ui'
+import { Button, IconOutline } from '~/libs/ui'
+import { copyTextToClipboard } from '~/libs/shared'
 
 import styles from './CopyButton.module.scss'
 

@@ -1,7 +1,8 @@
 import { FC } from 'react'
 import classNames from 'classnames'
 
-import { IconWrapper, textFormatMoneyLocaleString } from '~/libs/ui'
+import { IconWrapper } from '~/libs/ui'
+import { textFormatMoneyLocaleString } from '~/libs/shared'
 
 import { HelpIcon } from '../help-icon'
 

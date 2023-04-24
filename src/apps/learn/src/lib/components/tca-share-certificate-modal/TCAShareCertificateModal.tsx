@@ -4,12 +4,12 @@ import { toast } from 'react-toastify'
 import {
     BaseModal,
     BaseModalProps,
-    copyTextToClipboard,
     FacebookSocialShareBtn,
     IconOutline,
     LinkedinSocialShareBtn,
     TwitterSocialShareBtn,
 } from '~/libs/ui'
+import { copyTextToClipboard } from '~/libs/shared'
 
 import styles from './TCAShareCertificateModal.module.scss'
 

@@ -1,6 +1,7 @@
 /* eslint-disable */
 // TODO: enable when unassign feature is ready
-// import { ButtonProps, Button, useCheckIsMobile } from '~/libs/ui'
+// import { ButtonProps, Button } from '~/libs/ui'
+// import { useCheckIsMobile } from '~/libs/shared'
 import { MemberBadgeAward } from '../../../../../game-lib'
 
 import styles from './MemberActionRenderer.module.scss'

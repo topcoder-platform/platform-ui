@@ -2,9 +2,8 @@ import { FC } from 'react'
 
 import {
     IconOutline,
-    textFormatDateLocaleShortString,
-    textFormatMoneyLocaleString,
 } from '~/libs/ui'
+import { textFormatDateLocaleShortString, textFormatMoneyLocaleString } from '~/libs/shared'
 
 import { Work } from '../../../../lib'
 

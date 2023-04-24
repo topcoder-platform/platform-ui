@@ -4,7 +4,8 @@ import classNames from "classnames";
 import { useEffect, useState } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
 
-import { Breadcrumb, Button, ContactSupportModal, LoadingSpinner, PageDivider } from "~/libs/ui";
+import { Breadcrumb, Button, LoadingSpinner, PageDivider } from "~/libs/ui";
+import { ContactSupportModal } from "~/libs/shared";
 
 import { triggerAutoSave } from "../../actions/autoSave";
 import { saveWorkType, toggleSupportModal } from "../../actions/form";

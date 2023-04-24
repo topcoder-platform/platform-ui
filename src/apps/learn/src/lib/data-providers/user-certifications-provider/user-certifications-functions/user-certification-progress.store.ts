@@ -1,4 +1,4 @@
-import { GenericDataObject } from '~/libs/ui'
+import { GenericDataObject } from '~/libs/shared'
 
 import { LearnConfig } from '../../../../config'
 import { getUserCertificateUrl } from '../../../../learn.routes'

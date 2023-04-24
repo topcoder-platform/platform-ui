@@ -12,7 +12,7 @@ import {
     useState,
 } from 'react'
 
-import { useWindowSize } from '~/libs/ui'
+import { useWindowSize } from '~/libs/shared'
 
 import { CopyButton } from '../CopyButton'
 

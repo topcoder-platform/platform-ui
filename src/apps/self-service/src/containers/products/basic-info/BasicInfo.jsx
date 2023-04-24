@@ -6,11 +6,11 @@ import _ from "lodash";
 import {
   Breadcrumb,
   Button,
-  ContactSupportModal,
   IconOutline,
   LoadingSpinner,
   PageDivider,
 } from "~/libs/ui";
+import { ContactSupportModal } from "~/libs/shared";
 
 import { PageContent, PageFoot } from "../../../components/page-elements";
 import {

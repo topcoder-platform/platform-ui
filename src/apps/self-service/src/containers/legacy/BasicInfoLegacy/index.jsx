@@ -5,11 +5,11 @@ import _ from "lodash";
 import {
     Breadcrumb,
     Button,
-    ContactSupportModal,
     IconOutline,
     LoadingSpinner,
     PageDivider,
 } from "~/libs/ui";
+import { ContactSupportModal } from "~/libs/shared";
 
 import { Progress, WebsiteDesignBannerLegacy } from "../../../components/legacy";
 import { PageOptions, ROUTES } from "../../../config";

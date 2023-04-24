@@ -2,10 +2,9 @@ import { PaymentMethodResult, Stripe, StripeCardNumberElement } from '@stripe/st
 import { UserProfile } from '~/libs/core'
 import {
     FormCard,
-    GenericDataObject,
     Page,
-    textFormatMoneyLocaleString,
 } from '~/libs/ui'
+import { GenericDataObject, textFormatMoneyLocaleString } from '~/libs/shared'
 
 import { BugHuntPricingConfig } from '../../../config'
 

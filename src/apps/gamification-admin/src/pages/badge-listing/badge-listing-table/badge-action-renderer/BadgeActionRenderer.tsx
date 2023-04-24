@@ -1,4 +1,5 @@
-import { LinkButton, useCheckIsMobile } from '~/libs/ui'
+import { LinkButton } from '~/libs/ui'
+import { useCheckIsMobile } from '~/libs/shared'
 
 import { GameBadge } from '../../../../game-lib'
 import { badgeDetailPath } from '../../../../gamification-admin.routes'

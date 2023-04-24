@@ -12,7 +12,8 @@ import {
 } from 'react'
 import classNames from 'classnames'
 
-import { useClickOutside } from '../../hooks'
+import { useClickOutside } from '~/libs/shared/lib/hooks'
+
 import { ActiveTabTipIcon, IconOutline } from '../svgs'
 
 import { TabsNavItem } from './tabs-nav-item.model'

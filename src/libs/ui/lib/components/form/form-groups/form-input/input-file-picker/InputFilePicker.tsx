@@ -9,7 +9,8 @@ import {
     useState,
 } from 'react'
 
-import { useCheckIsMobile } from '../../../../../hooks'
+import { useCheckIsMobile } from '~/libs/shared/lib/hooks'
+
 import { Button } from '../../../../button'
 import { InputValue } from '../../../form-input.model'
 

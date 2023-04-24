@@ -12,9 +12,9 @@ import {
     Button,
     IconOutline,
     LoadingSpinner,
-    OrderContractModal,
     PageDivider,
 } from "~/libs/ui";
+import { OrderContractModal } from "~/libs/shared";
 
 import { MAX_COMPLETED_STEP } from "../../../config";
 import { resetIntakeForm } from "../../../actions/form";

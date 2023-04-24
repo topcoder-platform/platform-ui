@@ -19,8 +19,8 @@ import {
     InputText,
     InputWrapper,
     LoadingSpinner,
-    OrderContractModal,
 } from '~/libs/ui'
+import { OrderContractModal } from '~/libs/shared'
 
 import styles from './EnrollPaymentForm.module.scss'
 

@@ -1,6 +1,6 @@
 import { Dispatch, FC, MouseEvent, SetStateAction, useState } from 'react'
 
-import { OrderContractModal, PrivacyPolicyModal, TermsModal } from '~/libs/ui'
+import { OrderContractModal, PrivacyPolicyModal, TermsModal } from '~/libs/shared'
 
 import styles from './WorkDetailDetailsSidebar.module.scss'
 

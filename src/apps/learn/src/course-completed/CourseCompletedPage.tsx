@@ -5,8 +5,8 @@ import {
     Breadcrumb,
     BreadcrumbItemModel,
     LoadingSpinner,
-    textFormatGetSafeString,
 } from '~/libs/ui'
+import { textFormatGetSafeString } from '~/libs/shared'
 import { profileContext, ProfileContextData } from '~/libs/core'
 
 import {

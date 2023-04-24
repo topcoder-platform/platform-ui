@@ -7,7 +7,8 @@ import { Elements, useElements, useStripe } from "@stripe/react-stripe-js";
 import _ from "lodash";
 
 import { EnvironmentConfig } from "~/config";
-import { Breadcrumb, Button, IconOutline, LoadingSpinner, OrderContractModal, PageDivider } from "~/libs/ui";
+import { Breadcrumb, Button, IconOutline, LoadingSpinner, PageDivider } from "~/libs/ui";
+import { OrderContractModal } from "~/libs/shared";
 
 import { resetIntakeForm } from "../../../actions/form";
 import { MAX_COMPLETED_STEP, ROUTES } from "../../../config";

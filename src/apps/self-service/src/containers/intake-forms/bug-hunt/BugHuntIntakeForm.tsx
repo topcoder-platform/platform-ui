@@ -13,8 +13,8 @@ import {
     LoadingSpinner,
     PageDivider,
     SaveForLaterIcon,
-    useCheckIsMobile,
 } from '~/libs/ui'
+import { useCheckIsMobile } from '~/libs/shared'
 import { profileContext, ProfileContextData } from '~/libs/core'
 
 import {

@@ -2,7 +2,7 @@ import { useContext, useMemo } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { profileContext, ProfileContextData } from '~/libs/core'
-import { errorHandle } from '~/libs/ui'
+import { handleError } from '~/libs/shared'
 
 import { learnUrlGet } from '../../functions'
 
@@ -57,7 +57,7 @@ export function useGetUserCertifications(
     )
 
     if (error) {
-        errorHandle(error, 'There was an error getting your course progress.')
+        handleError(error, 'There was an error getting your course progress.')
     }
 
     return {

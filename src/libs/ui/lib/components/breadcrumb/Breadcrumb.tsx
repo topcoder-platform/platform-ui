@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, ReactElement } from 'react'
 import { createPortal } from 'react-dom'
 
 import { PageSubheaderPortalId } from '~/config'
@@ -8,17 +8,14 @@ import styles from './Breadcrumb.module.scss'
 
 interface BreadcrumbProps {
     items: Array<BreadcrumbItemModel>
+    renderInline?: boolean
 }
 
-const Breadcrumb: FC<BreadcrumbProps> = (props: BreadcrumbProps) => {
-    const portalRootEl: HTMLElement | null = document.getElementById(PageSubheaderPortalId)
+const Breadcrumb: FC<BreadcrumbProps> = props => {
+    const usePortal: boolean = !props.renderInline
 
-    if (!portalRootEl) {
-        return <></>
-    }
-
-    return createPortal(
-        (
+    function renderBreadcrumbs(): ReactElement {
+        return (
             <div className={styles['breadcrumb-wrap']}>
                 <nav className={styles.breadcrumb}>
                     <ol className='desktop-hide'>
@@ -71,8 +68,23 @@ const Breadcrumb: FC<BreadcrumbProps> = (props: BreadcrumbProps) => {
                     </ol>
                 </nav>
             </div>
-        ), portalRootEl,
-    )
+        )
+    }
+
+    if (usePortal) {
+        const portalRootEl: HTMLElement | null = document.getElementById(PageSubheaderPortalId)
+
+        if (portalRootEl) {
+            return createPortal(
+                renderBreadcrumbs(),
+                portalRootEl,
+            )
+        }
+
+        return <></>
+    }
+
+    return renderBreadcrumbs()
 }
 
 export default Breadcrumb

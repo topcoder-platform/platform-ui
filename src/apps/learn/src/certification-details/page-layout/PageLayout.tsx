@@ -7,8 +7,8 @@ import {
     ContentLayout,
     LoadingSpinner,
     Portal,
-    textFormatGetSafeString,
 } from '~/libs/ui'
+import { textFormatGetSafeString } from '~/libs/shared'
 
 import {
     TCACertification,

@@ -17,7 +17,6 @@ import {
     Button,
     ContentLayout,
     DefaultMemberIcon,
-    fileDownloadCanvasAsImage,
     IconOutline,
     LinkButton,
     Tooltip,
@@ -25,6 +24,7 @@ import {
 } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
 import { UserProfile } from '~/libs/core'
+import { downloadCanvasAsImage } from '~/libs/shared'
 
 import {
     ActionButton,
@@ -109,7 +109,7 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
 
         const canvas: HTMLCanvasElement | void = await getCertificateCanvas()
         if (!!canvas) {
-            fileDownloadCanvasAsImage(canvas, `${certificationTitle}.png`)
+            downloadCanvasAsImage(canvas, `${certificationTitle}.png`)
         }
 
     }, [certificationTitle, getCertificateCanvas])

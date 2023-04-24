@@ -1,6 +1,7 @@
 import { FC } from 'react'
 
-import { BaseModal, Button, LinkButton, PageDivider, useCheckIsMobile } from '~/libs/ui'
+import { BaseModal, Button, LinkButton, PageDivider } from '~/libs/ui'
+import { useCheckIsMobile } from '~/libs/shared'
 
 import { badgeDetailPath } from '../../../gamification-admin.routes'
 import { GameBadge } from '../../game-badge.model'

@@ -1,6 +1,7 @@
 import { FC, ReactNode, useMemo } from 'react'
 
-import { Button, ProgressBar, textFormatDateLocaleShortString } from '~/libs/ui'
+import { Button, ProgressBar } from '~/libs/ui'
+import { textFormatDateLocaleShortString } from '~/libs/shared'
 
 import { CurriculumSummary as CurriculumSummaryStats, LearnCourse } from '../../../lib'
 

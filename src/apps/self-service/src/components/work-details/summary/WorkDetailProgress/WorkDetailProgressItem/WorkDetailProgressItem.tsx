@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import classNames from 'classnames'
 
-import { textFormatDateLocaleShortString } from '~/libs/ui'
+import { textFormatDateLocaleShortString } from '~/libs/shared'
 
 import { WorkProgressStep } from '../../../../../lib'
 

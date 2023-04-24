@@ -18,8 +18,6 @@ import {
     BreadcrumbItemModel,
     Button,
     LoadingSpinner,
-    surveyTriggerForUser,
-    textFormatGetSafeString,
 } from '~/libs/ui'
 import {
     logError,
@@ -27,6 +25,7 @@ import {
     ProfileContextData,
     UserRole,
 } from '~/libs/core'
+import { sprigTriggerForUser, textFormatGetSafeString } from '~/libs/shared'
 
 import {
     CoursesProviderData,
@@ -332,7 +331,7 @@ const FreeCodeCamp: FC<{}> = () => {
         // NOTE: We have to add a delay, otherwise the survey closes when the user
         // is automatically redirected to the next lesson.
         setTimeout(() => {
-            surveyTriggerForUser('TCA First Module Completed', profile?.userId)
+            sprigTriggerForUser('TCA First Module Completed', profile?.userId)
         }, 1000)
     }
 

@@ -1,6 +1,9 @@
 import React, { FocusEvent, SVGProps } from 'react'
 import cn from 'classnames'
 
+import { textFormatMoneyLocaleString } from '~/libs/shared/lib/utils'
+import { useCheckIsMobile } from '~/libs/shared/lib/hooks'
+
 import {
     Button,
     IconCheck,
@@ -8,8 +11,6 @@ import {
     IconSolid,
     Tooltip,
 } from '../../..'
-import { textFormatMoneyLocaleString } from '../../../../functions'
-import { useCheckIsMobile } from '../../../../hooks'
 import { FormCard, FormInputModel } from '../../form-input.model'
 
 import styles from './FormCardSet.module.scss'

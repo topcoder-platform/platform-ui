@@ -1,7 +1,8 @@
 import { FC } from 'react'
 import classNames from 'classnames'
 
-import { IconOutline, textFormatDateLocaleShortString } from '~/libs/ui'
+import { IconOutline } from '~/libs/ui'
+import { textFormatDateLocaleShortString } from '~/libs/shared'
 
 import { CourseBadge, LearnCertificateTrackType } from '../../../../lib'
 

@@ -6,9 +6,9 @@ import {
     ContentLayout,
     LoadingSpinner,
     PageDivider,
-    useLocalStorage,
 } from '~/libs/ui'
 import { profileContext, ProfileContextData } from '~/libs/core'
+import { useLocalStorage } from '~/libs/shared'
 
 import {
     AllCertificationsProviderData,

@@ -10,12 +10,14 @@ import { useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import {
-    fileDownloadCanvasAsImage,
     IconOutline,
     LoadingSpinner,
+} from '~/libs/ui'
+import {
+    downloadCanvasAsImage,
     NavigateBackFunction,
     useNavigateBack,
-} from '~/libs/ui'
+} from '~/libs/shared'
 
 import { useCertificateScaling } from '../use-certificate-scaling-hook'
 import { useCertificateCanvas } from '../use-certificate-canvas-hook'
@@ -71,7 +73,7 @@ const CertificatePageLayout: FC<CertificatePageLayoutProps> = (props: Certificat
 
         const canvas: HTMLCanvasElement | void = await getCertificateCanvas()
         if (!!canvas) {
-            fileDownloadCanvasAsImage(canvas, `${props.title}.png`)
+            downloadCanvasAsImage(canvas, `${props.title}.png`)
         }
 
     }, [props.title, getCertificateCanvas])
