@@ -5,12 +5,12 @@ import _ from "lodash";
 import PT from "prop-types";
 import React from "react";
 
-import { GhostButton } from "../../../../components/UiKit";
 
 import EditModal from "../EditModal";
 
 import styles from "./style.scss";
 import { styled as styledCss } from "@earn/utils";
+import { Button } from "~/libs/ui";
 const styled = styledCss(styles)
 
 export default class Popup extends React.Component {
@@ -26,13 +26,14 @@ export default class Popup extends React.Component {
     const { editing } = this.state;
     const renderDisplay = () => (
       <div>
-        <GhostButton
+        <Button
           className={styled('edit')}
           onClick={() => this.setState({ editing: true })}
-          size="sm"
+          size="md"
+          secondary
         >
           Edit
-        </GhostButton>
+        </Button>
       </div>
     );
 

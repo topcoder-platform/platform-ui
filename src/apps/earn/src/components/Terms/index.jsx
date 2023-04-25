@@ -11,7 +11,6 @@ import FocusTrap from "focus-trap-react";
 
 import { BaseModal, Button } from "~/libs/ui";
 
-import { Modal } from "../UiKit";
 import LoadingIndicator from "../LoadingIndicator";
 import TermDetails from "./TermDetails";
 

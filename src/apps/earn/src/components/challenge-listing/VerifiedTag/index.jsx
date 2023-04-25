@@ -1,9 +1,9 @@
-import { DevelopmentTrackEventTag } from "../../UiKit";
 import VerifiedIcon from "../../../assets/images/icon-verified.svg";
 import Tooltip from "../../Tooltip";
 import PT from "prop-types";
 import styles from "./style.module.scss";
 import { styled as styledCss } from "../../../utils";
+import { DevelopmentTrackEventTag } from "../../challenge-detail/Tags";
 const styled = styledCss(styles);
 
 /**

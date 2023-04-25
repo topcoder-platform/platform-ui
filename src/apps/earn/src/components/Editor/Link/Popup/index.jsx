@@ -5,10 +5,9 @@ import _ from "lodash";
 import PT from "prop-types";
 import React from "react";
 
-import { GhostButton } from "../../../../components/UiKit";
-
 import styles from "./style.scss";
 import { styled as styledCss } from "@earn/utils";
+import { Button } from "~/libs/ui";
 const styled = styledCss(styles)
 
 export default class Popup extends React.Component {
@@ -34,13 +33,14 @@ export default class Popup extends React.Component {
         <a href={href} target="_blank" rel="noopener noreferrer">
           {href}
         </a>
-        <GhostButton
+        <Button
           className="edit"
           onClick={() => this.setState({ editing: true })}
-          size="sm"
+          size="md"
+          secondary
         >
           Edit
-        </GhostButton>
+        </Button>
       </div>
     );
 
@@ -59,15 +59,14 @@ export default class Popup extends React.Component {
             this.node = node;
           }}
         />
-        <GhostButton
+        <Button
           className="edit"
-          onClick={() => {
-            this.handleDone();
-          }}
-          size="sm"
+          onClick={() => this.handleDone()}
+          size="md"
+          secondary
         >
           Done
-        </GhostButton>
+        </Button>
       </div>
     );
 
