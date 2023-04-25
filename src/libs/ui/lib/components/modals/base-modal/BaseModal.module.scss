@@ -53,4 +53,21 @@
     :global(.button-container) {
         margin-top: $sp-2;
     }
+
+    p {
+        margin: $sp-2 0;
+
+        &:first-child,
+        &:last-child {
+            margin-top: 0;
+        }
+
+        a {
+            color: $link-blue-dark;
+            text-decoration: underline;
+            &:hover {
+                text-decoration: none;
+            }
+        }
+    }
 }

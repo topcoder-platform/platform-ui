@@ -1,3 +1,5 @@
+import { Navigate } from 'react-router-dom'
+
 import { ToolTitle } from '~/config'
 import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
 
@@ -92,6 +94,10 @@ export const earnRoutes: ReadonlyArray<PlatformRoute> = [
         ],
         element: <EarnAppRoot />,
         id: toolTitle,
+        route: rootRoute,
+    },
+    {
+        element: <Navigate to={EARN_APP_PATHS.challenges} />,
         route: rootRoute,
     },
 ]

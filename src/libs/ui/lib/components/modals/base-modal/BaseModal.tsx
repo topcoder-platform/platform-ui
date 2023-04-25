@@ -9,8 +9,10 @@ import { ModalContentResponse, useFetchModalContent } from './use-fetch-modal-co
 import styles from './BaseModal.module.scss'
 
 export interface BaseModalProps extends ModalProps {
+    bodyClassName?: string
     contentClassName?: string
     contentUrl?: string
+    theme?: 'danger'
     size?: 'body' | 'lg' | 'md' | 'sm'
     title?: string
     buttons?: ReactNode
@@ -47,8 +49,15 @@ const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
     return (
         <Modal
             {...props}
-            classNames={{ ...props.classNames, modal: `${props.classNames?.modal ?? ''} modal-${props.size || 'md'}` }}
-            closeIcon={<IconOutline.XIcon width={28} height={28} />}
+            classNames={{
+                ...props.classNames,
+                modal: classNames(
+                    props.classNames?.modal,
+                    `modal-${props.size || 'md'}`,
+                    props.theme && `theme-${props.theme}`,
+                ),
+            }}
+            closeIcon={<IconOutline.XIcon className={styles['close-icon']} width={24} height={24} />}
         >
             {props.title && (
                 <>
@@ -60,7 +69,7 @@ const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
                 </>
             )}
 
-            <div className={classNames(styles['modal-body'], 'modal-body')}>
+            <div className={classNames(props.bodyClassName, styles['modal-body'], 'modal-body')}>
                 {renterContent()}
                 {props.children}
             </div>
