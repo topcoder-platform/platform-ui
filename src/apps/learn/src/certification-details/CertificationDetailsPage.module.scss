@@ -27,8 +27,8 @@
     align-items: center;
     margin-bottom: $sp-10;
     gap: $sp-4;
-    
-    @include ltemd {
+
+    @include ltelg {
         flex-direction: column;
         align-items: flex-start;
         margin-bottom: $sp-8;

@@ -36,8 +36,8 @@
     }
 
     .innerContentWrap.innerContentWrap.innerContentWrap {
-        @include ltemd {
-            overflow: visible;
+        @include gtelg {
+            overflow: hidden;
         }
     }
 }

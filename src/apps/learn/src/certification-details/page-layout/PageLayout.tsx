@@ -1,12 +1,10 @@
-import { FC, ReactNode } from 'react'
+import { FC, ReactElement, ReactNode } from 'react'
 
-import { PageSubheaderPortalId } from '~/config'
 import {
     Breadcrumb,
     BreadcrumbItemModel,
     ContentLayout,
     LoadingSpinner,
-    Portal,
 } from '~/libs/ui'
 import { textFormatGetSafeString } from '~/libs/shared'
 
@@ -41,7 +39,7 @@ const PageLayout: FC<PageLayoutProps> = (props: PageLayoutProps) => {
         ...(props.extraBreadCrumbs ?? []),
     ])
 
-    function renderContents(): ReactNode {
+    function renderContents(): ReactElement {
         if (!props.certification) {
             return <></>
         }
@@ -50,39 +48,37 @@ const PageLayout: FC<PageLayoutProps> = (props: PageLayoutProps) => {
             <>
                 <Breadcrumb items={breadcrumb} />
 
-                <Portal portalId={PageSubheaderPortalId}>
-                    <div className={styles['hero-wrap']}>
-                        <WaveHero
-                            title={(
-                                <HeroTitle certification={props.certification} certTitle={props.certification.title} />
-                            )}
-                            theme='grey'
-                            text={!props.hideWaveHeroText ? props.certification.introText : ''}
-                        >
-                            {props.heroCTA}
-                        </WaveHero>
-                        {props.sidebarContents}
-                    </div>
-                </Portal>
+                <div className={styles['hero-wrap']}>
+                    <WaveHero
+                        title={(
+                            <HeroTitle certification={props.certification} certTitle={props.certification.title} />
+                        )}
+                        theme='grey'
+                        text={!props.hideWaveHeroText ? props.certification.introText : ''}
+                    >
+                        {props.heroCTA}
+                    </WaveHero>
+                    {props.sidebarContents}
+                </div>
 
-                {props.mainContent}
+                <ContentLayout
+                    contentClass={styles.contentWrap}
+                    outerClass={styles.outerContentWrap}
+                    innerClass={styles.innerContentWrap}
+                >
+                    {props.mainContent}
+                    {props.children}
+                </ContentLayout>
             </>
         )
     }
 
     return (
-        <ContentLayout
-            contentClass={styles.contentWrap}
-            outerClass={styles.outerContentWrap}
-            innerClass={styles.innerContentWrap}
-        >
-            {props.mainContent ? renderContents() : (
-                <div className={styles.wrap}>
-                    <LoadingSpinner />
-                </div>
-            )}
-            {props.children}
-        </ContentLayout>
+        props.mainContent ? renderContents() : (
+            <div className={styles.wrap}>
+                <LoadingSpinner />
+            </div>
+        )
     )
 }
 
