@@ -7,8 +7,7 @@ import _ from 'lodash';
 import moment from 'moment';
 import PT from 'prop-types';
 
-import { LinkButton } from '~/libs/ui';
-import Modal from '@earn/components/challenge-detail/Modal'
+import { BaseModal, LinkButton } from '~/libs/ui';
 import { getService } from '@earn/services/submissions';
 import sortList from '@earn/utils/challenge-detail/sort';
 import { ReactComponent as IconClose } from '@earn/assets/images/icon-close-green.svg';
@@ -477,41 +476,41 @@ class SubmissionsListView extends React.Component {
                 Add Submission
             </LinkButton>
         </div>
-        {
-          openModal && (
-            <Modal onCancel={this.toggleModal} theme={styles}>
-              <div className={styles.mySubModal}>
-                <div className={styles.header}>
-                  <h2 className={styles.title}>Submission Details</h2>
-                  <div className={styles.icon} role="presentation" onClick={() => this.toggleHistory({})}>
-                    <IconClose />
-                  </div>
+        <BaseModal
+            onClose={this.toggleModal}
+            open={openModal}
+            size="lg"
+        >
+            <div className={styles.mySubModal}>
+            <div className={styles.header}>
+                <h2 className={styles.title}>Submission Details</h2>
+                <div className={styles.icon} role="presentation" onClick={() => this.toggleHistory({})}>
+                <IconClose />
                 </div>
-                <hr />
-                <div className={styles['submission-text']}>
-                  Submission: <span>{selectedSubmission.submissionId}</span>
+            </div>
+            <hr />
+            <div className={styles['submission-text']}>
+                Submission: <span>{selectedSubmission.submissionId}</span>
+            </div>
+            <div className={styles['detail-row']}>
+                <div className={styled('col-1 col')}>
+                Review Type
                 </div>
-                <div className={styles['detail-row']}>
-                  <div className={styled('col-1 col')}>
-                    Review Type
-                  </div>
-                  <div className={styled('col-2 col')}>
-                    Reviewer
-                  </div>
-                  <div className={styled('col-3 col')}>
-                    Score
-                  </div>
-                  <div className={styled('col-4 col')}>
-                    Status
-                  </div>
+                <div className={styled('col-2 col')}>
+                Reviewer
                 </div>
-                <div className={styles['close-btn']} onClick={() => this.toggleHistory({})} role="presentation">
-                  <span>CLOSE</span>
+                <div className={styled('col-3 col')}>
+                Score
                 </div>
-              </div>
-            </Modal>
-          )
-        }
+                <div className={styled('col-4 col')}>
+                Status
+                </div>
+            </div>
+            <div className={styles['close-btn']} onClick={() => this.toggleHistory({})} role="presentation">
+                <span>CLOSE</span>
+            </div>
+            </div>
+        </BaseModal>
       </div>
     );
   }

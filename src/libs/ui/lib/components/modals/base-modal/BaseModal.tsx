@@ -12,7 +12,7 @@ export interface BaseModalProps extends ModalProps {
     bodyClassName?: string
     contentClassName?: string
     contentUrl?: string
-    theme?: 'danger'
+    theme?: 'danger' | 'clear'
     size?: 'body' | 'lg' | 'md' | 'sm'
     title?: string
     buttons?: ReactNode
@@ -54,7 +54,7 @@ const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
                 modal: classNames(
                     props.classNames?.modal,
                     `modal-${props.size || 'md'}`,
-                    props.theme && `theme-${props.theme}`,
+                    props.theme && styles[`theme-${props.theme}`],
                 ),
             }}
             closeIcon={<IconOutline.XIcon className={styles['close-icon']} width={24} height={24} />}

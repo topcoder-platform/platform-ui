@@ -1,23 +1,5 @@
 @import "@earn/styles/mixins";
 
-.modal {
-  background: #fff;
-  border-radius: 4;
-  max-height: 95vh;
-  overflow: hidden;
-  padding: 40;
-  width: 800px;
-  position: fixed;
-  top: 0;
-  left: 0;
-  transform: translate((calc(50vw - 50%), calc(50vh - 50%)));
-  z-index: 999;
-
-  &.download {
-    width: 900px;
-  }
-}
-
 .history {
   padding-bottom: 10px;
   border-radius: 8px;

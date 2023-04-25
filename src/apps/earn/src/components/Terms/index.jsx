@@ -9,7 +9,7 @@ import React from "react";
 import PT from "prop-types";
 import FocusTrap from "focus-trap-react";
 
-import { Button } from "~/libs/ui";
+import { BaseModal, Button } from "~/libs/ui";
 
 import { Modal } from "../UiKit";
 import LoadingIndicator from "../LoadingIndicator";
@@ -73,7 +73,7 @@ export default class Terms extends React.Component {
     }
     window.addEventListener("message", this.messageHandler, false);
     window.addEventListener("resize", this.resizeHandler, false);
-    this.terms.current.focus();
+    this.terms.current?.focus?.();
   }
 
   componentWillReceiveProps(nextProps) {
@@ -107,7 +107,7 @@ export default class Terms extends React.Component {
   }
 
   componentDidUpdate() {
-    this.terms.current.focus();
+    this.terms.current?.focus?.();
   }
 
   componentWillUnmount() {
@@ -196,16 +196,59 @@ export default class Terms extends React.Component {
     return (
       <div key={(selectedTerm || {}).id}>
         <FocusTrap>
-          <Modal
+          <BaseModal
+            open
             onCancel={onCancel}
             theme={{ container: styles["modal-container"] }}
+            size="lg"
+            title={terms.length > 1 ? defaultTitle : (terms[0] ?? {}).title ?? ''}
+            buttons={!isLoadingTerms &&
+                !checkingStatus &&
+                selectedTerm &&
+                details &&
+                !viewOnly &&
+                loadingTermId !== _.toString(selectedTerm.id) &&
+                details.agreeabilityType === "Electronically-agreeable" ? (
+                selectedTerm?.agreed ? (
+                  <Button
+                    primary
+                    size='lg'
+                    onClick={(e) => {
+                      this.nextTerm(e);
+                      if (this.vScrollArea) {
+                        this.vScrollArea.scrollTop = 0;
+                      }
+                    }}
+                  >
+                    Next
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      primary
+                      size='lg'
+                      disabled={agreeingTerm === details.id}
+                      onClick={() => {
+                        agreeTerm(details.id);
+                        if (this.vScrollArea) {
+                          this.vScrollArea.scrollTop = 0;
+                        }
+                      }}
+                    >
+                      I Agree
+                    </Button>
+                    <Button secondary size='lg' onClick={onCancel}>
+                      I Disagree
+                    </Button>
+                  </>
+                )
+            ) : (
+              <div className={styled("bottom-placeholder")} />
+            )}
           >
             {isLoadingTerms && <LoadingIndicator />}
             {!isLoadingTerms && (
               <div className={styled("modal-content")} ref={this.terms} tabIndex="0">
-                <div className={styled("title")}>
-                  {terms.length > 1 ? defaultTitle : terms[0].title}
-                </div>
                 <div
                   onScroll={handleVerticalScroll}
                   ref={(node) => {
@@ -290,56 +333,10 @@ export default class Terms extends React.Component {
                         )}
                     </div>
                   )}
-                </div>{" "}
-                {/* The end of scrollable area */}
-                {!isLoadingTerms &&
-                !checkingStatus &&
-                selectedTerm &&
-                details &&
-                !viewOnly &&
-                loadingTermId !== _.toString(selectedTerm.id) &&
-                details.agreeabilityType === "Electronically-agreeable" ? (
-                  <div className={styled("buttons")}>
-                    {selectedTerm.agreed ? (
-                      <Button
-                        primary
-                        size='md'
-                        onClick={(e) => {
-                          this.nextTerm(e);
-                          if (this.vScrollArea) {
-                            this.vScrollArea.scrollTop = 0;
-                          }
-                        }}
-                      >
-                        Next
-                      </Button>
-                    ) : (
-                      <div>
-                        <Button
-                          primary
-                          size='md'
-                          disabled={agreeingTerm === details.id}
-                          onClick={() => {
-                            agreeTerm(details.id);
-                            if (this.vScrollArea) {
-                              this.vScrollArea.scrollTop = 0;
-                            }
-                          }}
-                        >
-                          I Agree
-                        </Button>
-                        <Button secondary size='md' onClick={onCancel}>
-                          I Disagree
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className={styled("bottom-placeholder")} />
-                )}
+                </div>
               </div>
             )}
-          </Modal>
+          </BaseModal>
         </FocusTrap>
       </div>
     );

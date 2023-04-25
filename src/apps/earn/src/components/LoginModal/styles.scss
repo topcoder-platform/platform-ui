@@ -1,157 +1,151 @@
 @import "../../styles/mixins";
 
-div.container {
-  margin: 20px !important;
-  padding: 0 !important;
-  width: auto !important;
-  max-width: 728px !important;
-  height: auto !important;
-  max-height: none;
-  border-radius: 10px;
-  z-index: 1000;
-  .title {
-    position: relative;
-    color: #9d41c9;
-    @include barlow-condensed-medium;
-    font-size: 60px;
-    line-height: 58px;
-    text-transform: uppercase;
-    margin: 0;
+.title {
+  position: relative;
+  color: #9d41c9;
+  @include barlow-condensed-medium;
+  font-size: 60px;
+  line-height: 58px;
+  text-transform: uppercase;
+  margin: 0;
+  margin-bottom: 30px;
+
+  @include xs-to-sm {
+    max-width: 400px;
+    margin: auto;
+    font-size: 60px !important;
+    line-height: 58px !important;
     margin-bottom: 30px;
-
-    @include xs-to-sm {
-      max-width: 400px;
-      margin: auto;
-      font-size: 60px !important;
-      line-height: 58px !important;
-      margin-bottom: 30px;
-    }
-
-    @media (max-width: 425px) {
-      max-width: 230px;
-      margin: auto;
-      font-size: 36px !important;
-      line-height: 34px !important;
-      margin-bottom: 30px;
-    }
   }
 
-  .loginMsg {
-    color: #2a2a2a;
+  @media (max-width: 425px) {
+    max-width: 230px;
+    margin: auto;
+    font-size: 36px !important;
+    line-height: 34px !important;
+    margin-bottom: 30px;
+  }
+}
+
+.loginMsg {
+  color: #2a2a2a;
+  font-size: 24px;
+  line-height: 36px;
+  margin-bottom: 40px;
+
+  img {
+    display: inline;
+  }
+
+  @media (max-width: 425px) {
+    text-align: left !important;
+    font-size: 20px;
+    line-height: 30px;
+    margin-bottom: 30px;
+  }
+}
+
+.controls {
+  display: flex;
+  align-content: center;
+  justify-content: center;
+  margin: 0;
+
+  & > button:first-child {
+    margin-right: 10px !important;
+  }
+
+  & > a:first-child {
+    margin-right: 10px !important;
+  }
+}
+
+.referrals {
+  display: flex;
+  overflow: auto;
+
+  .sucessMsg {
     font-size: 24px;
     line-height: 36px;
     margin-bottom: 40px;
-
-    @media (max-width: 425px) {
-      text-align: left !important;
-      font-size: 20px;
-      line-height: 30px;
-      margin-bottom: 30px;
-    }
   }
 
-  .controls {
-    display: flex;
-    align-content: center;
-    justify-content: center;
-    margin: 0;
+  .rightAlign {
+    justify-content: flex-end;
+  }
+}
 
-    & > button:first-child {
-      margin-right: 10px !important;
-    }
+.loginRequired {
+  display: flex;
+  flex-direction: column;
+  padding: 80px 55px 40px 60px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
 
-    & > a:first-child {
-      margin-right: 10px !important;
-    }
+  @include xs-to-sm {
+    padding: 50px 35px 40px;
   }
 
-  .referrals {
-    display: flex;
-    overflow: auto;
+  @media (max-width: 425px) {
+    padding: 50px 35px 70px;
+  }
 
-    .sucessMsg {
-      font-size: 24px;
-      line-height: 36px;
+  .progressBar {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+
+    @include phone-only {
       margin-bottom: 40px;
     }
+  }
 
-    .rightAlign {
-      justify-content: flex-end;
+  .blobYellow,
+  .blobPurple {
+    display: block;
+    position: absolute;
+    max-width: 100%;
+  }
+
+  .blobYellow {
+    top: 0;
+    right: 0;
+
+    @media (max-width: 425px) {
+      max-width: 62px;
     }
   }
 
-  .loginRequired {
-    display: flex;
-    flex-direction: column;
-    padding: 80px 55px 40px 60px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-
-    @include xs-to-sm {
-      padding: 50px 35px 40px;
-    }
+  .blobPurple {
+    bottom: -5px;
+    left: 0;
 
     @media (max-width: 425px) {
-      padding: 50px 35px 70px;
+      max-width: 84px;
+      bottom: -40px;
     }
+  }
 
-    .progressBar {
-      display: block;
-      width: 100%;
-      max-width: 100%;
+  .thinkingFace {
+    width: 23px;
+    margin: 0 5px;
+    transform: translateY(4px);
 
-      @include phone-only {
-        margin-bottom: 40px;
-      }
+    @media (max-width: 425px) {
+      width: 21px;
+      transform: translateY(2px);
     }
+  }
 
-    .blobYellow,
-    .blobPurple {
-      display: block;
-      position: absolute;
-      max-width: 100%;
-    }
+  .regTxt {
+    position: relative;
+    font-size: 16px;
+    margin: 30px 0 0;
 
-    .blobYellow {
-      top: 0;
-      right: 0;
-
-      @media (max-width: 425px) {
-        max-width: 62px;
-      }
-    }
-
-    .blobPurple {
-      bottom: -5px;
-      left: 0;
-
-      @media (max-width: 425px) {
-        max-width: 84px;
-        bottom: -40px;
-      }
-    }
-
-    .thinkingFace {
-      width: 23px;
-      margin: 0 5px;
-      transform: translateY(4px);
-
-      @media (max-width: 425px) {
-        width: 21px;
-        transform: translateY(2px);
-      }
-    }
-
-    .regTxt {
-      position: relative;
-      font-size: 16px;
-      margin: 30px 0 0;
-
-      a {
-        color: #0D61BF;
-        text-decoration: underline;
-      }
+    a {
+      color: #0D61BF;
+      text-decoration: underline;
     }
   }
 }

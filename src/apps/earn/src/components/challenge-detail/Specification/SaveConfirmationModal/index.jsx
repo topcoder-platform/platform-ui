@@ -1,8 +1,7 @@
 import LoadingIndicator from '@earn/components/LoadingIndicator';
 import PT from 'prop-types';
 
-import { Button } from '~/libs/ui';
-import Modal from '@earn/components/challenge-detail/Modal'
+import { BaseModal, Button } from '~/libs/ui';
 
 import styles from './style.scss';
 
@@ -11,8 +10,9 @@ export default function SaveConfirmationModal({
   saving,
 }) {
   return (
-    <Modal
-      theme={{ container: styles.container }}
+    <BaseModal
+        onClose={onDone}
+        open
     >
       <h1 className={styles.title}>
         Saving The Challenge
@@ -28,7 +28,7 @@ export default function SaveConfirmationModal({
           </Button>
         )
       }
-    </Modal>
+    </BaseModal>
   );
 }
 

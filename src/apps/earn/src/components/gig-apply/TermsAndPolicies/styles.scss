@@ -1,4 +1,5 @@
 @import "../../../styles/mixins";
+@import "@libs/ui/styles/includes";
 
 .container {
 }
@@ -41,8 +42,10 @@
 
 .terms-field {
   position: relative;
-  white-space: nowrap;
-  margin-right: 20px;
+  display: flex;
+  align-items: center;
+  margin-right: $sp-5;
+  gap: $sp-1;
 }
 
 .policy-field {

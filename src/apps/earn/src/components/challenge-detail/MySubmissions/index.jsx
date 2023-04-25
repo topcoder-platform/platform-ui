@@ -9,9 +9,7 @@ import _ from 'lodash';
 import { goToLogin } from '@earn/utils/tc';
 import LoadingIndicator from '@earn/components/LoadingIndicator';
 import { isTokenExpired } from "@earn/utils/token";
-import { Button } from '~/libs/ui';
-
-import Modal from '../Modal'
+import { BaseModal, Button } from '~/libs/ui';
 
 import SubmissionsList from './SubmissionsList';
 import SubmissionsDetail from './SubmissionsDetail';
@@ -73,8 +71,12 @@ class MySubmissionsView extends React.Component {
     return (
       <div className={styles.wrapper}>
         <div className={styles.content}>
-          { selectedSubmission && (
-          <Modal onCancel={() => this.setState({ selectedSubmission: null })} theme={styles}>
+          <BaseModal
+            onClose={() => this.setState({ selectedSubmission: null })}
+            theme={styles}
+            open={selectedSubmission}
+            size="lg"
+          >
             <SubmissionsDetail
               onCancel={() => this.setState({ selectedSubmission: null })}
               submission={selectedSubmission}
@@ -92,8 +94,7 @@ class MySubmissionsView extends React.Component {
                 Close
               </Button>
             </div>
-          </Modal>
-          )}
+          </BaseModal>
           <SubmissionsList
             selectSubmission={submission => this.setState({ selectedSubmission: submission })}
             challengesUrl={challengesUrl}

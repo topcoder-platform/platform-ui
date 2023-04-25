@@ -2,28 +2,6 @@
 @import "../../styles/mixins";
 @import "../../styles/variables";
 
-.modal {
-  display: inline-flex !important;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  margin: 20px !important;
-  border-radius: 10px;
-  padding: 100px 40px !important;
-  width: auto !important;
-  background-color: #fff !important;
-  @include tablet {
-    width: 600px !important;
-  }
-  z-index: 1000;
-}
-
-.modalOverlay {
-  background-color: $body-color !important;
-  opacity: 0.95 !important;
-  z-index: -1;
-}
-
 .content {
   display: block;
 }

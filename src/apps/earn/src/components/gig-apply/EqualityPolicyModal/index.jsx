@@ -1,19 +1,17 @@
 import cn from "classnames";
 
-import { Button } from "~/libs/ui";
+import { BaseModal, Button } from "~/libs/ui";
 
-import Modal from "../../GigsModal";
 import modalStyles from "../../../styles/_modal.scss";
 
 import styles from "./styles.scss";
 
 const EqualityPolicyModal = ({ onClose, open }) => {
   return (
-    <Modal
-      modalClassName={cn(modalStyles.modal, styles.modal)}
-      overlayClassName={modalStyles.modalOverlay}
+    <BaseModal
       onClose={onClose}
       open={open}
+      size="lg"
     >
       <div className={modalStyles.title}>
         Equal Employment Opportunity Policy
@@ -38,7 +36,7 @@ const EqualityPolicyModal = ({ onClose, open }) => {
           CLOSE
         </Button>
       </div>
-    </Modal>
+    </BaseModal>
   );
 };
 

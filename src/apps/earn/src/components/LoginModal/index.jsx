@@ -5,7 +5,6 @@ import cn from "classnames";
 
 import { Button } from "~/libs/ui";
 
-import Modal from "../../components/GigsModal";
 import blobYellow from "../../assets/images/blob-yellow.svg";
 import blobPurple from "../../assets/images/blob-purple.svg";
 import progressBar from "../../assets/images/progress-bar.svg";
@@ -17,6 +16,7 @@ import { makeLoginUrl, makeRegisterUrl } from "../../utils/url";
 import modalStyles from "../../styles/_modal.scss";
 
 import styles from "./styles.scss";
+import BaseModal from "../../../../../libs/ui/lib/components/modals/base-modal/BaseModal";
 
 function LoginModal({ onClose, open }) {
   const onClickBtnRegister = useCallback(() => {
@@ -24,11 +24,11 @@ function LoginModal({ onClose, open }) {
   }, []);
 
   return (
-    <Modal
-      modalClassName={cn(modalStyles.modal, styles.container)}
-      overlayClassName={modalStyles.modalOverlay}
+    <BaseModal
       onClose={onClose}
       open={open}
+      size="lg"
+      theme="clear"
     >
       <div className={styles.loginRequired}>
         <img src={blobYellow} className={styles.blobYellow} alt="" />
@@ -59,7 +59,7 @@ function LoginModal({ onClose, open }) {
           <img src={ProgressBarXS} className={styles.progressBar} alt="" />
         </MediaQuery>
         <div className={cn(modalStyles.controls, styles.controls)}>
-          <Button primary size="md" onClick={onClickBtnRegister}>
+          <Button primary size="lg" onClick={onClickBtnRegister}>
             REGISTER NOW
           </Button>
         </div>
@@ -67,7 +67,7 @@ function LoginModal({ onClose, open }) {
           Already a member? <a href={makeLoginUrl(window.location.href)}>Login here</a>
         </p>
       </div>
-    </Modal>
+    </BaseModal>
   );
 }
 

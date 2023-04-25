@@ -1,9 +1,8 @@
 import { useCallback } from "react";
 import PT from "prop-types";
 
-import { Button } from "~/libs/ui";
+import { BaseModal, Button } from "~/libs/ui";
 
-import GigsModal from "../GigsModal";
 import { REFERRAL_PROGRAM_URL } from "../../constants";
 import { makeLoginUrl, makeRegisterUrl } from "../../utils/url";
 
@@ -26,9 +25,7 @@ const ReferralAuthModal = ({ onClose, open }) => {
   }, []);
 
   return (
-    <GigsModal
-      modalClassName={styles.modal}
-      overlayClassName={styles.modalOverlay}
+    <BaseModal
       onClose={onClose}
       open={open}
     >
@@ -57,7 +54,7 @@ const ReferralAuthModal = ({ onClose, open }) => {
         </a>
         .
       </div>
-    </GigsModal>
+    </BaseModal>
   );
 };
 

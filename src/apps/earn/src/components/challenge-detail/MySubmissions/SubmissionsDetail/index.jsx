@@ -162,9 +162,6 @@ class SubmissionsDetailView extends React.Component {
       <div className={styles.wrapper}>
         <div className={styles.header}>
           <h2 className={styles.title}>Submission Details</h2>
-          <div className={styles.icon} role="presentation" onClick={() => onCancel()}>
-            <IconClose />
-          </div>
         </div>
         <hr className={styles.hr} />
         <div className={styles['inner-content']}>

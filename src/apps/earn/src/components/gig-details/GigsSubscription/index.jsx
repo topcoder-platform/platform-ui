@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { Button } from "~/libs/ui";
+import { BaseModal, Button } from "~/libs/ui";
 
-import Modal from "../../GigsModal";
 import * as services from "../../../services/gig-subscription";
 import { isEmailValid, preventDefault } from "../../../utils/misc";
 
@@ -84,9 +83,7 @@ const GigSubscription = ({ className }) => {
           SUBSCRIBE
         </Button>
       </form>
-      <Modal
-        modalClassName={[styles["modal"], modalStyles["modal"]].join(' ')}
-        overlayClassName={modalStyles.modalOverlay}
+      <BaseModal
         onClose={onCloseModal}
         open={isModalOpen}
       >
@@ -101,7 +98,7 @@ const GigSubscription = ({ className }) => {
             CLOSE
           </Button>
         </div>
-      </Modal>
+      </BaseModal>
     </div>
   );
 };

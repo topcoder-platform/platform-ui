@@ -6,27 +6,23 @@
  */
 
  import _ from 'lodash';
- import { ACCESS_DENIED_REASON } from "../../constants";
- import AccessDenied from "../../components/AccessDenied";
  import LoadingIndicator from "@earn/components/LoadingIndicator";
  import SubmissionManagement from '@earn/components/SubmissionManagement/SubmissionManagement';
  import React from 'react';
  import PT from 'prop-types';
  import { safeForDownload } from '@earn/utils/tc';
  import { connect } from 'react-redux';
- import Modal from "@earn/components/Modal";
  import config from '@earn/config';
  import actions from '@earn/actions';
  import { getService } from '@earn/services/submissions';
  import smpActions from '../../actions/page/submission_management';
- import { Button } from '~/libs/ui';
- import styles from "./styles.scss";
- import { styled as styledCss } from "../../utils";
- const styled = styledCss(styles)
+ import { BaseModal, Button, LoadingCircles } from '~/libs/ui';
 
- const theme = {
-   container: styles.modalContainer,
- };
+ import { styled as styledCss } from "../../utils";
+
+ import styles from "./styles.scss";
+
+ const styled = styledCss(styles);
 
  // The container component
  class SubmissionManagementPageContainer extends React.Component {
@@ -193,65 +189,46 @@
            {isLoadingChallenge && <LoadingIndicator />}
            {/* TODO: The modal should be split out as a separate component.
              * Not critical though, so keeping it here for the moment. */}
-           {showModal && (
-           <Modal
-             onCancel={deleting ? _.noop : onCancelSubmissionDelete}
-             theme={theme}
+           <BaseModal
+             onClose={deleting ? _.noop : onCancelSubmissionDelete}
+             size="lg"
+             open={showModal}
+             title={`Are you sure you want to delete submission ${toBeDeletedId}?`}
+             buttons={(
+                <>
+                    <Button
+                        secondary
+                        variant='danger'
+                        size='lg'
+                        disabled={deleting}
+                        onClick={() => onSubmissionDeleteConfirmed(
+                            authTokens.tokenV3,
+                            toBeDeletedId,
+                        )}
+                    >
+                        Delete Submission
+                    </Button>
+                    <Button
+                        primary
+                        size='lg'
+                        onClick={() => onCancelSubmissionDelete()}
+                    >
+                        Cancel
+                    </Button>
+                </>
+             )}
            >
-             <div className={styled('modal-content')}>
-               <p className={styled('are-you-sure')}>
-                 Are you sure you want to delete
-                 submission
-                 {' '}
-                 <span className={styled('id')}>
-                   {toBeDeletedId}
-                 </span>
-                 ?
-               </p>
-               <p className={styled('remove-warn')}>
+             <div>
+               {deleting && <LoadingCircles />}
+               <p>
                  This will permanently remove all
                  files from our servers and can’t be undone.
                  You’ll have to upload all the files again in order to restore it.
                  Note that deleting the file may take a few minutes to propagate
                  through the Topcoder platform.
                </p>
-               <div
-                 /* NOTE: Current implementation of the loading indicator is
-                  * based on a gif image. Thus, we want to load create this
-                  * element from the beginning to ensure that the image is
-                  * downloaded in background, and will be shown immediately,
-                  * when needed. */
-                 className={styled('deletingIndicator', deleting ? '' : 'hidden')}
-               >
-                 <LoadingIndicator />
-               </div>
-               <div
-                 className={styled('action-btns', deleting ? 'hidden' : '')}
-               >
-                 <Button
-                   primary
-                   size='lg'
-                   onClick={() => onCancelSubmissionDelete()}
-                 >
-                   Cancel
-                 </Button>
-                 <Button
-                   secondary
-                   variant='danger'
-                   size='lg'
-                   onClick={
-                     () => onSubmissionDeleteConfirmed(
-                       authTokens.tokenV3,
-                       toBeDeletedId,
-                     )
-                   }
-                 >
-                   Delete Submission
-                 </Button>
-               </div>
              </div>
-           </Modal>
-           )}
+           </BaseModal>
          </div>
        </div>
      );
@@ -305,7 +282,7 @@
      challengeId: String(challengeId),
      challenge: state.challenge.details,
      challengesUrl: props.challengesUrl,
-     
+
      deleting: state.page.submission_management.deletingSubmission,
 
      isLoadingChallenge: Boolean(state.challenge.loadingDetailsForChallengeId),
@@ -313,7 +290,7 @@
      loadingSubmissionsForChallengeId:
        state.challenge.loadingSubmissionsForChallengeId || '',
      mySubmissions,
-    
+
      submissionPhaseStartDate: submissionPhase.actualStartDate || submissionPhase.scheduledStartDate || '',
 
      showDetails: state.page.submission_management.showDetails,

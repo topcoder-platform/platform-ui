@@ -93,7 +93,7 @@ const reducer = handleActions(
       CONFIRM_DELETE: onConfirmDelete,
       CANCEL_DELETE: onCancelDelete,
       DELETE_SUBMISSION_INIT: onDeleteSubmissionInit,
-      DELETE_SUBMISSION_DONE: onDeleteSubmissionDone,
+      DELETE_SUBMISSION_DONE_SUCCESS: onDeleteSubmissionDone,
       GET_MY_SUBMISSIONS_INIT: onGetMySubmissionsInit,
       GET_MY_SUBMISSIONS_DONE_SUCCESS: onGetMySubmissionsDone,
     },

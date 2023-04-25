@@ -32,11 +32,10 @@ function create(initialState = {}) {
       deletionSucceed: false,
     }),
 
-    'SMP/DELETE_SUBMISSION_INIT': (state, { payload }) => ({
+    'SMP/DELETE_SUBMISSION_INIT': (state, { payload }) => (console.log('HEREEE'), {
       ...state,
-      deletingSubmission: false,
+      deletingSubmission: true,
       deletionSucceed: false,
-      showModal: false,
       toBeDeletedId: payload,
     }),
 

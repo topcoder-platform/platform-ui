@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import PT from "prop-types";
 import _, { size, values } from "lodash";
 
-import { Button } from "~/libs/ui";
+import { BaseModal, Button } from "~/libs/ui";
 
 import FilePicker from "../../../../components/my-gigs/FilePicker";
 import TextInput from "../../../../components/TextInput";
@@ -22,6 +22,7 @@ import StatusTooltip from "./tooltips/StatusTooltip";
 import styles from "./styles.scss";
 
 const UpdateGigProfile = ({
+  open,
   profile,
   onSubmit,
   onClose,
@@ -182,108 +183,113 @@ const UpdateGigProfile = ({
   };
 
   return (
-    <div className={styles["update-resume"]}>
-      <button className={styles["close"]} onClick={onClose}>
-        <IconClose />
-      </button>
-      <h4 className={styles["title"]}>UPDATE RESUME</h4>
-      <p className={[styles["text"], styles["warnings"]].join(" ")}>
-        Uploading a resume will change your resume for all jobs that you apply
-        to.
-      </p>
-      <div className={styles["profile"]}>
-        <div className={styles["member"]}>
-          <div className={styles["photo"]}>
-            <UserPhoto handle={profile.handle} photoURL={profile.photoURL} />
-          </div>
-          <div className={styles["handle"]}>
-            <a href={`${makeProfileUrl(profile.handle)}`}>{profile.handle}</a>
-          </div>
-          <div className={styles["name"]}>
-            {profile.firstName} {profile.lastName}
-          </div>
-          <div className={styles["email"]}>{profile.email}</div>
-          <div className={styles["status"]}>
-            <div className={styles["dropdown"]}>
-              <Dropdown
-                options={statusOptions}
-                size="xs"
-                onChange={handleStatusDropdownChange}
-                errorMsg={(!pristine && validation && validation.status) || ""}
-              />
+    <BaseModal
+        size="lg"
+        title="UPDATE RESUME"
+        open={open}
+        onClose={onClose}
+        buttons={(
+            <div className={styles["footer"]}>
+                <a
+                    href={`${config.URL.BASE}/settings/profile#skills`}
+                    className={styles["link"]}
+                >
+                    Update your skills from Topcoder Profile page
+                </a>
+                <Button
+                    primary
+                    size="lg"
+                    disabled={!submitEnabled}
+                    onClick={onSubmitProfile}
+                >
+                    UPDATE PROFILE
+                </Button>
             </div>
-            <StatusTooltip statuses={statuses}>
-              <IconInfo />
-            </StatusTooltip>
-          </div>
-        </div>
-        <div className={styles["details"]}>
-          {profile && profile.existingResume && (
-            <div className={styles["resume-details"]}>
-              Please upload your resume/CV. Double-check that all of your tech
-              skills are listed in your resume/CV.&nbsp;&nbsp;&nbsp;
-              <a href={profile.existingResume.file_link} target="_blank">
-                {profile.existingResume.filename}
-              </a>
+        )}
+    >
+        <div>
+            <p className={[styles["text"], styles["warnings"]].join(" ")}>
+                Uploading a resume will change your resume for all jobs that you apply
+                to.
+            </p>
+            <div className={styles["profile"]}>
+                <div className={styles["member"]}>
+                    <div className={styles["photo"]}>
+                        <UserPhoto handle={profile.handle} photoURL={profile.photoURL} />
+                    </div>
+                    <div className={styles["handle"]}>
+                        <a href={`${makeProfileUrl(profile.handle)}`}>{profile.handle}</a>
+                    </div>
+                    <div className={styles["name"]}>
+                        {profile.firstName} {profile.lastName}
+                    </div>
+                    <div className={styles["email"]}>{profile.email}</div>
+                    <div className={styles["status"]}>
+                        <div className={styles["dropdown"]}>
+                        <Dropdown
+                            options={statusOptions}
+                            size="xs"
+                            onChange={handleStatusDropdownChange}
+                            errorMsg={(!pristine && validation && validation.status) || ""}
+                        />
+                        </div>
+                        <StatusTooltip statuses={statuses}>
+                        <IconInfo />
+                        </StatusTooltip>
+                    </div>
+                </div>
+                <div className={styles["details"]}>
+                {profile && profile.existingResume && (
+                    <div className={styles["resume-details"]}>
+                        Please upload your resume/CV. Double-check that all of your tech
+                        skills are listed in your resume/CV.&nbsp;&nbsp;&nbsp;
+                        <a href={profile.existingResume.file_link} target="_blank">
+                            {profile.existingResume.filename}
+                        </a>
+                    </div>
+                )}
+                <div className={styles["resume"]}>
+                    <FilePicker
+                        label="Drag & drop your resume or CV here - Please Omit Contact Information"
+                        required
+                        file={profileEdit.file}
+                        uploadTime={profileEdit.uploadTime}
+                        accept=".pdf, .docx"
+                        errorMsg={(!pristine && validation && validation.file) || ""}
+                        onFilePick={handleFilePick}
+                    />
+                </div>
+                <div className={styles["city"]}>
+                    <TextInput
+                        value={profileEdit.city}
+                        label="City"
+                        required
+                        onChange={handleInputChange("city")}
+                        errorMsg={(!pristine && validation && validation.city) || ""}
+                    />
+                </div>
+                <div className={styles["country"]}>
+                    <Dropdown
+                        options={countryOptions}
+                        label="Country"
+                        required
+                        onChange={handleCountryDropdownChange}
+                        errorMsg={(!pristine && validation && validation.country) || ""}
+                    />
+                </div>
+                <div className={styles["phone"]}>
+                    <TextInput
+                        value={profileEdit.phone}
+                        label="Phone - Please have the Country Code Included"
+                        required
+                        onChange={handleInputChange("phone")}
+                        errorMsg={(!pristine && validation && validation.phone) || ""}
+                    />
+                </div>
+                </div>
             </div>
-          )}
-          <div className={styles["resume"]}>
-            <FilePicker
-              label="Drag & drop your resume or CV here - Please Omit Contact Information"
-              required
-              file={profileEdit.file}
-              uploadTime={profileEdit.uploadTime}
-              accept=".pdf, .docx"
-              errorMsg={(!pristine && validation && validation.file) || ""}
-              onFilePick={handleFilePick}
-            />
-          </div>
-          <div className={styles["city"]}>
-            <TextInput
-              value={profileEdit.city}
-              label="City"
-              required
-              onChange={handleInputChange("city")}
-              errorMsg={(!pristine && validation && validation.city) || ""}
-            />
-          </div>
-          <div className={styles["country"]}>
-            <Dropdown
-              options={countryOptions}
-              label="Country"
-              required
-              onChange={handleCountryDropdownChange}
-              errorMsg={(!pristine && validation && validation.country) || ""}
-            />
-          </div>
-          <div className={styles["phone"]}>
-            <TextInput
-              value={profileEdit.phone}
-              label="Phone - Please have the Country Code Included"
-              required
-              onChange={handleInputChange("phone")}
-              errorMsg={(!pristine && validation && validation.phone) || ""}
-            />
-          </div>
         </div>
-      </div>
-      <div className={styles["footer"]}>
-        <a
-          href={`${config.URL.BASE}/settings/profile#skills`}
-          className={styles["link"]}
-        >
-          Update your skills from Topcoder Profile page
-        </a>
-        <Button
-          primary
-          size="lg"
-          disabled={!submitEnabled}
-          onClick={onSubmitProfile}
-        >
-          UPDATE PROFILE
-        </Button>
-      </div>
-    </div>
+    </BaseModal>
   );
 };
 
@@ -291,6 +297,7 @@ UpdateGigProfile.propTypes = {
   profile: PT.shape(),
   onSubmit: PT.func,
   onClose: PT.func,
+  open: PT.bool,
 };
 
 const mapStateToProps = (state) => ({

@@ -1,12 +1,6 @@
 import { useEffect } from "react";
 import PT from "prop-types";
-import { Button } from "~/libs/ui";
-import { styled as styledCss } from "@earn/utils";
-
-import Modal from "../GigsModal";
-
-import styles from "./styles.scss";
-const styled = styledCss(styles)
+import { BaseModal, Button } from "~/libs/ui";
 
 const ErrorMessage = ({ title, details, onOk }) => {
   useEffect(() => {
@@ -18,27 +12,36 @@ const ErrorMessage = ({ title, details, onOk }) => {
   }, []);
 
   return (
-    <Modal theme={{ container: styles.container }}>
-      <p className={styled("title")}>{title}</p>
-      <p className={styled("details")}>{details}</p>
-      <p className={styled("details")}>
-        We are sorry that you have encountered this problem. Please, contact our
-        support &zwnj;
-        <a href="mailto:support@topcoder.com">support@topcoder.com</a>
-        &zwnj; to help us resolve it as soon as possible.
-      </p>
-      <Button
-        secondary
-        variant="danger"
-        size="md"
-        onClick={(e) => {
-          e.preventDefault();
-          onOk();
-        }}
-      >
-        OK
-      </Button>
-    </Modal>
+    <BaseModal
+        open
+        size='md'
+        title={title}
+        onClose={onOk}
+        buttons={(
+            <Button
+                secondary
+                variant="danger"
+                size="md"
+                onClick={(e) => {
+                    e.preventDefault();
+                    onOk();
+                }}
+            >
+                OK
+            </Button>
+        )}
+    >
+        <div>
+            <p>{details}</p>
+
+            <p>
+                We are sorry that you have encountered this problem. Please, contact our
+                support &zwnj;
+                <a href="mailto:support@topcoder.com">support@topcoder.com</a>
+                &zwnj; to help us resolve it as soon as possible.
+            </p>
+        </div>
+    </BaseModal>
   );
 };
 

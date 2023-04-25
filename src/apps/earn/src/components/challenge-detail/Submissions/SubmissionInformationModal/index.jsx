@@ -4,13 +4,11 @@ import React from 'react';
 import PT from 'prop-types';
 import moment from 'moment';
 
-import { Button } from '~/libs/ui';
+import { BaseModal, Button } from '~/libs/ui';
 import { ReactComponent as ArrowUp } from '@earn/assets/images/icon-arrow-up.svg';
 import { ReactComponent as ArrowDown } from '@earn/assets/images/icon-arrow-down.svg';
 import LoadingIndicator from '@earn/components/LoadingIndicator';
 import { styled as styledCss } from "@earn/utils";
-
-import Modal from '../../Modal'
 
 import styles from "./style.scss";
 const styled = styledCss(styles)
@@ -73,7 +71,11 @@ class SubmissionInformationModal extends React.Component {
     const testcases = isLoadingSubmissionInformation ? [] : this.getTestcases();
 
     return (
-      <Modal theme={{ container: styles.container }} onCancel={() => onClose(false)}>
+      <BaseModal
+        onClose={() => onClose(false)}
+        open
+        size="lg"
+      >
         {
           !isLoadingSubmissionInformation && (
             <React.Fragment>
@@ -167,7 +169,7 @@ class SubmissionInformationModal extends React.Component {
             <LoadingIndicator />
           )
         }
-      </Modal>
+      </BaseModal>
     );
   }
 }

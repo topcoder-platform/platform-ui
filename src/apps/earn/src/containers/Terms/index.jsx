@@ -105,7 +105,7 @@ class TermsPageContainer extends React.Component {
             selectedTerm={selectedTerm}
             selectTerm={selectTerm}
             signDocu={signDocu}
-            terms={terms}
+            terms={terms || []}
             viewOnly={viewOnly}
           />
         ) : null}

@@ -1,10 +1,10 @@
 import cn from "classnames";
 
-import { Button } from "~/libs/ui";
+import { BaseModal, Button } from "~/libs/ui";
 
 import styles from "./styles.scss";
 import modalStyles from "../../../styles/_modal.scss";
-import Modal from "../../GigsModal";
+
 import {
   RECRUIT_CRM_GDPR_URL,
   RECRUIT_CRM_PRIVACY_POLICY_URL,
@@ -14,11 +14,10 @@ import {
 
 const CandidateTermsModal = ({ onClose, open }) => {
   return (
-    <Modal
-      modalClassName={cn(modalStyles.modal, styles.modal)}
-      overlayClassName={modalStyles.modalOverlay}
+    <BaseModal
       onClose={onClose}
       open={open}
+      size="lg"
     >
       <div className={modalStyles.title}>Candidate Terms</div>
       <div className={modalStyles.content}>
@@ -68,7 +67,7 @@ const CandidateTermsModal = ({ onClose, open }) => {
           CLOSE
         </Button>
       </div>
-    </Modal>
+    </BaseModal>
   );
 };
 

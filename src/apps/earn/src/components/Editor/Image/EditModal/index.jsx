@@ -5,18 +5,11 @@ import _ from "lodash";
 import PT from "prop-types";
 import React from "react";
 
-import { Button } from "~/libs/ui";
+import { BaseModal, Button } from "~/libs/ui";
 import { styled as styledCss } from "@earn/utils";
-
-import { Modal } from "../../../../components/UiKit";
 
 import styles from "./style.scss";
 const styled = styledCss(styles)
-
-const theme = {
-  container: styles.modalContainer,
-  overlay: styles.modalOverlay,
-};
 
 export default class EditModal extends React.Component {
   constructor(props) {
@@ -36,7 +29,11 @@ export default class EditModal extends React.Component {
     const st = this.state;
     return (
       <div className={styled("container")}>
-        <Modal onCancel={() => onCancel()} theme={theme}>
+        <BaseModal
+            onClose={onCancel}
+            open
+            size="lg"
+        >
           <div className={styled("fields-container")}>
             <div className={styled("field")}>
               URL:
@@ -86,7 +83,7 @@ export default class EditModal extends React.Component {
               />
             </div>
           ) : null}
-        </Modal>
+        </BaseModal>
       </div>
     );
   }

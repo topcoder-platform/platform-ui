@@ -6,7 +6,6 @@ import { LinkButton, Button } from "~/libs/ui";
 
 import * as lookupSelectors from "../../reducers/lookupSelectors";
 import * as myGigsSelectors from "../../reducers/my-gigs/selectors";
-import GigsModal from "../../components/GigsModal";
 import Loading from "../../components/my-gigs/Loading";
 import Empty from "../../components/my-gigs/Empty";
 import store from "../../store";
@@ -164,8 +163,8 @@ const MyGigs = ({
           <Loading>We are processing your gigs data</Loading>
         )}
       </div>
-      <GigsModal open={openUpdateProfile}>
-        <UpdateGigProfile
+      <UpdateGigProfile
+          open={openUpdateProfile}
           profile={profile}
           onSubmit={(profileEdit) => {
             updateProfile(profileEdit);
@@ -174,16 +173,14 @@ const MyGigs = ({
           onClose={() => {
             setOpenUpdateProfile(false);
           }}
-        />
-      </GigsModal>
-      <GigsModal open={openUpdateSuccess}>
-        <UpdateSuccess
+      />
+      <UpdateSuccess
           onClose={() => {
             setOpenUpdateSuccess(false);
             updateProfileReset();
           }}
-        />
-      </GigsModal>
+          open={openUpdateSuccess}
+      />
     </>
   );
 };

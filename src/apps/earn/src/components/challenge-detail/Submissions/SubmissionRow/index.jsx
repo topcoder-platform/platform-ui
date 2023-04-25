@@ -7,7 +7,6 @@ import React from 'react';
 import PT from 'prop-types';
 import _ from 'lodash';
 import { CHALLENGE_STATUS, getRatingLevel } from '@earn/utils/tc';
-import Modal from '../../Modal'
 import { ReactComponent as IconClose } from '@earn/assets/images/icon-close-green.svg';
 import moment from 'moment';
 
@@ -18,6 +17,7 @@ import SubmissionHistoryRow from './SubmissionHistoryRow';
 
 import styles from "./style.scss";
 import { styled as styledCss } from "@earn/utils";
+import { BaseModal } from '~/libs/ui';
 const styled = styledCss(styles)
 
 export default function SubmissionRow({
@@ -131,87 +131,85 @@ export default function SubmissionRow({
           </a>
         </div>
       </div>
-      { openHistory && (
-        <Modal
-          onCancel={toggleHistory}
-          theme={{ container: `${styles.modal} ${isMM && (numWinners > 0 || challengeStatus === CHALLENGE_STATUS.COMPLETED) ? styles.download : ''}` }}
-        >
-          <div className={styles.history}>
-            <div className={styles.header}>
-              <h2 className={styles.title}>Submission History</h2>
-              <div className={styles.icon} role="presentation" onClick={toggleHistory}>
-                <IconClose />
-              </div>
-            </div>
-            <hr />
-            <div className={styles['submission-text']}>
-              Latest Submission: <span>{submissionId}</span>
-            </div>
-            <div>
-              <div className={styled('row no-border history-head')}>
-                { isMM ? <div className={styled('col-1 col')} /> : null }
-                <div className={styled('col-2 col')}>
-                  Submission
-                </div>
-                <div className={styled('col-3 col')}>
-                  <div className={styles.col} />
-                  <div className={styles.col}>
-                    Final Score
-                  </div>
-                </div>
-                <div className={styled('col-4 col')}>
-                  <div className={styles.col}>
-                    Provisional Score
-                  </div>
-                </div>
-                <div className={styled('col-5 col')}>
-                  Time
-                </div>
-                {
-                  (isMM || isRDM)
-                  && (numWinners > 0 || challengeStatus === CHALLENGE_STATUS.COMPLETED) && (
-                    <div className={styled('col-2 col center')}>
-                      Action
-                    </div>
-                  )
-                }
-                {
-                  isMM && isLoggedIn && (
-                    <div className={styles.col}>&nbsp;</div>
-                  )
-                }
-              </div>
-            </div>
-            <div className={styles['table-body']}>
-              {
-                submissions.map((submissionHistory, index) => (
-                  <SubmissionHistoryRow
-                    isReviewPhaseComplete={isReviewPhaseComplete}
-                    isMM={isMM}
-                    isRDM={isRDM}
-                    challengeStatus={challengeStatus}
-                    submission={submissions.length - index}
-                    {...submissionHistory}
-                    key={submissionHistory.submissionId}
-                    onShowPopup={onShowPopup}
-                    member={member}
-                    numWinners={numWinners}
-                    auth={auth}
-                    isLoggedIn={isLoggedIn}
-                    submissionId={submissionHistory.submissionId}
-                  />
-                ))
-              }
-            </div>
-            <div className={styles['close-wrapper']}>
-              <div className={styles['close-btn']} onClick={toggleHistory} role="presentation">
-                <span>CLOSE</span>
-              </div>
+      <BaseModal
+        onClose={toggleHistory}
+        open={openHistory}
+        size={isMM && (numWinners > 0 || challengeStatus === CHALLENGE_STATUS.COMPLETED) ? 'body' : 'lg'}
+      >
+        <div className={styles.history}>
+          <div className={styles.header}>
+            <h2 className={styles.title}>Submission History</h2>
+            <div className={styles.icon} role="presentation" onClick={toggleHistory}>
+              <IconClose />
             </div>
           </div>
-        </Modal>
-      )
-          }
+          <hr />
+          <div className={styles['submission-text']}>
+            Latest Submission: <span>{submissionId}</span>
+          </div>
+          <div>
+            <div className={styled('row no-border history-head')}>
+              { isMM ? <div className={styled('col-1 col')} /> : null }
+              <div className={styled('col-2 col')}>
+                Submission
+              </div>
+              <div className={styled('col-3 col')}>
+                <div className={styles.col} />
+                <div className={styles.col}>
+                  Final Score
+                </div>
+              </div>
+              <div className={styled('col-4 col')}>
+                <div className={styles.col}>
+                  Provisional Score
+                </div>
+              </div>
+              <div className={styled('col-5 col')}>
+                Time
+              </div>
+              {
+                (isMM || isRDM)
+                && (numWinners > 0 || challengeStatus === CHALLENGE_STATUS.COMPLETED) && (
+                  <div className={styled('col-2 col center')}>
+                    Action
+                  </div>
+                )
+              }
+              {
+                isMM && isLoggedIn && (
+                  <div className={styles.col}>&nbsp;</div>
+                )
+              }
+            </div>
+          </div>
+          <div className={styles['table-body']}>
+            {
+              submissions.map((submissionHistory, index) => (
+                <SubmissionHistoryRow
+                  isReviewPhaseComplete={isReviewPhaseComplete}
+                  isMM={isMM}
+                  isRDM={isRDM}
+                  challengeStatus={challengeStatus}
+                  submission={submissions.length - index}
+                  {...submissionHistory}
+                  key={submissionHistory.submissionId}
+                  onShowPopup={onShowPopup}
+                  member={member}
+                  numWinners={numWinners}
+                  auth={auth}
+                  isLoggedIn={isLoggedIn}
+                  submissionId={submissionHistory.submissionId}
+                />
+              ))
+            }
+          </div>
+          <div className={styles['close-wrapper']}>
+            <div className={styles['close-btn']} onClick={toggleHistory} role="presentation">
+              <span>CLOSE</span>
+            </div>
+          </div>
+        </div>
+      </BaseModal>
     </div>
   );
 }
