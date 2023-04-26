@@ -25,6 +25,8 @@ interface PageLayoutProps {
     mainContent: ReactNode
     heroCTA?: ReactNode
     sidebarContents: ReactNode
+    children?: ReactNode
+    hideWaveHeroText?: boolean
 }
 
 const PageLayout: FC<PageLayoutProps> = (props: PageLayoutProps) => {
@@ -54,7 +56,7 @@ const PageLayout: FC<PageLayoutProps> = (props: PageLayoutProps) => {
                                 <HeroTitle certification={props.certification} certTitle={props.certification.title} />
                             )}
                             theme='grey'
-                            text={props.certification.introText}
+                            text={!props.hideWaveHeroText ? props.certification.introText : ''}
                         >
                             {props.heroCTA}
                         </WaveHero>
@@ -78,6 +80,7 @@ const PageLayout: FC<PageLayoutProps> = (props: PageLayoutProps) => {
                     <LoadingSpinner />
                 </div>
             )}
+            {props.children}
         </ContentLayout>
     )
 }

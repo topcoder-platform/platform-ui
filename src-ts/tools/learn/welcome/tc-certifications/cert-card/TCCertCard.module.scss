@@ -16,39 +16,41 @@
         display: flex;
         align-items: center;
 
+        > svg {
+            flex: 0 0 auto;
+        }
+
         @include ltemd {
             align-items: flex-start;
 
-            >svg {
+            > svg {
                 max-width: 60px;
                 max-height: 56px;
             }
         }
 
-        .cardTitleWrap {
+        .cardHeadline {
             display: flex;
             flex-direction: column;
-            flex: 1;
+            flex: 1 1 auto;
             margin-left: $space-xxl;
 
             @include ltesm {
                 margin-left: $space-lg;
             }
 
-            >p {
-                text-align: left;
-            }
-
             .cardSubWrap {
                 display: flex;
                 align-items: center;
+                gap: $space-sm;
+                flex-wrap: wrap;
 
-                @include ltesm {
-                    display: grid;
-                    grid-template-columns: 30px 1fr;
+                .subTitleItem {
+                    display: flex;
+                    align-items: center;
                 }
 
-                >svg {
+                svg {
                     margin-right: $space-xs;
                     color: $blue-140;
                 }
@@ -66,16 +68,29 @@
             }
         }
 
-        .cardLabels {
+        .cardTitleline {
             display: flex;
             align-items: flex-start;
+            > p {
+                text-align: left;
+            }
+
+            .cardLabels {
+                margin-left: auto;
+            }
+        }
+
+        .cardLabels {
+            display: flex;
+            height: 32px;
+            align-items: center;
+            gap: $space-sm;
 
             .newLabel {
                 font-weight: 500;
                 font-size: 11px;
                 line-height: 10px;
                 border-radius: 2px;
-                margin-bottom: $space-xl;
                 background-color: $green-140;
                 padding: 3px $space-xs;
                 color: $tc-white;
@@ -84,7 +99,6 @@
             .freeLabel {
                 @include freeLabel;
 
-                margin-left: $space-sm;
                 padding: 3px $space-xs;
                 font-weight: 500;
                 font-size: 11px;

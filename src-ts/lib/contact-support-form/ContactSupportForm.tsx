@@ -1,6 +1,7 @@
 import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useState } from 'react'
 
 import { Form, FormDefinition, formGetInputModel, FormInputModel } from '../form'
+import { FormValue } from '../form/form-functions'
 import { LoadingSpinner } from '../loading-spinner'
 import { profileContext, ProfileContextData } from '../profile-provider'
 
@@ -27,13 +28,13 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
 
     useEffect(() => {
         if (!loading && saveOnSuccess) {
-            props.onSave()
+            props.onSave.call(undefined)
         }
     }, [loading, saveOnSuccess, props.onSave])
 
-    const generateRequest: (inputs: ReadonlyArray<FormInputModel>) => void = useCallback((
+    const generateRequest: (inputs: ReadonlyArray<FormInputModel>) => FormValue = useCallback((
         inputs: ReadonlyArray<FormInputModel>,
-    ): ContactSupportRequest => {
+    ): FormValue => {
         const firstName: string
             = formGetInputModel(inputs, ContactSupportFormField.first).value as string
         const lastName: string
@@ -50,12 +51,12 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
             lastName,
             question,
         }
-    }, [props.workId])
+    }, [props.isSelfService, props.workId])
 
-    const saveAsync: (request: ContactSupportRequest) => Promise<void>
-        = useCallback(async (request: ContactSupportRequest): Promise<void> => {
+    const saveAsync: (request: FormValue) => Promise<void>
+        = useCallback(async (request: FormValue): Promise<void> => {
             setLoading(true)
-            return contactSupportSubmitRequestAsync(request)
+            return contactSupportSubmitRequestAsync(request as unknown as ContactSupportRequest)
                 .then(() => {
                     setSaveOnSuccess(true)
                 })
@@ -92,7 +93,7 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
 
             <Form
                 formDef={props.formDef}
-                formValues={profile}
+                formValues={profile as unknown as FormValue}
                 requestGenerator={generateRequest}
                 save={saveAsync}
             />

@@ -5,9 +5,11 @@ import {
     clearFCCCertificationTitle,
     CompletionTimeRange,
     LearnCertification,
+    LearnCourse,
     LearnLevelIcon,
     LearnUserCertificationProgress,
     ProvidersLogoList,
+    TCACertification,
     TCACertificationCompletionTimeRange,
     TCACertificationLearnLevel,
     TCACertificationProviderBase,
@@ -25,10 +27,12 @@ import styles from './CourseCard.module.scss'
 
 interface CourseCardProps {
     certification: LearnCertification
+    course?: LearnCourse
     progress: LearnUserCertificationProgress
     learnerLevel: TCACertificationLearnLevel
     provider: string
     isEnrolled: boolean
+    tcaCertification: TCACertification
 }
 
 const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
@@ -45,6 +49,12 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                                 props.provider,
                                 props.certification.certification,
                             )}
+                            routeState={{
+                                tcaCertInfo: {
+                                    dashedName: props.tcaCertification.dashedName,
+                                    title: props.tcaCertification.title,
+                                },
+                            }}
                         />
                         <Button
                             buttonStyle='primary'
@@ -68,6 +78,12 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                             props.certification.certification,
                             props.progress?.currentLesson,
                         )}
+                        routeState={{
+                            tcaCertInfo: {
+                                dashedName: props.tcaCertification.dashedName,
+                                title: props.tcaCertification.title,
+                            },
+                        }}
                     />
                 )
             default:
@@ -80,13 +96,19 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                             props.provider,
                             props.certification.certification,
                         )}
+                        routeState={{
+                            tcaCertInfo: {
+                                dashedName: props.tcaCertification.dashedName,
+                                title: props.tcaCertification.title,
+                            },
+                        }}
                     />
                 )
         }
     }
 
     const completionTimeRange: TCACertificationCompletionTimeRange = useHoursEstimateToRange(
-        props.certification.course?.estimatedCompletionTimeValue,
+        props.course?.estimatedCompletionTimeValue ?? 0,
     )
 
     return (
@@ -109,7 +131,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                                 <IconSolid.DocumentTextIcon />
                             </span>
                             <span className='quote-small'>
-                                {props.certification.course.modules.length}
+                                {props.course?.modules.length}
                                 {' modules'}
                             </span>
                         </li>

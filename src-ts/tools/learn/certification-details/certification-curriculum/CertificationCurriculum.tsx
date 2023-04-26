@@ -1,5 +1,5 @@
 import { FC, useMemo } from 'react'
-import { get } from 'lodash'
+import { get, orderBy } from 'lodash'
 
 import { IconOutline } from '../../../../lib'
 import {
@@ -7,6 +7,7 @@ import {
     LearnUserCertificationProgress,
     TCACertification,
     TCACertificationProvider,
+    TCACertificationResource,
 } from '../../learn-lib'
 
 import { CertificationSummary } from './certification-summary'
@@ -14,10 +15,9 @@ import { AssessmentCard, CourseCard } from './curriculum-cards'
 import styles from './CertificationCurriculum.module.scss'
 
 interface CertificationCurriculumProps {
-    certification: TCACertification
+    certification?: TCACertification
     certsProgress?: ReadonlyArray<LearnUserCertificationProgress>
     isEnrolled: boolean
-    isCompleted: boolean
 }
 
 interface ProgressByIdCollection {
@@ -37,13 +37,17 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
     ), [props.certsProgress])
 
     const providersById: ProvidersByIdCollection = useMemo(() => (
-        props.certification.resourceProviders.reduce((all, provider) => {
+        (props.certification?.resourceProviders ?? []).reduce((all, provider) => {
             all[provider.id] = provider
             return all
         }, {} as ProvidersByIdCollection)
     ), [props.certification])
 
-    return (
+    const sortedCertResources: TCACertificationResource[] = useMemo(() => (
+        orderBy(props.certification?.certificationResources, 'displayOrder')
+    ), [props.certification?.certificationResources])
+
+    return props.certification ? (
         <div className={styles.wrap}>
             <div className={styles.headline}>
                 <h2 className='details'>
@@ -70,14 +74,16 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
 
             <div className={styles.container}>
                 <div className={styles.courses}>
-                    {props.certification.certificationResources.map(cert => (
+                    {sortedCertResources.map(cert => (
                         <CourseCard
                             certification={cert.freeCodeCampCertification}
+                            course={cert.freeCodeCampCertification?.course}
                             progress={progressById[cert.freeCodeCampCertification.fccId]}
                             key={cert.id}
                             learnerLevel={cert.freeCodeCampCertification.learnerLevel}
                             provider={get(providersById, [cert.resourceProviderId, 'name'])}
                             isEnrolled={props.isEnrolled}
+                            tcaCertification={props.certification as TCACertification}
                         />
                     ))}
                     <AssessmentCard
@@ -87,11 +93,10 @@ const CertificationCurriculum: FC<CertificationCurriculumProps> = (props: Certif
                 </div>
                 <CertificationSummary
                     certification={props.certification}
-                    isCompleted={props.isCompleted}
                 />
             </div>
         </div>
-    )
+    ) : <></>
 }
 
 export default CertificationCurriculum

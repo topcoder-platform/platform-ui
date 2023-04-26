@@ -9,7 +9,11 @@ export function fileDownloadBlob(content: Blob, fileName: string): void {
     link.remove()
 }
 
-export function fileDownloadCanvasAsImage(canvas: HTMLCanvasElement, fileName: string, fileType: string = 'image/png'): void {
+export function fileDownloadCanvasAsImage(
+    canvas: HTMLCanvasElement,
+    fileName: string,
+    fileType: string = 'image/png',
+): void {
     canvas.style.display = 'none'
     document.body.append(canvas)
     canvas.toBlob(blob => {

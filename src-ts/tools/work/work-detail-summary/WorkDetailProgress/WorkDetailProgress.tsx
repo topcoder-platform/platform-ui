@@ -8,15 +8,13 @@ import styles from './WorkDetailProgress.module.scss'
 
 const WorkDetailProgress: FC<WorkProgress> = (props: WorkProgress) => {
 
-    const { steps, activeStepIndex }: WorkProgress = props
-
-    const progressItems: Array<JSX.Element> = steps
+    const progressItems: Array<JSX.Element> = props.steps
         .map((item, index) => (
             <WorkDetailProgressItem
                 {...item}
-                activeStepIndex={activeStepIndex}
+                activeStepIndex={props.activeStepIndex}
                 currentIndex={index}
-                key={index}
+                key={index as any}
             />
         ))
 

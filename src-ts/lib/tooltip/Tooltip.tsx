@@ -15,23 +15,20 @@ interface TooltipProps {
     triggerOn?: 'click' | 'hover'
 }
 
-const Tooltip: FC<TooltipProps> = ({
-    content,
-    trigger,
-    triggerOn = 'hover',
-    place = 'bottom',
-}: TooltipProps) => {
+const Tooltip: FC<TooltipProps> = (props: TooltipProps) => {
     const tooltipId: RefObject<string> = useRef<string>(uuidv4())
 
     // if we didn't get a tooltip, just return an empty fragment
-    if (!content) {
+    if (!props.content) {
         return <></>
     }
 
     let event: TooltipEvent = {}
     let tooltipProps: TooltipEvent = {}
-    // The following attributes are required by react-tooltip when we want to show the tooltip on click rather than hover
-    if (triggerOn === 'click') {
+
+    // The following attributes are required by react-tooltip
+    // when we want to show the tooltip on click rather than hover
+    if (props.triggerOn === 'click') {
         tooltipProps = {
             globalEventOff: 'click',
         }
@@ -48,18 +45,18 @@ const Tooltip: FC<TooltipProps> = ({
                 data-for={tooltipId.current}
                 {...event}
             >
-                {trigger}
+                {props.trigger}
             </div>
             <ReactTooltip
                 className={styles.tooltip}
-                id={tooltipId.current}
+                id={tooltipId.current as string}
                 aria-haspopup='true'
-                place={place}
+                place={props.place ?? 'bottom'}
                 effect='solid'
                 event=''
                 {...tooltipProps}
             >
-                {content}
+                {props.content}
             </ReactTooltip>
         </div>
     )

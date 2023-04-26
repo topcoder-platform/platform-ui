@@ -1,11 +1,23 @@
+import { get } from 'lodash'
+import React, {
+    Dispatch,
+    SetStateAction,
+    useCallback,
+    useContext,
+    useState,
+} from 'react'
+import cn from 'classnames'
+
 import {
     CardCvcElement,
     CardExpiryElement,
     CardNumberElement,
 } from '@stripe/react-stripe-js'
-import { StripeCardCvcElementChangeEvent, StripeCardExpiryElementChangeEvent, StripeCardNumberElementChangeEvent } from '@stripe/stripe-js'
-import React, { Dispatch, SetStateAction, useContext, useState } from 'react'
-import cn from 'classnames'
+import {
+    StripeCardCvcElementChangeEvent,
+    StripeCardExpiryElementChangeEvent,
+    StripeCardNumberElementChangeEvent,
+} from '@stripe/stripe-js'
 
 import { Button, OrderContractModal, profileContext, ProfileContextData } from '..'
 import { InputText } from '../form/form-groups/form-input'
@@ -38,7 +50,10 @@ interface PaymentFormProps {
     onUpdateField: (fieldName: string, value: string | boolean) => void
 }
 
-type CardChangeEvent = StripeCardExpiryElementChangeEvent | StripeCardNumberElementChangeEvent | StripeCardCvcElementChangeEvent
+type CardChangeEvent
+    = StripeCardExpiryElementChangeEvent
+    | StripeCardNumberElementChangeEvent
+    | StripeCardCvcElementChangeEvent
 
 /**
  * This is the payment form component.
@@ -54,21 +69,23 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
     const [cardCVVError, setCardCVVError]: [string, Dispatch<string>] = useState<string>('')
     const { profile }: ProfileContextData = useContext<ProfileContextData>(profileContext)
 
-    const [formState, setFormState]: [FieldDirtyState, Dispatch<SetStateAction<FieldDirtyState>>] = useState<FieldDirtyState>({
-        cardCvv: false,
-        cardExpiry: false,
-        cardNumber: false,
-    })
+    const [formState, setFormState]: [FieldDirtyState, Dispatch<SetStateAction<FieldDirtyState>>]
+        = useState<FieldDirtyState>({
+            cardCvv: false,
+            cardExpiry: false,
+            cardNumber: false,
+        })
 
-    const [isOrderContractModalOpen, setIsOrderContractModalOpen]: [boolean, Dispatch<boolean>] = useState<boolean>(false)
+    const [isOrderContractModalOpen, setIsOrderContractModalOpen]: [boolean, Dispatch<boolean>]
+        = useState<boolean>(false)
 
     const getError: (data: any) => string = data => data?.error?.message || ''
 
-    const onOpenOrderContract: (event: React.SyntheticEvent) => void = event => {
+    const onOpenOrderContract: (event: React.SyntheticEvent) => void = useCallback(event => {
         event.preventDefault()
         event.stopPropagation()
         setIsOrderContractModalOpen(true)
-    }
+    }, [])
 
     const renderCheckboxLabel: () => JSX.Element = () => (
         <div className={styles['checkbox-label']}>
@@ -77,21 +94,30 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
         </div>
     )
 
-    const cardElementOnChange: (fieldName: string, data: CardChangeEvent, stateUpdater: Dispatch<string>) => void = (fieldName, data, stateUpdater) => {
-        const error: string = getError(data)
-        stateUpdater(error)
-        props.onUpdateField(fieldName, data.complete)
-        setFormState({
-            ...formState,
-            [fieldName]: true,
-        })
+    const cardElementOnChange: (fieldName: string, stateUpdater: Dispatch<string>) => (data: CardChangeEvent) => void
+        = (fieldName, stateUpdater) => (data: CardChangeEvent) => {
+            const error: string = getError(data)
+            stateUpdater(error)
+            props.onUpdateField(fieldName, data.complete)
+            setFormState({
+                ...formState,
+                [fieldName]: true,
+            })
+        }
+
+    function hideOrderContractModal(): void {
+        setIsOrderContractModalOpen(false)
+    }
+
+    function handleFieldUpdate(fieldName: string, dataPath?: string): (event: unknown) => void {
+        return (event: unknown) => props.onUpdateField(fieldName, dataPath ? get(event, dataPath) : event)
     }
 
     return (
         <div className={styles['payment-form']}>
             <OrderContractModal
                 isOpen={isOrderContractModalOpen}
-                onClose={() => setIsOrderContractModalOpen(false)}
+                onClose={hideOrderContractModal}
             />
             <div className={styles.label}>Contact Information</div>
             <InputText
@@ -100,7 +126,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 name='email'
                 tabIndex={1}
                 type='text'
-                onChange={event => props.onUpdateField('email', event.target.value)}
+                onChange={handleFieldUpdate('email', 'target.value')}
                 value={profile?.email}
             />
 
@@ -122,7 +148,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                             base: styles.cardElement,
                         },
                     }}
-                    onChange={(event: StripeCardNumberElementChangeEvent) => cardElementOnChange('cardComplete', event, setCardNumberError)}
+                    onChange={cardElementOnChange('cardComplete', setCardNumberError)}
                 />
             </InputWrapper>
 
@@ -143,7 +169,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                             },
                             placeholder: 'MM/YY',
                         }}
-                        onChange={(event: StripeCardExpiryElementChangeEvent) => cardElementOnChange('expiryComplete', event, setCardExpiryError)}
+                        onChange={cardElementOnChange('expiryComplete', setCardExpiryError)}
                     />
                 </InputWrapper>
                 <InputWrapper
@@ -162,7 +188,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                             },
                             placeholder: 'CCV',
                         }}
-                        onChange={(event: StripeCardCvcElementChangeEvent) => cardElementOnChange('cvvComplete', event, setCardCVVError)}
+                        onChange={cardElementOnChange('cvvComplete', setCardCVVError)}
                     />
                 </InputWrapper>
             </div>
@@ -174,14 +200,20 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 name='name'
                 tabIndex={1}
                 type='text'
-                onChange={event => props.onUpdateField('name', event.target.value)}
+                onChange={handleFieldUpdate('name', 'target.value')}
                 value={`${profile?.firstName} ${profile?.lastName}`}
             />
 
-            <InputWrapper className={styles['input-wrapper']} label='Country or Region' tabIndex={3} type='text' disabled={false}>
+            <InputWrapper
+                className={styles['input-wrapper']}
+                label='Country or Region'
+                tabIndex={3}
+                type='text'
+                disabled={false}
+            >
                 <ReactSelect
                     value={props.formData.country}
-                    onChange={option => props.onUpdateField('country', option)}
+                    onChange={handleFieldUpdate('country')}
                     options={COUNTRIES_OPTIONS}
                     style2
                 />
@@ -194,7 +226,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 name='zipCode'
                 tabIndex={1}
                 type='text'
-                onChange={event => props.onUpdateField('zipCode', event.target.value)}
+                onChange={handleFieldUpdate('zipCode', 'target.value')}
             />
 
             <InputText
@@ -203,11 +235,12 @@ const PaymentForm: React.FC<PaymentFormProps> = (props: PaymentFormProps) => {
                 tabIndex={1}
                 type='checkbox'
                 checked={props.formData.orderContract}
-                onChange={event => props.onUpdateField('orderContract', event.target.checked)}
+                onChange={handleFieldUpdate('orderContract', 'target.checked')}
             />
 
             <div className={styles['info-box']}>
-                A hold will be placed on your card for the full amount of the project. Once your work is live on the Topcoder platform, you will be charged.
+                A hold will be placed on your card for the full amount of the project.&nbsp;
+                Once your work is live on the Topcoder platform, you will be charged.
             </div>
 
             {

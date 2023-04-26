@@ -20,21 +20,25 @@ const CardSection: FC = () => {
             space: process.env.REACT_APP_CONTENTFUL_EDU_SPACE_ID ?? '',
         })
         Promise.all(
-            ArticlesUrl.map(async (articleUrl, idx) => {
+            ArticlesUrl.map(async (articleUrl, idx): Promise<ThriveArticle | BlogPost | undefined> => {
                 switch (articleUrl.type) {
                     case ArticleType.Thrive:
-                        const response: { fields: ThriveArticle }
-                            = await client.getEntry(articleUrl.url)
-                        return response.fields
-                    case ArticleType.Blog:
+                        return (await client.getEntry(articleUrl.url)).fields as ThriveArticle
+
+                    case ArticleType.Blog: {
                         const blog: BlogPost
                             = (await getBlog(articleUrl.url))
                             ?? defaultBlogs[idx]
                         return blog
+                    }
+
+                    default: {
+                        return undefined
+                    }
                 }
             }),
         )
-            .then(arr => setArticles(arr))
+            .then(arr => setArticles(arr.filter(Boolean) as Array<ThriveArticle | BlogPost>))
     }, [])
 
     const articleStyles: Array<any> = [

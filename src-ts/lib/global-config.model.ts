@@ -7,6 +7,7 @@ export interface GlobalConfig {
         FORUM_ACCESS_TOKEN: string
         FORUM_V2: string
         V3: string
+        V4: string
         V5: string
     }
     AUTH: {
@@ -43,4 +44,6 @@ export interface GlobalConfig {
     UNIVERSAL_NAV: {
         URL: string
     }
+    MEMBER_VERIFY_LOOKER: number,
+    REACT_APP_ENABLE_TCA_CERT_MONETIZATION: boolean
 }

@@ -27,6 +27,11 @@ const CreateBadgePage: FC = () => {
         setShowBadgeCreatedModal(true)
     }
 
+    function handleCloseCreateModal(): void {
+        setCreatedBadge(undefined)
+        setShowBadgeCreatedModal(false)
+    }
+
     return (
         <ContentLayout
             title='Create Badge'
@@ -43,10 +48,7 @@ const CreateBadgePage: FC = () => {
                     <BadgeCreatedModal
                         badge={createdBadge}
                         isOpen={showBadgeCreatedModal}
-                        onClose={() => {
-                            setCreatedBadge(undefined)
-                            setShowBadgeCreatedModal(false)
-                        }}
+                        onClose={handleCloseCreateModal}
                     />
                 )
             }

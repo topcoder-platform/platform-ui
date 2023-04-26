@@ -1,11 +1,9 @@
-import { FC, ReactNode, useContext, useEffect } from 'react'
-import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
+import { FC, useContext, useEffect, useMemo } from 'react'
+import { NavigateFunction, Params, useLocation, useNavigate, useParams } from 'react-router-dom'
 
-import { EnvironmentConfig } from '../../../config'
 import {
     Breadcrumb,
     BreadcrumbItemModel,
-    Button,
     LoadingSpinner,
     profileContext,
     ProfileContextData,
@@ -14,20 +12,22 @@ import {
 import {
     AllCertificationsProviderData,
     CoursesProviderData,
-    CourseTitle,
+    PageTitle,
     TCACertificationCheckCompleted,
+    TCACertificationProviderData,
     useGetCertification,
     useGetCourses,
+    useGetTCACertification,
     useGetUserCertificationProgress,
     useLearnBreadcrumb,
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
     useTCACertificationCheckCompleted,
-    useTcaCertificationModal,
 } from '../learn-lib'
-import { getCertificatePath, getCoursePath, LEARN_PATHS, rootRoute } from '../learn.routes'
+import { getCoursePath, getTCACertificationPath, LEARN_PATHS } from '../learn.routes'
 
-import { ReactComponent as StarsSvg } from './stars.svg'
+import { CourseView } from './course-view'
+import { TCACertificationView } from './tca-certification-view'
 import styles from './CourseCompletedPage.module.scss'
 
 const CourseCompletedPage: FC<{}> = () => {
@@ -64,28 +64,67 @@ const CourseCompletedPage: FC<{}> = () => {
         },
     )
 
-    const { certification: tcaCertificationName }: TCACertificationCheckCompleted = useTCACertificationCheckCompleted(
-        'FccCertificationProgress',
-        progress?.id ?? '',
-        { enabled: !!progress?.id },
+    const { certification: tcaCertificationName, ready: tcaCertifCompletedCheckReady }: TCACertificationCheckCompleted
+        = useTCACertificationCheckCompleted(
+            'FccCertificationProgress',
+            progress?.id ?? '',
+            { enabled: !!progress?.id },
+        )
+
+    const { certification: tcaCertification }: TCACertificationProviderData = useGetTCACertification(
+        tcaCertificationName ?? '',
+        { enabled: !!tcaCertificationName },
     )
 
-    const isLoggedIn: boolean = profileReady && !!profile
-    const certificatesDataReady: boolean = progressReady && certifReady
-    const ready: boolean = profileReady && courseDataReady && (!isLoggedIn || certificatesDataReady)
+    const ready: boolean = useMemo(() => {
+        const isLoggedIn: boolean = profileReady && !!profile
+        const certificatesDataReady: boolean = progressReady && certifReady
+        const tcaCertReady: boolean = progressReady && (!progress?.id || !!tcaCertifCompletedCheckReady)
 
-    const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb([
-        {
-            name: courseData?.title ?? '',
-            url: coursePath,
-        },
-        {
-            name: 'Congratulations!',
-            url: LEARN_PATHS.completed,
-        },
+        return profileReady && courseDataReady && (
+            !isLoggedIn || (certificatesDataReady && tcaCertReady)
+        )
+    }, [
+        certifReady,
+        courseDataReady,
+        profile,
+        profileReady,
+        progress?.id,
+        progressReady,
+        tcaCertifCompletedCheckReady,
     ])
 
-    const tcaCertificationCompletedModal: ReactNode = useTcaCertificationModal(tcaCertificationName)
+    const location: any = useLocation()
+
+    const breadcrumbItems: BreadcrumbItemModel[] = useMemo(() => {
+        const bItems: BreadcrumbItemModel[] = [
+            {
+                name: courseData?.title ?? '',
+                url: coursePath,
+            },
+            {
+                name: 'Congratulations!',
+                url: LEARN_PATHS.completed,
+            },
+        ]
+
+        // if coming path is from TCA certification details page
+        // then we need to add the certification to the navi list
+        if (location.state?.tcaCertInfo) {
+            bItems.unshift({
+                name: location.state.tcaCertInfo.title,
+                url: getTCACertificationPath(location.state.tcaCertInfo.dashedName),
+            })
+        }
+
+        return bItems
+    }, [
+        location.state,
+        courseData?.title,
+        coursePath,
+    ])
+
+    const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb(breadcrumbItems)
 
     useEffect(() => {
         if (ready && progress?.status !== UserCertificationProgressStatus.completed) {
@@ -100,6 +139,10 @@ const CourseCompletedPage: FC<{}> = () => {
 
     return (
         <>
+            <PageTitle>
+                {`${courseData?.title ?? 'Course'} Completed`}
+            </PageTitle>
+
             <LoadingSpinner hide={ready} />
 
             {ready && courseData && (
@@ -107,67 +150,23 @@ const CourseCompletedPage: FC<{}> = () => {
                     <Breadcrumb items={breadcrumb} />
                     <div className={styles['main-wrap']}>
                         <div className={styles['course-frame']}>
-                            <div className={styles['content-wrap']}>
-                                <h1>Congratulations!</h1>
-                                <hr />
-                                <div className='body-large'>
-                                    You have successfully completed all Assessments for:
-                                </div>
-                                <div className={styles['course-title']}>
-                                    <StarsSvg />
-                                    <CourseTitle
-                                        size='xl'
-                                        title={courseData.title}
-                                        provider={courseData.resourceProvider.name}
-                                        trackType={certification?.certificationCategory.track}
-                                    />
-                                </div>
-                                <hr />
-                                <p className='body-main'>
-                                    Now that you have completed the
-                                    {' '}
-                                    {courseData.title}
-                                    ,
-                                    take a look at our other Topcoder Academy courses.
-                                    To view other courses, press the  &quot;Start a new course&quot; button below.
-                                </p>
-                                <div className={styles['btns-wrap']}>
-                                    <Button
-                                        size='sm'
-                                        buttonStyle='secondary'
-                                        label='View certificate'
-                                        route={(
-                                            getCertificatePath(
-                                                courseData.resourceProvider.name,
-                                                certificationParam,
-                                            )
-                                        )}
-                                    />
-                                    <Button
-                                        size='sm'
-                                        buttonStyle='primary'
-                                        label='Start a new course'
-                                        route={rootRoute}
-                                    />
-                                </div>
-                                <p className='body-main'>
-                                    Completed courses in the Academy will reflect on your Topcoder profile.
-                                    This will make your Topcoder profile more attractive to potential employers
-                                    via Gig work, and shows the community how well you&apos;ve progressed in completing
-                                    learning courses.
-                                </p>
-                                <div className={styles['btns-wrap']}>
-                                    <Button
-                                        buttonStyle='link'
-                                        label='See your updated profile'
-                                        url={`${EnvironmentConfig.TOPCODER_URLS.USER_PROFILE}/${profile?.handle}`}
-                                        target='_blank'
-                                    />
-                                </div>
-                            </div>
+                            {tcaCertificationName && tcaCertification ? (
+                                <TCACertificationView
+                                    courseData={courseData}
+                                    certification={tcaCertification}
+                                    certificationParam={certificationParam}
+                                    userHandle={profile?.handle}
+                                />
+                            ) : (
+                                <CourseView
+                                    courseData={courseData}
+                                    certification={certification}
+                                    certificationParam={certificationParam}
+                                    userHandle={profile?.handle}
+                                />
+                            )}
                         </div>
                     </div>
-                    {tcaCertificationCompletedModal}
                 </>
             )}
         </>

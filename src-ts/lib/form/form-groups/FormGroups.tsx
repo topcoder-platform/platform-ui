@@ -22,10 +22,8 @@ interface FormGroupsProps {
 
 const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsProps) => {
 
-    const { formDef, onBlur, onChange }: FormGroupsProps = props
-
     function getTabIndex(input: FormInputModel, index: number): number {
-        const tabIndex: number = input.notTabbable ? -1 : index + 1 + (formDef.tabIndexStart || 0)
+        const tabIndex: number = input.notTabbable ? -1 : index + 1 + (props.formDef.tabIndexStart || 0)
         return tabIndex
     }
 
@@ -41,7 +39,7 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                 inputElement = (
                     <InputRating
                         {...input}
-                        onChange={onChange}
+                        onChange={props.onChange}
                         tabIndex={tabIndex}
                         value={input.value as number | undefined}
                     />
@@ -51,8 +49,8 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                 inputElement = (
                     <InputTextarea
                         {...input}
-                        onBlur={onBlur}
-                        onChange={onChange}
+                        onBlur={props.onBlur}
+                        onChange={props.onChange}
                         tabIndex={tabIndex}
                         value={input.value as string | undefined}
                     />
@@ -63,8 +61,8 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                     <InputText
                         {...input}
                         checked={!!input.value}
-                        onBlur={onBlur}
-                        onChange={onChange}
+                        onBlur={props.onBlur}
+                        onChange={props.onChange}
                         tabIndex={tabIndex}
                         type='checkbox'
                     />
@@ -74,7 +72,7 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                 inputElement = (
                     <FormRadio
                         {...input}
-                        onChange={onChange}
+                        onChange={props.onChange}
                         value={input.value}
                     />
                 )
@@ -83,7 +81,7 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                 inputElement = (
                     <FormCardSet
                         {...input}
-                        onChange={onChange}
+                        onChange={props.onChange}
                         value={input.value}
                     />
                 )
@@ -92,7 +90,7 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                 inputElement = (
                     <InputImagePicker
                         {...input}
-                        onChange={onChange}
+                        onChange={props.onChange}
                         value={input.value}
                     />
                 )
@@ -101,8 +99,8 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                 inputElement = (
                     <InputText
                         {...input}
-                        onBlur={onBlur}
-                        onChange={onChange}
+                        onBlur={props.onBlur}
+                        onChange={props.onChange}
                         tabIndex={tabIndex}
                         type={input.type as InputTextTypes || 'text'}
                         value={input.value as string | undefined}
@@ -122,13 +120,14 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
         )
     }
 
-    const formGroups: Array<JSX.Element | undefined> = formDef?.groups
+    const formGroups: Array<JSX.Element | undefined> = props.formDef?.groups
         ?.map((element: FormGroup, index: number) => (
             <FormGroupItem
+                // eslint-disable-next-line react/no-array-index-key
                 key={`element-${index}`}
                 group={element}
                 renderFormInput={renderInputField}
-                totalGroupCount={formDef.groups?.length || 0}
+                totalGroupCount={props.formDef.groups?.length || 0}
                 renderDividers={props.formDef.groupsOptions?.renderGroupDividers}
             />
         ))

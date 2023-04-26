@@ -17,7 +17,9 @@ const DevCenterHeader: FC<{}> = () => (
                         <br />
                         Developer Center
                     </h1>
-                    <span className={classNames(styles.subtitle, 'body-main')}>Let's build together with millions of Topcoder developers around the world.</span>
+                    <span className={classNames(styles.subtitle, 'body-main')}>
+                        Let&apos;s build together with millions of Topcoder developers around the world.
+                    </span>
                 </div>
                 <div className={styles.rightContent}>
                     <DevCenterCarousel />

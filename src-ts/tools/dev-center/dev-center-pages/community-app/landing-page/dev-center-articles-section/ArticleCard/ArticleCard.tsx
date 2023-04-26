@@ -9,12 +9,6 @@ import { BlogPost, ThriveArticle } from '../models'
 
 import styles from './ArticleCard.module.scss'
 
-interface ArticleCardProps {
-    article: ThriveArticle | BlogPost
-    className?: string
-    isMain: boolean
-}
-
 interface ArticleDetails {
     author: string
     image: string
@@ -44,12 +38,14 @@ function getArticleContent(
     article: ThriveArticle | BlogPost,
     isThrive: boolean,
 ): string {
-    return isThrive ? article.content : article.contentSnippet
+    return isThrive ? (article as ThriveArticle).content : (article as BlogPost).contentSnippet
 }
 
 function getArticleDetails(article: ThriveArticle | BlogPost): ArticleDetails {
     const isThrive: boolean = isThriveArticle(article)
-    const isVideo: boolean = isThrive && article.type === 'Video'
+    const thriveArticle: ThriveArticle = article as ThriveArticle
+    const blogPost: BlogPost = article as BlogPost
+    const isVideo: boolean = isThrive && thriveArticle.type === 'Video'
 
     const tagText: string = getTagText(isThrive, isVideo)
 
@@ -57,12 +53,12 @@ function getArticleDetails(article: ThriveArticle | BlogPost): ArticleDetails {
     const regex: RegExp = /(<([^>]+)>)/gi
     const summary: string = content.replace(regex, '') // Remove html from the content string
     const url: string = isThrive
-        ? `${EnvironmentConfig.TOPCODER_URLS.THRIVE_PAGE}/articles/${article.slug}`
-        : article.link
-    const author: string = !isThrive ? article.creator : ''
+        ? `${EnvironmentConfig.TOPCODER_URLS.THRIVE_PAGE}/articles/${thriveArticle.slug}`
+        : blogPost.link
+    const author: string = !isThrive ? blogPost.creator : ''
     const image: string = isThrive
-        ? article.featuredImage.fields.file.url
-        : article.featuredImage
+        ? thriveArticle.featuredImage.fields.file.url
+        : blogPost.featuredImage
 
     return {
         author,
@@ -83,12 +79,14 @@ function getOuterClass(isMain: boolean, className: string): string {
     )
 }
 
-const ArticleCard: FC<ArticleCardProps> = ({
-    article,
-    isMain,
-    className = '',
-}) => {
-    const outerClass: string = getOuterClass(isMain, className)
+interface ArticleCardProps {
+    article: ThriveArticle | BlogPost
+    className?: string
+    isMain: boolean
+}
+
+const ArticleCard: FC<ArticleCardProps> = props => {
+    const outerClass: string = getOuterClass(props.isMain, props.className ?? '')
     const {
         isThrive,
         isVideo,
@@ -97,7 +95,7 @@ const ArticleCard: FC<ArticleCardProps> = ({
         url,
         author,
         image,
-    }: ArticleDetails = getArticleDetails(article)
+    }: ArticleDetails = getArticleDetails(props.article)
 
     return (
         <div
@@ -106,7 +104,7 @@ const ArticleCard: FC<ArticleCardProps> = ({
         >
             <div
                 className={styles.innerContainer}
-                onClick={() => openArticle(url)}
+                onClick={function handleOpenArticle() { openArticle(url) }}
             >
                 {isThrive && isVideo && (
                     <IconSolid.PlayIcon className={styles.playButton} />
@@ -116,17 +114,17 @@ const ArticleCard: FC<ArticleCardProps> = ({
                         <DevCenterTag text={tagText} />
                         {isThrive && (
                             <span className='font-tc-white body-small'>
-                                {article.readTime}
+                                {(props.article as ThriveArticle).readTime}
                             </span>
                         )}
                     </div>
-                    {isMain ? (
+                    {props.isMain ? (
                         <h2 className={classNames('font-tc-white', 'details')}>
-                            {article.title}
+                            {props.article.title}
                         </h2>
                     ) : (
                         <h4 className='font-tc-white details'>
-                            {article.title}
+                            {props.article.title}
                         </h4>
                     )}
                     {!isThrive && (
@@ -140,7 +138,7 @@ const ArticleCard: FC<ArticleCardProps> = ({
                             {author}
                         </span>
                     )}
-                    {isMain && (
+                    {props.isMain && (
                         <>
                             <span
                                 className={classNames(

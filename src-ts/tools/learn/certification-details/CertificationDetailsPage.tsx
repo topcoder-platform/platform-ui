@@ -3,6 +3,7 @@ import { Params, useParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import {
+    PageTitle,
     TCACertificationProgressProviderData,
     TCACertificationProgressStatus,
     TCACertificationProviderData,
@@ -16,6 +17,7 @@ import {
     profileContext,
     ProfileContextData,
 } from '../../../lib'
+import { getTCAUserCertificationUrl } from '../learn.routes'
 
 import { CertificationDetailsSidebar } from './certification-details-sidebar'
 import { CertificationCurriculum } from './certification-curriculum'
@@ -61,13 +63,27 @@ const CertificationDetailsPage: FC<{}> = () => {
     const isNotEnrolledView: boolean = !progressReady || !progress
     const isCompleted: boolean = progress?.status === TCACertificationProgressStatus.completed
 
+    function renderCertificationCompleted(): ReactNode {
+        return (
+            <div className={styles.certifCompleted}>
+                <div className='body-large-bold'>
+                    Congratulations! You earned the certification.
+                </div>
+                <Button
+                    buttonStyle='primary'
+                    label='View & share your certification'
+                    route={getTCAUserCertificationUrl(certification?.dashedName ?? '', progress?.userHandle ?? '')}
+                />
+            </div>
+        )
+    }
+
     function renderCertificationCurriculum(): ReactNode {
         return (
             <div className={classNames(styles['text-section'], isEnrolled && styles['no-top'])}>
                 <CertificationCurriculum
                     certification={certification}
                     isEnrolled={isEnrolled}
-                    isCompleted={isCompleted}
                     certsProgress={certsProgress}
                 />
             </div>
@@ -79,18 +95,19 @@ const CertificationDetailsPage: FC<{}> = () => {
     }
 
     function renderMainContent(): ReactNode {
-        return ready ? (
+        return ready && certification ? (
             isNotEnrolledView ? (
                 <CertifDetailsContent certification={certification} sectionClassName={styles['text-section']}>
                     {renderCertificationCurriculum()}
                 </CertifDetailsContent>
             ) : (
                 <>
+                    {isCompleted && renderCertificationCompleted()}
                     {renderCertificationCurriculum()}
                     <div className={styles['text-section']}>
                         <Button
                             buttonStyle='link'
-                            label='Certification Details'
+                            label='Certification Description'
                             onClick={toggleCertifDetailsModal}
                         />
                     </div>
@@ -101,15 +118,14 @@ const CertificationDetailsPage: FC<{}> = () => {
                     />
                 </>
             )
-        ) : null
+        ) : undefined
     }
 
     function renderSidebar(): ReactNode {
-        return (
+        return !!certification && (
             <CertificationDetailsSidebar
                 certification={certification}
                 enrolled={isEnrolled}
-                profile={profile}
                 certProgress={progress}
             />
         )
@@ -121,9 +137,11 @@ const CertificationDetailsPage: FC<{}> = () => {
             mainContent={renderMainContent()}
             certification={certification}
             heroCTA={!isEnrolled && (
-                <EnrollCtaBtn certification={certification?.dashedName} />
+                <EnrollCtaBtn certification={certification?.dashedName ?? ''} />
             )}
-        />
+        >
+            <PageTitle>{certification?.title ?? 'Certification Details'}</PageTitle>
+        </PageLayout>
     )
 }
 

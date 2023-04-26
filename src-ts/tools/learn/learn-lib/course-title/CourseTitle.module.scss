@@ -61,6 +61,8 @@
     @include ltemd {
         :global(.quote-small.xl) {
             margin-top: $space-sm;
+            display: flex;
+            justify-content: center;
         }
     }
 }

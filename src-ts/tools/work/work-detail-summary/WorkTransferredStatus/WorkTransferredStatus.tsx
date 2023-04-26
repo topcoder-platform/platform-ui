@@ -7,7 +7,8 @@ const WorkTransferredStatus: FC<{}> = () => (
         <h3>Transferred</h3>
         <p>
             <div className={styles.line}>
-                We have a few outstanding questions that will help us better understand the work and scope before we can launch your work on our platform.
+                We have a few outstanding questions that will help us better understand the
+                work and scope before we can launch your work on our platform.
             </div>
 
             <div className={styles.line}>

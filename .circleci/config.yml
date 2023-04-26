@@ -129,13 +129,13 @@ deploy_steps: &deploy_steps
           ./master_deploy.sh -d CFRONT -e $DEPLOY_ENV -c $ENABLE_CACHE
 
 jobs:
-  # lint-dev:
-  #   <<: *defaults
-  #   environment:
-  #     DEPLOY_ENV: "DEV"
-  #     LOGICAL_ENV: "dev"
-  #     APPNAME: "platform-ui-mvp"
-  #   steps: *lint_steps
+  lint-dev:
+    <<: *defaults
+    environment:
+      DEPLOY_ENV: "DEV"
+      LOGICAL_ENV: "dev"
+      APPNAME: "platform-ui-mvp"
+    steps: *lint_steps
 
   # lint-prod:
   #   <<: *defaults
@@ -144,7 +144,7 @@ jobs:
   #     LOGICAL_ENV: "prod"
   #     APPNAME: "platform-ui-mvp"
   #   steps: *lint_steps
-    
+
   build-dev:
     <<: *defaults
     environment:
@@ -160,7 +160,7 @@ jobs:
       LOGICAL_ENV: "prod"
       APPNAME: "platform-ui-mvp"
     steps: *build_steps
-  
+
   test-dev:
     <<: *test_defaults
     environment:
@@ -192,12 +192,12 @@ workflows:
   version: 2
   build:
     jobs:
-      # - lint-dev:
-      #     context : org-global
-      #     filters:
-      #       branches:
-      #         ignore:
-      #           - master
+      - lint-dev:
+          context : org-global
+          filters:
+            branches:
+              ignore:
+                - master
 
       # - lint-prod:
       #     context : org-global
@@ -224,7 +224,7 @@ workflows:
           context : org-global
           requires:
             - build-dev
-          filters: 
+          filters:
             branches:
               only:
                 - dev

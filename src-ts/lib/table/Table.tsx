@@ -13,6 +13,10 @@ import { tableGetDefaultSort, tableGetSorted } from './table-functions'
 import { TableSort } from './table-sort'
 import styles from './Table.module.scss'
 
+function getKey(key: string | number): string {
+    return `${key}`
+}
+
 interface TableProps<T> {
     readonly columns: ReadonlyArray<TableColumn<T>>
     readonly data: ReadonlyArray<T>
@@ -29,8 +33,6 @@ interface DefaultSortDirectionMap {
 const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) => JSX.Element
     = <T extends { [propertyName: string]: any }>(props: TableProps<T>) => {
 
-        const { columns, data }: TableProps<T> = props
-
         const [sort, setSort]: [Sort | undefined, Dispatch<SetStateAction<Sort | undefined>>]
             = useState<Sort | undefined>(tableGetDefaultSort(props.columns))
         const [defaultSortDirectionMap, setDefaultSortDirectionMap]: [
@@ -46,21 +48,24 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
 
                 if (!defaultSortDirectionMap) {
                     const map: DefaultSortDirectionMap = {}
-                    columns
+                    props.columns
                         .filter(col => !!col.propertyName)
-                        .forEach(col => map[col.propertyName as string] = col.defaultSortDirection || 'asc')
+                        .forEach(col => {
+                            map[col.propertyName as string] = col.defaultSortDirection || 'asc'
+                        })
                     setDefaultSortDirectionMap(map)
                 }
 
                 // if we have a sort handler, don't worry about getting the sorted data;
                 // otherwise, get the sorted data for the table
-                const sorted: ReadonlyArray<T> = !!props.onToggleSort ? data : tableGetSorted(data, columns, sort)
+                const sorted: ReadonlyArray<T>
+                    = !!props.onToggleSort ? props.data : tableGetSorted(props.data, props.columns, sort)
 
                 setSortedData(sorted)
             },
             [
-                columns,
-                data,
+                props.columns,
+                props.data,
                 defaultSortDirectionMap,
                 props.onToggleSort,
                 sort,
@@ -100,9 +105,13 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 return (
                     <th
                         className={styles.th}
-                        key={index}
+                        key={getKey(index)}
                     >
-                        <div className={classNames(styles['header-container'], styles[col.type], colorClass, sortableClass)}>
+                        <div
+                            className={
+                                classNames(styles['header-container'], styles[col.type], colorClass, sortableClass)
+                            }
+                        >
                             {col.label}
                             {!!col.tooltip && (
                                 <div className={styles.tooltip}>
@@ -141,7 +150,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                             {...col}
                             data={sorted}
                             index={index}
-                            key={`${index}${colIndex}`}
+                            key={getKey(`${index}${colIndex}`)}
                         />
                     ))
 
@@ -150,7 +159,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                     <tr
                         className={classNames(styles.tr, props.onRowClick ? styles.clickable : undefined)}
                         onClick={onRowClick}
-                        key={index}
+                        key={getKey(index)}
                     >
                         {cells}
                     </tr>

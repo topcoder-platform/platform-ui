@@ -8,7 +8,7 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { IconOutline, IconSolid } from '../../../../../lib'
@@ -82,6 +82,8 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
             />
         )
 
+    const location: any = useLocation()
+
     const renderListItem: (item: CollapsibleListItem) => ReactNode
         = (item: CollapsibleListItem) => {
             const isActive: boolean = props.itemId?.(item) === props.active
@@ -100,7 +102,11 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
                     onClick={handleClick}
                 >
                     {props.path ? (
-                        <Link className={styles['item-wrap']} to={props.path(item)}>
+                        <Link
+                            className={styles['item-wrap']}
+                            to={props.path(item)}
+                            state={{ tcaCertInfo: location.state?.tcaCertInfo }}
+                        >
                             {label}
                         </Link>
                     ) : label}
@@ -117,9 +123,10 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
         }
 
         setIsOpen(hasActiveItem)
-    // only trigger this on `hasActiveItem` change,
-    // we don't want to trigger it on `isOpen` change - that will force the parent of the active item to always be open
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // only trigger this on `hasActiveItem` change,
+        // we don't want to trigger it on `isOpen` change - that will
+        // force the parent of the active item to always be open
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hasActiveItem])
 
     return (

@@ -19,19 +19,19 @@ interface DeliverablesInfoCardProps {
     isMobile: boolean
 }
 
-const DeliverablesInfoCard: FC<DeliverablesInfoCardProps> = ({ isMobile }) => {
+const DeliverablesInfoCard: FC<DeliverablesInfoCardProps> = props => {
 
     const title: string = 'What will I receive?'
 
     return (
         <InfoCard
-            defaultOpen={!isMobile}
-            isCollapsible={isMobile}
-            title={isMobile ? title : undefined}
+            defaultOpen={!props.isMobile}
+            isCollapsible={props.isMobile}
+            title={props.isMobile ? title : undefined}
         >
             <div className={styles.row}>
                 <div className={styles.column}>
-                    {!isMobile && (
+                    {!props.isMobile && (
                         <div className={styles.title}>
                             {title}
                         </div>

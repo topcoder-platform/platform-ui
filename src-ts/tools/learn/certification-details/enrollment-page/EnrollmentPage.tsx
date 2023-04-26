@@ -30,9 +30,10 @@ import { PerksSection } from '../perks-section'
 import { PageLayout } from '../page-layout'
 import { EnrolledModal } from '../enrolled-modal'
 import { getTCACertificationPath } from '../../learn.routes'
+import { EnvironmentConfig } from '../../../../config'
+import { StripeProduct, useGetStripeProduct } from '../../learn-lib/data-providers/payments'
 
 import { EnrollmentSidebar } from './enrollment-sidebar'
-import { EnrollmentFormValue } from './enrollment-form/enrollment-form.config'
 
 const enrollmentBreadcrumb: Array<BreadcrumbItemModel> = [{ name: 'Enrollment', url: '' }]
 
@@ -51,6 +52,11 @@ const EnrollmentPage: FC<{}> = () => {
         certification,
         ready: certificationReady,
     }: TCACertificationProviderData = useGetTCACertification(dashedName as string)
+    const certificationDashedName: string = certification?.dashedName ?? ''
+
+    // fetch Stripe product data
+    const { product }: { product: StripeProduct | undefined }
+        = useGetStripeProduct(certification?.stripeProductId as string)
 
     // Fetch Enrollment status & progress
     const {
@@ -69,34 +75,31 @@ const EnrollmentPage: FC<{}> = () => {
         userInfo.current = { ...profile }
     }
 
-    // if is enrolled already, redirect back to certification
+    // if user is enrolled already, redirect back to certification
     if (progressReady && !enrolledCheck.current) {
         enrolledCheck.current = true
         if (!!progress) {
-            navigate(getTCACertificationPath(certification.dashedName))
+            navigate(getTCACertificationPath(certificationDashedName))
         }
     }
 
-    const startEnrollFlow: (value?: EnrollmentFormValue) => Promise<void>
-    = useCallback(async (value?: EnrollmentFormValue): Promise<void> => {
-        if (!profile) {
-            return
-        }
+    const startEnrollFlow: () => Promise<void>
+        = useCallback(async (): Promise<void> => {
+            if (!profile) {
+                return
+            }
 
-        if (value?.email) {
-            userInfo.current = { ...userInfo.current, email: value.email }
-            return
-        }
+            await enrollTCACertificationAsync(`${profile.userId}`, `${certification?.id}`)
+                .then(d => {
+                    setIsEnrolledModalOpen(true)
+                    setCertificateProgress(d)
+                })
+        }, [certification?.id, profile, setCertificateProgress])
 
-        await enrollTCACertificationAsync(`${profile.userId}`, `${certification.id}`)
-            .then(d => {
-                setIsEnrolledModalOpen(true)
-                setCertificateProgress(d)
-            })
-    }, [certification?.id, profile, setCertificateProgress])
+    const tcaMonetizationEnabled: boolean = EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION || false
 
     function navToCertificationDetails(): void {
-        navigate(getTCACertificationPath(certification.dashedName))
+        navigate(getTCACertificationPath(certificationDashedName))
     }
 
     function closeEnrolledModal(): void {
@@ -108,9 +111,11 @@ const EnrollmentPage: FC<{}> = () => {
         return ready ? (
             <>
                 <PerksSection
-                    style='clear'
+                    theme='clear'
                     items={perks}
-                    title='Enroll now for Free!'
+                    title={tcaMonetizationEnabled
+                        ? ''
+                        : 'Enroll now for Free!'}
                 />
 
                 <EnrolledModal
@@ -118,20 +123,20 @@ const EnrollmentPage: FC<{}> = () => {
                     onClose={closeEnrolledModal}
                 />
             </>
-        ) : null
+        ) : undefined
     }
 
     function renderSidebar(): ReactNode {
         return (
-            <EnrollmentSidebar profile={profile} onEnroll={startEnrollFlow} />
+            <EnrollmentSidebar onEnroll={startEnrollFlow} product={product} />
         )
     }
 
     useLayoutEffect(() => {
         if (profileReady && !profile) {
-            navigate(getTCACertificationPath(certification.dashedName))
+            navigate(getTCACertificationPath(certificationDashedName))
         }
-    }, [profileReady, profile, navigate, certification?.dashedName])
+    }, [profileReady, profile, navigate, certificationDashedName])
 
     return (
         <PageLayout
@@ -139,6 +144,7 @@ const EnrollmentPage: FC<{}> = () => {
             mainContent={renderMainContent()}
             extraBreadCrumbs={enrollmentBreadcrumb}
             certification={certification}
+            hideWaveHeroText={tcaMonetizationEnabled}
         />
     )
 }

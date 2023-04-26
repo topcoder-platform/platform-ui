@@ -13,7 +13,7 @@ export interface TcAcademyPolicyModalProps {
 const TcAcademyPolicyModal: FC<TcAcademyPolicyModalProps> = (props: TcAcademyPolicyModalProps) => {
     const [loading, setLoading]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
 
-    const handleConfirm: () => void = () => {
+    function handleConfirm(): void {
         if (loading) {
             return
         }
@@ -35,25 +35,25 @@ const TcAcademyPolicyModal: FC<TcAcademyPolicyModalProps> = (props: TcAcademyPol
                     Academic Honesty Pledge, which reads:
                 </p>
                 <p>
-                    "I understand that plagiarism means copying someone else's work and
+                    &quot;I understand that plagiarism means copying someone else&apos;s work and
                     presenting the work as if it were my own, without clearly attributing
-                    the original author."
+                    the original author.&quot;
                 </p>
                 <p>
-                    "I understand that plagiarism is an act of intellectual dishonesty,
+                    &quot;I understand that plagiarism is an act of intellectual dishonesty,
                     and that people usually get kicked out of their learning institution
-                    or fired from their jobs if they get caught plagiarizing."
+                    or fired from their jobs if they get caught plagiarizing.&quot;
                 </p>
                 <p>
-                    "Aside from using open source libraries such as jQuery and Bootstrap,
+                    &quot;Aside from using open source libraries such as jQuery and Bootstrap,
                     and short snippets of code which are clearly attributed to their original
                     author, 100% of the code in my projects was written by me, or along with
                     another person going through the Topcoder Academy or freeCodeCamp
-                    curriculum, with whom I was pair programming in real time."
+                    curriculum, with whom I was pair programming in real time.&quot;
                 </p>
                 <p>
-                    "I pledge that I did not plagiarize any of my work. I understand that
-                    the Topcoder team will audit my projects to confirm this."
+                    &quot;I pledge that I did not plagiarize any of my work. I understand that
+                    the Topcoder team will audit my projects to confirm this.&quot;
                 </p>
                 <p>
                     As an organization which grants achievement-based certifications, we
@@ -73,7 +73,7 @@ const TcAcademyPolicyModal: FC<TcAcademyPolicyModalProps> = (props: TcAcademyPol
                     buttonStyle='primary'
                     label='I Agree'
                     onClick={handleConfirm}
-                    tabIndex={2}
+                    tabIndex={-1}
                     size='lg'
                     disable={loading}
                 />

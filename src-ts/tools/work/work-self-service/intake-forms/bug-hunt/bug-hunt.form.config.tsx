@@ -1,3 +1,5 @@
+import { noop } from 'lodash'
+
 import {
     BackArrowIcon,
     FormDefinition,
@@ -17,14 +19,14 @@ export const BugHuntFormConfig: FormDefinition = {
             {
                 buttonStyle: 'secondary',
                 label: 'Save for later',
-                onClick: () => { },
+                onClick: noop,
                 type: 'submit',
             },
             {
                 buttonStyle: 'primary',
                 isSubmit: true,
                 label: 'Complete and pay',
-                onClick: () => { },
+                onClick: noop,
                 type: 'submit',
             },
         ],
@@ -32,7 +34,7 @@ export const BugHuntFormConfig: FormDefinition = {
             {
                 buttonStyle: 'icon-bordered',
                 icon: BackArrowIcon,
-                onClick: () => { },
+                onClick: noop,
                 type: 'button',
             },
         ],

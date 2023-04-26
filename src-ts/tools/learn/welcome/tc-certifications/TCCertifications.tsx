@@ -3,6 +3,7 @@ import { FC, ReactNode, useCallback, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { TCACertification, TCACertificationProgress } from '../../learn-lib'
+import { EnvironmentConfig } from '../../../../config'
 
 import { TCCertCard } from './cert-card'
 import styles from './TCCertifications.module.scss'
@@ -35,6 +36,8 @@ const TCCertifications: FC<TCCertificationsProps> = (props: TCCertificationsProp
 
     const certificationsCount: number = props.certifications.length
 
+    const tcaCertMonetization: boolean = !!EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION
+
     return (
         <div className={styles.wrap}>
             <h2 className='details'>
@@ -43,18 +46,20 @@ const TCCertifications: FC<TCCertificationsProps> = (props: TCCertificationsProp
                     {certificationsCount}
                 </span>
             </h2>
-            <div className={styles.teaseBanner}>
+            <div className={classNames(styles.teaseBanner, tcaCertMonetization ? styles.aloneTeaseBanner : '')}>
                 <h2>Introducing Topcoder Certifications</h2>
                 <p>
                     We are happy to release Topcoder Certifications! Take advantage
                     of our pilot Certification program. Click on a certification below to learn more.
                 </p>
             </div>
-            <div className={styles.freeBanner}>
-                <strong className='body-large-bold'>FREE</strong>
-                &nbsp;
-                <span className='body-large'>enrollment ends on April 30th.</span>
-            </div>
+            {!tcaCertMonetization && (
+                <div className={styles.freeBanner}>
+                    <strong className='body-large-bold'>FREE</strong>
+                    &nbsp;
+                    <span className='body-large'>enrollment for a limited time.</span>
+                </div>
+            )}
 
             <div className={styles.certsList}>
                 {

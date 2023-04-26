@@ -7,7 +7,11 @@ function checkForBooleanValueAndThrowError(value: InputValue): void {
     }
 }
 
-export function doesNotMatchOther(value: InputValue, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
+export function doesNotMatchOther(
+    value: InputValue,
+    formElements?: HTMLFormControlsCollection,
+    otherFieldName?: string,
+): string | undefined {
 
     checkForBooleanValueAndThrowError(value)
 
@@ -39,7 +43,8 @@ export function email(value: InputValue): string | undefined {
         return undefined
     }
 
-    const emailRegex: RegExp = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    // eslint-disable-next-line max-len
+    const emailRegex: RegExp = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
 
     return !emailRegex.test(value as string) ? 'Invalid email' : undefined
 }
@@ -63,10 +68,15 @@ export function password(value: InputValue): string | undefined {
     // - at least 1 symbol or number
     const passwordRegex: RegExp = /^(?=.*[a-zA-Z])(?=.*[#$^+=!*()@%&\d]).{8,}$/g
 
-    return !passwordRegex.test(value as string) ? 'Password rules: 8+ characters, 1+ letter, and 1+ number or symbol' : undefined
+    return !passwordRegex.test(value as string)
+        ? 'Password rules: 8+ characters, 1+ letter, and 1+ number or symbol' : undefined
 }
 
-export function matchOther(value: InputValue, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
+export function matchOther(
+    value: InputValue,
+    formElements?: HTMLFormControlsCollection,
+    otherFieldName?: string,
+): string | undefined {
 
     checkForBooleanValueAndThrowError(value)
 
@@ -91,7 +101,11 @@ export function required(value: InputValue): string | undefined {
     return (value === undefined || value === '' || !(value as FileList).length) ? 'Required' : undefined
 }
 
-export function requiredIfOther(value: InputValue, formElements?: HTMLFormControlsCollection, otherFieldName?: string): string | undefined {
+export function requiredIfOther(
+    value: InputValue,
+    formElements?: HTMLFormControlsCollection,
+    otherFieldName?: string,
+): string | undefined {
 
     // if there is a value, there's no need to check the other input
     if (typeof value === 'string' && !!value) {
@@ -137,7 +151,10 @@ function getOtherField(formElements?: HTMLFormControlsCollection, otherFieldName
 
     // if there are no form values or an other field name, we have a problem
     if (!formElements || !otherFieldName) {
-        throw new Error(`Cannot use the required if other validator if there isn't both formValues (${formElements}) and an otherFieldName (${otherFieldName})`)
+        throw new Error(
+            `Cannot use the required if other validator if
+            there isn't both formValues (${formElements}) and an otherFieldName (${otherFieldName})`,
+        )
     }
 
     // get the other form field
@@ -145,7 +162,10 @@ function getOtherField(formElements?: HTMLFormControlsCollection, otherFieldName
 
     // if there is no other field, we have a problem
     if (!otherField) {
-        throw new Error(`Cannot use the required if other validator if the otherField (${otherFieldName}) doesn't exist on the form`)
+        throw new Error(
+            `Cannot use the required if other validator if
+            the otherField (${otherFieldName}) doesn't exist on the form`,
+        )
     }
 
     return otherField

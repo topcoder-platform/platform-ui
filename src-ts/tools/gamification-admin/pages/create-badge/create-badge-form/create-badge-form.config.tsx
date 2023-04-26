@@ -1,3 +1,5 @@
+import { noop } from 'lodash'
+
 import { FormDefinition, IconOutline, validatorRequired } from '../../../../../lib'
 import { GamificationConfig } from '../../../game-config'
 
@@ -15,7 +17,7 @@ export const createBadgeFormDef: FormDefinition = {
                 buttonStyle: 'primary',
                 isSubmit: true,
                 label: 'Save Badge',
-                onClick: e => { },
+                onClick: noop,
                 size: 'lg',
                 type: 'submit',
             },

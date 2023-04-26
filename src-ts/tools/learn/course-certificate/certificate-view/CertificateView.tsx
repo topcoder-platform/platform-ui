@@ -1,7 +1,9 @@
 import {
     FC,
+    forwardRef,
     MutableRefObject,
     ReactNode,
+    RefAttributes,
     useMemo,
     useRef,
 } from 'react'
@@ -11,6 +13,7 @@ import {
     CertificateNotFoundContent,
     CertificatePageLayout,
     CoursesProviderData,
+    PageTitle,
     useGetCertification,
     useGetCourses,
     useGetUserCompletedCertifications,
@@ -32,7 +35,8 @@ interface CertificateViewProps {
     provider: string
 }
 
-const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) => {
+const CertificateView: FC<CertificateViewProps & RefAttributes<HTMLDivElement>>
+= forwardRef<HTMLDivElement, CertificateViewProps>((props, ref) => {
     const coursePath: string = getCoursePath(props.provider, props.certification)
     const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
 
@@ -103,23 +107,30 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
     }
 
     return (
-        <CertificatePageLayout
-            certificateElRef={certificateElRef}
-            fallbackBackUrl={coursePath}
-            fullScreenCertLayout={!certificateNotFoundError && props.fullScreenCertLayout}
-            isCertificateCompleted={hasCompletedTheCertification}
-            isReady={ready}
-            ssrUrl={certUrl}
-            title={certificationTitle}
-            disableActions={ready && !hasCompletedTheCertification}
-            className={certificateNotFoundError ? 'cert-not-found-layout' : ''}
-            afterContent={certificateNotFoundError && (
-                <CertificateNotFoundContent className='desktop-hide' />
-            )}
-        >
-            {renderCertificate()}
-        </CertificatePageLayout>
+        <>
+            <PageTitle>
+                {`${props.profile.handle}'s ${course?.title} Certificate`}
+            </PageTitle>
+
+            <CertificatePageLayout
+                ref={ref}
+                certificateElRef={certificateElRef}
+                fallbackBackUrl={coursePath}
+                fullScreenCertLayout={!certificateNotFoundError && props.fullScreenCertLayout}
+                isCertificateCompleted={hasCompletedTheCertification}
+                isReady={ready}
+                ssrUrl={certUrl}
+                title={certificationTitle}
+                disableActions={ready && !hasCompletedTheCertification}
+                className={certificateNotFoundError ? 'cert-not-found-layout' : ''}
+                afterContent={certificateNotFoundError && (
+                    <CertificateNotFoundContent className='desktop-hide' />
+                )}
+            >
+                {renderCertificate()}
+            </CertificatePageLayout>
+        </>
     )
-}
+})
 
 export default CertificateView

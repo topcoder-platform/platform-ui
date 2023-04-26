@@ -7,8 +7,9 @@ import { SkillLabel } from '..'
 import styles from './SkillTags.module.scss'
 
 interface SkillTagsProps {
-    courseKey: string
+    courseKey?: string
     expandCount?: number
+    label?: string
     theme?: 'white' | 'gray' | undefined
     skills: Array<string> | null | undefined
 }
@@ -16,10 +17,13 @@ interface SkillTagsProps {
 const SkillTags: FC<SkillTagsProps> = (props: SkillTagsProps) => {
     const expandCount: number = props.expandCount || 3
     const theme: 'white' | 'gray' = props.theme || 'white'
+    const label: string = props.label ?? 'skills taught'
 
     return (
         <div className={styles.skills}>
-            <span className={classNames('body-small', styles.infoText)}>skills taught</span>
+            {label && (
+                <span className={classNames('body-small', styles.infoText)}>{label}</span>
+            )}
             {props.skills?.slice(0, expandCount)
                 .map((skill: string) => <SkillLabel skill={skill} theme={theme} key={`${props.courseKey}:${skill}`} />)}
             {props.skills?.length > expandCount && (

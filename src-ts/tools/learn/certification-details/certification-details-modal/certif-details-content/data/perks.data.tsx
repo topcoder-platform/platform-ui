@@ -1,3 +1,8 @@
+import { ReactNode } from 'react'
+
+import { IconSolid } from '../../../../../../lib'
+import { getTCAUserCertificationPreviewUrl } from '../../../../learn.routes'
+
 export type PerkIconsType = |
     'currency-dolary' |
     'icon-certif' |
@@ -8,6 +13,7 @@ export interface PerkItem {
     description: string
     icon: PerkIconsType
     title: string
+    extra?: (certification: string) => ReactNode
 }
 
 export const perks: Array<PerkItem> = [
@@ -24,6 +30,16 @@ export const perks: Array<PerkItem> = [
             You will receive a digital certificate that can be linked to
             your resume/CV, as verified proof of your skills.
         `,
+        extra: (certification: string) => (
+            <a
+                href={getTCAUserCertificationPreviewUrl(certification)}
+                target='_blank'
+                rel='noreferrer'
+            >
+                Preview
+                <IconSolid.ExternalLinkIcon />
+            </a>
+        ),
         icon: 'icon-certif',
         title: 'Proof of my skills',
     },

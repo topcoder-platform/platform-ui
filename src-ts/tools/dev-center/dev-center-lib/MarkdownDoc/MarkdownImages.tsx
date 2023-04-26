@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { identity } from 'lodash'
 import Carousel from 'react-elastic-carousel'
 
 import { Button, IconSolid } from '../../../../lib'
@@ -16,26 +17,25 @@ interface CarouselButtonProps {
     onClick: (ev: any) => void
 }
 
-const CarouselButton: React.FC<CarouselButtonProps> = ({ onClick, active }) => (
+const CarouselButton: React.FC<CarouselButtonProps> = props => (
     <button
+        aria-label='Page'
+        type='button'
         className={`${styles.indicator} ${
-            active ? styles.active : ''
+            props.active ? styles.active : ''
         }`}
-        onClick={onClick}
+        onClick={props.onClick}
     />
 )
 
-const MarkdownImages: React.FC<MarkdownImagesProps> = ({
-    children,
-    length,
-}) => {
-    const carouselRef: React.MutableRefObject<undefined> = React.useRef()
+const MarkdownImages: React.FC<MarkdownImagesProps> = props => {
+    const carouselRef: React.MutableRefObject<any> = React.useRef()
 
-    const handlePrev: (ev: any) => void = (ev: any) => {
+    function handlePrev(): void {
         carouselRef?.current?.slidePrev()
     }
 
-    const handleNext: (ev: any) => void = (ev: any) => {
+    function handleNext(): void {
         carouselRef?.current?.slideNext()
     }
 
@@ -45,43 +45,46 @@ const MarkdownImages: React.FC<MarkdownImagesProps> = ({
         pages: Array<any>
     }
 
-    const renderPagination: React.FC<RenderPaginationProps> = ({
+    function renderPagination({
         pages,
         activePage,
         onClick,
-    }) => (
-        <div className={styles.footer}>
-            <Button
-                buttonStyle='icon'
-                size='xl'
-                className={styles.prev}
-                icon={IconSolid.ChevronLeftIcon}
-                disable={carouselRef?.current?.state.activePage === 0}
-                onClick={handlePrev}
-            />
-            {pages.map(page => {
-                const isActivePage: boolean = activePage === page
-                return (
-                    <CarouselButton
-                        key={page}
-                        onClick={() => onClick(page)}
-                        active={isActivePage}
-                    />
-                )
-            })}
-            <Button
-                buttonStyle='icon'
-                size='xl'
-                className={styles.next}
-                icon={IconSolid.ChevronRightIcon}
-                disable={
-                    carouselRef?.current?.state.activePage === length - 1
-                }
-                onClick={handleNext}
-            />
-        </div>
-    )
-    return children.length > 1 ? (
+    }: RenderPaginationProps): JSX.Element {
+        return (
+            <div className={styles.footer}>
+                <Button
+                    buttonStyle='icon'
+                    size='xl'
+                    className={styles.prev}
+                    icon={IconSolid.ChevronLeftIcon}
+                    disable={carouselRef?.current?.state.activePage === 0}
+                    onClick={handlePrev}
+                />
+                {pages.map(page => {
+                    const isActivePage: boolean = activePage === page
+                    return (
+                        <CarouselButton
+                            key={page}
+                            onClick={function handleBtnClick() { onClick(page) }}
+                            active={isActivePage}
+                        />
+                    )
+                })}
+                <Button
+                    buttonStyle='icon'
+                    size='xl'
+                    className={styles.next}
+                    icon={IconSolid.ChevronRightIcon}
+                    disable={
+                        carouselRef?.current?.state.activePage === props.length - 1
+                    }
+                    onClick={handleNext}
+                />
+            </div>
+        )
+    }
+
+    return props.children.length > 1 ? (
         // @ts-ignore
         <Carousel
             itemsToShow={1}
@@ -91,9 +94,9 @@ const MarkdownImages: React.FC<MarkdownImagesProps> = ({
             className={styles.imagesBlock}
             renderPagination={renderPagination}
         >
-            {children.map((image, index) => (
+            {props.children.map((image, index) => (
                 <div
-                    key={`md-image-${index}`}
+                    key={identity(`md-image-${index}`)}
                     className={styles.imageContainer}
                 >
                     {image}
@@ -103,7 +106,7 @@ const MarkdownImages: React.FC<MarkdownImagesProps> = ({
     ) : (
         <>
             <div key='md-image-single' className={`${styles.imageBlock}}`}>
-                <div className={styles.imageContainer}>{children[0]}</div>
+                <div className={styles.imageContainer}>{props.children[0]}</div>
             </div>
         </>
     )

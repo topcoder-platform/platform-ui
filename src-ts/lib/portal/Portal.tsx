@@ -16,7 +16,7 @@ const Portal: FC<PortalProps> = (props: PortalProps) => {
 
     const defaultPortalNode: HTMLElement = useMemo(() => {
         if (props.portalId || props.portalNode) {
-            return
+            return undefined
         }
 
         const backupHtmlNode: HTMLElement = document.createElement('div')

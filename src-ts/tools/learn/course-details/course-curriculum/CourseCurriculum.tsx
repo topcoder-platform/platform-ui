@@ -1,6 +1,6 @@
 import { noop } from 'lodash'
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react'
-import { NavigateFunction, useNavigate, useSearchParams } from 'react-router-dom'
+import { NavigateFunction, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { UserProfile } from '../../../../lib'
 import {
@@ -21,6 +21,7 @@ import {
     getLessonPathFromCurrentLesson,
     LEARN_PATHS,
 } from '../../learn.routes'
+import { LearnConfig } from '../../learn-config'
 
 import { CurriculumSummary } from './curriculum-summary'
 import { TcAcademyPolicyModal } from './tc-academy-policy-modal'
@@ -53,6 +54,8 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
     const inProgress: boolean = status === UserCertificationProgressStatus.inProgress
     const isCompleted: boolean = status === UserCertificationProgressStatus.completed
 
+    const location: any = useLocation()
+
     /**
      * Redirect user to the currentLesson if there's already some progress recorded
      * otherwise redirect to first module > first lesson
@@ -70,8 +73,11 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
             module.dashedName,
             lesson.dashedName,
         )
-        navigate(lessonPath)
+        navigate(lessonPath, {
+            state: location.state,
+        })
     }, [
+        location.state,
         navigate,
         props.certification,
         props.course,
@@ -93,7 +99,11 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
 
         // if the user is wipro and s/he hasn't set up DICE,
         // let the user know
-        if (props.profile?.isWipro && !props.profile.diceEnabled) {
+        if (
+            LearnConfig.REQUIRE_DICE_ID
+            && props.profile?.isWipro
+            && !props.profile.diceEnabled
+        ) {
             setIsDiceModalOpen(true)
             return
         }
@@ -136,7 +146,7 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         )
 
         progress = await userCertificationProgressUpdateAsync(
-            progress!.id,
+            progress?.id,
             UserCertificationUpdateProgressActions.acceptHonestyPolicy,
             {},
         )
@@ -168,7 +178,6 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
      * proceed as if the user just clicked "Start course" button
      */
     useEffect(() => {
-        // eslint-disable-next-line no-null/no-null
         if (props.progressReady && isLoggedIn && searchParams.get(LEARN_PATHS.startCourseRouteFlag) !== null) {
             handleStartCourseClick()
         }

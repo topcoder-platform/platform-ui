@@ -86,8 +86,19 @@
         grid-template-columns: 1fr 1fr;
         gap: $space-xxl;
 
-        @include ltemd {
+        // NOTE: these are not app defined breakpoints
+        // but they are required for the grid to look at it's best
+        @media (max-width: 900px) {
             grid-template-columns: 1fr;
         }
+    }
+}
+
+.aloneTeaseBanner {
+    margin-bottom: $space-mxx !important;
+    border-radius: 8px;
+
+    @include ltemd {
+        margin-bottom: $space-xxl !important;
     }
 }

@@ -70,19 +70,25 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                 <div className={styles.cardHeaderTitleWrap}>
                     <p className='body-medium-medium'>{clearFCCCertificationTitle(props.certification.title)}</p>
                     <div className={styles.subTitleWrap}>
-                        <LearnLevelIcon level={props.certification.learnerLevel} />
-                        <span className={classNames('body-small', styles.infoText)}>
-                            {props.certification.learnerLevel}
-                        </span>
-                        <IconSolid.DocumentTextIcon width={16} height={16} />
-                        <em>
-                            {props.certification.moduleCount}
-                            {' modules'}
-                        </em>
-                        <IconSolid.ClockIcon width={16} height={16} />
-                        <em>
-                            <CompletionTimeRange range={completionTimeRange} />
-                        </em>
+                        <div className={styles.subTitleItem}>
+                            <LearnLevelIcon level={props.certification.learnerLevel} />
+                            <span className={classNames('body-small', styles.infoText)}>
+                                {props.certification.learnerLevel}
+                            </span>
+                        </div>
+                        <div className={styles.subTitleItem}>
+                            <IconSolid.DocumentTextIcon width={16} height={16} />
+                            <em>
+                                {props.certification.moduleCount}
+                                {' modules'}
+                            </em>
+                        </div>
+                        <div className={styles.subTitleItem}>
+                            <IconSolid.ClockIcon width={16} height={16} />
+                            <em>
+                                <CompletionTimeRange range={completionTimeRange} />
+                            </em>
+                        </div>
                     </div>
                 </div>
             </div>

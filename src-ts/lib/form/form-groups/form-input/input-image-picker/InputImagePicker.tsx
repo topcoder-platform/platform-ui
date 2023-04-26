@@ -12,6 +12,7 @@ interface InputImagePickerProps {
     }
     readonly name: string
     readonly onChange: (event: ChangeEvent<HTMLInputElement>) => void
+    // eslint-disable-next-line react/no-unused-prop-types
     readonly value?: InputValue
 }
 
@@ -19,8 +20,10 @@ const InputImagePicker: FC<InputImagePickerProps> = (props: InputImagePickerProp
 
     const fileInputRef: RefObject<HTMLInputElement> = createRef<HTMLInputElement>()
 
-    const [files, setFiles]: [FileList | null, Dispatch<SetStateAction<FileList | null>>] = useState<FileList | null>(null)
-    const [fileDataURL, setFileDataURL]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState<string | undefined>()
+    const [files, setFiles]: [FileList | undefined, Dispatch<SetStateAction<FileList | undefined>>]
+        = useState<FileList | undefined>(undefined)
+    const [fileDataURL, setFileDataURL]: [string | undefined, Dispatch<SetStateAction<string | undefined>>]
+        = useState<string | undefined>()
 
     useEffect(() => {
         if (files && files.length) {
@@ -41,13 +44,22 @@ const InputImagePicker: FC<InputImagePickerProps> = (props: InputImagePickerProp
         fileDataURL,
     ])
 
+    function handleButtonClick(): void {
+        fileInputRef.current?.click()
+    }
+
+    function handleOnChange(event: ChangeEvent<HTMLInputElement>): void {
+        setFiles(event.target.files ?? undefined)
+        props.onChange(event)
+    }
+
     return (
         <div className={styles.filePicker}>
             <Button
                 buttonStyle='icon'
                 icon={IconOutline.PencilIcon}
                 className={styles.filePickerPencil}
-                onClick={() => fileInputRef.current?.click()}
+                onClick={handleButtonClick}
             />
             <input
                 name={props.name}
@@ -55,10 +67,7 @@ const InputImagePicker: FC<InputImagePickerProps> = (props: InputImagePickerProp
                 accept={props.fileConfig?.acceptFileType || '*'}
                 className={styles.filePickerInput}
                 ref={fileInputRef}
-                onChange={event => {
-                    setFiles(event.target.files)
-                    props.onChange(event)
-                }}
+                onChange={handleOnChange}
                 size={props.fileConfig?.maxFileSize || Infinity}
             />
             {

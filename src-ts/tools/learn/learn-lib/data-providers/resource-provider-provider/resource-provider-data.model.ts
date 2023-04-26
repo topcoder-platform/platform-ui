@@ -1,4 +1,4 @@
-import { ResourceProvider } from './resource-provider-functions'
+import { ResourceProvider } from './resource-provider.model'
 
 export interface ResourceProviderData {
     loading: boolean

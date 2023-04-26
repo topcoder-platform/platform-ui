@@ -1,3 +1,4 @@
+import { get } from 'lodash'
 import { FC, FocusEvent } from 'react'
 import { MultiValue, StylesConfig } from 'react-select'
 import AsyncSelect from 'react-select/async'
@@ -63,6 +64,14 @@ const InputHandleAutocomplete: FC<InputHandleAutocompleteProps> = (props: InputH
         }),
     }
 
+    function getUserProp(key: string): (d: unknown) => string {
+        return d => get(d, key)
+    }
+
+    function handleChange(newValue: MultiValue<MembersAutocompeteResult>): void {
+        props.onChange(newValue as Array<MembersAutocompeteResult>)
+    }
+
     return (
         <InputWrapper
             {...props}
@@ -75,15 +84,15 @@ const InputHandleAutocomplete: FC<InputHandleAutocompleteProps> = (props: InputH
             <AsyncSelect
                 className={styles.memberSelect}
                 cacheOptions
-                getOptionLabel={({ handle }) => handle}
-                getOptionValue={({ userId }) => userId}
+                getOptionLabel={getUserProp('handle')}
+                getOptionValue={getUserProp('userId')}
                 isMulti
                 key={props.value?.length}
                 loadOptions={membersAutocompete}
                 styles={customStyles}
                 placeholder={props.placeholder}
                 onBlur={props.onBlur}
-                onChange={(newValue: MultiValue<MembersAutocompeteResult>) => props.onChange(newValue as Array<MembersAutocompeteResult>)}
+                onChange={handleChange}
                 value={props.value}
                 isDisabled={props.disabled}
             />

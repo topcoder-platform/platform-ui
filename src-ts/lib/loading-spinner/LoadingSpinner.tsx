@@ -3,7 +3,7 @@
  *
  * Centered Loading Spinner with back overlay
  */
-import { FC } from 'react'
+import { FC, forwardRef, RefAttributes } from 'react'
 import { PuffLoader } from 'react-spinners'
 import classNames from 'classnames'
 
@@ -19,18 +19,23 @@ export interface LoadingSpinnerProps {
     type?: LoadingSpinnerType
 }
 
-const LoadingSpinner: FC<LoadingSpinnerProps> = ({ hide, className, type = 'Normal' }: LoadingSpinnerProps) => {
-
-    if (!!hide) {
+const LoadingSpinner: FC<LoadingSpinnerProps & RefAttributes<HTMLDivElement>>
+= forwardRef<HTMLDivElement, LoadingSpinnerProps>((props, ref) => {
+    if (!!props.hide) {
         return <></>
     }
 
-    const isOverlay: boolean = type === 'Overlay'
+    const isOverlay: boolean = props.type === 'Overlay'
     return (
-        <div className={classNames(styles['loading-spinner'], styles.show, { [styles.overlay]: isOverlay }, className)}>
+        <div
+            ref={ref}
+            className={
+                classNames(styles['loading-spinner'], styles.show, { [styles.overlay]: isOverlay }, props.className)
+            }
+        >
             <PuffLoader color='#2196f3' loading size={100} />
         </div>
     )
-}
+})
 
 export default LoadingSpinner

@@ -42,7 +42,8 @@
     &:global(.active) {
         color: $tc-white;
         .icon {
-            background: $tc-white;
+            border: 2px solid $tc-white;
+            box-shadow: 0 0 2px 1px $tc-white;
         }
     }
 }

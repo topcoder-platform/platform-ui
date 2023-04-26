@@ -171,7 +171,7 @@ const BugHuntIntakeForm: React.FC = () => {
             }
         }, [])
 
-    const onChange: (inputs: ReadonlyArray<FormInputModel>) => void = inputs => {
+    function onChange(inputs: ReadonlyArray<FormInputModel>): void {
         const packageType: PricePackageName
             = formGetInputModel(inputs, ChallengeMetadataName.packageType).value as PricePackageName
 
@@ -184,7 +184,7 @@ const BugHuntIntakeForm: React.FC = () => {
         setDisableSaveForLater(!title?.trim())
     }
 
-    const goToLoginStep: (formData: any) => void = (formData: any) => {
+    function goToLoginStep(formData: any): void {
         if (localStorage) {
             localStorage.setItem('challengeInProgress', JSON.stringify(formData))
             localStorage.setItem('challengeInProgressType', WorkType.bugHunt)
@@ -196,7 +196,7 @@ const BugHuntIntakeForm: React.FC = () => {
         navigate(loginPromptUrl)
     }
 
-    const onSave: (val: any) => Promise<void> = val => {
+    function onSave(val: any): Promise<void> {
         if (!isLoggedIn) {
             goToLoginStep(val)
             return Promise.reject()
@@ -215,7 +215,7 @@ const BugHuntIntakeForm: React.FC = () => {
             .finally(() => setLoading(false))
     }
 
-    const onSaveSuccess: () => void = () => {
+    function onSaveSuccess(): void {
         setSaveSuccess(true)
     }
 

@@ -27,6 +27,8 @@
     width: 100%;
     display: flex;
     flex-direction: column;
+    position: relative;
+    z-index: 1;
 
     padding-left: $space-xxxxl;
 
@@ -45,6 +47,24 @@
             margin-right: $space-lg;
             width: calc(100% - 2 * $space-lg);
         }
+    }
+}
+
+.course-iframe {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    width: 100%;
+}
+
+.course-frame-loader {
+    margin-left: $space-xxxxl;
+    margin-right: $space-xxxxl;
+    width: calc(100% - 2 * $space-xxxxl);
+
+    + iframe {
+        opacity: 0;
+        visibility: hidden;
     }
 }
 

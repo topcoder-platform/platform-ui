@@ -1,22 +1,30 @@
 import { FC, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { LearnCertificateTrackType, TCACertificationProviderBase } from '../data-providers'
+import { LearnCertificateTrackType, TCACertificationLearnLevel, TCACertificationProviderBase } from '../data-providers'
 import { CourseBadge } from '../course-badge'
+import { CertificateBadgeIcon } from '../dynamic-icons'
 import { ProvidersLogoList } from '../providers-logo-list'
 
 import styles from './CourseTitle.module.scss'
 
+export enum TitleBadgeType {
+    course = 'course',
+    tcaCertification = 'tca-certification'
+}
+
 interface CourseTitleProps {
+    badgeType?: TitleBadgeType
     children?: ReactNode
+    learnLevel?: TCACertificationLearnLevel
     provider?: string
+    providers?: TCACertificationProviderBase[]
     size?: 'md'|'lg'|'xl'
     title: string
     trackType?: LearnCertificateTrackType
 }
 
 const CourseTitle: FC<CourseTitleProps> = (props: CourseTitleProps) => {
-
     const title: ReactNode = (!props.size || props.size === 'md') ? (
         <div className='body-main-bold'>
             {props.title}
@@ -30,7 +38,14 @@ const CourseTitle: FC<CourseTitleProps> = (props: CourseTitleProps) => {
     return (
         <div className={classNames(styles.wrap, props.size)}>
             <div className={classNames('badge-icon', props.size)}>
-                <CourseBadge type={props.trackType ?? 'DEV'} />
+                {props.badgeType === TitleBadgeType.tcaCertification ? (
+                    <CertificateBadgeIcon
+                        type={props.trackType ?? 'DEV'}
+                        level={props.learnLevel as TCACertificationLearnLevel}
+                    />
+                ) : (
+                    <CourseBadge type={props.trackType ?? 'DEV'} />
+                )}
             </div>
             <div className={styles.text}>
                 <div className={styles['title-row']}>
@@ -39,10 +54,10 @@ const CourseTitle: FC<CourseTitleProps> = (props: CourseTitleProps) => {
                         {props.children}
                     </span>
                 </div>
-                {props.provider && (
+                {(props.provider || props.providers?.length) && (
                     <em className={classNames('quote-small', props.size)}>
                         <ProvidersLogoList
-                            providers={[{ name: props.provider } as TCACertificationProviderBase]}
+                            providers={props.providers ?? [{ name: props.provider } as TCACertificationProviderBase]}
                             label='by'
                         />
                     </em>

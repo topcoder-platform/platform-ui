@@ -7,7 +7,7 @@ import { WorkContextData } from './work-context-data.model'
 import { Work, workGetAllAsync } from './work-functions'
 import { default as workContext, defaultWorkContextData } from './work.context'
 
-export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { children: ReactNode }) => {
+export const WorkProvider: FC<{ children: ReactNode }> = props => {
 
     const [workContextData, setWorkContextData]: [WorkContextData, Dispatch<SetStateAction<WorkContextData>>]
         = useState<WorkContextData>(defaultWorkContextData)
@@ -44,7 +44,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
                 const safeProfile: UserProfile = profile as UserProfile
 
                 let pageNumber: number = 1
-                let nextSet: Array<Work> = await workGetAllAsync(safeProfile, pageNumber++)
+                let nextSet: Array<Work> = await workGetAllAsync(safeProfile, pageNumber += 1)
 
                 const contextData: WorkContextData = {
                     ...defaultWorkContextData,
@@ -72,7 +72,8 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
                         work: output,
                     }
                     setWorkContextData(messageContextData)
-                    nextSet = await workGetAllAsync(safeProfile, pageNumber++)
+                    // eslint-disable-next-line no-await-in-loop
+                    nextSet = await workGetAllAsync(safeProfile, pageNumber += 1)
                 }
 
                 // now that the work list is initialized,
@@ -115,7 +116,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = ({ children }: { childr
 
     return (
         <workContext.Provider value={workContextData}>
-            {children}
+            {props.children}
         </workContext.Provider>
     )
 }

@@ -1,7 +1,8 @@
 import { FC, memo, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import { Button, ButtonStyle, IconSolid, ProgressBar, useCheckIsMobile } from '../../../../../lib'
+import { getTCACertificationPath, getTCAUserCertificationUrl } from '../../../learn.routes'
+import { Button, ButtonStyle, IconSolid, ProgressBar } from '../../../../../lib'
 import {
     CertificateBadgeIcon,
     CompletionTimeRange,
@@ -12,7 +13,7 @@ import {
     TCACertificationProgress,
     TCACertificationProviderBase,
 } from '../../../learn-lib'
-import { getTCACertificateUrl, getTCACertificationPath } from '../../../learn.routes'
+import { EnvironmentConfig } from '../../../../../config'
 
 import styles from './TCCertCard.module.scss'
 
@@ -29,8 +30,6 @@ const getCtaBtn: (style: ButtonStyle, label: string, route: string) => ReactNode
 const EXCERPT_TEXT_LEN: number = 165
 
 const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
-    const isMobile: boolean = useCheckIsMobile()
-
     const desc: string = props.certification.description.slice(0, EXCERPT_TEXT_LEN)
 
     const { skills, providers, dashedName }: {
@@ -49,10 +48,11 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
         }
 
         if (isCompleted) {
+            const certificatePath: string = getTCAUserCertificationUrl(dashedName, props.progress?.userHandle as string)
             return (
                 <div className={styles.completedCTAs}>
                     <div className={styles.certCTAButtons}>
-                        {getCtaBtn('primary', 'View Certificate', getTCACertificateUrl(dashedName))}
+                        {getCtaBtn('primary', 'View Certificate', certificatePath)}
                         {getCtaBtn('secondary', 'Details', getTCACertificationPath(dashedName))}
                     </div>
                 </div>
@@ -60,6 +60,32 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
         }
 
         return getCtaBtn('primary', 'Resume', getTCACertificationPath(dashedName))
+    }
+
+    function renderStats(): ReactNode {
+        return (
+            <div className={styles.cardSubWrap}>
+                <div className={styles.subTitleItem}>
+                    <LearnLevelIcon level={props.certification.learnerLevel} />
+                    <span className={classNames('body-small', styles.infoText)}>
+                        {props.certification.learnerLevel}
+                    </span>
+                </div>
+                <div className={styles.subTitleItem}>
+                    <IconSolid.DocumentTextIcon width={16} height={16} />
+                    <span className={classNames('body-small', styles.infoText)}>
+                        {props.certification.coursesCount}
+                        {' courses'}
+                    </span>
+                </div>
+                <div className={styles.subTitleItem}>
+                    <IconSolid.ClockIcon width={16} height={16} />
+                    <span className={classNames('body-small', styles.durationWrap)}>
+                        <CompletionTimeRange range={props.certification.completionTimeRange} />
+                    </span>
+                </div>
+            </div>
+        )
     }
 
     function renderProgressBar(): ReactNode {
@@ -84,61 +110,17 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
                     type={props.certification.certificationCategory.track}
                     level={props.certification.learnerLevel}
                 />
-                <div className={styles.cardTitleWrap}>
-                    <p className='body-large-medium'>{props.certification.title}</p>
-                    {
-                        isMobile ? (
-                            <>
-                                <div className={styles.cardSubWrap}>
-                                    <LearnLevelIcon level={props.certification.learnerLevel} />
-                                    <span className={classNames('body-small', styles.infoText)}>
-                                        {props.certification.learnerLevel}
-                                    </span>
-                                    <IconSolid.DocumentTextIcon width={16} height={16} />
-                                    <span className={classNames('body-small', styles.infoText)}>
-                                        {props.certification.coursesCount}
-                                        {' courses'}
-                                    </span>
-                                </div>
-                                <div className={styles.cardSubWrap}>
-                                    <IconSolid.ClockIcon width={16} height={16} />
-                                    <span className={classNames('body-small', styles.durationWrap)}>
-                                        <CompletionTimeRange range={props.certification.completionTimeRange} />
-                                    </span>
-                                    {/* TODO: Uncomment this when paid certs come to prod! */}
-                                    {/* <IconSolid.CurrencyDollarIcon width={16} height={16} />
-                        <span className={classNames('body-small', styles.infoText)}>
-                            {' One time payment'}
-                        </span> */}
-                                </div>
-                            </>
-                        ) : (
-                            <div className={styles.cardSubWrap}>
-                                <LearnLevelIcon level={props.certification.learnerLevel} />
-                                <span className={classNames('body-small', styles.infoText)}>
-                                    {props.certification.learnerLevel}
-                                </span>
-                                <IconSolid.DocumentTextIcon width={16} height={16} />
-                                <span className={classNames('body-small', styles.infoText)}>
-                                    {props.certification.coursesCount}
-                                    {' courses'}
-                                </span>
-                                <IconSolid.ClockIcon width={16} height={16} />
-                                <span className={classNames('body-small', styles.durationWrap)}>
-                                    <CompletionTimeRange range={props.certification.completionTimeRange} />
-                                </span>
-                                {/* TODO: Uncomment this when paid certs come to prod! */}
-                                {/* <IconSolid.CurrencyDollarIcon width={16} height={16} />
-                        <span className={classNames('body-small', styles.infoText)}>
-                            {' One time payment'}
-                        </span> */}
-                            </div>
-                        )
-                    }
-                </div>
-                <div className={styles.cardLabels}>
-                    <div className={styles.newLabel}>NEW</div>
-                    <div className={styles.freeLabel}>FREE</div>
+                <div className={styles.cardHeadline}>
+                    <div className={styles.cardTitleline}>
+                        <p className='body-large-medium'>{props.certification.title}</p>
+
+                        <div className={styles.cardLabels}>
+                            <div className={styles.newLabel}>NEW</div>
+                            {!EnvironmentConfig.REACT_APP_ENABLE_TCA_CERT_MONETIZATION
+                                && <div className={styles.freeLabel}>FREE</div>}
+                        </div>
+                    </div>
+                    {renderStats()}
                 </div>
             </div>
 

@@ -15,6 +15,7 @@ import {
 import {
     AllCertificationsProviderData,
     LearnCertification,
+    PageTitle,
     TCACertificationsProgressProviderData,
     TCACertificationsProviderData,
     useGetAllCertifications,
@@ -84,6 +85,7 @@ const WelcomePage: FC = () => {
 
     return (
         <ContentLayout>
+            <PageTitle>Learn</PageTitle>
 
             <div className={classNames(styles.wrap, 'full-height-frame')}>
 

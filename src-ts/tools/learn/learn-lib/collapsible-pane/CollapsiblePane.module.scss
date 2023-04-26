@@ -42,8 +42,9 @@
     @extend .overline;
     flex: 0 0 auto;
 
-    svg {
+    > svg {
         @include icon-lg;
+        pointer-events: none;
     }
 
     @include gtelg {

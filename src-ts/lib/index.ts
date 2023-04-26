@@ -11,6 +11,7 @@ export {
     authUrlLogin,
     authUrlLogout,
     authUrlSignup,
+    copyTextToClipboard,
     errorHandle,
     fileCreateFromCanvas,
     fileDownloadBlob,
@@ -39,6 +40,7 @@ export * from './loading-spinner'
 export * from './modals'
 export * from './page-divider'
 export * from './page-footer'
+export * from './page-title'
 export * from './pagination'
 export * from './portal'
 export * from './profile-provider'

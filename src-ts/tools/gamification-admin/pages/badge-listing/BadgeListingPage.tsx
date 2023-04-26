@@ -19,7 +19,8 @@ import styles from './BadgeListingPage.module.scss'
 
 const BadgeListingPage: FC = () => {
 
-    const [sort, setSort]: [Sort, Dispatch<SetStateAction<Sort>>] = useState<Sort>(tableGetDefaultSort(badgeListingColumns))
+    const [sort, setSort]: [Sort, Dispatch<SetStateAction<Sort>>]
+        = useState<Sort>(tableGetDefaultSort(badgeListingColumns))
     const [columns]: [
         ReadonlyArray<TableColumn<GameBadge>>,
         Dispatch<SetStateAction<ReadonlyArray<TableColumn<GameBadge>>>>,

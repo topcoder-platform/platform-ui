@@ -1,4 +1,4 @@
-import { FaqEntry } from '../../../accordion/Accordion';
+import { FaqEntry } from '../../../accordion/Accordion'
 
 export const FAQs: Array<FaqEntry> = [
     {

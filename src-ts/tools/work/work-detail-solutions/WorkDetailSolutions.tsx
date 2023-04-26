@@ -32,7 +32,8 @@ const WorkDetailSolutions: FC<WorkDetailSolutionsProps> = (props: WorkDetailSolu
                         Solutions Available for Download
                     </h3>
                     <p className='body-small'>
-                        The solutions listed below have met your detailed criteria. They are ranked based on the best solution as determined by Topcoder expert reviewers.
+                        The solutions listed below have met your detailed criteria.
+                        They are ranked based on the best solution as determined by Topcoder expert reviewers.
                     </p>
                 </div>
             )}

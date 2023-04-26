@@ -50,7 +50,7 @@ const WorkDetailDetailsPane: FC<WorkDetailDetailsPaneProps> = ({
         return <LoadingSpinner />
     }
 
-    const onTogglePane: () => void = () => {
+    function onTogglePane(): void {
         if (!collapsible) {
             return
         }

@@ -15,51 +15,51 @@ export interface WorkServicePriceProps {
   stickerPrice?: number
 }
 
-const ServicePrice: FC<WorkServicePriceProps> = (props: WorkServicePriceProps) => {
-    const { icon, iconClass, showIcon, hideTitle = false, serviceType, stickerPrice, price = 0, duration }: WorkServicePriceProps = props
-
-    return (
-        <div className={styles.container}>
-            <div className={styles.inline}>
-                {!!showIcon && !!icon && (
-                    <IconWrapper icon={icon} className={iconClass} />
+const ServicePrice: FC<WorkServicePriceProps> = (props: WorkServicePriceProps) => (
+    <div className={styles.container}>
+        <div className={styles.inline}>
+            {!!props.showIcon && !!props.icon && (
+                <IconWrapper icon={props.icon} className={props.iconClass} />
+            )}
+            <div className={styles['content-wrapper']}>
+                {!props.hideTitle && (
+                    <p>
+                        <h3 className={styles.serviceTitle}>
+                            {props.serviceType}
+                        </h3>
+                    </p>
                 )}
-                <div className={styles['content-wrapper']}>
-                    {!hideTitle && (
-                        <p>
-                            <h3 className={styles.serviceTitle}>
-                                {serviceType}
-                            </h3>
-                        </p>
-                    )}
-                    <h3>
-                        <div className={styles.priceAndDuration}>
-                            {stickerPrice && (
-                                <span className={styles.stickerPrice}>
-                                    {textFormatMoneyLocaleString(stickerPrice)}
-                                </span>
-                            )}
-                            <span className={styles.discount}>{textFormatMoneyLocaleString(price)}</span>
-                            <span className={styles.separator}>|</span>
-                            <span className={styles.days}>
-                                {duration}
+                <h3>
+                    <div className={styles.priceAndDuration}>
+                        {props.stickerPrice && (
+                            <span className={styles.stickerPrice}>
+                                {textFormatMoneyLocaleString(props.stickerPrice)}
+                            </span>
+                        )}
+                        <span className={styles.discount}>{textFormatMoneyLocaleString(props.price)}</span>
+                        <span className={styles.separator}>|</span>
+                        <span className={styles.days}>
+                            {props.duration}
 &nbsp;Days
-                            </span>
-                            <span className={styles.help}>
-                                <Tooltip
-                                    content='The price and project length is dynamic and dependent on the
-                  variables selected as you define your work.'
-                                    trigger={(
-                                        <IconOutline.QuestionMarkCircleIcon className={styles['help-icon']} width={16} height={16} />
-                                    )}
-                                />
-                            </span>
-                        </div>
-                    </h3>
-                </div>
+                        </span>
+                        <span className={styles.help}>
+                            <Tooltip
+                                content='The price and project length is dynamic and dependent on the
+                variables selected as you define your work.'
+                                trigger={(
+                                    <IconOutline.QuestionMarkCircleIcon
+                                        className={styles['help-icon']}
+                                        width={16}
+                                        height={16}
+                                    />
+                                )}
+                            />
+                        </span>
+                    </div>
+                </h3>
             </div>
         </div>
-    )
-}
+    </div>
+)
 
 export default ServicePrice

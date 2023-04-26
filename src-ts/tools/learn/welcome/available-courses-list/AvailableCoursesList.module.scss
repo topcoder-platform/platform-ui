@@ -79,8 +79,14 @@
         border-bottom: none;
     }
 
+    // NOTE: these are not app defined breakpoints
+    // but they are required for the grid to look at it's best
+    @media (max-width: 1000px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
     @include ltemd {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(1, 1fr);
         padding: $space-lg 0 $space-xxl;
     }
 }
