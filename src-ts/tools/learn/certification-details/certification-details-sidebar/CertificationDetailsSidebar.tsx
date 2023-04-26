@@ -144,7 +144,7 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                 emsiSkills={props.certification.emsiSkills}
                 skills={props.certification.skills}
                 courseKey={props.certification.dashedName}
-                theme={'gray'}
+                theme='gray'
                 expandCount={9}
             />
 

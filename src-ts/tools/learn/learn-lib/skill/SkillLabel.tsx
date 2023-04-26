@@ -1,4 +1,5 @@
 import { FC } from 'react'
+
 import { TCAEMSISkillType } from '../data-providers'
 
 import styles from './SkillLabel.module.scss'
