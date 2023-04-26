@@ -2,13 +2,13 @@ import _ from "lodash";
 import PT from "prop-types";
 import { useEffect, useState } from "react";
 
-import { Button, PageDivider } from "~/libs/ui";
+import { BaseModal, Button, PageDivider } from "~/libs/ui";
 
 /**
  * Tab element
  */
 import { ColorOptions, FormField, FormInputText, FormInputTextArea } from "../../../../../components/form-elements";
-import { PageH3, PageP, PageRow } from "../../../../../components/page-elements";
+import { PageP, PageRow } from "../../../../../components/page-elements";
 import { WorkServicePrice } from "../../../../../components/work-service-price";
 import { RadioButton } from "../../../../../components/radio-button";
 import {
@@ -17,7 +17,6 @@ import {
   AllowStockOptions,
 } from "../../../../../config";
 import FontOptions from "../FontOptions";
-import { Modal } from "../../../../../components/modal";
 import PolicyContent from "../PolicyContent";
 
 import styles from "./styles.module.scss";
@@ -138,15 +137,14 @@ const BrandingForm = ({
   }, [formData.selectedDeliverableOption, formData.allowStockOption]);
   return (
     <div className={styles["brandingForm"]}>
-      <Modal
-        fullWidth
-        show={isPolicyModalOpen}
-        handleClose={() => setIsPolicyModalOpen(false)}
+      <BaseModal
+        size="body"
+        open={isPolicyModalOpen}
+        onClose={() => setIsPolicyModalOpen(false)}
+        title="STOCK ARTWORK POLICY"
       >
-        <PageH3>STOCK ARTWORK POLICY</PageH3>
-        <PageDivider />
         <PolicyContent />
-      </Modal>
+      </BaseModal>
       <WorkServicePrice
         price={estimate.total}
         duration={estimate.totalDuration}

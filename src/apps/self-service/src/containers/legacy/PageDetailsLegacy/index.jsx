@@ -129,7 +129,7 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem, isLoggedIn }) => 
             <div className={styles["footer-right"]}>
               <Button
                 primary
-                disabled={!isFormValid}
+                disabled={!isFormValid()}
                 size='lg'
                 onClick={onNext}
               >

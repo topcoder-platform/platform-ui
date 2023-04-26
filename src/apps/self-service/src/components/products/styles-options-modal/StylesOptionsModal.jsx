@@ -5,13 +5,12 @@ import classNames from "classnames";
 import PT from "prop-types";
 import _ from "lodash";
 
+import { BaseModal } from "~/libs/ui";
+
 import { ReactComponent as LikeIcon } from "../../../assets/images/thumbsup.svg";
 import { ReactComponent as DislikeIcon } from "../../../assets/images/thumbsdown.svg";
-import { Modal } from "../../modal";
-import useCheckMobileScreen from "../../../hooks/useCheckMobileScreen";
 
 import styles from "./styles.module.scss";
-import { PageDivider } from "~/libs/ui";
 
 const StylesOptionsModal = ({
   onDismiss,
@@ -20,58 +19,55 @@ const StylesOptionsModal = ({
   dislikes = [],
   onLike,
   onDislike,
-}) => {
-  const isMobile = useCheckMobileScreen();
-  const modalWidth = isMobile ? { fullWidth: true } : { halfWidth: true };
-  return (
-    <Modal show={true} {...modalWidth} handleClose={onDismiss}>
-      <div className={styles["styleWrapper"]}>
-        <div className={classNames(styles["style"], styles[style.className])}>
-          <div className={styles["name"]}>
-            <span>{style.name}</span> &nbsp;
-          </div>
-          <PageDivider />
-          <div className={styles["description"]}>
-            <span>{style.description}</span>
-          </div>
-          <div className={styles["box"]}>
-            <div className={styles["preview"]} />
-            <div className={styles["actions"]}>
-              <LikeIcon
-                role="button"
-                onClick={() => {
-                  if (likes.includes(style.name)) {
-                    onLike(likes.filter((s) => s !== style.name));
-                  } else {
-                    onLike([...likes, style.name]);
-                    if (dislikes.includes(style.name)) {
-                      onDislike(dislikes.filter((s) => s !== style.name));
-                    }
-                  }
-                }}
-                className={_.includes(likes, style.name) ? styles["liked"] : null}
-              />
-              <DislikeIcon
-                role="button"
-                onClick={() => {
+}) => (
+  <BaseModal
+      open
+      size="lg"
+      onClose={onDismiss}
+      title={style.name}
+  >
+    <div className={styles["styleWrapper"]}>
+      <div className={classNames(styles["style"], styles[style.className])}>
+        <div className={styles["description"]}>
+          <span>{style.description}</span>
+        </div>
+        <div className={styles["box"]}>
+          <div className={styles["preview"]} />
+          <div className={styles["actions"]}>
+            <LikeIcon
+              role="button"
+              onClick={() => {
+                if (likes.includes(style.name)) {
+                  onLike(likes.filter((s) => s !== style.name));
+                } else {
+                  onLike([...likes, style.name]);
                   if (dislikes.includes(style.name)) {
                     onDislike(dislikes.filter((s) => s !== style.name));
-                  } else {
-                    onDislike([...dislikes, style.name]);
-                    if (likes.includes(style.name)) {
-                      onLike(likes.filter((s) => s !== style.name));
-                    }
                   }
-                }}
-                className={_.includes(dislikes, style.name) ? styles["disliked"] : null}
-              />
-            </div>
+                }
+              }}
+              className={_.includes(likes, style.name) ? styles["liked"] : null}
+            />
+            <DislikeIcon
+              role="button"
+              onClick={() => {
+                if (dislikes.includes(style.name)) {
+                  onDislike(dislikes.filter((s) => s !== style.name));
+                } else {
+                  onDislike([...dislikes, style.name]);
+                  if (likes.includes(style.name)) {
+                    onLike(likes.filter((s) => s !== style.name));
+                  }
+                }
+              }}
+              className={_.includes(dislikes, style.name) ? styles["disliked"] : null}
+            />
           </div>
         </div>
       </div>
-    </Modal>
-  );
-};
+    </div>
+  </BaseModal>
+);
 
 StylesOptionsModal.defaultProps = {};
 

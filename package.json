@@ -17,7 +17,7 @@
     "report:coverage": "nyc report --reporter=html",
     "report:coverage:text": "nyc report --reporter=text",
     "sb": "storybook dev -p 6006",
-    "build:sb": "storybook build"
+    "sb:build": "storybook build -o build/storybook"
   },
   "dependencies": {
     "@datadog/browser-logs": "^4.21.2",
