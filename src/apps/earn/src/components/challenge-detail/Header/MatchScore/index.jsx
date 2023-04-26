@@ -1,5 +1,4 @@
 import PT from 'prop-types';
-import React from 'react';
 import { DevelopmentTrackEventTag } from '@earn/components/challenge-detail/tags';
 
 import styles from './style.scss';

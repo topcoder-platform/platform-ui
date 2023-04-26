@@ -16,10 +16,11 @@ import {
 
 import { COMPETITION_TRACKS } from "../../../utils/tc";
 import VerifiedTag from "../../challenge-listing/VerifiedTag";
-import MatchScore from "../../challenge-listing/ChallengeCard/MatchScore";
 import { calculateScore } from "../../../utils/challenge-listing/helper";
-import styles from "./style.scss";
 import { styled as styledCss } from "../../../utils";
+
+import MatchScore from "./MatchScore";
+import styles from "./style.scss";
 
 const styled = styledCss(styles)
 
