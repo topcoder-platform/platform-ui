@@ -46,4 +46,5 @@ export interface GlobalConfig {
     }
     MEMBER_VERIFY_LOOKER: number,
     REACT_APP_ENABLE_TCA_CERT_MONETIZATION: boolean
+    REACT_APP_ENABLE_EMSI_SKILLS: boolean
 }

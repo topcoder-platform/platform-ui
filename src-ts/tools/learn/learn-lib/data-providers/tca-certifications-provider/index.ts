@@ -17,3 +17,4 @@ export * from './tca-certification-progress'
 export * from './tca-certification-enrollment-base.model'
 export * from './tca-certification-validation'
 export * from './tca-certification-enrollment'
+export * from './tca-emsi-skill-type';
