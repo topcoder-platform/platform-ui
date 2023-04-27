@@ -1,7 +1,9 @@
 import {
     FC,
+    forwardRef,
     MutableRefObject,
     ReactNode,
+    RefAttributes,
     useCallback,
     useLayoutEffect,
     useRef,
@@ -42,7 +44,8 @@ interface CertificatePageLayoutProps {
     title?: string
 }
 
-const CertificatePageLayout: FC<CertificatePageLayoutProps> = (props: CertificatePageLayoutProps) => {
+const CertificatePageLayout: FC<CertificatePageLayoutProps & RefAttributes<HTMLDivElement>>
+= forwardRef<HTMLDivElement, CertificatePageLayoutProps>((props, ref) => {
     const [queryParams]: [URLSearchParams, any] = useSearchParams()
     const viewStyle: CertificatePageLayoutStyle = queryParams.get(getViewStyleParamKey()) as CertificatePageLayoutStyle
 
@@ -78,6 +81,12 @@ const CertificatePageLayout: FC<CertificatePageLayoutProps> = (props: Certificat
     const handlePrint: () => Promise<void>
         = useCertificatePrint(props.certificateElRef, props.title ?? '')
 
+    if (typeof ref === 'function') {
+        ref(wrapElRef.current)
+    } else if (ref && Object.prototype.hasOwnProperty.call(ref, 'current')) {
+        ref.current = wrapElRef.current
+    }
+
     useLayoutEffect(() => {
         const el: HTMLElement = wrapElRef.current
         if (props.fullScreenCertLayout !== true || !el) {
@@ -93,57 +102,59 @@ const CertificatePageLayout: FC<CertificatePageLayoutProps> = (props: Certificat
         <>
             <LoadingSpinner hide={props.isReady} />
 
-            {props.isReady && (
-                <div className={classNames(styles.wrap, props.className)} ref={wrapElRef}>
-                    <div className={styles['content-wrap']}>
-                        {!props.fullScreenCertLayout && (
-                            <div className={styles['btns-wrap']}>
-                                <ActionButton
-                                    icon={<IconOutline.ChevronLeftIcon />}
-                                    onClick={handleBackBtnClick}
-                                />
-                            </div>
-                        )}
-                        <div
-                            className={classNames(styles['certificate-wrap'], viewStyle)}
-                            ref={certificateWrapRef}
-                        >
-                            <div className={styles.certifInnerWrap}>
-                                {props.children}
-                            </div>
-                        </div>
-                        {!props.fullScreenCertLayout && (
+            <div className={classNames(styles.wrap, props.className)} ref={wrapElRef}>
+                {props.isReady && (
+                    <>
+                        <div className={styles['content-wrap']}>
+                            {!props.fullScreenCertLayout && (
+                                <div className={styles['btns-wrap']}>
+                                    <ActionButton
+                                        icon={<IconOutline.ChevronLeftIcon />}
+                                        onClick={handleBackBtnClick}
+                                    />
+                                </div>
+                            )}
                             <div
-                                className={
-                                    classNames(
-                                        styles['btns-wrap'],
-                                        (!props.isCertificateCompleted || props.disableActions) && styles.disabled,
-                                    )
-                                }
+                                className={classNames(styles['certificate-wrap'], viewStyle)}
+                                ref={certificateWrapRef}
                             >
-                                <ActionButton
-                                    icon={<IconOutline.PrinterIcon />}
-                                    onClick={handlePrint}
-                                />
-                                <ActionButton
-                                    icon={<IconOutline.DownloadIcon />}
-                                    onClick={handleDownload}
-                                />
-                                <ActionButton
-                                    icon={<IconOutline.ShareIcon />}
-                                    onClick={shareModal.show}
-                                >
-                                    Share certificate
-                                </ActionButton>
+                                <div className={styles.certifInnerWrap}>
+                                    {props.children}
+                                </div>
                             </div>
-                        )}
-                    </div>
-                    {props.afterContent}
-                    {shareModal.modal}
-                </div>
-            )}
+                            {!props.fullScreenCertLayout && (
+                                <div
+                                    className={
+                                        classNames(
+                                            styles['btns-wrap'],
+                                            (!props.isCertificateCompleted || props.disableActions) && styles.disabled,
+                                        )
+                                    }
+                                >
+                                    <ActionButton
+                                        icon={<IconOutline.PrinterIcon />}
+                                        onClick={handlePrint}
+                                    />
+                                    <ActionButton
+                                        icon={<IconOutline.DownloadIcon />}
+                                        onClick={handleDownload}
+                                    />
+                                    <ActionButton
+                                        icon={<IconOutline.ShareIcon />}
+                                        onClick={shareModal.show}
+                                    >
+                                        Share certificate
+                                    </ActionButton>
+                                </div>
+                            )}
+                        </div>
+                        {props.afterContent}
+                        {shareModal.modal}
+                    </>
+                )}
+            </div>
         </>
     )
-}
+})
 
 export default CertificatePageLayout
