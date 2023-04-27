@@ -1,6 +1,6 @@
 import { FC, ReactNode } from 'react'
 
-import { Button, IconSolid, ProgressBar } from '../../../../../../lib'
+import { BreadcrumbItemModel, Button, IconSolid, ProgressBar } from '../../../../../../lib'
 import {
     clearFCCCertificationTitle,
     CompletionTimeRange,
@@ -20,6 +20,7 @@ import {
     getCertificatePath,
     getCoursePath,
     getLessonPathFromCurrentLesson,
+    getTCACertificationPath,
 } from '../../../../learn.routes'
 import CurriculumCard from '../CurriculumCard'
 
@@ -36,7 +37,16 @@ interface CourseCardProps {
 }
 
 const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
+
     function renderCta(): ReactNode {
+
+        const routeState: { tcaCertInfo: BreadcrumbItemModel } = {
+            tcaCertInfo: {
+                name: props.tcaCertification.title,
+                url: getTCACertificationPath(props.tcaCertification.dashedName),
+            },
+        }
+
         switch (props.progress?.status) {
             case UserCertificationProgressStatus.completed:
                 return (
@@ -49,12 +59,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                                 props.provider,
                                 props.certification.certification,
                             )}
-                            routeState={{
-                                tcaCertInfo: {
-                                    dashedName: props.tcaCertification.dashedName,
-                                    title: props.tcaCertification.title,
-                                },
-                            }}
+                            routeState={routeState}
                         />
                         <Button
                             buttonStyle='primary'
@@ -78,12 +83,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                             props.certification.certification,
                             props.progress?.currentLesson,
                         )}
-                        routeState={{
-                            tcaCertInfo: {
-                                dashedName: props.tcaCertification.dashedName,
-                                title: props.tcaCertification.title,
-                            },
-                        }}
+                        routeState={routeState}
                     />
                 )
             default:
@@ -96,12 +96,7 @@ const CourseCard: FC<CourseCardProps> = (props: CourseCardProps) => {
                             props.provider,
                             props.certification.certification,
                         )}
-                        routeState={{
-                            tcaCertInfo: {
-                                dashedName: props.tcaCertification.dashedName,
-                                title: props.tcaCertification.title,
-                            },
-                        }}
+                        routeState={routeState}
                     />
                 )
         }

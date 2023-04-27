@@ -8,7 +8,7 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { IconOutline, IconSolid } from '../../../../../lib'
@@ -20,6 +20,10 @@ import {
 } from '../..'
 import { StatusIcon } from '../status-icon'
 import { StepIcon } from '../step-icon'
+import {
+    CoursePageContextValue,
+    useCoursePageContext,
+} from '../../../course-page-wrapper'
 
 import styles from './CollapsibleItem.module.scss'
 
@@ -82,7 +86,7 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
             />
         )
 
-    const location: any = useLocation()
+    const { navState }: CoursePageContextValue = useCoursePageContext()
 
     const renderListItem: (item: CollapsibleListItem) => ReactNode
         = (item: CollapsibleListItem) => {
@@ -105,7 +109,7 @@ const CollapsibleItem: FC<CollapsibleItemProps> = (props: CollapsibleItemProps) 
                         <Link
                             className={styles['item-wrap']}
                             to={props.path(item)}
-                            state={{ tcaCertInfo: location.state?.tcaCertInfo }}
+                            state={navState}
                         >
                             {label}
                         </Link>
