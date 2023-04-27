@@ -206,7 +206,7 @@ const Review: FC = () => {
 
     return (
         <div className={styles['review-container']}>
-            <LoadingSpinner hide={!isLoading} type='Overlay' />
+            <LoadingSpinner hide={!isLoading} overlay />
             {/* TODO: We need to not hard code the configs to that of BugHunt and instead
             use the challenge data to determine the WorkType */}
             <IntakeFormsBreadcrumb

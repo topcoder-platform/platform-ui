@@ -17,8 +17,7 @@ import _ from 'lodash';
 import PT from 'prop-types';
 import moment from 'moment';
 
-import { IconOutline, LinkButton } from '~/libs/ui';
-import LoadingIndicator from '@earn/components/LoadingIndicator';
+import { IconOutline, LinkButton, LoadingCircles } from '~/libs/ui';
 import { phaseEndDate } from '@earn/utils/challenge-listing/helper';
 
 import SubmissionsTable from '../SubmissionsTable';
@@ -166,7 +165,7 @@ export default function SubmissionManagement(props) {
              </p>
            )
          }
-        {loadingSubmissions && <LoadingIndicator />}
+        {loadingSubmissions && <LoadingCircles />}
         {!loadingSubmissions
            && (
            <SubmissionsTable

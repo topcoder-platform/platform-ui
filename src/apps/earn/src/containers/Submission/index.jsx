@@ -6,18 +6,19 @@
  *   Connects the Redux store to the Challenge Submissions display components.
  *   Passes the relevent state and setters as properties to the UI components.
  */
+import React from 'react';
+import PT from 'prop-types';
+import { connect } from 'react-redux';
+
  import actions from '@earn/actions/page/submission';
  import { actions as api } from '@earn/actions';
  import { isMM } from '@earn/utils/challenge';
- import shortId from 'shortid';
- import React from 'react';
- import PT from 'prop-types';
- import { connect } from 'react-redux';
- import SubmissionsPage from './SubmissionPage';
+ import { LinkButton, LoadingSpinner } from '~/libs/ui';
+
  import { ACCESS_DENIED_REASON } from "../../constants";
  import AccessDenied from "../../components/AccessDenied";
- import LoadingIndicator from "@earn/components/LoadingIndicator";
-import { LinkButton } from '~/libs/ui';
+
+ import SubmissionsPage from './SubmissionPage';
  /*import { sprig } from '@sprig-technologies/sprig-browser/dist';
 
  export const Sprig = sprig.configure({
@@ -90,7 +91,7 @@ import { LinkButton } from '~/libs/ui';
      } = this.props;
 
      if (!challengeName) {
-       return <LoadingIndicator />;
+       return <LoadingSpinner />;
      }
 
      if (!isRegistered && challengeName) {

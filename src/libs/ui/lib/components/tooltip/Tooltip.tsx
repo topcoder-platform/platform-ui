@@ -20,19 +20,22 @@ interface TooltipProps {
     content?: ReactNode
     /** Set clickable=true to allows interactions with the tooltip */
     clickable?: boolean
+    disableWrap?: boolean
     place?: 'top' | 'right' | 'bottom' | 'left'
     children?: ReactNode
     triggerOn?: 'click' | 'hover'
+    strategy?: 'absolute' | 'fixed'
 }
 
-function wrapComponents(el: ReactNode): ReactNode {
-    return typeof get(el, 'type') === 'string'
+function wrapComponents(el: ReactNode, disableWrap?: boolean): ReactNode {
+    return disableWrap || typeof get(el, 'type') === 'string'
         ? el
         : <div>{el}</div>
 }
 
 const Tooltip: FC<TooltipProps> = (props: TooltipProps) => {
     const tooltipId: RefObject<string> = useRef<string>(uuidv4())
+    const triggerOnClick: boolean = props.triggerOn === 'click'
 
     // if we didn't get a tooltip, just return an empty fragment
     if (!props.content) {
@@ -41,10 +44,11 @@ const Tooltip: FC<TooltipProps> = (props: TooltipProps) => {
 
     function renderTrigger(): ReactElement[] {
         return Children.toArray(props.children)
-            .map(child => cloneElement((wrapComponents(child) as ReactElement), {
-                'data-tooltip-delay-show': '300',
+            .map(child => cloneElement((wrapComponents(child, props.disableWrap) as ReactElement), {
+                'data-tooltip-delay-show': triggerOnClick ? '' : '300',
                 'data-tooltip-id': tooltipId.current as string,
                 'data-tooltip-place': props.place ?? 'bottom',
+                'data-tooltip-strategy': props.strategy ?? 'absolute',
             } as any))
     }
 
@@ -55,8 +59,9 @@ const Tooltip: FC<TooltipProps> = (props: TooltipProps) => {
                 className={classNames(styles.tooltip, props.className)}
                 id={tooltipId.current as string}
                 aria-haspopup='true'
-                openOnClick={props.triggerOn === 'click'}
+                openOnClick={triggerOnClick}
                 clickable={props.clickable}
+                positionStrategy={props.strategy ?? 'absolute'}
             >
                 {props.content}
             </ReactTooltip>

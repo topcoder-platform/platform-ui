@@ -230,7 +230,7 @@ const EnrollPaymentForm: FC<EnrollPaymentFormProps> = (props: EnrollPaymentFormP
 
             {
                 props.isPayProcessing && (
-                    <LoadingSpinner type='Overlay' />
+                    <LoadingSpinner overlay />
                 )
             }
 

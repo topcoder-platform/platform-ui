@@ -6,7 +6,6 @@
  */
 
  import _ from 'lodash';
- import LoadingIndicator from "@earn/components/LoadingIndicator";
  import SubmissionManagement from '@earn/components/SubmissionManagement/SubmissionManagement';
  import React from 'react';
  import PT from 'prop-types';
@@ -16,7 +15,7 @@
  import actions from '@earn/actions';
  import { getService } from '@earn/services/submissions';
  import smpActions from '../../actions/page/submission_management';
- import { BaseModal, Button, LoadingCircles } from '~/libs/ui';
+ import { BaseModal, Button, LoadingCircles, LoadingSpinner } from '~/libs/ui';
 
  import { styled as styledCss } from "../../utils";
 
@@ -186,7 +185,7 @@
                {...smConfig}
              />
              )}
-           {isLoadingChallenge && <LoadingIndicator />}
+           {isLoadingChallenge && <LoadingSpinner />}
            {/* TODO: The modal should be split out as a separate component.
              * Not critical though, so keeping it here for the moment. */}
            <BaseModal

@@ -4,19 +4,18 @@
  * Centered Loading Spinner with back overlay
  */
 import { FC } from 'react'
-import { PuffLoader } from 'react-spinners'
 import classNames from 'classnames'
 
-import styles from './LoadingSpinner.module.scss'
+import { LoadingCircles } from '../loading-circles'
 
-// This will determine whether we want to show the loading indicator on top of existing content or if its shown
-// without any content
-type LoadingSpinnerType = 'Overlay' | 'Normal'
+import styles from './LoadingSpinner.module.scss'
 
 export interface LoadingSpinnerProps {
     className?: string
     hide?: boolean
-    type?: LoadingSpinnerType
+    inline?: boolean
+    overlay?: boolean
+    message?: string
 }
 
 const LoadingSpinner: FC<LoadingSpinnerProps> = (props: LoadingSpinnerProps) => {
@@ -24,14 +23,17 @@ const LoadingSpinner: FC<LoadingSpinnerProps> = (props: LoadingSpinnerProps) => 
         return <></>
     }
 
-    const isOverlay: boolean = props.type === 'Overlay'
     return (
         <div
-            className={
-                classNames(styles['loading-spinner'], styles.show, { [styles.overlay]: isOverlay }, props.className)
-            }
+            className={classNames(
+                props.className,
+                styles['loading-spinner'],
+                props.inline && styles.inline,
+                props.overlay && styles.overlay,
+            )}
         >
-            <PuffLoader color='#2196f3' loading size={100} />
+            <LoadingCircles />
+            {props.message && <div className={styles.message}>{props.message}</div>}
         </div>
     )
 }

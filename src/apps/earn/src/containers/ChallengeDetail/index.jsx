@@ -22,14 +22,12 @@ import termsActions from "../../actions/terms";
 import challengeDetailsActions, {
   TABS as DETAIL_TABS,
 } from "../../actions/page/challenge-details";
-import { LoadingCircles } from "~/libs/ui";
-
+import { LoadingCircles, LoadingSpinner } from "~/libs/ui";
 
 import { isMM as checkIsMM, isRDM as checkIsRDM } from '@earn/utils/challenge';
 import MMDashboardGraph from '@earn/components/challenge-detail/MMDashboard/Graph';
 import { withRouter } from "../../utils/router";
 
-import LoadingIndicator from "../../components/LoadingIndicator";
 import ChallengeHeader from "../../components/challenge-detail/Header";
 import Registrants from "../../components/challenge-detail/Registrants";
 import Submissions from "../../components/challenge-detail/Submissions";
@@ -449,7 +447,7 @@ class ChallengeDetailPageContainer extends React.Component {
         <div className={styled('outer-container')}>
           <div className={styled('challenge-detail-container')} role="main">
           <div className={styled('page')}>
-            <LoadingCircles className={styled('loading-indicator')}/>
+            <LoadingSpinner />
           </div>
           </div>
         </div>
@@ -644,7 +642,7 @@ class ChallengeDetailPageContainer extends React.Component {
             && (
               <div className={styled('page')}>
                 {
-                  !statisticsData ? <LoadingIndicator /> : 'Dashboard data is not available!'
+                  !statisticsData ? <LoadingCircles /> : 'Dashboard data is not available!'
                 }
               </div>
             )

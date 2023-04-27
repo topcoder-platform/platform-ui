@@ -2,11 +2,10 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import PT from "prop-types";
 import { connect } from "react-redux";
 
-import { LinkButton, Button } from "~/libs/ui";
+import { LinkButton, Button, LoadingSpinner } from "~/libs/ui";
 
 import * as lookupSelectors from "../../reducers/lookupSelectors";
 import * as myGigsSelectors from "../../reducers/my-gigs/selectors";
-import Loading from "../../components/my-gigs/Loading";
 import Empty from "../../components/my-gigs/Empty";
 import store from "../../store";
 import { GIGS_FILTER_STATUSES } from '../../constants';
@@ -160,7 +159,7 @@ const MyGigs = ({
             />
           )}
         {(checkingGigs || (loadingMyGigs && !currentGigs.myGigs)) && (
-          <Loading>We are processing your gigs data</Loading>
+          <LoadingSpinner inline message="We are processing your gigs data" />
         )}
       </div>
       <UpdateGigProfile

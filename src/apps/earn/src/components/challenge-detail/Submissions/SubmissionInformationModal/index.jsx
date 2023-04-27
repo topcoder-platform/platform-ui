@@ -4,10 +4,9 @@ import React from 'react';
 import PT from 'prop-types';
 import moment from 'moment';
 
-import { BaseModal, Button } from '~/libs/ui';
+import { BaseModal, Button, LoadingSpinner } from '~/libs/ui';
 import { ReactComponent as ArrowUp } from '@earn/assets/images/icon-arrow-up.svg';
 import { ReactComponent as ArrowDown } from '@earn/assets/images/icon-arrow-down.svg';
-import LoadingIndicator from '@earn/components/LoadingIndicator';
 import { styled as styledCss } from "@earn/utils";
 
 import styles from "./style.scss";
@@ -166,7 +165,7 @@ class SubmissionInformationModal extends React.Component {
         }
         {
           isLoadingSubmissionInformation && (
-            <LoadingIndicator />
+            <LoadingSpinner />
           )
         }
       </BaseModal>

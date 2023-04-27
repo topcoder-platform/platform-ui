@@ -240,7 +240,7 @@ const BugHuntIntakeForm: React.FC = () => {
 
     return (
         <>
-            <LoadingSpinner hide={!loading} type='Overlay' />
+            <LoadingSpinner hide={!loading} overlay />
             <IntakeFormsBreadcrumb
                 basicInfoRoute={WorkIntakeFormRoutes[WorkType.bugHunt].basicInfo}
                 workType={workBugHuntConfig.type}

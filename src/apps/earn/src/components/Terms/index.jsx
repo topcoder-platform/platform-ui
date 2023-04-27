@@ -9,11 +9,9 @@ import React from "react";
 import PT from "prop-types";
 import FocusTrap from "focus-trap-react";
 
-import { BaseModal, Button } from "~/libs/ui";
+import { BaseModal, Button, LoadingCircles } from "~/libs/ui";
 
-import LoadingIndicator from "../LoadingIndicator";
 import TermDetails from "./TermDetails";
-
 import styles from "./styles.module.scss";
 import { styled as styledCss } from "@earn/utils";
 const styled = styledCss(styles)
@@ -245,7 +243,7 @@ export default class Terms extends React.Component {
               <div className={styled("bottom-placeholder")} />
             )}
           >
-            {isLoadingTerms && <LoadingIndicator />}
+            {isLoadingTerms && <LoadingCircles />}
             {!isLoadingTerms && (
               <div className={styled("modal-content")} ref={this.terms} tabIndex="0">
                 <div
@@ -258,7 +256,7 @@ export default class Terms extends React.Component {
                   <div className={styled("mask-v top")} />
                   <div className={styled("mask-v bottom")} />
                   <div className={styled("desc")}>{description}</div>
-                  {checkingStatus && <LoadingIndicator />}
+                  {checkingStatus && <LoadingCircles />}
                   {!checkingStatus && terms.length > 1 && (
                     <div className={styled("tabs-outer")}>
                       <div className={styled("mask-h left")} />
@@ -319,7 +317,7 @@ export default class Terms extends React.Component {
                         <div className={styled("sub-title")}>{selectedTerm.title}</div>
                       )}
                       {loadingTermId === _.toString(selectedTerm.id) && (
-                        <LoadingIndicator />
+                        <LoadingCircles />
                       )}
                       {loadingTermId !== _.toString(selectedTerm.id) &&
                         details && (

@@ -11,16 +11,17 @@
 import _ from 'lodash';
 import React from 'react';
 import PT from 'prop-types';
+
 import config from '@earn/config';
-import LoadingIndicator from '@earn/components/LoadingIndicator';
 import { COMPETITION_TRACKS } from '@earn/utils/tc';
+import { styled as styledCss } from "@earn/utils";
+import { Button, LoadingCircles } from '~/libs/ui';
 
 import FilestackFilePicker from '../FilestackFilePicker';
-
 import Uploading from '../Uploading';
+
 import styles from "./styles.scss";
-import { styled as styledCss } from "@earn/utils";
-import { Button } from '~/libs/ui';
+
 const styled = styledCss(styles)
 
 /**
@@ -239,7 +240,7 @@ class Submit extends React.Component {
               </div>
               <div className={styled('right')}>
                 <div className={styled('file-picker-container')}>
-                  { isLoadingCommunitiesList ? (<LoadingIndicator />) : (
+                  { isLoadingCommunitiesList ? (<LoadingCircles />) : (
                     <FilestackFilePicker
                       mandatory
                       fileExtensions={['.zip']}

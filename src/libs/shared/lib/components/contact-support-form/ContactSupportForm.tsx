@@ -80,7 +80,7 @@ const ContactSupportForm: FC<ContactSupportFormProps> = (props: ContactSupportFo
 
     return (
         <>
-            <LoadingSpinner hide={!loading} type='Overlay' />
+            <LoadingSpinner hide={!loading} overlay />
             <div className={styles['contact-support-intro']}>
                 <p>
                     Hi

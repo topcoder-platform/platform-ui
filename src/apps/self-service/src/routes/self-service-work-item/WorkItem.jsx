@@ -38,9 +38,9 @@ import { WorkStatusItem } from "../../components/work-status-item";
 import { Forum } from "../../containers/forum";
 import { WorkFeedback } from "../../components/work-feedback";
 
-  
+
 import styles from "./styles.module.scss";
-  
+
   /**
    * Work Item Page
    */
@@ -59,45 +59,45 @@ const WorkItem = ({
     saveSurvey,
     setIsSavingSurveyDone,
 }) => {
-  
+
     const { workItemId } = useParams()
-  
+
     const [selectedTab, setSelectedTab] = useState("summary");
     const [showSurvey, setShowSurvey] = useState(false);
     const [messageCount, setMessageCount] = useState(undefined)
     const { profile } = useContext(profileContext)
     const navigate = useNavigate()
-  
+
     const workStatus = !!work
       ? workFactoryGetStatus(work)
       : undefined;
-  
+
     useEffect(() => {
       getWork(workItemId);
     }, [workItemId, getWork]);
-  
+
     const { summary, details, solutions, solutionsCount } = useMemo(
       () => workItem,
       [workItem]
     );
-  
+
     const isReviewPhaseEnded = useMemo(() => {
       if (work) {
         return workUtil.isReviewPhaseEnded(work);
       }
     }, [work]);
-  
+
     useEffect(() => {
       if (!work) {
         return;
       }
-  
+
       if (profile) {
         if (work.createdBy !== profile.handle) {
           navigate(ROUTES.HOME_PAGE);
         }
       }
-  
+
       if (selectedTab === "summary") {
         if (!summary) {
           getSummary(work);
@@ -124,44 +124,44 @@ const WorkItem = ({
       getDetails,
       isReviewPhaseEnded,
     ]);
-  
+
     useEffect(() => {
-  
+
       if (!work) {
         return;
       }
-  
+
       async function getMessageCount() {
         const messages = await messageGetUnreadCountAsync(work.id, profile.handle)
         setMessageCount(messages);
       }
-  
+
       getMessageCount()
         .catch(err => console.error(err))
-  
+
     }, [
       work,
       selectedTab,
       profile,
     ]);
-  
+
     useEffect(() => {
       if (!work) {
         return;
       }
-  
+
       if (isReviewPhaseEnded) {
         getSolutionsCount(work.id);
       }
     }, [isReviewPhaseEnded, getSolutionsCount, work]);
-  
+
     useEffect(() => {
       if (isSavingSurveyDone) {
         getSummary(work);
         setIsSavingSurveyDone(false);
       }
     }, [work, isSavingSurveyDone, setIsSavingSurveyDone, getSummary]);
-  
+
     // TODO: get routes from a provider
     const breadcrumb = [
       {
@@ -173,7 +173,7 @@ const WorkItem = ({
         url: "", // this isn't necessary bc it's not a link
       },
     ];
-  
+
     const navTabs = useMemo(
       () =>
         [
@@ -209,29 +209,29 @@ const WorkItem = ({
         messageCount,
       ]
     );
-  
+
     const onTabChange = useCallback((tabId) => {
       window.history.replaceState(window.history.state, "", `?tab=${tabId}`);
       setSelectedTab(tabId);
     }, []);
-  
+
     function saveFeedback(updatedCustomerFeedback) {
       const metadata = (work.metadata || []).filter(
         (item) => item.name !== ChallengeMetadataName.feedback
       );
-  
+
       metadata.push({
         name: ChallengeMetadataName.feedback,
         value: JSON.stringify(updatedCustomerFeedback),
       });
-  
+
       saveSurvey(work.id, metadata);
       setShowSurvey(false);
     }
-  
+
     return (
       <>
-        <LoadingSpinner type="Overlay" hide={!isLoadingWork && !isLoadingSolutions} />
+        <LoadingSpinner overlay hide={!isLoadingWork && !isLoadingSolutions} />
 
         <PageContent className={styles["pageContent"]}>
         <Breadcrumb items={breadcrumb} />
@@ -289,7 +289,7 @@ const WorkItem = ({
             {selectedTab === "history" && <div />}
         </div>
         </PageContent>
-  
+
         <WorkFeedback
           challenge={work}
           onClose={() => setShowSurvey(false)}
@@ -299,7 +299,7 @@ const WorkItem = ({
       </>
     );
   };
-  
+
   WorkItem.propTypes = {
     work: PT.shape(),
     workItem: PT.shape(),
@@ -314,7 +314,7 @@ const WorkItem = ({
     saveSurvey: PT.func,
     setIsSavingSurveyDone: PT.func,
   };
-  
+
   const mapStateToProps = (state) => {
     const {
       work,
@@ -323,7 +323,7 @@ const WorkItem = ({
       isLoadingSolutions,
       isSavingSurveyDone,
     } = state.work;
-  
+
     return {
       work,
       workItem,
@@ -332,7 +332,7 @@ const WorkItem = ({
       isSavingSurveyDone,
     };
   };
-  
+
   const mapDispatchToProps = {
     getWork,
     getSummary,

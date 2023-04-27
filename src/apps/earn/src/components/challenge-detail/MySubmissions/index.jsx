@@ -7,9 +7,8 @@ import PT from 'prop-types';
 import _ from 'lodash';
 
 import { goToLogin } from '@earn/utils/tc';
-import LoadingIndicator from '@earn/components/LoadingIndicator';
 import { isTokenExpired } from "@earn/utils/token";
-import { BaseModal, Button } from '~/libs/ui';
+import { BaseModal, Button, LoadingCircles } from '~/libs/ui';
 
 import SubmissionsList from './SubmissionsList';
 import SubmissionsDetail from './SubmissionsDetail';
@@ -65,7 +64,7 @@ class MySubmissionsView extends React.Component {
     const { selectedSubmission, submissionsSortDetail } = this.state;
 
     if (!_.isEmpty(loadingMMSubmissionsForChallengeId)) {
-      return <div className={styles.loading}><LoadingIndicator /></div>;
+      return <div className={styles.loading}><LoadingCircles /></div>;
     }
 
     return (

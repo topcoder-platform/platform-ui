@@ -19,6 +19,6 @@ export const Normal: Story = {
 
 export const Overlay: Story = {
     args: {
-        type: 'Overlay',
+        overlay: true,
     },
 }

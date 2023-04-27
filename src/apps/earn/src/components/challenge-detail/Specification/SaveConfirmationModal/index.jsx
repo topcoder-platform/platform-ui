@@ -1,7 +1,6 @@
-import LoadingIndicator from '@earn/components/LoadingIndicator';
 import PT from 'prop-types';
 
-import { BaseModal, Button } from '~/libs/ui';
+import { BaseModal, Button, LoadingCircles } from '~/libs/ui';
 
 import styles from './style.scss';
 
@@ -18,7 +17,7 @@ export default function SaveConfirmationModal({
         Saving The Challenge
       </h1>
       {
-        saving ? <LoadingIndicator /> : (
+        saving ? <LoadingCircles /> : (
           <Button
             primary
             size='md'

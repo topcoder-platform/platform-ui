@@ -4,10 +4,12 @@
 
 import React from "react";
 import PT from "prop-types";
-import LoadingIndicator from "../LoadingIndicator";
+
+import { styled as styledCss } from "@earn/utils";
+import { LoadingCircles } from "~/libs/ui";
 
 import styles from "./TermDetails.module.scss";
-import { styled as styledCss } from "@earn/utils";
+
 const styled = styledCss(styles);
 
 export default class TermDetails extends React.Component {
@@ -54,14 +56,14 @@ export default class TermDetails extends React.Component {
         )}
         {details.agreeabilityType !== "Electronically-agreeable" &&
           details.docusignTemplateId === loadingDocuSignUrl && (
-            <LoadingIndicator />
+            <LoadingCircles />
           )}
         {details.agreeabilityType !== "Electronically-agreeable" &&
           details.docusignTemplateId &&
           !loadingDocuSignUrl &&
           docuSignUrl && (
             <div>
-              {loadingFrame && <LoadingIndicator />}
+              {loadingFrame && <LoadingCircles />}
               <iframe
                 onLoad={this.frameLoaded}
                 src={docuSignUrl}
