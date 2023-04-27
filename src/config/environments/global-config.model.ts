@@ -29,8 +29,9 @@ export interface GlobalConfig {
         ACCOUNT_SETTINGS: string
         UNIVERSAL_NAV: string
     }
-    MEMBER_VERIFY_LOOKER: number,
+    MEMBER_VERIFY_LOOKER: number
     ENABLE_TCA_CERT_MONETIZATION: boolean
+    ENABLE_EMSI_SKILLS: boolean
     VANILLA_FORUM: {
         ACCESS_TOKEN: string
         V2_URL: string

@@ -1,7 +1,9 @@
 import {
     FC,
+    forwardRef,
     MutableRefObject,
     ReactNode,
+    RefAttributes,
     useMemo,
     useRef,
 } from 'react'
@@ -34,7 +36,8 @@ interface CertificateViewProps {
     provider: string
 }
 
-const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) => {
+const CertificateView: FC<CertificateViewProps & RefAttributes<HTMLDivElement>>
+= forwardRef<HTMLDivElement, CertificateViewProps>((props, ref) => {
     const coursePath: string = getCoursePath(props.provider, props.certification)
     const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
 
@@ -111,6 +114,7 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
             </PageTitle>
 
             <CertificatePageLayout
+                ref={ref}
                 certificateElRef={certificateElRef}
                 fallbackBackUrl={coursePath}
                 fullScreenCertLayout={!certificateNotFoundError && props.fullScreenCertLayout}
@@ -128,6 +132,6 @@ const CertificateView: FC<CertificateViewProps> = (props: CertificateViewProps) 
             </CertificatePageLayout>
         </>
     )
-}
+})
 
 export default CertificateView

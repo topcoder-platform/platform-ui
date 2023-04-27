@@ -121,7 +121,7 @@ const CertificationDetailsPage: FC<{}> = () => {
                     />
                 </>
             )
-        ) : <></>
+        ) : undefined
     }
 
     function renderSidebar(): ReactNode {

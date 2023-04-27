@@ -3,4 +3,5 @@ export interface BreadcrumbItemModel {
     name: string
     onClick?: (item: BreadcrumbItemModel) => void
     url: string
+    state?: any
 }

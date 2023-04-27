@@ -65,13 +65,13 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
     }
 
     const completionTimeRange: TCACertificationCompletionTimeRange = useHoursEstimateToRange(
-        props.certification.course.estimatedCompletionTimeValue,
+        props.certification.course?.estimatedCompletionTimeValue,
     )
 
     return (
         <div className={classNames(styles.wrap, !courseEnabled && 'soon', isCompleted && styles.completed)}>
             <div className={styles.cardHeader}>
-                <CourseBadge type={props.certification.certificationCategory.track ?? 'DEV'} />
+                <CourseBadge type={props.certification.certificationCategory?.track ?? 'DEV'} />
                 <div className={styles.cardHeaderTitleWrap}>
                     <p className='body-medium-medium'>{clearFCCCertificationTitle(props.certification.title)}</p>
                     <div className={styles.subTitleWrap}>
@@ -102,7 +102,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                 {(isInProgress || isCompleted) && (
                     <ProgressBar
                         progress={(isCompleted ? 100 : (props.progress?.courseProgressPercentage ?? 0)) / 100}
-                        track={props.certification.certificationCategory.track}
+                        track={props.certification.certificationCategory?.track}
                     />
                 )}
                 {!isInProgress && !isCompleted && <div className={styles.cardHeaderDivider} />}
@@ -117,6 +117,7 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                 courseKey={props.certification.course.key}
                 expandCount={2}
                 skills={props.certification.course.skills}
+                emsiSkills={props.certification.course.emsiSkills}
                 theme={isCompleted ? 'gray' : 'white'}
             />
 

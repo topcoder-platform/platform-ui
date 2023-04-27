@@ -11,4 +11,5 @@ export const LearnConfigDefault: LearnConfigModel = {
         value: 'certificate-container',
     },
     CLIENT: 'https://fcc.topcoder-dev.com:4431',
+    REQUIRE_DICE_ID: `${process.env.REACT_APP_TCA_REQUIRE_DICE_ID}` === 'true',
 }

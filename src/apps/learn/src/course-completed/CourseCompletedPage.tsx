@@ -1,5 +1,5 @@
 import { FC, useContext, useEffect, useMemo } from 'react'
-import { NavigateFunction, Params, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Params, useParams } from 'react-router-dom'
 
 import {
     Breadcrumb,
@@ -19,12 +19,12 @@ import {
     useGetCourses,
     useGetTCACertification,
     useGetUserCertificationProgress,
-    useLearnBreadcrumb,
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
     useTCACertificationCheckCompleted,
 } from '../lib'
-import { getCoursePath, getTCACertificationPath, LEARN_PATHS } from '../learn.routes'
+import { getCoursePath, LEARN_PATHS } from '../learn.routes'
+import { CoursePageContextValue, useCoursePageContext } from '../course-page-wrapper'
 
 import { CourseView } from './course-view'
 import { TCACertificationView } from './tca-certification-view'
@@ -32,7 +32,7 @@ import styles from './CourseCompletedPage.module.scss'
 
 const CourseCompletedPage: FC<{}> = () => {
 
-    const navigate: NavigateFunction = useNavigate()
+    const { buildBreadcrumbs, localNavigate }: CoursePageContextValue = useCoursePageContext()
     const routeParams: Params<string> = useParams()
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
     const providerParam: string = textFormatGetSafeString(routeParams.provider)
@@ -94,45 +94,24 @@ const CourseCompletedPage: FC<{}> = () => {
         tcaCertifCompletedCheckReady,
     ])
 
-    const location: any = useLocation()
-
-    const breadcrumbItems: BreadcrumbItemModel[] = useMemo(() => {
-        const bItems: BreadcrumbItemModel[] = [
-            {
-                name: courseData?.title ?? '',
-                url: coursePath,
-            },
-            {
-                name: 'Congratulations!',
-                url: LEARN_PATHS.completed,
-            },
-        ]
-
-        // if coming path is from TCA certification details page
-        // then we need to add the certification to the navi list
-        if (location.state?.tcaCertInfo) {
-            bItems.unshift({
-                name: location.state.tcaCertInfo.title,
-                url: getTCACertificationPath(location.state.tcaCertInfo.dashedName),
-            })
-        }
-
-        return bItems
-    }, [
-        location.state,
-        courseData?.title,
-        coursePath,
-    ])
-
-    const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb(breadcrumbItems)
+    const breadcrumbs: Array<BreadcrumbItemModel> = useMemo(() => buildBreadcrumbs([
+        {
+            name: courseData?.title ?? '',
+            url: coursePath,
+        },
+        {
+            name: 'Congratulations!',
+            url: LEARN_PATHS.completed,
+        },
+    ]), [buildBreadcrumbs, courseData?.title, coursePath])
 
     useEffect(() => {
         if (ready && progress?.status !== UserCertificationProgressStatus.completed) {
-            navigate(coursePath)
+            localNavigate(coursePath)
         }
     }, [
         coursePath,
-        navigate,
+        localNavigate,
         progress,
         ready,
     ])
@@ -147,7 +126,7 @@ const CourseCompletedPage: FC<{}> = () => {
 
             {ready && courseData && (
                 <>
-                    <Breadcrumb items={breadcrumb} />
+                    <Breadcrumb items={breadcrumbs} />
                     <div className={styles['main-wrap']}>
                         <div className={styles['course-frame']}>
                             {tcaCertificationName && tcaCertification ? (

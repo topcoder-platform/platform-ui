@@ -4,7 +4,7 @@ import {
     FormCard,
     Page,
 } from '~/libs/ui'
-import { GenericDataObject, textFormatMoneyLocaleString } from '~/libs/shared'
+import { GenericDataObject, isJsonString, textFormatMoneyLocaleString } from '~/libs/shared'
 
 import { BugHuntPricingConfig } from '../../../config'
 
@@ -19,6 +19,8 @@ import {
 import {
     ActivateWorkRequest,
     Challenge,
+    ChallengeMetadata,
+    ChallengeMetadataName,
     CreateWorkRequest,
     CustomerPayment,
     CustomerPaymentRequest,
@@ -43,11 +45,21 @@ import {
     WorkTypeConfig,
     WorkTypeConfigs,
 } from './work-store'
+import { findMetadata } from './work-factory/work.factory'
 
 export async function createAsync(type: WorkType): Promise<Challenge> {
     const workConfig: WorkTypeConfig = WorkTypeConfigs[type]
     const body: CreateWorkRequest = workFactoryBuildCreateReqeuest(workConfig)
-    return workStoreCreateAsync(body)
+    const result: Challenge = await workStoreCreateAsync(body)
+
+    const intakeFormResponse: ChallengeMetadata | undefined
+        = findMetadata(result, ChallengeMetadataName.intakeForm) || undefined
+    if (!!intakeFormResponse?.value && !isJsonString(intakeFormResponse.value)) {
+        const bodyIntakeForm: ChallengeMetadata | undefined = findMetadata(body, ChallengeMetadataName.intakeForm)
+        intakeFormResponse.value = bodyIntakeForm?.value || '{}'
+    }
+
+    return result
 }
 
 export async function createCustomerPaymentAsync(

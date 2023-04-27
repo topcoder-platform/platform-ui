@@ -10,7 +10,7 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { NavigateFunction, Params, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Params, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
 import {
@@ -39,9 +39,7 @@ import {
     useGetCourses,
     useGetLesson,
     useGetUserCertificationProgress,
-    useLearnBreadcrumb,
     userCertificationProgressAutocompleteCourse,
-    userCertificationProgressCompleteCourseAsync,
     UserCertificationProgressProviderData,
     userCertificationProgressStartAsync,
     UserCertificationProgressStatus,
@@ -52,9 +50,11 @@ import {
     getCertificationCompletedPath,
     getCoursePath,
     getLessonPathFromModule,
-    getTCACertificationPath,
 } from '../learn.routes'
+import { LearnConfig } from '../config'
+import { CoursePageContextValue, useCoursePageContext } from '../course-page-wrapper'
 
+import { useCheckAndMarkCourseCompleted } from './hooks/use-mark-course-completed'
 import { FccFrame } from './fcc-frame'
 import { FccSidebar } from './fcc-sidebar'
 import { TitleNav } from './title-nav'
@@ -68,7 +68,6 @@ const FreeCodeCamp: FC<{}> = () => {
         profile,
     }: ProfileContextData = useContext(profileContext)
 
-    const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
     const providerParam: string = textFormatGetSafeString(routeParams.provider)
 
@@ -78,6 +77,8 @@ const FreeCodeCamp: FC<{}> = () => {
         = useState(textFormatGetSafeString(routeParams.module))
     const [lessonParam, setLessonParam]: [string, Dispatch<SetStateAction<string>>]
         = useState(textFormatGetSafeString(routeParams.lesson))
+    const [fccFrameReady, setFccFrameReady]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState(false)
 
     const {
         certificationProgress: certificateProgress,
@@ -106,40 +107,25 @@ const FreeCodeCamp: FC<{}> = () => {
 
     const module: string = textFormatGetSafeString(lesson?.module.title)
 
-    const location: any = useLocation()
+    const { buildBreadcrumbs, localNavigate }: CoursePageContextValue = useCoursePageContext()
 
-    const breadcrumbItems: BreadcrumbItemModel[] = useMemo(() => {
-        const bItems: BreadcrumbItemModel[] = [
-            {
-                name: textFormatGetSafeString(lesson?.course.title),
-                url: getCoursePath(providerParam, certificationParam),
-            },
-            {
-                name: module,
-                url: getLessonPathFromModule(providerParam, certificationParam, module, lessonParam),
-            },
-        ]
-
-        // if coming path is from TCA certification details page
-        // then we need to add the certification to the navi list
-        if (location.state?.tcaCertInfo) {
-            bItems.unshift({
-                name: location.state.tcaCertInfo.title,
-                url: getTCACertificationPath(location.state.tcaCertInfo.dashedName),
-            })
-        }
-
-        return bItems
-    }, [
+    const breadcrumbs: BreadcrumbItemModel[] = useMemo(() => buildBreadcrumbs([
+        {
+            name: textFormatGetSafeString(lesson?.course.title),
+            url: getCoursePath(providerParam, certificationParam),
+        },
+        {
+            name: module,
+            url: getLessonPathFromModule(providerParam, certificationParam, module, lessonParam),
+        },
+    ]), [
+        buildBreadcrumbs,
         certificationParam,
-        lesson,
+        lesson?.course.title,
         lessonParam,
-        location.state,
         module,
         providerParam,
     ])
-
-    const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb(breadcrumbItems)
 
     const currentModuleData: LearnModule | undefined
         = useMemo(() => courseData?.modules.find(d => d.key === moduleParam), [courseData, moduleParam])
@@ -166,18 +152,13 @@ const FreeCodeCamp: FC<{}> = () => {
             moduleParam,
             nextStep.dashedName,
         )
-        navigate(lessonPath, {
-            state: {
-                tcaCertInfo: location.state?.tcaCertInfo,
-            },
-        })
+        localNavigate(lessonPath)
     }, [
         certificationParam,
         currentModuleData,
         currentStepIndex,
         moduleParam,
-        location.state,
-        navigate,
+        localNavigate,
         providerParam,
     ])
 
@@ -207,6 +188,8 @@ const FreeCodeCamp: FC<{}> = () => {
     }
 
     const handleFccLessonReady: (lessonPath: string) => void = useCallback((lessonPath: string) => {
+        // mark fcc frame as being ready once we get the first "lesson ready"
+        setFccFrameReady(true)
 
         const [nLessonPath, modulePath, coursePath]: Array<string> = lessonPath.replace(/\/$/, '')
             .split('/')
@@ -267,10 +250,24 @@ const FreeCodeCamp: FC<{}> = () => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const handleFccLessonComplete: (challengeUuid: string) => void = useCallback(debounce((challengeUuid: string) => {
+        let lessonName: string = ''
+        let moduleName: string = ''
+
+        // Search in course's meta data, to determine the correct lesson name and module name based on the challengeUuid
+        courseData!.modules.forEach(m => {
+            const lessonData: LearnLesson | undefined = m.lessons.find(l => l.id === challengeUuid)
+
+            if (!lessonData) {
+                return
+            }
+
+            lessonName = lessonData.dashedName
+            moduleName = m.dashedName
+        })
 
         const currentLesson: { [key: string]: string } = {
-            lesson: lessonParam,
-            module: moduleParam,
+            lesson: lessonName,
+            module: moduleName,
             uuid: challengeUuid,
         }
 
@@ -353,11 +350,7 @@ const FreeCodeCamp: FC<{}> = () => {
                 certificationParam,
             )
 
-            navigate(completedPath, {
-                state: {
-                    tcaCertInfo: location.state?.tcaCertInfo,
-                },
-            })
+            localNavigate(completedPath)
             return
         }
 
@@ -388,62 +381,23 @@ const FreeCodeCamp: FC<{}> = () => {
             firstIncompleteLesson.dashedName ?? '',
         )
 
-        navigate(nextLessonPath, {
-            state: {
-                tcaCertInfo: location.state?.tcaCertInfo,
-            },
-        })
+        localNavigate(nextLessonPath)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, 30), [
         certificateProgress,
         certificationParam,
         courseData?.modules,
         providerParam,
-        location.state,
+        localNavigate,
     ])
 
-    useEffect(() => {
-
-        // if we don't yet have the user's handle,
-        // or if the cert isn't complete,
-        // or the cert isn't in progress,
-        // there's nothing to do
-        if (
-            !profile?.handle
-            || certificateProgress?.certificationProgressPercentage !== 100
-            || certificateProgress?.status !== UserCertificationProgressStatus.inProgress
-        ) {
-            return
-        }
-
-        // it's safe to complete the course
-        userCertificationProgressCompleteCourseAsync(
-            certificateProgress.id,
-            certificationParam,
-            profile.handle,
-            providerParam,
-        )
-            .then(setCertificateProgress)
-            .then(() => {
-                const completedPath: string = getCertificationCompletedPath(
-                    providerParam,
-                    certificationParam,
-                )
-                navigate(completedPath, {
-                    state: {
-                        tcaCertInfo: location.state?.tcaCertInfo,
-                    },
-                })
-            })
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
-        certificateProgress,
-        certificationParam,
-        profile?.handle,
-        profile?.userId,
+    useCheckAndMarkCourseCompleted(
+        !!profile?.userId,
         providerParam,
-        location.state,
-    ])
+        certificateProgress,
+        profile?.handle,
+        setCertificateProgress,
+    )
 
     useEffect(() => {
         if (courseDataReady && courseData) {
@@ -459,11 +413,7 @@ const FreeCodeCamp: FC<{}> = () => {
                     moduleParamData.lessons[0].dashedName,
                 )
 
-                navigate(lessonPath, {
-                    state: {
-                        tcaCertInfo: location.state?.tcaCertInfo,
-                    },
-                })
+                localNavigate(lessonPath)
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -472,9 +422,9 @@ const FreeCodeCamp: FC<{}> = () => {
         courseData,
         courseDataReady,
         lessonParam,
+        localNavigate,
         moduleParam,
         providerParam,
-        location.state,
     ])
 
     useEffect(() => {
@@ -518,7 +468,7 @@ const FreeCodeCamp: FC<{}> = () => {
         // and if the user has accepted the academic honesty policy,
         // the user is permitted to take the course, so there's nothing to do.
         if (isLoggedIn
-            && (!profile?.isWipro || !!profile?.diceEnabled)
+            && (!LearnConfig.REQUIRE_DICE_ID || !profile?.isWipro || !!profile?.diceEnabled)
             && !!certificateProgress?.academicHonestyPolicyAcceptedAt) {
             return
         }
@@ -530,20 +480,15 @@ const FreeCodeCamp: FC<{}> = () => {
             providerParam,
             certificationParam,
         )
-        navigate(coursePath, {
-            state: {
-                tcaCertInfo: location.state?.tcaCertInfo,
-            },
-        })
+        localNavigate(coursePath)
     }, [
         ready,
         certificateProgress,
         profile,
         providerParam,
         certificationParam,
-        navigate,
+        localNavigate,
         isLoggedIn,
-        location.state,
     ])
 
     /**
@@ -576,7 +521,7 @@ const FreeCodeCamp: FC<{}> = () => {
 
             <LoadingSpinner hide={ready} />
             <div className={styles.wrapBreadcrumb}>
-                <Breadcrumb items={breadcrumb} />
+                <Breadcrumb items={breadcrumbs} />
                 {
                     lesson && profile?.roles?.includes(UserRole.tcaAdmin) && (
                         <Button
@@ -610,12 +555,16 @@ const FreeCodeCamp: FC<{}> = () => {
                             onNavigate={handleNavigate}
                         />
                         <hr />
-                        <FccFrame
-                            lesson={lesson}
-                            onFccLessonChange={handleFccLessonReady}
-                            onFccLessonComplete={handleFccLessonComplete}
-                            onFccLastLessonNavigation={handleFccLastLessonNavigation}
-                        />
+
+                        <div className={styles['course-iframe']}>
+                            <LoadingSpinner className={styles['course-frame-loader']} hide={fccFrameReady} />
+                            <FccFrame
+                                lesson={lesson}
+                                onFccLessonChange={handleFccLessonReady}
+                                onFccLessonComplete={handleFccLessonComplete}
+                                onFccLastLessonNavigation={handleFccLastLessonNavigation}
+                            />
+                        </div>
                     </div>
                 </div>
             )}

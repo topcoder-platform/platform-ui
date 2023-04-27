@@ -3,7 +3,7 @@
  *
  * Centered Loading Spinner with back overlay
  */
-import { FC } from 'react'
+import { FC, forwardRef, RefAttributes } from 'react'
 import classNames from 'classnames'
 
 import { LoadingCircles } from '../loading-circles'
@@ -18,13 +18,15 @@ export interface LoadingSpinnerProps {
     message?: string
 }
 
-const LoadingSpinner: FC<LoadingSpinnerProps> = (props: LoadingSpinnerProps) => {
+const LoadingSpinner: FC<LoadingSpinnerProps & RefAttributes<HTMLDivElement>>
+= forwardRef<HTMLDivElement, LoadingSpinnerProps>((props, ref) => {
     if (!!props.hide) {
         return <></>
     }
 
     return (
         <div
+            ref={ref}
             className={classNames(
                 props.className,
                 styles['loading-spinner'],
@@ -36,6 +38,6 @@ const LoadingSpinner: FC<LoadingSpinnerProps> = (props: LoadingSpinnerProps) => 
             {props.message && <div className={styles.message}>{props.message}</div>}
         </div>
     )
-}
+})
 
 export default LoadingSpinner
