@@ -4,7 +4,7 @@
 */
 
 import _ from 'lodash';
-import Editor, { MODES as EDITOR_MODES } from '@earn/components/Editor/MultiEditor';
+import Editor, { MODES as EDITOR_MODES } from '../../Editor/MultiEditor';
 import EditorToolbar from '@earn/components/Editor/Toolbar';
 import Previewer from '@earn/components/Editor/Previewer';
 import ToolbarConnector from '@earn/components/Editor/Connector';

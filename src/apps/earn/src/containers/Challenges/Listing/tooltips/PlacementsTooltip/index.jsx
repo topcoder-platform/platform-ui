@@ -1,9 +1,11 @@
-import Tooltip from "../../../../../components/Tooltip";
-import Prize from "./Prize";
+import { Tooltip } from "~/libs/ui";
+import { styled as styledCss } from "@earn/utils";
+
 import * as utils from "../../../../../utils";
 
+import Prize from "./Prize";
 import styles from "./styles.scss";
-import { styled as styledCss } from "@earn/utils";
+
 const styled = styledCss(styles)
 
 const PlacementsTooltip = ({
@@ -46,7 +48,10 @@ const PlacementsTooltip = ({
   );
 
   return (
-    <Tooltip placement={placement} overlay={<Content />}>
+    <Tooltip
+        place={placement}
+        content={<Content />}
+    >
       {children}
     </Tooltip>
   );

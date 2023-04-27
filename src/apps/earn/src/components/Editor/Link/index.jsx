@@ -3,9 +3,8 @@
  * Renders links within the draft component including a popup Tooltip to edit
  */
 import PT from "prop-types";
-import React from "react";
 
-import Tooltip from "../../Tooltip";
+import { Tooltip } from "~/libs/ui";
 
 import Popup from "./Popup";
 
@@ -22,12 +21,7 @@ const Link = ({ children, contentState, entityKey, updateEntityData }) => {
   return (
     <span>
       <Tooltip
-        align={{
-          offset: [0, 5],
-        }}
         content={popup}
-        suppressDiv
-        trigger={["click", "hover"]}
         defaultVisible={triggerPopup}
       >
         <a href={href} target="_blank" rel="noopener noreferrer">

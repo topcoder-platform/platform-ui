@@ -15,7 +15,7 @@ import {
 } from "../Tags";
 
 import { COMPETITION_TRACKS } from "../../../utils/tc";
-import VerifiedTag from "../../challenge-listing/VerifiedTag";
+import VerifiedTag from "../VerifiedTag";
 import { calculateScore } from "../../../utils/challenge-listing/helper";
 import { styled as styledCss } from "../../../utils";
 

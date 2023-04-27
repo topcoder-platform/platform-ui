@@ -1,3 +1,4 @@
+@import '@libs/ui/styles/includes';
 @import "@earn/styles/variables";
 @import "@earn/styles/mixins";
 
@@ -5,11 +6,12 @@ $prize-space-10: $base-unit * 2;
 
 .prizes-tooltip {
   max-width: 480px;
-  padding: 15px;
+  padding: 7px;
   overflow: hidden;
 
   .placements {
     display: flex;
+    gap: $sp-6;
   }
 
   .checkpoint-message {

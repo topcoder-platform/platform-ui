@@ -94,9 +94,9 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                                 'learning per day',
                             ])}
                             place='bottom'
-                            trigger={<IconOutline.InformationCircleIcon />}
-                            triggerOn='hover'
-                        />
+                        >
+                            <IconOutline.InformationCircleIcon className='tooltip-icon' />
+                        </Tooltip>
                     </span>
                 </li>
                 {!props.certProgress && (
@@ -123,9 +123,9 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                                             'One-off, non-recurring payment',
                                         ])}
                                         place='bottom'
-                                        trigger={<IconOutline.InformationCircleIcon />}
-                                        triggerOn='hover'
-                                    />
+                                    >
+                                        <IconOutline.InformationCircleIcon className='tooltip-icon' />
+                                    </Tooltip>
                                 </>
                             ) : (
                                 <>

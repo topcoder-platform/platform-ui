@@ -1,12 +1,13 @@
-import React from "react";
-import PT from "prop-types";
-import Tooltip from "../../../../../components/Tooltip";
-import * as util from "../../../../../utils/challenge";
 import _ from "lodash";
 import moment from "moment";
 
-import styles from "./styles.scss";
 import { styled as styledCss } from "@earn/utils";
+import { Tooltip } from "~/libs/ui";
+
+import * as util from "../../../../../utils/challenge";
+
+import styles from "./styles.scss";
+
 const styled = styledCss(styles)
 
 const ProgressTooltip = ({ children, challenge, placement }) => {
@@ -115,7 +116,10 @@ const ProgressTooltip = ({ children, challenge, placement }) => {
   };
 
   return (
-    <Tooltip placement={placement} overlay={<Content c={challenge} />}>
+    <Tooltip
+        place={placement}
+        content={<Content c={challenge}
+    />}>
       {children}
     </Tooltip>
   );

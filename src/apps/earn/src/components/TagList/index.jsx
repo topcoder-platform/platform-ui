@@ -1,5 +1,4 @@
-import styles from "./styles.scss";
-import React, {
+import {
   useCallback,
   useEffect,
   useMemo,
@@ -7,8 +6,10 @@ import React, {
   useState,
 } from "react";
 import PT from "prop-types";
-import cn from "classnames";
-import Tooltip from "rc-tooltip";
+
+import { Tooltip } from "~/libs/ui";
+
+import styles from "./styles.scss";
 
 /**
  * Displays a tooltip with tags that are not initially shown.
@@ -33,10 +34,8 @@ const TagsTooltip = ({ children, onClickTag, renderTag, tags }) => {
   );
   return (
     <Tooltip
-      mouseEnterDelay={0.15}
-      overlay={overlay}
-      overlayClassName={styles.moreTagsTooltip}
-      placement="bottom"
+      content={overlay}
+      place="bottom"
     >
       {children}
     </Tooltip>

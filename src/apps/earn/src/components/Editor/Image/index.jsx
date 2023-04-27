@@ -3,9 +3,8 @@
  * Renders images within the draft component including a popup edit button and modal
  */
 import PT from "prop-types";
-import React from "react";
 
-import Tooltip from "../../Tooltip";
+import { Tooltip } from "~/libs/ui";
 
 import Popup from "./Popup";
 
@@ -28,12 +27,7 @@ const Image = ({ children, contentState, entityKey, updateEntityData }) => {
   return (
     <span>
       <Tooltip
-        align={{
-          offset: [0, 5],
-        }}
         content={popup}
-        suppressDiv
-        trigger={["click", "hover"]}
         defaultVisible={triggerModal}
       >
         <img

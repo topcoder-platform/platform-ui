@@ -73,11 +73,8 @@
                 position: relative;
                 top: 2px;
 
-                :global(.tooltip-icon) {
-
-                    svg {
-                        @include icon-md;
-                    }
+                svg:global(.tooltip-icon) {
+                    @include icon-md;
                 }
             }
         }

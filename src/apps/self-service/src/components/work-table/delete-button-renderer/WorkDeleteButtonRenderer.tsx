@@ -41,17 +41,13 @@ const WorkDeleteButtonRenderer: (work: Work) => JSX.Element | undefined
 
         return (
             <>
-                <Tooltip
-                    content='Delete'
-                    place='bottom'
-                    trigger={(
-                        <Button
-                            icon={IconOutline.TrashIcon}
-                            onClick={toggleConfirmation}
-                            tabIndex={-1}
-                        />
-                    )}
-                />
+                <Tooltip content='Delete'>
+                    <Button
+                        icon={IconOutline.TrashIcon}
+                        onClick={toggleConfirmation}
+                        tabIndex={-1}
+                    />
+                </Tooltip>
 
                 <ConfirmModal
                     title='Delete Draft'

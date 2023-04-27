@@ -7,14 +7,13 @@ import _ from 'lodash';
 import moment from 'moment';
 import PT from 'prop-types';
 
-import { BaseModal, LinkButton } from '~/libs/ui';
+import { BaseModal, LinkButton, Tooltip } from '~/libs/ui';
 import { getService } from '@earn/services/submissions';
 import sortList from '@earn/utils/challenge-detail/sort';
 import { ReactComponent as IconClose } from '@earn/assets/images/icon-close-green.svg';
 import { ReactComponent as DateSortIcon } from '@earn/assets/images/icon-date-sort.svg';
 import { ReactComponent as SortIcon } from '@earn/assets/images/icon-sort.svg';
 
-import Tooltip from '../../Tooltip';
 import { ReactComponent as IconFail } from '../../icons/failed.svg';
 import { ReactComponent as DownloadIcon } from '../../../SubmissionManagement/Icons/IconSquareDownload.svg';
 import { ReactComponent as ZoomIcon } from '../../../SubmissionManagement/Icons/IconZoom.svg';
@@ -418,7 +417,7 @@ class SubmissionsListView extends React.Component {
                     >
                       <div className={styles['mobile-header']}>Provisional Score</div>
                       {(provisionalScore < 0) ? (
-                        <Tooltip content="Failed Submission" className="toolTipPadding">
+                        <Tooltip content="Failed Submission" className="toolTipPadding" place="top">
                           <IconFail />
                         </Tooltip>
                       ) : (<span>{provisionalScore}</span>)}

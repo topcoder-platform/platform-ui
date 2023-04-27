@@ -1,8 +1,10 @@
-import React from "react";
 import PT from "prop-types";
-import Tooltip from "../../../../../../components/Tooltip";
-import { GIG_STATUS_TOOLTIP } from "../../../../../../constants";
 import { keys } from "lodash";
+
+import { Tooltip } from "~/libs/ui";
+
+import { GIG_STATUS_TOOLTIP } from "../../../../../../constants";
+
 import styles from "./styles.scss";
 
 const StatusTooltip = ({ children }) => {
@@ -22,7 +24,7 @@ const StatusTooltip = ({ children }) => {
   );
 
   return (
-    <Tooltip overlay={<Content />} placement="bottom">
+    <Tooltip content={<Content />} place="bottom">
       {children}
     </Tooltip>
   );

@@ -30,28 +30,6 @@
   }
 }
 
-.moreTagsTooltip:global(.rc-tooltip) {
-  max-width: 206px;
-  opacity: 1;
-
-  &:global(.rc-tooltip-placement-bottom) {
-    :global(.rc-tooltip-arrow) {
-      border-bottom-color: $body-color;
-    }
-  }
-
-  :global(.rc-tooltip-content) {
-    background-color: transparent;
-  }
-
-  :global(.rc-tooltip-inner) {
-    border-radius: 5px;
-    padding: 6px 10px 10px;
-    background-color: $body-color;
-    box-shadow: none;
-  }
-}
-
 .tooltip-tag-list {
   display: flex;
   flex-wrap: wrap;

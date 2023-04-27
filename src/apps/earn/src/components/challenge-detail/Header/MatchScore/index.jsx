@@ -1,5 +1,5 @@
 import PT from 'prop-types';
-import { DevelopmentTrackEventTag } from '@earn/components/challenge-detail/tags';
+import { DevelopmentTrackEventTag } from '../../Tags';
 
 import styles from './style.scss';
 

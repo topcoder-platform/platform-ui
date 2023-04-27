@@ -115,14 +115,11 @@ const FormCardSet: React.FC<FormCardSetProps> = (props: FormCardSetProps) => {
                                                             )
                                                             : <span className='body-main'>{row.text}</span>}
                                                         {row.infoIcon && (
-                                                            <Tooltip
-                                                                content={row.tooltipText}
-                                                                trigger={(
-                                                                    <IconSolid.InformationCircleIcon
-                                                                        className={styles['info-icon']}
-                                                                    />
-                                                                )}
-                                                            />
+                                                            <Tooltip content={row.tooltipText}>
+                                                                <IconSolid.InformationCircleIcon
+                                                                    className={styles['info-icon']}
+                                                                />
+                                                            </Tooltip>
                                                         )}
                                                     </span>
                                                 )}

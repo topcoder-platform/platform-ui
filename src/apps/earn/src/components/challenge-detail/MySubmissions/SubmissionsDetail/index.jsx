@@ -5,17 +5,17 @@
 import React from 'react';
 import PT from 'prop-types';
 import _ from 'lodash';
-import cn from 'classnames';
+
 import sortList from '@earn/utils/challenge-detail/sort';
-import Tooltip from '@earn/components/Tooltip';
-import { ReactComponent as IconClose } from '@earn/assets/images/icon-close-green.svg';
-
 import { ReactComponent as ArrowDown } from '@earn/assets/images/arrow-down.svg';
-import { ReactComponent as IconFail } from '../../icons/failed.svg';
 import { styled as styledCss } from '@earn/utils';
-import styles from './styles.scss';
-const styled = styledCss(styles);
+import { Tooltip } from '~/libs/ui';
 
+import { ReactComponent as IconFail } from '../../icons/failed.svg';
+
+import styles from './styles.scss';
+
+const styled = styledCss(styles);
 
 class SubmissionsDetailView extends React.Component {
   constructor(props) {
@@ -333,7 +333,7 @@ class SubmissionsDetailView extends React.Component {
                     <div className={styles['mobile-header']}>Score</div>
 
                     {(score < 0) ? (
-                      <Tooltip content="Failed Submission" className="toolTipPadding">
+                      <Tooltip content="Failed Submission" className="toolTipPadding" place="top">
                         <IconFail />
                       </Tooltip>
                     ) : (<span>{score}</span>)}

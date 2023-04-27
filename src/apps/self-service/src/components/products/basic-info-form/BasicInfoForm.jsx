@@ -492,14 +492,14 @@ const BasicInfoForm = ({
                 <br />
                 <div className={styles["helpText"]}>
                   No data?&nbsp;
-                  <HelpIcon>
+                  <HelpIcon inverted>
                     No problem. Based on your goals we'll recommend the type(s)
                     of data you need.
                   </HelpIcon>
                 </div>
                 <div className={styles["helpText"]}>
                   Can't share/upload?&nbsp;
-                  <HelpIcon>
+                  <HelpIcon inverted>
                     Try sharing a sample. Samples can be just the headers,
                     labels or titles of your data set. Our experts need to
                     understand the type, volume and structure of your data, not

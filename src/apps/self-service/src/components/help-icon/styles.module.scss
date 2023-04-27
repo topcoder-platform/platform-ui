@@ -3,22 +3,11 @@
 .help-icon {
   text-transform: none;
   .tooltip {
-    display: flex;
-    @include font-roboto;
-    font-weight: 400;
-    font-size: 12px;
-    line-height: 20px;
     max-width: 30ch;
-    padding: 8px;
-    background-color: $grey-bg;
-    color: $black;
-    border-radius: 8px;
-    opacity: 1 !important;
-    box-shadow: 0 1px 5px $tips-shadow;
 
     &.inverted {
-      background-color: $black;
-      color: $grey-bg;
+      background-color: $grey-bg;
+      color: $black;
     }
   }
 }

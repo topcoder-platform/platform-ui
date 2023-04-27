@@ -190,14 +190,13 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                                                 <VerifiedMemberFlagSvg />
                                                 <span className='overline'>verified member</span>
                                                 <Tooltip
-                                                    trigger={(
-                                                        <IconOutline.InformationCircleIcon
-                                                            className={styles.toolTipIcon}
-                                                        />
-                                                    )}
                                                     content={`This member is compliant with Topcoder policies
                                                 and is a trusted member of the Topcoder community.`}
-                                                />
+                                                >
+                                                    <IconOutline.InformationCircleIcon
+                                                        className={styles.toolTipIcon}
+                                                    />
+                                                </Tooltip>
                                             </div>
                                         ) : undefined
                                     }

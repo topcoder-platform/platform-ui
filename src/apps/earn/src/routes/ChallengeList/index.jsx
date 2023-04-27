@@ -18,7 +18,6 @@ import { ContentLayout } from "~/libs/ui";
 
 import "react-date-range/dist/theme/default.css";
 import "react-date-range/dist/styles.css";
-import "rc-tooltip/assets/bootstrap.css";
 
 import styles from './styles.scss';
 import { styled as styledCss } from "@earn/utils";
@@ -41,7 +40,7 @@ export const ChallengeList = () => {
     store.dispatch(actions.challenges.getChallengesInit());
     store.dispatch(actions.challenges.getChallengesDone(challengesFilters, signal));
   }
-  
+
   useEffect(() => { initAuth() }, [])
 
   useEffect(() => {
@@ -85,7 +84,7 @@ export const ChallengeList = () => {
     let lastFilterState = store.getState().filter.challenge;
     const unsub = store.subscribe(() => {
       const currentFilter = store.getState().filter.challenge;
-      
+
       if (_.isEqual(lastFilterState, currentFilter)) {
         return;
       }

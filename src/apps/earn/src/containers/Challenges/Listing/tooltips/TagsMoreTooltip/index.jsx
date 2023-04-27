@@ -1,8 +1,10 @@
-import Tooltip from "../../../../../components/Tooltip";
+import { Tooltip } from "~/libs/ui";
+import { styled as styledCss } from "@earn/utils";
+
 import Tag from "../../../../../components/Tag";
 
 import styles from "./styles.scss";
-import { styled as styledCss } from "@earn/utils";
+
 const styled = styledCss(styles)
 
 const TagsMoreTooltip = ({ children, tags, onClickTag, placement }) => {
@@ -19,8 +21,7 @@ const TagsMoreTooltip = ({ children, tags, onClickTag, placement }) => {
   return (
     <Tooltip
       placement={placement}
-      overlay={<Content />}
-      trigger={["hover", "focus"]}
+      content={<Content />}
     >
       {children}
     </Tooltip>

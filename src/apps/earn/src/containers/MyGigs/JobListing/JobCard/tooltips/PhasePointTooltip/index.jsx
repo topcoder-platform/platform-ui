@@ -1,7 +1,9 @@
-import React from "react";
 import PT from "prop-types";
-import Tooltip from "../../../../../../components/Tooltip";
+
+import { Tooltip } from "~/libs/ui";
+
 import { JOB_STATUS_MESSAGE_MAPPER } from "../../../../../../constants";
+
 import styles from "./styles.scss";
 
 const PhasePointTooltip = ({ phase, children, placement, width }) => {
@@ -13,7 +15,7 @@ const PhasePointTooltip = ({ phase, children, placement, width }) => {
   );
 
   return (
-    <Tooltip overlay={<Content />} placement={placement}>
+    <Tooltip content={<Content />} place={placement}>
       {children}
     </Tooltip>
   );

@@ -3,16 +3,12 @@
  *
  */
 
-import React from 'react';
 import PT from 'prop-types';
-import Tooltip from '@earn/components/challenge-detail/Tooltip';
+
+import { Tooltip } from '~/libs/ui';
+
 import { ReactComponent as Failed } from '../../icons/failed.svg';
 import styles from './style.scss';
-
-function onPopupAlign(TooltipNode) {
-  const inner = TooltipNode.querySelector('.rc-tooltip-inner');
-  inner.style['background-color'] = '#2A2A2A'; // consistent color with arrow svg
-}
 
 /**
   * Renders the tooltip.
@@ -22,7 +18,7 @@ function FailedSubmissionTooltip({
 }) {
   return (
     <div className={styles['failed-submission-tooltip']}>
-      <Tooltip content={content} placeArrow={onPopupAlign} position="top" className="tooltip-overlay toolTipPadding">
+      <Tooltip content={content} place="top">
         <Failed />
       </Tooltip>
     </div>

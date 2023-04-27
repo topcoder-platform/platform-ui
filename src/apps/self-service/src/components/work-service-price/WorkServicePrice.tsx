@@ -48,7 +48,7 @@ const WorkServicePrice: FC<WorkServicePriceProps> = (props: WorkServicePriceProp
     &nbsp;Days
                             </span>
                             <span className={styles.help}>
-                                <HelpIcon>
+                                <HelpIcon inverted>
                                     The price and project length is dynamic and dependent on the
                                     variables selected as you define your work.
                                 </HelpIcon>

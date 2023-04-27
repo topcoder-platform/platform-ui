@@ -26,12 +26,7 @@ const StyleOptions = ({
           <div className={classNames(moduleStyles["style"], moduleStyles[style.className])}>
             <div className={moduleStyles["name"]}>
               <span>{style.name}</span> &nbsp;
-              <HelpIcon
-                textColor="#f4f4f4"
-                inverted
-                backgroundColor="#000"
-                arrowColor="#000"
-              >
+              <HelpIcon>
                 {style.description}
               </HelpIcon>
             </div>

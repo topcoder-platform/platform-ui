@@ -1,13 +1,12 @@
 /**
  * Helper function for challenge detail
  */
-import React from 'react';
 import moment from 'moment';
 import _ from 'lodash';
-import { convertNow as convertMoney } from '@earn/services/money';
+// import { convertNow as convertMoney } from '@earn/services/money';
 import * as filter from './filter.js';
 import config from '@earn/config';
-import Prize from '@earn/components/challenge-detail/ChallengeCard/Prize';
+// import Prize from '@earn/components/challenge-detail/ChallengeCard/Prize';
 import { BUCKETS, getBuckets } from '@earn/utils/challenge-listing/buckets';
 import { phaseEndDate } from '@earn/utils/challenge-listing/helper';
 
@@ -87,90 +86,70 @@ export function getTimeLeft(
   return { late, text: time };
 }
 
-/**
- * Get prize purse ui
- * @param {Object} challenge challenge info
- * @param {String} prizeMode prize mode
- * @param {String} onlyShowTooltipForPrize only show tooltip for prize
- * @param {String} label label for prize
- */
-export function getPrizePurseUI(
-  challenge,
-  prizeMode,
-  onlyShowTooltipForPrize = false,
-  label = 'Purse',
-) {
-  /* Preparation of data to show in the prize component,
-   * depending on options. */
-  const bonuses = [];
-  if (challenge.reliabilityBonus) {
-    bonuses.push({
-      name: 'Reliability',
-      prize: challenge.reliabilityBonus,
-    });
-  }
+// /**
+//  * Get prize purse ui
+//  * @param {Object} challenge challenge info
+//  * @param {String} prizeMode prize mode
+//  * @param {String} onlyShowTooltipForPrize only show tooltip for prize
+//  * @param {String} label label for prize
+//  */
+// export function getPrizePurseUI(
+//   challenge,
+//   prizeMode,
+//   onlyShowTooltipForPrize = false,
+//   label = 'Purse',
+// ) {
+//   /* Preparation of data to show in the prize component,
+//    * depending on options. */
+//   const bonuses = [];
+//   if (challenge.reliabilityBonus) {
+//     bonuses.push({
+//       name: 'Reliability',
+//       prize: challenge.reliabilityBonus,
+//     });
+//   }
 
-  let prizeUnitSymbol = '';
-  let { prizes } = challenge;
-  let totalPrize;
-  switch (prizeMode) {
-    case PRIZE_MODE.MONEY_EUR:
-      prizeUnitSymbol = '€';
-      bonuses.forEach((bonus) => {
-        bonus.prize = Math.round(convertMoney(bonus.prize, 'EUR')); // eslint-disable-line no-param-reassign
-      });
-      totalPrize = Math.round(convertMoney(challenge.totalPrize, 'EUR'));
-      prizes = (prizes || []).map(prize => Math.round(convertMoney(prize, 'EUR')));
-      break;
-    case PRIZE_MODE.MONEY_INR:
-      prizeUnitSymbol = '₹';
-      bonuses.forEach((bonus) => {
-        bonus.prize = Math.round(convertMoney(bonus.prize, 'INR')); // eslint-disable-line no-param-reassign
-      });
-      totalPrize = Math.round(convertMoney(challenge.totalPrize, 'INR'));
-      prizes = (prizes || []).map(prize => Math.round(convertMoney(prize, 'INR')));
-      break;
-    case PRIZE_MODE.MONEY_USD:
-      prizeUnitSymbol = '$';
-      ({ totalPrize } = challenge);
-      break;
-    default: throw new Error('Unknown prize mode!');
-  }
+//   let prizeUnitSymbol = '';
+//   let { prizes } = challenge;
+//   let totalPrize;
+//   switch (prizeMode) {
+//     case PRIZE_MODE.MONEY_EUR:
+//       prizeUnitSymbol = '€';
+//       bonuses.forEach((bonus) => {
+//         bonus.prize = Math.round(convertMoney(bonus.prize, 'EUR')); // eslint-disable-line no-param-reassign
+//       });
+//       totalPrize = Math.round(convertMoney(challenge.totalPrize, 'EUR'));
+//       prizes = (prizes || []).map(prize => Math.round(convertMoney(prize, 'EUR')));
+//       break;
+//     case PRIZE_MODE.MONEY_INR:
+//       prizeUnitSymbol = '₹';
+//       bonuses.forEach((bonus) => {
+//         bonus.prize = Math.round(convertMoney(bonus.prize, 'INR')); // eslint-disable-line no-param-reassign
+//       });
+//       totalPrize = Math.round(convertMoney(challenge.totalPrize, 'INR'));
+//       prizes = (prizes || []).map(prize => Math.round(convertMoney(prize, 'INR')));
+//       break;
+//     case PRIZE_MODE.MONEY_USD:
+//       prizeUnitSymbol = '$';
+//       ({ totalPrize } = challenge);
+//       break;
+//     default: throw new Error('Unknown prize mode!');
+//   }
 
-  if (totalPrize > 1) {
-    return (
-      <Prize
-        bonuses={bonuses}
-        label={label}
-        prizes={prizes}
-        prizeUnitSymbol={prizeUnitSymbol}
-        totalPrize={totalPrize}
-        onlyShowTooltipForPrize={onlyShowTooltipForPrize}
-      />
-    );
-  }
-  return null;
-}
-
-/**
- * Get prize points ui
- * @param {Object} challenge challenge info
- */
-export function getPrizePointsUI(challenge) {
-  const placementPrizes = _.find(challenge.prizeSets, { type: 'placement' });
-  if (placementPrizes) {
-    const { prizes } = placementPrizes || [];
-    return (
-      <Prize
-        label="Purse"
-        prizes={prizes}
-        prizeUnitSymbol="$"
-        totalPrize={prizes.reduce((acc, prize) => acc + prize.value, 0)}
-      />
-    );
-  }
-  return null;
-}
+//   if (totalPrize > 1) {
+//     return (
+//       <Prize
+//         bonuses={bonuses}
+//         label={label}
+//         prizes={prizes}
+//         prizeUnitSymbol={prizeUnitSymbol}
+//         totalPrize={totalPrize}
+//         onlyShowTooltipForPrize={onlyShowTooltipForPrize}
+//       />
+//     );
+//   }
+//   return null;
+// }
 
 /**
  * Get recommended tags for challenge

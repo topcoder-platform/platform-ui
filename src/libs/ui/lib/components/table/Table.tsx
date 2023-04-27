@@ -115,12 +115,9 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                             {col.label}
                             {!!col.tooltip && (
                                 <div className={styles.tooltip}>
-                                    <Tooltip
-                                        content={col.tooltip}
-                                        place='bottom'
-                                        trigger={<IconOutline.InformationCircleIcon />}
-                                        triggerOn='click'
-                                    />
+                                    <Tooltip content={col.tooltip} triggerOn='click'>
+                                        <IconOutline.InformationCircleIcon className='tooltip-icon' />
+                                    </Tooltip>
                                 </div>
                             )}
                             <TableSort

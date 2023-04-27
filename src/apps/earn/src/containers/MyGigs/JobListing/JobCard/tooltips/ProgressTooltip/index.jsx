@@ -1,6 +1,7 @@
-import React from "react";
 import PT from "prop-types";
-import Tooltip from "../../../../../../components/Tooltip";
+
+import { Tooltip } from "~/libs/ui";
+
 import { ReactComponent as IconCheck } from "../../../../../../assets/icons/checkpoint-small.svg";
 
 import styles from "./styles.scss";
@@ -21,7 +22,7 @@ const ProgressTooltip = ({ job, children }) => {
           </span>
         </div>
         <div
-          className={[styles["progress-phase"], styles["previous"], 
+          className={[styles["progress-phase"], styles["previous"],
                     !job.previous ? styles["hidden"] : "",
                     job.next ? styles["has-next"] : ""].join(" ")}
         >
@@ -34,7 +35,7 @@ const ProgressTooltip = ({ job, children }) => {
           <h5 className={styles["name"]}>{job.previous}</h5>
           <p className={styles["note"]}>{job.previousNote}</p>
         </div>
-        <div className={[styles["progress-phase"], styles["next"], 
+        <div className={[styles["progress-phase"], styles["next"],
                         !job.next ? styles["hidden"] : ""].join(" ")}>
           <span className={styles["indicator"]}>
             <i className={styles["before"]}>
@@ -50,7 +51,7 @@ const ProgressTooltip = ({ job, children }) => {
   );
 
   return (
-    <Tooltip overlay={<Content />} placement="bottom">
+    <Tooltip content={<Content />} place="bottom">
       {children}
     </Tooltip>
   );

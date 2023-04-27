@@ -1,20 +1,18 @@
 /* eslint jsx-a11y/no-static-element-interactions:0 */
 
-import React from 'react';
 import PT from 'prop-types';
 import _ from 'lodash';
-
-import Tooltip from '@earn/components/challenge-detail/Tooltip';
 import { Link } from 'react-router-dom';
-import config from '@earn/config';
 
 import { ReactComponent as TooltipIcon } from '@earn/assets/images/tooltip-info.svg';
-import EligibleEvents from './EligibleEvents';
-
-import ShareSocial from './ShareSocial';
-
-import styles from "./styles.scss";
+import { Tooltip } from '~/libs/ui';
 import { styled as styledCss } from "@earn/utils";
+import config from '@earn/config';
+
+import EligibleEvents from './EligibleEvents';
+import ShareSocial from './ShareSocial';
+import styles from "./styles.scss";
+
 const styled = styledCss(styles)
 
 export default function SideBar({
@@ -59,21 +57,21 @@ export default function SideBar({
   );
 
   const reviewTip = (
-    <div className={styled("tctooltiptext tooltiptextreview")}>
+    <div className={styles["tctooltiptext"]}>
       <h4>Final Review:</h4>
       <p>{reviewTypeDescription}</p>
     </div>
   );
 
   const approvalTip = (
-    <div className={styled("tctooltiptext tooltiptextapproval")}>
+    <div className={styles["tctooltiptext"]}>
       <h4>Approval:</h4>
       <p>Customer has final opportunity to sign-off on the delivered assets.</p>
     </div>
   );
 
   const reviewScorecardTip = (
-    <div className={styled("tctooltiptext tooltiptextapproval")}>
+    <div className={styles["tctooltiptext"]}>
       <h4>See how you&apos;ll be reviewed.</h4>
       <p>
         Make sure you review the scorecard before you start.
@@ -83,14 +81,14 @@ export default function SideBar({
   );
 
   const usableCodeArticle = (
-    <div className={styled("tctooltiptext tooltiptextapproval")}>
+    <div className={styles["tctooltiptext"]}>
       <h4>Useable Code Rules</h4>
       <p>A set of guidelines to help determine if code is acceptable or not.</p>
     </div>
   );
 
   const vscodeTip = (
-    <div className={styled("tctooltiptext tooltiptextapproval")}>
+    <div className={styles["tctooltiptext"]}>
       <h4>Topcoder Extension for VSCode</h4>
       <p>
         Shortcuts to perform actions related to Topcoder platform without having to open a browser
@@ -138,7 +136,7 @@ export default function SideBar({
               </h3>
               <span className={styled('link-like-paragraph tooltip-container')}>
                 {reviewTypeTitle}
-                <Tooltip id="review-tip" content={reviewTip} trigger={['hover', 'focus']}>
+                <Tooltip place="top" id="review-tip" content={reviewTip}>
                   <div className={styles.tctooltip}>
                     <TooltipIcon />
                   </div>
@@ -152,8 +150,7 @@ export default function SideBar({
                 <Tooltip
                   id="approval-tip"
                   content={approvalTip}
-                  className={styles['tooltip-overlay']}
-                  trigger={['hover', 'focus']}
+                  place="top"
                 >
                   <div className={styles.tctooltip}>
                     <TooltipIcon />
@@ -209,8 +206,7 @@ export default function SideBar({
                     <Tooltip
                       id="reviewscorecard-tip"
                       content={reviewScorecardTip}
-                      className={styles['tooltip-overlay']}
-                      trigger={['hover', 'focus']}
+                      place="top"
                     >
                       <div className={styles.tctooltip}>
                         <TooltipIcon />
@@ -231,10 +227,9 @@ export default function SideBar({
                       Useable Code Rules
                     </a>
                     <Tooltip
+                      place="top"
                       id="usablecode-tip"
                       content={usableCodeArticle}
-                      className={styles['tooltip-overlay']}
-                      trigger={['hover', 'focus']}
                     >
                       <div className={styles.tctooltip}>
                         <TooltipIcon />
@@ -435,8 +430,7 @@ export default function SideBar({
             <Tooltip
               id="vscode-tip"
               content={vscodeTip}
-              className={styles['tooltip-overlay']}
-              trigger={['hover', 'focus']}
+              place="top"
             >
               <div className={styles.tctooltip}>
                 <TooltipIcon />
@@ -511,5 +505,5 @@ SideBar.propTypes = {
   isMM: PT.bool,
   metadata: PT.array,
   reviewScorecardId: PT.oneOfType([PT.string, PT.number]),
-  screeningScorecardId: PT.string,
+  screeningScorecardId: PT.oneOfType([PT.string, PT.number]),
 };

@@ -9,7 +9,6 @@ import FilePicker from "../../../../components/my-gigs/FilePicker";
 import TextInput from "../../../../components/TextInput";
 import Dropdown from "../../../../components/Dropdown";
 import UserPhoto from "../../../../components/my-gigs/UserPhoto";
-import { ReactComponent as IconClose } from "../../../../assets/icons/close.svg";
 import { ReactComponent as IconInfo } from "../../../../assets/icons/info.svg";
 import actions from "../../../../actions";
 

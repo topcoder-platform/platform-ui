@@ -13,5 +13,6 @@
   opacity: 1 !important;
   box-shadow: 0 1px 5px $tips-shadow;
   text-transform: none;
-  max-width: 50%;
+  max-width: 50ch;
+  z-index: 9;
 }

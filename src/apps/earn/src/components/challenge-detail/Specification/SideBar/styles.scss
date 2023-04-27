@@ -43,10 +43,6 @@
 }
 
 .tctooltiptext {
-  background: $tc-gray-90;
-  border-radius: 8px !important;
-  padding: 10px;
-
   h4 {
     @include roboto-bold;
 
@@ -55,6 +51,7 @@
     line-height: 20px;
     margin: 5px 0;
     color: $tc-white;
+    text-transform: none
   }
 
   p {
@@ -64,16 +61,8 @@
     color: $tc-gray-10;
     line-height: 20px;
     margin: 0 0 5px;
-    width: 150px;
+    max-width: 200px;
   }
-}
-
-.tooltiptextreview {
-  margin: 0 0 0 -140px;
-}
-
-.tooltiptextapproval {
-  border-radius: 8px;
 }
 
 .challenge-sidebar-inner {

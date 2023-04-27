@@ -1,6 +1,6 @@
-import React from "react";
 import PT from "prop-types";
-import Tooltip from "../../../../../../components/Tooltip";
+
+import { Tooltip } from "~/libs/ui";
 
 import styles from "./styles.scss";
 
@@ -12,7 +12,10 @@ const EarnTooltip = ({ children }) => {
   );
 
   return (
-    <Tooltip overlay={<Content />} placement="bottom">
+    <Tooltip
+        content={<Content />}
+        place="bottom"
+    >
       {children}
     </Tooltip>
   );

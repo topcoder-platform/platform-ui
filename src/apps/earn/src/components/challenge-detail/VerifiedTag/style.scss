@@ -1,3 +1,4 @@
+@import '@libs/ui/styles/includes';
 @import '@earn/styles/mixins';
 
 .recommended-challenge-tooltip {
@@ -6,37 +7,9 @@
   margin-bottom: 5px;
 }
 
-.tctooltiptext {
-  @include roboto-regular;
-
-  background: $tc-black;
-  display: inline-block;
-  max-width: 400px;
-  font-size: 14px;
-  color: $tc-white;
-  line-height: 22px;
-  font-weight: 500;
-  border-radius: 8px;
-  padding: 10px;
-}
-
-.tctooltiptext::after {
-  content: "";
-  position: absolute;
-  width: 0;
-  height: 0;
-  border-color: transparent;
-  border-style: solid;
-  bottom: 4px;
-  margin-left: -5px;
-  border-width: 5px 5px 0;
-  left: 50%;
-  border-top-color: $tc-black;
-  z-index: 1000;
-}
-
 .verified-tag {
   position: absolute;
+  left: $sp-1;
 }
 
 .verified-tag-text {

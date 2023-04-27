@@ -1,18 +1,34 @@
-import { FC, ReactNode, RefObject, useRef } from 'react'
+import {
+    Children,
+    cloneElement,
+    FC,
+    ReactElement,
+    ReactNode,
+    RefObject,
+    useRef,
+} from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import ReactTooltip from 'react-tooltip'
+import { Tooltip as ReactTooltip } from 'react-tooltip'
+import { get } from 'lodash'
+import classNames from 'classnames'
+import 'react-tooltip/dist/react-tooltip.css'
 
 import styles from './Tooltip.module.scss'
 
-interface TooltipEvent {
-  [key: string]: string
+interface TooltipProps {
+    className?: string
+    content?: ReactNode
+    /** Set clickable=true to allows interactions with the tooltip */
+    clickable?: boolean
+    place?: 'top' | 'right' | 'bottom' | 'left'
+    children?: ReactNode
+    triggerOn?: 'click' | 'hover'
 }
 
-interface TooltipProps {
-    content?: ReactNode
-    place?: 'top' | 'right' | 'bottom' | 'left'
-    trigger: ReactNode
-    triggerOn?: 'click' | 'hover'
+function wrapComponents(el: ReactNode): ReactNode {
+    return typeof get(el, 'type') === 'string'
+        ? el
+        : <div>{el}</div>
 }
 
 const Tooltip: FC<TooltipProps> = (props: TooltipProps) => {
@@ -23,42 +39,28 @@ const Tooltip: FC<TooltipProps> = (props: TooltipProps) => {
         return <></>
     }
 
-    let event: TooltipEvent = {}
-    let tooltipProps: TooltipEvent = {}
-
-    // The following attributes are required by react-tooltip
-    // when we want to show the tooltip on click rather than hover
-    if (props.triggerOn === 'click') {
-        tooltipProps = {
-            globalEventOff: 'click',
-        }
-        event = {
-            'data-event': 'click focus',
-        }
+    function renderTrigger(): ReactElement[] {
+        return Children.toArray(props.children)
+            .map(child => cloneElement((wrapComponents(child) as ReactElement), {
+                'data-tooltip-delay-show': '300',
+                'data-tooltip-id': tooltipId.current as string,
+                'data-tooltip-place': props.place ?? 'bottom',
+            } as any))
     }
 
     return (
-        <div>
-            <div
-                className='tooltip-icon'
-                data-tip
-                data-for={tooltipId.current}
-                {...event}
-            >
-                {props.trigger}
-            </div>
+        <>
+            {renderTrigger()}
             <ReactTooltip
-                className={styles.tooltip}
+                className={classNames(styles.tooltip, props.className)}
                 id={tooltipId.current as string}
                 aria-haspopup='true'
-                place={props.place ?? 'bottom'}
-                effect='solid'
-                event=''
-                {...tooltipProps}
+                openOnClick={props.triggerOn === 'click'}
+                clickable={props.clickable}
             >
                 {props.content}
             </ReactTooltip>
-        </div>
+        </>
     )
 }
 

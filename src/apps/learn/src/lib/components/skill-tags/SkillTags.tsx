@@ -31,8 +31,12 @@ const SkillTags: FC<SkillTagsProps> = (props: SkillTagsProps) => {
                 <Tooltip
                     content={props.skills?.slice(expandCount)
                         .join(', ')}
-                    trigger={<SkillLabel skill={`+ ${props.skills?.slice(expandCount).length}`} theme={theme} />}
-                />
+                >
+                    <SkillLabel
+                        skill={`+ ${props.skills?.slice(expandCount).length}`}
+                        theme={theme}
+                    />
+                </Tooltip>
             )}
         </div>
     )
