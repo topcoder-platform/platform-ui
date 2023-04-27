@@ -13,6 +13,10 @@ const EnrollmentPage: LazyLoadedComponent = lazyLoad(
     () => import('./certification-details/enrollment-page'),
     'EnrollmentPage',
 )
+const CoursePageWrapper: LazyLoadedComponent = lazyLoad(
+    () => import('./course-page-wrapper'),
+    'CoursePageWrapper',
+)
 const CourseDetailsPage: LazyLoadedComponent = lazyLoad(() => import('./course-details'), 'CourseDetailsPage')
 const CourseCompletedPage: LazyLoadedComponent = lazyLoad(() => import('./course-completed'), 'CourseCompletedPage')
 const MyCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certificate'), 'MyCertificate')
@@ -170,34 +174,41 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                 route: 'tca-certifications/:certification/enroll',
             },
             {
-                children: [],
-                element: <CourseDetailsPage />,
-                id: 'Course Details',
-                route: ':provider/:certification',
-            },
-            {
-                children: [],
-                element: <CourseCompletedPage />,
-                id: 'Course Completed',
-                route: ':provider/:certification/completed',
-            },
-            {
-                children: [],
-                element: <MyCertificate />,
-                id: 'My Certificate',
-                route: ':provider/:certification/certificate',
-            },
-            {
-                children: [],
-                element: <UserCertificate />,
-                id: 'User Certificate',
-                route: ':provider/:certification/:memberHandle/certificate',
-            },
-            {
-                children: [],
-                element: <FreeCodeCamp />,
-                id: 'FxreeCodeCamp',
-                route: ':provider/:certification/:module/:lesson',
+                children: [
+                    {
+                        children: [],
+                        element: <CourseDetailsPage />,
+                        id: 'Course Details',
+                        route: ':certification',
+                    },
+                    {
+                        children: [],
+                        element: <CourseCompletedPage />,
+                        id: 'Course Completed',
+                        route: ':certification/completed',
+                    },
+                    {
+                        children: [],
+                        element: <MyCertificate />,
+                        id: 'My Certificate',
+                        route: ':certification/certificate',
+                    },
+                    {
+                        children: [],
+                        element: <UserCertificate />,
+                        id: 'User Certificate',
+                        route: ':certification/:memberHandle/certificate',
+                    },
+                    {
+                        children: [],
+                        element: <FreeCodeCamp />,
+                        id: 'FxreeCodeCamp',
+                        route: ':certification/:module/:lesson',
+                    },
+                ],
+                element: <CoursePageWrapper />,
+                id: 'CoursePage',
+                route: ':provider',
             },
             {
                 children: [],
