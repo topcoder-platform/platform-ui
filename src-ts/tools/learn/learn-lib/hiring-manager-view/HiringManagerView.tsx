@@ -65,6 +65,7 @@ export interface HiringManagerViewProps {
     validationUrl?: string
 }
 
+// eslint-disable-next-line complexity
 const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewProps) => {
     const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
     const wrapElRef: MutableRefObject<HTMLElement | any> = useRef()
@@ -141,7 +142,7 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
     function renderTCACertificatePreview(ref?: MutableRefObject<HTMLDivElement | any>): ReactNode {
         return (
             <TCACertificatePreview
-                certification={props.certification}
+                certification={props.certification as TCACertification}
                 userName={props.userName}
                 completedDate={props.completedAt}
                 completionUuid={props.completionUuid}
@@ -295,6 +296,7 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
 
                             <SkillTags
                                 skills={props.certification?.skills ?? []}
+                                emsiSkills={props.certification?.emsiSkills ?? []}
                                 theme='gray'
                                 label=''
                                 expandCount={props.certification?.skills?.length ?? 0}

@@ -6,6 +6,7 @@ import {
     CompletionTimeRange,
     LearnLevelIcon,
     ProvidersLogoList,
+    SkillTags,
     StickySidebar,
     TCACertificatePreview,
     TCACertification,
@@ -139,11 +140,13 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
             <div className={classNames('body-small-medium', styles['section-header'])}>
                 Skills Covered
             </div>
-            <ul className={styles['certification-skills-list']}>
-                {props.certification.skills.map(skill => (
-                    <li key={skill}>{skill}</li>
-                ))}
-            </ul>
+            <SkillTags
+                emsiSkills={props.certification.emsiSkills}
+                skills={props.certification.skills}
+                courseKey={props.certification.dashedName}
+                theme='gray'
+                expandCount={9}
+            />
 
             <ProvidersLogoList
                 label='Content from'
