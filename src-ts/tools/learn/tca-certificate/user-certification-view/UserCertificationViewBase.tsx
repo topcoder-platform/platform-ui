@@ -36,7 +36,7 @@ interface UserCertificationViewBaseProps {
 
 const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: UserCertificationViewBaseProps) => {
     const [queryParams]: [URLSearchParams, any] = useSearchParams()
-    const wrapElRef: MutableRefObject<HTMLElement | any> = useRef()
+    const elRef: MutableRefObject<HTMLElement | any> = useRef()
 
     const tcaCertificationPath: string = getTCACertificationPath(`${props.certification?.dashedName}`)
     const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
@@ -59,7 +59,7 @@ const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: Us
     }, [props.enrollment])
 
     useLayoutEffect(() => {
-        const el: HTMLElement = wrapElRef.current
+        const el: HTMLElement = elRef.current
         if (!el || !isModalView) {
             return
         }
@@ -72,7 +72,7 @@ const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: Us
             <PageTitle>
                 {`${!!props.enrollment && `${props.enrollment.userName}'s `}${props.certification?.title} Certificate`}
             </PageTitle>
-            <LoadingSpinner hide={props.enrollmentError || (props.profile && !!props.enrollment)} />
+            <LoadingSpinner hide={props.enrollmentError || (props.profile && !!props.enrollment)} ref={elRef} />
 
             {props.enrollmentError && (
                 <CertificatePageLayout
@@ -86,7 +86,7 @@ const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: Us
                 </CertificatePageLayout>
             )}
 
-            <div className='full-height-frame' ref={wrapElRef}>
+            <div className='full-height-frame' ref={elRef}>
                 {props.profile && props.certification && props.enrollment && (
                     <HiringManagerView
                         certification={props.certification}

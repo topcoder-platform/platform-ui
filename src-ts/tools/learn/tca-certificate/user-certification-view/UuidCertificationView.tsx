@@ -48,11 +48,11 @@ const UuidCertificationView: FC<{}> = () => {
         }
 
         hideSiblings(el.parentElement as HTMLElement)
-    }, [isModalView])
+    })
 
     return (
         <>
-            <LoadingSpinner hide={enrollmentReady} ref={elRef} />
+            <LoadingSpinner hide={enrollmentError} ref={elRef} />
             {enrollmentReady && enrollmentError && (
                 <UserCertificationViewBase
                     enrollment={enrollment}
