@@ -1,6 +1,5 @@
 import { FC } from 'react'
 
-import { InfoCard } from '~/libs/ui'
 
 import {
     bugHuntExample1Img,
@@ -13,6 +12,7 @@ import {
     bugHuntExample4Pdf,
     workBugHuntConfig,
 } from '../../../../lib'
+import { InfoCard } from '../../../../components/info-card'
 
 import styles from './DeliverablesInfoCard.module.scss'
 

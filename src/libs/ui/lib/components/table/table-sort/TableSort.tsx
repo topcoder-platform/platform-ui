@@ -1,6 +1,6 @@
 import { FC, SVGProps } from 'react'
 
-import { Sort } from '../../pagination'
+import { Sort } from '../../../../../../apps/gamification-admin/src/game-lib/pagination'
 import { IconOutline } from '../../svgs'
 import { Button } from '../../button'
 

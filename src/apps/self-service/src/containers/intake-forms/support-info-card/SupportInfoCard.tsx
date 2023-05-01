@@ -1,7 +1,9 @@
 import React, { Dispatch, SetStateAction, useState } from 'react'
 
-import { Button, InfoCard } from '~/libs/ui'
+import { Button } from '~/libs/ui'
 import { ContactSupportModal, useCheckIsMobile } from '~/libs/shared'
+
+import { InfoCard } from '../../../components/info-card'
 
 import styles from './SupportInfoCard.module.scss'
 

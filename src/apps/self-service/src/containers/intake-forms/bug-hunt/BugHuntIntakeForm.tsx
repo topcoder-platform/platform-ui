@@ -9,7 +9,6 @@ import {
     formGetInputModel,
     FormInputModel,
     IconOutline,
-    InfoCard,
     LoadingSpinner,
     PageDivider,
     SaveForLaterIcon,
@@ -33,6 +32,7 @@ import { WorkServicePrice } from '../../../components/work-service-price'
 import { WorkTypeBanner } from '../../../components/work-type-banner'
 import { selfServiceStartRoute, workDashboardRoute } from '../../../self-service.routes'
 import { IntakeFormsBreadcrumb } from '../intake-forms-breadcrumb'
+import { InfoCard } from '../../../components/info-card'
 
 import { BugHuntFormConfig } from './bug-hunt.form.config'
 import { DeliverablesInfoCard } from './deliverables-info-card'

@@ -1,7 +1,7 @@
 import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react'
 import classNames from 'classnames'
 
-import { ArrowIcon } from '../svgs'
+import { ArrowIcon } from '~/libs/ui'
 
 import styles from './InfoCard.module.scss'
 

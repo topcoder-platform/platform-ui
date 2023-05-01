@@ -1,5 +1,5 @@
-@use '../../styles/typography';
-@import '../../styles/includes';
+@use '@libs/ui/styles/typography';
+@import '@libs/ui/styles/includes';
 
 .bug-delivery-radio {
     border: 1px solid $black-100;

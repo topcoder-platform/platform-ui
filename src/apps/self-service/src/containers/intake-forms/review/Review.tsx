@@ -13,7 +13,6 @@ import {
     BackArrowIcon,
     Button,
     IconOutline,
-    InfoCard,
     LoadingSpinner,
     PageDivider,
 } from '~/libs/ui'
@@ -37,6 +36,7 @@ import { WorkTypeBanner } from '../../../components/work-type-banner'
 import { DeliverablesInfoCard } from '../bug-hunt'
 import { IntakeFormsBreadcrumb } from '../intake-forms-breadcrumb'
 import { PaymentForm } from '../../../components/payment-form'
+import { InfoCard } from '../../../components/info-card'
 
 import { AboutYourProjectInfoCard } from './AboutYourProjectInfoCard'
 import styles from './Review.module.scss'

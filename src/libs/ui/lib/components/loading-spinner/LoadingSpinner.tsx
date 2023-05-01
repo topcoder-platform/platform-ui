@@ -6,8 +6,7 @@
 import { FC, forwardRef, RefAttributes } from 'react'
 import classNames from 'classnames'
 
-import { LoadingCircles } from '../loading-circles'
-
+import { LoadingCircles } from './loading-circles'
 import styles from './LoadingSpinner.module.scss'
 
 export interface LoadingSpinnerProps {

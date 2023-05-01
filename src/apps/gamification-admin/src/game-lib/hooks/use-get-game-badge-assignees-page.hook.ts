@@ -1,6 +1,6 @@
 import { EnvironmentConfig } from '~/config'
-import { InfinitePageDao, InfinitePageHandler, Sort, useGetInfinitePage } from '~/libs/ui'
 
+import { InfinitePageDao, InfinitePageHandler, Sort, useGetInfinitePage } from '../pagination'
 import { GameBadge, MemberBadgeAward } from '../game-badge.model'
 import { PAGE_SIZE } from '../../config'
 

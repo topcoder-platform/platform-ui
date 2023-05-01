@@ -29,7 +29,6 @@ import {
     IconSolid,
     LoadingSpinner,
     PageDivider,
-    Sort,
     tableGetDefaultSort,
     TabsNavbar,
     TabsNavItem,
@@ -39,6 +38,7 @@ import { ACCEPTED_BADGE_MIME_TYPES, MAX_BADGE_IMAGE_FILE_SIZE } from '../../conf
 import {
     BadgeDetailPageHandler,
     GameBadge,
+    Sort,
     useGamificationBreadcrumb,
     useGetGameBadgeDetails,
     useGetGameBadgesPage,

@@ -12,7 +12,7 @@ import store from '../../store'
 import { useLoadUnfinishedWork } from './use-load-unfinished-work'
 
 const SelfServiceIntake: FC<{}> = () => {
-    const { isLoading } = useLoadUnfinishedWork()
+    const { isLoading }: { isLoading: boolean } = useLoadUnfinishedWork()
     const { getChildRoutes }: RouterContextData = useContext(routerContext)
 
     return (

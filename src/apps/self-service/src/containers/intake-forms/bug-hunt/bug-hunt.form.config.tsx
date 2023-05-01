@@ -5,13 +5,13 @@ import {
     FormDefinition,
     GithubIcon,
     GitlabIcon,
-    RadioButton,
     validatorRequired,
 } from '~/libs/ui'
 
 import { ChallengeMetadataName, ChallengeMetadataTitle } from '../../../lib'
 import { SupportInfoCard } from '../support-info-card'
 import { BugHuntPricingConfig } from '../../../config'
+import { OptionButton } from '../../../components/option-button'
 
 export const BugHuntFormConfig: FormDefinition = {
     buttons: {
@@ -121,12 +121,12 @@ export const BugHuntFormConfig: FormDefinition = {
                     options: [
                         {
                             checked: false,
-                            children: <RadioButton name='GitHub' icon={<GithubIcon />} isRecommended />,
+                            children: <OptionButton name='GitHub' icon={<GithubIcon />} isRecommended />,
                             id: 'GitHub',
                         },
                         {
                             checked: false,
-                            children: <RadioButton name='GitLab' icon={<GitlabIcon />} />,
+                            children: <OptionButton name='GitLab' icon={<GitlabIcon />} />,
                             id: 'GitLab',
                         },
                     ],

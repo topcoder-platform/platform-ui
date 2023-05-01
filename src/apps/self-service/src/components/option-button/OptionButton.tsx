@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import cn from 'classnames'
 
-import styles from './RadioButton.module.scss'
+import styles from './OptionButton.module.scss'
 
 interface RadioProps {
     icon?: JSX.Element
@@ -10,7 +10,7 @@ interface RadioProps {
     selected?: boolean
 }
 
-const RadioButton: FC<RadioProps> = (props: RadioProps) => (
+const OptionButton: FC<RadioProps> = (props: RadioProps) => (
     <div
         className={
             cn(
@@ -27,4 +27,4 @@ const RadioButton: FC<RadioProps> = (props: RadioProps) => (
     </div>
 )
 
-export default RadioButton
+export default OptionButton

@@ -1,8 +1,8 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
-import { InfinitePageHandler, Sort, Table, TableColumn, tableGetDefaultSort } from '~/libs/ui'
+import { Table, TableColumn, tableGetDefaultSort } from '~/libs/ui'
 
-import { GameBadge, MemberBadgeAward } from '../../../game-lib'
+import { GameBadge, InfinitePageHandler, MemberBadgeAward, Sort } from '../../../game-lib'
 import { useGetGameBadgeAssigneesPage } from '../../../game-lib/hooks/use-get-game-badge-assignees-page.hook'
 
 import { awardedMembersColumns } from './awarded-members-table/awarded-members-table.config'

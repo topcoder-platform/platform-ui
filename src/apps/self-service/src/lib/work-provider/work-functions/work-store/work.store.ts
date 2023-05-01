@@ -1,5 +1,6 @@
 import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
-import { Page } from '~/libs/ui'
+
+import { Page } from '../../page.model'
 
 import { ActivateWorkRequest } from './activate-challenge-request.model'
 import { Challenge } from './challenge.model'

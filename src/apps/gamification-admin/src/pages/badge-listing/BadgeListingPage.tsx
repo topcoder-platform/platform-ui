@@ -4,15 +4,13 @@ import { NavigateFunction, useNavigate } from 'react-router-dom'
 import {
     ButtonProps,
     ContentLayout,
-    InfinitePageHandler,
     LoadingSpinner,
-    Sort,
     Table,
     TableColumn,
     tableGetDefaultSort,
 } from '~/libs/ui'
 
-import { GameBadge, useGetGameBadgesPage } from '../../game-lib'
+import { GameBadge, InfinitePageHandler, Sort, useGetGameBadgesPage } from '../../game-lib'
 import { createBadgeRoute } from '../../gamification-admin.routes'
 
 import { badgeListingColumns } from './badge-listing-table'

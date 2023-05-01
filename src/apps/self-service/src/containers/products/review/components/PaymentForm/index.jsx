@@ -8,9 +8,9 @@ import PT from "prop-types";
 import { useState, useContext } from "react";
 
 import { profileContext } from "~/libs/core";
-import { ReactSelect } from "~/libs/ui";
 
 import { COUNTRY_OPTIONS } from "../../../../../config";
+import { ReactSelect } from "../../../../../components/react-select";
 import { FormField, FormInputCheckbox, FormInputText } from "../../../../../components/form-elements";
 
 import styles from "./styles.module.scss";

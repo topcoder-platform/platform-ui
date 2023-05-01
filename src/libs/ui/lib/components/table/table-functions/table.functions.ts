@@ -1,4 +1,4 @@
-import { Sort } from '../../pagination'
+import { Sort } from '../../../../../../apps/gamification-admin/src/game-lib/pagination'
 import { TableColumn } from '../table-column.model'
 
 export function getDefaultSort<T>(columns: ReadonlyArray<TableColumn<T>>): Sort {

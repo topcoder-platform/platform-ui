@@ -2,7 +2,7 @@ import { Dispatch, MouseEvent, SetStateAction, useEffect, useState } from 'react
 import classNames from 'classnames'
 
 import { Button } from '../button'
-import { Sort } from '../pagination'
+import { Sort } from '../../../../../apps/gamification-admin/src/game-lib/pagination'
 import { IconOutline } from '../svgs'
 import { Tooltip } from '../tooltip'
 import '../../styles/_includes.scss'
