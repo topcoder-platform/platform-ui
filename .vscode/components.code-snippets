@@ -48,11 +48,44 @@
       ],
       "description": "Export module"
     },
-      "[MFE] use state": {
-          "scope": "typescript,typescriptreact",
-          "prefix": "usest",
-          "body": [
-              "const [$1, set$2]: [$3, Dispatch<SetStateAction<$3>>] = useState($4)$0",
-          ]
-      }
+    "[MFE] use state": {
+        "scope": "typescript,typescriptreact",
+        "prefix": "usest",
+        "body": [
+            "const [$1, set$2]: [$3, Dispatch<SetStateAction<$3>>] = useState($4)$0",
+        ]
+    },
+    "[MFE] Storybook Template": {
+        "scope": "typescript,typescriptreact",
+        "prefix": "sb",
+        "body": [
+            "/* eslint-disable no-underscore-dangle */",
+            "/* eslint-disable camelcase */",
+            "",
+            "import { Meta, StoryObj } from '@storybook/react'",
+            "",
+            "import '../../styles/index.scss'",
+            "",
+            "import { ${1:ComponentName} } from '.'",
+            "",
+            "const meta: Meta<typeof ${1:ComponentName}> = {",
+            "    argTypes: {",
+            "    },",
+            "    component: ${1:ComponentName},",
+            "    excludeStories: /.*Decorator$/,",
+            "    tags: ['autodocs'],",
+            "    title: 'Components/${1:ComponentName}',",
+            "}",
+            "",
+            "export default meta",
+            "",
+            "type Story = StoryObj<typeof ${1:ComponentName}>;",
+            "",
+            "export const Primary: Story = {",
+            "    args: {",
+            "    },",
+            "}",
+            ""
+        ]
+    }
   }

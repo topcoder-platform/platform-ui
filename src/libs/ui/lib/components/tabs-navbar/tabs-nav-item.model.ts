@@ -4,4 +4,5 @@ export interface TabsNavItem {
     badges?: Array<TabsNavItemBadge>
     id: string
     title: string
+    url?: string
 }

@@ -26,6 +26,8 @@ export interface TabsNavbarProps {
 }
 
 const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
+    const query: URLSearchParams = new URLSearchParams(window.location.search)
+    const initialTab: MutableRefObject<string | null> = useRef<string|null>(query.get('tab'))
 
     const [tabOpened, setTabOpened]: [string | undefined, Dispatch<SetStateAction<string | undefined>>]
         = useState<string | undefined>(props.defaultActive)
@@ -66,11 +68,13 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
     }
 
     useLayoutEffect(() => {
-        const query: URLSearchParams = new URLSearchParams(window.location.search)
-        const initialTab: string | null = query.get('tab')
-
-        if (initialTab && props.tabs.find(tab => tab.id === initialTab)) {
-            handleActivateTab(initialTab)()
+        if (
+            initialTab.current
+            && initialTab.current !== props.defaultActive
+            && props.tabs.find(tab => tab.id === initialTab.current)
+        ) {
+            handleActivateTab(initialTab.current)()
+            initialTab.current = ''
         } else if (props.defaultActive) {
             setTabOpened(props.defaultActive)
             updateOffset(props.defaultActive)
@@ -82,27 +86,49 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
         updateOffset,
     ])
 
-    const renderTabItem: (tab: TabsNavItem, activeTabId?: string, ref?: (el: HTMLDivElement) => void) => ReactNode = (
+    const renderTabItem: (
         tab: TabsNavItem,
         activeTabId?: string,
-        ref?: (el: HTMLDivElement) => void,
-    ) => (
-        <div
-            ref={ref}
-            className={classNames(styles['tab-item'], activeTabId === tab.id && 'active')}
-            key={tab.id}
-            onClick={handleActivateTab(tab.id)}
-        >
-            <span className={styles['tab-label']}>
-                {tab.title}
-            </span>
-            {tab.badges?.map(badge => (
-                <span className={classNames(styles['tab-badge'], badge.type)} key={badge.type}>
-                    {badge.count}
+        ref?: (el: HTMLElement | null) => void
+    ) => ReactNode = (
+        tab,
+        activeTabId,
+        ref,
+    ) => {
+        const tabContent: ReactNode = (
+            <>
+                <span className={styles['tab-label']}>
+                    {tab.title}
                 </span>
-            ))}
-        </div>
-    )
+                {tab.badges?.map(badge => (
+                    <span className={classNames(styles['tab-badge'], badge.type)} key={badge.type}>
+                        {badge.count}
+                    </span>
+                ))}
+            </>
+        )
+
+        return tab.url ? (
+            <a
+                ref={ref}
+                className={styles['tab-item']}
+                href={tab.url}
+                rel='noopener noreferrer'
+                target='_blank'
+            >
+                {tabContent}
+            </a>
+        ) : (
+            <div
+                ref={ref}
+                className={classNames(styles['tab-item'], activeTabId === tab.id && 'active')}
+                key={tab.id}
+                onClick={handleActivateTab(tab.id)}
+            >
+                {tabContent}
+            </div>
+        )
+    }
 
     useClickOutside(triggerRef.current, () => setMenuIsVisible(false))
 
