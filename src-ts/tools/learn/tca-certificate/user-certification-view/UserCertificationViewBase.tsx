@@ -4,6 +4,7 @@ import {
     MutableRefObject,
     SetStateAction,
     useEffect,
+    useLayoutEffect,
     useRef,
     useState,
 } from 'react'
@@ -16,6 +17,7 @@ import {
 } from '../../../../lib'
 import {
     CertificatePageLayout,
+    hideSiblings,
     HiringManagerView,
     PageTitle,
     TCACertification,
@@ -34,6 +36,7 @@ interface UserCertificationViewBaseProps {
 
 const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: UserCertificationViewBaseProps) => {
     const [queryParams]: [URLSearchParams, any] = useSearchParams()
+    const wrapElRef: MutableRefObject<HTMLElement | any> = useRef()
 
     const tcaCertificationPath: string = getTCACertificationPath(`${props.certification?.dashedName}`)
     const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
@@ -55,6 +58,15 @@ const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: Us
             .then(verified => setIsMemberVerified(verified))
     }, [props.enrollment])
 
+    useLayoutEffect(() => {
+        const el: HTMLElement = wrapElRef.current
+        if (!el || !isModalView) {
+            return
+        }
+
+        hideSiblings(el.parentElement as HTMLElement)
+    }, [isModalView])
+
     return (
         <>
             <PageTitle>
@@ -74,8 +86,8 @@ const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: Us
                 </CertificatePageLayout>
             )}
 
-            {props.profile && props.certification && props.enrollment && (
-                <div className='full-height-frame'>
+            <div className='full-height-frame' ref={wrapElRef}>
+                {props.profile && props.certification && props.enrollment && (
                     <HiringManagerView
                         certification={props.certification}
                         completedAt={(props.enrollment.completedAt ?? undefined) as string}
@@ -88,8 +100,8 @@ const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: Us
                         isPreview={props.isPreview}
                         isModalView={isModalView}
                     />
-                </div>
-            )}
+                )}
+            </div>
         </>
     )
 }
