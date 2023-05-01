@@ -1,8 +1,9 @@
-import { FC, useLayoutEffect } from 'react'
+import { FC, MutableRefObject, useLayoutEffect, useRef } from 'react'
 import { NavigateFunction, Params, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import { LoadingSpinner } from '../../../../lib'
 import {
+    hideSiblings,
     TCACertification,
     TCACertificationEnrollmentProviderData,
     useTCACertificationEnrollment,
@@ -16,6 +17,8 @@ const UuidCertificationView: FC<{}> = () => {
     const routeParams: Params<string> = useParams()
     const [queryParams]: [URLSearchParams, any] = useSearchParams()
 
+    const elRef: MutableRefObject<HTMLElement | any> = useRef()
+
     const {
         enrollment,
         error: enrollmentError,
@@ -24,6 +27,7 @@ const UuidCertificationView: FC<{}> = () => {
         = useTCACertificationEnrollment(routeParams.completionUuid as string)
 
     const certification: TCACertification | undefined = enrollment?.topcoderCertification
+    const isModalView: boolean = queryParams.get('view-style') === 'modal'
 
     useLayoutEffect(() => {
         if (enrollmentReady && enrollment) {
@@ -37,9 +41,18 @@ const UuidCertificationView: FC<{}> = () => {
         }
     }, [certification?.dashedName, enrollment, enrollmentReady, navigate, queryParams])
 
+    useLayoutEffect(() => {
+        const el: HTMLElement = elRef.current
+        if (!el || !isModalView) {
+            return
+        }
+
+        hideSiblings(el.parentElement as HTMLElement)
+    }, [isModalView])
+
     return (
         <>
-            <LoadingSpinner hide={enrollmentReady} />
+            <LoadingSpinner hide={enrollmentReady} ref={elRef} />
             {enrollmentReady && enrollmentError && (
                 <UserCertificationViewBase
                     enrollment={enrollment}
