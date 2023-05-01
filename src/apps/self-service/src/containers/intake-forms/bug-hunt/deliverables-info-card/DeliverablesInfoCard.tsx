@@ -1,6 +1,5 @@
 import { FC } from 'react'
 
-
 import {
     bugHuntExample1Img,
     bugHuntExample1Pdf,

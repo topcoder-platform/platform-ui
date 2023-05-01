@@ -6,7 +6,6 @@ import {
     ReactNode,
     SetStateAction,
     useCallback,
-    useLayoutEffect,
     useMemo,
     useRef,
     useState,
@@ -42,7 +41,7 @@ import {
     TCACertificationResource,
 } from '../../data-providers'
 import { getTCACertificationPath, getUserTCACertificateSsr } from '../../../learn.routes'
-import { clearFCCCertificationTitle, hideSiblings } from '../../functions'
+import { clearFCCCertificationTitle } from '../../functions'
 
 import { CertificateModal } from './certificate-modal'
 import styles from './HiringManagerView.module.scss'
@@ -73,7 +72,6 @@ export interface HiringManagerViewProps {
 // eslint-disable-next-line complexity
 const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewProps) => {
     const certificateElRef: MutableRefObject<HTMLDivElement | any> = useRef()
-    const wrapElRef: MutableRefObject<HTMLElement | any> = useRef()
 
     const [certPreviewModalIsOpen, setCertPreviewModalIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -257,19 +255,8 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
         )
     }
 
-    useLayoutEffect(() => {
-        const el: HTMLElement = wrapElRef.current
-        if (!el || !props.isModalView) {
-            return
-        }
-
-        hideSiblings(el.parentElement as HTMLElement)
-        hideSiblings(el.parentElement?.parentElement as HTMLElement)
-
-    })
-
     return !!props.certification && !!props.userProfile ? (
-        <div className={props.isModalView ? styles.modalView : ''} ref={wrapElRef}>
+        <div className={props.isModalView ? styles.modalView : ''}>
             {renderHero()}
 
             <ContentLayout
