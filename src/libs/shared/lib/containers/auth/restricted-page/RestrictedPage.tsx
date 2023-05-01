@@ -1,6 +1,6 @@
 import { ReactElement } from 'react'
 
-import { ContentLayout } from '..'
+import { ContentLayout } from '~/libs/ui'
 
 import styles from './RestrictedPage.module.scss'
 

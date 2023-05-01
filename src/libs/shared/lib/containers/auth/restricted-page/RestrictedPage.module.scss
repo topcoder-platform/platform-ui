@@ -1,3 +1,5 @@
+@import '@libs/ui/styles/includes';
+
 .contentLayout {
   width: 100%;
   padding-bottom: 0;
@@ -17,10 +19,10 @@
   padding-top: 26px;
 
   a {
-    color: #0D61BF;
+    color: $link-blue-dark;
 
     &:hover {
-      color: #0D61BF;
+      color: $link-blue-dark;
       text-decoration: underline;
     }
   }

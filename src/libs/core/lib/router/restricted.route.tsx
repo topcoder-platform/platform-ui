@@ -1,6 +1,6 @@
 import { FC, useContext } from 'react'
 
-import { RestrictedPage } from '~/libs/ui'
+import { RestrictedPage } from '~/libs/shared'
 
 import { profileContext, ProfileContextData } from '../profile'
 
