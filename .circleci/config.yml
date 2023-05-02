@@ -54,6 +54,12 @@ running_yarn_build: &running_yarn_build
       yarn install
       yarn build
 
+running_yarn_sb_build: &running_yarn_sb_build
+    name: Running Yarn Storybook Build
+    command: |
+      source buildenvvar
+      yarn sb:build
+
 running_yarn_test: &running_yarn_test
     name: Running Yarn Test Build
     command: |
@@ -91,6 +97,7 @@ build_steps: &build_steps
     - run: *install_deploysuite
     - run: *build_configuration_fetch
     - run: *running_yarn_build
+    - run: *running_yarn_sb_build
     - persist_to_workspace: *workspace_persist
 
 test_steps: &test_steps
@@ -144,7 +151,7 @@ jobs:
   #     LOGICAL_ENV: "prod"
   #     APPNAME: "platform-ui-mvp"
   #   steps: *lint_steps
-    
+
   build-dev:
     <<: *defaults
     environment:
@@ -168,7 +175,7 @@ jobs:
       LOGICAL_ENV: "prod"
       APPNAME: "platform-ui-mvp"
     steps: *build_steps
-  
+
   test-dev:
     <<: *test_defaults
     environment:
@@ -251,7 +258,7 @@ workflows:
           context : org-global
           requires:
             - build-dev
-          filters: 
+          filters:
             branches:
               only:
                 - dev
@@ -260,7 +267,7 @@ workflows:
           context : org-global
           requires:
             - build-qa
-          filters: 
+          filters:
             branches:
               only:
                 - qa
