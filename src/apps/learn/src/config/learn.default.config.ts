@@ -1,7 +1,10 @@
+import { EnvironmentConfig } from '~/config'
+import { getReactEnv } from '~/config/environments/react-env'
+
 import { LearnConfigModel } from './learn-config.model'
 
 export const LearnConfigDefault: LearnConfigModel = {
-    API: 'https://api.topcoder-dev.com/v5/learning-paths',
+    API: `${EnvironmentConfig.API.V5}/learning-paths`,
     CERT_ALT_PARAMS: {
         'view-style': 'large-container',
     },
@@ -11,5 +14,5 @@ export const LearnConfigDefault: LearnConfigModel = {
         value: 'certificate-container',
     },
     CLIENT: 'https://fcc.topcoder-dev.com:4431',
-    REQUIRE_DICE_ID: `${process.env.REACT_APP_TCA_REQUIRE_DICE_ID}` === 'true',
+    REQUIRE_DICE_ID: `${getReactEnv<string>('REQUIRE_DICE_ID', '')}` === 'true',
 }
