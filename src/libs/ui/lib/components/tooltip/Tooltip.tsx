@@ -49,6 +49,7 @@ const Tooltip: FC<TooltipProps> = (props: TooltipProps) => {
                 'data-tooltip-id': tooltipId.current as string,
                 'data-tooltip-place': props.place ?? 'bottom',
                 'data-tooltip-strategy': props.strategy ?? 'absolute',
+                key: tooltipId.current as string,
             } as any))
     }
 

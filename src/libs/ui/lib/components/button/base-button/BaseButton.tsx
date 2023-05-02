@@ -46,6 +46,8 @@ const BaseButton: FC<BaseButtonProps> = props => {
     return (
         <button
             {...dataProps}
+            name={props.name}
+            value={props.value}
             className={className}
             type={props.type ?? 'button'}
             disabled={props.disabled}

@@ -281,7 +281,7 @@ const Review: FC = () => {
 
             <div className={styles['button-wrapper']}>
                 <PageDivider />
-                <Button type='button' secondary icon={BackArrowIcon} onClick={navigateToBasicInfo} />
+                <Button type='button' size='lg' secondary icon={BackArrowIcon} onClick={navigateToBasicInfo} />
             </div>
         </div>
     )

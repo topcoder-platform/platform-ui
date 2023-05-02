@@ -44,7 +44,7 @@ const FormCardSet: React.FC<FormCardSetProps> = (props: FormCardSetProps) => {
             type={selected ? 'button' : 'submit'}
             size='md'
             icon={selected ? IconCheck : undefined}
-            id={card.id}
+            value={card.id}
             name={props.name}
             className={selected ? 'flex-row' : ''}
         />
@@ -56,6 +56,7 @@ const FormCardSet: React.FC<FormCardSetProps> = (props: FormCardSetProps) => {
                 props.cards?.map((card, index: number) => {
                     const formattedPrice: string | undefined = textFormatMoneyLocaleString(card.price)
                     const selected: boolean = props.value === card.id
+
                     return (
                         <div
                             key={`card-${card.id}`}
@@ -93,7 +94,7 @@ const FormCardSet: React.FC<FormCardSetProps> = (props: FormCardSetProps) => {
                                     )}
                                 >
                                     {section.rows.map(row => (
-                                        <div className={styles.row}>
+                                        <div className={styles.row} key={`row-${row.label}`}>
                                             <div className={styles['row-divider']} />
                                             <div
                                                 key={`row-${row.label}`}
