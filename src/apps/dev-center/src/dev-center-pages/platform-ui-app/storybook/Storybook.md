@@ -9,7 +9,7 @@ To aid in development, we've built a storybook that can help designers and devel
 
 ## Storybook
 
-The storybook can be found [here](https://platform-ui.topcoder-qa.com/storybook/index.html)
+The storybook can be found [here](/storybook/index.html)
 
 On this page, you can see the UI elements available to developers in the Platform UI app, all the variations, and all the available styles.
 
@@ -24,7 +24,7 @@ If you want to test individual elements, for instance, the "Primary" option unde
 
 ![](./images/Storybook2.png)
 
-## Figma 
+## Figma
 
 The Topcoder Design System is what defines the individual components and colours for the platform UI.  You can find the latest Figma link [here](https://www.figma.com/file/2t8Wcyu8FAXxzQGpyK8r4f/TC-Design-System-2.0-%2F-2022?node-id=0-1&t=dYPoI1JQmBZlf1nm-0)
 
