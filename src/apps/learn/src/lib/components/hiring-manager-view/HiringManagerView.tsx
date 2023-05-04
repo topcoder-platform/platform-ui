@@ -301,8 +301,8 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                                         props.isOwner ? 'View your Topcoder profile' : 'View full Topcoder profile'
                                     )}
                                     size='lg'
-                                    className={styles.shareBtn}
-                                    to={props.isPreview ? '#profile-preview' : myProfileLink}
+                                    className={classNames(styles.shareBtn, props.isPreview && styles.disabled)}
+                                    to={props.isPreview ? '' : myProfileLink}
                                     target='_blank'
                                     rel='noreferrer'
                                 />

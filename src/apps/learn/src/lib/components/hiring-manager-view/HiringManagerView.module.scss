@@ -49,7 +49,7 @@
             z-index: -1;
         }
     }
-    
+
     .heroInner {
         display: flex;
         gap: $sp-10;
@@ -144,7 +144,7 @@
         }
         .heroCert {
             position: relative;
-            
+
             .certActionBtns {
                 position: absolute;
                 bottom: $sp-6;
@@ -166,7 +166,7 @@
 
 .wrap {
     margin-bottom: 120px;
-    
+
     @include ltemd {
         margin-bottom: $sp-4;
     }
@@ -188,7 +188,7 @@
         background: $black-5;
         border-radius: $sp-2;
         margin-bottom: $sp-10;
-        
+
         @include ltemd {
             border-radius: 0;
             margin-left: -$sp-6;
@@ -266,6 +266,10 @@
     &:global(.secondary) {
         border: 2px solid;
     }
+
+    &.disabled {
+        pointer-events: none;
+    }
 }
 
 .colsWrap {
@@ -275,7 +279,7 @@
     h2 {
         margin-bottom: $sp-6;
     }
-    
+
     @include ltemd {
         flex-direction: column;
         gap: $sp-8;
@@ -298,7 +302,7 @@
     width: 1px;
     flex: 0 0 auto;
     margin: 0 $sp-8;
-    
+
     @include ltemd {
         display: none;
     }
@@ -347,7 +351,7 @@
     .wrap {
         margin-bottom: 0;
     }
-    
+
     .contentOuter {
         max-width: none;
 
@@ -360,7 +364,7 @@
     .courses {
         margin-bottom: 0;
     }
-    
+
     .colWrap {
         &:last-child {
             max-width: 25%;

@@ -38,7 +38,7 @@ const LinkButton: FC<LinkButtonProps> = props => {
 
     const button: ReactNode = <Button {...buttonProps} />
 
-    if (props.disabled) {
+    if (props.disabled || !props.to) {
         return button
     }
 
