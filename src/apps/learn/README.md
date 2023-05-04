@@ -4,11 +4,9 @@
 
 The Learn tool has its own configuration defined in the [/src-ts/tools/learn/learn-config](/src-ts/tools/learn/learn-config/learn.config.ts) directory.
 
-The default configuration expects both the FCC Client and API to be running locally. In most cases, developers probably won't want to run both locally. 
+The default configuration expects both the FCC Client and API to be running locally. In most cases, developers probably won't want to run both locally.
 
 >**NOTE** There is a known issue when running the learn app locally with the FCC hosted in the dev environment. The FCC API appears to throw 403 errors when loading a new lesson; however, this does not affect the usage of the site and can be safely ignored. See [TCA-595](https://topcoder.atlassian.net/browse/TCA-595) for more details.
-
->**See** [/src-ts/tools/learn/learn-config/learn.brooke.config.ts](/src-ts/tools/learn/learn-config/learn.brooke.config.ts) for an example of how to override the FCC source URLs to use the dev env config.
 
 >**See** the [main app README](/README.md#personal-config) for instructions for creating a personal config.
 

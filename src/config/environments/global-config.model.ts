@@ -1,4 +1,5 @@
 export interface GlobalConfig {
+    TC_DOMAIN: string
     TOPCODER_URL: string
     PLATFORMUI_URL: string
     API: {

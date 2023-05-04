@@ -8,7 +8,7 @@ export const LearnConfigDefault: LearnConfigModel = {
     CERT_ALT_PARAMS: {
         'view-style': 'large-container',
     },
-    CERT_DOMAIN: 'https://certificate.topcoder-dev.com',
+    CERT_DOMAIN: `https://certificate.${EnvironmentConfig.TC_DOMAIN}`,
     CERT_ELEMENT_SELECTOR: {
         attribute: 'data-id',
         value: 'certificate-container',
