@@ -28,10 +28,18 @@ const GetStartedCardsContainer: FC = () => (
         <DevCenterCard
             cornerIcon={<ApiCornerIcon />}
             icon={<ApiIcon />}
-            title='TopCoder api'
+            title='Platform UI Storybook'
             titleClass={styles.apiTitle}
-            description='Explore API libraries and integrate with API endpoints.'
-            button={<h4 className={styles.comingSoon}>Coming soon</h4>}
+            description='Explore the Platform UI Storybook for UI development.'
+            button={(
+                <LinkButton
+                    primary
+                    size='lg'
+                    label='get started'
+                    className={styles.button}
+                    to='/dev-center/storybook'
+                />
+            )}
         />
     </div>
 )
