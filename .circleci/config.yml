@@ -245,7 +245,6 @@ workflows:
             branches:
               only:
                 - qa
-                - UOF-61_merge-latest-uof
 
       - build-prod:
           context : org-global
@@ -262,6 +261,7 @@ workflows:
             branches:
               only:
                 - dev
+                - UOF-61_merge-latest-uof
 
       - deployQa:
           context : org-global
@@ -271,7 +271,6 @@ workflows:
             branches:
               only:
                 - qa
-                - UOF-61_merge-latest-uof
 
       - deployProd:
           context : org-global
