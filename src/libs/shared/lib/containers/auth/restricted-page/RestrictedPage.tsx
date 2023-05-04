@@ -15,7 +15,7 @@ export const RestrictedPage: ReactElement
             <div className={styles.container}>
                 <p>
                     Unfortunately, you are not permitted to access the site. If you feel you should be able to, please
-                    <a href='/support'>contact us</a>
+                    <a href='/support'> contact us</a>
                     .
                 </p>
             </div>
