@@ -237,7 +237,6 @@ workflows:
               ignore:
                 - master
                 - qa
-                - UOF-61_merge-latest-uof
 
       - build-qa:
           context : org-global
