@@ -343,7 +343,7 @@ export class Renderer implements MarkdownRenderer {
                 .filter(t => t.type === 'image')
                 .map((t, idx) => (
                     <img
-                        src={require(`../../../${_.get(t, 'lang', '').slice(2)}`)}
+                        src={require(`../../../${_.get(t, 'href', '').slice(2)}`)}
                         alt=''
                         key={idx}
                     />

@@ -15,14 +15,14 @@ On this page, you can see the UI elements available to developers in the Platfor
 
 You can also get code by using the `Show code` button underneath examples on the Overview page.
 
-![](../../../images/Storybook1.png)
+![](./images/Storybook1.png)
 
 
 ### Individual testing
 
 If you want to test individual elements, for instance, the "Primary" option under "Button", you can click that and then you have controls at the bottom of the page that allow you to edit individual properties on the control and see the result, for easy validation.
 
-![](../../../images/Storybook2.png)
+![](./images/Storybook2.png)
 
 ## Figma 
 
@@ -38,4 +38,4 @@ In Figma, when you select an element, you will see the CSS code for the element.
 
 **When applying CSS to your elements in platform-UI, it's important to reuse the existing mixins as opposed to defining these per-component, whenever possible**.
 
-![](../../../images/Figma1.png)
+![](./images/Figma1.png)
