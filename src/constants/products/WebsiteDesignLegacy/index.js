@@ -1,3 +1,5 @@
+import { selfServiceRootRoute } from "../../routes";
+
 export const PRIZES_PAYMENT_BREAKDOWN = [0.5, 0.2, 0.1];
 export const REVIEWER_PAYMENT_BREAKDOWN = [0.1, 0.1];
 export const DEFAULT_DURATION = "4-6";
@@ -111,54 +113,54 @@ export const DURATION_MAPPING = [
 ];
 
 export const INTAKE_FORM_ROUTES = [
-  "/self-service/wizard",
-  "/self-service/new/website-design-legacy/basic-info",
-  "/self-service/new/website-design-legacy/website-purpose",
-  "/self-service/new/website-design-legacy/page-details",
-  "/self-service/new/website-design-legacy/login-prompt",
-  "/self-service/new/website-design-legacy/branding",
-  "/self-service/new/website-design-legacy/review",
-  "/self-service/new/website-design-legacy/thank-you",
+  `${selfServiceRootRoute}/wizard`,
+  `${selfServiceRootRoute}/new/website-design-legacy/basic-info`,
+  `${selfServiceRootRoute}/new/website-design-legacy/website-purpose`,
+  `${selfServiceRootRoute}/new/website-design-legacy/page-details`,
+  `${selfServiceRootRoute}/new/website-design-legacy/login-prompt`,
+  `${selfServiceRootRoute}/new/website-design-legacy/branding`,
+  `${selfServiceRootRoute}/new/website-design-legacy/review`,
+  `${selfServiceRootRoute}/new/website-design-legacy/thank-you`,
 ];
 
 export const PROGRESS_LEVELS = [
   {
     label: "Basic Info",
-    url: "/self-service/new/website-design-legacy/basic-info",
+    url: `${selfServiceRootRoute}/new/website-design-legacy/basic-info`,
     trueIndex: 2,
     showIndex: 1,
     visibleInProgressIndicator: true,
   },
   {
     label: "REVIEW REQUIREMENTS",
-    url: "/self-service/new/website-design-legacy/basic-info",
+    url: `${selfServiceRootRoute}/new/website-design-legacy/basic-info`,
     trueIndex: 2,
     showIndex: 1,
   },
   {
     label: "Website Purpose",
-    url: "/self-service/new/website-design-legacy/website-purpose",
+    url: `${selfServiceRootRoute}/new/website-design-legacy/website-purpose`,
     trueIndex: 3,
     showIndex: 2,
     visibleInProgressIndicator: true,
   },
   {
     label: "Page Details",
-    url: "/self-service/new/website-design-legacy/page-details",
+    url: `${selfServiceRootRoute}/new/website-design-legacy/page-details`,
     trueIndex: 4,
     showIndex: 3,
     visibleInProgressIndicator: true,
   },
   {
     label: "Branding",
-    url: "/self-service/new/website-design-legacy/branding",
+    url: `${selfServiceRootRoute}/new/website-design-legacy/branding`,
     trueIndex: 5,
     showIndex: 4,
     visibleInProgressIndicator: true,
   },
   {
     label: "Review",
-    url: "/self-service/new/website-design-legacy/review",
+    url: `${selfServiceRootRoute}/new/website-design-legacy/review`,
     trueIndex: 6,
     showIndex: 5,
     visibleInProgressIndicator: true,

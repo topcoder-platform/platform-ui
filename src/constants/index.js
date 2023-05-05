@@ -38,13 +38,8 @@ import imgProductProblemStatement from "../assets/images/products/product-main-p
 import imgProductFindMeData from "../assets/images/products/product-main-photos/find-me-data.jpeg";
 import imgProductWebsiteDesign from "../assets/images/products/product-main-photos/web-design.jpeg";
 import imgRedBlueGradient from "../assets/images/products/product-main-photos/reb-blue-gradient-background.jpeg";
-import { EnvironmentConfig } from "../../src-ts";
-import { AppSubdomain } from "../../src-ts/config";
 
-// Need to re-define this in here, otherwise if we're loading it from tools/work/work.routes
-//  it creates a circular dependency within webpack somehow and it breaks the build
-export const rootRoute = EnvironmentConfig.SUBDOMAIN === AppSubdomain.work ? '' : `/${AppSubdomain.work}`
-export const selfServiceRootRoute = `${rootRoute}/self-service`
+import { selfServiceRootRoute } from './routes';
 
 export const UNDER_MAINTENANCE = false;
 
