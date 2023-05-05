@@ -3,6 +3,7 @@ import { FC } from 'react'
 import { Button } from '../../../../../../../lib'
 import { ApiCornerIcon, ApiIcon, CommunityAppCornerIcon, CommunityAppIcon } from '../../../../../assets/i'
 import { DevCenterCard } from '../../dev-center-card'
+import { rootRoute } from '../../../../../dev-center.routes'
 
 import styles from './GetStartedCardsContainer.module.scss'
 
@@ -14,7 +15,7 @@ const GetStartedCardsContainer: FC = () => (
             title='Community App'
             titleClass={styles.communityTitle}
             description='Learn about Topcoder Community App and run started code.'
-            button={<Button route='/getting-started' label='get started' className={styles.button} />}
+            button={<Button route={`${rootRoute}/getting-started`} label='get started' className={styles.button} />}
         />
         <DevCenterCard
             cornerIcon={<ApiCornerIcon />}
