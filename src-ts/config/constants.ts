@@ -1,3 +1,10 @@
+export enum AppSubdomain {
+    dev = 'devcenter',
+    game = 'gamification-admin',
+    tca = 'academy',
+    work = 'work',
+}
+
 export enum ToolTitle {
     dev = 'Dev Center',
     game = 'Gamification Admin',

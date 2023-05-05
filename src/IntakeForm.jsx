@@ -168,32 +168,32 @@ export default function IntakeForm() {
           {/* Data Exploration */}
           <Route
             element={<DataExploration isLoggedIn={isLoggedIn} />}
-            path="/work/new/data-exploration/*"
+            path="/new/data-exploration/*"
           />
 
           {/* Data Advisory */}
           <Route
             element={<DataAdvisory isLoggedIn={isLoggedIn} />}
-            path="/work/new/data-advisory/*"
+            path="/new/data-advisory/*"
 
           />
 
           {/* Find Me Data */}
           <Route
             element={<FindMeData isLoggedIn={isLoggedIn} />}
-            path="/work/new/find-me-data/*"
+            path="/new/find-me-data/*"
           />
 
           {/* Web Design*/}
           <Route
             element={<WebsiteDesign isLoggedIn={isLoggedIn} />}
-            path="/work/new/website-design/*"
+            path="/new/website-design/*"
           />
 
           {/* Web Design (Legacy) */}
           <Route
             element={<WebsiteDesignLegacy isLoggedIn={isLoggedIn} />}
-            path="/work/new/website-design-legacy/*"
+            path="/new/website-design-legacy/*"
           />
 
           <Route

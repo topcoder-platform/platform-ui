@@ -7,6 +7,7 @@ import BrandingLegacy from "../../BrandingLegacy";
 import PageDetailsLegacy from "../../PageDetailsLegacy";
 import WebsitePurposeLegacy from "../../WebsitePurposeLegacy";
 import WebsiteDesignBannerLegacy from "../../../components/Banners/WebsiteDesignBannerLegacy";
+import { selfServiceRootRoute } from "../../../../src-ts/tools/work";
 
 export default function WebsiteDesignLegacy({ isLoggedIn }) {
   return (
@@ -30,7 +31,7 @@ export default function WebsiteDesignLegacy({ isLoggedIn }) {
       <Route
         element={<LoginPrompt
           isLoggedIn={isLoggedIn}
-          nextPageUrl="/self-service/work/new/website-design-legacy/branding"
+          nextPageUrl={`${selfServiceRootRoute}/new/website-design-legacy/branding`}
         />}
         path="/login-prompt"
       />

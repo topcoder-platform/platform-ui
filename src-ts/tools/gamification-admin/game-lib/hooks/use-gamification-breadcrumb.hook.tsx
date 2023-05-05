@@ -1,13 +1,13 @@
 import { BreadcrumbItemModel } from '../../../../lib'
-import { basePath } from '../../gamification-admin.routes'
 import { toolTitle } from '../../GamificationAdmin'
+import { rootRoute } from '../../gamification-admin.routes'
 
 export function useGamificationBreadcrumb(items: Array<BreadcrumbItemModel>): Array<BreadcrumbItemModel> {
 
     const breadcrumb: Array<BreadcrumbItemModel> = [
         {
             name: toolTitle,
-            url: basePath,
+            url: rootRoute,
         },
         ...items,
     ]

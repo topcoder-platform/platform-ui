@@ -6,13 +6,13 @@ export const CHALLENGE_FIELD_VALUES = {
 
 export const INTAKE_FORM_ROUTES = [
   "/self-service/wizard",
-  "/self-service/work/new/website-design/basic-info",
+  "/self-service/new/website-design/basic-info",
   "/self-service",
   "/self-service",
-  "/self-service/work/new/website-design/login-prompt",
+  "/self-service/new/website-design/login-prompt",
   "/self-service",
-  "/self-service/work/new/website-design/review",
-  "/self-service/work/new/website-design/thank-you",
+  "/self-service/new/website-design/review",
+  "/self-service/new/website-design/thank-you",
 ];
 
 export const DEFAULT_TIMELINE = [

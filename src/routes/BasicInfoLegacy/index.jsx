@@ -36,6 +36,7 @@ import {
 
 import { Breadcrumb, ContactSupportModal } from "../../../src-ts";
 import { useNavigate } from "react-router-dom";
+import { selfServiceRootRoute } from "../../../src-ts/tools/work";
 
 /**
  * Basic Info Page
@@ -72,13 +73,13 @@ const BasicInfoLegacy = ({
 
   const onBack = () => {
     dispatch(resetIntakeForm(true));
-    navigate("/self-service/wizard");
+    navigate(`${selfServiceRootRoute}/wizard`);
   };
 
   const onNext = () => {
     setProgressItem(3);
     saveBasicInfo(formData);
-    navigate("/self-service/work/new/website-design-legacy/website-purpose");
+    navigate(`${selfServiceRootRoute}/new/website-design-legacy/website-purpose`);
   };
 
   const updateNumOfPages = (newNumOfPages) => {

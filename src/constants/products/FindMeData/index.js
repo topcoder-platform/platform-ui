@@ -6,13 +6,13 @@ export const CHALLENGE_FIELD_VALUES = {
 
 export const INTAKE_FORM_ROUTES = [
   "/self-service/wizard",
-  "/self-service/work/new/find-me-data/basic-info",
+  "/self-service/new/find-me-data/basic-info",
   "/self-service",
   "/self-service",
-  "/self-service/work/new/find-me-data/login-prompt",
+  "/self-service/new/find-me-data/login-prompt",
   "/self-service",
-  "/self-service/work/new/find-me-data/review",
-  "/self-service/work/new/find-me-data/thank-you",
+  "/self-service/new/find-me-data/review",
+  "/self-service/new/find-me-data/thank-you",
 ];
 
 export const DEFAULT_TIMELINE = [

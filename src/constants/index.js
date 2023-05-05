@@ -38,30 +38,37 @@ import imgProductProblemStatement from "../assets/images/products/product-main-p
 import imgProductFindMeData from "../assets/images/products/product-main-photos/find-me-data.jpeg";
 import imgProductWebsiteDesign from "../assets/images/products/product-main-photos/web-design.jpeg";
 import imgRedBlueGradient from "../assets/images/products/product-main-photos/reb-blue-gradient-background.jpeg";
+import { EnvironmentConfig } from "../../src-ts";
+import { AppSubdomain } from "../../src-ts/config";
+
+// Need to re-define this in here, otherwise if we're loading it from tools/work/work.routes
+//  it creates a circular dependency within webpack somehow and it breaks the build
+export const rootRoute = EnvironmentConfig.SUBDOMAIN === AppSubdomain.work ? '' : `/${AppSubdomain.work}`
+export const selfServiceRootRoute = `${rootRoute}/self-service`
 
 export const UNDER_MAINTENANCE = false;
 
 export const GA_ID = "GTM-MXXQHG8";
 
 export const ROUTES = {
-  INTAKE_FORM: "/self-service/wizard",
-  HOME_PAGE: "/self-service",
-  DASHBOARD_PAGE: "/work/dashboard",
-  WEBSITE_DESIGN: "/self-service/work/new/website-design/basic-info",
-  WEBSITE_DESIGN_REVIEW: "/self-service/work/new/website-design/review",
-  DATA_EXPLORATION: "/self-service/work/new/data-exploration/basic-info",
-  DATA_EXPLORATION_REVIEW: "/self-service/work/new/data-exploration/review",
-  PROBLEM_STATEMENT: "/self-service/work/new/data-advisory/basic-info",
-  PROBLEM_STATEMENT_REVIEW: "/self-service/work/new/data-advisory/review",
-  FIND_ME_DATA: "/self-service/work/new/find-me-data/basic-info",
-  FIND_ME_DATA_REVIEW: "/self-service/work/new/find-me-data/review",
-  WEBSITE_DESIGN_LEGACY: "/self-service/work/new/website-design-legacy/basic-info",
+  INTAKE_FORM: `${selfServiceRootRoute}/wizard`,
+  HOME_PAGE: `${selfServiceRootRoute}`,
+  DASHBOARD_PAGE: `/work/dashboard`,
+  WEBSITE_DESIGN: `${selfServiceRootRoute}/new/website-design/basic-info`,
+  WEBSITE_DESIGN_REVIEW: `${selfServiceRootRoute}/new/website-design/review`,
+  DATA_EXPLORATION: `${selfServiceRootRoute}/new/data-exploration/basic-info`,
+  DATA_EXPLORATION_REVIEW: `${selfServiceRootRoute}/new/data-exploration/review`,
+  PROBLEM_STATEMENT: `${selfServiceRootRoute}/new/data-advisory/basic-info`,
+  PROBLEM_STATEMENT_REVIEW: `${selfServiceRootRoute}/new/data-advisory/review`,
+  FIND_ME_DATA: `${selfServiceRootRoute}/new/find-me-data/basic-info`,
+  FIND_ME_DATA_REVIEW: `${selfServiceRootRoute}/new/find-me-data/review`,
+  WEBSITE_DESIGN_LEGACY: `${selfServiceRootRoute}/new/website-design-legacy/basic-info`,
   WEBSITE_DESIGN_PURPOSE_LEGACY:
-    "/self-service/work/new/website-design-legacy/website-purpose",
+    `${selfServiceRootRoute}/new/website-design-legacy/website-purpose`,
   WEBSITE_DESIGN_PAGE_DETAILS_LEGACY:
-    "/self-service/work/new/website-design-legacy/page-details",
+    `${selfServiceRootRoute}/new/website-design-legacy/page-details`,
   WEBSITE_DESIGN_BRANDING_LEGACY:
-    "/self-service/work/new/website-design-legacy/branding",
+    `${selfServiceRootRoute}/new/website-design-legacy/branding`,
 };
 
 /**
@@ -278,7 +285,7 @@ export const webWorkTypes = [
     price: workPriceDesignLegacy.getPrice(workPriceDesignLegacy),
     stickerPrice: workPriceDesignLegacy.packages?.base?.price,
     featured: false,
-    startRoute: "/self-service/work/new/website-design-legacy/basic-info",
+    startRoute: `${selfServiceRootRoute}/new/website-design-legacy/basic-info`,
     basePath: "website-design-legacy",
     bgImage: imgProductWebsiteDesign,
   },
@@ -295,7 +302,7 @@ export const webWorkTypes = [
     // stickerPrice: workPriceDesign.packages?.base?.price,
     duration: `${webDesignConfigs.DEFAULT_DURATION} Days`,
     featured: true,
-    startRoute: "/self-service/work/new/website-design/basic-info",
+    startRoute: `${selfServiceRootRoute}/new/website-design/basic-info`,
     basePath: "website-design",
     helperBannerTitle: "WHAT WILL I RECEIVE?",
     bgImage: imgProductWebsiteDesign,
@@ -358,7 +365,7 @@ export const webWorkTypes = [
     stickerPrice: workPriceData.packages?.base?.price,
     duration: `${dataExplorationConfigs.DEFAULT_DURATION} Days`,
     featured: true,
-    startRoute: "/self-service/work/new/data-exploration/basic-info",
+    startRoute: `${selfServiceRootRoute}/new/data-exploration/basic-info`,
     basePath: "data-exploration",
     bgImage: imgProductDataExploration,
     helperBannerTitle: "WHAT WILL I GET?",
@@ -414,7 +421,7 @@ export const webWorkTypes = [
     stickerPrice: workPriceProblem.packages?.base?.price,
     duration: `${dataAdvisoryConfigs.DEFAULT_DURATION} Days`,
     featured: true,
-    startRoute: "/self-service/work/new/data-advisory/basic-info",
+    startRoute: `${selfServiceRootRoute}/new/data-advisory/basic-info`,
     basePath: "data-advisory",
     helperBannerTitle: "WHAT WILL I RECEIVE?",
     bgImage: imgProductProblemStatement,
@@ -476,7 +483,7 @@ export const webWorkTypes = [
     stickerPrice: workPriceFindData.packages?.base?.price,
     duration: `${findMeDataConfigs.DEFAULT_DURATION} Days`,
     featured: true,
-    startRoute: "/self-service/work/new/find-me-data/basic-info",
+    startRoute: `${selfServiceRootRoute}/new/find-me-data/basic-info`,
     basePath: "find-me-data",
     bgImage: imgProductFindMeData,
     helperBannerTitle: "WHAT WILL I RECEIVE?",
@@ -560,18 +567,18 @@ export const ColorOptionsItems = [
 export const tabNames = ["summary", "details", "messaging", "solutions"];
 
 export const disabledSidebarRoutes = [
-  "/self-service/basic-info",
-  "/self-service/website-purpose",
-  "/self-service/page-details",
-  "/self-service/branding",
-  "/self-service/review",
-  "/self-service/payment",
-  "/self-service/thank-you",
-  "/self-service/wizard",
-  "/self-service/profile",
-  "/self-service/login-prompt",
-  "/self-service/work-items/*",
-  "/self-service/work/*",
+  `${selfServiceRootRoute}/basic-info`,
+  `${selfServiceRootRoute}/website-purpose`,
+  `${selfServiceRootRoute}/page-details`,
+  `${selfServiceRootRoute}/branding`,
+  `${selfServiceRootRoute}/review`,
+  `${selfServiceRootRoute}/payment`,
+  `${selfServiceRootRoute}/thank-you`,
+  `${selfServiceRootRoute}/wizard`,
+  `${selfServiceRootRoute}/profile`,
+  `${selfServiceRootRoute}/login-prompt`,
+  `${selfServiceRootRoute}/work-items/*`,
+  `${selfServiceRootRoute}/*`,
 ];
 
 export const menuItems = [

@@ -14,7 +14,7 @@ const GetStartedCardsContainer: FC = () => (
             title='Community App'
             titleClass={styles.communityTitle}
             description='Learn about Topcoder Community App and run started code.'
-            button={<Button route='/dev-center/getting-started' label='get started' className={styles.button} />}
+            button={<Button route='/getting-started' label='get started' className={styles.button} />}
         />
         <DevCenterCard
             cornerIcon={<ApiCornerIcon />}

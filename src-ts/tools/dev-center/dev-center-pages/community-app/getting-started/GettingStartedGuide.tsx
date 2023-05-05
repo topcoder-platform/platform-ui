@@ -11,7 +11,7 @@ import styles from './GettingStartedGuide.module.scss'
 export const GettingStartedGuide: React.FC = () => {
     const { doc, toc, title }: ReturnType<typeof useMarkdown> = useMarkdown({ uri: gettingStartedGuide })
     const breadcrumb: Array<BreadcrumbItemModel> = React.useMemo(() => [
-        { name: toolTitle, url: '/dev-center' },
+        { name: toolTitle, url: '/' },
         { name: title, url: '#' },
     ], [title])
 

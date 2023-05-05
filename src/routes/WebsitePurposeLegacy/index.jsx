@@ -22,6 +22,7 @@ import WebsitePurposeForm from "./components/WebsitePurposeForm";
 import styles from "./styles.module.scss";
 
 import { Breadcrumb } from "../../../src-ts";
+import { selfServiceRootRoute } from "../../../src-ts/tools/work";
 
 /**
  * Website Purpose Page
@@ -54,12 +55,12 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem, isLoggedIn 
     formData?.userStory?.value.length;
 
   const onBack = () => {
-    navigate("/self-service/work/new/website-design-legacy/basic-info");
+    navigate(`${selfServiceRootRoute}/new/website-design-legacy/basic-info`);
   };
 
   const onNext = () => {
     saveWebsitePurpose(formData);
-    navigate("/self-service/work/new/website-design-legacy/page-details");
+    navigate(`${selfServiceRootRoute}/new/website-design-legacy/page-details`);
     setProgressItem(4);
   };
 
@@ -72,7 +73,7 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem, isLoggedIn 
     setProgressItem(3);
 
     if (currentStep === 0) {
-      navigate("/self-service");
+      navigate(selfServiceRootRoute);
     }
 
     if (websitePurpose) {

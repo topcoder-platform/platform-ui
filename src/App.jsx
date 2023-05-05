@@ -9,6 +9,7 @@ import { ScrollToTop } from "./ScrollToTop";
 import styles from "./styles/main.module.scss";
 import { lazyLoad, LoadingSpinner } from "../src-ts/lib";
 import { Suspense } from "react";
+import { selfServiceRootRoute } from "../src-ts/tools/work";
 
 const WorkItem = lazyLoad(() => import("./routes/WorkItems"));
 const IntakeForm = lazyLoad(() => import("./IntakeForm"));
@@ -47,11 +48,11 @@ const App = () => {
             <Routes>
                 <Route
                     element={<IntakeForm />}
-                    path="/self-service/*"
+                    path={`${selfServiceRootRoute}/*`}
                 />
                 <Route
                     element={<WorkItem />}
-                    path="/self-service/work-items/:workItemId"
+                    path={`${selfServiceRootRoute}/work-items/:workItemId`}
                 />
             </Routes>
         </Suspense>

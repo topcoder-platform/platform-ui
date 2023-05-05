@@ -6,7 +6,7 @@ export function useLearnBreadcrumb(items: Array<BreadcrumbItemModel>): Array<Bre
     const breadcrumb: Array<BreadcrumbItemModel> = [
         {
             name: 'Topcoder Academy',
-            url: rootRoute,
+            url: rootRoute || '/',
         },
         ...items,
     ]
