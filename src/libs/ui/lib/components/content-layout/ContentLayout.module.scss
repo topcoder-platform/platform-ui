@@ -3,6 +3,7 @@
 .content {
     flex: 1 1 auto;
     display: flex;
+    padding-bottom: $sp-4;
 
     .content-outer {
         max-width: $xxl-min;

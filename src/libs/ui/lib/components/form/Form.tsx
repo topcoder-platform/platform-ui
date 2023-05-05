@@ -12,7 +12,7 @@ import {
 } from 'react'
 import classNames from 'classnames'
 
-import { Button } from '../button'
+import { LinkButton } from '../button'
 import { IconOutline } from '../svgs'
 import '../../styles/index.scss'
 
@@ -174,9 +174,11 @@ const Form: <
                 || !!props.shouldDisableButton?.(isPrimaryGroup, index)
 
             return (
-                <Button
+                <LinkButton
                     {...button}
                     {...{ [button.buttonStyle ?? 'primary']: true }}
+                    to={button.route ?? button.url}
+                    type={button.type ?? (button.isReset ? 'reset' : button.isSubmit ? 'submit' : 'button')}
                     size='lg'
                     key={button.label || `button-${index}`}
                     disabled={disabled}
