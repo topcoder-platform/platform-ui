@@ -47,7 +47,7 @@ export const GA_ID = "GTM-MXXQHG8";
 
 export const ROUTES = {
   INTAKE_FORM: `${selfServiceRootRoute}/wizard`,
-  HOME_PAGE: `${selfServiceRootRoute}`,
+  HOME_PAGE: rootRoute || '/',
   DASHBOARD_PAGE: `${rootRoute}/dashboard`,
   WEBSITE_DESIGN: `${selfServiceRootRoute}/new/website-design/basic-info`,
   WEBSITE_DESIGN_REVIEW: `${selfServiceRootRoute}/new/website-design/review`,

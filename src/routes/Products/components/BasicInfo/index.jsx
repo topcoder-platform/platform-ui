@@ -21,6 +21,7 @@ import {
   BUTTON_TYPE,
   PageOptions,
   PrimaryDataChallengeOptions,
+  ROUTES,
 } from "../../../../constants/";
 import {
   saveBasicInfo,
@@ -219,7 +220,7 @@ const BasicInfo = ({
   const saveForm = (autoSave) => {
     saveBasicInfo(formData);
     dispatch(triggerAutoSave(autoSave, isLoggedIn, true));
-    if (autoSave) navigate(selfServiceRootRoute);
+    if (autoSave) navigate(ROUTES.HOME_PAGE);
   };
 
   const onClickBreadcrumbItem = (item) => {
