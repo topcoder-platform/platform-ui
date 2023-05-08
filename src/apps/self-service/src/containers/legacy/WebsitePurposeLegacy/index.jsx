@@ -94,7 +94,7 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem, isLoggedIn 
 
   return (
     <>
-      <LoadingSpinner hide={!isLoading} />
+      <LoadingSpinner hide={!isLoading} overlay />
       <Breadcrumb items={breadcrumbs} />
       <WebsiteDesignBannerLegacy />
       <PageContent>

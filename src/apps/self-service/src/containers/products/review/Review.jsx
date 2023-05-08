@@ -203,7 +203,7 @@ const Review = ({
         isOpen={isOrderContractModalOpen}
         onClose={() => setIsOrderContractModalOpen(false)}
       />
-      <LoadingSpinner hide={!isLoading} />
+      <LoadingSpinner hide={!isLoading} overlay />
       <Breadcrumb
         items={breadcrumb.map((item) => ({
           ...item,
