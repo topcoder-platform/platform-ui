@@ -55,7 +55,7 @@ export const WorkProvider: FC<{ children: ReactNode }> = props => {
             try {
                 const safeProfile: UserProfile = profile as UserProfile
 
-                let pageNumber: number = 1
+                let pageNumber: number = 0
                 let nextSet: Array<Work> = await workGetAllAsync(safeProfile, pageNumber += 1)
 
                 const contextData: WorkContextData = {
