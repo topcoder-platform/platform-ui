@@ -21,6 +21,7 @@ import {
   BUTTON_TYPE,
   PageOptions,
   PrimaryDataChallengeOptions,
+  ROUTES,
 } from "../../../../constants/";
 import {
   saveBasicInfo,
@@ -43,6 +44,7 @@ import {
   getWebsiteDesignPriceAndTimelineEstimate,
 } from "../../../../utils/";
 import FeaturedWorkTypeBanner from "../../../../components/Banners/FeaturedWorkTypeBanner";
+import { selfServiceRootRoute } from "../../../../../src-ts/tools/work";
 
 import styles from "./styles.module.scss";
 
@@ -147,10 +149,10 @@ const BasicInfo = ({
   const onBack = () => {
     dispatch(triggerCookieClear());
     saveBasicInfo(defaultFormData);
-    navigate("/self-service/wizard");
+    navigate(`${selfServiceRootRoute}/wizard`);
   };
 
-  const baseUrl = `/self-service/work/new/${workItemConfig.basePath}`;
+  const baseUrl = `${selfServiceRootRoute}/new/${workItemConfig.basePath}`;
 
   const onNext = () => {
     setProgressItem(isLoggedIn ? 7 : 5);
@@ -218,7 +220,7 @@ const BasicInfo = ({
   const saveForm = (autoSave) => {
     saveBasicInfo(formData);
     dispatch(triggerAutoSave(autoSave, isLoggedIn, true));
-    if (autoSave) navigate("/self-service");
+    if (autoSave) navigate(ROUTES.HOME_PAGE);
   };
 
   const onClickBreadcrumbItem = (item) => {

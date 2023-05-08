@@ -1,4 +1,5 @@
 module.exports = {
+  TC_DOMAIN: 'topcoder-dev.com',
   /**
    * URL of Topcoder Community Website
    */

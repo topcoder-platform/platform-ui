@@ -19,6 +19,7 @@ import PageH2 from "../../components/PageElements/PageH2";
 import Progress from "../../components/Progress";
 import { BUTTON_SIZE, BUTTON_TYPE, ROUTES } from "../../constants/";
 import { getDynamicPriceAndTimelineEstimate } from "../../utils/";
+import { selfServiceRootRoute } from "../../../src-ts/tools/work";
 
 import BrandingForm from "./components/BrandingForm";
 import styles from "./styles.module.scss";
@@ -79,7 +80,7 @@ const BrandingLegacy = ({ saveBranding, setProgressItem, isLoggedIn }) => {
     setProgressItem(5);
 
     if (currentStep === 0) {
-      navigate("/self-service/wizard");
+      navigate(`${selfServiceRootRoute}/wizard`);
     }
 
     if (branding) {
@@ -104,11 +105,11 @@ const BrandingLegacy = ({ saveBranding, setProgressItem, isLoggedIn }) => {
       formData?.fontUrl.value.trim() !== "");
 
   const onBack = () => {
-    navigate("/self-service/work/new/website-design-legacy/page-details");
+    navigate(`${selfServiceRootRoute}/new/website-design-legacy/page-details`);
   };
 
   const onNext = () => {
-    navigate("/self-service/work/new/website-design-legacy/review");
+    navigate(`${selfServiceRootRoute}/new/website-design-legacy/review`);
     saveBranding(formData);
     setProgressItem(6);
   };

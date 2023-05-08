@@ -11,6 +11,7 @@ import { ReactComponent as DataAdvisoryIcon } from "../../../assets/images/data-
 import HelpBanner from "../../../components/HelpBanner";
 import FeaturedWorkTypeBanner from "../../../components/Banners/FeaturedWorkTypeBanner";
 import { webWorkTypes } from "../../../constants/index";
+import { selfServiceRootRoute } from "../../../../src-ts/tools/work";
 
 export default function DataAdvisory({ isLoggedIn }) {
   const dataAdvisory = webWorkTypes.find(
@@ -35,8 +36,8 @@ export default function DataAdvisory({ isLoggedIn }) {
       <Route
         element={<LoginPrompt
           isLoggedIn={isLoggedIn}
-          previousPageUrl="/self-service/work/new/data-advisory/basic-info"
-          nextPageUrl="/self-service/work/new/data-advisory/review"
+          previousPageUrl={`${selfServiceRootRoute}/new/data-advisory/basic-info`}
+          nextPageUrl={`${selfServiceRootRoute}/new/data-advisory/review`}
         />}
         path="/login-prompt"
       />
@@ -55,10 +56,10 @@ export default function DataAdvisory({ isLoggedIn }) {
               {helperBannerContent}
             </HelpBanner>
           }
-          previousPageUrl="/self-service/work/new/data-advisory/basic-info"
+          previousPageUrl={`${selfServiceRootRoute}/new/data-advisory/basic-info`}
           nextPageUrl={
             isLoggedIn
-              ? "/self-service/work/new/data-advisory/thank-you"
+              ? `${selfServiceRootRoute}/new/data-advisory/thank-you`
               : config.SIGN_IN_URL
           }
           icon={<DataAdvisoryIcon />}

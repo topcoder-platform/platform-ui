@@ -36,6 +36,7 @@ import {
   setCookie,
   clearCachedChallengeId,
 } from "../../autoSaveBeforeLogin";
+import { selfServiceRootRoute } from "../../../src-ts/tools/work";
 
 import AboutYourProject from "./components/AboutYourProject";
 import styles from "./styles.module.scss";
@@ -109,7 +110,7 @@ const Review = ({
     setProgressItem(7);
 
     if (currentStep === 0) {
-      navigate("/self-service");
+      navigate(selfServiceRootRoute);
     }
 
     setFirstMounted(false);
@@ -126,14 +127,14 @@ const Review = ({
     }
 
     if (currentStep === 0) {
-      navigate("/self-service");
+      navigate(selfServiceRootRoute);
     }
 
     setAnotherFirstMounted(false);
   }, [currentStep, anotherFirstMounted, navigate]);
 
   const onBack = () => {
-    navigate(previousPageUrl || "/self-service/branding");
+    navigate(previousPageUrl || `${selfServiceRootRoute}/branding`);
   };
 
   const clearPreviousForm = () => {
@@ -169,7 +170,7 @@ const Review = ({
       .then((res) => {
         activateChallenge(challengeId);
         clearPreviousForm();
-        navigate(nextPageUrl || "/self-service/thank-you");
+        navigate(nextPageUrl || `${selfServiceRootRoute}/thank-you`);
         setProgressItem(8);
         setPaymentFailed(false);
       })

@@ -20,6 +20,7 @@ import { setProgressItem } from "../../actions/progress";
 import { ReactComponent as BackIcon } from "../../assets/images/icon-back-arrow.svg";
 import { WebsiteDesignBannerLegacy } from "../../components/Banners/WebsiteDesignBannerLegacy";
 import { ROUTES } from "../../constants";
+import { selfServiceRootRoute } from "../../../src-ts/tools/work";
 
 import PageDetailsForm from "./components/PageDetailsForm";
 import styles from "./styles.module.scss";
@@ -47,7 +48,7 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem, isLoggedIn }) => 
   const estimate = getDynamicPriceAndTimelineEstimate(fullState);
 
   const onBack = () => {
-    navigate("/self-service/work/new/website-design-legacy/website-purpose");
+    navigate(`${selfServiceRootRoute}/new/website-design-legacy/website-purpose`);
   };
 
   const [firstMounted, setFirstMounted] = useState(true);
@@ -59,7 +60,7 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem, isLoggedIn }) => 
     setProgressItem(4);
 
     if (currentStep === 0) {
-      navigate("/self-service/wizard");
+      navigate(`${selfServiceRootRoute}/wizard`);
     }
 
     if (pageDetails) {
@@ -74,7 +75,7 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem, isLoggedIn }) => 
   }, [currentStep, pageDetails, dispatch, setProgressItem, firstMounted, navigate, isLoggedIn]);
 
   const onNext = () => {
-    navigate("/self-service/work/new/website-design-legacy/login-prompt");
+    navigate(`${selfServiceRootRoute}/new/website-design-legacy/login-prompt`);
     savePageDetails(listInputs);
     setProgressItem(5);
   };

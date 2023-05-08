@@ -13,6 +13,7 @@ import config from "../../../config";
 import PageFoot from "../../components/PageElements/PageFoot";
 import PageDivider from "../../components/PageDivider";
 import { ReactComponent as BackIcon } from "../../assets/images/icon-back-arrow.svg";
+import { selfServiceRootRoute } from "../../../src-ts/tools/work";
 
 import styles from "./styles.module.scss";
 
@@ -46,7 +47,7 @@ const LoginPrompt = ({
 
   const onBack = () => {
     navigate(
-      previousPageUrl || "/self-service/work/new/website-design-legacy/page-details"
+      previousPageUrl || `${selfServiceRootRoute}/new/website-design-legacy/page-details`
     );
   };
 

@@ -1,4 +1,4 @@
-import { EnvironmentConfig } from '../../config'
+import { AppSubdomain, EnvironmentConfig } from '../../config'
 import { authUrlLogin, lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
 
 import { toolTitle } from './Learn'
@@ -35,18 +35,17 @@ const UserCertificationView: LazyLoadedComponent
 const UserCertificationPreview: LazyLoadedComponent
     = lazyLoad(() => import('./tca-certificate'), 'UserCertificationPreview')
 
-export enum LEARN_PATHS {
-    certificate = '/certificate',
-    completed = '/learn/completed',
-    myLearning = '/learn/my-learning',
-    fcc = '/learn/fcc',
-    root = '/learn',
-    startCourseRouteFlag = 'start-course',
-    tcaCertifications = '/tca-certifications',
-    tcaEnroll = '/enroll',
+export const rootRoute: string = EnvironmentConfig.SUBDOMAIN === AppSubdomain.tca ? '' : `/${AppSubdomain.tca}`
+
+export const LEARN_PATHS: { [key: string]: string } = {
+    certificate: '/certificate',
+    myLearning: `${rootRoute}/my-learning`,
+    root: rootRoute,
+    startCourseRouteFlag: 'start-course',
+    tcaCertifications: '/tca-certifications',
+    tcaEnroll: '/enroll',
 }
 
-export const rootRoute: string = LEARN_PATHS.root
 export const absoluteRootRoute: string = `${window.location.origin}${LEARN_PATHS.root}`
 
 export function getAuthenticateAndStartCourseRoute(): string {
@@ -241,6 +240,7 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                 route: 'tca-certifications/:certification/preview',
             },
         ],
+        domain: AppSubdomain.tca,
         element: <LandingLearn />,
         id: toolTitle,
         route: rootRoute,
