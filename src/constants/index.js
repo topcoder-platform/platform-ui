@@ -39,7 +39,7 @@ import imgProductFindMeData from "../assets/images/products/product-main-photos/
 import imgProductWebsiteDesign from "../assets/images/products/product-main-photos/web-design.jpeg";
 import imgRedBlueGradient from "../assets/images/products/product-main-photos/reb-blue-gradient-background.jpeg";
 
-import { selfServiceRootRoute } from './routes';
+import { rootRoute, selfServiceRootRoute } from './routes';
 
 export const UNDER_MAINTENANCE = false;
 
@@ -48,7 +48,7 @@ export const GA_ID = "GTM-MXXQHG8";
 export const ROUTES = {
   INTAKE_FORM: `${selfServiceRootRoute}/wizard`,
   HOME_PAGE: `${selfServiceRootRoute}`,
-  DASHBOARD_PAGE: `/work/dashboard`,
+  DASHBOARD_PAGE: `${rootRoute}/dashboard`,
   WEBSITE_DESIGN: `${selfServiceRootRoute}/new/website-design/basic-info`,
   WEBSITE_DESIGN_REVIEW: `${selfServiceRootRoute}/new/website-design/review`,
   DATA_EXPLORATION: `${selfServiceRootRoute}/new/data-exploration/basic-info`,
