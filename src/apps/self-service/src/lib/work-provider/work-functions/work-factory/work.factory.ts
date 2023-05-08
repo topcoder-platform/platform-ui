@@ -714,11 +714,16 @@ function getType(challenge: Challenge): WorkType {
         return WorkType.unknown
     }
 
-    // parse the form
-    const form: { form: IntakeForm } = JSON.parse(intakeForm.value)
-    const workTypeKey: (keyof typeof WorkType) | undefined = Object.entries(WorkType)
-        .find(([, value]) => value === form.form?.workType?.selectedWorkType)
-        ?.[0] as keyof typeof WorkType
+    let workTypeKey: (keyof typeof WorkType) | undefined
+
+    try {
+        // parse the form
+        const form: { form: IntakeForm } = JSON.parse(intakeForm.value)
+        workTypeKey = Object.entries(WorkType)
+            .find(([, value]) => value === form.form?.workType?.selectedWorkType)
+            ?.[0] as keyof typeof WorkType
+    } catch (error) {
+    }
 
     const output: WorkType = !!workTypeKey ? WorkType[workTypeKey] : WorkType.unknown
     return output
