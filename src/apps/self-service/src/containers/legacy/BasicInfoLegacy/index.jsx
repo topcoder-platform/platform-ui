@@ -160,7 +160,7 @@ const BasicInfoLegacy = ({
 
   return (
     <>
-      <LoadingSpinner hide={!isLoading} />
+      <LoadingSpinner hide={!isLoading} overlay />
       <ContactSupportModal
         workId={challenge?.id}
         isOpen={showSupportModal}

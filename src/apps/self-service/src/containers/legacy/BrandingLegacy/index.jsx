@@ -123,7 +123,7 @@ const BrandingLegacy = ({ saveBranding, setProgressItem, isLoggedIn }) => {
 
   return (
     <>
-      <LoadingSpinner hide={initialized} />
+      <LoadingSpinner hide={initialized} overlay />
       <Breadcrumb items={breadcrumbs} />
       <WebsiteDesignBannerLegacy />
       <PageContent>

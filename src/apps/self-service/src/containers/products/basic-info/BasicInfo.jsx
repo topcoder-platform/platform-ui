@@ -226,7 +226,7 @@ const BasicInfo = ({
 
   return (
     <>
-      <LoadingSpinner hide={!isLoading} />
+      <LoadingSpinner hide={!isLoading} overlay />
       <ContactSupportModal
         challengeId={challenge?.id}
         isOpen={showSupportModal}
