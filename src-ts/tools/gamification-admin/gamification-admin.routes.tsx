@@ -35,6 +35,7 @@ export const gamificationAdminRoutes: ReadonlyArray<PlatformRoute> = [
                 route: `${baseDetailPath}/:id`,
             },
         ],
+        domain: AppSubdomain.game,
         element: <GamificationAdmin />,
         hidden: true,
         id: toolTitle,
