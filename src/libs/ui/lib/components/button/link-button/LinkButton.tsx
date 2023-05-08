@@ -4,8 +4,8 @@ import { omit, pick } from 'lodash'
 
 import Button, { ButtonProps } from '../Button'
 
-export type LinkButtonProps = ButtonProps & LinkProps & {
-    to: To
+export type LinkButtonProps = ButtonProps & Omit<LinkProps, 'to'> & {
+    to?: To
 }
 
 const linkPropsList: string[] = [
