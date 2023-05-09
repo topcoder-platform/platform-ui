@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom'
 
-import { contactSupportPath, lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
+import { contactSupportPath, lazyLoad, LazyLoadedComponent, PlatformRoute, Rewrite } from '../../lib'
 import { AppSubdomain, EnvironmentConfig } from '../../config'
 
 import { dashboardRouteId, intakeFormsRouteId, toolTitle } from './Work'
@@ -48,6 +48,15 @@ export function workDetailOrDraftRoute(selectedWork: Work): string {
 export function workDetailRoute(workId: string, tab?: 'solutions' | 'messages'): string {
     return `${selfServiceRootRoute}/work-items/${workId}${!!tab ? `?tab=${tab}` : ''}`
 }
+
+const oldUrlRedirectRoute: ReadonlyArray<PlatformRoute> = EnvironmentConfig.SUBDOMAIN === AppSubdomain.work ? [
+    {
+        children: [],
+        element: <Rewrite to='/*' />,
+        id: 'redirect-old-url',
+        route: '/work/*',
+    },
+] : []
 
 export const workRoutes: ReadonlyArray<PlatformRoute> = [
     {
@@ -123,8 +132,13 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
         route: `${selfServiceRootRoute}/dashboard`,
     },
     {
+        element: <Navigate to={selfServiceStartRoute} />,
+        route: selfServiceRootRoute,
+    },
+    {
         children: [],
         element: <Navigate to={contactSupportPath} />,
         route: `${contactSupportPath}`,
     },
+    ...oldUrlRedirectRoute,
 ]
