@@ -27,7 +27,7 @@ export const createBadgeFormDef: FormDefinition = {
             {
                 buttonStyle: 'icon-bordered',
                 icon: IconOutline.ChevronLeftIcon,
-                route: rootRoute,
+                route: rootRoute || '/',
                 size: 'lg',
             },
         ],
