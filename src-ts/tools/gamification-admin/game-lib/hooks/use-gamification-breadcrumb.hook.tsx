@@ -7,7 +7,7 @@ export function useGamificationBreadcrumb(items: Array<BreadcrumbItemModel>): Ar
     const breadcrumb: Array<BreadcrumbItemModel> = [
         {
             name: toolTitle,
-            url: rootRoute,
+            url: rootRoute || '/',
         },
         ...items,
     ]
