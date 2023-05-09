@@ -46,7 +46,7 @@ export const CoursePageContextProvider: FC<CoursePageContextProviderProps> = pro
             const breadcrumbs: BreadcrumbItemModel[] = [
                 {
                     name: 'Topcoder Academy',
-                    url: rootRoute,
+                    url: rootRoute || '/',
                 },
                 ...(!parentTcaCert ? [] : [parentTcaCert]),
                 ...items,
