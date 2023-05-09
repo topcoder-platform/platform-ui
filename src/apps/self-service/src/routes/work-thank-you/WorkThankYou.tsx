@@ -1,21 +1,13 @@
-import { NavigateFunction, useNavigate } from 'react-router-dom'
+import { LinkButton } from '~/libs/ui'
 
-import { Button } from '~/libs/ui'
-
-import { selfServiceRootRoute } from '../../self-service.routes'
+import { workDashboardRoute } from '../../config'
 
 import styles from './WorkThankYou.module.scss'
 
 const WorkThankYou: () => JSX.Element = () => {
 
-    const navigate: NavigateFunction = useNavigate()
-
     const clearPreviousForm: () => void = () => {
         // TODO in PROD-2441 - Whichever form clearing mechanism is coded in PROD-2441 should be called here.
-    }
-
-    function onDone(): void {
-        navigate(selfServiceRootRoute)
     }
 
     clearPreviousForm()
@@ -39,11 +31,11 @@ const WorkThankYou: () => JSX.Element = () => {
                             page.
                         </p>
                     </div>
-                    <Button
+                    <LinkButton
                         primary
                         size='lg'
                         label='Go to Dashboard'
-                        onClick={onDone}
+                        to={workDashboardRoute}
                     />
                 </div>
             </div>

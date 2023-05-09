@@ -16,7 +16,7 @@ import {
 } from "~/libs/ui";
 import { OrderContractModal } from "~/libs/shared";
 
-import { MAX_COMPLETED_STEP } from "../../../config";
+import { MAX_COMPLETED_STEP, selfServiceRootRoute, selfServiceStartRoute } from "../../../config";
 import { resetIntakeForm } from "../../../actions/form";
 import { triggerAutoSave, triggerCookieClear } from "../../../actions/autoSave";
 import { setProgressItem } from "../../../actions/progress";
@@ -108,7 +108,7 @@ const Review = ({
     setProgressItem(7);
 
     if (currentStep === 0) {
-      navigate("/self-service");
+      navigate(selfServiceStartRoute);
     }
 
     setFirstMounted(false);
@@ -125,14 +125,14 @@ const Review = ({
     }
 
     if (currentStep === 0) {
-      navigate("/self-service");
+      navigate(selfServiceRootRoute);
     }
 
     setAnotherFirstMounted(false);
   }, [currentStep, anotherFirstMounted, navigate]);
 
   const onBack = () => {
-    navigate(previousPageUrl || "/self-service/branding");
+    navigate(previousPageUrl || `${selfServiceRootRoute}/branding`);
   };
 
   const clearPreviousForm = () => {
@@ -168,7 +168,7 @@ const Review = ({
       .then((res) => {
         activateChallenge(challengeId);
         clearPreviousForm();
-        navigate(nextPageUrl || "/self-service/thank-you");
+        navigate(nextPageUrl || `${selfServiceRootRoute}/thank-you`);
         setProgressItem(8);
         setPaymentFailed(false);
       })

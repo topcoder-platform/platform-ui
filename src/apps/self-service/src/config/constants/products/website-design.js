@@ -1,3 +1,5 @@
+import { selfServiceRootRoute } from "../../routes.config";
+
 export const CHALLENGE_FIELD_VALUES = {
     trackId: "5fa04185-041f-49a6-bfd1-fe82533cd6c8",
     typeId: "927abff4-7af9-4145-8ba1-577c16e64e2e",
@@ -5,14 +7,14 @@ export const CHALLENGE_FIELD_VALUES = {
 };
 
 export const INTAKE_FORM_ROUTES = [
-    "/self-service/wizard",
-    "/self-service/work/new/website-design/basic-info",
-    "/self-service",
-    "/self-service",
-    "/self-service/work/new/website-design/login-prompt",
-    "/self-service",
-    "/self-service/work/new/website-design/review",
-    "/self-service/work/new/website-design/thank-you",
+    `${selfServiceRootRoute}/wizard`,
+    `${selfServiceRootRoute}/new/website-design/basic-info`,
+    `${selfServiceRootRoute}`,
+    `${selfServiceRootRoute}`,
+    `${selfServiceRootRoute}/new/website-design/login-prompt`,
+    `${selfServiceRootRoute}`,
+    `${selfServiceRootRoute}/new/website-design/review`,
+    `${selfServiceRootRoute}/new/website-design/thank-you`,
 ];
 
 export const DEFAULT_TIMELINE = [

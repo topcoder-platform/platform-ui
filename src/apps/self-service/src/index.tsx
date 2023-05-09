@@ -1,4 +1,2 @@
-export {
-    selfServiceRoutes,
-    workRootRoute as selfServiceRootRoute,
-} from './self-service.routes'
+export { selfServiceRoutes } from './self-service.routes'
+export { workRootRoute as selfServiceRootRoute } from './config'

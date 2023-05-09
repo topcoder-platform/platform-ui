@@ -4,7 +4,7 @@ import { Route, Routes } from "react-router-dom";
 import { profileContext } from "~/libs/core";
 
 import { ReactComponent as DataExplorationIcon } from "../../../assets/images/data-exploration-icon.svg";
-import { SIGN_IN_URL, webWorkTypes } from "../../../config";
+import { SIGN_IN_URL, selfServiceRootRoute, webWorkTypes } from "../../../config";
 import { WorkType } from "../../../lib";
 import { BasicInfo, Review } from "../../../containers/products";
 import { WorkLoginPrompt } from "../../work-login-prompt";
@@ -36,8 +36,8 @@ export default function WebsiteDesign() {
       <Route
         element={<WorkLoginPrompt
           isLoggedIn={isLoggedIn}
-          previousPageUrl="/self-service/work/new/website-design/basic-info"
-          nextPageUrl="/self-service/work/new/website-design/review"
+          previousPageUrl={`${selfServiceRootRoute}/new/website-design/basic-info`}
+          nextPageUrl={`${selfServiceRootRoute}/new/website-design/review`}
         />}
         path="/login-prompt"
       />
@@ -56,10 +56,10 @@ export default function WebsiteDesign() {
               {helperBannerContent}
             </HelpBanner>
           }
-          previousPageUrl="/self-service/work/new/website-design/basic-info"
+          previousPageUrl={`${selfServiceRootRoute}/new/website-design/basic-info`}
           nextPageUrl={
             isLoggedIn
-              ? "/self-service/work/new/website-design/thank-you"
+              ? `${selfServiceRootRoute}/new/website-design/thank-you`
               : SIGN_IN_URL
           }
           icon={<DataExplorationIcon />}

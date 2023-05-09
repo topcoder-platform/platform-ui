@@ -5,6 +5,7 @@ import { ToolTitle } from '~/config'
 import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
 
 import { Work, WorkIntakeFormRoutes, WorkStatus, WorkType } from './lib'
+import { bugHuntRoute, selfServiceRootRoute, selfServiceStartRoute, workDashboardRoute, workRootRoute } from './config'
 
 const SelfServiceMyWork: LazyLoadedComponent = lazyLoad(() => import('./routes/self-service-my-work'), 'SelfServiceMyWork')
 const SelfServiceWorkItem: LazyLoadedComponent = lazyLoad(() => import('./routes/self-service-work-item'), 'SelfServiceWorkItem')
@@ -26,14 +27,6 @@ const WebsiteDesignLegacy: LazyLoadedComponent = lazyLoad(() => import('./routes
 export const toolTitle: string = ToolTitle.selfService
 export const workDashboardRouteId: string = `${toolTitle} Dashboard`
 export const intakeFormsRouteId: string = `${toolTitle} Intake Forms`
-
-export const workRootRoute: string = '/work'
-export const workDashboardRoute: string = `${workRootRoute}/dashboard`
-
-export const selfServiceRootRoute: string = '/self-service'
-export const selfServiceStartRoute: string = `${selfServiceRootRoute}/wizard`
-
-export const bugHuntRoute: string = 'bug-hunt/'
 
 export function getWorkDashboardRoute(active: string): string {
     return `${workDashboardRoute}/${active}`
@@ -104,53 +97,53 @@ export const selfServiceRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 element: <DataAdvisory />,
-                route: `${workRootRoute}/new/data-advisory/*`,
+                route: '/new/data-advisory/*',
             },
             {
                 element: <DataExploration />,
-                route: `${workRootRoute}/new/data-exploration/*`,
+                route: '/new/data-exploration/*',
             },
             {
                 element: <FindMeData />,
-                route: `${workRootRoute}/new/find-me-data/*`,
+                route: '/new/find-me-data/*',
             },
             {
                 element: <WebsiteDesign />,
-                route: `${workRootRoute}/new/website-design/*`,
+                route: '/new/website-design/*',
             },
             {
                 element: <WebsiteDesignLegacy />,
-                route: `${workRootRoute}/new/website-design-legacy/*`,
+                route: '/new/website-design-legacy/*',
             },
             // Bug Hunt
             {
                 element: <BugHuntIntakeForm />,
-                route: `${workRootRoute}/new/${bugHuntRoute}basic-info`,
+                route: `/new/${bugHuntRoute}basic-info`,
             },
             {
                 element: <BugHuntIntakeForm />,
-                route: `${workRootRoute}/new/${bugHuntRoute}basic-info/:workId`,
+                route: `/new/${bugHuntRoute}basic-info/:workId`,
             },
             {
                 element: <Review />,
-                route: `${workRootRoute}/new/${bugHuntRoute}review`,
+                route: `/new/${bugHuntRoute}review`,
             },
             {
                 element: <Review />,
-                route: `${workRootRoute}/new/${bugHuntRoute}review/:workId`,
+                route: `/new/${bugHuntRoute}review/:workId`,
             },
             {
                 element: <WorkLoginPrompt previousPageUrl={WorkIntakeFormRoutes[WorkType.bugHunt].basicInfo} />,
-                route: `${workRootRoute}/new/${bugHuntRoute}login-prompt/:retUrl`,
+                route: `/new/${bugHuntRoute}login-prompt/:retUrl`,
             },
             // General
             {
                 element: <SaveAfterLogin />,
-                route: `${workRootRoute}/new/:workType/save-after-login`,
+                route: '/new/:workType/save-after-login',
             },
             {
                 element: <WorkThankYou />,
-                route: `${workRootRoute}/new/:workType/thank-you`,
+                route: '/new/:workType/thank-you',
             },
         ],
         element: <SelfServiceIntake />,
@@ -159,7 +152,7 @@ export const selfServiceRoutes: ReadonlyArray<PlatformRoute> = [
         title: toolTitle,
     },
     {
-        element: <Navigate to={workRootRoute} />,
+        element: <Navigate to={workDashboardRoute} />,
         route: selfServiceRootRoute,
     },
     {

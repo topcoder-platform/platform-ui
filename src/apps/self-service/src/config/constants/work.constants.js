@@ -1,6 +1,8 @@
 import moment from "moment";
 import { filter, includes } from "lodash";
 
+import { AppSubdomain, EnvironmentConfig } from "~/config";
+
 import workUtil from "../../utils/work";
 import { PageP, PageUl } from "../../components/page-elements";
 import {
@@ -11,13 +13,6 @@ import {
     findData as workPriceFindData,
 } from '../../lib/work-provider/work-functions/work-store/work-prices.store'
 import { WorkType } from '../../lib/work-provider/work-functions/work-store/work-type.enum'
-
- import * as dataExplorationConfigs from "./products/data-exploration";
- import * as findMeDataConfigs from "./products/find-me-data";
- import * as dataAdvisoryConfigs from "./products/data-advisory";
- import * as webDesignConfigs from "./products/website-design";
- import * as webDesignLegacyConfigs from "./products/website-design-legacy";
-
 import WebsiteDesignPdf1 from "../../assets/pdf/WebDesign-1.pdf";
 import WebsiteDesignPdf2 from "../../assets/pdf/WebDesign-2.pdf";
 import exampleImage1 from "../../assets/images/design-example-image1.png";
@@ -28,18 +23,19 @@ import imgProductProblemStatement from "../../assets/images/products/product-mai
 import imgProductFindMeData from "../../assets/images/products/product-main-photos/find-me-data.jpeg";
 import imgProductWebsiteDesign from "../../assets/images/products/product-main-photos/web-design.jpeg";
 import imgRedBlueGradient from "../../assets/images/products/product-main-photos/reb-blue-gradient-background.jpeg";
+import { selfServiceRootRoute, workRootRoute } from "../routes.config";
 
+ import * as dataExplorationConfigs from "./products/data-exploration";
+ import * as findMeDataConfigs from "./products/find-me-data";
+ import * as dataAdvisoryConfigs from "./products/data-advisory";
+ import * as webDesignConfigs from "./products/website-design";
+ import * as webDesignLegacyConfigs from "./products/website-design-legacy";
 import countries from "./countries";
 import styles from "./styles.module.scss";
-import { EnvironmentConfig } from "~/config";
 
-export const SIGN_IN_URL = EnvironmentConfig.ENV === 'prod'
-    ? 'https://accounts-auth0.topcoder.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder.com%2Fself-service%2Fwizard&regSource=selfService'
-    : 'https://accounts-auth0.topcoder-dev.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder-dev.com%2Fself-service%2Fwizard&regSource=selfService';
-
-export const SIGN_UP_URL = EnvironmentConfig.ENV === 'prod'
-    ? 'https://accounts-auth0.topcoder.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder.com%2Fself-service%2Fwizard&regSource=selfService&mode=signUp'
-    : 'https://accounts-auth0.topcoder-dev.com/?retUrl=https%3A%2F%2Fplatform-ui.topcoder-dev.com%2Fself-service%2Fwizard&regSource=selfService&mode=signUp';
+const retUrl = encodeURIComponent(`https://${AppSubdomain.work}.${EnvironmentConfig.TC_DOMAIN}/self-service/wizard`)
+export const SIGN_IN_URL = `${EnvironmentConfig.AUTH.ACCOUNTS_APP_CONNECTOR}?retUrl=${retUrl}&regSource=selfService`
+export const SIGN_UP_URL = `${SIGN_IN_URL}&mode=signUp`
 
 export const VANILLA_EMBED_JS = EnvironmentConfig.ENV === 'prod'
     ? 'https://discussions.topcoder.com/js/embed.js'
@@ -55,24 +51,24 @@ export const AUTO_SAVED_COOKIE_EXPIRED_IN = 24 * 60
 export const TIME_ZONE = 'Europe/London'
 
 export const ROUTES = {
-    INTAKE_FORM: "/self-service/wizard",
-    HOME_PAGE: "/self-service",
-    DASHBOARD_PAGE: "/work/dashboard",
-    WEBSITE_DESIGN: "/self-service/work/new/website-design/basic-info",
-    WEBSITE_DESIGN_REVIEW: "/self-service/work/new/website-design/review",
-    DATA_EXPLORATION: "/self-service/work/new/data-exploration/basic-info",
-    DATA_EXPLORATION_REVIEW: "/self-service/work/new/data-exploration/review",
-    PROBLEM_STATEMENT: "/self-service/work/new/data-advisory/basic-info",
-    PROBLEM_STATEMENT_REVIEW: "/self-service/work/new/data-advisory/review",
-    FIND_ME_DATA: "/self-service/work/new/find-me-data/basic-info",
-    FIND_ME_DATA_REVIEW: "/self-service/work/new/find-me-data/review",
-    WEBSITE_DESIGN_LEGACY: "/self-service/work/new/website-design-legacy/basic-info",
+    INTAKE_FORM: `${selfServiceRootRoute}/wizard`,
+    HOME_PAGE: workRootRoute || '/',
+    DASHBOARD_PAGE: `${workRootRoute}/dashboard`,
+    WEBSITE_DESIGN: `${selfServiceRootRoute}/new/website-design/basic-info`,
+    WEBSITE_DESIGN_REVIEW: `${selfServiceRootRoute}/new/website-design/review`,
+    DATA_EXPLORATION: `${selfServiceRootRoute}/new/data-exploration/basic-info`,
+    DATA_EXPLORATION_REVIEW: `${selfServiceRootRoute}/new/data-exploration/review`,
+    PROBLEM_STATEMENT: `${selfServiceRootRoute}/new/data-advisory/basic-info`,
+    PROBLEM_STATEMENT_REVIEW: `${selfServiceRootRoute}/new/data-advisory/review`,
+    FIND_ME_DATA: `${selfServiceRootRoute}/new/find-me-data/basic-info`,
+    FIND_ME_DATA_REVIEW: `${selfServiceRootRoute}/new/find-me-data/review`,
+    WEBSITE_DESIGN_LEGACY: `${selfServiceRootRoute}/new/website-design-legacy/basic-info`,
     WEBSITE_DESIGN_PURPOSE_LEGACY:
-      "/self-service/work/new/website-design-legacy/website-purpose",
+      `${selfServiceRootRoute}/new/website-design-legacy/website-purpose`,
     WEBSITE_DESIGN_PAGE_DETAILS_LEGACY:
-      "/self-service/work/new/website-design-legacy/page-details",
+      `${selfServiceRootRoute}/new/website-design-legacy/page-details`,
     WEBSITE_DESIGN_BRANDING_LEGACY:
-      "/self-service/work/new/website-design-legacy/branding",
+      `${selfServiceRootRoute}/new/website-design-legacy/branding`,
   };
 
 
@@ -491,7 +487,7 @@ export const webWorkTypes = [
     price: workPriceDesignLegacy.getPrice(workPriceDesignLegacy),
     stickerPrice: workPriceDesignLegacy.packages?.base?.price,
     featured: false,
-    startRoute: "/self-service/work/new/website-design-legacy/basic-info",
+    startRoute: `${selfServiceRootRoute}/new/website-design-legacy/basic-info`,
     basePath: "website-design-legacy",
     bgImage: imgProductWebsiteDesign,
   },
@@ -508,7 +504,7 @@ export const webWorkTypes = [
     // stickerPrice: workPriceDesign.packages?.base?.price,
     duration: `${webDesignConfigs.DEFAULT_DURATION} Days`,
     featured: true,
-    startRoute: "/self-service/work/new/website-design/basic-info",
+    startRoute: `${selfServiceRootRoute}/new/website-design/basic-info`,
     basePath: "website-design",
     helperBannerTitle: "WHAT WILL I RECEIVE?",
     bgImage: imgProductWebsiteDesign,
@@ -571,7 +567,7 @@ export const webWorkTypes = [
     stickerPrice: workPriceData.packages?.base?.price,
     duration: `${dataExplorationConfigs.DEFAULT_DURATION} Days`,
     featured: true,
-    startRoute: "/self-service/work/new/data-exploration/basic-info",
+    startRoute: `${selfServiceRootRoute}/new/data-exploration/basic-info`,
     basePath: "data-exploration",
     bgImage: imgProductDataExploration,
     helperBannerTitle: "WHAT WILL I GET?",
@@ -627,7 +623,7 @@ export const webWorkTypes = [
     stickerPrice: workPriceProblem.packages?.base?.price,
     duration: `${dataAdvisoryConfigs.DEFAULT_DURATION} Days`,
     featured: true,
-    startRoute: "/self-service/work/new/data-advisory/basic-info",
+    startRoute: `${selfServiceRootRoute}/new/data-advisory/basic-info`,
     basePath: "data-advisory",
     helperBannerTitle: "WHAT WILL I RECEIVE?",
     bgImage: imgProductProblemStatement,
@@ -689,7 +685,7 @@ export const webWorkTypes = [
     stickerPrice: workPriceFindData.packages?.base?.price,
     duration: `${findMeDataConfigs.DEFAULT_DURATION} Days`,
     featured: true,
-    startRoute: "/self-service/work/new/find-me-data/basic-info",
+    startRoute: `${selfServiceRootRoute}/new/find-me-data/basic-info`,
     basePath: "find-me-data",
     bgImage: imgProductFindMeData,
     helperBannerTitle: "WHAT WILL I RECEIVE?",

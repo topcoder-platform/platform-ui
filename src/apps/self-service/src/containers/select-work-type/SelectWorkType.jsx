@@ -11,7 +11,7 @@ import { triggerAutoSave } from "../../actions/autoSave";
 import { saveWorkType, toggleSupportModal } from "../../actions/form";
 import { setProgressItem } from "../../actions/progress";
 import { WorkTypeConfigs } from "../../lib";
-import { ROUTES, projectAndProfessionalWork, webWorkTypes, workTypes } from "../../config";
+import { ROUTES, projectAndProfessionalWork, webWorkTypes, workTypes, selfServiceStartRoute } from "../../config";
 import { PageContent, PageH2 } from "../../components/page-elements";
 import Slider from "../../components/Slider";
 
@@ -150,7 +150,7 @@ const SelectWorkType = ({
 
   const breadcrumb = [
     { url: ROUTES.DASHBOARD_PAGE, name: "My work" },
-    { url: "/self-service/wizard", name: "Start work" },
+    { url: selfServiceStartRoute, name: "Start work" },
   ];
 
   const workTypeClassName = (title) => title.toLowerCase().split(" ").join("-");

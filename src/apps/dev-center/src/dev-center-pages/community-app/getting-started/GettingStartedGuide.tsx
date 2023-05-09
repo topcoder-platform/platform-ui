@@ -2,7 +2,7 @@ import * as React from 'react'
 
 import { Breadcrumb, BreadcrumbItemModel, ContentLayout } from '~/libs/ui'
 
-import { toolTitle } from '../../../dev-center.routes'
+import { rootRoute, toolTitle } from '../../../dev-center.routes'
 import { LayoutDocHeader, MarkdownDoc } from '../../../dev-center-lib/MarkdownDoc'
 import useMarkdown from '../../../dev-center-lib/hooks/useMarkdown'
 
@@ -12,7 +12,7 @@ import styles from './GettingStartedGuide.module.scss'
 export const GettingStartedGuide: React.FC = () => {
     const { doc, toc, title }: ReturnType<typeof useMarkdown> = useMarkdown({ uri: gettingStartedGuide })
     const breadcrumb: Array<BreadcrumbItemModel> = React.useMemo(() => [
-        { name: toolTitle, url: '/dev-center' },
+        { name: toolTitle, url: rootRoute || '/' },
         { name: title, url: '#' },
     ], [title])
 

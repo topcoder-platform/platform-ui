@@ -1,4 +1,5 @@
 export interface PlatformRoute {
+    domain?: string
     alternativePaths?: Array<string>
     authRequired?: boolean
     children?: Array<PlatformRoute>

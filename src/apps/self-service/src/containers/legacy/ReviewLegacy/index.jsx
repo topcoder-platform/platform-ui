@@ -11,7 +11,7 @@ import { Breadcrumb, Button, IconOutline, LoadingSpinner, PageDivider } from "~/
 import { OrderContractModal } from "~/libs/shared";
 
 import { resetIntakeForm } from "../../../actions/form";
-import { MAX_COMPLETED_STEP, ROUTES } from "../../../config";
+import { MAX_COMPLETED_STEP, ROUTES, selfServiceRootRoute, selfServiceStartRoute } from "../../../config";
 import { triggerAutoSave } from "../../../actions/autoSave";
 import { setProgressItem } from "../../../actions/progress";
 import * as services from "../../../services/payment";
@@ -82,7 +82,7 @@ const ReviewLegacy = ({
     setProgressItem(7);
 
     if (currentStep === 0) {
-      navigate("/self-service");
+      navigate(selfServiceStartRoute);
     }
 
     setFirstMounted(false);
@@ -99,14 +99,14 @@ const ReviewLegacy = ({
     }
 
     if (currentStep === 0) {
-      navigate("/self-service");
+      navigate(selfServiceStartRoute);
     }
 
     setAnotherFirstMounted(false);
   }, [currentStep, anotherFirstMounted, navigate]);
 
   const onBack = () => {
-    navigate("/self-service/work/new/website-design-legacy/branding");
+    navigate(`${selfServiceRootRoute}/new/website-design-legacy/branding`);
   };
 
   const clearPreviousForm = () => {
@@ -153,7 +153,7 @@ const ReviewLegacy = ({
       .then((res) => {
         activateChallenge(challengeId);
         clearPreviousForm();
-        navigate("/self-service/work/new/website-design-legacy/thank-you");
+        navigate(`${selfServiceRootRoute}/new/website-design-legacy/thank-you`);
         setProgressItem(8);
         setPaymentFailed(false);
       })

@@ -15,10 +15,11 @@ import {
     WorkStatusFilter,
 } from '../../lib'
 import { clearAutoSavedForm, clearCachedChallengeId } from '../../utils/autoSaveBeforeLogin'
-import { getWorkDashboardRoute, selfServiceStartRoute } from '../../self-service.routes'
+import { getWorkDashboardRoute } from '../../self-service.routes'
 import { WorkTable } from '../work-table'
 import { WorkNoResults } from '../../components/work-table'
 import { resetIntakeForm } from '../../actions/form'
+import { selfServiceStartRoute } from '../../config'
 
 import { workDashboardTabs } from './work-nav.config'
 

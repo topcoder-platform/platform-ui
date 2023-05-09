@@ -9,7 +9,7 @@ import {
 } from '~/libs/ui'
 import { authUrlLogin, routerContext, RouterContextData } from '~/libs/core'
 
-import { ROUTES } from '../../config'
+import { ROUTES, selfServiceRootRoute } from '../../config'
 import { setProgressItem } from '../../actions/progress'
 
 import styles from './WorkLoginPrompt.module.scss'
@@ -44,7 +44,7 @@ const WorkLoginPrompt: FC<WorkLoginPromptProps> = props => {
     }
 
     function onBack(): void {
-        navigate(props.previousPageUrl ?? '/self-service/work/new/website-design-legacy/page-details')
+        navigate(props.previousPageUrl ?? `${selfServiceRootRoute}/new/website-design-legacy/page-details`)
     }
 
     return (

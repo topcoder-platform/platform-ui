@@ -4,6 +4,7 @@ import { LinkButton } from '~/libs/ui'
 
 import { ApiCornerIcon, ApiIcon, CommunityAppCornerIcon, CommunityAppIcon } from '../../../../../assets/i'
 import { DevCenterCard } from '../../dev-center-card'
+import { rootRoute } from '../../../../../dev-center.routes'
 
 import styles from './GetStartedCardsContainer.module.scss'
 
@@ -21,7 +22,7 @@ const GetStartedCardsContainer: FC = () => (
                     size='lg'
                     label='get started'
                     className={styles.button}
-                    to='/dev-center/getting-started'
+                    to={`${rootRoute}/getting-started`}
                 />
             )}
         />
@@ -37,7 +38,7 @@ const GetStartedCardsContainer: FC = () => (
                     size='lg'
                     label='get started'
                     className={styles.button}
-                    to='/dev-center/storybook'
+                    to={`${rootRoute}/storybook`}
                 />
             )}
         />

@@ -9,9 +9,8 @@ import { triggerAutoSave, autoSaveInitErrored } from "../../actions/autoSave";
 import { getChallenge } from "../../actions/challenge";
 import { saveForm } from "../../actions/form";
 import { setProgressItem } from "../../actions/progress";
-import { MAX_COMPLETED_STEP } from "../../config";
+import { bugHuntRoute, MAX_COMPLETED_STEP } from "../../config";
 import { WorkType } from "../../lib";
-import { bugHuntRoute } from "../../self-service.routes";
 import { getIntakeFormChallenges } from "../../services/challenge";
 import { setCookie, loadChallengeId, cacheChallengeId, loadSavedFormCookie } from "../../utils/autoSaveBeforeLogin";
 

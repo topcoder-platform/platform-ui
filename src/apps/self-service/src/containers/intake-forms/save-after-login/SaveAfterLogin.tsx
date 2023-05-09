@@ -5,7 +5,7 @@ import { LoadingSpinner } from '~/libs/ui'
 import { GenericDataObject } from '~/libs/shared'
 
 import { Challenge, workCreateAsync, WorkIntakeFormRoutes, WorkType, workUpdateAsync } from '../../../lib'
-import { selfServiceStartRoute } from '../../../self-service.routes'
+import { selfServiceStartRoute } from '../../../config'
 
 /**
  * This component is the intermediate step for when a user logs in mid work creation.

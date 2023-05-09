@@ -4,7 +4,7 @@ import { Route, Routes } from "react-router-dom";
 import { profileContext } from "~/libs/core";
 
 import { ReactComponent as FindMeDataIcon } from "../../../assets/images/find-me-data-icon.svg";
-import { SIGN_IN_URL, webWorkTypes } from "../../../config";
+import { SIGN_IN_URL, selfServiceRootRoute, webWorkTypes } from "../../../config";
 import { WorkType } from "../../../lib";
 import { BasicInfo, Review } from "../../../containers/products";
 import { WorkLoginPrompt } from "../../work-login-prompt";
@@ -36,8 +36,8 @@ export default function FindMeData() {
       <Route
         element={<WorkLoginPrompt
           isLoggedIn={isLoggedIn}
-          previousPageUrl="/self-service/work/new/find-me-data/basic-info"
-          nextPageUrl="/self-service/work/new/find-me-data/review"
+          previousPageUrl={`${selfServiceRootRoute}/new/find-me-data/basic-info`}
+          nextPageUrl={`${selfServiceRootRoute}/new/find-me-data/review`}
         />}
         path="/login-prompt"
       />
@@ -56,10 +56,10 @@ export default function FindMeData() {
               {helperBannerContent}
             </HelpBanner>
           }
-          previousPageUrl="/self-service/work/new/find-me-data/basic-info"
+          previousPageUrl={`${selfServiceRootRoute}/new/find-me-data/basic-info`}
           nextPageUrl={
             isLoggedIn
-              ? "/self-service/work/new/find-me-data/thank-you"
+              ? `${selfServiceRootRoute}/new/find-me-data/thank-you`
               : SIGN_IN_URL
           }
           icon={<FindMeDataIcon />}

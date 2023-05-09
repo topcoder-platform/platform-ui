@@ -10,7 +10,7 @@ import { resetIntakeForm, saveBranding } from "../../../actions/form";
 import { setProgressItem } from "../../../actions/progress";
 import { Progress, WebsiteDesignBannerLegacy } from "../../../components/legacy";
 import { PageContent, PageFoot, PageH2 } from "../../../components/page-elements";
-import { ROUTES } from "../../../config";
+import { ROUTES, selfServiceRootRoute, selfServiceStartRoute } from "../../../config";
 import { getDynamicPriceAndTimelineEstimate } from "../../../utils";
 
 import BrandingForm from "./components/BrandingForm";
@@ -72,7 +72,7 @@ const BrandingLegacy = ({ saveBranding, setProgressItem, isLoggedIn }) => {
     setProgressItem(5);
 
     if (currentStep === 0) {
-      navigate("/self-service/wizard");
+      navigate(selfServiceStartRoute);
     }
 
     if (branding) {
@@ -97,11 +97,11 @@ const BrandingLegacy = ({ saveBranding, setProgressItem, isLoggedIn }) => {
       formData?.fontUrl.value.trim() !== "");
 
   const onBack = () => {
-    navigate("/self-service/work/new/website-design-legacy/page-details");
+    navigate(`${selfServiceRootRoute}/new/website-design-legacy/page-details`);
   };
 
   const onNext = () => {
-    navigate("/self-service/work/new/website-design-legacy/review");
+    navigate(`${selfServiceRootRoute}/new/website-design-legacy/review`);
     saveBranding(formData);
     setProgressItem(6);
   };

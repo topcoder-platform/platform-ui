@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import { Button, Breadcrumb, IconOutline, LoadingSpinner, PageDivider } from "~/libs/ui";
 
-import { ROUTES } from "../../../config";
+import { ROUTES, selfServiceRootRoute, selfServiceStartRoute } from "../../../config";
 import { getDynamicPriceAndTimelineEstimate } from "../../../utils";
 import { triggerAutoSave } from "../../../actions/autoSave";
 import { resetIntakeForm, saveWebsitePurpose } from "../../../actions/form";
@@ -47,12 +47,12 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem, isLoggedIn 
     formData?.userStory?.value.length;
 
   const onBack = () => {
-    navigate("/self-service/work/new/website-design-legacy/basic-info");
+    navigate(`${selfServiceRootRoute}/new/website-design-legacy/basic-info`);
   };
 
   const onNext = () => {
     saveWebsitePurpose(formData);
-    navigate("/self-service/work/new/website-design-legacy/page-details");
+    navigate(`${selfServiceRootRoute}/new/website-design-legacy/page-details`);
     setProgressItem(4);
   };
 
@@ -65,7 +65,7 @@ const WebsitePurposeLegacy = ({ saveWebsitePurpose, setProgressItem, isLoggedIn 
     setProgressItem(3);
 
     if (currentStep === 0) {
-      navigate("/self-service");
+      navigate(selfServiceStartRoute);
     }
 
     if (websitePurpose) {

@@ -5,7 +5,10 @@ import {
 } from '../../auth'
 import { PlatformRoute } from '../platform-route.model'
 
-export function getActive(currentLocation: string, toolRoutes: Array<PlatformRoute>): PlatformRoute | undefined {
+export function getActive(
+    currentLocation: string,
+    toolRoutes: Array<PlatformRoute>,
+): PlatformRoute | undefined {
     return toolRoutes.find(tool => isActiveTool(currentLocation, tool))
 }
 
@@ -32,4 +35,11 @@ export function getSignupUrl(
 function isActiveTool(activePath: string, toolRoute: PlatformRoute): boolean {
     return !!activePath.startsWith(toolRoute.route)
         || !!toolRoute.alternativePaths?.some(path => activePath.startsWith(path))
+}
+
+export function matchAppRouter(
+    activeDomain: string | undefined,
+    toolsRoutes: Array<PlatformRoute>,
+): PlatformRoute | undefined {
+    return !activeDomain ? undefined : toolsRoutes.find(toolRoutes => activeDomain === toolRoutes.domain)
 }

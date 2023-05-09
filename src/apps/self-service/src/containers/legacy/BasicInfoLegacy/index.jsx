@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { connect, useSelector, useDispatch } from "react-redux";
 import _ from "lodash";
 
@@ -12,7 +13,7 @@ import {
 import { ContactSupportModal } from "~/libs/shared";
 
 import { Progress, WebsiteDesignBannerLegacy } from "../../../components/legacy";
-import { PageOptions, ROUTES } from "../../../config";
+import { PageOptions, ROUTES, selfServiceRootRoute, selfServiceStartRoute } from "../../../config";
 import {
   saveBasicInfo,
   toggleSupportModal,
@@ -22,16 +23,15 @@ import {
 } from "../../../actions/form";
 import { triggerAutoSave } from "../../../actions/autoSave";
 import { setProgressItem } from "../../../actions/progress";
+import {
+    getDynamicPriceAndTimeline,
+    getDynamicPriceAndTimelineEstimate,
+    currencyFormat,
+} from "../../../utils";
+import { PageContent, PageFoot, PageH2 } from "../../../components/page-elements";
+
 import BasicInfoFormLegacy from "./components/BasicInfoFormLegacy";
 import styles from "./styles.module.scss";
-import {
-  getDynamicPriceAndTimeline,
-  getDynamicPriceAndTimelineEstimate,
-  currencyFormat,
-} from "../../../utils";
-
-import { useNavigate } from "react-router-dom";
-import { PageContent, PageFoot, PageH2 } from "../../../components/page-elements";
 
 /**
  * Basic Info Page
@@ -68,13 +68,13 @@ const BasicInfoLegacy = ({
 
   const onBack = () => {
     dispatch(resetIntakeForm(true));
-    navigate("/self-service/wizard");
+    navigate(selfServiceStartRoute);
   };
 
   const onNext = () => {
     setProgressItem(3);
     saveBasicInfo(formData);
-    navigate("/self-service/work/new/website-design-legacy/website-purpose");
+    navigate(`${selfServiceRootRoute}/new/website-design-legacy/website-purpose`);
   };
 
   const updateNumOfPages = (newNumOfPages) => {

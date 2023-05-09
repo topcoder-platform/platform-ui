@@ -59,3 +59,5 @@ export const ENABLE_EMSI_SKILLS = getReactEnv<boolean>('ENABLE_EMSI_SKILLS', fal
 
 export const TERMS_URL = 'https://www.topcoder-dev.com/challenges/terms/detail/317cd8f9-d66c-4f2a-8774-63c612d99cd4'
 export const PRIVACY_POLICY_URL = `${TOPCODER_URL}/policy`
+
+export const SUBDOMAIN = window.location.hostname.split('.')[0]

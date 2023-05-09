@@ -16,6 +16,9 @@ import { PageContent, PageFoot } from "../../../components/page-elements";
 import {
   PageOptions,
   PrimaryDataChallengeOptions,
+  ROUTES,
+  selfServiceRootRoute,
+  selfServiceStartRoute,
 } from "../../../config";
 import {
   saveBasicInfo,
@@ -27,7 +30,6 @@ import {
 import { WorkType } from "../../../lib";
 import { triggerAutoSave, triggerCookieClear } from "../../../actions/autoSave";
 import { setProgressItem } from "../../../actions/progress";
-
 import { BasicInfoForm } from "../../../components/products/basic-info-form";
 import {
   getDynamicPriceAndTimeline,
@@ -142,10 +144,10 @@ const BasicInfo = ({
   const onBack = () => {
     dispatch(triggerCookieClear());
     saveBasicInfo(defaultFormData);
-    navigate("/self-service/wizard");
+    navigate(selfServiceStartRoute);
   };
 
-  const baseUrl = `/self-service/work/new/${workItemConfig.basePath}`;
+  const baseUrl = `${selfServiceRootRoute}/new/${workItemConfig.basePath}`;
 
   const onNext = () => {
     setProgressItem(isLoggedIn ? 7 : 5);
@@ -213,7 +215,7 @@ const BasicInfo = ({
   const saveForm = (autoSave) => {
     saveBasicInfo(formData);
     dispatch(triggerAutoSave(autoSave, isLoggedIn, true));
-    if (autoSave) navigate("/self-service");
+    if (autoSave) navigate(ROUTES.HOME_PAGE);
   };
 
   const onClickBreadcrumbItem = (item) => {

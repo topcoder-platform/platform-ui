@@ -37,4 +37,5 @@ export interface GlobalConfig {
         ACCESS_TOKEN: string
         V2_URL: string
     },
+    SUBDOMAIN: string,
 }

@@ -12,9 +12,10 @@ import {
 import { Location, Route, useLocation } from 'react-router-dom'
 
 import { LoadingSpinner } from '~/libs/ui'
+import { EnvironmentConfig } from '~/config'
 
 import { authUrlLogin } from '../../auth'
-import { routeGetActive, routeGetSignupUrl } from '../routes-functions'
+import { routeGetActive, routeGetSignupUrl, routeMatchAppRouter } from '../routes-functions'
 import { PlatformRoute } from '../platform-route.model'
 import { profileContext, ProfileContextData } from '../../profile'
 import RestrictedRoute from '../restricted.route'
@@ -48,7 +49,13 @@ export const RouterProvider: FC<RouterProviderProps> = (props: RouterProviderPro
 
         allRoutes = props.allRoutes.filter(route => !route.disabled)
 
-        const activeRoute: PlatformRoute | undefined = routeGetActive(location.pathname, allRoutes)
+        let activeRoute: PlatformRoute | undefined = routeGetActive(location.pathname, allRoutes)
+        const matchedAppRouter: PlatformRoute | undefined = routeMatchAppRouter(EnvironmentConfig.SUBDOMAIN, allRoutes)
+
+        if (matchedAppRouter) {
+            allRoutes = [matchedAppRouter]
+            activeRoute = matchedAppRouter
+        }
 
         // TODO: support additional roles and landing pages
         const loggedInRoot: string = !profile

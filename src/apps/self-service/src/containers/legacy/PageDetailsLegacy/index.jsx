@@ -4,7 +4,7 @@ import { connect, useDispatch, useSelector } from "react-redux";
 
 import { Breadcrumb, Button, IconOutline, LoadingSpinner, PageDivider } from "~/libs/ui";
 
-import { ROUTES } from "../../../config";
+import { ROUTES, selfServiceRootRoute, selfServiceStartRoute } from "../../../config";
 import { getDynamicPriceAndTimelineEstimate } from "../../../utils";
 import { triggerAutoSave } from "../../../actions/autoSave";
 import { resetIntakeForm, savePageDetails } from "../../../actions/form";
@@ -38,7 +38,7 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem, isLoggedIn }) => 
   const estimate = getDynamicPriceAndTimelineEstimate(fullState);
 
   const onBack = () => {
-    navigate("/self-service/work/new/website-design-legacy/website-purpose");
+    navigate(`${selfServiceRootRoute}/new/website-design-legacy/website-purpose`);
   };
 
   const [firstMounted, setFirstMounted] = useState(true);
@@ -50,7 +50,7 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem, isLoggedIn }) => 
     setProgressItem(4);
 
     if (currentStep === 0) {
-      navigate("/self-service/wizard");
+      navigate(selfServiceStartRoute);
     }
 
     if (pageDetails) {
@@ -65,7 +65,7 @@ const PageDetailsLegacy = ({ savePageDetails, setProgressItem, isLoggedIn }) => 
   }, [currentStep, pageDetails, dispatch, setProgressItem, firstMounted, navigate, isLoggedIn]);
 
   const onNext = () => {
-    navigate("/self-service/work/new/website-design-legacy/login-prompt");
+    navigate(`${selfServiceRootRoute}/new/website-design-legacy/login-prompt`);
     savePageDetails(listInputs);
     setProgressItem(5);
   };
