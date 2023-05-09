@@ -1,5 +1,5 @@
 import { AppSubdomain, EnvironmentConfig } from '../../config'
-import { authUrlLogin, lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
+import { authUrlLogin, lazyLoad, LazyLoadedComponent, PlatformRoute, Rewrite } from '../../lib'
 
 import { toolTitle } from './Learn'
 import { LearnConfig } from './learn-config'
@@ -23,7 +23,7 @@ const MyCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certi
 const UserCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certificate'), 'UserCertificate')
 const FreeCodeCamp: LazyLoadedComponent = lazyLoad(() => import('./free-code-camp'), 'FreeCodeCamp')
 const MyLearning: LazyLoadedComponent = lazyLoad(() => import('./my-learning'), 'MyLearning')
-const LandingLearn: LazyLoadedComponent = lazyLoad(() => import('./Learn'))
+const LearnRootPage: LazyLoadedComponent = lazyLoad(() => import('./Learn'))
 const UserTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'CertificateView')
 
 const ValidateTCACertificate: LazyLoadedComponent
@@ -131,7 +131,7 @@ export function getTCACertificateUrl(
 export function getTCACertificationValidationUrl(
     completionUuid: string,
 ): string {
-    return `${absoluteRootRoute}/${completionUuid}`
+    return `${absoluteRootRoute}/certificate/${completionUuid}`
 }
 
 export function getTCAUserCertificationUrl(
@@ -150,6 +150,15 @@ export function getTCAUserCertificationPreviewUrl(
 export function getAuthenticateAndEnrollRoute(): string {
     return `${authUrlLogin()}${encodeURIComponent(LEARN_PATHS.tcaEnroll)}`
 }
+
+const oldUrlRedirectRoute: ReadonlyArray<PlatformRoute> = EnvironmentConfig.SUBDOMAIN === AppSubdomain.tca ? [
+    {
+        children: [],
+        element: <Rewrite to='/*' />,
+        id: 'redirect-old-url',
+        route: '/learn/*',
+    },
+] : []
 
 export const learnRoutes: ReadonlyArray<PlatformRoute> = [
     {
@@ -225,7 +234,7 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                 children: [],
                 element: <ValidateTCACertificate />,
                 id: 'Hiring manager view - uuid param',
-                route: ':completionUuid',
+                route: 'certificate/:completionUuid',
             },
             {
                 children: [],
@@ -239,9 +248,10 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                 id: 'Giring manager preview',
                 route: 'tca-certifications/:certification/preview',
             },
+            ...oldUrlRedirectRoute,
         ],
         domain: AppSubdomain.tca,
-        element: <LandingLearn />,
+        element: <LearnRootPage />,
         id: toolTitle,
         route: rootRoute,
     },
