@@ -4,8 +4,7 @@
  * @todo Some of them repeat actions in {@link actions.members.md}. The code
  *  should be refactored to avoid redundancy.
  */
-import { createActions } from 'redux-actions';
-import _ from 'lodash';
+import { createActions } from 'redux-actions'
 
 /**
  * @static
@@ -15,12 +14,12 @@ import _ from 'lodash';
  * @param {String} handle User handle.
  * @return {Action}
  */
-function loadProfile(handle: string) {
-  return handle;
+function loadProfile(handle: string): string {
+    return handle
 }
 
 export default createActions({
-  PROFILE: {
-    LOAD_PROFILE: loadProfile,
-  },
-});
+    PROFILE: {
+        LOAD_PROFILE: loadProfile,
+    },
+})

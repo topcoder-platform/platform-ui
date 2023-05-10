@@ -1,4 +1,4 @@
-import { LazyLoadedComponent, PlatformRoute, lazyLoad } from '~/libs/core'
+import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
 import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
 
 const ProfilesApp: LazyLoadedComponent = lazyLoad(() => import('./ProfilesApp'))

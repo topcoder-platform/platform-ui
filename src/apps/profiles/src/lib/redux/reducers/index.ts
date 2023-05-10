@@ -1,4 +1,4 @@
-import { Reducer, combineReducers } from "redux";
+import { combineReducers, Reducer } from 'redux'
 
 export const rootReducer: Reducer = combineReducers({
-});
+})
