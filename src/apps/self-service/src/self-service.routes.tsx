@@ -1,8 +1,8 @@
 /* eslint-disable max-len */
 import { Navigate } from 'react-router-dom'
 
-import { ToolTitle } from '~/config'
-import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
+import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
+import { lazyLoad, LazyLoadedComponent, PlatformRoute, Rewrite } from '~/libs/core'
 
 import { Work, WorkIntakeFormRoutes, WorkStatus, WorkType } from './lib'
 import { bugHuntRoute, selfServiceRootRoute, selfServiceStartRoute, workDashboardRoute, workRootRoute } from './config'
@@ -54,6 +54,15 @@ export function workDetailRoute(workId: string, tab?: 'solutions' | 'messages'):
     return `${selfServiceRootRoute}/work-items/${workId}${!!tab ? `?tab=${tab}` : ''}`
 }
 
+const oldUrlRedirectRoute: ReadonlyArray<PlatformRoute> = EnvironmentConfig.SUBDOMAIN === AppSubdomain.work ? [
+    {
+        children: [],
+        element: <Rewrite to='/*' />,
+        id: 'redirect-old-url',
+        route: '/work/*',
+    },
+] : []
+
 export const selfServiceRoutes: ReadonlyArray<PlatformRoute> = [
     {
         element: <NotLoggedIn />,
@@ -85,6 +94,10 @@ export const selfServiceRoutes: ReadonlyArray<PlatformRoute> = [
     },
     {
         children: [
+            {
+                element: <Navigate to={selfServiceStartRoute} />,
+                route: '/',
+            },
             // Edit work item
             {
                 element: <SelfServiceWorkItem />,
@@ -159,4 +172,5 @@ export const selfServiceRoutes: ReadonlyArray<PlatformRoute> = [
         element: <Navigate to={workDashboardRoute} />,
         route: `${selfServiceRootRoute}/dashboard`,
     },
+    ...oldUrlRedirectRoute,
 ]

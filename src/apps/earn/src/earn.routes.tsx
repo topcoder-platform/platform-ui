@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom'
 
-import { ToolTitle } from '~/config'
+import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
 import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
 
 const EarnAppRoot: LazyLoadedComponent = lazyLoad(() => import('./EarnApp'))
@@ -36,19 +36,26 @@ const MyGigs: LazyLoadedComponent = lazyLoad(
     () => import('./routes/MyGigsPage'),
 )
 
-export enum EARN_APP_PATHS {
-    root = '/earn',
-    gigs = '/earn/gigs',
-    challenges = '/earn/challenges',
+export const rootRoute: string = (
+    EnvironmentConfig.SUBDOMAIN === AppSubdomain.earn ? '' : `/${AppSubdomain.earn}`
+)
+
+export const EARN_APP_PATHS: { [key: string]: string } = {
+    root: rootRoute,
+    gigs: `${rootRoute}/gigs`,
+    challenges: `${rootRoute}/challenges`,
 }
 
 export const toolTitle: string = ToolTitle.earn
-export const rootRoute: string = EARN_APP_PATHS.root
 export const absoluteRootRoute: string = `${window.location.origin}${EARN_APP_PATHS.root}`
 
 export const earnRoutes: ReadonlyArray<PlatformRoute> = [
     {
         children: [
+            {
+                element: <Navigate to={EARN_APP_PATHS.challenges} />,
+                route: '/',
+            },
             {
                 children: [],
                 element: <ChallengeList />,
@@ -92,12 +99,9 @@ export const earnRoutes: ReadonlyArray<PlatformRoute> = [
                 route: 'my-gigs',
             },
         ],
+        domain: AppSubdomain.earn,
         element: <EarnAppRoot />,
         id: toolTitle,
-        route: rootRoute,
-    },
-    {
-        element: <Navigate to={EARN_APP_PATHS.challenges} />,
         route: rootRoute,
     },
 ]
