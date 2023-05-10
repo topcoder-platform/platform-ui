@@ -154,6 +154,12 @@ export function getAuthenticateAndEnrollRoute(): string {
 const oldUrlRedirectRoute: ReadonlyArray<PlatformRoute> = EnvironmentConfig.SUBDOMAIN === AppSubdomain.tca ? [
     {
         children: [],
+        element: <Rewrite to='/certificate/:certUuid' />,
+        id: 'redirect-old-uuidcert-url',
+        route: '/learn/:certUuid',
+    },
+    {
+        children: [],
         element: <Rewrite to='/*' />,
         id: 'redirect-old-url',
         route: '/learn/*',
