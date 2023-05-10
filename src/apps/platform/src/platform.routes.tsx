@@ -4,6 +4,7 @@ import { devCenterRoutes } from '~/apps/dev-center'
 import { gamificationAdminRoutes } from '~/apps/gamification-admin'
 import { earnRoutes } from '~/apps/earn'
 import { selfServiceRoutes } from '~/apps/self-service'
+import { profilesRoutes } from '~/apps/profiles'
 
 const Home: LazyLoadedComponent = lazyLoad(() => import('./routes/home'), 'HomePage')
 
@@ -24,5 +25,6 @@ export const platformRoutes: Array<PlatformRoute> = [
     ...earnRoutes,
     ...learnRoutes,
     ...gamificationAdminRoutes,
+    ...profilesRoutes,
     ...homeRoutes,
 ]
