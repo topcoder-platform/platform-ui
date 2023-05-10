@@ -1,0 +1,87 @@
+@import '../variables/spacing';
+
+@mixin pagePaddings {
+    padding-left: $sp-8;
+    padding-right: $sp-8;
+
+    @include ltemd {
+        padding-left: $sp-6;
+        padding-right: $sp-6;
+    }
+
+    @include ltesm {
+        padding-left: $sp-4;
+        padding-right: $sp-4;
+    }
+}
+
+@mixin substractPagePaddings {
+    margin-left: -$sp-8;
+    margin-right: -$sp-8;
+
+    @include ltemd {
+        margin-left: -$sp-6;
+        margin-right: -$sp-6;
+    }
+
+    @include ltesm {
+        margin-left: -$sp-4;
+        margin-right: -$sp-4;
+    }
+}
+
+@mixin contentWidth {
+    max-width: $xxl-min;
+    @include pagePaddings;
+    margin: 0 auto;
+    width: 100%;
+}
+
+@mixin socialPreviewImg {
+    width: 1200px;
+    height: 630px;
+}
+
+@mixin scrollbar {
+
+    // firefox's solution for "customizing" scrollbars
+    & {
+        scrollbar-width: thin;
+        scrollbar-color: rgba($tc-black, 0.4) transparent;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: rgba($tc-black, 0.4);
+        border-radius: 4px;
+
+        &:hover {
+            background-color: rgba($tc-black, 0.6);
+        }
+    }
+}
+
+@mixin freeLabel {
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: $font-weight-bold;
+    font-style: normal;
+    background-color: $orange-100;
+    padding: 2px $sp-2;
+    border-radius: 4px;
+    color: $black-100;
+    display: inline-block;
+
+    @include ltesm {
+        font-size: 20px;
+        line-height: 28px;
+    }
+}

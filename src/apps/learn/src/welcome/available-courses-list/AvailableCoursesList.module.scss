@@ -1,0 +1,92 @@
+@import '@libs/ui/styles/includes';
+
+.coursesListHeaderWrap {
+    display: flex;
+    flex-direction: column;
+
+    .teaseBanner {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        padding: $sp-8;
+        margin: $sp-6 0 $sp-10;
+        background-image: url("./assets/courses-banner-bg.png");
+        background-size: cover;
+        border-radius: 8px;
+
+        @include ltemd {
+            padding: 88px $sp-4 $sp-4;
+            margin: 0 0 $sp-6;
+            background-image: url("./assets/courses-banner-bg-mobile.png");
+        }
+
+        >h2 {
+            color: $tc-white;
+            margin-bottom: $sp-4;
+            font-family: $font-barlow;
+
+            @include ltemd {
+                font-size: 24px;
+            }
+        }
+
+        >p {
+            color: $tc-white;
+            max-width: $md-max;
+        }
+    }
+
+    .coursesListHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: $sp-4;
+
+        @include ltemd {
+            flex-direction: column;
+            align-items: flex-start;
+            padding-bottom: $sp-6;
+
+            h2 {
+                margin: $sp-3 0 $sp-6;
+            }
+        }
+
+        h2 {
+            display: flex;
+            align-items: center;
+
+            .badge {
+                font-family: $font-roboto;
+                background: $blue-100;
+
+                padding: 0 $sp-2;
+                margin-left: $sp-2;
+                border-radius: 50px;
+                color: $tc-white;
+            }
+        }
+    }
+}
+
+.coursesList {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $sp-5;
+    padding: $sp-6 0 $sp-10;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    // NOTE: these are not app defined breakpoints
+    // but they are required for the grid to look at it's best
+    @media (max-width: 1000px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include ltemd {
+        grid-template-columns: repeat(1, 1fr);
+        padding: $sp-4 0 $sp-6;
+    }
+}

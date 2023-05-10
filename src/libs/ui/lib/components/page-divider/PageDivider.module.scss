@@ -1,0 +1,15 @@
+@import '../../styles/includes';
+
+.divider {
+    border-bottom: $border solid $black-10;
+    margin: $sp-8 0;
+    width: 100%;
+
+    @include ltemd {
+        margin: $sp-6 0;
+    }
+}
+
+.spacingSmall {
+    margin: $sp-4 0;
+}

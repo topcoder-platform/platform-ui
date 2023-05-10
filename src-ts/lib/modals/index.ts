@@ -1,6 +1,0 @@
-export * from './base-modal'
-export * from './confirm'
-export * from './contact-support-modal'
-export * from './order-contract-modal'
-export * from './privacy-policy-modal'
-export * from './terms-modal'

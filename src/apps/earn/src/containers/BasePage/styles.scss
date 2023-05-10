@@ -1,0 +1,26 @@
+@import "../../styles/variables";
+
+.layout {
+  flex: 1 1 0;
+  display: flex;
+  padding-top: 30px;
+
+  .sidebar {
+    flex: none;
+    width: var(--sideBarWidth, 270px);
+    min-height: calc(100vh - var(--navbarHeight, 60px));
+    background: $white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin-left: 20px;
+    .sidebar-footer {
+      margin: 0 auto;
+      margin-bottom: 125px;
+    }
+  }
+
+  .content {
+    flex: 1 1 auto;
+  }
+}

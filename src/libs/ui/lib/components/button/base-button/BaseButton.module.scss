@@ -1,0 +1,217 @@
+@import '../../../styles/includes';
+
+$btn-secondary-border-width: $border;
+
+.btn {
+    @include font-roboto;
+    @include font-weight-bold;
+    @include resetBtnStyle;
+
+    display: inline-flex;
+    cursor: pointer;
+    box-sizing: border-box;
+
+    justify-content: center;
+    align-items: center;
+    gap: $sp-1;
+
+    font-size: $sp-3;
+    line-height: $sp-6;
+
+    letter-spacing: 0.008em;
+    text-transform: uppercase;
+
+    white-space: nowrap;
+
+    color: $turq-160;
+    --btn-variant: #{$turq-160};
+    --btn-variant--hover: #{$turq-140};
+    --btn-variant--active: #{$turq-180};
+
+    // Define button sizes
+    &:global(.btn-size-sm) {
+        @include pad(0, 4);
+        border-radius: $sp-6;
+    }
+    &, &:global(.btn-size-md) {
+        @include pad(1, 5);
+        border-radius: $sp-8;
+    }
+    &:global(.btn-size-lg) {
+        @include pad(2, 6);
+        border-radius: $sp-10;
+        font-size: $sp-3 + 2px;
+    }
+    &:global(.btn-size-xl) {
+        @include pad(3, 6);
+        border-radius: $sp-12;
+        font-size: $sp-4;
+    }
+    &:global(.btn-size-full) {
+        width: 100%;
+    }
+
+    // Define variants
+    &:global(.btn-variant-danger) {
+        --btn-variant: #{$red-110};
+        --btn-variant--hover: #{lighten($red-110, 10%)};
+        --btn-variant--active: #{darken($red-110, 10%)};
+    }
+    &:global(.btn-variant-warning) {
+        --btn-variant: #{$orange-140};
+        --btn-variant--hover: #{lighten($orange-140, 10%)};
+        --btn-variant--active: #{darken($orange-140, 10%)};
+    }
+    &:global(.btn-variant-linkblue) {
+        --btn-variant: #{$link-blue-dark};
+        --btn-variant--hover: #{lighten($link-blue-dark, 10%)};
+        --btn-variant--active: #{darken($link-blue-dark, 10%)};
+    }
+
+    &:global(.btn-variant-round) {
+        @include pad(0);
+        &:global(.btn-size-sm) {
+            width: $sp-6;
+            height: $sp-6;
+        }
+        &, &:global(.btn-size-md) {
+            width: $sp-8;
+            height: $sp-8;
+        }
+        &:global(.btn-size-lg) {
+            width: $sp-10;
+            height: $sp-10;
+        }
+        &:global(.btn-size-xl) {
+            width: $sp-12;
+            height: $sp-12;
+        }
+    }
+
+    &:global(.btn-active) {
+        pointer-events: none;
+    }
+
+    &:disabled, &:global(.btn-disabled) {
+        pointer-events: none;
+    }
+}
+
+// Define button types
+.btn:global(.btn-style-primary) {
+    background: var(--btn-variant);
+    color: $tc-white;
+
+    &:hover, &:global(.btn-hover) {
+        background: var(--btn-variant--hover);
+    }
+
+    &:active, &:global(.btn-active) {
+        background: var(--btn-variant--active);
+    }
+
+    &:disabled, &:global(.btn-disabled) {
+        background: $black-5;
+        color: $black-60;
+    }
+
+    &:global(.btn-light) {
+        color: var(--btn-variant);
+        background: $tc-white;
+
+        &:hover, &:global(.btn-hover) {
+            color: var(--btn-variant--hover);
+        }
+
+        &:active, &:global(.btn-active) {
+            color: var(--btn-variant--active);
+        }
+
+        &:disabled, &:global(.btn-disabled) {
+            color: $black-60;
+        }
+    }
+}
+
+.btn:global(.btn-style-secondary) {
+    box-shadow: inset 0 0 0 $btn-secondary-border-width var(--btn-variant);
+    color: var(--btn-variant);
+    background: $tc-white;
+
+    &:hover, &:global(.btn-hover) {
+        box-shadow: inset 0 0 0 $btn-secondary-border-width var(--btn-variant--hover);
+        background: $tc-white;
+        color: var(--btn-variant--hover);
+    }
+
+    &:active, &:global(.btn-active) {
+        box-shadow: inset 0 0 0 $btn-secondary-border-width var(--btn-variant--active);
+        background: $tc-white;
+        color: var(--btn-variant--active);
+    }
+
+    &:disabled, &:global(.btn-disabled) {
+        box-shadow: inset 0 0 0 $btn-secondary-border-width $black-5;
+        color: $black-60;
+    }
+
+    &:global(.btn-light) {
+        box-shadow: inset 0 0 0 $btn-secondary-border-width $tc-white;
+        color: $tc-white;
+        background: transparent;
+
+        &:hover, &:global(.btn-hover) {
+            background: rgba($tc-white, 0.05);
+        }
+
+        &:active, &:global(.btn-active) {
+            background: rgba($tc-white, 0.1);
+        }
+
+        &:disabled, &:global(.btn-disabled) {
+            box-shadow: inset 0 0 0 $btn-secondary-border-width $black-40;
+            color: $black-60;
+        }
+    }
+}
+
+.btn:global(.btn-style-inlinelink) {
+    text-transform: none;
+}
+
+.btn:global(.btn-style-link) {
+    @include padX(0);
+    color: var(--btn-variant);
+
+    &:global(.btn-variant-linkblue) {
+        text-transform: none;
+    }
+
+    &:hover, &:global(.btn-hover) {
+        color: var(--btn-variant--hover);
+    }
+
+    &:active, &:global(.btn-active) {
+        color: var(--btn-variant--active);
+    }
+
+    &:disabled, &:global(.btn-disabled) {
+        color: $black-60;
+    }
+
+    &:global(.btn-light) {
+        color: $tc-white;
+
+        &:hover, &:global(.btn-hover) {
+            background: rgba($tc-white, 0.05);
+        }
+
+        &:active, &:global(.btn-active) {
+            background: rgba($tc-white, 0.1);
+        }
+
+        &:disabled, &:global(.btn-disabled) {
+            color: $black-60;
+        }
+    }
+}

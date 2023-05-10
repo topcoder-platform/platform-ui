@@ -1,0 +1,98 @@
+@use '../../styles/typography';
+@import '../../styles/includes';
+
+.table-wrap {
+    width: 100%;
+    overflow: auto;
+}
+
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+
+    .tr {
+
+        &.clickable {
+            position: relative;
+            cursor: pointer;
+
+            td {
+                border: 1px solid transparent;
+            }
+
+            &:hover {
+
+                td {
+                    border-top-color: $turq-160;
+                    border-bottom-color: $turq-160;
+
+                    &:first-child {
+                        border-left-color: $turq-160;
+                    }
+
+                    &:last-child {
+                        border-right-color: $turq-160;
+                    }
+                }
+            }
+        }
+
+        .th {
+            @extend .small-tab;
+            padding: $sp-4;
+            white-space: nowrap;
+            text-align: left;
+            text-transform: uppercase;
+
+            &:first-child {
+                padding-left: 0;
+            }
+
+            .header-container {
+                display: flex;
+                align-items: center;
+
+                &.money {
+                    text-align: right;
+                    justify-content: flex-end;
+
+                    &.sortable {
+                        margin-right: -29px;
+                    }
+                }
+
+                &.centerHeader {
+                    justify-content: center;
+                }
+            }
+
+            .tooltip {
+                display: inline-block;
+                margin-left: $sp-1;
+                position: relative;
+                top: 2px;
+
+                svg:global(.tooltip-icon) {
+                    @include icon-md;
+                }
+            }
+        }
+
+        &:nth-child(2n) {
+
+            td {
+                background-color: $tc-white;
+            }
+        }
+    }
+}
+
+.tootlipBody {
+    min-width: 200px;
+}
+
+.loadBtnWrap {
+    display: flex;
+    justify-content: center;
+}

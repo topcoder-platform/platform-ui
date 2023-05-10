@@ -1,0 +1,135 @@
+@import '@libs/ui/styles/includes';
+@import '@libs/ui/styles/typography';
+
+.section-header {
+    margin-top: $sp-6;
+}
+
+.certificate-placeholder {
+    display: flex;
+    border-radius: $sp-2;
+    border: $border-xs solid $black-20;
+    background: $black-5;
+    overflow: hidden;
+    width: 100%;
+}
+
+.certification-details-list {
+    margin-top: $sp-6;
+
+    li {
+        display: flex;
+        align-items: center;
+        margin-top: $sp-2;
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: $sp-2;
+            color: $blue-140;
+
+            >svg {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+        }
+
+        :global(.tooltip-icon) {
+            width: 16px;
+            height: 16px;
+            margin-left: $sp-2;
+        }
+
+        :global(.quote-main) {
+            color: $black-100;
+            display: flex;
+            align-items: center;
+
+            :global(.strike) {
+                text-decoration: line-through;
+                color: $black-40;
+            }
+
+            :global(.body-main-bold) {
+                font-style: normal;
+            }
+        }
+
+        .freeLabel {
+            @include freeLabel;
+        }
+    }
+}
+
+.certification-skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: $sp-2;
+    max-width: 325px;
+
+    li {
+        background: $black-5;
+        border-radius: $sp-1;
+        padding: 0 $sp-2;
+        line-height: 22px;
+        font-size: 14px;
+        color: $black-80;
+        font-style: italic;
+    }
+}
+
+.providers {
+    margin-top: $sp-2;
+
+    >span {
+        @extend .body-small-medium;
+    }
+}
+
+.tooltip {
+    font-style: normal;
+
+    svg {
+        @include icon-lg;
+        display: block;
+    }
+}
+
+.btns {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-top: $sp-6;
+}
+
+.tag {
+    display: block;
+    padding: $sp-1 calc($sp-2 + $border);
+    border-radius: $sp-1;
+    color: $tc-white;
+
+    &.enrolled {
+        background: $blue-140;
+    }
+
+    &.completed-dev {
+        background: $tc-dev-grad;
+    }
+
+    &.completed-datascience {
+        background: $tc-datascience-grad;
+    }
+
+    &.completed-design {
+        background: $tc-design-grad;
+    }
+
+    &.completed-qa {
+        background: $tc-qa-grad;
+    }
+}

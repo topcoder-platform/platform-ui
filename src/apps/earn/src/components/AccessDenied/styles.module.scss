@@ -1,0 +1,48 @@
+@import '@earn/styles/variables';
+@import '@earn/styles/mixins';
+
+.access-denied {
+  @include tc-body-lg;
+
+  padding-top: 100px;
+  text-align: center;
+  width: 100%;
+}
+
+.msg {
+  padding-top: 48px;
+
+  a {
+    cursor: pointer;
+  }
+}
+
+.joinNow {
+  &,
+  &:hover,
+  &:visited {
+    color: $tc-light-blue;
+    text-decoration: underline;
+  }
+}
+
+.policy {
+  font-weight: bold;
+  margin-right: 24px;
+
+  &,
+  &:hover,
+  &:visited {
+    color: $tc-light-blue;
+    text-decoration: underline;
+  }
+}
+
+.copyright {
+  @include roboto-regular;
+
+  color: $tc-gray-60;
+  font-size: 12pt;
+  margin-top: 128px;
+  text-transform: uppercase;
+}

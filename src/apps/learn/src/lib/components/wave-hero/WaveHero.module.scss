@@ -1,0 +1,97 @@
+@use '@libs/ui/styles/typography';
+@import '@libs/ui/styles/includes';
+
+.hero {
+    &-wrap {
+        background: url('./learn-welcome-bg-curve.png') repeat-x center bottom, url('./learn-welcome-banner-img.png') no-repeat center, $tc-grad15;
+        overflow: hidden;
+        padding-bottom: 100px;
+
+        @include ltelg {
+            background-size: 100vw $sp-4, auto;
+            padding-bottom: $sp-10;
+        }
+
+        &:global(.light) {
+            background: url('./learn-welcome-bg-curve-white.png') repeat-x center bottom / 100vw, url('./learn-welcome-banner-img.png') no-repeat center, $tc-grad15;
+
+            @include ltelg {
+                background: url('./learn-welcome-bg-curve-white.png') repeat-x center bottom / 100vw, url('./learn-welcome-banner-img-mobile.png') no-repeat top, $tc-grad15;
+            }
+        }
+        &:global(.grey) {
+            background: $black-10 url('./learn-welcome-bg-curve-white.png') repeat-x center bottom ;
+            background-size: 1440px 40px, auto;
+            padding-bottom: 84px;
+            @include ltelg {
+                background-size: 100vw $sp-4, auto;
+                padding-bottom: 60px;
+            }
+            @include ltemd {
+                padding-bottom: 32px;
+            }
+        }
+    }
+
+    &-inner {
+        padding: calc($sp-10 * 2) 0 $sp-4;
+
+        .hero-wrap:global(.grey) & {
+            padding-top: $sp-8;
+            padding-bottom: 0;
+        }
+
+        @include contentWidth;
+
+        @include ltelg {
+            padding-bottom: $sp-10;
+        }
+
+        @include ltemd {
+            padding-top: calc($sp-10 * 4);
+            padding-bottom: $sp-6;
+        }
+    }
+
+    &-content {
+        display: flex;
+        gap: calc($sp-10 * 2);
+
+        color: $tc-white;
+
+        .hero-wrap:global(.grey) & {
+            color: $black-100;
+        }
+        .hero-wrap:global(:not(.grey)) & {
+            h1 {
+                font-size: 80px;
+                line-height: 72px;
+                margin-bottom: $sp-8;
+
+                @include ltemd {
+                    font-size: 42px;
+                    line-height: 40px;
+                }
+            }
+        }
+
+        @include ltelg {
+            gap: $sp-10;
+        }
+
+        @include ltemd {
+            gap: $sp-6;
+            flex-direction: column;
+        }
+    }
+
+    &-card-col {
+        flex: 0 0 auto;
+    }
+
+    &-text {
+        @extend .body-large;
+        margin-top: $sp-2;
+        max-width: 910px;
+    }
+}

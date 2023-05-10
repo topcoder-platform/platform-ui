@@ -1,7 +1,0 @@
-export * from './profile-functions'
-export * from './change-password-request.model'
-export * from './edit-name-request.model'
-export * from './profile-context-data.model'
-export { default as profileContext, defaultProfileContextData } from './profile.context'
-export * from './profile.provider'
-export * from './user-profile.model'

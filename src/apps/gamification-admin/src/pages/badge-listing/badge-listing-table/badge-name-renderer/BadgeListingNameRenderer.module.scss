@@ -1,0 +1,28 @@
+@import "@libs/ui/styles/includes";
+@import "@libs/ui/styles/variables";
+
+.badge {
+  display: flex;
+  align-items: center;
+
+  .badge-image {
+    width: 48px;
+    height: 48px;
+    margin-right: $sp-5;
+  }
+
+  .badge-image-disabled {
+    width: 48px;
+    height: 48px;
+    margin-right: $sp-5;
+    opacity: 0.5;
+    filter: grayscale(1);
+  }
+
+  .badge-name {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    color: $black-100;
+  }
+}

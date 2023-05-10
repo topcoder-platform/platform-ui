@@ -1,0 +1,90 @@
+@import 'variables';
+@import 'mixins';
+
+html {
+    --header-height: 60px;
+    --footer-height: 96px;
+    --breadcrumb-height: 64px;
+
+    @media (max-width: 767px) {
+        --header-height: 48px;
+    }
+
+    @include ltemd {
+        --breadcrumb-height: 48px;
+    }
+}
+
+#root {
+    margin: 0 auto;
+    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+
+    .root-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    flex: 1;
+    }
+}
+
+body {
+    background-color: $tc-white;
+}
+
+
+hr {
+    color: $black-10;
+    border: 1px solid;
+    border-radius: 1px;
+    margin: 16px 0px;
+    width: 100%;
+}
+
+#tc-accounts-iframe {
+    border: none;
+    display: none;
+}
+
+.topCoderLink {
+    text-decoration: underline;
+    color: $link-blue-light;
+}
+
+.full-height-frame {
+    position: relative;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.mobile-hide {
+
+    // increase specificity without using !important
+    &.mobile-hide.mobile-hide {
+        @include ltemd {
+            display: none;
+        }
+    }
+}
+
+.desktop-hide {
+
+    // increase specificity without using !important
+    &.desktop-hide.desktop-hide {
+        @include gtelg {
+            display: none;
+        }
+    }
+}
+
+.nw {
+    white-space: nowrap;
+}
+
+.hidden {
+    display: none;
+}

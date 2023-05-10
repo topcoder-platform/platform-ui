@@ -1,0 +1,16 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background: $black-5;
+    width: 624px;
+    border-radius: 8px;
+    overflow: hidden;
+
+    @include md {
+        width: 100%;
+    }
+
+    @include ltesm {
+        width: 100%;
+    }
+}

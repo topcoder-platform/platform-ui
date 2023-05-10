@@ -1,0 +1,221 @@
+@import '../../../../styles/includes';
+
+.form-card-set {
+    display: flex;
+    flex: 1;
+    margin-bottom: $sp-6;
+    @include ltemd {
+        flex-direction: column;
+        margin-bottom: $sp-4;
+    }
+
+    input[type=radio] {  
+        opacity: 0;
+    }
+
+    .card {
+        flex: 1 1 0;
+        margin-right: $sp-5;
+        border-radius: $sp-1;
+        padding: $sp-6 0px 0px;
+        background-color: $black-5;
+        position: relative;
+        height: calc($sp-5 * 30);
+
+        .popular-card {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            padding: $sp-2;
+
+            width: 100%;
+            height: $sp-8;
+            background: $tc-grad19;
+            border-radius: $sp-2 $sp-2 0px 0px;
+            color: $tc-white;
+            position: absolute;
+            left: 0;
+            top: -$sp-6;
+        }
+
+        &.mobile-popular {
+            margin-top: $sp-7;
+        }
+
+        @include ltemd {
+            margin-right: 0;
+            margin-bottom: $sp-4;
+            padding-top: $sp-6;
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+        &:last-child {
+            margin-right: 0;
+        }
+
+        .card-header {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            h3 {
+                margin: $sp-6 $sp-4;
+                font-weight: 500;
+                font-size: calc($sp-10 + $sp-1);
+                line-height: $sp-10;
+            }
+
+            &.feature {
+                visibility: hidden;
+
+                h3 {
+                    margin: $sp-6 $sp-4;
+                    font-size: $sp-8;
+                }
+            }
+
+            &.mobile {
+                h3 {
+                    font-size: $sp-8;
+                    line-height: $sp-8;
+                    margin-top: $sp-2;
+                    margin-bottom: $sp-6;
+                }
+            }
+        }
+
+        .card-header-features {
+            visibility: hidden;
+
+            h3 {
+                margin: $sp-4;
+            }
+        }
+
+        .card-section {
+            margin: $sp-10 0;
+
+            .row {
+                height: auto;
+
+                &:last-child {
+                    .row-divider {
+                        &:last-child {
+                            display: block;
+                        }
+                    }
+                }
+            }
+
+            .row-divider {
+                height: $border-xs;
+                border-bottom: $border solid $black-10;
+                width: auto;
+                margin: 0;
+
+                &:last-child {
+                    display: none;
+                }
+            }
+
+            .card-row {
+                display: flex;
+                padding: $sp-3;
+                align-items: center;
+                min-height: calc($sp-4 + $sp-10 - 2px);
+                position: relative;
+
+                .card-row-col {
+                    align-content: center;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    flex-grow: 1;
+
+                    &.mobile {
+                        display: flex;
+                        justify-content: flex-start;
+                    }
+
+                    &.info-col {
+                      display: flex;
+                    }
+
+                    svg {
+                        display: inline;
+                        margin-left: $sp-1;
+                    }
+
+                    &.center {
+                        text-align: center;
+                    }
+
+                    .label {
+                        @include ltemd {
+                            font-size: 10px;
+                        }
+                    }
+
+                    .info-icon {
+                        @include icon-lg;
+                        margin-left: $sp-2;
+                        color: $turq-160;
+                        cursor: pointer;
+                        outline: none;
+                    }
+
+                    .check-icon {
+                        @include icon-xxl;
+                        @include ltemd {
+                            @include icon-lg;
+                        }
+                    }
+                }
+            }
+            &.mobile {
+              margin-bottom: 0;
+              margin-top: $sp-6;
+              .feature-name {
+                width: 100%;
+              }
+              .center {
+                width: 40%;
+              }
+            }
+            &.feature {
+                margin-top: $sp-10;
+            }
+        }
+
+        &.feature {
+            background-color: $tc-white;
+            margin-right: 0;
+            flex-grow: 0.9;
+
+            .card-row-col:nth-child(2) {
+                display: none;
+            }
+
+            .row-divider {
+                width: 100%;
+                margin-left: 6%;
+            }
+
+            &.mobile {
+                display: none;
+            }
+        }
+    }
+
+    svg.card-row-icon {
+        @include icon-xxl;
+        display: inline;
+        margin-right: 6px;
+
+        @include ltemd {
+          @include icon-lg;
+      }
+    }
+}

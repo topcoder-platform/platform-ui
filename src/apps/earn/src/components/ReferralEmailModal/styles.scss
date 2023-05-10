@@ -1,0 +1,24 @@
+.sendLoadingIndicator {
+  display: block;
+  margin: 20px auto 0;
+}
+
+.hint {
+  margin: 40px 0 20px;
+  font-size: 14px;
+  line-height: 26px;
+  text-align: center;
+
+  a {
+    color: #0d61bf;
+    text-decoration: underline;
+  }
+
+  + .controls {
+    margin: 0;
+  }
+}
+
+.error {
+  color: #f00;
+}

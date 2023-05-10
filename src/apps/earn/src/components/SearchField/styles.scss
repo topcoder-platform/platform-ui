@@ -1,0 +1,38 @@
+.container {
+  display: flex;
+  align-items: center;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  background-color: #fff;
+
+  &.medium {
+    height: 40px;
+  }
+
+  &.small {
+    height: 30px;
+  }
+}
+
+.icon {
+  margin: auto 10px;
+  width: 16px;
+  height: 16px;
+}
+
+input.input {
+  flex: 1 1 0;
+  margin: 0;
+  border: none !important;
+  padding: 8px 16px 8px 0;
+  height: 22px;
+  line-height: 22px;
+  background: none;
+  outline: none !important;
+  box-shadow: none !important;
+
+  &::placeholder {
+    text-transform: none;
+    color: #aaa;
+  }
+}

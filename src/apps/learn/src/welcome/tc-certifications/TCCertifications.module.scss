@@ -1,0 +1,104 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: $sp-8;
+    margin-top: $sp-6;
+
+    @include ltemd {
+        margin-bottom: 0;
+    }
+
+    >h2 {
+        display: flex;
+        align-items: center;
+
+        .badge {
+            font-family: $font-roboto;
+            background: $blue-100;
+
+            padding: 0 $sp-2;
+            margin-left: $sp-2;
+            border-radius: 50px;
+            color: $tc-white;
+        }
+    }
+
+    .teaseBanner {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        padding: $sp-8;
+        margin: $sp-10 0 0;
+        background-image: url("./assets/certs-banner-bg.png");
+        background-size: cover;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+
+        @include ltemd {
+            padding: 88px $sp-4 $sp-4;
+            margin: $sp-4 0 0;
+            background-image: url("./assets/certs-banner-bg-mobile.png");
+        }
+
+        >h2 {
+            color: $tc-white;
+            margin-bottom: $sp-4;
+            font-family: $font-barlow;
+            font-size: 24px;
+
+            @include ltemd {
+                line-height: 28px;
+            }
+        }
+
+        >p {
+            color: $tc-white;
+            max-width: $md-max;
+        }
+    }
+
+    .freeBanner {
+        display: flex;
+        align-items: center;
+        padding: $sp-4 $sp-8;
+        margin: 0 0 $sp-10;
+        background-image: url("./assets/free-banner-bg.png");
+        background-size: cover;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+
+        @include ltemd {
+            padding: $sp-4 $sp-6;
+            margin-bottom: $sp-6;
+            background-image: url("./assets/free-banner-bg-mobile.png");
+
+            >span {
+                font-size: 14px;
+                line-height: 20px;
+            }
+        }
+    }
+
+    .certsList {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $sp-6;
+
+        // NOTE: these are not app defined breakpoints
+        // but they are required for the grid to look at it's best
+        @media (max-width: 900px) {
+            grid-template-columns: 1fr;
+        }
+    }
+}
+
+.aloneTeaseBanner {
+    margin-bottom: $sp-12 !important;
+    border-radius: 8px;
+
+    @include ltemd {
+        margin-bottom: $sp-6 !important;
+    }
+}

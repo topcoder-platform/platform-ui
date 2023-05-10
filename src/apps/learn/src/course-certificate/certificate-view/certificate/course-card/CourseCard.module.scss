@@ -1,0 +1,52 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    border-radius: $sp-2;
+    width: 100%;
+    width: 264px;
+    background: rgba($tc-white, 0.12);
+    backdrop-filter: blur(160px);
+    color: $tc-white;
+
+    h5 {
+        font-size: 24px;
+        line-height: 26px;
+    }
+}
+
+.badge {
+    img {
+        display: block;
+        @include icon-size(78);
+    }
+}
+
+.course-title {
+    margin-top: $sp-4;
+}
+
+.top-wrap {
+    background: url(./wave-bg.png) 0 0 no-repeat;
+    background-size: 264px 600px;
+    padding: $sp-6;
+    min-height: 264px;
+}
+
+.details {
+    display: flex;
+    align-items: center;
+    padding: $sp-6;
+    gap: calc($sp-2 + $border);
+
+    svg {
+        @include icon-xl;
+    }
+
+    span {
+        line-height: 24px;
+
+        & > span {
+            display: block;
+        }
+    }
+}

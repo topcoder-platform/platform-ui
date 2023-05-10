@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="612px" height="60px" viewBox="0 0 612 60" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>E3BD476A-D75E-46B7-B760-74F655D7902F</title>
+    <defs>
+        <linearGradient x1="10.9099787%" y1="50%" x2="80.9206321%" y2="50%" id="linearGradient-1">
+            <stop stop-color="#9D41C9" offset="0%"/>
+            <stop stop-color="#50ADE8" offset="100%"/>
+        </linearGradient>
+        <circle id="path-2" cx="570" cy="18" r="18"/>
+        <filter x="-13.9%" y="-13.9%" width="127.8%" height="127.8%" filterUnits="objectBoundingBox" id="filter-3">
+            <feMorphology radius="2" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"/>
+            <feOffset dx="0" dy="0" in="shadowSpreadOuter1" result="shadowOffsetOuter1"/>
+            <feGaussianBlur stdDeviation="1" in="shadowOffsetOuter1" result="shadowBlurOuter1"/>
+            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"/>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.246011801 0" type="matrix" in="shadowBlurOuter1"/>
+        </filter>
+    </defs>
+    <g id="TaaS" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="06-1-Notification-Registration-Desktop" transform="translate(-420.000000, -422.000000)">
+            <g id="Group-15" transform="translate(360.000000, 146.000000)">
+                <g id="progress-bar" transform="translate(60.000000, 280.000000)">
+                    <rect id="full-bar" fill="#E9E9E9" x="0" y="8" width="607" height="23" rx="11.5"/>
+                    <rect fill="url(#linearGradient-1)" x="0" y="8" width="565" height="23" rx="11.5"/>
+                    <text id="You-are-here" font-family="Roboto-Regular, Roboto" font-size="11" font-weight="normal" line-spacing="15" letter-spacing="0.5" fill="#2A2A2A">
+                        <tspan x="536.596924" y="51">You are here</tspan>
+                    </text>
+                    <g id="current-position">
+                        <use fill="black" fill-opacity="1" filter="url(#filter-3)" xlink:href="#path-2"/>
+                        <use stroke="#FFFFFF" stroke-width="4" fill="#50ADE8" fill-rule="evenodd" xlink:href="#path-2"/>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

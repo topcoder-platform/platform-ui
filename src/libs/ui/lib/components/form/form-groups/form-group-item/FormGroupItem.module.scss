@@ -1,0 +1,64 @@
+@use '../../../../styles/typography';
+@import "../../../../styles/includes";
+
+.form-group-item {
+    display: flex;
+
+    &.single-field {
+        border-bottom: none;
+        padding: 0;
+
+        .right {
+            margin-top: 0;
+        }
+    }
+
+    @include ltemd {
+        flex-direction: column;
+        padding: $sp-6 0 $sp-2 0;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    &:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .left {
+        flex: 1;
+
+        .title {
+            text-transform: uppercase;
+        }
+
+        .group-item-instructions {
+            @extend .body-small;
+            @include font-roboto;
+            margin-top: $sp-6;
+        }
+    }
+
+    .right {
+        flex: 1;
+        margin-top: 46px;
+
+        @include ltemd {
+            margin-top: $sp-6;
+        }
+    }
+
+    &.full-width-container {
+        display: inline;
+
+        .group-item-instructions {
+            margin-top: $sp-6;
+            margin-bottom: $sp-12;
+        }
+
+    }
+
+    .full-width-items {
+        margin-top: $sp-7;
+    }
+}

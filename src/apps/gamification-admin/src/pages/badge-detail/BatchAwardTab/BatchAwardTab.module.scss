@@ -1,0 +1,55 @@
+@use '@libs/ui/styles/typography';
+@import "@libs/ui/styles/variables/palette";
+@import "@libs/ui/styles/includes";
+
+$error-line-height: 14px;
+
+.tabWrap {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 260px;
+
+    .batchFormWrap {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $sp-8;
+        margin-top: $sp-6;
+
+        @include ltemd {
+            grid-template-columns: 1fr;
+        }
+
+        .templateLink {
+            text-transform: uppercase;
+            color: $turq-160;
+            font-weight: $font-weight-bold;
+            margin-top: $sp-4;
+            display: inline-block;
+        }
+
+        .batchForm {
+            display: flex;
+            flex-direction: column;
+
+            .error {
+                display: flex;
+                align-items: center;
+                color: $red-100;
+                // extend body ultra small and override it
+                @extend .ultra-small;
+                line-height: $error-line-height;
+                margin-top: $sp-1;
+
+                svg {
+                    @include icon-md;
+                    fill: $red-100;
+                    margin-right: $sp-1;
+                }
+            }
+
+            .actionsWrap {
+                margin-top: $sp-6;
+            }
+        }
+    }
+}

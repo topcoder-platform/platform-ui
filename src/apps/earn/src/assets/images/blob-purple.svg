@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="123px" height="133px" viewBox="0 0 123 133" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+        <linearGradient x1="0.0527767138%" y1="21.516476%" x2="100%" y2="91.2384507%" id="blob-purple-gradient">
+            <stop stop-color="#9D41C9" offset="0.0131967905%"/>
+            <stop stop-color="#EF476F" offset="100%"/>
+        </linearGradient>
+    </defs>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g transform="translate(-360.000000, -545.000000)" fill="url(#blob-purple-gradient)">
+            <g transform="translate(360.000000, 146.000000)">
+                <path d="M27.3412314,537.70736 C57.3382831,601.434106 119.308228,544.130658 119.308228,492.775897 C119.308228,441.421135 106.482224,395.870363 57.0995677,395.870363 C7.71691157,395.870363 -51.6917722,398.598591 -51.6917722,449.953352 C-51.6917722,501.308114 -2.65582026,473.980615 27.3412314,537.70736 Z" id="blob-purple" transform="translate(33.808228, 480.870363) rotate(-186.000000) translate(-33.808228, -480.870363) "/>
+            </g>
+        </g>
+    </g>
+</svg>

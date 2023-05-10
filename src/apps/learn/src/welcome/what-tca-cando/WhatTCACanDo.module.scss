@@ -1,0 +1,67 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    display: flex;
+    flex-direction: column;
+    background-color: $black-5;
+    border-radius: 8px;
+    padding: $sp-8;
+    margin-bottom: $sp-8;
+
+    @include ltemd {
+        padding: $sp-4;
+        margin-bottom: $sp-2;
+    }
+
+    .collapseTrigger {
+        display: flex;
+        justify-content: space-between;
+
+        h2 {
+            margin-bottom: $sp-4;
+
+            @include ltemd {
+                max-width: 290px;
+            }
+        }
+
+        >svg {
+            color: $turq-160;
+            cursor: pointer;
+        }
+    }
+
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: $sp-4;
+        margin-top: $sp-4;
+
+        @include ltemd {
+            grid-template-columns: 1fr;
+        }
+
+        .card {
+            display: flex;
+            flex-direction: column;
+            padding: $sp-6 $sp-6 $sp-8;
+            background-color: $tc-white;
+            border-radius: 8px;
+
+            @include ltemd {
+                padding: $sp-4 $sp-4 $sp-5;
+            }
+
+            .cardTitle {
+                display: flex;
+                align-items: center;
+                margin-bottom: $sp-4;
+
+                >svg {
+                    color: $blue-110;
+                    margin-right: $sp-2;
+                }
+            }
+        }
+    }
+}

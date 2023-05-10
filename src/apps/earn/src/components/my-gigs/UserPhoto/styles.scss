@@ -1,0 +1,15 @@
+.user-photo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  vertical-align: middle;
+  overflow: hidden;
+  border-radius: 50%;
+
+  img {
+    width: auto;
+    height: 100%;
+  }
+}

@@ -54,6 +54,12 @@ running_yarn_build: &running_yarn_build
       yarn install
       yarn build
 
+running_yarn_sb_build: &running_yarn_sb_build
+    name: Running Yarn Storybook Build
+    command: |
+      source buildenvvar
+      yarn sb:build
+
 running_yarn_test: &running_yarn_test
     name: Running Yarn Test Build
     command: |
@@ -91,6 +97,7 @@ build_steps: &build_steps
     - run: *install_deploysuite
     - run: *build_configuration_fetch
     - run: *running_yarn_build
+    - run: *running_yarn_sb_build
     - persist_to_workspace: *workspace_persist
 
 test_steps: &test_steps
@@ -129,13 +136,13 @@ deploy_steps: &deploy_steps
           ./master_deploy.sh -d CFRONT -e $DEPLOY_ENV -c $ENABLE_CACHE
 
 jobs:
-  lint-dev:
-    <<: *defaults
-    environment:
-      DEPLOY_ENV: "DEV"
-      LOGICAL_ENV: "dev"
-      APPNAME: "platform-ui-mvp"
-    steps: *lint_steps
+  # lint-dev:
+  #   <<: *defaults
+  #   environment:
+  #     DEPLOY_ENV: "DEV"
+  #     LOGICAL_ENV: "dev"
+  #     APPNAME: "platform-ui-mvp"
+  #   steps: *lint_steps
 
   # lint-prod:
   #   <<: *defaults
@@ -150,6 +157,14 @@ jobs:
     environment:
       DEPLOY_ENV: "DEV"
       LOGICAL_ENV: "dev"
+      APPNAME: "platform-ui-mvp"
+    steps: *build_steps
+
+  build-qa:
+    <<: *defaults
+    environment:
+      DEPLOY_ENV: "QA"
+      LOGICAL_ENV: "qa"
       APPNAME: "platform-ui-mvp"
     steps: *build_steps
 
@@ -179,6 +194,15 @@ jobs:
       APPNAME: "platform-ui-mvp"
     steps: *deploy_steps
 
+  deployQa:
+    <<: *deploy_defaults
+    environment:
+      DEPLOY_ENV: "QA"
+      LOGICAL_ENV: "qa"
+      ENABLE_CACHE: true
+      APPNAME: "platform-ui-mvp"
+    steps: *deploy_steps
+
   deployProd:
     <<: *deploy_defaults
     environment:
@@ -192,12 +216,12 @@ workflows:
   version: 2
   build:
     jobs:
-      - lint-dev:
-          context : org-global
-          filters:
-            branches:
-              ignore:
-                - master
+      # - lint-dev:
+      #     context : org-global
+      #     filters:
+      #       branches:
+      #         ignore:
+      #           - master
 
       # - lint-prod:
       #     context : org-global
@@ -212,6 +236,14 @@ workflows:
             branches:
               ignore:
                 - master
+                - qa
+
+      - build-qa:
+          context : org-global
+          filters:
+            branches:
+              only:
+                - qa
 
       - build-prod:
           context : org-global
@@ -228,6 +260,15 @@ workflows:
             branches:
               only:
                 - dev
+
+      - deployQa:
+          context : org-global
+          requires:
+            - build-qa
+          filters:
+            branches:
+              only:
+                - qa
 
       - deployProd:
           context : org-global

@@ -1,0 +1,27 @@
+@use '@libs/ui/styles/typography';
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+
+    position: relative;
+
+    :global(.loading-spinner) {
+        background: transparent;
+    }
+}
+
+.content {
+    flex: 1 1 auto;
+    overflow: auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+
+    @include scrollbar;
+    padding-right: 5px;
+    margin-right: -5px;
+}

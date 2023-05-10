@@ -1,0 +1,97 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+  margin-top: $sp-5;
+
+  .inline {
+    display: flex;
+    flex-direction: row;
+    width:100%;
+
+    @include ltemd {
+      width: 100%;
+    }
+  }
+
+  .content-wrapper {
+    display: flex;
+    flex: 1;
+
+    h3 {
+      font-weight: normal;
+      @include ltemd {
+        flex: 1;
+      }
+    }
+  }
+
+  @include ltemd {
+    display: flex;
+    flex-direction: row;
+  }
+}
+
+.serviceTitle {
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.priceAndDuration {
+  color: $tc-black;
+  display: flex;
+  text-align: center;
+  text-transform: uppercase;
+  line-height: 48px;
+
+  @include ltemd {
+    justify-content: space-between;
+  }
+
+  .stickerPrice {
+    color: $black-80;
+    text-decoration: line-through;
+    margin-right: $sp-1;
+  }
+
+  .separator {
+    height: 26px;
+    width: $border;
+    color: $black-10;
+    margin: 0px 16px;
+  }
+
+  .discount {
+    color: $green-140;
+  }
+
+  .days {
+    display: inline;
+
+    @include ltemd {
+      flex: 1;
+      text-align: left;
+    }
+  }
+
+  .help {
+    display: flex;
+    align-items: center;
+    margin-left: $sp-2;
+    color: $turq-160;
+
+    .help-icon {
+      cursor: pointer;
+
+      @include ltemd {
+        @include icon-xl;
+      }
+    }
+  }
+}
+
+.icon {
+  margin-left: 0;
+  svg {
+    @include icon-mxx;
+  }
+}
