@@ -41,9 +41,9 @@ export const rootRoute: string = (
 )
 
 export const EARN_APP_PATHS: { [key: string]: string } = {
-    root: rootRoute,
-    gigs: `${rootRoute}/gigs`,
     challenges: `${rootRoute}/challenges`,
+    gigs: `${rootRoute}/gigs`,
+    root: rootRoute,
 }
 
 export const toolTitle: string = ToolTitle.earn

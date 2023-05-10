@@ -260,7 +260,6 @@ workflows:
             branches:
               only:
                 - dev
-                - UOF-61_merge-latest-uof
 
       - deployQa:
           context : org-global
