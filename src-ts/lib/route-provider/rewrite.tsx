@@ -19,6 +19,6 @@ export const Rewrite: FC<RewriteProps> = props => {
     )
 
     return (
-        <Navigate to={rewriteTo} />
+        <Navigate to={`${rewriteTo}${window.location.search}`} />
     )
 }
