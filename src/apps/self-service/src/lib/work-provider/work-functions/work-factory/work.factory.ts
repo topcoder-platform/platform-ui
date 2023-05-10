@@ -719,7 +719,7 @@ function getType(challenge: Challenge): WorkType {
         try {
             return JSON.parse(intakeForm.value)
         } catch {
-            return {form: undefined}
+            return { form: undefined }
         }
     })()
     const workTypeKey: (keyof typeof WorkType) | undefined = Object.entries(WorkType)
