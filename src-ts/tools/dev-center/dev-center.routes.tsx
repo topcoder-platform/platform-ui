@@ -1,4 +1,4 @@
-import { ToolTitle } from '../../config'
+import { AppSubdomain, EnvironmentConfig, ToolTitle } from '../../config'
 import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
 
 const GettingStartedGuide: LazyLoadedComponent
@@ -9,6 +9,7 @@ const DevCenterLandingPage: LazyLoadedComponent
 
 const DevCenter: LazyLoadedComponent = lazyLoad(() => import('./DevCenter'))
 
+export const rootRoute: string = EnvironmentConfig.SUBDOMAIN === AppSubdomain.dev ? '' : `/${AppSubdomain.dev}`
 export const toolTitle: string = ToolTitle.dev
 
 export const devCenterRoutes: ReadonlyArray<PlatformRoute> = [
@@ -23,8 +24,9 @@ export const devCenterRoutes: ReadonlyArray<PlatformRoute> = [
                 route: '/',
             },
         ],
+        domain: 'devcenter',
         element: <DevCenter />,
         id: toolTitle,
-        route: '/dev-center',
+        route: rootRoute,
     },
 ]

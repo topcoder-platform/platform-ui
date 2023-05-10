@@ -12,6 +12,7 @@ import {
     TCACertification,
     TCACertificationProgress,
     TCACertificationProviderBase,
+    TCAEMSISkillType,
 } from '../../../learn-lib'
 import { EnvironmentConfig } from '../../../../../config'
 
@@ -32,10 +33,11 @@ const EXCERPT_TEXT_LEN: number = 165
 const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
     const desc: string = props.certification.description.slice(0, EXCERPT_TEXT_LEN)
 
-    const { skills, providers, dashedName }: {
+    const { skills, providers, dashedName, emsiSkills }: {
         skills: string[],
         providers: Array<TCACertificationProviderBase>,
         dashedName: string
+        emsiSkills: TCAEMSISkillType[]
     } = props.certification
 
     const isEnrolled: boolean = props.progress?.status === 'enrolled'
@@ -132,6 +134,7 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
             </p>
 
             <SkillTags
+                emsiSkills={emsiSkills}
                 skills={skills}
                 courseKey={dashedName}
                 theme={isCompleted ? 'gray' : 'white'}

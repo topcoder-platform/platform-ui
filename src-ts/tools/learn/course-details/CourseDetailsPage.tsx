@@ -1,6 +1,6 @@
 /* eslint-disable react/no-danger */
 import { FC, ReactNode, useContext, useMemo } from 'react'
-import { Params, useLocation, useParams } from 'react-router-dom'
+import { Params, useParams } from 'react-router-dom'
 
 import {
     Breadcrumb,
@@ -23,17 +23,17 @@ import {
     useGetCourses,
     useGetResourceProvider,
     useGetUserCertificationProgress,
-    useLearnBreadcrumb,
     UserCertificationProgressProviderData,
     UserCertificationProgressStatus,
 } from '../learn-lib'
-import { getCoursePath, getTCACertificationPath } from '../learn.routes'
+import { getCoursePath } from '../learn.routes'
+import { CoursePageContextValue, useCoursePageContext } from '../course-page-wrapper'
 
 import { CourseCurriculum } from './course-curriculum'
 import styles from './CourseDetailsPage.module.scss'
 
 const CourseDetailsPage: FC<{}> = () => {
-
+    const { buildBreadcrumbs }: CoursePageContextValue = useCoursePageContext()
     const routeParams: Params<string> = useParams()
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
 
@@ -69,35 +69,15 @@ const CourseDetailsPage: FC<{}> = () => {
 
     const ready: boolean = profileReady && courseReady && certificateReady && (!profile || progressReady)
 
-    const location: any = useLocation()
-
-    const breadcrumbItems: BreadcrumbItemModel[] = useMemo(() => {
-        const bItems: BreadcrumbItemModel[] = [
-            {
-
-                name: textFormatGetSafeString(course?.title),
-                url: getCoursePath(routeParams.provider as string, textFormatGetSafeString(routeParams.certification)),
-            },
-        ]
-
-        // if coming path is from TCA certification details page
-        // then we need to add the certification to the navi list
-        if (location.state?.tcaCertInfo) {
-            bItems.unshift({
-                name: location.state.tcaCertInfo.title,
-                url: getTCACertificationPath(location.state.tcaCertInfo.dashedName),
-            })
-        }
-
-        return bItems
-    }, [
+    const breadcrumbs: Array<BreadcrumbItemModel> = useMemo(() => buildBreadcrumbs([{
+        name: textFormatGetSafeString(course?.title),
+        url: getCoursePath(routeParams.provider as string, textFormatGetSafeString(routeParams.certification)),
+    }]), [
+        buildBreadcrumbs,
         course?.title,
         routeParams.certification,
         routeParams.provider,
-        location.state,
     ])
-
-    const breadcrumb: Array<BreadcrumbItemModel> = useLearnBreadcrumb(breadcrumbItems)
 
     function getDescription(): ReactNode {
 
@@ -207,7 +187,7 @@ const CourseDetailsPage: FC<{}> = () => {
                     <LoadingSpinner />
                 </div>
             )}
-            <Breadcrumb items={breadcrumb} />
+            <Breadcrumb items={breadcrumbs} />
             {ready && course && certificate && (
                 <>
                     <div className={styles.wrap}>

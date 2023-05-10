@@ -2,6 +2,7 @@ import { noop } from 'lodash'
 
 import { FormDefinition, IconOutline, validatorRequired } from '../../../../../lib'
 import { GamificationConfig } from '../../../game-config'
+import { rootRoute } from '../../../gamification-admin.routes'
 
 export enum CreateBadgeFormField {
     badgeActive = 'badgeActive',
@@ -26,7 +27,7 @@ export const createBadgeFormDef: FormDefinition = {
             {
                 buttonStyle: 'icon-bordered',
                 icon: IconOutline.ChevronLeftIcon,
-                route: '/gamification-admin',
+                route: rootRoute || '/',
                 size: 'lg',
             },
         ],

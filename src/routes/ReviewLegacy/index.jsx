@@ -42,6 +42,7 @@ import {
 import { Breadcrumb, OrderContractModal } from "../../../src-ts";
 import AboutYourProject from "../../routes/Review/components/AboutYourProject";
 import PageH2 from "../../components/PageElements/PageH2";
+import { selfServiceRootRoute } from "../../../src-ts/tools/work";
 
 let stripePromise;
 
@@ -94,7 +95,7 @@ const ReviewLegacy = ({
     setProgressItem(7);
 
     if (currentStep === 0) {
-      navigate("/self-service");
+      navigate(selfServiceRootRoute);
     }
 
     setFirstMounted(false);
@@ -111,14 +112,14 @@ const ReviewLegacy = ({
     }
 
     if (currentStep === 0) {
-      navigate("/self-service");
+      navigate(selfServiceRootRoute);
     }
 
     setAnotherFirstMounted(false);
   }, [currentStep, anotherFirstMounted, navigate]);
 
   const onBack = () => {
-    navigate("/self-service/work/new/website-design-legacy/branding");
+    navigate(`${selfServiceRootRoute}/new/website-design-legacy/branding`);
   };
 
   const clearPreviousForm = () => {
@@ -165,7 +166,7 @@ const ReviewLegacy = ({
       .then((res) => {
         activateChallenge(challengeId);
         clearPreviousForm();
-        navigate("/self-service/work/new/website-design-legacy/thank-you");
+        navigate(`${selfServiceRootRoute}/new/website-design-legacy/thank-you`);
         setProgressItem(8);
         setPaymentFailed(false);
       })

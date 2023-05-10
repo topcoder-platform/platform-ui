@@ -1,5 +1,5 @@
-import { EnvironmentConfig } from '../../config'
-import { authUrlLogin, lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
+import { AppSubdomain, EnvironmentConfig } from '../../config'
+import { authUrlLogin, lazyLoad, LazyLoadedComponent, PlatformRoute, Rewrite } from '../../lib'
 
 import { toolTitle } from './Learn'
 import { LearnConfig } from './learn-config'
@@ -13,13 +13,17 @@ const EnrollmentPage: LazyLoadedComponent = lazyLoad(
     () => import('./certification-details/enrollment-page'),
     'EnrollmentPage',
 )
+const CoursePageWrapper: LazyLoadedComponent = lazyLoad(
+    () => import('./course-page-wrapper'),
+    'CoursePageWrapper',
+)
 const CourseDetailsPage: LazyLoadedComponent = lazyLoad(() => import('./course-details'), 'CourseDetailsPage')
 const CourseCompletedPage: LazyLoadedComponent = lazyLoad(() => import('./course-completed'), 'CourseCompletedPage')
 const MyCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certificate'), 'MyCertificate')
 const UserCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certificate'), 'UserCertificate')
 const FreeCodeCamp: LazyLoadedComponent = lazyLoad(() => import('./free-code-camp'), 'FreeCodeCamp')
 const MyLearning: LazyLoadedComponent = lazyLoad(() => import('./my-learning'), 'MyLearning')
-const LandingLearn: LazyLoadedComponent = lazyLoad(() => import('./Learn'))
+const LearnRootPage: LazyLoadedComponent = lazyLoad(() => import('./Learn'))
 const UserTCACertificate: LazyLoadedComponent = lazyLoad(() => import('./tca-certificate'), 'CertificateView')
 
 const ValidateTCACertificate: LazyLoadedComponent
@@ -31,18 +35,17 @@ const UserCertificationView: LazyLoadedComponent
 const UserCertificationPreview: LazyLoadedComponent
     = lazyLoad(() => import('./tca-certificate'), 'UserCertificationPreview')
 
-export enum LEARN_PATHS {
-    certificate = '/certificate',
-    completed = '/learn/completed',
-    myLearning = '/learn/my-learning',
-    fcc = '/learn/fcc',
-    root = '/learn',
-    startCourseRouteFlag = 'start-course',
-    tcaCertifications = '/tca-certifications',
-    tcaEnroll = '/enroll',
+export const rootRoute: string = EnvironmentConfig.SUBDOMAIN === AppSubdomain.tca ? '' : `/${AppSubdomain.tca}`
+
+export const LEARN_PATHS: { [key: string]: string } = {
+    certificate: '/certificate',
+    myLearning: `${rootRoute}/my-learning`,
+    root: rootRoute,
+    startCourseRouteFlag: 'start-course',
+    tcaCertifications: '/tca-certifications',
+    tcaEnroll: '/enroll',
 }
 
-export const rootRoute: string = LEARN_PATHS.root
 export const absoluteRootRoute: string = `${window.location.origin}${LEARN_PATHS.root}`
 
 export function getAuthenticateAndStartCourseRoute(): string {
@@ -128,7 +131,7 @@ export function getTCACertificateUrl(
 export function getTCACertificationValidationUrl(
     completionUuid: string,
 ): string {
-    return `${EnvironmentConfig.TOPCODER_URLS.TCA}${LEARN_PATHS.root}/${completionUuid}`
+    return `${absoluteRootRoute}/certificate/${completionUuid}`
 }
 
 export function getTCAUserCertificationUrl(
@@ -147,6 +150,21 @@ export function getTCAUserCertificationPreviewUrl(
 export function getAuthenticateAndEnrollRoute(): string {
     return `${authUrlLogin()}${encodeURIComponent(LEARN_PATHS.tcaEnroll)}`
 }
+
+const oldUrlRedirectRoute: ReadonlyArray<PlatformRoute> = EnvironmentConfig.SUBDOMAIN === AppSubdomain.tca ? [
+    {
+        children: [],
+        element: <Rewrite to='/certificate/:certUuid' />,
+        id: 'redirect-old-uuidcert-url',
+        route: '/learn/:certUuid',
+    },
+    {
+        children: [],
+        element: <Rewrite to='/*' />,
+        id: 'redirect-old-url',
+        route: '/learn/*',
+    },
+] : []
 
 export const learnRoutes: ReadonlyArray<PlatformRoute> = [
     {
@@ -170,34 +188,41 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                 route: 'tca-certifications/:certification/enroll',
             },
             {
-                children: [],
-                element: <CourseDetailsPage />,
-                id: 'Course Details',
-                route: ':provider/:certification',
-            },
-            {
-                children: [],
-                element: <CourseCompletedPage />,
-                id: 'Course Completed',
-                route: ':provider/:certification/completed',
-            },
-            {
-                children: [],
-                element: <MyCertificate />,
-                id: 'My Certificate',
-                route: ':provider/:certification/certificate',
-            },
-            {
-                children: [],
-                element: <UserCertificate />,
-                id: 'User Certificate',
-                route: ':provider/:certification/:memberHandle/certificate',
-            },
-            {
-                children: [],
-                element: <FreeCodeCamp />,
-                id: 'FxreeCodeCamp',
-                route: ':provider/:certification/:module/:lesson',
+                children: [
+                    {
+                        children: [],
+                        element: <CourseDetailsPage />,
+                        id: 'Course Details',
+                        route: ':certification',
+                    },
+                    {
+                        children: [],
+                        element: <CourseCompletedPage />,
+                        id: 'Course Completed',
+                        route: ':certification/completed',
+                    },
+                    {
+                        children: [],
+                        element: <MyCertificate />,
+                        id: 'My Certificate',
+                        route: ':certification/certificate',
+                    },
+                    {
+                        children: [],
+                        element: <UserCertificate />,
+                        id: 'User Certificate',
+                        route: ':certification/:memberHandle/certificate',
+                    },
+                    {
+                        children: [],
+                        element: <FreeCodeCamp />,
+                        id: 'FxreeCodeCamp',
+                        route: ':certification/:module/:lesson',
+                    },
+                ],
+                element: <CoursePageWrapper />,
+                id: 'CoursePage',
+                route: ':provider',
             },
             {
                 children: [],
@@ -215,7 +240,7 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                 children: [],
                 element: <ValidateTCACertificate />,
                 id: 'Hiring manager view - uuid param',
-                route: ':completionUuid',
+                route: 'certificate/:completionUuid',
             },
             {
                 children: [],
@@ -229,8 +254,10 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                 id: 'Giring manager preview',
                 route: 'tca-certifications/:certification/preview',
             },
+            ...oldUrlRedirectRoute,
         ],
-        element: <LandingLearn />,
+        domain: AppSubdomain.tca,
+        element: <LearnRootPage />,
         id: toolTitle,
         route: rootRoute,
     },

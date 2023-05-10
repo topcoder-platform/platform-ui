@@ -24,6 +24,7 @@ import {
 
 import styles from "./styles.module.scss";
 import classNames from "classnames";
+import { selfServiceRootRoute } from "../../../src-ts/tools/work";
 
 const WorkTypeCard = ({
   className = "",
@@ -156,7 +157,7 @@ const SelectWorkType = ({
 
   const breadcrumb = [
     { url: ROUTES.DASHBOARD_PAGE, name: "My work" },
-    { url: "/self-service/wizard", name: "Start work" },
+    { url: `${selfServiceRootRoute}/wizard`, name: "Start work" },
   ];
 
   const workTypeClassName = (title) => title.toLowerCase().split(" ").join("-");

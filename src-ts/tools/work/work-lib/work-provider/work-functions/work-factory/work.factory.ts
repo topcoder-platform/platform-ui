@@ -450,7 +450,10 @@ function checkFormDataOptionEmpty(detail: any): boolean {
     )
 }
 
-function findMetadata(challenge: Challenge, metadataName: ChallengeMetadataName): ChallengeMetadata | undefined {
+export function findMetadata(
+    challenge: Challenge | CreateWorkRequest,
+    metadataName: ChallengeMetadataName,
+): ChallengeMetadata | undefined {
     return challenge.metadata?.find((item: ChallengeMetadata) => item.name === metadataName)
 }
 

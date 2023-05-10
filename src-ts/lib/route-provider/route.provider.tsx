@@ -14,11 +14,12 @@ import { Location, Route, useLocation } from 'react-router-dom'
 import { authUrlLogin } from '../functions'
 import { LoadingSpinner } from '../loading-spinner'
 import { profileContext, ProfileContextData } from '../profile-provider'
+import { EnvironmentConfig } from '../../config'
 
 import { PlatformRoute } from './platform-route.model'
 import { RequireAuthProvider } from './require-auth-provider'
 import { RouteContextData } from './route-context-data.model'
-import { routeGetActive, routeGetSignupUrl } from './route-functions'
+import { routeGetActive, routeGetSignupUrl, routeMatchAppRouter } from './route-functions'
 import { default as routeContext, defaultRouteContextData } from './route.context'
 
 interface RouteProviderProps {
@@ -53,7 +54,13 @@ export const RouteProvider: FC<RouteProviderProps> = (props: RouteProviderProps)
             ...utilsRoutes,
         ]
 
-        const activeRoute: PlatformRoute | undefined = routeGetActive(location.pathname, allRoutes)
+        let activeRoute: PlatformRoute | undefined = routeGetActive(location.pathname, allRoutes)
+        const matchedAppRouter: PlatformRoute | undefined = routeMatchAppRouter(EnvironmentConfig.SUBDOMAIN, allRoutes)
+
+        if (matchedAppRouter) {
+            allRoutes = [matchedAppRouter]
+            activeRoute = matchedAppRouter
+        }
 
         // TODO: support additional roles and landing pages
         const loggedInRoot: string = !profile

@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom'
 
-import { contactSupportPath, lazyLoad, LazyLoadedComponent, PlatformRoute } from '../../lib'
+import { contactSupportPath, lazyLoad, LazyLoadedComponent, PlatformRoute, Rewrite } from '../../lib'
+import { AppSubdomain, EnvironmentConfig } from '../../config'
 
 import { dashboardRouteId, intakeFormsRouteId, toolTitle } from './Work'
 import { Work, WorkIntakeFormRoutes, WorkStatus, WorkType } from './work-lib'
@@ -16,8 +17,8 @@ const SaveAfterLogin: LazyLoadedComponent
 const WorkTable: LazyLoadedComponent = lazyLoad(() => import('./work-table'), 'WorkTable')
 const WorkThankYou: LazyLoadedComponent = lazyLoad(() => import('./work-thank-you'), 'WorkThankYou')
 
-export const rootRoute: string = '/work'
-export const selfServiceRootRoute: string = '/self-service'
+export const rootRoute: string = EnvironmentConfig.SUBDOMAIN === AppSubdomain.work ? '' : `/${AppSubdomain.work}`
+export const selfServiceRootRoute: string = `${rootRoute}/self-service`
 export const selfServiceStartRoute: string = `${selfServiceRootRoute}/wizard`
 export const dashboardRoute: string = `${rootRoute}/dashboard`
 export const bugHuntRoute: string = 'bug-hunt/'
@@ -47,6 +48,15 @@ export function workDetailOrDraftRoute(selectedWork: Work): string {
 export function workDetailRoute(workId: string, tab?: 'solutions' | 'messages'): string {
     return `${selfServiceRootRoute}/work-items/${workId}${!!tab ? `?tab=${tab}` : ''}`
 }
+
+const oldUrlRedirectRoute: ReadonlyArray<PlatformRoute> = EnvironmentConfig.SUBDOMAIN === AppSubdomain.work ? [
+    {
+        children: [],
+        element: <Rewrite to='/*' />,
+        id: 'redirect-old-url',
+        route: '/work/*',
+    },
+] : []
 
 export const workRoutes: ReadonlyArray<PlatformRoute> = [
     {
@@ -114,20 +124,21 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
         element: <IntakeForms />,
         hidden: true,
         id: intakeFormsRouteId,
-        route: `${selfServiceRootRoute}${rootRoute}/new`,
+        route: `${selfServiceRootRoute}/new`,
         title: toolTitle,
-    },
-    {
-        element: <Navigate to={rootRoute} />,
-        route: selfServiceRootRoute,
     },
     {
         element: <Navigate to={dashboardRoute} />,
         route: `${selfServiceRootRoute}/dashboard`,
     },
     {
+        element: <Navigate to={selfServiceStartRoute} />,
+        route: selfServiceRootRoute,
+    },
+    {
         children: [],
         element: <Navigate to={contactSupportPath} />,
-        route: `${rootRoute}${contactSupportPath}`,
+        route: `${contactSupportPath}`,
     },
+    ...oldUrlRedirectRoute,
 ]

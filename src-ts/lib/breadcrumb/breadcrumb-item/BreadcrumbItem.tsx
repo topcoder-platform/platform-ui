@@ -26,6 +26,7 @@ const BreadcrumbItem: FC<BreadcrumbItemProps> = (props: BreadcrumbItemProps) => 
             <Link
                 className={classNames(props.item.isElipsis && styles.elipsis)}
                 to={props.item.url}
+                state={props.item.state}
             >
                 {props.item.name}
             </Link>

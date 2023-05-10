@@ -11,6 +11,7 @@ import { ReactComponent as DataExplorationIcon } from "../../../assets/images/da
 import HelpBanner from "../../../components/HelpBanner";
 import FeaturedWorkTypeBanner from "../../../components/Banners/FeaturedWorkTypeBanner";
 import { webWorkTypes } from "../../../constants/index";
+import { selfServiceRootRoute } from "../../../../src-ts/tools/work";
 
 export default function WebsiteDesign({ isLoggedIn }) {
   const websiteDesign = webWorkTypes.find(
@@ -35,8 +36,8 @@ export default function WebsiteDesign({ isLoggedIn }) {
       <Route
         element={<LoginPrompt
           isLoggedIn={isLoggedIn}
-          previousPageUrl="/self-service/work/new/website-design/basic-info"
-          nextPageUrl="/self-service/work/new/website-design/review"
+          previousPageUrl={`${selfServiceRootRoute}/new/website-design/basic-info`}
+          nextPageUrl={`${selfServiceRootRoute}/new/website-design/review`}
         />}
         path="/login-prompt"
       />
@@ -55,10 +56,10 @@ export default function WebsiteDesign({ isLoggedIn }) {
               {helperBannerContent}
             </HelpBanner>
           }
-          previousPageUrl="/self-service/work/new/website-design/basic-info"
+          previousPageUrl={`${selfServiceRootRoute}/new/website-design/basic-info`}
           nextPageUrl={
             isLoggedIn
-              ? "/self-service/work/new/website-design/thank-you"
+              ? `${selfServiceRootRoute}/new/website-design/thank-you`
               : config.SIGN_IN_URL
           }
           icon={<DataExplorationIcon />}
