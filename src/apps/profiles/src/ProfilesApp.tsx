@@ -1,22 +1,21 @@
 import { FC, useContext } from 'react'
 import { Outlet, Routes } from 'react-router-dom'
-import { Provider } from 'react-redux'
 
 import { routerContext, RouterContextData } from '~/libs/core'
 
 import { toolTitle } from './profiles.routes'
-import store from './store'
+import { ProfileSwr } from './lib'
 
 const ProfilesApp: FC<{}> = () => {
     const { getChildRoutes }: RouterContextData = useContext(routerContext)
 
     return (
-        <Provider store={store}>
+        <ProfileSwr>
             <Outlet />
             <Routes>
                 {getChildRoutes(toolTitle)}
             </Routes>
-        </Provider>
+        </ProfileSwr>
     )
 }
 
