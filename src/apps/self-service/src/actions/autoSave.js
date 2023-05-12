@@ -21,11 +21,6 @@ export const triggerCookieClear = () => ({
   type: ACTIONS.AUTO_SAVE.TRIGGER_COOKIE_CLEARED,
 });
 
-export const autoSaveCookieCleared = (isCookieCleared) => ({
-  type: ACTIONS.AUTO_SAVE.COOKIE_CLEARED,
-  payload: isCookieCleared,
-});
-
 export const sendAutoSavedPatch = (dataToSave, challengeId) => (dispatch) => {
   patchChallenge(dataToSave, challengeId)
     .then((patched) => {
