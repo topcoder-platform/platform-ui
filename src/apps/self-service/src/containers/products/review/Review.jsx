@@ -167,10 +167,10 @@ const Review = ({
       )
       .then((res) => {
         activateChallenge(challengeId);
-        clearPreviousForm();
         navigate(nextPageUrl || `${selfServiceRootRoute}/thank-you`);
         setProgressItem(8);
         setPaymentFailed(false);
+        clearPreviousForm();
       })
       .catch(() => {
         setPaymentFailed(true);
