@@ -1,0 +1,23 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    padding-left: $sp-13;
+    padding-top: $sp-2;
+    border-left: 2px solid $black-10;
+
+    .memberSince {
+        margin-bottom: $sp-4;
+    }
+
+    .wins {
+        @include font-barlow-condensed;
+        @include font-weight-medium;
+        font-size: 48px;
+        line-height: 50px;
+        color: $teal-120;
+        text-transform: uppercase;
+        margin-top: $sp-2;
+    }
+}

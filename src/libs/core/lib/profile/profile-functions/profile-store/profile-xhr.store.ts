@@ -1,6 +1,7 @@
 import { xhrGetAsync, xhrPutAsync } from '../../../xhr'
 import { EditNameRequest } from '../../edit-name-request.model'
 import { UserProfile } from '../../user-profile.model'
+import { UserStats } from '../../user-stats.model'
 import { UserVerify } from '../../user-verify.model'
 
 import { profile as profileUrl, verify as verifyUrl } from './profile-endpoint.config'
@@ -18,4 +19,9 @@ export function patchName(handle: string, request: EditNameRequest): Promise<Use
 // reads from looker where member verified status is stored
 export function getVerification(): Promise<UserVerify[]> {
     return xhrGetAsync<UserVerify[]>(verifyUrl())
+}
+
+export function getMemberStats(handle: string): Promise<UserStats | undefined> {
+    return xhrGetAsync<UserStats[]>(`${profileUrl(handle)}/stats`)
+        .then(stats => (!stats.length ? undefined : stats[0]))
 }
