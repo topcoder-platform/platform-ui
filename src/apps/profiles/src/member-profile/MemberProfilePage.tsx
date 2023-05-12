@@ -28,7 +28,7 @@ const MemberProfilePage: FC<{}> = () => {
                 })
                 .catch(err => {
                     console.error('Error loading memebr profile', err)
-                    // TODO: NOT FOUND PAGA redirect/dispaly
+                    // TODO: NOT FOUND PAGE redirect/dispaly
                 })
 
             getMemberStatsAsync(routeParams.memberHandle)

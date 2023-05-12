@@ -1,8 +1,24 @@
+@import '@libs/ui/styles/includes';
+
 .container {
     display: flex;
     flex-direction: column;
 
-    .basicInfoWrap {
-        display: flex;
+    .contentLayoutOuter {
+        margin-top: $sp-12;
+
+        .basicInfoWrap {
+            display: flex;
+
+            @include ltelg {
+                flex-direction: column;
+            }
+
+            .skillsWrap {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+            }
+        }
     }
 }

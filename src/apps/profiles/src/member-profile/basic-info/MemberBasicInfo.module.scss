@@ -7,6 +7,14 @@
     padding-top: $sp-2;
     border-left: 2px solid $black-10;
 
+    @include ltelg {
+        border-left: none;
+        border-top: 2px solid $black-10;
+        padding-left: 0;
+        padding-top: $sp-13;
+        margin-top: $sp-2;
+    }
+
     .memberSince {
         margin-bottom: $sp-4;
     }

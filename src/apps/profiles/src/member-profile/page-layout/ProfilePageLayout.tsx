@@ -5,6 +5,7 @@ import { MemberBasicInfo } from "../basic-info"
 import { ContentLayout } from "~/libs/ui"
 
 import styles from './ProfilePageLayout.module.scss'
+import { MemberTracksInfo } from "../tracks"
 
 interface ProfilePageLayoutProps {
     memberStats: UserStats | undefined
@@ -19,10 +20,14 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
 
             <ProfilePageJumbo profile={profile} />
 
-            <ContentLayout>
+            <ContentLayout
+                outerClass={styles.contentLayoutOuter}
+            >
 
                 <div className={styles.basicInfoWrap}>
-                    
+                    <div className={styles.skillsWrap}>
+                        <MemberTracksInfo profile={profile} />
+                    </div>
                     <MemberBasicInfo profile={profile} memberStats={memberStats} />
                 </div>
 

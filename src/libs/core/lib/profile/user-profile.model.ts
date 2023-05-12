@@ -1,3 +1,4 @@
+type TC_TRACKS = 'DEVELOP' | 'DESIGN' | 'DATA_SCIENCE'
 export interface UserProfile {
     competitionCountryCode: string
     createdAt: number
@@ -14,6 +15,7 @@ export interface UserProfile {
     photoURL?: string
     roles: Array<string>
     status: string
+    tracks?: Array<TC_TRACKS>
     updatedAt: number
     userId: number
 }
