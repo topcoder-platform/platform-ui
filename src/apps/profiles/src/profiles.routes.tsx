@@ -18,7 +18,7 @@ export const profilesRoutes: ReadonlyArray<PlatformRoute> = [
                 children: [],
                 element: <MemberProfilePage />,
                 id: 'MemberProfilePage',
-                route: ':handle',
+                route: ':memberHandle',
             }
         ],
         domain: AppSubdomain.profiles,
