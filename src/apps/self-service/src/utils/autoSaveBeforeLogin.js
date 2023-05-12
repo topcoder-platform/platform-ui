@@ -6,7 +6,6 @@ import "moment-timezone";
 import { EnvironmentConfig } from "~/config";
 
 import {
-  autoSaveCookieCleared,
   sendAutoSavedPatch,
   storeAutoSavedCookie,
 } from "../actions/autoSave";
@@ -54,11 +53,10 @@ export const saveUpdatesMiddleware = ({ dispatch, getState }) => {
 
   const clearCache = () => {
     clearAutoSavedForm();
-    dispatch(autoSaveCookieCleared(true));
   };
 
   const clearCachedCookie = (autoSave) => {
-    if (autoSave.triggered && !autoSave.cookieCleared) {
+    if (autoSave.triggered && getCookie(AUTO_SAVE_FORM)) {
       clearCache();
     }
   };
