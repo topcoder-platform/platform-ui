@@ -1,7 +1,6 @@
 import { FC } from "react"
-import { UserProfile, UserSkills, useMemberSkills } from "~/libs/core"
+import { UserProfile, UserSkill, useMemberSkills } from "~/libs/core"
 import { TCVerifiedSkillIcon, TCVerifiedSkillWhiteIcon } from "~/libs/ui"
-import { keys } from "lodash"
 
 import styles from './MemberSkillsInfo.module.scss'
 
@@ -11,7 +10,7 @@ interface MemberSkillsInfoProps {
 const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProps) => {
     const { profile } = props
 
-    const memberSkills: UserSkills | undefined = useMemberSkills(profile?.handle)
+    const memberSkills: UserSkill[] | undefined = useMemberSkills(profile?.handle)
 
     return memberSkills ? (
         <div className={styles.container}>
@@ -19,10 +18,10 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
             <div className={styles.skillsWrap}>
                 {
-                    keys(memberSkills).map((skillKey: string) => (
-                        <div className={styles.skillItem} key={skillKey}>
-                            {memberSkills[skillKey].sources?.includes('CHALLENGE') && <TCVerifiedSkillWhiteIcon />}
-                            {memberSkills[skillKey].tagName}
+                    memberSkills.map((memberSkill: UserSkill) => (
+                        <div className={styles.skillItem} key={memberSkill.id}>
+                            {memberSkill.sources?.includes('CHALLENGE') && <TCVerifiedSkillWhiteIcon />}
+                            {memberSkill.tagName}
                         </div>
                     ))
                 }

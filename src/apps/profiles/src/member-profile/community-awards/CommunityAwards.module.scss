@@ -1,0 +1,95 @@
+@import "@libs/ui/styles/includes";
+
+.container {
+    background-color: $black-5;
+    padding: $sp-8;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    margin-top: $sp-13;
+
+    @include ltelg {
+        padding: $sp-4;
+    }
+
+    .title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: $sp-10;
+
+        .viewAllLink {
+            text-transform: uppercase;
+            color: $turq-160;
+            font-weight: $font-weight-bold;
+        }
+    }
+
+    .badges {
+        display: flex;
+        column-gap: $sp-4;
+        row-gap: $sp-4;
+        flex-wrap: wrap;
+
+        @include ltelg {
+            flex-direction: column;
+        }
+
+        .badgeCard {
+            background-color: $tc-white;
+            padding: $sp-4;
+            display: flex;
+            cursor: pointer;
+            min-width: 316px;
+            border-radius: 8px;
+            align-items: center;
+
+            .badgeImage {
+                width: 48px;
+                height: 48px;
+            }
+
+            .badgeTitle {
+                font-size: 14px;
+                font-weight: $font-weight-bold;
+                line-height: 16px;
+                margin-left: $sp-2;
+                max-width: 130px;
+            }
+        }
+    }
+}
+
+.badgeModalWrap {
+    display: flex;
+
+    .badgeImageModal {
+        width: 100px;
+        height: 100px;
+    }
+
+    .badgeInfoWrap {
+        display: flex;
+        flex-direction: column;
+        margin-left: $sp-4;
+
+        .badgeTitleModal {
+            font-size: 20px;
+            font-weight: $font-weight-bold;
+            line-height: 26px;
+        }
+
+        .badgeAwardedAt {
+            font-size: 12px;
+            line-height: 16px;
+            font-weight: $font-weight-bold;
+            text-transform: uppercase;
+            color: #767676;
+            margin-top: $sp-2;
+        }
+
+        .badgeDescription {
+            margin-top: $sp-4;
+        }
+    }
+}

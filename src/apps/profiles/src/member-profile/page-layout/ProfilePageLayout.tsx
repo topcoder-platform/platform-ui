@@ -7,6 +7,7 @@ import { MemberTracksInfo } from "../tracks"
 import { MemberSkillsInfo } from "../skills"
 
 import styles from './ProfilePageLayout.module.scss'
+import { CommunityAwards } from "../community-awards"
 
 interface ProfilePageLayoutProps {
     profile: UserProfile | undefined
@@ -32,6 +33,8 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                     </div>
                     <MemberBasicInfo profile={profile} />
                 </div>
+
+                <CommunityAwards profile={profile} />
 
             </ContentLayout>
 

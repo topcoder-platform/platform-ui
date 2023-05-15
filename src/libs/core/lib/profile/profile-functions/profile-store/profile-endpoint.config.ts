@@ -13,3 +13,7 @@ export function countryLookupURL(): string {
     // TODO: add DEV API eventually and/or add a config for this
     return 'https://api.topcoder.com/v3/members/lookup/countries'
 }
+
+export function gamificationAPIBaseURL(): string {
+    return `${EnvironmentConfig.API.V5}/gamification`
+}

@@ -1,10 +1,17 @@
+import { keys } from 'lodash'
 import useSWR, { SWRResponse } from 'swr'
 
-import { UserSkills } from '../user-skill.model'
+import { UserSkill } from '../user-skill.model'
 import { getProfileUrl } from '../profile-functions'
 
-export function useMemberSkills(handle?: string): UserSkills | undefined {
+export function useMemberSkills(handle?: string): UserSkill[] | undefined {
     const { data }: SWRResponse = useSWR(handle ? `${getProfileUrl(handle)}/skills` : undefined)
 
-    return data?.skills
+    const skills: UserSkill[] | undefined
+        = data?.skills ? keys(data.skills)
+            .map(skillKey => ({ id: skillKey, ...data.skills[skillKey] }))
+            // sort by challenge verified first
+            .sort((a, b) => b.sources.indexOf('CHALLENGE') - a.sources.indexOf('CHALLENGE')) : undefined
+
+    return skills
 }
