@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from "react"
 import { Params, useParams } from "react-router"
-import { UserProfile, UserStats, getMemberStatsAsync, profileGetPublicAsync, useCountryName } from "~/libs/core"
+import { UserProfile, profileGetPublicAsync } from "~/libs/core"
 import { LoadingSpinner } from "~/libs/ui"
 import { ProfilePageLayout } from "./page-layout"
 
@@ -11,13 +11,6 @@ const MemberProfilePage: FC<{}> = () => {
         UserProfile | undefined,
         Dispatch<SetStateAction<UserProfile | undefined>>
     ] = useState()
-
-    const [memberStats, setMemberStats]: [
-        UserStats | undefined,
-        Dispatch<SetStateAction<UserStats | undefined>>
-    ] = useState()
-
-    const memberCountry: string | undefined = useCountryName(profile?.homeCountryCode)
 
     const [profileReady, setProfileReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
@@ -32,15 +25,8 @@ const MemberProfilePage: FC<{}> = () => {
                     console.error('Error loading memebr profile', err)
                     // TODO: NOT FOUND PAGE redirect/dispaly
                 })
-
-            getMemberStatsAsync(routeParams.memberHandle)
-                .then(userStats => {
-                    setMemberStats(userStats)
-                })
         }
     }, [routeParams.memberHandle])
-
-    console.log('MemberProfilePage', profile, memberStats, memberCountry)
 
     return (
         <>
@@ -48,8 +34,6 @@ const MemberProfilePage: FC<{}> = () => {
 
             {profileReady && profile && (
                 <ProfilePageLayout
-                    memberCountry={memberCountry}
-                    memberStats={memberStats}
                     profile={profile}
                 />
             )}

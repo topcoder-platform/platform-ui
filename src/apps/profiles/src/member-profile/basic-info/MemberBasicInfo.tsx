@@ -1,18 +1,20 @@
 import { FC } from "react"
-import { UserProfile, UserStats } from "~/libs/core"
+import { UserProfile, UserStats, useCountryName, useMemberStats } from "~/libs/core"
 import moment from "moment"
 
 import styles from './MemberBasicInfo.module.scss'
 
 
 interface MemberBasicInfoProps {
-    memberCountry: string | undefined
-    memberStats: UserStats | undefined
     profile: UserProfile | undefined
 }
 
 const MemberBasicInfo: FC<MemberBasicInfoProps> = (props: MemberBasicInfoProps) => {
-    const { profile, memberCountry, memberStats } = props
+    const { profile } = props
+
+    const memberStats: UserStats | undefined = useMemberStats(profile?.handle)
+
+    const memberCountry: string | undefined = useCountryName(profile?.homeCountryCode)
 
     return (
         <div className={styles.container}>
