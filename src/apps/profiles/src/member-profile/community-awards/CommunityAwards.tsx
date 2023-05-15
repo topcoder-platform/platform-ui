@@ -1,8 +1,7 @@
 import { Dispatch, FC, SetStateAction, useCallback, useState } from "react"
 import { UserBadge, UserBadgesResponse, UserProfile, useMemberBadges } from "~/libs/core"
 import { Link } from 'react-router-dom'
-import { BaseModal } from "~/libs/ui"
-import { format } from 'date-fns';
+import { MemberBadgeModal } from "../../components";
 
 import styles from './CommunityAwards.module.scss'
 
@@ -44,21 +43,11 @@ const CommunityAwards: FC<CommunityAwardsProps> = (props: CommunityAwardsProps) 
 
             {
                 selectedBadge && (
-                    <BaseModal
+                    <MemberBadgeModal
+                        isBadgeDetailsOpen={isBadgeDetailsOpen}
                         onClose={() => setIsBadgeDetailsOpen(false)}
-                        open={isBadgeDetailsOpen}
-                        size='lg'
-                        title="COMMUNITY AWARDS & HONORS"
-                    >
-                        <div className={styles.badgeModalWrap}>
-                            <img src={selectedBadge.org_badge.badge_image_url} alt={`Topcoder community badge - ${selectedBadge.org_badge.badge_name}`} className={styles.badgeImageModal} />
-                            <div className={styles.badgeInfoWrap}>
-                                <div className={styles.badgeTitleModal}>{selectedBadge.org_badge.badge_name}</div>
-                                <div className={styles.badgeAwardedAt}>AWARDED ON  {format(new Date(selectedBadge.awarded_at), 'PPP')}</div>
-                                <div className={styles.badgeDescription}>{selectedBadge.org_badge.badge_description}</div>
-                            </div>
-                        </div>
-                    </BaseModal>
+                        selectedBadge={selectedBadge}
+                    />
                 )
             }
         </div>
