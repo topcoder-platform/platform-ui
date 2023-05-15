@@ -8,12 +8,13 @@ import styles from './ProfilePageLayout.module.scss'
 import { MemberTracksInfo } from "../tracks"
 
 interface ProfilePageLayoutProps {
+    memberCountry: string | undefined
     memberStats: UserStats | undefined
     profile: UserProfile | undefined
 }
 
 const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutProps) => {
-    const { profile, memberStats } = props
+    const { profile, memberCountry, memberStats } = props
 
     return (
         <div className={styles.container}>
@@ -28,7 +29,7 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                     <div className={styles.skillsWrap}>
                         <MemberTracksInfo profile={profile} />
                     </div>
-                    <MemberBasicInfo profile={profile} memberStats={memberStats} />
+                    <MemberBasicInfo profile={profile} memberCountry={memberCountry} memberStats={memberStats} />
                 </div>
 
             </ContentLayout>

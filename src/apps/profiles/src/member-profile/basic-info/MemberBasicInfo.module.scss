@@ -15,8 +15,17 @@
         margin-top: $sp-2;
     }
 
+    .location {
+        @include font-barlow;
+        @include font-weight-semibold;
+        font-size: 18px;
+        line-height: 22px;
+        color: $black-100;
+        text-transform: uppercase;
+    }
+
     .memberSince {
-        margin-bottom: $sp-4;
+        margin: $sp-2 0 $sp-4;
     }
 
     .wins {

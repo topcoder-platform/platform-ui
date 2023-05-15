@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from "react"
 import { Params, useParams } from "react-router"
-import { UserProfile, UserStats, getMemberStatsAsync, profileGetPublicAsync } from "~/libs/core"
+import { UserProfile, UserStats, getMemberStatsAsync, profileGetPublicAsync, useCountryName } from "~/libs/core"
 import { LoadingSpinner } from "~/libs/ui"
 import { ProfilePageLayout } from "./page-layout"
 
@@ -16,6 +16,8 @@ const MemberProfilePage: FC<{}> = () => {
         UserStats | undefined,
         Dispatch<SetStateAction<UserStats | undefined>>
     ] = useState()
+
+    const memberCountry: string | undefined = useCountryName(profile?.homeCountryCode)
 
     const [profileReady, setProfileReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
@@ -38,7 +40,7 @@ const MemberProfilePage: FC<{}> = () => {
         }
     }, [routeParams.memberHandle])
 
-    console.log('MemberProfilePage', profile, memberStats)
+    console.log('MemberProfilePage', profile, memberStats, memberCountry)
 
     return (
         <>
@@ -46,6 +48,7 @@ const MemberProfilePage: FC<{}> = () => {
 
             {profileReady && profile && (
                 <ProfilePageLayout
+                    memberCountry={memberCountry}
                     memberStats={memberStats}
                     profile={profile}
                 />

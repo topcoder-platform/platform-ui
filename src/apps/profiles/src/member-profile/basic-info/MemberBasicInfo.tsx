@@ -6,15 +6,18 @@ import styles from './MemberBasicInfo.module.scss'
 
 
 interface MemberBasicInfoProps {
+    memberCountry: string | undefined
     memberStats: UserStats | undefined
     profile: UserProfile | undefined
 }
 
 const MemberBasicInfo: FC<MemberBasicInfoProps> = (props: MemberBasicInfoProps) => {
-    const { profile, memberStats } = props
+    const { profile, memberCountry, memberStats } = props
 
     return (
         <div className={styles.container}>
+            <div className={styles.location}>{memberCountry}</div>
+
             <p className={styles.memberSince}>
                 Member Since
                 {' '}

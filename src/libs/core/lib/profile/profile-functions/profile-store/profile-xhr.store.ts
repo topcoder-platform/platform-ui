@@ -1,10 +1,11 @@
 import { xhrGetAsync, xhrPutAsync } from '../../../xhr'
+import { CountryLookup } from '../../country-lookup.model'
 import { EditNameRequest } from '../../edit-name-request.model'
 import { UserProfile } from '../../user-profile.model'
 import { UserStats } from '../../user-stats.model'
 import { UserVerify } from '../../user-verify.model'
 
-import { profile as profileUrl, verify as verifyUrl } from './profile-endpoint.config'
+import { countryLookupURL, profile as profileUrl, verify as verifyUrl } from './profile-endpoint.config'
 
 export function get(handle: string): Promise<UserProfile> {
     return xhrGetAsync<UserProfile>(profileUrl(handle))
@@ -24,4 +25,9 @@ export function getVerification(): Promise<UserVerify[]> {
 export function getMemberStats(handle: string): Promise<UserStats | undefined> {
     return xhrGetAsync<UserStats[]>(`${profileUrl(handle)}/stats`)
         .then(stats => (!stats.length ? undefined : stats[0]))
+}
+
+export function getCountryLookup(): Promise<CountryLookup[]> {
+    return xhrGetAsync<CountryLookup[]>(countryLookupURL())
+        .then((countryLookup: any) => countryLookup.result?.content || [])
 }
