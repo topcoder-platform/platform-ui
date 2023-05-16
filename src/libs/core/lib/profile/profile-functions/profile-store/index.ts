@@ -5,4 +5,9 @@ export {
     getVerification,
 } from './profile-xhr.store'
 
-export { countryLookupURL, profile as getProfileUrl, gamificationAPIBaseURL } from './profile-endpoint.config'
+export {
+    countryLookupURL,
+    profile as getProfileUrl,
+    gamificationAPIBaseURL,
+    learnBaseURL,
+} from './profile-endpoint.config'

@@ -17,3 +17,7 @@ export function countryLookupURL(): string {
 export function gamificationAPIBaseURL(): string {
     return `${EnvironmentConfig.API.V5}/gamification`
 }
+
+export function learnBaseURL(): string {
+    return `${EnvironmentConfig.API.V5}/learning-paths`
+}

@@ -1,0 +1,67 @@
+@import "@libs/ui/styles/includes";
+
+.container {
+    background-color: $black-5;
+    padding: $sp-8 $sp-8 $sp-2 $sp-8;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    margin-bottom: $sp-6;
+
+    @include ltelg {
+        padding: $sp-4;
+    }
+
+    .title {
+        display: flex;
+        align-items: center;
+        margin-bottom: $sp-8;
+
+        svg {
+            width: 37px;
+            height: 38px;
+            margin-right: $sp-4;
+        }
+    }
+
+    h4 {
+        margin-bottom: $sp-6;
+    }
+
+    .certifications {
+        display: flex;
+        flex-wrap: wrap;
+        gap: $sp-4;
+        margin-bottom: $sp-6;
+
+        .certificationCard {
+            background-color: $tc-white;
+            padding: $sp-4;
+            display: flex;
+            align-items: center;
+            width: 316px;
+            transition: .25s ease-in-out;
+            box-shadow: 0 0 0 transparent;
+            cursor: pointer;
+            border-radius: 8px;
+
+            &:hover {
+                box-shadow: 0 0 16px rgba(22,103,154,.5);
+            }
+
+            @include ltelg {
+                width: 100%;
+            }
+
+            svg {
+                width: 48px;
+                height: 48px;
+            }
+
+            .certificationTitle {
+                font-weight: $font-weight-bold;
+                margin-left: $sp-2;
+            }
+        }
+    }
+}

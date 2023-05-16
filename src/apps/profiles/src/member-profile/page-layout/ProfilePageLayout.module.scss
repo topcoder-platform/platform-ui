@@ -9,6 +9,7 @@
 
         .basicInfoWrap {
             display: flex;
+            margin-bottom: $sp-13;
 
             @include ltelg {
                 flex-direction: column;

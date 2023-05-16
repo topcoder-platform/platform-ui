@@ -8,6 +8,7 @@ import { MemberSkillsInfo } from "../skills"
 
 import styles from './ProfilePageLayout.module.scss'
 import { CommunityAwards } from "../community-awards"
+import { MemberTCAInfo } from "../tca-info"
 
 interface ProfilePageLayoutProps {
     profile: UserProfile | undefined
@@ -35,6 +36,8 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                 </div>
 
                 <CommunityAwards profile={profile} />
+
+                <MemberTCAInfo profile={profile} />
 
             </ContentLayout>
 
