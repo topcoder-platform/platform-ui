@@ -63,7 +63,7 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
         setCoursePreviewModalIsOpen(false)
     }
 
-    return memberTCA ? (
+    return memberTCA && (memberTCA.courses.length || memberTCA.enrollments.length) ? (
         <div className={styles.container}>
             <div className={styles.title}>
                 <TCALogo />

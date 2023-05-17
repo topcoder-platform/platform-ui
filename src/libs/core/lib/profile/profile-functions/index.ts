@@ -8,3 +8,4 @@ export {
     editNameAsync as profileEditNameAsync,
 } from './profile.functions'
 export * from './profile-store'
+export * from './rating.functions'

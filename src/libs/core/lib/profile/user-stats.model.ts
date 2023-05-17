@@ -1,3 +1,43 @@
+export type SRMDivisionStats = {
+    levelName: string
+    problemsFailed: number
+    problemsSubmitted: number
+    problemsSysByTest: number
+}
+
+export type SERMChallengeStats = {
+    levelName: string
+    challenges: number
+    failedChallenges: number
+}
+
+export type SRMStats = {
+    challenges: number
+    division1: Array<SRMDivisionStats>
+    division2: Array<SRMDivisionStats>
+    challengeDetails: Array<SERMChallengeStats>
+    mostRecentEventDate: number
+    mostRecentEventName: string
+    mostRecentSubmission: number
+    rank: {
+        maximumRating: number
+        rating: number
+        rank: number
+        percentile: number
+        competitions: number
+        volatility: number
+    }
+    wins: number
+}
+
+export type MMStats = {
+    challenges: number
+    rank: {
+        maximumRating: number
+    }
+    wins: number
+}
+
 export type UserStats = {
     groupId: number
     handle: string
@@ -5,4 +45,49 @@ export type UserStats = {
     challenges: number
     userId: number
     wins: number
+    maxRating?: {
+        rating: number
+        ratingColor: string
+        subTrack: string
+        track: string
+    }
+    COPILOT?: {
+        activeContests: number
+        activeProjects: number
+        contests: number
+        failures: number
+        fulfillment: number
+        projects: number
+        reposts: number
+    }
+    DATA_SCIENCE?: {
+        MARATHON_MATCH: MMStats
+        SRM: SRMStats
+        challenges: number
+        mostRecentEventDate: number
+        mostRecentEventName: string
+        mostRecentSubmission: number
+        wins: number
+    }
+}
+
+export type SRMHistory = {
+    challengeId: number
+    challengeName: string
+    date: number
+    percentile: number
+    placement: number
+    rating: number
+}
+
+export type UserStatsHistory = {
+    groupId: number
+    handle: string
+    handleLower: string
+    userId: number
+    DATA_SCIENCE?: {
+        SRM?: {
+            history: Array<SRMHistory>
+        }
+    }
 }
