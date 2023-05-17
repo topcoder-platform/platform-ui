@@ -26,6 +26,7 @@ const TableCell: <T extends { [propertyName: string]: any }>(props: TableCellPro
 
             case 'action':
             case 'element':
+            case 'numberElement':
                 data = props.renderer?.(props.data)
                 break
 

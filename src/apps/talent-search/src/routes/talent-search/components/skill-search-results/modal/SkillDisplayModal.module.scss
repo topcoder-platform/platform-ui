@@ -1,0 +1,20 @@
+@import "@libs/ui/styles/includes";
+@import "@libs/ui/styles/variables";
+
+.score-high{
+    color: $green-140;
+}
+.score-medium{
+    color: $yellow-140;
+}
+.score-low{
+    color: $red-140;
+}
+
+.topTable{
+    padding-bottom: 30px;
+}
+
+.profileButton{
+    text-align: right;
+}

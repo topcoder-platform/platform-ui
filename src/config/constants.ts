@@ -4,6 +4,7 @@ export enum AppSubdomain {
     gamificationAdmin = 'gamification-admin',
     tcAcademy = 'academy',
     work = 'work',
+    talentSearch = 'talent-search'
 }
 
 export enum ToolTitle {
@@ -12,6 +13,7 @@ export enum ToolTitle {
     gamificationAdmin = 'Gamification Admin',
     tcAcademy = 'Topcoder Academy',
     selfService = 'Self Service Challenges',
+    talentSearch = "Talent Search"
 }
 
 export const PageSubheaderPortalId: string = 'page-subheader-portal-el'

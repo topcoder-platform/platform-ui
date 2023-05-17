@@ -3,6 +3,7 @@ export interface GlobalConfig {
     TOPCODER_URL: string
     PLATFORMUI_URL: string
     API: {
+        V1: string
         V3: string
         V4: string
         V5: string

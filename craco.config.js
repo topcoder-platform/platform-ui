@@ -34,6 +34,7 @@ module.exports = {
             '@learn': resolve('src/apps/learn/src'),
             '@devCenter': resolve('src/apps/dev-center/src'),
             '@gamificationAdmin': resolve('src/apps/gamification-admin/src'),
+            '@talentSearch': resolve('src/apps/talent-search/src'),
 
             '@platform': resolve('src/apps/platform/src'),
             // aliases used in SCSS files

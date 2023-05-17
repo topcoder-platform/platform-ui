@@ -15,6 +15,7 @@ export const TOPCODER_URL: string = `https://www.${TC_DOMAIN}`
 export const PLATFORMUI_URL: string = `https://platform-ui.${TC_DOMAIN}`
 
 export const API = {
+    V1: `https://api.${TC_DOMAIN}/v1`,
     V2: `https://api.${TC_DOMAIN}/v2`,
     V3: `https://api.${TC_DOMAIN}/v3`,
     V4: `https://api.${TC_DOMAIN}/v4`,
