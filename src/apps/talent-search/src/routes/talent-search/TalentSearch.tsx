@@ -28,8 +28,6 @@ export const TalentSearch: FC = () => {
         MatcherService.getAllSkills()
         .then((response: Array<Skill>) => {
             setAllSkills(response);
-            
-            console.log(JSON.stringify(allSkills));
         })
         .catch((e: Error) => {
             console.log(e);
@@ -91,7 +89,6 @@ export const TalentSearch: FC = () => {
     if(!allSkills || allSkills.length==0){
         return (<LoadingSpinner />)
     }
-
     return (
             <ContentLayout
                 contentClass={styles.contentLayout}

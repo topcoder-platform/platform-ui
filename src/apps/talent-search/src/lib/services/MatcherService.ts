@@ -10,7 +10,6 @@ export async function getAllSkills(): Promise<Array<Skill>>{
 
 export async function retrieveMatchesForSkills(skills:ReadonlyArray<Skill>): Promise<Array<Member>>{
   const params = new URLSearchParams()
-  console.log("Search skills: " + JSON.stringify(skills))
   skills.forEach(value => params.append('skill', value.skillName))
   params.append('sortBy', 'numberOfChallengesWon')
   params.append('sortOrder', 'desc')
