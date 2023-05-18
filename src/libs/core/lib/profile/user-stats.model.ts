@@ -30,7 +30,7 @@ export type SRMStats = {
     wins: number
 }
 
-export type MMStats = {
+export type MemberStats = {
     challenges: number
     rank: {
         maximumRating: number
@@ -41,6 +41,7 @@ export type MMStats = {
         volatility: number
     }
     wins: number
+    name: string
 }
 
 export type UserStats = {
@@ -66,12 +67,19 @@ export type UserStats = {
         reposts: number
     }
     DATA_SCIENCE?: {
-        MARATHON_MATCH: MMStats
+        MARATHON_MATCH: MemberStats
         SRM: SRMStats
         challenges: number
         mostRecentEventDate: number
         mostRecentEventName: string
         mostRecentSubmission: number
+        wins: number
+    }
+    DEVELOP: {
+        challenges: number
+        mostRecentEventDate: number
+        mostRecentSubmission: number
+        subTracks: Array<MemberStats>
         wins: number
     }
 }

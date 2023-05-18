@@ -6,7 +6,7 @@ import HighchartsReact from 'highcharts-react-official'
 
 import { BaseModal, Button, LoadingSpinner } from '~/libs/ui'
 import {
-    MMStats,
+    MemberStats,
     ratingToCSScolor,
     StatsHistory,
     UserProfile,
@@ -24,7 +24,7 @@ type SRMViewTypes = 'STATISTICS' | 'MATCH DETAILS'
 interface SRMDetailsModalProps {
     isDSDetailsOpen: boolean
     onClose: () => void
-    MMStats: MMStats | undefined
+    MMStats: MemberStats | undefined
     profile: UserProfile | undefined
 }
 

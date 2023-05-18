@@ -1,6 +1,7 @@
+/* eslint-disable complexity */
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
-import { ratingToCSScolor, useMemberStats, UserProfile, UserStats } from '~/libs/core'
+import { MemberStats, ratingToCSScolor, useMemberStats, UserProfile, UserStats } from '~/libs/core'
 import { Button, Collapsible } from '~/libs/ui'
 import { ChevronRightIcon } from '@heroicons/react/solid'
 
@@ -14,13 +15,25 @@ interface MemberTCActivityInfoProps {
 
 const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActivityInfoProps) => {
     const memberStats: UserStats | undefined = useMemberStats(props.profile?.handle)
-    const SRMRating: number = memberStats?.DATA_SCIENCE?.SRM?.rank?.maximumRating || 0
-    const MMRating: number = memberStats?.DATA_SCIENCE?.MARATHON_MATCH?.rank?.maximumRating || 0
+    const srmRating: number = memberStats?.DATA_SCIENCE?.SRM?.rank?.maximumRating || 0
+    const mmRating: number = memberStats?.DATA_SCIENCE?.MARATHON_MATCH?.rank?.maximumRating || 0
+    const f2fStats: MemberStats | undefined
+        = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'FIRST_2_FINISH')
+    const codeStats: MemberStats | undefined
+        = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'CODE')
+    const assemblyStats: MemberStats | undefined
+        = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'ASSEMBLY_COMPETITION')
 
     const [isCopilotDetailsOpen, setIsCopilotDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
     const [isDSDetailsOpen, setIsDSDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
     const [isSRMDetailsOpen, setIsSRMDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [isF2FDetailsOpen, setIsF2FDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [isCodeDetailsOpen, setIsCodeDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [isAssemblyDetailsOpen, setIsAssemblyDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
     function handleShowCopilotModal(): void {
@@ -35,9 +48,99 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
         setIsSRMDetailsOpen(!isSRMDetailsOpen)
     }
 
+    function handleShowF2FModal(): void {
+        setIsF2FDetailsOpen(!isF2FDetailsOpen)
+    }
+
+    function handleShowCodeModal(): void {
+        setIsCodeDetailsOpen(!isCodeDetailsOpen)
+    }
+
+    function handleShowAssemblyModal(): void {
+        setIsAssemblyDetailsOpen(!isAssemblyDetailsOpen)
+    }
+
     return memberStats ? (
         <div className={styles.container}>
             <h3>TC ACTIVITY</h3>
+
+            {
+                memberStats?.DEVELOP && (
+                    <Collapsible
+                        header={<h4>DEVELOPMENT</h4>}
+                        containerClass={styles.activitySection}
+                    >
+                        <div className={styles.contentGrid}>
+                            {
+                                f2fStats && (
+                                    <div className={styles.content}>
+                                        <span>First2Finish</span>
+                                        <div className={styles.progress}>
+                                            <div className={styles.progressValue}>
+                                                {f2fStats.wins || 0}
+                                                {' '}
+                                                WINS
+                                            </div>
+                                            <Button
+                                                icon={ChevronRightIcon}
+                                                size='lg'
+                                                className={styles.btn}
+                                                onClick={handleShowF2FModal}
+                                            />
+                                        </div>
+                                    </div>
+                                )
+                            }
+                            {
+                                codeStats && (
+                                    <div className={styles.content}>
+                                        <span>Code</span>
+                                        <div className={styles.progress}>
+                                            <div
+                                                className={styles.progressValue}
+                                                style={ratingToCSScolor(codeStats.rank.rating)}
+                                            >
+                                                {codeStats.rank.rating || 0}
+                                                {' '}
+                                                RATING
+                                            </div>
+                                            <Button
+                                                icon={ChevronRightIcon}
+                                                size='lg'
+                                                className={styles.btn}
+                                                onClick={handleShowCodeModal}
+                                            />
+                                        </div>
+                                    </div>
+                                )
+                            }
+                            {
+                                assemblyStats && (
+                                    <div className={styles.content}>
+                                        <span>Assembly Competition</span>
+                                        <div className={styles.progress}>
+                                            <div
+                                                className={styles.progressValue}
+                                                style={ratingToCSScolor(assemblyStats.rank.rating)}
+                                            >
+                                                {assemblyStats.rank.rating || 0}
+                                                {' '}
+                                                RATING
+                                            </div>
+                                            <Button
+                                                icon={ChevronRightIcon}
+                                                size='lg'
+                                                className={styles.btn}
+                                                onClick={handleShowAssemblyModal}
+                                            />
+                                        </div>
+                                    </div>
+                                )
+                            }
+                        </div>
+                    </Collapsible>
+                )
+            }
 
             {
                 memberStats?.DATA_SCIENCE && (
@@ -49,8 +152,8 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
                             <div className={styles.content}>
                                 <span>SRM</span>
                                 <div className={styles.progress}>
-                                    <div className={styles.progressValue} style={ratingToCSScolor(SRMRating)}>
-                                        {SRMRating}
+                                    <div className={styles.progressValue} style={ratingToCSScolor(srmRating)}>
+                                        {srmRating}
                                         {' '}
                                         RATING
                                     </div>
@@ -65,8 +168,8 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
                             <div className={styles.content}>
                                 <span>Marathon Match</span>
                                 <div className={styles.progress}>
-                                    <div className={styles.progressValue} style={ratingToCSScolor(MMRating)}>
-                                        {MMRating || 'NO'}
+                                    <div className={styles.progressValue} style={ratingToCSScolor(mmRating)}>
+                                        {mmRating || 'NO'}
                                         {' '}
                                         RATING
                                     </div>

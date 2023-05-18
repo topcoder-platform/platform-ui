@@ -23,7 +23,7 @@
     .contentGrid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: $sp-8;
+        column-gap: $sp-8;
 
         @include ltelg {
             grid-template-columns: 1fr;
