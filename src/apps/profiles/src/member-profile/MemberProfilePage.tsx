@@ -1,5 +1,5 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
-import { Params, useParams } from 'react-router'
+import { Params, useParams } from 'react-router-dom'
 
 import { profileGetPublicAsync, UserProfile } from '~/libs/core'
 import { LoadingSpinner } from '~/libs/ui'
