@@ -3,11 +3,14 @@ import { FC } from 'react'
 import { useMemberSkills, UserProfile, UserSkill } from '~/libs/core'
 import { TCVerifiedSkillIcon, TCVerifiedSkillWhiteIcon } from '~/libs/ui'
 
+import { TC_VERIFIED_SKILL_LABEL } from '../../config'
+
 import styles from './MemberSkillsInfo.module.scss'
 
 interface MemberSkillsInfoProps {
     profile: UserProfile | undefined
 }
+
 const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProps) => {
 
     const memberSkills: UserSkill[] | undefined = useMemberSkills(props.profile?.handle)
@@ -29,7 +32,8 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
             <div className={styles.legendWrap}>
                 <TCVerifiedSkillIcon />
-&nbsp;= Topcoder Verified
+                {' = '}
+                {TC_VERIFIED_SKILL_LABEL}
             </div>
         </div>
     ) : <></>
