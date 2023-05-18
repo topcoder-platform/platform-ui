@@ -65,9 +65,6 @@ type SkillSearchResultsProps = {
 export default class SkillSearchResult extends Component<SkillSearchResultsProps>{
 
     render() {
-        console.log("results:" + this.props.results + this.props.results.length)
-        console.log("skillsFilter:" + this.props.skillsFilter + this.props.skillsFilter!.length)
-        console.log("Loading:",this.props.isLoading)
         //If we searched and have no results, show "No results found", otherwise hide the results table 
         //until a search has been made
         if(this.props.isLoading){

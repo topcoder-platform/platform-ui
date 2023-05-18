@@ -7,7 +7,7 @@ const TalentSearch: LazyLoadedComponent = lazyLoad(() => import('./routes/talent
 
 import "./styles/main.vendor.scss";
 import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
-import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
+import { lazyLoad, LazyLoadedComponent, PlatformRoute, UserRole } from '~/libs/core'
 
 export const rootRoute: string = (
     EnvironmentConfig.SUBDOMAIN === AppSubdomain.talentSearch ? '' : `/${AppSubdomain.talentSearch}`
@@ -17,6 +17,7 @@ export const toolTitle: string = ToolTitle.talentSearch
 
 export const talentSearchRoutes: ReadonlyArray<PlatformRoute> = [
     {
+        authRequired: true,
         children: [
             {
                 element: <TalentSearch />,
@@ -26,6 +27,9 @@ export const talentSearchRoutes: ReadonlyArray<PlatformRoute> = [
         domain: AppSubdomain.talentSearch,
         element: <TalentSearchAppRoot />,
         id: toolTitle,
+        rolesRequired: [
+            UserRole.administrator
+        ],
         route: rootRoute,
     },
 ]
