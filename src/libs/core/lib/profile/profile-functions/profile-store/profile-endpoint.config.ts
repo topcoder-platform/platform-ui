@@ -21,3 +21,7 @@ export function gamificationAPIBaseURL(): string {
 export function learnBaseURL(): string {
     return `${EnvironmentConfig.API.V5}/learning-paths`
 }
+
+export function memberStatsDistroURL(): string {
+    return `${EnvironmentConfig.API.V3}/members/stats/distribution`
+}
