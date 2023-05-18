@@ -24,7 +24,7 @@ export const profilesRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <MemberBadgesPage />,
                 id: 'MemberBadgesPage',
                 route: ':memberHandle/badges',
-            }
+            },
         ],
         domain: AppSubdomain.profiles,
         element: <ProfilesApp />,

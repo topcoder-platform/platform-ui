@@ -1,1 +1,1 @@
-export { default as ProfilePageJumbotron } from './ProfilePageJumbo';
+export { default as ProfilePageJumbotron } from './ProfilePageJumbo'

@@ -17,7 +17,7 @@ export interface UserCompletedCertificationsData {
 export function useUserCompletedCertifications(
     userId: number | undefined,
 ): {
-    data?: UserCompletedCertificationsData
+    data: UserCompletedCertificationsData | undefined
     loading: boolean
     ready: boolean
 } {

@@ -1,51 +1,49 @@
-import { FC } from "react"
-import { UserProfile } from "~/libs/core"
-import ProfilePageJumbo from "../jumbotron/ProfilePageJumbo"
-import { MemberBasicInfo } from "../basic-info"
-import { ContentLayout } from "~/libs/ui"
-import { MemberTracksInfo } from "../tracks"
-import { MemberSkillsInfo } from "../skills"
+import { FC } from 'react'
+
+import { UserProfile } from '~/libs/core'
+import { ContentLayout } from '~/libs/ui'
+
+import { MemberBasicInfo } from '../basic-info'
+import { MemberTracksInfo } from '../tracks'
+import { MemberSkillsInfo } from '../skills'
+import { CommunityAwards } from '../community-awards'
+import { MemberTCAInfo } from '../tca-info'
+import { MemberTCActivityInfo } from '../tc-activity'
+import ProfilePageJumbo from '../jumbotron/ProfilePageJumbo'
 
 import styles from './ProfilePageLayout.module.scss'
-import { CommunityAwards } from "../community-awards"
-import { MemberTCAInfo } from "../tca-info"
-import { MemberTCActivityInfo } from "../tc-activity"
 
 interface ProfilePageLayoutProps {
     profile: UserProfile | undefined
 }
 
-const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutProps) => {
-    const { profile } = props
+const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutProps) => (
+    <div className={styles.container}>
 
-    return (
-        <div className={styles.container}>
+        <ProfilePageJumbo profile={props.profile} />
 
-            <ProfilePageJumbo profile={profile} />
+        <ContentLayout
+            outerClass={styles.contentLayoutOuter}
+        >
 
-            <ContentLayout
-                outerClass={styles.contentLayoutOuter}
-            >
+            <div className={styles.basicInfoWrap}>
+                <div className={styles.skillsWrap}>
+                    <MemberTracksInfo profile={props.profile} />
 
-                <div className={styles.basicInfoWrap}>
-                    <div className={styles.skillsWrap}>
-                        <MemberTracksInfo profile={profile} />
-
-                        <MemberSkillsInfo profile={profile} />
-                    </div>
-                    <MemberBasicInfo profile={profile} />
+                    <MemberSkillsInfo profile={props.profile} />
                 </div>
+                <MemberBasicInfo profile={props.profile} />
+            </div>
 
-                <CommunityAwards profile={profile} />
+            <CommunityAwards profile={props.profile} />
 
-                <MemberTCAInfo profile={profile} />
+            <MemberTCAInfo profile={props.profile} />
 
-                <MemberTCActivityInfo profile={profile} />
+            <MemberTCActivityInfo profile={props.profile} />
 
-            </ContentLayout>
+        </ContentLayout>
 
-        </div>
-    )
-}
+    </div>
+)
 
 export default ProfilePageLayout

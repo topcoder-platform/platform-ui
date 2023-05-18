@@ -1,7 +1,10 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react'
-import { UserBadge, UserBadgesResponse, UserProfile, profileGetPublicAsync, useMemberBadges } from '~/libs/core'
-import { ContentLayout, LoadingSpinner } from '~/libs/ui'
 import { Link, Params, useParams } from 'react-router-dom'
+import { bind } from 'lodash'
+
+import { profileGetPublicAsync, useMemberBadges, UserBadge, UserBadgesResponse, UserProfile } from '~/libs/core'
+import { ContentLayout, LoadingSpinner } from '~/libs/ui'
+
 import { MemberBadgeModal } from '../components'
 
 import styles from './MemberBadgesPage.module.scss'
@@ -18,11 +21,13 @@ const MemberBadgesPage: FC<{}> = () => {
 
     const memberBadges: UserBadgesResponse | undefined = useMemberBadges(profile?.userId as number, { limit: 100 })
 
-    const [isBadgeDetailsOpen, setIsBadgeDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [isBadgeDetailsOpen, setIsBadgeDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
 
-    const [selectedBadge, setSelectedBadge]: [UserBadge | undefined, Dispatch<SetStateAction<UserBadge | undefined>>] = useState<UserBadge | undefined>(undefined)
+    const [selectedBadge, setSelectedBadge]: [UserBadge | undefined, Dispatch<SetStateAction<UserBadge | undefined>>]
+        = useState<UserBadge | undefined>(undefined)
 
-    const onBadgeClick = useCallback((badge: UserBadge) => {
+    const onBadgeClick: (badge: UserBadge) => void = useCallback((badge: UserBadge) => {
         setIsBadgeDetailsOpen(true)
         setSelectedBadge(badge)
     }, [])
@@ -34,12 +39,13 @@ const MemberBadgesPage: FC<{}> = () => {
                     setProfile(userProfile)
                     setProfileReady(true)
                 })
-                .catch(err => {
-                    console.error('Error loading memebr profile', err)
-                    // TODO: NOT FOUND PAGE redirect/dispaly
-                })
+            // TODO: NOT FOUND PAGE redirect/dispaly via catch
         }
     }, [routeParams.memberHandle])
+
+    function handleMemberBadgeModalClose(): void {
+        setIsBadgeDetailsOpen(false)
+    }
 
     return (
         <>
@@ -51,17 +57,18 @@ const MemberBadgesPage: FC<{}> = () => {
                 >
                     <div className={styles.backLink}>
                         <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="14"
-                            height="12"
-                            fill="none"
-                            viewBox="0 0 14 12"
+                            xmlns='http://www.w3.org/2000/svg'
+                            width='14'
+                            height='12'
+                            fill='none'
+                            viewBox='0 0 14 12'
                         >
                             <path
-                                fill="#137D60"
-                                fillRule="evenodd"
-                                d="M6.766 11.366a.8.8 0 01-1.132 0l-4.8-4.8a.8.8 0 010-1.132l4.8-4.8a.8.8 0 111.132 1.132L3.33 5.2h9.27a.8.8 0 010 1.6H3.33l3.435 3.434a.8.8 0 010 1.132z"
-                                clipRule="evenodd"
+                                fill='#137D60'
+                                fillRule='evenodd'
+                                // eslint-disable-next-line max-len
+                                d='M6.766 11.366a.8.8 0 01-1.132 0l-4.8-4.8a.8.8 0 010-1.132l4.8-4.8a.8.8 0 111.132 1.132L3.33 5.2h9.27a.8.8 0 010 1.6H3.33l3.435 3.434a.8.8 0 010 1.132z'
+                                clipRule='evenodd'
                             />
                         </svg>
                         <Link to={`/profiles/${profile?.handle}`}>Return to Profile</Link>
@@ -73,8 +80,16 @@ const MemberBadgesPage: FC<{}> = () => {
                         <div className={styles.badges}>
                             {
                                 memberBadges.rows.map(badge => (
-                                    <div key={badge.org_badge_id} className={styles.badgeCard} onClick={() => onBadgeClick(badge)}>
-                                        <img src={badge.org_badge.badge_image_url} alt={`Topcoder community badge - ${badge.org_badge.badge_name}`} className={styles.badgeImage} />
+                                    <div
+                                        key={badge.org_badge_id}
+                                        className={styles.badgeCard}
+                                        onClick={bind(onBadgeClick, this, badge)}
+                                    >
+                                        <img
+                                            src={badge.org_badge.badge_image_url}
+                                            alt={`Topcoder community badge - ${badge.org_badge.badge_name}`}
+                                            className={styles.badgeImage}
+                                        />
                                         <span className={styles.badgeTitle}>{badge.org_badge.badge_name}</span>
                                     </div>
                                 ))
@@ -88,7 +103,7 @@ const MemberBadgesPage: FC<{}> = () => {
                 selectedBadge && (
                     <MemberBadgeModal
                         isBadgeDetailsOpen={isBadgeDetailsOpen}
-                        onClose={() => setIsBadgeDetailsOpen(false)}
+                        onClose={handleMemberBadgeModalClose}
                         selectedBadge={selectedBadge}
                     />
                 )

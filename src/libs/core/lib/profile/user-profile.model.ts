@@ -1,4 +1,5 @@
-type TC_TRACKS = 'DEVELOP' | 'DESIGN' | 'DATA_SCIENCE'
+export type TC_TRACKS = 'DEVELOP' | 'DESIGN' | 'DATA_SCIENCE'
+
 export interface UserProfile {
     competitionCountryCode: string
     createdAt: number

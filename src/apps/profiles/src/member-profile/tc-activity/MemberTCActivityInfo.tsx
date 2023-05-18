@@ -1,7 +1,9 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
-import { UserProfile, UserStats, ratingToCSScolor, useMemberStats } from '~/libs/core'
+
+import { ratingToCSScolor, useMemberStats, UserProfile, UserStats } from '~/libs/core'
 import { Button, Collapsible } from '~/libs/ui'
 import { ChevronRightIcon } from '@heroicons/react/solid'
+
 import { CopilotDetailsModal, SRMDetailsModal } from '../../components'
 
 import styles from './MemberTCActivityInfo.module.scss'
@@ -11,16 +13,15 @@ interface MemberTCActivityInfoProps {
 }
 
 const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActivityInfoProps) => {
-    const { profile } = props
-
-    const memberStats: UserStats | undefined = useMemberStats(profile?.handle)
+    const memberStats: UserStats | undefined = useMemberStats(props.profile?.handle)
     const SRMRating: number = memberStats?.DATA_SCIENCE?.SRM?.rank?.maximumRating || 0
     const MMRating: number = memberStats?.DATA_SCIENCE?.MARATHON_MATCH?.rank?.maximumRating || 0
 
-
-    const [isCopilotDetailsOpen, setIsCopilotDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [isCopilotDetailsOpen, setIsCopilotDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
     const [isDSDetailsOpen, setIsDSDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
-    const [isSRMDetailsOpen, setIsSRMDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [isSRMDetailsOpen, setIsSRMDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
 
     function handleShowCopilotModal(): void {
         setIsCopilotDetailsOpen(!isCopilotDetailsOpen)
@@ -33,8 +34,6 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
     function handleShowSRMModal(): void {
         setIsSRMDetailsOpen(!isSRMDetailsOpen)
     }
-
-    console.log(memberStats)
 
     return memberStats ? (
         <div className={styles.container}>
@@ -50,15 +49,33 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
                             <div className={styles.content}>
                                 <span>SRM</span>
                                 <div className={styles.progress}>
-                                    <div className={styles.progressValue} style={ratingToCSScolor(SRMRating)}>{SRMRating} RATING</div>
-                                    <Button icon={ChevronRightIcon} size='lg' className={styles.btn} onClick={handleShowSRMModal} />
+                                    <div className={styles.progressValue} style={ratingToCSScolor(SRMRating)}>
+                                        {SRMRating}
+                                        {' '}
+                                        RATING
+                                    </div>
+                                    <Button
+                                        icon={ChevronRightIcon}
+                                        size='lg'
+                                        className={styles.btn}
+                                        onClick={handleShowSRMModal}
+                                    />
                                 </div>
                             </div>
                             <div className={styles.content}>
                                 <span>Marathon Match</span>
                                 <div className={styles.progress}>
-                                    <div className={styles.progressValue} style={ratingToCSScolor(MMRating)} >{MMRating || 'NO'} RATING</div>
-                                    <Button icon={ChevronRightIcon} size='lg' className={styles.btn} onClick={handleShowDSModal} />
+                                    <div className={styles.progressValue} style={ratingToCSScolor(MMRating)}>
+                                        {MMRating || 'NO'}
+                                        {' '}
+                                        RATING
+                                    </div>
+                                    <Button
+                                        icon={ChevronRightIcon}
+                                        size='lg'
+                                        className={styles.btn}
+                                        onClick={handleShowDSModal}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -72,26 +89,38 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
                         <div className={styles.content}>
                             <span>Copilot</span>
                             <div className={styles.progress}>
-                                <div className={styles.progressValue}>{memberStats?.COPILOT.fulfillment}% FULFILLMENT</div>
-                                <Button icon={ChevronRightIcon} size='lg' className={styles.btn} onClick={handleShowCopilotModal} />
+                                <div className={styles.progressValue}>
+                                    {memberStats?.COPILOT.fulfillment}
+                                    % FULFILLMENT
+                                </div>
+                                <Button
+                                    icon={ChevronRightIcon}
+                                    size='lg'
+                                    className={styles.btn}
+                                    onClick={handleShowCopilotModal}
+                                />
                             </div>
                         </div>
                     </Collapsible>
                 )
             }
 
-            {isSRMDetailsOpen && (<SRMDetailsModal
-                isSRMDetailsOpen={isSRMDetailsOpen}
-                onClose={handleShowSRMModal}
-                SRMStats={memberStats?.DATA_SCIENCE?.SRM}
-                profile={profile}
-            />)}
+            {isSRMDetailsOpen && (
+                <SRMDetailsModal
+                    isSRMDetailsOpen={isSRMDetailsOpen}
+                    onClose={handleShowSRMModal}
+                    SRMStats={memberStats?.DATA_SCIENCE?.SRM}
+                    profile={props.profile}
+                />
+            )}
 
-            {isCopilotDetailsOpen && (<CopilotDetailsModal
-                isCopilotDetailsOpen={isCopilotDetailsOpen}
-                onClose={handleShowCopilotModal}
-                copilotDetails={memberStats?.COPILOT}
-            />)}
+            {isCopilotDetailsOpen && (
+                <CopilotDetailsModal
+                    isCopilotDetailsOpen={isCopilotDetailsOpen}
+                    onClose={handleShowCopilotModal}
+                    copilotDetails={memberStats?.COPILOT}
+                />
+            )}
         </div>
     ) : <></>
 }

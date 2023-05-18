@@ -1,20 +1,18 @@
-import { FC } from "react"
-import { UserProfile, UserStats, useCountryName, useMemberStats } from "~/libs/core"
-import moment from "moment"
+import { FC } from 'react'
+import moment from 'moment'
+
+import { useCountryName, useMemberStats, UserProfile, UserStats } from '~/libs/core'
 
 import styles from './MemberBasicInfo.module.scss'
-
 
 interface MemberBasicInfoProps {
     profile: UserProfile | undefined
 }
 
 const MemberBasicInfo: FC<MemberBasicInfoProps> = (props: MemberBasicInfoProps) => {
-    const { profile } = props
+    const memberStats: UserStats | undefined = useMemberStats(props.profile?.handle)
 
-    const memberStats: UserStats | undefined = useMemberStats(profile?.handle)
-
-    const memberCountry: string | undefined = useCountryName(profile?.homeCountryCode)
+    const memberCountry: string | undefined = useCountryName(props.profile?.homeCountryCode)
 
     return (
         <div className={styles.container}>
@@ -23,12 +21,15 @@ const MemberBasicInfo: FC<MemberBasicInfoProps> = (props: MemberBasicInfoProps) 
             <p className={styles.memberSince}>
                 Member Since
                 {' '}
-                {moment(profile?.createdAt).format('MMM YYYY')}
+                {moment(props.profile?.createdAt)
+                    .format('MMM YYYY')}
             </p>
 
             <h3>COMPETITION ACTIVITY</h3>
             <div className={styles.wins}>
-                {memberStats?.wins || 0} Wins
+                {memberStats?.wins || 0}
+                {' '}
+                Wins
             </div>
         </div>
     )

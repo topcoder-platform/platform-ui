@@ -1,14 +1,26 @@
-import { Dispatch, FC, SetStateAction, useMemo, useState } from "react"
+/* eslint-disable complexity */
+import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
+import { bind, isEmpty, keys } from 'lodash'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
-import { BaseModal, Button, LoadingSpinner } from "~/libs/ui"
-import { SRMHistory, SRMStats, UserProfile, UserStatsDistributionResponse, UserStatsHistory, ratingToCSScolor, useStatsDistribution, useStatsHistory } from "~/libs/core"
-import { ChallengesGrid } from "../ChallengesGrid"
-import { DivisionGrid } from "../DivisionGrid"
-import { RATING_CHART_CONFIG, RATING_DISTRO_CHART_CONFIG } from "./chart-configs"
-import { isEmpty, keys } from "lodash"
 
-import styles from "./SRMDetailsModal.module.scss"
+import { BaseModal, Button, LoadingSpinner } from '~/libs/ui'
+import {
+    ratingToCSScolor,
+    SRMHistory,
+    SRMStats,
+    UserProfile,
+    UserStatsDistributionResponse,
+    UserStatsHistory,
+    useStatsDistribution,
+    useStatsHistory,
+} from '~/libs/core'
+
+import { ChallengesGrid } from '../ChallengesGrid'
+import { DivisionGrid } from '../DivisionGrid'
+
+import { RATING_CHART_CONFIG, RATING_DISTRO_CHART_CONFIG } from './chart-configs'
+import styles from './SRMDetailsModal.module.scss'
 
 type SRMViewTypes = 'STATISTICS' | 'SRM DETAILS' | 'PAST SRM'
 
@@ -20,33 +32,33 @@ interface SRMDetailsModalProps {
 }
 
 const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) => {
-    const { isSRMDetailsOpen, onClose, SRMStats, profile } = props
+    const [viewType, setviewType]: [SRMViewTypes, Dispatch<SetStateAction<SRMViewTypes>>]
+        = useState<SRMViewTypes>('STATISTICS')
 
-    const [viewType, setviewType]: [SRMViewTypes, Dispatch<SetStateAction<SRMViewTypes>>] = useState<SRMViewTypes>('STATISTICS')
-
-    const statsHistory: UserStatsHistory | undefined = useStatsHistory(profile?.handle)
+    const statsHistory: UserStatsHistory | undefined = useStatsHistory(props.profile?.handle)
 
     const ratingHistoryOptions: Highcharts.Options | undefined = useMemo(() => {
-        const SRMHistory: Array<SRMHistory> = statsHistory?.DATA_SCIENCE?.SRM?.history || []
+        const srmHistory: Array<SRMHistory> = statsHistory?.DATA_SCIENCE?.SRM?.history || []
         const options: Highcharts.Options = RATING_CHART_CONFIG
 
-        if (!SRMHistory.length) return undefined
+        if (!srmHistory.length) return undefined
 
         options.series = [{
-            type: 'spline',
+            data: srmHistory.sort((a, b) => b.date - a.date)
+                .map((srm: SRMHistory) => ({ name: srm.challengeName, x: srm.date, y: srm.rating })),
             name: 'SRM Rating',
-            data: SRMHistory.sort((a, b) => b.date - a.date).map((srm: SRMHistory) => ({ x: srm.date, y: srm.rating, name: srm.challengeName }))
+            type: 'spline',
         }]
 
         return options
     }, [statsHistory])
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
-        filter: 'track=DATA_SCIENCE&subTrack=SRM'
+        filter: 'track=DATA_SCIENCE&subTrack=SRM',
     })
 
     const ratingDistributionOptions: Highcharts.Options | undefined = useMemo(() => {
-        const ratingDistro = memberStatsDist?.distribution || {}
+        const ratingDistro: { [key: string]: number } = memberStatsDist?.distribution || {}
         const options: Highcharts.Options = RATING_DISTRO_CHART_CONFIG
 
         if (isEmpty(ratingDistro)) return undefined
@@ -55,46 +67,57 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
             .map((key: string) => ({
                 data: [ratingDistro[key]],
                 name: key.split('ratingRange')[1],
-                type: 'column'
+                type: 'column',
             }))
 
         return options
     }, [memberStatsDist])
 
-    function toggleViewType(viewType: SRMViewTypes): void {
-        setviewType(viewType)
+    function toggleViewType(newViewType: SRMViewTypes): void {
+        setviewType(newViewType)
     }
 
     return (
         <BaseModal
-            onClose={onClose}
-            open={isSRMDetailsOpen}
+            onClose={props.onClose}
+            open={props.isSRMDetailsOpen}
             size='body'
-            title="SINGLE ROUND MATCH"
+            title='SINGLE ROUND MATCH'
         >
             <LoadingSpinner hide={!!statsHistory && !!memberStatsDist} />
 
             {!!statsHistory && !!memberStatsDist && (
                 <div className={styles.container}>
-                    <div className="member-stat-header">
+                    <div className='member-stat-header'>
                         <div>
-                            <span className="member-stat-value" style={ratingToCSScolor(SRMStats?.rank.rating || 0)}>{SRMStats?.rank.rating}</span>
+                            <span
+                                className='member-stat-value'
+                                style={ratingToCSScolor(props.SRMStats?.rank.rating || 0)}
+                            >
+                                {props.SRMStats?.rank.rating}
+                            </span>
                             Rating
                         </div>
                         <div>
-                            <span className="member-stat-value">{SRMStats?.rank.rank}</span>
+                            <span className='member-stat-value'>{props.SRMStats?.rank.rank}</span>
                             Rank
                         </div>
                         <div>
-                            <span className="member-stat-value">{SRMStats?.rank.percentile}%</span>
+                            <span className='member-stat-value'>
+                                {props.SRMStats?.rank.percentile}
+                                %
+                            </span>
                             Percentile
                         </div>
                         <div>
-                            <span className="member-stat-value">{SRMStats?.rank.competitions}%</span>
+                            <span className='member-stat-value'>
+                                {props.SRMStats?.rank.competitions}
+                                %
+                            </span>
                             Competitions
                         </div>
                         <div>
-                            <span className="member-stat-value">{SRMStats?.rank.volatility}</span>
+                            <span className='member-stat-value'>{props.SRMStats?.rank.volatility}</span>
                             Volatility
                         </div>
                     </div>
@@ -103,8 +126,30 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
                         <div className={styles.contentHeader}>
                             <h4>{viewType}</h4>
                             <div className={styles.contentHeaderActions}>
-                                <Button primary onClick={() => toggleViewType(viewType !== 'SRM DETAILS' ? 'SRM DETAILS' : 'STATISTICS')}>See {viewType !== 'SRM DETAILS' ? 'SRM DETAILS' : 'STATISTICS'}</Button>
-                                <Button primary onClick={() => toggleViewType(viewType !== 'PAST SRM' ? 'PAST SRM' : 'SRM DETAILS')}>See {viewType !== 'PAST SRM' ? 'PAST SRM' : 'SRM DETAILS'}</Button>
+                                <Button
+                                    primary
+                                    onClick={bind(
+                                        toggleViewType,
+                                        this,
+                                        viewType !== 'SRM DETAILS' ? 'SRM DETAILS' : 'STATISTICS',
+                                    )}
+                                >
+                                    See
+                                    {' '}
+                                    {viewType !== 'SRM DETAILS' ? 'SRM DETAILS' : 'STATISTICS'}
+                                </Button>
+                                <Button
+                                    primary
+                                    onClick={bind(
+                                        toggleViewType,
+                                        this,
+                                        viewType !== 'PAST SRM' ? 'PAST SRM' : 'SRM DETAILS',
+                                    )}
+                                >
+                                    See
+                                    {' '}
+                                    {viewType !== 'PAST SRM' ? 'PAST SRM' : 'SRM DETAILS'}
+                                </Button>
                             </div>
                         </div>
 
@@ -136,18 +181,18 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
                                 viewType === 'SRM DETAILS' && (
                                     <div className={styles.details}>
                                         {
-                                            SRMStats?.division1 && (
-                                                <DivisionGrid divisionData={SRMStats.division1} number={1} />
+                                            props.SRMStats?.division1 && (
+                                                <DivisionGrid divisionData={props.SRMStats.division1} number={1} />
                                             )
                                         }
                                         {
-                                            SRMStats?.division2 && (
-                                                <DivisionGrid divisionData={SRMStats.division2} number={2} />
+                                            props.SRMStats?.division2 && (
+                                                <DivisionGrid divisionData={props.SRMStats.division2} number={2} />
                                             )
                                         }
                                         {
-                                            SRMStats?.challengeDetails && (
-                                                <ChallengesGrid challengesData={SRMStats.challengeDetails} />
+                                            props.SRMStats?.challengeDetails && (
+                                                <ChallengesGrid challengesData={props.SRMStats.challengeDetails} />
                                             )
                                         }
                                     </div>
@@ -156,7 +201,7 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
                             }
                             {
                                 viewType === 'PAST SRM' && (
-                                    <div></div>
+                                    <div />
                                 )
 
                             }

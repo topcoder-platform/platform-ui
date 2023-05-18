@@ -1,41 +1,51 @@
-import { Dispatch, MutableRefObject, ReactNode, SetStateAction, useState } from "react"
-import { CertificateBadgeIcon, CourseBadge, LearnUserCertificationProgress, TCACertificatePreview, TCACertification, TCACertificationEnrollmentBase } from "~/apps/learn/src/lib"
-import { CertificateModal } from "~/apps/learn/src/lib/components/hiring-manager-view/certificate-modal"
-import { getTCACertificationValidationUrl } from "~/apps/learn/src/learn.routes"
-import { UserProfile, useUserCompletedCertifications } from "~/libs/core"
-import { BaseModal, TCALogo } from "~/libs/ui"
+import { Dispatch, MutableRefObject, ReactNode, SetStateAction, useState } from 'react'
+import { bind } from 'lodash'
+
+import {
+    CertificateBadgeIcon,
+    CourseBadge,
+    LearnUserCertificationProgress,
+    TCACertificatePreview,
+    TCACertification,
+    TCACertificationEnrollmentBase,
+} from '~/apps/learn/src/lib'
+import { CertificateModal } from '~/apps/learn/src/lib/components/hiring-manager-view/certificate-modal'
+import { CertificateView } from '~/apps/learn/src/course-certificate/certificate-view'
+import { getTCACertificationValidationUrl } from '~/apps/learn/src/learn.routes'
+import { UserCompletedCertificationsData, UserProfile, useUserCompletedCertifications } from '~/libs/core'
+import { BaseModal, TCALogo } from '~/libs/ui'
 
 import styles from './MemberTCAInfo.module.scss'
-import { CertificateView } from "~/apps/learn/src/course-certificate/certificate-view"
 
 interface MemberTCAInfoProps {
     profile: UserProfile | undefined
 }
 
 const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) => {
-    const { profile } = props
-
-    const { data: memberTCA } = useUserCompletedCertifications(profile?.userId)
+    const { data: memberTCA }: { data: UserCompletedCertificationsData | undefined }
+        = useUserCompletedCertifications(props.profile?.userId)
 
     const [certPreviewModalIsOpen, setCertPreviewModalIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const [selectedCertification, setSelectedCertification]: [TCACertificationEnrollmentBase | undefined, Dispatch<SetStateAction<TCACertificationEnrollmentBase | undefined>>]
-        = useState<TCACertificationEnrollmentBase | undefined>(undefined)
+    const [selectedCertification, setSelectedCertification]: [
+        TCACertificationEnrollmentBase | undefined, Dispatch<SetStateAction<TCACertificationEnrollmentBase | undefined>>
+    ] = useState<TCACertificationEnrollmentBase | undefined>(undefined)
 
     const validateLink: string = getTCACertificationValidationUrl(selectedCertification?.completionUuid as string)
 
     const [coursePreviewModalIsOpen, setCoursePreviewModalIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const [selectedCourse, setSelectedCourse]: [LearnUserCertificationProgress | undefined, Dispatch<SetStateAction<LearnUserCertificationProgress | undefined>>]
-        = useState<LearnUserCertificationProgress | undefined>(undefined)
+    const [selectedCourse, setSelectedCourse]: [
+        LearnUserCertificationProgress | undefined, Dispatch<SetStateAction<LearnUserCertificationProgress | undefined>>
+    ] = useState<LearnUserCertificationProgress | undefined>(undefined)
 
     function renderTCACertificatePreview(ref?: MutableRefObject<HTMLDivElement | any>): ReactNode {
         return (
             <TCACertificatePreview
                 certification={selectedCertification?.topcoderCertification as TCACertification}
-                userName={selectedCertification?.userName || profile?.handle}
+                userName={selectedCertification?.userName || props.profile?.handle}
                 completedDate={selectedCertification?.completedAt as string}
                 completionUuid={selectedCertification?.completionUuid as string}
                 validateLink={validateLink}
@@ -77,12 +87,20 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
                         <div className={styles.certifications}>
                             {
                                 memberTCA.enrollments.map(enrollment => (
-                                    <div className={styles.certificationCard} onClick={() => onCertClick(enrollment)} key={enrollment.completionUuid}>
+                                    <div
+                                        className={styles.certificationCard}
+                                        onClick={bind(onCertClick, this, enrollment)}
+                                        key={enrollment.completionUuid}
+                                    >
                                         <CertificateBadgeIcon
                                             level={enrollment.topcoderCertification?.learnerLevel || 'Beginner'}
-                                            type={enrollment.topcoderCertification?.certificationCategory.track || 'DEV'}
+                                            type={
+                                                enrollment.topcoderCertification?.certificationCategory.track || 'DEV'
+                                            }
                                         />
-                                        <div className={styles.certificationTitle}>{enrollment.topcoderCertification?.title}</div>
+                                        <div className={styles.certificationTitle}>
+                                            {enrollment.topcoderCertification?.title}
+                                        </div>
                                     </div>
                                 ))
                             }
@@ -95,7 +113,11 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
             <div className={styles.certifications}>
                 {
                     memberTCA.courses.map(course => (
-                        <div className={styles.certificationCard} onClick={() => onCourseClick(course)} key={course.courseKey}>
+                        <div
+                            className={styles.certificationCard}
+                            onClick={bind(onCourseClick, this, course)}
+                            key={course.courseKey}
+                        >
                             <CourseBadge type={course.certificationTrackType} />
                             <div className={styles.certificationTitle}>{course.certificationTitle}</div>
                         </div>
@@ -118,7 +140,7 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
                 >
                     <CertificateView
                         certification={selectedCourse?.certification as string}
-                        profile={profile as UserProfile}
+                        profile={props.profile as UserProfile}
                         provider={selectedCourse?.resourceProvider.name as string}
                         fullScreenCertLayout
                     />

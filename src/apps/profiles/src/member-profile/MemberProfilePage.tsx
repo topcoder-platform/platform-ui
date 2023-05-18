@@ -1,8 +1,10 @@
-import { Dispatch, FC, SetStateAction, useEffect, useState } from "react"
-import { Params, useParams } from "react-router"
-import { UserProfile, profileGetPublicAsync } from "~/libs/core"
-import { LoadingSpinner } from "~/libs/ui"
-import { ProfilePageLayout } from "./page-layout"
+import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import { Params, useParams } from 'react-router'
+
+import { profileGetPublicAsync, UserProfile } from '~/libs/core'
+import { LoadingSpinner } from '~/libs/ui'
+
+import { ProfilePageLayout } from './page-layout'
 
 const MemberProfilePage: FC<{}> = () => {
     const routeParams: Params<string> = useParams()
@@ -21,10 +23,7 @@ const MemberProfilePage: FC<{}> = () => {
                     setProfile(userProfile)
                     setProfileReady(true)
                 })
-                .catch(err => {
-                    console.error('Error loading memebr profile', err)
-                    // TODO: NOT FOUND PAGE redirect/dispaly
-                })
+                // TODO: NOT FOUND PAGE redirect/dispaly
         }
     }, [routeParams.memberHandle])
 

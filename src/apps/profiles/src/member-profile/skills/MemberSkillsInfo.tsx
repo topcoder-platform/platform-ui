@@ -1,6 +1,7 @@
-import { FC } from "react"
-import { UserProfile, UserSkill, useMemberSkills } from "~/libs/core"
-import { TCVerifiedSkillIcon, TCVerifiedSkillWhiteIcon } from "~/libs/ui"
+import { FC } from 'react'
+
+import { useMemberSkills, UserProfile, UserSkill } from '~/libs/core'
+import { TCVerifiedSkillIcon, TCVerifiedSkillWhiteIcon } from '~/libs/ui'
 
 import styles from './MemberSkillsInfo.module.scss'
 
@@ -8,9 +9,8 @@ interface MemberSkillsInfoProps {
     profile: UserProfile | undefined
 }
 const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProps) => {
-    const { profile } = props
 
-    const memberSkills: UserSkill[] | undefined = useMemberSkills(profile?.handle)
+    const memberSkills: UserSkill[] | undefined = useMemberSkills(props.profile?.handle)
 
     return memberSkills ? (
         <div className={styles.container}>
@@ -28,7 +28,8 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
             </div>
 
             <div className={styles.legendWrap}>
-                <TCVerifiedSkillIcon />&nbsp;= Topcoder Verified
+                <TCVerifiedSkillIcon />
+&nbsp;= Topcoder Verified
             </div>
         </div>
     ) : <></>
