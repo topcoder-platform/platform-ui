@@ -6,8 +6,8 @@ import HighchartsReact from 'highcharts-react-official'
 
 import { BaseModal, Button, LoadingSpinner } from '~/libs/ui'
 import {
+    MMStats,
     ratingToCSScolor,
-    SRMStats,
     StatsHistory,
     UserProfile,
     UserStatsDistributionResponse,
@@ -16,35 +16,32 @@ import {
     useStatsHistory,
 } from '~/libs/core'
 
-import { ChallengesGrid } from '../ChallengesGrid'
-import { DivisionGrid } from '../DivisionGrid'
-
 import { RATING_CHART_CONFIG, RATING_DISTRO_CHART_CONFIG } from './chart-configs'
-import styles from './SRMDetailsModal.module.scss'
+import styles from './MMDetailsModal.module.scss'
 
-type SRMViewTypes = 'STATISTICS' | 'SRM DETAILS' | 'PAST SRM'
+type SRMViewTypes = 'STATISTICS' | 'MATCH DETAILS'
 
 interface SRMDetailsModalProps {
-    isSRMDetailsOpen: boolean
+    isDSDetailsOpen: boolean
     onClose: () => void
-    SRMStats: SRMStats | undefined
+    MMStats: MMStats | undefined
     profile: UserProfile | undefined
 }
 
-const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) => {
+const MMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) => {
     const [viewType, setviewType]: [SRMViewTypes, Dispatch<SetStateAction<SRMViewTypes>>]
         = useState<SRMViewTypes>('STATISTICS')
 
     const statsHistory: UserStatsHistory | undefined = useStatsHistory(props.profile?.handle)
 
     const ratingHistoryOptions: Highcharts.Options | undefined = useMemo(() => {
-        const srmHistory: Array<StatsHistory> = statsHistory?.DATA_SCIENCE?.SRM?.history || []
+        const mmHistory: Array<StatsHistory> = statsHistory?.DATA_SCIENCE?.MARATHON_MATCH?.history || []
         const options: Highcharts.Options = RATING_CHART_CONFIG
 
-        if (!srmHistory.length) return undefined
+        if (!mmHistory.length) return undefined
 
         options.series = [{
-            data: srmHistory.sort((a, b) => b.date - a.date)
+            data: mmHistory.sort((a, b) => b.date - a.date)
                 .map((srm: StatsHistory) => ({ name: srm.challengeName, x: srm.date, y: srm.rating })),
             name: 'SRM Rating',
             type: 'spline',
@@ -54,7 +51,7 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
     }, [statsHistory])
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
-        filter: 'track=DATA_SCIENCE&subTrack=SRM',
+        filter: 'track=DATA_SCIENCE&subTrack=MARATHON_MATCH',
     })
 
     const ratingDistributionOptions: Highcharts.Options | undefined = useMemo(() => {
@@ -80,9 +77,9 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isSRMDetailsOpen}
+            open={props.isDSDetailsOpen}
             size='body'
-            title='SINGLE ROUND MATCH'
+            title='MARATHON MATCH'
         >
             <LoadingSpinner hide={!!statsHistory && !!memberStatsDist} />
 
@@ -92,32 +89,26 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
                         <div>
                             <span
                                 className='member-stat-value'
-                                style={ratingToCSScolor(props.SRMStats?.rank.rating || 0)}
+                                style={ratingToCSScolor(props.MMStats?.rank.rating || 0)}
                             >
-                                {props.SRMStats?.rank.rating}
+                                {props.MMStats?.rank.rating}
                             </span>
                             Rating
                         </div>
                         <div>
-                            <span className='member-stat-value'>{props.SRMStats?.rank.rank}</span>
+                            <span className='member-stat-value'>{props.MMStats?.rank.rank}</span>
                             Rank
                         </div>
                         <div>
                             <span className='member-stat-value'>
-                                {props.SRMStats?.rank.percentile}
+                                {props.MMStats?.rank.percentile}
                                 %
                             </span>
                             Percentile
                         </div>
                         <div>
-                            <span className='member-stat-value'>
-                                {props.SRMStats?.rank.competitions}
-                            </span>
-                            Competitions
-                        </div>
-                        <div>
-                            <span className='member-stat-value'>{props.SRMStats?.rank.volatility}</span>
-                            Volatility
+                            <span className='member-stat-value'>{props.MMStats?.wins}</span>
+                            Wins
                         </div>
                     </div>
 
@@ -130,24 +121,12 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
                                     onClick={bind(
                                         toggleViewType,
                                         this,
-                                        viewType !== 'SRM DETAILS' ? 'SRM DETAILS' : 'STATISTICS',
+                                        viewType !== 'MATCH DETAILS' ? 'MATCH DETAILS' : 'STATISTICS',
                                     )}
                                 >
                                     See
                                     {' '}
-                                    {viewType !== 'SRM DETAILS' ? 'SRM DETAILS' : 'STATISTICS'}
-                                </Button>
-                                <Button
-                                    primary
-                                    onClick={bind(
-                                        toggleViewType,
-                                        this,
-                                        viewType !== 'PAST SRM' ? 'PAST SRM' : 'SRM DETAILS',
-                                    )}
-                                >
-                                    See
-                                    {' '}
-                                    {viewType !== 'PAST SRM' ? 'PAST SRM' : 'SRM DETAILS'}
+                                    {viewType !== 'MATCH DETAILS' ? 'MATCH DETAILS' : 'STATISTICS'}
                                 </Button>
                             </div>
                         </div>
@@ -177,29 +156,7 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
 
                             }
                             {
-                                viewType === 'SRM DETAILS' && (
-                                    <div className={styles.details}>
-                                        {
-                                            props.SRMStats?.division1 && (
-                                                <DivisionGrid divisionData={props.SRMStats.division1} number={1} />
-                                            )
-                                        }
-                                        {
-                                            props.SRMStats?.division2 && (
-                                                <DivisionGrid divisionData={props.SRMStats.division2} number={2} />
-                                            )
-                                        }
-                                        {
-                                            props.SRMStats?.challengeDetails && (
-                                                <ChallengesGrid challengesData={props.SRMStats.challengeDetails} />
-                                            )
-                                        }
-                                    </div>
-                                )
-
-                            }
-                            {
-                                viewType === 'PAST SRM' && (
+                                viewType === 'MATCH DETAILS' && (
                                     <div />
                                 )
 
@@ -212,4 +169,4 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
     )
 }
 
-export default SRMDetailsModal
+export default MMDetailsModal

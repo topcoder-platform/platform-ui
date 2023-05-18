@@ -4,7 +4,7 @@ import { ratingToCSScolor, useMemberStats, UserProfile, UserStats } from '~/libs
 import { Button, Collapsible } from '~/libs/ui'
 import { ChevronRightIcon } from '@heroicons/react/solid'
 
-import { CopilotDetailsModal, SRMDetailsModal } from '../../components'
+import { CopilotDetailsModal, MMDetailsModal, SRMDetailsModal } from '../../components'
 
 import styles from './MemberTCActivityInfo.module.scss'
 
@@ -110,6 +110,15 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
                     isSRMDetailsOpen={isSRMDetailsOpen}
                     onClose={handleShowSRMModal}
                     SRMStats={memberStats?.DATA_SCIENCE?.SRM}
+                    profile={props.profile}
+                />
+            )}
+
+            {isDSDetailsOpen && (
+                <MMDetailsModal
+                    isDSDetailsOpen={isDSDetailsOpen}
+                    onClose={handleShowDSModal}
+                    MMStats={memberStats?.DATA_SCIENCE?.MARATHON_MATCH}
                     profile={props.profile}
                 />
             )}

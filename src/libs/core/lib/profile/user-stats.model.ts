@@ -34,6 +34,11 @@ export type MMStats = {
     challenges: number
     rank: {
         maximumRating: number
+        rating: number
+        rank: 0
+        percentile: number
+        competitions: number
+        volatility: number
     }
     wins: number
 }
@@ -71,7 +76,7 @@ export type UserStats = {
     }
 }
 
-export type SRMHistory = {
+export type StatsHistory = {
     challengeId: number
     challengeName: string
     date: number
@@ -87,7 +92,10 @@ export type UserStatsHistory = {
     userId: number
     DATA_SCIENCE?: {
         SRM?: {
-            history: Array<SRMHistory>
+            history: Array<StatsHistory>
+        },
+        MARATHON_MATCH?: {
+            history: Array<StatsHistory>
         }
     }
 }
