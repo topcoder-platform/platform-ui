@@ -6,7 +6,6 @@ import { ACTIONS } from "../config";
 
 const initialState = {
   triggered: false,
-  cookieCleared: false,
   initErrored: null,
   forced: false,
 };
@@ -19,11 +18,6 @@ const autoSaveReducer = (state = initialState, action) => {
         triggered: action.payload.isTriggered,
         forced: action.payload.isForced,
         isLoggedIn: action.payload.isLoggedIn,
-      };
-    case ACTIONS.AUTO_SAVE.COOKIE_CLEARED:
-      return {
-        ...state,
-        cookieCleared: action.payload,
       };
     case ACTIONS.AUTO_SAVE.INIT_ERRORED:
       return {

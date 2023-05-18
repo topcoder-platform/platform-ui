@@ -61,6 +61,12 @@ const oldUrlRedirectRoute: ReadonlyArray<PlatformRoute> = EnvironmentConfig.SUBD
         id: 'redirect-old-url',
         route: '/work/*',
     },
+    {
+        children: [],
+        element: <Rewrite to='/self-service/*' />,
+        id: 'redirect-old-url',
+        route: '/self-service/work/*',
+    },
 ] : []
 
 export const selfServiceRoutes: ReadonlyArray<PlatformRoute> = [
