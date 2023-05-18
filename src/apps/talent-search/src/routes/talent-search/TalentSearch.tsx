@@ -4,6 +4,8 @@ import {
     useState,
 } from 'react'
 
+import codes from "country-calling-code";
+
 import { ContentLayout, LoadingSpinner } from '~/libs/ui'
 import SkillSearchResults from './components/skill-search-results/SkillSearchResults'
 import Skill from '@talentSearch/lib/models/Skill'
@@ -51,7 +53,13 @@ export const TalentSearch: FC = () => {
                     if(!value.country){
                         value.country="-"
                     }
-                    
+
+                    const code = codes.find((i) => i.isoCode3 === value.country);
+
+                    if (code) {
+                      value.country = code.country;
+                    }
+                  
                     //totalSkillScore holds the total scoe for *all* skills associated with this member, regardless of if 
                     //they are applicable against the searched skills
                     value.totalSkillScore = 0
