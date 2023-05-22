@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
-import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useState } from 'react'
-import { connect, useSelector, useDispatch } from "react-redux";
+import { connect, useDispatch } from 'react-redux'
+import { noop } from 'lodash'
+import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useState } from 'react'
 
 import {
     Form,
@@ -34,17 +35,21 @@ import { WorkTypeBanner } from '../../../components/work-type-banner'
 import { IntakeFormsBreadcrumb } from '../intake-forms-breadcrumb'
 import { InfoCard } from '../../../components/info-card'
 import { selfServiceStartRoute, workDashboardRoute } from '../../../config'
+import { triggerCookieClear } from '../../../actions/autoSave'
 
 import { BugHuntFormConfig } from './bug-hunt.form.config'
 import { DeliverablesInfoCard } from './deliverables-info-card'
 import styles from './BugHunt.module.scss'
-import { triggerCookieClear } from '../../../actions/autoSave';
 
-const BugHuntIntakeForm = (props: { triggerCookieClear: () => any; }) => {
+interface BugHuntIntakeFormProps {
+    triggerCookieClear: () => any;
+}
+
+const BugHuntIntakeForm: FC<BugHuntIntakeFormProps> = props => {
 
     const workId: string | undefined = useParams().workId
     const navigate: NavigateFunction = useNavigate()
-    const dispatch = useDispatch();
+    const dispatch: Dispatch<any> = useDispatch()
 
     const isMobile: boolean = useCheckIsMobile()
     const { isLoggedIn }: ProfileContextData = useContext<ProfileContextData>(profileContext)
@@ -58,9 +63,10 @@ const BugHuntIntakeForm = (props: { triggerCookieClear: () => any; }) => {
     BugHuntFormConfig.buttons.primaryGroup[0].onClick = () => { setAction('save') }
     BugHuntFormConfig.buttons.primaryGroup[0].hidden = !isLoggedIn
     BugHuntFormConfig.buttons.primaryGroup[1].onClick = () => {
-        setAction('submit');
-        dispatch(props.triggerCookieClear());
+        setAction('submit')
+        dispatch(props.triggerCookieClear())
     }
+
     if (BugHuntFormConfig.buttons.secondaryGroup) {
         BugHuntFormConfig.buttons.secondaryGroup[0].onClick = () => { navigate(selfServiceStartRoute) }
     }
@@ -293,11 +299,8 @@ const BugHuntIntakeForm = (props: { triggerCookieClear: () => any; }) => {
     )
 }
 
+const mapDispatchToProps: BugHuntIntakeFormProps = {
+    triggerCookieClear,
+}
 
-const mapStateToProps = () => {};
-
-const mapDispatchToProps = {
-  triggerCookieClear,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(BugHuntIntakeForm);
+export default connect(noop, mapDispatchToProps)(BugHuntIntakeForm)
