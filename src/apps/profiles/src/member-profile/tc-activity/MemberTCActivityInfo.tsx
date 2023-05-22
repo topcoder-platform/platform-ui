@@ -3,7 +3,7 @@ import { Dispatch, FC, SetStateAction, useState } from 'react'
 
 import { MemberStats, useMemberStats, UserProfile, UserStats } from '~/libs/core'
 
-import { CopilotDetailsModal, MMDetailsModal, SRMDetailsModal } from '../../components'
+import { CopilotDetailsModal, MMDetailsModal, SRMDetailsModal, TestScenariosDetailsModal } from '../../components'
 
 import { DSActivity } from './DS'
 import { CopilotActivity } from './Copilot'
@@ -19,12 +19,6 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
     const memberStats: UserStats | undefined = useMemberStats(props.profile?.handle)
     const srmRating: number = memberStats?.DATA_SCIENCE?.SRM?.rank?.maximumRating || 0
     const mmRating: number = memberStats?.DATA_SCIENCE?.MARATHON_MATCH?.rank?.maximumRating || 0
-    const f2fStats: MemberStats | undefined
-        = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'FIRST_2_FINISH')
-    const codeStats: MemberStats | undefined
-        = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'CODE')
-    const assemblyStats: MemberStats | undefined
-        = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'ASSEMBLY_COMPETITION')
     const bugHuntStats: MemberStats | undefined
         = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'BUG_HUNT')
     const testScenStats: MemberStats | undefined
@@ -85,9 +79,7 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
             {
                 memberStats?.DEVELOP && (
                     <DevelopActivity
-                        f2fStats={f2fStats}
-                        codeStats={codeStats}
-                        assemblyStats={assemblyStats}
+                        activityData={memberStats?.DEVELOP?.subTracks || []}
                         handleShowF2FModal={handleShowF2FModal}
                         handleShowCodeModal={handleShowCodeModal}
                         handleShowAssemblyModal={handleShowAssemblyModal}
@@ -146,6 +138,15 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
                     isCopilotDetailsOpen={isCopilotDetailsOpen}
                     onClose={handleShowCopilotModal}
                     copilotDetails={memberStats?.COPILOT}
+                />
+            )}
+
+            {isTestScenDetailsOpen && (
+                <TestScenariosDetailsModal
+                    isTestScenDetailsOpen={isTestScenDetailsOpen}
+                    onClose={handleShowTestScenModal}
+                    testScenStats={testScenStats}
+                    profile={props.profile}
                 />
             )}
         </div>

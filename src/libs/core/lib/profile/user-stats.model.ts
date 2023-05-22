@@ -39,6 +39,8 @@ export type MemberStats = {
         percentile: number
         competitions: number
         volatility: number
+        overallRank: number
+        overallPercentile: number
     }
     wins: number
     name: string
@@ -91,6 +93,8 @@ export type StatsHistory = {
     percentile: number
     placement: number
     rating: number
+    newRating: number
+    ratingDate: number
 }
 
 export type UserStatsHistory = {
@@ -105,5 +109,11 @@ export type UserStatsHistory = {
         MARATHON_MATCH?: {
             history: Array<StatsHistory>
         }
+    }
+    DEVELOP?: {
+        subTracks: Array<{
+            name: string
+            history: Array<StatsHistory>
+        }>
     }
 }
