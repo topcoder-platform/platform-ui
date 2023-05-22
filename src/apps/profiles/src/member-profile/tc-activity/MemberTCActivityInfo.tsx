@@ -8,6 +8,7 @@ import {
     CodeDetailsModal,
     ContentCreationDetailsModal,
     CopilotDetailsModal,
+    F2FDetailsModal,
     MMDetailsModal,
     SRMDetailsModal,
     TestScenariosDetailsModal,
@@ -38,6 +39,8 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
         = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'UI_PROTOTYPE_COMPETITION')
     const codeStats: MemberStats | undefined
         = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'CODE')
+    const f2fStats: MemberStats | undefined
+        = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'FIRST_2_FINISH')
 
     const [isCopilotDetailsOpen, setIsCopilotDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -211,6 +214,14 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
                     onClose={handleShowCodeModal}
                     codeStats={codeStats}
                     profile={props.profile}
+                />
+            )}
+
+            {isF2FDetailsOpen && (
+                <F2FDetailsModal
+                    isF2FDetailsOpen={isF2FDetailsOpen}
+                    onClose={handleShowF2FModal}
+                    f2fStats={f2fStats}
                 />
             )}
         </div>
