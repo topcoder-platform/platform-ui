@@ -19,6 +19,17 @@
                 display: flex;
                 flex-direction: column;
                 flex: 1;
+
+                .shortBio {
+                    margin-top: $sp-4;
+                    padding-right: $sp-13;
+
+                    @include ltelg {
+                        margin-top: 0;
+                        margin-bottom: $sp-4;
+                        padding-right: 0;
+                    }
+                }
             }
         }
     }

@@ -3,6 +3,7 @@ export type TC_TRACKS = 'DEVELOP' | 'DESIGN' | 'DATA_SCIENCE'
 export interface UserProfile {
     competitionCountryCode: string
     createdAt: number
+    description: string
     diceEnabled: boolean
     email: string
     firstName: string

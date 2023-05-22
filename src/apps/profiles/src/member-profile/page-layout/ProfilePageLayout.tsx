@@ -31,6 +31,10 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                     <MemberTracksInfo profile={props.profile} />
 
                     <MemberSkillsInfo profile={props.profile} />
+
+                    <div className={styles.shortBio}>
+                        {props.profile?.description}
+                    </div>
                 </div>
                 <MemberBasicInfo profile={props.profile} />
             </div>
