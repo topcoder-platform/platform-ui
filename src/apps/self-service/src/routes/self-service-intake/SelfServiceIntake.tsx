@@ -10,9 +10,11 @@ import { intakeFormsRouteId } from '../../self-service.routes'
 import store from '../../store'
 
 import { useLoadUnfinishedWork } from './use-load-unfinished-work'
+import { useHandleRouteChange } from './use-handle-route-change'
 
 const SelfServiceIntake: FC<{}> = () => {
     const { isLoading }: { isLoading: boolean } = useLoadUnfinishedWork()
+    useHandleRouteChange()
     const { getChildRoutes }: RouterContextData = useContext(routerContext)
 
     return (
