@@ -3,7 +3,13 @@ import { Dispatch, FC, SetStateAction, useState } from 'react'
 
 import { MemberStats, useMemberStats, UserProfile, UserStats } from '~/libs/core'
 
-import { CopilotDetailsModal, MMDetailsModal, SRMDetailsModal, TestScenariosDetailsModal } from '../../components'
+import {
+    BugHuntDetailsModal,
+    CopilotDetailsModal,
+    MMDetailsModal,
+    SRMDetailsModal,
+    TestScenariosDetailsModal,
+} from '../../components'
 
 import { DSActivity } from './DS'
 import { CopilotActivity } from './Copilot'
@@ -147,6 +153,14 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
                     onClose={handleShowTestScenModal}
                     testScenStats={testScenStats}
                     profile={props.profile}
+                />
+            )}
+
+            {isBugHuntDetailsOpen && (
+                <BugHuntDetailsModal
+                    isBugHuntDetailsOpen={isBugHuntDetailsOpen}
+                    onClose={handleShowBugHuntModal}
+                    bugHuntStats={bugHuntStats}
                 />
             )}
         </div>

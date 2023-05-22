@@ -104,7 +104,7 @@ const TestScenariosDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsMo
                         </div>
                         <div>
                             <span className='member-stat-value'>
-                                {Number(props.testScenStats?.rank.overallPercentile)
+                                {Number(props.testScenStats?.rank.overallPercentile || 0)
                                     .toFixed(2)}
                                 %
                             </span>
