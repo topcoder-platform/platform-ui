@@ -59,11 +59,10 @@ const DevelopActivity: FC<DevelopActivityProps> = (props: DevelopActivityProps) 
                             <div className={styles.progress}>
                                 <div
                                     className={styles.progressValue}
-                                    style={ratingToCSScolor(codeStats.rank.rating)}
                                 >
-                                    {codeStats.rank.rating || 0}
+                                    {codeStats.wins || 0}
                                     {' '}
-                                    RATING
+                                    WINS
                                 </div>
                                 <ModalTriggerButton onClick={props.handleShowCodeModal} />
                             </div>

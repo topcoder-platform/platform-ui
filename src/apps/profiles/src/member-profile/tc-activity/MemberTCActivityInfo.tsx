@@ -5,6 +5,7 @@ import { MemberStats, useMemberStats, UserProfile, UserStats } from '~/libs/core
 
 import {
     BugHuntDetailsModal,
+    CodeDetailsModal,
     ContentCreationDetailsModal,
     CopilotDetailsModal,
     MMDetailsModal,
@@ -35,6 +36,8 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
         = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'CONTENT_CREATION')
     const uiPrototypeStats: MemberStats | undefined
         = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'UI_PROTOTYPE_COMPETITION')
+    const codeStats: MemberStats | undefined
+        = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'CODE')
 
     const [isCopilotDetailsOpen, setIsCopilotDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -198,6 +201,15 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
                     isUIPrototypeDetailsOpen={isUIPrototypeDetailsOpen}
                     onClose={handleShowUIPrototypeModal}
                     uiPrototypeStats={uiPrototypeStats}
+                    profile={props.profile}
+                />
+            )}
+
+            {isCodeDetailsOpen && (
+                <CodeDetailsModal
+                    isCodeDetailsOpen={isCodeDetailsOpen}
+                    onClose={handleShowCodeModal}
+                    codeStats={codeStats}
                     profile={props.profile}
                 />
             )}
