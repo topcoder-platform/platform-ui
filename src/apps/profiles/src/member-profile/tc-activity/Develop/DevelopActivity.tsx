@@ -12,6 +12,8 @@ interface DevelopActivityProps {
     handleShowAssemblyModal: () => void
     handleShowCodeModal: () => void
     handleShowF2FModal: () => void
+    handleShowUIPrototypeModal: () => void
+    handleShowContentCreationModal: () => void
 }
 
 const DevelopActivity: FC<DevelopActivityProps> = (props: DevelopActivityProps) => {
@@ -21,6 +23,10 @@ const DevelopActivity: FC<DevelopActivityProps> = (props: DevelopActivityProps) 
         = props.activityData.find(subTrack => subTrack.name === 'CODE')
     const assemblyStats: MemberStats | undefined
         = props.activityData.find(subTrack => subTrack.name === 'ASSEMBLY_COMPETITION')
+    const contentCreationStats: MemberStats | undefined
+        = props.activityData.find(subTrack => subTrack.name === 'CONTENT_CREATION')
+    const uiPrototypeStats: MemberStats | undefined
+        = props.activityData.find(subTrack => subTrack.name === 'UI_PROTOTYPE_COMPETITION')
 
     return (
         <Collapsible
@@ -29,16 +35,19 @@ const DevelopActivity: FC<DevelopActivityProps> = (props: DevelopActivityProps) 
         >
             <div className={styles.contentGrid}>
                 {
-                    f2fStats && (
+                    assemblyStats && (
                         <div className={styles.content}>
-                            <span>First2Finish</span>
+                            <span>Assembly Competition</span>
                             <div className={styles.progress}>
-                                <div className={styles.progressValue}>
-                                    {f2fStats.wins || 0}
+                                <div
+                                    className={styles.progressValue}
+                                    style={ratingToCSScolor(assemblyStats.rank.rating)}
+                                >
+                                    {assemblyStats.rank.rating || 0}
                                     {' '}
-                                    WINS
+                                    RATING
                                 </div>
-                                <ModalTriggerButton onClick={props.handleShowF2FModal} />
+                                <ModalTriggerButton onClick={props.handleShowAssemblyModal} />
                             </div>
                         </div>
                     )
@@ -62,19 +71,52 @@ const DevelopActivity: FC<DevelopActivityProps> = (props: DevelopActivityProps) 
                     )
                 }
                 {
-                    assemblyStats && (
+                    contentCreationStats && (
                         <div className={styles.content}>
-                            <span>Assembly Competition</span>
+                            <span>Content Creation</span>
                             <div className={styles.progress}>
                                 <div
                                     className={styles.progressValue}
-                                    style={ratingToCSScolor(assemblyStats.rank.rating)}
+                                    style={ratingToCSScolor(contentCreationStats.rank.rating)}
                                 >
-                                    {assemblyStats.rank.rating || 0}
+                                    {contentCreationStats.rank.rating || 0}
                                     {' '}
                                     RATING
                                 </div>
-                                <ModalTriggerButton onClick={props.handleShowAssemblyModal} />
+                                <ModalTriggerButton onClick={props.handleShowContentCreationModal} />
+                            </div>
+                        </div>
+                    )
+                }
+                {
+                    f2fStats && (
+                        <div className={styles.content}>
+                            <span>First2Finish</span>
+                            <div className={styles.progress}>
+                                <div className={styles.progressValue}>
+                                    {f2fStats.wins || 0}
+                                    {' '}
+                                    WINS
+                                </div>
+                                <ModalTriggerButton onClick={props.handleShowF2FModal} />
+                            </div>
+                        </div>
+                    )
+                }
+                {
+                    uiPrototypeStats && (
+                        <div className={styles.content}>
+                            <span>UI Prototype Competition</span>
+                            <div className={styles.progress}>
+                                <div
+                                    className={styles.progressValue}
+                                    style={ratingToCSScolor(uiPrototypeStats.rank.rating)}
+                                >
+                                    {uiPrototypeStats.rank.rating || 0}
+                                    {' '}
+                                    RATING
+                                </div>
+                                <ModalTriggerButton onClick={props.handleShowUIPrototypeModal} />
                             </div>
                         </div>
                     )

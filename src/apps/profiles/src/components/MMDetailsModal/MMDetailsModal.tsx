@@ -21,14 +21,14 @@ import styles from './MMDetailsModal.module.scss'
 
 type SRMViewTypes = 'STATISTICS' | 'MATCH DETAILS'
 
-interface SRMDetailsModalProps {
+interface MMDetailsModalProps {
     isDSDetailsOpen: boolean
     onClose: () => void
     MMStats: MemberStats | undefined
     profile: UserProfile | undefined
 }
 
-const MMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) => {
+const MMDetailsModal: FC<MMDetailsModalProps> = (props: MMDetailsModalProps) => {
     const [viewType, setviewType]: [SRMViewTypes, Dispatch<SetStateAction<SRMViewTypes>>]
         = useState<SRMViewTypes>('STATISTICS')
 
@@ -43,7 +43,7 @@ const MMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) =
         options.series = [{
             data: mmHistory.sort((a, b) => b.date - a.date)
                 .map((srm: StatsHistory) => ({ name: srm.challengeName, x: srm.date, y: srm.rating })),
-            name: 'SRM Rating',
+            name: 'Marathon Match Rating',
             type: 'spline',
         }]
 

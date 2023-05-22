@@ -17,36 +17,36 @@ import {
 } from '~/libs/core'
 
 import { RATING_CHART_CONFIG, RATING_DISTRO_CHART_CONFIG } from './chart-configs'
-import styles from './TestScenariosDetailsModal.module.scss'
+import styles from './ContentCreationDetailsModal.module.scss'
 
 type TestScenViewTypes = 'STATISTICS' | 'CHALLENGES DETAILS'
 
-interface TestScenariosDetailsModalProps {
-    isTestScenDetailsOpen: boolean
+interface ContentCreationDetailsModalProps {
+    isContentCreationDetailsOpen: boolean
     onClose: () => void
-    testScenStats: MemberStats | undefined
+    contentCreationStats: MemberStats | undefined
     profile: UserProfile | undefined
 }
 
-const TestScenariosDetailsModal: FC<TestScenariosDetailsModalProps> = (props: TestScenariosDetailsModalProps) => {
+const ContentCreationDetailsModal: FC<ContentCreationDetailsModalProps> = (props: ContentCreationDetailsModalProps) => {
     const [viewType, setviewType]: [TestScenViewTypes, Dispatch<SetStateAction<TestScenViewTypes>>]
         = useState<TestScenViewTypes>('STATISTICS')
 
     const statsHistory: UserStatsHistory | undefined = useStatsHistory(props.profile?.handle)
 
     const ratingHistoryOptions: Highcharts.Options | undefined = useMemo(() => {
-        const testScenHistory: Array<StatsHistory> | undefined
-            = statsHistory?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'TEST_SCENARIOS')?.history
+        const contentCreationHistory: Array<StatsHistory> | undefined
+            = statsHistory?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'CONTENT_CREATION')?.history
         const options: Highcharts.Options = RATING_CHART_CONFIG
 
-        if (!testScenHistory?.length) return undefined
+        if (!contentCreationHistory?.length) return undefined
 
         options.series = [{
-            data: testScenHistory.sort((a, b) => b.date - a.date)
+            data: contentCreationHistory.sort((a, b) => b.date - a.date)
                 .map((testChallenge: StatsHistory) => ({
                     name: testChallenge.challengeName, x: testChallenge.ratingDate, y: testChallenge.newRating,
                 })),
-            name: 'Test Scenarios Rating',
+            name: 'Content Creation Rating',
             type: 'spline',
         }]
 
@@ -54,7 +54,7 @@ const TestScenariosDetailsModal: FC<TestScenariosDetailsModalProps> = (props: Te
     }, [statsHistory])
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
-        filter: 'track=DEVELOP&subTrack=TEST_SCENARIOS',
+        filter: 'track=DEVELOP&subTrack=CONTENT_CREATION',
     })
 
     const ratingDistributionOptions: Highcharts.Options | undefined = useMemo(() => {
@@ -80,9 +80,9 @@ const TestScenariosDetailsModal: FC<TestScenariosDetailsModalProps> = (props: Te
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isTestScenDetailsOpen}
+            open={props.isContentCreationDetailsOpen}
             size='body'
-            title='TEST SCENARIOS'
+            title='CONTENT CREATION'
         >
             <LoadingSpinner hide={!!statsHistory && !!memberStatsDist} />
 
@@ -92,30 +92,30 @@ const TestScenariosDetailsModal: FC<TestScenariosDetailsModalProps> = (props: Te
                         <div>
                             <span
                                 className='member-stat-value'
-                                style={ratingToCSScolor(props.testScenStats?.rank.rating || 0)}
+                                style={ratingToCSScolor(props.contentCreationStats?.rank.rating || 0)}
                             >
-                                {props.testScenStats?.rank.rating}
+                                {props.contentCreationStats?.rank.rating}
                             </span>
                             Rating
                         </div>
                         <div>
-                            <span className='member-stat-value'>{props.testScenStats?.rank.overallRank}</span>
+                            <span className='member-stat-value'>{props.contentCreationStats?.rank.overallRank}</span>
                             Rank
                         </div>
                         <div>
                             <span className='member-stat-value'>
-                                {Number(props.testScenStats?.rank.overallPercentile || 0)
+                                {Number(props.contentCreationStats?.rank.overallPercentile || 0)
                                     .toFixed(2)}
                                 %
                             </span>
                             Percentile
                         </div>
                         <div>
-                            <span className='member-stat-value'>{props.testScenStats?.wins}</span>
+                            <span className='member-stat-value'>{props.contentCreationStats?.wins}</span>
                             Wins
                         </div>
                         <div>
-                            <span className='member-stat-value'>{props.testScenStats?.challenges}</span>
+                            <span className='member-stat-value'>{props.contentCreationStats?.challenges}</span>
                             Challenges
                         </div>
                     </div>
@@ -177,4 +177,4 @@ const TestScenariosDetailsModal: FC<TestScenariosDetailsModalProps> = (props: Te
     )
 }
 
-export default TestScenariosDetailsModal
+export default ContentCreationDetailsModal

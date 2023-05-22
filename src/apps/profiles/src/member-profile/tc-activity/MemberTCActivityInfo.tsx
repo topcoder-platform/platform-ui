@@ -5,10 +5,12 @@ import { MemberStats, useMemberStats, UserProfile, UserStats } from '~/libs/core
 
 import {
     BugHuntDetailsModal,
+    ContentCreationDetailsModal,
     CopilotDetailsModal,
     MMDetailsModal,
     SRMDetailsModal,
     TestScenariosDetailsModal,
+    UIPrototypeDetailsModal,
 } from '../../components'
 
 import { DSActivity } from './DS'
@@ -29,6 +31,10 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
         = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'BUG_HUNT')
     const testScenStats: MemberStats | undefined
         = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'TEST_SCENARIOS')
+    const contentCreationStats: MemberStats | undefined
+        = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'CONTENT_CREATION')
+    const uiPrototypeStats: MemberStats | undefined
+        = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'UI_PROTOTYPE_COMPETITION')
 
     const [isCopilotDetailsOpen, setIsCopilotDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -44,6 +50,10 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
     const [isBugHuntDetailsOpen, setIsBugHuntDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
     const [isTestScenDetailsOpen, setIsTestScenDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [isContentCreationDetailsOpen, setIsContentCreationDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [isUIPrototypeDetailsOpen, setIsUIPrototypeDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
     function handleShowCopilotModal(): void {
@@ -78,6 +88,14 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
         setIsTestScenDetailsOpen(!isTestScenDetailsOpen)
     }
 
+    function handleShowContentCreationModal(): void {
+        setIsContentCreationDetailsOpen(!isContentCreationDetailsOpen)
+    }
+
+    function handleShowUIPrototypeModal(): void {
+        setIsUIPrototypeDetailsOpen(!isUIPrototypeDetailsOpen)
+    }
+
     return memberStats ? (
         <div className={styles.container}>
             <h3>TC ACTIVITY</h3>
@@ -89,6 +107,8 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
                         handleShowF2FModal={handleShowF2FModal}
                         handleShowCodeModal={handleShowCodeModal}
                         handleShowAssemblyModal={handleShowAssemblyModal}
+                        handleShowContentCreationModal={handleShowContentCreationModal}
+                        handleShowUIPrototypeModal={handleShowUIPrototypeModal}
                     />
                 )
             }
@@ -161,6 +181,24 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
                     isBugHuntDetailsOpen={isBugHuntDetailsOpen}
                     onClose={handleShowBugHuntModal}
                     bugHuntStats={bugHuntStats}
+                />
+            )}
+
+            {isContentCreationDetailsOpen && (
+                <ContentCreationDetailsModal
+                    isContentCreationDetailsOpen={isContentCreationDetailsOpen}
+                    onClose={handleShowContentCreationModal}
+                    contentCreationStats={contentCreationStats}
+                    profile={props.profile}
+                />
+            )}
+
+            {isUIPrototypeDetailsOpen && (
+                <UIPrototypeDetailsModal
+                    isUIPrototypeDetailsOpen={isUIPrototypeDetailsOpen}
+                    onClose={handleShowUIPrototypeModal}
+                    uiPrototypeStats={uiPrototypeStats}
+                    profile={props.profile}
                 />
             )}
         </div>
