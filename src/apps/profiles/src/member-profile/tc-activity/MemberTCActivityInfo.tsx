@@ -4,6 +4,7 @@ import { Dispatch, FC, SetStateAction, useState } from 'react'
 import { MemberStats, useMemberStats, UserProfile, UserStats } from '~/libs/core'
 
 import {
+    AssemblyDetailsModal,
     BugHuntDetailsModal,
     CodeDetailsModal,
     ContentCreationDetailsModal,
@@ -41,6 +42,8 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
         = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'CODE')
     const f2fStats: MemberStats | undefined
         = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'FIRST_2_FINISH')
+    const assemblyStats: MemberStats | undefined
+        = memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'ASSEMBLY_COMPETITION')
 
     const [isCopilotDetailsOpen, setIsCopilotDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -222,6 +225,15 @@ const MemberTCActivityInfo: FC<MemberTCActivityInfoProps> = (props: MemberTCActi
                     isF2FDetailsOpen={isF2FDetailsOpen}
                     onClose={handleShowF2FModal}
                     f2fStats={f2fStats}
+                />
+            )}
+
+            {isAssemblyDetailsOpen && (
+                <AssemblyDetailsModal
+                    isAssemblyDetailsOpen={isAssemblyDetailsOpen}
+                    onClose={handleShowAssemblyModal}
+                    assemblyStats={assemblyStats}
+                    profile={props.profile}
                 />
             )}
         </div>
