@@ -16,6 +16,8 @@ import {
     useStatsHistory,
 } from '~/libs/core'
 
+import { numberToFixed } from '../../lib'
+
 import { RATING_CHART_CONFIG, RATING_DISTRO_CHART_CONFIG } from './chart-configs'
 import styles from './UIPrototypeDetailsModal.module.scss'
 
@@ -104,8 +106,7 @@ const UIPrototypeDetailsModal: FC<UIPrototypeDetailsModalProps> = (props: UIProt
                         </div>
                         <div>
                             <span className='member-stat-value'>
-                                {Number(props.uiPrototypeStats?.rank.overallPercentile || 0)
-                                    .toFixed(2)}
+                                {numberToFixed(props.uiPrototypeStats?.rank.overallPercentile || 0)}
                                 %
                             </span>
                             Percentile

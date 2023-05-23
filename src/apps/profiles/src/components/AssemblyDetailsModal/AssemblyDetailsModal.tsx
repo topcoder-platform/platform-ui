@@ -15,6 +15,8 @@ import {
     useStatsHistory,
 } from '~/libs/core'
 
+import { numberToFixed } from '../../lib'
+
 import { RATING_CHART_CONFIG, RATING_DISTRO_CHART_CONFIG } from './chart-configs'
 import styles from './AssemblyDetailsModal.module.scss'
 
@@ -106,8 +108,7 @@ const AssemblyDetailsModal: FC<AssemblyDetailsModalProps> = (props: AssemblyDeta
                         </div>
                         <div>
                             <span className='member-stat-value'>
-                                {Number(props.assemblyStats?.rank.overallPercentile || 0)
-                                    .toFixed(2)}
+                                {numberToFixed(props.assemblyStats?.rank.overallPercentile || 0)}
                                 %
                             </span>
                             Percentile

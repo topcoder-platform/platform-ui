@@ -31,6 +31,7 @@ export type SRMStats = {
 }
 
 export type MemberStats = {
+    avgPlacement: number
     challenges: number
     rank: {
         maximumRating: number
@@ -42,6 +43,7 @@ export type MemberStats = {
         overallRank: number
         overallPercentile: number
     }
+    screeningSuccessRate: number
     wins: number
     name: string
 }
@@ -77,7 +79,14 @@ export type UserStats = {
         mostRecentSubmission: number
         wins: number
     }
-    DEVELOP: {
+    DEVELOP?: {
+        challenges: number
+        mostRecentEventDate: number
+        mostRecentSubmission: number
+        subTracks: Array<MemberStats>
+        wins: number
+    }
+    DESIGN?: {
         challenges: number
         mostRecentEventDate: number
         mostRecentSubmission: number

@@ -15,6 +15,8 @@ import {
     useStatsHistory,
 } from '~/libs/core'
 
+import { numberToFixed } from '../../lib'
+
 import { RATING_CHART_CONFIG, RATING_DISTRO_CHART_CONFIG } from './chart-configs'
 import styles from './CodeDetailsModal.module.scss'
 
@@ -90,8 +92,7 @@ const CodeDetailsModal: FC<CodeDetailsModalProps> = (props: CodeDetailsModalProp
                     <div className='member-stat-header'>
                         <div>
                             <span className='member-stat-value'>
-                                {Number(props.codeStats?.rank.overallPercentile || 0)
-                                    .toFixed(2)}
+                                {numberToFixed(props.codeStats?.rank.overallPercentile || 0)}
                                 %
                             </span>
                             Percentile

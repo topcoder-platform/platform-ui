@@ -6,6 +6,8 @@ import {
     MemberStats,
 } from '~/libs/core'
 
+import { numberToFixed } from '../../lib'
+
 import styles from './BugHuntDetailsModal.module.scss'
 
 type BugHuntViewTypes = 'CHALLENGES DETAILS'
@@ -32,8 +34,7 @@ const BugHuntDetailsModal: FC<BugHuntDetailsModalProps> = (props: BugHuntDetails
                 <div className='member-stat-header'>
                     <div>
                         <span className='member-stat-value'>
-                            {Number(props.bugHuntStats?.rank.overallPercentile || 0)
-                                .toFixed(2)}
+                            {numberToFixed(props.bugHuntStats?.rank.overallPercentile || 0)}
                             %
                         </span>
                         Percentile

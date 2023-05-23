@@ -6,6 +6,8 @@ import {
     MemberStats,
 } from '~/libs/core'
 
+import { numberToFixed } from '../../lib'
+
 import styles from './F2FDetailsModal.module.scss'
 
 type BugHuntViewTypes = 'CHALLENGES DETAILS'
@@ -32,8 +34,7 @@ const F2FDetailsModal: FC<F2FDetailsModalProps> = (props: F2FDetailsModalProps) 
                 <div className='member-stat-header'>
                     <div>
                         <span className='member-stat-value'>
-                            {Number(props.f2fStats?.rank.overallPercentile || 0)
-                                .toFixed(2)}
+                            {numberToFixed(props.f2fStats?.rank.overallPercentile || 0)}
                             %
                         </span>
                         Percentile
