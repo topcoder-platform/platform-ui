@@ -1,0 +1,35 @@
+@import "@libs/ui/styles/includes";
+
+.badgeModalWrap {
+    display: flex;
+
+    .badgeImageModal {
+        width: 100px;
+        height: 100px;
+    }
+
+    .badgeInfoWrap {
+        display: flex;
+        flex-direction: column;
+        margin-left: $sp-4;
+
+        .badgeTitleModal {
+            font-size: 20px;
+            font-weight: $font-weight-bold;
+            line-height: 26px;
+        }
+
+        .badgeAwardedAt {
+            font-size: 12px;
+            line-height: 16px;
+            font-weight: $font-weight-bold;
+            text-transform: uppercase;
+            color: #767676;
+            margin-top: $sp-2;
+        }
+
+        .badgeDescription {
+            margin-top: $sp-4;
+        }
+    }
+}

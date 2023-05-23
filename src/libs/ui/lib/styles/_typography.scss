@@ -2,6 +2,7 @@
 @import 'variables/breakpoints';
 @import 'variables/fonts';
 @import 'variables/palette';
+@import 'mixins/layout.mixins';
 
 body {
     margin: 0;
@@ -312,4 +313,12 @@ h4 {
 
 .pointer-events-none {
     pointer-events: none;
+}
+
+.member-stat-header {
+    @include memberStatHeader;
+}
+
+.member-stat-value {
+    @include memberStatValue;
 }

@@ -237,6 +237,7 @@ workflows:
               ignore:
                 - master
                 - qa
+                - profiles-app
 
       - build-qa:
           context : org-global
@@ -244,6 +245,7 @@ workflows:
             branches:
               only:
                 - qa
+                - profiles-app
 
       - build-prod:
           context : org-global
@@ -269,6 +271,7 @@ workflows:
             branches:
               only:
                 - qa
+                - profiles-app
 
       - deployProd:
           context : org-global
