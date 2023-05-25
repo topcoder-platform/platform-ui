@@ -55,7 +55,7 @@ const MemberBadgesPage: FC<{}> = () => {
                 <ContentLayout
                     outerClass={styles.container}
                 >
-                    <div className={styles.backLink}>
+                    <Link to={`/${profile?.handle}`} className={styles.backLink}>
                         <svg
                             xmlns='http://www.w3.org/2000/svg'
                             width='14'
@@ -71,8 +71,8 @@ const MemberBadgesPage: FC<{}> = () => {
                                 clipRule='evenodd'
                             />
                         </svg>
-                        <Link to={`/profiles/${profile?.handle}`}>Return to Profile</Link>
-                    </div>
+                        Return to Profile
+                    </Link>
 
                     <div className={styles.badgesWrapper}>
                         <h3>COMMUNITY AWARDS & HONORS</h3>
