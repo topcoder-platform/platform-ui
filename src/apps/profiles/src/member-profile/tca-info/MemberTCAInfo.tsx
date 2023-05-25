@@ -1,15 +1,14 @@
-import { Dispatch, MutableRefObject, ReactNode, SetStateAction, useState } from 'react'
+import { Dispatch, SetStateAction, useState } from 'react'
 import { bind } from 'lodash'
 
 import {
     CertificateBadgeIcon,
     CourseBadge,
+    HiringManagerView,
     LearnUserCertificationProgress,
-    TCACertificatePreview,
     TCACertification,
     TCACertificationEnrollmentBase,
 } from '~/apps/learn/src/lib'
-import { CertificateModal } from '~/apps/learn/src/lib/components/hiring-manager-view/certificate-modal'
 import { CertificateView } from '~/apps/learn/src/course-certificate/certificate-view'
 import { getTCACertificationValidationUrl } from '~/apps/learn/src/learn.routes'
 import { UserCompletedCertificationsData, UserProfile, useUserCompletedCertifications } from '~/libs/core'
@@ -40,20 +39,6 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
     const [selectedCourse, setSelectedCourse]: [
         LearnUserCertificationProgress | undefined, Dispatch<SetStateAction<LearnUserCertificationProgress | undefined>>
     ] = useState<LearnUserCertificationProgress | undefined>(undefined)
-
-    function renderTCACertificatePreview(ref?: MutableRefObject<HTMLDivElement | any>): ReactNode {
-        return (
-            <TCACertificatePreview
-                certification={selectedCertification?.topcoderCertification as TCACertification}
-                userName={selectedCertification?.userName || props.profile?.handle}
-                completedDate={selectedCertification?.completedAt as string}
-                completionUuid={selectedCertification?.completionUuid as string}
-                validateLink={validateLink}
-                certificateElRef={ref}
-                maxScale={Math.min()}
-            />
-        )
-    }
 
     function onCertClick(enrollment: TCACertificationEnrollmentBase): void {
         setCertPreviewModalIsOpen(true)
@@ -126,9 +111,20 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
             </div>
 
             {certPreviewModalIsOpen && (
-                <CertificateModal open onClose={handleHideCertPreviewModal}>
-                    {renderTCACertificatePreview()}
-                </CertificateModal>
+                <BaseModal
+                    onClose={handleHideCertPreviewModal}
+                    open
+                    size='body'
+                    theme='clear'
+                >
+                    <HiringManagerView
+                        certification={selectedCertification?.topcoderCertification as TCACertification}
+                        completionUuid={selectedCertification?.completionUuid as string}
+                        isModalView
+                        userProfile={props.profile as UserProfile}
+                        validationUrl={validateLink}
+                    />
+                </BaseModal>
             )}
 
             {coursePreviewModalIsOpen && (
@@ -136,7 +132,7 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
                     onClose={handleHideCoursePreviewModal}
                     open
                     size='body'
-                    theme='clear'
+                    title='TOPCODER ACADEMY'
                 >
                     <CertificateView
                         certification={selectedCourse?.certification as string}
