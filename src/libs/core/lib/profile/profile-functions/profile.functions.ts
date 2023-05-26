@@ -47,13 +47,26 @@ export async function editNameAsync(handle: string, profile: EditNameRequest): P
 export async function getVerificationStatusAsync(handle: string): Promise<boolean> {
 
     // get verification statuses
-    // this Looker API returns all verified members which is inconvenient
-    // also, there is no DEV API over lookers thus this call always fails in DEV env
-    // TODO: add looker filters support eventually and DEV API...
+    // in DEV this looker API is mocked data response
     const verfiedMembers: UserVerify[] = await getVerification()
 
     // filter by member
-    return verfiedMembers.some(member => member['user.handle'].toLowerCase() === handle.toLowerCase())
+    return verfiedMembers.some(member => {
+        let isVerified: boolean = false
+        if (member['user.handle'] && member['user.handle'].toLowerCase() === handle.toLowerCase()) {
+            isVerified = true
+        }
+
+        // On DEV we have a mocked data response with silghtly different structure
+        if (
+            member['member_verification_dev.handle']
+            && member['member_verification_dev.handle'].toLowerCase() === handle.toLowerCase()
+        ) {
+            isVerified = true
+        }
+
+        return isVerified
+    })
 }
 
 export async function getMemberStatsAsync(handle: string): Promise<UserStats | undefined> {

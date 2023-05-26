@@ -14,7 +14,7 @@ import ProfilePageJumbo from '../jumbotron/ProfilePageJumbo'
 import styles from './ProfilePageLayout.module.scss'
 
 interface ProfilePageLayoutProps {
-    profile: UserProfile | undefined
+    profile: UserProfile
 }
 
 const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutProps) => (
