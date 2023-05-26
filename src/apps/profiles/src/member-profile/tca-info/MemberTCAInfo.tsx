@@ -1,16 +1,14 @@
 import { Dispatch, SetStateAction, useState } from 'react'
 import { bind } from 'lodash'
 
+import { AppSubdomain, EnvironmentConfig } from '~/config'
 import {
     CertificateBadgeIcon,
     CourseBadge,
-    HiringManagerView,
     LearnUserCertificationProgress,
-    TCACertification,
     TCACertificationEnrollmentBase,
 } from '~/apps/learn/src/lib'
 import { CertificateView } from '~/apps/learn/src/course-certificate/certificate-view'
-import { getTCACertificationValidationUrl } from '~/apps/learn/src/learn.routes'
 import { UserCompletedCertificationsData, UserProfile, useUserCompletedCertifications } from '~/libs/core'
 import { BaseModal, TCALogo } from '~/libs/ui'
 
@@ -31,14 +29,16 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
         TCACertificationEnrollmentBase | undefined, Dispatch<SetStateAction<TCACertificationEnrollmentBase | undefined>>
     ] = useState<TCACertificationEnrollmentBase | undefined>(undefined)
 
-    const validateLink: string = getTCACertificationValidationUrl(selectedCertification?.completionUuid as string)
-
     const [coursePreviewModalIsOpen, setCoursePreviewModalIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
     const [selectedCourse, setSelectedCourse]: [
         LearnUserCertificationProgress | undefined, Dispatch<SetStateAction<LearnUserCertificationProgress | undefined>>
     ] = useState<LearnUserCertificationProgress | undefined>(undefined)
+
+    const tcaHiringManagerViewUrl: string
+        // eslint-disable-next-line max-len
+        = `https://${AppSubdomain.tcAcademy}.${EnvironmentConfig.TC_DOMAIN}/tca-certifications/${selectedCertification?.topcoderCertification?.dashedName}/${selectedCertification?.userHandle}/certification?view-style=modal`
 
     function onCertClick(enrollment: TCACertificationEnrollmentBase): void {
         setCertPreviewModalIsOpen(true)
@@ -116,13 +116,12 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
                     open
                     size='body'
                     theme='clear'
+                    contentClassName={styles.certPreviewModalWrap}
                 >
-                    <HiringManagerView
-                        certification={selectedCertification?.topcoderCertification as TCACertification}
-                        completionUuid={selectedCertification?.completionUuid as string}
-                        isModalView
-                        userProfile={props.profile as UserProfile}
-                        validationUrl={validateLink}
+                    <iframe
+                        className={styles.certPreviewModalIframe}
+                        src={tcaHiringManagerViewUrl}
+                        title={selectedCertification?.topcoderCertification?.title}
                     />
                 </BaseModal>
             )}
