@@ -1,0 +1,23 @@
+@import '@libs/ui/styles/includes';
+
+.verifyStatus {
+    display: flex;
+    align-items: center;
+    min-width: 185px;
+    margin-top: $sp-2;
+    color: $tc-white;
+
+    >svg {
+        max-width: 24px;
+    }
+
+    span {
+        margin: 0 $sp-2;
+    }
+
+    .toolTipIcon {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+}

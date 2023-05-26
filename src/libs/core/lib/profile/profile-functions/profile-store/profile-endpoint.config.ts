@@ -5,7 +5,10 @@ export function profile(handle: string): string {
 }
 
 export function verify(): string {
-    return `${EnvironmentConfig.API.V4}/looks/${EnvironmentConfig.MEMBER_VERIFY_LOOKER}/run/json`
+    // No DEV Looker API exists thus we hardcode the URL here
+    // to use always prod reporting API regardless of environment.
+    // There is a mock DEV look in Looker with id: 3964 that is used for dev/QA purposes
+    return `https://api.topcoder.com/v4/looks/${EnvironmentConfig.MEMBER_VERIFY_LOOKER}/run/json`
 }
 
 export function countryLookupURL(): string {
