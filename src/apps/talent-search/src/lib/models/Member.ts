@@ -1,20 +1,22 @@
-import SkillScore from './SkillScore'
+import MemberEmsiSkill from './MemberEmsiSkill';
+import MemberMaxRating from './MemberMaxRating';
+import MemberStats from './MemberStats';
 
 export default interface Member {
     userId: number;
     handle: string;
+    status: string;
     firstName: string;
     lastName: string;
-    country: string;
+    competitionCountryCode: string;
+    email: string;
     accountAge: number;
-    numberOfChallengesWon: number;
-    numberOfChallengesPlaced: number;
-    skills: Array<SkillScore>;
-    searchedSkills: Array<SkillScore>;
-    roles: Array<string>;
-    domains: Array<string>;
-    totalSkillScore: number;
-    searchedSkillScore: number;
+    maxRating: MemberMaxRating;
+    emsiSkills: Array<MemberEmsiSkill>;
+    stats:Array<MemberStats>;
+    country:string;
+    photoURL:string;   
+    createdAt:number;
 }
 
   

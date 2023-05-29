@@ -1,19 +1,7 @@
 @import "@libs/ui/styles/includes";
 @import "@libs/ui/styles/variables";
 
-.score {
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 24px;
-    cursor: pointer;
-}
-
-.score-high{
-    color: $green-140;
-}
-.score-medium{
-    color: $yellow-140;
-}
-.score-low{
-    color: $red-140;
+.skills {
+    display: flex;
+    flex-wrap: wrap;
 }

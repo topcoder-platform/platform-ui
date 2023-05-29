@@ -1,47 +1,41 @@
 import { useState, Dispatch } from 'react'
 
 import Member from '@talentSearch/lib/models/Member'
-
+import MemberEmsiSkill from '@talentSearch/lib/models/MemberEmsiSkill'
 import styles from './MemberSkillsRenderer.module.scss'
-
-import SkillDisplayModal from '../modal/SkillDisplayModal'
-
+import TagList from '@earn/components/TagList'
+import SkillTag from './SkillTag'
 const MemberSkillsRenderer: (member:Member) => JSX.Element
 = (member:Member): JSX.Element => {
-    const [isSkillPopupOpen, setIsSkillPopupOpen]: [boolean, Dispatch<boolean>]
-    = useState<boolean>(false)
-
-    let style="score-low"
-
-    function handlePopupLink(): void {
-        console.log("Opening popup")
-        setIsSkillPopupOpen(true)
-    }
-
-    function hideSkillModal(): void {
-        setIsSkillPopupOpen(false)
-    }
-
-    if(member.searchedSkillScore>50){
-        style = "score-high"
-    }
-    else if(member.searchedSkillScore>20){
-        style = "score-medium"
+    let tags:Array<MemberEmsiSkill>=[]
+    if(member && member.emsiSkills){
+        tags=member.emsiSkills
     }
     else{
-        style = "score-low"
+        tags=[]
     }
     return (
-        
-        <div className={styles.score}>
-            <SkillDisplayModal
-                    isOpen={isSkillPopupOpen}
-                    onClose={hideSkillModal}
-                    member={member}
-            />
-            <a onClick={handlePopupLink} className={styles[style]}>{member.searchedSkillScore}</a>
-        </div>
+      <div className={styles["skills"]}>
+        <TagList
+          maxTagCount={3}
+          renderTag={renderTag}
+          tags={tags}
+        />
+      </div>
     )
 }
+
+  
+interface RenderTagProps {
+    className?: string,
+    onClickTag?: () => void,
+    tag: MemberEmsiSkill
+}
+
+const renderTag = ({ className = "", onClickTag, tag }: RenderTagProps): JSX.Element => (
+    <SkillTag
+        skill={tag}
+    />
+);
 
 export default MemberSkillsRenderer

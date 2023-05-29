@@ -1,6 +1,5 @@
 export default interface Skill {
-    id: string;
-    skillName: string;
-    description: string;
+    name: string;
+    emsiId: string;
 }
   

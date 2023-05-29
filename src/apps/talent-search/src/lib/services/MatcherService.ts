@@ -4,23 +4,26 @@ import { xhrGetAsync } from '~/libs/core'
 import Skill from '@talentSearch/lib/models/Skill'
 import Member from '@talentSearch/lib/models/Member'
 
-export async function getAllSkills(): Promise<Array<Skill>>{
-    return xhrGetAsync(`${EnvironmentConfig.API.V1}/match-engine/skills`)
+
+export async function autoCompleteSkills(search:string): Promise<Array<Skill>>{
+  return xhrGetAsync(`${EnvironmentConfig.API.V5}/emsi-skills/skills/auto-complete?term=${search}`)
 }
 
-export async function retrieveMatchesForSkills(skills:ReadonlyArray<Skill>): Promise<Array<Member>>{
+export async function retrieveMatchesForSkills(skills:ReadonlyArray<Skill>, page:number, pageSize:number): Promise<Array<Member>>{
   const params = new URLSearchParams()
-  skills.forEach(value => params.append('skill', value.skillName))
+  skills.forEach(value => params.append('skillId', value.emsiId))
   params.append('sortBy', 'numberOfChallengesWon')
   params.append('sortOrder', 'desc')
-  
-  const url = `${EnvironmentConfig.API.V1}/match-engine/members?${params.toString()}`
+  params.append('page', `${page}`)
+  params.append('perPage', `${pageSize}`)
+
+  const url = `${EnvironmentConfig.API.V5}/members/searchBySkills?${params.toString()}`
 
   return xhrGetAsync(url)
 }
 
 const MatcherService = {
-  getAllSkills,
+  autoCompleteSkills,
   retrieveMatchesForSkills,
 };
 
