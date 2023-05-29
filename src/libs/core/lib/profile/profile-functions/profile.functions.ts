@@ -1,13 +1,14 @@
 import { tokenGetAsync, TokenModel, userGetDiceStatusAsync } from '../../auth'
 import { CountryLookup } from '../country-lookup.model'
 import { EditNameRequest } from '../edit-name-request.model'
+import { ModifyUserRoleResponse } from '../modify-user-role.model'
 import { UserProfile } from '../user-profile.model'
 import { UserStats } from '../user-stats.model'
 import { UserVerify } from '../user-verify.model'
 
 import { profileFactoryCreate } from './profile-factory'
 import { getMemberStats, getVerification, profileStoreGet, profileStorePatchName } from './profile-store'
-import { getCountryLookup } from './profile-store/profile-xhr.store'
+import { getCountryLookup, updatePrimaryMemberRole } from './profile-store/profile-xhr.store'
 
 export async function getLoggedInAsync(handle?: string): Promise<UserProfile | undefined> {
 
@@ -62,4 +63,8 @@ export async function getMemberStatsAsync(handle: string): Promise<UserStats | u
 
 export async function getCountryLookupAsync(): Promise<CountryLookup[]> {
     return getCountryLookup()
+}
+
+export async function updatePrimaryMemberRoleAsync(primaryRole: string): Promise<ModifyUserRoleResponse> {
+    return updatePrimaryMemberRole(primaryRole)
 }

@@ -2,4 +2,60 @@
 
 .container {
     margin: $sp-8 0;
+
+    .content {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        margin-bottom: 0;
+
+        @include ltelg {
+            grid-template-columns: 1fr;
+        }
+
+        > p {
+            max-width: 380px;
+        }
+
+        form {
+            display: flex;
+            justify-self: flex-end;
+
+            @include ltelg {
+                flex-direction: column;
+                justify-self: auto;
+                margin-top: $sp-4;
+            }
+
+            .formControlWrap {
+                border: 1px solid $black-20;
+                border-radius: 8px;
+                padding: $sp-6 $sp-4;
+                min-width: 286px;
+                display: flex;
+                justify-content: space-between;
+                margin-right: $sp-8;
+
+                @include ltelg {
+                    margin-right: 0;
+                    margin-bottom: $sp-4;
+                }
+
+                &:last-child {
+                    margin-right: 0;
+                }
+
+                label {
+                    font-weight: $font-weight-medium;
+                }
+
+                input {
+                    cursor: pointer;
+                }
+            }
+        }
+    }
+}
+
+:global(.react-responsive-modal-closeButton) {
+    display: none;
 }

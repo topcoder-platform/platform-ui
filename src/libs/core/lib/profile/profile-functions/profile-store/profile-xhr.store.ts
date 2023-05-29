@@ -1,11 +1,17 @@
-import { xhrGetAsync, xhrPutAsync } from '../../../xhr'
+import { xhrGetAsync, xhrPostAsync, xhrPutAsync } from '../../../xhr'
 import { CountryLookup } from '../../country-lookup.model'
 import { EditNameRequest } from '../../edit-name-request.model'
+import { ModifyUserRoleRequest, ModifyUserRoleResponse } from '../../modify-user-role.model'
 import { UserProfile } from '../../user-profile.model'
 import { UserStats } from '../../user-stats.model'
 import { UserVerify } from '../../user-verify.model'
 
-import { countryLookupURL, profile as profileUrl, verify as verifyUrl } from './profile-endpoint.config'
+import {
+    countryLookupURL,
+    memberModifyRoleURL,
+    profile as profileUrl,
+    verify as verifyUrl,
+} from './profile-endpoint.config'
 
 export function get(handle: string): Promise<UserProfile> {
     return xhrGetAsync<UserProfile>(profileUrl(handle))
@@ -30,4 +36,11 @@ export function getMemberStats(handle: string): Promise<UserStats | undefined> {
 export function getCountryLookup(): Promise<CountryLookup[]> {
     return xhrGetAsync<CountryLookup[]>(countryLookupURL())
         .then((countryLookup: any) => countryLookup.result?.content || [])
+}
+
+export async function updatePrimaryMemberRole(primaryRole: string): Promise<ModifyUserRoleResponse> {
+    return xhrPostAsync<ModifyUserRoleRequest, ModifyUserRoleResponse>(
+        memberModifyRoleURL(),
+        { param: { primaryRole } },
+    )
 }

@@ -28,7 +28,7 @@ const AccountSettingsTabs: FC<AccountSettingsTabsProps> = (props: AccountSetting
             />
 
             {activeTab === AccountSettingsTabViews.account && (
-                <AccountTab />
+                <AccountTab profile={props.profile} />
             )}
         </div>
     )
