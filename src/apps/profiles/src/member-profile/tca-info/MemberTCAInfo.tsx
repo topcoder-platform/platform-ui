@@ -135,6 +135,7 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
                 >
                     <CertificateView
                         certification={selectedCourse?.certification as string}
+                        isModalView
                         profile={props.profile as UserProfile}
                         provider={selectedCourse?.resourceProvider.name as string}
                         fullScreenCertLayout
