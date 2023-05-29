@@ -8,7 +8,6 @@ import {
     LearnUserCertificationProgress,
     TCACertificationEnrollmentBase,
 } from '~/apps/learn/src/lib'
-import { CertificateView } from '~/apps/learn/src/course-certificate/certificate-view'
 import { UserCompletedCertificationsData, UserProfile, useUserCompletedCertifications } from '~/libs/core'
 import { BaseModal, TCALogo } from '~/libs/ui'
 
@@ -39,6 +38,10 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
     const tcaHiringManagerViewUrl: string
         // eslint-disable-next-line max-len
         = `https://${AppSubdomain.tcAcademy}.${EnvironmentConfig.TC_DOMAIN}/tca-certifications/${selectedCertification?.topcoderCertification?.dashedName}/${selectedCertification?.userHandle}/certification?view-style=modal`
+
+    const tcaCourseViewUrl: string
+        // eslint-disable-next-line max-len
+        = `https://${AppSubdomain.tcAcademy}.${EnvironmentConfig.TC_DOMAIN}/${selectedCourse?.resourceProvider.name}/${selectedCourse?.courseKey}/${props.profile?.handle}/certificate`
 
     function onCertClick(enrollment: TCACertificationEnrollmentBase): void {
         setCertPreviewModalIsOpen(true)
@@ -155,12 +158,10 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
                     size='body'
                     title='TOPCODER ACADEMY'
                 >
-                    <CertificateView
-                        certification={selectedCourse?.certification as string}
-                        isModalView
-                        profile={props.profile as UserProfile}
-                        provider={selectedCourse?.resourceProvider.name as string}
-                        fullScreenCertLayout
+                    <iframe
+                        className={styles.certPreviewModalIframe}
+                        src={tcaCourseViewUrl}
+                        title={selectedCourse?.certificationTitle}
                     />
                 </BaseModal>
             )}
