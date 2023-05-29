@@ -8,7 +8,6 @@ import {
     LearnUserCertificationProgress,
     TCACertificationEnrollmentBase,
 } from '~/apps/learn/src/lib'
-import { CertificateView } from '~/apps/learn/src/course-certificate/certificate-view'
 import { UserCompletedCertificationsData, UserProfile, useUserCompletedCertifications } from '~/libs/core'
 import { BaseModal, TCALogo } from '~/libs/ui'
 
@@ -40,6 +39,10 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
         // eslint-disable-next-line max-len
         = `https://${AppSubdomain.tcAcademy}.${EnvironmentConfig.TC_DOMAIN}/tca-certifications/${selectedCertification?.topcoderCertification?.dashedName}/${selectedCertification?.userHandle}/certification?view-style=modal`
 
+    const tcaCourseViewUrl: string
+        // eslint-disable-next-line max-len
+        = `https://${AppSubdomain.tcAcademy}.${EnvironmentConfig.TC_DOMAIN}/${selectedCourse?.resourceProvider.name}/${selectedCourse?.courseKey}/${props.profile?.handle}/certificate`
+
     function onCertClick(enrollment: TCACertificationEnrollmentBase): void {
         setCertPreviewModalIsOpen(true)
         setSelectedCertification(enrollment)
@@ -56,6 +59,17 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
 
     function handleHideCoursePreviewModal(): void {
         setCoursePreviewModalIsOpen(false)
+    }
+
+    function handleCourseProviderClick(course: LearnUserCertificationProgress, e: MouseEvent): void {
+        e.stopPropagation()
+        e.preventDefault()
+
+        const url: URL
+            = new URL(!/^https?:\/\//i.test(course.resourceProvider.url)
+                ? `https://${course.resourceProvider.url}` : course.resourceProvider.url)
+
+        window.open(url, '_blank')
     }
 
     return memberTCA && (memberTCA.courses.length || memberTCA.enrollments.length) ? (
@@ -104,7 +118,18 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
                             key={course.courseKey}
                         >
                             <CourseBadge type={course.certificationTrackType} />
-                            <div className={styles.certificationTitle}>{course.certificationTitle}</div>
+                            <div className={styles.certificationTitle}>
+                                {course.certificationTitle}
+                                <a
+                                    className={styles.courseProvider}
+                                    href={course.resourceProvider.url}
+                                    onClick={bind(handleCourseProviderClick, this, course)}
+                                >
+                                    by
+                                    {' '}
+                                    {course.resourceProvider.name}
+                                </a>
+                            </div>
                         </div>
                     ))
                 }
@@ -133,11 +158,10 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
                     size='body'
                     title='TOPCODER ACADEMY'
                 >
-                    <CertificateView
-                        certification={selectedCourse?.certification as string}
-                        profile={props.profile as UserProfile}
-                        provider={selectedCourse?.resourceProvider.name as string}
-                        fullScreenCertLayout
+                    <iframe
+                        className={styles.certPreviewModalIframe}
+                        src={tcaCourseViewUrl}
+                        title={selectedCourse?.certificationTitle}
                     />
                 </BaseModal>
             )}

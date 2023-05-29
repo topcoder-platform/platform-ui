@@ -1,7 +1,7 @@
 import { FC } from 'react'
 
 import { UserProfile } from '~/libs/core'
-import { ContentLayout } from '~/libs/ui'
+import { ContentLayout, PageTitle } from '~/libs/ui'
 
 import { MemberBasicInfo } from '../basic-info'
 import { MemberTracksInfo } from '../tracks'
@@ -25,6 +25,7 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
         <ContentLayout
             outerClass={styles.contentLayoutOuter}
         >
+            <PageTitle>{`${props.profile.handle} | Community Profile | Topcoder`}</PageTitle>
 
             <div className={styles.basicInfoWrap}>
                 <div className={styles.skillsWrap}>
