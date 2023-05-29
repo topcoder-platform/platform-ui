@@ -58,6 +58,17 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
         setCoursePreviewModalIsOpen(false)
     }
 
+    function handleCourseProviderClick(course: LearnUserCertificationProgress, e: MouseEvent): void {
+        e.stopPropagation()
+        e.preventDefault()
+
+        const url: URL
+            = new URL(!/^https?:\/\//i.test(course.resourceProvider.url)
+                ? `https://${course.resourceProvider.url}` : course.resourceProvider.url)
+
+        window.open(url, '_blank')
+    }
+
     return memberTCA && (memberTCA.courses.length || memberTCA.enrollments.length) ? (
         <div className={styles.container}>
             <div className={styles.title}>
@@ -104,7 +115,18 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
                             key={course.courseKey}
                         >
                             <CourseBadge type={course.certificationTrackType} />
-                            <div className={styles.certificationTitle}>{course.certificationTitle}</div>
+                            <div className={styles.certificationTitle}>
+                                {course.certificationTitle}
+                                <a
+                                    className={styles.courseProvider}
+                                    href={course.resourceProvider.url}
+                                    onClick={bind(handleCourseProviderClick, this, course)}
+                                >
+                                    by
+                                    {' '}
+                                    {course.resourceProvider.name}
+                                </a>
+                            </div>
                         </div>
                     ))
                 }
