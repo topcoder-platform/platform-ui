@@ -1,14 +1,20 @@
 import { tokenGetAsync, TokenModel, userGetDiceStatusAsync } from '../../auth'
 import { CountryLookup } from '../country-lookup.model'
 import { EditNameRequest } from '../edit-name-request.model'
+import { ModifyMemberEmailPreferencesRequest } from '../modify-user-email-preferences.model'
 import { ModifyUserRoleResponse } from '../modify-user-role.model'
+import { UserEmailPreferences } from '../user-email-preference.model'
 import { UserProfile } from '../user-profile.model'
 import { UserStats } from '../user-stats.model'
 import { UserVerify } from '../user-verify.model'
 
 import { profileFactoryCreate } from './profile-factory'
 import { getMemberStats, getVerification, profileStoreGet, profileStorePatchName } from './profile-store'
-import { getCountryLookup, updatePrimaryMemberRole } from './profile-store/profile-xhr.store'
+import {
+    getCountryLookup,
+    updateMemberEmailPreferences,
+    updatePrimaryMemberRole,
+} from './profile-store/profile-xhr.store'
 
 export async function getLoggedInAsync(handle?: string): Promise<UserProfile | undefined> {
 
@@ -67,4 +73,11 @@ export async function getCountryLookupAsync(): Promise<CountryLookup[]> {
 
 export async function updatePrimaryMemberRoleAsync(primaryRole: string): Promise<ModifyUserRoleResponse> {
     return updatePrimaryMemberRole(primaryRole)
+}
+
+export async function updateMemberEmailPreferencesAsync(
+    email: string,
+    emailPreferences: ModifyMemberEmailPreferencesRequest,
+): Promise<UserEmailPreferences> {
+    return updateMemberEmailPreferences(email, emailPreferences)
 }

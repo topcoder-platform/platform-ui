@@ -6,6 +6,7 @@
     border: 1px solid $black-20;
     border-radius: 8px;
     margin-top: $sp-4;
+    flex-wrap: wrap;
 
     .contentMiddle {
         display: flex;

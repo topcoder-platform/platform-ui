@@ -29,3 +29,9 @@ export function memberStatsDistroURL(): string {
 export function memberModifyRoleURL(): string {
     return `${EnvironmentConfig.API.V3}/users/updatePrimaryRole`
 }
+
+export function memberEmailPreferencesURL(): string {
+    // TODO: this is a API under community-app, we should move it to a new API.
+    // Also, note the audience id is hardcoded here NO DEV audience exists in Mailchimp
+    return `https://community-app.${EnvironmentConfig.TC_DOMAIN}/api/mailchimp/28bfd3c062/members`
+}

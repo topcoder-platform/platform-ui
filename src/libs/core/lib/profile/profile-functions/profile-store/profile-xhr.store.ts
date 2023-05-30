@@ -1,13 +1,16 @@
 import { xhrGetAsync, xhrPostAsync, xhrPutAsync } from '../../../xhr'
 import { CountryLookup } from '../../country-lookup.model'
 import { EditNameRequest } from '../../edit-name-request.model'
+import { ModifyMemberEmailPreferencesRequest } from '../../modify-user-email-preferences.model'
 import { ModifyUserRoleRequest, ModifyUserRoleResponse } from '../../modify-user-role.model'
+import { UserEmailPreferences } from '../../user-email-preference.model'
 import { UserProfile } from '../../user-profile.model'
 import { UserStats } from '../../user-stats.model'
 import { UserVerify } from '../../user-verify.model'
 
 import {
     countryLookupURL,
+    memberEmailPreferencesURL,
     memberModifyRoleURL,
     profile as profileUrl,
     verify as verifyUrl,
@@ -42,5 +45,15 @@ export async function updatePrimaryMemberRole(primaryRole: string): Promise<Modi
     return xhrPostAsync<ModifyUserRoleRequest, ModifyUserRoleResponse>(
         memberModifyRoleURL(),
         { param: { primaryRole } },
+    )
+}
+
+export async function updateMemberEmailPreferences(
+    email: string,
+    request: ModifyMemberEmailPreferencesRequest,
+): Promise<UserEmailPreferences> {
+    return xhrPutAsync<ModifyMemberEmailPreferencesRequest, UserEmailPreferences>(
+        `${memberEmailPreferencesURL()}/${email}`,
+        request,
     )
 }

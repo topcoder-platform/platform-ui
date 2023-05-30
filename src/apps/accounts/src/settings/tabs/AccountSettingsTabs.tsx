@@ -5,6 +5,7 @@ import { TabsNavbar } from '~/libs/ui'
 
 import { AccountSettingsTabsConfig, AccountSettingsTabViews } from './config'
 import { AccountTab } from './account'
+import { PreferencesTab } from './preferences'
 import styles from './AccountSettingsTabs.module.scss'
 
 interface AccountSettingsTabsProps {
@@ -29,6 +30,10 @@ const AccountSettingsTabs: FC<AccountSettingsTabsProps> = (props: AccountSetting
 
             {activeTab === AccountSettingsTabViews.account && (
                 <AccountTab profile={props.profile} />
+            )}
+
+            {activeTab === AccountSettingsTabViews.preferences && (
+                <PreferencesTab profile={props.profile} />
             )}
         </div>
     )

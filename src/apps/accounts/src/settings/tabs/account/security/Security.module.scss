@@ -22,6 +22,10 @@
 
         .diceIdButton {
             align-self: center;
+
+            @include ltelg {
+                margin-top: $sp-4;
+            }
         }
     }
 }
