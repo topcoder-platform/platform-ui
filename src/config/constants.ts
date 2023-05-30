@@ -1,5 +1,5 @@
 export enum AppSubdomain {
-    accounts = 'accounts',
+    accounts = 'account-settings',
     devCenter = 'devcenter',
     earn = 'earn',
     gamificationAdmin = 'gamification-admin',
