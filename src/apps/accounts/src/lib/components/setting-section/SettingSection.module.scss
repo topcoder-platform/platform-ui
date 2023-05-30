@@ -1,0 +1,25 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    padding: $sp-4;
+    border: 1px solid $black-20;
+    border-radius: 8px;
+    margin-top: $sp-4;
+
+    .contentMiddle {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        align-self: center;
+
+        @include ltelg {
+            margin-right: $sp-4;
+        }
+
+        .infoText {
+            color: #767676;
+            max-width: 85%;
+        }
+    }
+}
