@@ -1,4 +1,5 @@
 export enum AppSubdomain {
+    accounts = 'account-settings',
     devCenter = 'devcenter',
     earn = 'earn',
     gamificationAdmin = 'gamification-admin',
@@ -8,6 +9,7 @@ export enum AppSubdomain {
 }
 
 export enum ToolTitle {
+    accounts = 'Account Settings',
     devCenter = 'Dev Center',
     earn = 'Opportunity Feed',
     gamificationAdmin = 'Gamification Admin',

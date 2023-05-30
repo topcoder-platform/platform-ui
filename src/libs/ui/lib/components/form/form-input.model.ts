@@ -55,7 +55,8 @@ export interface FormInputModel {
     readonly spellCheck?: boolean
     readonly title?: string
     touched?: boolean
-    readonly type: 'card-set' | 'checkbox' | 'password' | 'radio' | 'rating' | 'text' | 'textarea' | 'image-picker'
+    // eslint-disable-next-line max-len
+    readonly type: 'card-set'| 'checkbox' | 'password' | 'radio' | 'rating' | 'text' | 'textarea' | 'image-picker' | 'toggle'
     readonly validators?: ReadonlyArray<ValidatorFn>
     value?: InputValue
 }

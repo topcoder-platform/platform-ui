@@ -1,0 +1,86 @@
+@import '../../../../styles/includes';
+
+.formToggle {
+    transition: all .15s ease-in-out;
+    border-radius: 10px;
+    box-sizing: border-box;
+    height: 20px;
+    width: 37px;
+    position: relative;
+    align-self: center;
+
+    .checkbox {
+        display: none;
+
+        &:checked+.label {
+            background-color: $turq-160;
+
+            .inner {
+                margin-left: 0;
+            }
+
+            .switch {
+                right: 0;
+            }
+        }
+    }
+
+    .label {
+        display: block;
+        overflow: hidden;
+        cursor: pointer;
+        border-radius: 20px;
+        transition: all .15s ease-in-out;
+        background-color: $black-40;
+        width: 37px;
+
+        &:hover {
+            background-color: $black-60;
+        }
+
+        .inner {
+            display: block;
+            width: 200%;
+            margin-left: -100%;
+            transition: margin 0.3s ease-in 0s;
+
+            &::before,
+            &::after {
+                background-color: transparent;
+                color: transparent;
+                content: "";
+                box-sizing: border-box;
+                display: block;
+                float: left;
+                height: 20px;
+                width: 50%;
+                font-size: 15px;
+                font-weight: 700;
+                line-height: 20px;
+                padding: 0;
+            }
+        }
+
+        .switch {
+            transition: all .15s ease-in-out;
+            background: $tc-white;
+            background-color: $tc-white;
+            border: none;
+            border-radius: 20px;
+            bottom: 0;
+            color: $tc-white;
+            display: block;
+            height: 14px;
+            width: 14px;
+            margin: 3px;
+            position: absolute;
+            top: 0;
+        }
+    }
+
+    &.disabled {
+        .label {
+            background-color: $black-20;
+        }
+    }
+}

@@ -1,0 +1,31 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    margin: $sp-8 0;
+
+    .content {
+        display: grid;
+        grid-template-columns: 1fr;
+        margin-bottom: 0;
+
+        >p {
+            max-width: 380px;
+        }
+
+        .imageWrap {
+            padding: $sp-2;
+            background-color: $black-5;
+            border-radius: 4px;
+            margin-right: $sp-2;
+            align-self: flex-start;
+        }
+
+        .diceIdButton {
+            align-self: center;
+
+            @include ltelg {
+                margin-top: $sp-4;
+            }
+        }
+    }
+}
