@@ -4,6 +4,7 @@ export default interface MemberEmsiSkill {
     emsiId:string
     name:string;
     category:string;
+    isSearched: boolean;
 }
 
   

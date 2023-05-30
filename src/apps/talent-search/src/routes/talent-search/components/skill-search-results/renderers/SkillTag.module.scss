@@ -1,8 +1,7 @@
 @import "@libs/ui/styles/includes";
 @import "@libs/ui/styles/variables";
 
-.self-reported{
-    flex: 0 0 auto;
+.skill{
     font-family: $font-barlow; 
     font-weight: $font-weight-medium;
     background-color: rgb(34, 107, 116);
@@ -14,25 +13,15 @@
     font-size: 14px;
     line-height: 16px;
     cursor: pointer;
-    position: inherit;
+    position: relative;
+    
 }
-
-.challenge-win{
-    flex: 0 0 auto;
-    font-family: $font-barlow; 
-    font-weight: $font-weight-medium;
-    background-color: rgb(106, 52, 155);
-    color: #fff;
-    margin-top: 4px;
-    margin-right: 4px;
-    border-radius: 5px;
+.challengeWin{
     padding: 4px 6px 4px 26px;
-    font-size: 14px;
-    line-height: 18px;
-    cursor: pointer;
-    position: inherit;
 }
-
+.isSearched{
+    background-color: rgb(106, 52, 155);
+}
 
 .before{
   position: absolute;
@@ -42,7 +31,4 @@
   margin:0px;
   width: 16px;
   height: 16px;
-  border-radius:8px;
-  border: 1px #fff solid;
-
 }

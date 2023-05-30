@@ -11,14 +11,14 @@ import codes from "country-calling-code";
 
 export const memberColumns: ReadonlyArray<TableColumn<Member>> = [
     {
-        label: 'Handle',
+        label: 'Wins',
         propertyName: 'numberOfChallengesWon',
-        type: 'element',
+        type: 'numberElement',
         renderer: MemberHandleRenderer,
+        defaultSortDirection: 'desc'
     },
     {
         label: 'Skills',
-        propertyName: 'emsiSkills',
         type: 'element',
         renderer: MemberSkillsRenderer,
     }
@@ -67,14 +67,28 @@ export default class SkillSearchResult extends Component<SkillSearchResultsProps
                 if(response.length==PER_PAGE){
                     this.state.hasMore = true
                 }
-
+                let filter = this.props.skillsFilter;
                 response.forEach(function (value){
                     const code = codes.find((i) => i.isoCode3 === value.competitionCountryCode);
                     
                     if (code) {
                       value.country = code.country;
                     }
+
+                    //This isn't great TODO: make this cleaner
+                    value.emsiSkills.forEach(function (emsiSkill){
+                        emsiSkill.isSearched = false;
+                        for(let i=0; i<filter.length; i++){
+                            if(emsiSkill.emsiId == filter[i].emsiId){
+                                emsiSkill.isSearched = true;
+                            }
+                        }
+                    })
+                    //Move the values that were searched to the front of the skills list for display in the UI
+                    value.emsiSkills.sort((a, b) => a.isSearched ? -1 : 0)
                 })
+                
+
             }
             if(this.state.page==1){
                 this.state.searchResults = response;
