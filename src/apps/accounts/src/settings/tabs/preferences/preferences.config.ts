@@ -1,12 +1,12 @@
 /* eslint-disable max-len */
 export const newsletters: Array<{ id: string, name: string, desc: string }> = [
     {
-        desc: 'This newsletter gets sent out at various times, specifically when we have an opportunity of mass appeal. For more information you can visit the <a href="https://www.topcoder.com/community/taas" style="color:#0d61bf;text-decoration:none;font-weight:500;">Gig Work page.</a>',
+        desc: 'A weekly summary of available ways to earn, including gig work, challenges, and Thrive articles.',
         id: 'd0c48e9da3',
-        name: 'Gig Work',
+        name: 'Work Opportunities',
     },
     {
-        desc: 'This newsletter gets sent out at the end of every month and contains a variety of important information across all of our tracks.',
+        desc: 'A monthly newsletter with recent highlights from the Topcoder community.',
         id: 'a8f858cdf1',
         name: 'Monthly Newsletter',
     },
