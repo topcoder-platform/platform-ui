@@ -78,8 +78,8 @@ const PreferencesTab: FC<PreferencesTabProps> = (props: PreferencesTabProps) => 
                                     <div className={styles.subAction}>
                                         <form action={mailChimpFormAction} method='post' id='mc-embedded-subscribe-form' name='mc-embedded-subscribe-form' noValidate>
                                             <input type='email' value={props.profile.email} readOnly name='EMAIL' id='mce-EMAIL' />
-                                            <input type='checkbox' id='gdpr_11101' name='gdpr[11101]' value='Y' />
-                                            <input type='text' name='b_65bd5a1857b73643aad556093_28bfd3c062' value='' />
+                                            <input type='checkbox' id='gdpr_11101' name='gdpr[11101]' value='Y' readOnly />
+                                            <input type='text' name='b_65bd5a1857b73643aad556093_28bfd3c062' value='' readOnly />
                                             <Button
                                                 label={emailPreferences.status === 'subscribed' ? 'Unsubscribe' : 'Subscribe'}
                                                 secondary

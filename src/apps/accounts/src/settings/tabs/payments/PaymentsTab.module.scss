@@ -1,0 +1,115 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background-color: $black-5;
+    padding: $sp-6;
+    margin: $sp-8 0;
+    border-radius: 6px;
+
+    @include ltelg {
+        padding: $sp-4;
+    }
+
+    .paymentsHeader {
+        display: flex;
+        justify-content: space-between;
+
+        @include ltelg {
+            flex-direction: column;
+        }
+
+        .managePaymentsLink {
+            font-weight: $font-weight-bold;
+            color: $turq-160;
+            display: flex;
+            align-items: center;
+
+            @include ltelg {
+                margin-top: $sp-4;
+            }
+
+            svg {
+                margin-left: $sp-2;
+                max-width: 100%;
+            }
+        }
+    }
+
+    .content {
+        background-color: $tc-white;
+        border-radius: 4px;
+        margin-top: $sp-8;
+
+        .providers {
+            display: grid;
+            gap: $sp-8;
+            grid-template-columns: repeat(3, 1fr);
+            margin: $sp-6 0;
+
+            @include ltelg {
+                grid-template-columns: 1fr;
+            }
+
+            .providerCard {
+                padding: $sp-6;
+                border: 1px solid $black-20;
+                border-radius: 8px;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+
+                .benefitTitle {
+                    display: flex;
+                    align-items: center;
+
+                    svg {
+                        margin-right: $sp-1;
+                    }
+
+                    span {
+                        color: $teal-140;
+                    }
+                }
+
+                p {
+                    margin-bottom: $sp-3;
+                }
+
+                button {
+                    margin-top: auto;
+                }
+            }
+        }
+
+        .providerSubmitted {
+            margin-top: $sp-8;
+
+            @include ltelg {
+                flex-direction: column;
+            }
+
+            .providerSubmittedIcon {
+                background: linear-gradient(264.69deg, #198807 2.17%, #017c6d 97.49%);
+                padding: $sp-4;
+                border-radius: 4px;
+                width: 64px;
+                height: 64px;
+                color: $tc-white;
+                margin-right: $sp-4;
+
+                @include ltelg {
+                    margin-bottom: $sp-4;
+                }
+            }
+
+            button {
+                align-self: center;
+
+                @include ltelg {
+                    align-self: flex-start;
+                    margin-top: $sp-4;
+                }
+            }
+        }
+    }
+}
