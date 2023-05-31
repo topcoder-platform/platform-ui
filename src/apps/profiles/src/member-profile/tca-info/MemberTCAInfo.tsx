@@ -41,7 +41,7 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
 
     const tcaCourseViewUrl: string
         // eslint-disable-next-line max-len
-        = `https://${AppSubdomain.tcAcademy}.${EnvironmentConfig.TC_DOMAIN}/${selectedCourse?.resourceProvider.name}/${selectedCourse?.courseKey}/${props.profile?.handle}/certificate`
+        = `https://${AppSubdomain.tcAcademy}.${EnvironmentConfig.TC_DOMAIN}/${selectedCourse?.resourceProvider.name}/${selectedCourse?.certification}/${props.profile?.handle}/certificate`
 
     function onCertClick(enrollment: TCACertificationEnrollmentBase): void {
         setCertPreviewModalIsOpen(true)
