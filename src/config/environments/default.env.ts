@@ -62,3 +62,5 @@ export const TERMS_URL = 'https://www.topcoder-dev.com/challenges/terms/detail/3
 export const PRIVACY_POLICY_URL = `${TOPCODER_URL}/policy`
 
 export const SUBDOMAIN = window.location.hostname.split('.')[0]
+
+export const GAMIFICATION_ORG_ID = getReactEnv<string>('GAMIFICATION_ORG_ID', undefined)

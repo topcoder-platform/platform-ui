@@ -85,3 +85,31 @@
         line-height: 28px;
     }
 }
+
+@mixin memberStatHeader {
+    padding: $sp-4;
+    background-color: $black-5;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    border-radius: 4px;
+
+    @include ltesm {
+        justify-content: flex-start;
+        gap: $sp-2;
+    }
+}
+
+@mixin memberStatValue {
+    font-family: $font-barlow-condensed;
+    font-weight: $font-weight-medium;
+    font-size: 44px;
+    line-height: 44px;
+    color: $teal-120;
+    margin-right: $sp-2;
+
+    @include ltesm {
+        font-size: 27px;
+        line-height: 28px;
+    }
+}

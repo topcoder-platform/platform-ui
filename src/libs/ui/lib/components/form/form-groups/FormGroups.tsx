@@ -11,6 +11,7 @@ import { FormInputRow } from './form-input-row'
 import { InputTextTypes } from './form-input/input-text/InputText'
 import FormGroupItem from './form-group-item/FormGroupItem'
 import FormRadio from './form-radio'
+import FormToggleSwitch from './form-toggle-switch'
 import styles from './FormGroups.module.scss'
 
 interface FormGroupsProps {
@@ -92,6 +93,15 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                         {...input}
                         onChange={props.onChange}
                         value={input.value}
+                    />
+                )
+                break
+            case 'toggle':
+                inputElement = (
+                    <FormToggleSwitch
+                        {...input}
+                        onChange={props.onChange}
+                        value={!!input.value}
                     />
                 )
                 break

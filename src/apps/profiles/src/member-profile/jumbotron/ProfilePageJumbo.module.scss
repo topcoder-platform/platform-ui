@@ -1,0 +1,56 @@
+@import "@libs/ui/styles/includes";
+
+.container {
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(263.22deg, #038664 2.65%, #075F96 98.14%), #FFFFFF;
+    background-repeat: no-repeat;
+    background-position: 50%;
+    width: 100%;
+    margin: 0 auto;
+    height: 115px;
+    position: relative;
+
+    &::before {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        background: url(https://d1aahxkjiobka8.cloudfront.net/static-assets/images/22a92c0ddfaef36188adf669e8e8aff7.png);
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+
+        @include ltelg {
+            height: 30px;
+        }
+    }
+
+    .contentWrap {
+        .outerContentWrap {
+            position: relative;
+            padding-top: $sp-6;
+
+            .innerContentWrap {
+                flex-direction: row;
+
+                .profilePhoto {
+                    width: 120px;
+                    height: 120px;
+                    border: 3px solid #fff;
+                    border-radius: 50%;
+                    margin-right: $sp-6;
+                }
+
+                .handle {
+                    font-weight: 500;
+                    color: #fff;
+                    font-size: 32px;
+                    line-height: 32px;
+                    margin-bottom: $sp-3;
+                }
+            }
+        }
+    }
+}

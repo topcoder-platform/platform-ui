@@ -39,4 +39,5 @@ export interface GlobalConfig {
         V2_URL: string
     },
     SUBDOMAIN: string,
+    GAMIFICATION_ORG_ID: string
 }

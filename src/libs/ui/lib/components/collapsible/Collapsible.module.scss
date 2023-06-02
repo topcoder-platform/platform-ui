@@ -1,0 +1,39 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    background-color: $tc-white;
+    padding: $sp-4 $sp-8;
+    border-radius: 8px;
+
+    @include ltelg {
+        padding: $sp-4;
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+
+        .btn {
+            padding-right: 0;
+        }
+    }
+
+    .content {
+        transition: all 0.3s ease-in-out;
+        max-height: auto;
+        margin: $sp-4 0;
+        opacity: 1;
+
+        &.collapsed {
+            max-height: 0;
+            overflow: hidden;
+            padding: 0;
+            margin-top: 0;
+            opacity: 0;
+        }
+    }
+}

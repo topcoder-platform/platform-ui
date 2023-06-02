@@ -1,6 +1,9 @@
+export type TC_TRACKS = 'DEVELOP' | 'DESIGN' | 'DATA_SCIENCE'
+
 export interface UserProfile {
     competitionCountryCode: string
     createdAt: number
+    description: string
     diceEnabled: boolean
     email: string
     firstName: string
@@ -14,6 +17,7 @@ export interface UserProfile {
     photoURL?: string
     roles: Array<string>
     status: string
+    tracks?: Array<TC_TRACKS>
     updatedAt: number
     userId: number
 }
