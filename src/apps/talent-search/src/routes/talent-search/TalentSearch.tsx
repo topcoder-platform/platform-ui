@@ -30,6 +30,9 @@ export const TalentSearch: FC = () => {
                 <AsyncSelect
                     isMulti
                     cacheOptions
+                    autoFocus
+                    defaultOptions
+                    placeholder='Start typing to autocomplete available EMSI skills'
                     loadOptions={MatcherService.autoCompleteSkills}
                     name='skills'
                     className='basic-multi-select'
