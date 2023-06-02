@@ -31,7 +31,7 @@ const MemberHandleRenderer: (member:Member) => JSX.Element
                 <span className={styles.memberWins}>{winsText}</span>
             </div>
             <div className={styles.memberAccountAge}>
-                Member since
+                Member since&nbsp;
                 {moment(member.createdAt)
                     .format('MMM YYYY')}
             </div>
