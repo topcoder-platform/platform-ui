@@ -1,6 +1,6 @@
-import MemberEmsiSkill from './MemberEmsiSkill';
-import MemberMaxRating from './MemberMaxRating';
-import MemberStats from './MemberStats';
+import MemberEmsiSkill from './MemberEmsiSkill'
+import MemberMaxRating from './MemberMaxRating'
+import MemberStats from './MemberStats'
 
 export default interface Member {
     userId: number;
@@ -15,8 +15,6 @@ export default interface Member {
     emsiSkills: Array<MemberEmsiSkill>;
     stats:Array<MemberStats>;
     country:string;
-    photoURL:string;   
+    photoURL:string;
     createdAt:number;
 }
-
-  

@@ -17,7 +17,7 @@ export enum ToolTitle {
     profiles = 'Profiles',
     tcAcademy = 'Topcoder Academy',
     selfService = 'Self Service Challenges',
-    talentSearch = "Talent Search"
+    talentSearch = 'Talent Search'
 }
 
 export const PageSubheaderPortalId: string = 'page-subheader-portal-el'

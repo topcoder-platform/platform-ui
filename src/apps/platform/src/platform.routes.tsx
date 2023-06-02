@@ -30,5 +30,5 @@ export const platformRoutes: Array<PlatformRoute> = [
     ...talentSearchRoutes,
     ...profilesRoutes,
     ...accountsRoutes,
-    ...homeRoutes
+    ...homeRoutes,
 ]

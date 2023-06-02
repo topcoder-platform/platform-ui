@@ -1,13 +1,11 @@
 /* eslint-disable max-len */
-import React, { useLayoutEffect } from "react";
-import { Provider } from "react-redux";
-
-const TalentSearchAppRoot: LazyLoadedComponent = lazyLoad(() => import('./TalentSearchApp'));
-const TalentSearch: LazyLoadedComponent = lazyLoad(() => import('./routes/talent-search/TalentSearch'));
-
-import "./styles/main.vendor.scss";
 import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
 import { lazyLoad, LazyLoadedComponent, PlatformRoute, UserRole } from '~/libs/core'
+
+import './styles/main.vendor.scss'
+
+const TalentSearchAppRoot: LazyLoadedComponent = lazyLoad(() => import('./TalentSearchApp'))
+const TalentSearch: LazyLoadedComponent = lazyLoad(() => import('./routes/talent-search/TalentSearch'))
 
 export const rootRoute: string = (
     EnvironmentConfig.SUBDOMAIN === AppSubdomain.talentSearch ? '' : `/${AppSubdomain.talentSearch}`
@@ -22,13 +20,13 @@ export const talentSearchRoutes: ReadonlyArray<PlatformRoute> = [
             {
                 element: <TalentSearch />,
                 route: '/',
-            }, 
+            },
         ],
         domain: AppSubdomain.talentSearch,
         element: <TalentSearchAppRoot />,
         id: toolTitle,
         rolesRequired: [
-            UserRole.administrator
+            UserRole.administrator,
         ],
         route: rootRoute,
     },

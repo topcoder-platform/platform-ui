@@ -4,5 +4,3 @@ export default interface MemberMaxRating {
     subTrack:string;
     ratingColor:string;
 }
-
-  

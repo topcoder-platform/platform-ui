@@ -5,5 +5,3 @@ export default interface MemberStats {
     mostRecentEventName:string;
     mostRecentSubmission:number;
 }
-
-  

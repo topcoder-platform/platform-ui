@@ -1,1 +1,1 @@
-export { talentSearchRoutes } from "./talent-search.routes"
+export { talentSearchRoutes } from './talent-search.routes'
