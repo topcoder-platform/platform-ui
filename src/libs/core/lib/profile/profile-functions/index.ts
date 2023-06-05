@@ -8,6 +8,7 @@ export {
     editNameAsync as profileEditNameAsync,
     updatePrimaryMemberRoleAsync,
     updateMemberEmailPreferencesAsync,
+    updateMemberMFAStatusAsync,
 } from './profile.functions'
 export * from './profile-store'
 export * from './rating.functions'

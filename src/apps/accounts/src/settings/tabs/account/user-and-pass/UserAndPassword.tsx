@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { Dispatch, FC, useCallback, useState } from 'react'
 
 import { Collapsible, Form, FormInputModel, FormToggleSwitch } from '~/libs/ui'
@@ -36,6 +37,8 @@ const UserAndPassword: FC<UserAndPasswordProps> = (props: UserAndPasswordProps) 
 
     function shouldDisableChangePasswordButton(): boolean {
         // pass reset form validation
+        console.log('formValues', formValues)
+
         return true
     }
 

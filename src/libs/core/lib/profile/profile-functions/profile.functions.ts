@@ -2,6 +2,7 @@ import { tokenGetAsync, TokenModel, userGetDiceStatusAsync } from '../../auth'
 import { CountryLookup } from '../country-lookup.model'
 import { EditNameRequest } from '../edit-name-request.model'
 import { ModifyMemberEmailPreferencesRequest } from '../modify-user-email-preferences.model'
+import { ModifyUserMFARequest, ModifyUserMFAResponse } from '../modify-user-mfa.model'
 import { ModifyUserRoleResponse } from '../modify-user-role.model'
 import { UserEmailPreferences } from '../user-email-preference.model'
 import { UserProfile } from '../user-profile.model'
@@ -13,6 +14,7 @@ import { getMemberStats, getVerification, profileStoreGet, profileStorePatchName
 import {
     getCountryLookup,
     updateMemberEmailPreferences,
+    updateMemberMFA,
     updatePrimaryMemberRole,
 } from './profile-store/profile-xhr.store'
 
@@ -80,4 +82,11 @@ export async function updateMemberEmailPreferencesAsync(
     emailPreferences: ModifyMemberEmailPreferencesRequest,
 ): Promise<UserEmailPreferences> {
     return updateMemberEmailPreferences(email, emailPreferences)
+}
+
+export async function updateMemberMFAStatusAsync(
+    userId: number,
+    payload: ModifyUserMFARequest,
+): Promise<ModifyUserMFAResponse> {
+    return updateMemberMFA(userId, payload)
 }

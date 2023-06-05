@@ -19,7 +19,7 @@ const AccountTab: FC<AccountTabProps> = (props: AccountTabProps) => (
 
         <UserAndPassword profile={props.profile} />
 
-        <SecuritySection />
+        <SecuritySection profile={props.profile} />
     </div>
 )
 
