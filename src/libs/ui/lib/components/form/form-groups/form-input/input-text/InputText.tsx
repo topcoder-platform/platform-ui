@@ -1,9 +1,10 @@
 import { FC, FocusEvent } from 'react'
 import cn from 'classnames'
 
-import { InputValue } from '../../../form-input.model'
+import { FormInputTooltipOptions, InputValue } from '../../../form-input.model'
 import { FormInputAutocompleteOption } from '../form-input-autcomplete-option.enum'
 import { InputWrapper } from '../input-wrapper'
+import { Tooltip } from '../../../../tooltip'
 
 import styles from './InputText.module.scss'
 
@@ -26,6 +27,7 @@ export interface InputTextProps {
     readonly readonly?: boolean
     readonly spellCheck?: boolean
     readonly tabIndex: number
+    readonly tooltip?: FormInputTooltipOptions
     readonly type: InputTextTypes
     readonly value?: InputValue
 }
@@ -36,6 +38,24 @@ const InputText: FC<InputTextProps> = (props: InputTextProps) => {
         ? 'on'
         : props.value as string | number | undefined
 
+    const renderInput: () => JSX.Element = () => (
+        <input
+            autoComplete={props.autocomplete}
+            checked={defaultValue === 'on'}
+            className={cn(styles['form-input-text'], styles[props.type])}
+            defaultValue={defaultValue}
+            disabled={!!props.disabled}
+            onBlur={props.onBlur}
+            onChange={props.onChange}
+            name={props.name}
+            placeholder={props.placeholder}
+            readOnly={props.readonly}
+            spellCheck={!!props.spellCheck}
+            tabIndex={props.tabIndex}
+            type={props.type || 'text'}
+        />
+    )
+
     return (
         <InputWrapper
             {...props}
@@ -44,21 +64,13 @@ const InputText: FC<InputTextProps> = (props: InputTextProps) => {
             label={props.label || props.name}
             hideInlineErrors={props.hideInlineErrors}
         >
-            <input
-                autoComplete={props.autocomplete}
-                checked={defaultValue === 'on'}
-                className={cn(styles['form-input-text'], styles[props.type])}
-                defaultValue={defaultValue}
-                disabled={!!props.disabled}
-                onBlur={props.onBlur}
-                onChange={props.onChange}
-                name={props.name}
-                placeholder={props.placeholder}
-                readOnly={props.readonly}
-                spellCheck={!!props.spellCheck}
-                tabIndex={props.tabIndex}
-                type={props.type || 'text'}
-            />
+            {
+                props.tooltip ? (
+                    <Tooltip {...props.tooltip}>{renderInput()}</Tooltip>
+                ) : (
+                    renderInput()
+                )
+            }
         </InputWrapper>
     )
 }

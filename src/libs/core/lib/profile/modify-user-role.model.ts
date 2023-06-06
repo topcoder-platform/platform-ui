@@ -1,13 +1,17 @@
-export interface ModifyUserRoleRequest {
+export interface ModifyUserPropertyRequest {
     param: {
-        primaryRole: string
+        primaryRole?: string
+        credential?: {
+            currentPassword: string
+            password: string
+        }
     }
 }
 
-export interface ModifyUserRoleResponse {
+export interface ModifyUserPropertyResponse {
     id: string
     result: {
-        content: string
+        content: string | any
         success: boolean
     }
 }

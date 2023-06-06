@@ -64,3 +64,9 @@ export const PRIVACY_POLICY_URL = `${TOPCODER_URL}/policy`
 export const SUBDOMAIN = window.location.hostname.split('.')[0]
 
 export const GAMIFICATION_ORG_ID = getReactEnv<string>('GAMIFICATION_ORG_ID', undefined)
+
+export const DICE_VERIFY_URL = get({
+    dev: 'https://accounts-auth0.topcoder-dev.com',
+    prod: 'https://accounts-auth0.topcoder.com',
+    qa: 'https://accounts-auth0.topcoder-qa.com',
+}, ENV, 'https://accounts-auth0.topcoder.com')

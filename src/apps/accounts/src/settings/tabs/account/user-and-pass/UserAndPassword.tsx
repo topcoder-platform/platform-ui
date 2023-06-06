@@ -1,7 +1,14 @@
-import { Dispatch, FC, useCallback, useState } from 'react'
+import { Dispatch, FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { has, trim } from 'lodash'
+import { toast } from 'react-toastify'
 
-import { Collapsible, Form, FormInputModel, FormToggleSwitch } from '~/libs/ui'
-import { UserProfile } from '~/libs/core'
+import {
+    Collapsible,
+    Form,
+    FormInputModel,
+    FormToggleSwitch,
+} from '~/libs/ui'
+import { updateMemberPasswordAsync, updateMemberTraitsAsync, UserProfile, UserTrait, UserTraits } from '~/libs/core'
 import { SettingSection } from '~/apps/accounts/src/lib'
 
 import { UserAndPassFromConfig } from './user-and-pass.form.config'
@@ -9,6 +16,7 @@ import styles from './UserAndPassword.module.scss'
 
 interface UserAndPasswordProps {
     profile: UserProfile
+    memberTraits: UserTraits[] | undefined
 }
 
 const UserAndPassword: FC<UserAndPasswordProps> = (props: UserAndPasswordProps) => {
@@ -17,30 +25,82 @@ const UserAndPassword: FC<UserAndPasswordProps> = (props: UserAndPasswordProps) 
         handle: props.profile.handle,
     })
 
+    const personalizationTrait: UserTraits | undefined = useMemo(
+        () => props.memberTraits?.find((trait: UserTraits) => trait.traitId === 'personalization'),
+        [props.memberTraits],
+    )
+
     const [userConsent, setUserConsent]: [boolean, Dispatch<boolean>] = useState(false)
 
     const requestGenerator: (inputs: ReadonlyArray<FormInputModel>) => any
         = useCallback((inputs: ReadonlyArray<FormInputModel>) => {
-            console.log('inputs', inputs)
-            return {}
-        }, [])
+            const currentPassword: any = inputs[2]
+            const newPassword: any = inputs[3]
 
-    async function onSave(val: any): Promise<void> {
-        console.log('onSave', val)
+            return {
+                currentPassword: currentPassword.value,
+                newPassword: newPassword.value,
+                userId: props.profile.userId,
+            }
+        }, [props.profile.userId])
+
+    useEffect(() => {
+        if (personalizationTrait) {
+            setUserConsent(
+                !!personalizationTrait?.traits.data.find(
+                    (trait: UserTrait) => has(trait, 'userConsent') && trait.userConsent === true,
+                ),
+            )
+        }
+    }, [personalizationTrait])
+
+    async function onSave(request: any): Promise<void> {
+        await updateMemberPasswordAsync(request.userId, request.currentPassword, request.newPassword)
     }
 
-    function handleUserConsentChange(event: any): void {
-        console.log('handleUserConsentChange', event)
-        setUserConsent(!userConsent)
+    function handleUserConsentChange(): void {
+        updateMemberTraitsAsync(props.profile.handle, [{
+            categoryName: 'Personalization',
+            traitId: 'personalization',
+            traits: {
+                data: [{
+                    userConsent: !userConsent,
+                }],
+            },
+        }])
+            .then(() => {
+                setUserConsent(!userConsent)
+                toast.success('User consent updated successfully.')
+            })
+            .catch(() => {
+                toast.error('Failed to update user consent.')
+            })
     }
 
     function shouldDisableChangePasswordButton(): boolean {
         // pass reset form validation
+        const specialChars: any = /[`!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~]/
+        const currentPassword: any = formValues[2]
+        const newPassword: any = formValues[3]
+        const reTypeNewPassword: any = formValues[4]
+
+        if (
+            trim(currentPassword?.value)
+            && trim(newPassword?.value)
+            && newPassword.value?.length >= 8
+            && (
+                /\d/.test(newPassword?.value) || specialChars.test(newPassword?.value)
+            )
+            && newPassword?.value !== currentPassword?.value
+            && trim(reTypeNewPassword?.value)
+            && newPassword?.value === reTypeNewPassword?.value) {
+            return false
+        }
+
         return true
     }
 
     function setChangePasswordFormValues(val: any): void {
-        console.log('setChangePasswordFormValues', val)
         setFormValues({
             ...formValues,
             ...val,

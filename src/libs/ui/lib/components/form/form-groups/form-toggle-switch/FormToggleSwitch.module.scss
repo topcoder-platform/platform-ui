@@ -80,7 +80,7 @@
 
     &.disabled {
         .label {
-            background-color: $black-20;
+            background-color: $black-20 !important;
         }
     }
 }

@@ -1,17 +1,20 @@
-import { xhrGetAsync, xhrPostAsync, xhrPutAsync } from '../../../xhr'
+import { xhrGetAsync, xhrPatchAsync, xhrPostAsync, xhrPutAsync } from '../../../xhr'
 import { CountryLookup } from '../../country-lookup.model'
 import { EditNameRequest } from '../../edit-name-request.model'
 import { ModifyMemberEmailPreferencesRequest } from '../../modify-user-email-preferences.model'
-import { ModifyUserRoleRequest, ModifyUserRoleResponse } from '../../modify-user-role.model'
+import { ModifyUserMFARequest, ModifyUserMFAResponse } from '../../modify-user-mfa.model'
+import { ModifyUserPropertyRequest, ModifyUserPropertyResponse } from '../../modify-user-role.model'
 import { UserEmailPreferences } from '../../user-email-preference.model'
 import { UserProfile } from '../../user-profile.model'
 import { UserStats } from '../../user-stats.model'
+import { UserTraits } from '../../user-traits.model'
 import { UserVerify } from '../../user-verify.model'
 
 import {
     countryLookupURL,
     memberEmailPreferencesURL,
-    memberModifyRoleURL,
+    memberModifyMfaURL,
+    memberModifyURL,
     profile as profileUrl,
     verify as verifyUrl,
 } from './profile-endpoint.config'
@@ -41,9 +44,9 @@ export function getCountryLookup(): Promise<CountryLookup[]> {
         .then((countryLookup: any) => countryLookup.result?.content || [])
 }
 
-export async function updatePrimaryMemberRole(primaryRole: string): Promise<ModifyUserRoleResponse> {
-    return xhrPostAsync<ModifyUserRoleRequest, ModifyUserRoleResponse>(
-        memberModifyRoleURL(),
+export async function updatePrimaryMemberRole(primaryRole: string): Promise<ModifyUserPropertyResponse> {
+    return xhrPostAsync<ModifyUserPropertyRequest, ModifyUserPropertyResponse>(
+        `${memberModifyURL()}/updatePrimaryRole`,
         { param: { primaryRole } },
     )
 }
@@ -56,4 +59,29 @@ export async function updateMemberEmailPreferences(
         `${memberEmailPreferencesURL()}/${email}`,
         request,
     )
+}
+
+export async function updateMemberMFA(userId: number, payload: ModifyUserMFARequest): Promise<ModifyUserMFAResponse> {
+    return xhrPatchAsync<ModifyUserMFARequest, ModifyUserMFAResponse>(
+        memberModifyMfaURL(userId),
+        payload,
+    )
+}
+
+export async function updateMemberPassword(
+    userId: number,
+    currentPassword: string,
+    newPassword: string,
+): Promise<ModifyUserPropertyResponse> {
+    return xhrPatchAsync(
+        `${memberModifyURL()}/${userId}`,
+        { param: { credential: { currentPassword, password: newPassword } } },
+    )
+}
+
+export async function updateMemberTraits(
+    handle: string,
+    traits: UserTraits[],
+): Promise<UserTraits[]> {
+    return xhrPutAsync<UserTraits[], UserTraits[]>(`${profileUrl(handle)}/traits`, traits)
 }
