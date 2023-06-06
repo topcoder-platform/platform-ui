@@ -1,18 +1,43 @@
-import { Dispatch, FC, SetStateAction, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
 
 import { Button, Collapsible, FormToggleSwitch } from '~/libs/ui'
 import { diceIdLogo, MFAImage, SettingSection } from '~/apps/accounts/src/lib'
+import { MemberMFAStatus, updateMemberMFAStatusAsync, useMemberMFAStatus, UserProfile } from '~/libs/core'
 
 import { DiceSetupModal } from './dice-setup-modal'
 import styles from './Security.module.scss'
 
-const Security: FC<{}> = () => {
-    const [mfaStatus, setMFAStatus]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
+interface SecurityProps {
+    profile: UserProfile
+}
+
+const Security: FC<SecurityProps> = (props: SecurityProps) => {
     const [setupDiceModalOpen, setSetupDiceModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
 
-    function handleUserMFAChange(event: any): void {
-        console.log('handleUserMFAChange', event)
-        setMFAStatus(!mfaStatus)
+    const mfaStatusData: MemberMFAStatus | undefined = useMemberMFAStatus(props.profile.userId)
+
+    const [mfaEnabled, setMFAEnabled]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
+
+    useEffect(() => {
+        if (mfaStatusData) {
+            setMFAEnabled(mfaStatusData.mfaEnabled)
+        }
+    }, [mfaStatusData])
+
+    function handleUserMFAChange(): void {
+        updateMemberMFAStatusAsync(props.profile.userId, {
+            param: {
+                mfaEnabled: !mfaEnabled,
+            },
+        })
+            .then(() => {
+                setMFAEnabled(!mfaEnabled)
+                toast.success('Your Multi Factor Authentication (MFA) status was updated.')
+            })
+            .catch(() => {
+                toast.error('Something went wrong. Please try again later.')
+            })
     }
 
     function handleDiceModalStatus(): void {
@@ -38,7 +63,8 @@ const Security: FC<{}> = () => {
                     <FormToggleSwitch
                         name='mfaStatus'
                         onChange={handleUserMFAChange}
-                        value={mfaStatus}
+                        value={mfaEnabled}
+                        disabled={mfaStatusData?.diceEnabled}
                     />
                 )}
             />
@@ -58,6 +84,7 @@ const Security: FC<{}> = () => {
                         size='lg'
                         className={styles.diceIdButton}
                         onClick={handleDiceModalStatus}
+                        disabled={!mfaEnabled || mfaStatusData?.diceEnabled}
                     />
                 )}
             />
@@ -65,6 +92,7 @@ const Security: FC<{}> = () => {
             {setupDiceModalOpen && (
                 <DiceSetupModal
                     onClose={handleDiceModalStatus}
+                    profile={props.profile}
                 />
             )}
         </Collapsible>

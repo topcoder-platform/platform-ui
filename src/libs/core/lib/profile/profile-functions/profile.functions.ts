@@ -2,10 +2,12 @@ import { tokenGetAsync, TokenModel, userGetDiceStatusAsync } from '../../auth'
 import { CountryLookup } from '../country-lookup.model'
 import { EditNameRequest } from '../edit-name-request.model'
 import { ModifyMemberEmailPreferencesRequest } from '../modify-user-email-preferences.model'
-import { ModifyUserRoleResponse } from '../modify-user-role.model'
+import { ModifyUserMFARequest, ModifyUserMFAResponse } from '../modify-user-mfa.model'
+import { ModifyUserPropertyResponse } from '../modify-user-role.model'
 import { UserEmailPreferences } from '../user-email-preference.model'
 import { UserProfile } from '../user-profile.model'
 import { UserStats } from '../user-stats.model'
+import { UserTraits } from '../user-traits.model'
 import { UserVerify } from '../user-verify.model'
 
 import { profileFactoryCreate } from './profile-factory'
@@ -13,6 +15,9 @@ import { getMemberStats, getVerification, profileStoreGet, profileStorePatchName
 import {
     getCountryLookup,
     updateMemberEmailPreferences,
+    updateMemberMFA,
+    updateMemberPassword,
+    updateMemberTraits,
     updatePrimaryMemberRole,
 } from './profile-store/profile-xhr.store'
 
@@ -84,7 +89,7 @@ export async function getCountryLookupAsync(): Promise<CountryLookup[]> {
     return getCountryLookup()
 }
 
-export async function updatePrimaryMemberRoleAsync(primaryRole: string): Promise<ModifyUserRoleResponse> {
+export async function updatePrimaryMemberRoleAsync(primaryRole: string): Promise<ModifyUserPropertyResponse> {
     return updatePrimaryMemberRole(primaryRole)
 }
 
@@ -93,4 +98,26 @@ export async function updateMemberEmailPreferencesAsync(
     emailPreferences: ModifyMemberEmailPreferencesRequest,
 ): Promise<UserEmailPreferences> {
     return updateMemberEmailPreferences(email, emailPreferences)
+}
+
+export async function updateMemberMFAStatusAsync(
+    userId: number,
+    payload: ModifyUserMFARequest,
+): Promise<ModifyUserMFAResponse> {
+    return updateMemberMFA(userId, payload)
+}
+
+export async function updateMemberPasswordAsync(
+    userId: number,
+    currentPassword: string,
+    newPassword: string,
+): Promise<ModifyUserPropertyResponse> {
+    return updateMemberPassword(userId, currentPassword, newPassword)
+}
+
+export async function updateMemberTraitsAsync(
+    handle: string,
+    traits: UserTraits[],
+): Promise<UserTraits[]> {
+    return updateMemberTraits(handle, traits)
 }

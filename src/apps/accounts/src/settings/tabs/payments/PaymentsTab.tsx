@@ -35,6 +35,9 @@ const PaymentsTab: FC<PaymentsTabProps> = (props: PaymentsTabProps) => {
     const [hasEmailedSupport, setHasEmailedSupport]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
+    const [wantsToChangePreviousSelection, setWantsToChangePreviousSelection]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
     const [paymentService, setPaymentService]: [string | undefined, Dispatch<SetStateAction<string | undefined>>] = useState(
         localStorage.getItem(`${props.profile.handle}_${PAYMENT_PROVIDER_KEY}`) || undefined,
     )
@@ -68,7 +71,12 @@ const PaymentsTab: FC<PaymentsTabProps> = (props: PaymentsTabProps) => {
         }
     }
 
-    function handleSelectedProviderReset(): void {
+    function handleSelectedProviderChange(): void {
+        setWantsToChangePreviousSelection(true)
+    }
+
+    function handleSelectionReset(): void {
+        setWantsToChangePreviousSelection(false)
         localStorage.removeItem(`${props.profile.handle}_${PAYMENT_PROVIDER_KEY}`)
         setPaymentService(undefined)
     }
@@ -108,7 +116,7 @@ const PaymentsTab: FC<PaymentsTabProps> = (props: PaymentsTabProps) => {
                     </p>
 
                     {
-                        paymentService ? (
+                        paymentService && !wantsToChangePreviousSelection ? (
                             <SettingSection
                                 leftElement={(
                                     <div className={styles.providerSubmittedIcon}>
@@ -123,11 +131,37 @@ const PaymentsTab: FC<PaymentsTabProps> = (props: PaymentsTabProps) => {
                                         secondary
                                         size='lg'
                                         label='Change Provider'
-                                        onClick={handleSelectedProviderReset}
+                                        onClick={handleSelectedProviderChange}
                                     />
                                 )}
                             />
-                        ) : (
+                        ) : undefined
+                    }
+
+                    {
+                        paymentService && wantsToChangePreviousSelection ? (
+                            <div className={styles.confirmSelectionReset}>
+                                <p>
+                                    <strong className='body-main-bold'>
+                                        Your currently selected payment provider is:
+                                        {' '}
+                                        {paymentService}
+                                    </strong>
+                                    <br />
+                                    <strong className='body-main-bold'>Note: </strong>
+                                    You have chosen to change your selected payment provider. This change may take up to 48 hours to be reflected in your account.
+                                </p>
+                                <Button
+                                    secondary
+                                    label='Cancel Change'
+                                    onClick={handleSelectionReset}
+                                />
+                            </div>
+                        ) : undefined
+                    }
+
+                    {
+                        !paymentService || wantsToChangePreviousSelection ? (
                             <>
                                 <div className={styles.providers}>
                                     <div className={styles.providerCard}>
@@ -214,7 +248,7 @@ const PaymentsTab: FC<PaymentsTabProps> = (props: PaymentsTabProps) => {
                                     prior to making a payment provider decision.
                                 </p>
                             </>
-                        )
+                        ) : undefined
                     }
                 </Collapsible>
             </div>

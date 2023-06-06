@@ -1,0 +1,30 @@
+@import '@libs/ui/styles/includes';
+
+.diceModal {
+    :global(.react-responsive-modal-closeButton) {
+        display: flex;
+    }
+
+    .appSoresWrap {
+        display: flex;
+        justify-content: space-evenly;
+        margin: $sp-4 0;
+
+        .appStoreCard {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+
+    .qrCode {
+        margin: auto;
+    }
+
+    .ctaButtons {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        flex: 1;
+    }
+}
