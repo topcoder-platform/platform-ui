@@ -20,7 +20,7 @@ const MemberHandleRenderer: (member:Member) => JSX.Element
     return (
         <section className={styles.memberCell}>
             <div className={styles.memberImage}>
-                <img alt='Avatar' src={member.photoURL} className={styles.avatar} />
+                <a onClick={handleOpenLink}><img alt='Avatar' src={member.photoURL} className={styles.avatar} /></a>
             </div>
             <div className={styles.memberHandle}>
                 <a onClick={handleOpenLink}>{member.handle}</a>
