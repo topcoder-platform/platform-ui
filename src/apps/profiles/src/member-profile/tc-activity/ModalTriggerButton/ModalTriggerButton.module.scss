@@ -4,4 +4,9 @@
     border: 1px solid $black-10;
     padding: $sp-1 $sp-4 !important;
     margin-left: $sp-2;
+
+    svg {
+        width: 24px;
+        height: 24px;
+    }
 }

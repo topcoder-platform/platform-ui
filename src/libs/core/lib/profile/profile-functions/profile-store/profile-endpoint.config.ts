@@ -26,8 +26,8 @@ export function memberStatsDistroURL(): string {
     return `${EnvironmentConfig.API.V3}/members/stats/distribution`
 }
 
-export function memberModifyRoleURL(): string {
-    return `${EnvironmentConfig.API.V3}/users/updatePrimaryRole`
+export function memberModifyURL(): string {
+    return `${EnvironmentConfig.API.V3}/users`
 }
 
 export function memberEmailPreferencesURL(): string {

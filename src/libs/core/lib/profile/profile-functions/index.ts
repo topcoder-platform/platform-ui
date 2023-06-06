@@ -9,6 +9,8 @@ export {
     updatePrimaryMemberRoleAsync,
     updateMemberEmailPreferencesAsync,
     updateMemberMFAStatusAsync,
+    updateMemberPasswordAsync,
+    updateMemberTraitsAsync,
 } from './profile.functions'
 export * from './profile-store'
 export * from './rating.functions'

@@ -1,7 +1,7 @@
 import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 
-import { UserProfile } from '~/libs/core'
+import { useMemberTraits, UserProfile, UserTraits } from '~/libs/core'
 import { TabsNavbar } from '~/libs/ui'
 
 import { AccountSettingsTabsConfig, AccountSettingsTabViews, getHashFromTabId, getTabIdFromHash } from './config'
@@ -22,6 +22,8 @@ const AccountSettingsTabs: FC<AccountSettingsTabsProps> = (props: AccountSetting
     const [activeTab, setActiveTab]: [string, Dispatch<SetStateAction<string>>]
         = useState<string>(activeTabHash)
 
+    const memberTraits: UserTraits[] | undefined = useMemberTraits(props.profile.handle)
+
     function handleTabChange(tabId: string): void {
         setActiveTab(tabId)
         window.location.hash = getHashFromTabId(tabId)
@@ -36,7 +38,7 @@ const AccountSettingsTabs: FC<AccountSettingsTabsProps> = (props: AccountSetting
             />
 
             {activeTab === AccountSettingsTabViews.account && (
-                <AccountTab profile={props.profile} />
+                <AccountTab profile={props.profile} memberTraits={memberTraits} />
             )}
 
             {activeTab === AccountSettingsTabViews.preferences && (

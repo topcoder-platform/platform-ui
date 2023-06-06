@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { UserProfile } from '~/libs/core'
+import { UserProfile, UserTraits } from '~/libs/core'
 
 import { AccountRole } from './account-role'
 import { SecuritySection } from './security'
@@ -9,6 +9,7 @@ import styles from './AccountTab.module.scss'
 
 interface AccountTabProps {
     profile: UserProfile
+    memberTraits: UserTraits[] | undefined
 }
 
 const AccountTab: FC<AccountTabProps> = (props: AccountTabProps) => (
@@ -17,7 +18,7 @@ const AccountTab: FC<AccountTabProps> = (props: AccountTabProps) => (
 
         <AccountRole profile={props.profile} />
 
-        <UserAndPassword profile={props.profile} />
+        <UserAndPassword profile={props.profile} memberTraits={props.memberTraits} />
 
         <SecuritySection profile={props.profile} />
     </div>
