@@ -41,18 +41,19 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
     ])
 
     function handleSecondaryButtonClick(): void {
-        if (step === 1 || step === 4) {
-            props.onClose()
-        } else {
-            setStep(step - 1)
+        switch (step) {
+            case 2: return setStep(step - 1)
+            default: return props.onClose()
         }
     }
 
     function handlePrimaryButtonClick(): void {
-        if (step >= 3) {
-            props.onClose()
-        } else {
-            setStep(step + 1)
+        switch (step) {
+            case 1:
+            case 2:
+            case 3:
+                return setStep(step + 1)
+            default: return props.onClose()
         }
     }
 
@@ -240,6 +241,7 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
                         <img src={diceIdLogoBig} alt='DICE ID Logo' />
                         <p>
                             For more information on DICE ID, please visit
+                            {' '}
                             <a
                                 href='https://www.diceid.com/'
                                 target='_blank'

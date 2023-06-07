@@ -1,0 +1,60 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    margin: $sp-8 0;
+
+    .content {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 0;
+
+        .imageWrap {
+            padding: $sp-4;
+            background-color: $black-5;
+            border-radius: 4px;
+            margin-right: $sp-2;
+            align-self: flex-start;
+            width: 64px;
+            height: 64px;
+        }
+
+        .actionElements {
+            display: flex;
+            align-items: center;
+
+            :global(button) {
+                padding: $sp-2;
+
+                @include ltelg {
+                    padding: $sp-1;
+                }
+            }
+
+            svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+
+        .formWrap {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            margin: $sp-13 0 $sp-4;
+
+            .formCTAs {
+                display: flex;
+                align-items: center;
+
+                svg {
+                    width: 14px;
+                    height: 14px;
+                    margin-right: $sp-1;
+                }
+
+                .ctaBtnCancel {
+                    margin-left: $sp-8;
+                }
+            }
+        }
+    }
+}
