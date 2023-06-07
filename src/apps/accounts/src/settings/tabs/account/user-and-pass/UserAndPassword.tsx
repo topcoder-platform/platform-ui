@@ -123,6 +123,7 @@ const UserAndPassword: FC<UserAndPasswordProps> = (props: UserAndPasswordProps) 
                     action='submit'
                     formDef={UserAndPassFromConfig}
                     formValues={formValues}
+                    resetFormAfterSave
                     requestGenerator={requestGenerator}
                     save={onSave}
                     shouldDisableButton={shouldDisableChangePasswordButton}
