@@ -6,7 +6,7 @@ import styles from './SettingSection.module.scss'
 interface SettingSectionProps {
     containerClassName?: string
     readonly title: string
-    readonly infoText: string
+    readonly infoText?: string
     actionElement?: React.ReactNode
     leftElement?: React.ReactNode
 }

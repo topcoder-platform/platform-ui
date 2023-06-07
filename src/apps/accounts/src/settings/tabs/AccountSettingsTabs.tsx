@@ -2,12 +2,13 @@ import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 
 import { useMemberTraits, UserProfile, UserTraits } from '~/libs/core'
-import { TabsNavbar } from '~/libs/ui'
+import { PageTitle, TabsNavbar, TabsNavItem } from '~/libs/ui'
 
 import { AccountSettingsTabsConfig, AccountSettingsTabViews, getHashFromTabId, getTabIdFromHash } from './config'
 import { AccountTab } from './account'
 import { PreferencesTab } from './preferences'
 import { PaymentsTab } from './payments'
+import { ToolsTab } from './tools'
 import styles from './AccountSettingsTabs.module.scss'
 
 interface AccountSettingsTabsProps {
@@ -36,6 +37,17 @@ const AccountSettingsTabs: FC<AccountSettingsTabsProps> = (props: AccountSetting
                 onChange={handleTabChange}
                 tabs={AccountSettingsTabsConfig}
             />
+
+            <PageTitle>
+                {[
+                    AccountSettingsTabsConfig.find((tab: TabsNavItem) => tab.id === activeTab)?.title,
+                    'Account Settings',
+                    'Topcoder'].join(' | ')}
+            </PageTitle>
+
+            {activeTab === AccountSettingsTabViews.tools && (
+                <ToolsTab profile={props.profile} memberTraits={memberTraits} />
+            )}
 
             {activeTab === AccountSettingsTabViews.account && (
                 <AccountTab profile={props.profile} memberTraits={memberTraits} />

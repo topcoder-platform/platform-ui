@@ -1,12 +1,17 @@
 import { TabsNavItem } from '~/libs/ui'
 
 export enum AccountSettingsTabViews {
-    account = '0',
-    preferences = '1',
-    payment = '2',
+    tools = '0',
+    account = '1',
+    preferences = '2',
+    payment = '3',
 }
 
 export const AccountSettingsTabsConfig: TabsNavItem[] = [
+    {
+        id: AccountSettingsTabViews.tools,
+        title: 'Tools',
+    },
     {
         id: AccountSettingsTabViews.account,
         title: 'Account',
@@ -23,6 +28,7 @@ export const AccountSettingsTabsConfig: TabsNavItem[] = [
 
 export function getHashFromTabId(tabId: string): string {
     switch (tabId) {
+        case AccountSettingsTabViews.tools: return '#tools'
         case AccountSettingsTabViews.account: return '#account'
         case AccountSettingsTabViews.preferences: return '#preferences'
         case AccountSettingsTabViews.payment: return '#payment'
@@ -32,6 +38,7 @@ export function getHashFromTabId(tabId: string): string {
 
 export function getTabIdFromHash(hash: string): string {
     switch (hash) {
+        case '#tools': return AccountSettingsTabViews.tools
         case '#account': return AccountSettingsTabViews.account
         case '#preferences': return AccountSettingsTabViews.preferences
         case '#payment': return AccountSettingsTabViews.payment
