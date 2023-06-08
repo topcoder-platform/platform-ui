@@ -73,6 +73,7 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
     function resetForm(): void {
         setSelectedSubscriptionName(undefined)
         formElRef.current.reset()
+        setIsEditMode(false)
     }
 
     function handleFormAction(): void {
@@ -174,6 +175,8 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
         const updatedSubscriptionsTypesData: UserTrait[] = reject(subscriptionsTypesData, (trait: UserTrait) => (
             trait.name === itemToRemove?.name
         )) || []
+
+        resetForm()
 
         updateMemberTraitsAsync(
             props.profile.handle,

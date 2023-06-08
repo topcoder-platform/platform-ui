@@ -93,6 +93,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
         setSelectedServiceProviderType(undefined)
         setSelectedServiceProviderName(undefined)
         formElRef.current.reset()
+        setIsEditMode(false)
     }
 
     function handleFormAction(): void {
@@ -201,6 +202,8 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
             trait.name === itemToRemove?.name && trait.serviceProviderType === itemToRemove?.serviceProviderType
         )) || []
 
+        resetForm()
+
         updateMemberTraitsAsync(
             props.profile.handle,
             [{
@@ -301,6 +304,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                         label='Service Provider Type *'
                         error={formErrors.serviceProviderType}
                         dirty
+                        placeholder='Select a Service Provider Type'
                     />
                     <InputText
                         name='serviceProviderName'

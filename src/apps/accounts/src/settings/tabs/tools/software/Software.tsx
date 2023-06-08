@@ -86,6 +86,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
         setSelectedSoftwareType(undefined)
         setSelectedSoftwareName(undefined)
         formElRef.current.reset()
+        setIsEditMode(false)
     }
 
     function handleFormAction(): void {
@@ -189,6 +190,8 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
         const updatedSoftwareTypesData: UserTrait[] = reject(softwareTypesData, (trait: UserTrait) => (
             trait.name === itemToRemove?.name && trait.softwareType === itemToRemove?.softwareType
         )) || []
+
+        resetForm()
 
         updateMemberTraitsAsync(
             props.profile.handle,
