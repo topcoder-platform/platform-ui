@@ -1,8 +1,9 @@
 import { Dispatch, FC, MutableRefObject, SetStateAction, useEffect, useRef, useState } from 'react'
 import { bind, isEmpty, reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
+import classNames from 'classnames'
 
-import { updateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
+import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputSelect, InputText } from '~/libs/ui'
 import { SettingSection, SoftwareIcon } from '~/apps/accounts/src/lib'
 
@@ -12,6 +13,11 @@ import styles from './Software.module.scss'
 interface SoftwareProps {
     softwareTrait: UserTrait | undefined
     profile: UserProfile
+}
+
+const methodsMap: { [key: string]: any } = {
+    create: createMemberTraitsAsync,
+    update: updateMemberTraitsAsync,
 }
 
 const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
@@ -85,6 +91,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
         setSelectedSoftwareType(undefined)
         setSelectedSoftwareName(undefined)
         formElRef.current.reset()
+        setIsEditMode(false)
     }
 
     function handleFormAction(): void {
@@ -146,7 +153,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                         setIsEditMode(false)
                     })
             } else {
-                updateMemberTraitsAsync(
+                methodsMap[!softwareTypesData || !softwareTypesData.length ? 'create' : 'update'](
                     props.profile.handle,
                     [{
                         categoryName: 'Software',
@@ -188,6 +195,8 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
         const updatedSoftwareTypesData: UserTrait[] = reject(softwareTypesData, (trait: UserTrait) => (
             trait.name === itemToRemove?.name && trait.softwareType === itemToRemove?.softwareType
         )) || []
+
+        resetForm()
 
         updateMemberTraitsAsync(
             props.profile.handle,
@@ -267,7 +276,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
 
             <form
                 ref={formElRef}
-                className={styles.formWrap}
+                className={classNames(styles.formWrap, !softwareTypesData?.length ? styles.formNoTop : '')}
             >
                 <p>Add a new software</p>
                 <div className={styles.form}>
@@ -278,6 +287,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                         name='softwareTypes'
                         label='Software Type *'
                         error={formErrors.softwareType}
+                        placeholder='Select a Software Type'
                         dirty
                     />
                     <InputText

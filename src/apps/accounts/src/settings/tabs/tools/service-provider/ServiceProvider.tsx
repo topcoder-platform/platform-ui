@@ -1,8 +1,9 @@
 import { Dispatch, FC, MutableRefObject, SetStateAction, useEffect, useRef, useState } from 'react'
 import { bind, isEmpty, reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
+import classNames from 'classnames'
 
-import { updateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
+import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputSelect, InputText } from '~/libs/ui'
 import {
     FinancialInstitutionIcon,
@@ -19,6 +20,11 @@ import styles from './ServiceProvider.module.scss'
 interface ServiceProviderProps {
     serviceProviderTrait: UserTrait | undefined
     profile: UserProfile
+}
+
+const methodsMap: { [key: string]: any } = {
+    create: createMemberTraitsAsync,
+    update: updateMemberTraitsAsync,
 }
 
 const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) => {
@@ -92,6 +98,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
         setSelectedServiceProviderType(undefined)
         setSelectedServiceProviderName(undefined)
         formElRef.current.reset()
+        setIsEditMode(false)
     }
 
     function handleFormAction(): void {
@@ -157,7 +164,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                         setIsEditMode(false)
                     })
             } else {
-                updateMemberTraitsAsync(
+                methodsMap[!serviceProviderTypesData || !serviceProviderTypesData.length ? 'create' : 'update'](
                     props.profile.handle,
                     [{
                         categoryName: 'Service Provider',
@@ -199,6 +206,8 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
         const updatedServiceProviderTypesData: UserTrait[] = reject(serviceProviderTypesData, (trait: UserTrait) => (
             trait.name === itemToRemove?.name && trait.serviceProviderType === itemToRemove?.serviceProviderType
         )) || []
+
+        resetForm()
 
         updateMemberTraitsAsync(
             props.profile.handle,
@@ -288,7 +297,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
 
             <form
                 ref={formElRef}
-                className={styles.formWrap}
+                className={classNames(styles.formWrap, !serviceProviderTypesData?.length ? styles.formNoTop : '')}
             >
                 <p>Add a new service provider</p>
                 <div className={styles.form}>
@@ -300,6 +309,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                         label='Service Provider Type *'
                         error={formErrors.serviceProviderType}
                         dirty
+                        placeholder='Select a Service Provider Type'
                     />
                     <InputText
                         name='serviceProviderName'

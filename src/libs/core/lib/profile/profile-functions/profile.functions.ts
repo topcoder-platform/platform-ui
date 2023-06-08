@@ -13,6 +13,7 @@ import { UserVerify } from '../user-verify.model'
 import { profileFactoryCreate } from './profile-factory'
 import { getMemberStats, getVerification, profileStoreGet, profileStorePatchName } from './profile-store'
 import {
+    createMemberTraits,
     getCountryLookup,
     updateMemberEmailPreferences,
     updateMemberMFA,
@@ -120,4 +121,11 @@ export async function updateMemberTraitsAsync(
     traits: UserTraits[],
 ): Promise<UserTraits[]> {
     return updateMemberTraits(handle, traits)
+}
+
+export async function createMemberTraitsAsync(
+    handle: string,
+    traits: UserTraits[],
+): Promise<UserTraits[]> {
+    return createMemberTraits(handle, traits)
 }

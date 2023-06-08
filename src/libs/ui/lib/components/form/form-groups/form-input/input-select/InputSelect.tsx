@@ -32,6 +32,7 @@ interface InputSelectProps {
     readonly name: string
     readonly onChange: (event: ChangeEvent<HTMLInputElement>) => void
     readonly options: ReadonlyArray<InputSelectOption>
+    readonly placeholder?: string
     readonly tabIndex?: number
     readonly value?: string
 }
@@ -79,6 +80,7 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
         >
             <div className={styles.selected} onClick={toggleIfNotDisabled}>
                 <span className='body-small'>{selectedOption ? label(selectedOption) : ''}</span>
+                <span className='body-small'>{!selectedOption && !!props.placeholder ? props.placeholder : ''}</span>
                 <span className={styles['selected-icon']}>
                     <IconOutline.ChevronDownIcon />
                 </span>

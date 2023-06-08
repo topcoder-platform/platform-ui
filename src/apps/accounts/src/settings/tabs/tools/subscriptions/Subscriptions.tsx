@@ -1,8 +1,9 @@
 import { Dispatch, FC, MutableRefObject, SetStateAction, useEffect, useRef, useState } from 'react'
 import { bind, isEmpty, reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
+import classNames from 'classnames'
 
-import { updateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
+import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputText } from '~/libs/ui'
 import { SettingSection, SubscriptionsIcon } from '~/apps/accounts/src/lib'
 
@@ -11,6 +12,11 @@ import styles from './Subscriptions.module.scss'
 interface SubscriptionsProps {
     subscriptionsTrait: UserTrait | undefined
     profile: UserProfile
+}
+
+const methodsMap: { [key: string]: any } = {
+    create: createMemberTraitsAsync,
+    update: updateMemberTraitsAsync,
 }
 
 const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
@@ -72,6 +78,7 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
     function resetForm(): void {
         setSelectedSubscriptionName(undefined)
         formElRef.current.reset()
+        setIsEditMode(false)
     }
 
     function handleFormAction(): void {
@@ -131,7 +138,7 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                         setIsEditMode(false)
                     })
             } else {
-                updateMemberTraitsAsync(
+                methodsMap[!subscriptionsTypesData || !subscriptionsTypesData.length ? 'create' : 'update'](
                     props.profile.handle,
                     [{
                         categoryName: 'Subscription',
@@ -173,6 +180,8 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
         const updatedSubscriptionsTypesData: UserTrait[] = reject(subscriptionsTypesData, (trait: UserTrait) => (
             trait.name === itemToRemove?.name
         )) || []
+
+        resetForm()
 
         updateMemberTraitsAsync(
             props.profile.handle,
@@ -251,7 +260,7 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
 
             <form
                 ref={formElRef}
-                className={styles.formWrap}
+                className={classNames(styles.formWrap, !subscriptionsTypesData?.length ? styles.formNoTop : '')}
             >
                 <p>Add a new subscription</p>
                 <div className={styles.form}>
