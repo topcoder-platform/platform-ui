@@ -1,6 +1,7 @@
 import { Dispatch, FC, MutableRefObject, SetStateAction, useEffect, useRef, useState } from 'react'
 import { bind, isEmpty, reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
+import classNames from 'classnames'
 
 import { updateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputText } from '~/libs/ui'
@@ -251,7 +252,7 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
 
             <form
                 ref={formElRef}
-                className={styles.formWrap}
+                className={classNames(styles.formWrap, !subscriptionsTypesData?.length ? styles.formNoTop : '')}
             >
                 <p>Add a new subscription</p>
                 <div className={styles.form}>

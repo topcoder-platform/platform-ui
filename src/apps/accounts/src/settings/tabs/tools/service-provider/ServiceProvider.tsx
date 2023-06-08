@@ -1,6 +1,7 @@
 import { Dispatch, FC, MutableRefObject, SetStateAction, useEffect, useRef, useState } from 'react'
 import { bind, isEmpty, reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
+import classNames from 'classnames'
 
 import { updateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputSelect, InputText } from '~/libs/ui'
@@ -288,7 +289,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
 
             <form
                 ref={formElRef}
-                className={styles.formWrap}
+                className={classNames(styles.formWrap, !serviceProviderTypesData?.length ? styles.formNoTop : '')}
             >
                 <p>Add a new service provider</p>
                 <div className={styles.form}>
