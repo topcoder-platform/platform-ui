@@ -5,9 +5,14 @@ export enum AccountSettingsTabViews {
     account = '1',
     preferences = '2',
     payment = '3',
+    tcandyou = '4',
 }
 
 export const AccountSettingsTabsConfig: TabsNavItem[] = [
+    {
+        id: AccountSettingsTabViews.tcandyou,
+        title: 'Topcoder & You',
+    },
     {
         id: AccountSettingsTabViews.tools,
         title: 'Tools',
@@ -28,6 +33,7 @@ export const AccountSettingsTabsConfig: TabsNavItem[] = [
 
 export function getHashFromTabId(tabId: string): string {
     switch (tabId) {
+        case AccountSettingsTabViews.tcandyou: return '#tcandyou'
         case AccountSettingsTabViews.tools: return '#tools'
         case AccountSettingsTabViews.account: return '#account'
         case AccountSettingsTabViews.preferences: return '#preferences'
@@ -38,6 +44,7 @@ export function getHashFromTabId(tabId: string): string {
 
 export function getTabIdFromHash(hash: string): string {
     switch (hash) {
+        case '#tcandyu': return AccountSettingsTabViews.tcandyou
         case '#tools': return AccountSettingsTabViews.tools
         case '#account': return AccountSettingsTabViews.account
         case '#preferences': return AccountSettingsTabViews.preferences

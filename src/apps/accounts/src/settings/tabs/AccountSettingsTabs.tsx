@@ -9,6 +9,7 @@ import { AccountTab } from './account'
 import { PreferencesTab } from './preferences'
 import { PaymentsTab } from './payments'
 import { ToolsTab } from './tools'
+import { TCandYouTab } from './tcandyou'
 import styles from './AccountSettingsTabs.module.scss'
 
 interface AccountSettingsTabsProps {
@@ -44,6 +45,10 @@ const AccountSettingsTabs: FC<AccountSettingsTabsProps> = (props: AccountSetting
                     'Account Settings',
                     'Topcoder'].join(' | ')}
             </PageTitle>
+
+            {activeTab === AccountSettingsTabViews.tcandyou && (
+                <TCandYouTab profile={props.profile} memberTraits={memberTraits} />
+            )}
 
             {activeTab === AccountSettingsTabViews.tools && (
                 <ToolsTab profile={props.profile} memberTraits={memberTraits} />

@@ -1,6 +1,7 @@
 import { xhrGetAsync, xhrPatchAsync, xhrPostAsync, xhrPutAsync } from '../../../xhr'
 import { CountryLookup } from '../../country-lookup.model'
 import { EditNameRequest } from '../../edit-name-request.model'
+import { ModifyTracksRequest } from '../../modify-tracks.request'
 import { ModifyMemberEmailPreferencesRequest } from '../../modify-user-email-preferences.model'
 import { ModifyUserMFARequest, ModifyUserMFAResponse } from '../../modify-user-mfa.model'
 import { ModifyUserPropertyRequest, ModifyUserPropertyResponse } from '../../modify-user-role.model'
@@ -91,4 +92,8 @@ export async function createMemberTraits(
     traits: UserTraits[],
 ): Promise<UserTraits[]> {
     return xhrPostAsync<UserTraits[], UserTraits[]>(`${profileUrl(handle)}/traits`, traits)
+}
+
+export function modifyTracks(handle: string, request: ModifyTracksRequest): Promise<UserProfile> {
+    return xhrPutAsync<ModifyTracksRequest, UserProfile>(profileUrl(handle), request)
 }
