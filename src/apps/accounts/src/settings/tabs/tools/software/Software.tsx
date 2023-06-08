@@ -279,6 +279,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                         name='softwareTypes'
                         label='Software Type *'
                         error={formErrors.softwareType}
+                        placeholder='Select a Software Type'
                         dirty
                     />
                     <InputText
