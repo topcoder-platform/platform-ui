@@ -11,6 +11,7 @@ export {
     updateMemberMFAStatusAsync,
     updateMemberPasswordAsync,
     updateMemberTraitsAsync,
+    createMemberTraitsAsync,
 } from './profile.functions'
 export * from './profile-store'
 export * from './rating.functions'

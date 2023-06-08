@@ -3,7 +3,7 @@ import { bind, isEmpty, reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
-import { updateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
+import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputSelect, InputText } from '~/libs/ui'
 import { SettingSection, SoftwareIcon } from '~/apps/accounts/src/lib'
 
@@ -13,6 +13,11 @@ import styles from './Software.module.scss'
 interface SoftwareProps {
     softwareTrait: UserTrait | undefined
     profile: UserProfile
+}
+
+const methodsMap: { [key: string]: any } = {
+    create: createMemberTraitsAsync,
+    update: updateMemberTraitsAsync,
 }
 
 const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
@@ -148,7 +153,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                         setIsEditMode(false)
                     })
             } else {
-                updateMemberTraitsAsync(
+                methodsMap[!softwareTypesData || !softwareTypesData.length ? 'create' : 'update'](
                     props.profile.handle,
                     [{
                         categoryName: 'Software',

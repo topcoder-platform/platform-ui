@@ -85,3 +85,10 @@ export async function updateMemberTraits(
 ): Promise<UserTraits[]> {
     return xhrPutAsync<UserTraits[], UserTraits[]>(`${profileUrl(handle)}/traits`, traits)
 }
+
+export async function createMemberTraits(
+    handle: string,
+    traits: UserTraits[],
+): Promise<UserTraits[]> {
+    return xhrPostAsync<UserTraits[], UserTraits[]>(`${profileUrl(handle)}/traits`, traits)
+}
