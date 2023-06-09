@@ -24,7 +24,9 @@ const AccountSettingsTabs: FC<AccountSettingsTabsProps> = (props: AccountSetting
     const [activeTab, setActiveTab]: [string, Dispatch<SetStateAction<string>>]
         = useState<string>(activeTabHash)
 
-    const memberTraits: UserTraits[] | undefined = useMemberTraits(props.profile.handle)
+    const { data: memberTraits }: {
+        data: UserTraits[] | undefined
+    } = useMemberTraits(props.profile.handle)
 
     function handleTabChange(tabId: string): void {
         setActiveTab(tabId)

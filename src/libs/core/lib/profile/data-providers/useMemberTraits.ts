@@ -1,10 +1,18 @@
-import useSWR, { SWRResponse } from 'swr'
+import useSWR, { KeyedMutator, SWRResponse } from 'swr'
 
 import { getProfileUrl } from '../profile-functions'
 import { UserTraits } from '../user-traits.model'
 
-export function useMemberTraits(handle?: string): UserTraits[] | undefined {
-    const { data }: SWRResponse = useSWR(handle ? `${getProfileUrl(handle)}/traits` : undefined)
+export interface MemberTraitsAPI {
+    data: UserTraits[] | undefined
+    mutate: KeyedMutator<any>
+}
 
-    return data
+export function useMemberTraits(handle?: string): MemberTraitsAPI {
+    const { data, mutate }: SWRResponse = useSWR(handle ? `${getProfileUrl(handle)}/traits` : undefined)
+
+    return {
+        data,
+        mutate,
+    }
 }

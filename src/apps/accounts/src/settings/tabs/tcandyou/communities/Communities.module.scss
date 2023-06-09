@@ -1,0 +1,50 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    margin: $sp-8 0;
+
+    .content {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 0;
+
+        .communityCard {
+            border: 1px solid #d4d4d4;
+            border-radius: 8px;
+            padding: $sp-4;
+            margin-bottom: $sp-4;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+
+            .communityCardHeader {
+                display: flex;
+                align-items: flex-start;
+
+                @include ltelg {
+                    flex-direction: column;
+                }
+            }
+
+            img {
+                margin-right: $sp-4;
+                border-radius: 4px;
+
+                @include ltelg {
+                    margin-right: 0;
+                    margin-bottom: $sp-4;
+                }
+            }
+
+            .communityInfo {
+                flex: 1;
+
+                .infoText {
+                    padding-right: 74px;
+                    color: #767676;
+                    margin: $sp-3 0;
+                }
+            }
+        }
+    }
+}
