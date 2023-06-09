@@ -7,6 +7,7 @@ export const defaultProfileContextData: ProfileContextData = {
     initialized: false,
     isLoggedIn: false,
     updateProfile: () => Promise.resolve(undefined),
+    updateProfileContext: () => undefined,
 }
 
 const profileContext: Context<ProfileContextData> = createContext(defaultProfileContextData)

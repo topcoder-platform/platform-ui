@@ -1,7 +1,8 @@
-import { Dispatch, FC, useState } from 'react'
+import { Dispatch, FC, useContext, useEffect, useState } from 'react'
 import { bind } from 'lodash'
+import { toast } from 'react-toastify'
 
-import { TC_TRACKS, UserProfile } from '~/libs/core'
+import { profileContext, ProfileContextData, TC_TRACKS, updateMemberProfileAsync, UserProfile } from '~/libs/core'
 import { Collapsible, FormToggleSwitch } from '~/libs/ui'
 import { DataScienceTrackIcon, DesignTrackIcon, DevelopmentTrackIcon, SettingSection } from '~/apps/accounts/src/lib'
 
@@ -12,20 +13,46 @@ interface TracksProps {
 }
 
 const Tracks: FC<TracksProps> = (props: TracksProps) => {
-    const [devTrack, setDevTrack]: [boolean, Dispatch<boolean>]
-        = useState<boolean>(!!props.profile.tracks?.includes('DEVELOP'))
+    const [memberTracks, setMemberTracks]: [TC_TRACKS[], Dispatch<TC_TRACKS[]>]
+        = useState<TC_TRACKS[]>(props.profile.tracks || [])
 
-    const [designTrack, setDesignTrack]: [boolean, Dispatch<boolean>]
-        = useState<boolean>(!!props.profile.tracks?.includes('DESIGN'))
+    const memberProfileContext: ProfileContextData = useContext(profileContext)
 
-    const [dsTrack, setDSTrack]: [boolean, Dispatch<boolean>]
-        = useState<boolean>(!!props.profile.tracks?.includes('DATA_SCIENCE'))
+    useEffect(() => {
+        setMemberTracks(props.profile.tracks || [])
+    }, [props.profile])
 
     function handleTracksChange(type: TC_TRACKS): void {
-        
-    }
+        const hasTrack: boolean = memberTracks.includes(type)
+        let updatedTracks: TC_TRACKS[]
 
-    console.log('devTrack', props)
+        if (hasTrack) {
+            // remove track
+            updatedTracks = memberTracks.filter((track: TC_TRACKS) => track !== type)
+        } else {
+            // add track
+            updatedTracks = memberTracks.concat(type)
+        }
+
+        updateMemberProfileAsync(
+            props.profile.handle,
+            { tracks: updatedTracks },
+        )
+            .then(() => {
+                setMemberTracks(updatedTracks)
+                memberProfileContext.updateProfileContext({
+                    ...memberProfileContext,
+                    profile: {
+                        ...memberProfileContext.profile,
+                        tracks: updatedTracks,
+                    } as any,
+                })
+                toast.success('Your profile has been updated.')
+            })
+            .catch(() => {
+                toast.error('Failed to update your profile.')
+            })
+    }
 
     return (
         <Collapsible
@@ -48,7 +75,7 @@ const Tracks: FC<TracksProps> = (props: TracksProps) => {
                     <FormToggleSwitch
                         name='designTrack'
                         onChange={bind(handleTracksChange, this, 'DESIGN')}
-                        value={designTrack}
+                        value={!!memberTracks.includes('DESIGN')}
                     />
                 )}
             />
@@ -63,7 +90,7 @@ const Tracks: FC<TracksProps> = (props: TracksProps) => {
                     <FormToggleSwitch
                         name='devTrack'
                         onChange={bind(handleTracksChange, this, 'DEVELOP')}
-                        value={devTrack}
+                        value={!!memberTracks.includes('DEVELOP')}
                     />
                 )}
             />
@@ -78,7 +105,7 @@ const Tracks: FC<TracksProps> = (props: TracksProps) => {
                     <FormToggleSwitch
                         name='dsTrack'
                         onChange={bind(handleTracksChange, this, 'DATA_SCIENCE')}
-                        value={dsTrack}
+                        value={!!memberTracks.includes('DATA_SCIENCE')}
                     />
                 )}
             />

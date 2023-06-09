@@ -4,6 +4,7 @@ import { EditNameRequest } from '../edit-name-request.model'
 import { ModifyTracksRequest } from '../modify-tracks.request'
 import { ModifyMemberEmailPreferencesRequest } from '../modify-user-email-preferences.model'
 import { ModifyUserMFARequest, ModifyUserMFAResponse } from '../modify-user-mfa.model'
+import { UpdateProfileRequest } from '../modify-user-profile.model'
 import { ModifyUserPropertyResponse } from '../modify-user-role.model'
 import { UserEmailPreferences } from '../user-email-preference.model'
 import { UserProfile } from '../user-profile.model'
@@ -20,6 +21,7 @@ import {
     updateMemberEmailPreferences,
     updateMemberMFA,
     updateMemberPassword,
+    updateMemberProfile,
     updateMemberTraits,
     updatePrimaryMemberRole,
 } from './profile-store/profile-xhr.store'
@@ -121,4 +123,8 @@ export async function createMemberTraitsAsync(
 
 export async function modifyTracksAsync(handle: string, tracks: ModifyTracksRequest): Promise<UserProfile> {
     return modifyTracks(handle, tracks)
+}
+
+export async function updateMemberProfileAsync(handle: string, profile: UpdateProfileRequest): Promise<UserProfile> {
+    return updateMemberProfile(handle, profile)
 }

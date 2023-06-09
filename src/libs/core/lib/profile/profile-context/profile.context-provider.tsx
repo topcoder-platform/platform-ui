@@ -31,6 +31,7 @@ export const ProfileProvider: FC<ProfileProviderProps> = (props: ProfileProvider
             isLoggedIn: !!profile,
             profile,
             updateProfile,
+            updateProfileContext,
         }
         setProfileContextData(contextData)
     }
@@ -50,6 +51,17 @@ export const ProfileProvider: FC<ProfileProviderProps> = (props: ProfileProvider
 
         return profileEditNameAsync(profile.handle, request)
             .then(() => setProfileContextData(updatedContext))
+    }
+
+    function updateProfileContext(updatedContext: ProfileContextData): void {
+
+        const { profile }: ProfileContextData = updatedContext
+
+        if (!profile) {
+            throw new Error('Cannot update an undefined profile')
+        }
+
+        setProfileContextData(updatedContext)
     }
 
     useEffect(() => {

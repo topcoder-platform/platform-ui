@@ -7,6 +7,7 @@ import styles from './TCandYouTab.module.scss'
 
 interface TCandYouTabProps {
     profile: UserProfile
+    // eslint-disable-next-line react/no-unused-prop-types
     memberTraits: UserTraits[] | undefined
 }
 

@@ -44,7 +44,7 @@ export function getHashFromTabId(tabId: string): string {
 
 export function getTabIdFromHash(hash: string): string {
     switch (hash) {
-        case '#tcandyu': return AccountSettingsTabViews.tcandyou
+        case '#tcandyou': return AccountSettingsTabViews.tcandyou
         case '#tools': return AccountSettingsTabViews.tools
         case '#account': return AccountSettingsTabViews.account
         case '#preferences': return AccountSettingsTabViews.preferences
