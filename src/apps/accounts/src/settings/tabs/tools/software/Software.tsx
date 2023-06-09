@@ -1,9 +1,10 @@
 import { Dispatch, FC, MutableRefObject, SetStateAction, useEffect, useRef, useState } from 'react'
 import { bind, isEmpty, reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
+import { KeyedMutator } from 'swr'
 import classNames from 'classnames'
 
-import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
+import { createMemberTraitsAsync, updateMemberTraitsAsync, useMemberTraits, UserProfile, UserTrait } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputSelect, InputText } from '~/libs/ui'
 import { SettingSection, SoftwareIcon } from '~/apps/accounts/src/lib'
 
@@ -56,6 +57,8 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
 
     const [itemToRemove, setItemToRemove]: [UserTrait | undefined, Dispatch<SetStateAction<UserTrait | undefined>>]
         = useState<UserTrait | undefined>()
+
+    const { mutate: mutateTraits }: { mutate: KeyedMutator<any> } = useMemberTraits(props.profile.handle)
 
     useEffect(() => {
         setSoftwareTypesData(props.softwareTrait?.traits.data)
@@ -144,6 +147,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                             ...updatedSoftwareTypesData || [],
                             softwareTypeUpdate,
                         ])
+                        mutateTraits()
                     })
                     .catch(() => {
                         toast.error('Error updating software')
@@ -172,6 +176,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                             ...softwareTypesData || [],
                             softwareTypeUpdate,
                         ])
+                        mutateTraits()
                     })
                     .catch(() => {
                         toast.error('Error adding new software')
@@ -211,6 +216,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
             .then(() => {
                 toast.success('Software deleted successfully')
                 setSoftwareTypesData(updatedSoftwareTypesData)
+                mutateTraits()
             })
             .catch(() => {
                 toast.error('Error deleting software')

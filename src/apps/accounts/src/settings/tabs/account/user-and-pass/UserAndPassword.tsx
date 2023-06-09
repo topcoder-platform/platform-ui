@@ -1,6 +1,7 @@
 import { Dispatch, FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { has, trim } from 'lodash'
 import { toast } from 'react-toastify'
+import { KeyedMutator } from 'swr'
 
 import {
     Collapsible,
@@ -8,7 +9,14 @@ import {
     FormInputModel,
     FormToggleSwitch,
 } from '~/libs/ui'
-import { updateMemberPasswordAsync, updateMemberTraitsAsync, UserProfile, UserTrait, UserTraits } from '~/libs/core'
+import {
+    updateMemberPasswordAsync,
+    updateMemberTraitsAsync,
+    useMemberTraits,
+    UserProfile,
+    UserTrait,
+    UserTraits,
+} from '~/libs/core'
 import { SettingSection } from '~/apps/accounts/src/lib'
 
 import { UserAndPassFromConfig } from './user-and-pass.form.config'
@@ -29,6 +37,8 @@ const UserAndPassword: FC<UserAndPasswordProps> = (props: UserAndPasswordProps) 
         () => props.memberTraits?.find((trait: UserTraits) => trait.traitId === 'personalization'),
         [props.memberTraits],
     )
+
+    const { mutate: mutateTraits }: { mutate: KeyedMutator<any> } = useMemberTraits(props.profile.handle)
 
     const [userConsent, setUserConsent]: [boolean, Dispatch<boolean>] = useState(false)
 
@@ -70,6 +80,7 @@ const UserAndPassword: FC<UserAndPasswordProps> = (props: UserAndPasswordProps) 
         }])
             .then(() => {
                 setUserConsent(!userConsent)
+                mutateTraits()
                 toast.success('User consent updated successfully.')
             })
             .catch(() => {

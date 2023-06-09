@@ -1,9 +1,10 @@
 import { Dispatch, FC, MutableRefObject, SetStateAction, useEffect, useRef, useState } from 'react'
 import { bind, isEmpty, reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
+import { KeyedMutator } from 'swr'
 import classNames from 'classnames'
 
-import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
+import { createMemberTraitsAsync, updateMemberTraitsAsync, useMemberTraits, UserProfile, UserTrait } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputSelect, InputText } from '~/libs/ui'
 import {
     FinancialInstitutionIcon,
@@ -63,6 +64,8 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
 
     const [itemToRemove, setItemToRemove]: [UserTrait | undefined, Dispatch<SetStateAction<UserTrait | undefined>>]
         = useState<UserTrait | undefined>()
+
+    const { mutate: mutateTraits }: { mutate: KeyedMutator<any> } = useMemberTraits(props.profile.handle)
 
     useEffect(() => {
         setServiceProviderTypesData(props.serviceProviderTrait?.traits.data)
@@ -155,6 +158,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                             ...updatedServiceProviderTypesData || [],
                             serviceProviderTypeUpdate,
                         ])
+                        mutateTraits()
                     })
                     .catch(() => {
                         toast.error('Error updating Service Provider')
@@ -183,6 +187,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                             ...serviceProviderTypesData || [],
                             serviceProviderTypeUpdate,
                         ])
+                        mutateTraits()
                     })
                     .catch(() => {
                         toast.error('Error adding new Service Provider')
@@ -222,6 +227,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
             .then(() => {
                 toast.success('Service Provider deleted successfully')
                 setServiceProviderTypesData(updatedServiceProviderTypesData)
+                mutateTraits()
             })
             .catch(() => {
                 toast.error('Error deleting Service Provider')
