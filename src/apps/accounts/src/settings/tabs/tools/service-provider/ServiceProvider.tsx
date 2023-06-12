@@ -9,7 +9,7 @@ import { Button, Collapsible, ConfirmModal, IconOutline, InputSelect, InputText 
 import {
     FinancialInstitutionIcon,
     InternetServiceProviderIcon,
-    MobileCarierServiceProviderIcon,
+    MobileCarrierServiceProviderIcon,
     OtherServiceProviderIcon,
     SettingSection,
     TelevisionServiceProviderIcon,
@@ -241,7 +241,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
         switch (trait.serviceProviderType) {
             case 'Financial Institution': return <FinancialInstitutionIcon />
             case 'Internet Service Provider': return <InternetServiceProviderIcon />
-            case 'MobileCarierServiceProviderIcon': return <MobileCarierServiceProviderIcon />
+            case 'Mobile Carrier': return <MobileCarrierServiceProviderIcon />
             case 'Television': return <TelevisionServiceProviderIcon />
             default: return <OtherServiceProviderIcon />
         }

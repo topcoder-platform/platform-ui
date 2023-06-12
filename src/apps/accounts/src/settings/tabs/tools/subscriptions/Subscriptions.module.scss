@@ -41,6 +41,14 @@
             grid-template-columns: 1fr 1fr;
             margin: $sp-13 0 $sp-4;
 
+            @include ltelg {
+                grid-template-columns: 1fr;
+
+                p {
+                    margin-bottom: $sp-4;
+                }
+            }
+
             &.formNoTop {
                 margin-top: 0;
             }
