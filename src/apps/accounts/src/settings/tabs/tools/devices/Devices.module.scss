@@ -16,6 +16,10 @@
             align-self: flex-start;
             width: 64px;
             height: 64px;
+
+            svg {
+                margin: auto;
+            }
         }
 
         .actionElements {
@@ -36,10 +40,37 @@
             }
         }
 
-        .deviceForm {
+        .formWrap {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            margin: $sp-4 0;
+            margin: $sp-13 0 $sp-4;
+
+            @include ltelg {
+                grid-template-columns: 1fr;
+
+                p {
+                    margin-bottom: $sp-4;
+                }
+            }
+
+            &.formNoTop {
+                margin-top: 0;
+            }
+
+            .formCTAs {
+                display: flex;
+                align-items: center;
+
+                svg {
+                    width: 14px;
+                    height: 14px;
+                    margin-right: $sp-1;
+                }
+
+                .ctaBtnCancel {
+                    margin-left: $sp-8;
+                }
+            }
         }
     }
 }
