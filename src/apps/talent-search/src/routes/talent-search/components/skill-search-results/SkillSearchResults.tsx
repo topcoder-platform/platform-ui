@@ -71,6 +71,8 @@ export default class SkillSearchResult extends Component<SkillSearchResultsProps
                 if (response) {
                     if (response.length === PER_PAGE) {
                         this.state.hasMore = true
+                    } else {
+                        this.state.hasMore = false
                     }
 
                     const filter:readonly Skill[] = this.props.skillsFilter
