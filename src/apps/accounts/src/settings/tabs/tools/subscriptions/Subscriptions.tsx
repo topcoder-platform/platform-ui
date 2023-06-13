@@ -1,10 +1,9 @@
 import { Dispatch, FC, MutableRefObject, SetStateAction, useEffect, useRef, useState } from 'react'
 import { bind, isEmpty, reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
-import { KeyedMutator } from 'swr'
 import classNames from 'classnames'
 
-import { createMemberTraitsAsync, updateMemberTraitsAsync, useMemberTraits, UserProfile, UserTrait } from '~/libs/core'
+import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputText } from '~/libs/ui'
 import { SettingSection, SubscriptionsIcon } from '~/apps/accounts/src/lib'
 
@@ -50,8 +49,6 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
 
     const [itemToRemove, setItemToRemove]: [UserTrait | undefined, Dispatch<SetStateAction<UserTrait | undefined>>]
         = useState<UserTrait | undefined>()
-
-    const { mutate: mutateTraits }: { mutate: KeyedMutator<any> } = useMemberTraits(props.profile.handle)
 
     useEffect(() => {
         setSubscriptionsTypesData(props.subscriptionsTrait?.traits.data)
@@ -132,7 +129,6 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                             ...updatedSubscriptionsTypesData || [],
                             softwareTypeUpdate,
                         ])
-                        mutateTraits()
                     })
                     .catch(() => {
                         toast.error('Error updating subscription')
@@ -161,7 +157,6 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                             ...subscriptionsTypesData || [],
                             softwareTypeUpdate,
                         ])
-                        mutateTraits()
                     })
                     .catch(() => {
                         toast.error('Error adding new subscription')
@@ -201,7 +196,6 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
             .then(() => {
                 toast.success('Subscription deleted successfully')
                 setSubscriptionsTypesData(updatedSubscriptionsTypesData)
-                mutateTraits()
             })
             .catch(() => {
                 toast.error('Error deleting subscription')

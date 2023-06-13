@@ -1,7 +1,6 @@
 /* eslint-disable complexity */
 import { Dispatch, FC, MutableRefObject, SetStateAction, useEffect, useRef, useState } from 'react'
 import { bind, compact, isEmpty, reject, uniqBy } from 'lodash'
-import { KeyedMutator } from 'swr'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
@@ -9,7 +8,6 @@ import {
     createMemberTraitsAsync,
     updateMemberTraitsAsync,
     useMemberDevicesLookup,
-    useMemberTraits,
     UserProfile,
     UserTrait,
 } from '~/libs/core'
@@ -63,8 +61,6 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
 
     const [itemToRemove, setItemToRemove]: [UserTrait | undefined, Dispatch<SetStateAction<UserTrait | undefined>>]
         = useState<UserTrait | undefined>()
-
-    const { mutate: mutateTraits }: { mutate: KeyedMutator<any> } = useMemberTraits(props.profile.handle)
 
     const [selectedDeviceType, setSelectedDeviceType]: [
         string | undefined,
@@ -150,6 +146,7 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
         setSelectedDeviceManufacturerType(undefined)
         formElRef.current.reset()
         setIsEditMode(false)
+        setFormErrors({})
     }
 
     function onRemoveItemConfirm(): void {
@@ -174,7 +171,6 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
             .then(() => {
                 toast.success('Device deleted successfully')
                 setDeviceTypesData(updatedDeviceTypesData)
-                mutateTraits()
             })
             .catch(() => {
                 toast.error('Error deleting Device')
@@ -280,7 +276,6 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
                             ...updatedDeviceTypesData || [],
                             deviceUpdate,
                         ])
-                        mutateTraits()
                     })
                     .catch(() => {
                         toast.error('Error updating Device')
@@ -309,7 +304,6 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
                             ...deviceTypesData || [],
                             deviceUpdate,
                         ])
-                        mutateTraits()
                     })
                     .catch(() => {
                         toast.error('Error adding new Device')

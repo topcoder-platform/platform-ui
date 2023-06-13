@@ -1,5 +1,6 @@
 import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import { KeyedMutator } from 'swr'
 
 import { useMemberTraits, UserProfile, UserTraits } from '~/libs/core'
 import { PageTitle, TabsNavbar, TabsNavItem } from '~/libs/ui'
@@ -24,13 +25,15 @@ const AccountSettingsTabs: FC<AccountSettingsTabsProps> = (props: AccountSetting
     const [activeTab, setActiveTab]: [string, Dispatch<SetStateAction<string>>]
         = useState<string>(activeTabHash)
 
-    const { data: memberTraits }: {
-        data: UserTraits[] | undefined
+    const { data: memberTraits, mutate: mutateTraits }: {
+        data: UserTraits[] | undefined,
+        mutate: KeyedMutator<any>
     } = useMemberTraits(props.profile.handle)
 
     function handleTabChange(tabId: string): void {
         setActiveTab(tabId)
         window.location.hash = getHashFromTabId(tabId)
+        mutateTraits() // mutate member traits to refresh the data
     }
 
     return (
