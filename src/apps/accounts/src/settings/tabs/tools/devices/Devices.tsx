@@ -146,6 +146,7 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
         setSelectedDeviceManufacturerType(undefined)
         formElRef.current.reset()
         setIsEditMode(false)
+        setFormErrors({})
     }
 
     function onRemoveItemConfirm(): void {
