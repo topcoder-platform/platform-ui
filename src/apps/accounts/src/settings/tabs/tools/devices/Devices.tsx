@@ -440,7 +440,7 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
                         {!isEditMode && <IconOutline.PlusCircleIcon />}
                         <Button
                             link
-                            label={`${isEditMode ? 'Edit' : 'Add'} Service Provider to your List`}
+                            label={`${isEditMode ? 'Edit' : 'Add'} Device to your List`}
                             onClick={handleFormAction}
                         />
                         {isEditMode && (
