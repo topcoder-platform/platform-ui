@@ -1,5 +1,11 @@
 @import '@libs/ui/styles/includes';
 
 .container {
-    
+    form {
+        @include ltelg {
+            :global(.input-el) {
+                margin-bottom: $sp-4;
+            }
+        }
+    }
 }
