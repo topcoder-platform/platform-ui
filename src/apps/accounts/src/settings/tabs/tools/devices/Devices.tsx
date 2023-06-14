@@ -121,6 +121,9 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
         setSelectedDeviceManufacturerModelType({
             model: trait.model,
         })
+        setSelectedDeviceManufacturerModelOSType({
+            operatingSystem: trait.operatingSystem,
+        })
         setFormErrors({})
     }
 

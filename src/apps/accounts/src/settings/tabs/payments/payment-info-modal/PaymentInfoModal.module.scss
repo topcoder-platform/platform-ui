@@ -52,6 +52,11 @@
         .modalContentRight {
             padding-left: $sp-8;
 
+            @include ltelg {
+                padding-left: 0;
+                margin-top: $sp-8;
+            }
+
             p {
                 margin-bottom: $sp-4;
             }
