@@ -147,6 +147,8 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
     function resetForm(): void {
         setSelectedDeviceType(undefined)
         setSelectedDeviceManufacturerType(undefined)
+        setSelectedDeviceManufacturerModelType(undefined)
+        setSelectedDeviceManufacturerModelOSType(undefined)
         formElRef.current.reset()
         setIsEditMode(false)
         setFormErrors({})
