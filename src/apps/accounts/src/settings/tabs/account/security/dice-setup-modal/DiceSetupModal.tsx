@@ -63,8 +63,6 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
     }
 
     function verificationCallback(data: any): void {
-        // eslint-disable-next-line no-console
-        console.log('dice verificationCallback data', data)
         if (data.success) {
             const userEmail: string = get(data, 'user.profile.Email')
             if (!isUndefined(userEmail) && lowerCase(userEmail) === lowerCase(props.profile.email)) {
@@ -82,7 +80,7 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
                         toast.error('Something went wrong. Please try again later.')
                     })
             } else {
-                setStep(4)
+                setStep(5)
             }
         } else {
             setStep(5)
