@@ -2,6 +2,7 @@ import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { get, isUndefined, lowerCase } from 'lodash'
 import { toast } from 'react-toastify'
+import { KeyedMutator } from 'swr'
 
 import { BaseModal, Button } from '~/libs/ui'
 import {
@@ -20,6 +21,7 @@ import styles from './DiceSetupModal.module.scss'
 const GooglePlayLink: string = 'https://play.google.com/store/apps/details?id=com.diwallet1'
 const AppleStoreLink: string = 'https://apps.apple.com/us/app/dice-id/id1548148979'
 interface DiceSetupModalProps {
+    mutateMFAData: KeyedMutator<any>
     onClose: () => void
     profile: UserProfile
 }
@@ -72,6 +74,7 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
                     },
                 })
                     .then(() => {
+                        props.mutateMFAData()
                         setStep(4)
                         // eslint-disable-next-line max-len
                         toast.success('Your credentials have been verified and you are all set for MFA using your decentralized identity (DICE ID).')

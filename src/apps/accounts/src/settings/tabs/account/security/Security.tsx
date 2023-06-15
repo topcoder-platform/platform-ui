@@ -1,5 +1,6 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
+import { KeyedMutator } from 'swr'
 
 import { Button, Collapsible, FormToggleSwitch } from '~/libs/ui'
 import { diceIdLogo, MFAImage, SettingSection } from '~/apps/accounts/src/lib'
@@ -15,7 +16,10 @@ interface SecurityProps {
 const Security: FC<SecurityProps> = (props: SecurityProps) => {
     const [setupDiceModalOpen, setSetupDiceModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
 
-    const mfaStatusData: MemberMFAStatus | undefined = useMemberMFAStatus(props.profile.userId)
+    const { data: mfaStatusData, mutate: mutateMFAData }: {
+        data: MemberMFAStatus | undefined
+        mutate: KeyedMutator<any>,
+    } = useMemberMFAStatus(props.profile.userId)
 
     const [mfaEnabled, setMFAEnabled]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
 
@@ -91,6 +95,7 @@ const Security: FC<SecurityProps> = (props: SecurityProps) => {
 
             {setupDiceModalOpen && (
                 <DiceSetupModal
+                    mutateMFAData={mutateMFAData}
                     onClose={handleDiceModalStatus}
                     profile={props.profile}
                 />

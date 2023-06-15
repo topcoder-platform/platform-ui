@@ -1,4 +1,4 @@
-import useSWR, { SWRResponse } from 'swr'
+import useSWR, { KeyedMutator, SWRResponse } from 'swr'
 
 import { memberModifyMfaURL } from '~/libs/core'
 
@@ -13,8 +13,16 @@ export interface MemberMFAStatus {
     userId: number
 }
 
-export function useMemberMFAStatus(userId: number): MemberMFAStatus | undefined {
-    const { data }: SWRResponse = useSWR(memberModifyMfaURL(userId))
+export interface UseMemberMFAStatusAPI {
+    data: MemberMFAStatus | undefined
+    mutate: KeyedMutator<any>
+}
 
-    return data ? data.result.content : undefined
+export function useMemberMFAStatus(userId: number): UseMemberMFAStatusAPI {
+    const { data, mutate }: SWRResponse = useSWR(memberModifyMfaURL(userId))
+
+    return {
+        data: data ? data.result.content : undefined,
+        mutate,
+    }
 }
