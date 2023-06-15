@@ -9,6 +9,15 @@
         display: flex;
     }
 
+    .titleWrap {
+        display: flex;
+        align-items: center;
+
+        img {
+            margin-right: $sp-4;
+        }
+    }
+
     .appSoresWrap {
         display: flex;
         justify-content: space-evenly;
@@ -25,10 +34,29 @@
         margin: auto;
     }
 
+    .diceBigLogo {
+        margin: $sp-4 0;
+    }
+
+    .errorWrap {
+        display: flex;
+        align-items: center;
+
+        svg {
+            margin-right: $sp-2;
+            width: 28px;
+            height: 28px;
+        }
+    }
+
     .ctaButtons {
         display: flex;
         justify-content: space-between;
         width: 100%;
         flex: 1;
+    }
+
+    .errorText {
+        color: #ef476f;
     }
 }

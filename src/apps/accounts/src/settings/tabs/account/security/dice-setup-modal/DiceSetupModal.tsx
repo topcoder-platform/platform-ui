@@ -4,7 +4,13 @@ import { get, isUndefined, lowerCase } from 'lodash'
 import { toast } from 'react-toastify'
 
 import { BaseModal, Button } from '~/libs/ui'
-import { AppleStore, diceIdLogoBig, googlePlay } from '~/apps/accounts/src/lib'
+import {
+    AppleStore,
+    diceIdLogoBig,
+    diceIdLogoSmall,
+    googlePlay,
+    UnSuccessfullDiceVerificationIcon,
+} from '~/apps/accounts/src/lib'
 import { DiceConnectionStatus, updateMemberMFAStatusAsync, useDiceIdConnection, UserProfile } from '~/libs/core'
 import { EnvironmentConfig } from '~/config'
 
@@ -51,7 +57,6 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
         switch (step) {
             case 1:
             case 2:
-            case 3:
                 return setStep(step + 1)
             default: return props.onClose()
         }
@@ -90,7 +95,15 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
         <BaseModal
             open
             onClose={props.onClose}
-            title='DICE ID AUTHENTICATOR SETUP'
+            title={(
+                <div className={styles.titleWrap}>
+                    <img
+                        src={diceIdLogoSmall}
+                        alt='DICE ID Title Logo'
+                    />
+                    <h3>DICE ID AUTHENTICATOR SETUP</h3>
+                </div>
+            )}
             size='body'
             classNames={{ modal: styles.diceModal }}
             buttons={(
@@ -101,10 +114,10 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
                         onClick={handleSecondaryButtonClick}
                     />
                     {
-                        step <= 4 && (
+                        step !== 3 && (
                             <Button
                                 primary
-                                label={step === 4 ? 'Finish' : 'Next'}
+                                label={(step === 4 || step === 5) ? 'Finish' : 'Next'}
                                 onClick={handlePrimaryButtonClick}
                                 disabled={step === 2 && !diceConnection?.accepted}
                             />
@@ -227,7 +240,7 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
             {
                 step === 4 && (
                     <>
-                        <h4>Setup completed!</h4>
+                        <h3>Setup completed!</h3>
                         <p>
                             Hello
                             {' '}
@@ -238,7 +251,7 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
                             Your credentials have been verified and you are all set
                             for MFA using your decentralized identity (DICE ID).
                         </p>
-                        <img src={diceIdLogoBig} alt='DICE ID Logo' />
+                        <img src={diceIdLogoBig} className={styles.diceBigLogo} alt='DICE ID Logo' />
                         <p>
                             For more information on DICE ID, please visit
                             {' '}
@@ -257,7 +270,27 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
             {
                 step === 5 && (
                     <>
-
+                        <div className={styles.errorWrap}>
+                            <UnSuccessfullDiceVerificationIcon />
+                            <h3 className={styles.errorText}>Unsuccessful Verification!</h3>
+                        </div>
+                        <p>
+                            Hello
+                            {' '}
+                            {props.profile.handle}
+                            ,
+                            <br />
+                            <br />
+                            Your credentials could not be verified,
+                            you won&apos;t be able to connect to MFA using your decentralized identity (DICE ID).
+                        </p>
+                        <img src={diceIdLogoBig} className={styles.diceBigLogo} alt='DICE ID Logo' />
+                        <p>
+                            Please try again your process after few minutes.
+                            <br />
+                            <br />
+                        </p>
+                        <p>Please click Finish bellow.</p>
                     </>
                 )
             }

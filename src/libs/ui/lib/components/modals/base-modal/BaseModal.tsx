@@ -14,7 +14,7 @@ export interface BaseModalProps extends ModalProps {
     contentUrl?: string
     theme?: 'danger' | 'clear'
     size?: 'body' | 'lg' | 'md' | 'sm'
-    title?: string
+    title?: string | ReactNode
     buttons?: ReactNode
 }
 
@@ -62,7 +62,13 @@ const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
             {props.title && (
                 <>
                     <div className={styles['modal-header']}>
-                        <h3>{props.title}</h3>
+                        {
+                            typeof props.title === 'string' ? (
+                                <h3>{props.title}</h3>
+                            ) : (
+                                props.title
+                            )
+                        }
                     </div>
 
                     <hr className={styles.spacer} />
