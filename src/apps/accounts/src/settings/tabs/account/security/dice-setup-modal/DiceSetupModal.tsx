@@ -266,7 +266,7 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
                                 https://www.diceid.com
                             </a>
                         </p>
-                        <p>Please click Finish bellow.</p>
+                        <p>Please click Finish below.</p>
                     </>
                 )
             }
@@ -293,7 +293,7 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
                             <br />
                             <br />
                         </p>
-                        <p>Please click Finish bellow.</p>
+                        <p>Please click Finish below.</p>
                     </>
                 )
             }
