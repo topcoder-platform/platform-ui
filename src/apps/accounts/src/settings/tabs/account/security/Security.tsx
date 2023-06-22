@@ -1,8 +1,9 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { KeyedMutator } from 'swr'
+import { noop } from 'lodash'
 
-import { Button, Collapsible, FormToggleSwitch, IconOutline, Tooltip } from '~/libs/ui'
+import { Button, Collapsible, FormToggleSwitch, IconSolid, Tooltip } from '~/libs/ui'
 import { diceIdLogo, MFAImage, SettingSection } from '~/apps/accounts/src/lib'
 import { MemberMFAStatus, updateMemberMFAStatusAsync, useMemberMFAStatus, UserProfile } from '~/libs/core'
 
@@ -83,20 +84,31 @@ const Security: FC<SecurityProps> = (props: SecurityProps) => {
                 infoText='DICE ID authentication application.'
                 actionElement={(
                     <div className={styles.diceBtnWrap}>
-                        <Button
-                            label='Setup DICE ID Authentication'
-                            secondary
-                            size='lg'
-                            className={styles.diceIdButton}
-                            onClick={handleDiceModalStatus}
-                            disabled={!mfaEnabled || mfaStatusData?.diceEnabled}
-                        />
+                        {
+                            !mfaStatusData?.diceEnabled ? (
+                                <FormToggleSwitch
+                                    name='diceEnabled'
+                                    onChange={noop}
+                                    value={mfaStatusData?.diceEnabled as boolean}
+                                    disabled={mfaStatusData?.diceEnabled}
+                                />
+                            ) : (
+                                <Button
+                                    label='Setup DICE ID Authentication'
+                                    secondary
+                                    size='lg'
+                                    className={styles.diceIdButton}
+                                    onClick={handleDiceModalStatus}
+                                    disabled={!mfaEnabled}
+                                />
+                            )
+                        }
                         {
                             mfaStatusData?.diceEnabled && (
                                 <Tooltip
                                     content='Please reach out to support@topcoder.com for deactivating Dice ID.'
                                 >
-                                    <IconOutline.InformationCircleIcon />
+                                    <IconSolid.InformationCircleIcon />
                                 </Tooltip>
                             )
                         }
