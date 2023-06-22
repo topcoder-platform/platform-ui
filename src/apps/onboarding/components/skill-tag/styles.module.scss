@@ -1,0 +1,19 @@
+.container {
+  background-color: gray;
+  color: white;
+  border-radius: 3px;
+  padding: 0 10px;
+  font-size: 14px;
+  gap: 5px;
+}
+
+.btnDelete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border-radius: 100%;
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+}
