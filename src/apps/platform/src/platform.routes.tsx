@@ -8,6 +8,7 @@ import { selfServiceRoutes } from '~/apps/self-service'
 import { profilesRoutes } from '~/apps/profiles'
 import { talentSearchRoutes } from '~/apps/talent-search'
 import { accountsRoutes } from '~/apps/accounts'
+import { onboardingRoutes } from '~/apps/onboarding/onboarding.routes'
 
 const Home: LazyLoadedComponent = lazyLoad(() => import('./routes/home'), 'HomePage')
 
@@ -24,6 +25,7 @@ export const platformRoutes: Array<PlatformRoute> = [
     // is determined by finding the first route
     // that matches the current path
     ...selfServiceRoutes,
+    ...onboardingRoutes,
     ...devCenterRoutes,
     // ...earnRoutes,
     ...learnRoutes,

@@ -1,0 +1,27 @@
+@import '../../../../libs/ui/lib/styles/includes';
+
+.wrap {
+    background: $black-10;
+    border-radius: $sp-1;
+    height: 4px;
+    width: 100%;
+    display: flex;
+
+    :global(.progress) {
+        background: gray;
+        border-radius: inherit;
+        width: calc(var(--progress, 0) * 100%);
+        position: relative;
+
+        .percentage {
+            position: absolute;
+            top: 1px;
+            font-family: $font-barlow;
+            font-style: normal;
+            font-weight: $font-weight-bold;
+            font-size: 11px;
+            line-height: 14px;
+            color: $black-100;
+        }
+    }
+}
