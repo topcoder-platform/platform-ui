@@ -1,0 +1,14 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: $sp-8;
+
+    .titleWrap {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        margin-bottom: $sp-2;
+    }
+}
