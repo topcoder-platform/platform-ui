@@ -85,7 +85,7 @@ const Security: FC<SecurityProps> = (props: SecurityProps) => {
                 actionElement={(
                     <div className={styles.diceBtnWrap}>
                         {
-                            !mfaStatusData?.diceEnabled ? (
+                            mfaStatusData?.diceEnabled ? (
                                 <FormToggleSwitch
                                     name='diceEnabled'
                                     onChange={noop}
