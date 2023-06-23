@@ -29,16 +29,12 @@ const MemberProfilePage: FC<{}> = () => {
         }
     }, [routeParams.memberHandle])
 
-    const refreshProfile: () => void = useCallback(() => {
-        if (routeParams.memberHandle) {
-            profileGetPublicAsync(routeParams.memberHandle)
-                .then(userProfile => {
-                    setProfile(userProfile)
-                    setProfileReady(true)
-                })
-            // TODO: NOT FOUND PAGE redirect/dispaly
-        }
-    }, [routeParams.memberHandle])
+    const refreshProfile: (handle: string) => void = useCallback((handle: string) => {
+        profileGetPublicAsync(handle)
+            .then(userProfile => {
+                setProfile(userProfile)
+            })
+    }, [])
 
     return (
         <>

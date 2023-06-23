@@ -18,7 +18,7 @@ import styles from './ProfilePageLayout.module.scss'
 
 interface ProfilePageLayoutProps {
     profile: UserProfile
-    refreshProfile: () => void
+    refreshProfile: (handle: string) => void
     authProfile: UserProfile | undefined
 }
 
