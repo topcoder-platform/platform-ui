@@ -1,0 +1,144 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    border-radius: $sp-2;
+    background: $black-5;
+    padding: $sp-6;
+
+    display: flex;
+    gap: $sp-6;
+
+    @media (max-width: 1150px) {
+        padding: $sp-4;
+        flex-direction: column;
+        gap: $sp-4;
+    }
+}
+
+.statusCol {
+    margin: -$sp-6;
+    margin-right: 0;
+
+    border-radius: $sp-2 0px 0px $sp-2;
+    overflow: hidden;
+
+    width: 64px;
+    flex: 0 0 auto;
+    display: flex;
+
+    @media (max-width: 1150px) {
+        display: none;
+    }
+}
+
+.statusBox {
+    margin-left: auto;
+    @include icon-xxxxl;
+    border-radius: $sp-1;
+    display: flex;
+    overflow: hidden;
+}
+
+.statusIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: $tc-white;
+    color: $black-40;
+    flex: 1 1 auto;
+
+    &.inProgress {
+        color: $turq-100;
+    }
+
+    &.completed {
+        background: $turq-100;
+        color: $tc-white;
+    }
+
+    > svg {
+        display: flex;
+        @include icon-xxxxl;
+
+        @include ltelg {
+            @include icon-xxl;
+        }
+    }
+}
+
+.inner {
+    flex: 1 1 auto;
+
+    display: flex;
+    align-items: flex-start;
+    gap: $sp-4;
+
+    @include ltelg {
+        gap: $sp-2;
+    }
+}
+
+.badge {
+    width: $sp-12;
+    height: $sp-12;
+    flex: 0 0 auto;
+
+    @include ltelg {
+        width: $sp-10;
+        height: $sp-10;
+    }
+
+    svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+.contentWrap {
+    color: $black-100;
+    flex: 1 1 auto;
+}
+
+.headline {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+
+    .cta {
+        margin-left: auto;
+        justify-content: flex-end;
+
+        @media (max-width: 1250px) {
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 1150px) {
+            display: none;
+        }
+    }
+}
+
+.cta, .bottomActions, .bottomCta {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+}
+
+.bottomActions {
+    @media (min-width: 1150px) {
+        display: none;
+    }
+}
+
+.bottomCta {
+    flex-direction: row-reverse;
+}
+
+.content {
+    margin-top: $sp-1;
+    @include ltelg {
+        margin-top: 0;
+    }
+}

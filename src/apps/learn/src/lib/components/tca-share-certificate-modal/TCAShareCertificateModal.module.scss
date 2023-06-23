@@ -1,0 +1,75 @@
+@import '@libs/ui/styles/includes';
+
+.shareCertificateModal {
+    &:global(.react-responsive-modal-modal) {
+        &:global(.modal-md) {
+            width: 600px;
+        }
+        :global(.react-responsive-modal-closeButton) {
+            color: $turq-160;
+        }
+        :global(.modal-body) {
+            gap: $sp-4;
+        }
+    }
+
+    .share-btn {
+        @include icon-mxx;
+        border-radius: 50%;
+        color: $blue-140;
+
+        border: $border solid currentColor;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        padding: $sp-2;
+
+        &:hover {
+            background: transparent;
+        }
+
+        :global(.btn-icon) {
+            @include icon-xxl;
+
+            svg > path {
+                fill: currentColor;
+            }
+        }
+
+        @include ltemd {
+            @include icon-mx;
+        }
+    }
+}
+
+.shareBtnsWrap {
+    display: flex;
+    gap: $sp-4;
+}
+
+.shareUrl {
+    display: flex;
+    gap: $sp-4;
+    background: $black-5;
+    padding: $sp-2 $sp-4;
+    border-radius: $sp-2;
+
+    input {
+        flex: 1 1 auto;
+        display: block;
+        border: 0 none;
+        padding: 0;
+        background: transparent;
+        color: $link-blue-dark;
+        font: inherit;
+    }
+
+    .icon {
+        @include icon-xxl;
+        color: $turq-160;
+
+        cursor: pointer;
+    }
+}

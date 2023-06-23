@@ -1,0 +1,65 @@
+@import "@earn/styles/variables";
+@import "@earn/styles/mixins";
+
+.banner {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+
+  width: 100%;
+  background: linear-gradient(90deg, $tc-blue 0%, $tc-turquoise 100%);
+  border-radius: 10px;
+  margin-bottom: 22px;
+  color: $tc-white;
+  padding-left: 28px;
+
+  .header {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    flex-direction: row;
+    align-items: center;
+    @include roboto-bold;
+    line-height: 25px;
+    min-height: 50px;
+    font-size: 20px;
+    text-transform: uppercase;
+  }
+
+  .chevron {
+    margin-right: 20px;
+    margin-top: 5px;
+
+    &.expanded {
+      transform: rotate(180deg);
+    }
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    font-size: 16px;
+    margin-bottom: 24px;
+    width: 85%;
+
+    h3 {
+      font-size: 15px;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    p {
+      margin-top: 15px;
+    }
+
+    a {
+      text-decoration: underline;
+    }
+
+  }
+}

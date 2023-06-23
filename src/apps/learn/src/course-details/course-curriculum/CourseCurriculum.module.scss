@@ -1,0 +1,56 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    background: $tc-grad15;
+    padding: $sp-8;
+    border-radius: $sp-2;
+
+    color: $tc-white;
+
+    display: flex;
+    flex-direction: column;
+    gap: $sp-6;
+
+    @include ltelg {
+        padding: $sp-4;
+        gap: $sp-4;
+    }
+}
+
+.title {
+    display: flex;
+    align-items: center;
+
+    svg {
+        @include icon-size(60);
+        margin-right: $sp-2;
+        path {
+            fill: url(#lh-paint-02);
+        }
+    }
+}
+
+.bottom-link {
+    margin-top: $sp-8;
+}
+
+.course-outline {
+    max-height: 650px;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+
+    @include scrollbar;
+
+    :global(.steps-list) {
+        pointer-events: none;
+    }
+    :global(.course-outline-wrap .content) {
+        padding-right: 0;
+        margin-right: 0;
+    }
+    
+    @include ltemd {
+        max-height: none;
+    }
+}

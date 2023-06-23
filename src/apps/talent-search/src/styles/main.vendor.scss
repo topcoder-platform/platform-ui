@@ -1,0 +1,5 @@
+// This file can import 3rd parties css/scss files globally
+// without applying CSS Modules
+
+@import "~react-redux-toastr/src/styles/index";
+@import "~react-responsive-modal/styles";

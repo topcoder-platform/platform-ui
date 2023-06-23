@@ -1,0 +1,28 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+
+
+    > svg {
+        display: block;
+        @include icon-size(96);
+    }
+
+    :global(.body-large-bold) {
+        > span {
+            margin-top: $sp-2;
+            display: block;
+        }
+    }
+}
+
+.completedIcon {
+    margin-left: auto;
+    svg {
+        @include icon-size(52);
+        color: $turq-75;
+    }
+}

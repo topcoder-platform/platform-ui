@@ -1,0 +1,89 @@
+@use '@libs/ui/styles/typography';
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    margin: 0 -32px;
+}
+
+.main-wrap {
+    height: calc($content-height - $breadcrumb-height);
+    width: 100%;
+    background: $tc-white;
+
+    display: flex;
+
+    position: relative;
+
+    @include ltemd {
+        flex-direction: column;
+        gap: $sp-4;
+        height: auto;
+        flex: 99 1 auto;
+        margin-bottom: 0;
+    }
+}
+
+.course-frame {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 1;
+
+    padding-left: $sp-8;
+
+    hr {
+        margin-left: $sp-8;
+        margin-right: $sp-8;
+        width: calc(100% - 2 * $sp-8);
+    }
+
+    @include ltemd {
+        padding-left: 0;
+        flex: 1 1 auto;
+
+        hr {
+            margin-left: $sp-4;
+            margin-right: $sp-4;
+            width: calc(100% - 2 * $sp-4);
+        }
+    }
+}
+
+.course-iframe {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    width: 100%;
+}
+
+.course-frame-loader {
+    margin-left: $sp-8;
+    margin-right: $sp-8;
+    width: calc(100% - 2 * $sp-8);
+
+    + iframe {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+.wrapBreadcrumb {
+    position: relative;
+
+    .completeCourseBtn {
+        position: absolute;
+        right: $sp-8;
+        bottom: $sp-5;
+
+        @include ltesm {
+            right: $sp-2;
+            bottom: $sp-3;
+        }
+
+        @include md {
+            right: $sp-2;
+            bottom: $sp-4;
+        }
+    }
+}

@@ -1,0 +1,13 @@
+@import "../../styles/include";
+
+.help-icon {
+  text-transform: none;
+  .tooltip {
+    max-width: 30ch;
+
+    &.inverted {
+      background-color: $grey-bg;
+      color: $black;
+    }
+  }
+}

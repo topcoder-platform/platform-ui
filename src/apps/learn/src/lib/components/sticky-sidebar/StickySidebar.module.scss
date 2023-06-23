@@ -1,0 +1,49 @@
+@import '@libs/ui/styles/includes';
+
+.sticky-container {
+    @include ltelg {
+        @include contentWidth;
+        padding-top: $sp-6;
+    }
+
+    @include gtelg {
+        position: absolute;
+        top: 0;
+        width: 445px;
+        padding: 40px 0;
+        bottom: 0;
+    }
+
+    @media (min-width: $lg-min) and (max-width: 1150px){
+        width: 40vw;
+    }
+
+    @include ltexxl {
+        right: $sp-8;
+    }
+
+    @include xxl {
+        right: calc(50vw - calc($xxl-min/2 - $sp-6));
+    }
+
+}
+
+.wrap {
+    background: $tc-white;
+    border: $border-xs solid $black-20;
+    border-radius: $sp-2;
+
+    width: 100%;
+    margin: 0 auto;
+
+    padding: $sp-6;
+
+    position: sticky;
+    top: 40px;
+
+    @include ltemd {
+        padding: $sp-4;
+        position: relative;
+        top: 0;
+    }
+}

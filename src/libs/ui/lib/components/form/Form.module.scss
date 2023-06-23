@@ -1,0 +1,74 @@
+@use '../../styles/typography';
+@import '../../styles/includes';
+
+.form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+    @include gtemd {
+        width: auto;
+    }
+
+    .subtitle {
+        margin-bottom: $sp-4;
+    }
+
+    .form-footer {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+
+        .button-container {
+            display: flex;
+            justify-content: flex-end;
+
+            .right-container {
+                display: flex;
+                flex: 1;
+                justify-content: flex-end;
+
+                button {
+                    margin-right: 16px;
+
+                    &:last-child {
+                        margin-right: 0;
+                    }
+                }
+            }
+
+            .left-container {
+                display: flex;
+                flex: 1;
+                justify-content: flex-start;
+
+                button {
+                    margin-right: 16px;
+
+                    &:last-child {
+                        margin-right: 0;
+                    }
+                }
+            }
+        }
+
+        .form-error {
+            display: flex;
+            @extend .ultra-small-medium;
+            color: $red-100;
+            background-color: $black-5;
+            padding: $sp-1;
+            margin-bottom: $sp-5;
+
+            svg {
+                @include icon-lg;
+                margin-right: $sp-1;
+            }
+        }
+
+        button:last-child {
+            margin-right: 0;
+        }
+    }
+}

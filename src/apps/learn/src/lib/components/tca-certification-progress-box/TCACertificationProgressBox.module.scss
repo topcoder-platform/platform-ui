@@ -1,0 +1,125 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    border: $border dashed $blue-140;
+    border-radius: $sp-2;
+
+    padding: $sp-6;
+
+    @include ltemd {
+        padding: $sp-4;
+    }
+}
+
+.header {
+    display: flex;
+    gap: $sp-4;
+    align-items: flex-start;
+
+    svg {
+        @include icon-size(47);
+        flex: 0 0 auto;
+    }
+
+    &Content {
+        :global(.overline) {
+            color: $blue-140;
+        }
+
+        :global(.body-main-bold) {
+            margin-top: $sp-1;
+        }
+    }
+}
+
+.certTitle {
+    display: flex;
+    align-items: flex-start;
+    gap: $sp-1;
+}
+
+.desc {
+    margin-top: $sp-4;
+}
+
+.link {
+    display: block;
+    margin-top: $sp-4;
+    font-family: $font-roboto;
+    font-size: 12px;
+    line-height: 14px;
+    font-weight: $font-weight-bold;
+    color: $turq-160;
+    text-transform: uppercase;
+}
+
+.externalLink {
+    display: flex;
+    gap: $sp-1;
+    height: 24px;
+    align-items: center;
+    color: $turq-160;
+
+    svg {
+        @include icon-lg;
+    }
+}
+
+.statusBox {
+    display: flex;
+    align-items: center;
+
+    background: $black-5;
+    border-radius: $sp-2;
+
+    margin-top: $sp-4;
+    padding: $sp-2;
+    padding-left: 0;
+
+    .icon {
+        display: flex;
+        width: 40px;
+        height: 24px;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+
+        color: $black-40;
+
+        svg {
+            @include icon-xxl;
+        }
+
+        &:global(.green) {
+            color: $turq-75;
+        }
+    }
+
+}
+
+.wrap:global(.theme-sidebar) {
+    background: $black-5;
+    color: $tc-black;
+    border: 0 none;
+    padding: $sp-4;
+
+    .header {
+        > svg {
+            @include icon-size(36);
+        }
+
+        :global(.overline) {
+            font-size: 10px;
+            line-height: 12px;
+        }
+
+        :global(.body-main-bold) {
+            font-size: 14px;
+            line-height: 20px;
+        }
+    }
+
+    .statusBox {
+        background: $tc-white;
+    }
+}

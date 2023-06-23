@@ -1,0 +1,34 @@
+@import "@libs/ui/styles/includes";
+@import "@libs/ui/styles/variables";
+
+.skill{
+    font-family: $font-barlow; 
+    font-weight: $font-weight-medium;
+    background-color: rgb(34, 107, 116);
+    color: #fff;
+    margin-top: 4px;
+    margin-right: 4px;
+    border-radius: 5px;
+    padding: 4px 6px 4px;
+    font-size: 14px;
+    line-height: 16px;
+    cursor: pointer;
+    position: relative;
+    
+}
+.challengeWin{
+    padding: 4px 6px 4px 26px;
+}
+.isSearched{
+    background-color: rgb(106, 52, 155);
+}
+
+.before{
+  position: absolute;
+  top: 5px;
+  left: 4px;
+  padding:0px;
+  margin:0px;
+  width: 16px;
+  height: 16px;
+}

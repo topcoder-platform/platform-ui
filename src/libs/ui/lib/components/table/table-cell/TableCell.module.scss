@@ -1,0 +1,38 @@
+@use '../../../styles/typography';
+@import '../../../styles/variables';
+
+.td {
+    max-width: 450px;
+    @extend .medium-subtitle;
+    padding: $sp-4;
+    background: $black-5;
+    word-break: break-word;
+    vertical-align: top;
+
+    &:first-child {
+        border-radius: $sp-2 0 0 $sp-2;
+    }
+
+    &:last-child {
+        border-radius: 0 $sp-2 $sp-2 0;
+    }
+
+    &:nth-last-child(2) {
+        text-align: center;
+    }
+
+    &.action {
+        text-align: center;
+        padding: $sp-2;
+    }
+
+    &.date,
+    &.money, 
+    &.text {
+        white-space: nowrap;
+    }
+
+    &.money {
+        text-align: right;
+    }
+}

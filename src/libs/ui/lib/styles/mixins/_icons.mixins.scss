@@ -1,0 +1,55 @@
+@import '../variables/spacing';
+
+@mixin icon-sm {
+    height: $sp-2;
+    width: $sp-2;
+}
+
+@mixin icon-md {
+    height: $sp-3;
+    width: $sp-3;
+}
+
+@mixin icon-lg {
+    height: $sp-4;
+    width: $sp-4;
+}
+
+@mixin icon-xl {
+    height: $sp-5;
+    width: $sp-5;
+}
+
+@mixin icon-xxl {
+    height: $sp-6;
+    width: $sp-6;
+}
+
+@mixin icon-xxxl {
+    height: $sp-7;
+    width: $sp-7;
+}
+@mixin icon-xxxxl {
+    height: $sp-8;
+    width: $sp-8;
+}
+
+@mixin icon-mx {
+    height: $sp-10;
+    width: $sp-10;
+}
+
+@mixin icon-mxx {
+    height: $sp-12;
+    width: $sp-12;
+}
+
+@mixin icon-full {
+    height: 100%;
+    width: 100%;
+}
+
+@mixin icon-size($size) {
+    height: $size * 1px;
+    width: $size * 1px;
+}

@@ -1,0 +1,22 @@
+@use '@libs/ui/styles/typography';
+@import '@libs/ui/styles/includes';
+
+.list-wrap {
+    counter-reset: solutionListItem;
+}
+  
+
+.solutions-not-available {
+    @extend .large-subtitle;
+    @include font-barlow;
+    color: $black-100;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 507px;
+    padding: $sp-4;
+    text-align: center;
+    background-color: $black-5;
+    border-radius: $sp-2;
+}

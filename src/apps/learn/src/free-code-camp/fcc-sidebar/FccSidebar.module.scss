@@ -1,0 +1,33 @@
+@use '@libs/ui/styles/typography';
+@import '@libs/ui/styles/includes';
+
+.course-outline-pane {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 2;
+
+    @include ltemd {
+        position: relative;
+        top: auto;
+        left: auto;
+        bottom: auto;
+        flex: 0 0 auto;
+    }
+}
+
+.course-outline-wrap {
+    width: 406px;
+
+    @include ltemd {
+        width: 100%;
+    }
+}
+
+.course-outline-title {
+    @extend .body-main-bold;
+    flex: 0 0 auto;
+    margin-bottom: $sp-5;
+    margin-top: $sp-4;
+}

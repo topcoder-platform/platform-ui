@@ -1,0 +1,113 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    padding: $sp-8;
+    background: linear-gradient(84.45deg, $blue-160 2.12%, $blue-110 97.43%);
+    border-radius: 8px;
+    color: $tc-white;
+
+
+    @include ltemd {
+        border-radius: 0;
+        margin-left: -$sp-6;
+        margin-right: -$sp-6;
+    }
+
+    @include ltesm {
+        margin-left: -$sp-4;
+        margin-right: -$sp-4;
+    }
+
+    @media (max-width: 1150px) {
+        padding: $sp-8 $sp-4 $sp-4;
+    }
+}
+
+.headline {
+    display: flex;
+    align-items: baseline;
+
+    @include ltelg {
+        flex-direction: column;
+    }
+
+    .headlineDetails {
+        margin-left: auto;
+
+        display: flex;
+        align-items: baseline;
+        gap: $sp-4;
+
+        @media (max-width: 1250px) {
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        @include ltelg {
+            margin-left: 0;
+            margin-top: $sp-6;
+        }
+    }
+}
+
+.headlineDetailsItem {
+    display: flex;
+    align-items: baseline;
+    gap: $sp-1;
+
+    .icon {
+        height: 38px;
+        padding: 8px 0 0px;
+    }
+
+    svg {
+        display: block;
+        @include icon-xxxxl;
+        color: $turq-75;
+    }
+
+    > span, .headlineDetailsSpan {
+        @include font-barlow;
+        font-weight: 600;
+        font-size: 18px;
+        line-height: 22px;
+
+        color: $black-20;
+        text-transform: uppercase;
+    }
+
+    strong {
+        @include font-barlow-condensed;
+        font-weight: 500;
+        font-size: 44px;
+        line-height: 44px;
+
+        text-transform: uppercase;
+
+        :global(span.units) {
+            @extend .headlineDetailsSpan;
+            align-self: flex-end;
+            padding-bottom: 1px;
+        }
+    }
+}
+
+.container {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 100%);
+    border: 2px dashed rgba(255, 255, 255, 0.6);
+    border-radius: 8px;
+    padding: $sp-8;
+
+    margin-top: $sp-6;
+    @media (max-width: 1150px) {
+        padding: $sp-4;
+    }
+}
+
+.courses {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+
+    margin-bottom: $sp-10;
+}

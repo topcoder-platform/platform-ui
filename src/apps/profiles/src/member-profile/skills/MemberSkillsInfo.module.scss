@@ -1,0 +1,47 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    margin-top: $sp-6;
+
+    @include ltelg {
+        padding-bottom: $sp-6;
+    }
+
+    .skillsWrap {
+        display: flex;
+        flex-wrap: wrap;
+        column-gap: $sp-1;
+        row-gap: $sp-2;
+        margin-top: $sp-2;
+        padding-right: $sp-13;
+
+        @include ltelg {
+            padding-right: 0;
+        }
+
+        .skillItem {
+            background-color: $teal-140;
+            font-weight: $font-weight-medium;
+            font-size: 14px;
+            line-height: 16px;
+            letter-spacing: .5px;
+            color: $tc-white;
+            white-space: nowrap;
+            padding: $sp-1 $sp-2;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+
+            svg {
+                margin-right: $sp-1;
+            }
+        }
+    }
+
+    .legendWrap {
+        display: flex;
+        margin-top: $sp-2;
+    }
+}

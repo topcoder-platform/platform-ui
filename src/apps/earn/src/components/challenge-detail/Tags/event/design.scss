@@ -1,0 +1,21 @@
+/**
+ * Event tag, colored with colors of design track (blue).
+ */
+
+@import "../default";
+
+.button {
+  color: $tc-dark-blue-110;
+  background-color: $tc-light-blue-10;
+
+  &:active,
+  &:focus,
+  &:hover {
+    color: $tc-light-blue;
+    background-color: $tc-light-blue-30;
+  }
+
+  &:visited {
+    color: $tc-light-blue;
+  }
+}

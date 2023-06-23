@@ -1,0 +1,39 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background-color: $black-5;
+    padding: $sp-6;
+    margin: $sp-8 0;
+    border-radius: 6px;
+
+    @include ltelg {
+        padding: $sp-4;
+    }
+
+    .content {
+        background-color: $tc-white;
+        border-radius: 4px;
+        padding: $sp-8;
+        margin-top: $sp-8;
+
+        .sectionButton {
+            align-self: center;
+        }
+
+        .imageWrap {
+            padding: $sp-4;
+            background-color: $black-5;
+            border-radius: 4px;
+            margin-right: $sp-2;
+            align-self: flex-start;
+        }
+
+        .subAction {
+            align-self: center;
+
+            input {
+                display: none;
+            }
+        }
+    }
+}

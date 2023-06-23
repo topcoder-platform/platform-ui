@@ -1,0 +1,24 @@
+@import './layouts';
+
+$border-xs: 1px;
+$border: 2px;
+
+$sp: 4px;
+$sp-1: calc(1 * $sp); // 4px
+$sp-2: calc(2 * $sp); // 8px
+$sp-3: calc(3 * $sp); // 12px
+$sp-35: calc(3.5 * $sp); // 14px
+$sp-4: calc(4 * $sp); // 16px
+$sp-45: calc(4.5 * $sp); // 18px
+$sp-5: calc(5 * $sp); // 20px
+$sp-55: calc(5.5 * $sp); // 22px
+$sp-6: calc(6 * $sp); // 24px
+$sp-7: calc(7 * $sp); // 28px
+$sp-8: calc(8 * $sp); // 32px
+$sp-9: calc(9 * $sp); // 36px
+$sp-10: calc(10 * $sp); // 40px
+$sp-11: calc(11 * $sp); // 44px
+$sp-12: calc(12 * $sp); // 48px
+$sp-13: calc(13 * $sp); // 52px
+$sp-14: calc(14 * $sp); // 56px
+$sp-15: calc(15 * $sp); // 60px

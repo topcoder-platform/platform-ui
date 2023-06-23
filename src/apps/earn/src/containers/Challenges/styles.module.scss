@@ -1,0 +1,91 @@
+@import "@earn/styles/variables";
+@import "@earn/styles/mixins";
+
+:global(.basic-page) {
+  padding: 1px;
+}
+
+.page {
+  padding: $page-padding-y $page-padding-x 105px;
+
+  @include down($mfe-screen-xs) {
+    padding: 10px 0;
+    background-color: $tc-white;
+
+    :global(.banner) {
+      margin: 0 20px;
+      width: calc(100% - 40px);
+    }
+  }
+}
+
+.title {
+  @include barlow-condensed-medium;
+  margin-bottom: 22px;
+  font-size: 34px;
+  line-height: 1;
+
+  @include down($mfe-screen-xs) {
+    font-size: 25px;
+    line-height: 27px;
+    margin: 10px 0 0;
+    padding: 0 20px 10px 20px;
+    background-color: $tc-white;
+    position: relative;
+    z-index: 11;
+    cursor: pointer;
+
+    &.menu-title {
+      text-align: center;
+    }
+  }
+}
+
+.mobile-menu {
+  position: absolute;
+  width: 100%;
+  background-color: $tc-white;
+  border-top: 1px solid $gray3;
+  box-shadow: 0 10px 20px 0 rgba($tc-black, 0.25);
+  z-index: 10;
+
+  &.hidden {
+    display: none;
+  }
+}
+
+.button-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  line-height: 0;
+  text-align: center;
+  vertical-align: middle;
+  appearance: none;
+  background: none;
+  border: 0;
+  border-radius: 50%;
+
+  &.active {
+    path {
+      fill: $darkGreen;
+    }
+  }
+}
+
+.view-mode {
+  float: right;
+
+  > button {
+    margin: 0 2px;
+  }
+}
+
+.arrow-down {
+  float: right;
+  vertical-align: middle;
+
+  &.up {
+    transform: rotate(180deg);
+  }
+}

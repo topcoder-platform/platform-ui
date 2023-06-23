@@ -1,0 +1,91 @@
+@import "../variables";
+
+// Paddings
+@mixin pad($n, $m:null) {
+    @if $m!=null {
+        padding: $n * $sp $m * $sp;
+    } @else {
+        padding: $n * $sp;
+    }
+}
+
+@mixin padLeft($n) {
+    padding-left: $n * $sp;
+}
+
+@mixin padRight($n) {
+    padding-left: $n * $sp;
+}
+
+@mixin padX($n, $m:null) {
+    padding-left: $n * $sp;
+
+    @if $m != null {
+        padding-right: $m * $sp;
+    } @else {
+        padding-right: $n * $sp;
+    }
+}
+
+@mixin padTop($n) {
+    padding-top: $n * $sp;
+}
+
+@mixin padBottom($n) {
+    padding-bottom: $n * $sp;
+}
+
+@mixin padY($n, $m:null) {
+    padding-top: $n * $sp;
+
+    @if $m != null {
+        padding-top: $m * $sp;
+    } @else {
+        padding-bottom: $n * $sp;
+    }
+}
+
+// Margins
+@mixin mg($n, $m:null) {
+    @if $m!=null {
+        margin: $n * $sp $m * $sp;
+    } @else {
+        margin: $n * $sp;
+    }
+}
+
+@mixin mgLeft($n) {
+    margin-left: $n * $sp;
+}
+
+@mixin mgRight($n) {
+    margin-left: $n * $sp;
+}
+
+@mixin mgX($n, $m:null) {
+    margin-left: $n * $sp;
+
+    @if $m != null {
+        margin-right: $m * $sp;
+    } @else {
+        margin-right: $n * $sp;
+    }
+}
+
+@mixin mgTop($n) {
+    margin-top: $n * $sp;
+}
+
+@mixin mgBottom($n) {
+    margin-bottom: $n * $sp;
+}
+
+@mixin mgY($n, $m:null) {
+    margin-top: $n * $sp;
+
+    @if $m != null {
+        margin-top: $m * $sp;
+    } @else {
+        margin-bottom: $n * $sp;
+    }
+}

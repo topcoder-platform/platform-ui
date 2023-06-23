@@ -1,0 +1,38 @@
+@import '@libs/ui/styles/includes';
+
+.card {
+    padding-left: $sp-6;
+    padding-right: $sp-6;
+    width: 100%;
+
+    @include ltemd {
+        padding-left: $sp-4;
+        padding-right: $sp-4;
+    }
+
+    .titleContainer{
+        margin-top: $sp-8;
+
+        @include ltemd {
+            margin-top: $sp-6;
+        }
+
+        .headline {
+            font-weight: 500;
+            font-size: 26px;
+            
+            text-align: left;
+            margin-bottom: $sp-1;
+        }
+
+        .summary {
+            text-align: left;
+            display: block;
+        }
+    }
+
+    .image {
+        margin-top: $sp-6;
+        pointer-events: none;
+    }
+}

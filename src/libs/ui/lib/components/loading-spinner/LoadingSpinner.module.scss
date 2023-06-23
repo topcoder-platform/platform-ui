@@ -1,0 +1,71 @@
+@import '../../styles/includes';
+
+.loading-spinner {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: $black-10;
+    color: $tc-white;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    transition: opacity 1s ease;
+    opacity: 1;
+
+
+    &.inline {
+      position: static;
+      border-radius: $sp-2;
+    }
+
+    &.overlay {
+      position: fixed;
+      background: $white-100-opacity-10;
+    }
+
+    .message {
+        font-size: $sp-4;
+        color: $black-80;
+        line-height: $sp-6;
+        margin-top: $sp-1;
+        @include font-roboto;
+    }
+}
+
+.circles {
+    display: block;
+    width: 64px;
+    height: 64px;
+    text-align: center;
+    margin: 0 auto;
+  }
+
+  .circle-outer {
+    fill: none;
+    stroke: #149efe;
+    stroke-width: 2;
+    animation: growing-circle 2s linear 0s infinite;
+  }
+
+  .circle-inner {
+    fill: none;
+    stroke: #e3e4e5;
+    stroke-width: 2;
+    animation: growing-circle 2s linear -1s infinite;
+  }
+
+  @keyframes growing-circle {
+    0% {
+      r: 9.375%;
+      opacity: 1;
+    }
+
+    100% {
+      r: 43.75%;
+      opacity: 0;
+    }
+  }

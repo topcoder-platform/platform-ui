@@ -1,0 +1,19 @@
+@import '@libs/ui/styles/includes';
+
+.text-section {
+    margin-top: $sp-6;
+
+    > h2 {
+        margin-bottom: $sp-6;
+    }
+
+    > ul {
+        list-style: disc;
+        padding-left: $sp-6;
+        padding-left: $sp-6;
+    }
+
+    &.no-top {
+        margin-top: 0;
+    }
+}

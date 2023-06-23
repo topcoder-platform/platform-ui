@@ -1,0 +1,43 @@
+@import '@libs/ui/styles/includes';
+
+.content {
+    color: $blue-25;
+    margin-top: $sp-4;
+
+    @include ltemd {
+        padding-left: $sp-6;
+        padding-right: $sp-6;
+    }
+
+    @include ltesm {
+        padding-left: $sp-4;
+        padding-right: $sp-4;
+    }
+
+    p, ol, li {
+        margin-top: $sp-4;
+    }
+    ol {
+        list-style: decimal;
+        padding-left: 16px;
+    }
+
+    ol li a {
+        display: flex;
+        align-items: center;
+        gap: $sp-1;
+        font-family: $font-roboto;
+        font-weight: bold;
+        font-size: 14px;
+        line-height: 14px;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: $tc-white;
+        margin-top: $sp-2;
+        svg {
+            display: block;
+            width: 14px;
+            height: 14px;
+        }
+    }
+}

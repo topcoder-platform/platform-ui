@@ -1,0 +1,24 @@
+@import "@libs/ui/styles/includes";
+@import '../../../styles/variables';
+
+.contentLayout {
+  width: 100%;
+  padding-bottom: 0;
+
+  .contentLayout-outer {
+    width: 100%;
+
+    .contentLayout-inner {
+      width: 100%;
+      overflow: visible;
+    }
+  }
+}
+
+@include ltelg {
+  .contentLayout {
+    .contentLayout-outer {
+      padding: 0 $sp-4;
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+    "compilerOptions": {
+        "baseUrl": "./",
+
+        "paths": {
+            "~/*": [
+                "./src/*"
+            ],
+            "@earn/*": [
+                "./src/apps/earn/src/*"
+            ],
+            "@devCenter/*": [
+                "./src/apps/dev-center/src/*"
+            ],
+            "@gamificationAdmin/*": [
+                "./src/apps/gamification-admin/src/*"
+            ],
+            "@learn/*": [
+                "./src/apps/learn/src/*"
+            ],
+            "@platform/*": [
+                "./src/apps/platform/src/*"
+            ],
+            "@talentSearch/*": [
+                "./src/apps/talent-search/src/*"
+            ],
+            "@libs/ui/styles/*": [
+                "./src/libs/ui/lib/styles/*"
+            ]
+        }
+    }
+}

@@ -1,0 +1,56 @@
+@import '../../../styles/includes';
+
+@mixin iconOnly {
+    &:first-child:last-child {
+        @content;
+    }
+}
+
+.icon-btn {
+    :global(.btn-icon) {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        &:first-child {
+            margin-left: -$sp-1;
+        }
+        &:last-child {
+            margin-right: -$sp-1;
+        }
+    }
+    &:global(.btn-size-sm) {
+        :global(.btn-icon) {
+            &:first-child {
+                margin-left: -$sp-2;
+            }
+            &:last-child {
+                margin-right: -$sp-2;
+            }
+        }
+    }
+
+    // Define button sizes
+    &:global(.btn-size-sm),
+    &, &:global(.btn-size-md),
+    &:global(.btn-size-lg) {
+        :global(.btn-icon) {
+            @include padY(1);
+            @include icon-size(16);
+        }
+    }
+
+    &:global(.btn-size-lg) {
+        :global(.btn-icon) {
+            @include iconOnly {
+                @include icon-size(24);
+            }
+        }
+    }
+
+    &:global(.btn-size-xl) {
+        :global(.btn-icon) {
+            @include icon-size(22);
+        }
+    }
+
+}

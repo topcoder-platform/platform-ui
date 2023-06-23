@@ -1,0 +1,47 @@
+@use '@libs/ui/styles/typography';
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    padding: $sp-6;
+    border-radius: $sp-2;
+    background: $tc-white;
+
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+
+    @include ltelg {
+        padding: $sp-4;
+        gap: $sp-2;
+    }
+
+    @include ltemd {
+        gap: $sp-4;
+    }
+}
+
+.title {
+    @extend .body-main-bold;
+    color: $blue-140;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.summary {
+    display: flex;
+    gap: $sp-4;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    
+    @include ltelg {
+        gap: $sp-2;
+    }
+
+    @include ltemd {
+        justify-content: center;
+        gap: $sp-4;
+    }
+}

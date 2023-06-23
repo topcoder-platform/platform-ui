@@ -54,6 +54,12 @@ running_yarn_build: &running_yarn_build
       yarn install
       yarn build
 
+running_yarn_sb_build: &running_yarn_sb_build
+    name: Running Yarn Storybook Build
+    command: |
+      source buildenvvar
+      yarn sb:build
+
 running_yarn_test: &running_yarn_test
     name: Running Yarn Test Build
     command: |
@@ -91,6 +97,7 @@ build_steps: &build_steps
     - run: *install_deploysuite
     - run: *build_configuration_fetch
     - run: *running_yarn_build
+    - run: *running_yarn_sb_build
     - persist_to_workspace: *workspace_persist
 
 test_steps: &test_steps
@@ -153,6 +160,14 @@ jobs:
       APPNAME: "platform-ui-mvp"
     steps: *build_steps
 
+  build-qa:
+    <<: *defaults
+    environment:
+      DEPLOY_ENV: "QA"
+      LOGICAL_ENV: "qa"
+      APPNAME: "platform-ui-mvp"
+    steps: *build_steps
+
   build-prod:
     <<: *defaults
     environment:
@@ -175,6 +190,15 @@ jobs:
     environment:
       DEPLOY_ENV: "DEV"
       LOGICAL_ENV: "dev"
+      ENABLE_CACHE: true
+      APPNAME: "platform-ui-mvp"
+    steps: *deploy_steps
+
+  deployQa:
+    <<: *deploy_defaults
+    environment:
+      DEPLOY_ENV: "QA"
+      LOGICAL_ENV: "qa"
       ENABLE_CACHE: true
       APPNAME: "platform-ui-mvp"
     steps: *deploy_steps
@@ -212,6 +236,16 @@ workflows:
             branches:
               ignore:
                 - master
+                - qa
+                - profiles-app
+
+      - build-qa:
+          context : org-global
+          filters:
+            branches:
+              only:
+                - qa
+                - profiles-app
 
       - build-prod:
           context : org-global
@@ -228,6 +262,17 @@ workflows:
             branches:
               only:
                 - dev
+                - talent-search
+
+      - deployQa:
+          context : org-global
+          requires:
+            - build-qa
+          filters:
+            branches:
+              only:
+                - qa
+                - profiles-app
 
       - deployProd:
           context : org-global

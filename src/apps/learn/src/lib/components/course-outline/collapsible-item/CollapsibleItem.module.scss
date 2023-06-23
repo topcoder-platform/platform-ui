@@ -1,0 +1,127 @@
+@use '@libs/ui/styles/typography';
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    color: $tc-white;
+}
+
+.title-row {
+    display: flex;
+    align-items: flex-start;
+    gap: calc($sp-2 + $border);
+    cursor: pointer;
+
+    > span {
+        @extend .body-small-bold;
+        line-height: 24px;
+    }
+
+    .title {
+        @include ltemd {
+            line-height: 18px;
+            align-self: center;
+        }
+    }
+
+    :global(.status-checkbox) {
+        margin-top: 0;
+        width: $sp-6;
+        height: $sp-6;
+
+        &:global(.completed) {
+            color: $turq-75;
+        }
+    }
+}
+
+.title-tag {
+    display: inline-block;
+    color: $blue-140;
+    background: $tc-white;
+    padding: calc($border + $border-xs) $sp-1;
+    border-radius: $border;
+    text-transform: uppercase;
+    line-height: 10px;
+    margin-top: $sp-1;
+    margin-right: calc($sp-2 + $border);
+    @include ltemd {
+        margin-right: $sp-1;
+    }
+}
+
+.chevron {
+    margin-left: auto;
+    width: $sp-6;
+    flex: 0 0 auto;
+    svg {
+        @include icon-xxl;
+    }
+
+
+    .wrap:global(.collapsed) & svg {
+        transform: rotate(180deg);
+    }
+}
+
+.content {
+    margin-left: 34px;
+    padding-right: $sp-8;
+
+    @include ltemd {
+        padding-right: $sp-6;
+    }
+}
+
+
+.short-desc {
+    margin-top: $sp-2;
+
+    pre {
+        display: inline;
+    }
+}
+
+.summary {
+    display: flex;
+    color: $tc-white;
+    margin-top: $border-xs;
+
+    > * + * {
+        &:before {
+            content: "";
+            display: block;
+            width: 1px;
+            height: 14px;
+            background: $tc-white;
+            margin: 0 calc($sp-2 + $border);
+        }
+    }
+
+    &-item {
+        @extend .body-small;
+        display: flex;
+        align-items: center;
+
+        svg {
+            width: 14px;
+            height: 14px;
+            margin-right: calc($sp-1 + $border);
+        }
+    }
+
+    @include ltemd {
+        margin-top: $sp-3;
+    }
+}
+
+.list {
+    display: flex;
+    gap: calc($sp-1 + $border) $sp-2;
+    flex-wrap: wrap;
+
+    margin-top: $sp-2;
+
+    > li:global(.full-width) {
+        width: 100%;
+    }
+}

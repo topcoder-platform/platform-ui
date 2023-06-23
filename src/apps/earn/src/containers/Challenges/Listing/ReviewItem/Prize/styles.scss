@@ -1,0 +1,34 @@
+@import "@earn/styles/variables";
+@import "@earn/styles/mixins";
+
+.prize {
+  @include down($mfe-screen-xs) {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    align-items: center;
+
+    .value {
+      margin-right: 10px;
+      font-size: 21px;
+      line-height: 25px;
+    }
+  }
+}
+
+.text,
+.value {
+  display: block;
+}
+
+.text {
+  font-size: $font-size-sm;
+  line-height: 22px;
+  color: #7F7F7F;
+}
+
+.value {
+  @include barlow-semibold;
+
+  font-size: 24px;
+  line-height: 26px;
+}

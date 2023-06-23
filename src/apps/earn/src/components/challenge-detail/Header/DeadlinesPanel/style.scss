@@ -1,0 +1,38 @@
+@import "@earn/styles/mixins";
+
+.panel {
+  background-color: #555;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 24px 0 34px 0;
+  position: relative;
+  margin-bottom: -24px;
+
+  @include xs-to-md {
+    flex-direction: column;
+    padding-top: 0;
+    padding-right: 16px;
+    padding-left: 16px;
+    margin-bottom: 0;
+  }
+
+  &.left {
+    justify-content: flex-start;
+  }
+}
+
+.timezone {
+  @include roboto-regular;
+
+  color: #d4d4d4;
+  font-size: 12px;
+  line-height: 18px;
+  position: absolute;
+  right: 24px;
+  bottom: 8px;
+
+  @include xs-to-md {
+    right: 16px;
+  }
+}

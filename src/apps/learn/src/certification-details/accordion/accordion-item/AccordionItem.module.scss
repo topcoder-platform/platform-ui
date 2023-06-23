@@ -1,0 +1,51 @@
+@import '@libs/ui/styles/includes';
+
+.item {
+    padding: $sp-4 $sp-6;
+    border-top: $border solid $black-10;
+    &:last-child {
+        border-bottom: $border solid $black-10;
+    }
+
+    &:global(.toggled) {
+        .itemArrowIcon {
+            transform: rotateZ(0deg);
+        }
+    }
+    &:global(:not(.toggled)) {
+        .itemDesc {
+            display: none;
+        }
+    }
+}
+
+.itemTitle {
+    display: flex;
+    align-items: flex-start;
+
+    cursor: pointer;
+}
+
+.itemDesc {
+    margin-top: $sp-4;
+}
+
+.itemArrowIcon {
+    display: flex;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    transform: rotateZ(180deg);
+    color: $turq-160;
+
+    margin-left: auto;
+
+    transition: 0.15s ease-in;
+    flex: 0 0 auto;
+
+    svg {
+        display: block;
+        width: 100%;
+    }
+}

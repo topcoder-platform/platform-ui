@@ -1,0 +1,106 @@
+@import "@libs/ui/styles/includes";
+@import "@libs/ui/styles/variables";
+
+.container {
+  display: flex;
+  flex-direction: column;
+  padding-top: $sp-8;
+
+  .badges-table-header {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: $sp-4;
+    color: $black-60;
+    @include font-barlow;
+    @include font-weight-semibold;
+    font-size: 11px;
+    line-height: 11px;
+
+    .col-sort {
+      display: flex;
+      margin-left: 94px;
+      align-items: center;
+
+      svg {
+        color: $black-100;
+      }
+    }
+
+    div:last-child {
+      margin-right: 100px;
+
+      @include ltemd {
+        display: none;
+      }
+    }
+  }
+
+  .badges-table {
+    display: flex;
+    flex-direction: column;
+
+    .badge-row {
+      display: flex;
+      justify-content: space-between;
+      padding: $sp-4 $sp-6;
+
+      @include ltemd {
+        flex-direction: column;
+      }
+
+      &:nth-child(odd) {
+        background-color: $black-5;
+        border-radius: 8px;
+      }
+
+      .badge {
+        display: flex;
+        align-items: center;
+
+        .badge-image {
+          width: 48px;
+          height: 48px;
+          margin-right: $sp-5;
+        }
+
+        .badge-image-disabled {
+          width: 48px;
+          height: 48px;
+          margin-right: $sp-5;
+          opacity: 0.5;
+          filter: grayscale(1);
+        }
+
+        .badge-name {
+          font-size: 16px;
+          font-weight: 700;
+          line-height: 24px;
+          color: $black-100;
+        }
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+
+        @include ltemd {
+          margin: $sp-2 0;
+        }
+
+        .action-btn {
+          margin-right: $sp-2;
+
+          &:last-child {
+            margin-right: 0;
+          }
+        }
+      }
+    }
+  }
+
+  .loadbtn-wrap {
+    display: flex;
+    justify-content: center;
+    flex: 1;
+  }
+}

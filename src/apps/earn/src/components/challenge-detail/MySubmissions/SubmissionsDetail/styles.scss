@@ -1,0 +1,276 @@
+@import "@earn/styles/mixins";
+
+.wrapper {
+  @include roboto-medium;
+
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  font-size: 13px;
+  overflow: hidden;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+
+  button {
+    cursor: pointer;
+    border: none;
+    outline: none;
+    font: inherit;
+    color: inherit;
+    padding: 0;
+    background: transparent;
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 25px;
+
+  .title {
+    @include barlow-medium;
+
+    font-weight: 600;
+    color: #2a2a2a;
+    font-size: 18px;
+    line-height: 22px;
+    text-transform: uppercase;
+  }
+
+  .icon {
+    cursor: pointer;
+    margin-top: 5px;
+  }
+}
+
+.table-header {
+  background: #fafafb;
+  justify-content: center;
+  position: relative;
+}
+
+.table-title {
+  display: flex;
+}
+
+.table-row {
+  display: flex;
+  height: 40px;
+  align-items: center;
+  border-bottom: 1px solid #ededf2;
+
+  @include xs-to-sm {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    height: inherit;
+    padding-top: 18px;
+    padding-bottom: 18px;
+
+    &:first-child {
+      border-top: 1px solid #ededf2;
+    }
+  }
+}
+
+.btn-back {
+  position: absolute;
+  left: 22px;
+
+  * {
+    color: $tc-dark-blue;
+  }
+}
+
+.back-icon {
+  width: 12px;
+  margin-right: 1px;
+  margin-bottom: -1px;
+  -moz-transform: rotate(90deg);
+  -o-transform: rotate(90deg);
+  -webkit-transform: rotate(90deg);
+  transform: rotate(90deg);
+
+  :global {
+    g {
+      fill: $tc-dark-blue;
+    }
+  }
+}
+
+.title-detail {
+  margin-left: 2px;
+}
+
+.table-tabs {
+  background: rgba(26, 133, 255, 0.05);
+}
+
+.tab-item {
+  width: 141px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  border-right: 1px solid #ededf2;
+
+  &.tab-item-selected {
+    background: $tc-white;
+  }
+
+  &:last-child {
+    border-right: none;
+  }
+}
+
+.column-1 {
+  color: black;
+  padding-left: 22px;
+  font-size: 14px;
+
+  @include xs-to-sm {
+    padding-left: 0;
+  }
+}
+
+.table-content-header {
+  color: $tc-black;
+
+  @include xs-to-sm {
+    display: none;
+  }
+
+  .column-1 {
+    color: $tc-black;
+  }
+}
+
+.table-column {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  height: 100%;
+  align-items: center;
+
+  &.column-1 {
+    justify-content: flex-start;
+  }
+
+  @include xs-to-sm {
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 14px;
+  }
+}
+
+.table-content-footer {
+  .column-1 {
+    color: $tc-black;
+  }
+}
+
+.col-arrow {
+  display: none;
+  padding-left: 5px;
+  margin-right: -19px;
+
+  :global {
+    svg {
+      margin-bottom: 1px;
+      height: 8px;
+    }
+  }
+}
+
+.hr {
+  width: 100%;
+  margin: 0;
+}
+
+.sub-header {
+  font-size: 16px;
+  margin-top: 24px;
+  margin-bottom: 24px;
+
+  .title-detail {
+    font-weight: bold;
+  }
+}
+
+.col-arrow-is-sorting {
+  display: block;
+
+  :global {
+    g {
+      fill: $tc-dark-blue;
+    }
+  }
+}
+
+.col-arrow-sort-asc {
+  :global {
+    svg {
+      -moz-transform: scale(1, -1);
+      -o-transform: scale(1, -1);
+      -webkit-transform: scale(1, -1);
+      transform: scale(1, -1);
+    }
+  }
+}
+
+button.header-sort {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 11px;
+  color: #767676;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-family: "Barlow", Helvetica, Arial, sans-serif;
+
+  &:hover {
+    color: $tc-dark-blue;
+
+    :global {
+      g {
+        fill: $tc-dark-blue;
+      }
+    }
+  }
+}
+
+.status-complete {
+  font-size: 14px;
+  color: #0ab88a;
+  font-weight: 500;
+}
+
+.status-failed {
+  font-size: 14px;
+  color: #ef476f;
+  font-weight: 500;
+}
+
+.status-in-queue {
+  font-size: 14px;
+  color: #f46500;
+  font-weight: 500;
+}
+
+.mobile-header {
+  display: none;
+  font-weight: 600;
+  color: #767676;
+  padding-bottom: 3px;
+
+  @include xs-to-sm {
+    display: block;
+  }
+}
+
+.inner-content {
+  @include xs-to-sm {
+    max-height: calc(100vh - 150px);
+    overflow: auto;
+  }
+}

@@ -1,0 +1,79 @@
+@use '@libs/ui/styles/typography';
+@import '@libs/ui/styles/includes';
+@import '@libs/ui/styles/inputs';
+
+.payment-form {
+    padding: $sp-6;
+
+    @include ltemd {
+        padding: $sp-4;
+    }
+
+    > h3 {
+        margin-bottom: $sp-6;
+        font-family: $font-barlow;
+    }
+
+    .cardElement {
+        @include formInputText;
+
+        input,
+        select {
+            @include formInputText;
+        }
+    }
+
+    .cardDate {
+        margin-right: $sp-2;
+    }
+
+    .input-wrap-wrapper {
+        display: flex;
+        margin-bottom: $sp-2;
+        > div {
+            flex: 1;
+        }
+    }
+
+    .checkbox-label {
+        @extend .body-main;
+        white-space: pre-wrap;
+        font-weight: 400;
+        .link {
+            @extend .body-main-link;
+            color: $link-blue-dark;
+            margin-left: $sp-1;
+            cursor: pointer;
+        }
+    }
+
+    .pay-button {
+        width: 100%;
+
+        @include ltemd {
+            margin-top: $sp-4;
+        }
+    }
+
+    .error {
+        background-color: $red-25;
+        padding: $sp-4;
+        border: 1px solid $red-120;
+        border-radius: 4px;
+        color: $red-120;
+        margin-bottom: $sp-5;
+        display: flex;
+        align-items: flex-start;
+
+        .errorIcon {
+            width: 20px;
+            min-width: 20px;
+            margin-right: $sp-2;
+        }
+
+        .errorMsg {
+            display: flex;
+            flex-direction: column;
+        }
+    }
+}

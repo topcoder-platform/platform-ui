@@ -1,0 +1,55 @@
+@use '@libs/ui/styles/typography';
+@import '@libs/ui/styles/includes';
+
+.bug-delivery-radio {
+    border: 1px solid $black-100;
+    border-radius: 4px;
+    padding-top: $sp-4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    cursor: pointer;
+    height: 100%;
+    svg {
+        path {
+            fill: $tc-black;
+        }
+    }
+    &.selected {
+        background-color: $turq-160;
+        border: 1px solid $turq-160;
+        svg {
+            path {
+                fill: $tc-white;
+            }
+        }
+        .name {
+            color: $tc-white;
+        }
+        .recommended-text-wrapper {
+          background-color: $black-5;
+          color: $turq-160;
+        }
+    }
+    &.recommended {
+      .name {
+        margin-bottom: $sp-5;
+      }
+    }
+    .name {
+        @extend .body-large-bold;
+        margin-top: $sp-2;
+        margin-bottom: $sp-8;
+    }
+    .recommended-text-wrapper {
+      @extend .overline;
+
+      text-align: center;
+      background-color: $black-100;
+      color: $tc-white;
+      padding: $sp-1 $sp-2;
+      border-radius: 0 0 $sp-1 $sp-1;
+      width: 100%;
+    }
+}

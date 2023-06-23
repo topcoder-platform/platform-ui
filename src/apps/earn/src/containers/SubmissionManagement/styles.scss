@@ -1,0 +1,31 @@
+@import '@earn/styles/mixins';
+
+$sm-space-10: $base-unit * 2;
+$sm-space-15: $base-unit * 3;
+$sm-space-25: $base-unit * 5;
+$sm-space-40: $base-unit * 8;
+
+.outer-container {
+  background: $tc-gray-10;
+  padding: 24px;
+  width: 100%;
+
+  @include xs-to-sm {
+    padding: 15px;
+  }
+}
+
+.deletingIndicator {
+  margin: -17px 0;
+
+  &:global.hidden {
+    display: none;
+  }
+}
+
+.submission-management-container {
+  @include roboto-regular;
+
+  background: #fff;
+  margin: auto;
+}

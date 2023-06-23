@@ -1,0 +1,64 @@
+import { ColorPalette, ColorItem, Meta, Markdown } from '@storybook/blocks';
+
+<Meta title="Scss/Breakpoints" />
+
+
+# Breakpoints variables
+
+<Markdown>
+{`
+| Variable Name | Value           |
+|---------------|-----------------|
+| $xxs-max      | 320px           |
+| $xs-min       | 321px           |
+| $xs-max       | 375px           |
+| $sm-min       | 376px           |
+| $sm-max       | 464px           |
+| $md-min       | 465px           |
+| $md-max       | 744px           |
+| $lg-min       | 745px           |
+| $lg-max       | 984px           |
+| $xl-min       | 985px           |
+| $xl-max       | 1439px          |
+| $xxl-min      | 1440px          |
+`}
+</Markdown>
+
+# Breakpoints mixins
+
+Sample usage
+
+```css
+.container {
+    width: 50%;
+    @include xxs {
+        width: 100%;
+    }
+}
+```
+
+
+<Markdown>
+{`
+| Variable Name | Description                                               |
+|---------------|-----------------------------------------------------------|
+| xxs           | Screens smaller than 320px                                |
+| ltexs         | Screens smaller than 375px                                |
+| xs            | Screens between 321px and 375px                           |
+| ltesm         | Screens smaller than 464px                                |
+| sm            | Screens between 376px and 464px                           |
+| smlg          | Screens between 376px and 984px                           |
+| gtesm         | Screens larger than 376px                                 |
+| ltemd         | Screens smaller than 744px                                |
+| md            | Screens between 465px and 744px                           |
+| gtemd         | Screens larger than 465px                                 |
+| ltelg         | Screens smaller than 984px                                |
+| lg            | Screens between 745px and 984px                           |
+| gtelg         | Screens larger than 745px                                 |
+| ltexl         | Screens smaller 1439px                                    |
+| xl            | Screens between 985px and 1439px                          |
+| gtexl         | Screens larger than 985px                                 |
+| ltexxl        | Screens smaller than 1439px                               |
+| xxl           | Screens larger than 1440px                                |
+`}
+</Markdown>

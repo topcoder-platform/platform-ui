@@ -1,0 +1,167 @@
+@import "@libs/ui/styles/includes";
+@import "../../styles/variables";
+
+.markdown-doc {
+    @include font-roboto;
+    @include font-weight-normal;
+    font-size: 16px;
+    line-height: 24px;
+    color: inherit;
+
+    counter-reset: devCenterHeading2;
+    counter-reset: devCenterHeading3;
+
+    *:not(pre) code {
+        @include font-roboto-mono;
+        @include font-weight-normal;
+        font-size: 14px;
+        line-height: 18px;
+        color: $silver-1;
+        background-color: $black-100;
+
+        word-break: break-word;
+    }
+
+    a {
+        font: inherit;
+        @include font-weight-medium;
+        color: $link-blue-dark;
+
+        &:hover,
+        &:active {
+            color: lighten($link-blue-dark, 5%);
+        }
+    }
+
+    > *:first-child {
+        margin-top: 0;
+    }
+}
+
+.heading1 {
+    @include font-barlow-condensed;
+    @include font-weight-semibold;
+    font-size: 34px;
+    line-height: 32px;
+    color: inherit;
+    text-transform: uppercase;
+
+    margin: $sp-6 0 $sp-4;
+    counter-reset: devCenterHeading2;
+}
+
+.heading2 {
+    @include font-barlow;
+    @include font-weight-semibold;
+    font-size: 24px;
+    line-height: 28px;
+    color: inherit;
+    text-transform: uppercase;
+
+    margin: 80px 0 $sp-6;
+    counter-increment: devCenterHeading2;
+    counter-reset: devCenterHeading3;
+
+    &::before {
+        content: counter(devCenterHeading2) ". ";
+        font: inherit;
+        color: inherit;
+    }
+}
+
+.heading3 {
+    @include font-barlow;
+    @include font-weight-semibold;
+    font-size: 22px;
+    line-height: 26px;
+    color: inherit;
+    text-transform: uppercase;
+    margin: 10px 0 $sp-6;
+    counter-increment: devCenterHeading3;
+
+    &::before {
+        content: counter(devCenterHeading2) "." counter(devCenterHeading3) ". ";
+        font: inherit;
+        color: inherit;
+    }
+
+    &:first-child {
+        margin-top: $sp-6;
+    }
+}
+
+.divider {
+    hr {
+        width: 100%;
+        margin: $sp-4 0;
+        border: 1px solid $black-10;
+        border-radius: 2px;
+    }
+}
+
+.paragraph {
+    font: inherit;
+    color: inherit;
+    margin: $sp-6 0 0;
+}
+
+.orderedList,
+.unorderedList {
+    > ol,
+    > ul {
+        font: inherit;
+        color: inherit;
+        margin: 0 0 $sp-6;
+
+        padding-left: 24px;
+        > li {
+            position: relative;
+
+            &::before {
+                position: absolute;
+            }
+        }
+    }
+}
+.orderedList {
+    > ol {
+        counter-reset: devCenterOrderedList;
+        > li::before {
+            counter-increment: devCenterOrderedList;
+            content: counter(devCenterOrderedList) ". ";
+            left: -1em;
+            top: 0;
+        }
+    }
+}
+.unorderedList {
+    > ul {
+        > li::before {
+            content: "";
+            top: 0.625em;
+            left: -0.625em;
+            width: 3px;
+            height: 3px;
+            background-color: currentColor;
+            border-radius: 3px;
+        }
+    }
+}
+
+@include ltelg {
+    .markdown-doc {
+        font-size: 14px;
+        line-height: 20px;
+    }
+
+    .heading1 {
+        font-size: 28px;
+        line-height: 32px;
+    }
+
+    .heading2 {
+        font-size: 20px;
+        line-height: 22px;
+        margin: $sp-6 0 $sp-6;
+    }
+}

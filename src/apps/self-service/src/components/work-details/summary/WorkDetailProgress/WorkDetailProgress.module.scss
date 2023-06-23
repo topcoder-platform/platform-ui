@@ -1,0 +1,19 @@
+@import '@libs/ui/styles/includes';
+
+.progress-container {
+    margin-bottom: calc($sp-4 + $sp-6);
+    padding: $sp-4 $sp-6 $sp-6;
+    border-radius: $sp-2;
+    @extend .bg-black-5;
+
+    h3 {
+        margin-bottom: $sp-4;
+        color: $black-100;
+    }
+
+    .progress {
+        display: flex;
+        justify-content: space-between;
+        margin-top: calc($sp-4 + $sp-6);
+    }
+}

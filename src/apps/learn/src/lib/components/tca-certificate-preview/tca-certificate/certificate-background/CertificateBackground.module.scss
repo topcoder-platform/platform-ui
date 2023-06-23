@@ -1,0 +1,28 @@
+@import '@libs/ui/styles/includes';
+
+.bg {
+    path:global(#tca-cert-bg_grad-el) {
+        fill: url(#tca-cert-bg--default);
+    }
+    &:global(.dev) {
+        path:global(#tca-cert-bg_grad-el) {
+            fill: url(#tca-cert-bg--dev);
+        }
+    }
+    &:global(.datascience) {
+        path:global(#tca-cert-bg_grad-el) {
+            fill: url(#tca-cert-bg--datascience);
+        }
+    }
+    &:global(.design) {
+        path:global(#tca-cert-bg_grad-el) {
+            fill: url(#tca-cert-bg--design);
+        }
+    }
+    &:global(.qa) {
+        path:global(#tca-cert-bg_grad-el) {
+            fill: url(#tca-cert-bg--qa);
+        }
+    }
+
+}

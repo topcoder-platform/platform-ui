@@ -1,0 +1,85 @@
+@use '@libs/ui/styles/typography';
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    padding: $sp-10 0 $sp-8;
+    gap: $sp-8;
+    position: relative;
+    flex: 1;
+
+    display: grid;
+    grid-template-areas:
+        'intro-copy aside'
+        'description aside';
+    grid-template-columns: 1fr 40%;
+    grid-template-rows: auto 1fr;
+
+    @include ltemd {
+        grid-template-areas: 'intro-copy' 'aside' 'description';
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr;
+    }
+}
+
+.tcaCertBanner {
+    margin-top: $sp-8;
+}
+
+.aside {
+    flex: 0 0 auto;
+    max-width: 560px;
+    width: 100%;
+    grid-area: aside;
+    @include ltemd {
+        max-width: none;
+    }
+}
+
+.intro-copy {
+    grid-area: intro-copy;
+    flex: 1 1 auto;
+    .text {
+        @extend .body-main;
+        margin-top: $sp-8;
+    }
+}
+
+.description {
+    grid-area: description;
+    flex: 1 1 auto;
+    .text {
+        @extend .body-main;
+        margin-top: $sp-6;
+    }
+
+    p {
+        margin: $sp-2 0;
+    }
+
+    :global(.details.mtop) {
+        margin-top: $sp-6;
+    }
+}
+
+.coming-soon {
+    margin-top: $sp-8;
+}
+
+.credits-link {
+    margin-top: $sp-8;
+    padding-bottom: $sp-6;
+
+    a {
+        @extend .quote-small;
+        color: $link-blue-dark;
+        font-style: italic;
+
+        display: inline-flex;
+        align-items: center;
+    }
+    svg {
+        @include icon-md;
+        margin-left: $sp-1;
+        flex: 0 0 auto;
+    }
+}

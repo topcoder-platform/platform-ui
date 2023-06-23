@@ -1,0 +1,30 @@
+@import "../../../styles/mixins";
+
+.container {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+
+  @include desktop {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .nameField {
+    @include desktop {
+      flex: 0 0 auto;
+      width: 380px;
+    }
+  }
+
+  .sortingDropdown {
+    margin-top: 16px;
+
+    @include desktop {
+      flex: 0 0 auto;
+      margin-top: 0;
+      margin-left: 32px;
+      width: 230px;
+    }
+  }
+}
