@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom'
 
 import { ToolTitle } from '~/config/constants'
-import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
+import { lazyLoad, LazyLoadedComponent, PlatformRoute, UserRole } from '~/libs/core'
 
 const PageOnboarding: LazyLoadedComponent = lazyLoad(() => import('./pages/onboarding/index'), 'OnboardingWrapper')
 const PageStart: LazyLoadedComponent = lazyLoad(() => import('./pages/start/index'), 'PageStart')
@@ -32,6 +32,9 @@ export const onboardingRoutes: ReadonlyArray<PlatformRoute> = [
         ],
         element: <PageOnboarding />,
         id: onboardRouteId,
+        rolesRequired: [
+            UserRole.member,
+        ],
         route: onboardingRootRoute,
         title: toolTitle,
     },
