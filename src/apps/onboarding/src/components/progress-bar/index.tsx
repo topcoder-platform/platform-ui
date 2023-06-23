@@ -4,6 +4,7 @@ import styles from './styles.module.scss'
 
 interface ProgressBarProps {
     progress: number
+    label?: string
     className?: string
 }
 
@@ -15,7 +16,7 @@ export const ProgressBar: FC<ProgressBarProps> = (props: ProgressBarProps) => {
 
     return (
         <div className={props.className}>
-            <span>#/##</span>
+            <span>{props.label}</span>
             <div className={styles.wrap}>
                 <div
                     className='progress'

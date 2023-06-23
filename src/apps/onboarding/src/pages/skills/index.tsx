@@ -118,7 +118,11 @@ const PageSkillsContent: FC<{
                 </div>
             </div>
 
-            <ProgressBar className={styles.ProgressBar} progress={0.5} />
+            <ProgressBar
+                className={styles.ProgressBar}
+                progress={2.0 / 7}
+                label='2/7'
+            />
 
             <div className={classNames('d-flex justify-content-between', styles.blockFooter)}>
                 <Button
