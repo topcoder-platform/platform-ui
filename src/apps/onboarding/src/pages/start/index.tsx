@@ -62,7 +62,11 @@ export const PageStart: FC<{}> = () => {
                 </div>
             </div>
 
-            <ProgressBar className={styles.ProgressBar} progress={0.5} />
+            <ProgressBar
+                className={styles.ProgressBar}
+                progress={1.0 / 7}
+                label='1/7'
+            />
 
             <div className={classNames('d-flex justify-content-end', styles.blockFooter)}>
                 <Button
