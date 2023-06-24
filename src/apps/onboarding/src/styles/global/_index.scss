@@ -1,2 +1,10 @@
 @import "flex";
 @import "layout";
+
+.react-datepicker-popper {
+  z-index: 9999 !important;
+}
+
+.full-width {
+  width: 100%;
+}
