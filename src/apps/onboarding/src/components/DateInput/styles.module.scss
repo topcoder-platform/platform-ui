@@ -61,10 +61,11 @@
         font-weight: 400;
 
         &::placeholder {
-            color: #aaa;
+            color: #7F7F7F;
             font-size: 14px;
             font-weight: 400;
             text-transform: none !important;
+            opacity: 1;
         }
     }
 }
