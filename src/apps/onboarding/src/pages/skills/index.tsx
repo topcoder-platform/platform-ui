@@ -18,19 +18,21 @@ import SkillInfo from '../../models/SkillInfo'
 import SkillTag from '../../components/skill-tag'
 
 import styles from './styles.module.scss'
+import ConnectLinkedIn from '../../components/connect-linked-in'
 
 const PageSkillsContent: FC<{
     memberInfo?: Member,
     updateMemberSkills: (skills: SkillInfo[]) => void
 }> = props => {
     const navigate: any = useNavigate()
-    const [skillsFilter, setSkillsFilter] = useState<ReadonlyArray<SkillInfo>>([])
+    const [skillsFilter, setSkillsFilter] = useState<ReadonlyArray<SkillInfo> | null>(null)
     const [loading, setLoading] = useState<boolean>(false)
     useEffect(() => {
-        if (!skillsFilter.length) {
+        if (!skillsFilter && props.memberInfo) {
             setSkillsFilter(props.memberInfo?.emsiSkills || [])
         }
-    }, [props.memberInfo, skillsFilter])
+        /* eslint-disable react-hooks/exhaustive-deps */
+    }, [props.memberInfo])
 
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
@@ -39,13 +41,12 @@ const PageSkillsContent: FC<{
             <div className={classNames(styles.blockContent, 'd-flex justify-content-between')}>
                 <div className={classNames('d-flex flex-column', styles.blockLeft)}>
                     <h3>Select your skills</h3>
-                    <br />
-                    <span>
+                    <span className='mt-30'>
                         Add industry standard skills to your profile to let employers
                         search and find you for opportunities that fit your capabilities.
                     </span>
                     <div>
-                        {(skillsFilter.length > 0) ? (
+                        {(skillsFilter && skillsFilter.length > 0) ? (
                             <div
                                 className={
                                     classNames(
@@ -54,7 +55,7 @@ const PageSkillsContent: FC<{
                                     )
                                 }
                             >
-                                {skillsFilter.map(skillItem => (
+                                {(skillsFilter || []).map(skillItem => (
                                     <SkillTag
                                         key={skillItem.name}
                                         skill={skillItem}
@@ -81,7 +82,10 @@ const PageSkillsContent: FC<{
                             getOptionValue={(skill: SkillInfo) => skill.emsiId}
                             onChange={(options: readonly SkillInfo[]) => {
                                 if (options.length > 0) {
-                                    const newSkillFilter: SkillInfo[] = _.uniqBy([...skillsFilter, ...options], 'name')
+                                    const newSkillFilter: SkillInfo[] = _.uniqBy(
+                                        [...(skillsFilter || []), ...options],
+                                        'name',
+                                    )
                                     _.forEach(options, option => {
                                         const matchSkill: SkillInfo | undefined = _.find(
                                             newSkillFilter,
@@ -105,17 +109,8 @@ const PageSkillsContent: FC<{
                         />
                     </div>
                 </div>
-                <div className='d-flex flex-column align-items-end'>
-                    <span>Wait! Get my skills from LinkedIn instead...</span>
-                    <Button
-                        size='lg'
-                        secondary
-                        iconToLeft
-                        className='mt-30'
-                    >
-                        connect to linked in
-                    </Button>
-                </div>
+
+                <ConnectLinkedIn />
             </div>
 
             <ProgressBar
@@ -140,8 +135,12 @@ const PageSkillsContent: FC<{
                     disabled={loading}
                     onClick={async () => {
                         setLoading(true)
-                        await props.updateMemberSkills([...skillsFilter])
+                        if (!_.isEqual(props.memberInfo?.emsiSkills, skillsFilter)) {
+                            await props.updateMemberSkills([...(skillsFilter || [])])
+                        }
+
                         setLoading(false)
+                        navigate('../works')
                     }}
                 >
                     next

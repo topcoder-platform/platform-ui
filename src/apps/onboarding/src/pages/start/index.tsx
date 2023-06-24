@@ -21,11 +21,9 @@ export const PageStart: FC<{}> = () => {
                     help put your best foot forward.
                 </span>
                 <span>Let potential employers and others in our network see your exceptional talent!</span>
-                <br />
-                <h3>How would you like to share your skills and experience?</h3>
-                <br />
+                <h3 className='mt-30'>How would you like to share your skills and experience?</h3>
 
-                <div className={classNames('d-flex justify-content-between flex-wrap', styles.blockOr)}>
+                <div className={classNames('d-flex justify-content-between flex-wrap mt-30', styles.blockOr)}>
                     <div>
                         <span>We can extract data from your LinkedIn profile or a digital version of your resume.</span>
                         <div className={classNames(styles.blockImportButtons, 'd-flex')}>

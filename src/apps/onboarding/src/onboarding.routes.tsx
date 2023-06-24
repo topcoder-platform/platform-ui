@@ -6,6 +6,8 @@ import { lazyLoad, LazyLoadedComponent, PlatformRoute, UserRole } from '~/libs/c
 const PageOnboarding: LazyLoadedComponent = lazyLoad(() => import('./pages/onboarding/index'), 'OnboardingWrapper')
 const PageStart: LazyLoadedComponent = lazyLoad(() => import('./pages/start/index'), 'PageStart')
 const PageSkills: LazyLoadedComponent = lazyLoad(() => import('./pages/skills/index'), 'PageSkills')
+const PageWorks: LazyLoadedComponent = lazyLoad(() => import('./pages/works/index'), 'PageWorks')
+const PageEducations: LazyLoadedComponent = lazyLoad(() => import('./pages/educations/index'), 'PageEducations')
 const toolTitle: string = ToolTitle.onboarding
 const onboardingRootRoute: string = '/onboarding'
 
@@ -22,12 +24,18 @@ export const onboardingRoutes: ReadonlyArray<PlatformRoute> = [
             {
                 element: <PageStart />,
                 route: '/start',
-                title: toolTitle,
             },
             {
                 element: <PageSkills />,
                 route: '/skills',
-                title: toolTitle,
+            },
+            {
+                element: <PageWorks />,
+                route: '/works',
+            },
+            {
+                element: <PageEducations />,
+                route: '/educations',
             },
         ],
         element: <PageOnboarding />,

@@ -7,16 +7,20 @@ import { ContentLayout } from '~/libs/ui'
 import { routerContext, RouterContextData } from '~/libs/core'
 
 import { onboardRouteId } from '../../onboarding.routes'
-import { fetchMemberInfo } from '../../redux/actions/member'
+import { fetchMemberInfo, fetchMemberTraits } from '../../redux/actions/member'
 import store from '../../redux/store'
 import '../../styles/global/_index.scss'
 
 import styles from './styles.module.scss'
 
-const OnboardingContent: FC<{ fetchMemberInfo: () => void }> = props => {
+const OnboardingContent: FC<{
+    fetchMemberInfo: () => void;
+    fetchMemberTraits: () => void;
+}> = props => {
     const { getChildRoutes }: RouterContextData = useContext(routerContext)
     useEffect(() => {
         props.fetchMemberInfo()
+        props.fetchMemberTraits()
         /* eslint-disable react-hooks/exhaustive-deps */
     }, [])
 
@@ -26,12 +30,14 @@ const OnboardingContent: FC<{ fetchMemberInfo: () => void }> = props => {
             <Routes>
                 {getChildRoutes(onboardRouteId)}
             </Routes>
+            <div id='calendar-portal' />
         </div>
     )
 }
 
 const mapDispatchToProps: any = {
     fetchMemberInfo,
+    fetchMemberTraits,
 }
 const Onboarding: any = connect(undefined, mapDispatchToProps)(OnboardingContent)
 
