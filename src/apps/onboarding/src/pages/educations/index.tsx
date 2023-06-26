@@ -21,6 +21,7 @@ export const PageEducationsContent: FC<{
     reduxEducations: EducationInfo[] | null
     updateMemberEducations: (educations: EducationInfo[]) => void
     createMemberEducations: (educations: EducationInfo[]) => void
+    loadingMemberTraits: boolean
 }> = props => {
     const navigate: any = useNavigate()
     const [editingEducation, setEditingEducation] = useState<EducationInfo | null>(null)
@@ -77,7 +78,7 @@ export const PageEducationsContent: FC<{
                     secondary
                     iconToLeft
                     onClick={() => setShowAddEducationModal(true)}
-                    disabled={!educations}
+                    disabled={props.loadingMemberTraits}
                 >
                     + add education
                 </Button>
@@ -108,7 +109,7 @@ export const PageEducationsContent: FC<{
                     size='lg'
                     primary
                     iconToLeft
-                    disabled={loading || !educations}
+                    disabled={loading || props.loadingMemberTraits}
                     onClick={async () => {
                         setLoading(true)
                         if (!_.isEqual(props.reduxEducations, educations)) {
@@ -151,9 +152,11 @@ export const PageEducationsContent: FC<{
 const mapStateToProps: any = (state: any) => {
     const {
         educations,
+        loadingMemberTraits,
     }: any = state.member
 
     return {
+        loadingMemberTraits,
         reduxEducations: educations,
     }
 }

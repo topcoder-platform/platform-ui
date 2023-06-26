@@ -22,6 +22,7 @@ export const PageWorksContent: FC<{
     reduxWorks: WorkInfo[] | null
     updateMemberWorks: (works: WorkInfo[]) => void
     createMemberWorks: (works: WorkInfo[]) => void
+    loadingMemberTraits: boolean
 }> = props => {
     const navigate: any = useNavigate()
     const [editingWork, setEditingWork] = useState<WorkInfo | null>(null)
@@ -87,7 +88,7 @@ export const PageWorksContent: FC<{
                         secondary
                         iconToLeft
                         onClick={() => setShowAddWorkModal(true)}
-                        disabled={!works}
+                        disabled={props.loadingMemberTraits}
                     >
                         + add work experience
                     </Button>
@@ -120,7 +121,7 @@ export const PageWorksContent: FC<{
                     size='lg'
                     primary
                     iconToLeft
-                    disabled={loading || !works}
+                    disabled={loading || props.loadingMemberTraits}
                     onClick={async () => {
                         setLoading(true)
                         if (!_.isEqual(props.reduxWorks, works)) {
@@ -165,10 +166,12 @@ export const PageWorksContent: FC<{
 
 const mapStateToProps: any = (state: any) => {
     const {
+        loadingMemberTraits,
         works,
     }: any = state.member
 
     return {
+        loadingMemberTraits,
         reduxWorks: works,
     }
 }

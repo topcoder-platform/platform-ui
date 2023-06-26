@@ -31,6 +31,11 @@ export const updateEducations: any = (educations: EducationInfo[]) => ({
     payload: educations,
 })
 
+export const updateLoadingMemberTraits: any = (loading: boolean) => ({
+    type: ACTIONS.MEMBER.SET_LOADING_MEMBER_TRAITS,
+    payload: loading,
+})
+
 export const fetchMemberInfo: any = () => async (dispatch: any) => {
     try {
         const tokenInfo: TokenModel = await getAsyncToken()
@@ -44,10 +49,13 @@ const dateTimeToDate: any = (s: string) => (s ? new Date(s) : undefined)
 export const fetchMemberTraits: any = () => async (dispatch: any) => {
     const tokenInfo: TokenModel = await getAsyncToken()
     let memberTraits: any = []
+    dispatch(updateLoadingMemberTraits(true))
     try {
         memberTraits = await getMemberTraits(tokenInfo.handle || '')
     } catch (error) {
     }
+
+    dispatch(updateLoadingMemberTraits(false))
 
     const workExp: any = memberTraits.find((t: any) => t.traitId === 'work')
     const workExpValue: any = workExp?.traits?.data
