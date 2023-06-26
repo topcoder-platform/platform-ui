@@ -14,6 +14,7 @@ import { MemberLocalInfo } from '../local-info'
 import { MemberLanguages } from '../languages'
 import { AboutMe } from '../about-me'
 import { MemberLinks } from '../links'
+import { MemberTCAchievements } from '../tc-achievements'
 
 import styles from './ProfilePageLayout.module.scss'
 
@@ -51,6 +52,8 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                         <div className={styles.skillsWrap}>
                             <MemberSkillsInfo profile={props.profile} />
                         </div>
+
+                        <MemberTCAchievements profile={props.profile} />
 
                         <MemberTracksInfo profile={props.profile} />
 
