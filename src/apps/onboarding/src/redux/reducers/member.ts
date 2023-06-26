@@ -25,6 +25,11 @@ const memberReducer: any = (state = initialState, action: { type: any; payload: 
                 ...state,
                 works: action.payload,
             }
+        case ACTIONS.MEMBER.SET_LOADING_MEMBER_TRAITS:
+            return {
+                ...state,
+                loadingMemberTraits: action.payload,
+            }
         case ACTIONS.MEMBER.SET_EDUCATIONS:
             return {
                 ...state,
