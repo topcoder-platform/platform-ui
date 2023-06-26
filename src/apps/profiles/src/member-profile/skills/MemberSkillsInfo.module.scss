@@ -3,10 +3,17 @@
 .container {
     display: flex;
     flex-direction: column;
-    margin-top: $sp-6;
+    margin-bottom: $sp-6;
 
     @include ltelg {
         padding-bottom: $sp-6;
+    }
+
+    .titleWrap {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: $sp-4;
     }
 
     .skillsWrap {
@@ -15,11 +22,6 @@
         column-gap: $sp-1;
         row-gap: $sp-2;
         margin-top: $sp-2;
-        padding-right: $sp-13;
-
-        @include ltelg {
-            padding-right: 0;
-        }
 
         .skillItem {
             background-color: $teal-140;

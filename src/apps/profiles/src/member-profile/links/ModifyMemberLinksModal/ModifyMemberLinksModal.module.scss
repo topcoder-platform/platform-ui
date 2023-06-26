@@ -1,0 +1,79 @@
+@import '@libs/ui/styles/includes';
+
+.modalButtons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.formError {
+    color: $red-100;
+}
+
+.formWrap {
+    display: flex;
+    flex-direction: column;
+    min-height: 300px;
+    margin-top: $sp-2;
+
+    @include ltelg {
+        :global(.input-wrapper) {
+            margin-bottom: $sp-2;
+        }
+    }
+
+    .form {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        & > div:nth-child(1) {
+            margin-right: $sp-2;
+            min-width: 100px;
+        }
+
+        & > div:nth-child(2) {
+            flex: 1;
+        }
+
+        .formCTAs {
+            display: flex;
+            align-items: center;
+            margin-bottom: $sp-4;
+
+            svg {
+                width: 32px;
+                height: 32px;
+            }
+        }
+    }
+}
+
+.links {
+    margin-bottom: $sp-15;
+
+    &.noLinks {
+        margin-bottom: 0;
+    }
+
+    .linkItemWrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: $sp-2;
+        border-radius: 8px;
+        padding: $sp-2;
+        border: 1px solid $black-10;
+
+        .linkItem {
+            display: flex;
+            align-items: center;
+
+            svg {
+                width: 16px;
+                height: 16px;
+                margin-right: $sp-2;
+            }
+        }
+    }
+}

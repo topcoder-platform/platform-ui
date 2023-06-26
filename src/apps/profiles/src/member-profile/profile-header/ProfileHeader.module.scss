@@ -1,0 +1,40 @@
+@import "@libs/ui/styles/includes";
+
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: $sp-8;
+
+    .profilePhoto {
+        width: 200px;
+        height: 200px;
+        border: 3px solid #fff;
+        border-radius: 50%;
+        margin-right: $sp-13;
+    }
+
+    .profileInfo {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+
+        :global(.body-large-bold) {
+            margin-bottom: $sp-2;
+        }
+
+        .verified {
+            color: $tc-black;
+        }
+    }
+
+    .profileActions {
+        margin-bottom: $sp-13;
+        display: flex;
+        align-items: center;
+
+        > button {
+            margin-left: $sp-2;
+        }
+    }
+}

@@ -2,53 +2,87 @@ import { FC } from 'react'
 
 import { UserProfile } from '~/libs/core'
 import { ContentLayout, PageTitle } from '~/libs/ui'
+import { useCheckIsMobile } from '~/libs/shared'
 
-import { MemberBasicInfo } from '../basic-info'
+// import { MemberTCActivityInfo } from '../tc-activity'
 import { MemberTracksInfo } from '../tracks'
 import { MemberSkillsInfo } from '../skills'
 import { CommunityAwards } from '../community-awards'
 import { MemberTCAInfo } from '../tca-info'
-import { MemberTCActivityInfo } from '../tc-activity'
-import ProfilePageJumbo from '../jumbotron/ProfilePageJumbo'
+import { ProfileHeader } from '../profile-header'
+import { MemberLocalInfo } from '../local-info'
+import { MemberLanguages } from '../languages'
+import { AboutMe } from '../about-me'
+import { MemberLinks } from '../links'
 
 import styles from './ProfilePageLayout.module.scss'
 
 interface ProfilePageLayoutProps {
     profile: UserProfile
+    refreshProfile: (handle: string) => void
+    authProfile: UserProfile | undefined
 }
 
-const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutProps) => (
-    <div className={styles.container}>
+const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutProps) => {
+    const isMobile: boolean = useCheckIsMobile()
 
-        <ProfilePageJumbo profile={props.profile} />
+    return (
+        <div className={styles.container}>
 
-        <ContentLayout
-            outerClass={styles.contentLayoutOuter}
-        >
-            <PageTitle>{`${props.profile.handle} | Community Profile | Topcoder`}</PageTitle>
+            <ContentLayout
+                outerClass={styles.contentLayoutOuter}
+            >
+                <PageTitle>{`${props.profile.handle} | Community Profile | Topcoder`}</PageTitle>
 
-            <div className={styles.basicInfoWrap}>
-                <div className={styles.skillsWrap}>
-                    <MemberTracksInfo profile={props.profile} />
+                <div className={styles.profileInfoWrap}>
+                    <div className={styles.profileInfoLeft}>
+                        <ProfileHeader profile={props.profile} authProfile={props.authProfile} />
 
-                    <MemberSkillsInfo profile={props.profile} />
+                        {
+                            isMobile && (
+                                <AboutMe
+                                    profile={props.profile}
+                                    authProfile={props.authProfile}
+                                    refreshProfile={props.refreshProfile}
+                                />
+                            )
+                        }
 
-                    <div className={styles.shortBio}>
-                        {props.profile?.description}
+                        <div className={styles.skillsWrap}>
+                            <MemberSkillsInfo profile={props.profile} />
+                        </div>
+
+                        <MemberTracksInfo profile={props.profile} />
+
+                        <CommunityAwards profile={props.profile} />
+
+                        <MemberTCAInfo profile={props.profile} />
+                    </div>
+                    <div className={styles.profileInfoRight}>
+                        {
+                            !isMobile && (
+                                <AboutMe
+                                    profile={props.profile}
+                                    authProfile={props.authProfile}
+                                    refreshProfile={props.refreshProfile}
+                                />
+                            )
+                        }
+
+                        <MemberLanguages profile={props.profile} authProfile={props.authProfile} />
+
+                        <MemberLinks profile={props.profile} authProfile={props.authProfile} />
+
+                        <MemberLocalInfo profile={props.profile} />
                     </div>
                 </div>
-                <MemberBasicInfo profile={props.profile} />
-            </div>
 
-            <CommunityAwards profile={props.profile} />
+                {/* <MemberTCActivityInfo profile={props.profile} /> */}
 
-            <MemberTCAInfo profile={props.profile} />
+            </ContentLayout>
 
-            <MemberTCActivityInfo profile={props.profile} />
-
-        </ContentLayout>
-
-    </div>
-)
+        </div>
+    )
+}
 
 export default ProfilePageLayout

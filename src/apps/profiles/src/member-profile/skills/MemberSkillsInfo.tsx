@@ -17,7 +17,14 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
     return memberSkills ? (
         <div className={styles.container}>
-            <h3>Skills</h3>
+            <div className={styles.titleWrap}>
+                <h3>My Skills</h3>
+                <div className={styles.legendWrap}>
+                    <TCVerifiedSkillIcon />
+                    {' = '}
+                    {TC_VERIFIED_SKILL_LABEL}
+                </div>
+            </div>
 
             <div className={styles.skillsWrap}>
                 {
@@ -28,12 +35,6 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                         </div>
                     ))
                 }
-            </div>
-
-            <div className={styles.legendWrap}>
-                <TCVerifiedSkillIcon />
-                {' = '}
-                {TC_VERIFIED_SKILL_LABEL}
             </div>
         </div>
     ) : <></>
