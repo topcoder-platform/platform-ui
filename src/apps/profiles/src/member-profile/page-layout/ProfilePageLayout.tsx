@@ -11,7 +11,7 @@ import { CommunityAwards } from '../community-awards'
 import { MemberTCAInfo } from '../tca-info'
 import { ProfileHeader } from '../profile-header'
 import { MemberLocalInfo } from '../local-info'
-import { MemberLangagues } from '../langagues'
+import { MemberLanguages } from '../languages'
 import { AboutMe } from '../about-me'
 
 import styles from './ProfilePageLayout.module.scss'
@@ -68,7 +68,7 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                             )
                         }
 
-                        <MemberLangagues profile={props.profile} authProfile={props.authProfile} />
+                        <MemberLanguages profile={props.profile} authProfile={props.authProfile} />
 
                         <MemberLocalInfo profile={props.profile} />
                     </div>

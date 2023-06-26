@@ -1,0 +1,32 @@
+@import '@libs/ui/styles/includes';
+
+.modalButtons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.formError {
+    color: $red-100;
+}
+
+.formWrap {
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+
+    .formCTAs {
+        display: flex;
+        align-items: center;
+
+        svg {
+            width: 14px;
+            height: 14px;
+            margin-right: $sp-1;
+        }
+
+        .ctaBtnCancel {
+            margin-left: $sp-8;
+        }
+    }
+}
