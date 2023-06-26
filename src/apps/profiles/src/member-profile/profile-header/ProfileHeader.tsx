@@ -2,8 +2,9 @@ import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import moment from 'moment'
 
 import { getVerificationStatusAsync, UserProfile } from '~/libs/core'
-import { Button, FormToggleSwitch, VerifiedMemberBadge } from '~/libs/ui'
+import { Button, VerifiedMemberBadge } from '~/libs/ui'
 
+import { OpenForGigs } from './OpenForGigs'
 import styles from './ProfileHeader.module.scss'
 
 interface ProfileHeaderProps {
@@ -36,10 +37,6 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         console.log('Hire Me button clicked')
     }
 
-    function handleToggleAvailableForGigs(): void {
-        console.log('Available for Gigs toggle clicked')
-    }
-
     return (
         <div className={styles.container}>
             <img src={photoURL} alt='Topcoder - Member Profile Avatar' className={styles.profilePhoto} />
@@ -70,20 +67,16 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
             </div>
 
             <div className={styles.profileActions}>
-                <div className={styles.availableForGigs}>
-                    <FormToggleSwitch
-                        name='availableForGigs'
-                        onChange={handleToggleAvailableForGigs}
-                        value={false}
-                        disabled={!canEdit}
-                    />
-                    <p className='body-ultra-small'>Available for Gigs</p>
-                </div>
-                <Button
-                    label='Hire Me'
-                    primary
-                    onClick={handleHireMeClick}
-                />
+                <OpenForGigs canEdit={canEdit} authProfile={props.authProfile} profile={props.profile} />
+                {
+                    !canEdit && (
+                        <Button
+                            label='Hire Me'
+                            primary
+                            onClick={handleHireMeClick}
+                        />
+                    )
+                }
             </div>
         </div>
     )
