@@ -13,6 +13,7 @@ import { ProfileHeader } from '../profile-header'
 import { MemberLocalInfo } from '../local-info'
 import { MemberLanguages } from '../languages'
 import { AboutMe } from '../about-me'
+import { MemberLinks } from '../links'
 
 import styles from './ProfilePageLayout.module.scss'
 
@@ -69,6 +70,8 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                         }
 
                         <MemberLanguages profile={props.profile} authProfile={props.authProfile} />
+
+                        <MemberLinks profile={props.profile} authProfile={props.authProfile} />
 
                         <MemberLocalInfo profile={props.profile} />
                     </div>

@@ -11,4 +11,5 @@ export const EDIT_MODE_QUERY_PARAM: string = 'edit-mode'
 export enum profileEditModes {
     aboutMe = 'aboutMe',
     languages = 'languages',
+    links = 'links',
 }

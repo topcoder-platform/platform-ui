@@ -1,0 +1,30 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: $sp-8;
+
+    .titleWrap {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        margin-bottom: $sp-2;
+    }
+
+    .links {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+
+        > a {
+            margin-right: $sp-2;
+            cursor: pointer;
+
+            svg {
+                width: 24px;
+                height: 24px;
+            }
+        }
+    }
+}
