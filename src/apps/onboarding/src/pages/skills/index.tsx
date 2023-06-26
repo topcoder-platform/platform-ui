@@ -18,7 +18,6 @@ import SkillInfo from '../../models/SkillInfo'
 import SkillTag from '../../components/skill-tag'
 
 import styles from './styles.module.scss'
-import ConnectLinkedIn from '../../components/connect-linked-in'
 
 const PageSkillsContent: FC<{
     memberInfo?: Member,
@@ -109,8 +108,6 @@ const PageSkillsContent: FC<{
                         />
                     </div>
                 </div>
-
-                <ConnectLinkedIn />
             </div>
 
             <ProgressBar

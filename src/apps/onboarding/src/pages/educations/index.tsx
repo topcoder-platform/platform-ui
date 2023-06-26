@@ -32,7 +32,9 @@ export const PageEducationsContent: FC<{
     useEffect(() => {
         if (!educations && props.reduxEducations) {
             setEducations(props.reduxEducations)
-            setEducationId(props.reduxEducations[props.reduxEducations.length - 1].id + 1)
+            if (props.reduxEducations.length > 0) {
+                setEducationId(props.reduxEducations[props.reduxEducations.length - 1].id + 1)
+            }
         }
         /* eslint-disable react-hooks/exhaustive-deps */
     }, [props.reduxEducations])

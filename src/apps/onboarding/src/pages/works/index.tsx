@@ -11,7 +11,6 @@ import { Button, PageDivider } from '~/libs/ui'
 
 import { ProgressBar } from '../../components/progress-bar'
 import styles from './styles.module.scss'
-import ConnectLinkedIn from '../../components/connect-linked-in'
 import WorkInfo from '../../models/WorkInfo'
 import ModalAddWork from '../../components/modal-add-work'
 import IconEdit from '../../assets/images/edit.svg'
@@ -33,7 +32,9 @@ export const PageWorksContent: FC<{
     useEffect(() => {
         if (!works && props.reduxWorks) {
             setWorks(props.reduxWorks)
-            setWorkId(props.reduxWorks[props.reduxWorks.length - 1].id + 1)
+            if (props.reduxWorks.length > 0) {
+                setWorkId(props.reduxWorks[props.reduxWorks.length - 1].id + 1)
+            }
         }
         /* eslint-disable react-hooks/exhaustive-deps */
     }, [props.reduxWorks])
@@ -99,7 +100,6 @@ export const PageWorksContent: FC<{
                         </span>
                     ) : null}
                 </div>
-                <ConnectLinkedIn />
             </div>
 
             <ProgressBar

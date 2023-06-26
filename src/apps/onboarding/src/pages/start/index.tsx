@@ -25,15 +25,8 @@ export const PageStart: FC<{}> = () => {
 
                 <div className={classNames('d-flex justify-content-between flex-wrap mt-30', styles.blockOr)}>
                     <div>
-                        <span>We can extract data from your LinkedIn profile or a digital version of your resume.</span>
+                        <span>We can extract data from a digital version of your resume.</span>
                         <div className={classNames(styles.blockImportButtons, 'd-flex')}>
-                            <Button
-                                size='lg'
-                                secondary
-                                iconToLeft
-                            >
-                                import from linked in
-                            </Button>
                             <Button
                                 size='lg'
                                 secondary
@@ -71,6 +64,7 @@ export const PageStart: FC<{}> = () => {
                     size='lg'
                     primary
                     iconToLeft
+                    onClick={() => navigate('../skills')}
                 >
                     next
                 </Button>
