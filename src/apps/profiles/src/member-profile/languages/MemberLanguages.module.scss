@@ -12,7 +12,9 @@
         margin-bottom: $sp-2;
     }
 
-    .language {
-        margin-bottom: $sp-2;
+    .languages {
+        > div {
+            margin-bottom: $sp-2;
+        }
     }
 }

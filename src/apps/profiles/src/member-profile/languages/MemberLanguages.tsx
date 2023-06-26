@@ -1,7 +1,6 @@
-import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { KeyedMutator } from 'swr'
 import { useSearchParams } from 'react-router-dom'
-import { compact } from 'lodash'
 
 import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } from '~/libs/core'
 
@@ -9,6 +8,7 @@ import { EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 
 import { ModifyLanguagesModal } from './ModifyLanguagesModal'
+import { LanguageCard } from './LanguageCard'
 import styles from './MemberLanguages.module.scss'
 
 interface MemberLanguagesProps {
@@ -31,14 +31,15 @@ const MemberLanguages: FC<MemberLanguagesProps> = (props: MemberLanguagesProps) 
     }
         = useMemberTraits(props.profile.handle, { traitIds: UserTraitIds.languages })
 
+    const memberLanguages: UserTrait[] | undefined
+        = useMemo(() => memberLanguageTraits?.[0]?.traits?.data, [memberLanguageTraits])
+
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.languages) {
             setIsEditMode(true)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.authProfile])
-
-    console.log('memberLanguageTraits', memberLanguageTraits)
 
     function handleEditLangaguesClick(): void {
         setIsEditMode(true)
@@ -70,17 +71,8 @@ const MemberLanguages: FC<MemberLanguagesProps> = (props: MemberLanguagesProps) 
 
             <div className={styles.languages}>
                 {
-                    memberLanguageTraits?.[0]?.traits?.data?.map((trait: UserTrait) => (
-                        <div className={styles.language} key={`member-lan-${trait.language}`}>
-                            <p className='body-main-medium'>{trait.language}</p>
-                            <p className='body-small'>
-                                {compact([
-                                    trait.spokenLevel ? `Spoken: ${trait.spokenLevel}` : undefined,
-                                    trait.writtenLevel ? `Written: ${trait.writtenLevel}` : undefined,
-                                ])
-                                    .join(' | ')}
-                            </p>
-                        </div>
+                    memberLanguages?.map((trait: UserTrait) => (
+                        <LanguageCard trait={trait} key={`member-lan-${trait.language}`} />
                     ))
                 }
             </div>
@@ -91,9 +83,7 @@ const MemberLanguages: FC<MemberLanguagesProps> = (props: MemberLanguagesProps) 
                         onClose={handleEditModalClose}
                         onSave={handleEditModalSaved}
                         profile={props.profile}
-                    // memberPersonalizationTraitsData={
-                    //     (memberPersonalizationTraits?.[0]?.traits?.data || []) as UserTraits[]
-                    // }
+                        memberLanguages={memberLanguages}
                     />
                 )
             }
