@@ -23,8 +23,7 @@ const DEFAULT_MEMBER_AVATAR: string
     = 'https://d1aahxkjiobka8.cloudfront.net/static-assets/images/ab4a084a9815ebb1cf8f7b451ce4c88f.svg'
 
 const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
-    // const photoURL: string = props.profile.photoURL || DEFAULT_MEMBER_AVATAR
-    const photoURL: string = DEFAULT_MEMBER_AVATAR
+    const photoURL: string = props.profile.photoURL || DEFAULT_MEMBER_AVATAR
 
     const [isMemberVerified, setIsMemberVerified]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)

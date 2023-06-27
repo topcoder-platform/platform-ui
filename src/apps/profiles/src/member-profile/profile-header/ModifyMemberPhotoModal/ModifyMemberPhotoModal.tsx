@@ -1,7 +1,8 @@
-import { Dispatch, FC, SetStateAction, useState } from 'react'
+import { Dispatch, FC, MutableRefObject, SetStateAction, useRef, useState } from 'react'
+import { toast } from 'react-toastify'
 
 import { BaseModal, Button } from '~/libs/ui'
-import { UserProfile } from '~/libs/core'
+import { updateMemberPhotoAsync, UserProfile } from '~/libs/core'
 
 import styles from './ModifyMemberPhotoModal.module.scss'
 
@@ -15,11 +16,43 @@ const ModifyMemberPhotoModal: FC<ModifyMemberPhotoModalProps> = (props: ModifyMe
     const [isSaving, setIsSaving]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const [isFormChanged, setIsFormChanged]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
+    const [file, setFile]: [File | undefined, Dispatch<SetStateAction<File | undefined>>]
+        = useState<File | undefined>(undefined)
+
+    const fileElRef: MutableRefObject<HTMLDivElement | any> = useRef()
 
     function handleModifyPhotoSave(): void {
-        setIsSaving(true)
+        const formData: FormData = new FormData()
+
+        if (file) {
+            formData.append('photo', file)
+
+            setIsSaving(true)
+
+            updateMemberPhotoAsync(props.profile.handle, formData)
+                .then(() => {
+                    toast.success('Photo updated successfully.')
+                    props.onSave()
+                })
+                .catch(() => {
+                    toast.error('Failed to update member\'s photo.')
+                    setIsSaving(false)
+                })
+        }
+    }
+
+    function handleFilePickClick(): void {
+        fileElRef.current.click()
+    }
+
+    function handleFilePickChange(event: React.ChangeEvent<HTMLInputElement>): void {
+        const pickedFile: File | undefined = event.target.files?.[0]
+
+        if (pickedFile && pickedFile?.size < 2000000) { // max 2mb limit
+            setFile(pickedFile)
+        } else {
+            setFile(undefined)
+        }
     }
 
     return (
@@ -38,13 +71,39 @@ const ModifyMemberPhotoModal: FC<ModifyMemberPhotoModalProps> = (props: ModifyMe
                         label='Save'
                         onClick={handleModifyPhotoSave}
                         primary
-                        disabled={isSaving || !isFormChanged}
+                        disabled={isSaving || !file}
                     />
                 </div>
             )}
         >
             <div className={styles.modalBody}>
                 <p>Show the community who you are. Don&apos;t worry, you look great.</p>
+                <p className='body-main-bold'>Requirements:</p>
+                <ul>
+                    <li>PNG or JPG format.</li>
+                    <li>Maximum size: 2MB.</li>
+                </ul>
+                <form>
+                    <input
+                        ref={fileElRef}
+                        accept='image/png, image/jpg'
+                        type='file'
+                        onChange={handleFilePickChange}
+                    />
+                    <Button
+                        label='Upload New Photo'
+                        primary
+                        onClick={handleFilePickClick}
+                    />
+                </form>
+                {
+                    file && (
+                        <div className={styles.preview}>
+                            <p className='body-main-bold'>Preview:</p>
+                            <img src={URL.createObjectURL(file)} alt='preview' />
+                        </div>
+                    )
+                }
             </div>
         </BaseModal>
     )
