@@ -16,4 +16,8 @@
     flex-shrink: 0;
     width: 15px;
     height: 15px;
+
+    &:disabled {
+        opacity: 0.2;
+    }
 }

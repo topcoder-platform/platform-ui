@@ -33,6 +33,20 @@ const PageSkillsContent: FC<{
         /* eslint-disable react-hooks/exhaustive-deps */
     }, [props.memberInfo])
 
+    useEffect(() => {
+        const saveData: any = async () => {
+            setLoading(true)
+            await props.updateMemberSkills([...(skillsFilter || [])])
+            setLoading(false)
+        }
+
+        if (!!skillsFilter && !_.isEqual(props.memberInfo?.emsiSkills, skillsFilter)) {
+            saveData()
+                .then(_.noop)
+        }
+        /* eslint-disable react-hooks/exhaustive-deps */
+    }, [skillsFilter])
+
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
             <h2>What skills do you have?</h2>
@@ -58,6 +72,7 @@ const PageSkillsContent: FC<{
                                     <SkillTag
                                         key={skillItem.name}
                                         skill={skillItem}
+                                        disabled={loading}
                                         onDelete={() => {
                                             setSkillsFilter(
                                                 _.filter(skillsFilter, skill => skill.name !== skillItem.name),
@@ -121,6 +136,7 @@ const PageSkillsContent: FC<{
                     size='lg'
                     primary
                     iconToLeft
+                    disabled={loading}
                     onClick={() => navigate('../start')}
                 >
                     back
@@ -130,15 +146,7 @@ const PageSkillsContent: FC<{
                     primary
                     iconToLeft
                     disabled={loading}
-                    onClick={async () => {
-                        setLoading(true)
-                        if (!_.isEqual(props.memberInfo?.emsiSkills, skillsFilter)) {
-                            await props.updateMemberSkills([...(skillsFilter || [])])
-                        }
-
-                        setLoading(false)
-                        navigate('../works')
-                    }}
+                    onClick={() => navigate('../works')}
                 >
                     next
                 </Button>

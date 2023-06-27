@@ -12,12 +12,18 @@ import styles from './styles.module.scss'
 interface SkillTagProps {
     skill: Skill
     onDelete?: () => void
+    disabled?: boolean
 }
 
 const SkillTag: FC<SkillTagProps> = (props: SkillTagProps) => (
     <div className={classNames('d-flex align-items-center', styles.container)}>
         {props.skill.name}
-        <button type='button' className={styles.btnDelete} onClick={props.onDelete}>
+        <button
+            type='button'
+            className={styles.btnDelete}
+            onClick={props.onDelete}
+            disabled={props.disabled}
+        >
             <img width={7} height={7} src={XIcon} alt='' />
         </button>
     </div>
