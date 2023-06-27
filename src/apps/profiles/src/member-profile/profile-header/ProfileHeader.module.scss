@@ -6,12 +6,23 @@
     align-items: center;
     margin-bottom: $sp-8;
 
-    .profilePhoto {
-        width: 200px;
-        height: 200px;
-        border: 3px solid #fff;
-        border-radius: 50%;
+    .photoWrap {
+        position: relative;
         margin-right: $sp-13;
+
+        .profilePhoto {
+            width: 200px;
+            height: 200px;
+            border: 3px solid #fff;
+            border-radius: 50%;
+        }
+
+        button {
+            position: absolute;
+            right: 0;
+            top: calc(50% - 8px);
+            padding-right: $sp-1;
+        }
     }
 
     .profileInfo {
@@ -35,7 +46,7 @@
         display: flex;
         align-items: center;
 
-        > button {
+        >button {
             margin-left: $sp-2;
         }
     }

@@ -13,4 +13,6 @@ export enum profileEditModes {
     languages = 'languages',
     links = 'links',
     openForWork = 'openForWork',
+    names = 'names',
+    photo = 'photo',
 }

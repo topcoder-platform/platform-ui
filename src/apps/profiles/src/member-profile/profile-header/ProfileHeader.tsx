@@ -1,13 +1,16 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import moment from 'moment'
 
 import { getVerificationStatusAsync, UserProfile } from '~/libs/core'
 import { Button, VerifiedMemberBadge } from '~/libs/ui'
 
 import { EditMemberPropertyBtn } from '../../components'
+import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 
 import { OpenForGigs } from './OpenForGigs'
 import { ModifyMemberNameModal } from './ModifyMemberNameModal'
+import { ModifyMemberPhotoModal } from './ModifyMemberPhotoModal'
 import styles from './ProfileHeader.module.scss'
 
 interface ProfileHeaderProps {
@@ -28,8 +31,25 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
 
-    const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
+    const [isNameEditMode, setIsNameEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
+
+    const [isPhotoEditMode, setIsPhotoEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
+    const [queryParams]: [URLSearchParams, any] = useSearchParams()
+    const editMode: string | null = queryParams.get(EDIT_MODE_QUERY_PARAM)
+
+    useEffect(() => {
+        if (props.authProfile && editMode === profileEditModes.names) {
+            setIsNameEditMode(true)
+        }
+
+        if (props.authProfile && editMode === profileEditModes.photo) {
+            setIsPhotoEditMode(true)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.authProfile])
 
     useEffect(() => {
         if (!props.profile?.handle) {
@@ -45,23 +65,47 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     }
 
     function handleModifyNameClick(): void {
-        setIsEditMode(true)
+        setIsNameEditMode(true)
     }
 
     function handleModifyNameModalClose(): void {
-        setIsEditMode(false)
+        setIsNameEditMode(false)
     }
 
     function handleModifyNameModalSave(): void {
         setTimeout(() => {
-            setIsEditMode(false)
+            setIsNameEditMode(false)
+            props.refreshProfile(props.profile.handle)
+        }, 1000)
+    }
+
+    function handleModifyPhotoClick(): void {
+        setIsPhotoEditMode(true)
+    }
+
+    function handleModifyPhotoModalClose(): void {
+        setIsPhotoEditMode(false)
+    }
+
+    function handleModifyPhotoModalSave(): void {
+        setTimeout(() => {
+            setIsPhotoEditMode(false)
             props.refreshProfile(props.profile.handle)
         }, 1000)
     }
 
     return (
         <div className={styles.container}>
-            <img src={photoURL} alt='Topcoder - Member Profile Avatar' className={styles.profilePhoto} />
+            <div className={styles.photoWrap}>
+                <img src={photoURL} alt='Topcoder - Member Profile Avatar' className={styles.profilePhoto} />
+                {
+                    canEdit && (
+                        <EditMemberPropertyBtn
+                            onClick={handleModifyPhotoClick}
+                        />
+                    )
+                }
+            </div>
 
             <div className={styles.profileInfo}>
                 <div className={styles.nameWrap}>
@@ -111,10 +155,20 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
             </div>
 
             {
-                isEditMode && (
+                isNameEditMode && (
                     <ModifyMemberNameModal
                         onClose={handleModifyNameModalClose}
                         onSave={handleModifyNameModalSave}
+                        profile={props.profile}
+                    />
+                )
+            }
+
+            {
+                isPhotoEditMode && (
+                    <ModifyMemberPhotoModal
+                        onClose={handleModifyPhotoModalClose}
+                        onSave={handleModifyPhotoModalSave}
                         profile={props.profile}
                     />
                 )
