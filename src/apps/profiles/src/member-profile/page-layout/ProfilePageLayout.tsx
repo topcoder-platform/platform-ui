@@ -37,7 +37,11 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
 
                 <div className={styles.profileInfoWrap}>
                     <div className={styles.profileInfoLeft}>
-                        <ProfileHeader profile={props.profile} authProfile={props.authProfile} />
+                        <ProfileHeader
+                            profile={props.profile}
+                            authProfile={props.authProfile}
+                            refreshProfile={props.refreshProfile}
+                        />
 
                         {
                             isMobile && (

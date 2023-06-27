@@ -19,12 +19,14 @@
         flex-direction: column;
         flex: 1;
 
-        :global(.body-large-bold) {
-            margin-bottom: $sp-2;
-        }
-
         .verified {
             color: $tc-black;
+        }
+
+        .nameWrap {
+            display: flex;
+            align-items: center;
+            margin-bottom: $sp-2;
         }
     }
 
