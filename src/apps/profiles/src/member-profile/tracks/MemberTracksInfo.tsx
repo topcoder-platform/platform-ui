@@ -15,13 +15,17 @@ const MemberTracksInfo: FC<MemberTracksInfoProps> = (props: MemberTracksInfoProp
 
     return (
         <div className={styles.container}>
-            {
-                tracks.map(track => (
-                    <div key={`${props.profile?.userId}-${track}`} className={styles.track}>
-                        {TRACKS_PROFILE_MAP[track]}
-                    </div>
-                ))
-            }
+            <h3>My Tracks</h3>
+
+            <div className={styles.tracksWrap}>
+                {
+                    tracks.map(track => (
+                        <div key={`${props.profile?.userId}-${track}`} className={styles.track}>
+                            {TRACKS_PROFILE_MAP[track]}
+                        </div>
+                    ))
+                }
+            </div>
         </div>
     )
 }

@@ -14,6 +14,9 @@ export interface UserProfile {
     isMember?: boolean
     isWipro: boolean
     lastName: string
+    maxRating: {
+        rating: number
+    }
     photoURL?: string
     roles: Array<string>
     status: string

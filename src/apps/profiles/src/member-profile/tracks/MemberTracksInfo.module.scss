@@ -2,25 +2,35 @@
 
 .container {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-direction: column;
+    margin-bottom: $sp-6;
 
-    .track {
-        padding: 4px 10px;
-        border: 2px solid #137d60;
-        border-radius: 4px;
-        font-weight: 500;
-        font-size: 16px;
-        line-height: 24px;
-        margin-right: $sp-4;
-        margin-bottom: $sp-2;
+    > h3 {
+        margin-bottom: $sp-4;
+    }
 
-        &:last-child {
-            margin-right: 0;
-        }
+    .tracksWrap {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
 
-        @include ltelg {
-            padding: 2px 10px;
+        .track {
+            padding: 4px 10px;
+            border: 2px solid #137d60;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 16px;
+            line-height: 24px;
+            margin-right: $sp-4;
+            margin-bottom: $sp-2;
+
+            &:last-child {
+                margin-right: 0;
+            }
+
+            @include ltelg {
+                padding: 2px 10px;
+            }
         }
     }
 }

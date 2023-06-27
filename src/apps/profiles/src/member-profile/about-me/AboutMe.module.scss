@@ -1,0 +1,20 @@
+@import '@libs/ui/styles/includes';
+
+.shortBio {
+    margin-bottom: $sp-8;
+
+    :global(.body-large-medium),
+    :global(.body-large) {
+        text-align: left;
+    }
+
+    :global(.body-large) {
+        font-style: italic;
+    }
+
+    .wizzardWrap {
+        display: flex;
+        align-items: center;
+        margin-bottom: $sp-2;
+    }
+}
