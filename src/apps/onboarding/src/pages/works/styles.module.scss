@@ -18,3 +18,7 @@
 .textPosition {
   font-weight: 700;
 }
+
+.btn:disabled {
+  opacity: 0.2;
+}

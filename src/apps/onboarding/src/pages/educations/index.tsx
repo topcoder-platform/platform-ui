@@ -39,6 +39,25 @@ export const PageEducationsContent: FC<{
         /* eslint-disable react-hooks/exhaustive-deps */
     }, [props.reduxEducations])
 
+    useEffect(() => {
+        const saveData: any = async () => {
+            setLoading(true)
+            if (!props.reduxEducations) {
+                await props.createMemberEducations(educations || [])
+            } else {
+                await props.updateMemberEducations(educations || [])
+            }
+
+            setLoading(false)
+        }
+
+        if (!!educations && !_.isEqual(props.reduxEducations, educations)) {
+            saveData()
+                .then(_.noop)
+        }
+    /* eslint-disable react-hooks/exhaustive-deps */
+    }, [educations])
+
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
             <h2>Add your education information</h2>
@@ -57,6 +76,8 @@ export const PageEducationsContent: FC<{
                                         setEditingEducation(education)
                                         setShowAddEducationModal(true)
                                     }}
+                                    disabled={loading}
+                                    className={styles.btn}
                                 >
                                     <img width={15} height={15} src={IconEdit} alt='' />
                                 </button>
@@ -64,6 +85,8 @@ export const PageEducationsContent: FC<{
                                     aria-label='edit'
                                     type='button'
                                     onClick={() => setEducations(_.filter(educations, w => w.id !== education.id))}
+                                    disabled={loading}
+                                    className={styles.btn}
                                 >
                                     <img width={15} height={15} src={IconTrash} alt='' />
                                 </button>
@@ -111,19 +134,7 @@ export const PageEducationsContent: FC<{
                     size='lg'
                     primary
                     iconToLeft
-                    disabled={loading || props.loadingMemberTraits}
-                    onClick={async () => {
-                        setLoading(true)
-                        if (!_.isEqual(props.reduxEducations, educations)) {
-                            if (!props.reduxEducations) {
-                                await props.createMemberEducations(educations || [])
-                            } else {
-                                await props.updateMemberEducations(educations || [])
-                            }
-                        }
-
-                        setLoading(false)
-                    }}
+                    disabled={loading}
                 >
                     next
                 </Button>

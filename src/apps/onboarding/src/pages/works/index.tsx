@@ -39,6 +39,25 @@ export const PageWorksContent: FC<{
         /* eslint-disable react-hooks/exhaustive-deps */
     }, [props.reduxWorks])
 
+    useEffect(() => {
+        const saveData: any = async () => {
+            setLoading(true)
+            if (!props.reduxWorks) {
+                await props.createMemberWorks(works || [])
+            } else {
+                await props.updateMemberWorks(works || [])
+            }
+
+            setLoading(false)
+        }
+
+        if (!!works && !_.isEqual(props.reduxWorks, works)) {
+            saveData()
+                .then(_.noop)
+        }
+    /* eslint-disable react-hooks/exhaustive-deps */
+    }, [works])
+
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
             <h2>Add your work experience here</h2>
@@ -58,6 +77,8 @@ export const PageWorksContent: FC<{
                                             setEditingWork(work)
                                             setShowAddWorkModal(true)
                                         }}
+                                        disabled={loading}
+                                        className={styles.btn}
                                     >
                                         <img width={15} height={15} src={IconEdit} alt='' />
                                     </button>
@@ -65,6 +86,8 @@ export const PageWorksContent: FC<{
                                         aria-label='delete'
                                         type='button'
                                         onClick={() => setWorks(_.filter(works, w => w.id !== work.id))}
+                                        disabled={loading}
+                                        className={styles.btn}
                                     >
                                         <img width={15} height={15} src={IconTrash} alt='' />
                                     </button>
@@ -89,7 +112,7 @@ export const PageWorksContent: FC<{
                         secondary
                         iconToLeft
                         onClick={() => setShowAddWorkModal(true)}
-                        disabled={props.loadingMemberTraits}
+                        disabled={props.loadingMemberTraits || loading}
                     >
                         + add work experience
                     </Button>
@@ -113,6 +136,7 @@ export const PageWorksContent: FC<{
                     size='lg'
                     primary
                     iconToLeft
+                    disabled={loading}
                     onClick={() => navigate('../skills')}
                 >
                     back
@@ -121,20 +145,8 @@ export const PageWorksContent: FC<{
                     size='lg'
                     primary
                     iconToLeft
-                    disabled={loading || props.loadingMemberTraits}
-                    onClick={async () => {
-                        setLoading(true)
-                        if (!_.isEqual(props.reduxWorks, works)) {
-                            if (!props.reduxWorks) {
-                                await props.createMemberWorks(works || [])
-                            } else {
-                                await props.updateMemberWorks(works || [])
-                            }
-                        }
-
-                        setLoading(false)
-                        navigate('../educations')
-                    }}
+                    disabled={loading}
+                    onClick={() => navigate('../educations')}
                 >
                     next
                 </Button>
