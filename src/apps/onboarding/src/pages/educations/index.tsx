@@ -135,6 +135,7 @@ export const PageEducationsContent: FC<{
                     primary
                     iconToLeft
                     disabled={loading}
+                    onClick={() => navigate('../personalization')}
                 >
                     next
                 </Button>

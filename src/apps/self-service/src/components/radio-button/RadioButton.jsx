@@ -9,7 +9,7 @@ import React, { useEffect, useState } from "react";
 import styles from "./styles.module.scss";
 import classNames from "classnames";
 
-function RadioButton({ options, onChange, size, errorMsg }) {
+function RadioButton({ options, onChange, size, errorMsg, disabled }) {
   const [internalOptions, setInternalOptions] = useState(
     (options || []).map((o, i) => ({ ...o, key: i }))
   );
@@ -57,6 +57,7 @@ function RadioButton({ options, onChange, size, errorMsg }) {
               <input
                 type="radio"
                 checked={o.value}
+                disabled={disabled}
                 onChange={() => {
                   const newOptions = internalOptions.map((oWithKeyTmp) => ({
                     ...oWithKeyTmp,
@@ -81,6 +82,7 @@ RadioButton.defaultProps = {
   onChange: () => { },
   size: "sm",
   errorMsg: "",
+  disabled: false,
 };
 
 RadioButton.propTypes = {
@@ -93,6 +95,7 @@ RadioButton.propTypes = {
   onChange: PT.func,
   size: PT.oneOf(["xs", "sm", "lg"]),
   errorMsg: PT.string,
+  disabled: PT.bool,
 };
 
 export default RadioButton;

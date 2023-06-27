@@ -8,6 +8,8 @@ const PageStart: LazyLoadedComponent = lazyLoad(() => import('./pages/start/inde
 const PageSkills: LazyLoadedComponent = lazyLoad(() => import('./pages/skills/index'), 'PageSkills')
 const PageWorks: LazyLoadedComponent = lazyLoad(() => import('./pages/works/index'), 'PageWorks')
 const PageEducations: LazyLoadedComponent = lazyLoad(() => import('./pages/educations/index'), 'PageEducations')
+const PagePersonalization: LazyLoadedComponent = lazyLoad(() => import('./pages/personalization/index'), 'PagePersonalization')
+const PageAccountDetails: LazyLoadedComponent = lazyLoad(() => import('./pages/account-details/index'), 'PageAccountDetails')
 const toolTitle: string = ToolTitle.onboarding
 const onboardingRootRoute: string = '/onboarding'
 
@@ -36,6 +38,14 @@ export const onboardingRoutes: ReadonlyArray<PlatformRoute> = [
             {
                 element: <PageEducations />,
                 route: '/educations',
+            },
+            {
+                element: <PagePersonalization />,
+                route: '/personalization',
+            },
+            {
+                element: <PageAccountDetails />,
+                route: '/account-details',
             },
         ],
         element: <PageOnboarding />,
