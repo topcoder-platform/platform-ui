@@ -8,3 +8,22 @@
         padding-left: 30px;
     }
 }
+
+.blockImg {
+    width: 200px;
+    height: 200px;
+    display: flex;
+    background-color: #eee;
+    border: 1px dashed gray;
+
+    &.haveImg {
+        border: none;
+        background-color: transparent;
+    }
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+}

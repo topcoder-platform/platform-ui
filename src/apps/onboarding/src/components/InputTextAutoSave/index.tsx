@@ -11,7 +11,6 @@ import React, { FC, useEffect, useState } from 'react'
 import { InputText, InputValue } from '~/libs/ui'
 import { InputTextTypes } from '~/libs/ui/lib/components/form/form-groups/form-input/input-text/InputText'
 
-
 export interface InputTextProps {
     readonly checked?: boolean
     readonly className?: string

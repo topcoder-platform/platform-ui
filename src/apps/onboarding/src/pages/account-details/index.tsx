@@ -1,21 +1,26 @@
 /* eslint-disable ordered-imports/ordered-imports */
 /* eslint-disable react/jsx-no-bind */
 /* eslint-disable unicorn/no-null */
+/* eslint-disable sort-keys */
 import { useNavigate } from 'react-router-dom'
 import { connect } from 'react-redux'
-import { FC, useEffect, useRef, useState } from 'react'
+import { FC, MutableRefObject, useEffect, useRef, useState } from 'react'
 import _ from 'lodash'
 import classNames from 'classnames'
 
 import { Button, InputSelect, PageDivider } from '~/libs/ui'
+import { getCountryLookup } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
 
 import { ProgressBar } from '../../components/progress-bar'
 
 import styles from './styles.module.scss'
 import InputTextAutoSave from '../../components/InputTextAutoSave'
 import { validatePhonenumber } from '../../utils/validation'
-import { getCountryLookup } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
-import { createMemberConnectInfos, updateMemberConnectInfos, updateMemberHomeAddresss } from '../../redux/actions/member'
+import {
+    createMemberConnectInfos,
+    updateMemberConnectInfos,
+    updateMemberHomeAddresss,
+} from '../../redux/actions/member'
 import MemberAddress, { emptyMemberAddress } from '../../models/MemberAddress'
 import ConnectInfo, { emptyConnectInfo } from '../../models/ConnectInfo'
 
@@ -40,10 +45,10 @@ const PageAccountDetailsContent: FC<{
     const [countryOptions, setCountryOptions] = useState<{
         label: string
         value: string
-    }[]>([]);
-    const shouldSavingAddressData = useRef<boolean>(false)
-    const shouldSavingConnectInfoData = useRef<boolean>(false)
-    const shouldNavigateTo = useRef<string>('')
+    }[]>([])
+    const shouldSavingAddressData: MutableRefObject<boolean> = useRef<boolean>(false)
+    const shouldSavingConnectInfoData: MutableRefObject<boolean> = useRef<boolean>(false)
+    const shouldNavigateTo: MutableRefObject<string> = useRef<string>('')
 
     const validateField: any = () => {
         const errorTmp: any = {}
@@ -59,6 +64,7 @@ const PageAccountDetailsContent: FC<{
         if (!connectInfo || !validateField()) {
             return
         }
+
         setLoadingConnectInfo(true)
         if (!props.reduxConnectInfo) {
             await props.createMemberConnectInfos([connectInfo])
@@ -75,6 +81,7 @@ const PageAccountDetailsContent: FC<{
                 shouldSavingConnectInfoData.current = true
                 return
             }
+
             saveConnectInfoData()
                 .then(_.noop)
         }
@@ -85,6 +92,7 @@ const PageAccountDetailsContent: FC<{
         if (!memberAddress) {
             return
         }
+
         setLoadingAddress(true)
         await props.updateMemberHomeAddresss([memberAddress])
 
@@ -97,6 +105,7 @@ const PageAccountDetailsContent: FC<{
                 shouldSavingAddressData.current = true
                 return
             }
+
             saveAddressData()
                 .then(_.noop)
         }
@@ -104,13 +113,14 @@ const PageAccountDetailsContent: FC<{
     }, [memberAddress])
 
     useEffect(() => {
-        const doSaveAddress = !loadingAddress && shouldSavingAddressData.current
+        const doSaveAddress: boolean = !loadingAddress && shouldSavingAddressData.current
         if (doSaveAddress) {
             shouldSavingAddressData.current = false
             saveAddressData()
                 .then(_.noop)
         }
-        const doSaveConnectData = !loadingConnectInfo && shouldSavingConnectInfoData.current
+
+        const doSaveConnectData: boolean = !loadingConnectInfo && shouldSavingConnectInfoData.current
         if (doSaveConnectData) {
             shouldSavingConnectInfoData.current = false
             saveConnectInfoData()
@@ -131,19 +141,17 @@ const PageAccountDetailsContent: FC<{
     // Get all countries
     useEffect(() => {
         getCountryLookup()
-            .then((results) => {
+            .then(results => {
                 if (results) {
-                    setCountryOptions(_.sortBy(results, 'country').map((country: any) => ({
-                        value: country.country,
-                        label: country.country,
-                    })));
+                    setCountryOptions(_.sortBy(results, 'country')
+                        .map((country: any) => ({
+                            value: country.country,
+                            label: country.country,
+                        })))
                 }
             })
-            .catch((e) => {
-                // eslint-disable-next-line no-console
-                console.log(e);
-            });
-    }, []);
+            .catch(_.noop)
+    }, [])
 
     useEffect(() => {
         if (!memberAddress && props.reduxAddress) {
@@ -159,14 +167,18 @@ const PageAccountDetailsContent: FC<{
         /* eslint-disable react-hooks/exhaustive-deps */
     }, [props.reduxConnectInfo])
 
-
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
             <h2>Final account details</h2>
             <PageDivider />
             <div className={classNames(styles.blockContent, 'd-flex flex-column gap-20')}>
                 <h3>Account mailing address</h3>
-                <span>Your mailing address is required for account activation and verification to do work with Topcoder or Topcoder customers. This information <strong>will not</strong> be displayed on your profile nor to anyone visiting the Topcoder site.</span>
+                <span>
+                    Your mailing address is required for account activation and verification to do work with Topcoder or
+                    Topcoder customers. This information
+                    <strong>will not</strong>
+                    be displayed on your profile nor to anyone visiting the Topcoder site.
+                </span>
 
                 <InputTextAutoSave
                     name='streetAddr1'
@@ -274,7 +286,12 @@ const PageAccountDetailsContent: FC<{
                     disabled={props.loadingMemberTraits}
                 />
                 <h3>Valid mobile phone number</h3>
-                <span>Your phone number may be necessary to validate your account and verify your identity. Topcoder will not share this information with any other parties or use this to contact you for any other reason. It will not display on your public profile nor to anyone visiting the Topcoder site.</span>
+                <span>
+                    Your phone number may be necessary to validate your account and verify your identity.
+                    Topcoder will not share this information with any other parties or use this to contact
+                    you for any other reason. It will not display on your public profile nor to anyone
+                    visiting the Topcoder site.
+                </span>
                 <InputTextAutoSave
                     name='phoneNumber'
                     label='Phone Number'

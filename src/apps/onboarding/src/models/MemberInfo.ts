@@ -1,7 +1,7 @@
-import { MemberMaxRating, MemberEmsiSkill } from "~/apps/talent-search/src/lib/models"
-import { MemberStats } from "~/libs/core"
-import MemberAddress from "./MemberAddress"
-
+/* eslint-disable ordered-imports/ordered-imports */
+import { MemberMaxRating, MemberEmsiSkill } from '~/apps/talent-search/src/lib/models'
+import { MemberStats } from '~/libs/core'
+import MemberAddress from './MemberAddress'
 
 export default interface MemberInfo {
     userId: number

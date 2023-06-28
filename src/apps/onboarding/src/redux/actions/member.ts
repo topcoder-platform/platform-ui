@@ -1,7 +1,10 @@
 /* eslint-disable ordered-imports/ordered-imports */
 /* eslint-disable react/jsx-no-bind */
 /* eslint-disable sort-keys */
+/* eslint-disable unicorn/no-null */
 import moment from 'moment'
+import _ from 'lodash'
+
 import { getAsync as getAsyncToken } from '~/libs/core/lib/auth/token-functions/token.functions'
 import { TokenModel } from '~/libs/core'
 import {
@@ -18,7 +21,6 @@ import PersonalizationInfo from '../../models/PersonalizationInfo'
 import MemberAddress from '../../models/MemberAddress'
 import MemberInfo from '../../models/MemberInfo'
 import ConnectInfo from '../../models/ConnectInfo'
-import _ from 'lodash'
 
 export const updateMemberInfo: any = (memberInfo: MemberInfo) => ({
     type: ACTIONS.MEMBER.GET_MEMBER,
@@ -55,7 +57,6 @@ export const updateLoadingMemberTraits: any = (loading: boolean) => ({
     payload: loading,
 })
 
-
 export const updateLoadingMemberInfo: any = (loading: boolean) => ({
     type: ACTIONS.MEMBER.SET_LOADING_MEMBER_INFO,
     payload: loading,
@@ -75,7 +76,7 @@ export const fetchMemberInfo: any = () => async (dispatch: any) => {
         dispatch(updateMemberInfo(memberInfo))
 
         if (memberInfo.addresses) {
-            const addresses = memberInfo.addresses.map(address => ({
+            const addresses: MemberAddress[] = memberInfo.addresses.map(address => ({
                 ...address,
                 streetAddr1: address.streetAddr1,
                 streetAddr2: address.streetAddr2,
@@ -83,7 +84,7 @@ export const fetchMemberInfo: any = () => async (dispatch: any) => {
                 stateCode: address.stateCode,
                 zip: address.zip,
             }))
-            const matchAddress = _.find(addresses, { type: 'HOME' })
+            const matchAddress: MemberAddress = _.find(addresses, { type: 'HOME' }) as MemberAddress
             if (matchAddress) {
                 dispatch(updateAddress(matchAddress))
             }
@@ -183,14 +184,12 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
     )
     const personalizationExpValue: any = personalizationExp?.traits?.data
     if (personalizationExpValue) {
-        const personalizations: PersonalizationInfo[] = personalizationExpValue.map((e: any) => {
-            return ({
-                referAs: e.referAs,
-                profileSelfTitle: e.profileSelfTitle,
-                shortBio: e.shortBio,
-                ...e,
-            })
-        })
+        const personalizations: PersonalizationInfo[] = personalizationExpValue.map((e: any) => ({
+            ...e,
+            referAs: e.referAs,
+            profileSelfTitle: e.profileSelfTitle,
+            shortBio: e.shortBio,
+        }))
         dispatch(updatePersonalization(personalizations[0]))
     }
 
@@ -199,13 +198,11 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
     )
     const connectInfoExpValue: any = connectInfoExp?.traits?.data
     if (connectInfoExpValue) {
-        const connectInfos: ConnectInfo[] = connectInfoExpValue.map((e: any) => {
-            return ({
-                ...e,
-                country: e.country,
-                phoneNumber: e.phoneNumber,
-            })
-        })
+        const connectInfos: ConnectInfo[] = connectInfoExpValue.map((e: any) => ({
+            ...e,
+            country: e.country,
+            phoneNumber: e.phoneNumber,
+        }))
         dispatch(updateConnectInfo(connectInfos[0]))
     }
 }

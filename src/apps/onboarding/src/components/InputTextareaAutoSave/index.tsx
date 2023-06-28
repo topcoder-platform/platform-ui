@@ -10,7 +10,6 @@
 import React, { FC, useEffect, useState } from 'react'
 import { InputTextarea } from '~/libs/ui'
 
-
 export interface InputTextareaProps {
     readonly dirty?: boolean
     readonly disabled?: boolean
