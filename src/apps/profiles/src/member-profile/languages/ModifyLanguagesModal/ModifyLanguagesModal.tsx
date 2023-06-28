@@ -70,14 +70,12 @@ const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLangua
         'label',
     ), [])
 
-    const spokenLevel: any = useMemo(() => sortBy(
-        dropDowns.spokenLevel.map(lang => ({ label: lang.label, value: lang.label })),
-        'label',
+    const spokenLevel: any = useMemo(() => dropDowns.spokenLevel.map(
+        lang => ({ label: lang.label, value: lang.label }),
     ), [])
 
-    const writtenLevel: any = useMemo(() => sortBy(
-        dropDowns.writtenLevel.map(lang => ({ label: lang.label, value: lang.label })),
-        'label',
+    const writtenLevel: any = useMemo(() => dropDowns.writtenLevel.map(
+        lang => ({ label: lang.label, value: lang.label }),
     ), [])
 
     const [currentMemberLanguages, setCurrentMemberLanguages]: [
