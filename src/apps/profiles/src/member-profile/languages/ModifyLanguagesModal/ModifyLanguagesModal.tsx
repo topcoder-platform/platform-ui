@@ -4,7 +4,14 @@ import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
 import { BaseModal, Button, IconOutline, InputSelect } from '~/libs/ui'
-import { updateMemberTraitsAsync, UserProfile, UserTrait, UserTraitCategoryNames, UserTraitIds } from '~/libs/core'
+import {
+    createMemberTraitsAsync,
+    updateMemberTraitsAsync,
+    UserProfile,
+    UserTrait,
+    UserTraitCategoryNames,
+    UserTraitIds,
+} from '~/libs/core'
 
 import { LanguageCard } from '../LanguageCard'
 
@@ -16,6 +23,11 @@ interface ModifyLanguagesModalProps {
     onSave: () => void
     profile: UserProfile
     memberLanguages: UserTrait[] | undefined
+}
+
+const methodsMap: { [key: string]: any } = {
+    create: createMemberTraitsAsync,
+    update: updateMemberTraitsAsync,
 }
 
 const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLanguagesModalProps) => {
@@ -89,7 +101,7 @@ const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLangua
     function handleLanguagesSave(): void {
         setIsSaving(true)
 
-        updateMemberTraitsAsync(props.profile.handle, [{
+        methodsMap[!!props.memberLanguages ? 'update' : 'create'](props.profile.handle, [{
             categoryName: UserTraitCategoryNames.languages,
             traitId: UserTraitIds.languages,
             traits: {
