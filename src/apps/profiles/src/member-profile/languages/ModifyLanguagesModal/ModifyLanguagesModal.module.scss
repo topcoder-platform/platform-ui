@@ -1,0 +1,57 @@
+@import '@libs/ui/styles/includes';
+
+.modalButtons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.formError {
+    color: $red-100;
+}
+
+.formWrap {
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+    margin-top: $sp-2;
+
+    @include ltelg {
+        :global(.input-wrapper) {
+            margin-bottom: $sp-2;
+        }
+    }
+
+    .formCTAs {
+        display: flex;
+        align-items: center;
+
+        svg {
+            width: 14px;
+            height: 14px;
+            margin-right: $sp-1;
+        }
+
+        .ctaBtnCancel {
+            margin-left: $sp-8;
+        }
+    }
+}
+
+.languages {
+    margin-bottom: $sp-15;
+
+    &.noLanguages {
+        margin-bottom: 0;
+    }
+
+    .languageItemWrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: $sp-2;
+        border-radius: 8px;
+        padding: $sp-2;
+        border: 1px solid $black-10;
+    }
+}

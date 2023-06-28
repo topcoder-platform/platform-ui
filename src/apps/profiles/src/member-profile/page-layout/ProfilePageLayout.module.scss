@@ -7,27 +7,44 @@
     .contentLayoutOuter {
         margin-top: $sp-12;
 
-        .basicInfoWrap {
-            display: flex;
+        .profileInfoWrap {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            grid-gap: $sp-15;
             margin-bottom: $sp-13;
 
             @include ltelg {
-                flex-direction: column;
+                grid-template-columns: 1fr;
+                gap: 0;
             }
 
-            .skillsWrap {
+            .profileInfoLeft {
                 display: flex;
                 flex-direction: column;
-                flex: 1;
 
+                .skillsWrap {
+                    display: flex;
+                    flex-direction: column;
+                    flex: 1;
+                }
+            }
+
+            .profileInfoRight {
+                display: flex;
+                flex-direction: column;
+                margin-top: $sp-15;
+                
                 .shortBio {
-                    margin-top: $sp-4;
-                    padding-right: $sp-13;
+                    margin-bottom: $sp-8;
 
-                    @include ltelg {
-                        margin-top: 0;
-                        margin-bottom: $sp-4;
-                        padding-right: 0;
+                    :global(.body-large-medium),
+                    :global(.body-large) {
+                        text-align: left;
+                        margin-bottom: $sp-2;
+                    }
+
+                    :global(.body-large) {
+                        font-style: italic;
                     }
                 }
             }

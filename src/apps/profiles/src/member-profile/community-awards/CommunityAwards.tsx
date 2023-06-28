@@ -13,7 +13,7 @@ interface CommunityAwardsProps {
 }
 
 const CommunityAwards: FC<CommunityAwardsProps> = (props: CommunityAwardsProps) => {
-    const memberBadges: UserBadgesResponse | undefined = useMemberBadges(props.profile?.userId as number, { limit: 4 })
+    const memberBadges: UserBadgesResponse | undefined = useMemberBadges(props.profile?.userId as number, { limit: 6 })
 
     const [isBadgeDetailsOpen, setIsBadgeDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)

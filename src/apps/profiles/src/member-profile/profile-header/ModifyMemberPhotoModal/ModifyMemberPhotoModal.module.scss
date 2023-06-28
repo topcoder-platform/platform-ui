@@ -1,0 +1,40 @@
+@import "@libs/ui/styles/includes";
+
+.modalButtons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.modalBody {
+    display: flex;
+    flex-direction: column;
+
+    :global(.body-main-bold) {
+        margin-top: $sp-2;
+    }
+
+    ul {
+        list-style: disc;
+        margin-left: $sp-4;
+    }
+
+    form {
+        input {
+            display: none;
+        }
+
+        button {
+            margin: $sp-4 0;
+        }
+    }
+
+    .preview {
+        img {
+            max-width: 200px;
+            max-height: 200px;
+            border: 3px solid #fff;
+            border-radius: 50%;
+        }
+    }
+}
