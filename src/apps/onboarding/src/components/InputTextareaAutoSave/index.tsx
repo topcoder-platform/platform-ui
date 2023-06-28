@@ -7,7 +7,7 @@
  *
  * A Form Field Is a wrapper for input to add the label to it
  */
-import React, { FC, FocusEvent } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { InputTextarea } from '~/libs/ui'
 
 
@@ -19,7 +19,7 @@ export interface InputTextareaProps {
     readonly hint?: string
     readonly label?: string
     readonly name: string
-    readonly onChange: (event: FocusEvent<HTMLTextAreaElement>) => void
+    readonly onChange: (value?: string) => void
     readonly placeholder?: string
     readonly spellCheck?: boolean
     readonly tabIndex: number
@@ -27,10 +27,19 @@ export interface InputTextareaProps {
 }
 
 const InputTextareaAutoSave: FC<InputTextareaProps> = (props: InputTextareaProps) => {
+    const [value, setValue] = useState<string | number | undefined>('')
+    useEffect(() => {
+        setValue(props.value)
+    }, [props.value])
+
     return (
         <InputTextarea
             {...props}
-            onBlur={() => { }}
+            value={value}
+            onChange={event => {
+                setValue(event.target.value)
+            }}
+            onBlur={() => props.onChange(`${value}`)}
         />
     )
 }

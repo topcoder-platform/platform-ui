@@ -23,7 +23,7 @@ const FieldAvatar: FC<FieldAvatarProps> = ({
 }: FieldAvatarProps) => {
     return (
         <div
-            className={classNames(styles.container, className || '')}
+            className={classNames(styles.container, className, 'd-flex flex-column gap-20 align-items-start')}
         >
             <h3>A picture can speek a thousand words</h3>
             <div className='d-flex'>
@@ -33,8 +33,8 @@ const FieldAvatar: FC<FieldAvatarProps> = ({
                 <div className='d-flex flex-column'>
                     <strong>Requirements:</strong>
                     <ul>
-                    <li>PNG or JPG format.</li>
-                    <li>Maximum size: 2MB.</li>
+                        <li>PNG or JPG format.</li>
+                        <li>Maximum size: 2MB.</li>
                     </ul>
                 </div>
             </div>

@@ -1,20 +1,16 @@
 /* eslint-disable sort-keys */
-export default interface AccountDetailInfo {
+export default interface MemberAddress {
     streetAddr1: string
     streetAddr2: string
     city: string
     stateCode: string
     zip: string
-    country: string
-    phoneNumber: string
 }
 
-export const emptyAccountDetailInfo: () => AccountDetailInfo = () => ({
+export const emptyMemberAddress: () => MemberAddress = () => ({
     streetAddr1: '',
     streetAddr2: '',
     city: '',
     stateCode: '',
     zip: '',
-    country: '',
-    phoneNumber: '',
 })

@@ -8,7 +8,6 @@ import _ from 'lodash'
 import AsyncSelect from 'react-select/async'
 import classNames from 'classnames'
 
-import { Member } from '~/apps/talent-search/src/lib/models'
 import { Button, PageDivider } from '~/libs/ui'
 
 import { ProgressBar } from '../../components/progress-bar'
@@ -18,9 +17,10 @@ import SkillInfo from '../../models/SkillInfo'
 import SkillTag from '../../components/skill-tag'
 
 import styles from './styles.module.scss'
+import MemberInfo from '../../models/MemberInfo'
 
 const PageSkillsContent: FC<{
-    memberInfo?: Member,
+    memberInfo?: MemberInfo,
     updateMemberSkills: (skills: SkillInfo[]) => void
 }> = props => {
     const navigate: any = useNavigate()
