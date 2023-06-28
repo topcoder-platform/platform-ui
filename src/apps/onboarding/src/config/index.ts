@@ -5,7 +5,11 @@ export const ACTIONS: {
         UPDATE_MEMBER_SKILLS: string;
         SET_WORKS: string;
         SET_EDUCATIONS: string;
+        SET_PERSONALIZATION: string;
+        SET_ADDRESS: string;
+        SET_CONNECT_INFO: string;
         SET_LOADING_MEMBER_TRAITS: string;
+        SET_LOADING_MEMBER_INFO: string;
     };
 } = {
     MEMBER: {
@@ -13,7 +17,11 @@ export const ACTIONS: {
         UPDATE_MEMBER_SKILLS: 'UPDATE_MEMBER_SKILLS',
         SET_WORKS: 'SET_WORKS',
         SET_EDUCATIONS: 'SET_EDUCATIONS',
+        SET_PERSONALIZATION: 'SET_PERSONALIZATION',
+        SET_ADDRESS: 'SET_ADDRESS',
+        SET_CONNECT_INFO: 'SET_CONNECT_INFO',
         SET_LOADING_MEMBER_TRAITS: 'SET_LOADING_MEMBER_TRAITS',
+        SET_LOADING_MEMBER_INFO: 'SET_LOADING_MEMBER_INFO',
     },
 }
 

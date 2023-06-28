@@ -1,8 +1,10 @@
 /* eslint-disable ordered-imports/ordered-imports */
 /* eslint-disable react/jsx-no-bind */
 /* eslint-disable sort-keys */
+/* eslint-disable unicorn/no-null */
 import moment from 'moment'
-import { Member } from '~/apps/talent-search/src/lib/models'
+import _ from 'lodash'
+
 import { getAsync as getAsyncToken } from '~/libs/core/lib/auth/token-functions/token.functions'
 import { TokenModel } from '~/libs/core'
 import {
@@ -15,8 +17,12 @@ import SkillInfo from '../../models/SkillInfo'
 import { getMemberInfo, getMemberTraits, putMemberInfo } from '../../services/members'
 import WorkInfo from '../../models/WorkInfo'
 import EducationInfo from '../../models/EducationInfo'
+import PersonalizationInfo from '../../models/PersonalizationInfo'
+import MemberAddress from '../../models/MemberAddress'
+import MemberInfo from '../../models/MemberInfo'
+import ConnectInfo from '../../models/ConnectInfo'
 
-export const updateMemberInfo: any = (memberInfo: Member) => ({
+export const updateMemberInfo: any = (memberInfo: MemberInfo) => ({
     type: ACTIONS.MEMBER.GET_MEMBER,
     payload: memberInfo,
 })
@@ -31,17 +37,58 @@ export const updateEducations: any = (educations: EducationInfo[]) => ({
     payload: educations,
 })
 
+export const updatePersonalization: any = (personalization: PersonalizationInfo) => ({
+    type: ACTIONS.MEMBER.SET_PERSONALIZATION,
+    payload: personalization,
+})
+
+export const updateConnectInfo: any = (connectInfo: ConnectInfo) => ({
+    type: ACTIONS.MEMBER.SET_CONNECT_INFO,
+    payload: connectInfo,
+})
+
+export const updateAddress: any = (address: MemberAddress) => ({
+    type: ACTIONS.MEMBER.SET_ADDRESS,
+    payload: address,
+})
+
 export const updateLoadingMemberTraits: any = (loading: boolean) => ({
     type: ACTIONS.MEMBER.SET_LOADING_MEMBER_TRAITS,
     payload: loading,
 })
 
+export const updateLoadingMemberInfo: any = (loading: boolean) => ({
+    type: ACTIONS.MEMBER.SET_LOADING_MEMBER_INFO,
+    payload: loading,
+})
 export const fetchMemberInfo: any = () => async (dispatch: any) => {
+    let tokenInfo: TokenModel
+    let memberInfo: MemberInfo | null = null
+    dispatch(updateLoadingMemberInfo(true))
     try {
-        const tokenInfo: TokenModel = await getAsyncToken()
-        const memberInfo: Member = await getMemberInfo(tokenInfo.handle || '')
-        dispatch(updateMemberInfo(memberInfo))
+        tokenInfo = await getAsyncToken()
+        memberInfo = await getMemberInfo(tokenInfo.handle || '')
     } catch (error) {
+    }
+
+    dispatch(updateLoadingMemberInfo(false))
+    if (memberInfo) {
+        dispatch(updateMemberInfo(memberInfo))
+
+        if (memberInfo.addresses) {
+            const addresses: MemberAddress[] = memberInfo.addresses.map(address => ({
+                ...address,
+                streetAddr1: address.streetAddr1,
+                streetAddr2: address.streetAddr2,
+                city: address.city,
+                stateCode: address.stateCode,
+                zip: address.zip,
+            }))
+            const matchAddress: MemberAddress = _.find(addresses, { type: 'HOME' }) as MemberAddress
+            if (matchAddress) {
+                dispatch(updateAddress(matchAddress))
+            }
+        }
     }
 }
 
@@ -130,6 +177,33 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
             })
         })
         dispatch(updateEducations(educations))
+    }
+
+    const personalizationExp: any = memberTraits.find(
+        (t: any) => t.traitId === 'personalization',
+    )
+    const personalizationExpValue: any = personalizationExp?.traits?.data
+    if (personalizationExpValue) {
+        const personalizations: PersonalizationInfo[] = personalizationExpValue.map((e: any) => ({
+            ...e,
+            referAs: e.referAs,
+            profileSelfTitle: e.profileSelfTitle,
+            shortBio: e.shortBio,
+        }))
+        dispatch(updatePersonalization(personalizations[0]))
+    }
+
+    const connectInfoExp: any = memberTraits.find(
+        (t: any) => t.traitId === 'connect_info',
+    )
+    const connectInfoExpValue: any = connectInfoExp?.traits?.data
+    if (connectInfoExpValue) {
+        const connectInfos: ConnectInfo[] = connectInfoExpValue.map((e: any) => ({
+            ...e,
+            country: e.country,
+            phoneNumber: e.phoneNumber,
+        }))
+        dispatch(updateConnectInfo(connectInfos[0]))
     }
 }
 
@@ -235,6 +309,94 @@ export const createMemberEducations: any = (educations: EducationInfo[]) => asyn
     }
 }
 
+const createPersonalizationsPayloadData: any = (personalizations: PersonalizationInfo[]) => {
+    const data: any = personalizations.map(personalization => {
+        const {
+            referAs,
+            profileSelfTitle,
+            shortBio,
+        }: any = personalization
+        return {
+            ...personalization,
+            referAs,
+            profileSelfTitle,
+            shortBio,
+        }
+    })
+
+    const payload: any = {
+        categoryName: 'Personalization',
+        traitId: 'personalization',
+        traits: {
+            data,
+        },
+    }
+    return [payload]
+}
+
+export const updateMemberPersonalizations: any = (personalizations: PersonalizationInfo[]) => async (dispatch: any) => {
+    try {
+        const tokenInfo: TokenModel = await getAsyncToken()
+
+        await updateMemberTraits(tokenInfo.handle || '', createPersonalizationsPayloadData(personalizations))
+        dispatch(updatePersonalization(personalizations[0]))
+    } catch (error) {
+    }
+}
+
+export const createMemberPersonalizations: any = (personalizations: PersonalizationInfo[]) => async (dispatch: any) => {
+    try {
+        const tokenInfo: TokenModel = await getAsyncToken()
+
+        await createMemberTraits(tokenInfo.handle || '', createPersonalizationsPayloadData(personalizations))
+        dispatch(updatePersonalization(personalizations[0]))
+    } catch (error) {
+    }
+}
+
+const createConnectInfosPayloadData: any = (connectInfos: ConnectInfo[]) => {
+    const data: any = connectInfos.map(connectInfo => {
+        const {
+            country,
+            phoneNumber,
+        }: any = connectInfo
+        return {
+            ...connectInfo,
+            country,
+            phoneNumber,
+        }
+    })
+
+    const payload: any = {
+        categoryName: 'Connect User Information',
+        traitId: 'connect_info',
+        traits: {
+            data,
+        },
+    }
+    return [payload]
+}
+
+export const updateMemberConnectInfos: any = (connectInfos: ConnectInfo[]) => async (dispatch: any) => {
+    try {
+        const tokenInfo: TokenModel = await getAsyncToken()
+
+        await updateMemberTraits(tokenInfo.handle || '', createConnectInfosPayloadData(connectInfos))
+        dispatch(updateConnectInfo(connectInfos[0]))
+    } catch (error) {
+    }
+}
+
+export const createMemberConnectInfos: any = (connectInfos: ConnectInfo[]) => async (dispatch: any) => {
+    try {
+        const tokenInfo: TokenModel = await getAsyncToken()
+
+        await createMemberTraits(tokenInfo.handle || '', createConnectInfosPayloadData(connectInfos))
+        dispatch(updateConnectInfo(connectInfos[0]))
+    } catch (error) {
+    }
+}
+
 export const setMemberSkills: any = (skills: SkillInfo[]) => ({
     type: ACTIONS.MEMBER.UPDATE_MEMBER_SKILLS,
     payload: skills,
@@ -253,6 +415,25 @@ export const updateMemberSkills: any = (skills: SkillInfo[]) => async (dispatch:
             })),
         })
         dispatch(setMemberSkills(skills))
+    } catch (error) {
+    }
+}
+
+export const updateMemberHomeAddresss: any = (addresses: MemberAddress[]) => async (dispatch: any) => {
+    try {
+        const tokenInfo: TokenModel = await getAsyncToken()
+        await putMemberInfo(tokenInfo.handle || '', {
+            addresses: addresses.map(address => ({
+                ...address,
+                streetAddr1: address.streetAddr1,
+                streetAddr2: address.streetAddr2,
+                city: address.city,
+                stateCode: address.stateCode,
+                zip: address.zip,
+                type: 'HOME',
+            })),
+        })
+        dispatch(updateAddress(addresses[0]))
     } catch (error) {
     }
 }

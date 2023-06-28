@@ -5,11 +5,19 @@ import { Member } from '~/apps/talent-search/src/lib/models'
 import { ACTIONS } from '../../config'
 import WorkInfo from '../../models/WorkInfo'
 import EducationInfo from '../../models/EducationInfo'
+import PersonalizationInfo from '../../models/PersonalizationInfo'
+import MemberAddress from '../../models/MemberAddress'
+import ConnectInfo from '../../models/ConnectInfo'
 
 const initialState: {
-  memberInfo?: Member
-  works?: WorkInfo[]
-  educations?: EducationInfo[]
+    memberInfo?: Member
+    works?: WorkInfo[]
+    educations?: EducationInfo[]
+    personalization?: PersonalizationInfo
+    address?: MemberAddress
+    connectInfo?: ConnectInfo
+    loadingMemberTraits?: boolean
+    loadingMemberInfo?: boolean
 } = {
 }
 
@@ -25,10 +33,30 @@ const memberReducer: any = (state = initialState, action: { type: any; payload: 
                 ...state,
                 works: action.payload,
             }
+        case ACTIONS.MEMBER.SET_PERSONALIZATION:
+            return {
+                ...state,
+                personalization: action.payload,
+            }
+        case ACTIONS.MEMBER.SET_ADDRESS:
+            return {
+                ...state,
+                address: action.payload,
+            }
+        case ACTIONS.MEMBER.SET_CONNECT_INFO:
+            return {
+                ...state,
+                connectInfo: action.payload,
+            }
         case ACTIONS.MEMBER.SET_LOADING_MEMBER_TRAITS:
             return {
                 ...state,
                 loadingMemberTraits: action.payload,
+            }
+        case ACTIONS.MEMBER.SET_LOADING_MEMBER_INFO:
+            return {
+                ...state,
+                loadingMemberInfo: action.payload,
             }
         case ACTIONS.MEMBER.SET_EDUCATIONS:
             return {
