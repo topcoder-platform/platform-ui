@@ -56,7 +56,7 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
         }, 1000)
     }
 
-    return props.authProfile || openForWork ? (
+    return props.authProfile?.handle === props.profile.handle || openForWork ? (
         <div className={styles.container}>
             <p className='body-small-bold'>Open to Work</p>
             {

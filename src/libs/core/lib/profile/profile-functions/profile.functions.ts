@@ -4,7 +4,7 @@ import { EditNameRequest } from '../edit-name-request.model'
 import { ModifyTracksRequest } from '../modify-tracks.request'
 import { ModifyMemberEmailPreferencesRequest } from '../modify-user-email-preferences.model'
 import { ModifyUserMFARequest, ModifyUserMFAResponse } from '../modify-user-mfa.model'
-import { UpdateProfileRequest } from '../modify-user-profile.model'
+import { UpdateProfileRequest, UserPhotoUpdateResponse } from '../modify-user-profile.model'
 import { ModifyUserPropertyResponse } from '../modify-user-role.model'
 import { UserEmailPreferences } from '../user-email-preference.model'
 import { UserProfile } from '../user-profile.model'
@@ -21,6 +21,7 @@ import {
     updateMemberEmailPreferences,
     updateMemberMFA,
     updateMemberPassword,
+    updateMemberPhoto,
     updateMemberProfile,
     updateMemberTraits,
     updatePrimaryMemberRole,
@@ -140,4 +141,8 @@ export async function modifyTracksAsync(handle: string, tracks: ModifyTracksRequ
 
 export async function updateMemberProfileAsync(handle: string, profile: UpdateProfileRequest): Promise<UserProfile> {
     return updateMemberProfile(handle, profile)
+}
+
+export async function updateMemberPhotoAsync(handle: string, payload: FormData): Promise<UserPhotoUpdateResponse> {
+    return updateMemberPhoto(handle, payload)
 }

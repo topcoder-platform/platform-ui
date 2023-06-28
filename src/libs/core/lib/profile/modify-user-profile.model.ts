@@ -6,3 +6,7 @@ export interface UpdateProfileRequest {
     tracks?: TC_TRACKS[],
     description?: string
 }
+
+export interface UserPhotoUpdateResponse {
+    photoURL: string
+}
