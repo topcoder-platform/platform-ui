@@ -1,0 +1,26 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    .headerWrap {
+        display: flex;
+        justify-content: space-between;
+        padding: $sp-2 $sp-3;
+
+        button {
+            svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+    }
+
+    input {
+        border: none;
+        pointer-events: none;
+        height: 22px;
+
+        &:focus {
+            outline: none;
+        }
+    }
+}
