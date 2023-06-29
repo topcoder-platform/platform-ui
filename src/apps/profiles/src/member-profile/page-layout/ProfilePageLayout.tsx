@@ -8,13 +8,14 @@ import { useCheckIsMobile } from '~/libs/shared'
 import { MemberTracksInfo } from '../tracks'
 import { MemberSkillsInfo } from '../skills'
 import { CommunityAwards } from '../community-awards'
-import { MemberTCAInfo } from '../tca-info'
 import { ProfileHeader } from '../profile-header'
 import { MemberLocalInfo } from '../local-info'
 import { MemberLanguages } from '../languages'
 import { AboutMe } from '../about-me'
 import { MemberLinks } from '../links'
 import { MemberTCAchievements } from '../tc-achievements'
+import { WorkExpirence } from '../work-expirence'
+import { EducationAndCertifications } from '../education-and-certifications'
 
 import styles from './ProfilePageLayout.module.scss'
 
@@ -62,8 +63,6 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                         <MemberTracksInfo profile={props.profile} />
 
                         <CommunityAwards profile={props.profile} />
-
-                        <MemberTCAInfo profile={props.profile} />
                     </div>
                     <div className={styles.profileInfoRight}>
                         {
@@ -82,6 +81,18 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
 
                         <MemberLocalInfo profile={props.profile} />
                     </div>
+                </div>
+
+                <div className={styles.expirenceWrap}>
+                    <WorkExpirence
+                        profile={props.profile}
+                        authProfile={props.authProfile}
+                    />
+
+                    <EducationAndCertifications
+                        profile={props.profile}
+                        authProfile={props.authProfile}
+                    />
                 </div>
 
                 {/* <MemberTCActivityInfo profile={props.profile} /> */}

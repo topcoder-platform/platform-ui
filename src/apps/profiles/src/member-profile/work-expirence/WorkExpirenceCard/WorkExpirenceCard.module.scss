@@ -1,0 +1,12 @@
+@import '@libs/ui/styles/includes';
+
+.workExpirenceCard {
+    margin-bottom: $sp-4;
+    flex: 1;
+
+    .workExpirenceCardHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+}

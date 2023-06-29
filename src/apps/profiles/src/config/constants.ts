@@ -15,4 +15,6 @@ export enum profileEditModes {
     openForWork = 'openForWork',
     names = 'names',
     photo = 'photo',
+    workExperience = 'workExperience',
+    education = 'education',
 }
