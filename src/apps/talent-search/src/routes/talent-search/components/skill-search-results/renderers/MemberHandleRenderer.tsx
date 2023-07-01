@@ -12,8 +12,7 @@ const MemberHandleRenderer: (member:Member) => JSX.Element
         window.open(`${EnvironmentConfig.URLS.USER_PROFILE}/${member.handle}`, '_blank')
     }
 
-    
-    let scoreText: string = 'Skill score: ' + member.skillScore
+    const scoreText: string = `Skill score: ${member.skillScore}`
 
     return (
         <section className={styles.memberCell}>
