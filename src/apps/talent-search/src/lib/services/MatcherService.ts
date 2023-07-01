@@ -18,7 +18,7 @@ export async function retrieveMatchesForSkills(
 ): Promise<Array<Member>>{
     const params = new URLSearchParams()
     skills.forEach(value => params.append('skillId', value.emsiId))
-    params.append('sortBy', 'numberOfChallengesWon')
+    params.append('sortBy', 'skillScore')
     params.append('sortOrder', 'desc')
     params.append('page', `${page}`)
     params.append('perPage', `${pageSize}`)
