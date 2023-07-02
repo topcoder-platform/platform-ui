@@ -64,6 +64,13 @@ export const PageEducationsContent: FC<{
             <PageDivider />
 
             <div className={classNames('d-flex flex-column full-width align-items-start', styles.blockContent)}>
+                {(!educations || educations.length === 0) ? (
+                    <span className='mb-30'>
+                        Relevant education details will help make your
+                        profile more valuable to potential employers, add it here!
+                    </span>
+                ) : null}
+
                 <div className='d-flex flex-column full-width'>
                     {(educations || []).map(education => (
                         <div key={education.id} className='d-flex flex-column full-width'>
@@ -107,12 +114,6 @@ export const PageEducationsContent: FC<{
                 >
                     + add education
                 </Button>
-                {(!educations || educations.length === 0) ? (
-                    <span className='mt-30'>
-                        Relevant education details will help make your
-                        profile more valuable to potential employers, add it here!
-                    </span>
-                ) : null}
             </div>
 
             <ProgressBar

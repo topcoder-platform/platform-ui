@@ -20,11 +20,13 @@ import MemberInfo from '../../models/MemberInfo'
 interface FieldAvatarProps {
     className?: string
     memberInfo?: MemberInfo,
+    setMemberPhotoUrl: (photoUrl: string) => void
 }
 
 const FieldAvatar: FC<FieldAvatarProps> = ({
     className,
     memberInfo,
+    setMemberPhotoUrl,
 }: FieldAvatarProps) => {
     const fileElRef: MutableRefObject<HTMLDivElement | any> = useRef()
     const [imgUrl, setImgUrl] = useState<string>('')
@@ -50,7 +52,7 @@ const FieldAvatar: FC<FieldAvatarProps> = ({
         }
     }
 
-    async function handleModifyPhotoSave(): Promise<void> {
+    async function handleModifyPhotoSave(newImgUrl: string): Promise<void> {
         const formData: FormData = new FormData()
 
         if (file && memberInfo) {
@@ -58,6 +60,7 @@ const FieldAvatar: FC<FieldAvatarProps> = ({
 
             setIsSaving(true)
             try {
+                setMemberPhotoUrl(newImgUrl)
                 await updateMemberPhotoAsync(memberInfo.handle, formData)
             } catch (error) {
             }
@@ -68,8 +71,9 @@ const FieldAvatar: FC<FieldAvatarProps> = ({
 
     useEffect(() => {
         if (file) {
-            setImgUrl(URL.createObjectURL(file))
-            handleModifyPhotoSave()
+            const newImgUrl: string = URL.createObjectURL(file)
+            setImgUrl(newImgUrl)
+            handleModifyPhotoSave(newImgUrl)
                 .then(_.noop)
         }
     /* eslint-disable react-hooks/exhaustive-deps */
@@ -79,7 +83,7 @@ const FieldAvatar: FC<FieldAvatarProps> = ({
         <div
             className={classNames(styles.container, className, 'd-flex flex-column gap-20 align-items-start')}
         >
-            <h3>A picture can speek a thousand words</h3>
+            <h3>A picture can speak a thousand words</h3>
             <div className='d-flex gap-30'>
                 <div className={classNames(
                     'd-flex',

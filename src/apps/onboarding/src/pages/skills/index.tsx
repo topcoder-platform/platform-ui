@@ -87,7 +87,7 @@ const PageSkillsContent: FC<{
                             cacheOptions
                             autoFocus
                             defaultOptions
-                            placeholder='Start typing to autocomplete available EMSI skills'
+                            placeholder='Type to add a skill...'
                             loadOptions={autoCompleteSkills}
                             name='skills'
                             className='basic-multi-select mt-30'

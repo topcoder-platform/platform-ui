@@ -402,6 +402,11 @@ export const setMemberSkills: any = (skills: SkillInfo[]) => ({
     payload: skills,
 })
 
+export const setMemberPhotoUrl: any = (photoUrl: string) => ({
+    type: ACTIONS.MEMBER.UPDATE_MEMBER_PHOTO_URL,
+    payload: photoUrl,
+})
+
 export const updateMemberSkills: any = (skills: SkillInfo[]) => async (dispatch: any) => {
     try {
         const tokenInfo: TokenModel = await getAsyncToken()

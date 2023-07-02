@@ -65,6 +65,13 @@ export const PageWorksContent: FC<{
 
             <div className={classNames('d-flex justify-content-between gap-50 flex-wrap', styles.blockContent)}>
                 <div className='d-flex flex-column align-items-start flex-1'>
+                    {(!works || works.length === 0) ? (
+                        <span className='mb-30'>
+                            You will be able to add details for each of the work experiences
+                            that you think will demonstrate your abilities.
+                        </span>
+                    ) : null}
+
                     <div className='d-flex flex-column full-width'>
                         {(works || []).map(work => (
                             <div key={work.id} className='d-flex flex-column full-width'>
@@ -116,12 +123,6 @@ export const PageWorksContent: FC<{
                     >
                         + add work experience
                     </Button>
-                    {(!works || works.length === 0) ? (
-                        <span className='mt-30'>
-                            You will be able to add details for each of the work experiences
-                            that you think will demonstrate your abilities.
-                        </span>
-                    ) : null}
                 </div>
             </div>
 
