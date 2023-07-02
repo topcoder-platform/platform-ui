@@ -17,7 +17,11 @@ import FieldAvatar from '../../components/FieldAvatar'
 import InputTextAutoSave from '../../components/InputTextAutoSave'
 import PersonalizationInfo, { emptyPersonalizationInfo } from '../../models/PersonalizationInfo'
 import InputTextareaAutoSave from '../../components/InputTextareaAutoSave'
-import { createMemberPersonalizations, updateMemberPersonalizations } from '../../redux/actions/member'
+import {
+    createMemberPersonalizations,
+    setMemberPhotoUrl,
+    updateMemberPersonalizations,
+} from '../../redux/actions/member'
 import MemberInfo from '../../models/MemberInfo'
 import SelectOption from '../../models/SelectOption'
 
@@ -41,6 +45,7 @@ const PagePersonalizationContent: FC<{
     reduxPersonalization: PersonalizationInfo | null
     updateMemberPersonalizations: (infos: PersonalizationInfo[]) => void
     createMemberPersonalizations: (infos: PersonalizationInfo[]) => void
+    setMemberPhotoUrl: (photoUrl: string) => void
     loadingMemberTraits: boolean
 }> = props => {
     const navigate: any = useNavigate()
@@ -102,12 +107,13 @@ const PagePersonalizationContent: FC<{
             <div className={classNames(styles.blockContent, 'd-flex flex-column full-width gap-20')}>
                 <span>
                     When members personalize theirs profiles with a photo and description,
-                    they are more likely to get notices by our customers for work and opportunities.
+                    they are more likely to get noticed by our customers for work and opportunities.
                 </span>
 
                 <div className='d-flex gap-100 flex-wrap'>
                     <FieldAvatar
                         memberInfo={props.memberInfo}
+                        setMemberPhotoUrl={props.setMemberPhotoUrl}
                     />
 
                     <div className={classNames('d-flex flex-column gap-20', styles.blockHandleSelect)}>
@@ -160,7 +166,7 @@ const PagePersonalizationContent: FC<{
                             profileSelfTitle: value || '',
                         })
                     }}
-                    placeholder='Company Name'
+                    placeholder='Title'
                     tabIndex={0}
                     type='text'
                     disabled={props.loadingMemberTraits}
@@ -244,6 +250,7 @@ const mapStateToProps: any = (state: any) => {
 const mapDispatchToProps: any = {
     createMemberPersonalizations,
     updateMemberPersonalizations,
+    setMemberPhotoUrl,
 }
 
 export const PagePersonalization: any = connect(mapStateToProps, mapDispatchToProps)(PagePersonalizationContent)

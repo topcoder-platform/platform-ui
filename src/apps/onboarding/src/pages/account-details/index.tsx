@@ -176,7 +176,7 @@ const PageAccountDetailsContent: FC<{
                 <span>
                     Your mailing address is required for account activation and verification to do work with Topcoder or
                     Topcoder customers. This information
-                    <strong>will not</strong>
+                    <strong> will not </strong>
                     be displayed on your profile nor to anyone visiting the Topcoder site.
                 </span>
 

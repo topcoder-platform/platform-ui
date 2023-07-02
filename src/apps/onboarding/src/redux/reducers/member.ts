@@ -77,6 +77,20 @@ const memberReducer: any = (state = initialState, action: { type: any; payload: 
             }
         }
 
+        case ACTIONS.MEMBER.UPDATE_MEMBER_PHOTO_URL: {
+            if (!state.memberInfo) {
+                return state
+            }
+
+            return {
+                ...state,
+                memberInfo: {
+                    ...state.memberInfo,
+                    photoURL: action.payload,
+                },
+            }
+        }
+
         default:
             return state
     }
