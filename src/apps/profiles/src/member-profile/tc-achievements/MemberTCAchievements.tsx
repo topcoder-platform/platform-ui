@@ -1,7 +1,6 @@
 import { FC, useMemo } from 'react'
 
 import {
-    ratingToCSScolor,
     useMemberBadges,
     useMemberStats,
     UserBadge,
@@ -35,7 +34,7 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
 
     return (
         <div className={styles.container}>
-            <h3>Achievements with Topcoder</h3>
+            <h3>Achievements @ Topcoder</h3>
 
             <div className={styles.achievementsWrap}>
                 <div className={styles.achievement}>
@@ -45,12 +44,6 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
                 <div className={styles.achievement}>
                     <p>{memberStats?.wins || 0}</p>
                     <p>Challenge Wins</p>
-                </div>
-                <div className={styles.achievement}>
-                    <span style={ratingToCSScolor(props.profile.maxRating?.rating || 0)}>
-                        {props.profile.maxRating?.rating || 0}
-                    </span>
-                    <p>RATING</p>
                 </div>
             </div>
 

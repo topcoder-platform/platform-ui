@@ -3,13 +3,33 @@
 .container {
     display: flex;
     flex-direction: column;
+    background-color: $black-5;
 
-    .contentLayoutOuter {
-        margin-top: $sp-12;
+    .profileHeaderWrap {
+        background: url('../../lib/assets/profile-header-bg.png') no-repeat right center / auto, linear-gradient(#0d83c5, #0e89d5);
+
+        .profileHeaderContent {
+            padding: 0;
+            max-height: 200px;
+            overflow: visible;
+        }
+
+        .profileHeaderContentOuter {
+            margin-top: 75px;
+        }
+
+        .profileHeaderBottom {
+            height: 90px;
+            background-color: $tc-white
+        }
+    }
+
+    .profileOuter {
+        margin-top: 130px;
 
         .profileInfoWrap {
             display: grid;
-            grid-template-columns: 1fr 360px;
+            grid-template-columns: 300px 1fr;
             grid-gap: $sp-15;
             margin-bottom: $sp-13;
 
@@ -32,8 +52,8 @@
             .profileInfoRight {
                 display: flex;
                 flex-direction: column;
-                margin-top: $sp-15;
-                
+                margin-top: -215px;
+
                 .shortBio {
                     margin-bottom: $sp-8;
 
@@ -53,7 +73,7 @@
         .expirenceWrap {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 80px;
+            gap: 40px;
 
             @include ltelg {
                 grid-template-columns: 1fr;
@@ -61,4 +81,11 @@
             }
         }
     }
+}
+
+.sectionWrap {
+    background-color: $tc-white;
+    padding: $sp-8 $sp-8 0;
+    margin-bottom: $sp-8;
+    border-radius: 16px;
 }

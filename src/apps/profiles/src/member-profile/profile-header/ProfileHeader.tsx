@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import moment from 'moment'
 
 import { getVerificationStatusAsync, UserProfile } from '~/libs/core'
-import { Button, VerifiedMemberBadge } from '~/libs/ui'
+import { Button, IconSolid } from '~/libs/ui'
 
 import { EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
@@ -98,6 +98,13 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
             <div className={styles.photoWrap}>
                 <img src={photoURL} alt='Topcoder - Member Profile Avatar' className={styles.profilePhoto} />
                 {
+                    isMemberVerified ? (
+                        <div className={styles.verifiedBadge}>
+                            <IconSolid.CheckCircleIcon />
+                        </div>
+                    ) : undefined
+                }
+                {
                     canEdit && (
                         <EditMemberPropertyBtn
                             onClick={handleModifyPhotoClick}
@@ -108,7 +115,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
 
             <div className={styles.profileInfo}>
                 <div className={styles.nameWrap}>
-                    <p className='body-large-bold'>
+                    <p>
                         {props.profile.firstName}
                         {' '}
                         {props.profile.lastName}
@@ -123,7 +130,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                 </div>
 
                 <p className={styles.memberSince}>
-                    {props.profile.handle}
+                    <span>{props.profile.handle}</span>
                     {' '}
                     |
                     {' '}
@@ -132,15 +139,14 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                     {moment(props.profile.createdAt)
                         .format('MMM YYYY')}
                 </p>
-
-                {
-                    isMemberVerified ? (
-                        <VerifiedMemberBadge containerClass={styles.verified} />
-                    ) : undefined
-                }
             </div>
 
             <div className={styles.profileActions}>
+                <span>
+                    {props.profile.firstName}
+                    {' '}
+                    is
+                </span>
                 <OpenForGigs canEdit={canEdit} authProfile={props.authProfile} profile={props.profile} />
                 {
                     !canEdit && (

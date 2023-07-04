@@ -1,11 +1,8 @@
 @import "@libs/ui/styles/includes";
 
 .container {
-    background-color: $black-5;
-    padding: $sp-8;
     display: flex;
     flex-direction: column;
-    border-radius: 8px;
     margin-bottom: $sp-8;
 
     @include ltelg {
@@ -22,6 +19,7 @@
             text-transform: uppercase;
             color: $turq-160;
             font-weight: $font-weight-bold;
+            font-size: 14px;
         }
     }
 
