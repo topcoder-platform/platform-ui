@@ -1,7 +1,6 @@
 import { FC, useMemo } from 'react'
 
 import {
-    ratingToCSScolor,
     useMemberBadges,
     useMemberStats,
     UserBadge,
@@ -45,12 +44,6 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
                 <div className={styles.achievement}>
                     <p>{memberStats?.wins || 0}</p>
                     <p>Challenge Wins</p>
-                </div>
-                <div className={styles.achievement}>
-                    <span style={ratingToCSScolor(props.profile.maxRating?.rating || 0)}>
-                        {props.profile.maxRating?.rating || 0}
-                    </span>
-                    <p>RATING</p>
                 </div>
             </div>
 

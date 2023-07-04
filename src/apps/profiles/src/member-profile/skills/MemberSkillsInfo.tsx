@@ -1,7 +1,8 @@
 import { FC } from 'react'
+import classNames from 'classnames'
 
-import { useMemberSkills, UserProfile, UserSkill } from '~/libs/core'
-import { TCVerifiedSkillIcon, TCVerifiedSkillWhiteIcon } from '~/libs/ui'
+import { isVerifiedSkill, useMemberSkills, UserProfile, UserSkill } from '~/libs/core'
+import { IconOutline, TCVerifiedSkillIcon } from '~/libs/ui'
 
 import { TC_VERIFIED_SKILL_LABEL } from '../../config'
 
@@ -29,9 +30,15 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
             <div className={styles.skillsWrap}>
                 {
                     memberSkills.map((memberSkill: UserSkill) => (
-                        <div className={styles.skillItem} key={memberSkill.id}>
-                            {memberSkill.sources?.includes('CHALLENGE') && <TCVerifiedSkillWhiteIcon />}
+                        <div
+                            className={classNames(
+                                styles.skillItem,
+                                isVerifiedSkill(memberSkill.sources) ? styles.verifiedSkillItem : '',
+                            )}
+                            key={memberSkill.id}
+                        >
                             {memberSkill.tagName}
+                            {isVerifiedSkill(memberSkill.sources) && <IconOutline.CheckCircleIcon />}
                         </div>
                     ))
                 }

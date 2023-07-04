@@ -38,9 +38,6 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
                 </p>
             </div>
         </div>
-        {/* <div className={styles.workExpirenceCardBody}>
-                                <p>{props.work.properties?.description}</p>
-                            </div> */}
     </div>
 )
 

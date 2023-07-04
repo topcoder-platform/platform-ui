@@ -1,5 +1,7 @@
 import { CSSProperties } from 'react'
 
+import { skillSources } from '../user-skill.model'
+
 export const TC_RATING_COLORS: Array<{ color: string, limit: number }> = [{
     color: '#555555' /* Grey */,
     limit: 900,
@@ -29,4 +31,8 @@ export function ratingToCSScolor(rating: number): CSSProperties {
     return {
         color,
     }
+}
+
+export function isVerifiedSkill(skillOriginSources: skillSources[]): boolean {
+    return skillOriginSources?.includes('CHALLENGE')
 }
