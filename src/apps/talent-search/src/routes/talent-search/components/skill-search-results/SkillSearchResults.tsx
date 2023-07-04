@@ -88,7 +88,7 @@ export default class SkillSearchResult extends Component<SkillSearchResultsProps
                         value.emsiSkills.forEach(emsiSkill => {
                             emsiSkill.isSearched = false
                             for (let i:number = 0; i < filter.length; i++) {
-                                if (emsiSkill.emsiId === filter[i].emsiId) {
+                                if (emsiSkill.skillId === filter[i].emsiId) {
                                     emsiSkill.isSearched = true
                                 }
                             }
