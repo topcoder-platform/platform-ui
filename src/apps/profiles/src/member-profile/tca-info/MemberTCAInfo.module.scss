@@ -1,8 +1,6 @@
 @import "@libs/ui/styles/includes";
 
 .container {
-    background-color: $black-5;
-    padding: $sp-8 $sp-8 $sp-2 $sp-8;
     display: flex;
     flex-direction: column;
     border-radius: 8px;
@@ -35,7 +33,7 @@
         margin-bottom: $sp-6;
 
         .certificationCard {
-            background-color: $tc-white;
+            background-color: $black-5;
             padding: $sp-4;
             display: flex;
             align-items: center;
