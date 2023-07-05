@@ -17,7 +17,7 @@ export enum ToolTitle {
     profiles = 'Profiles',
     tcAcademy = 'Topcoder Academy',
     selfService = 'Self Service Challenges',
-    onboarding = '',
+    onboarding = ' ',
     talentSearch = 'Talent Search'
 }
 
