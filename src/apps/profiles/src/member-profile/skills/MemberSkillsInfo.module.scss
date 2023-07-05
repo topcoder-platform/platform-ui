@@ -9,6 +9,12 @@
         padding-bottom: $sp-6;
     }
 
+    .headerWrap {
+        display: flex;
+        align-items: center;
+        margin-bottom: $sp-4;
+    }
+
     .titleWrap {
         display: flex;
         justify-content: space-between;
@@ -49,5 +55,10 @@
     .legendWrap {
         display: flex;
         margin-top: $sp-2;
+        color: $link-blue-dark;
+
+        &:hover {
+            text-decoration: underline;
+        }
     }
 }

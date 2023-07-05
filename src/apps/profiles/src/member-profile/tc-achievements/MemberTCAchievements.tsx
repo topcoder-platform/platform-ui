@@ -9,6 +9,8 @@ import {
     UserStats,
 } from '~/libs/core'
 
+import { TCOWinsBanner } from './TCOWinsBanner'
+import { ChallengeWinsBanner } from './ChallengeWinsBanner'
 import styles from './MemberTCAchievements.module.scss'
 
 interface MemberTCAchievementsProps {
@@ -32,19 +34,23 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
     //     console.log('handleOpenTCAchievements')
     // }
 
-    return (
+    return memberStats?.wins || tcoWins ? (
         <div className={styles.container}>
             <h3>Achievements @ Topcoder</h3>
 
             <div className={styles.achievementsWrap}>
-                <div className={styles.achievement}>
-                    <p>{tcoWins}</p>
-                    <p>TCO Wins</p>
-                </div>
-                <div className={styles.achievement}>
-                    <p>{memberStats?.wins || 0}</p>
-                    <p>Challenge Wins</p>
-                </div>
+                {
+                    tcoWins > 0 && (
+                        <TCOWinsBanner tcoWins={tcoWins} />
+                    )
+                }
+                {
+                    !!memberStats?.wins && memberStats.wins > 0 && (
+                        <ChallengeWinsBanner
+                            challengeWins={memberStats?.wins}
+                        />
+                    )
+                }
             </div>
 
             {
@@ -56,7 +62,7 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
                 )
             }
         </div>
-    )
+    ) : <></>
 }
 
 export default MemberTCAchievements
