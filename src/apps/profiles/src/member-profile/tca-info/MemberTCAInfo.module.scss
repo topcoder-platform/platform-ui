@@ -6,10 +6,6 @@
     border-radius: 8px;
     margin-bottom: $sp-8;
 
-    @include ltelg {
-        padding: $sp-4;
-    }
-
     .title {
         display: flex;
         align-items: center;
