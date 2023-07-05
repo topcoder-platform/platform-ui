@@ -1,41 +1,85 @@
-import { FC } from 'react'
+import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
+import classNames from 'classnames'
 
-import { useMemberSkills, UserProfile, UserSkill } from '~/libs/core'
-import { TCVerifiedSkillIcon, TCVerifiedSkillWhiteIcon } from '~/libs/ui'
+import { isVerifiedSkill, UserEMSISkill, UserProfile } from '~/libs/core'
+import { IconOutline } from '~/libs/ui'
 
-import { TC_VERIFIED_SKILL_LABEL } from '../../config'
+import { EditMemberPropertyBtn } from '../../components'
 
+import { ModifySkillsModal } from './ModifySkillsModal'
 import styles from './MemberSkillsInfo.module.scss'
 
 interface MemberSkillsInfoProps {
-    profile: UserProfile | undefined
+    profile: UserProfile
+    authProfile: UserProfile | undefined
 }
 
 const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProps) => {
+    const canEdit: boolean = props.authProfile?.handle === props.profile.handle
 
-    const memberSkills: UserSkill[] | undefined = useMemberSkills(props.profile?.handle)
+    const memberEMSISkills: UserEMSISkill[] = useMemo(
+        () => (props.profile.emsiSkills || [])
+            .sort((a, b) => (isVerifiedSkill(a.skillSources) ? -1 : (isVerifiedSkill(b.skillSources) ? 1 : 0))),
+        [props.profile.emsiSkills],
+    )
 
-    return memberSkills ? (
+    const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
+    function handleEditSkillsClick(): void {
+        setIsEditMode(true)
+    }
+
+    function handleModyfSkillsModalClose(): void {
+        setIsEditMode(false)
+    }
+
+    return memberEMSISkills ? (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
-                <h3>My Skills</h3>
-                <div className={styles.legendWrap}>
-                    <TCVerifiedSkillIcon />
-                    {' = '}
-                    {TC_VERIFIED_SKILL_LABEL}
+                <div className={styles.headerWrap}>
+                    <h3>Skills</h3>
+                    {
+                        canEdit && (
+                            <EditMemberPropertyBtn
+                                onClick={handleEditSkillsClick}
+                            />
+                        )
+                    }
                 </div>
+                <a
+                    className={styles.legendWrap}
+                    href='/'
+                >
+                    How skills work?
+                </a>
             </div>
 
             <div className={styles.skillsWrap}>
                 {
-                    memberSkills.map((memberSkill: UserSkill) => (
-                        <div className={styles.skillItem} key={memberSkill.id}>
-                            {memberSkill.sources?.includes('CHALLENGE') && <TCVerifiedSkillWhiteIcon />}
-                            {memberSkill.tagName}
+                    memberEMSISkills.map((memberEMSISkill: UserEMSISkill) => (
+                        <div
+                            className={classNames(
+                                styles.skillItem,
+                                isVerifiedSkill(memberEMSISkill.skillSources) ? styles.verifiedSkillItem : '',
+                            )}
+                            key={memberEMSISkill.id}
+                        >
+                            {memberEMSISkill.name}
+                            {isVerifiedSkill(memberEMSISkill.skillSources) && <IconOutline.CheckCircleIcon />}
                         </div>
                     ))
                 }
             </div>
+
+            {
+                isEditMode && (
+                    <ModifySkillsModal
+                        // profile={props.profile}
+                        onClose={handleModyfSkillsModalClose}
+                    />
+                )
+            }
         </div>
     ) : <></>
 }

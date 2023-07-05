@@ -5,7 +5,7 @@
 
     :global(.body-large-medium),
     :global(.body-large) {
-        text-align: left;
+        text-align: center;
     }
 
     :global(.body-large) {
@@ -15,6 +15,7 @@
     .wizzardWrap {
         display: flex;
         align-items: center;
-        margin-bottom: $sp-2;
+        justify-content: center;
+        margin-bottom: $sp-10;
     }
 }

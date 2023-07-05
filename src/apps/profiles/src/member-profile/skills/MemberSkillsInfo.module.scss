@@ -9,6 +9,12 @@
         padding-bottom: $sp-6;
     }
 
+    .headerWrap {
+        display: flex;
+        align-items: center;
+        margin-bottom: $sp-4;
+    }
+
     .titleWrap {
         display: flex;
         justify-content: space-between;
@@ -24,20 +30,24 @@
         margin-top: $sp-2;
 
         .skillItem {
-            background-color: $teal-140;
-            font-weight: $font-weight-medium;
+            border: 1px solid $black-20;
             font-size: 14px;
             line-height: 16px;
-            letter-spacing: .5px;
-            color: $tc-white;
             white-space: nowrap;
-            padding: $sp-1 $sp-2;
-            border-radius: 4px;
+            padding: $sp-2 $sp-3;
+            border-radius: 24px;
             display: flex;
             align-items: center;
 
-            svg {
-                margin-right: $sp-1;
+            &.verifiedSkillItem {
+                border: 2px solid $turq-120;
+
+                svg {
+                    margin-left: $sp-1;
+                    width: 16px;
+                    height: 16px;
+                    color: $turq-120;
+                }
             }
         }
     }
@@ -45,5 +55,10 @@
     .legendWrap {
         display: flex;
         margin-top: $sp-2;
+        color: $link-blue-dark;
+
+        &:hover {
+            text-decoration: underline;
+        }
     }
 }

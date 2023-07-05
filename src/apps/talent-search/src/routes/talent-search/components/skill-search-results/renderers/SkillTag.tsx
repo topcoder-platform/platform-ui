@@ -24,8 +24,8 @@ export default class SkillTag extends Component<SkillTagProps> {
 
         return (
             <div
-                key={this.props.skill.emsiId}
-                data-id={this.props.skill.emsiId}
+                key={this.props.skill.skillId}
+                data-id={this.props.skill.skillId}
                 className={style}
             >
                 {this.props.skill.skillSources.includes('ChallengeWin')

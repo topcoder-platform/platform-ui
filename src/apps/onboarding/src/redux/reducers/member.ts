@@ -63,19 +63,6 @@ const memberReducer: any = (state = initialState, action: { type: any; payload: 
                 ...state,
                 educations: action.payload,
             }
-        case ACTIONS.MEMBER.UPDATE_MEMBER_SKILLS: {
-            if (!state.memberInfo) {
-                return state
-            }
-
-            return {
-                ...state,
-                memberInfo: {
-                    ...state.memberInfo,
-                    emsiSkills: action.payload,
-                },
-            }
-        }
 
         case ACTIONS.MEMBER.UPDATE_MEMBER_PHOTO_URL: {
             if (!state.memberInfo) {

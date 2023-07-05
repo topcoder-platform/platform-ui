@@ -1,0 +1,91 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+
+    .educationWrap {
+        margin-bottom: $sp-8;
+
+        &.noItems {
+            margin-bottom: 0;
+        }
+
+        .educationCardWrap {
+            display: flex;
+            align-items: center;
+
+            .actionElements {
+                display: flex;
+                align-items: center;
+                margin-left: $sp-15;
+
+                :global(button) {
+                    padding: $sp-2;
+
+                    @include ltelg {
+                        padding: $sp-1;
+                    }
+                }
+
+                svg {
+                    width: 20px;
+                    height: 20px;
+                }
+            }
+        }
+    }
+
+    .row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+
+        :global(.input-wrapper) {
+            flex: 1;
+
+            @include ltelg {
+                min-width: 100%;
+            }
+
+            &:first-child {
+                margin-right: $sp-2;
+
+                @include ltelg {
+                    margin-right: 0;
+                }
+            }
+        }
+    }
+
+    .formWrap {
+        margin-top: $sp-4;
+
+        @include ltelg {
+            :global(.input-wrapper) {
+                margin-bottom: $sp-2;
+            }
+        }
+
+        .formCTAs {
+            display: flex;
+            align-items: center;
+
+            svg {
+                width: 14px;
+                height: 14px;
+                margin-right: $sp-1;
+            }
+
+            .ctaBtnCancel {
+                margin-left: $sp-8;
+            }
+        }
+    }
+}
+
+.modalButtons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
