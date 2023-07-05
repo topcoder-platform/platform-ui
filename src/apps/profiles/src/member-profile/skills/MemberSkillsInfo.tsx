@@ -1,18 +1,21 @@
-import { FC, useMemo } from 'react'
+import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
 import classNames from 'classnames'
 
 import { isVerifiedSkill, UserEMSISkill, UserProfile } from '~/libs/core'
-import { IconOutline, TCVerifiedSkillIcon } from '~/libs/ui'
+import { IconOutline } from '~/libs/ui'
 
-import { TC_VERIFIED_SKILL_LABEL } from '../../config'
+import { EditMemberPropertyBtn } from '../../components'
 
+import { ModifySkillsModal } from './ModifySkillsModal'
 import styles from './MemberSkillsInfo.module.scss'
 
 interface MemberSkillsInfoProps {
     profile: UserProfile
+    authProfile: UserProfile | undefined
 }
 
 const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProps) => {
+    const canEdit: boolean = props.authProfile?.handle === props.profile.handle
 
     const memberEMSISkills: UserEMSISkill[] = useMemo(
         () => (props.profile.emsiSkills || [])
@@ -20,15 +23,36 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         [props.profile.emsiSkills],
     )
 
+    const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
+    function handleEditSkillsClick(): void {
+        setIsEditMode(true)
+    }
+
+    function handleModyfSkillsModalClose(): void {
+        setIsEditMode(false)
+    }
+
     return memberEMSISkills ? (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
-                <h3>My Skills</h3>
-                <div className={styles.legendWrap}>
-                    <TCVerifiedSkillIcon />
-                    {' = '}
-                    {TC_VERIFIED_SKILL_LABEL}
+                <div className={styles.headerWrap}>
+                    <h3>Skills</h3>
+                    {
+                        canEdit && (
+                            <EditMemberPropertyBtn
+                                onClick={handleEditSkillsClick}
+                            />
+                        )
+                    }
                 </div>
+                <a
+                    className={styles.legendWrap}
+                    href='/'
+                >
+                    How skills work?
+                </a>
             </div>
 
             <div className={styles.skillsWrap}>
@@ -47,6 +71,15 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                     ))
                 }
             </div>
+
+            {
+                isEditMode && (
+                    <ModifySkillsModal
+                        // profile={props.profile}
+                        onClose={handleModyfSkillsModalClose}
+                    />
+                )
+            }
         </div>
     ) : <></>
 }

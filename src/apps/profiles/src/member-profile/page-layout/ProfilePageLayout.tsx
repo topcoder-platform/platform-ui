@@ -80,7 +80,7 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
 
                         <div className={styles.sectionWrap}>
                             <div className={styles.skillsWrap}>
-                                <MemberSkillsInfo profile={props.profile} />
+                                <MemberSkillsInfo profile={props.profile} authProfile={props.authProfile} />
                             </div>
                         </div>
 
