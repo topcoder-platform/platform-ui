@@ -1,7 +1,7 @@
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import classNames from 'classnames'
 
-import { isVerifiedSkill, useMemberSkills, UserProfile, UserSkill } from '~/libs/core'
+import { isVerifiedSkill, UserEMSISkill, UserProfile } from '~/libs/core'
 import { IconOutline, TCVerifiedSkillIcon } from '~/libs/ui'
 
 import { TC_VERIFIED_SKILL_LABEL } from '../../config'
@@ -9,14 +9,18 @@ import { TC_VERIFIED_SKILL_LABEL } from '../../config'
 import styles from './MemberSkillsInfo.module.scss'
 
 interface MemberSkillsInfoProps {
-    profile: UserProfile | undefined
+    profile: UserProfile
 }
 
 const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProps) => {
 
-    const memberSkills: UserSkill[] | undefined = useMemberSkills(props.profile?.handle)
+    const memberEMSISkills: UserEMSISkill[] = useMemo(
+        () => (props.profile.emsiSkills || [])
+            .sort((a, b) => (isVerifiedSkill(a.skillSources) ? -1 : (isVerifiedSkill(b.skillSources) ? 1 : 0))),
+        [props.profile.emsiSkills],
+    )
 
-    return memberSkills ? (
+    return memberEMSISkills ? (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
                 <h3>My Skills</h3>
@@ -29,16 +33,16 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
             <div className={styles.skillsWrap}>
                 {
-                    memberSkills.map((memberSkill: UserSkill) => (
+                    memberEMSISkills.map((memberEMSISkill: UserEMSISkill) => (
                         <div
                             className={classNames(
                                 styles.skillItem,
-                                isVerifiedSkill(memberSkill.sources) ? styles.verifiedSkillItem : '',
+                                isVerifiedSkill(memberEMSISkill.skillSources) ? styles.verifiedSkillItem : '',
                             )}
-                            key={memberSkill.id}
+                            key={memberEMSISkill.id}
                         >
-                            {memberSkill.tagName}
-                            {isVerifiedSkill(memberSkill.sources) && <IconOutline.CheckCircleIcon />}
+                            {memberEMSISkill.name}
+                            {isVerifiedSkill(memberEMSISkill.skillSources) && <IconOutline.CheckCircleIcon />}
                         </div>
                     ))
                 }

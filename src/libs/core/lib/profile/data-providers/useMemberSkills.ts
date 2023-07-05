@@ -4,6 +4,7 @@ import useSWR, { SWRResponse } from 'swr'
 import { UserSkill } from '../user-skill.model'
 import { getProfileUrl } from '../profile-functions'
 
+// This is currently providing legacy TC skills, not EMSI!
 export function useMemberSkills(handle?: string): UserSkill[] | undefined {
     const { data }: SWRResponse = useSWR(handle ? `${getProfileUrl(handle)}/skills` : undefined)
 
