@@ -6,7 +6,6 @@ import { useCheckIsMobile } from '~/libs/shared'
 
 // import { MemberTCActivityInfo } from '../tc-activity'
 import { MemberSkillsInfo } from '../skills'
-import { CommunityAwards } from '../community-awards'
 import { ProfileHeader } from '../profile-header'
 import { MemberLocalInfo } from '../local-info'
 import { MemberLanguages } from '../languages'
@@ -84,11 +83,7 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                             </div>
                         </div>
 
-                        <div className={styles.sectionWrap}>
-                            <MemberTCAchievements profile={props.profile} />
-
-                            <CommunityAwards profile={props.profile} />
-                        </div>
+                        <MemberTCAchievements profile={props.profile} />
 
                         <div className={styles.expirenceWrap}>
                             <div>
