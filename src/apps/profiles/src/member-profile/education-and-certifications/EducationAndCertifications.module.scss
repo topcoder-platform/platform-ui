@@ -9,4 +9,10 @@
         align-items: center;
         margin-bottom: $sp-4;
     }
+
+    .educationContentWrap {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: $sp-13;
+    }
 }

@@ -9,6 +9,7 @@ import { EditMemberPropertyBtn } from '../../components'
 import { MemberTCAInfo } from '../tca-info'
 
 import { ModifyEducationModal } from './ModifyEducationModal'
+import { EducationCard } from './EducationCard'
 import styles from './EducationAndCertifications.module.scss'
 
 interface EducationAndCertificationsProps {
@@ -31,7 +32,7 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
     }
         = useMemberTraits(props.profile.handle, { traitIds: UserTraitIds.education })
 
-    const education: UserTrait[] | undefined
+    const memberEducation: UserTrait[] | undefined
         = useMemo(() => memberEducationTraits?.[0]?.traits?.data, [memberEducationTraits])
 
     useEffect(() => {
@@ -50,7 +51,10 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
     }
 
     function handleEditEducationModalSave(): void {
-        mutateTraits()
+        setTimeout(() => {
+            setIsEditMode(false)
+            mutateTraits()
+        }, 1000)
     }
 
     return (
@@ -66,16 +70,26 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
                 }
             </div>
 
+            <div className={styles.educationContentWrap}>
+                {
+                    memberEducation?.map((education: UserTrait) => (
+                        <EducationCard
+                            key={`${education.schoolCollegeName}-${education.major}`}
+                            education={education}
+                        />
+                    ))
+                }
+            </div>
+
             <MemberTCAInfo profile={props.profile} />
 
             {
                 isEditMode && (
                     <ModifyEducationModal
-                        // profile={props.profile}
-                        // authProfile={props.authProfile}
+                        profile={props.profile}
                         onClose={handleEditEducationModalClose}
                         onSave={handleEditEducationModalSave}
-                        education={education}
+                        education={memberEducation}
                     />
                 )
             }

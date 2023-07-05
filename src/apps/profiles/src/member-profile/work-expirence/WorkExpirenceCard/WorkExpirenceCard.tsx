@@ -36,7 +36,7 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
                             -
                             {' '}
                             {props.work.timePeriodTo ? moment(props.work.timePeriodTo)
-                                .format('MM/YYYY') : ''}
+                                .format('MM/YYYY') : (props.work.currentlyWorking ? 'Present' : '')}
                         </p>
                     </div>
                 ) : undefined
