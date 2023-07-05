@@ -1,9 +1,16 @@
 import { Dispatch, FC, MutableRefObject, SetStateAction, useRef, useState } from 'react'
 import { bind, trim } from 'lodash'
+import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
 import { BaseModal, Button, IconOutline, InputDatePicker, InputText } from '~/libs/ui'
-import { UserTrait } from '~/libs/core'
+import {
+    createMemberTraitsAsync,
+    updateMemberTraitsAsync,
+    UserProfile, UserTrait,
+    UserTraitCategoryNames,
+    UserTraitIds,
+} from '~/libs/core'
 
 import { WorkExpirenceCard } from '../WorkExpirenceCard'
 
@@ -12,7 +19,13 @@ import styles from './ModifyWorkExpirenceModal.module.scss'
 interface ModifyWorkExpirenceModalProps {
     onClose: () => void
     onSave: () => void
+    profile: UserProfile
     workExpirence: UserTrait[] | undefined
+}
+
+const methodsMap: { [key: string]: any } = {
+    create: createMemberTraitsAsync,
+    update: updateMemberTraitsAsync,
 }
 
 const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: ModifyWorkExpirenceModalProps) => {
@@ -49,8 +62,22 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
 
     function handleModifyWorkExpirenceSave(): void {
         setIsSaving(true)
-        setFormErrors({})
-        props.onSave()
+
+        methodsMap[!!props.workExpirence ? 'update' : 'create'](props.profile.handle, [{
+            categoryName: UserTraitCategoryNames.work,
+            traitId: UserTraitIds.work,
+            traits: {
+                data: workExpirence || [],
+            },
+        }])
+            .then(() => {
+                toast.success('Work Experience updated successfully.')
+                props.onSave()
+            })
+            .catch(() => {
+                toast.error('Failed to update user\'s Work Experience.')
+                setIsSaving(false)
+            })
     }
 
     function handleFormValueChange(key: string, event: React.ChangeEvent<HTMLInputElement>): void {
@@ -124,23 +151,21 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
             return
         }
 
-        console.log('handleFormAction', formValues)
-
         const updatedWorkExpirence: UserTrait = {
             cityTown: formValues.city,
             company: formValues.company,
             industry: formValues.industry,
             position: formValues.position,
+            timePeriodFrom: formValues.startDate ? (formValues.startDate as Date).toISOString() : undefined,
+            timePeriodTo: formValues.endDate ? (formValues.endDate as Date).toISOString() : undefined,
             working: formValues.currentlyWorking,
         }
 
         if (editedItemIndex !== undefined && workExpirence) {
-            // workExpirence[editedItemIndex] = updatedWorkExpirence
-
-            // console.log('handleFormAction', updatedWorkExpirence, workExpirence)
+            workExpirence[editedItemIndex] = updatedWorkExpirence
 
             setWorkExpirence([
-                updatedWorkExpirence,
+                ...workExpirence,
             ])
         } else {
             setWorkExpirence(
@@ -157,14 +182,14 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
 
         setEditedItemIndex(indx)
 
-        console.log('handleWorkExpirenceEdit', indx, work)
-
         setFormValues({
             city: work.cityTown,
             company: work.company,
             currentlyWorking: work.working,
+            endDate: work.timePeriodTo ? new Date(work.timePeriodTo) : undefined,
             industry: work.industry,
             position: work.position,
+            startDate: work.timePeriodFrom ? new Date(work.timePeriodFrom) : undefined,
         })
     }
 
@@ -202,7 +227,10 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                 <div className={classNames(styles.workExpirenceWrap, !workExpirence?.length ? styles.noItems : '')}>
                     {
                         workExpirence?.map((work: UserTrait, indx: number) => (
-                            <div className={styles.workExpirenceCardWrap} key={`${work.company}-${work.position}`}>
+                            <div
+                                className={styles.workExpirenceCardWrap}
+                                key={`${work.company}-${work.industry}-${work.position}`}
+                            >
                                 <WorkExpirenceCard work={work} />
                                 <div className={styles.actionElements}>
                                     <Button
@@ -294,6 +322,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                             disabled={false}
                             error={formErrors.endDate}
                             dirty
+                            maxDate={new Date()}
                         />
                     </div>
                     <InputText

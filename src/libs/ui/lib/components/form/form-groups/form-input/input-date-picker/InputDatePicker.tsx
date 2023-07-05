@@ -21,6 +21,11 @@ interface InputDatePickerProps {
     readonly hideInlineErrors?: boolean
     readonly hint?: string
     readonly label: string | JSX.Element
+    readonly maxDate?: Date | null | undefined;
+    readonly maxTime?: Date | undefined;
+    readonly minDate?: Date | null | undefined;
+    readonly minTime?: Date | undefined;
+    readonly placeholder?: string
     readonly tabIndex?: number
 }
 
@@ -55,11 +60,12 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
                 <button onClick={decreaseMonth} disabled={prevMonthButtonDisabled} type='button'>
                     <IconOutline.ArrowCircleLeftIcon />
                 </button>
+
                 <select
-                    value={getYear(date)}
-                    onChange={({ target: { value } }: any) => changeYear(value)}
+                    value={months[getMonth(date)]}
+                    onChange={({ target: { value } }: any) => changeMonth(months.indexOf(value))}
                 >
-                    {years.map(option => (
+                    {months.map(option => (
                         <option key={option} value={option}>
                             {option}
                         </option>
@@ -67,10 +73,10 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
                 </select>
 
                 <select
-                    value={months[getMonth(date)]}
-                    onChange={({ target: { value } }: any) => changeMonth(months.indexOf(value))}
+                    value={getYear(date)}
+                    onChange={({ target: { value } }: any) => changeYear(value)}
                 >
-                    {months.map(option => (
+                    {years.map(option => (
                         <option key={option} value={option}>
                             {option}
                         </option>
@@ -94,6 +100,12 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
                 renderCustomHeader={renderCustomHeader}
                 selected={props.date}
                 onChange={props.onChange}
+                placeholderText={props.placeholder || 'Select a date'}
+                className={styles.datePickerWrapper}
+                minDate={props.minDate}
+                maxDate={props.maxDate}
+                minTime={props.minTime}
+                maxTime={props.maxTime}
             />
         </InputWrapper>
     )

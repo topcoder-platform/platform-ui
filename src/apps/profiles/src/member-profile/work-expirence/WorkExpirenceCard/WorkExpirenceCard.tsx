@@ -26,17 +26,21 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
                     {props.work.cityTown}
                 </p>
             </div>
-            <div className={styles.workExpirenceCardHeaderRight}>
-                <p>
-                    {moment(props.work.timePeriodFrom)
-                        .format('YYYY')}
-                    {' '}
-                    -
-                    {' '}
-                    {props.work.timePeriodTo ? moment(props.work.timePeriodTo)
-                        .format('YYYY') : 'Present'}
-                </p>
-            </div>
+            {
+                props.work.timePeriodFrom || props.work.timePeriodTo ? (
+                    <div className={styles.workExpirenceCardHeaderRight}>
+                        <p>
+                            {props.work.timePeriodFrom ? moment(props.work.timePeriodFrom)
+                                .format('MM/YYYY') : ''}
+                            {' '}
+                            -
+                            {' '}
+                            {props.work.timePeriodTo ? moment(props.work.timePeriodTo)
+                                .format('MM/YYYY') : ''}
+                        </p>
+                    </div>
+                ) : undefined
+            }
         </div>
     </div>
 )

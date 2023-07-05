@@ -50,8 +50,10 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
     }
 
     function handleModyfyWorkExpirenceSave(): void {
-        console.log('handleModyfyWorkExpirenceSave')
-        mutateTraits()
+        setTimeout(() => {
+            setIsEditMode(false)
+            mutateTraits()
+        }, 1000)
     }
 
     return (
@@ -70,7 +72,7 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
             <div className={styles.contentWrap}>
                 {
                     workExpirence?.map((work: UserTrait) => (
-                        <WorkExpirenceCard key={`${work.company}-${work.position}`} work={work} />
+                        <WorkExpirenceCard key={`${work.company}-${work.industry}-${work.position}`} work={work} />
                     ))
                 }
             </div>
@@ -80,6 +82,7 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
                     <ModifyWorkExpirenceModal
                         onClose={handleModyfyWorkExpirenceModalClose}
                         onSave={handleModyfyWorkExpirenceSave}
+                        profile={props.profile}
                         workExpirence={workExpirence}
                     />
                 )
