@@ -59,7 +59,7 @@ const MemberLanguages: FC<MemberLanguagesProps> = (props: MemberLanguagesProps) 
     return (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
-                <p className='body-main-bold'>My Langagues:</p>
+                <p className='body-main-bold'>My Languages:</p>
                 {
                     canEdit && (
                         <EditMemberPropertyBtn

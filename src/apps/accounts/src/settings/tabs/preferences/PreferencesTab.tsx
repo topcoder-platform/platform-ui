@@ -23,7 +23,7 @@ const PreferencesTab: FC<PreferencesTabProps> = (props: PreferencesTabProps) => 
     const mailChimpFormAction: string = emailPreferences?.status === 'subscribed' ? unsubscribeLink : subscribeLink
 
     function handleGoToForumPreferences(): void {
-        window.open(`https://vanilla.${EnvironmentConfig.TC_DOMAIN}/profile/preferences`, '_blank')
+        window.open(`https://${EnvironmentConfig.ENV === 'prod' ? 'discussions' : 'vanilla'}.${EnvironmentConfig.TC_DOMAIN}/profile/preferences`, '_blank')
     }
 
     function handleSubscribtionStatusChange(): void {

@@ -2,7 +2,6 @@
 export const ACTIONS: {
     MEMBER: {
         GET_MEMBER: string;
-        UPDATE_MEMBER_SKILLS: string;
         UPDATE_MEMBER_PHOTO_URL: string;
         SET_WORKS: string;
         SET_EDUCATIONS: string;
@@ -15,7 +14,6 @@ export const ACTIONS: {
 } = {
     MEMBER: {
         GET_MEMBER: 'GET_MEMBER',
-        UPDATE_MEMBER_SKILLS: 'UPDATE_MEMBER_SKILLS',
         UPDATE_MEMBER_PHOTO_URL: 'UPDATE_MEMBER_PHOTO_URL',
         SET_WORKS: 'SET_WORKS',
         SET_EDUCATIONS: 'SET_EDUCATIONS',

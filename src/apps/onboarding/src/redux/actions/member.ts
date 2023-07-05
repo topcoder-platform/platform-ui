@@ -13,7 +13,6 @@ import {
 } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
 
 import { ACTIONS } from '../../config'
-import SkillInfo from '../../models/SkillInfo'
 import { getMemberInfo, getMemberTraits, putMemberInfo } from '../../services/members'
 import WorkInfo from '../../models/WorkInfo'
 import EducationInfo from '../../models/EducationInfo'
@@ -397,32 +396,10 @@ export const createMemberConnectInfos: any = (connectInfos: ConnectInfo[]) => as
     }
 }
 
-export const setMemberSkills: any = (skills: SkillInfo[]) => ({
-    type: ACTIONS.MEMBER.UPDATE_MEMBER_SKILLS,
-    payload: skills,
-})
-
 export const setMemberPhotoUrl: any = (photoUrl: string) => ({
     type: ACTIONS.MEMBER.UPDATE_MEMBER_PHOTO_URL,
     payload: photoUrl,
 })
-
-export const updateMemberSkills: any = (skills: SkillInfo[]) => async (dispatch: any) => {
-    try {
-        const tokenInfo: TokenModel = await getAsyncToken()
-        await putMemberInfo(tokenInfo.handle || '', {
-            emsiSkills: skills.map(skill => ({
-                skillSources: skill.skillSources,
-                subCategory: skill.subCategory,
-                emsiId: skill.emsiId,
-                name: skill.name,
-                category: skill.category,
-            })),
-        })
-        dispatch(setMemberSkills(skills))
-    } catch (error) {
-    }
-}
 
 export const updateMemberHomeAddresss: any = (addresses: MemberAddress[]) => async (dispatch: any) => {
     try {

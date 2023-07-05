@@ -19,9 +19,6 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
     const [isSaving, setIsSaving]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const [isFormChanged, setIsFormChanged]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-
     const [openForWork, setOpenForWork]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(props.openForWork)
 
@@ -60,7 +57,6 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
     }
 
     function handleOpenForWorkToggle(): void {
-        setIsFormChanged(true)
         setOpenForWork(!openForWork)
     }
 
@@ -80,7 +76,7 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
                         label='Save'
                         onClick={handleOpenForWorkSave}
                         primary
-                        disabled={isSaving || !isFormChanged}
+                        disabled={isSaving}
                     />
                 </div>
             )}

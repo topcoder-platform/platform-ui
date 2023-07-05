@@ -4,7 +4,14 @@ import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
 import { BaseModal, Button, IconOutline, InputSelect } from '~/libs/ui'
-import { updateMemberTraitsAsync, UserProfile, UserTrait, UserTraitCategoryNames, UserTraitIds } from '~/libs/core'
+import {
+    createMemberTraitsAsync,
+    updateMemberTraitsAsync,
+    UserProfile,
+    UserTrait,
+    UserTraitCategoryNames,
+    UserTraitIds,
+} from '~/libs/core'
 
 import { LanguageCard } from '../LanguageCard'
 
@@ -16,6 +23,11 @@ interface ModifyLanguagesModalProps {
     onSave: () => void
     profile: UserProfile
     memberLanguages: UserTrait[] | undefined
+}
+
+const methodsMap: { [key: string]: any } = {
+    create: createMemberTraitsAsync,
+    update: updateMemberTraitsAsync,
 }
 
 const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLanguagesModalProps) => {
@@ -58,14 +70,12 @@ const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLangua
         'label',
     ), [])
 
-    const spokenLevel: any = useMemo(() => sortBy(
-        dropDowns.spokenLevel.map(lang => ({ label: lang.label, value: lang.label })),
-        'label',
+    const spokenLevel: any = useMemo(() => dropDowns.spokenLevel.map(
+        lang => ({ label: lang.label, value: lang.label }),
     ), [])
 
-    const writtenLevel: any = useMemo(() => sortBy(
-        dropDowns.writtenLevel.map(lang => ({ label: lang.label, value: lang.label })),
-        'label',
+    const writtenLevel: any = useMemo(() => dropDowns.writtenLevel.map(
+        lang => ({ label: lang.label, value: lang.label }),
     ), [])
 
     const [currentMemberLanguages, setCurrentMemberLanguages]: [
@@ -89,7 +99,7 @@ const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLangua
     function handleLanguagesSave(): void {
         setIsSaving(true)
 
-        updateMemberTraitsAsync(props.profile.handle, [{
+        methodsMap[!!props.memberLanguages ? 'update' : 'create'](props.profile.handle, [{
             categoryName: UserTraitCategoryNames.languages,
             traitId: UserTraitIds.languages,
             traits: {

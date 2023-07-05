@@ -16,5 +16,6 @@ export default interface Member {
     stats:Array<MemberStats>;
     country:string;
     photoURL:string;
+    skillScore:number;
     createdAt:number;
 }

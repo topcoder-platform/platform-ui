@@ -1,0 +1,17 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+
+    .headerWrap {
+        display: flex;
+        align-items: center;
+        margin-bottom: $sp-4;
+    }
+
+    .educationContentWrap {
+        display: flex;
+        flex-direction: column;
+    }
+}

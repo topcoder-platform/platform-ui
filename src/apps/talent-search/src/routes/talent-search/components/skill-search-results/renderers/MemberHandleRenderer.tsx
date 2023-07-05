@@ -12,10 +12,7 @@ const MemberHandleRenderer: (member:Member) => JSX.Element
         window.open(`${EnvironmentConfig.URLS.USER_PROFILE}/${member.handle}`, '_blank')
     }
 
-    let winsText: string = '0 wins'
-    if (member.stats && member.stats.length > 0) {
-        winsText = `${member.stats[0].wins} wins`
-    }
+    const scoreText: string = `Skill score: ${member.skillScore}`
 
     return (
         <section className={styles.memberCell}>
@@ -28,7 +25,7 @@ const MemberHandleRenderer: (member:Member) => JSX.Element
             <div className={styles.countryRow}>
                 <span className={styles.memberCountry}>{member.country}</span>
                 <span className={styles.separator}> | </span>
-                <span className={styles.memberWins}>{winsText}</span>
+                <span className={styles.memberWins}>{scoreText}</span>
             </div>
             <div className={styles.memberAccountAge}>
                 Member since&nbsp;

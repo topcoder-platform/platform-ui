@@ -3,7 +3,14 @@ import { KeyedMutator } from 'swr'
 import { useSearchParams } from 'react-router-dom'
 
 import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } from '~/libs/core'
-import { IconOutline } from '~/libs/ui'
+import {
+    IconOutline,
+    SocialIconFacebook,
+    SocialIconInstagram,
+    SocialIconLinkedIn,
+    SocialIconTwitter,
+    SocialIconYoutube,
+} from '~/libs/ui'
 
 import { EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
@@ -19,7 +26,15 @@ interface MemberLinksProps {
 export function renderLinkIcon(linkName: string): JSX.Element {
     switch (linkName) {
         case 'Facebook':
-            return <IconOutline.LinkIcon />
+            return <SocialIconFacebook />
+        case 'Twitter':
+            return <SocialIconTwitter />
+        case 'LinkedIn':
+            return <SocialIconLinkedIn />
+        case 'Instagram':
+            return <SocialIconInstagram />
+        case 'YouTube':
+            return <SocialIconYoutube />
         default:
             return <IconOutline.LinkIcon />
     }
