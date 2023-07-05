@@ -7,8 +7,11 @@
 
     .achievementsWrap {
         display: flex;
-        align-items: center;
         margin: $sp-4 0 $sp-2;
+
+        > div:not(:last-child) {
+            margin-right: $sp-8;
+        }
     }
 
     .rolesWrap {
