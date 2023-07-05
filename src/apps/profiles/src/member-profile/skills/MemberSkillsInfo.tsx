@@ -1,10 +1,12 @@
-import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { isVerifiedSkill, UserEMSISkill, UserProfile } from '~/libs/core'
 import { IconOutline } from '~/libs/ui'
 
 import { EditMemberPropertyBtn } from '../../components'
+import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 
 import { ModifySkillsModal } from './ModifySkillsModal'
 import styles from './MemberSkillsInfo.module.scss'
@@ -15,6 +17,9 @@ interface MemberSkillsInfoProps {
 }
 
 const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProps) => {
+    const [queryParams]: [URLSearchParams, any] = useSearchParams()
+    const editMode: string | null = queryParams.get(EDIT_MODE_QUERY_PARAM)
+
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
 
     const memberEMSISkills: UserEMSISkill[] = useMemo(
@@ -25,6 +30,13 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
+
+    useEffect(() => {
+        if (props.authProfile && editMode === profileEditModes.skills) {
+            setIsEditMode(true)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.authProfile])
 
     function handleEditSkillsClick(): void {
         setIsEditMode(true)

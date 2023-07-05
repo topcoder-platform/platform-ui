@@ -17,4 +17,5 @@ export enum profileEditModes {
     photo = 'photo',
     workExperience = 'workExperience',
     education = 'education',
+    skills = 'skills',
 }
