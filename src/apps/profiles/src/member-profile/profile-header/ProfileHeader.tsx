@@ -1,8 +1,15 @@
-import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import moment from 'moment'
 
-import { getVerificationStatusAsync, UserProfile } from '~/libs/core'
+import {
+    getVerificationStatusAsync,
+    useMemberTraits,
+    UserProfile,
+    UserTrait,
+    UserTraitIds,
+    UserTraits,
+} from '~/libs/core'
 import { Button, IconSolid } from '~/libs/ui'
 
 import { EditMemberPropertyBtn } from '../../components'
@@ -38,6 +45,16 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
 
     const [queryParams]: [URLSearchParams, any] = useSearchParams()
     const editMode: string | null = queryParams.get(EDIT_MODE_QUERY_PARAM)
+
+    const { data: memberPersonalizationTraits }: {
+        data: UserTraits[] | undefined,
+    }
+        = useMemberTraits(props.profile.handle, { traitIds: UserTraitIds.personalization })
+
+    const openForWork: UserTrait | undefined
+        = useMemo(() => memberPersonalizationTraits?.[0]?.traits?.data?.find(
+            (trait: UserTrait) => trait.availableForGigs,
+        ), [memberPersonalizationTraits])
 
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.names) {
@@ -141,23 +158,25 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                 </p>
             </div>
 
-            <div className={styles.profileActions}>
-                <span>
-                    {props.profile.firstName}
-                    {' '}
-                    is
-                </span>
-                <OpenForGigs canEdit={canEdit} authProfile={props.authProfile} profile={props.profile} />
-                {
-                    !canEdit && (
-                        <Button
-                            label='Hire Me'
-                            primary
-                            onClick={handleHireMeClick}
-                        />
-                    )
-                }
-            </div>
+            {
+                openForWork || canEdit ? (
+                    <div className={styles.profileActions}>
+                        <span>
+                            {canEdit ? 'I am' : `${props.profile.firstName} is`}
+                        </span>
+                        <OpenForGigs canEdit={canEdit} authProfile={props.authProfile} profile={props.profile} />
+                        {
+                            !canEdit && (
+                                <Button
+                                    label={`Hire ${props.profile.firstName}`}
+                                    primary
+                                    onClick={handleHireMeClick}
+                                />
+                            )
+                        }
+                    </div>
+                ) : undefined
+            }
 
             {
                 isNameEditMode && (

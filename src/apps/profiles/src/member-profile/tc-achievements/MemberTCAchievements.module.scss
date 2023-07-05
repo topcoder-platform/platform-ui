@@ -4,6 +4,9 @@
     display: flex;
     flex-direction: column;
     margin-bottom: $sp-8;
+    background-color: $tc-white;
+    padding: $sp-8 $sp-8 $sp-2;
+    border-radius: 16px;
 
     .achievementsWrap {
         display: flex;

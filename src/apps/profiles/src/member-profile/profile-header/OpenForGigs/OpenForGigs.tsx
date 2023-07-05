@@ -56,9 +56,11 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
         }, 1000)
     }
 
-    return props.authProfile?.handle === props.profile.handle || openForWork ? (
+    return props.canEdit || openForWork ? (
         <div className={styles.container}>
-            <p className='body-small-bold'>Open to Work</p>
+            <p className='body-main-bold'>
+                {openForWork?.availableForGigs ? 'open to work' : 'not open to work'}
+            </p>
             {
                 props.canEdit && (
                     <EditMemberPropertyBtn

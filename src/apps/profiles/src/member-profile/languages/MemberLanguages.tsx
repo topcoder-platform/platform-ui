@@ -56,7 +56,7 @@ const MemberLanguages: FC<MemberLanguagesProps> = (props: MemberLanguagesProps) 
         }, 1000)
     }
 
-    return (
+    return canEdit || memberLanguages ? (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
                 <p className='body-main-bold'>My Languages:</p>
@@ -88,7 +88,7 @@ const MemberLanguages: FC<MemberLanguagesProps> = (props: MemberLanguagesProps) 
                 )
             }
         </div>
-    )
+    ) : <></>
 }
 
 export default MemberLanguages

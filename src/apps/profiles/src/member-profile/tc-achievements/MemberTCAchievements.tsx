@@ -9,6 +9,8 @@ import {
     UserStats,
 } from '~/libs/core'
 
+import { CommunityAwards } from '../community-awards'
+
 import { TCOWinsBanner } from './TCOWinsBanner'
 import { ChallengeWinsBanner } from './ChallengeWinsBanner'
 import styles from './MemberTCAchievements.module.scss'
@@ -61,6 +63,8 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
                     </div>
                 )
             }
+
+            <CommunityAwards profile={props.profile} />
         </div>
     ) : <></>
 }
