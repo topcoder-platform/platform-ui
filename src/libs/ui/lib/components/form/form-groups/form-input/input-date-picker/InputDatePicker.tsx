@@ -15,6 +15,7 @@ interface InputDatePickerProps {
     date: Date | undefined
     onChange: (date: Date | null) => void
     readonly className?: string
+    readonly dateFormat?: string | string[]
     readonly dirty?: boolean
     readonly disabled: boolean
     readonly error?: string
@@ -26,6 +27,7 @@ interface InputDatePickerProps {
     readonly minDate?: Date | null | undefined;
     readonly minTime?: Date | undefined;
     readonly placeholder?: string
+    readonly showYearPicker?: boolean
     readonly tabIndex?: number
 }
 
@@ -106,6 +108,8 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
                 maxDate={props.maxDate}
                 minTime={props.minTime}
                 maxTime={props.maxTime}
+                showYearPicker={props.showYearPicker}
+                dateFormat={props.dateFormat}
             />
         </InputWrapper>
     )

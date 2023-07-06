@@ -85,10 +85,6 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
         let value: string | boolean | Date | undefined
 
         switch (key) {
-            case 'graduated':
-                value = event.target.checked
-                break
-            case 'startDate':
             case 'endDate':
                 value = event as unknown as Date
                 break
@@ -135,7 +131,6 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
             graduated: formValues.graduated,
             major: formValues.major,
             schoolCollegeName: formValues.schoolCollegeName,
-            timePeriodFrom: formValues.startDate ? (formValues.startDate as Date).toISOString() : undefined,
             timePeriodTo: formValues.endDate ? (formValues.endDate as Date).toISOString() : undefined,
         }
 
@@ -165,7 +160,6 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
             graduated: education.graduated,
             major: education.major,
             schoolCollegeName: education.schoolCollegeName,
-            startDate: education.timePeriodFrom ? new Date(education.timePeriodFrom) : undefined,
         })
     }
 
@@ -257,25 +251,17 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
                         onChange={bind(handleFormValueChange, this, 'major')}
                         value={formValues.major as string}
                     />
-                    <div className={styles.row}>
-                        <InputDatePicker
-                            label='Start Date'
-                            date={formValues.startDate as Date}
-                            onChange={bind(handleFormValueChange, this, 'startDate')}
-                            disabled={false}
-                            error={formErrors.startDate}
-                            dirty
-                        />
-                        <InputDatePicker
-                            label='End Date'
-                            date={formValues.endDate as Date}
-                            onChange={bind(handleFormValueChange, this, 'endDate')}
-                            disabled={false}
-                            error={formErrors.endDate}
-                            dirty
-                            maxDate={new Date()}
-                        />
-                    </div>
+                    <InputDatePicker
+                        label='End date (or expected)'
+                        date={formValues.endDate as Date}
+                        onChange={bind(handleFormValueChange, this, 'endDate')}
+                        disabled={false}
+                        error={formErrors.endDate}
+                        dirty
+                        maxDate={new Date()}
+                        showYearPicker
+                        dateFormat='yyyy'
+                    />
                     <div className={styles.formCTAs}>
                         {editedItemIndex === undefined ? <IconOutline.PlusCircleIcon /> : undefined}
                         <Button
