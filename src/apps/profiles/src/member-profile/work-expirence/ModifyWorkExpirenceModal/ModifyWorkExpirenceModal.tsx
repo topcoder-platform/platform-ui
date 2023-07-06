@@ -130,6 +130,13 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
             return
         }
 
+        if (formValues.endDate && formValues.startDate && formValues.endDate <= formValues.startDate) {
+            setFormErrors({
+                endDate: 'End date must be greater than start date',
+            })
+            return
+        }
+
         const updatedWorkExpirence: UserTrait = {
             cityTown: formValues.city,
             company: formValues.company,
@@ -293,6 +300,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                             disabled={false}
                             error={formErrors.startDate}
                             dirty
+                            maxDate={new Date()}
                         />
                         <InputDatePicker
                             label='End Date'
