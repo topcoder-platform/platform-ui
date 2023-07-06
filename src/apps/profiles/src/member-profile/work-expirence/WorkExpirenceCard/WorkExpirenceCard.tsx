@@ -32,9 +32,7 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
                         <p>
                             {props.work.timePeriodFrom ? moment(props.work.timePeriodFrom)
                                 .format('MM/YYYY') : ''}
-                            {' '}
-                            -
-                            {' '}
+                            {props.work.timePeriodTo || props.work.currentlyWorking ? ' - ' : ''}
                             {props.work.timePeriodTo ? moment(props.work.timePeriodTo)
                                 .format('MM/YYYY') : (props.work.currentlyWorking ? 'Present' : '')}
                         </p>

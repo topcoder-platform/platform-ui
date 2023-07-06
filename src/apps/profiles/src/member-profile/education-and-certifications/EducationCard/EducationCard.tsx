@@ -24,13 +24,8 @@ const EducationCard: FC<EducationCardProps> = (props: EducationCardProps) => (
                 props.education.timePeriodFrom || props.education.timePeriodTo ? (
                     <div className={styles.educationCardHeaderRight}>
                         <p>
-                            {props.education.timePeriodFrom ? moment(props.education.timePeriodFrom)
-                                .format('MM/YYYY') : ''}
-                            {' '}
-                            -
-                            {' '}
                             {props.education.timePeriodTo ? moment(props.education.timePeriodTo)
-                                .format('MM/YYYY') : (props.education.graduated ? 'Graduated' : '')}
+                                .format('YYYY') : ''}
                         </p>
                     </div>
                 ) : undefined

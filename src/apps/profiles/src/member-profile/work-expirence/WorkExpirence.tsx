@@ -59,7 +59,7 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
     return (
         <div className={styles.container}>
             <div className={styles.headerWrap}>
-                <h3>Work Experience</h3>
+                <h3>Experience</h3>
                 {
                     canEdit && (
                         <EditMemberPropertyBtn

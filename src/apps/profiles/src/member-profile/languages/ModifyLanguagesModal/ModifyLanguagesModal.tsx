@@ -107,11 +107,11 @@ const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLangua
             },
         }])
             .then(() => {
-                toast.success('Languages updated successfully.')
+                toast.success('Languages updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
                 props.onSave()
             })
             .catch(() => {
-                toast.error('Failed to update user Languages.')
+                toast.error('Failed to update your Languages.', { position: toast.POSITION.BOTTOM_RIGHT })
                 setIsSaving(false)
             })
     }
@@ -133,7 +133,7 @@ const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLangua
         }
 
         if (currentMemberLanguages?.find((item: UserTrait) => item.language === selectedLanguage)) {
-            toast.info('Language already exists')
+            toast.info('Language already exists', { position: toast.POSITION.BOTTOM_RIGHT })
             resetForm()
             return
         }

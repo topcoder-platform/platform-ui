@@ -71,11 +71,11 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
             },
         }])
             .then(() => {
-                toast.success('Work Experience updated successfully.')
+                toast.success('Work Experience updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
                 props.onSave()
             })
             .catch(() => {
-                toast.error('Failed to update user\'s Work Experience.')
+                toast.error('Failed to update user\'s Work Experience.', { position: toast.POSITION.BOTTOM_RIGHT })
                 setIsSaving(false)
             })
     }
@@ -130,23 +130,9 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
             return
         }
 
-        if (!trim(formValues.industry as string)) {
+        if (formValues.endDate && formValues.startDate && formValues.endDate <= formValues.startDate) {
             setFormErrors({
-                industry: 'Industry is required',
-            })
-            return
-        }
-
-        if (!trim(formValues.city as string)) {
-            setFormErrors({
-                city: 'City is required',
-            })
-            return
-        }
-
-        if (!formValues.startDate) {
-            setFormErrors({
-                startDate: 'Start date is required',
+                endDate: 'End date must be greater than start date',
             })
             return
         }
@@ -285,7 +271,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                     <div className={styles.row}>
                         <InputText
                             name='industry'
-                            label='Industry *'
+                            label='Industry'
                             error={formErrors.industry}
                             placeholder='Enter an industry'
                             dirty
@@ -296,7 +282,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                         />
                         <InputText
                             name='city'
-                            label='City *'
+                            label='City'
                             error={formErrors.city}
                             placeholder='Enter a city'
                             dirty
@@ -308,12 +294,13 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                     </div>
                     <div className={styles.row}>
                         <InputDatePicker
-                            label='Start Date *'
+                            label='Start Date'
                             date={formValues.startDate as Date}
                             onChange={bind(handleFormValueChange, this, 'startDate')}
                             disabled={false}
                             error={formErrors.startDate}
                             dirty
+                            maxDate={new Date()}
                         />
                         <InputDatePicker
                             label='End Date'

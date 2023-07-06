@@ -21,6 +21,9 @@ const ModifyMemberPhotoModal: FC<ModifyMemberPhotoModalProps> = (props: ModifyMe
 
     const fileElRef: MutableRefObject<HTMLDivElement | any> = useRef()
 
+    const [fileSizeError, setFileSizeError]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
     function handleModifyPhotoSave(): void {
         const formData: FormData = new FormData()
 
@@ -31,11 +34,11 @@ const ModifyMemberPhotoModal: FC<ModifyMemberPhotoModalProps> = (props: ModifyMe
 
             updateMemberPhotoAsync(props.profile.handle, formData)
                 .then(() => {
-                    toast.success('Photo updated successfully.')
+                    toast.success('Photo updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
                     props.onSave()
                 })
                 .catch(() => {
-                    toast.error('Failed to update member\'s photo.')
+                    toast.error('Failed to update your photo.', { position: toast.POSITION.BOTTOM_RIGHT })
                     setIsSaving(false)
                 })
         }
@@ -48,10 +51,16 @@ const ModifyMemberPhotoModal: FC<ModifyMemberPhotoModalProps> = (props: ModifyMe
     function handleFilePickChange(event: React.ChangeEvent<HTMLInputElement>): void {
         const pickedFile: File | undefined = event.target.files?.[0]
 
-        if (pickedFile && pickedFile?.size < 2000000) { // max 2mb limit
-            setFile(pickedFile)
+        if (pickedFile) {
+            if (pickedFile?.size < 2000000) { // max 2mb limit
+                setFile(pickedFile)
+                setFileSizeError(false)
+            } else {
+                setFileSizeError(true)
+            }
         } else {
             setFile(undefined)
+            setFileSizeError(false)
         }
     }
 
@@ -86,7 +95,7 @@ const ModifyMemberPhotoModal: FC<ModifyMemberPhotoModalProps> = (props: ModifyMe
                 <form>
                     <input
                         ref={fileElRef}
-                        accept='image/png, image/jpg'
+                        accept='image/png,image/jpeg'
                         type='file'
                         onChange={handleFilePickChange}
                     />
@@ -95,6 +104,11 @@ const ModifyMemberPhotoModal: FC<ModifyMemberPhotoModalProps> = (props: ModifyMe
                         primary
                         onClick={handleFilePickClick}
                     />
+                    {
+                        fileSizeError && (
+                            <p>Please select an image that is less than 2MB.</p>
+                        )
+                    }
                 </form>
                 {
                     file && (
