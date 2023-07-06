@@ -86,7 +86,7 @@ const ModifyMemberPhotoModal: FC<ModifyMemberPhotoModalProps> = (props: ModifyMe
                 <form>
                     <input
                         ref={fileElRef}
-                        accept='image/png, image/jpg'
+                        accept='image/png,image/jpeg'
                         type='file'
                         onChange={handleFilePickChange}
                     />
