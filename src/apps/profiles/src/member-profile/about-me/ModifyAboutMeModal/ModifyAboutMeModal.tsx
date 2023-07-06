@@ -94,11 +94,11 @@ const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeMod
             }]),
         ])
             .then(() => {
-                toast.success('Your profile has been updated.')
+                toast.success('Your profile has been updated.', { position: toast.POSITION.BOTTOM_RIGHT })
                 props.onSave()
             })
             .catch((error: any) => {
-                toast.error('Something went wrong. Please try again.')
+                toast.error('Something went wrong. Please try again.', { position: toast.POSITION.BOTTOM_RIGHT })
                 setIsSaving(false)
                 setFormSaveError(error.message || error)
             })

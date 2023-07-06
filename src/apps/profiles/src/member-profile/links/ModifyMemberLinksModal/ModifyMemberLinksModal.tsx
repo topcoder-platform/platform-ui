@@ -92,11 +92,11 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
             },
         }])
             .then(() => {
-                toast.success('Links updated successfully.')
+                toast.success('Links updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
                 props.onSave()
             })
             .catch(() => {
-                toast.error('Failed to update user Links.')
+                toast.error('Failed to update user Links.', { position: toast.POSITION.BOTTOM_RIGHT })
                 setIsSaving(false)
             })
     }
@@ -126,7 +126,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
         }
 
         if (currentMemberLinks?.find((item: UserTrait) => item.url.toLowerCase() === selectedLinkURL?.toLowerCase())) {
-            toast.info('Link already exists')
+            toast.info('Link already exists', { position: toast.POSITION.BOTTOM_RIGHT })
             resetForm()
             return
         }

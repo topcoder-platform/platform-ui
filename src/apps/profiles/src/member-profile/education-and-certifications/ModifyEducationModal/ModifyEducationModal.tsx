@@ -72,11 +72,11 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
             },
         }])
             .then(() => {
-                toast.success('Education updated successfully.')
+                toast.success('Education updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
                 props.onSave()
             })
             .catch(() => {
-                toast.error('Failed to update your Education.')
+                toast.error('Failed to update your Education.', { position: toast.POSITION.BOTTOM_RIGHT })
                 setIsSaving(false)
             })
     }

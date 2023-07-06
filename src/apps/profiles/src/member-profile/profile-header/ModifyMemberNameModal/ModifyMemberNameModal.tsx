@@ -69,11 +69,11 @@ const ModifyMemberNameModal: FC<ModifyMemberNameModalProps> = (props: ModifyMemb
             { firstName: updatedFirstName, lastName: updatedLastName },
         )
             .then(() => {
-                toast.success('Your profile has been updated.')
+                toast.success('Your profile has been updated.', { position: toast.POSITION.BOTTOM_RIGHT })
                 props.onSave()
             })
             .catch(() => {
-                toast.error('Something went wrong. Please try again.')
+                toast.error('Something went wrong. Please try again.', { position: toast.POSITION.BOTTOM_RIGHT })
                 setIsSaving(false)
             })
     }

@@ -71,11 +71,11 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
             },
         }])
             .then(() => {
-                toast.success('Work Experience updated successfully.')
+                toast.success('Work Experience updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
                 props.onSave()
             })
             .catch(() => {
-                toast.error('Failed to update user\'s Work Experience.')
+                toast.error('Failed to update user\'s Work Experience.', { position: toast.POSITION.BOTTOM_RIGHT })
                 setIsSaving(false)
             })
     }

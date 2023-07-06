@@ -31,11 +31,11 @@ const ModifyMemberPhotoModal: FC<ModifyMemberPhotoModalProps> = (props: ModifyMe
 
             updateMemberPhotoAsync(props.profile.handle, formData)
                 .then(() => {
-                    toast.success('Photo updated successfully.')
+                    toast.success('Photo updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
                     props.onSave()
                 })
                 .catch(() => {
-                    toast.error('Failed to update member\'s photo.')
+                    toast.error('Failed to update your photo.', { position: toast.POSITION.BOTTOM_RIGHT })
                     setIsSaving(false)
                 })
         }
