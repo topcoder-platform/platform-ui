@@ -76,7 +76,7 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
                 props.onSave()
             })
             .catch(() => {
-                toast.error('Failed to update member\'s Education.')
+                toast.error('Failed to update your Education.')
                 setIsSaving(false)
             })
     }
@@ -127,13 +127,6 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
         if (!trim(formValues.major as string)) {
             setFormErrors({
                 major: 'Degree is required',
-            })
-            return
-        }
-
-        if (!formValues.startDate) {
-            setFormErrors({
-                startDate: 'Start date is required',
             })
             return
         }
@@ -266,7 +259,7 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
                     />
                     <div className={styles.row}>
                         <InputDatePicker
-                            label='Start Date *'
+                            label='Start Date'
                             date={formValues.startDate as Date}
                             onChange={bind(handleFormValueChange, this, 'startDate')}
                             disabled={false}
@@ -283,16 +276,6 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
                             maxDate={new Date()}
                         />
                     </div>
-                    <InputText
-                        name='graduated'
-                        label='Graduated?'
-                        error={formErrors.graduated}
-                        dirty
-                        tabIndex={-1}
-                        type='checkbox'
-                        onChange={bind(handleFormValueChange, this, 'graduated')}
-                        checked={formValues.graduated as boolean}
-                    />
                     <div className={styles.formCTAs}>
                         {editedItemIndex === undefined ? <IconOutline.PlusCircleIcon /> : undefined}
                         <Button

@@ -8,6 +8,15 @@
         display: flex;
         align-items: center;
         margin-bottom: $sp-4;
+
+        h3 {
+            font-family: $font-roboto;
+            font-weight: 700;
+            text-transform: none;
+            font-size: 20px;
+            line-height: 26px;
+            color: $black-60;
+        }
     }
 
     .contentWrap {

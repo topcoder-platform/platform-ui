@@ -26,9 +26,7 @@ const EducationCard: FC<EducationCardProps> = (props: EducationCardProps) => (
                         <p>
                             {props.education.timePeriodFrom ? moment(props.education.timePeriodFrom)
                                 .format('MM/YYYY') : ''}
-                            {' '}
-                            -
-                            {' '}
+                            {props.education.timePeriodTo || props.education.graduated ? ' - ' : ''}
                             {props.education.timePeriodTo ? moment(props.education.timePeriodTo)
                                 .format('MM/YYYY') : (props.education.graduated ? 'Graduated' : '')}
                         </p>

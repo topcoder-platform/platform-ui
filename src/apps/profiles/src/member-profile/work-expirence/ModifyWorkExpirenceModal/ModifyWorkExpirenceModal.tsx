@@ -130,27 +130,6 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
             return
         }
 
-        if (!trim(formValues.industry as string)) {
-            setFormErrors({
-                industry: 'Industry is required',
-            })
-            return
-        }
-
-        if (!trim(formValues.city as string)) {
-            setFormErrors({
-                city: 'City is required',
-            })
-            return
-        }
-
-        if (!formValues.startDate) {
-            setFormErrors({
-                startDate: 'Start date is required',
-            })
-            return
-        }
-
         const updatedWorkExpirence: UserTrait = {
             cityTown: formValues.city,
             company: formValues.company,
@@ -285,7 +264,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                     <div className={styles.row}>
                         <InputText
                             name='industry'
-                            label='Industry *'
+                            label='Industry'
                             error={formErrors.industry}
                             placeholder='Enter an industry'
                             dirty
@@ -296,7 +275,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                         />
                         <InputText
                             name='city'
-                            label='City *'
+                            label='City'
                             error={formErrors.city}
                             placeholder='Enter a city'
                             dirty
@@ -308,7 +287,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                     </div>
                     <div className={styles.row}>
                         <InputDatePicker
-                            label='Start Date *'
+                            label='Start Date'
                             date={formValues.startDate as Date}
                             onChange={bind(handleFormValueChange, this, 'startDate')}
                             disabled={false}

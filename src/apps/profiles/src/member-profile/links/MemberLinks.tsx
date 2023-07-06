@@ -85,7 +85,7 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
     return canEdit || memberLinks?.links ? (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
-                <p className='body-main-bold'>My Links:</p>
+                <p className='body-main-bold'>Links:</p>
                 {
                     canEdit && (
                         <EditMemberPropertyBtn

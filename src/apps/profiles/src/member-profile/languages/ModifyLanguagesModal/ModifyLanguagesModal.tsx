@@ -111,7 +111,7 @@ const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLangua
                 props.onSave()
             })
             .catch(() => {
-                toast.error('Failed to update user Languages.')
+                toast.error('Failed to update your Languages.')
                 setIsSaving(false)
             })
     }
