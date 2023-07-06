@@ -35,6 +35,11 @@
             right: 0;
             top: calc(50% - 8px);
             padding-right: $sp-1;
+
+            svg {
+                width: 16px;
+                height: 16px;
+            }
         }
     }
 
