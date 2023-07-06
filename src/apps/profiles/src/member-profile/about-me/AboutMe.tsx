@@ -85,7 +85,7 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
                         onSave={handleEditModalSaved}
                         profile={props.profile}
                         memberPersonalizationTraitsData={
-                            (memberPersonalizationTraits?.[0]?.traits?.data || []) as UserTraits[]
+                            memberPersonalizationTraits?.[0]?.traits?.data
                         }
                     />
                 )
