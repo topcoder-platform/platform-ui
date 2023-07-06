@@ -4,7 +4,14 @@ import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
 import { BaseModal, Button, IconOutline, InputSelect, InputText } from '~/libs/ui'
-import { updateMemberTraitsAsync, UserProfile, UserTrait, UserTraitCategoryNames, UserTraitIds } from '~/libs/core'
+import {
+    createMemberTraitsAsync,
+    updateMemberTraitsAsync,
+    UserProfile,
+    UserTrait,
+    UserTraitCategoryNames,
+    UserTraitIds,
+} from '~/libs/core'
 
 import { renderLinkIcon } from '../MemberLinks'
 
@@ -17,6 +24,11 @@ interface ModifyMemberLinksModalProps {
     profile: UserProfile
     memberLinks: UserTrait[] | undefined
     memberPersonalizationTraitsFullData: UserTrait[] | undefined
+}
+
+const methodsMap: { [key: string]: any } = {
+    create: createMemberTraitsAsync,
+    update: updateMemberTraitsAsync,
 }
 
 const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMemberLinksModalProps) => {
@@ -67,7 +79,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
         const updatedPersonalizationTraits: UserTrait[]
             = reject(props.memberPersonalizationTraitsFullData, (trait: UserTrait) => trait.links)
 
-        updateMemberTraitsAsync(props.profile.handle, [{
+        methodsMap[!!props.memberPersonalizationTraitsFullData ? 'update' : 'create'](props.profile.handle, [{
             categoryName: UserTraitCategoryNames.personalization,
             traitId: UserTraitIds.personalization,
             traits: {
