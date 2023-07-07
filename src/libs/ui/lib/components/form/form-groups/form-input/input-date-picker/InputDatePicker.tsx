@@ -27,6 +27,7 @@ interface InputDatePickerProps {
     readonly minDate?: Date | null | undefined;
     readonly minTime?: Date | undefined;
     readonly placeholder?: string
+    readonly showMonthPicker?: boolean
     readonly showYearPicker?: boolean
     readonly tabIndex?: number
 }
@@ -63,16 +64,20 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
                     <IconOutline.ArrowCircleLeftIcon />
                 </button>
 
-                <select
-                    value={months[getMonth(date)]}
-                    onChange={({ target: { value } }: any) => changeMonth(months.indexOf(value))}
-                >
-                    {months.map(option => (
-                        <option key={option} value={option}>
-                            {option}
-                        </option>
-                    ))}
-                </select>
+                {
+                    props.showMonthPicker !== false && (
+                        <select
+                            value={months[getMonth(date)]}
+                            onChange={({ target: { value } }: any) => changeMonth(months.indexOf(value))}
+                        >
+                            {months.map(option => (
+                                <option key={option} value={option}>
+                                    {option}
+                                </option>
+                            ))}
+                        </select>
+                    )
+                }
 
                 <select
                     value={getYear(date)}

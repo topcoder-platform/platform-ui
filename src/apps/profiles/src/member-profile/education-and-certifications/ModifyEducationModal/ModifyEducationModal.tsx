@@ -258,7 +258,7 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
                         disabled={false}
                         error={formErrors.endDate}
                         dirty
-                        maxDate={new Date()}
+                        showMonthPicker={false}
                         showYearPicker
                         dateFormat='yyyy'
                     />
