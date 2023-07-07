@@ -21,8 +21,8 @@ const ModifyMemberPhotoModal: FC<ModifyMemberPhotoModalProps> = (props: ModifyMe
 
     const fileElRef: MutableRefObject<HTMLDivElement | any> = useRef()
 
-    const [fileSizeError, setFileSizeError]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
+    const [fileSelectError, setFileSelectError]: [string | undefined, Dispatch<SetStateAction<string | undefined>>]
+        = useState<string | undefined>()
 
     function handleModifyPhotoSave(): void {
         const formData: FormData = new FormData()
@@ -53,14 +53,19 @@ const ModifyMemberPhotoModal: FC<ModifyMemberPhotoModalProps> = (props: ModifyMe
 
         if (pickedFile) {
             if (pickedFile?.size < 2000000) { // max 2mb limit
+                if (pickedFile.type !== 'image/png' && pickedFile.type !== 'image/jpeg') {
+                    setFileSelectError('Please select a PNG or JPG image.')
+                    return
+                }
+
                 setFile(pickedFile)
-                setFileSizeError(false)
+                setFileSelectError(undefined)
             } else {
-                setFileSizeError(true)
+                setFileSelectError('Please select an image that is less than 2MB.')
             }
         } else {
             setFile(undefined)
-            setFileSizeError(false)
+            setFileSelectError(undefined)
         }
     }
 
@@ -105,8 +110,8 @@ const ModifyMemberPhotoModal: FC<ModifyMemberPhotoModalProps> = (props: ModifyMe
                         onClick={handleFilePickClick}
                     />
                     {
-                        fileSizeError && (
-                            <p>Please select an image that is less than 2MB.</p>
+                        fileSelectError && (
+                            <p>{fileSelectError}</p>
                         )
                     }
                 </form>
