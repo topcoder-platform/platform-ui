@@ -195,8 +195,8 @@ const PagePersonalizationContent: FC<{
 
             <ProgressBar
                 className={styles.ProgressBar}
-                progress={5.0 / 7}
-                label='5/7'
+                progress={5.0 / 6}
+                label='5/6'
             />
 
             <div className={classNames('d-flex justify-content-between', styles.blockFooter)}>

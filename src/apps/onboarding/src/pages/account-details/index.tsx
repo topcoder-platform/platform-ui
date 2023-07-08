@@ -10,6 +10,8 @@ import classNames from 'classnames'
 
 import { Button, InputSelect, PageDivider } from '~/libs/ui'
 import { getCountryLookup } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
+import { EnvironmentConfig } from '~/config'
+import { Member } from '~/apps/talent-search/src/lib/models'
 
 import { ProgressBar } from '../../components/progress-bar'
 
@@ -30,6 +32,7 @@ const blankConnectInfo: ConnectInfo = emptyConnectInfo()
 const PageAccountDetailsContent: FC<{
     reduxAddress: MemberAddress | null
     reduxConnectInfo: ConnectInfo | null
+    reduxMemberInfo: Member | null
     updateMemberConnectInfos: (infos: ConnectInfo[]) => void
     createMemberConnectInfos: (infos: ConnectInfo[]) => void
     updateMemberHomeAddresss: (infos: MemberAddress[]) => void
@@ -133,7 +136,11 @@ const PageAccountDetailsContent: FC<{
             && !loadingAddress
             && !loadingConnectInfo
             && shouldNavigateTo.current) {
-            navigate(shouldNavigateTo.current)
+            if (shouldNavigateTo.current.startsWith('../')) {
+                navigate(shouldNavigateTo.current)
+            } else {
+                window.location.href = shouldNavigateTo.current
+            }
         }
         /* eslint-disable react-hooks/exhaustive-deps */
     }, [loadingAddress, loadingConnectInfo])
@@ -313,8 +320,8 @@ const PageAccountDetailsContent: FC<{
 
             <ProgressBar
                 className={styles.ProgressBar}
-                progress={6.0 / 7}
-                label='6/7'
+                progress={6.0 / 6}
+                label='6/6'
             />
 
             <div className={classNames('d-flex justify-content-between', styles.blockFooter)}>
@@ -337,7 +344,16 @@ const PageAccountDetailsContent: FC<{
                     size='lg'
                     primary
                     iconToLeft
-                    disabled={!_.isEmpty(formErrors)}
+                    disabled={!_.isEmpty(formErrors) || !props.reduxMemberInfo}
+                    onClick={() => {
+                        if (loadingAddress || loadingConnectInfo) {
+                            shouldNavigateTo.current
+                                = `${EnvironmentConfig.USER_PROFILE_URL}/${props.reduxMemberInfo?.handle}`
+                        } else {
+                            window.location.href
+                                = `${EnvironmentConfig.USER_PROFILE_URL}/${props.reduxMemberInfo?.handle}`
+                        }
+                    }}
                 >
                     next
                 </Button>
@@ -352,6 +368,7 @@ const mapStateToProps: any = (state: any) => {
         loadingMemberInfo,
         address,
         connectInfo,
+        memberInfo,
     }: any = state.member
 
     return {
@@ -359,6 +376,7 @@ const mapStateToProps: any = (state: any) => {
         loadingMemberTraits,
         reduxAddress: address,
         reduxConnectInfo: connectInfo,
+        reduxMemberInfo: memberInfo,
     }
 }
 

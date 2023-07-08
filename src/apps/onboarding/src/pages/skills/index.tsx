@@ -34,8 +34,8 @@ export const PageSkills: FC<{}> = () => {
 
             <ProgressBar
                 className={styles.ProgressBar}
-                progress={2.0 / 7}
-                label='2/7'
+                progress={2.0 / 6}
+                label='2/6'
             />
 
             <div className={classNames('d-flex justify-content-between', styles.blockFooter)}>
