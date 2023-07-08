@@ -2,6 +2,7 @@ export interface GlobalConfig {
     TC_DOMAIN: string
     TOPCODER_URL: string
     PLATFORMUI_URL: string
+    USER_PROFILE_URL: string
     API: {
         V1: string
         V3: string

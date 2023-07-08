@@ -118,8 +118,8 @@ export const PageEducationsContent: FC<{
 
             <ProgressBar
                 className={styles.ProgressBar}
-                progress={4.0 / 7}
-                label='4/7'
+                progress={4.0 / 6}
+                label='4/6'
             />
 
             <div className={classNames('d-flex justify-content-between', styles.blockFooter)}>
