@@ -4,6 +4,7 @@ import { toast } from 'react-toastify'
 
 import { BaseModal, Button, InputText, InputTextarea } from '~/libs/ui'
 import {
+    createMemberTraitsAsync,
     updateMemberProfileAsync,
     updateMemberTraitsAsync,
     UserProfile,
@@ -18,7 +19,12 @@ interface ModifyAboutMeModalProps {
     onClose: () => void
     onSave: () => void
     profile: UserProfile
-    memberPersonalizationTraitsData: Array<UserTrait>
+    memberPersonalizationTraitsData: UserTrait[] | undefined
+}
+
+const methodsMap: { [key: string]: any } = {
+    create: createMemberTraitsAsync,
+    update: updateMemberTraitsAsync,
 }
 
 const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeModalProps) => {
@@ -38,14 +44,14 @@ const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeMod
     const [isFormChanged, setIsFormChanged]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const [formError, setFormError]: [
+    const [formSaveError, setFormSaveError]: [
         string | undefined,
         Dispatch<SetStateAction<string | undefined>>
     ] = useState<string | undefined>()
 
     useEffect(() => {
         const profileSelfTitleData: any
-            = props.memberPersonalizationTraitsData.find(
+            = props.memberPersonalizationTraitsData?.find(
                 (trait: any) => trait.profileSelfTitle,
             )
         setMemberTitle(profileSelfTitleData?.profileSelfTitle)
@@ -66,14 +72,14 @@ const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeMod
         const updatedTitle: string = trim(memberTitle)
 
         setIsSaving(true)
-        setFormError(undefined)
+        setFormSaveError(undefined)
 
         Promise.all([
             updateMemberProfileAsync(
                 props.profile.handle,
                 { description: updatedDescription },
             ),
-            updateMemberTraitsAsync(props.profile.handle, [{
+            methodsMap[!!props.memberPersonalizationTraitsData ? 'update' : 'create'](props.profile.handle, [{
                 categoryName: UserTraitCategoryNames.personalization,
                 traitId: UserTraitIds.personalization,
                 traits: {
@@ -88,13 +94,13 @@ const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeMod
             }]),
         ])
             .then(() => {
-                toast.success('Your profile has been updated.')
+                toast.success('Your profile has been updated.', { position: toast.POSITION.BOTTOM_RIGHT })
                 props.onSave()
             })
             .catch((error: any) => {
-                toast.error('Something went wrong. Please try again.')
+                toast.error('Something went wrong. Please try again.', { position: toast.POSITION.BOTTOM_RIGHT })
                 setIsSaving(false)
-                setFormError(error.message || error)
+                setFormSaveError(error.message || error)
             })
     }
 
@@ -115,38 +121,35 @@ const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeMod
                         label='Save'
                         onClick={handleAboutMeSave}
                         primary
-                        disabled={!trim(memberTitle) || !trim(memberDescription) || isSaving || !isFormChanged}
+                        disabled={isSaving || !isFormChanged}
                     />
                 </div>
             )}
         >
+            <p>Enter a short bio to help potential customers know you.</p>
             <form className={styles.editForm}>
                 <InputText
-                    label='Title *'
+                    label='Title'
                     name='memberTitle'
                     onChange={handleMemberTitleChange}
                     value={memberTitle}
                     tabIndex={0}
                     type='text'
-                    error={!trim(memberTitle) ? 'Title is required' : undefined}
-                    dirty={!trim(memberTitle)}
                 />
                 <InputTextarea
-                    label='Description *'
+                    label='Description'
                     name='memberDescription'
                     onChange={handleMemberDescriptionChange}
                     onBlur={handleMemberDescriptionChange}
                     value={memberDescription}
                     tabIndex={0}
-                    error={!trim(memberDescription) ? 'Description is required' : undefined}
-                    dirty={!trim(memberDescription)}
                 />
             </form>
 
             {
-                formError && (
+                formSaveError && (
                     <div className={styles.formError}>
-                        {formError}
+                        {formSaveError}
                     </div>
                 )
             }

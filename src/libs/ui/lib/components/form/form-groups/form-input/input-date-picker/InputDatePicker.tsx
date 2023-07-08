@@ -15,6 +15,7 @@ interface InputDatePickerProps {
     date: Date | undefined
     onChange: (date: Date | null) => void
     readonly className?: string
+    readonly dateFormat?: string | string[]
     readonly dirty?: boolean
     readonly disabled: boolean
     readonly error?: string
@@ -26,6 +27,8 @@ interface InputDatePickerProps {
     readonly minDate?: Date | null | undefined;
     readonly minTime?: Date | undefined;
     readonly placeholder?: string
+    readonly showMonthPicker?: boolean
+    readonly showYearPicker?: boolean
     readonly tabIndex?: number
 }
 
@@ -61,16 +64,20 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
                     <IconOutline.ArrowCircleLeftIcon />
                 </button>
 
-                <select
-                    value={months[getMonth(date)]}
-                    onChange={({ target: { value } }: any) => changeMonth(months.indexOf(value))}
-                >
-                    {months.map(option => (
-                        <option key={option} value={option}>
-                            {option}
-                        </option>
-                    ))}
-                </select>
+                {
+                    props.showMonthPicker !== false && (
+                        <select
+                            value={months[getMonth(date)]}
+                            onChange={({ target: { value } }: any) => changeMonth(months.indexOf(value))}
+                        >
+                            {months.map(option => (
+                                <option key={option} value={option}>
+                                    {option}
+                                </option>
+                            ))}
+                        </select>
+                    )
+                }
 
                 <select
                     value={getYear(date)}
@@ -106,6 +113,8 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
                 maxDate={props.maxDate}
                 minTime={props.minTime}
                 maxTime={props.maxTime}
+                showYearPicker={props.showYearPicker}
+                dateFormat={props.dateFormat}
             />
         </InputWrapper>
     )

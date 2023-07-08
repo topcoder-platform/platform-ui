@@ -45,11 +45,11 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
             },
         }])
             .then(() => {
-                toast.success('Work availability updated successfully.')
+                toast.success('Work availability updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
                 props.onSave()
             })
             .catch(() => {
-                toast.error('Failed to update member\'s work availability')
+                toast.error('Failed to update your work availability', { position: toast.POSITION.BOTTOM_RIGHT })
                 setIsSaving(false)
             })
 

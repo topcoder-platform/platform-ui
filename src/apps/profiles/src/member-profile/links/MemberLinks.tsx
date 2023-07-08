@@ -82,10 +82,10 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
         }, 1000)
     }
 
-    return (
+    return canEdit || memberLinks?.links ? (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
-                <p className='body-main-bold'>My Links:</p>
+                <p className='body-main-bold'>Links:</p>
                 {
                     canEdit && (
                         <EditMemberPropertyBtn
@@ -122,7 +122,7 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
                 )
             }
         </div>
-    )
+    ) : <></>
 }
 
 export default MemberLinks

@@ -9,3 +9,11 @@
 .formError {
     color: $red-100;
 }
+
+.editForm {
+    margin-top: $sp-4;
+
+    :global(.input-wrapper) {
+        margin-bottom: $sp-4;
+    }
+}
