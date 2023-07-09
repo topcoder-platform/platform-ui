@@ -8,6 +8,7 @@ import { FC, MutableRefObject, useEffect, useRef } from 'react'
 import classNames from 'classnames'
 
 import { Button, PageDivider } from '~/libs/ui'
+import { EnvironmentConfig } from '~/config'
 
 import { ProgressBar } from '../../components/progress-bar'
 import styles from './styles.module.scss'
@@ -54,7 +55,11 @@ const PagePersonalizationContent: FC<{
 
     useEffect(() => {
         if (!loading && !shouldSavingData.current && !!shouldNavigateTo.current) {
-            navigate(shouldNavigateTo.current)
+            if (shouldNavigateTo.current.startsWith('../')) {
+                navigate(shouldNavigateTo.current)
+            } else {
+                window.location.href = shouldNavigateTo.current
+            }
         }
         /* eslint-disable react-hooks/exhaustive-deps */
     }, [loading])
@@ -131,9 +136,11 @@ const PagePersonalizationContent: FC<{
                     iconToLeft
                     onClick={() => {
                         if (loading) {
-                            shouldNavigateTo.current = '../account-details'
+                            shouldNavigateTo.current
+                                = `${EnvironmentConfig.USER_PROFILE_URL}/${props.memberInfo?.handle}`
                         } else {
-                            navigate('../account-details')
+                            window.location.href
+                                = `${EnvironmentConfig.USER_PROFILE_URL}/${props.memberInfo?.handle}`
                         }
                     }}
                 >
