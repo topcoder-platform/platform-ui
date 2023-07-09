@@ -60,7 +60,7 @@ export const PageEducationsContent: FC<{
 
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
-            <h2>Add your education information</h2>
+            <h2>Education</h2>
             <PageDivider />
 
             <div className={classNames('d-flex flex-column align-items-start full-width mt-8', styles.blockContent)}>

@@ -223,17 +223,19 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         </FormField>
                     </div>
                 </div>
-                <FormInputCheckboxMiddleware
-                    label='I am currently working in this role'
-                    checked={workInfo.currentlyWorking}
-                    inline
-                    onChange={(e: any) => {
-                        setWorkInfo({
-                            ...workInfo,
-                            currentlyWorking: e.target.checked,
-                        })
-                    }}
-                />
+                <div className='mt-16'>
+                    <FormInputCheckboxMiddleware
+                        label='I am currently working in this role'
+                        checked={workInfo.currentlyWorking}
+                        inline
+                        onChange={(e: any) => {
+                            setWorkInfo({
+                                ...workInfo,
+                                currentlyWorking: e.target.checked,
+                            })
+                        }}
+                    />
+                </div>
             </div>
         </BaseModal>
     )
