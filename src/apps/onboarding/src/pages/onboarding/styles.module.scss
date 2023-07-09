@@ -1,4 +1,53 @@
-.container {
+@import '@libs/ui/styles/includes';
+
+.blockWrapper {
+  background-color: #EAF6FD;
+  padding: 64px;
   min-height: 100%;
-  padding: 60px 0 20px 0;
+
+  @include sm {
+    padding: 0;
+  }
+}
+
+.container {
+  padding: 48px;
+  font-size: 16px;
+  line-height: 24px;
+  background-color: white;
+  width: 768px;
+  max-width: 100%;
+  min-height: calc(100% - 88px);
+  border-radius: 16px;
+  box-shadow: 0px 8px 24px 0px rgba(144, 144, 144, 0.15);
+
+  h2 {
+    font-family: $font-barlow;
+    color: $black-100;
+    font-size: 34px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 40px;
+    text-transform: none;
+  }
+
+  h3 {
+    font-family: $font-roboto;
+    color: $black-100;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 26px;
+    text-transform: none;
+  }
+}
+
+.textFooter {
+  color: $black-80;
+  margin-top: 64px;
+
+  a {
+    color: $turq-160;
+    font-weight: 500;
+  }
 }

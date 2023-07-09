@@ -1,0 +1,15 @@
+.d-grid {
+  display: grid;
+}
+
+.grid-2-column {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.gap-column-16 {
+  column-gap: 16px;
+}
+
+.gap-row-8 {
+  row-gap: 8px;
+}

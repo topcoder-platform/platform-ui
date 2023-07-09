@@ -1,30 +1,29 @@
 /* eslint-disable ordered-imports/ordered-imports */
 /* eslint-disable react/jsx-no-bind */
-import React, { FC } from 'react'
+import React, { FC, useMemo } from 'react'
+import classNames from 'classnames'
 
 import styles from './styles.module.scss'
 
 interface ProgressBarProps {
     progress: number
-    label?: string
+    maxStep: number
     className?: string
 }
 
 export const ProgressBar: FC<ProgressBarProps> = (props: ProgressBarProps) => {
-
-    const progressProps: React.CSSProperties & { '--progress': number } = {
-        '--progress': props.progress,
-    }
-
+    const progresses = useMemo(() => Array.from(Array(props.maxStep), (_, index) => index), [props.maxStep])
     return (
-        <div className={props.className}>
-            <span>{props.label}</span>
-            <div className={styles.wrap}>
+        <div className={classNames(props.className, styles.container, 'd-flex')}>
+            {progresses.map(item => (
                 <div
-                    className='progress'
-                    style={progressProps}
+                    key={item}
+                    className={classNames(styles.blockProgress, {
+                        [styles.active]: item < props.progress,
+                    })}
                 />
-            </div>
+            ))}
+
         </div>
     )
 }

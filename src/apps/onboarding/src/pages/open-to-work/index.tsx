@@ -1,39 +1,30 @@
 /* eslint-disable ordered-imports/ordered-imports */
 /* eslint-disable react/jsx-no-bind */
 /* eslint-disable unicorn/no-null */
-/* eslint-disable sort-keys */
 import { useNavigate } from 'react-router-dom'
-import { connect } from 'react-redux'
 import { FC, MutableRefObject, useEffect, useRef } from 'react'
 import classNames from 'classnames'
+import { connect } from 'react-redux'
 
 import { Button, PageDivider } from '~/libs/ui'
+import { FormInputCheckbox } from '~/apps/self-service/src/components/form-elements'
 
 import { ProgressBar } from '../../components/progress-bar'
+
 import styles from './styles.module.scss'
-import FieldAvatar from '../../components/FieldAvatar'
-import InputTextAutoSave from '../../components/InputTextAutoSave'
 import PersonalizationInfo, { emptyPersonalizationInfo } from '../../models/PersonalizationInfo'
-import InputTextareaAutoSave from '../../components/InputTextareaAutoSave'
-import {
-    createMemberPersonalizations,
-    setMemberPhotoUrl,
-    updateMemberPersonalizations,
-    updateMemberPhotoUrl,
-} from '../../redux/actions/member'
-import MemberInfo from '../../models/MemberInfo'
+import { createMemberPersonalizations, updateMemberPersonalizations } from '../../redux/actions/member'
 import { useAutoSavePersonalization, useAutoSavePersonalizationType } from '../../hooks/useAutoSavePersonalization'
 import { ReactComponent as IconBackGreen } from '../../assets/images/back-green.svg'
 
+const FormInputCheckboxMiddleware: any = FormInputCheckbox as any
+
 const blankPersonalizationInfo: PersonalizationInfo = emptyPersonalizationInfo()
 
-const PagePersonalizationContent: FC<{
-    memberInfo?: MemberInfo,
+export const PageOpenToWorkContent: FC<{
     reduxPersonalization: PersonalizationInfo | null
     updateMemberPersonalizations: (infos: PersonalizationInfo[]) => void
     createMemberPersonalizations: (infos: PersonalizationInfo[]) => void
-    setMemberPhotoUrl: (photoUrl: string) => void
-    updateMemberPhotoUrl: (photoUrl: string) => void
     loadingMemberTraits: boolean
 }> = props => {
     const navigate: any = useNavigate()
@@ -61,53 +52,39 @@ const PagePersonalizationContent: FC<{
 
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
-            <h2>Make it personal</h2>
+            <h2>
+                Are you open to work?
+            </h2>
             <PageDivider />
-            <div className={classNames(styles.blockContent, 'd-flex flex-column full-width mt-8')}>
-                <FieldAvatar
-                    memberInfo={props.memberInfo}
-                    setMemberPhotoUrl={props.setMemberPhotoUrl}
-                    updateMemberPhotoUrl={props.updateMemberPhotoUrl}
-                />
+            <div className={classNames(styles.blockContent, 'd-flex mt-8')}>
+                <div className={classNames('d-flex flex-column full-width', styles.blockLeft)}>
+                    <h3>Don’t miss work opportunities.</h3>
+                    <span className='mt-8 color-black-80'>
+                        By selecting “Yes, I’m open to work” our customers will know that you are
+                        available for job opportunities.
+                        You will have the option to change this at any time on your member profile.
+                    </span>
 
-                <h3 className='mt-48'>Bio</h3>
-                <span className='mt-8 color-black-60'>This is where we can really get to know you. </span>
-                <InputTextAutoSave
-                    name='title'
-                    label='Bio Title'
-                    value={personalizationInfo?.profileSelfTitle || ''}
-                    onChange={value => {
-                        setPersonalizationInfo({
-                            ...(personalizationInfo || blankPersonalizationInfo),
-                            profileSelfTitle: value || '',
-                        })
-                    }}
-                    placeholder='Ex: I’m a creative rockstar'
-                    tabIndex={0}
-                    type='text'
-                    disabled={props.loadingMemberTraits}
-                    className='mt-16'
-                />
-
-                <InputTextareaAutoSave
-                    name='shortBio'
-                    label='Bio'
-                    value={personalizationInfo?.shortBio || ''}
-                    onChange={value => {
-                        setPersonalizationInfo({
-                            ...(personalizationInfo || blankPersonalizationInfo),
-                            shortBio: value || '',
-                        })
-                    }}
-                    placeholder='Share something that makes you, you.'
-                    tabIndex={0}
-                    disabled={props.loadingMemberTraits}
-                />
+                    <div className='mt-26'>
+                        <FormInputCheckboxMiddleware
+                            label='Yes, I’m open to work'
+                            checked={(personalizationInfo || blankPersonalizationInfo).availableForGigs}
+                            inline
+                            onChange={(e: any) => {
+                                setPersonalizationInfo({
+                                    ...personalizationInfo,
+                                    availableForGigs: e.target.checked,
+                                })
+                            }}
+                            disabled={props.loadingMemberTraits}
+                        />
+                    </div>
+                </div>
             </div>
 
             <ProgressBar
                 className={styles.ProgressBar}
-                progress={5}
+                progress={2}
                 maxStep={5}
             />
 
@@ -119,9 +96,9 @@ const PagePersonalizationContent: FC<{
                     icon={IconBackGreen}
                     onClick={() => {
                         if (loading) {
-                            shouldNavigateTo.current = '../educations'
+                            shouldNavigateTo.current = '../skills'
                         } else {
-                            navigate('../educations')
+                            navigate('../skills')
                         }
                     }}
                 />
@@ -131,9 +108,9 @@ const PagePersonalizationContent: FC<{
                     iconToLeft
                     onClick={() => {
                         if (loading) {
-                            shouldNavigateTo.current = '../account-details'
+                            shouldNavigateTo.current = '../works'
                         } else {
-                            navigate('../account-details')
+                            navigate('../works')
                         }
                     }}
                 >
@@ -148,11 +125,9 @@ const mapStateToProps: any = (state: any) => {
     const {
         loadingMemberTraits,
         personalization,
-        memberInfo,
     }: any = state.member
 
     return {
-        memberInfo,
         loadingMemberTraits,
         reduxPersonalization: personalization,
     }
@@ -161,10 +136,8 @@ const mapStateToProps: any = (state: any) => {
 const mapDispatchToProps: any = {
     createMemberPersonalizations,
     updateMemberPersonalizations,
-    setMemberPhotoUrl,
-    updateMemberPhotoUrl,
 }
 
-export const PagePersonalization: any = connect(mapStateToProps, mapDispatchToProps)(PagePersonalizationContent)
+export const PageOpenToWork: any = connect(mapStateToProps, mapDispatchToProps)(PageOpenToWorkContent)
 
-export default PagePersonalization
+export default PageOpenToWork

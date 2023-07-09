@@ -6,7 +6,6 @@ export default interface WorkInfo {
     city?: string
     startDate?: Date
     dateDescription?: string
-    description?: string
     endDate?: Date
     currentlyWorking?: boolean
     id: number
@@ -20,7 +19,6 @@ export const emptyWorkInfo: () => WorkInfo = () => ({
     startDate: undefined,
     dateDescription: '',
     endDate: undefined,
-    description: '',
     currentlyWorking: false,
     id: 0,
 })

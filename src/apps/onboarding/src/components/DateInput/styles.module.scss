@@ -1,3 +1,5 @@
+@import '@libs/ui/styles/includes';
+
 .datepicker-wrapper {
     position: relative;
     padding: 0 10px;
@@ -61,7 +63,7 @@
         font-weight: 400;
 
         &::placeholder {
-            color: #7F7F7F;
+            color: $black-60;
             font-size: 14px;
             font-weight: 400;
             text-transform: none !important;

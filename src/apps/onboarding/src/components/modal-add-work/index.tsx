@@ -6,7 +6,7 @@ import classNames from 'classnames'
 import _ from 'lodash'
 import moment from 'moment'
 
-import { BaseModal, Button, InputSelect, InputText, InputTextarea } from '~/libs/ui'
+import { BaseModal, Button, InputSelect, InputText } from '~/libs/ui'
 import { FormInputCheckbox } from '~/apps/self-service/src/components/form-elements'
 
 import styles from './styles.module.scss'
@@ -73,47 +73,55 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
     return (
         <BaseModal
             buttons={(
-                <Button
-                    primary
-                    size='lg'
-                    label={props.editingWork ? 'edit experience' : 'add experience'}
-                    onClick={() => {
-                        if (validateField()) {
-                            const endDate: Date | undefined = workInfo.endDate
-                            let endDateString: string = endDate ? moment(endDate)
-                                .format('YYYY') : ''
-                            if (workInfo.currentlyWorking) {
-                                endDateString = 'current'
-                            }
+                <div className='d-flex gap-16'>
+                    <Button
+                        secondary
+                        size='lg'
+                        label='cancel'
+                        onClick={props.onClose}
+                    />
+                    <Button
+                        primary
+                        size='lg'
+                        label='save'
+                        onClick={() => {
+                            if (validateField()) {
+                                const endDate: Date | undefined = workInfo.endDate
+                                let endDateString: string = endDate ? moment(endDate)
+                                    .format('YYYY') : ''
+                                if (workInfo.currentlyWorking) {
+                                    endDateString = 'current'
+                                }
 
-                            let startDateString: string = workInfo.startDate ? moment(workInfo.startDate)
-                                .format('YYYY') : ''
-                            if (startDateString) {
-                                startDateString += '-'
-                            }
+                                let startDateString: string = workInfo.startDate ? moment(workInfo.startDate)
+                                    .format('YYYY') : ''
+                                if (startDateString) {
+                                    startDateString += '-'
+                                }
 
-                            (props.editingWork ? props.onEdit : props.onAdd)?.({
-                                ...workInfo,
-                                dateDescription: (
-                                    workInfo.startDate || workInfo.endDate
-                                ) ? `${startDateString}${endDateString}` : '',
-                            })
-                            props.onClose?.()
-                        }
-                    }}
-                />
+                                (props.editingWork ? props.onEdit : props.onAdd)?.({
+                                    ...workInfo,
+                                    dateDescription: (
+                                        workInfo.startDate || workInfo.endDate
+                                    ) ? `${startDateString}${endDateString}` : '',
+                                })
+                                props.onClose?.()
+                            }
+                        }}
+                    />
+                </div>
             )}
             onClose={props.onClose || _.noop}
             open
             size='body'
-            title={props.editingWork ? 'Edit work experience:' : 'Add work experience:'}
+            title={props.editingWork ? 'Edit Experience' : 'Add Experience'}
             classNames={{ modal: styles.infoModal }}
         >
             <div className={classNames(styles.modalContent, 'd-flex flex-column align-items-start')}>
                 <div className='full-width'>
                     <InputText
                         name='company'
-                        label='Company Name'
+                        label='Company *'
                         value={workInfo.company}
                         onChange={event => {
                             setWorkInfo({
@@ -121,59 +129,57 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                                 company: event.target.value,
                             })
                         }}
-                        placeholder='Company Name'
+                        placeholder='Enter company'
                         tabIndex={0}
                         type='text'
                         dirty
                         error={formErrors.company}
                     />
                 </div>
-                <div className='d-flex full-width gap-20'>
-                    <div className='flex-1'>
-                        <InputSelect
-                            options={industryOptions}
-                            value={workInfo.industry}
-                            onChange={event => setWorkInfo({
-                                ...workInfo,
-                                industry: event.target.value,
-                            })}
-                            name='industry'
-                            label='Industry'
-                            placeholder='Industry'
-                        />
-                    </div>
-                    <div className='flex-1'>
-                        <InputText
-                            name='location'
-                            label='Location'
-                            value={workInfo.city}
-                            onChange={event => setWorkInfo({
-                                ...workInfo,
-                                city: event.target.value,
-                            })}
-                            placeholder='Location'
-                            tabIndex={0}
-                            type='text'
-                        />
-                    </div>
-                </div>
                 <div className='full-width'>
                     <InputText
                         name='position'
-                        label='Position / Job Title'
+                        label='Position *'
                         value={workInfo.position}
                         onChange={event => setWorkInfo({
                             ...workInfo,
                             position: event.target.value,
                         })}
-                        placeholder='Position / Job Title'
+                        placeholder='Enter position'
                         tabIndex={0}
                         type='text'
                         dirty
                         error={formErrors.position}
                     />
                 </div>
-                <div className='d-flex gap-20 full-width'>
+                <div className='full-width'>
+                    <InputSelect
+                        options={industryOptions}
+                        value={workInfo.industry}
+                        onChange={event => setWorkInfo({
+                            ...workInfo,
+                            industry: event.target.value,
+                        })}
+                        name='industry'
+                        label='Industry'
+                        placeholder='Select industry'
+                    />
+                </div>
+                <div className='full-width'>
+                    <InputText
+                        name='location'
+                        label='Location'
+                        value={workInfo.city}
+                        onChange={event => setWorkInfo({
+                            ...workInfo,
+                            city: event.target.value,
+                        })}
+                        placeholder='Enter city, country'
+                        tabIndex={0}
+                        type='text'
+                    />
+                </div>
+                <div className='d-flex gap-16 full-width'>
                     <div
                         className='flex-1'
                     >
@@ -192,7 +198,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                                     })
                                 }}
                                 style2
-                                placeholder='Start date'
+                                placeholder='Select start date'
                             />
                         </FormField>
                     </div>
@@ -212,13 +218,13 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                                     })
                                 }}
                                 style2
-                                placeholder='End date'
+                                placeholder='Select end date'
                             />
                         </FormField>
                     </div>
                 </div>
                 <FormInputCheckboxMiddleware
-                    label='Current Role'
+                    label='I am currently working in this role'
                     checked={workInfo.currentlyWorking}
                     inline
                     onChange={(e: any) => {
@@ -228,20 +234,6 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         })
                     }}
                 />
-                <div className={classNames('full-width mt-30', styles.InputTextareaDescription)}>
-                    <InputTextarea
-                        name='description'
-                        label='Description'
-                        value={workInfo.description}
-                        onChange={event => setWorkInfo({
-                            ...workInfo,
-                            description: event.target.value,
-                        })}
-                        onBlur={_.noop}
-                        placeholder='Description'
-                        tabIndex={0}
-                    />
-                </div>
             </div>
         </BaseModal>
     )
