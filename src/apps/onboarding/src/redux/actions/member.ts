@@ -133,7 +133,6 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
                 startDate,
                 endDate,
                 currentlyWorking: j.working,
-                description: j.description,
                 dateDescription,
                 id: index + 1,
             })
@@ -150,15 +149,12 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
         const educations: EducationInfo[] = educationExpValue.map((e: any, index: number) => {
             const startDate: Date | undefined = dateTimeToDate(e.timePeriodFrom)
             const endDate: Date | undefined = dateTimeToDate(e.timePeriodTo)
-            let endDateString: string = endDate ? moment(endDate)
+            const endDateString: string = endDate ? moment(endDate)
                 .format('YYYY') : ''
-            if (!e.graduated) {
-                endDateString = 'current'
-            }
 
             let startDateString: string = startDate ? moment(startDate)
                 .format('YYYY') : ''
-            if (startDateString) {
+            if (startDateString && endDateString) {
                 startDateString += '-'
             }
 
@@ -170,7 +166,6 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
                 major: e.major,
                 startDate,
                 endDate,
-                graduated: e.graduated,
                 dateDescription,
                 id: index + 1,
             })
@@ -188,6 +183,7 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
             referAs: e.referAs,
             profileSelfTitle: e.profileSelfTitle,
             shortBio: e.shortBio,
+            availableForGigs: e.availableForGigs,
         }))
         dispatch(updatePersonalization(personalizations[0]))
     }
@@ -216,14 +212,12 @@ const createWorksPayloadData: any = (works: WorkInfo[]) => {
             startDate,
             endDate,
             currentlyWorking,
-            description,
         }: any = work
         return {
             company,
             industry,
             position,
             cityTown: city,
-            description,
             timePeriodFrom: startDate ? startDate.toISOString() : '',
             timePeriodTo: endDate ? endDate.toISOString() : '',
             working: currentlyWorking,
@@ -267,14 +261,12 @@ const createEducationsPayloadData: any = (educations: EducationInfo[]) => {
             major,
             startDate,
             endDate,
-            graduated,
         }: any = education
         return {
             schoolCollegeName: collegeName,
             major,
             timePeriodFrom: startDate ? startDate.toISOString() : '',
             timePeriodTo: endDate ? endDate.toISOString() : '',
-            graduated,
         }
     })
 
@@ -314,12 +306,14 @@ const createPersonalizationsPayloadData: any = (personalizations: Personalizatio
             referAs,
             profileSelfTitle,
             shortBio,
+            availableForGigs,
         }: any = personalization
         return {
             ...personalization,
             referAs,
             profileSelfTitle,
             shortBio,
+            availableForGigs,
         }
     })
 
@@ -416,6 +410,17 @@ export const updateMemberHomeAddresss: any = (addresses: MemberAddress[]) => asy
             })),
         })
         dispatch(updateAddress(addresses[0]))
+    } catch (error) {
+    }
+}
+
+export const updateMemberPhotoUrl: any = (photoURL: string) => async (dispatch: any) => {
+    try {
+        const tokenInfo: TokenModel = await getAsyncToken()
+        await putMemberInfo(tokenInfo.handle || '', {
+            photoURL,
+        })
+        dispatch(setMemberPhotoUrl(photoURL))
     } catch (error) {
     }
 }

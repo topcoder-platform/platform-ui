@@ -13,9 +13,9 @@ import { ProgressBar } from '../../components/progress-bar'
 import styles from './styles.module.scss'
 import WorkInfo from '../../models/WorkInfo'
 import ModalAddWork from '../../components/modal-add-work'
-import IconEdit from '../../assets/images/edit.svg'
-import IconTrash from '../../assets/images/trash.svg'
+import { ReactComponent as IconBackGreen } from '../../assets/images/back-green.svg'
 import { createMemberWorks, updateMemberWorks } from '../../redux/actions/member'
+import CardItem from '../../components/card-item'
 
 export const PageWorksContent: FC<{
     reduxWorks: WorkInfo[] | null
@@ -55,64 +55,39 @@ export const PageWorksContent: FC<{
             saveData()
                 .then(_.noop)
         }
-    /* eslint-disable react-hooks/exhaustive-deps */
+        /* eslint-disable react-hooks/exhaustive-deps */
     }, [works])
 
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
-            <h2>Add your work experience here</h2>
+            <h2>Show us what you have done!</h2>
             <PageDivider />
 
-            <div className={classNames('d-flex justify-content-between gap-50 flex-wrap', styles.blockContent)}>
-                <div className='d-flex flex-column align-items-start flex-1'>
-                    {(!works || works.length === 0) ? (
-                        <span className='mb-30'>
-                            You will be able to add details for each of the work experiences
-                            that you think will demonstrate your abilities.
-                        </span>
-                    ) : null}
+            <div className={classNames('d-flex justify-content-between gap-50 flex-wrap mt-8', styles.blockContent)}>
+                <div className='d-flex flex-column align-items-start full-width'>
+                    <h3>Add your experience</h3>
 
-                    <div className='d-flex flex-column full-width'>
-                        {(works || []).map(work => (
-                            <div key={work.id} className='d-flex flex-column full-width'>
-                                <div className='d-flex align-items-center gap-20'>
-                                    <span>{work.company}</span>
-                                    <button
-                                        aria-label='edit'
-                                        type='button'
-                                        onClick={() => {
-                                            setEditingWork(work)
-                                            setShowAddWorkModal(true)
-                                        }}
-                                        disabled={loading}
-                                        className={styles.btn}
-                                    >
-                                        <img width={15} height={15} src={IconEdit} alt='' />
-                                    </button>
-                                    <button
-                                        aria-label='delete'
-                                        type='button'
-                                        onClick={() => setWorks(_.filter(works, w => w.id !== work.id))}
-                                        disabled={loading}
-                                        className={styles.btn}
-                                    >
-                                        <img width={15} height={15} src={IconTrash} alt='' />
-                                    </button>
-                                </div>
-                                {work.city ? (<span>{work.city}</span>) : null}
-                                <span className={styles.textPosition}>{work.position}</span>
-                                {work.dateDescription ? (<span>{work.dateDescription}</span>) : null}
-                                {work.description ? (
-                                    <span
-                                        className={classNames('mt-30', styles.textDescription)}
-                                    >
-                                        {work.description}
-                                    </span>
-                                ) : null}
-                                <PageDivider />
-                            </div>
-                        ))}
-                    </div>
+                    <span className='color-black-80 mt-8'>
+                        Add details for career experiences that demonstrate your abilities.
+                    </span>
+
+                    {(works || []).length > 0 ? (
+                        <div className='d-grid grid-2-column gap-column-16 gap-row-8 full-width mt-24'>
+                            {(works || []).map(work => (
+                                <CardItem
+                                    key={work.id}
+                                    title={work.position || ''}
+                                    subTitle={work.city || ''}
+                                    description={work.dateDescription || ''}
+                                    onEdit={() => {
+                                        setEditingWork(work)
+                                        setShowAddWorkModal(true)
+                                    }}
+                                    onDelete={() => setWorks(_.filter(works, w => w.id !== work.id))}
+                                />
+                            ))}
+                        </div>
+                    ) : null}
 
                     <Button
                         size='lg'
@@ -120,28 +95,28 @@ export const PageWorksContent: FC<{
                         iconToLeft
                         onClick={() => setShowAddWorkModal(true)}
                         disabled={props.loadingMemberTraits || loading}
+                        className='mt-24'
                     >
-                        + add work experience
+                        + add experience
                     </Button>
                 </div>
             </div>
 
             <ProgressBar
                 className={styles.ProgressBar}
-                progress={3.0 / 6}
-                label='3/6'
+                progress={3}
+                maxStep={5}
             />
 
             <div className={classNames('d-flex justify-content-between', styles.blockFooter)}>
                 <Button
                     size='lg'
-                    primary
+                    secondary
                     iconToLeft
+                    icon={IconBackGreen}
                     disabled={loading}
-                    onClick={() => navigate('../skills')}
-                >
-                    back
-                </Button>
+                    onClick={() => navigate('../open-to-work')}
+                />
                 <Button
                     size='lg'
                     primary

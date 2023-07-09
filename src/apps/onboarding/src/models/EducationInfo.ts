@@ -5,7 +5,6 @@ export default interface EducationInfo {
     dateDescription: string
     startDate?: Date
     endDate?: Date
-    graduated?: boolean
     id: number
 }
 
@@ -15,6 +14,5 @@ export const emptyEducationInfo: () => EducationInfo = () => ({
     dateDescription: '',
     startDate: undefined,
     endDate: undefined,
-    graduated: false,
     id: 0,
 })

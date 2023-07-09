@@ -11,11 +11,11 @@ import { Button, PageDivider } from '~/libs/ui'
 
 import { ProgressBar } from '../../components/progress-bar'
 import styles from './styles.module.scss'
-import IconEdit from '../../assets/images/edit.svg'
-import IconTrash from '../../assets/images/trash.svg'
 import EducationInfo from '../../models/EducationInfo'
 import ModalAddEducation from '../../components/modal-add-education'
 import { updateMemberEducations, createMemberEducations } from '../../redux/actions/member'
+import { ReactComponent as IconBackGreen } from '../../assets/images/back-green.svg'
+import CardItem from '../../components/card-item'
 
 export const PageEducationsContent: FC<{
     reduxEducations: EducationInfo[] | null
@@ -55,7 +55,7 @@ export const PageEducationsContent: FC<{
             saveData()
                 .then(_.noop)
         }
-    /* eslint-disable react-hooks/exhaustive-deps */
+        /* eslint-disable react-hooks/exhaustive-deps */
     }, [educations])
 
     return (
@@ -63,54 +63,38 @@ export const PageEducationsContent: FC<{
             <h2>Add your education information</h2>
             <PageDivider />
 
-            <div className={classNames('d-flex flex-column full-width align-items-start', styles.blockContent)}>
-                {(!educations || educations.length === 0) ? (
-                    <span className='mb-30'>
-                        Relevant education details will help make your
-                        profile more valuable to potential employers, add it here!
-                    </span>
-                ) : null}
+            <div className={classNames('d-flex flex-column align-items-start full-width mt-8', styles.blockContent)}>
+                <h3>Add your education</h3>
 
-                <div className='d-flex flex-column full-width'>
-                    {(educations || []).map(education => (
-                        <div key={education.id} className='d-flex flex-column full-width'>
-                            <div className='d-flex align-items-center gap-20'>
-                                <span>{education.collegeName}</span>
-                                <button
-                                    aria-label='edit'
-                                    type='button'
-                                    onClick={() => {
-                                        setEditingEducation(education)
-                                        setShowAddEducationModal(true)
-                                    }}
-                                    disabled={loading}
-                                    className={styles.btn}
-                                >
-                                    <img width={15} height={15} src={IconEdit} alt='' />
-                                </button>
-                                <button
-                                    aria-label='edit'
-                                    type='button'
-                                    onClick={() => setEducations(_.filter(educations, w => w.id !== education.id))}
-                                    disabled={loading}
-                                    className={styles.btn}
-                                >
-                                    <img width={15} height={15} src={IconTrash} alt='' />
-                                </button>
-                            </div>
-                            <span>{education.major}</span>
-                            {education.dateDescription ? (<span>{education.dateDescription}</span>) : null}
-                            <PageDivider />
-                        </div>
-                    ))}
-                </div>
+                <span className='color-black-80 mt-8'>
+                    Relevant education details will help make your profile more valuable to potential employers.
+                </span>
+
+                {(educations || []).length > 0 ? (
+                    <div className='d-grid grid-2-column gap-column-16 gap-row-8 full-width mt-24'>
+                        {(educations || []).map(education => (
+                            <CardItem
+                                key={education.id}
+                                title={education.major || ''}
+                                subTitle={education.collegeName || ''}
+                                description={education.dateDescription || ''}
+                                onEdit={() => {
+                                    setEditingEducation(education)
+                                    setShowAddEducationModal(true)
+                                }}
+                                onDelete={() => setEducations(_.filter(educations, w => w.id !== education.id))}
+                            />
+                        ))}
+                    </div>
+                ) : null}
 
                 <Button
                     size='lg'
                     secondary
                     iconToLeft
                     onClick={() => setShowAddEducationModal(true)}
-                    disabled={props.loadingMemberTraits}
+                    disabled={props.loadingMemberTraits || loading}
+                    className='mt-24'
                 >
                     + add education
                 </Button>
@@ -118,19 +102,18 @@ export const PageEducationsContent: FC<{
 
             <ProgressBar
                 className={styles.ProgressBar}
-                progress={4.0 / 6}
-                label='4/6'
+                progress={4}
+                maxStep={5}
             />
 
             <div className={classNames('d-flex justify-content-between', styles.blockFooter)}>
                 <Button
                     size='lg'
-                    primary
+                    secondary
                     iconToLeft
+                    icon={IconBackGreen}
                     onClick={() => navigate('../works')}
-                >
-                    back
-                </Button>
+                />
                 <Button
                     size='lg'
                     primary

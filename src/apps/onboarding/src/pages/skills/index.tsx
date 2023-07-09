@@ -4,29 +4,38 @@
 import { useNavigate } from 'react-router-dom'
 import { FC } from 'react'
 import classNames from 'classnames'
+import { connect } from 'react-redux'
 
 import { Button, PageDivider } from '~/libs/ui'
 import { InputSkillSelector } from '~/libs/shared/lib/components/input-skill-selector'
+import { Member } from '~/apps/talent-search/src/lib/models'
 
 import { ProgressBar } from '../../components/progress-bar'
 
 import styles from './styles.module.scss'
 
-export const PageSkills: FC<{}> = () => {
+export const PageSkillsContent: FC<{
+    reduxMemberInfo: Member | null
+}> = props => {
     const navigate: any = useNavigate()
 
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
-            <h2>What skills do you have?</h2>
+            <h2>
+                Welcome
+                {` ${props.reduxMemberInfo?.firstName || ''}`}
+                !
+                <br />
+                Let’s get acquainted.
+            </h2>
             <PageDivider />
-            <div className={classNames(styles.blockContent, 'd-flex justify-content-between')}>
-                <div className={classNames('d-flex flex-column', styles.blockLeft)}>
-                    <h3>Select your skills</h3>
-                    <span className='mt-30'>
-                        Add industry standard skills to your profile to let employers
-                        search and find you for opportunities that fit your capabilities.
+            <div className={classNames(styles.blockContent, 'd-flex mt-8')}>
+                <div className={classNames('d-flex flex-column full-width', styles.blockLeft)}>
+                    <h3>What are your skills?</h3>
+                    <span className='mt-8 color-black-80'>
+                        Understanding your skills will allow us to connect you to the right opportunities.
                     </span>
-                    <div className='mt-30'>
+                    <div className='mt-16 full-width color-black-80'>
                         <InputSkillSelector />
                     </div>
                 </div>
@@ -34,24 +43,16 @@ export const PageSkills: FC<{}> = () => {
 
             <ProgressBar
                 className={styles.ProgressBar}
-                progress={2.0 / 6}
-                label='2/6'
+                progress={1}
+                maxStep={5}
             />
 
-            <div className={classNames('d-flex justify-content-between', styles.blockFooter)}>
+            <div className={classNames('d-flex justify-content-end', styles.blockFooter)}>
                 <Button
                     size='lg'
                     primary
                     iconToLeft
-                    onClick={() => navigate('../start')}
-                >
-                    back
-                </Button>
-                <Button
-                    size='lg'
-                    primary
-                    iconToLeft
-                    onClick={() => navigate('../works')}
+                    onClick={() => navigate('../open-to-work')}
                 >
                     next
                 </Button>
@@ -59,5 +60,17 @@ export const PageSkills: FC<{}> = () => {
         </div>
     )
 }
+
+const mapStateToProps: any = (state: any) => {
+    const {
+        memberInfo,
+    }: any = state.member
+
+    return {
+        reduxMemberInfo: memberInfo,
+    }
+}
+
+export const PageSkills: any = connect(mapStateToProps, undefined)(PageSkillsContent)
 
 export default PageSkills

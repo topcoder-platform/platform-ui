@@ -7,83 +7,62 @@
  *
  * A Form Field Is a wrapper for input to add the label to it
  */
-import React, { Dispatch, FC, MutableRefObject, SetStateAction, useEffect, useRef, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import classNames from 'classnames'
 import _ from 'lodash'
 
 import { Button, IconOutline } from '~/libs/ui'
-import { updateMemberPhotoAsync } from '~/libs/core'
 
 import styles from './styles.module.scss'
 import MemberInfo from '../../models/MemberInfo'
+import AvatarPlaceholder from '../../assets/images/avatar-placeholder.png'
+import ModalUploadPhoto from '../modal-upload-photo'
 
 interface FieldAvatarProps {
     className?: string
     memberInfo?: MemberInfo,
     setMemberPhotoUrl: (photoUrl: string) => void
+    updateMemberPhotoUrl: (photoUrl: string) => void
 }
 
 const FieldAvatar: FC<FieldAvatarProps> = ({
     className,
     memberInfo,
     setMemberPhotoUrl,
+    updateMemberPhotoUrl,
 }: FieldAvatarProps) => {
-    const fileElRef: MutableRefObject<HTMLDivElement | any> = useRef()
     const [imgUrl, setImgUrl] = useState<string>('')
     useEffect(() => {
-        if (memberInfo && !imgUrl) {
+        if (memberInfo) {
             setImgUrl(memberInfo.photoURL)
         }
-    /* eslint-disable react-hooks/exhaustive-deps */
+        /* eslint-disable react-hooks/exhaustive-deps */
     }, [memberInfo])
 
-    const [file, setFile]: [File | undefined, Dispatch<SetStateAction<File | undefined>>]
-        = useState<File | undefined>(undefined)
+    const [isPhotoEditMode, setIsPhotoEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
     const [isSaving, setIsSaving]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    function handleFilePickChange(event: React.ChangeEvent<HTMLInputElement>): void {
-        const pickedFile: File | undefined = event.target.files?.[0]
-
-        if (pickedFile && pickedFile?.size < 2000000) { // max 2mb limit
-            setFile(pickedFile)
-        } else {
-            setFile(undefined)
-        }
+    function handleModifyPhotoModalClose(): void {
+        setIsPhotoEditMode(false)
     }
 
-    async function handleModifyPhotoSave(newImgUrl: string): Promise<void> {
-        const formData: FormData = new FormData()
-
-        if (file && memberInfo) {
-            formData.append('photo', file)
-
-            setIsSaving(true)
-            try {
-                setMemberPhotoUrl(newImgUrl)
-                await updateMemberPhotoAsync(memberInfo.handle, formData)
-            } catch (error) {
-            }
-
-            setIsSaving(false)
+    async function handleRemovePhoto(): Promise<void> {
+        setIsSaving(true)
+        try {
+            await updateMemberPhotoUrl('')
+        } catch (error) {
         }
+
+        setIsSaving(false)
     }
-
-    useEffect(() => {
-        if (file) {
-            const newImgUrl: string = URL.createObjectURL(file)
-            setImgUrl(newImgUrl)
-            handleModifyPhotoSave(newImgUrl)
-                .then(_.noop)
-        }
-    /* eslint-disable react-hooks/exhaustive-deps */
-    }, [file])
 
     return (
         <div
             className={classNames(styles.container, className, 'd-flex flex-column gap-20 align-items-start')}
         >
-            <h3>A picture can speak a thousand words</h3>
+            <h3>Photo</h3>
             <div className='d-flex gap-30'>
                 <div className={classNames(
                     'd-flex',
@@ -93,33 +72,70 @@ const FieldAvatar: FC<FieldAvatarProps> = ({
                     },
                 )}
                 >
-                    {imgUrl ? (<img src={imgUrl} alt='avatar' />) : null}
+                    {imgUrl ? (
+                        <img className={styles.img} src={imgUrl} alt='avatar' />
+                    ) : (
+                        <img className={styles.imgPlaceholder} src={AvatarPlaceholder} alt='avatar' />
+                    )}
                 </div>
-                <div className='d-flex flex-column'>
-                    <strong>Requirements:</strong>
-                    <ul>
-                        <li>PNG or JPG format.</li>
-                        <li>Maximum size: 2MB.</li>
-                    </ul>
+                <div className='d-flex flex-column align-items-start'>
+                    <span className='color-black-60'>
+                        Make a great first impression to potential customers with a
+                        professional photo that represents your style.
+                    </span>
+                    {imgUrl ? (
+                        <div className='d-flex gap-8'>
+                            <Button
+                                size='lg'
+                                secondary
+                                iconToLeft
+                                icon={IconOutline.UploadIcon}
+                                disabled={!memberInfo || isSaving}
+                                onClick={() => setIsPhotoEditMode(true)}
+                                className='mt-16'
+                            >
+                                change
+                            </Button>
+                            <Button
+                                size='lg'
+                                secondary
+                                iconToLeft
+                                icon={IconOutline.TrashIcon}
+                                disabled={!memberInfo || isSaving}
+                                onClick={() => {
+                                    handleRemovePhoto()
+                                        .then(_.noop)
+                                }}
+                                className='mt-16'
+                            >
+                                delete
+                            </Button>
+                        </div>
+                    ) : (
+                        <Button
+                            size='lg'
+                            secondary
+                            iconToLeft
+                            icon={IconOutline.UploadIcon}
+                            disabled={!memberInfo}
+                            onClick={() => setIsPhotoEditMode(true)}
+                            className='mt-16'
+                        >
+                            add image
+                        </Button>
+                    )}
                 </div>
             </div>
-            <input
-                ref={fileElRef}
-                accept='image/png, image/jpg'
-                type='file'
-                onChange={handleFilePickChange}
-                hidden
-            />
-            <Button
-                size='lg'
-                secondary
-                iconToRight
-                icon={IconOutline.DownloadIcon}
-                disabled={!memberInfo || isSaving}
-                onClick={() => fileElRef.current.click()}
-            >
-                upload photo
-            </Button>
+
+            {
+                isPhotoEditMode && memberInfo && (
+                    <ModalUploadPhoto
+                        onClose={handleModifyPhotoModalClose}
+                        memberInfo={memberInfo}
+                        setMemberPhotoUrl={setMemberPhotoUrl}
+                    />
+                )
+            }
         </div>
     )
 }

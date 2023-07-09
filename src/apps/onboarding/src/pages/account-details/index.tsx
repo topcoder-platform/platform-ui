@@ -25,6 +25,7 @@ import {
 } from '../../redux/actions/member'
 import MemberAddress, { emptyMemberAddress } from '../../models/MemberAddress'
 import ConnectInfo, { emptyConnectInfo } from '../../models/ConnectInfo'
+import { ReactComponent as IconBackGreen } from '../../assets/images/back-green.svg'
 
 const blankMemberAddress: MemberAddress = emptyMemberAddress()
 const blankConnectInfo: ConnectInfo = emptyConnectInfo()
@@ -320,15 +321,16 @@ const PageAccountDetailsContent: FC<{
 
             <ProgressBar
                 className={styles.ProgressBar}
-                progress={6.0 / 6}
-                label='6/6'
+                progress={5}
+                maxStep={5}
             />
 
             <div className={classNames('d-flex justify-content-between', styles.blockFooter)}>
                 <Button
                     size='lg'
-                    primary
+                    secondary
                     iconToLeft
+                    icon={IconBackGreen}
                     disabled={!_.isEmpty(formErrors)}
                     onClick={() => {
                         if (loadingAddress || loadingConnectInfo) {
@@ -337,9 +339,7 @@ const PageAccountDetailsContent: FC<{
                             navigate('../personalization')
                         }
                     }}
-                >
-                    back
-                </Button>
+                />
                 <Button
                     size='lg'
                     primary

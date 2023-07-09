@@ -55,8 +55,8 @@ export const PageStart: FC<{}> = () => {
 
             <ProgressBar
                 className={styles.ProgressBar}
-                progress={1.0 / 6}
-                label='1/6'
+                progress={0}
+                maxStep={5}
             />
 
             <div className={classNames('d-flex justify-content-end', styles.blockFooter)}>

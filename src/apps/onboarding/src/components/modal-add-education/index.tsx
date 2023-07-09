@@ -7,14 +7,11 @@ import moment from 'moment'
 import _ from 'lodash'
 
 import { BaseModal, Button, InputText } from '~/libs/ui'
-import { FormInputCheckbox } from '~/apps/self-service/src/components/form-elements'
 
 import styles from './styles.module.scss'
 import EducationInfo, { emptyEducationInfo } from '../../models/EducationInfo'
 import FormField from '../FormField'
 import DateInput from '../DateInput'
-
-const FormInputCheckboxMiddleware: any = FormInputCheckbox as any
 
 interface ModalAddEducationProps {
     onClose?: () => void
@@ -66,47 +63,52 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
     return (
         <BaseModal
             buttons={(
-                <Button
-                    primary
-                    size='lg'
-                    label={props.editingEducation ? 'edit education' : 'add education'}
-                    onClick={() => {
-                        if (validateField()) {
-                            const endDate: Date | undefined = educationInfo.endDate
-                            let endDateString: string = endDate ? moment(endDate)
-                                .format('YYYY') : ''
-                            if (!educationInfo.graduated) {
-                                endDateString = 'current'
-                            }
+                <div className='d-flex gap-16'>
+                    <Button
+                        secondary
+                        size='lg'
+                        label='cancel'
+                        onClick={props.onClose}
+                    />
+                    <Button
+                        primary
+                        size='lg'
+                        label='save'
+                        onClick={() => {
+                            if (validateField()) {
+                                const endDate: Date | undefined = educationInfo.endDate
+                                const endDateString: string = endDate ? moment(endDate)
+                                    .format('YYYY') : ''
 
-                            let startDateString: string = educationInfo.startDate ? moment(educationInfo.startDate)
-                                .format('YYYY') : ''
-                            if (startDateString) {
-                                startDateString += '-'
-                            }
+                                let startDateString: string = educationInfo.startDate ? moment(educationInfo.startDate)
+                                    .format('YYYY') : ''
+                                if (startDateString && endDateString) {
+                                    startDateString += '-'
+                                }
 
-                            (props.editingEducation ? props.onEdit : props.onAdd)?.({
-                                ...educationInfo,
-                                dateDescription: (
-                                    educationInfo.startDate || educationInfo.endDate
-                                ) ? `${startDateString}${endDateString}` : '',
-                            })
-                            props.onClose?.()
-                        }
-                    }}
-                />
+                                (props.editingEducation ? props.onEdit : props.onAdd)?.({
+                                    ...educationInfo,
+                                    dateDescription: (
+                                        educationInfo.startDate || educationInfo.endDate
+                                    ) ? `${startDateString}${endDateString}` : '',
+                                })
+                                props.onClose?.()
+                            }
+                        }}
+                    />
+                </div>
             )}
             onClose={props.onClose || _.noop}
             open
             size='body'
-            title={props.editingEducation ? 'Edit education:' : 'Add education:'}
+            title={props.editingEducation ? 'Edit Education' : 'Add Education'}
             classNames={{ modal: styles.infoModal }}
         >
             <div className={classNames(styles.modalContent, 'd-flex flex-column align-items-start')}>
                 <div className='full-width'>
                     <InputText
                         name='collegeName'
-                        label='Name of College or University'
+                        label='College or University *'
                         value={educationInfo.collegeName}
                         onChange={event => {
                             setEducationInfo({
@@ -114,7 +116,7 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                                 collegeName: event.target.value,
                             })
                         }}
-                        placeholder='Name of College or University'
+                        placeholder='Enter school'
                         tabIndex={0}
                         type='text'
                         dirty
@@ -124,20 +126,20 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                 <div className='full-width'>
                     <InputText
                         name='major'
-                        label='Major'
+                        label='Degree *'
                         value={educationInfo.major}
                         onChange={event => setEducationInfo({
                             ...educationInfo,
                             major: event.target.value,
                         })}
-                        placeholder='Major'
+                        placeholder='Enter degree'
                         tabIndex={0}
                         type='text'
                         dirty
                         error={formErrors.major}
                     />
                 </div>
-                <div className='d-flex gap-20 full-width'>
+                <div className='d-flex gap-16 full-width'>
                     <div
                         className='flex-1'
                     >
@@ -156,7 +158,7 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                                     })
                                 }}
                                 style2
-                                placeholder='Start date'
+                                placeholder='Select start date'
                             />
                         </FormField>
                     </div>
@@ -164,10 +166,9 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                         className='flex-1'
                     >
                         <FormField
-                            label='End Date (or expected)'
+                            label='End Date or Expected'
                         >
                             <DateInput
-                                disabled={!educationInfo.graduated}
                                 value={educationInfo.endDate}
                                 onChange={v => {
                                     setEducationInfo({
@@ -176,22 +177,11 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                                     })
                                 }}
                                 style2
-                                placeholder='End date'
+                                placeholder='Select end date'
                             />
                         </FormField>
                     </div>
                 </div>
-                <FormInputCheckboxMiddleware
-                    label='Graduated'
-                    checked={educationInfo.graduated}
-                    inline
-                    onChange={(e: any) => {
-                        setEducationInfo({
-                            ...educationInfo,
-                            graduated: e.target.checked,
-                        })
-                    }}
-                />
             </div>
         </BaseModal>
     )
