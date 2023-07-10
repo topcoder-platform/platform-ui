@@ -1,10 +1,11 @@
-import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { KeyedMutator } from 'swr'
+import classNames from 'classnames'
 
 import { useMemberTraits, UserProfile, UserTraitIds, UserTraits } from '~/libs/core'
 
-import { EditMemberPropertyBtn } from '../../components'
+import { EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { notifyUniNavi } from '../../lib'
 
@@ -32,6 +33,10 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
 
     const memberTitleTrait: any
         = memberPersonalizationTraits?.[0]?.traits?.data?.find((trait: any) => trait.profileSelfTitle)
+
+    const hasEmptyDescription = useMemo(() => (
+        props.profile && !props.profile.description
+    ), [props.profile])
 
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.aboutMe) {
@@ -68,7 +73,7 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
                 {' '}
                 {props.profile?.firstName || props.profile?.handle}
             </p>
-            <div className={styles.wizzardWrap}>
+            <div className={classNames(styles.wizzardWrap, hasEmptyDescription && styles.emptyDesc)}>
                 <p className='body-large'>{memberTitleTrait?.profileSelfTitle}</p>
                 {
                     canEdit && (
@@ -78,6 +83,16 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
                     )
                 }
             </div>
+            {hasEmptyDescription && (
+                <EmptySection
+                    className={styles.empty}
+                    selfMessage={`
+                        Your bio is an opportunity to share your personality
+                        and interests with the community and customers.
+                    `}
+                    isSelf={canEdit}
+                />
+            )}
             <p>{props.profile?.description}</p>
 
             {

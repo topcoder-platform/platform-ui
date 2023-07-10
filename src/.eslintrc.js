@@ -71,7 +71,7 @@ module.exports = {
             parameter: true,
             memberVariableDeclaration: true,
             callSignature: true,
-            variableDeclaration: true,
+            variableDeclaration: false,
             arrayDestructuring: false,
             objectDestructuring: true,
           },
