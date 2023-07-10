@@ -245,12 +245,18 @@ export const updateMemberWorks: any = (works: WorkInfo[]) => async (dispatch: an
 }
 
 export const createMemberWorks: any = (works: WorkInfo[]) => async (dispatch: any) => {
+    let isCreatedSuccess = false
     try {
         const tokenInfo: TokenModel = await getAsyncToken()
 
         await createMemberTraits(tokenInfo.handle || '', createWorksPayloadData(works))
+        isCreatedSuccess = true
         dispatch(updateWorks(works))
     } catch (error) {
+    }
+
+    if (!isCreatedSuccess) {
+        await dispatch(updateMemberWorks(works))
     }
 }
 
@@ -291,12 +297,18 @@ export const updateMemberEducations: any = (educations: EducationInfo[]) => asyn
 }
 
 export const createMemberEducations: any = (educations: EducationInfo[]) => async (dispatch: any) => {
+    let isCreatedSuccess = false
     try {
         const tokenInfo: TokenModel = await getAsyncToken()
 
         await createMemberTraits(tokenInfo.handle || '', createEducationsPayloadData(educations))
+        isCreatedSuccess = true
         dispatch(updateEducations(educations))
     } catch (error) {
+    }
+
+    if (!isCreatedSuccess) {
+        await dispatch(updateMemberEducations(educations))
     }
 }
 
@@ -338,12 +350,18 @@ export const updateMemberPersonalizations: any = (personalizations: Personalizat
 }
 
 export const createMemberPersonalizations: any = (personalizations: PersonalizationInfo[]) => async (dispatch: any) => {
+    let isCreatedSuccess = false
     try {
         const tokenInfo: TokenModel = await getAsyncToken()
 
         await createMemberTraits(tokenInfo.handle || '', createPersonalizationsPayloadData(personalizations))
+        isCreatedSuccess = true
         dispatch(updatePersonalization(personalizations[0]))
     } catch (error) {
+    }
+
+    if (!isCreatedSuccess) {
+        await dispatch(updateMemberPersonalizations(personalizations))
     }
 }
 
@@ -381,12 +399,18 @@ export const updateMemberConnectInfos: any = (connectInfos: ConnectInfo[]) => as
 }
 
 export const createMemberConnectInfos: any = (connectInfos: ConnectInfo[]) => async (dispatch: any) => {
+    let isCreatedSuccess = false
     try {
         const tokenInfo: TokenModel = await getAsyncToken()
 
         await createMemberTraits(tokenInfo.handle || '', createConnectInfosPayloadData(connectInfos))
+        isCreatedSuccess = true
         dispatch(updateConnectInfo(connectInfos[0]))
     } catch (error) {
+    }
+
+    if (!isCreatedSuccess) {
+        await dispatch(updateMemberConnectInfos(connectInfos))
     }
 }
 
