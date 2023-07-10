@@ -32,6 +32,7 @@
     "apexcharts": "^3.36.0",
     "axios": "^1.1.2",
     "browser-cookies": "^1.2.0",
+    "city-timezones": "^1.2.1",
     "classnames": "^2.3.2",
     "contentful": "^9.2.5",
     "country-calling-code": "0.0.3",
