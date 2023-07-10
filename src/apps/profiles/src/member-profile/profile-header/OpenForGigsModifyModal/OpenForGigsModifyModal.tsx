@@ -3,7 +3,14 @@ import { toast } from 'react-toastify'
 import { reject } from 'lodash'
 
 import { BaseModal, Button, FormToggleSwitch } from '~/libs/ui'
-import { updateMemberTraitsAsync, UserProfile, UserTrait, UserTraitCategoryNames, UserTraitIds } from '~/libs/core'
+import {
+    createMemberTraitsAsync,
+    updateMemberTraitsAsync,
+    UserProfile,
+    UserTrait,
+    UserTraitCategoryNames,
+    UserTraitIds,
+} from '~/libs/core'
 
 import styles from './OpenForGigsModifyModal.module.scss'
 
@@ -13,6 +20,11 @@ interface OpenForGigsModifyModalProps {
     openForWork: boolean
     memberPersonalizationTraitsFullData: UserTrait[] | undefined
     profile: UserProfile
+}
+
+const methodsMap: { [key: string]: any } = {
+    create: createMemberTraitsAsync,
+    update: updateMemberTraitsAsync,
 }
 
 const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForGigsModifyModalProps) => {
@@ -32,7 +44,7 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
         const updatedPersonalizationTraits: UserTrait[]
             = reject(props.memberPersonalizationTraitsFullData, (trait: UserTrait) => !!trait.availableForGigs)
 
-        updateMemberTraitsAsync(props.profile.handle, [{
+        methodsMap[!!props.memberPersonalizationTraitsFullData ? 'update' : 'create'](props.profile.handle, [{
             categoryName: UserTraitCategoryNames.personalization,
             traitId: UserTraitIds.personalization,
             traits: {

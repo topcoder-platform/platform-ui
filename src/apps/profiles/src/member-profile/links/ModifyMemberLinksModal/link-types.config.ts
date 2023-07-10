@@ -3,7 +3,7 @@ export const linkTypes: Array<{[key: string]: string}> = [
         name: 'Facebook',
     },
     {
-        name: 'Twitter',
+        name: 'GitHub',
     },
     {
         name: 'Instagram',
@@ -12,9 +12,12 @@ export const linkTypes: Array<{[key: string]: string}> = [
         name: 'LinkedIn',
     },
     {
-        name: 'YouTube',
+        name: 'Twitter',
     },
     {
         name: 'Website',
+    },
+    {
+        name: 'YouTube',
     },
 ]

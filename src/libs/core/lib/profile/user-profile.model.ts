@@ -3,6 +3,9 @@ import { UserEMSISkill } from './user-skill.model'
 export type TC_TRACKS = 'DEVELOP' | 'DESIGN' | 'DATA_SCIENCE'
 
 export interface UserProfile {
+    addresses?: Array<{
+        city?: string
+    }>
     competitionCountryCode: string
     createdAt: number
     description: string
