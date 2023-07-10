@@ -17,5 +17,8 @@
         align-items: center;
         justify-content: center;
         margin-bottom: $sp-10;
+        &.emptyDesc {
+            margin-bottom: 0;
+        }
     }
 }
