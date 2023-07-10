@@ -10,7 +10,7 @@ import {
     UserTraitIds,
     UserTraits,
 } from '~/libs/core'
-import { Button, IconSolid } from '~/libs/ui'
+import { Button, IconOutline } from '~/libs/ui'
 
 import { EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
@@ -117,7 +117,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                 {
                     isMemberVerified ? (
                         <div className={styles.verifiedBadge}>
-                            <IconSolid.CheckCircleIcon />
+                            <IconOutline.CheckCircleIcon />
                         </div>
                     ) : undefined
                 }
