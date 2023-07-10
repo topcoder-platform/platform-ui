@@ -12,6 +12,7 @@ import {
 
 import { EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
+import { notifyUniNavi } from '../../lib'
 
 import { ModifyMemberLinksModal } from './ModifyMemberLinksModal'
 import { ReactComponent as GitHubLinkIcon } from './assets/github-link-icon.svg'
@@ -82,6 +83,7 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
         setTimeout(() => {
             setIsEditMode(false)
             mutateTraits()
+            notifyUniNavi(props.profile)
         }, 1000)
     }
 

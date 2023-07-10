@@ -7,6 +7,7 @@ import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } fro
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { EditMemberPropertyBtn, EmptySection } from '../../components'
 import { MemberTCAInfo } from '../tca-info'
+import { notifyUniNavi } from '../../lib'
 
 import { ModifyEducationModal } from './ModifyEducationModal'
 import { EducationCard } from './EducationCard'
@@ -54,6 +55,7 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
         setTimeout(() => {
             setIsEditMode(false)
             mutateTraits()
+            notifyUniNavi(props.profile)
         }, 1000)
     }
 

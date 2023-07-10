@@ -14,6 +14,7 @@ import { Button, IconOutline } from '~/libs/ui'
 
 import { EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
+import { notifyUniNavi } from '../../lib'
 
 import { OpenForGigs } from './OpenForGigs'
 import { ModifyMemberNameModal } from './ModifyMemberNameModal'
@@ -92,6 +93,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         setTimeout(() => {
             setIsNameEditMode(false)
             props.refreshProfile(props.profile.handle)
+            notifyUniNavi(props.profile)
         }, 1000)
     }
 
@@ -107,6 +109,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         setTimeout(() => {
             setIsPhotoEditMode(false)
             props.refreshProfile(props.profile.handle)
+            notifyUniNavi(props.profile)
         }, 1000)
     }
 
