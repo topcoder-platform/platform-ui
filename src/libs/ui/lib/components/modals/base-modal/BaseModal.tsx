@@ -40,7 +40,7 @@ const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
     }
 
     useEffect(() => {
-        if (props.blockScroll === false) {
+        if (!props.blockScroll) {
             document.documentElement.style.overflow = props.open ? 'hidden' : ''
             document.body.style.overflow = props.open ? 'hidden' : ''
         }
@@ -58,6 +58,8 @@ const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
                 ),
             }}
             closeIcon={<IconOutline.XIcon className={styles['close-icon']} width={24} height={24} />}
+            // send blockScroll as false unless we get a specific true from props
+            blockScroll={props.blockScroll === true}
         >
             {props.title && (
                 <>
