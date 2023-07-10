@@ -28,4 +28,9 @@
         padding: $sp-15 2*$sp-15;
     }
 
+    @include ltemd {
+        &, &:global(.m-lg) {
+            padding: $sp-8 $sp-6;
+        }
+    }
 }

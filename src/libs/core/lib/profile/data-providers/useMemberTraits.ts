@@ -6,6 +6,7 @@ import { UserTraits } from '../user-traits.model'
 
 export interface MemberTraitsAPI {
     data: UserTraits[] | undefined
+    loading: boolean
     mutate: KeyedMutator<any>
 }
 
@@ -14,11 +15,12 @@ export interface MemberTraitsQuery {
 }
 
 export function useMemberTraits(handle?: string, query?: MemberTraitsQuery): MemberTraitsAPI {
-    const { data, mutate }: SWRResponse
+    const { data, mutate, isValidating, error }: SWRResponse
         = useSWR(handle ? `${getProfileUrl(handle)}/traits?${qs.stringify(query)}` : undefined)
 
     return {
         data,
+        loading: isValidating && !data && !error,
         mutate,
     }
 }
