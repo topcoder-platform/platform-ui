@@ -17,7 +17,7 @@ export function numberToFixed(value: number | string, digits: number = 2): strin
 export function notifyUniNavi(profile: UserProfile): void {
     if (window?.tcUniNav) {
         window.tcUniNav('update', '*', {
-            user: profile,
+            user: { ...profile, photoUrl: profile.photoURL },
         })
     }
 }
