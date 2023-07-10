@@ -1,33 +1,29 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable unicorn/no-null */
-/* eslint-disable sort-keys */
 import { Dispatch, MutableRefObject, SetStateAction, useEffect, useState } from 'react'
 import _ from 'lodash'
 
 import PersonalizationInfo from '../models/PersonalizationInfo'
 
 export interface useAutoSavePersonalizationType {
-    personalizationInfo: PersonalizationInfo | null
+    personalizationInfo: PersonalizationInfo | undefined
     loading: boolean
-    setPersonalizationInfo: Dispatch<SetStateAction<PersonalizationInfo | null>>
+    setPersonalizationInfo: Dispatch<SetStateAction<PersonalizationInfo | undefined>>
 }
 
 type useAutoSavePersonalizationFunctionType = (
-    reduxPersonalization: PersonalizationInfo | null,
+    reduxPersonalization: PersonalizationInfo | undefined,
     updateMemberPersonalizations: (infos: PersonalizationInfo[]) => void,
     createMemberPersonalizations: (infos: PersonalizationInfo[]) => void,
     shouldSavingData: MutableRefObject<boolean>,
 ) => useAutoSavePersonalizationType
 
 export const useAutoSavePersonalization: useAutoSavePersonalizationFunctionType = (
-    reduxPersonalization: PersonalizationInfo | null,
+    reduxPersonalization: PersonalizationInfo | undefined,
     updateMemberPersonalizations: (infos: PersonalizationInfo[]) => void,
     createMemberPersonalizations: (infos: PersonalizationInfo[]) => void,
     shouldSavingData: MutableRefObject<boolean>,
 ) => {
     const [loading, setLoading] = useState<boolean>(false)
-    const [personalizationInfo, setPersonalizationInfo] = useState<PersonalizationInfo | null>(null)
+    const [personalizationInfo, setPersonalizationInfo] = useState<PersonalizationInfo | undefined>(undefined)
 
     const saveData: any = async () => {
         if (!personalizationInfo) {
@@ -74,8 +70,8 @@ export const useAutoSavePersonalization: useAutoSavePersonalizationFunctionType 
     }, [loading])
 
     return {
+        loading,
         personalizationInfo,
         setPersonalizationInfo,
-        loading,
     }
 }

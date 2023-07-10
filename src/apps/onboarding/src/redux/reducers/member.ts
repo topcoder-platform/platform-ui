@@ -1,13 +1,11 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable default-param-last */
 import { Member } from '~/apps/talent-search/src/lib/models'
+
 import { ACTIONS } from '../../config'
-import WorkInfo from '../../models/WorkInfo'
-import EducationInfo from '../../models/EducationInfo'
-import PersonalizationInfo from '../../models/PersonalizationInfo'
-import MemberAddress from '../../models/MemberAddress'
 import ConnectInfo from '../../models/ConnectInfo'
+import EducationInfo from '../../models/EducationInfo'
+import MemberAddress from '../../models/MemberAddress'
+import PersonalizationInfo from '../../models/PersonalizationInfo'
+import WorkInfo from '../../models/WorkInfo'
 
 const initialState: {
     memberInfo?: Member
@@ -21,7 +19,13 @@ const initialState: {
 } = {
 }
 
-const memberReducer: any = (state = initialState, action: { type: any; payload: any; }) => {
+const memberReducer: any = (
+    state = initialState,
+    action: { type: any; payload: any; } = {
+        payload: undefined,
+        type: '',
+    },
+) => {
     switch (action.type) {
         case ACTIONS.MEMBER.GET_MEMBER:
             return {

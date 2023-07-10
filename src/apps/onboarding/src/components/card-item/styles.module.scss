@@ -34,6 +34,7 @@
 
 .btn {
     flex-shrink: 0;
+    color: $turq-160;
 
     &:disabled {
         opacity: 0.2;

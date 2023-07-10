@@ -1,31 +1,28 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable unicorn/no-null */
 import { FC, useEffect, useState } from 'react'
 import { connect } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import classNames from 'classnames'
 import _ from 'lodash'
+import classNames from 'classnames'
 
-import { Button, PageDivider } from '~/libs/ui'
+import { Button, IconOutline, PageDivider } from '~/libs/ui'
 
-import { ProgressBar } from '../../components/progress-bar'
-import styles from './styles.module.scss'
-import WorkInfo from '../../models/WorkInfo'
-import ModalAddWork from '../../components/modal-add-work'
-import { ReactComponent as IconBackGreen } from '../../assets/images/back-green.svg'
 import { createMemberWorks, updateMemberWorks } from '../../redux/actions/member'
+import { ProgressBar } from '../../components/progress-bar'
 import CardItem from '../../components/card-item'
+import ModalAddWork from '../../components/modal-add-work'
+import WorkInfo from '../../models/WorkInfo'
+
+import styles from './styles.module.scss'
 
 export const PageWorksContent: FC<{
-    reduxWorks: WorkInfo[] | null
+    reduxWorks: WorkInfo[] | undefined
     updateMemberWorks: (works: WorkInfo[]) => void
     createMemberWorks: (works: WorkInfo[]) => void
     loadingMemberTraits: boolean
 }> = props => {
     const navigate: any = useNavigate()
-    const [editingWork, setEditingWork] = useState<WorkInfo | null>(null)
-    const [works, setWorks] = useState<WorkInfo[] | null>(null)
+    const [editingWork, setEditingWork] = useState<WorkInfo | undefined>(undefined)
+    const [works, setWorks] = useState<WorkInfo[] | undefined>(undefined)
     const [workId, setWorkId] = useState<number>(10)
     const [showAddWorkModal, setShowAddWorkModal] = useState(false)
     const [loading, setLoading] = useState<boolean>(false)
@@ -79,21 +76,25 @@ export const PageWorksContent: FC<{
                                     title={work.position || ''}
                                     subTitle={work.city || ''}
                                     description={work.dateDescription || ''}
-                                    onEdit={() => {
+                                    onEdit={function onEdit() {
                                         setEditingWork(work)
                                         setShowAddWorkModal(true)
                                     }}
-                                    onDelete={() => setWorks(_.filter(works, w => w.id !== work.id))}
+                                    onDelete={function onDelete() {
+                                        setWorks(_.filter(works, w => w.id !== work.id))
+                                    }}
                                 />
                             ))}
                         </div>
-                    ) : null}
+                    ) : undefined}
 
                     <Button
                         size='lg'
                         secondary
                         iconToLeft
-                        onClick={() => setShowAddWorkModal(true)}
+                        onClick={function onClick() {
+                            setShowAddWorkModal(true)
+                        }}
                         disabled={props.loadingMemberTraits || loading}
                         className='mt-24'
                     >
@@ -113,16 +114,20 @@ export const PageWorksContent: FC<{
                     size='lg'
                     secondary
                     iconToLeft
-                    icon={IconBackGreen}
+                    icon={IconOutline.ChevronLeftIcon}
                     disabled={loading}
-                    onClick={() => navigate('../open-to-work')}
+                    onClick={function previousPage() {
+                        navigate('../open-to-work')
+                    }}
                 />
                 <Button
                     size='lg'
                     primary
                     iconToLeft
                     disabled={loading}
-                    onClick={() => navigate('../educations')}
+                    onClick={function nextPage() {
+                        navigate('../educations')
+                    }}
                 >
                     next
                 </Button>
@@ -130,24 +135,24 @@ export const PageWorksContent: FC<{
             {showAddWorkModal ? (
                 <ModalAddWork
                     editingWork={editingWork}
-                    onClose={() => {
+                    onClose={function onClose() {
                         setShowAddWorkModal(false)
-                        setEditingWork(null)
+                        setEditingWork(undefined)
                     }}
-                    onAdd={newWork => {
+                    onAdd={function onAdd(newWork: WorkInfo) {
                         setWorks([...(works || []), {
                             ...newWork,
                             id: workId + 1,
                         }])
                         setWorkId(workId + 1)
                     }}
-                    onEdit={editWork => {
+                    onEdit={function onEdit(editWork: WorkInfo) {
                         setWorks(
                             (works || []).map(w => (w.id !== editWork.id ? w : editWork)),
                         )
                     }}
                 />
-            ) : null}
+            ) : undefined}
         </div>
     )
 }

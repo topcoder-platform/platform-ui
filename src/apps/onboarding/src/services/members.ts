@@ -1,6 +1,6 @@
-/* eslint-disable ordered-imports/ordered-imports */
 import { getAsync, putAsync } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
 import { profile } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-endpoint.config'
+
 import MemberInfo from '../models/MemberInfo'
 
 export async function getMemberInfo(handle: string): Promise<MemberInfo> {

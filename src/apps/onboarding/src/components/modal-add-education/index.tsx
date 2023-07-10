@@ -1,17 +1,15 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable sort-keys */
-import { FC, useEffect, useState } from 'react'
+import { FC, FocusEvent, useEffect, useState } from 'react'
+import _ from 'lodash'
 import classNames from 'classnames'
 import moment from 'moment'
-import _ from 'lodash'
 
 import { BaseModal, Button, InputText } from '~/libs/ui'
 
-import styles from './styles.module.scss'
+import DateInput from '../DateInput'
 import EducationInfo, { emptyEducationInfo } from '../../models/EducationInfo'
 import FormField from '../FormField'
-import DateInput from '../DateInput'
+
+import styles from './styles.module.scss'
 
 interface ModalAddEducationProps {
     onClose?: () => void
@@ -74,7 +72,7 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                         primary
                         size='lg'
                         label='save'
-                        onClick={() => {
+                        onClick={function onClick() {
                             if (validateField()) {
                                 const endDate: Date | undefined = educationInfo.endDate
                                 const endDateString: string = endDate ? moment(endDate)
@@ -110,7 +108,7 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                         name='collegeName'
                         label='College or University *'
                         value={educationInfo.collegeName}
-                        onChange={event => {
+                        onChange={function onChange(event: FocusEvent<HTMLInputElement>) {
                             setEducationInfo({
                                 ...educationInfo,
                                 collegeName: event.target.value,
@@ -128,10 +126,12 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                         name='major'
                         label='Degree *'
                         value={educationInfo.major}
-                        onChange={event => setEducationInfo({
-                            ...educationInfo,
-                            major: event.target.value,
-                        })}
+                        onChange={function onChange(event: FocusEvent<HTMLInputElement>) {
+                            setEducationInfo({
+                                ...educationInfo,
+                                major: event.target.value,
+                            })
+                        }}
                         placeholder='Enter degree'
                         tabIndex={0}
                         type='text'
@@ -151,7 +151,7 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                         >
                             <DateInput
                                 value={educationInfo.startDate}
-                                onChange={v => {
+                                onChange={function onChange(v: Date | null) {
                                     setEducationInfo({
                                         ...educationInfo,
                                         startDate: v || undefined,
@@ -170,7 +170,7 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                         >
                             <DateInput
                                 value={educationInfo.endDate}
-                                onChange={v => {
+                                onChange={function onChange(v: Date | null) {
                                     setEducationInfo({
                                         ...educationInfo,
                                         endDate: v || undefined,

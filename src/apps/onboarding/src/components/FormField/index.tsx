@@ -1,7 +1,3 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable react/destructuring-assignment */
-/* eslint-disable unicorn/no-null */
 /**
  * FormField
  *
@@ -21,13 +17,15 @@ interface FormFieldProps {
     error?: string
 }
 
-const FormField: FC<FormFieldProps> = ({
-    children,
-    className,
-    label,
-    ...props
-}: FormFieldProps) => {
-    const handleClick: any = (e: any) => {
+const FormField: FC<FormFieldProps> = (componentProps: FormFieldProps) => {
+    const {
+        children,
+        className,
+        label,
+        ...props
+    }: FormFieldProps = componentProps
+
+    function handleClick(e: any): void {
         // focus on input label click
         const inputElement: any = e.target.closest('.form-field')
             .querySelector('input')
@@ -45,7 +43,7 @@ const FormField: FC<FormFieldProps> = ({
                 {children}
             </div>
             <div className={classNames(styles.error, 'd-flex align-items-center')}>
-                {props.error ? (<IconSolid.ExclamationIcon width={12} height={12} />) : null}
+                {props.error ? (<IconSolid.ExclamationIcon width={12} height={12} />) : undefined}
                 {props.error}
             </div>
         </div>

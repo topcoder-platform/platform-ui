@@ -1,10 +1,7 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable unicorn/no-null */
 import { useNavigate } from 'react-router-dom'
 import { FC, useState } from 'react'
-import classNames from 'classnames'
 import { connect } from 'react-redux'
+import classNames from 'classnames'
 
 import { Button, PageDivider } from '~/libs/ui'
 import { Member } from '~/apps/talent-search/src/lib/models'
@@ -15,13 +12,13 @@ import { ProgressBar } from '../../components/progress-bar'
 import styles from './styles.module.scss'
 
 export const PageSkillsContent: FC<{
-    reduxMemberInfo: Member | null
+    reduxMemberInfo: Member | undefined
 }> = props => {
     const navigate: any = useNavigate()
     const [loading, setLoading] = useState(false)
     const { formInput: emsiFormInput, saveSkills: saveEmsiSkills }: MemberSkillEditor = useMemberSkillEditor()
 
-    const saveSkills = async (): Promise<void> => {
+    async function saveSkills(): Promise<void> {
         setLoading(true)
         try {
             await saveEmsiSkills()

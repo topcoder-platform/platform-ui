@@ -1,13 +1,10 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable global-require */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /**
  * Configure Redux Store
  */
 import { applyMiddleware, compose, createStore } from 'redux'
 import { createPromise } from 'redux-promise-middleware'
 import thunk from 'redux-thunk'
+
 import rootReducer from './reducers'
 
 const middlewares: any = [
@@ -20,6 +17,7 @@ const middlewares: any = [
 
 // enable Redux Logger in in DEV environment
 if (process.env.APPMODE !== 'production') {
+    /* eslint-disable-next-line global-require, @typescript-eslint/no-var-requires */
     const { createLogger }: any = require('redux-logger')
 
     const logger: any = createLogger()

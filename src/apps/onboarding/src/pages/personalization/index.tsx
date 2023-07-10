@@ -1,36 +1,32 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable unicorn/no-null */
-/* eslint-disable sort-keys */
 import { useNavigate } from 'react-router-dom'
 import { connect } from 'react-redux'
 import { FC, MutableRefObject, useEffect, useRef } from 'react'
 import classNames from 'classnames'
 
-import { Button, PageDivider } from '~/libs/ui'
+import { Button, IconOutline, PageDivider } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
 
+import { useAutoSavePersonalization, useAutoSavePersonalizationType } from '../../hooks/useAutoSavePersonalization'
 import { ProgressBar } from '../../components/progress-bar'
-import styles from './styles.module.scss'
-import FieldAvatar from '../../components/FieldAvatar'
-import InputTextAutoSave from '../../components/InputTextAutoSave'
-import PersonalizationInfo, { emptyPersonalizationInfo } from '../../models/PersonalizationInfo'
-import InputTextareaAutoSave from '../../components/InputTextareaAutoSave'
 import {
     createMemberPersonalizations,
     setMemberPhotoUrl,
     updateMemberPersonalizations,
     updateMemberPhotoUrl,
 } from '../../redux/actions/member'
+import FieldAvatar from '../../components/FieldAvatar'
+import InputTextAutoSave from '../../components/InputTextAutoSave'
+import InputTextareaAutoSave from '../../components/InputTextareaAutoSave'
 import MemberInfo from '../../models/MemberInfo'
-import { useAutoSavePersonalization, useAutoSavePersonalizationType } from '../../hooks/useAutoSavePersonalization'
-import { ReactComponent as IconBackGreen } from '../../assets/images/back-green.svg'
+import PersonalizationInfo, { emptyPersonalizationInfo } from '../../models/PersonalizationInfo'
+
+import styles from './styles.module.scss'
 
 const blankPersonalizationInfo: PersonalizationInfo = emptyPersonalizationInfo()
 
 const PagePersonalizationContent: FC<{
     memberInfo?: MemberInfo,
-    reduxPersonalization: PersonalizationInfo | null
+    reduxPersonalization: PersonalizationInfo | undefined
     updateMemberPersonalizations: (infos: PersonalizationInfo[]) => void
     createMemberPersonalizations: (infos: PersonalizationInfo[]) => void
     setMemberPhotoUrl: (photoUrl: string) => void
@@ -81,7 +77,7 @@ const PagePersonalizationContent: FC<{
                     name='title'
                     label='Bio Title'
                     value={personalizationInfo?.profileSelfTitle || ''}
-                    onChange={value => {
+                    onChange={function onChange(value: string | undefined) {
                         setPersonalizationInfo({
                             ...(personalizationInfo || blankPersonalizationInfo),
                             profileSelfTitle: value || '',
@@ -98,7 +94,7 @@ const PagePersonalizationContent: FC<{
                     name='shortBio'
                     label='Bio'
                     value={personalizationInfo?.shortBio || ''}
-                    onChange={value => {
+                    onChange={function onChange(value: string | undefined) {
                         setPersonalizationInfo({
                             ...(personalizationInfo || blankPersonalizationInfo),
                             shortBio: value || '',
@@ -121,8 +117,8 @@ const PagePersonalizationContent: FC<{
                     size='lg'
                     secondary
                     iconToLeft
-                    icon={IconBackGreen}
-                    onClick={() => {
+                    icon={IconOutline.ChevronLeftIcon}
+                    onClick={function previousPage() {
                         if (loading) {
                             shouldNavigateTo.current = '../educations'
                         } else {
@@ -134,7 +130,7 @@ const PagePersonalizationContent: FC<{
                     size='lg'
                     primary
                     iconToLeft
-                    onClick={() => {
+                    onClick={function nextPage() {
                         if (loading) {
                             shouldNavigateTo.current
                                 = `${EnvironmentConfig.USER_PROFILE_URL}/${props.memberInfo?.handle}`
@@ -159,16 +155,16 @@ const mapStateToProps: any = (state: any) => {
     }: any = state.member
 
     return {
-        memberInfo,
         loadingMemberTraits,
+        memberInfo,
         reduxPersonalization: personalization,
     }
 }
 
 const mapDispatchToProps: any = {
     createMemberPersonalizations,
-    updateMemberPersonalizations,
     setMemberPhotoUrl,
+    updateMemberPersonalizations,
     updateMemberPhotoUrl,
 }
 

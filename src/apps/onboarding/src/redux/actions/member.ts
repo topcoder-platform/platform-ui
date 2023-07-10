@@ -1,12 +1,8 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable sort-keys */
-/* eslint-disable unicorn/no-null */
-import moment from 'moment'
 import _ from 'lodash'
+import moment from 'moment'
 
-import { getAsync as getAsyncToken } from '~/libs/core/lib/auth/token-functions/token.functions'
 import { TokenModel } from '~/libs/core'
+import { getAsync as getAsyncToken } from '~/libs/core/lib/auth/token-functions/token.functions'
 import {
     createMemberTraits,
     updateMemberTraits,
@@ -14,55 +10,55 @@ import {
 
 import { ACTIONS } from '../../config'
 import { getMemberInfo, getMemberTraits, putMemberInfo } from '../../services/members'
-import WorkInfo from '../../models/WorkInfo'
+import ConnectInfo from '../../models/ConnectInfo'
 import EducationInfo from '../../models/EducationInfo'
-import PersonalizationInfo from '../../models/PersonalizationInfo'
 import MemberAddress from '../../models/MemberAddress'
 import MemberInfo from '../../models/MemberInfo'
-import ConnectInfo from '../../models/ConnectInfo'
+import PersonalizationInfo from '../../models/PersonalizationInfo'
+import WorkInfo from '../../models/WorkInfo'
 
 export const updateMemberInfo: any = (memberInfo: MemberInfo) => ({
-    type: ACTIONS.MEMBER.GET_MEMBER,
     payload: memberInfo,
+    type: ACTIONS.MEMBER.GET_MEMBER,
 })
 
 export const updateWorks: any = (works: WorkInfo[]) => ({
-    type: ACTIONS.MEMBER.SET_WORKS,
     payload: works,
+    type: ACTIONS.MEMBER.SET_WORKS,
 })
 
 export const updateEducations: any = (educations: EducationInfo[]) => ({
-    type: ACTIONS.MEMBER.SET_EDUCATIONS,
     payload: educations,
+    type: ACTIONS.MEMBER.SET_EDUCATIONS,
 })
 
 export const updatePersonalization: any = (personalization: PersonalizationInfo) => ({
-    type: ACTIONS.MEMBER.SET_PERSONALIZATION,
     payload: personalization,
+    type: ACTIONS.MEMBER.SET_PERSONALIZATION,
 })
 
 export const updateConnectInfo: any = (connectInfo: ConnectInfo) => ({
-    type: ACTIONS.MEMBER.SET_CONNECT_INFO,
     payload: connectInfo,
+    type: ACTIONS.MEMBER.SET_CONNECT_INFO,
 })
 
 export const updateAddress: any = (address: MemberAddress) => ({
-    type: ACTIONS.MEMBER.SET_ADDRESS,
     payload: address,
+    type: ACTIONS.MEMBER.SET_ADDRESS,
 })
 
 export const updateLoadingMemberTraits: any = (loading: boolean) => ({
-    type: ACTIONS.MEMBER.SET_LOADING_MEMBER_TRAITS,
     payload: loading,
+    type: ACTIONS.MEMBER.SET_LOADING_MEMBER_TRAITS,
 })
 
 export const updateLoadingMemberInfo: any = (loading: boolean) => ({
-    type: ACTIONS.MEMBER.SET_LOADING_MEMBER_INFO,
     payload: loading,
+    type: ACTIONS.MEMBER.SET_LOADING_MEMBER_INFO,
 })
 export const fetchMemberInfo: any = () => async (dispatch: any) => {
     let tokenInfo: TokenModel
-    let memberInfo: MemberInfo | null = null
+    let memberInfo: MemberInfo | undefined
     dispatch(updateLoadingMemberInfo(true))
     try {
         tokenInfo = await getAsyncToken()
@@ -77,10 +73,10 @@ export const fetchMemberInfo: any = () => async (dispatch: any) => {
         if (memberInfo.addresses) {
             const addresses: MemberAddress[] = memberInfo.addresses.map(address => ({
                 ...address,
-                streetAddr1: address.streetAddr1,
-                streetAddr2: address.streetAddr2,
                 city: address.city,
                 stateCode: address.stateCode,
+                streetAddr1: address.streetAddr1,
+                streetAddr2: address.streetAddr2,
                 zip: address.zip,
             }))
             const matchAddress: MemberAddress = _.find(addresses, { type: 'HOME' }) as MemberAddress
@@ -126,15 +122,15 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
                 startDate || endDate
             ) ? `${startDateString}${endDateString}` : ''
             return ({
-                company: j.company,
-                position: j.position,
-                industry: j.industry,
                 city: j.cityTown,
-                startDate,
-                endDate,
+                company: j.company,
                 currentlyWorking: j.working,
                 dateDescription,
+                endDate,
                 id: index + 1,
+                industry: j.industry,
+                position: j.position,
+                startDate,
             })
         })
         dispatch(updateWorks(works))
@@ -163,11 +159,11 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
             ) ? `${startDateString}${endDateString}` : ''
             return ({
                 collegeName: e.schoolCollegeName,
+                dateDescription,
+                endDate,
+                id: index + 1,
                 major: e.major,
                 startDate,
-                endDate,
-                dateDescription,
-                id: index + 1,
             })
         })
         dispatch(updateEducations(educations))
@@ -180,10 +176,10 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
     if (personalizationExpValue) {
         const personalizations: PersonalizationInfo[] = personalizationExpValue.map((e: any) => ({
             ...e,
-            referAs: e.referAs,
-            profileSelfTitle: e.profileSelfTitle,
-            shortBio: e.shortBio,
             availableForGigs: e.availableForGigs,
+            profileSelfTitle: e.profileSelfTitle,
+            referAs: e.referAs,
+            shortBio: e.shortBio,
         }))
         dispatch(updatePersonalization(personalizations[0]))
     }
@@ -214,10 +210,10 @@ const createWorksPayloadData: any = (works: WorkInfo[]) => {
             currentlyWorking,
         }: any = work
         return {
+            cityTown: city,
             company,
             industry,
             position,
-            cityTown: city,
             timePeriodFrom: startDate ? startDate.toISOString() : '',
             timePeriodTo: endDate ? endDate.toISOString() : '',
             working: currentlyWorking,
@@ -269,8 +265,8 @@ const createEducationsPayloadData: any = (educations: EducationInfo[]) => {
             endDate,
         }: any = education
         return {
-            schoolCollegeName: collegeName,
             major,
+            schoolCollegeName: collegeName,
             timePeriodFrom: startDate ? startDate.toISOString() : '',
             timePeriodTo: endDate ? endDate.toISOString() : '',
         }
@@ -322,10 +318,10 @@ const createPersonalizationsPayloadData: any = (personalizations: Personalizatio
         }: any = personalization
         return {
             ...personalization,
-            referAs,
-            profileSelfTitle,
-            shortBio,
             availableForGigs,
+            profileSelfTitle,
+            referAs,
+            shortBio,
         }
     })
 
@@ -415,8 +411,8 @@ export const createMemberConnectInfos: any = (connectInfos: ConnectInfo[]) => as
 }
 
 export const setMemberPhotoUrl: any = (photoUrl: string) => ({
-    type: ACTIONS.MEMBER.UPDATE_MEMBER_PHOTO_URL,
     payload: photoUrl,
+    type: ACTIONS.MEMBER.UPDATE_MEMBER_PHOTO_URL,
 })
 
 export const updateMemberHomeAddresss: any = (addresses: MemberAddress[]) => async (dispatch: any) => {
@@ -425,12 +421,12 @@ export const updateMemberHomeAddresss: any = (addresses: MemberAddress[]) => asy
         await putMemberInfo(tokenInfo.handle || '', {
             addresses: addresses.map(address => ({
                 ...address,
-                streetAddr1: address.streetAddr1,
-                streetAddr2: address.streetAddr2,
                 city: address.city,
                 stateCode: address.stateCode,
-                zip: address.zip,
+                streetAddr1: address.streetAddr1,
+                streetAddr2: address.streetAddr2,
                 type: 'HOME',
+                zip: address.zip,
             })),
         })
         dispatch(updateAddress(addresses[0]))

@@ -1,39 +1,34 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable unicorn/no-null */
-/* eslint-disable sort-keys */
 import { useNavigate } from 'react-router-dom'
 import { connect } from 'react-redux'
 import { FC, MutableRefObject, useEffect, useRef, useState } from 'react'
 import _ from 'lodash'
 import classNames from 'classnames'
 
-import { Button, InputSelect, PageDivider } from '~/libs/ui'
+import { Button, IconOutline, InputSelect, PageDivider } from '~/libs/ui'
 import { getCountryLookup } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
 import { EnvironmentConfig } from '~/config'
 import { Member } from '~/apps/talent-search/src/lib/models'
 
 import { ProgressBar } from '../../components/progress-bar'
-
-import styles from './styles.module.scss'
-import InputTextAutoSave from '../../components/InputTextAutoSave'
 import { validatePhonenumber } from '../../utils/validation'
 import {
     createMemberConnectInfos,
     updateMemberConnectInfos,
     updateMemberHomeAddresss,
 } from '../../redux/actions/member'
-import MemberAddress, { emptyMemberAddress } from '../../models/MemberAddress'
 import ConnectInfo, { emptyConnectInfo } from '../../models/ConnectInfo'
-import { ReactComponent as IconBackGreen } from '../../assets/images/back-green.svg'
+import InputTextAutoSave from '../../components/InputTextAutoSave'
+import MemberAddress, { emptyMemberAddress } from '../../models/MemberAddress'
+
+import styles from './styles.module.scss'
 
 const blankMemberAddress: MemberAddress = emptyMemberAddress()
 const blankConnectInfo: ConnectInfo = emptyConnectInfo()
 
 const PageAccountDetailsContent: FC<{
-    reduxAddress: MemberAddress | null
-    reduxConnectInfo: ConnectInfo | null
-    reduxMemberInfo: Member | null
+    reduxAddress: MemberAddress | undefined
+    reduxConnectInfo: ConnectInfo | undefined
+    reduxMemberInfo: Member | undefined
     updateMemberConnectInfos: (infos: ConnectInfo[]) => void
     createMemberConnectInfos: (infos: ConnectInfo[]) => void
     updateMemberHomeAddresss: (infos: MemberAddress[]) => void
@@ -43,8 +38,8 @@ const PageAccountDetailsContent: FC<{
     const navigate: any = useNavigate()
     const [loadingAddress, setLoadingAddress] = useState<boolean>(false)
     const [loadingConnectInfo, setLoadingConnectInfo] = useState<boolean>(false)
-    const [memberAddress, setMemberAddress] = useState<MemberAddress | null>(null)
-    const [connectInfo, setConnectInfo] = useState<ConnectInfo | null>(null)
+    const [memberAddress, setMemberAddress] = useState<MemberAddress | undefined>(undefined)
+    const [connectInfo, setConnectInfo] = useState<ConnectInfo | undefined>(undefined)
     const [formErrors, setFormErrors] = useState<any>({})
     const [countryOptions, setCountryOptions] = useState<{
         label: string
@@ -153,8 +148,8 @@ const PageAccountDetailsContent: FC<{
                 if (results) {
                     setCountryOptions(_.sortBy(results, 'country')
                         .map((country: any) => ({
-                            value: country.country,
                             label: country.country,
+                            value: country.country,
                         })))
                 }
             })
@@ -192,7 +187,7 @@ const PageAccountDetailsContent: FC<{
                     name='streetAddr1'
                     label='Address 1'
                     value={memberAddress?.streetAddr1 || ''}
-                    onChange={event => {
+                    onChange={function (event?: string) {
                         setMemberAddress({
                             ...(memberAddress || blankMemberAddress),
                             streetAddr1: event || '',
@@ -207,7 +202,7 @@ const PageAccountDetailsContent: FC<{
                     name='streetAddr2'
                     label='Address 2'
                     value={memberAddress?.streetAddr2 || ''}
-                    onChange={event => {
+                    onChange={function (event?: string) {
                         setMemberAddress({
                             ...(memberAddress || blankMemberAddress),
                             streetAddr2: event || '',
@@ -226,7 +221,7 @@ const PageAccountDetailsContent: FC<{
                             name='city'
                             label='City'
                             value={memberAddress?.city || ''}
-                            onChange={event => {
+                            onChange={function (event?: string) {
                                 setMemberAddress({
                                     ...(memberAddress || blankMemberAddress),
                                     city: event || '',
@@ -245,7 +240,7 @@ const PageAccountDetailsContent: FC<{
                             name='stateCode'
                             label='State / Province'
                             value={memberAddress?.stateCode || ''}
-                            onChange={event => {
+                            onChange={function (event?: string) {
                                 setMemberAddress({
                                     ...(memberAddress || blankMemberAddress),
                                     stateCode: event || '',
@@ -265,7 +260,7 @@ const PageAccountDetailsContent: FC<{
                             name='zip'
                             label='Zip / Postal Code'
                             value={memberAddress?.zip || ''}
-                            onChange={event => {
+                            onChange={function (event?: string) {
                                 setMemberAddress({
                                     ...(memberAddress || blankMemberAddress),
                                     zip: event || '',
@@ -282,7 +277,7 @@ const PageAccountDetailsContent: FC<{
                 <InputSelect
                     options={countryOptions}
                     value={connectInfo?.country || ''}
-                    onChange={event => {
+                    onChange={function (event: any) {
                         setConnectInfo({
                             ...(connectInfo || blankConnectInfo),
                             country: event.target.value,
@@ -304,7 +299,7 @@ const PageAccountDetailsContent: FC<{
                     name='phoneNumber'
                     label='Phone Number'
                     value={connectInfo?.phoneNumber || ''}
-                    onChange={event => {
+                    onChange={function (event?: string) {
                         setConnectInfo({
                             ...(connectInfo || blankConnectInfo),
                             phoneNumber: event || '',
@@ -330,9 +325,9 @@ const PageAccountDetailsContent: FC<{
                     size='lg'
                     secondary
                     iconToLeft
-                    icon={IconBackGreen}
+                    icon={IconOutline.ChevronLeftIcon}
                     disabled={!_.isEmpty(formErrors)}
-                    onClick={() => {
+                    onClick={function onPrevious() {
                         if (loadingAddress || loadingConnectInfo) {
                             shouldNavigateTo.current = '../personalization'
                         } else {
@@ -345,7 +340,7 @@ const PageAccountDetailsContent: FC<{
                     primary
                     iconToLeft
                     disabled={!_.isEmpty(formErrors) || !props.reduxMemberInfo}
-                    onClick={() => {
+                    onClick={function onNext() {
                         if (loadingAddress || loadingConnectInfo) {
                             shouldNavigateTo.current
                                 = `${EnvironmentConfig.USER_PROFILE_URL}/${props.reduxMemberInfo?.handle}`
@@ -381,9 +376,9 @@ const mapStateToProps: any = (state: any) => {
 }
 
 const mapDispatchToProps: any = {
-    updateMemberHomeAddresss,
-    updateMemberConnectInfos,
     createMemberConnectInfos,
+    updateMemberConnectInfos,
+    updateMemberHomeAddresss,
 }
 
 export const PageAccountDetails: any = connect(mapStateToProps, mapDispatchToProps)(PageAccountDetailsContent)

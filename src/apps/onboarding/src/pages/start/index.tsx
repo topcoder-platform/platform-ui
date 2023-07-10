@@ -1,10 +1,11 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
 import { FC } from 'react'
-import { Button, PageDivider } from '~/libs/ui'
 import { useNavigate } from 'react-router-dom'
 import classNames from 'classnames'
+
+import { Button, PageDivider } from '~/libs/ui'
+
 import { ProgressBar } from '../../components/progress-bar'
+
 import styles from './styles.module.scss'
 
 export const PageStart: FC<{}> = () => {
@@ -44,7 +45,9 @@ export const PageStart: FC<{}> = () => {
                                 size='lg'
                                 secondary
                                 iconToLeft
-                                onClick={() => navigate('../skills')}
+                                onClick={function nextPage() {
+                                    navigate('../skills')
+                                }}
                             >
                                 enter my info
                             </Button>
@@ -64,7 +67,9 @@ export const PageStart: FC<{}> = () => {
                     size='lg'
                     primary
                     iconToLeft
-                    onClick={() => navigate('../skills')}
+                    onClick={function nextPage() {
+                        navigate('../skills')
+                    }}
                 >
                     next
                 </Button>

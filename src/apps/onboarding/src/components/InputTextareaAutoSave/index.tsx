@@ -1,13 +1,10 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable react/destructuring-assignment */
-/* eslint-disable unicorn/no-null */
 /**
  * InputTextareaAutoSave
  *
  * A Form Field Is a wrapper for input to add the label to it
  */
-import React, { FC, useEffect, useState } from 'react'
+import { FC, FocusEvent, useEffect, useState } from 'react'
+
 import { InputTextarea } from '~/libs/ui'
 
 export interface InputTextareaProps {
@@ -35,10 +32,12 @@ const InputTextareaAutoSave: FC<InputTextareaProps> = (props: InputTextareaProps
         <InputTextarea
             {...props}
             value={value}
-            onChange={event => {
+            onChange={function onChange(event: FocusEvent<HTMLTextAreaElement>) {
                 setValue(event.target.value)
             }}
-            onBlur={() => props.onChange(`${value}`)}
+            onBlur={function onBlur() {
+                props.onChange(`${value}`)
+            }}
         />
     )
 }
