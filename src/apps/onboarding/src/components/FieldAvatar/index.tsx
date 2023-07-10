@@ -1,7 +1,3 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable react/destructuring-assignment */
-/* eslint-disable unicorn/no-null */
 /**
  * FieldAvatar
  *
@@ -9,14 +5,14 @@
  */
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import classNames from 'classnames'
-import _ from 'lodash'
 
 import { Button, IconOutline } from '~/libs/ui'
 
-import styles from './styles.module.scss'
-import MemberInfo from '../../models/MemberInfo'
 import AvatarPlaceholder from '../../assets/images/avatar-placeholder.png'
+import MemberInfo from '../../models/MemberInfo'
 import ModalUploadPhoto from '../modal-upload-photo'
+
+import styles from './styles.module.scss'
 
 interface FieldAvatarProps {
     className?: string
@@ -25,19 +21,14 @@ interface FieldAvatarProps {
     updateMemberPhotoUrl: (photoUrl: string) => void
 }
 
-const FieldAvatar: FC<FieldAvatarProps> = ({
-    className,
-    memberInfo,
-    setMemberPhotoUrl,
-    updateMemberPhotoUrl,
-}: FieldAvatarProps) => {
+const FieldAvatar: FC<FieldAvatarProps> = (props: FieldAvatarProps) => {
     const [imgUrl, setImgUrl] = useState<string>('')
     useEffect(() => {
-        if (memberInfo) {
-            setImgUrl(memberInfo.photoURL)
+        if (props.memberInfo) {
+            setImgUrl(props.memberInfo.photoURL)
         }
         /* eslint-disable react-hooks/exhaustive-deps */
-    }, [memberInfo])
+    }, [props.memberInfo])
 
     const [isPhotoEditMode, setIsPhotoEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -51,16 +42,20 @@ const FieldAvatar: FC<FieldAvatarProps> = ({
     async function handleRemovePhoto(): Promise<void> {
         setIsSaving(true)
         try {
-            await updateMemberPhotoUrl('')
+            await props.updateMemberPhotoUrl('')
         } catch (error) {
         }
 
         setIsSaving(false)
     }
 
+    function showEditPhoto(): void {
+        setIsPhotoEditMode(true)
+    }
+
     return (
         <div
-            className={classNames(styles.container, className, 'd-flex flex-column gap-20 align-items-start')}
+            className={classNames(styles.container, props.className, 'd-flex flex-column gap-20 align-items-start')}
         >
             <h3>Photo</h3>
             <div className='d-flex gap-30'>
@@ -90,8 +85,8 @@ const FieldAvatar: FC<FieldAvatarProps> = ({
                                 secondary
                                 iconToLeft
                                 icon={IconOutline.UploadIcon}
-                                disabled={!memberInfo || isSaving}
-                                onClick={() => setIsPhotoEditMode(true)}
+                                disabled={!props.memberInfo || isSaving}
+                                onClick={showEditPhoto}
                                 className='mt-16'
                             >
                                 change
@@ -101,11 +96,8 @@ const FieldAvatar: FC<FieldAvatarProps> = ({
                                 secondary
                                 iconToLeft
                                 icon={IconOutline.TrashIcon}
-                                disabled={!memberInfo || isSaving}
-                                onClick={() => {
-                                    handleRemovePhoto()
-                                        .then(_.noop)
-                                }}
+                                disabled={!props.memberInfo || isSaving}
+                                onClick={handleRemovePhoto}
                                 className='mt-16'
                             >
                                 delete
@@ -117,8 +109,8 @@ const FieldAvatar: FC<FieldAvatarProps> = ({
                             secondary
                             iconToLeft
                             icon={IconOutline.UploadIcon}
-                            disabled={!memberInfo}
-                            onClick={() => setIsPhotoEditMode(true)}
+                            disabled={!props.memberInfo}
+                            onClick={showEditPhoto}
                             className='mt-16'
                         >
                             add image
@@ -128,11 +120,11 @@ const FieldAvatar: FC<FieldAvatarProps> = ({
             </div>
 
             {
-                isPhotoEditMode && memberInfo && (
+                isPhotoEditMode && props.memberInfo && (
                     <ModalUploadPhoto
                         onClose={handleModifyPhotoModalClose}
-                        memberInfo={memberInfo}
-                        setMemberPhotoUrl={setMemberPhotoUrl}
+                        memberInfo={props.memberInfo}
+                        setMemberPhotoUrl={props.setMemberPhotoUrl}
                     />
                 )
             }

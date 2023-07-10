@@ -1,4 +1,3 @@
-/* eslint-disable sort-keys */
 export default interface EducationInfo {
     collegeName: string
     major: string
@@ -10,9 +9,9 @@ export default interface EducationInfo {
 
 export const emptyEducationInfo: () => EducationInfo = () => ({
     collegeName: '',
-    major: '',
     dateDescription: '',
-    startDate: undefined,
     endDate: undefined,
     id: 0,
+    major: '',
+    startDate: undefined,
 })

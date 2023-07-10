@@ -1,28 +1,24 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable unicorn/no-null */
 import { useNavigate } from 'react-router-dom'
 import { FC, MutableRefObject, useEffect, useMemo, useRef } from 'react'
-import classNames from 'classnames'
 import { connect } from 'react-redux'
+import classNames from 'classnames'
 
-import { Button, PageDivider } from '~/libs/ui'
+import { Button, IconOutline, PageDivider } from '~/libs/ui'
 import { FormInputCheckbox } from '~/apps/self-service/src/components/form-elements'
 
+import { createMemberPersonalizations, updateMemberPersonalizations } from '../../redux/actions/member'
 import { ProgressBar } from '../../components/progress-bar'
+import { useAutoSavePersonalization, useAutoSavePersonalizationType } from '../../hooks/useAutoSavePersonalization'
+import PersonalizationInfo, { emptyPersonalizationInfo } from '../../models/PersonalizationInfo'
 
 import styles from './styles.module.scss'
-import PersonalizationInfo, { emptyPersonalizationInfo } from '../../models/PersonalizationInfo'
-import { createMemberPersonalizations, updateMemberPersonalizations } from '../../redux/actions/member'
-import { useAutoSavePersonalization, useAutoSavePersonalizationType } from '../../hooks/useAutoSavePersonalization'
-import { ReactComponent as IconBackGreen } from '../../assets/images/back-green.svg'
 
 const FormInputCheckboxMiddleware: any = FormInputCheckbox as any
 
 const blankPersonalizationInfo: PersonalizationInfo = emptyPersonalizationInfo()
 
 export const PageOpenToWorkContent: FC<{
-    reduxPersonalization: PersonalizationInfo | null
+    reduxPersonalization: PersonalizationInfo | undefined
     updateMemberPersonalizations: (infos: PersonalizationInfo[]) => void
     createMemberPersonalizations: (infos: PersonalizationInfo[]) => void
     loadingMemberTraits: boolean
@@ -90,7 +86,7 @@ export const PageOpenToWorkContent: FC<{
                             label='Yes, I’m open to work'
                             checked={availableForGigsValue}
                             inline
-                            onChange={(e: any) => {
+                            onChange={function onChange(e: any) {
                                 setPersonalizationInfo({
                                     ...(personalizationInfo || blankPersonalizationInfo),
                                     availableForGigs: e.target.checked,
@@ -114,8 +110,8 @@ export const PageOpenToWorkContent: FC<{
                     secondary
                     iconToLeft
                     disabled={loading}
-                    icon={IconBackGreen}
-                    onClick={() => {
+                    icon={IconOutline.ChevronLeftIcon}
+                    onClick={function previousPage() {
                         checkToNavigateNextPage('../skills')
                     }}
                 />
@@ -124,7 +120,7 @@ export const PageOpenToWorkContent: FC<{
                     primary
                     iconToLeft
                     disabled={loading}
-                    onClick={() => {
+                    onClick={function nextPage() {
                         checkToNavigateNextPage('../works')
                     }}
                 >

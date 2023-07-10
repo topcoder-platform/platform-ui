@@ -1,4 +1,3 @@
-/* eslint-disable sort-keys */
 export default interface WorkInfo {
     company?: string
     position?: string
@@ -12,13 +11,13 @@ export default interface WorkInfo {
 }
 
 export const emptyWorkInfo: () => WorkInfo = () => ({
-    company: '',
-    position: '',
-    industry: '',
     city: '',
-    startDate: undefined,
+    company: '',
+    currentlyWorking: false,
     dateDescription: '',
     endDate: undefined,
-    currentlyWorking: false,
     id: 0,
+    industry: '',
+    position: '',
+    startDate: undefined,
 })

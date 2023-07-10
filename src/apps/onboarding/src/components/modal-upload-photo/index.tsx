@@ -1,17 +1,14 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable sort-keys */
-/* eslint-disable unicorn/no-null */
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react'
-import classNames from 'classnames'
-import _ from 'lodash'
 import { DropzoneState, useDropzone } from 'react-dropzone'
+import _ from 'lodash'
+import classNames from 'classnames'
 
 import { BaseModal, Button } from '~/libs/ui'
 import { updateMemberPhotoAsync } from '~/libs/core'
 
-import styles from './styles.module.scss'
 import MemberInfo from '../../models/MemberInfo'
+
+import styles from './styles.module.scss'
 
 interface ModalUploadPhotoProps {
     onClose?: () => void
@@ -33,11 +30,11 @@ const ModalUploadPhoto: FC<ModalUploadPhotoProps> = (props: ModalUploadPhotoProp
         getRootProps,
         getInputProps,
     }: DropzoneState = useDropzone({
-        multiple: false,
         accept: 'image/jpg, image/jpeg, image/png',
-        minSize: 1,
-        maxSize: 2097152,
         disabled: isSaving,
+        maxSize: 2097152,
+        minSize: 1,
+        multiple: false,
         onDrop,
     })
 
@@ -80,10 +77,7 @@ const ModalUploadPhoto: FC<ModalUploadPhotoProps> = (props: ModalUploadPhotoProp
                         size='lg'
                         label='save profile picture'
                         disabled={!props.memberInfo || isSaving || !myFiles.length}
-                        onClick={() => {
-                            handleModifyPhotoSave()
-                                .then(_.noop)
-                        }}
+                        onClick={handleModifyPhotoSave}
                     />
                 </div>
             )}
@@ -106,13 +100,14 @@ const ModalUploadPhoto: FC<ModalUploadPhotoProps> = (props: ModalUploadPhotoProp
                             BROWSE
                         </span>
                     </div>
-                ) : null}
+                ) : undefined}
+
                 {(!isSaving && imgUrl) ? (
                     <div {...getRootProps()} className={styles.blockPhoto}>
                         <input {...getInputProps()} />
                         <img src={imgUrl} alt='' />
                     </div>
-                ) : null}
+                ) : undefined}
 
                 {isSaving ? (
                     <div className={styles.blockDropZone}>
@@ -121,7 +116,7 @@ const ModalUploadPhoto: FC<ModalUploadPhotoProps> = (props: ModalUploadPhotoProp
                             <div className={styles.blockProgress} />
                         </div>
                     </div>
-                ) : null}
+                ) : undefined}
 
                 <div className='d-flex flex-column align-items-start'>
                     <span>Add a photo that you would like to share to the customers and community members.</span>

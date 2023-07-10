@@ -1,4 +1,3 @@
-/* eslint-disable sort-keys */
 export default interface PersonalizationInfo {
     referAs?: string
     profileSelfTitle?: string
@@ -7,8 +6,8 @@ export default interface PersonalizationInfo {
 }
 
 export const emptyPersonalizationInfo: () => PersonalizationInfo = () => ({
-    referAs: '',
-    profileSelfTitle: '',
-    shortBio: '',
     availableForGigs: true,
+    profileSelfTitle: '',
+    referAs: '',
+    shortBio: '',
 })

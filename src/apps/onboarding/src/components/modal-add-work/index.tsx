@@ -1,19 +1,17 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable sort-keys */
 import { FC, useEffect, useState } from 'react'
-import classNames from 'classnames'
 import _ from 'lodash'
+import classNames from 'classnames'
 import moment from 'moment'
 
 import { BaseModal, Button, InputSelect, InputText } from '~/libs/ui'
 import { FormInputCheckbox } from '~/apps/self-service/src/components/form-elements'
 
-import styles from './styles.module.scss'
-import WorkInfo, { emptyWorkInfo } from '../../models/WorkInfo'
 import { INDUSTRIES_OPTIONS } from '../../config'
-import FormField from '../FormField'
 import DateInput from '../DateInput'
+import FormField from '../FormField'
+import WorkInfo, { emptyWorkInfo } from '../../models/WorkInfo'
+
+import styles from './styles.module.scss'
 
 const FormInputCheckboxMiddleware: any = FormInputCheckbox as any
 
@@ -26,8 +24,8 @@ interface ModalAddWorkProps {
 
 const industryOptions: any = _.sortBy(INDUSTRIES_OPTIONS)
     .map(v => ({
-        value: v,
         label: v,
+        value: v,
     }))
 
 const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
@@ -84,7 +82,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         primary
                         size='lg'
                         label='save'
-                        onClick={() => {
+                        onClick={function onClick() {
                             if (validateField()) {
                                 const endDate: Date | undefined = workInfo.endDate
                                 let endDateString: string = endDate ? moment(endDate)
@@ -123,7 +121,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         name='company'
                         label='Company *'
                         value={workInfo.company}
-                        onChange={event => {
+                        onChange={function onChange(event: any) {
                             setWorkInfo({
                                 ...workInfo,
                                 company: event.target.value,
@@ -141,10 +139,12 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         name='position'
                         label='Position *'
                         value={workInfo.position}
-                        onChange={event => setWorkInfo({
-                            ...workInfo,
-                            position: event.target.value,
-                        })}
+                        onChange={function onChange(event: any) {
+                            setWorkInfo({
+                                ...workInfo,
+                                position: event.target.value,
+                            })
+                        }}
                         placeholder='Enter position'
                         tabIndex={0}
                         type='text'
@@ -156,10 +156,12 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                     <InputSelect
                         options={industryOptions}
                         value={workInfo.industry}
-                        onChange={event => setWorkInfo({
-                            ...workInfo,
-                            industry: event.target.value,
-                        })}
+                        onChange={function onChange(event: any) {
+                            setWorkInfo({
+                                ...workInfo,
+                                industry: event.target.value,
+                            })
+                        }}
                         name='industry'
                         label='Industry'
                         placeholder='Select industry'
@@ -170,10 +172,12 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         name='location'
                         label='Location'
                         value={workInfo.city}
-                        onChange={event => setWorkInfo({
-                            ...workInfo,
-                            city: event.target.value,
-                        })}
+                        onChange={function onChange(event: any) {
+                            setWorkInfo({
+                                ...workInfo,
+                                city: event.target.value,
+                            })
+                        }}
                         placeholder='Enter city, country'
                         tabIndex={0}
                         type='text'
@@ -191,7 +195,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         >
                             <DateInput
                                 value={workInfo.startDate}
-                                onChange={v => {
+                                onChange={function onChange(v: any) {
                                     setWorkInfo({
                                         ...workInfo,
                                         startDate: v || undefined,
@@ -211,7 +215,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                             <DateInput
                                 disabled={workInfo.currentlyWorking}
                                 value={workInfo.endDate}
-                                onChange={v => {
+                                onChange={function onChange(v: any) {
                                     setWorkInfo({
                                         ...workInfo,
                                         endDate: v || undefined,
@@ -228,7 +232,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         label='I am currently working in this role'
                         checked={workInfo.currentlyWorking}
                         inline
-                        onChange={(e: any) => {
+                        onChange={function onChange(e: any) {
                             setWorkInfo({
                                 ...workInfo,
                                 currentlyWorking: e.target.checked,

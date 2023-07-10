@@ -1,6 +1,3 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable unicorn/no-null */
 import { FC, useContext, useEffect } from 'react'
 import { Outlet, Routes } from 'react-router-dom'
 import { connect, Provider } from 'react-redux'
@@ -14,12 +11,13 @@ import { onboardRouteId } from '../../onboarding.routes'
 import { fetchMemberInfo, fetchMemberTraits } from '../../redux/actions/member'
 import store from '../../redux/store'
 import '../../styles/global/_index.scss'
+
 import styles from './styles.module.scss'
 
 const OnboardingContent: FC<{
     fetchMemberInfo: () => void
     fetchMemberTraits: () => void
-    reduxMemberInfo: Member | null
+    reduxMemberInfo: Member | undefined
 }> = props => {
     const { getChildRoutes }: RouterContextData = useContext(routerContext)
     useEffect(() => {

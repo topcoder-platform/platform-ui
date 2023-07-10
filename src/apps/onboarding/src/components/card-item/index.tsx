@@ -1,11 +1,9 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
 import React, { FC } from 'react'
 import classNames from 'classnames'
 
+import { IconOutline } from '~/libs/ui'
+
 import styles from './styles.module.scss'
-import IconEdit from '../../assets/images/edit.svg'
-import IconTrash from '../../assets/images/trash.svg'
 
 interface CardItemProps {
     title: string
@@ -30,7 +28,7 @@ export const CardItem: FC<CardItemProps> = (props: CardItemProps) => (
                     disabled={props.disabled}
                     className={styles.btn}
                 >
-                    <img src={IconEdit} alt='' />
+                    <IconOutline.PencilIcon width={24} height={24} />
                 </button>
                 <button
                     aria-label='delete'
@@ -39,7 +37,7 @@ export const CardItem: FC<CardItemProps> = (props: CardItemProps) => (
                     disabled={props.disabled}
                     className={styles.btn}
                 >
-                    <img src={IconTrash} alt='' />
+                    <IconOutline.TrashIcon width={24} height={24} />
                 </button>
             </div>
         </div>

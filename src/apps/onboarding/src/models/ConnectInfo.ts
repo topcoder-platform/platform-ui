@@ -1,4 +1,3 @@
-/* eslint-disable sort-keys */
 export default interface ConnectInfo {
     country: string
     phoneNumber: string

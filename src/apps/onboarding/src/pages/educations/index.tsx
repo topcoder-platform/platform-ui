@@ -1,31 +1,28 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable unicorn/no-null */
 import { FC, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import classNames from 'classnames'
-import _ from 'lodash'
 import { connect } from 'react-redux'
+import _ from 'lodash'
+import classNames from 'classnames'
 
-import { Button, PageDivider } from '~/libs/ui'
+import { Button, IconOutline, PageDivider } from '~/libs/ui'
 
+import { createMemberEducations, updateMemberEducations } from '../../redux/actions/member'
 import { ProgressBar } from '../../components/progress-bar'
-import styles from './styles.module.scss'
+import CardItem from '../../components/card-item'
 import EducationInfo from '../../models/EducationInfo'
 import ModalAddEducation from '../../components/modal-add-education'
-import { updateMemberEducations, createMemberEducations } from '../../redux/actions/member'
-import { ReactComponent as IconBackGreen } from '../../assets/images/back-green.svg'
-import CardItem from '../../components/card-item'
+
+import styles from './styles.module.scss'
 
 export const PageEducationsContent: FC<{
-    reduxEducations: EducationInfo[] | null
+    reduxEducations: EducationInfo[] | undefined
     updateMemberEducations: (educations: EducationInfo[]) => void
     createMemberEducations: (educations: EducationInfo[]) => void
     loadingMemberTraits: boolean
 }> = props => {
     const navigate: any = useNavigate()
-    const [editingEducation, setEditingEducation] = useState<EducationInfo | null>(null)
-    const [educations, setEducations] = useState<EducationInfo[] | null>(null)
+    const [editingEducation, setEditingEducation] = useState<EducationInfo | undefined>(undefined)
+    const [educations, setEducations] = useState<EducationInfo[] | undefined>(undefined)
     const [educationId, setEducationId] = useState<number>(10)
     const [showAddEducationModal, setShowAddEducationModal] = useState(false)
     const [loading, setLoading] = useState<boolean>(false)
@@ -78,21 +75,25 @@ export const PageEducationsContent: FC<{
                                 title={education.major || ''}
                                 subTitle={education.collegeName || ''}
                                 description={education.dateDescription || ''}
-                                onEdit={() => {
+                                onEdit={function onEdit() {
                                     setEditingEducation(education)
                                     setShowAddEducationModal(true)
                                 }}
-                                onDelete={() => setEducations(_.filter(educations, w => w.id !== education.id))}
+                                onDelete={function onDelete() {
+                                    setEducations(_.filter(educations, w => w.id !== education.id))
+                                }}
                             />
                         ))}
                     </div>
-                ) : null}
+                ) : undefined}
 
                 <Button
                     size='lg'
                     secondary
                     iconToLeft
-                    onClick={() => setShowAddEducationModal(true)}
+                    onClick={function showAddEducation() {
+                        setShowAddEducationModal(true)
+                    }}
                     disabled={props.loadingMemberTraits || loading}
                     className='mt-24'
                 >
@@ -111,15 +112,19 @@ export const PageEducationsContent: FC<{
                     size='lg'
                     secondary
                     iconToLeft
-                    icon={IconBackGreen}
-                    onClick={() => navigate('../works')}
+                    icon={IconOutline.ChevronLeftIcon}
+                    onClick={function onPrevious() {
+                        navigate('../works')
+                    }}
                 />
                 <Button
                     size='lg'
                     primary
                     iconToLeft
                     disabled={loading}
-                    onClick={() => navigate('../personalization')}
+                    onClick={function onNext() {
+                        navigate('../personalization')
+                    }}
                 >
                     next
                 </Button>
@@ -127,22 +132,22 @@ export const PageEducationsContent: FC<{
             {showAddEducationModal ? (
                 <ModalAddEducation
                     editingEducation={editingEducation}
-                    onClose={() => {
+                    onClose={function onClose() {
                         setShowAddEducationModal(false)
-                        setEditingEducation(null)
+                        setEditingEducation(undefined)
                     }}
-                    onAdd={newEducation => {
+                    onAdd={function onAdd(newEducation: EducationInfo) {
                         setEducations([...(educations || []), {
                             ...newEducation,
                             id: educationId + 1,
                         }])
                         setEducationId(educationId + 1)
                     }}
-                    onEdit={editEducation => {
+                    onEdit={function onEdit(editEducation: EducationInfo) {
                         setEducations((educations || []).map(w => (w.id !== editEducation.id ? w : editEducation)))
                     }}
                 />
-            ) : null}
+            ) : undefined}
         </div>
     )
 }

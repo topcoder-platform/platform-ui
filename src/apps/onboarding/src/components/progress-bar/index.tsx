@@ -1,6 +1,4 @@
-/* eslint-disable ordered-imports/ordered-imports */
-/* eslint-disable react/jsx-no-bind */
-import React, { FC, useMemo } from 'react'
+import { FC, useMemo } from 'react'
 import classNames from 'classnames'
 
 import styles from './styles.module.scss'
