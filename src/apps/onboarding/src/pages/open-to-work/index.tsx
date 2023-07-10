@@ -2,7 +2,7 @@
 /* eslint-disable react/jsx-no-bind */
 /* eslint-disable unicorn/no-null */
 import { useNavigate } from 'react-router-dom'
-import { FC, MutableRefObject, useEffect, useRef } from 'react'
+import { FC, MutableRefObject, useEffect, useMemo, useRef } from 'react'
 import classNames from 'classnames'
 import { connect } from 'react-redux'
 
@@ -43,12 +43,32 @@ export const PageOpenToWorkContent: FC<{
         shouldSavingData,
     )
 
+    const availableForGigsValue: boolean | undefined = useMemo(() => {
+        if (!personalizationInfo || personalizationInfo.availableForGigs === undefined) {
+            return blankPersonalizationInfo.availableForGigs
+        }
+
+        return personalizationInfo.availableForGigs
+    }, [personalizationInfo])
+
     useEffect(() => {
         if (!loading && !shouldSavingData.current && !!shouldNavigateTo.current) {
             navigate(shouldNavigateTo.current)
         }
         /* eslint-disable react-hooks/exhaustive-deps */
     }, [loading])
+
+    function checkToNavigateNextPage(pageUrl: string): void {
+        if (!personalizationInfo || personalizationInfo.availableForGigs === undefined) {
+            shouldNavigateTo.current = pageUrl
+            setPersonalizationInfo({
+                ...(personalizationInfo || blankPersonalizationInfo),
+                availableForGigs: blankPersonalizationInfo.availableForGigs,
+            })
+        } else {
+            navigate(pageUrl)
+        }
+    }
 
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
@@ -68,15 +88,15 @@ export const PageOpenToWorkContent: FC<{
                     <div className='mt-26'>
                         <FormInputCheckboxMiddleware
                             label='Yes, I’m open to work'
-                            checked={(personalizationInfo || blankPersonalizationInfo).availableForGigs}
+                            checked={availableForGigsValue}
                             inline
                             onChange={(e: any) => {
                                 setPersonalizationInfo({
-                                    ...personalizationInfo,
+                                    ...(personalizationInfo || blankPersonalizationInfo),
                                     availableForGigs: e.target.checked,
                                 })
                             }}
-                            disabled={props.loadingMemberTraits}
+                            disabled={props.loadingMemberTraits || loading}
                         />
                     </div>
                 </div>
@@ -93,25 +113,19 @@ export const PageOpenToWorkContent: FC<{
                     size='lg'
                     secondary
                     iconToLeft
+                    disabled={loading}
                     icon={IconBackGreen}
                     onClick={() => {
-                        if (loading) {
-                            shouldNavigateTo.current = '../skills'
-                        } else {
-                            navigate('../skills')
-                        }
+                        checkToNavigateNextPage('../skills')
                     }}
                 />
                 <Button
                     size='lg'
                     primary
                     iconToLeft
+                    disabled={loading}
                     onClick={() => {
-                        if (loading) {
-                            shouldNavigateTo.current = '../works'
-                        } else {
-                            navigate('../works')
-                        }
+                        checkToNavigateNextPage('../works')
                     }}
                 >
                     next

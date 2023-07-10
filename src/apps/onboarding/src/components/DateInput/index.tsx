@@ -70,6 +70,7 @@ const DateInput: FC<DateInputProps> = (props: DateInputProps) => {
                 }}
                 onFocus={props.onFocus}
                 showYearDropdown
+                dropdownMode='select'
                 onCalendarOpen={() => setOpen(true)}
                 maxDate={
                     props.allowFutureDate ? null : moment()
