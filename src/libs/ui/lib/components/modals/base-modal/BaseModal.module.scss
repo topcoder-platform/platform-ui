@@ -32,7 +32,9 @@
 
 .modal-body {
     flex: 1 1 auto;
-    overflow: auto;
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+
     margin: 0 -1*$sp-8 -1*$sp-8;
     padding: 0 $sp-8 $sp-8;
 
