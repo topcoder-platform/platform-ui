@@ -6,6 +6,7 @@ import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } fro
 
 import { EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
+import { notifyUniNavi } from '../../lib'
 
 import { ModifyLanguagesModal } from './ModifyLanguagesModal'
 import { LanguageCard } from './LanguageCard'
@@ -53,6 +54,7 @@ const MemberLanguages: FC<MemberLanguagesProps> = (props: MemberLanguagesProps) 
         setTimeout(() => {
             setIsEditMode(false)
             mutateTraits()
+            notifyUniNavi(props.profile)
         }, 1000)
     }
 

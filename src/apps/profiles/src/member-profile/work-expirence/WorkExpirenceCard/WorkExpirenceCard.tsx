@@ -15,15 +15,11 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
             <div className={styles.workExpirenceCardHeaderLeft}>
                 <p className='body-main-bold'>
                     {props.work.position}
-                    ,
-                    {' '}
-                    {props.work.industry}
+                    {props.work.industry ? `, ${props.work.industry}` : undefined}
                 </p>
                 <p>
                     {props.work.company}
-                    ,
-                    {' '}
-                    {props.work.cityTown}
+                    {props.work.cityTown ? `, ${props.work.cityTown}` : undefined}
                 </p>
             </div>
             {

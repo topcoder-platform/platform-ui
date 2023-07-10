@@ -14,11 +14,16 @@
             position: absolute;
             right: 0;
             top: 0;
-            color: $turq-120;
+            color: $tc-white;
 
             svg {
                 width: 70px;
                 height: 70px;
+                fill: $turq-120;
+
+                path {
+                    fill: $turq-120;
+                }
             }
         }
 

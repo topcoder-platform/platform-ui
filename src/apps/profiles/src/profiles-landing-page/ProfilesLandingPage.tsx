@@ -3,6 +3,8 @@ import { NavigateFunction, useNavigate } from 'react-router-dom'
 
 import { profileContext, ProfileContextData } from '~/libs/core'
 
+import { rootRoute } from '../profiles.routes'
+
 const ProfilesLandingPage: FC = () => {
     const navigate: NavigateFunction = useNavigate()
 
@@ -11,7 +13,7 @@ const ProfilesLandingPage: FC = () => {
     // redirect to profile page if logged in
     useEffect(() => {
         if (authProfile) {
-            navigate(`/${authProfile.handle}`)
+            navigate(`${rootRoute}/${authProfile.handle}`)
         }
     }, [authProfile, navigate])
 

@@ -5,7 +5,8 @@ import { KeyedMutator } from 'swr'
 import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } from '~/libs/core'
 
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
-import { EditMemberPropertyBtn } from '../../components'
+import { notifyUniNavi } from '../../lib'
+import { EditMemberPropertyBtn, EmptySection } from '../../components'
 
 import { ModifyWorkExpirenceModal } from './ModifyWorkExpirenceModal'
 import { WorkExpirenceCard } from './WorkExpirenceCard'
@@ -53,6 +54,7 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
         setTimeout(() => {
             setIsEditMode(false)
             mutateTraits()
+            notifyUniNavi(props.profile)
         }, 1000)
     }
 
@@ -70,11 +72,18 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
             </div>
 
             <div className={styles.contentWrap}>
-                {
-                    workExpirence?.map((work: UserTrait) => (
+                {(workExpirence?.length as number) > 0
+                    ? workExpirence?.map((work: UserTrait) => (
                         <WorkExpirenceCard key={`${work.company}-${work.industry}-${work.position}`} work={work} />
                     ))
-                }
+                    : (
+                        <EmptySection
+                            selfMessage='Adding experience enhances the professional appearance of your profile.'
+                            isSelf={canEdit}
+                        >
+                            I&apos;m still building up my experience here at Topcoder.
+                        </EmptySection>
+                    )}
             </div>
 
             {
