@@ -6,8 +6,6 @@ import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } fro
 import {
     IconOutline,
     SocialIconFacebook,
-    SocialIconInstagram,
-    SocialIconLinkedIn,
     SocialIconTwitter,
     SocialIconYoutube,
 } from '~/libs/ui'
@@ -16,6 +14,9 @@ import { EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 
 import { ModifyMemberLinksModal } from './ModifyMemberLinksModal'
+import { ReactComponent as GitHubLinkIcon } from './assets/github-link-icon.svg'
+import { ReactComponent as InstagramLinkIcon } from './assets/instagram-link-icon.svg'
+import { ReactComponent as LinkedInLinkIcon } from './assets/linkedIn-link-icon.svg'
 import styles from './MemberLinks.module.scss'
 
 interface MemberLinksProps {
@@ -27,12 +28,14 @@ export function renderLinkIcon(linkName: string): JSX.Element {
     switch (linkName) {
         case 'Facebook':
             return <SocialIconFacebook />
+        case 'GitHub':
+            return <GitHubLinkIcon />
         case 'Twitter':
             return <SocialIconTwitter />
         case 'LinkedIn':
-            return <SocialIconLinkedIn />
+            return <LinkedInLinkIcon />
         case 'Instagram':
-            return <SocialIconInstagram />
+            return <InstagramLinkIcon />
         case 'YouTube':
             return <SocialIconYoutube />
         default:
