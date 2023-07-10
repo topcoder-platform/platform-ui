@@ -5,7 +5,7 @@ import { KeyedMutator } from 'swr'
 import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } from '~/libs/core'
 
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
-import { EditMemberPropertyBtn } from '../../components'
+import { EditMemberPropertyBtn, EmptySection } from '../../components'
 
 import { ModifyWorkExpirenceModal } from './ModifyWorkExpirenceModal'
 import { WorkExpirenceCard } from './WorkExpirenceCard'
@@ -70,11 +70,15 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
             </div>
 
             <div className={styles.contentWrap}>
-                {
-                    workExpirence?.map((work: UserTrait) => (
+                {(workExpirence?.length as number) > 0
+                    ? workExpirence?.map((work: UserTrait) => (
                         <WorkExpirenceCard key={`${work.company}-${work.industry}-${work.position}`} work={work} />
                     ))
-                }
+                    : (
+                        <EmptySection>
+                            I&apos;m still building up my experience here at Topcoder.
+                        </EmptySection>
+                    )}
             </div>
 
             {

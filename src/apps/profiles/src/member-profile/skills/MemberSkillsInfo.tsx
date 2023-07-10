@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import { isVerifiedSkill, UserEMSISkill, UserProfile } from '~/libs/core'
 import { IconOutline } from '~/libs/ui'
 
-import { EditMemberPropertyBtn } from '../../components'
+import { EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 
 import { ModifySkillsModal } from './ModifySkillsModal'
@@ -68,8 +68,8 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
             </div>
 
             <div className={styles.skillsWrap}>
-                {
-                    memberEMSISkills.map((memberEMSISkill: UserEMSISkill) => (
+                {memberEMSISkills?.length > 0
+                    ? memberEMSISkills.map((memberEMSISkill: UserEMSISkill) => (
                         <div
                             className={classNames(
                                 styles.skillItem,
@@ -81,7 +81,15 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                             {isVerifiedSkill(memberEMSISkill.skillSources) && <IconOutline.CheckCircleIcon />}
                         </div>
                     ))
-                }
+                    : (
+                        <EmptySection
+                            title='Topcoder verifies and tracks skills as our members complete projects and challenges.'
+                            wide
+                        >
+                            This member has not yet provided skills, but check back soon as their skills will grow as
+                            they complete project tasks.
+                        </EmptySection>
+                    )}
             </div>
 
             {

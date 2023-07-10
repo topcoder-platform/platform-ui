@@ -5,7 +5,7 @@ import { KeyedMutator } from 'swr'
 import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } from '~/libs/core'
 
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
-import { EditMemberPropertyBtn } from '../../components'
+import { EditMemberPropertyBtn, EmptySection } from '../../components'
 import { MemberTCAInfo } from '../tca-info'
 
 import { ModifyEducationModal } from './ModifyEducationModal'
@@ -71,14 +71,18 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
             </div>
 
             <div className={styles.educationContentWrap}>
-                {
-                    memberEducation?.map((education: UserTrait) => (
+                {(memberEducation?.length as number) > 0
+                    ? memberEducation?.map((education: UserTrait) => (
                         <EducationCard
                             key={`${education.schoolCollegeName}-${education.major}`}
                             education={education}
                         />
                     ))
-                }
+                    : (
+                        <EmptySection>
+                            I&apos;m still building up my education and certifications here at Topcoder.
+                        </EmptySection>
+                    )}
             </div>
 
             <MemberTCAInfo profile={props.profile} />
