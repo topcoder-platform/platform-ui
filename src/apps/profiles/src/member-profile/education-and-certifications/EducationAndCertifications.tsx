@@ -79,7 +79,13 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
                         />
                     ))
                     : (
-                        <EmptySection>
+                        <EmptySection
+                            selfMessage={`
+                                Including your education and certifications enhances the strength
+                                of your profile in comparison to others.
+                            `}
+                            isSelf={canEdit}
+                        >
                             I&apos;m still building up my education and certifications here at Topcoder.
                         </EmptySection>
                     )}

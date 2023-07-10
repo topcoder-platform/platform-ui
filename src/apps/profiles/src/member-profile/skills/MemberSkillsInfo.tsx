@@ -85,6 +85,8 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                         <EmptySection
                             title='Topcoder verifies and tracks skills as our members complete projects and challenges.'
                             wide
+                            selfMessage='Adding at least five skills will increase your visibility with customers.'
+                            isSelf={canEdit}
                         >
                             This member has not yet provided skills, but check back soon as their skills will grow as
                             they complete project tasks.

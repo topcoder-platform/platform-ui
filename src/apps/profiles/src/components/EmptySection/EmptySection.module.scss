@@ -1,11 +1,18 @@
 @import "@libs/ui/styles/includes";
 
 .wrap {
-    background: $black-10;
-    border-radius: $sp-4;
     flex: 1 1;
     width: 100%;
     height: 100%;
+
+    .warning {
+        color: $red-100;
+    }
+}
+
+.publicContent {
+    background: $black-10;
+    border-radius: $sp-4;
 
     display: flex;
     align-items: center;

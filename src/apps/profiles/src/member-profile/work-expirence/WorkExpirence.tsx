@@ -75,7 +75,10 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
                         <WorkExpirenceCard key={`${work.company}-${work.industry}-${work.position}`} work={work} />
                     ))
                     : (
-                        <EmptySection>
+                        <EmptySection
+                            selfMessage='Adding experience enhances the professional appearance of your profile.'
+                            isSelf={canEdit}
+                        >
                             I&apos;m still building up my experience here at Topcoder.
                         </EmptySection>
                     )}
