@@ -15,10 +15,12 @@ import styles from './InputMultiselect.module.scss'
 export interface InputMultiselectOption {
     label?: ReactNode
     value: string
+    verified?: boolean
 }
 
 interface InputMultiselectProps {
     readonly dirty?: boolean
+    readonly loading?: boolean
     readonly disabled?: boolean
     readonly error?: string
     readonly hideInlineErrors?: boolean
@@ -29,13 +31,19 @@ interface InputMultiselectProps {
     readonly options?: ReadonlyArray<InputMultiselectOption>
     readonly placeholder?: string
     readonly tabIndex?: number
-    readonly value?: string
+    readonly value?: InputMultiselectOption[]
     readonly onFetchOptions?: (query: string) => Promise<InputMultiselectOption[]>
 }
 
 const MultiValueRemove: FC = (props: any) => (
     <components.MultiValueRemove {...props}>
-        <IconSolid.XCircleIcon />
+        {props.data.verified ? (
+            <span title='Topcoder Verified'>
+                <IconSolid.CheckCircleIcon />
+            </span>
+        ) : (
+            <IconSolid.XCircleIcon />
+        )}
     </components.MultiValueRemove>
 )
 
@@ -70,10 +78,9 @@ const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProp
                 onChange={handleOnChange}
                 onBlur={noop}
                 blurInputOnSelect={false}
-                components={{
-                    // MultiValueLabel: () =>
-                    MultiValueRemove,
-                }}
+                isLoading={props.loading}
+                components={{ MultiValueRemove }}
+                value={props.value}
             />
         </InputWrapper>
     )

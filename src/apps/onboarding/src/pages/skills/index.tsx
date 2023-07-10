@@ -2,13 +2,13 @@
 /* eslint-disable react/jsx-no-bind */
 /* eslint-disable unicorn/no-null */
 import { useNavigate } from 'react-router-dom'
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import classNames from 'classnames'
 import { connect } from 'react-redux'
 
 import { Button, PageDivider } from '~/libs/ui'
-import { InputSkillSelector } from '~/libs/shared/lib/components/input-skill-selector'
 import { Member } from '~/apps/talent-search/src/lib/models'
+import { MemberSkillEditor, useMemberSkillEditor } from '~/libs/shared'
 
 import { ProgressBar } from '../../components/progress-bar'
 
@@ -18,6 +18,19 @@ export const PageSkillsContent: FC<{
     reduxMemberInfo: Member | null
 }> = props => {
     const navigate: any = useNavigate()
+    const [loading, setLoading] = useState(false)
+    const { formInput: emsiFormInput, saveSkills: saveEmsiSkills }: MemberSkillEditor = useMemberSkillEditor()
+
+    const saveSkills = async (): Promise<void> => {
+        setLoading(true)
+        try {
+            await saveEmsiSkills()
+        } catch (error) {
+        }
+
+        setLoading(false)
+        navigate('../open-to-work')
+    }
 
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
@@ -36,7 +49,7 @@ export const PageSkillsContent: FC<{
                         Understanding your skills will allow us to connect you to the right opportunities.
                     </span>
                     <div className='mt-16 full-width color-black-80'>
-                        <InputSkillSelector />
+                        {emsiFormInput}
                     </div>
                 </div>
             </div>
@@ -52,7 +65,8 @@ export const PageSkillsContent: FC<{
                     size='lg'
                     primary
                     iconToLeft
-                    onClick={() => navigate('../open-to-work')}
+                    onClick={saveSkills}
+                    disabled={loading}
                 >
                     next
                 </Button>
