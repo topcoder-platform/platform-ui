@@ -1,0 +1,34 @@
+@import '@libs/ui/styles/includes';
+
+.infoModal {
+    padding: 35px 32px 32px 32px !important;
+    max-width: 600px !important;
+
+    :global(.react-responsive-modal-closeButton) {
+        display: flex;
+        right: 32px;
+        top: 46px !important;
+
+        path {
+            color: $turq-160;
+        }
+    }
+
+    hr {
+        margin-top: 30px;
+    }
+
+    h3 {
+      font-family: $font-barlow;
+      color: $black-100;
+      font-size: 34px;
+      font-style: normal;
+      font-weight: 600;
+      line-height: 40px;
+      text-transform: none;
+    }
+
+    .modalContent {
+        width: 100%;
+    }
+}

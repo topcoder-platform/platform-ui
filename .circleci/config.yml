@@ -262,7 +262,7 @@ workflows:
             branches:
               only:
                 - dev
-                - talent-search
+                - onboarding
 
       - deployQa:
           context : org-global

@@ -1,0 +1,15 @@
+@import '../../../../../libs/ui/lib/styles/includes';
+
+.container {
+    gap: 8px;
+}
+
+.blockProgress {
+    height: 4px;
+    background-color: $black-10;
+    flex: 1;
+
+    &.active {
+        background-color: $turq-100;
+    }
+}
