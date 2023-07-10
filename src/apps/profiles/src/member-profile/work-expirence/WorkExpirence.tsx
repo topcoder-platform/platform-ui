@@ -6,6 +6,7 @@ import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } fro
 
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { EditMemberPropertyBtn } from '../../components'
+import { notifyUniNavi } from '../../lib'
 
 import { ModifyWorkExpirenceModal } from './ModifyWorkExpirenceModal'
 import { WorkExpirenceCard } from './WorkExpirenceCard'
@@ -53,6 +54,7 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
         setTimeout(() => {
             setIsEditMode(false)
             mutateTraits()
+            notifyUniNavi(props.profile)
         }, 1000)
     }
 

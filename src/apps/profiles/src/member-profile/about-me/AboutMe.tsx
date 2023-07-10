@@ -6,6 +6,7 @@ import { useMemberTraits, UserProfile, UserTraitIds, UserTraits } from '~/libs/c
 
 import { EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
+import { notifyUniNavi } from '../../lib'
 
 import { ModifyAboutMeModal } from './ModifyAboutMeModal'
 import styles from './AboutMe.module.scss'
@@ -54,6 +55,7 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
             setIsEditMode(false)
             mutateTraits()
             props.refreshProfile(props.profile.handle)
+            notifyUniNavi(props.profile)
         }, 1000)
     }
 
