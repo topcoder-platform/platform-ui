@@ -69,7 +69,10 @@ export const PageWorksContent: FC<{
                     </span>
 
                     {(works || []).length > 0 ? (
-                        <div className='d-grid grid-2-column gap-column-16 gap-row-8 full-width mt-24'>
+                        <div
+                            className={'d-grid grid-2-column mobile-grid-1-column '
+                                + ' gap-column-16 gap-row-8 mobile-gap-row-16 full-width mt-24 mobile-mt-8'}
+                        >
                             {(works || []).map(work => (
                                 <CardItem
                                     key={work.id}

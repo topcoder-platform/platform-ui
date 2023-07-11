@@ -1,39 +1,7 @@
 @import '@libs/ui/styles/includes';
 
-.infoModal {
-    padding: 35px 32px 32px 32px !important;
-    max-width: 600px !important;
-
-    :global(.react-responsive-modal-closeButton) {
-        display: flex;
-        right: 32px;
-        top: 46px !important;
-
-        path {
-            color: $turq-160;
-        }
-    }
-
-    hr {
-        margin-top: 30px;
-    }
-
-    h3 {
-      font-family: $font-barlow;
-      color: $black-100;
-      font-size: 34px;
-      font-style: normal;
-      font-weight: 600;
-      line-height: 40px;
-      text-transform: none;
-    }
-
-    .modalContent {
-        width: 100%;
-    }
-}
-
-.blockDropZone {
+.blockDropZone,
+.blockPhoto {
     width: 256px;
     height: 256px;
     margin-right: 24px;
@@ -46,6 +14,13 @@
     flex-direction: column;
     background-color: rgba(224, 250, 243, 0.30);
 
+    @include ltemd {
+        width: 100%;
+        height: 343px;
+    }
+}
+
+.blockDropZone {
     .textDragAndDrop {
         font-size: 16px;
         font-style: normal;
@@ -79,13 +54,6 @@
 }
 
 .blockPhoto {
-    width: 256px;
-    height: 256px;
-    margin-right: 24px;
-    flex-shrink: 0;
-    border: 1px dashed $turq-160;
-    background-color: rgba(224, 250, 243, 0.30);
-
     img {
         width: 100%;
         height: 100%;
@@ -96,4 +64,8 @@
 .listRequirements {
     list-style: disc;
     padding-left: 24px;
+
+    @include ltemd {
+        margin-bottom: 21px;
+    }
 }

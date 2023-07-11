@@ -22,10 +22,28 @@
   margin-top: 48px;
 }
 
+.mobile-mt-32 {
+  @include ltemd {
+    margin-top: 32px;
+  }
+}
+
 .mb-30 {
   margin-bottom: 30px;
 }
 
 .mb-24 {
   margin-bottom: 24px;
+}
+
+.mobile-mt-8 {
+  @include ltemd {
+    margin-top: 8px;
+  }
+}
+
+.mobile-mt-0 {
+  @include ltemd {
+    margin-top: 0;
+  }
 }

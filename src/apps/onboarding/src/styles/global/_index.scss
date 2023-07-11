@@ -12,3 +12,9 @@
 .full-width {
   width: 100%;
 }
+
+.mobile-full-width {
+  @include ltemd {
+    width: 100%;
+  }
+}
