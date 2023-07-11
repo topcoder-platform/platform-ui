@@ -18,4 +18,5 @@ export enum profileEditModes {
     workExperience = 'workExperience',
     education = 'education',
     skills = 'skills',
+    onboardingCompleted = 'onboardingCompleted',
 }
