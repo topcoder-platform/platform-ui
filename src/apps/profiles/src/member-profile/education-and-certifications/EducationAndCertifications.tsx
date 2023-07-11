@@ -1,8 +1,7 @@
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { KeyedMutator } from 'swr'
 
-import { MemberTraitsAPI, useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } from '~/libs/core'
+import { MemberTraitsAPI, useMemberTraits, UserProfile, UserTrait, UserTraitIds } from '~/libs/core'
 
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { EditMemberPropertyBtn, EmptySection } from '../../components'
