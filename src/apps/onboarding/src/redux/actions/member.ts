@@ -47,6 +47,11 @@ export const updateAddress: any = (address: MemberAddress) => ({
     type: ACTIONS.MEMBER.SET_ADDRESS,
 })
 
+export const setMemberDescription: any = (description: string) => ({
+    payload: description,
+    type: ACTIONS.MEMBER.SET_DESCRIPTION,
+})
+
 export const updateLoadingMemberTraits: any = (loading: boolean) => ({
     payload: loading,
     type: ACTIONS.MEMBER.SET_LOADING_MEMBER_TRAITS,
@@ -430,6 +435,17 @@ export const updateMemberHomeAddresss: any = (addresses: MemberAddress[]) => asy
             })),
         })
         dispatch(updateAddress(addresses[0]))
+    } catch (error) {
+    }
+}
+
+export const updateMemberDescription: any = (description: string) => async (dispatch: any) => {
+    try {
+        const tokenInfo: TokenModel = await getAsyncToken()
+        await putMemberInfo(tokenInfo.handle || '', {
+            description,
+        })
+        dispatch(setMemberDescription(description))
     } catch (error) {
     }
 }

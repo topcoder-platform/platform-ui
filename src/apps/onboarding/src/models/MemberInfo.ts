@@ -19,4 +19,5 @@ export default interface MemberInfo {
     country: string
     photoURL: string
     createdAt: number
+    description: string
 }

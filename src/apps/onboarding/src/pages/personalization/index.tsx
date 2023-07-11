@@ -6,11 +6,19 @@ import classNames from 'classnames'
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
 
-import { useAutoSavePersonalization, useAutoSavePersonalizationType } from '../../hooks/useAutoSavePersonalization'
 import { ProgressBar } from '../../components/progress-bar'
+import {
+    useAutoSaveMemberDescription,
+    useAutoSaveMemberDescriptionType,
+} from '../../hooks/useAutoSaveMemberDescription'
+import {
+    useAutoSavePersonalization,
+    useAutoSavePersonalizationType,
+} from '../../hooks/useAutoSavePersonalization'
 import {
     createMemberPersonalizations,
     setMemberPhotoUrl,
+    updateMemberDescription,
     updateMemberPersonalizations,
     updateMemberPhotoUrl,
 } from '../../redux/actions/member'
@@ -31,11 +39,14 @@ const PagePersonalizationContent: FC<{
     createMemberPersonalizations: (infos: PersonalizationInfo[]) => void
     setMemberPhotoUrl: (photoUrl: string) => void
     updateMemberPhotoUrl: (photoUrl: string) => void
+    updateMemberDescription: (photoUrl: string) => void
     loadingMemberTraits: boolean
+    loadingMemberInfo: boolean
 }> = props => {
     const navigate: any = useNavigate()
 
     const shouldSavingData: MutableRefObject<boolean> = useRef<boolean>(false)
+    const shouldSavingMemberData: MutableRefObject<boolean> = useRef<boolean>(false)
     const shouldNavigateTo: MutableRefObject<string> = useRef<string>('')
 
     const {
@@ -49,8 +60,24 @@ const PagePersonalizationContent: FC<{
         shouldSavingData,
     )
 
+    const {
+        loading: loadingMemberInfo,
+        description,
+        setDescription,
+    }: useAutoSaveMemberDescriptionType = useAutoSaveMemberDescription(
+        props.memberInfo,
+        props.updateMemberDescription,
+        shouldSavingMemberData,
+    )
+
     useEffect(() => {
-        if (!loading && !shouldSavingData.current && !!shouldNavigateTo.current) {
+        if (
+            !loading
+            && !loadingMemberInfo
+            && !shouldSavingData.current
+            && !shouldSavingMemberData.current
+            && !!shouldNavigateTo.current
+        ) {
             if (shouldNavigateTo.current.startsWith('../')) {
                 navigate(shouldNavigateTo.current)
             } else {
@@ -58,7 +85,17 @@ const PagePersonalizationContent: FC<{
             }
         }
         /* eslint-disable react-hooks/exhaustive-deps */
-    }, [loading])
+    }, [loading, loadingMemberInfo])
+
+    function nextPage(pageUrl: string): void {
+        if (loading || loadingMemberInfo) {
+            shouldNavigateTo.current = pageUrl
+        } else if (pageUrl.startsWith('../')) {
+            navigate(pageUrl)
+        } else {
+            window.location.href = pageUrl
+        }
+    }
 
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
@@ -93,16 +130,13 @@ const PagePersonalizationContent: FC<{
                     <InputTextareaAutoSave
                         name='shortBio'
                         label='Bio'
-                        value={personalizationInfo?.shortBio || ''}
+                        value={description || ''}
                         onChange={function onChange(value: string | undefined) {
-                            setPersonalizationInfo({
-                                ...(personalizationInfo || blankPersonalizationInfo),
-                                shortBio: value || '',
-                            })
+                            setDescription(value || '')
                         }}
                         placeholder='Share something that makes you, you.'
                         tabIndex={0}
-                        disabled={props.loadingMemberTraits}
+                        disabled={props.loadingMemberInfo}
                     />
                 </div>
             </div>
@@ -119,26 +153,18 @@ const PagePersonalizationContent: FC<{
                     secondary
                     iconToLeft
                     icon={IconOutline.ChevronLeftIcon}
+                    disabled={!!shouldNavigateTo.current}
                     onClick={function previousPage() {
-                        if (loading) {
-                            shouldNavigateTo.current = '../educations'
-                        } else {
-                            navigate('../educations')
-                        }
+                        nextPage('../educations')
                     }}
                 />
                 <Button
                     size='lg'
                     primary
                     iconToLeft
-                    onClick={function nextPage() {
-                        if (loading) {
-                            shouldNavigateTo.current
-                                = `${EnvironmentConfig.USER_PROFILE_URL}/${props.memberInfo?.handle}`
-                        } else {
-                            window.location.href
-                                = `${EnvironmentConfig.USER_PROFILE_URL}/${props.memberInfo?.handle}`
-                        }
+                    disabled={!!shouldNavigateTo.current}
+                    onClick={function onClick() {
+                        nextPage(`${EnvironmentConfig.USER_PROFILE_URL}/${props.memberInfo?.handle}`)
                     }}
                 >
                     next
@@ -151,11 +177,13 @@ const PagePersonalizationContent: FC<{
 const mapStateToProps: any = (state: any) => {
     const {
         loadingMemberTraits,
+        loadingMemberInfo,
         personalization,
         memberInfo,
     }: any = state.member
 
     return {
+        loadingMemberInfo,
         loadingMemberTraits,
         memberInfo,
         reduxPersonalization: personalization,
@@ -165,6 +193,7 @@ const mapStateToProps: any = (state: any) => {
 const mapDispatchToProps: any = {
     createMemberPersonalizations,
     setMemberPhotoUrl,
+    updateMemberDescription,
     updateMemberPersonalizations,
     updateMemberPhotoUrl,
 }
