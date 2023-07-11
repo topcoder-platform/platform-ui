@@ -3,12 +3,13 @@ import _ from 'lodash'
 import classNames from 'classnames'
 import moment from 'moment'
 
-import { BaseModal, Button, InputSelect, InputText } from '~/libs/ui'
+import { Button, InputSelect, InputText } from '~/libs/ui'
 import { FormInputCheckbox } from '~/apps/self-service/src/components/form-elements'
 
 import { INDUSTRIES_OPTIONS } from '../../config'
 import DateInput from '../DateInput'
 import FormField from '../FormField'
+import OnboardingBaseModal from '../onboarding-base-modal'
 import WorkInfo, { emptyWorkInfo } from '../../models/WorkInfo'
 
 import styles from './styles.module.scss'
@@ -69,7 +70,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
     }, [props.editingWork])
 
     return (
-        <BaseModal
+        <OnboardingBaseModal
             buttons={(
                 <div className='d-flex gap-16'>
                     <Button
@@ -110,12 +111,9 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                 </div>
             )}
             onClose={props.onClose || _.noop}
-            open
-            size='body'
             title={props.editingWork ? 'Edit Experience' : 'Add Experience'}
-            classNames={{ modal: styles.infoModal }}
         >
-            <div className={classNames(styles.modalContent, 'd-flex flex-column align-items-start')}>
+            <div className={classNames(styles.modalContent, 'd-flex flex-column align-items-start mobile-gap-16')}>
                 <div className='full-width'>
                     <InputText
                         name='company'
@@ -227,7 +225,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         </FormField>
                     </div>
                 </div>
-                <div className='mt-16'>
+                <div className='mt-16 mobile-mt-0'>
                     <FormInputCheckboxMiddleware
                         label='I am currently working in this role'
                         checked={workInfo.currentlyWorking}
@@ -241,7 +239,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                     />
                 </div>
             </div>
-        </BaseModal>
+        </OnboardingBaseModal>
     )
 }
 

@@ -53,12 +53,51 @@ const FieldAvatar: FC<FieldAvatarProps> = (props: FieldAvatarProps) => {
         setIsPhotoEditMode(true)
     }
 
+    const bottomButtons = imgUrl ? (
+        <div className='d-flex gap-8 mobile-full-width'>
+            <Button
+                size='lg'
+                secondary
+                iconToLeft
+                icon={IconOutline.UploadIcon}
+                disabled={!props.memberInfo || isSaving}
+                onClick={showEditPhoto}
+                className='mt-16 mobile-flex-1'
+            >
+                change
+            </Button>
+            <Button
+                size='lg'
+                secondary
+                iconToLeft
+                icon={IconOutline.TrashIcon}
+                disabled={!props.memberInfo || isSaving}
+                onClick={handleRemovePhoto}
+                className='mt-16 mobile-flex-1'
+            >
+                delete
+            </Button>
+        </div>
+    ) : (
+        <Button
+            size='lg'
+            secondary
+            iconToLeft
+            icon={IconOutline.UploadIcon}
+            disabled={!props.memberInfo}
+            onClick={showEditPhoto}
+            className='mt-16 mobile-flex-1'
+        >
+            add image
+        </Button>
+    )
+
     return (
         <div
-            className={classNames(styles.container, props.className, 'd-flex flex-column gap-20 align-items-start')}
+            className={classNames(styles.container, props.className, 'd-flex flex-column align-items-start')}
         >
             <h3>Photo</h3>
-            <div className='d-flex gap-30'>
+            <div className='d-flex gap-30 mt-16'>
                 <div className={classNames(
                     'd-flex',
                     styles.blockImg,
@@ -78,45 +117,13 @@ const FieldAvatar: FC<FieldAvatarProps> = (props: FieldAvatarProps) => {
                         Make a great first impression to potential customers with a
                         professional photo that represents your style.
                     </span>
-                    {imgUrl ? (
-                        <div className='d-flex gap-8'>
-                            <Button
-                                size='lg'
-                                secondary
-                                iconToLeft
-                                icon={IconOutline.UploadIcon}
-                                disabled={!props.memberInfo || isSaving}
-                                onClick={showEditPhoto}
-                                className='mt-16'
-                            >
-                                change
-                            </Button>
-                            <Button
-                                size='lg'
-                                secondary
-                                iconToLeft
-                                icon={IconOutline.TrashIcon}
-                                disabled={!props.memberInfo || isSaving}
-                                onClick={handleRemovePhoto}
-                                className='mt-16'
-                            >
-                                delete
-                            </Button>
-                        </div>
-                    ) : (
-                        <Button
-                            size='lg'
-                            secondary
-                            iconToLeft
-                            icon={IconOutline.UploadIcon}
-                            disabled={!props.memberInfo}
-                            onClick={showEditPhoto}
-                            className='mt-16'
-                        >
-                            add image
-                        </Button>
-                    )}
+                    <div className='mobile-hide'>
+                        {bottomButtons}
+                    </div>
                 </div>
+            </div>
+            <div className='desktop-hide full-width d-flex'>
+                {bottomButtons}
             </div>
 
             {

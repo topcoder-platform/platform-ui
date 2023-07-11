@@ -71,39 +71,40 @@ const PagePersonalizationContent: FC<{
                     updateMemberPhotoUrl={props.updateMemberPhotoUrl}
                 />
 
-                <h3 className='mt-48'>Bio</h3>
+                <h3 className='mt-48 mobile-mt-32'>Bio</h3>
                 <span className='mt-8 color-black-60'>This is where we can really get to know you. </span>
-                <InputTextAutoSave
-                    name='title'
-                    label='Bio Title'
-                    value={personalizationInfo?.profileSelfTitle || ''}
-                    onChange={function onChange(value: string | undefined) {
-                        setPersonalizationInfo({
-                            ...(personalizationInfo || blankPersonalizationInfo),
-                            profileSelfTitle: value || '',
-                        })
-                    }}
-                    placeholder='Ex: I’m a creative rockstar'
-                    tabIndex={0}
-                    type='text'
-                    disabled={props.loadingMemberTraits}
-                    className='mt-16'
-                />
+                <div className='d-flex flex-column mt-16 full-width mobile-gap-16'>
+                    <InputTextAutoSave
+                        name='title'
+                        label='Bio Title'
+                        value={personalizationInfo?.profileSelfTitle || ''}
+                        onChange={function onChange(value: string | undefined) {
+                            setPersonalizationInfo({
+                                ...(personalizationInfo || blankPersonalizationInfo),
+                                profileSelfTitle: value || '',
+                            })
+                        }}
+                        placeholder='Ex: I’m a creative rockstar'
+                        tabIndex={0}
+                        type='text'
+                        disabled={props.loadingMemberTraits}
+                    />
 
-                <InputTextareaAutoSave
-                    name='shortBio'
-                    label='Bio'
-                    value={personalizationInfo?.shortBio || ''}
-                    onChange={function onChange(value: string | undefined) {
-                        setPersonalizationInfo({
-                            ...(personalizationInfo || blankPersonalizationInfo),
-                            shortBio: value || '',
-                        })
-                    }}
-                    placeholder='Share something that makes you, you.'
-                    tabIndex={0}
-                    disabled={props.loadingMemberTraits}
-                />
+                    <InputTextareaAutoSave
+                        name='shortBio'
+                        label='Bio'
+                        value={personalizationInfo?.shortBio || ''}
+                        onChange={function onChange(value: string | undefined) {
+                            setPersonalizationInfo({
+                                ...(personalizationInfo || blankPersonalizationInfo),
+                                shortBio: value || '',
+                            })
+                        }}
+                        placeholder='Share something that makes you, you.'
+                        tabIndex={0}
+                        disabled={props.loadingMemberTraits}
+                    />
+                </div>
             </div>
 
             <ProgressBar
