@@ -24,8 +24,8 @@ const ModalUploadPhoto: FC<ModalUploadPhotoProps> = (props: ModalUploadPhotoProp
         = useState<boolean>(false)
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
-        setMyFiles([...myFiles, ...acceptedFiles])
-    }, [myFiles])
+        setMyFiles([...acceptedFiles])
+    }, [])
 
     const {
         getRootProps,
@@ -56,6 +56,7 @@ const ModalUploadPhoto: FC<ModalUploadPhotoProps> = (props: ModalUploadPhotoProp
                 await updateMemberPhotoAsync(props.memberInfo.handle, formData)
                 props.setMemberPhotoUrl(URL.createObjectURL(myFiles[0]))
                 setMyFiles([])
+                props.onClose?.()
             } catch (error) {
             }
 

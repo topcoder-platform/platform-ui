@@ -21,6 +21,13 @@
     border-radius: 16px;
     box-shadow: 0px 8px 24px 0px rgba(144, 144, 144, 0.15);
 
+    :global(.btn-icon) {
+        svg {
+            width: max-content;
+            height: max-content;
+        }
+    }
+
     @include ltemd {
         padding: 48px 16px;
     }
