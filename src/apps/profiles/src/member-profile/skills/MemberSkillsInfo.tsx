@@ -24,7 +24,8 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
     const memberEMSISkills: UserEMSISkill[] = useMemo(
         () => (props.profile.emsiSkills || [])
-            .sort((a, b) => (isVerifiedSkill(a.skillSources) ? -1 : (isVerifiedSkill(b.skillSources) ? 1 : 0))),
+            .sort((a, b) => (+isVerifiedSkill(b.skillSources))
+                - (+isVerifiedSkill(a.skillSources)) || a.name.localeCompare(b.name)),
         [props.profile.emsiSkills],
     )
 
