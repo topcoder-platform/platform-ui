@@ -164,7 +164,10 @@ const PagePersonalizationContent: FC<{
                     iconToLeft
                     disabled={!!shouldNavigateTo.current}
                     onClick={function onClick() {
-                        nextPage(`${EnvironmentConfig.USER_PROFILE_URL}/${props.memberInfo?.handle}`)
+                        nextPage(
+                            `${EnvironmentConfig.USER_PROFILE_URL}/${props.memberInfo?.handle}`
+                            + '?edit-mode=onboardingCompleted',
+                        )
                     }}
                 >
                     next
