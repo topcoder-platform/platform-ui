@@ -1,4 +1,4 @@
-import { FC, ReactNode, useEffect } from 'react'
+import { FC, ReactNode, useCallback, useEffect } from 'react'
 import Modal, { ModalProps } from 'react-responsive-modal'
 import classNames from 'classnames'
 
@@ -39,12 +39,20 @@ const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
         )
     }
 
+    const handleBodyScroll = useCallback((force?: boolean) => {
+        const isOpen = force ?? props.open
+        document.documentElement.style.overflow = isOpen ? 'hidden' : ''
+        document.body.style.overflow = isOpen ? 'hidden' : ''
+    }, [props.open])
+
     useEffect(() => {
-        if (!props.blockScroll) {
-            document.documentElement.style.overflow = props.open ? 'hidden' : ''
-            document.body.style.overflow = props.open ? 'hidden' : ''
+        if (props.blockScroll) {
+            return undefined
         }
-    }, [props.blockScroll, props.open])
+
+        handleBodyScroll()
+        return () => handleBodyScroll(false)
+    }, [handleBodyScroll, props.blockScroll, props.open])
 
     return (
         <Modal
