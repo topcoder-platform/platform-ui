@@ -22,10 +22,8 @@ export interface GlobalConfig {
         ENVIRONMENT_ID: string | undefined
     }
     STRIPE: {
-        ADMIN_TOKEN: string | undefined
         API_KEY: string
         API_VERSION: string | undefined
-        CUSTOMER_TOKEN: string | undefined
     }
     URLS: {
         USER_PROFILE: string
