@@ -94,7 +94,13 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
             )}
         >
             <div className={styles.modalBody}>
-                <p>Open for Gig Work</p>
+                <p>
+                    Currently
+                    {openForWork ? ' ' : ' not '}
+                    available for work.
+                    Get found in search results when potential clients look for services
+                    and them reach out to you for free.
+                </p>
                 <FormToggleSwitch
                     name='openForWork'
                     onChange={handleOpenForWorkToggle}
