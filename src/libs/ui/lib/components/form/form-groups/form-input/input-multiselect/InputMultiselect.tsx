@@ -26,6 +26,7 @@ interface InputMultiselectProps {
     readonly hideInlineErrors?: boolean
     readonly hint?: string
     readonly label?: string
+    readonly limit?: number
     readonly name: string
     readonly onChange: (event: ChangeEvent<HTMLInputElement>) => void
     readonly options?: ReadonlyArray<InputMultiselectOption>
@@ -55,6 +56,10 @@ const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProp
         } as unknown as ChangeEvent<HTMLInputElement>)
     }
 
+    function isOptionDisabled(): boolean {
+        return !!props.limit && (props.value?.length as number) >= props.limit
+    }
+
     return (
         <InputWrapper
             {...props}
@@ -63,6 +68,7 @@ const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProp
             label={(props.label || props.name) ?? 'Select Option'}
             hideInlineErrors={props.hideInlineErrors}
             type='text'
+            hint={props.limit ? ` (max ${props.limit})` : undefined}
         >
             <AsyncSelect
                 className={styles.multiselect}
@@ -79,6 +85,8 @@ const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProp
                 onBlur={noop}
                 blurInputOnSelect={false}
                 isLoading={props.loading}
+                isOptionDisabled={isOptionDisabled}
+                isSearchable={!isOptionDisabled()}
                 components={{ MultiValueRemove }}
                 value={props.value}
             />
