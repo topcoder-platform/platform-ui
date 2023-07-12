@@ -141,7 +141,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                 </div>
                 <div className='full-width'>
                     <InputSelect
-                        tabIndex={1}
+                        tabIndex={0}
                         options={industryOptions}
                         value={workInfo.industry}
                         onChange={function onChange(event: any) {
