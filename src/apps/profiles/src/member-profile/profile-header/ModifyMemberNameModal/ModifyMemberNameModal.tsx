@@ -1,9 +1,17 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
-import { trim } from 'lodash'
+import { reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
 
-import { updateMemberProfileAsync, UserProfile } from '~/libs/core'
-import { BaseModal, Button, InputText } from '~/libs/ui'
+import {
+    createMemberTraitsAsync,
+    updateMemberProfileAsync,
+    updateMemberTraitsAsync,
+    UserProfile,
+    UserTrait,
+    UserTraitCategoryNames,
+    UserTraitIds,
+} from '~/libs/core'
+import { BaseModal, Button, FormToggleSwitch, InputText } from '~/libs/ui'
 
 import styles from './ModifyMemberNameModal.module.scss'
 
@@ -11,6 +19,13 @@ interface ModifyMemberNameModalProps {
     profile: UserProfile
     onClose: () => void
     onSave: () => void
+    memberPersonalizationTraitsData: UserTrait[] | undefined
+    hideMyNameInProfile: boolean
+}
+
+const methodsMap: { [key: string]: any } = {
+    create: createMemberTraitsAsync,
+    update: updateMemberTraitsAsync,
 }
 
 const ModifyMemberNameModal: FC<ModifyMemberNameModalProps> = (props: ModifyMemberNameModalProps) => {
@@ -32,6 +47,9 @@ const ModifyMemberNameModal: FC<ModifyMemberNameModalProps> = (props: ModifyMemb
     const [currentLastName, setCurrentLastName]: [string, Dispatch<SetStateAction<string>>]
         = useState<string>(props.profile.lastName)
 
+    const [hideMyNameInProfile, setHideMyNameInProfile]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(props.hideMyNameInProfile)
+
     function handleFirstNameChange(e: React.ChangeEvent<HTMLInputElement>): void {
         setCurrentFirstName(e.target.value)
         setIsFormChanged(true)
@@ -39,6 +57,11 @@ const ModifyMemberNameModal: FC<ModifyMemberNameModalProps> = (props: ModifyMemb
 
     function handleLastNameChange(e: React.ChangeEvent<HTMLInputElement>): void {
         setCurrentLastName(e.target.value)
+        setIsFormChanged(true)
+    }
+
+    function handleShowMyNameInProfileToggle(): void {
+        setHideMyNameInProfile(!hideMyNameInProfile)
         setIsFormChanged(true)
     }
 
@@ -64,10 +87,25 @@ const ModifyMemberNameModal: FC<ModifyMemberNameModalProps> = (props: ModifyMemb
 
         setIsSaving(true)
 
-        updateMemberProfileAsync(
-            props.profile.handle,
-            { firstName: updatedFirstName, lastName: updatedLastName },
-        )
+        Promise.all([
+            updateMemberProfileAsync(
+                props.profile.handle,
+                { firstName: updatedFirstName, lastName: updatedLastName },
+            ),
+            methodsMap[!!props.memberPersonalizationTraitsData ? 'update' : 'create'](props.profile.handle, [{
+                categoryName: UserTraitCategoryNames.personalization,
+                traitId: UserTraitIds.personalization,
+                traits: {
+                    data: [
+                        ...reject(
+                            props.memberPersonalizationTraitsData,
+                            (trait: any) => trait.hideNamesOnProfile,
+                        ),
+                        { hideNamesOnProfile: hideMyNameInProfile },
+                    ],
+                },
+            }]),
+        ])
             .then(() => {
                 toast.success('Your profile has been updated.', { position: toast.POSITION.BOTTOM_RIGHT })
                 props.onSave()
@@ -122,6 +160,14 @@ const ModifyMemberNameModal: FC<ModifyMemberNameModalProps> = (props: ModifyMemb
                     onChange={handleLastNameChange}
                     value={currentLastName}
                 />
+                <div className={styles.nameToggle}>
+                    <p>Hide my names on profile</p>
+                    <FormToggleSwitch
+                        name='hideMyNameInProfile'
+                        onChange={handleShowMyNameInProfileToggle}
+                        value={hideMyNameInProfile}
+                    />
+                </div>
             </div>
         </BaseModal>
     )
