@@ -16,9 +16,7 @@ export const PageSkillsContent: FC<{
 }> = props => {
     const navigate: any = useNavigate()
     const [loading, setLoading] = useState(false)
-    const { formInput: emsiFormInput, saveSkills: saveEmsiSkills }: MemberSkillEditor = useMemberSkillEditor({
-        limit: 15,
-    })
+    const { formInput: emsiFormInput, saveSkills: saveEmsiSkills }: MemberSkillEditor = useMemberSkillEditor()
 
     async function saveSkills(): Promise<void> {
         setLoading(true)
