@@ -19,6 +19,18 @@
         }
     }
 
+    :global(.input-wrapper) {
+        textarea,
+        input {
+            color: $black-100;
+        }
+    }
+    :global(.body-small) {
+        &:first-child {
+            color: $black-100;
+        }
+    }
+
     hr {
         margin-top: 30px;
 

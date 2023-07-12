@@ -28,6 +28,18 @@
         }
     }
 
+    :global(.input-wrapper) {
+        textarea,
+        input {
+            color: $black-100;
+        }
+    }
+    :global(.body-small) {
+        &:first-child {
+            color: $black-100;
+        }
+    }
+
     @include ltemd {
         padding: 48px 16px;
     }

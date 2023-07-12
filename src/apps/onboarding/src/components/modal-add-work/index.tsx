@@ -33,6 +33,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
     const [workInfo, setWorkInfo] = useState(emptyWorkInfo())
     const [formErrors, setFormErrors] = useState<any>({
         company: undefined,
+        endDate: undefined,
         position: undefined,
         startDate: undefined,
     })
@@ -55,8 +56,14 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
             errorTmp.position = 'Required'
         }
 
-        if (!validateDate(workInfo.startDate, workInfo.endDate)) {
+        if (!workInfo.startDate) {
+            errorTmp.startDate = 'Required'
+        } else if (!validateDate(workInfo.startDate, workInfo.endDate)) {
             errorTmp.startDate = 'Start Date should be before End Date'
+        }
+
+        if (!workInfo.endDate && !workInfo.currentlyWorking) {
+            errorTmp.endDate = 'Required'
         }
 
         setFormErrors(errorTmp)
@@ -85,25 +92,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         label='save'
                         onClick={function onClick() {
                             if (validateField()) {
-                                const endDate: Date | undefined = workInfo.endDate
-                                let endDateString: string = endDate ? moment(endDate)
-                                    .format('YYYY') : ''
-                                if (workInfo.currentlyWorking) {
-                                    endDateString = 'current'
-                                }
-
-                                let startDateString: string = workInfo.startDate ? moment(workInfo.startDate)
-                                    .format('YYYY') : ''
-                                if (startDateString) {
-                                    startDateString += '-'
-                                }
-
-                                (props.editingWork ? props.onEdit : props.onAdd)?.({
-                                    ...workInfo,
-                                    dateDescription: (
-                                        workInfo.startDate || workInfo.endDate
-                                    ) ? `${startDateString}${endDateString}` : '',
-                                })
+                                (props.editingWork ? props.onEdit : props.onAdd)?.(workInfo)
                                 props.onClose?.()
                             }
                         }}
@@ -152,6 +141,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                 </div>
                 <div className='full-width'>
                     <InputSelect
+                        tabIndex={1}
                         options={industryOptions}
                         value={workInfo.industry}
                         onChange={function onChange(event: any) {
@@ -163,22 +153,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         name='industry'
                         label='Industry'
                         placeholder='Select industry'
-                    />
-                </div>
-                <div className='full-width'>
-                    <InputText
-                        name='location'
-                        label='Location'
-                        value={workInfo.city}
-                        onChange={function onChange(event: any) {
-                            setWorkInfo({
-                                ...workInfo,
-                                city: event.target.value,
-                            })
-                        }}
-                        placeholder='Enter city, country'
-                        tabIndex={0}
-                        type='text'
+                        dirty
                     />
                 </div>
                 <div className='d-flex gap-16 full-width'>
@@ -186,7 +161,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         className='flex-1'
                     >
                         <FormField
-                            label='Start Date'
+                            label='Start Date *'
                             error={
                                 formErrors.startDate
                             }
@@ -208,7 +183,10 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         className='flex-1'
                     >
                         <FormField
-                            label='End Date'
+                            label={workInfo.currentlyWorking ? 'End Date' : 'End Date *'}
+                            error={
+                                formErrors.endDate
+                            }
                         >
                             <DateInput
                                 disabled={workInfo.currentlyWorking}
@@ -234,6 +212,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                             setWorkInfo({
                                 ...workInfo,
                                 currentlyWorking: e.target.checked,
+                                endDate: e.target.checked ? undefined : workInfo.endDate,
                             })
                         }}
                     />

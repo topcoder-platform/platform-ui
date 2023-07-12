@@ -1,5 +1,4 @@
 import _ from 'lodash'
-import moment from 'moment'
 
 import { TokenModel } from '~/libs/core'
 import { getAsync as getAsyncToken } from '~/libs/core/lib/auth/token-functions/token.functions'
@@ -9,6 +8,7 @@ import {
 } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
 
 import { ACTIONS } from '../../config'
+import { dateTimeToDate } from '../../utils/date'
 import { getMemberInfo, getMemberTraits, putMemberInfo } from '../../services/members'
 import ConnectInfo from '../../models/ConnectInfo'
 import EducationInfo from '../../models/EducationInfo'
@@ -23,27 +23,33 @@ export const updateMemberInfo: any = (memberInfo: MemberInfo) => ({
 })
 
 export const updateWorks: any = (works: WorkInfo[]) => ({
-    payload: works,
+    payload: [...works],
     type: ACTIONS.MEMBER.SET_WORKS,
 })
 
 export const updateEducations: any = (educations: EducationInfo[]) => ({
-    payload: educations,
+    payload: [...educations],
     type: ACTIONS.MEMBER.SET_EDUCATIONS,
 })
 
 export const updatePersonalization: any = (personalization: PersonalizationInfo) => ({
-    payload: personalization,
+    payload: {
+        ...personalization,
+    },
     type: ACTIONS.MEMBER.SET_PERSONALIZATION,
 })
 
 export const updateConnectInfo: any = (connectInfo: ConnectInfo) => ({
-    payload: connectInfo,
+    payload: {
+        ...connectInfo,
+    },
     type: ACTIONS.MEMBER.SET_CONNECT_INFO,
 })
 
 export const updateAddress: any = (address: MemberAddress) => ({
-    payload: address,
+    payload: {
+        ...address,
+    },
     type: ACTIONS.MEMBER.SET_ADDRESS,
 })
 
@@ -92,7 +98,6 @@ export const fetchMemberInfo: any = () => async (dispatch: any) => {
     }
 }
 
-const dateTimeToDate: any = (s: string) => (s ? new Date(s) : undefined)
 export const fetchMemberTraits: any = () => async (dispatch: any) => {
     const tokenInfo: TokenModel = await getAsyncToken()
     let memberTraits: any = []
@@ -111,26 +116,9 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
         const works: WorkInfo[] = workExpValue.map((j: any, index: number) => {
             const startDate: Date | undefined = dateTimeToDate(j.timePeriodFrom)
             const endDate: Date | undefined = dateTimeToDate(j.timePeriodTo)
-            let endDateString: string = endDate ? moment(endDate)
-                .format('YYYY') : ''
-            if (j.working) {
-                endDateString = 'current'
-            }
-
-            let startDateString: string = startDate ? moment(startDate)
-                .format('YYYY') : ''
-            if (startDateString) {
-                startDateString += '-'
-            }
-
-            const dateDescription: string = (
-                startDate || endDate
-            ) ? `${startDateString}${endDateString}` : ''
             return ({
-                city: j.cityTown,
                 company: j.company,
                 currentlyWorking: j.working,
-                dateDescription,
                 endDate,
                 id: index + 1,
                 industry: j.industry,
@@ -150,21 +138,8 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
         const educations: EducationInfo[] = educationExpValue.map((e: any, index: number) => {
             const startDate: Date | undefined = dateTimeToDate(e.timePeriodFrom)
             const endDate: Date | undefined = dateTimeToDate(e.timePeriodTo)
-            const endDateString: string = endDate ? moment(endDate)
-                .format('YYYY') : ''
-
-            let startDateString: string = startDate ? moment(startDate)
-                .format('YYYY') : ''
-            if (startDateString && endDateString) {
-                startDateString += '-'
-            }
-
-            const dateDescription: string = (
-                startDate || endDate
-            ) ? `${startDateString}${endDateString}` : ''
             return ({
                 collegeName: e.schoolCollegeName,
-                dateDescription,
                 endDate,
                 id: index + 1,
                 major: e.major,
@@ -209,13 +184,11 @@ const createWorksPayloadData: any = (works: WorkInfo[]) => {
             company,
             position,
             industry,
-            city,
             startDate,
             endDate,
             currentlyWorking,
         }: any = work
         return {
-            cityTown: city,
             company,
             industry,
             position,

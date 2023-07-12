@@ -23,6 +23,7 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
     const [educationInfo, setEducationInfo] = useState(emptyEducationInfo())
     const [formErrors, setFormErrors] = useState<any>({
         collegeName: undefined,
+        endDate: undefined,
         major: undefined,
         startDate: undefined,
     })
@@ -45,8 +46,14 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
             errorTmp.major = 'Required'
         }
 
-        if (!validateDate(educationInfo.startDate, educationInfo.endDate)) {
+        if (!educationInfo.startDate) {
+            errorTmp.startDate = 'Required'
+        } else if (!validateDate(educationInfo.startDate, educationInfo.endDate)) {
             errorTmp.startDate = 'Start Date should be before End Date'
+        }
+
+        if (!educationInfo.endDate) {
+            errorTmp.endDate = 'Required'
         }
 
         setFormErrors(errorTmp)
@@ -75,22 +82,7 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                         label='save'
                         onClick={function onClick() {
                             if (validateField()) {
-                                const endDate: Date | undefined = educationInfo.endDate
-                                const endDateString: string = endDate ? moment(endDate)
-                                    .format('YYYY') : ''
-
-                                let startDateString: string = educationInfo.startDate ? moment(educationInfo.startDate)
-                                    .format('YYYY') : ''
-                                if (startDateString && endDateString) {
-                                    startDateString += '-'
-                                }
-
-                                (props.editingEducation ? props.onEdit : props.onAdd)?.({
-                                    ...educationInfo,
-                                    dateDescription: (
-                                        educationInfo.startDate || educationInfo.endDate
-                                    ) ? `${startDateString}${endDateString}` : '',
-                                })
+                                (props.editingEducation ? props.onEdit : props.onAdd)?.(educationInfo)
                                 props.onClose?.()
                             }
                         }}
@@ -142,7 +134,7 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                         className='flex-1'
                     >
                         <FormField
-                            label='Start Date'
+                            label='Start Date *'
                             error={
                                 formErrors.startDate
                             }
@@ -164,7 +156,10 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                         className='flex-1'
                     >
                         <FormField
-                            label='End Date or Expected'
+                            label='End Date or Expected *'
+                            error={
+                                formErrors.endDate
+                            }
                         >
                             <DateInput
                                 value={educationInfo.endDate}

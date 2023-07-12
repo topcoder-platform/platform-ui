@@ -170,7 +170,7 @@ const PagePersonalizationContent: FC<{
                         )
                     }}
                 >
-                    next
+                    done
                 </Button>
             </div>
         </div>
