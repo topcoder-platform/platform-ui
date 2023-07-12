@@ -3,10 +3,11 @@ import { DropzoneState, useDropzone } from 'react-dropzone'
 import _ from 'lodash'
 import classNames from 'classnames'
 
-import { BaseModal, Button } from '~/libs/ui'
+import { Button } from '~/libs/ui'
 import { updateMemberPhotoAsync } from '~/libs/core'
 
 import MemberInfo from '../../models/MemberInfo'
+import OnboardingBaseModal from '../onboarding-base-modal'
 
 import styles from './styles.module.scss'
 
@@ -63,7 +64,7 @@ const ModalUploadPhoto: FC<ModalUploadPhotoProps> = (props: ModalUploadPhotoProp
     }
 
     return (
-        <BaseModal
+        <OnboardingBaseModal
             buttons={(
                 <div className='d-flex gap-16'>
                     <Button
@@ -82,12 +83,14 @@ const ModalUploadPhoto: FC<ModalUploadPhotoProps> = (props: ModalUploadPhotoProp
                 </div>
             )}
             onClose={props.onClose || _.noop}
-            open
-            size='body'
             title='Profile Photo'
-            classNames={{ modal: styles.infoModal }}
         >
-            <div className={classNames(styles.modalContent, 'd-flex align-items-start')}>
+            <div
+                className={classNames(
+                    styles.modalContent,
+                    'd-flex mobile-flex-column align-items-start mobile-gap-16',
+                )}
+            >
                 {(!isSaving && !imgUrl) ? (
                     <div {...getRootProps()} className={styles.blockDropZone}>
                         <input {...getInputProps()} />
@@ -128,7 +131,7 @@ const ModalUploadPhoto: FC<ModalUploadPhotoProps> = (props: ModalUploadPhotoProp
                     </ul>
                 </div>
             </div>
-        </BaseModal>
+        </OnboardingBaseModal>
     )
 }
 
