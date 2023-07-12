@@ -3,7 +3,6 @@
  *
  * Date Input control.
  */
-import { Portal } from 'react-overlays'
 import { createRef, FC, useState } from 'react'
 import DatePicker from 'react-datepicker'
 import cn from 'classnames'
@@ -15,15 +14,6 @@ import { IconOutline } from '~/libs/ui'
 import { ReactComponent as CalendarIcon } from '../../assets/images/calendar.svg'
 
 import styles from './styles.module.scss'
-
-interface CalendarContainerProps {
-    children?: any
-}
-const CalendarContainer: FC<CalendarContainerProps> = (props: CalendarContainerProps) => {
-    const el: any = document.getElementById('calendar-portal')
-
-    return <Portal container={el}>{props.children}</Portal>
-}
 
 interface DateInputProps {
     style2?: boolean
@@ -78,7 +68,7 @@ const DateInput: FC<DateInputProps> = (props: DateInputProps) => {
                         .toDate()
                 }
                 disabled={props.disabled}
-                popperContainer={CalendarContainer}
+                portalId='root'
             />
             <div
                 className={cn(

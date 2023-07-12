@@ -1,8 +1,9 @@
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { connect } from 'react-redux'
 import _ from 'lodash'
 import classNames from 'classnames'
+import moment from 'moment'
 
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
 
@@ -55,6 +56,22 @@ export const PageEducationsContent: FC<{
         /* eslint-disable react-hooks/exhaustive-deps */
     }, [educations])
 
+    const displayEducations = useMemo(() => (educations || []).map(educationItem => {
+        const startDate: Date | undefined = educationItem.startDate
+        const endDate: Date | undefined = educationItem.endDate
+        const endDateString: string = endDate ? moment(endDate)
+            .format('YYYY') : ''
+        const startDateString: string = startDate ? moment(startDate)
+            .format('YYYY') : ''
+        return {
+            ...educationItem,
+            dateDescription: [
+                ...(startDateString ? [startDateString] : []),
+                ...(endDateString ? [endDateString] : []),
+            ].join('-'),
+        }
+    }), [educations])
+
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
             <h2>Education</h2>
@@ -67,12 +84,12 @@ export const PageEducationsContent: FC<{
                     Relevant education details will help make your profile more valuable to potential employers.
                 </span>
 
-                {(educations || []).length > 0 ? (
+                {displayEducations.length > 0 ? (
                     <div
                         className={'d-grid grid-2-column mobile-grid-1-column '
                             + ' gap-column-16 gap-row-8 mobile-gap-row-16 full-width mt-24 mobile-mt-8'}
                     >
-                        {(educations || []).map(education => (
+                        {displayEducations.map(education => (
                             <CardItem
                                 key={education.id}
                                 title={education.major || ''}
