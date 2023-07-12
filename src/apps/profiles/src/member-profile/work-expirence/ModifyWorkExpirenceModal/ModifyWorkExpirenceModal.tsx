@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import { Dispatch, FC, MutableRefObject, SetStateAction, useRef, useState } from 'react'
 import { bind, trim } from 'lodash'
 import { toast } from 'react-toastify'
@@ -82,10 +83,15 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
 
     function handleFormValueChange(key: string, event: React.ChangeEvent<HTMLInputElement>): void {
         let value: string | boolean | Date | undefined
+        const oldFormValues = { ...formValues }
 
         switch (key) {
             case 'currentlyWorking':
                 value = event.target.checked
+                if (value) {
+                    oldFormValues.endDate = undefined
+                }
+
                 break
             case 'startDate':
             case 'endDate':
@@ -97,7 +103,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
         }
 
         setFormValues({
-            ...formValues,
+            ...oldFormValues,
             [key]: value,
         })
     }
@@ -135,6 +141,22 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                 endDate: 'End date must be greater than start date',
             })
             return
+        }
+
+        if (formValues.endDate || formValues.startDate) {
+            if (formValues.endDate && !formValues.startDate && !formValues.currentlyWorking) {
+                setFormErrors({
+                    startDate: 'Start date is required when end date is given',
+                })
+                return
+            }
+
+            if (formValues.startDate && !formValues.endDate && !formValues.currentlyWorking) {
+                setFormErrors({
+                    endDate: 'End date is required when start date is given',
+                })
+                return
+            }
         }
 
         const updatedWorkExpirence: UserTrait = {
@@ -306,7 +328,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                             label='End Date'
                             date={formValues.endDate as Date}
                             onChange={bind(handleFormValueChange, this, 'endDate')}
-                            disabled={false}
+                            disabled={formValues.currentlyWorking as boolean}
                             error={formErrors.endDate}
                             dirty
                             maxDate={new Date()}
