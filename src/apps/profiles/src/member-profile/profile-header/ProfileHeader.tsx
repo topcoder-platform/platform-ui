@@ -1,5 +1,7 @@
+/* eslint-disable complexity */
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { KeyedMutator } from 'swr'
 import moment from 'moment'
 
 import {
@@ -46,14 +48,21 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     const [queryParams]: [URLSearchParams, any] = useSearchParams()
     const editMode: string | null = queryParams.get(EDIT_MODE_QUERY_PARAM)
 
-    const { data: memberPersonalizationTraits }: {
+    const { data: memberPersonalizationTraits, mutate: mutateTraits, loading: traitsLoading }: {
         data: UserTraits[] | undefined,
+        mutate: KeyedMutator<any>,
+        loading: boolean,
     }
         = useMemberTraits(props.profile.handle, { traitIds: UserTraitIds.personalization })
 
     const openForWork: UserTrait | undefined
         = useMemo(() => memberPersonalizationTraits?.[0]?.traits?.data?.find(
             (trait: UserTrait) => trait.availableForGigs,
+        ), [memberPersonalizationTraits])
+
+    const hideNamesOnProfile: UserTrait | undefined
+        = useMemo(() => memberPersonalizationTraits?.[0]?.traits?.data?.find(
+            (trait: UserTrait) => trait.hideNamesOnProfile,
         ), [memberPersonalizationTraits])
 
     useEffect(() => {
@@ -92,6 +101,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         setTimeout(() => {
             setIsNameEditMode(false)
             props.refreshProfile(props.profile.handle)
+            mutateTraits()
         }, 1000)
     }
 
@@ -130,33 +140,43 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                 }
             </div>
 
-            <div className={styles.profileInfo}>
-                <div className={styles.nameWrap}>
-                    <p>
-                        {props.profile.firstName}
-                        {' '}
-                        {props.profile.lastName}
-                    </p>
-                    {
-                        canEdit && (
-                            <EditMemberPropertyBtn
-                                onClick={handleModifyNameClick}
-                            />
-                        )
-                    }
-                </div>
+            {!traitsLoading && (
+                <div className={styles.profileInfo}>
+                    <div className={styles.nameWrap}>
+                        <p>
+                            {
+                                hideNamesOnProfile
+                                    ? props.profile.handle
+                                    : `${props.profile.firstName} ${props.profile.lastName}`
+                            }
+                        </p>
+                        {
+                            canEdit && (
+                                <EditMemberPropertyBtn
+                                    onClick={handleModifyNameClick}
+                                />
+                            )
+                        }
+                    </div>
 
-                <p className={styles.memberSince}>
-                    <span>{props.profile.handle}</span>
-                    {' '}
-                    |
-                    {' '}
-                    Member Since
-                    {' '}
-                    {moment(props.profile.createdAt)
-                        .format('MMM YYYY')}
-                </p>
-            </div>
+                    <p className={styles.memberSince}>
+                        {
+                            !hideNamesOnProfile ? (
+                                <>
+                                    <span>{props.profile.handle}</span>
+                                    {' '}
+                                    |
+                                    {' '}
+                                </>
+                            ) : undefined
+                        }
+                        Member Since
+                        {' '}
+                        {moment(props.profile.createdAt)
+                            .format('MMM YYYY')}
+                    </p>
+                </div>
+            )}
 
             {
                 openForWork || canEdit ? (
@@ -184,6 +204,8 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                         onClose={handleModifyNameModalClose}
                         onSave={handleModifyNameModalSave}
                         profile={props.profile}
+                        memberPersonalizationTraitsData={memberPersonalizationTraits?.[0]?.traits?.data}
+                        hideMyNameInProfile={hideNamesOnProfile?.hideNamesOnProfile || false}
                     />
                 )
             }
