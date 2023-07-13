@@ -133,8 +133,10 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                                 ),
                             })
                         }}
+                        dirty
+                        error={formErrors.endDate}
                         name='endDate'
-                        label='End Year or Expected'
+                        label='End Year or Expected *'
                         placeholder='Select year'
                     />
                 </div>
