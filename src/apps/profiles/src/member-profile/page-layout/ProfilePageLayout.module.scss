@@ -7,11 +7,11 @@
     height: 100%;
 
     .profileHeaderWrap {
-        background: url('../../lib/assets/profile-header-bg.png') no-repeat right center / auto, linear-gradient(#0d83c5, #0e89d5);
+        background: url('../../lib/assets/profile-header-bg.png') no-repeat right top / auto, linear-gradient(#0d83c5, #0e89d5);
 
         .profileHeaderContent {
             padding: 0;
-            max-height: 200px;
+            max-height: 260px;
             overflow: visible;
 
             @include ltelg {
@@ -57,7 +57,7 @@
             .profileInfoRight {
                 display: flex;
                 flex-direction: column;
-                margin-top: -215px;
+                margin-top: -275px;
 
                 @include ltelg {
                     margin-top: 0;

@@ -14,6 +14,7 @@ import styles from './MemberSkillsInfo.module.scss'
 interface MemberSkillsInfoProps {
     profile: UserProfile
     authProfile: UserProfile | undefined
+    refreshProfile: (handle: string) => void
 }
 
 const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProps) => {
@@ -45,6 +46,13 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
     function handleModyfSkillsModalClose(): void {
         setIsEditMode(false)
+    }
+
+    function handleModyfSkillsSave(): void {
+        setTimeout(() => {
+            setIsEditMode(false)
+            props.refreshProfile(props.profile.handle)
+        }, 1500)
     }
 
     return memberEMSISkills ? (
@@ -98,8 +106,8 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
             {
                 isEditMode && (
                     <ModifySkillsModal
-                        // profile={props.profile}
                         onClose={handleModyfSkillsModalClose}
+                        onSave={handleModyfSkillsSave}
                     />
                 )
             }
