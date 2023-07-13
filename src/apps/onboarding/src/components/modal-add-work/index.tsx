@@ -3,12 +3,10 @@ import _ from 'lodash'
 import classNames from 'classnames'
 import moment from 'moment'
 
-import { Button, InputSelect, InputText } from '~/libs/ui'
+import { Button, IconSolid, InputDatePicker, InputSelect, InputText, Tooltip } from '~/libs/ui'
 import { FormInputCheckbox } from '~/apps/self-service/src/components/form-elements'
 
 import { INDUSTRIES_OPTIONS } from '../../config'
-import DateInput from '../DateInput'
-import FormField from '../FormField'
 import OnboardingBaseModal from '../onboarding-base-modal'
 import WorkInfo, { emptyWorkInfo } from '../../models/WorkInfo'
 
@@ -75,6 +73,24 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
             setWorkInfo(props.editingWork)
         }
     }, [props.editingWork])
+
+    const endDateUI = (
+        <InputDatePicker
+            label={workInfo.currentlyWorking ? 'End Date' : 'End Date *'}
+            date={workInfo.endDate}
+            onChange={function onChange(v: any) {
+                setWorkInfo({
+                    ...workInfo,
+                    endDate: v || undefined,
+                })
+            }}
+            disabled={workInfo.currentlyWorking || false}
+            error={formErrors.endDate}
+            dirty
+            maxDate={new Date()}
+            placeholder='Select end date'
+        />
+    )
 
     return (
         <OnboardingBaseModal
@@ -160,50 +176,47 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                     <div
                         className='flex-1'
                     >
-                        <FormField
+                        <InputDatePicker
                             label='Start Date *'
-                            error={
-                                formErrors.startDate
-                            }
-                        >
-                            <DateInput
-                                value={workInfo.startDate}
-                                onChange={function onChange(v: any) {
-                                    setWorkInfo({
-                                        ...workInfo,
-                                        startDate: v || undefined,
-                                    })
-                                }}
-                                style2
-                                placeholder='Select start date'
-                            />
-                        </FormField>
+                            date={workInfo.startDate}
+                            onChange={function onChange(v: any) {
+                                setWorkInfo({
+                                    ...workInfo,
+                                    startDate: v || undefined,
+                                })
+                            }}
+                            disabled={false}
+                            error={formErrors.startDate}
+                            dirty
+                            maxDate={new Date()}
+                            placeholder='Select start date'
+                        />
                     </div>
                     <div
                         className='flex-1'
                     >
-                        <FormField
-                            label={workInfo.currentlyWorking ? 'End Date' : 'End Date *'}
-                            error={
-                                formErrors.endDate
-                            }
-                        >
-                            <DateInput
-                                disabled={workInfo.currentlyWorking}
-                                value={workInfo.endDate}
-                                onChange={function onChange(v: any) {
-                                    setWorkInfo({
-                                        ...workInfo,
-                                        endDate: v || undefined,
-                                    })
-                                }}
-                                style2
-                                placeholder='Select end date'
-                            />
-                        </FormField>
+                        {workInfo.currentlyWorking ? (
+                            <Tooltip
+                                content={(
+                                    <div className={classNames('d-flex flex-column', styles.blockEndDateTooltip)}>
+                                        <div className='d-flex align-items-center'>
+                                            <IconSolid.InformationCircleIcon width={16} height={16} />
+                                            <span className={styles.textTooltipTitle}>End Date</span>
+                                        </div>
+                                        <span>
+                                            You can not select an end date if you are
+                                            currently working in this role.
+                                        </span>
+                                    </div>
+                                )}
+                                place='top'
+                            >
+                                {endDateUI}
+                            </Tooltip>
+                        ) : endDateUI}
                     </div>
                 </div>
-                <div className='mt-16 mobile-mt-0'>
+                <div className='mt-8 mobile-mt-0'>
                     <FormInputCheckboxMiddleware
                         label='I am currently working in this role'
                         checked={workInfo.currentlyWorking}

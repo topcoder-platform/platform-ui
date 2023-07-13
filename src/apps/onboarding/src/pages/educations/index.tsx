@@ -57,18 +57,12 @@ export const PageEducationsContent: FC<{
     }, [educations])
 
     const displayEducations = useMemo(() => (educations || []).map(educationItem => {
-        const startDate: Date | undefined = educationItem.startDate
         const endDate: Date | undefined = educationItem.endDate
         const endDateString: string = endDate ? moment(endDate)
             .format('YYYY') : ''
-        const startDateString: string = startDate ? moment(startDate)
-            .format('YYYY') : ''
         return {
             ...educationItem,
-            dateDescription: [
-                ...(startDateString ? [startDateString] : []),
-                ...(endDateString ? [endDateString] : []),
-            ].join('-'),
+            dateDescription: endDateString || '',
         }
     }), [educations])
 

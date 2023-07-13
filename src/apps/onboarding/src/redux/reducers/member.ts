@@ -12,7 +12,7 @@ const initialState: {
     memberInfo?: MemberInfo
     works?: WorkInfo[]
     educations?: EducationInfo[]
-    personalization?: PersonalizationInfo
+    personalizations?: PersonalizationInfo[]
     address?: MemberAddress
     connectInfo?: ConnectInfo
     loadingMemberTraits?: boolean
@@ -38,10 +38,10 @@ const memberReducer: any = (
                 ...state,
                 works: action.payload,
             }
-        case ACTIONS.MEMBER.SET_PERSONALIZATION:
+        case ACTIONS.MEMBER.SET_PERSONALIZATIONS:
             return {
                 ...state,
-                personalization: action.payload,
+                personalizations: action.payload,
             }
         case ACTIONS.MEMBER.SET_ADDRESS:
             return {
