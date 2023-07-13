@@ -214,7 +214,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
             onClose={props.onClose}
             open
             size='lg'
-            title='Work Experience'
+            title='Experience'
             buttons={(
                 <div className={styles.modalButtons}>
                     <Button
@@ -336,7 +336,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                     </div>
                     <InputText
                         name='currentlyWorking'
-                        label='I am currently working in this role'
+                        label='I am currently in this role'
                         error={formErrors.currentlyWorking}
                         dirty
                         tabIndex={-1}
@@ -348,7 +348,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                         {editedItemIndex === undefined ? <IconOutline.PlusCircleIcon /> : undefined}
                         <Button
                             link
-                            label={`${editedItemIndex !== undefined ? 'Edit' : 'Add'} Job to your List`}
+                            label={`${editedItemIndex !== undefined ? 'Edit' : 'Add another'} experience to your List`}
                             onClick={handleFormAction}
                         />
                         {editedItemIndex !== undefined && (

@@ -60,9 +60,13 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
     }: any): JSX.Element {
         return (
             <div className={styles.headerWrap}>
-                <button onClick={decreaseMonth} disabled={prevMonthButtonDisabled} type='button'>
-                    <IconOutline.ArrowCircleLeftIcon />
-                </button>
+                {
+                    props.showMonthPicker !== false && (
+                        <button onClick={decreaseMonth} disabled={prevMonthButtonDisabled} type='button'>
+                            <IconOutline.ArrowCircleLeftIcon />
+                        </button>
+                    )
+                }
 
                 {
                     props.showMonthPicker !== false && (
@@ -90,9 +94,13 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
                     ))}
                 </select>
 
-                <button onClick={increaseMonth} disabled={nextMonthButtonDisabled} type='button'>
-                    <IconOutline.ArrowCircleRightIcon />
-                </button>
+                {
+                    props.showMonthPicker !== false && (
+                        <button onClick={increaseMonth} disabled={nextMonthButtonDisabled} type='button'>
+                            <IconOutline.ArrowCircleRightIcon />
+                        </button>
+                    )
+                }
             </div>
         )
     }
