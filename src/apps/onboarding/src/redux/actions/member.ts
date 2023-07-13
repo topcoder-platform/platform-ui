@@ -1,6 +1,6 @@
 import _ from 'lodash'
 
-import { TokenModel } from '~/libs/core'
+import { TokenModel, UserTraitCategoryNames, UserTraitIds } from '~/libs/core'
 import { getAsync as getAsyncToken } from '~/libs/core/lib/auth/token-functions/token.functions'
 import {
     createMemberTraits,
@@ -32,11 +32,14 @@ export const updateEducations: any = (educations: EducationInfo[]) => ({
     type: ACTIONS.MEMBER.SET_EDUCATIONS,
 })
 
-export const updatePersonalization: any = (personalization: PersonalizationInfo) => ({
-    payload: {
-        ...personalization,
-    },
-    type: ACTIONS.MEMBER.SET_PERSONALIZATION,
+export const updatePersonalizations: (personalizations: PersonalizationInfo[]) => {
+    payload: PersonalizationInfo[]
+    type: string
+} = (personalizations: PersonalizationInfo[]) => ({
+    payload: [
+        ...personalizations,
+    ],
+    type: ACTIONS.MEMBER.SET_PERSONALIZATIONS,
 })
 
 export const updateConnectInfo: any = (connectInfo: ConnectInfo) => ({
@@ -109,7 +112,7 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
 
     dispatch(updateLoadingMemberTraits(false))
 
-    const workExp: any = memberTraits.find((t: any) => t.traitId === 'work')
+    const workExp: any = memberTraits.find((t: any) => t.traitId === UserTraitIds.work)
     const workExpValue: any = workExp?.traits?.data
     if (workExpValue) {
         // workExpValue is array of works. fill it to state
@@ -130,7 +133,7 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
     }
 
     const educationExp: any = memberTraits.find(
-        (t: any) => t.traitId === 'education',
+        (t: any) => t.traitId === UserTraitIds.education,
     )
     const educationExpValue: any = educationExp?.traits?.data
     if (educationExpValue) {
@@ -150,22 +153,22 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
     }
 
     const personalizationExp: any = memberTraits.find(
-        (t: any) => t.traitId === 'personalization',
+        (t: any) => t.traitId === UserTraitIds.personalization,
     )
     const personalizationExpValue: any = personalizationExp?.traits?.data
     if (personalizationExpValue) {
-        const personalizations: PersonalizationInfo[] = personalizationExpValue.map((e: any) => ({
+        const personalizations: PersonalizationInfo[] = personalizationExpValue.map((e: any) => _.omitBy({
             ...e,
             availableForGigs: e.availableForGigs,
             profileSelfTitle: e.profileSelfTitle,
             referAs: e.referAs,
             shortBio: e.shortBio,
-        }))
-        dispatch(updatePersonalization(personalizations[0]))
+        }, _.isUndefined))
+        dispatch(updatePersonalizations(personalizations))
     }
 
     const connectInfoExp: any = memberTraits.find(
-        (t: any) => t.traitId === 'connect_info',
+        (t: any) => t.traitId === UserTraitIds.connectInfo,
     )
     const connectInfoExpValue: any = connectInfoExp?.traits?.data
     if (connectInfoExpValue) {
@@ -199,8 +202,8 @@ const createWorksPayloadData: any = (works: WorkInfo[]) => {
     })
 
     const payload: any = {
-        categoryName: 'Work',
-        traitId: 'work',
+        categoryName: UserTraitCategoryNames.work,
+        traitId: UserTraitIds.work,
         traits: {
             data,
         },
@@ -251,8 +254,8 @@ const createEducationsPayloadData: any = (educations: EducationInfo[]) => {
     })
 
     const payload: any = {
-        categoryName: 'Education',
-        traitId: 'education',
+        categoryName: UserTraitCategoryNames.education,
+        traitId: UserTraitIds.education,
         traits: {
             data,
         },
@@ -294,18 +297,18 @@ const createPersonalizationsPayloadData: any = (personalizations: Personalizatio
             shortBio,
             availableForGigs,
         }: any = personalization
-        return {
+        return _.omitBy({
             ...personalization,
             availableForGigs,
             profileSelfTitle,
             referAs,
             shortBio,
-        }
+        }, _.isUndefined)
     })
 
     const payload: any = {
-        categoryName: 'Personalization',
-        traitId: 'personalization',
+        categoryName: UserTraitCategoryNames.personalization,
+        traitId: UserTraitIds.personalization,
         traits: {
             data,
         },
@@ -318,7 +321,7 @@ export const updateMemberPersonalizations: any = (personalizations: Personalizat
         const tokenInfo: TokenModel = await getAsyncToken()
 
         await updateMemberTraits(tokenInfo.handle || '', createPersonalizationsPayloadData(personalizations))
-        dispatch(updatePersonalization(personalizations[0]))
+        dispatch(updatePersonalizations(personalizations))
     } catch (error) {
     }
 }
@@ -330,7 +333,7 @@ export const createMemberPersonalizations: any = (personalizations: Personalizat
 
         await createMemberTraits(tokenInfo.handle || '', createPersonalizationsPayloadData(personalizations))
         isCreatedSuccess = true
-        dispatch(updatePersonalization(personalizations[0]))
+        dispatch(updatePersonalizations(personalizations))
     } catch (error) {
     }
 
@@ -353,8 +356,8 @@ const createConnectInfosPayloadData: any = (connectInfos: ConnectInfo[]) => {
     })
 
     const payload: any = {
-        categoryName: 'Connect User Information',
-        traitId: 'connect_info',
+        categoryName: UserTraitCategoryNames.connectInfo,
+        traitId: UserTraitIds.connectInfo,
         traits: {
             data,
         },

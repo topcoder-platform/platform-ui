@@ -26,23 +26,26 @@ import FieldAvatar from '../../components/FieldAvatar'
 import InputTextAutoSave from '../../components/InputTextAutoSave'
 import InputTextareaAutoSave from '../../components/InputTextareaAutoSave'
 import MemberInfo from '../../models/MemberInfo'
-import PersonalizationInfo, { emptyPersonalizationInfo } from '../../models/PersonalizationInfo'
+import PersonalizationInfo from '../../models/PersonalizationInfo'
 
 import styles from './styles.module.scss'
 
-const blankPersonalizationInfo: PersonalizationInfo = emptyPersonalizationInfo()
-
-const PagePersonalizationContent: FC<{
+interface PagePersonalizationContentReduxProps {
     memberInfo?: MemberInfo,
-    reduxPersonalization: PersonalizationInfo | undefined
+    reduxPersonalizations: PersonalizationInfo[] | undefined
+    loadingMemberTraits: boolean
+    loadingMemberInfo: boolean
+}
+
+interface PagePersonalizationContentProps extends PagePersonalizationContentReduxProps {
     updateMemberPersonalizations: (infos: PersonalizationInfo[]) => void
     createMemberPersonalizations: (infos: PersonalizationInfo[]) => void
     setMemberPhotoUrl: (photoUrl: string) => void
     updateMemberPhotoUrl: (photoUrl: string) => void
     updateMemberDescription: (photoUrl: string) => void
-    loadingMemberTraits: boolean
-    loadingMemberInfo: boolean
-}> = props => {
+}
+
+const PagePersonalizationContent: FC<PagePersonalizationContentProps> = props => {
     const navigate: any = useNavigate()
 
     const shouldSavingData: MutableRefObject<boolean> = useRef<boolean>(false)
@@ -54,7 +57,8 @@ const PagePersonalizationContent: FC<{
         personalizationInfo,
         setPersonalizationInfo,
     }: useAutoSavePersonalizationType = useAutoSavePersonalization(
-        props.reduxPersonalization,
+        props.reduxPersonalizations,
+        ['profileSelfTitle'],
         props.updateMemberPersonalizations,
         props.createMemberPersonalizations,
         shouldSavingData,
@@ -117,7 +121,7 @@ const PagePersonalizationContent: FC<{
                         value={personalizationInfo?.profileSelfTitle || ''}
                         onChange={function onChange(value: string | undefined) {
                             setPersonalizationInfo({
-                                ...(personalizationInfo || blankPersonalizationInfo),
+                                ...(personalizationInfo || {}),
                                 profileSelfTitle: value || '',
                             })
                         }}
@@ -177,21 +181,22 @@ const PagePersonalizationContent: FC<{
     )
 }
 
-const mapStateToProps: any = (state: any) => {
-    const {
-        loadingMemberTraits,
-        loadingMemberInfo,
-        personalization,
-        memberInfo,
-    }: any = state.member
+const mapStateToProps: (state: any) => PagePersonalizationContentReduxProps
+    = (state: any): PagePersonalizationContentReduxProps => {
+        const {
+            loadingMemberTraits,
+            loadingMemberInfo,
+            personalizations,
+            memberInfo,
+        }: any = state.member
 
-    return {
-        loadingMemberInfo,
-        loadingMemberTraits,
-        memberInfo,
-        reduxPersonalization: personalization,
+        return {
+            loadingMemberInfo,
+            loadingMemberTraits,
+            memberInfo,
+            reduxPersonalizations: personalizations,
+        }
     }
-}
 
 const mapDispatchToProps: any = {
     createMemberPersonalizations,

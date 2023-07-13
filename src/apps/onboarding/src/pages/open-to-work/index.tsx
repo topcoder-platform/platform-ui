@@ -17,12 +17,17 @@ const FormInputCheckboxMiddleware: any = FormInputCheckbox as any
 
 const blankPersonalizationInfo: PersonalizationInfo = emptyPersonalizationInfo()
 
-export const PageOpenToWorkContent: FC<{
-    reduxPersonalization: PersonalizationInfo | undefined
+interface PageOpenToWorkContentReduxProps {
+    reduxPersonalizations: PersonalizationInfo[] | undefined
+    loadingMemberTraits: boolean
+}
+
+interface PageOpenToWorkContentProps extends PageOpenToWorkContentReduxProps {
     updateMemberPersonalizations: (infos: PersonalizationInfo[]) => void
     createMemberPersonalizations: (infos: PersonalizationInfo[]) => void
-    loadingMemberTraits: boolean
-}> = props => {
+}
+
+export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
     const navigate: any = useNavigate()
 
     const shouldSavingData: MutableRefObject<boolean> = useRef<boolean>(false)
@@ -33,7 +38,8 @@ export const PageOpenToWorkContent: FC<{
         personalizationInfo,
         setPersonalizationInfo,
     }: useAutoSavePersonalizationType = useAutoSavePersonalization(
-        props.reduxPersonalization,
+        props.reduxPersonalizations,
+        ['availableForGigs'],
         props.updateMemberPersonalizations,
         props.createMemberPersonalizations,
         shouldSavingData,
@@ -58,7 +64,7 @@ export const PageOpenToWorkContent: FC<{
         if (!personalizationInfo || personalizationInfo.availableForGigs === undefined) {
             shouldNavigateTo.current = pageUrl
             setPersonalizationInfo({
-                ...(personalizationInfo || blankPersonalizationInfo),
+                ...(personalizationInfo || {}),
                 availableForGigs: blankPersonalizationInfo.availableForGigs,
             })
         } else {
@@ -88,7 +94,7 @@ export const PageOpenToWorkContent: FC<{
                             inline
                             onChange={function onChange(e: any) {
                                 setPersonalizationInfo({
-                                    ...(personalizationInfo || blankPersonalizationInfo),
+                                    ...(personalizationInfo || {}),
                                     availableForGigs: e.target.checked,
                                 })
                             }}
@@ -131,17 +137,18 @@ export const PageOpenToWorkContent: FC<{
     )
 }
 
-const mapStateToProps: any = (state: any) => {
-    const {
-        loadingMemberTraits,
-        personalization,
-    }: any = state.member
+const mapStateToProps: (state: any) => PageOpenToWorkContentReduxProps
+    = (state: any): PageOpenToWorkContentReduxProps => {
+        const {
+            loadingMemberTraits,
+            personalizations,
+        }: any = state.member
 
-    return {
-        loadingMemberTraits,
-        reduxPersonalization: personalization,
+        return {
+            loadingMemberTraits,
+            reduxPersonalizations: personalizations,
+        }
     }
-}
 
 const mapDispatchToProps: any = {
     createMemberPersonalizations,

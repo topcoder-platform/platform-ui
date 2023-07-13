@@ -1,13 +1,11 @@
 import { FC, FocusEvent, useEffect, useState } from 'react'
+import { getYear, setYear } from 'date-fns'
 import _ from 'lodash'
 import classNames from 'classnames'
-import moment from 'moment'
 
-import { Button, InputText } from '~/libs/ui'
+import { Button, InputSelect, InputText } from '~/libs/ui'
 
-import DateInput from '../DateInput'
 import EducationInfo, { emptyEducationInfo } from '../../models/EducationInfo'
-import FormField from '../FormField'
 import OnboardingBaseModal from '../onboarding-base-modal'
 
 import styles from './styles.module.scss'
@@ -19,22 +17,20 @@ interface ModalAddEducationProps {
     onEdit?: (educationInfo: EducationInfo) => void
 }
 
+const years: number[] = _.range(1979, getYear(new Date()) + 10)
+const yearOptions: any = years
+    .map(v => ({
+        label: `${v}`,
+        value: `${v}`,
+    }))
+
 const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationProps) => {
     const [educationInfo, setEducationInfo] = useState(emptyEducationInfo())
     const [formErrors, setFormErrors] = useState<any>({
         collegeName: undefined,
         endDate: undefined,
         major: undefined,
-        startDate: undefined,
     })
-
-    const validateDate: any = (startDate: Date | undefined, endDate: Date | undefined) => {
-        const isInValid: any = endDate
-            && startDate
-            && moment(endDate)
-                .isSameOrBefore(startDate)
-        return !isInValid
-    }
 
     const validateField: any = () => {
         const errorTmp: any = {}
@@ -44,12 +40,6 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
 
         if (!educationInfo.major) {
             errorTmp.major = 'Required'
-        }
-
-        if (!educationInfo.startDate) {
-            errorTmp.startDate = 'Required'
-        } else if (!validateDate(educationInfo.startDate, educationInfo.endDate)) {
-            errorTmp.startDate = 'Start Date should be before End Date'
         }
 
         if (!educationInfo.endDate) {
@@ -129,51 +119,24 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                         error={formErrors.major}
                     />
                 </div>
-                <div className='d-flex gap-16 full-width'>
-                    <div
-                        className='flex-1'
-                    >
-                        <FormField
-                            label='Start Date *'
-                            error={
-                                formErrors.startDate
-                            }
-                        >
-                            <DateInput
-                                value={educationInfo.startDate}
-                                onChange={function onChange(v: Date | null) {
-                                    setEducationInfo({
-                                        ...educationInfo,
-                                        startDate: v || undefined,
-                                    })
-                                }}
-                                style2
-                                placeholder='Select start date'
-                            />
-                        </FormField>
-                    </div>
-                    <div
-                        className='flex-1'
-                    >
-                        <FormField
-                            label='End Date or Expected *'
-                            error={
-                                formErrors.endDate
-                            }
-                        >
-                            <DateInput
-                                value={educationInfo.endDate}
-                                onChange={function onChange(v: Date | null) {
-                                    setEducationInfo({
-                                        ...educationInfo,
-                                        endDate: v || undefined,
-                                    })
-                                }}
-                                style2
-                                placeholder='Select end date'
-                            />
-                        </FormField>
-                    </div>
+                <div className='full-width'>
+                    <InputSelect
+                        tabIndex={0}
+                        options={yearOptions}
+                        value={educationInfo.endDate ? `${getYear(educationInfo.endDate)}` : undefined}
+                        onChange={function onChange(event: any) {
+                            setEducationInfo({
+                                ...educationInfo,
+                                endDate: setYear(
+                                    new Date(),
+                                    parseInt(event.target.value, 10),
+                                ),
+                            })
+                        }}
+                        name='endDate'
+                        label='End Year or Expected'
+                        placeholder='Select year'
+                    />
                 </div>
             </div>
         </OnboardingBaseModal>
