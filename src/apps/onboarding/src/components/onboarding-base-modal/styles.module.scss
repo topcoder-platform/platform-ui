@@ -6,6 +6,7 @@
 
     @include ltemd {
         max-width: 375px !important;
+        padding: 40px 16px 32px 16px !important;
     }
 
     :global(.react-responsive-modal-closeButton) {
@@ -18,13 +19,12 @@
         }
     }
 
-    :global(.modal-body) {
-        padding-bottom: 0;
-        margin-bottom: 0;
-    }
-
     hr {
         margin-top: 30px;
+
+        @include ltemd {
+            margin-top: 32px;
+        }
     }
 
     h3 {
@@ -35,6 +35,10 @@
       font-weight: 600;
       line-height: 40px;
       text-transform: none;
+
+      @include ltemd {
+        font-size: 28px;
+      }
     }
 
     .modalContent {

@@ -187,7 +187,7 @@ const PageAccountDetailsContent: FC<{
                     name='streetAddr1'
                     label='Address 1'
                     value={memberAddress?.streetAddr1 || ''}
-                    onChange={function (event?: string) {
+                    onChange={function onChange(event?: string) {
                         setMemberAddress({
                             ...(memberAddress || blankMemberAddress),
                             streetAddr1: event || '',
@@ -202,7 +202,7 @@ const PageAccountDetailsContent: FC<{
                     name='streetAddr2'
                     label='Address 2'
                     value={memberAddress?.streetAddr2 || ''}
-                    onChange={function (event?: string) {
+                    onChange={function onChange(event?: string) {
                         setMemberAddress({
                             ...(memberAddress || blankMemberAddress),
                             streetAddr2: event || '',
@@ -221,7 +221,7 @@ const PageAccountDetailsContent: FC<{
                             name='city'
                             label='City'
                             value={memberAddress?.city || ''}
-                            onChange={function (event?: string) {
+                            onChange={function onChange(event?: string) {
                                 setMemberAddress({
                                     ...(memberAddress || blankMemberAddress),
                                     city: event || '',
@@ -240,7 +240,7 @@ const PageAccountDetailsContent: FC<{
                             name='stateCode'
                             label='State / Province'
                             value={memberAddress?.stateCode || ''}
-                            onChange={function (event?: string) {
+                            onChange={function onChange(event?: string) {
                                 setMemberAddress({
                                     ...(memberAddress || blankMemberAddress),
                                     stateCode: event || '',
@@ -260,7 +260,7 @@ const PageAccountDetailsContent: FC<{
                             name='zip'
                             label='Zip / Postal Code'
                             value={memberAddress?.zip || ''}
-                            onChange={function (event?: string) {
+                            onChange={function onChange(event?: string) {
                                 setMemberAddress({
                                     ...(memberAddress || blankMemberAddress),
                                     zip: event || '',
@@ -277,7 +277,7 @@ const PageAccountDetailsContent: FC<{
                 <InputSelect
                     options={countryOptions}
                     value={connectInfo?.country || ''}
-                    onChange={function (event: any) {
+                    onChange={function onChange(event: any) {
                         setConnectInfo({
                             ...(connectInfo || blankConnectInfo),
                             country: event.target.value,
@@ -299,7 +299,7 @@ const PageAccountDetailsContent: FC<{
                     name='phoneNumber'
                     label='Phone Number'
                     value={connectInfo?.phoneNumber || ''}
-                    onChange={function (event?: string) {
+                    onChange={function onChange(event?: string) {
                         setConnectInfo({
                             ...(connectInfo || blankConnectInfo),
                             phoneNumber: event || '',
