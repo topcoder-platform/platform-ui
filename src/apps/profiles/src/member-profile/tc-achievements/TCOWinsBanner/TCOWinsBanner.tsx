@@ -10,9 +10,17 @@ const TCOWinsBanner: FC<TCOWinsBannerProps> = (props: TCOWinsBannerProps) => (
     <div className={styles.container}>
         <p className='body-large-bold'>Topcoder Open (TCO)</p>
         <p className={styles.wins}>
-            {props.tcoWins}
-            {' '}
-            <span>{props.tcoWins === 1 ? 'time' : 'times'}</span>
+            {
+                props.tcoWins === 1 ? (
+                    <></>
+                ) : (
+                    <>
+                        {props.tcoWins}
+                        {' '}
+                        <span>times</span>
+                    </>
+                )
+            }
         </p>
         <p className={styles.champText}>Champion</p>
         <p className={styles.text}>

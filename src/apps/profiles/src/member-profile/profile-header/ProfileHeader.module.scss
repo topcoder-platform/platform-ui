@@ -11,23 +11,6 @@
         position: relative;
         margin-right: 60px;
 
-        .verifiedBadge {
-            position: absolute;
-            right: 0;
-            top: 0;
-            color: $tc-white;
-
-            svg {
-                width: 70px;
-                height: 70px;
-                fill: $turq-120;
-
-                path {
-                    fill: $turq-120;
-                }
-            }
-        }
-
         .profilePhoto {
             width: 300px;
             height: 300px;
@@ -38,14 +21,11 @@
 
         button {
             position: absolute;
-            right: 0;
-            top: calc(50% - 8px);
-            padding-right: $sp-1;
-
-            svg {
-                width: 16px;
-                height: 16px;
-            }
+            bottom: -10px;
+            left: calc(50% - 20px);
+            padding: $sp-2 $sp-3 !important;
+            background-color: $tc-white;
+            border-radius: 50%;
         }
     }
 
