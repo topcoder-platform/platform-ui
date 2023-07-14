@@ -2,6 +2,23 @@
 
 .workExpirenceCard {
     flex: 1;
+    margin-bottom: $sp-8;
+
+    &.workExpirenceCardModalView {
+        margin-bottom: 0;
+
+        .workExpirenceCardHeader {
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            font-size: 14px;
+            line-height: 22px;
+
+            :global(.body-main-bold) {
+                margin-bottom: $sp-2;
+            }
+        }    
+    }
 
     .workExpirenceCardHeader {
         display: flex;
