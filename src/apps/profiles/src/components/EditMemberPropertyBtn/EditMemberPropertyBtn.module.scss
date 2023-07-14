@@ -1,8 +1,12 @@
 @import "@libs/ui/styles/includes";
 
 .editMemberPropertyBtn {
+    padding: 0 !important;
+    padding-left: $sp-4 !important;
+    color: $black-100;
+
     svg {
-        width: 16px;
-        height: 16px;
+        width: 20px;
+        height: 20px;
     }
 }

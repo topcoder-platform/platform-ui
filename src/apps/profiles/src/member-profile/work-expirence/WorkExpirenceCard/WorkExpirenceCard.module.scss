@@ -3,6 +3,13 @@
 .workExpirenceCard {
     flex: 1;
     margin-bottom: $sp-8;
+    font-size: 14px;
+    line-height: 22px;
+    color: $black-60;
+
+    :global(.body-main-bold) {
+        color: $black-100;
+    }
 
     &.workExpirenceCardModalView {
         margin-bottom: 0;
@@ -11,13 +18,11 @@
             flex-direction: column;
             align-items: flex-start;
             justify-content: flex-start;
-            font-size: 14px;
-            line-height: 22px;
 
             :global(.body-main-bold) {
                 margin-bottom: $sp-2;
             }
-        }    
+        }
     }
 
     .workExpirenceCardHeader {

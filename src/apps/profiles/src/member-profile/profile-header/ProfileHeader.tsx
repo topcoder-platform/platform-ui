@@ -5,14 +5,13 @@ import { KeyedMutator } from 'swr'
 import moment from 'moment'
 
 import {
-    getVerificationStatusAsync,
     useMemberTraits,
     UserProfile,
     UserTrait,
     UserTraitIds,
     UserTraits,
 } from '~/libs/core'
-import { Button, IconOutline } from '~/libs/ui'
+import { Button } from '~/libs/ui'
 
 import { EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
@@ -33,9 +32,6 @@ const DEFAULT_MEMBER_AVATAR: string
 
 const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     const photoURL: string = props.profile.photoURL || DEFAULT_MEMBER_AVATAR
-
-    const [isMemberVerified, setIsMemberVerified]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
 
@@ -76,15 +72,6 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.authProfile])
 
-    useEffect(() => {
-        if (!props.profile?.handle) {
-            return
-        }
-
-        getVerificationStatusAsync(props.profile.handle)
-            .then(verified => setIsMemberVerified(verified))
-    }, [props.profile.handle])
-
     function handleHireMeClick(): void {
         console.log('Hire Me button clicked')
     }
@@ -124,13 +111,6 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         <div className={styles.container}>
             <div className={styles.photoWrap}>
                 <img src={photoURL} alt='Topcoder - Member Profile Avatar' className={styles.profilePhoto} />
-                {
-                    isMemberVerified ? (
-                        <div className={styles.verifiedBadge}>
-                            <IconOutline.CheckCircleIcon />
-                        </div>
-                    ) : undefined
-                }
                 {
                     canEdit && (
                         <EditMemberPropertyBtn
