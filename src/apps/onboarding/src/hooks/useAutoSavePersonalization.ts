@@ -1,4 +1,4 @@
-import { Dispatch, MutableRefObject, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, MutableRefObject, SetStateAction, useEffect, useMemo, useState } from 'react'
 import _ from 'lodash'
 
 import PersonalizationInfo from '../models/PersonalizationInfo'
@@ -10,31 +10,44 @@ export interface useAutoSavePersonalizationType {
 }
 
 type useAutoSavePersonalizationFunctionType = (
-    reduxPersonalization: PersonalizationInfo | undefined,
+    reduxPersonalizations: PersonalizationInfo[] | undefined,
+    savingFields: string[],
     updateMemberPersonalizations: (infos: PersonalizationInfo[]) => void,
     createMemberPersonalizations: (infos: PersonalizationInfo[]) => void,
     shouldSavingData: MutableRefObject<boolean>,
 ) => useAutoSavePersonalizationType
 
 export const useAutoSavePersonalization: useAutoSavePersonalizationFunctionType = (
-    reduxPersonalization: PersonalizationInfo | undefined,
+    reduxPersonalizations: PersonalizationInfo[] | undefined,
+    savingFields: string[],
     updateMemberPersonalizations: (infos: PersonalizationInfo[]) => void,
     createMemberPersonalizations: (infos: PersonalizationInfo[]) => void,
     shouldSavingData: MutableRefObject<boolean>,
 ) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [personalizationInfo, setPersonalizationInfo] = useState<PersonalizationInfo | undefined>(undefined)
+    const reduxPersonalization = useMemo(() => (reduxPersonalizations || []).find(
+        (trait: any) => _.some(savingFields, (savingField: string) => trait[savingField] !== undefined),
+    ), [reduxPersonalizations, savingFields])
 
     const saveData: any = async () => {
         if (!personalizationInfo) {
             return
         }
 
+        const datas: PersonalizationInfo[] = [
+            ..._.reject(
+                reduxPersonalizations || [],
+                (trait: any) => _.some(savingFields, (savingField: string) => trait[savingField] !== undefined),
+            ),
+            personalizationInfo,
+        ]
+
         setLoading(true)
         if (!reduxPersonalization) {
-            await createMemberPersonalizations([personalizationInfo])
+            await createMemberPersonalizations(datas)
         } else {
-            await updateMemberPersonalizations([personalizationInfo])
+            await updateMemberPersonalizations(datas)
         }
 
         setLoading(false)
@@ -54,7 +67,7 @@ export const useAutoSavePersonalization: useAutoSavePersonalizationFunctionType 
     }, [personalizationInfo])
 
     useEffect(() => {
-        if (!personalizationInfo && reduxPersonalization) {
+        if (!personalizationInfo && !!reduxPersonalization) {
             setPersonalizationInfo(reduxPersonalization)
         }
         /* eslint-disable react-hooks/exhaustive-deps */

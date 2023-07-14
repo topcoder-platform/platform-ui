@@ -1,17 +1,18 @@
-import { Member } from '~/apps/talent-search/src/lib/models'
+import _ from 'lodash'
 
 import { ACTIONS } from '../../config'
 import ConnectInfo from '../../models/ConnectInfo'
 import EducationInfo from '../../models/EducationInfo'
 import MemberAddress from '../../models/MemberAddress'
+import MemberInfo from '../../models/MemberInfo'
 import PersonalizationInfo from '../../models/PersonalizationInfo'
 import WorkInfo from '../../models/WorkInfo'
 
 const initialState: {
-    memberInfo?: Member
+    memberInfo?: MemberInfo
     works?: WorkInfo[]
     educations?: EducationInfo[]
-    personalization?: PersonalizationInfo
+    personalizations?: PersonalizationInfo[]
     address?: MemberAddress
     connectInfo?: ConnectInfo
     loadingMemberTraits?: boolean
@@ -37,10 +38,10 @@ const memberReducer: any = (
                 ...state,
                 works: action.payload,
             }
-        case ACTIONS.MEMBER.SET_PERSONALIZATION:
+        case ACTIONS.MEMBER.SET_PERSONALIZATIONS:
             return {
                 ...state,
-                personalization: action.payload,
+                personalizations: action.payload,
             }
         case ACTIONS.MEMBER.SET_ADDRESS:
             return {
@@ -72,12 +73,12 @@ const memberReducer: any = (
                 return state
             }
 
+            const newMemberInfo = _.cloneDeep(state.memberInfo)
+            newMemberInfo.description = action.payload
+
             return {
                 ...state,
-                memberInfo: {
-                    ...state.memberInfo,
-                    description: action.payload,
-                },
+                memberInfo: newMemberInfo,
             }
         }
 
@@ -86,12 +87,12 @@ const memberReducer: any = (
                 return state
             }
 
+            const newMemberInfo = _.cloneDeep(state.memberInfo)
+            newMemberInfo.photoURL = action.payload
+
             return {
                 ...state,
-                memberInfo: {
-                    ...state.memberInfo,
-                    photoURL: action.payload,
-                },
+                memberInfo: newMemberInfo,
             }
         }
 

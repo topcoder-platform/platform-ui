@@ -2,7 +2,6 @@ export default interface EducationInfo {
     collegeName: string
     major: string
     dateDescription: string
-    startDate?: Date
     endDate?: Date
     id: number
 }
@@ -13,5 +12,4 @@ export const emptyEducationInfo: () => EducationInfo = () => ({
     endDate: undefined,
     id: 0,
     major: '',
-    startDate: undefined,
 })

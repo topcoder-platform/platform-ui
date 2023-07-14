@@ -3,12 +3,10 @@ import _ from 'lodash'
 import classNames from 'classnames'
 import moment from 'moment'
 
-import { Button, InputSelect, InputText } from '~/libs/ui'
+import { Button, IconSolid, InputDatePicker, InputSelect, InputText, Tooltip } from '~/libs/ui'
 import { FormInputCheckbox } from '~/apps/self-service/src/components/form-elements'
 
 import { INDUSTRIES_OPTIONS } from '../../config'
-import DateInput from '../DateInput'
-import FormField from '../FormField'
 import OnboardingBaseModal from '../onboarding-base-modal'
 import WorkInfo, { emptyWorkInfo } from '../../models/WorkInfo'
 
@@ -33,6 +31,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
     const [workInfo, setWorkInfo] = useState(emptyWorkInfo())
     const [formErrors, setFormErrors] = useState<any>({
         company: undefined,
+        endDate: undefined,
         position: undefined,
         startDate: undefined,
     })
@@ -55,8 +54,14 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
             errorTmp.position = 'Required'
         }
 
-        if (!validateDate(workInfo.startDate, workInfo.endDate)) {
+        if (!workInfo.startDate) {
+            errorTmp.startDate = 'Required'
+        } else if (!validateDate(workInfo.startDate, workInfo.endDate)) {
             errorTmp.startDate = 'Start Date should be before End Date'
+        }
+
+        if (!workInfo.endDate && !workInfo.currentlyWorking) {
+            errorTmp.endDate = 'Required'
         }
 
         setFormErrors(errorTmp)
@@ -68,6 +73,24 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
             setWorkInfo(props.editingWork)
         }
     }, [props.editingWork])
+
+    const endDateUI = (
+        <InputDatePicker
+            label={workInfo.currentlyWorking ? 'End Date' : 'End Date *'}
+            date={workInfo.endDate}
+            onChange={function onChange(v: any) {
+                setWorkInfo({
+                    ...workInfo,
+                    endDate: v || undefined,
+                })
+            }}
+            disabled={workInfo.currentlyWorking || false}
+            error={formErrors.endDate}
+            dirty
+            maxDate={new Date()}
+            placeholder='Select end date'
+        />
+    )
 
     return (
         <OnboardingBaseModal
@@ -85,25 +108,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         label='save'
                         onClick={function onClick() {
                             if (validateField()) {
-                                const endDate: Date | undefined = workInfo.endDate
-                                let endDateString: string = endDate ? moment(endDate)
-                                    .format('YYYY') : ''
-                                if (workInfo.currentlyWorking) {
-                                    endDateString = 'current'
-                                }
-
-                                let startDateString: string = workInfo.startDate ? moment(workInfo.startDate)
-                                    .format('YYYY') : ''
-                                if (startDateString) {
-                                    startDateString += '-'
-                                }
-
-                                (props.editingWork ? props.onEdit : props.onAdd)?.({
-                                    ...workInfo,
-                                    dateDescription: (
-                                        workInfo.startDate || workInfo.endDate
-                                    ) ? `${startDateString}${endDateString}` : '',
-                                })
+                                (props.editingWork ? props.onEdit : props.onAdd)?.(workInfo)
                                 props.onClose?.()
                             }
                         }}
@@ -152,6 +157,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                 </div>
                 <div className='full-width'>
                     <InputSelect
+                        tabIndex={0}
                         options={industryOptions}
                         value={workInfo.industry}
                         onChange={function onChange(event: any) {
@@ -163,69 +169,54 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         name='industry'
                         label='Industry'
                         placeholder='Select industry'
-                    />
-                </div>
-                <div className='full-width'>
-                    <InputText
-                        name='location'
-                        label='Location'
-                        value={workInfo.city}
-                        onChange={function onChange(event: any) {
-                            setWorkInfo({
-                                ...workInfo,
-                                city: event.target.value,
-                            })
-                        }}
-                        placeholder='Enter city, country'
-                        tabIndex={0}
-                        type='text'
+                        dirty
                     />
                 </div>
                 <div className='d-flex gap-16 full-width'>
                     <div
                         className='flex-1'
                     >
-                        <FormField
-                            label='Start Date'
-                            error={
-                                formErrors.startDate
-                            }
-                        >
-                            <DateInput
-                                value={workInfo.startDate}
-                                onChange={function onChange(v: any) {
-                                    setWorkInfo({
-                                        ...workInfo,
-                                        startDate: v || undefined,
-                                    })
-                                }}
-                                style2
-                                placeholder='Select start date'
-                            />
-                        </FormField>
+                        <InputDatePicker
+                            label='Start Date *'
+                            date={workInfo.startDate}
+                            onChange={function onChange(v: any) {
+                                setWorkInfo({
+                                    ...workInfo,
+                                    startDate: v || undefined,
+                                })
+                            }}
+                            disabled={false}
+                            error={formErrors.startDate}
+                            dirty
+                            maxDate={new Date()}
+                            placeholder='Select start date'
+                        />
                     </div>
                     <div
                         className='flex-1'
                     >
-                        <FormField
-                            label='End Date'
-                        >
-                            <DateInput
-                                disabled={workInfo.currentlyWorking}
-                                value={workInfo.endDate}
-                                onChange={function onChange(v: any) {
-                                    setWorkInfo({
-                                        ...workInfo,
-                                        endDate: v || undefined,
-                                    })
-                                }}
-                                style2
-                                placeholder='Select end date'
-                            />
-                        </FormField>
+                        {workInfo.currentlyWorking ? (
+                            <Tooltip
+                                content={(
+                                    <div className={classNames('d-flex flex-column', styles.blockEndDateTooltip)}>
+                                        <div className='d-flex align-items-center'>
+                                            <IconSolid.InformationCircleIcon width={16} height={16} />
+                                            <span className={styles.textTooltipTitle}>End Date</span>
+                                        </div>
+                                        <span>
+                                            You can not select an end date if you are
+                                            currently working in this role.
+                                        </span>
+                                    </div>
+                                )}
+                                place='top'
+                            >
+                                {endDateUI}
+                            </Tooltip>
+                        ) : endDateUI}
                     </div>
                 </div>
-                <div className='mt-16 mobile-mt-0'>
+                <div className='mt-8 mobile-mt-0'>
                     <FormInputCheckboxMiddleware
                         label='I am currently working in this role'
                         checked={workInfo.currentlyWorking}
@@ -234,6 +225,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                             setWorkInfo({
                                 ...workInfo,
                                 currentlyWorking: e.target.checked,
+                                endDate: e.target.checked ? undefined : workInfo.endDate,
                             })
                         }}
                     />

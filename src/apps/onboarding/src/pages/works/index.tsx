@@ -1,8 +1,9 @@
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
 import { connect } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import _ from 'lodash'
 import classNames from 'classnames'
+import moment from 'moment'
 
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
 
@@ -55,6 +56,27 @@ export const PageWorksContent: FC<{
         /* eslint-disable react-hooks/exhaustive-deps */
     }, [works])
 
+    const displayWorks = useMemo(() => (works || []).map(workItem => {
+        const startDate: Date | undefined = workItem.startDate
+        const endDate: Date | undefined = workItem.endDate
+        let endDateString: string = endDate ? moment(endDate)
+            .format('YYYY') : ''
+        if (workItem.currentlyWorking) {
+            endDateString = 'current'
+        }
+
+        const startDateString: string = startDate ? moment(startDate)
+            .format('YYYY') : ''
+        return {
+            ...workItem,
+            dateDescription: [
+                ...(startDateString ? [startDateString] : []),
+                ...(endDateString ? [endDateString] : []),
+            ].join('-'),
+            description: workItem.company,
+        }
+    }), [works])
+
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
             <h2>Show us what you have done!</h2>
@@ -68,16 +90,16 @@ export const PageWorksContent: FC<{
                         Add details for career experiences that demonstrate your abilities.
                     </span>
 
-                    {(works || []).length > 0 ? (
+                    {displayWorks.length > 0 ? (
                         <div
                             className={'d-grid grid-2-column mobile-grid-1-column '
                                 + ' gap-column-16 gap-row-8 mobile-gap-row-16 full-width mt-24 mobile-mt-8'}
                         >
-                            {(works || []).map(work => (
+                            {displayWorks.map(work => (
                                 <CardItem
                                     key={work.id}
                                     title={work.position || ''}
-                                    subTitle={work.city || ''}
+                                    subTitle={work.description || ''}
                                     description={work.dateDescription || ''}
                                     onEdit={function onEdit() {
                                         setEditingWork(work)
