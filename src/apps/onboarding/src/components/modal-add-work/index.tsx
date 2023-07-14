@@ -172,7 +172,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         dirty
                     />
                 </div>
-                <div className='d-flex gap-16 full-width'>
+                <div className='d-flex gap-16 full-width flex-wrap'>
                     <div
                         className='flex-1'
                     >
