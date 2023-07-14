@@ -1,8 +1,10 @@
-import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useState } from 'react'
 import { Params, useParams } from 'react-router-dom'
 
-import { profileGetPublicAsync, UserProfile } from '~/libs/core'
+import { profileContext, ProfileContextData, profileGetPublicAsync, UserProfile } from '~/libs/core'
 import { LoadingSpinner } from '~/libs/ui'
+
+import { notifyUniNavi } from '../lib'
 
 import { ProfilePageLayout } from './page-layout'
 
@@ -16,6 +18,8 @@ const MemberProfilePage: FC<{}> = () => {
 
     const [profileReady, setProfileReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
+    const { profile: authProfile }: ProfileContextData = useContext(profileContext)
+
     useEffect(() => {
         if (routeParams.memberHandle) {
             profileGetPublicAsync(routeParams.memberHandle)
@@ -23,9 +27,19 @@ const MemberProfilePage: FC<{}> = () => {
                     setProfile(userProfile)
                     setProfileReady(true)
                 })
-                // TODO: NOT FOUND PAGE redirect/dispaly
+            // TODO: NOT FOUND PAGE redirect/dispaly
         }
     }, [routeParams.memberHandle])
+
+    const refreshProfile = useCallback((handle: string) => (
+        profileGetPublicAsync(handle)
+            .then(userProfile => {
+                setProfile(userProfile)
+                if (userProfile) {
+                    notifyUniNavi(userProfile)
+                }
+            })
+    ), [])
 
     return (
         <>
@@ -34,6 +48,8 @@ const MemberProfilePage: FC<{}> = () => {
             {profileReady && profile && (
                 <ProfilePageLayout
                     profile={profile}
+                    refreshProfile={refreshProfile}
+                    authProfile={authProfile}
                 />
             )}
         </>

@@ -42,7 +42,7 @@ export function getSorted<T extends { [propertyName: string]: any }>(
         return direction === 'asc' ? a - b : b - a
     }
 
-    if (sortColumn.type === 'money') {
+    if (sortColumn.type === 'money' || sortColumn.type === 'number' || sortColumn.type === 'numberElement') {
         return sortedData
             .sort((a: T, b: T) => sortNumbers(+a[sort.fieldName], +b[sort.fieldName], sort.direction))
     }

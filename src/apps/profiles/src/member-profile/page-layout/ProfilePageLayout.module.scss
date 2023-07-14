@@ -3,34 +3,98 @@
 .container {
     display: flex;
     flex-direction: column;
+    background-color: $black-5;
+    height: 100%;
 
-    .contentLayoutOuter {
-        margin-top: $sp-12;
+    .profileHeaderWrap {
+        background: url('../../lib/assets/profile-header-bg.png') no-repeat right top / auto, linear-gradient(#0d83c5, #0e89d5);
 
-        .basicInfoWrap {
-            display: flex;
+        .profileHeaderContent {
+            padding: 0;
+            max-height: 260px;
+            overflow: visible;
+
+            @include ltelg {
+                max-height: 100%;
+            }
+        }
+
+        .profileHeaderContentOuter {
+            margin-top: 75px;
+        }
+
+        .profileHeaderBottom {
+            height: 90px;
+            background-color: $tc-white
+        }
+    }
+
+    .profileOuter {
+        margin-top: 130px;
+
+        .profileInfoWrap {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            grid-gap: $sp-15;
             margin-bottom: $sp-13;
 
             @include ltelg {
-                flex-direction: column;
+                grid-template-columns: 1fr;
+                gap: 0;
             }
 
-            .skillsWrap {
+            .profileInfoLeft {
                 display: flex;
                 flex-direction: column;
-                flex: 1;
+
+                .skillsWrap {
+                    display: flex;
+                    flex-direction: column;
+                    flex: 1;
+                }
+            }
+
+            .profileInfoRight {
+                display: flex;
+                flex-direction: column;
+                margin-top: -275px;
+
+                @include ltelg {
+                    margin-top: 0;
+                }
 
                 .shortBio {
-                    margin-top: $sp-4;
-                    padding-right: $sp-13;
+                    margin-bottom: $sp-8;
 
-                    @include ltelg {
-                        margin-top: 0;
-                        margin-bottom: $sp-4;
-                        padding-right: 0;
+                    :global(.body-large-medium),
+                    :global(.body-large) {
+                        text-align: left;
+                        margin-bottom: $sp-2;
+                    }
+
+                    :global(.body-large) {
+                        font-style: italic;
                     }
                 }
             }
         }
+
+        .expirenceWrap {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+
+            @include ltelg {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+        }
     }
+}
+
+.sectionWrap {
+    background-color: $tc-white;
+    padding: $sp-8 $sp-8 0;
+    margin-bottom: $sp-8;
+    border-radius: 16px;
 }

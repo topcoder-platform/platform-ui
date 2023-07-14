@@ -78,13 +78,19 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
             hideInlineErrors={props.hideInlineErrors}
             ref={triggerRef}
         >
-            <div className={styles.selected} onClick={toggleIfNotDisabled}>
+            <button
+                tabIndex={props.tabIndex}
+                className={styles.selected}
+                onClick={toggleIfNotDisabled}
+                type='button'
+                disabled={!!props.disabled}
+            >
                 <span className='body-small'>{selectedOption ? label(selectedOption) : ''}</span>
                 <span className='body-small'>{!selectedOption && !!props.placeholder ? props.placeholder : ''}</span>
                 <span className={styles['selected-icon']}>
                     <IconOutline.ChevronDownIcon />
                 </span>
-            </div>
+            </button>
 
             <div className={styles['menu-wrap']}>
                 {menuIsVisible && (

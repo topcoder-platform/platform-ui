@@ -13,8 +13,10 @@ export const TC_DOMAIN: string = get({
 
 export const TOPCODER_URL: string = `https://www.${TC_DOMAIN}`
 export const PLATFORMUI_URL: string = `https://platform-ui.${TC_DOMAIN}`
+export const USER_PROFILE_URL: string = `https://profiles.${TC_DOMAIN}`
 
 export const API = {
+    V1: `https://api.${TC_DOMAIN}/v1`,
     V2: `https://api.${TC_DOMAIN}/v2`,
     V3: `https://api.${TC_DOMAIN}/v3`,
     V4: `https://api.${TC_DOMAIN}/v4`,
@@ -40,10 +42,8 @@ export const VANILLA_FORUM = {
 }
 
 export const STRIPE = {
-    ADMIN_TOKEN: getReactEnv<string | undefined>('STRIPE_ADMIN_TOKEN', undefined),
     API_KEY: getReactEnv<string>('STRIPE_API_KEY', ''),
     API_VERSION: getReactEnv<string | undefined>('STRIPE_API_VERSION', undefined),
-    CUSTOMER_TOKEN: getReactEnv<string | undefined>('STRIPE_CUSTOMER_TOKEN', undefined),
 }
 
 export const URLS = {

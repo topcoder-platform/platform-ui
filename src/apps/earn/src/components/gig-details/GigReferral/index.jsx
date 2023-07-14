@@ -138,7 +138,7 @@ const GigReferral = ({ className }) => {
       </div>
       <div className={styles.incentive}>
         Refer someone to this gig and earn $500. Just add their email below. See{" "}
-        <a target="_blank" href={REFERRAL_PROGRAM_URL}>
+        <a target="_blank" href={REFERRAL_PROGRAM_URL} rel="noreferrer">
           how it works
         </a>
         .

@@ -18,8 +18,7 @@ import {
     DefaultMemberIcon,
     IconOutline,
     LinkButton,
-    Tooltip,
-    VerifiedMemberFlagSvg,
+    VerifiedMemberBadge,
 } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
 import { UserProfile } from '~/libs/core'
@@ -185,18 +184,7 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                                     <p className='body-large-medium'>{props.userProfile.handle}</p>
                                     {
                                         props.isMemberVerified ? (
-                                            <div className={styles.verifyStatus}>
-                                                <VerifiedMemberFlagSvg />
-                                                <span className='overline'>verified member</span>
-                                                <Tooltip
-                                                    content={`This member is compliant with Topcoder policies
-                                                and is a trusted member of the Topcoder community.`}
-                                                >
-                                                    <IconOutline.InformationCircleIcon
-                                                        className={styles.toolTipIcon}
-                                                    />
-                                                </Tooltip>
-                                            </div>
+                                            <VerifiedMemberBadge />
                                         ) : undefined
                                     }
                                 </div>

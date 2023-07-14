@@ -1,16 +1,13 @@
 import { Dispatch, SetStateAction, useState } from 'react'
 import { bind } from 'lodash'
 
+import { AppSubdomain, EnvironmentConfig } from '~/config'
 import {
     CertificateBadgeIcon,
     CourseBadge,
-    HiringManagerView,
     LearnUserCertificationProgress,
-    TCACertification,
     TCACertificationEnrollmentBase,
 } from '~/apps/learn/src/lib'
-import { CertificateView } from '~/apps/learn/src/course-certificate/certificate-view'
-import { getTCACertificationValidationUrl } from '~/apps/learn/src/learn.routes'
 import { UserCompletedCertificationsData, UserProfile, useUserCompletedCertifications } from '~/libs/core'
 import { BaseModal, TCALogo } from '~/libs/ui'
 
@@ -31,14 +28,20 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
         TCACertificationEnrollmentBase | undefined, Dispatch<SetStateAction<TCACertificationEnrollmentBase | undefined>>
     ] = useState<TCACertificationEnrollmentBase | undefined>(undefined)
 
-    const validateLink: string = getTCACertificationValidationUrl(selectedCertification?.completionUuid as string)
-
     const [coursePreviewModalIsOpen, setCoursePreviewModalIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
     const [selectedCourse, setSelectedCourse]: [
         LearnUserCertificationProgress | undefined, Dispatch<SetStateAction<LearnUserCertificationProgress | undefined>>
     ] = useState<LearnUserCertificationProgress | undefined>(undefined)
+
+    const tcaHiringManagerViewUrl: string
+        // eslint-disable-next-line max-len
+        = `https://${AppSubdomain.tcAcademy}.${EnvironmentConfig.TC_DOMAIN}/tca-certifications/${selectedCertification?.topcoderCertification?.dashedName}/${selectedCertification?.userHandle}/certification?view-style=modal`
+
+    const tcaCourseViewUrl: string
+        // eslint-disable-next-line max-len
+        = `https://${AppSubdomain.tcAcademy}.${EnvironmentConfig.TC_DOMAIN}/${selectedCourse?.resourceProvider.name}/${selectedCourse?.certification}/${props.profile?.handle}/certificate`
 
     function onCertClick(enrollment: TCACertificationEnrollmentBase): void {
         setCertPreviewModalIsOpen(true)
@@ -56,6 +59,17 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
 
     function handleHideCoursePreviewModal(): void {
         setCoursePreviewModalIsOpen(false)
+    }
+
+    function handleCourseProviderClick(course: LearnUserCertificationProgress, e: MouseEvent): void {
+        e.stopPropagation()
+        e.preventDefault()
+
+        const url: URL
+            = new URL(!/^https?:\/\//i.test(course.resourceProvider.url)
+                ? `https://${course.resourceProvider.url}` : course.resourceProvider.url)
+
+        window.open(url, '_blank')
     }
 
     return memberTCA && (memberTCA.courses.length || memberTCA.enrollments.length) ? (
@@ -104,7 +118,18 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
                             key={course.courseKey}
                         >
                             <CourseBadge type={course.certificationTrackType} />
-                            <div className={styles.certificationTitle}>{course.certificationTitle}</div>
+                            <div className={styles.certificationTitle}>
+                                {course.certificationTitle}
+                                <a
+                                    className={styles.courseProvider}
+                                    href={course.resourceProvider.url}
+                                    onClick={bind(handleCourseProviderClick, this, course)}
+                                >
+                                    by
+                                    {' '}
+                                    {course.resourceProvider.name}
+                                </a>
+                            </div>
                         </div>
                     ))
                 }
@@ -116,13 +141,12 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
                     open
                     size='body'
                     theme='clear'
+                    contentClassName={styles.certPreviewModalWrap}
                 >
-                    <HiringManagerView
-                        certification={selectedCertification?.topcoderCertification as TCACertification}
-                        completionUuid={selectedCertification?.completionUuid as string}
-                        isModalView
-                        userProfile={props.profile as UserProfile}
-                        validationUrl={validateLink}
+                    <iframe
+                        className={styles.certPreviewModalIframe}
+                        src={tcaHiringManagerViewUrl}
+                        title={selectedCertification?.topcoderCertification?.title}
                     />
                 </BaseModal>
             )}
@@ -134,11 +158,10 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
                     size='body'
                     title='TOPCODER ACADEMY'
                 >
-                    <CertificateView
-                        certification={selectedCourse?.certification as string}
-                        profile={props.profile as UserProfile}
-                        provider={selectedCourse?.resourceProvider.name as string}
-                        fullScreenCertLayout
+                    <iframe
+                        className={styles.certPreviewModalIframe}
+                        src={tcaCourseViewUrl}
+                        title={selectedCourse?.certificationTitle}
                     />
                 </BaseModal>
             )}

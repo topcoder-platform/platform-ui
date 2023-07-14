@@ -1,0 +1,35 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: $sp-8;
+
+    .headerWrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: $sp-4;
+
+        h3 {
+            font-family: $font-roboto;
+            font-weight: 700;
+            text-transform: none;
+            font-size: 20px;
+            line-height: 26px;
+            color: $black-60;
+        }
+    }
+
+    .emptyBlock {
+        display: none;
+    }
+
+    .educationContentWrap {
+        display: flex;
+        flex-direction: column;
+        &:empty + .emptyBlock {
+            display: flex;
+        }
+    }
+}

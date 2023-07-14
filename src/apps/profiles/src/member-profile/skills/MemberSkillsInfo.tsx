@@ -1,40 +1,116 @@
-import { FC } from 'react'
+import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import classNames from 'classnames'
 
-import { useMemberSkills, UserProfile, UserSkill } from '~/libs/core'
-import { TCVerifiedSkillIcon, TCVerifiedSkillWhiteIcon } from '~/libs/ui'
+import { isVerifiedSkill, UserEMSISkill, UserProfile } from '~/libs/core'
+import { IconOutline } from '~/libs/ui'
 
-import { TC_VERIFIED_SKILL_LABEL } from '../../config'
+import { EditMemberPropertyBtn, EmptySection } from '../../components'
+import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 
+import { ModifySkillsModal } from './ModifySkillsModal'
 import styles from './MemberSkillsInfo.module.scss'
 
 interface MemberSkillsInfoProps {
-    profile: UserProfile | undefined
+    profile: UserProfile
+    authProfile: UserProfile | undefined
+    refreshProfile: (handle: string) => void
 }
 
 const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProps) => {
+    const [queryParams]: [URLSearchParams, any] = useSearchParams()
+    const editMode: string | null = queryParams.get(EDIT_MODE_QUERY_PARAM)
 
-    const memberSkills: UserSkill[] | undefined = useMemberSkills(props.profile?.handle)
+    const canEdit: boolean = props.authProfile?.handle === props.profile.handle
 
-    return memberSkills ? (
+    const memberEMSISkills: UserEMSISkill[] = useMemo(
+        () => (props.profile.emsiSkills || [])
+            .sort((a, b) => (+isVerifiedSkill(b.skillSources))
+                - (+isVerifiedSkill(a.skillSources)) || a.name.localeCompare(b.name)),
+        [props.profile.emsiSkills],
+    )
+
+    const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
+    useEffect(() => {
+        if (props.authProfile && editMode === profileEditModes.skills) {
+            setIsEditMode(true)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.authProfile])
+
+    function handleEditSkillsClick(): void {
+        setIsEditMode(true)
+    }
+
+    function handleModyfSkillsModalClose(): void {
+        setIsEditMode(false)
+    }
+
+    function handleModyfSkillsSave(): void {
+        setTimeout(() => {
+            setIsEditMode(false)
+            props.refreshProfile(props.profile.handle)
+        }, 1500)
+    }
+
+    return memberEMSISkills ? (
         <div className={styles.container}>
-            <h3>Skills</h3>
+            <div className={styles.titleWrap}>
+                <div className={styles.headerWrap}>
+                    <h3>Skills</h3>
+                    {
+                        canEdit && (
+                            <EditMemberPropertyBtn
+                                onClick={handleEditSkillsClick}
+                            />
+                        )
+                    }
+                </div>
+                <a
+                    className={styles.legendWrap}
+                    href='/'
+                >
+                    How skills work?
+                </a>
+            </div>
 
             <div className={styles.skillsWrap}>
-                {
-                    memberSkills.map((memberSkill: UserSkill) => (
-                        <div className={styles.skillItem} key={memberSkill.id}>
-                            {memberSkill.sources?.includes('CHALLENGE') && <TCVerifiedSkillWhiteIcon />}
-                            {memberSkill.tagName}
+                {memberEMSISkills?.length > 0
+                    ? memberEMSISkills.map((memberEMSISkill: UserEMSISkill) => (
+                        <div
+                            className={classNames(
+                                styles.skillItem,
+                                isVerifiedSkill(memberEMSISkill.skillSources) ? styles.verifiedSkillItem : '',
+                            )}
+                            key={memberEMSISkill.id}
+                        >
+                            {memberEMSISkill.name}
+                            {isVerifiedSkill(memberEMSISkill.skillSources) && <IconOutline.CheckCircleIcon />}
                         </div>
                     ))
-                }
+                    : (
+                        <EmptySection
+                            title='Topcoder verifies and tracks skills as our members complete projects and challenges.'
+                            wide
+                            selfMessage='Adding at least five skills will increase your visibility with customers.'
+                            isSelf={canEdit}
+                        >
+                            This member has not yet provided skills, but check back soon as their skills will grow as
+                            they complete project tasks.
+                        </EmptySection>
+                    )}
             </div>
 
-            <div className={styles.legendWrap}>
-                <TCVerifiedSkillIcon />
-                {' = '}
-                {TC_VERIFIED_SKILL_LABEL}
-            </div>
+            {
+                isEditMode && (
+                    <ModifySkillsModal
+                        onClose={handleModyfSkillsModalClose}
+                        onSave={handleModyfSkillsSave}
+                    />
+                )
+            }
         </div>
     ) : <></>
 }

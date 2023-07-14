@@ -1,0 +1,11 @@
+@import '@libs/ui/styles/includes';
+
+.educationCard {
+    flex: 1;
+
+    .educationCardHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+}

@@ -2,7 +2,9 @@ export interface GlobalConfig {
     TC_DOMAIN: string
     TOPCODER_URL: string
     PLATFORMUI_URL: string
+    USER_PROFILE_URL: string
     API: {
+        V1: string
         V3: string
         V4: string
         V5: string
@@ -20,10 +22,8 @@ export interface GlobalConfig {
         ENVIRONMENT_ID: string | undefined
     }
     STRIPE: {
-        ADMIN_TOKEN: string | undefined
         API_KEY: string
         API_VERSION: string | undefined
-        CUSTOMER_TOKEN: string | undefined
     }
     URLS: {
         USER_PROFILE: string

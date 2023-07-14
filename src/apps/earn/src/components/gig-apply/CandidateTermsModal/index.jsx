@@ -26,22 +26,22 @@ const CandidateTermsModal = ({ onClose, open }) => {
           Recruit CRM to manage your information and send your profile to
           companies to present you for potential Gig Opportunities. You Can view
           Topcoder’s{" "}
-          <a target="_blank" href={TOPCODER_PRIVACY_POLICY_URL}>
+          <a target="_blank" href={TOPCODER_PRIVACY_POLICY_URL} rel="noreferrer">
             privacy policy here
           </a>
           .
         </p>
         <p>
-          <a target="_blank" href={RECRUIT_CRM_URL}>
+          <a target="_blank" href={RECRUIT_CRM_URL} rel="noreferrer">
             Recruit CRM
           </a>{" "}
           is a software system that helps recruitment firms manage their
           relationship with their clients. You can view Recruit CRMs{" "}
-          <a target="_blank" href={RECRUIT_CRM_PRIVACY_POLICY_URL}>
+          <a target="_blank" href={RECRUIT_CRM_PRIVACY_POLICY_URL} rel="noreferrer">
             privacy policy
           </a>{" "}
           or{" "}
-          <a target="_blank" href={RECRUIT_CRM_GDPR_URL}>
+          <a target="_blank" href={RECRUIT_CRM_GDPR_URL} rel="noreferrer">
             GDPR
           </a>{" "}
           commitment on our website.

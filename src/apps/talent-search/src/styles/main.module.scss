@@ -1,0 +1,15 @@
+// This file should contain global styles for the microapp
+
+@import "@talentSearch/styles/include";
+
+.talent-search-app {
+  @include font-roboto;
+  color: #2a2a2a;
+  svg {
+    pointer-events: none;
+  }
+  vertical-align: middle;
+  margin-left: auto;
+  margin-right: auto;
+
+}

@@ -62,6 +62,12 @@
     opacity: 0;
     cursor: pointer;
 
+    &:disabled {
+      &~.checkmark {
+        opacity: 0.2;
+      }
+    }
+
     /* When the radio button is checked, add a blue background */
     &:checked~.checkmark {
       background-color: $gui-kit-level-2;

@@ -1,0 +1,59 @@
+@import "@libs/ui/styles/includes";
+@import "@libs/ui/styles/variables";
+
+.memberCell {
+  display: grid;
+  grid-template-rows: repeat(auto-fill, 1fr);
+  grid-template-columns: 72px 250px;
+  width:100px;
+  gap: 8px;
+}
+
+.memberAccountAge{
+  text-align: left;
+  font-weight: 350;
+  color: $black-60;
+}
+.memberImage{
+  grid-row: 1 / span 3; 
+}
+
+.countryRow{
+  text-align: left;
+}
+.avatar {
+  border-radius: 32px;
+  height: 64px;
+  width: 64px;
+  border-width: 3px;
+  border-color: #fff;
+  border-style:solid;
+  cursor: pointer;
+}
+
+.separator{
+  color:$black-20;
+}
+
+.memberCountry {
+  font-size: 17px;
+  font-weight: 400;
+  color: $black-80;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.memberWins {
+  font-size: 17px;
+  color: $black-80;
+  text-align: left;
+}
+
+.memberHandle {
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 24px;
+  color: $black-100;
+  text-align: left;
+  cursor: pointer;
+}

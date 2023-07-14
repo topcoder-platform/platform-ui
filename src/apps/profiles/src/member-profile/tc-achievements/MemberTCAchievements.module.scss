@@ -1,0 +1,24 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: $sp-8;
+    background-color: $tc-white;
+    padding: $sp-8 $sp-8 $sp-2;
+    border-radius: 16px;
+
+    .achievementsWrap {
+        display: flex;
+        margin: $sp-4 0 $sp-2;
+
+        > div:not(:last-child) {
+            margin-right: $sp-8;
+        }
+    }
+
+    .rolesWrap {
+        display: flex;
+        align-items: center;
+    }
+}

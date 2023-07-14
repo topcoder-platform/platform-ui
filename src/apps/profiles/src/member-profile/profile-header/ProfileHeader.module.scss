@@ -1,0 +1,81 @@
+@import "@libs/ui/styles/includes";
+
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    color: $tc-white;
+
+    .photoWrap {
+        position: relative;
+        margin-right: 60px;
+
+        .profilePhoto {
+            width: 300px;
+            height: 300px;
+            border: 12px solid $tc-white;
+            border-radius: 50%;
+            background-color: $tc-white;
+        }
+
+        button {
+            position: absolute;
+            bottom: -10px;
+            left: calc(50% - 20px);
+            padding: $sp-2 $sp-3 !important;
+            background-color: $tc-white;
+            border-radius: 50%;
+        }
+    }
+
+    .profileInfo {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        margin-top: $sp-8;
+
+        .nameWrap {
+            display: flex;
+            align-items: center;
+            margin-bottom: $sp-2;
+
+            p {
+                font-size: 40px;
+                font-weight: $font-weight-bold;
+                font-family: $font-barlow;
+            }
+
+            button {
+                color: $tc-white;
+            }
+        }
+
+        .memberSince {
+            margin-top: $sp-2;
+            font-size: 20px;
+
+            span {
+                font-weight: $font-weight-bold;
+            }
+        }
+    }
+
+    .profileActions {
+        display: flex;
+        align-items: center;
+        background-color: $tc-white;
+        padding: $sp-4;
+        border-radius: 200px;
+        color: $black-100;
+        margin-top: $sp-8;
+
+        > span {
+            margin-right: $sp-1;
+        }
+
+        >button {
+            margin-left: $sp-2;
+        }
+    }
+}

@@ -1,0 +1,54 @@
+// reusable mixins
+
+@mixin rounded-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+  }
+  
+  @mixin font-roboto {
+    font-family: "Roboto", Arial, Helvetica, sans-serif;
+  }
+  
+  @mixin font-barlow-condensed {
+    font-family: "Barlow Condensed", Arial, Helvetica, sans-serif;
+  }
+  
+  @mixin font-barlow {
+    font-family: "Barlow", Arial, Helvetica, sans-serif;
+  }
+  
+  @mixin table {
+    width: 100%;
+  }
+  
+  @mixin table-row {
+    border-top: 1px solid #e9e9e9;
+    display: flex;
+    flex-direction: row;
+  
+    &:last-child {
+      border-bottom: 1px solid #e9e9e9;
+    }
+  }
+  
+  @mixin table-cell {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    flex: 1 1 auto;
+    font-size: 14px;
+    line-height: 22px;
+    padding: 18px 8px 19px;
+    overflow-wrap: anywhere;
+  
+    a {
+      color: #0d61bf;
+      text-decoration: none;
+    }
+  }
+  
+  @mixin table-group {
+    display: flex;
+    align-items: center;
+  }
+  
