@@ -21,3 +21,18 @@ export function notifyUniNavi(profile: UserProfile): void {
         })
     }
 }
+
+export function subTrackLabelToHumanName(label: string): string {
+    switch (label) {
+        case 'ASSEMBLY_COMPETITION':
+            return 'Assembly Competition'
+        case 'CODE':
+            return 'Code'
+        case 'FIRST_2_FINISH':
+            return 'First2Finish'
+        case 'CONCEPTUALIZATION':
+            return 'Conceptualization'
+        default: return label
+    }
+
+}

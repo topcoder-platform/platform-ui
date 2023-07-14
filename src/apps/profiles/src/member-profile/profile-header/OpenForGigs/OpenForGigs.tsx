@@ -7,6 +7,7 @@ import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } fro
 import { EditMemberPropertyBtn } from '../../../components'
 import { OpenForGigsModifyModal } from '../OpenForGigsModifyModal'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../../config'
+import { notifyUniNavi } from '../../../lib'
 
 import styles from './OpenForGigs.module.scss'
 
@@ -53,6 +54,7 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
         setTimeout(() => {
             setIsEditMode(false)
             mutateTraits()
+            notifyUniNavi(props.profile)
         }, 1000)
     }
 

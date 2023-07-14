@@ -13,6 +13,7 @@ const EditMemberPropertyBtn: FC<EditMemberPropertyBtnProps> = (props: EditMember
         icon={IconOutline.PencilIcon}
         onClick={props.onClick}
         className={styles.editMemberPropertyBtn}
+        size='lg'
     />
 )
 

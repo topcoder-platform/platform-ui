@@ -14,6 +14,7 @@ import { MemberLinks } from '../links'
 import { MemberTCAchievements } from '../tc-achievements'
 import { WorkExpirence } from '../work-expirence'
 import { EducationAndCertifications } from '../education-and-certifications'
+import OnboardingCompleted from '../onboarding-complete/OnboardingCompleted'
 
 import styles from './ProfilePageLayout.module.scss'
 
@@ -79,7 +80,11 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
 
                         <div className={styles.sectionWrap}>
                             <div className={styles.skillsWrap}>
-                                <MemberSkillsInfo profile={props.profile} authProfile={props.authProfile} />
+                                <MemberSkillsInfo
+                                    profile={props.profile}
+                                    authProfile={props.authProfile}
+                                    refreshProfile={props.refreshProfile}
+                                />
                             </div>
                         </div>
 
@@ -107,6 +112,8 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                 {/* <MemberTCActivityInfo profile={props.profile} /> */}
 
             </ContentLayout>
+
+            <OnboardingCompleted authProfile={props.authProfile} />
 
         </div>
     )

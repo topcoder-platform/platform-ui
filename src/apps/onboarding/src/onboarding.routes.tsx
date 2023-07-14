@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom'
 
-import { ToolTitle } from '~/config/constants'
+import { EnvironmentConfig } from '~/config'
+import { AppSubdomain, ToolTitle } from '~/config/constants'
 import { lazyLoad, LazyLoadedComponent, PlatformRoute, UserRole } from '~/libs/core'
 
 const PageOnboarding: LazyLoadedComponent = lazyLoad(() => import('./pages/onboarding/index'), 'OnboardingWrapper')
@@ -18,7 +19,10 @@ const PageAccountDetails: LazyLoadedComponent = lazyLoad(
     'PageAccountDetails',
 )
 const toolTitle: string = ToolTitle.onboarding
-const onboardingRootRoute: string = '/onboarding'
+
+export const rootRoute: string = (
+    EnvironmentConfig.SUBDOMAIN === AppSubdomain.onboarding ? '' : `/${AppSubdomain.onboarding}`
+)
 
 export const onboardRouteId: string = `${toolTitle} Onbarding`
 
@@ -59,12 +63,13 @@ export const onboardingRoutes: ReadonlyArray<PlatformRoute> = [
                 route: '/account-details',
             },
         ],
+        domain: AppSubdomain.onboarding,
         element: <PageOnboarding />,
         id: onboardRouteId,
         rolesRequired: [
             UserRole.member,
         ],
-        route: onboardingRootRoute,
+        route: rootRoute,
         title: toolTitle,
     },
 ]
