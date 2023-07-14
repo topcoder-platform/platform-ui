@@ -1,8 +1,7 @@
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { KeyedMutator } from 'swr'
 
-import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } from '~/libs/core'
+import { MemberTraitsAPI, useMemberTraits, UserProfile, UserTrait, UserTraitIds } from '~/libs/core'
 
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { notifyUniNavi } from '../../lib'
@@ -26,10 +25,7 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const { data: memberWorkExpirenceTraits, mutate: mutateTraits }: {
-        data: UserTraits[] | undefined,
-        mutate: KeyedMutator<any>,
-    }
+    const { data: memberWorkExpirenceTraits, mutate: mutateTraits, loading }: MemberTraitsAPI
         = useMemberTraits(props.profile.handle, { traitIds: UserTraitIds.work })
 
     const workExpirence: UserTrait[] | undefined
@@ -72,18 +68,20 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
             </div>
 
             <div className={styles.contentWrap}>
-                {(workExpirence?.length as number) > 0
-                    ? workExpirence?.map((work: UserTrait) => (
-                        <WorkExpirenceCard key={`${work.company}-${work.industry}-${work.position}`} work={work} />
-                    ))
-                    : (
-                        <EmptySection
-                            selfMessage='Adding experience enhances the professional appearance of your profile.'
-                            isSelf={canEdit}
-                        >
-                            I&apos;m still building up my experience here at Topcoder.
-                        </EmptySection>
-                    )}
+                {!loading && (
+                    (workExpirence?.length as number) > 0
+                        ? workExpirence?.map((work: UserTrait) => (
+                            <WorkExpirenceCard key={`${work.company}-${work.industry}-${work.position}`} work={work} />
+                        ))
+                        : (
+                            <EmptySection
+                                selfMessage='Adding experience enhances the professional appearance of your profile.'
+                                isSelf={canEdit}
+                            >
+                                I&apos;m still building up my experience here at Topcoder.
+                            </EmptySection>
+                        )
+                )}
             </div>
 
             {

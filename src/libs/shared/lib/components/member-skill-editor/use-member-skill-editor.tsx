@@ -31,7 +31,9 @@ export interface MemberSkillEditor {
  * @returns
  */
 
-export const useMemberSkillEditor = (): MemberSkillEditor => {
+export const useMemberSkillEditor = ({
+    limit,
+}: {limit?: number} = {}): MemberSkillEditor => {
     const { profile }: ProfileContextData = useContext(profileContext)
     const [isEmsiInitialized, setIsEmsiInitialized] = useState<boolean>(false)
     const [skills, setSkills] = useState<EmsiSkill[]>([])
@@ -120,8 +122,13 @@ export const useMemberSkillEditor = (): MemberSkillEditor => {
 
     // build the form input
     const formInput = useMemo(() => (
-        <InputSkillSelector value={skills} onChange={handleOnChange} loading={loading} />
-    ), [skills, handleOnChange, loading])
+        <InputSkillSelector
+            value={skills}
+            onChange={handleOnChange}
+            loading={loading}
+            limit={limit}
+        />
+    ), [skills, handleOnChange, loading, limit])
 
     return {
         formInput,

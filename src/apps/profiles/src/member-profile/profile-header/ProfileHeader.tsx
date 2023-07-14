@@ -1,20 +1,20 @@
+/* eslint-disable complexity */
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { KeyedMutator } from 'swr'
 import moment from 'moment'
 
 import {
-    getVerificationStatusAsync,
     useMemberTraits,
     UserProfile,
     UserTrait,
     UserTraitIds,
     UserTraits,
 } from '~/libs/core'
-import { Button, IconOutline } from '~/libs/ui'
+import { Button } from '~/libs/ui'
 
 import { EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
-import { notifyUniNavi } from '../../lib'
 
 import { OpenForGigs } from './OpenForGigs'
 import { ModifyMemberNameModal } from './ModifyMemberNameModal'
@@ -33,9 +33,6 @@ const DEFAULT_MEMBER_AVATAR: string
 const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     const photoURL: string = props.profile.photoURL || DEFAULT_MEMBER_AVATAR
 
-    const [isMemberVerified, setIsMemberVerified]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
 
     const [isNameEditMode, setIsNameEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
@@ -47,14 +44,21 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     const [queryParams]: [URLSearchParams, any] = useSearchParams()
     const editMode: string | null = queryParams.get(EDIT_MODE_QUERY_PARAM)
 
-    const { data: memberPersonalizationTraits }: {
+    const { data: memberPersonalizationTraits, mutate: mutateTraits, loading: traitsLoading }: {
         data: UserTraits[] | undefined,
+        mutate: KeyedMutator<any>,
+        loading: boolean,
     }
         = useMemberTraits(props.profile.handle, { traitIds: UserTraitIds.personalization })
 
     const openForWork: UserTrait | undefined
         = useMemo(() => memberPersonalizationTraits?.[0]?.traits?.data?.find(
             (trait: UserTrait) => trait.availableForGigs,
+        ), [memberPersonalizationTraits])
+
+    const hideNamesOnProfile: UserTrait | undefined
+        = useMemo(() => memberPersonalizationTraits?.[0]?.traits?.data?.find(
+            (trait: UserTrait) => trait.hideNamesOnProfile,
         ), [memberPersonalizationTraits])
 
     useEffect(() => {
@@ -67,15 +71,6 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.authProfile])
-
-    useEffect(() => {
-        if (!props.profile?.handle) {
-            return
-        }
-
-        getVerificationStatusAsync(props.profile.handle)
-            .then(verified => setIsMemberVerified(verified))
-    }, [props.profile.handle])
 
     function handleHireMeClick(): void {
         console.log('Hire Me button clicked')
@@ -93,7 +88,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         setTimeout(() => {
             setIsNameEditMode(false)
             props.refreshProfile(props.profile.handle)
-            notifyUniNavi(props.profile)
+            mutateTraits()
         }, 1000)
     }
 
@@ -109,7 +104,6 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         setTimeout(() => {
             setIsPhotoEditMode(false)
             props.refreshProfile(props.profile.handle)
-            notifyUniNavi(props.profile)
         }, 1000)
     }
 
@@ -117,13 +111,6 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         <div className={styles.container}>
             <div className={styles.photoWrap}>
                 <img src={photoURL} alt='Topcoder - Member Profile Avatar' className={styles.profilePhoto} />
-                {
-                    isMemberVerified ? (
-                        <div className={styles.verifiedBadge}>
-                            <IconOutline.CheckCircleIcon />
-                        </div>
-                    ) : undefined
-                }
                 {
                     canEdit && (
                         <EditMemberPropertyBtn
@@ -133,33 +120,43 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                 }
             </div>
 
-            <div className={styles.profileInfo}>
-                <div className={styles.nameWrap}>
-                    <p>
-                        {props.profile.firstName}
-                        {' '}
-                        {props.profile.lastName}
-                    </p>
-                    {
-                        canEdit && (
-                            <EditMemberPropertyBtn
-                                onClick={handleModifyNameClick}
-                            />
-                        )
-                    }
-                </div>
+            {!traitsLoading && (
+                <div className={styles.profileInfo}>
+                    <div className={styles.nameWrap}>
+                        <p>
+                            {
+                                hideNamesOnProfile
+                                    ? props.profile.handle
+                                    : `${props.profile.firstName} ${props.profile.lastName}`
+                            }
+                        </p>
+                        {
+                            canEdit && (
+                                <EditMemberPropertyBtn
+                                    onClick={handleModifyNameClick}
+                                />
+                            )
+                        }
+                    </div>
 
-                <p className={styles.memberSince}>
-                    <span>{props.profile.handle}</span>
-                    {' '}
-                    |
-                    {' '}
-                    Member Since
-                    {' '}
-                    {moment(props.profile.createdAt)
-                        .format('MMM YYYY')}
-                </p>
-            </div>
+                    <p className={styles.memberSince}>
+                        {
+                            !hideNamesOnProfile ? (
+                                <>
+                                    <span>{props.profile.handle}</span>
+                                    {' '}
+                                    |
+                                    {' '}
+                                </>
+                            ) : undefined
+                        }
+                        Member Since
+                        {' '}
+                        {moment(props.profile.createdAt)
+                            .format('MMM YYYY')}
+                    </p>
+                </div>
+            )}
 
             {
                 openForWork || canEdit ? (
@@ -187,6 +184,8 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                         onClose={handleModifyNameModalClose}
                         onSave={handleModifyNameModalSave}
                         profile={props.profile}
+                        memberPersonalizationTraitsData={memberPersonalizationTraits?.[0]?.traits?.data}
+                        hideMyNameInProfile={hideNamesOnProfile?.hideNamesOnProfile || false}
                     />
                 )
             }

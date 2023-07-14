@@ -1,8 +1,7 @@
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { KeyedMutator } from 'swr'
 
-import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } from '~/libs/core'
+import { MemberTraitsAPI, useMemberTraits, UserProfile, UserTrait, UserTraitIds } from '~/libs/core'
 
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { EditMemberPropertyBtn, EmptySection } from '../../components'
@@ -27,10 +26,7 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const { data: memberEducationTraits, mutate: mutateTraits }: {
-        data: UserTraits[] | undefined,
-        mutate: KeyedMutator<any>,
-    }
+    const { data: memberEducationTraits, mutate: mutateTraits, loading }: MemberTraitsAPI
         = useMemberTraits(props.profile.handle, { traitIds: UserTraitIds.education })
 
     const memberEducation: UserTrait[] | undefined
@@ -73,27 +69,32 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
             </div>
 
             <div className={styles.educationContentWrap}>
-                {(memberEducation?.length as number) > 0
-                    ? memberEducation?.map((education: UserTrait) => (
-                        <EducationCard
-                            key={`${education.schoolCollegeName}-${education.major}`}
-                            education={education}
-                        />
-                    ))
-                    : (
-                        <EmptySection
-                            selfMessage={`
-                                Including your education and certifications enhances the strength
-                                of your profile in comparison to others.
-                            `}
-                            isSelf={canEdit}
-                        >
-                            I&apos;m still building up my education and certifications here at Topcoder.
-                        </EmptySection>
-                    )}
+                {!loading && (
+                    (memberEducation?.length as number) > 0 && (
+                        memberEducation?.map((education: UserTrait) => (
+                            <EducationCard
+                                key={`${education.schoolCollegeName}-${education.major}`}
+                                education={education}
+                            />
+                        ))
+                    )
+                )}
             </div>
 
             <MemberTCAInfo profile={props.profile} />
+
+            {!loading && !memberEducation?.length && (
+                <EmptySection
+                    className={styles.emptyBlock}
+                    selfMessage={`
+                        Including your education and certifications enhances the strength
+                        of your profile in comparison to others.
+                    `}
+                    isSelf={canEdit}
+                >
+                    I&apos;m still building up my education and certifications here at Topcoder.
+                </EmptySection>
+            )}
 
             {
                 isEditMode && (

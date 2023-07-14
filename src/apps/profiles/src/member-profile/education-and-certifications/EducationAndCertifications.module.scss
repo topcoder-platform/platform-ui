@@ -3,10 +3,12 @@
 .container {
     display: flex;
     flex-direction: column;
+    padding-bottom: $sp-8;
 
     .headerWrap {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         margin-bottom: $sp-4;
 
         h3 {
@@ -19,9 +21,15 @@
         }
     }
 
+    .emptyBlock {
+        display: none;
+    }
+
     .educationContentWrap {
         display: flex;
         flex-direction: column;
-        padding-bottom: $sp-8;
+        &:empty + .emptyBlock {
+            display: flex;
+        }
     }
 }

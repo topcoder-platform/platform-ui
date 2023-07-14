@@ -2,7 +2,7 @@ import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { reject } from 'lodash'
 
-import { BaseModal, Button, FormToggleSwitch } from '~/libs/ui'
+import { BaseModal, Button, InputText } from '~/libs/ui'
 import {
     createMemberTraitsAsync,
     updateMemberTraitsAsync,
@@ -76,7 +76,8 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
         <BaseModal
             onClose={props.onClose}
             open
-            title='Gig Availability'
+            title='Don’t miss gig and work opportunities.'
+            size='lg'
             buttons={(
                 <div className={styles.modalButtons}>
                     <Button
@@ -94,11 +95,16 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
             )}
         >
             <div className={styles.modalBody}>
-                <p>Open for Gig Work</p>
-                <FormToggleSwitch
+                <p>
+                    By selecting “Open to Work” our customers will know that you are available for job opportunities.
+                </p>
+                <InputText
                     name='openForWork'
+                    label='Yes, I’m open to work'
+                    tabIndex={-1}
+                    type='checkbox'
                     onChange={handleOpenForWorkToggle}
-                    value={openForWork}
+                    checked={openForWork}
                 />
             </div>
         </BaseModal>

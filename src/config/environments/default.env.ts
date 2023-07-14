@@ -42,10 +42,8 @@ export const VANILLA_FORUM = {
 }
 
 export const STRIPE = {
-    ADMIN_TOKEN: getReactEnv<string | undefined>('STRIPE_ADMIN_TOKEN', undefined),
     API_KEY: getReactEnv<string>('STRIPE_API_KEY', ''),
     API_VERSION: getReactEnv<string | undefined>('STRIPE_API_VERSION', undefined),
-    CUSTOMER_TOKEN: getReactEnv<string | undefined>('STRIPE_CUSTOMER_TOKEN', undefined),
 }
 
 export const URLS = {

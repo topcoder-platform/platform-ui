@@ -20,7 +20,6 @@ const OnboardingBaseModal: FC<OnboardingBaseModalProps> = (props: OnboardingBase
         size='body'
         title={props.title}
         classNames={{ modal: styles.infoModal }}
-        blockScroll
     >
         {props.children}
     </BaseModal>

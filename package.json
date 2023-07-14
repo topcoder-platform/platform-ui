@@ -4,10 +4,10 @@
   "private": true,
   "license": "ISC",
   "scripts": {
-    "dev": "craco start --mode ${REACT_APP_HOST_ENV:-dev}",
+    "dev": "craco start --mode ${LOGICAL_ENV:-dev}",
     "start": "bash start.sh",
-    "build": "export CI=false && craco build --mode ${REACT_APP_HOST_ENV:-prod}",
-    "build:dev": "craco build --mode ${REACT_APP_HOST_ENV:-dev}",
+    "build": "export CI=false && craco build --mode ${LOGICAL_ENV:-prod}",
+    "build:dev": "craco build --mode ${LOGICAL_ENV:-dev}",
     "demo": "npx http-server --port 443 -a 0.0.0.0 -S -C ./ssl/rootCA.crt -K ./ssl/rootCA.key -P https://local.topcoder-dev.com? --proxy-options.secure false ./build",
     "lint": "eslint -c ./src/.eslintrc.js 'src/**/*.{ts,tsx,js,jsx}'",
     "lint:fix": "yarn lint --fix",

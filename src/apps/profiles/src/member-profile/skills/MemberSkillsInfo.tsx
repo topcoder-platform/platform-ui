@@ -14,6 +14,7 @@ import styles from './MemberSkillsInfo.module.scss'
 interface MemberSkillsInfoProps {
     profile: UserProfile
     authProfile: UserProfile | undefined
+    refreshProfile: (handle: string) => void
 }
 
 const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProps) => {
@@ -24,7 +25,8 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
     const memberEMSISkills: UserEMSISkill[] = useMemo(
         () => (props.profile.emsiSkills || [])
-            .sort((a, b) => (isVerifiedSkill(a.skillSources) ? -1 : (isVerifiedSkill(b.skillSources) ? 1 : 0))),
+            .sort((a, b) => (+isVerifiedSkill(b.skillSources))
+                - (+isVerifiedSkill(a.skillSources)) || a.name.localeCompare(b.name)),
         [props.profile.emsiSkills],
     )
 
@@ -44,6 +46,13 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
     function handleModyfSkillsModalClose(): void {
         setIsEditMode(false)
+    }
+
+    function handleModyfSkillsSave(): void {
+        setTimeout(() => {
+            setIsEditMode(false)
+            props.refreshProfile(props.profile.handle)
+        }, 1500)
     }
 
     return memberEMSISkills ? (
@@ -97,8 +106,8 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
             {
                 isEditMode && (
                     <ModifySkillsModal
-                        // profile={props.profile}
                         onClose={handleModyfSkillsModalClose}
+                        onSave={handleModyfSkillsSave}
                     />
                 )
             }

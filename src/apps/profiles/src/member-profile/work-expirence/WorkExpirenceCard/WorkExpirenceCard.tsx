@@ -1,4 +1,5 @@
 import { FC } from 'react'
+import classNames from 'classnames'
 import moment from 'moment'
 
 import { UserTrait } from '~/libs/core'
@@ -7,10 +8,11 @@ import styles from './WorkExpirenceCard.module.scss'
 
 interface WorkExpirenceCardProps {
     work: UserTrait
+    isModalView?: boolean
 }
 
 const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardProps) => (
-    <div className={styles.workExpirenceCard}>
+    <div className={classNames(styles.workExpirenceCard, props.isModalView ? styles.workExpirenceCardModalView : '')}>
         <div className={styles.workExpirenceCardHeader}>
             <div className={styles.workExpirenceCardHeaderLeft}>
                 <p className='body-main-bold'>
