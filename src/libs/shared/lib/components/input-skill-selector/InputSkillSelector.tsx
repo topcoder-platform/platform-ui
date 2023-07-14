@@ -28,6 +28,7 @@ const fetchSkills = (queryTerm: string): Promise<Option[]> => (
 )
 
 interface InputSkillSelectorProps {
+    readonly limit?: number
     readonly loading?: boolean
     readonly value?: EmsiSkill[]
     readonly onChange?: (event: ChangeEvent<HTMLInputElement>) => void
@@ -36,6 +37,7 @@ interface InputSkillSelectorProps {
 const InputSkillSelector: FC<InputSkillSelectorProps> = props => (
     <InputMultiselect
         label='Select Skills'
+        limit={props.limit}
         placeholder='Type to add a skill...'
         onFetchOptions={fetchSkills}
         name='skills'

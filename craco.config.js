@@ -5,6 +5,13 @@ const BabelRcPlugin = require('@jackwilsdon/craco-use-babelrc');
 
 const isProd = process.env.APPMODE === "production";
 
+function getModeName() {
+    const index = process.argv.indexOf('--mode');
+    return index === -1 ? '' : process.argv[index + 1] || ''
+}
+
+console.log({buildMode: getModeName()});
+
 const localIdentName = isProd
     ? "[hash:base64:6]"
     : "[name]_[local]__[hash:base64:6]";

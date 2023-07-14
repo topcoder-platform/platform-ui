@@ -67,6 +67,19 @@ const memberReducer: any = (
                 ...state,
                 educations: action.payload,
             }
+        case ACTIONS.MEMBER.SET_DESCRIPTION: {
+            if (!state.memberInfo) {
+                return state
+            }
+
+            return {
+                ...state,
+                memberInfo: {
+                    ...state.memberInfo,
+                    description: action.payload,
+                },
+            }
+        }
 
         case ACTIONS.MEMBER.UPDATE_MEMBER_PHOTO_URL: {
             if (!state.memberInfo) {

@@ -6,11 +6,19 @@ import classNames from 'classnames'
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
 
-import { useAutoSavePersonalization, useAutoSavePersonalizationType } from '../../hooks/useAutoSavePersonalization'
 import { ProgressBar } from '../../components/progress-bar'
+import {
+    useAutoSaveMemberDescription,
+    useAutoSaveMemberDescriptionType,
+} from '../../hooks/useAutoSaveMemberDescription'
+import {
+    useAutoSavePersonalization,
+    useAutoSavePersonalizationType,
+} from '../../hooks/useAutoSavePersonalization'
 import {
     createMemberPersonalizations,
     setMemberPhotoUrl,
+    updateMemberDescription,
     updateMemberPersonalizations,
     updateMemberPhotoUrl,
 } from '../../redux/actions/member'
@@ -31,11 +39,14 @@ const PagePersonalizationContent: FC<{
     createMemberPersonalizations: (infos: PersonalizationInfo[]) => void
     setMemberPhotoUrl: (photoUrl: string) => void
     updateMemberPhotoUrl: (photoUrl: string) => void
+    updateMemberDescription: (photoUrl: string) => void
     loadingMemberTraits: boolean
+    loadingMemberInfo: boolean
 }> = props => {
     const navigate: any = useNavigate()
 
     const shouldSavingData: MutableRefObject<boolean> = useRef<boolean>(false)
+    const shouldSavingMemberData: MutableRefObject<boolean> = useRef<boolean>(false)
     const shouldNavigateTo: MutableRefObject<string> = useRef<string>('')
 
     const {
@@ -49,8 +60,24 @@ const PagePersonalizationContent: FC<{
         shouldSavingData,
     )
 
+    const {
+        loading: loadingMemberInfo,
+        description,
+        setDescription,
+    }: useAutoSaveMemberDescriptionType = useAutoSaveMemberDescription(
+        props.memberInfo,
+        props.updateMemberDescription,
+        shouldSavingMemberData,
+    )
+
     useEffect(() => {
-        if (!loading && !shouldSavingData.current && !!shouldNavigateTo.current) {
+        if (
+            !loading
+            && !loadingMemberInfo
+            && !shouldSavingData.current
+            && !shouldSavingMemberData.current
+            && !!shouldNavigateTo.current
+        ) {
             if (shouldNavigateTo.current.startsWith('../')) {
                 navigate(shouldNavigateTo.current)
             } else {
@@ -58,7 +85,17 @@ const PagePersonalizationContent: FC<{
             }
         }
         /* eslint-disable react-hooks/exhaustive-deps */
-    }, [loading])
+    }, [loading, loadingMemberInfo])
+
+    function nextPage(pageUrl: string): void {
+        if (loading || loadingMemberInfo) {
+            shouldNavigateTo.current = pageUrl
+        } else if (pageUrl.startsWith('../')) {
+            navigate(pageUrl)
+        } else {
+            window.location.href = pageUrl
+        }
+    }
 
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
@@ -71,39 +108,37 @@ const PagePersonalizationContent: FC<{
                     updateMemberPhotoUrl={props.updateMemberPhotoUrl}
                 />
 
-                <h3 className='mt-48'>Bio</h3>
+                <h3 className='mt-48 mobile-mt-32'>Bio</h3>
                 <span className='mt-8 color-black-60'>This is where we can really get to know you. </span>
-                <InputTextAutoSave
-                    name='title'
-                    label='Bio Title'
-                    value={personalizationInfo?.profileSelfTitle || ''}
-                    onChange={function onChange(value: string | undefined) {
-                        setPersonalizationInfo({
-                            ...(personalizationInfo || blankPersonalizationInfo),
-                            profileSelfTitle: value || '',
-                        })
-                    }}
-                    placeholder='Ex: I’m a creative rockstar'
-                    tabIndex={0}
-                    type='text'
-                    disabled={props.loadingMemberTraits}
-                    className='mt-16'
-                />
+                <div className='d-flex flex-column mt-16 full-width mobile-gap-16'>
+                    <InputTextAutoSave
+                        name='title'
+                        label='Bio Title'
+                        value={personalizationInfo?.profileSelfTitle || ''}
+                        onChange={function onChange(value: string | undefined) {
+                            setPersonalizationInfo({
+                                ...(personalizationInfo || blankPersonalizationInfo),
+                                profileSelfTitle: value || '',
+                            })
+                        }}
+                        placeholder='Ex: I’m a creative rockstar'
+                        tabIndex={0}
+                        type='text'
+                        disabled={props.loadingMemberTraits}
+                    />
 
-                <InputTextareaAutoSave
-                    name='shortBio'
-                    label='Bio'
-                    value={personalizationInfo?.shortBio || ''}
-                    onChange={function onChange(value: string | undefined) {
-                        setPersonalizationInfo({
-                            ...(personalizationInfo || blankPersonalizationInfo),
-                            shortBio: value || '',
-                        })
-                    }}
-                    placeholder='Share something that makes you, you.'
-                    tabIndex={0}
-                    disabled={props.loadingMemberTraits}
-                />
+                    <InputTextareaAutoSave
+                        name='shortBio'
+                        label='Bio'
+                        value={description || ''}
+                        onChange={function onChange(value: string | undefined) {
+                            setDescription(value || '')
+                        }}
+                        placeholder='Share something that makes you, you.'
+                        tabIndex={0}
+                        disabled={props.loadingMemberInfo}
+                    />
+                </div>
             </div>
 
             <ProgressBar
@@ -118,26 +153,21 @@ const PagePersonalizationContent: FC<{
                     secondary
                     iconToLeft
                     icon={IconOutline.ChevronLeftIcon}
+                    disabled={!!shouldNavigateTo.current}
                     onClick={function previousPage() {
-                        if (loading) {
-                            shouldNavigateTo.current = '../educations'
-                        } else {
-                            navigate('../educations')
-                        }
+                        nextPage('../educations')
                     }}
                 />
                 <Button
                     size='lg'
                     primary
                     iconToLeft
-                    onClick={function nextPage() {
-                        if (loading) {
-                            shouldNavigateTo.current
-                                = `${EnvironmentConfig.USER_PROFILE_URL}/${props.memberInfo?.handle}`
-                        } else {
-                            window.location.href
-                                = `${EnvironmentConfig.USER_PROFILE_URL}/${props.memberInfo?.handle}`
-                        }
+                    disabled={!!shouldNavigateTo.current}
+                    onClick={function onClick() {
+                        nextPage(
+                            `${EnvironmentConfig.USER_PROFILE_URL}/${props.memberInfo?.handle}`
+                            + '?edit-mode=onboardingCompleted',
+                        )
                     }}
                 >
                     next
@@ -150,11 +180,13 @@ const PagePersonalizationContent: FC<{
 const mapStateToProps: any = (state: any) => {
     const {
         loadingMemberTraits,
+        loadingMemberInfo,
         personalization,
         memberInfo,
     }: any = state.member
 
     return {
+        loadingMemberInfo,
         loadingMemberTraits,
         memberInfo,
         reduxPersonalization: personalization,
@@ -164,6 +196,7 @@ const mapStateToProps: any = (state: any) => {
 const mapDispatchToProps: any = {
     createMemberPersonalizations,
     setMemberPhotoUrl,
+    updateMemberDescription,
     updateMemberPersonalizations,
     updateMemberPhotoUrl,
 }

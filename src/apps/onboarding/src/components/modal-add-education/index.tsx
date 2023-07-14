@@ -3,11 +3,12 @@ import _ from 'lodash'
 import classNames from 'classnames'
 import moment from 'moment'
 
-import { BaseModal, Button, InputText } from '~/libs/ui'
+import { Button, InputText } from '~/libs/ui'
 
 import DateInput from '../DateInput'
 import EducationInfo, { emptyEducationInfo } from '../../models/EducationInfo'
 import FormField from '../FormField'
+import OnboardingBaseModal from '../onboarding-base-modal'
 
 import styles from './styles.module.scss'
 
@@ -59,7 +60,7 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
     }, [props.editingEducation])
 
     return (
-        <BaseModal
+        <OnboardingBaseModal
             buttons={(
                 <div className='d-flex gap-16'>
                     <Button
@@ -97,12 +98,9 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                 </div>
             )}
             onClose={props.onClose || _.noop}
-            open
-            size='body'
             title={props.editingEducation ? 'Edit Education' : 'Add Education'}
-            classNames={{ modal: styles.infoModal }}
         >
-            <div className={classNames(styles.modalContent, 'd-flex flex-column align-items-start')}>
+            <div className={classNames(styles.modalContent, 'd-flex flex-column align-items-start mobile-gap-16')}>
                 <div className='full-width'>
                     <InputText
                         name='collegeName'
@@ -183,7 +181,7 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                     </div>
                 </div>
             </div>
-        </BaseModal>
+        </OnboardingBaseModal>
     )
 }
 
