@@ -1,10 +1,18 @@
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
-import { MemberTraitsAPI, useMemberTraits, UserProfile, UserTrait, UserTraitIds } from '~/libs/core'
+import {
+    MemberTraitsAPI,
+    useMemberTraits,
+    UserCompletedCertificationsResponse,
+    UserProfile,
+    UserTrait,
+    UserTraitIds,
+    useUserCompletedCertifications,
+} from '~/libs/core'
 
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
-import { EditMemberPropertyBtn, EmptySection } from '../../components'
+import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { MemberTCAInfo } from '../tca-info'
 import { notifyUniNavi } from '../../lib'
 
@@ -21,16 +29,27 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
     const [queryParams]: [URLSearchParams, any] = useSearchParams()
     const editMode: string | null = queryParams.get(EDIT_MODE_QUERY_PARAM)
 
+    const { data: memberTCA, loading: tcaDataLoading }: UserCompletedCertificationsResponse
+        = useUserCompletedCertifications(props.profile?.userId)
+
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const { data: memberEducationTraits, mutate: mutateTraits, loading }: MemberTraitsAPI
+    const { data: memberEducationTraits, mutate: mutateTraits, loading: traitsLoading }: MemberTraitsAPI
         = useMemberTraits(props.profile.handle, { traitIds: UserTraitIds.education })
+
+    const loading = tcaDataLoading || traitsLoading
 
     const memberEducation: UserTrait[] | undefined
         = useMemo(() => memberEducationTraits?.[0]?.traits?.data, [memberEducationTraits])
+
+    const hasEducationData = useMemo(() => !!(
+        memberTCA?.courses?.length
+        || memberTCA?.enrollments?.length
+        || memberEducation?.length
+    ), [memberEducation?.length, memberTCA?.courses?.length, memberTCA?.enrollments?.length])
 
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.education) {
@@ -59,13 +78,11 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
         <div className={styles.container}>
             <div className={styles.headerWrap}>
                 <h3>Education and Certifications</h3>
-                {
-                    canEdit && (
-                        <EditMemberPropertyBtn
-                            onClick={handleEditEducationClick}
-                        />
-                    )
-                }
+                {canEdit && hasEducationData && (
+                    <EditMemberPropertyBtn
+                        onClick={handleEditEducationClick}
+                    />
+                )}
             </div>
 
             <div className={styles.educationContentWrap}>
@@ -81,9 +98,9 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
                 )}
             </div>
 
-            <MemberTCAInfo profile={props.profile} />
+            <MemberTCAInfo memberTcaData={memberTCA} profile={props.profile} />
 
-            {!loading && !memberEducation?.length && (
+            {!loading && !hasEducationData && (
                 <EmptySection
                     className={styles.emptyBlock}
                     selfMessage={`
@@ -94,6 +111,13 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
                 >
                     I&apos;m still building up my education and certifications here at Topcoder.
                 </EmptySection>
+            )}
+
+            {!loading && canEdit && !hasEducationData && (
+                <AddButton
+                    label='Add education & certifications'
+                    onClick={handleEditEducationClick}
+                />
             )}
 
             {

@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import { isVerifiedSkill, UserEMSISkill, UserProfile } from '~/libs/core'
 import { IconOutline } from '~/libs/ui'
 
-import { EditMemberPropertyBtn, EmptySection } from '../../components'
+import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 
 import { ModifySkillsModal } from './ModifySkillsModal'
@@ -61,7 +61,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                 <div className={styles.headerWrap}>
                     <h3>Skills</h3>
                     {
-                        canEdit && (
+                        canEdit && memberEMSISkills?.length > 0 && (
                             <EditMemberPropertyBtn
                                 onClick={handleEditSkillsClick}
                             />
@@ -94,7 +94,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                         <EmptySection
                             title='Topcoder verifies and tracks skills as our members complete projects and challenges.'
                             wide
-                            selfMessage='Adding at least five skills will increase your visibility with customers.'
+                            selfMessage='Adding at least three skills will increase your visibility with customers.'
                             isSelf={canEdit}
                         >
                             This member has not yet provided skills, but check back soon as their skills will grow as
@@ -102,6 +102,12 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                         </EmptySection>
                     )}
             </div>
+            {canEdit && !memberEMSISkills?.length && (
+                <AddButton
+                    label='Add skills'
+                    onClick={handleEditSkillsClick}
+                />
+            )}
 
             {
                 isEditMode && (

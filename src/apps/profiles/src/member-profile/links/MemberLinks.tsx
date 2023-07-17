@@ -1,8 +1,7 @@
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
-import { KeyedMutator } from 'swr'
 import { useSearchParams } from 'react-router-dom'
 
-import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } from '~/libs/core'
+import { MemberTraitsAPI, useMemberTraits, UserProfile, UserTrait, UserTraitIds } from '~/libs/core'
 import {
     IconOutline,
     SocialIconFacebook,
@@ -10,7 +9,7 @@ import {
     SocialIconYoutube,
 } from '~/libs/ui'
 
-import { EditMemberPropertyBtn } from '../../components'
+import { AddButton, EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { notifyUniNavi } from '../../lib'
 
@@ -53,10 +52,7 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const { data: memberPersonalizationTraits, mutate: mutateTraits }: {
-        data: UserTraits[] | undefined,
-        mutate: KeyedMutator<any>,
-    }
+    const { data: memberPersonalizationTraits, mutate: mutateTraits, loading }: MemberTraitsAPI
         = useMemberTraits(props.profile.handle, { traitIds: UserTraitIds.personalization })
 
     const memberLinks: UserTrait | undefined
@@ -71,7 +67,7 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.authProfile])
 
-    function handleEditLangaguesClick(): void {
+    function handleEditClick(): void {
         setIsEditMode(true)
     }
 
@@ -87,17 +83,15 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
         }, 1000)
     }
 
-    return canEdit || memberLinks?.links ? (
+    return !loading && (canEdit || memberLinks?.links) ? (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
-                <p className='body-main-bold'>Links:</p>
-                {
-                    canEdit && (
-                        <EditMemberPropertyBtn
-                            onClick={handleEditLangaguesClick}
-                        />
-                    )
-                }
+                <p className='body-main-bold'>Links</p>
+                {canEdit && !!memberLinks?.links.length && (
+                    <EditMemberPropertyBtn
+                        onClick={handleEditClick}
+                    />
+                )}
             </div>
 
             <div className={styles.links}>
@@ -114,6 +108,14 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
                     ))
                 }
             </div>
+
+            {canEdit && !memberLinks?.links.length && (
+                <AddButton
+                    variant='mt0'
+                    label='Add your social links'
+                    onClick={handleEditClick}
+                />
+            )}
 
             {
                 isEditMode && (

@@ -53,7 +53,7 @@ export const useMemberSkillEditor = ({
             return
         }
 
-        updateMemberEmsiSkills(profile.userId, emsiSkills)
+        await updateMemberEmsiSkills(profile.userId, emsiSkills)
     }, [isEmsiInitialized, profile?.userId, skills])
 
     // Handle user changes

@@ -12,7 +12,6 @@
     .headerWrap {
         display: flex;
         align-items: center;
-        margin-bottom: $sp-4;
 
         h3 {
             font-family: $font-barlow;
@@ -35,7 +34,6 @@
         flex-wrap: wrap;
         column-gap: $sp-1;
         row-gap: $sp-2;
-        margin-top: $sp-2;
 
         .skillItem {
             border: 1px solid $black-20;
