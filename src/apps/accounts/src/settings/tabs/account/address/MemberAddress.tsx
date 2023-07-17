@@ -68,11 +68,11 @@ const MemberAddress: FC<MemberAddressProps> = (props: MemberAddressProps) => {
             props.profile.handle,
             {
                 addresses: [{
-                    city: formValues.city,
-                    stateCode: formValues.stateCode,
-                    streetAddr1: formValues.streetAddr1,
-                    streetAddr2: formValues.streetAddr2,
-                    zip: formValues.zip,
+                    city: trim(formValues.city),
+                    stateCode: trim(formValues.stateCode),
+                    streetAddr1: trim(formValues.streetAddr1),
+                    streetAddr2: trim(formValues.streetAddr2),
+                    zip: trim(formValues.zip),
                 }],
                 competitionCountryCode: formValues.country,
                 homeCountryCode: formValues.country,
