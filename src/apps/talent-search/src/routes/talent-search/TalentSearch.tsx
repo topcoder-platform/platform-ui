@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable react/destructuring-assignment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable arrow-body-style */
@@ -9,10 +10,11 @@
 import {
     FC,
     useState,
-    CSSProperties
+    CSSProperties,
 } from 'react'
 
-import { components, ControlProps, Options, GroupBase, MultiValue, SingleValue, StylesConfig, ActionMeta } from 'react-select'
+import { components, ControlProps, Options,
+    GroupBase, MultiValue, SingleValue, StylesConfig, ActionMeta } from 'react-select'
 import AsyncSelect from 'react-select/async'
 
 import { ContentLayout } from '~/libs/ui'
@@ -23,24 +25,25 @@ import SkillPill from './components/SkillPill'
 import styles from './TalentSearch.module.scss'
 
 function search(skills:Options<Skill>): void {
-    alert("Searching skills: " + JSON.stringify(skills))
+    alert(JSON.stringify(skills))
 }
 
-const Control: React.FC<ControlProps<Skill, boolean, GroupBase<Skill>>> = ({children, ...props }) => (
+const Control: React.FC<ControlProps<Skill, boolean, GroupBase<Skill>>> = ({ children, ...props }) => (
     <components.Control {...props}>
         {children}
-        <span onClick={() => search(props.getValue())} className={styles.searchIconSpan}><SearchIcon className={styles.searchIcon} /></span>
+        <span
+            onClick={() => search(props.getValue())}
+            className={styles.searchIconSpan}
+        >
+            <SearchIcon className={styles.searchIcon} />
+        </span>
     </components.Control>
 )
 
 export const TalentSearch: FC = () => {
     const [skillsFilter, setSkillsFilter] = useState<Array<Skill>>([])
 
-    function search(): void {
-        alert("Searching for skills: " + JSON.stringify(skillsFilter))
-    }
-
-    function toggleSkill(skill:Skill, pill:SkillPill): void {
+    function toggleSkill(skill:Skill): void {
         let newFilter: Array<Skill> = []
         let deleted: boolean = false
         if (skillsFilter) {
@@ -49,8 +52,7 @@ export const TalentSearch: FC = () => {
             skillsFilter.forEach((filterSkill, index) => {
                 if (filterSkill.emsiId === skill.emsiId) {
                     deleted = true
-                }
-                else {
+                } else {
                     newFilter.push(filterSkill)
                 }
             })
@@ -65,8 +67,7 @@ export const TalentSearch: FC = () => {
     function onChange(options:MultiValue<Skill> | SingleValue<Skill>, meta:ActionMeta<Skill>): void {
         if (Array.isArray(options)) {
             setSkillsFilter(options)
-        }
-        else {
+        } else {
             setSkillsFilter([])
         }
     }
@@ -91,10 +92,10 @@ export const TalentSearch: FC = () => {
         [{ name: 'HyperText Markup Language (HTML)', emsiId: 'KS1200578T5QCYT0Z98G' },
          { name: 'IOS Development', emsiId: 'ES86A20379CD2AD061F3' },
          { name: 'Node.js', emsiId: 'KS127296VDYS7ZFWVC46' }],
-        [{ name: '.NET Development', emsiId: 'ES50D03AC9CFC1A0BC93' }, 
+        [{ name: '.NET Development', emsiId: 'ES50D03AC9CFC1A0BC93' },
          { name: 'C++ (Programming Language)', emsiId: 'KS1219W70LY1GXZDSKW5' },
          { name: 'PHP Development', emsiId: 'KS127SZ60YZR8B5CQKV1' }],
-        [{ name: 'Adobe Illustrator', emsiId: 'KS1206V6K46N1SDVJGBD' }, 
+        [{ name: 'Adobe Illustrator', emsiId: 'KS1206V6K46N1SDVJGBD' },
          { name: 'Ruby (Programming Language)', emsiId: 'ESD07FEE22E7EC094EB8' },
          { name: 'Java (Programming Language)', emsiId: 'KS120076FGP5WGWYMP0F' }],
         [{ name: 'React Native', emsiId: 'KSPSGF5MXB6568UIQ4BK' },
@@ -115,7 +116,6 @@ export const TalentSearch: FC = () => {
         fontFamily: 'Roboto',
         fontWeight: 400,
     }
-
 
     const multiValueStyle: CSSProperties = {
         backgroundColor: 'white',
@@ -225,21 +225,27 @@ export const TalentSearch: FC = () => {
                     components={{ Control }}
                     openMenuOnClick={false}
                     value={skillsFilter}
-                    onChange={(newValue: MultiValue<Skill> | SingleValue<Skill>, actionMeta: ActionMeta<Skill>) => 
-                               onChange(newValue, actionMeta)}
+                    onChange={(
+                            newValue: MultiValue<Skill> | SingleValue<Skill>,
+                            actionMeta: ActionMeta<Skill>,
+                        ) => onChange(newValue, actionMeta)}
                 />
             </div>
             <div className={styles.popularSkillsContainer}>
                 <span className={styles.popularSkillsTitle}>Popular Skills</span>
 
-                {popularSkills.map(row =>
-                    <div className={styles.pillRow}>
-                        {row.map(skill => 
-                            <SkillPill skill={skill} 
-                                selected={ filteringSkill(skill) } 
-                                onClick={toggleSkill} 
-                            /> )}
-                    </div>
+                {popularSkills.map(
+                    row => (
+                        <div className={styles.pillRow}>
+                            {row.map(skill => (
+                                <SkillPill
+                                    skill={skill}
+                                    selected={filteringSkill(skill)}
+                                    onClick={toggleSkill}
+                                />
+                              ))}
+                        </div>
+                        ),
                 )}
             </div>
         </ContentLayout>

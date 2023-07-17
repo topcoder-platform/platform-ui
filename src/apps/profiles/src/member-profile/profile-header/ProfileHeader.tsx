@@ -11,7 +11,6 @@ import {
     UserTraitIds,
     UserTraits,
 } from '~/libs/core'
-import { Button } from '~/libs/ui'
 
 import { EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
