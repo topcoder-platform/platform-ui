@@ -1,0 +1,19 @@
+@import '@libs/ui/styles/includes';
+
+.modalButtons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.formError {
+    color: $red-100;
+}
+
+.editForm {
+    margin-top: $sp-4;
+
+    :global(.input-wrapper) {
+        margin-bottom: $sp-4;
+    }
+}
