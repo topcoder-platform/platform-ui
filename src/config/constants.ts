@@ -19,7 +19,7 @@ export enum ToolTitle {
     tcAcademy = 'Topcoder Academy',
     selfService = 'Self Service Challenges',
     onboarding = ' ',
-    talentSearch = 'Talent Search'
+    talentSearch = 'Expert Talent'
 }
 
 export const PageSubheaderPortalId: string = 'page-subheader-portal-el'
