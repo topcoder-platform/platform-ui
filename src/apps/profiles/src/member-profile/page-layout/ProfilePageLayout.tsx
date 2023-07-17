@@ -65,7 +65,11 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
 
                         <MemberLinks profile={props.profile} authProfile={props.authProfile} />
 
-                        <MemberLocalInfo profile={props.profile} />
+                        <MemberLocalInfo
+                            profile={props.profile}
+                            authProfile={props.authProfile}
+                            refreshProfile={props.refreshProfile}
+                        />
                     </div>
                     <div className={styles.profileInfoRight}>
                         {

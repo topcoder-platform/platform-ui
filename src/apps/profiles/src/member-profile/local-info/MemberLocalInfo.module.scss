@@ -9,10 +9,14 @@
         align-items: center;
         margin-bottom: $sp-2;
 
-        svg {
+        > svg {
             margin-right: $sp-2;
             width: 24px;
             height: 24px;
+        }
+
+        > button {
+            margin-left: auto;
         }
     }
 }

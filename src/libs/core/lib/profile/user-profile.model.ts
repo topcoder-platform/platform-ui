@@ -5,6 +5,10 @@ export type TC_TRACKS = 'DEVELOP' | 'DESIGN' | 'DATA_SCIENCE'
 export interface UserProfile {
     addresses?: Array<{
         city?: string
+        stateCode?: string
+        streetAddr1?: string
+        streetAddr2?: string
+        zip?: string
     }>
     competitionCountryCode: string
     createdAt: number

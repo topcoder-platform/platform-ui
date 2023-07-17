@@ -3,9 +3,14 @@
 .container {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
 
     .educationWrap {
-        margin-bottom: $sp-8;
+        margin: $sp-8 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $sp-4;
+        width: 100%;
 
         &.noItems {
             margin-bottom: 0;
@@ -13,7 +18,10 @@
 
         .educationCardWrap {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
+            border: 1px solid $black-20;
+            border-radius: 8px;
+            padding: $sp-4;
 
             .actionElements {
                 display: flex;
@@ -60,25 +68,11 @@
 
     .formWrap {
         margin-top: $sp-4;
+        width: 100%;
 
         @include ltelg {
             :global(.input-wrapper) {
                 margin-bottom: $sp-2;
-            }
-        }
-
-        .formCTAs {
-            display: flex;
-            align-items: center;
-
-            svg {
-                width: 14px;
-                height: 14px;
-                margin-right: $sp-1;
-            }
-
-            .ctaBtnCancel {
-                margin-left: $sp-8;
             }
         }
     }

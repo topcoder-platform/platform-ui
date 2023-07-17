@@ -72,9 +72,10 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.authProfile])
 
-    function handleHireMeClick(): void {
-        console.log('Hire Me button clicked')
-    }
+    // Enable this with talent search app
+    // function handleHireMeClick(): void {
+    //     console.log('Hire Me button clicked')
+    // }
 
     function handleModifyNameClick(): void {
         setIsNameEditMode(true)
@@ -165,7 +166,8 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                             {canEdit ? 'I am' : `${props.profile.firstName} is`}
                         </span>
                         <OpenForGigs canEdit={canEdit} authProfile={props.authProfile} profile={props.profile} />
-                        {
+                        {/* Enable this with talent search app */}
+                        {/* {
                             !canEdit && (
                                 <Button
                                     label={`Hire ${props.profile.firstName}`}
@@ -173,7 +175,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                                     onClick={handleHireMeClick}
                                 />
                             )
-                        }
+                        } */}
                     </div>
                 ) : undefined
             }
