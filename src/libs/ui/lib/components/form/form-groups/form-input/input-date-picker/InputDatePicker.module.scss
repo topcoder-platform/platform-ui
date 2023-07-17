@@ -48,6 +48,8 @@
             border: none;
             background-color: transparent;
             margin: auto;
+            -webkit-appearance: menulist;
+            appearance: menulist;
 
             option:hover {
                 background-color: $turq-160;
