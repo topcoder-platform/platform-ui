@@ -1,5 +1,5 @@
 import { FC, useContext, useEffect } from 'react'
-import { Outlet, Routes } from 'react-router-dom'
+import { Outlet, Routes, useLocation } from 'react-router-dom'
 import { connect, Provider } from 'react-redux'
 import classNames from 'classnames'
 
@@ -53,6 +53,14 @@ const OnboardingFooter: any = connect(mapStateToProps, mapDispatchToProps)(Onboa
 const OnboardingContent: FC<{
 }> = () => {
     const { getChildRoutes }: RouterContextData = useContext(routerContext)
+    const location = useLocation()
+
+    useEffect(
+        () => {
+            window.scrollTo(0, 0)
+        },
+        [location.pathname],
+    )
 
     return (
         <>
