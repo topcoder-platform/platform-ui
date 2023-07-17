@@ -82,6 +82,8 @@ export const TalentSearch: FC = () => {
         return result
     }
 
+    // TODO: Make this configurable, or read from a service.  We need to discuss
+    // how we want to handle this.
     const popularSkills:Skill[][] = [
         [{ emsiId: 'KS441LF7187KS0CV4B6Y', name: 'Typescript' },
             { emsiId: 'KS1244K6176NLVWV02B6', name: 'Front-End Engineering' },
