@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import {
     MemberTraitsAPI,
     useMemberTraits,
-    UserCompletedCertificationsData,
+    UserCompletedCertificationsResponse,
     UserProfile,
     UserTrait,
     UserTraitIds,
@@ -29,7 +29,7 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
     const [queryParams]: [URLSearchParams, any] = useSearchParams()
     const editMode: string | null = queryParams.get(EDIT_MODE_QUERY_PARAM)
 
-    const { data: memberTCA }: { data: UserCompletedCertificationsData | undefined }
+    const { data: memberTCA, loading: tcaDataLoading }: UserCompletedCertificationsResponse
         = useUserCompletedCertifications(props.profile?.userId)
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
@@ -37,8 +37,10 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const { data: memberEducationTraits, mutate: mutateTraits, loading }: MemberTraitsAPI
+    const { data: memberEducationTraits, mutate: mutateTraits, loading: traitsLoading }: MemberTraitsAPI
         = useMemberTraits(props.profile.handle, { traitIds: UserTraitIds.education })
+
+    const loading = tcaDataLoading || traitsLoading
 
     const memberEducation: UserTrait[] | undefined
         = useMemo(() => memberEducationTraits?.[0]?.traits?.data, [memberEducationTraits])
@@ -111,7 +113,7 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
                 </EmptySection>
             )}
 
-            {canEdit && !hasEducationData && (
+            {!loading && canEdit && !hasEducationData && (
                 <AddButton
                     label='Add education & certifications'
                     onClick={handleEditEducationClick}

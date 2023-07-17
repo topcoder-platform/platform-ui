@@ -1,8 +1,7 @@
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
-import { KeyedMutator } from 'swr'
 import { useSearchParams } from 'react-router-dom'
 
-import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } from '~/libs/core'
+import { MemberTraitsAPI, useMemberTraits, UserProfile, UserTrait, UserTraitIds } from '~/libs/core'
 import {
     IconOutline,
     SocialIconFacebook,
@@ -53,10 +52,7 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const { data: memberPersonalizationTraits, mutate: mutateTraits }: {
-        data: UserTraits[] | undefined,
-        mutate: KeyedMutator<any>,
-    }
+    const { data: memberPersonalizationTraits, mutate: mutateTraits, loading }: MemberTraitsAPI
         = useMemberTraits(props.profile.handle, { traitIds: UserTraitIds.personalization })
 
     const memberLinks: UserTrait | undefined
@@ -87,7 +83,7 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
         }, 1000)
     }
 
-    return canEdit || memberLinks?.links ? (
+    return !loading && (canEdit || memberLinks?.links) ? (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
                 <p className='body-main-bold'>Links</p>
