@@ -33,8 +33,8 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
     const [isSaving, setIsSaving]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const [isFormChanged, setIsFormChanged]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
+    const [addingNewItem, setAddingNewItem]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(props.education?.length === 0 || false)
 
     const [formValues, setFormValues]: [
         { [key: string]: string | boolean | Date | undefined },
@@ -62,6 +62,12 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
         = useState<UserTrait[] | undefined>(props.education)
 
     function handleModifyEducationSave(): void {
+        if (addingNewItem || editedItemIndex !== undefined) {
+            handleFormAction()
+
+            return
+        }
+
         setIsSaving(true)
 
         methodsMap[!!props.education ? 'update' : 'create'](props.profile.handle, [{
@@ -99,15 +105,12 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
         })
     }
 
-    function handleCancelEditMode(): void {
-        setEditedItemIndex(undefined)
-        resetForm()
-    }
-
     function resetForm(): void {
         setFormValues({})
+        setFormErrors({})
         formElRef.current.reset()
         setEditedItemIndex(undefined)
+        setAddingNewItem(false)
     }
 
     function handleFormAction(): void {
@@ -146,7 +149,6 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
             )
         }
 
-        setIsFormChanged(true)
         resetForm()
     }
 
@@ -168,7 +170,20 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
 
         updatedEducation.splice(indx, 1)
         setMemberEducation(updatedEducation)
-        setIsFormChanged(true)
+    }
+
+    function handleAddNewItem(): void {
+        setAddingNewItem(true)
+    }
+
+    function handleModifyEducationCancel(): void {
+        if (addingNewItem || editedItemIndex !== undefined) {
+            setAddingNewItem(false)
+            setEditedItemIndex(undefined)
+            resetForm()
+        } else {
+            props.onClose()
+        }
     }
 
     return (
@@ -176,109 +191,104 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
             onClose={props.onClose}
             open
             size='lg'
-            title='LEARNING & EDUCATION'
+            title='EDUCATION'
             buttons={(
                 <div className={styles.modalButtons}>
                     <Button
                         label='Cancel'
-                        onClick={props.onClose}
+                        onClick={handleModifyEducationCancel}
                         secondary
                     />
                     <Button
                         label='Save'
                         onClick={handleModifyEducationSave}
                         primary
-                        disabled={isSaving || !isFormChanged}
+                        disabled={isSaving}
                     />
                 </div>
             )}
         >
             <div className={styles.container}>
-                <div className={classNames(styles.educationWrap, !memberEducation?.length ? styles.noItems : '')}>
-                    {
-                        memberEducation?.map((education: UserTrait, indx: number) => (
-                            <div
-                                className={styles.educationCardWrap}
-                                key={`${education.schoolCollegeName}-${education.major}`}
-                            >
-                                <EducationCard education={education} />
-                                <div className={styles.actionElements}>
-                                    <Button
-                                        className={styles.ctaBtn}
-                                        icon={IconOutline.PencilIcon}
-                                        onClick={bind(handleEducationEdit, this, indx)}
-                                        size='lg'
-                                    />
-                                    <Button
-                                        className={styles.ctaBtn}
-                                        icon={IconOutline.TrashIcon}
-                                        onClick={bind(handleEducationDelete, this, indx)}
-                                        size='lg'
-                                    />
-                                </div>
-                            </div>
-                        ))
-                    }
-                </div>
 
                 <p>
-                    Enter information about your schooling and degrees.
+                    Add degrees or other education details.
                 </p>
 
-                <form
-                    ref={formElRef}
-                    className={styles.formWrap}
-                >
-                    <InputText
-                        name='school'
-                        label='Name of College or University *'
-                        error={formErrors.schoolCollegeName}
-                        placeholder='Enter name of college or university'
-                        dirty
-                        tabIndex={0}
-                        type='text'
-                        onChange={bind(handleFormValueChange, this, 'schoolCollegeName')}
-                        value={formValues.schoolCollegeName as string}
-                    />
-                    <InputText
-                        name='major'
-                        label='Degree *'
-                        error={formErrors.major}
-                        placeholder='Enter Degree'
-                        dirty
-                        tabIndex={-1}
-                        type='text'
-                        onChange={bind(handleFormValueChange, this, 'major')}
-                        value={formValues.major as string}
-                    />
-                    <InputDatePicker
-                        label='End date (or expected)'
-                        date={formValues.endDate as Date}
-                        onChange={bind(handleFormValueChange, this, 'endDate')}
-                        disabled={false}
-                        error={formErrors.endDate}
-                        dirty
-                        showMonthPicker={false}
-                        showYearPicker
-                        dateFormat='yyyy'
-                    />
-                    <div className={styles.formCTAs}>
-                        {editedItemIndex === undefined ? <IconOutline.PlusCircleIcon /> : undefined}
-                        <Button
-                            link
-                            label={`${editedItemIndex !== undefined ? 'Edit' : 'Add'} School / Degree`}
-                            onClick={handleFormAction}
-                        />
-                        {editedItemIndex !== undefined && (
-                            <Button
-                                className={styles.ctaBtnCancel}
-                                link
-                                label='Cancel'
-                                onClick={handleCancelEditMode}
-                            />
-                        )}
+                {editedItemIndex === undefined && !addingNewItem ? (
+                    <div className={classNames(styles.educationWrap, !memberEducation?.length ? styles.noItems : '')}>
+                        {
+                            memberEducation?.map((education: UserTrait, indx: number) => (
+                                <div
+                                    className={styles.educationCardWrap}
+                                    key={`${education.schoolCollegeName}-${education.major}`}
+                                >
+                                    <EducationCard education={education} isModalView />
+                                    <div className={styles.actionElements}>
+                                        <Button
+                                            className={styles.ctaBtn}
+                                            icon={IconOutline.PencilIcon}
+                                            onClick={bind(handleEducationEdit, this, indx)}
+                                            size='lg'
+                                        />
+                                        <Button
+                                            className={styles.ctaBtn}
+                                            icon={IconOutline.TrashIcon}
+                                            onClick={bind(handleEducationDelete, this, indx)}
+                                            size='lg'
+                                        />
+                                    </div>
+                                </div>
+                            ))
+                        }
                     </div>
-                </form>
+                ) : undefined}
+
+                {editedItemIndex !== undefined || addingNewItem ? (
+                    <form
+                        ref={formElRef}
+                        className={styles.formWrap}
+                    >
+                        <InputText
+                            name='school'
+                            label='Name of College or University *'
+                            error={formErrors.schoolCollegeName}
+                            placeholder='Enter name of college or university'
+                            dirty
+                            tabIndex={0}
+                            type='text'
+                            onChange={bind(handleFormValueChange, this, 'schoolCollegeName')}
+                            value={formValues.schoolCollegeName as string}
+                        />
+                        <InputText
+                            name='major'
+                            label='Degree *'
+                            error={formErrors.major}
+                            placeholder='Enter Degree'
+                            dirty
+                            tabIndex={-1}
+                            type='text'
+                            onChange={bind(handleFormValueChange, this, 'major')}
+                            value={formValues.major as string}
+                        />
+                        <InputDatePicker
+                            label='End date (or expected)'
+                            date={formValues.endDate as Date}
+                            onChange={bind(handleFormValueChange, this, 'endDate')}
+                            disabled={false}
+                            error={formErrors.endDate}
+                            dirty
+                            showMonthPicker={false}
+                            showYearPicker
+                            dateFormat='yyyy'
+                        />
+                    </form>
+                ) : (
+                    <Button
+                        label='+ Add Education'
+                        secondary
+                        onClick={handleAddNewItem}
+                    />
+                )}
             </div>
         </BaseModal>
     )

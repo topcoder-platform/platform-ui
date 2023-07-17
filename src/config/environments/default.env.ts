@@ -47,9 +47,9 @@ export const STRIPE = {
 }
 
 export const URLS = {
-    ACCOUNT_SETTINGS: `${TOPCODER_URL}/settings/account`,
+    ACCOUNT_SETTINGS: `https://account-settings.${TC_DOMAIN}/#account`,
     UNIVERSAL_NAV: `https://uni-nav.${TC_DOMAIN}/v1/tc-universal-nav.js`,
-    USER_PROFILE: `${TOPCODER_URL}/members`,
+    USER_PROFILE: `https://profile.${TC_DOMAIN}`,
 }
 
 export const MEMBER_VERIFY_LOOKER = getReactEnv<number>('MEMBER_VERIFY_LOOKER', 3322)
