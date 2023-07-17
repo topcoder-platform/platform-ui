@@ -14,12 +14,11 @@ import '../../styles/global/_index.scss'
 
 import styles from './styles.module.scss'
 
-const OnboardingContent: FC<{
+const OnboardingFooterContent: FC<{
     fetchMemberInfo: () => void
     fetchMemberTraits: () => void
     reduxMemberInfo: Member | undefined
 }> = props => {
-    const { getChildRoutes }: RouterContextData = useContext(routerContext)
     useEffect(() => {
         props.fetchMemberInfo()
         props.fetchMemberTraits()
@@ -27,20 +26,11 @@ const OnboardingContent: FC<{
     }, [])
 
     return (
-        <>
-            <div className={classNames('d-flex flex-column', styles.container)}>
-                <Outlet />
-                <Routes>
-                    {getChildRoutes(onboardRouteId)}
-                </Routes>
-                <div id='calendar-portal' />
-            </div>
-            <span className={styles.textFooter}>
-                I will complete this onboarding later,
-                <a href={`${EnvironmentConfig.USER_PROFILE_URL}/${props.reduxMemberInfo?.handle}`}> skip for now</a>
-                .
-            </span>
-        </>
+        <span className={styles.textFooter}>
+            I will complete this onboarding later,
+            <a href={`${EnvironmentConfig.USER_PROFILE_URL}/${props.reduxMemberInfo?.handle}`}> skip for now</a>
+            .
+        </span>
     )
 }
 
@@ -58,12 +48,30 @@ const mapDispatchToProps: any = {
     fetchMemberInfo,
     fetchMemberTraits,
 }
-const Onboarding: any = connect(mapStateToProps, mapDispatchToProps)(OnboardingContent)
+const OnboardingFooter: any = connect(mapStateToProps, mapDispatchToProps)(OnboardingFooterContent)
+
+const OnboardingContent: FC<{
+}> = () => {
+    const { getChildRoutes }: RouterContextData = useContext(routerContext)
+
+    return (
+        <>
+            <div className={classNames('d-flex flex-column', styles.container)}>
+                <Outlet />
+                <Routes>
+                    {getChildRoutes(onboardRouteId)}
+                </Routes>
+                <div id='calendar-portal' />
+            </div>
+            <OnboardingFooter />
+        </>
+    )
+}
 
 export const OnboardingWrapper: FC<{}> = () => (
     <div className={classNames(styles.blockWrapper, 'd-flex flex-column align-items-center')}>
         <Provider store={store}>
-            <Onboarding />
+            <OnboardingContent />
         </Provider>
     </div>
 )
