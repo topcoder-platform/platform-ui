@@ -9,6 +9,7 @@ import { EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 
 import { ModifyAboutMeModal } from './ModifyAboutMeModal'
+import MemberRatingCard from './MemberRatingCard/MemberRatingCard'
 import styles from './AboutMe.module.scss'
 
 interface AboutMeProps {
@@ -71,6 +72,9 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
                 {' '}
                 {props.profile?.firstName || props.profile?.handle}
             </p>
+
+            <MemberRatingCard profile={props.profile} />
+
             <div className={classNames(styles.wizzardWrap, hasEmptyDescription && styles.emptyDesc)}>
                 <p className='body-large'>{memberTitleTrait?.profileSelfTitle}</p>
                 {

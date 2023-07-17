@@ -46,6 +46,11 @@
             .profileInfoLeft {
                 display: flex;
                 flex-direction: column;
+                margin-top: -60px;
+
+                @include ltelg {
+                    margin-top: 0;
+                }
 
                 .skillsWrap {
                     display: flex;
