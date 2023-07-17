@@ -1,0 +1,36 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background-color: $tc-white;
+    padding: $sp-3;
+    margin: $sp-4 0;
+    border-radius: 16px;
+    width: 100%;
+
+    .innerWrap {
+        background-image: linear-gradient(90deg, #05456D, #0A7AC0);
+        color: $tc-white;
+        border-radius: 10px;
+        display: flex;
+        justify-content: space-between;
+        padding: $sp-4;
+
+        .valueWrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            .value {
+                font-size: 26px;
+                font-weight: 500;
+                font-family: $font-barlow-condensed;
+                line-height: 28px;
+            }
+
+            .name {
+                font-size: 12px;
+                line-height: 18px;
+            }
+        }
+    }
+}

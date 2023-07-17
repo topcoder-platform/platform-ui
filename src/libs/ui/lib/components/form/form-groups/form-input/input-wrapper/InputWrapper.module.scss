@@ -87,7 +87,7 @@ $error-line-height: 14px;
 
     &.input-error {
         border-color: $red-100;
-        margin-bottom: 0;
+        margin-bottom: 0 !important;
         color: $red-100;
 
         .label {
