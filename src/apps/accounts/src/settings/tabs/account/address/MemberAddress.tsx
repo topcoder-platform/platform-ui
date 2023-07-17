@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useState } from 'react'
 import { toast } from 'react-toastify'
 import { bind, trim } from 'lodash'
 import classNames from 'classnames'
@@ -9,6 +9,7 @@ import {
 } from '~/libs/ui'
 import {
     CountryLookup,
+    updateMemberProfileAsync,
     useCountryLookup,
     UserProfile,
 } from '~/libs/core'
@@ -63,6 +64,31 @@ const MemberAddress: FC<MemberAddressProps> = (props: MemberAddressProps) => {
 
         setIsSaving(true)
 
+        updateMemberProfileAsync(
+            props.profile.handle,
+            {
+                addresses: [{
+                    city: formValues.city,
+                    stateCode: formValues.stateCode,
+                    streetAddr1: formValues.streetAddr1,
+                    streetAddr2: formValues.streetAddr2,
+                    zip: formValues.zip,
+                }],
+                competitionCountryCode: formValues.country,
+                homeCountryCode: formValues.country,
+            },
+        )
+            .then(() => {
+                toast.success('Your account has been updated.', { position: toast.POSITION.BOTTOM_RIGHT })
+                setFormErrors({})
+            })
+            .catch(() => {
+                toast.error('Something went wrong. Please try again.', { position: toast.POSITION.BOTTOM_RIGHT })
+            })
+            .finally(() => {
+                setIsFormChanged(false)
+                setIsSaving(false)
+            })
     }
 
     return (
@@ -88,7 +114,7 @@ const MemberAddress: FC<MemberAddressProps> = (props: MemberAddressProps) => {
                         dirty
                         tabIndex={0}
                         type='text'
-                        onChange={bind(handleFormValueChange, this, 'address')}
+                        onChange={bind(handleFormValueChange, this, 'streetAddr1')}
                         value={formValues.streetAddr1}
                     />
                     <InputText
@@ -99,7 +125,7 @@ const MemberAddress: FC<MemberAddressProps> = (props: MemberAddressProps) => {
                         dirty
                         tabIndex={0}
                         type='text'
-                        onChange={bind(handleFormValueChange, this, 'address2')}
+                        onChange={bind(handleFormValueChange, this, 'streetAddr2')}
                         value={formValues.streetAddr2}
                     />
                     <InputText
@@ -116,13 +142,13 @@ const MemberAddress: FC<MemberAddressProps> = (props: MemberAddressProps) => {
                     <InputText
                         name='state'
                         label='State'
-                        error={formErrors.state}
+                        error={formErrors.stateCode}
                         placeholder='State'
                         dirty
                         tabIndex={0}
                         type='text'
-                        onChange={bind(handleFormValueChange, this, 'state')}
-                        value={formValues.state}
+                        onChange={bind(handleFormValueChange, this, 'stateCode')}
+                        value={formValues.stateCode}
                     />
                     <InputText
                         name='zip'
