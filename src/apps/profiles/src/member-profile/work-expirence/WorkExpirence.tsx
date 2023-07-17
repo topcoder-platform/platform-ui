@@ -5,7 +5,7 @@ import { MemberTraitsAPI, useMemberTraits, UserProfile, UserTrait, UserTraitIds 
 
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { notifyUniNavi } from '../../lib'
-import { EditMemberPropertyBtn, EmptySection } from '../../components'
+import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 
 import { ModifyWorkExpirenceModal } from './ModifyWorkExpirenceModal'
 import { WorkExpirenceCard } from './WorkExpirenceCard'
@@ -58,29 +58,41 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
         <div className={styles.container}>
             <div className={styles.headerWrap}>
                 <h3>Experience</h3>
-                {
-                    canEdit && (
-                        <EditMemberPropertyBtn
-                            onClick={handleEditWorkExpirenceClick}
-                        />
-                    )
-                }
+                {canEdit && !!workExpirence?.length && (
+                    <EditMemberPropertyBtn
+                        onClick={handleEditWorkExpirenceClick}
+                    />
+                )}
             </div>
 
             <div className={styles.contentWrap}>
                 {!loading && (
-                    (workExpirence?.length as number) > 0
-                        ? workExpirence?.map((work: UserTrait) => (
-                            <WorkExpirenceCard key={`${work.company}-${work.industry}-${work.position}`} work={work} />
-                        ))
-                        : (
-                            <EmptySection
-                                selfMessage='Adding experience enhances the professional appearance of your profile.'
-                                isSelf={canEdit}
-                            >
-                                I&apos;m still building up my experience here at Topcoder.
-                            </EmptySection>
-                        )
+                    <>
+                        {(workExpirence?.length as number) > 0
+                            ? workExpirence?.map((work: UserTrait) => (
+                                <WorkExpirenceCard
+                                    key={`${work.company}-${work.industry}-${work.position}`}
+                                    work={work}
+                                />
+                            ))
+                            : (
+                                <EmptySection
+                                    selfMessage={
+                                        'Adding experience enhances the professional '
+                                        + 'appearance of your profile.'
+                                    }
+                                    isSelf={canEdit}
+                                >
+                                    I&apos;m still building up my experience here at Topcoder.
+                                </EmptySection>
+                            )}
+                        {canEdit && !workExpirence?.length && (
+                            <AddButton
+                                label='Add experience'
+                                onClick={handleEditWorkExpirenceClick}
+                            />
+                        )}
+                    </>
                 )}
             </div>
 

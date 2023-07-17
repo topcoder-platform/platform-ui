@@ -10,7 +10,7 @@ import {
     SocialIconYoutube,
 } from '~/libs/ui'
 
-import { EditMemberPropertyBtn } from '../../components'
+import { AddButton, EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { notifyUniNavi } from '../../lib'
 
@@ -71,7 +71,7 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.authProfile])
 
-    function handleEditLangaguesClick(): void {
+    function handleEditClick(): void {
         setIsEditMode(true)
     }
 
@@ -90,14 +90,12 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
     return canEdit || memberLinks?.links ? (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
-                <p className='body-main-bold'>Links:</p>
-                {
-                    canEdit && (
-                        <EditMemberPropertyBtn
-                            onClick={handleEditLangaguesClick}
-                        />
-                    )
-                }
+                <p className='body-main-bold'>Links</p>
+                {canEdit && !!memberLinks?.links.length && (
+                    <EditMemberPropertyBtn
+                        onClick={handleEditClick}
+                    />
+                )}
             </div>
 
             <div className={styles.links}>
@@ -114,6 +112,14 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
                     ))
                 }
             </div>
+
+            {canEdit && !memberLinks?.links.length && (
+                <AddButton
+                    variant='mt0'
+                    label='Add your social links'
+                    onClick={handleEditClick}
+                />
+            )}
 
             {
                 isEditMode && (

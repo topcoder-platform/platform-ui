@@ -4,8 +4,9 @@ import { KeyedMutator } from 'swr'
 import classNames from 'classnames'
 
 import { useMemberTraits, UserProfile, UserTraitIds, UserTraits } from '~/libs/core'
+import { Button } from '~/libs/ui'
 
-import { EditMemberPropertyBtn, EmptySection } from '../../components'
+import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 
 import { ModifyAboutMeModal } from './ModifyAboutMeModal'
@@ -73,23 +74,43 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
             </p>
             <div className={classNames(styles.wizzardWrap, hasEmptyDescription && styles.emptyDesc)}>
                 <p className='body-large'>{memberTitleTrait?.profileSelfTitle}</p>
-                {
-                    canEdit && (
-                        <EditMemberPropertyBtn
-                            onClick={handleEditClick}
-                        />
-                    )
-                }
+                {canEdit && !hasEmptyDescription && (
+                    <EditMemberPropertyBtn
+                        onClick={handleEditClick}
+                    />
+                )}
             </div>
             {hasEmptyDescription && (
-                <EmptySection
-                    className={styles.empty}
-                    selfMessage={`
-                        Your bio is an opportunity to share your personality
-                        and interests with the community and customers.
-                    `}
-                    isSelf={canEdit}
-                />
+                <>
+                    <EmptySection
+                        className={styles.empty}
+                        selfMessage={`
+                            Your bio is an opportunity to share your personality
+                            and interests with the community and customers.
+                        `}
+                        isSelf={canEdit}
+                    >
+                        I&apos;m a proud Topcoder member, working hard to solve some of the worlds biggest problems.
+                        <br />
+                        <br />
+                        I&apos;m excited to hear about your technology challenges and look forward to being
+                        on your next project.
+                        <br />
+                        <Button
+                            link
+                            variant='linkblue'
+                            size='lg'
+                        >
+                            Let&apos;s connect!
+                        </Button>
+                    </EmptySection>
+                    {canEdit && (
+                        <AddButton
+                            label='Add your bio'
+                            onClick={handleEditClick}
+                        />
+                    )}
+                </>
             )}
             <p>{props.profile?.description}</p>
 

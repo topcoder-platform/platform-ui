@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 
 import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } from '~/libs/core'
 
-import { EditMemberPropertyBtn } from '../../components'
+import { AddButton, EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { notifyUniNavi } from '../../lib'
 
@@ -61,16 +61,21 @@ const MemberLanguages: FC<MemberLanguagesProps> = (props: MemberLanguagesProps) 
     return canEdit || memberLanguages ? (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
-                <p className='body-main-bold'>Languages:</p>
-                {
-                    canEdit && (
-                        <EditMemberPropertyBtn
-                            onClick={handleEditLangaguesClick}
-                        />
-                    )
-                }
+                <p className='body-main-bold'>Languages</p>
+                {canEdit && !!memberLanguages?.length && (
+                    <EditMemberPropertyBtn
+                        onClick={handleEditLangaguesClick}
+                    />
+                )}
             </div>
 
+            {canEdit && !memberLanguages?.length && (
+                <AddButton
+                    variant='mt0'
+                    label='Add your languages'
+                    onClick={handleEditLangaguesClick}
+                />
+            )}
             <div className={styles.languages}>
                 {
                     memberLanguages?.map((trait: UserTrait) => (

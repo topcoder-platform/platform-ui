@@ -13,7 +13,7 @@ import {
 } from '~/libs/core'
 import { Button } from '~/libs/ui'
 
-import { EditMemberPropertyBtn } from '../../components'
+import { AddButton, EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 
 import { OpenForGigs } from './OpenForGigs'
@@ -32,6 +32,7 @@ const DEFAULT_MEMBER_AVATAR: string
 
 const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     const photoURL: string = props.profile.photoURL || DEFAULT_MEMBER_AVATAR
+    const hasProfilePicture = !!props.profile.photoURL
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
 
@@ -111,13 +112,19 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         <div className={styles.container}>
             <div className={styles.photoWrap}>
                 <img src={photoURL} alt='Topcoder - Member Profile Avatar' className={styles.profilePhoto} />
-                {
-                    canEdit && (
-                        <EditMemberPropertyBtn
-                            onClick={handleModifyPhotoClick}
-                        />
-                    )
-                }
+                {canEdit && hasProfilePicture && (
+                    <EditMemberPropertyBtn
+                        className={styles.button}
+                        onClick={handleModifyPhotoClick}
+                    />
+                )}
+                {canEdit && !hasProfilePicture && (
+                    <AddButton
+                        className={styles.addButton}
+                        label='Add a profile picture'
+                        onClick={handleModifyPhotoClick}
+                    />
+                )}
             </div>
 
             {!traitsLoading && (
