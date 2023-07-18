@@ -26,4 +26,8 @@
 .empty {
     height: auto;
     margin-top: $sp-4;
+
+    @include ltelg {
+        padding: $sp-4 $sp-4 $sp-4 0;
+    }
 }

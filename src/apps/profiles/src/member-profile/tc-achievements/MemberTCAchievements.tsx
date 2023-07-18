@@ -38,7 +38,7 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
 
     return memberStats?.wins || tcoWins ? (
         <div className={styles.container}>
-            <h3>Achievements @ Topcoder</h3>
+            <p className='body-large-medium'>Achievements @ Topcoder</p>
 
             <div className={styles.achievementsWrap}>
                 {

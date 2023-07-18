@@ -21,11 +21,19 @@
 
         .profileHeaderContentOuter {
             margin-top: 75px;
+
+            @include ltelg {
+                margin-top: 0;
+            }
         }
 
         .profileHeaderBottom {
             height: 90px;
-            background-color: $tc-white
+            background-color: $tc-white;
+
+            @include ltelg {
+                height: 30px;
+            }
         }
     }
 
@@ -65,7 +73,7 @@
                 margin-top: -275px;
 
                 @include ltelg {
-                    margin-top: 0;
+                    margin-top: $sp-8;
                 }
 
                 .shortBio {
@@ -102,4 +110,9 @@
     padding: $sp-8 $sp-8 0;
     margin-bottom: $sp-8;
     border-radius: 16px;
+
+    @include ltelg {
+        padding: $sp-4;
+        padding-bottom: 0;
+    }
 }

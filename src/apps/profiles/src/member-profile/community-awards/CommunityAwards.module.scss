@@ -11,6 +11,10 @@
         align-items: center;
         margin-bottom: $sp-10;
 
+        @include ltelg {
+            margin-bottom: $sp-4;
+        }
+
         .viewAllLink {
             text-transform: uppercase;
             color: $turq-160;
@@ -39,6 +43,11 @@
             align-items: center;
             transition: 0.25s ease-in-out;
             box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+
+            @include ltelg {
+                padding-bottom: 0;
+                padding-left: $sp-2;
+            }
 
             &:hover {
                 box-shadow: 0 0 16px rgba(22, 103, 154, 0.5);
