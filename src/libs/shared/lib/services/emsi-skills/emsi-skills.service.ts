@@ -1,5 +1,5 @@
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
+import { xhrDeleteAsync, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
 
 import { EmsiSkill, Skill } from './skill.model'
 
@@ -22,4 +22,8 @@ export async function updateMemberEmsiSkills(userId: string | number, skills: Sk
     return xhrPutAsync(`${EnvironmentConfig.API.V5}/emsi-skills/member-emsi-skills/${userId}`, {
         emsiSkills: skills,
     })
+}
+
+export async function deleteMemberEmsiSkills(userId: string | number): Promise<void> {
+    return xhrDeleteAsync(`${EnvironmentConfig.API.V5}/emsi-skills/member-emsi-skills/${userId}`)
 }

@@ -1,10 +1,12 @@
 import { FC } from 'react'
+import classNames from 'classnames'
 
 import { Button, IconOutline } from '~/libs/ui'
 
 import styles from './EditMemberPropertyBtn.module.scss'
 
 interface EditMemberPropertyBtnProps {
+    className?: string
     onClick: () => void
 }
 
@@ -12,7 +14,7 @@ const EditMemberPropertyBtn: FC<EditMemberPropertyBtnProps> = (props: EditMember
     <Button
         icon={IconOutline.PencilIcon}
         onClick={props.onClick}
-        className={styles.editMemberPropertyBtn}
+        className={classNames(styles.editMemberPropertyBtn, props.className)}
         size='lg'
     />
 )
