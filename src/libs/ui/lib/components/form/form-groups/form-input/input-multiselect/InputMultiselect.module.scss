@@ -169,7 +169,9 @@
 .theme-clear.multiselect .ms {
     &:global(__placeholder) {
         color: $black-100;
+        font-size: 16px;
     }
+
     &:global(__input-container) {
         color: $black-100;
     }

@@ -4,7 +4,7 @@ import { ContentLayout, IconOutline, InputMultiselectOption } from '~/libs/ui'
 import { EmsiSkill, EmsiSkillSources, InputSkillSelector } from '~/libs/shared'
 import { Skill } from '@talentSearch/lib/models/'
 
-import SkillPill from './components/SkillPill'
+import { SkillPill } from './components/skill-pill'
 import styles from './TalentSearch.module.scss'
 
 // TODO: Make this configurable, or read from a service.  We need to discuss
@@ -86,9 +86,9 @@ export const TalentSearch: FC = () => {
                 <span className={styles.searchHeaderText}>Looking for a technology expert?</span>
             </div>
             <div className={styles.subHeader}>
-                <span className={styles.subHeaderText}>
+                <div className={styles.subHeaderText}>
                     Search thousands of skills to match with our global experts.
-                </span>
+                </div>
             </div>
             <div className={styles.searchOptions}>
                 <span className={styles.searchPrompt}>Search by skills</span>
@@ -102,7 +102,7 @@ export const TalentSearch: FC = () => {
                 />
             </div>
             <div className={styles.popularSkillsContainer}>
-                <span className={styles.popularSkillsTitle}>Popular Skills</span>
+                <div className='body-medium-bold'>Popular Skills</div>
 
                 {popularSkills.map((row, i) => (
                     // eslint-disable-next-line react/no-array-index-key
