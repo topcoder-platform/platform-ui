@@ -53,7 +53,6 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
         props.onChange({
             target: { value: option.value },
         } as unknown as ChangeEvent<HTMLInputElement>)
-        toggleMenu()
     }
 
     function toggleIfNotDisabled(): void {

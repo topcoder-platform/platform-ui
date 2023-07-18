@@ -736,41 +736,5 @@
       "value": "language",
       "label": "Zulu"
     }
-  ],
-  "spokenLevel": [
-    {
-      "value": "spokenLevel",
-      "label": "Basic"
-    },
-    {
-      "value": "spokenLevel",
-      "label": "Intermediate"
-    },
-    {
-      "value": "spokenLevel",
-      "label": "Advanced"
-    },
-    {
-      "value": "spokenLevel",
-      "label": "Native"
-    }
-  ],
-  "writtenLevel": [
-    {
-      "value": "writtenLevel",
-      "label": "Basic"
-    },
-    {
-      "value": "writtenLevel",
-      "label": "Intermediate"
-    },
-    {
-      "value": "writtenLevel",
-      "label": "Advanced"
-    },
-    {
-      "value": "writtenLevel",
-      "label": "Native"
-    }
   ]
 }
