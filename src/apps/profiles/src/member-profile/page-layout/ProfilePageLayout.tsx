@@ -44,6 +44,7 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
 
         <ContentLayout
             outerClass={styles.profileOuter}
+            innerClass={styles.profileInner}
         >
             <div className={styles.profileInfoWrap}>
                 <div className={styles.profileInfoLeft}>

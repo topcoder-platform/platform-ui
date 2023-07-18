@@ -77,7 +77,7 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
             <MemberRatingCard profile={props.profile} />
 
             <div className={classNames(styles.wizzardWrap, hasEmptyDescription && styles.emptyDesc)}>
-                <p className='body-large'>{memberTitleTrait?.profileSelfTitle}</p>
+                <p className='body-main-medium'>{memberTitleTrait?.profileSelfTitle}</p>
                 {canEdit && !hasEmptyDescription && (
                     <EditMemberPropertyBtn
                         onClick={handleEditClick}

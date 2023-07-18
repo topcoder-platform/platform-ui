@@ -40,6 +40,10 @@
     .profileOuter {
         margin-top: 130px;
 
+        .profileInner {
+            width: 100%;
+        }
+
         .profileInfoWrap {
             display: grid;
             grid-template-columns: 300px 1fr;
@@ -47,8 +51,8 @@
             margin-bottom: $sp-13;
 
             @include ltelg {
-                grid-template-columns: 1fr;
-                gap: 0;
+                display: flex;
+                flex-direction: column;
             }
 
             .profileInfoLeft {
@@ -71,6 +75,7 @@
                 display: flex;
                 flex-direction: column;
                 margin-top: -275px;
+                z-index: 1;
 
                 @include ltelg {
                     margin-top: $sp-8;
@@ -107,7 +112,7 @@
 
 .sectionWrap {
     background-color: $tc-white;
-    padding: $sp-8 $sp-8 0;
+    padding: $sp-8 $sp-8 $sp-4;
     margin-bottom: $sp-8;
     border-radius: 16px;
 
