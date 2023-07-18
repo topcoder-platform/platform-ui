@@ -1,6 +1,6 @@
 import { FC, useContext, useEffect } from 'react'
 import { Outlet, Routes, useLocation } from 'react-router-dom'
-import { connect, Provider } from 'react-redux'
+import { Provider, useDispatch, useSelector } from 'react-redux'
 import classNames from 'classnames'
 
 import { routerContext, RouterContextData } from '~/libs/core'
@@ -14,46 +14,18 @@ import '../../styles/global/_index.scss'
 
 import styles from './styles.module.scss'
 
-const OnboardingFooterContent: FC<{
-    fetchMemberInfo: () => void
-    fetchMemberTraits: () => void
-    reduxMemberInfo: Member | undefined
-}> = props => {
-    useEffect(() => {
-        props.fetchMemberInfo()
-        props.fetchMemberTraits()
-        /* eslint-disable react-hooks/exhaustive-deps */
-    }, [])
-
-    return (
-        <span className={styles.textFooter}>
-            I will complete this onboarding later,
-            <a href={`${EnvironmentConfig.USER_PROFILE_URL}/${props.reduxMemberInfo?.handle}`}> skip for now</a>
-            .
-        </span>
-    )
-}
-
-const mapStateToProps: any = (state: any) => {
-    const {
-        memberInfo,
-    }: any = state.member
-
-    return {
-        reduxMemberInfo: memberInfo,
-    }
-}
-
-const mapDispatchToProps: any = {
-    fetchMemberInfo,
-    fetchMemberTraits,
-}
-const OnboardingFooter: any = connect(mapStateToProps, mapDispatchToProps)(OnboardingFooterContent)
-
 const OnboardingContent: FC<{
 }> = () => {
     const { getChildRoutes }: RouterContextData = useContext(routerContext)
     const location = useLocation()
+    const dispatch = useDispatch()
+    const reduxMemberInfo: Member = useSelector((state: any) => state.member.memberInfo)
+
+    useEffect(() => {
+        dispatch(fetchMemberInfo())
+        dispatch(fetchMemberTraits())
+        /* eslint-disable react-hooks/exhaustive-deps */
+    }, [])
 
     useEffect(
         () => {
@@ -69,9 +41,12 @@ const OnboardingContent: FC<{
                 <Routes>
                     {getChildRoutes(onboardRouteId)}
                 </Routes>
-                <div id='calendar-portal' />
             </div>
-            <OnboardingFooter />
+            <span className={styles.textFooter}>
+                I will complete this onboarding later,
+                <a href={`${EnvironmentConfig.USER_PROFILE_URL}/${reduxMemberInfo?.handle}`}> skip for now</a>
+                .
+            </span>
         </>
     )
 }
