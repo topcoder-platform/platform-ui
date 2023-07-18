@@ -83,7 +83,7 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
                                     }
                                     isSelf={canEdit}
                                 >
-                                    I&apos;m still building up my experience here at Topcoder.
+                                    This member is still building their experience here at Topcoder.
                                 </EmptySection>
                             )}
                         {canEdit && !workExpirence?.length && (
