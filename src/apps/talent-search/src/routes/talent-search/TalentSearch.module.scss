@@ -1,96 +1,90 @@
-@import '@talentSearch/styles/variables';
+@import "@libs/ui/styles/includes";
 
 .contentLayout {
-  width: 100%;
-  padding-top: 30px;
-  background-image: url("../../assets/background.png");
-  background-size: cover;
-  background-repeat: no-repeat;
+    background-image: url("../../assets/background.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+}
 
-  .contentLayout-outer {
-    width: 100%;
-
-    .contentLayout-inner {
-      width: 100%;
-      padding: 86px 48px 48px 48px;
-      overflow: visible;
-    }
-  }
+.contentLayout-inner {
+    padding: 86px 48px 48px 48px;
+    color: $tc-white;
 }
 
 .popularSkillsContainer{
-  margin-top: 16px;
-  margin-left: auto;
-  margin-right: auto;
-  text-align: center;
+    margin-top: 16px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+
+    :global(.body-medium-bold) {
+        margin-bottom: $sp-4;
+    }
 }
 
 .pillRow{
-  margin-top: 20px;
-  width:100%;
-  margin-left:auto;
-  margin-right:auto;
-}
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $sp-2;
 
-.popularSkillsTitle{
-  font-family: $font-roboto;
-  font-weight: 700;
-  font-size: 20px;
-  line-height: 26px;
-  text-align: center;
-  color: $tc-white;
+    + .pillRow {
+        margin-top: $sp-2;
+    }
+
+    &:nth-child(4) {
+        opacity: 60%;
+    }
+    &:nth-child(n+5) {
+        opacity: 40%;
+    }
 }
 
 .searchHeader{
-  text-align: center;
+    text-align: center;
 }
 
 .searchHeaderText{
-  font-family: $font-roboto;
-  font-weight: 500;
-  font-size: 30px;
-  line-height: 20px;
-  letter-spacing: 0.5px;
-  color: $tc-white;
+    font-family: $font-roboto;
+    font-weight: 500;
+    font-size: 30px;
+    line-height: 20px;
+    letter-spacing: 0.5px;
 }
 
 .subHeader{
-  padding-top: 49px;
-  text-align: center;
+    margin-top: 49px;
+    text-align: center;
 }
 
 .subHeaderText{
-  font-family: $font-barlow;
-  font-weight: 400;
-  font-size: 25px;
-  line-height: 30px;
-  color: $tc-white;
+    font-family: $font-barlow;
+    font-weight: 400;
+    font-size: 25px;
+    line-height: 30px;
+    color: $tc-white;
 
 }
 .searchPrompt{
-  font-family: $font-roboto;
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 48px;
-  color: $tc-white;
+    font-family: $font-roboto;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 48px;
+    color: $tc-white;
 }
 
 .searchOptions{
-  margin-left: auto;
-  margin-right: auto;
-  padding: 70px 32px 32px 32px;
-  max-width: 931px;
-  width: 100%;
-}
-
-.searchIconSpan{
-  cursor: pointer;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 70px 32px 32px 32px;
+    max-width: 931px;
+    width: 100%;
 }
 
 .searchIcon{
-  width: 24px;
-  height: 24px;
-  color: $black-40;
-  stroke: $black-40;
-  margin-right: 10px;
+    width: 24px;
+    height: 24px;
+    color: $black-40;
+    stroke: $black-40;
+    margin-right: 10px;
 }
