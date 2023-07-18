@@ -34,7 +34,9 @@ const EmptySection: FC<EmptySectionProps> = props => (
                     {props.title && (
                         <div className='body-medium-bold'>{props.title}</div>
                     )}
-                    {props.children}
+                    <div className='body-main'>
+                        {props.children}
+                    </div>
                 </>
             )}
     </div>
