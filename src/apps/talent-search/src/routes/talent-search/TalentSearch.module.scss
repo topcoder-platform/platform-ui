@@ -1,25 +1,96 @@
-@import "@libs/ui/styles/includes";
 @import '@talentSearch/styles/variables';
 
 .contentLayout {
   width: 100%;
   padding-top: 30px;
+  background-image: url("../../assets/background.png");
+  background-size: cover;
+  background-repeat: no-repeat;
 
   .contentLayout-outer {
     width: 100%;
 
     .contentLayout-inner {
       width: 100%;
+      padding: 86px 48px 48px 48px;
       overflow: visible;
     }
   }
 }
 
-.header{
-  padding-bottom: 20px;
+.popularSkillsContainer{
+  margin-top: 16px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
 }
 
-.options{
-  max-width: 600px;
-  padding-bottom: 30px;
+.pillRow{
+  margin-top: 20px;
+  width:100%;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+.popularSkillsTitle{
+  font-family: $font-roboto;
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 26px;
+  text-align: center;
+  color: $tc-white;
+}
+
+.searchHeader{
+  text-align: center;
+}
+
+.searchHeaderText{
+  font-family: $font-roboto;
+  font-weight: 500;
+  font-size: 30px;
+  line-height: 20px;
+  letter-spacing: 0.5px;
+  color: $tc-white;
+}
+
+.subHeader{
+  padding-top: 49px;
+  text-align: center;
+}
+
+.subHeaderText{
+  font-family: $font-barlow;
+  font-weight: 400;
+  font-size: 25px;
+  line-height: 30px;
+  color: $tc-white;
+
+}
+.searchPrompt{
+  font-family: $font-roboto;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 48px;
+  color: $tc-white;
+}
+
+.searchOptions{
+  margin-left: auto;
+  margin-right: auto;
+  padding: 70px 32px 32px 32px;
+  max-width: 931px;
+  width: 100%;
+}
+
+.searchIconSpan{
+  cursor: pointer;
+}
+
+.searchIcon{
+  width: 24px;
+  height: 24px;
+  color: $black-40;
+  stroke: $black-40;
+  margin-right: 10px;
 }

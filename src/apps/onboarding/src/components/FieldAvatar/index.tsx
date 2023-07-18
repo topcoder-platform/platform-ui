@@ -108,9 +108,10 @@ const FieldAvatar: FC<FieldAvatarProps> = (props: FieldAvatarProps) => {
                 >
                     {imgUrl ? (
                         <img className={styles.img} src={imgUrl} alt='avatar' />
-                    ) : (
+                    ) : undefined}
+                    {!imgUrl ? (
                         <img className={styles.imgPlaceholder} src={AvatarPlaceholder} alt='avatar' />
-                    )}
+                    ) : undefined}
                 </div>
                 <div className='d-flex flex-column align-items-start'>
                     <span className='color-black-60'>

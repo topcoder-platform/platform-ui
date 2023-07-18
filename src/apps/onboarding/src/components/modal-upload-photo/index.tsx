@@ -53,8 +53,8 @@ const ModalUploadPhoto: FC<ModalUploadPhotoProps> = (props: ModalUploadPhotoProp
 
             setIsSaving(true)
             try {
-                await updateMemberPhotoAsync(props.memberInfo.handle, formData)
-                props.setMemberPhotoUrl(URL.createObjectURL(myFiles[0]))
+                const result = await updateMemberPhotoAsync(props.memberInfo.handle, formData)
+                props.setMemberPhotoUrl(result?.photoURL || URL.createObjectURL(myFiles[0]))
                 setMyFiles([])
                 props.onClose?.()
             } catch (error) {

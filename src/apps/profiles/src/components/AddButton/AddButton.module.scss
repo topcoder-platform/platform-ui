@@ -1,0 +1,19 @@
+@import "@libs/ui/styles/includes";
+
+.wrap {
+    margin-top: $sp-2;
+
+    &:global(.mt0) {
+        margin-top: 0;
+    }
+}
+
+.addButton {
+    padding: 0 !important;
+    color: $black-100;
+
+    svg {
+        width: 20px;
+        height: 20px;
+    }
+}

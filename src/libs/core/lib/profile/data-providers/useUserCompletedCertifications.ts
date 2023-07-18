@@ -14,13 +14,15 @@ export interface UserCompletedCertificationsData {
     courses: ReadonlyArray<LearnUserCertificationProgress>
 }
 
-export function useUserCompletedCertifications(
-    userId: number | undefined,
-): {
+export interface UserCompletedCertificationsResponse {
     data: UserCompletedCertificationsData | undefined
     loading: boolean
     ready: boolean
-} {
+}
+
+export function useUserCompletedCertifications(
+    userId: number | undefined,
+): UserCompletedCertificationsResponse {
 
     const url: string = `${learnBaseURL()}/completed-certifications/${userId}`
 

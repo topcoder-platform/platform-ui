@@ -8,18 +8,17 @@ import {
     LearnUserCertificationProgress,
     TCACertificationEnrollmentBase,
 } from '~/apps/learn/src/lib'
-import { UserCompletedCertificationsData, UserProfile, useUserCompletedCertifications } from '~/libs/core'
+import { UserCompletedCertificationsData, UserProfile } from '~/libs/core'
 import { BaseModal, TCALogo } from '~/libs/ui'
 
 import styles from './MemberTCAInfo.module.scss'
 
 interface MemberTCAInfoProps {
+    memberTcaData?: UserCompletedCertificationsData
     profile: UserProfile | undefined
 }
 
 const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) => {
-    const { data: memberTCA }: { data: UserCompletedCertificationsData | undefined }
-        = useUserCompletedCertifications(props.profile?.userId)
 
     const [certPreviewModalIsOpen, setCertPreviewModalIsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -72,7 +71,7 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
         window.open(url, '_blank')
     }
 
-    return memberTCA && (memberTCA.courses.length || memberTCA.enrollments.length) ? (
+    return props.memberTcaData && (props.memberTcaData.courses.length || props.memberTcaData.enrollments.length) ? (
         <div className={styles.container}>
             <div className={styles.title}>
                 <TCALogo />
@@ -80,12 +79,12 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
             </div>
 
             {
-                memberTCA.enrollments.length ? (
+                props.memberTcaData.enrollments.length ? (
                     <>
                         <h4>CERTIFICATIONS</h4>
                         <div className={styles.certifications}>
                             {
-                                memberTCA.enrollments.map(enrollment => (
+                                props.memberTcaData.enrollments.map(enrollment => (
                                     <div
                                         className={styles.certificationCard}
                                         onClick={bind(onCertClick, this, enrollment)}
@@ -111,7 +110,7 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
             <h4>COURSES</h4>
             <div className={styles.certifications}>
                 {
-                    memberTCA.courses.map(course => (
+                    props.memberTcaData.courses.map(course => (
                         <div
                             className={styles.certificationCard}
                             onClick={bind(onCourseClick, this, course)}

@@ -114,7 +114,14 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
             <DatePicker
                 renderCustomHeader={renderCustomHeader}
                 selected={props.date}
-                onChange={props.onChange}
+                onChange={(
+                    date: Date | null,
+                    event: React.SyntheticEvent<any> | undefined,
+                ) => {
+                    event?.stopPropagation()
+                    event?.preventDefault()
+                    props.onChange?.(date)
+                }}
                 placeholderText={props.placeholder || 'Select a date'}
                 className={styles.datePickerWrapper}
                 minDate={props.minDate}

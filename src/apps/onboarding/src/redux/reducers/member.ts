@@ -1,5 +1,7 @@
 import _ from 'lodash'
 
+import { notifyUniNavi } from '~/apps/profiles/src/lib'
+
 import { ACTIONS } from '../../config'
 import ConnectInfo from '../../models/ConnectInfo'
 import EducationInfo from '../../models/EducationInfo'
@@ -89,6 +91,9 @@ const memberReducer: any = (
 
             const newMemberInfo = _.cloneDeep(state.memberInfo)
             newMemberInfo.photoURL = action.payload
+            if (newMemberInfo) {
+                notifyUniNavi(newMemberInfo as any)
+            }
 
             return {
                 ...state,

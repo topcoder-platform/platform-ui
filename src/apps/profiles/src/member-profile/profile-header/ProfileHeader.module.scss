@@ -19,7 +19,12 @@
             background-color: $tc-white;
         }
 
-        button {
+        .addButton {
+            display: flex;
+            justify-content: center;
+        }
+
+        .button {
             position: absolute;
             bottom: -10px;
             left: calc(50% - 20px);

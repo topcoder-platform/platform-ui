@@ -2,6 +2,7 @@ import {
     ChangeEvent,
     Dispatch,
     FC,
+    MouseEvent,
     MutableRefObject,
     ReactNode,
     SetStateAction,
@@ -49,7 +50,12 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
 
     const toggleMenu: () => void = () => setMenuIsVisible(wasVisible => !wasVisible)
 
-    const select: (option: InputSelectOption) => () => void = (option: InputSelectOption) => () => {
+    const select: (option: InputSelectOption) => (event: MouseEvent<HTMLDivElement>) => void
+    = (option: InputSelectOption) => (
+        event: MouseEvent<HTMLDivElement>,
+    ) => {
+        event.stopPropagation()
+        event.preventDefault()
         props.onChange({
             target: { value: option.value },
         } as unknown as ChangeEvent<HTMLInputElement>)
