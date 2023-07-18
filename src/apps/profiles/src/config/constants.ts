@@ -8,6 +8,8 @@ export const TC_VERIFIED_SKILL_LABEL: string = 'Topcoder Verified'
 
 export const EDIT_MODE_QUERY_PARAM: string = 'edit-mode'
 
+export const TALENT_SEARCH_MODE_QUERY_PARAM: string = 'talent-search'
+
 export enum profileEditModes {
     aboutMe = 'aboutMe',
     languages = 'languages',

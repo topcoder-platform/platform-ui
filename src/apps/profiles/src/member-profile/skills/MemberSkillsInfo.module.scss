@@ -57,13 +57,4 @@
             }
         }
     }
-
-    .legendWrap {
-        display: flex;
-        color: $link-blue-dark;
-
-        &:hover {
-            text-decoration: underline;
-        }
-    }
 }
