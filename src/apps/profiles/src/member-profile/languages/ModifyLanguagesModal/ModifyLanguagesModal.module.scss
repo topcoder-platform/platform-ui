@@ -14,7 +14,6 @@
 .formWrap {
     display: flex;
     flex-direction: column;
-    min-height: 500px;
     margin-top: $sp-2;
 
     @include ltelg {
@@ -22,29 +21,15 @@
             margin-bottom: $sp-2;
         }
     }
-
-    .formCTAs {
-        display: flex;
-        align-items: center;
-
-        svg {
-            width: 14px;
-            height: 14px;
-            margin-right: $sp-1;
-        }
-
-        .ctaBtnCancel {
-            margin-left: $sp-8;
-        }
-    }
 }
 
 .languages {
-    margin-bottom: $sp-15;
-
-    &.noLanguages {
-        margin-bottom: 0;
-    }
+    margin: $sp-4 0 $sp-6;
+    padding-bottom: $sp-4;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: $sp-4;
+    border-bottom: 1px solid $black-20;
 
     .languageItemWrap {
         display: flex;
@@ -52,12 +37,26 @@
         justify-content: space-between;
         margin-bottom: $sp-2;
         border-radius: 8px;
-        padding: $sp-2;
+        padding: $sp-5 $sp-6;
         border: 1px solid $black-10;
 
-        button svg {
-            width: 16px;
-            height: 16px;
+        button {
+            padding-right: 0;
+
+            svg {
+                width: 24px;
+                height: 24px;
+            }
         }
     }
+}
+
+.langModal {
+    @include gtemd {
+        overflow: visible !important;
+    }
+}
+
+.langModalBody {
+    overflow: visible !important;
 }

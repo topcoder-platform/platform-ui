@@ -17,3 +17,13 @@
         margin-bottom: $sp-4;
     }
 }
+
+.localModal {
+    @include gtemd {
+        overflow: visible !important;
+    }
+}
+
+.localModalBody {
+    overflow: visible !important;
+}

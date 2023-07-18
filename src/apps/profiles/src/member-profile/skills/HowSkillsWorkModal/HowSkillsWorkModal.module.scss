@@ -1,0 +1,30 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+
+    p {
+        margin-bottom: $sp-4;
+    }
+
+    ul {
+        list-style: disc;
+        margin: 0 0 $sp-2 $sp-4;
+
+        li {
+            margin-bottom: $sp-4;
+        }
+    }
+
+    .checkIconRow {
+        display: flex;
+
+        svg {
+            margin: 0 $sp-2;
+            width: 24px;
+            height: 24px;
+            color: $turq-120;
+        }
+    }
+}

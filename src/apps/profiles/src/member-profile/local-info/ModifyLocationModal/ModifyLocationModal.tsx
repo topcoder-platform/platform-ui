@@ -76,6 +76,10 @@ const ModifyLocationModal: FC<ModifyLocationModalProps> = (props: ModifyLocation
 
     return (
         <BaseModal
+            bodyClassName={styles.localModalBody}
+            classNames={{
+                modal: styles.localModal,
+            }}
             onClose={props.onClose}
             open
             size='lg'
