@@ -109,7 +109,7 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
                     `}
                     isSelf={canEdit}
                 >
-                    I&apos;m still building up my education and certifications here at Topcoder.
+                    This member is still building their education and certifications here at Topcoder.
                 </EmptySection>
             )}
 

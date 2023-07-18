@@ -93,21 +93,7 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
                             and interests with the community and customers.
                         `}
                         isSelf={canEdit}
-                    >
-                        I&apos;m a proud Topcoder member, working hard to solve some of the worlds biggest problems.
-                        <br />
-                        <br />
-                        I&apos;m excited to hear about your technology challenges and look forward to being
-                        on your next project.
-                        <br />
-                        <Button
-                            link
-                            variant='linkblue'
-                            size='lg'
-                        >
-                            Let&apos;s connect!
-                        </Button>
-                    </EmptySection>
+                    />
                     {canEdit && (
                         <AddButton
                             label='Add your bio'
