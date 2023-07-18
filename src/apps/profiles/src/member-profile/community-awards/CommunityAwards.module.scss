@@ -4,19 +4,12 @@
     display: flex;
     flex-direction: column;
     margin-top: $sp-8;
+    padding-bottom: $sp-4;
 
     .title {
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-end;
         align-items: center;
-        margin-bottom: $sp-10;
-
-        .viewAllLink {
-            text-transform: uppercase;
-            color: $turq-160;
-            font-weight: $font-weight-bold;
-            font-size: 14px;
-        }
     }
 
     .badges {
@@ -39,6 +32,12 @@
             align-items: center;
             transition: 0.25s ease-in-out;
             box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+
+            @include ltelg {
+                padding-bottom: 0;
+                padding-left: $sp-2;
+                min-width: 100%;
+            }
 
             &:hover {
                 box-shadow: 0 0 16px rgba(22, 103, 154, 0.5);

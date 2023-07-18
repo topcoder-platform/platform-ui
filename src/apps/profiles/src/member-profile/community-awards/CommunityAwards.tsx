@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { bind } from 'lodash'
 
 import { useMemberBadges, UserBadge, UserBadgesResponse, UserProfile } from '~/libs/core'
+import { Button } from '~/libs/ui'
 
 import { MemberBadgeModal } from '../../components'
 
@@ -29,8 +30,13 @@ const CommunityAwards: FC<CommunityAwardsProps> = (props: CommunityAwardsProps) 
     return memberBadges && memberBadges.count ? (
         <div className={styles.container}>
             <div className={styles.title}>
-                <h4>Community Awards & Honors</h4>
-                <Link to='badges' className={styles.viewAllLink}>View all badges</Link>
+                <Link to='badges'>
+                    <Button
+                        label='View all badges'
+                        link
+                        variant='linkblue'
+                    />
+                </Link>
             </div>
 
             <div className={styles.badges}>

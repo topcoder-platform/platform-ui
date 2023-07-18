@@ -21,16 +21,28 @@
 
         .profileHeaderContentOuter {
             margin-top: 75px;
+
+            @include ltelg {
+                margin-top: 0;
+            }
         }
 
         .profileHeaderBottom {
             height: 90px;
-            background-color: $tc-white
+            background-color: $tc-white;
+
+            @include ltelg {
+                height: 30px;
+            }
         }
     }
 
     .profileOuter {
         margin-top: 130px;
+
+        .profileInner {
+            width: 100%;
+        }
 
         .profileInfoWrap {
             display: grid;
@@ -39,8 +51,8 @@
             margin-bottom: $sp-13;
 
             @include ltelg {
-                grid-template-columns: 1fr;
-                gap: 0;
+                display: flex;
+                flex-direction: column;
             }
 
             .profileInfoLeft {
@@ -63,9 +75,10 @@
                 display: flex;
                 flex-direction: column;
                 margin-top: -275px;
+                z-index: 1;
 
                 @include ltelg {
-                    margin-top: 0;
+                    margin-top: $sp-8;
                 }
 
                 .shortBio {
@@ -99,7 +112,12 @@
 
 .sectionWrap {
     background-color: $tc-white;
-    padding: $sp-8 $sp-8 0;
+    padding: $sp-8 $sp-8 $sp-4;
     margin-bottom: $sp-8;
     border-radius: 16px;
+
+    @include ltelg {
+        padding: $sp-4;
+        padding-bottom: 0;
+    }
 }

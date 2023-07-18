@@ -11,6 +11,7 @@ import {
     UserTraitIds,
     UserTraits,
 } from '~/libs/core'
+import { useCheckIsMobile } from '~/libs/shared'
 
 import { AddButton, EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
@@ -30,6 +31,8 @@ const DEFAULT_MEMBER_AVATAR: string
     = 'https://d1aahxkjiobka8.cloudfront.net/static-assets/images/ab4a084a9815ebb1cf8f7b451ce4c88f.svg'
 
 const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
+    const isMobile: boolean = useCheckIsMobile()
+
     const photoURL: string = props.profile.photoURL || DEFAULT_MEMBER_AVATAR
     const hasProfilePicture = !!props.profile.photoURL
 
@@ -108,8 +111,29 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         }, 1000)
     }
 
-    return (
-        <div className={styles.container}>
+    function renderOpenForWork(): JSX.Element {
+        return (
+            <div className={styles.profileActions}>
+                <span>
+                    {canEdit ? 'I am' : `${props.profile.firstName} is`}
+                </span>
+                <OpenForGigs canEdit={canEdit} authProfile={props.authProfile} profile={props.profile} />
+                {/* Enable this with talent search app */}
+                {/* {
+                            !canEdit && (
+                                <Button
+                                    label={`Hire ${props.profile.firstName}`}
+                                    primary
+                                    onClick={handleHireMeClick}
+                                />
+                            )
+                        } */}
+            </div>
+        )
+    }
+
+    function renderMemberPhotoWrap(): JSX.Element {
+        return (
             <div className={styles.photoWrap}>
                 <img src={photoURL} alt='Topcoder - Member Profile Avatar' className={styles.profilePhoto} />
                 {canEdit && hasProfilePicture && (
@@ -126,6 +150,14 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                     />
                 )}
             </div>
+        )
+    }
+
+    return (
+        <div className={styles.container}>
+            {
+                !isMobile ? renderMemberPhotoWrap() : undefined
+            }
 
             {!traitsLoading && (
                 <div className={styles.profileInfo}>
@@ -166,24 +198,11 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
             )}
 
             {
-                openForWork || canEdit ? (
-                    <div className={styles.profileActions}>
-                        <span>
-                            {canEdit ? 'I am' : `${props.profile.firstName} is`}
-                        </span>
-                        <OpenForGigs canEdit={canEdit} authProfile={props.authProfile} profile={props.profile} />
-                        {/* Enable this with talent search app */}
-                        {/* {
-                            !canEdit && (
-                                <Button
-                                    label={`Hire ${props.profile.firstName}`}
-                                    primary
-                                    onClick={handleHireMeClick}
-                                />
-                            )
-                        } */}
-                    </div>
-                ) : undefined
+                openForWork || canEdit ? renderOpenForWork() : undefined
+            }
+
+            {
+                isMobile ? renderMemberPhotoWrap() : undefined
             }
 
             {

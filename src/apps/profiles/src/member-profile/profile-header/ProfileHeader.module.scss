@@ -2,14 +2,26 @@
 
 .container {
     display: flex;
-    flex-wrap: wrap;
     align-items: flex-start;
     justify-content: space-between;
     color: $tc-white;
+    position: relative;
+
+    @include ltelg {
+        padding-bottom: 150px;
+        flex-direction: column;
+    }
 
     .photoWrap {
         position: relative;
         margin-right: 60px;
+
+        @include ltelg {
+            margin: auto;
+            position: absolute;
+            bottom: -125px;
+            left: calc(50% - 125px);
+        }
 
         .profilePhoto {
             width: 300px;
@@ -17,6 +29,11 @@
             border: 12px solid $tc-white;
             border-radius: 50%;
             background-color: $tc-white;
+
+            @include ltelg {
+                width: 250px;
+                height: 250px;
+            }
         }
 
         .addButton {
@@ -49,6 +66,11 @@
                 font-size: 40px;
                 font-weight: $font-weight-bold;
                 font-family: $font-barlow;
+
+                @include ltelg {
+                    font-size: 32px;
+                    line-height: 33px;
+                }
             }
 
             button {
@@ -59,6 +81,11 @@
         .memberSince {
             margin-top: $sp-2;
             font-size: 20px;
+
+            @include ltelg {
+                font-size: 16px;
+                margin-top: 0;
+            }
 
             span {
                 font-weight: $font-weight-bold;
@@ -75,7 +102,11 @@
         color: $black-100;
         margin-top: $sp-8;
 
-        > span {
+        @include ltelg {
+            margin-top: $sp-4;
+        }
+
+        >span {
             margin-right: $sp-1;
         }
 
