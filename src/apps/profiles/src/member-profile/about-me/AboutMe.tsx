@@ -4,7 +4,6 @@ import { KeyedMutator } from 'swr'
 import classNames from 'classnames'
 
 import { useMemberTraits, UserProfile, UserTraitIds, UserTraits } from '~/libs/core'
-import { Button } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
