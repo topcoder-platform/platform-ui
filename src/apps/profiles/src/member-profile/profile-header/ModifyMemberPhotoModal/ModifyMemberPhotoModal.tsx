@@ -73,7 +73,8 @@ const ModifyMemberPhotoModal: FC<ModifyMemberPhotoModalProps> = (props: ModifyMe
         <BaseModal
             onClose={props.onClose}
             open
-            title='Your Photo'
+            title='Change Photo'
+            size='lg'
             buttons={(
                 <div className={styles.modalButtons}>
                     <Button
@@ -82,7 +83,7 @@ const ModifyMemberPhotoModal: FC<ModifyMemberPhotoModalProps> = (props: ModifyMe
                         secondary
                     />
                     <Button
-                        label='Save'
+                        label='Save profile picture'
                         onClick={handleModifyPhotoSave}
                         primary
                         disabled={isSaving || !file}
@@ -91,38 +92,41 @@ const ModifyMemberPhotoModal: FC<ModifyMemberPhotoModalProps> = (props: ModifyMe
             )}
         >
             <div className={styles.modalBody}>
-                <p>Show the community who you are. Don&apos;t worry, you look great.</p>
-                <p className='body-main-bold'>Requirements:</p>
-                <ul>
-                    <li>PNG or JPG format.</li>
-                    <li>Maximum size: 2MB.</li>
-                </ul>
-                <form>
-                    <input
-                        ref={fileElRef}
-                        accept='image/png,image/jpeg'
-                        type='file'
-                        onChange={handleFilePickChange}
-                    />
-                    <Button
-                        label='Upload New Photo'
-                        primary
-                        onClick={handleFilePickClick}
-                    />
+                <div className={styles.imageArea} onClick={handleFilePickClick}>
+                    <form>
+                        <input
+                            ref={fileElRef}
+                            accept='image/png,image/jpeg'
+                            type='file'
+                            onChange={handleFilePickChange}
+                        />
+                        {
+                            fileSelectError && (
+                                <p className={styles.error}>{fileSelectError}</p>
+                            )
+                        }
+                        {
+                            !file && !fileSelectError && (
+                                <p className='body-small-bold'>Browse</p>
+                            )
+                        }
+                    </form>
                     {
-                        fileSelectError && (
-                            <p>{fileSelectError}</p>
+                        file && (
+                            <div className={styles.preview}>
+                                <img src={URL.createObjectURL(file)} alt='preview' />
+                            </div>
                         )
                     }
-                </form>
-                {
-                    file && (
-                        <div className={styles.preview}>
-                            <p className='body-main-bold'>Preview:</p>
-                            <img src={URL.createObjectURL(file)} alt='preview' />
-                        </div>
-                    )
-                }
+                </div>
+                <div>
+                    <p>Add a photo that you would like to share to the customers and community members.</p>
+                    <p className='body-main-bold'>Requirements:</p>
+                    <ul>
+                        <li>PNG or JPG format.</li>
+                        <li>Maximum size: 2MB.</li>
+                    </ul>
+                </div>
             </div>
         </BaseModal>
     )
