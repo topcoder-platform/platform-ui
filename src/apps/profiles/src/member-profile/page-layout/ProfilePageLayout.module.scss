@@ -32,17 +32,17 @@
         }
 
         .profileHeaderBottom {
-            height: 90px;
+            height: 30px;
             background-color: $tc-white;
-
-            @include ltelg {
-                height: 30px;
-            }
         }
     }
 
     .profileOuter {
-        margin-top: 130px;
+        margin-top: 185px;
+
+        @include ltelg {
+            margin-top: 155px;
+        }
 
         .profileInner {
             width: 100%;

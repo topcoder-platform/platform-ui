@@ -7,8 +7,13 @@
 }
 
 .modalBody {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 255px 1fr;
+    gap: 30px;
+
+    @include ltelg {
+        grid-template-columns: 1fr;
+    }
 
     :global(.body-main-bold) {
         margin-top: $sp-2;
@@ -19,26 +24,39 @@
         margin-left: $sp-4;
     }
 
-    form {
-        input {
-            display: none;
+    .imageArea {
+        border: 1px dashed $turq-160;
+        border-radius: 4px;
+        background-color: rgba(224, 250, 243, 0.3);
+        width: 255px;
+        height: 255px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+
+        form {
+            input {
+                display: none;
+            }
+
+            .error {
+                color: $red-120;
+                text-align: center;
+                margin: 0 $sp-4;
+            }
+
+            :global(.body-small-bold) {
+                color: $turq-160;
+                text-transform: uppercase;
+            }
         }
 
-        button {
-            margin: $sp-4 0;
-        }
-
-        p {
-            color: $red-100;
-        }
-    }
-
-    .preview {
-        img {
-            max-width: 200px;
-            max-height: 200px;
-            border: 3px solid #fff;
-            border-radius: 50%;
+        .preview {
+            img {
+                max-width: 255px;
+                max-height: 255px;
+            }
         }
     }
 }
