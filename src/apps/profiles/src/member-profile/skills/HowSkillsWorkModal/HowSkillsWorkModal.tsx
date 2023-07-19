@@ -31,7 +31,7 @@ const HowSkillsWorkModal: FC<HowSkillsWorkModalProps> = (props: HowSkillsWorkMod
                     <p>Here’s how it works:</p>
                     <ul>
                         <li>Experts perform specific Topcoder opportunities</li>
-                        <li>Each opportunity has associated skills (ex: javascript, HTML)</li>
+                        <li>Each task has associated skills (ex: javascript, HTML)</li>
                         <li>
                             Experts prove they are proficient in these skills
                             by completing opportunities on the platform
