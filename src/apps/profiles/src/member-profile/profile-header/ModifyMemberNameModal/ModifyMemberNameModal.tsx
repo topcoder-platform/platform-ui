@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useState } from 'react'
+import { Dispatch, FC, FocusEvent, SetStateAction, useState } from 'react'
 import { reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
 
@@ -11,7 +11,9 @@ import {
     UserTraitCategoryNames,
     UserTraitIds,
 } from '~/libs/core'
-import { BaseModal, Button, FormToggleSwitch, InputText } from '~/libs/ui'
+import { BaseModal, Button, InputRadio, InputText } from '~/libs/ui'
+
+import { NamesAndHandleAppearance } from '../ProfileHeader'
 
 import styles from './ModifyMemberNameModal.module.scss'
 
@@ -20,7 +22,7 @@ interface ModifyMemberNameModalProps {
     onClose: () => void
     onSave: () => void
     memberPersonalizationTraitsData: UserTrait[] | undefined
-    hideMyNameInProfile: boolean
+    namesAndHandleAppearance: NamesAndHandleAppearance | undefined
 }
 
 const methodsMap: { [key: string]: any } = {
@@ -47,8 +49,10 @@ const ModifyMemberNameModal: FC<ModifyMemberNameModalProps> = (props: ModifyMemb
     const [currentLastName, setCurrentLastName]: [string, Dispatch<SetStateAction<string>>]
         = useState<string>(props.profile.lastName)
 
-    const [hideMyNameInProfile, setHideMyNameInProfile]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(props.hideMyNameInProfile)
+    const [namesAndHandleAppearance, setNamesAndHandleAppearance]: [
+        NamesAndHandleAppearance | undefined, Dispatch<SetStateAction<NamesAndHandleAppearance | undefined>>
+    ]
+        = useState<NamesAndHandleAppearance | undefined>(props.namesAndHandleAppearance)
 
     function handleFirstNameChange(e: React.ChangeEvent<HTMLInputElement>): void {
         setCurrentFirstName(e.target.value)
@@ -60,8 +64,8 @@ const ModifyMemberNameModal: FC<ModifyMemberNameModalProps> = (props: ModifyMemb
         setIsFormChanged(true)
     }
 
-    function handleShowMyNameInProfileToggle(): void {
-        setHideMyNameInProfile(!hideMyNameInProfile)
+    function handleShowMyNameInProfileToggle(event: FocusEvent<HTMLInputElement>): void {
+        setNamesAndHandleAppearance(event.target.value as NamesAndHandleAppearance)
         setIsFormChanged(true)
     }
 
@@ -99,9 +103,9 @@ const ModifyMemberNameModal: FC<ModifyMemberNameModalProps> = (props: ModifyMemb
                     data: [
                         ...reject(
                             props.memberPersonalizationTraitsData,
-                            (trait: any) => trait.hideNamesOnProfile,
+                            (trait: any) => trait.namesAndHandleAppearance,
                         ),
-                        { hideNamesOnProfile: hideMyNameInProfile },
+                        { namesAndHandleAppearance },
                     ],
                 },
             }]),
@@ -121,6 +125,7 @@ const ModifyMemberNameModal: FC<ModifyMemberNameModalProps> = (props: ModifyMemb
             onClose={props.onClose}
             open
             title='My Name'
+            size='lg'
             buttons={(
                 <div className={styles.modalButtons}>
                     <Button
@@ -160,12 +165,31 @@ const ModifyMemberNameModal: FC<ModifyMemberNameModalProps> = (props: ModifyMemb
                     onChange={handleLastNameChange}
                     value={currentLastName}
                 />
-                <div className={styles.nameToggle}>
-                    <p>Hide my names on profile</p>
-                    <FormToggleSwitch
-                        name='hideMyNameInProfile'
+                <p className='body-main-bold'>Choose a combination to show:</p>
+                <div className={styles.radioButtons}>
+                    <InputRadio
+                        name='showMyNameInProfile'
+                        label='First and Last Name Only'
+                        value='namesOnly'
+                        checked={namesAndHandleAppearance === 'namesOnly'}
                         onChange={handleShowMyNameInProfileToggle}
-                        value={hideMyNameInProfile}
+                        id='namesOnly'
+                    />
+                    <InputRadio
+                        name='showMyNameInProfile'
+                        label='Handle Only'
+                        value='handleOnly'
+                        checked={namesAndHandleAppearance === 'handleOnly'}
+                        onChange={handleShowMyNameInProfileToggle}
+                        id='handleOnly'
+                    />
+                    <InputRadio
+                        name='showMyNameInProfile'
+                        label='Both'
+                        value='namesAndHandle'
+                        checked={namesAndHandleAppearance === 'namesAndHandle'}
+                        onChange={handleShowMyNameInProfileToggle}
+                        id='namesAndHandle'
                     />
                 </div>
             </div>

@@ -40,6 +40,7 @@ export interface InputMultiselectProps {
     readonly onFetchOptions?: (query: string) => Promise<InputMultiselectOption[]>
     readonly options?: ReadonlyArray<InputMultiselectOption>
     readonly placeholder?: string
+    readonly additionalPlaceholder?: string
     readonly tabIndex?: number
     readonly theme?: InputMultiselectThemes
     readonly useWrapper?: boolean
@@ -64,6 +65,18 @@ const dropdownIndicator = (dropdownIcon: ReactNode): FC => (props: any) => (
     <components.DropdownIndicator {...props}>
         {dropdownIcon}
     </components.DropdownIndicator>
+)
+
+// eslint-disable-next-line react/function-component-definition
+const valueContainer = (additionalPlaceholder: string): FC => (props: any) => (
+    <components.ValueContainer {...props}>
+        {props.children}
+        {props.hasValue && additionalPlaceholder && (
+            <span className={classNames('body-small', styles.additionalPlaceholder)}>
+                {additionalPlaceholder}
+            </span>
+        )}
+    </components.ValueContainer>
 )
 
 const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProps) => {
@@ -116,7 +129,11 @@ const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProp
             isLoading={props.loading}
             isOptionDisabled={isOptionDisabled}
             isSearchable={!isOptionDisabled()}
-            components={{ DropdownIndicator: dropdownIndicator(props.dropdownIcon), MultiValueRemove }}
+            components={{
+                DropdownIndicator: dropdownIndicator(props.dropdownIcon),
+                MultiValueRemove,
+                ValueContainer: valueContainer(props.additionalPlaceholder ?? 'Add more...'),
+            }}
             value={props.value}
             openMenuOnClick={false}
             onKeyDown={handleKeyPress}

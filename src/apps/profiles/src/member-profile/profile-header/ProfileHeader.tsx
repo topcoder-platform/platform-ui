@@ -11,6 +11,7 @@ import {
     UserTraitIds,
     UserTraits,
 } from '~/libs/core'
+import { useCheckIsMobile } from '~/libs/shared'
 
 import { AddButton, EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
@@ -26,11 +27,12 @@ interface ProfileHeaderProps {
     refreshProfile: (handle: string) => void
 }
 
-const DEFAULT_MEMBER_AVATAR: string
-    = 'https://d1aahxkjiobka8.cloudfront.net/static-assets/images/ab4a084a9815ebb1cf8f7b451ce4c88f.svg'
+export type NamesAndHandleAppearance = 'namesOnly' | 'handleOnly' | 'namesAndHandle'
 
 const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
-    const photoURL: string = props.profile.photoURL || DEFAULT_MEMBER_AVATAR
+    const isMobile: boolean = useCheckIsMobile()
+
+    const photoURL: string | undefined = props.profile.photoURL
     const hasProfilePicture = !!props.profile.photoURL
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
@@ -56,9 +58,9 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
             (trait: UserTrait) => trait.availableForGigs,
         ), [memberPersonalizationTraits])
 
-    const hideNamesOnProfile: UserTrait | undefined
+    const namesAndHandleAppearanceData: UserTrait | undefined
         = useMemo(() => memberPersonalizationTraits?.[0]?.traits?.data?.find(
-            (trait: UserTrait) => trait.hideNamesOnProfile,
+            (trait: UserTrait) => trait.namesAndHandleAppearance,
         ), [memberPersonalizationTraits])
 
     useEffect(() => {
@@ -108,10 +110,42 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         }, 1000)
     }
 
-    return (
-        <div className={styles.container}>
+    function renderOpenForWork(): JSX.Element {
+        return (
+            <div className={styles.profileActions}>
+                <span>
+                    {canEdit ? 'I am' : `${props.profile.firstName} is`}
+                </span>
+                <OpenForGigs canEdit={canEdit} authProfile={props.authProfile} profile={props.profile} />
+                {/* Enable this with talent search app */}
+                {/* {
+                            !canEdit && (
+                                <Button
+                                    label={`Hire ${props.profile.firstName}`}
+                                    primary
+                                    onClick={handleHireMeClick}
+                                />
+                            )
+                        } */}
+            </div>
+        )
+    }
+
+    function renderMemberPhotoWrap(): JSX.Element {
+        return (
             <div className={styles.photoWrap}>
-                <img src={photoURL} alt='Topcoder - Member Profile Avatar' className={styles.profilePhoto} />
+                {
+                    photoURL ? (
+                        <img src={photoURL} alt='Topcoder - Member Profile Avatar' className={styles.profilePhoto} />
+                    ) : (
+                        <div className={styles.profilePhoto}>
+                            <span className={styles.initials}>
+                                {props.profile.firstName[0]}
+                                {props.profile.lastName[0]}
+                            </span>
+                        </div>
+                    )
+                }
                 {canEdit && hasProfilePicture && (
                     <EditMemberPropertyBtn
                         className={styles.button}
@@ -126,13 +160,21 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                     />
                 )}
             </div>
+        )
+    }
+
+    return (
+        <div className={styles.container}>
+            {
+                !isMobile ? renderMemberPhotoWrap() : undefined
+            }
 
             {!traitsLoading && (
                 <div className={styles.profileInfo}>
                     <div className={styles.nameWrap}>
                         <p>
                             {
-                                hideNamesOnProfile
+                                namesAndHandleAppearanceData?.namesAndHandleAppearance === 'handleOnly'
                                     ? props.profile.handle
                                     : `${props.profile.firstName} ${props.profile.lastName}`
                             }
@@ -148,7 +190,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
 
                     <p className={styles.memberSince}>
                         {
-                            !hideNamesOnProfile ? (
+                            namesAndHandleAppearanceData?.namesAndHandleAppearance === 'namesAndHandle' ? (
                                 <>
                                     <span>{props.profile.handle}</span>
                                     {' '}
@@ -166,24 +208,11 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
             )}
 
             {
-                openForWork || canEdit ? (
-                    <div className={styles.profileActions}>
-                        <span>
-                            {canEdit ? 'I am' : `${props.profile.firstName} is`}
-                        </span>
-                        <OpenForGigs canEdit={canEdit} authProfile={props.authProfile} profile={props.profile} />
-                        {/* Enable this with talent search app */}
-                        {/* {
-                            !canEdit && (
-                                <Button
-                                    label={`Hire ${props.profile.firstName}`}
-                                    primary
-                                    onClick={handleHireMeClick}
-                                />
-                            )
-                        } */}
-                    </div>
-                ) : undefined
+                openForWork || canEdit ? renderOpenForWork() : undefined
+            }
+
+            {
+                isMobile ? renderMemberPhotoWrap() : undefined
             }
 
             {
@@ -193,7 +222,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                         onSave={handleModifyNameModalSave}
                         profile={props.profile}
                         memberPersonalizationTraitsData={memberPersonalizationTraits?.[0]?.traits?.data}
-                        hideMyNameInProfile={hideNamesOnProfile?.hideNamesOnProfile || false}
+                        namesAndHandleAppearance={namesAndHandleAppearanceData?.namesAndHandleAppearance}
                     />
                 )
             }

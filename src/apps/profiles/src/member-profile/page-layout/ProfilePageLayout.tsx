@@ -2,7 +2,6 @@ import { FC } from 'react'
 
 import { UserProfile } from '~/libs/core'
 import { ContentLayout, PageTitle } from '~/libs/ui'
-import { useCheckIsMobile } from '~/libs/shared'
 
 // import { MemberTCActivityInfo } from '../tc-activity'
 import { MemberSkillsInfo } from '../skills'
@@ -24,103 +23,86 @@ interface ProfilePageLayoutProps {
     authProfile: UserProfile | undefined
 }
 
-const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutProps) => {
-    const isMobile: boolean = useCheckIsMobile()
+const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutProps) => (
+    <div className={styles.container}>
 
-    return (
-        <div className={styles.container}>
+        <PageTitle>{`${props.profile.handle} | Community Profile | Topcoder`}</PageTitle>
 
-            <PageTitle>{`${props.profile.handle} | Community Profile | Topcoder`}</PageTitle>
+        <div className={styles.profileHeaderWrap}>
+            <ContentLayout
+                outerClass={styles.profileHeaderContentOuter}
+                contentClass={styles.profileHeaderContent}
+            >
+                <ProfileHeader
+                    profile={props.profile}
+                    authProfile={props.authProfile}
+                    refreshProfile={props.refreshProfile}
+                />
+            </ContentLayout>
+            <div className={styles.profileHeaderBottom} />
+        </div>
 
-            <div className={styles.profileHeaderWrap}>
-                <ContentLayout
-                    outerClass={styles.profileHeaderContentOuter}
-                    contentClass={styles.profileHeaderContent}
-                >
-                    <ProfileHeader
+        <ContentLayout
+            outerClass={styles.profileOuter}
+            innerClass={styles.profileInner}
+        >
+            <div className={styles.profileInfoWrap}>
+                <div className={styles.profileInfoLeft}>
+                    <AboutMe
                         profile={props.profile}
                         authProfile={props.authProfile}
                         refreshProfile={props.refreshProfile}
                     />
-                </ContentLayout>
-                <div className={styles.profileHeaderBottom} />
-            </div>
 
-            <ContentLayout
-                outerClass={styles.profileOuter}
-            >
-                <div className={styles.profileInfoWrap}>
-                    <div className={styles.profileInfoLeft}>
-                        {
-                            !isMobile && (
-                                <AboutMe
-                                    profile={props.profile}
-                                    authProfile={props.authProfile}
-                                    refreshProfile={props.refreshProfile}
-                                />
-                            )
-                        }
+                    <MemberLanguages profile={props.profile} authProfile={props.authProfile} />
 
-                        <MemberLanguages profile={props.profile} authProfile={props.authProfile} />
+                    <MemberLinks profile={props.profile} authProfile={props.authProfile} />
 
-                        <MemberLinks profile={props.profile} authProfile={props.authProfile} />
-
-                        <MemberLocalInfo
-                            profile={props.profile}
-                            authProfile={props.authProfile}
-                            refreshProfile={props.refreshProfile}
-                        />
+                    <MemberLocalInfo
+                        profile={props.profile}
+                        authProfile={props.authProfile}
+                        refreshProfile={props.refreshProfile}
+                    />
+                </div>
+                <div className={styles.profileInfoRight}>
+                    <div className={styles.sectionWrap}>
+                        <div className={styles.skillsWrap}>
+                            <MemberSkillsInfo
+                                profile={props.profile}
+                                authProfile={props.authProfile}
+                                refreshProfile={props.refreshProfile}
+                            />
+                        </div>
                     </div>
-                    <div className={styles.profileInfoRight}>
-                        {
-                            isMobile && (
-                                <AboutMe
-                                    profile={props.profile}
-                                    authProfile={props.authProfile}
-                                    refreshProfile={props.refreshProfile}
-                                />
-                            )
-                        }
 
-                        <div className={styles.sectionWrap}>
-                            <div className={styles.skillsWrap}>
-                                <MemberSkillsInfo
+                    <MemberTCAchievements profile={props.profile} />
+
+                    <div className={styles.expirenceWrap}>
+                        <div>
+                            <div className={styles.sectionWrap}>
+                                <WorkExpirence
                                     profile={props.profile}
                                     authProfile={props.authProfile}
-                                    refreshProfile={props.refreshProfile}
                                 />
                             </div>
                         </div>
-
-                        <MemberTCAchievements profile={props.profile} />
-
-                        <div className={styles.expirenceWrap}>
-                            <div>
-                                <div className={styles.sectionWrap}>
-                                    <WorkExpirence
-                                        profile={props.profile}
-                                        authProfile={props.authProfile}
-                                    />
-                                </div>
-                            </div>
-                            <div className={styles.sectionWrap}>
-                                <EducationAndCertifications
-                                    profile={props.profile}
-                                    authProfile={props.authProfile}
-                                />
-                            </div>
+                        <div className={styles.sectionWrap}>
+                            <EducationAndCertifications
+                                profile={props.profile}
+                                authProfile={props.authProfile}
+                            />
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {/* <MemberTCActivityInfo profile={props.profile} /> */}
+            {/* <MemberTCActivityInfo profile={props.profile} /> */}
 
-            </ContentLayout>
+        </ContentLayout>
 
-            <OnboardingCompleted authProfile={props.authProfile} />
+        <OnboardingCompleted authProfile={props.authProfile} />
 
-        </div>
-    )
-}
+    </div>
+)
 
 export default ProfilePageLayout

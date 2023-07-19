@@ -7,6 +7,10 @@
     padding: $sp-6;
     flex: 1;
 
+    @include ltelg {
+        padding: $sp-4;
+    }
+
     >p {
         font-size: 20px;
     }
@@ -20,6 +24,14 @@
         background-image: linear-gradient(90deg, #7B21A7, #1974AD);
         color: $tc-white;
         padding: $sp-8;
+
+        @include ltelg {
+            padding: $sp-4;
+        }
+
+        :global(.body-large-bold) {
+            text-align: center;
+        }
 
         .wins {
             display: flex;

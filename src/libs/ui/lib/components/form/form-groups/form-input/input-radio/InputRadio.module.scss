@@ -1,0 +1,57 @@
+@import '../../../../../styles/includes';
+
+.container {
+    display: flex;
+    align-items: center;
+
+    input[type="radio"] {
+        -webkit-appearance: none;
+        appearance: none;
+        /* For iOS < 15 to remove gradient background */
+        background-color: #fff;
+        /* Not removed via appearance */
+        margin: 0;
+        font: inherit;
+        color: $black-60;
+        width: 20px;
+        height: 20px;
+        border: 1.5px solid $black-60;
+        border-radius: 50%;
+        transform: translateY(-0.075em);
+        display: grid;
+        place-content: center;
+    }
+
+    input[type="radio"]::before {
+        content: "";
+        width: 0.65em;
+        height: 0.65em;
+        border-radius: 50%;
+        transform: scale(0);
+        transition: 120ms transform ease-in-out;
+        box-shadow: inset 1em 1em $turq-160;
+    }
+
+    input[type="radio"]:checked::before {
+        transform: scale(1);
+    }
+
+    &:has(input[disabled]) {
+        input[type="radio"] {
+            border-color: $black-20;
+
+            &::before {
+                box-shadow: inset 1em 1em $black-20;
+            }
+        }
+
+        label {
+            color: $black-60;
+        }
+    }
+
+    label {
+        color: $black-100;
+        margin-left: $sp-2;
+    }
+}

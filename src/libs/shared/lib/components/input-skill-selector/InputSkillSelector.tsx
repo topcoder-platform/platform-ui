@@ -40,6 +40,7 @@ interface InputSkillSelectorProps {
     readonly useWrapper?: boolean
     readonly dropdownIcon?: ReactNode
     readonly onSubmit?: () => void
+    readonly additionalPlaceholder?: string
 }
 
 const InputSkillSelector: FC<InputSkillSelectorProps> = props => (
@@ -58,6 +59,7 @@ const InputSkillSelector: FC<InputSkillSelectorProps> = props => (
         useWrapper={props.useWrapper}
         dropdownIcon={props.dropdownIcon}
         onSubmit={props.onSubmit}
+        additionalPlaceholder={props.additionalPlaceholder}
     />
 )
 
