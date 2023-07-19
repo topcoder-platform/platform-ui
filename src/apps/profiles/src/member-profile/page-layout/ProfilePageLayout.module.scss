@@ -9,6 +9,10 @@
     .profileHeaderWrap {
         background: url('../../lib/assets/profile-header-bg.png') no-repeat right top / auto, linear-gradient(#0d83c5, #0e89d5);
 
+        @include ltelg {
+            background: url('../../lib/assets/profile-header-bg-mobile.png') no-repeat right top /100% 100%;
+        }
+
         .profileHeaderContent {
             padding: 0;
             max-height: 260px;
