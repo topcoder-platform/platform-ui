@@ -9,7 +9,7 @@ const mapEmsiSkillToInputOption = (s: EmsiSkill): InputMultiselectOption => ({
     ...s,
     label: s.name,
     value: s.skillId,
-    verified: s.skillSources.includes(EmsiSkillSources.challengeWin),
+    verified: !!s.skillSources?.includes(EmsiSkillSources.challengeWin),
 })
 
 interface Option {
