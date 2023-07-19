@@ -1,6 +1,7 @@
 import { FC, useCallback } from 'react'
+import classNames from 'classnames'
 
-import { ContentLayout } from '~/libs/ui'
+import { ContentLayout, LoadingSpinner } from '~/libs/ui'
 import { EmsiSkill } from '~/libs/shared'
 
 import { TalentCard } from '../../components/talent-card'
@@ -19,28 +20,42 @@ const SearchResultsPage: FC = () => {
     ), [skills])
 
     return (
-        <ContentLayout
-            contentClass={styles.contentLayout}
-            outerClass={styles['contentLayout-outer']}
-            innerClass={styles['contentLayout-inner']}
-        >
+        <>
             <div className={styles.headerWrap}>
-                <SearchInput
-                    skills={skills}
-                    onChange={setSkills}
-                />
-            </div>
-            <div className={styles.resultsWrap}>
-                {matches.map(member => (
-                    <TalentCard
-                        member={member}
-                        match={member.skillScore}
-                        key={member.userId}
-                        isMatchingSkill={isMatchingSkill}
+                <ContentLayout contentClass={styles.headerContentLayout}>
+                    <SearchInput
+                        className={styles.searchInput}
+                        skills={skills}
+                        onChange={setSkills}
                     />
-                ))}
+                </ContentLayout>
             </div>
-        </ContentLayout>
+            <ContentLayout
+                contentClass={styles.contentLayout}
+                outerClass={styles['contentLayout-outer']}
+                innerClass={styles['contentLayout-inner']}
+            >
+                <LoadingSpinner hide={!loading} />
+                <div className={classNames('body-medium-normal', styles.summaryText)}>
+                    We found&nbsp;
+                    <span className='body-medium-medium'>
+                        {matches.length}
+                        &nbsp;Experts
+                    </span>
+                    &nbsp;that match your search
+                </div>
+                <div className={styles.resultsWrap}>
+                    {matches.map(member => (
+                        <TalentCard
+                            member={member}
+                            match={member.skillScore}
+                            key={member.userId}
+                            isMatchingSkill={isMatchingSkill}
+                        />
+                    ))}
+                </div>
+            </ContentLayout>
+        </>
     )
 }
 

@@ -28,6 +28,7 @@ const fetchSkills = (queryTerm: string): Promise<Option[]> => (
 )
 
 interface InputSkillSelectorProps {
+    readonly className?: string
     readonly autoFocus?: boolean
     readonly limit?: number
     readonly label?: string
@@ -43,6 +44,7 @@ interface InputSkillSelectorProps {
 
 const InputSkillSelector: FC<InputSkillSelectorProps> = props => (
     <InputMultiselect
+        className={props.className}
         autoFocus={props.autoFocus}
         label={props.label ?? 'Select Skills'}
         limit={props.limit}

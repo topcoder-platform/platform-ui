@@ -25,6 +25,7 @@ export type InputMultiselectThemes = 'tc-green' | 'clear'
 
 export interface InputMultiselectProps {
     readonly autoFocus?: boolean
+    readonly className?: string
     readonly dirty?: boolean
     readonly disabled?: boolean
     readonly dropdownIcon?: ReactNode
@@ -93,6 +94,7 @@ const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProp
         <AsyncSelect
             className={
                 classNames(
+                    props.className,
                     styles.multiselect,
                     styles[`theme-${props.theme ? props.theme : 'tc-green'}`],
                     props.useWrapper === false && styles.multiSelectWrap,

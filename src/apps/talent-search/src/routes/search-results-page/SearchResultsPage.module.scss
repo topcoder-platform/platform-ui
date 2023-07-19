@@ -1,9 +1,34 @@
 @import "@libs/ui/styles/includes";
 
+.headerWrap {
+    height: 156px;
+}
+
+.headerContentLayout {
+    height: 100%;
+    background-image: url("../../assets/background.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+    padding: 0 $sp-8;
+}
+
+.summaryText {
+    margin: $sp-4 0 $sp-5;
+    text-align: center;
+    color: $black-60;
+    > span {
+        color: $black-100;
+    }
+}
+
+.searchInput {
+    margin-top: $sp-10;
+}
 
 .contentLayout {
     background: $black-5;
-    padding: $sp-8;
+    padding: $sp-2;
+    position: relative;
 }
 
 .resultsWrap {
