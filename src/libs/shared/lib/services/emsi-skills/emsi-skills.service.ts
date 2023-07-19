@@ -23,7 +23,3 @@ export async function updateMemberEmsiSkills(userId: string | number, skills: Sk
         emsiSkills: skills,
     })
 }
-
-export async function deleteMemberEmsiSkills(userId: string | number): Promise<void> {
-    return xhrDeleteAsync(`${EnvironmentConfig.API.V5}/emsi-skills/member-emsi-skills/${userId}`)
-}

@@ -6,10 +6,15 @@
 
 .headerContentLayout {
     height: 100%;
-    background-image: url("../../assets/background.png");
+    background-image: url("../../assets/background.jpg");
     background-size: cover;
     background-repeat: no-repeat;
-    padding: 0 $sp-8;
+    position: relative;
+    z-index: 2;
+
+    &Inner {
+        padding: 0 $sp-8;
+    }
 }
 
 .summaryText {
@@ -29,6 +34,11 @@
     background: $black-5;
     padding: $sp-2;
     position: relative;
+    z-index: 1;
+
+    .contentLayout-inner {
+        padding-bottom: $sp-12;
+    }
 }
 
 .resultsWrap {
@@ -37,3 +47,8 @@
     gap: $sp-9;
 }
 
+.moreBtn {
+    margin-top: $sp-8;
+    display: flex;
+    justify-content: center;
+}

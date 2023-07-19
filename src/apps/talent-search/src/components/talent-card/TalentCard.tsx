@@ -1,14 +1,24 @@
 import { CSSProperties, FC } from 'react'
 import { orderBy } from 'lodash'
+import codes from 'country-calling-code'
 
 import { IconSolid } from '~/libs/ui'
-import { EmsiSkill } from '~/libs/shared'
+import { EmsiSkill, isSkillVerified } from '~/libs/shared'
 
 import { MatchBar } from '../match-bar'
 import { SkillPill } from '../skill-pill'
 import { Member } from '../../lib/models'
 
 import styles from './TalentCard.module.scss'
+
+const getCountry = (countryCode: string): string => (
+    codes.find(c => c.isoCode3 === countryCode || c.isoCode2 === countryCode)?.country ?? countryCode ?? ''
+)
+
+const getAddrString = (city: string, country: string): string => (
+    [city, country].filter(Boolean)
+        .join(', ')
+)
 
 interface TalentCardProps {
     isMatchingSkill: (skill: EmsiSkill) => boolean
@@ -17,7 +27,7 @@ interface TalentCardProps {
 }
 
 const TalentCard: FC<TalentCardProps> = props => {
-    const visibleSkills = orderBy(props.member.emsiSkills, props.isMatchingSkill, 'desc')
+    const visibleSkills = orderBy(props.member.emsiSkills, [props.isMatchingSkill, isSkillVerified], ['desc', 'desc'])
         .slice(0, 6) as EmsiSkill[]
 
     const hiddenSkills = props.member.emsiSkills.length - visibleSkills.length
@@ -53,7 +63,7 @@ const TalentCard: FC<TalentCardProps> = props => {
                         >
                             <IconSolid.LocationMarkerIcon className='icon-xxl' />
                             <span className='body-main'>
-                                {`${addr.city}, ${addr.stateCode}`}
+                                {getAddrString(addr.city, getCountry(props.member.homeCountryCode))}
                             </span>
                         </div>
                     ))}
@@ -63,9 +73,9 @@ const TalentCard: FC<TalentCardProps> = props => {
                     {visibleSkills.map(skill => (
                         <SkillPill
                             key={skill.skillId}
-                            theme='dark'
+                            theme={props.isMatchingSkill(skill) ? 'verified' : 'dark'}
                             skill={skill}
-                            verified={props.isMatchingSkill(skill)}
+                            verified={isSkillVerified(skill)}
                         />
                     ))}
                     {hiddenSkills > 0 && (
