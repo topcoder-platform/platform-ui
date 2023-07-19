@@ -27,6 +27,8 @@ interface ProfileHeaderProps {
     refreshProfile: (handle: string) => void
 }
 
+export type NamesAndHandleAppearance = 'namesOnly' | 'handleOnly' | 'namesAndHandle'
+
 const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     const isMobile: boolean = useCheckIsMobile()
 
@@ -56,9 +58,9 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
             (trait: UserTrait) => trait.availableForGigs,
         ), [memberPersonalizationTraits])
 
-    const hideNamesOnProfile: UserTrait | undefined
+    const namesAndHandleAppearanceData: UserTrait | undefined
         = useMemo(() => memberPersonalizationTraits?.[0]?.traits?.data?.find(
-            (trait: UserTrait) => trait.hideNamesOnProfile,
+            (trait: UserTrait) => trait.namesAndHandleAppearance,
         ), [memberPersonalizationTraits])
 
     useEffect(() => {
@@ -172,7 +174,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                     <div className={styles.nameWrap}>
                         <p>
                             {
-                                hideNamesOnProfile
+                                namesAndHandleAppearanceData?.namesAndHandleAppearance === 'handleOnly'
                                     ? props.profile.handle
                                     : `${props.profile.firstName} ${props.profile.lastName}`
                             }
@@ -188,7 +190,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
 
                     <p className={styles.memberSince}>
                         {
-                            !hideNamesOnProfile ? (
+                            namesAndHandleAppearanceData?.namesAndHandleAppearance === 'namesAndHandle' ? (
                                 <>
                                     <span>{props.profile.handle}</span>
                                     {' '}
@@ -220,7 +222,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                         onSave={handleModifyNameModalSave}
                         profile={props.profile}
                         memberPersonalizationTraitsData={memberPersonalizationTraits?.[0]?.traits?.data}
-                        hideMyNameInProfile={hideNamesOnProfile?.hideNamesOnProfile || false}
+                        namesAndHandleAppearance={namesAndHandleAppearanceData?.namesAndHandleAppearance}
                     />
                 )
             }
