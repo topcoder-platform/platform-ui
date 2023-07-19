@@ -139,7 +139,7 @@ const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLangua
             onClose={props.onClose}
             open
             size='lg'
-            title='My Languages'
+            title='Languages'
             buttons={(
                 <div className={styles.modalButtons}>
                     <Button
