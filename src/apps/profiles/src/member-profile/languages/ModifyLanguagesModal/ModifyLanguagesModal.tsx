@@ -1,4 +1,4 @@
-import { bind, compact, sortBy, values } from 'lodash'
+import { bind, compact, sortBy, uniq, values } from 'lodash'
 import { Dispatch, FC, MutableRefObject, SetStateAction, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
@@ -67,7 +67,7 @@ const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLangua
     }
 
     function handleLanguagesSave(): void {
-        const formLanguages = compact(values(formValues))
+        const formLanguages = uniq(compact(values(formValues)))
 
         if (formLanguages.length) {
             const filteredLanguages = formLanguages
