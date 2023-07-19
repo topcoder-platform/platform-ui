@@ -3,13 +3,13 @@ import { noop } from 'lodash'
 
 import { InputMultiselect, InputMultiselectOption, InputMultiselectThemes } from '~/libs/ui'
 
-import { autoCompleteSkills, EmsiSkill, EmsiSkillSources } from '../../services/emsi-skills'
+import { autoCompleteSkills, EmsiSkill, isSkillVerified } from '../../services/emsi-skills'
 
-const mapEmsiSkillToInputOption = (s: EmsiSkill): InputMultiselectOption => ({
-    ...s,
-    label: s.name,
-    value: s.skillId,
-    verified: s.skillSources.includes(EmsiSkillSources.challengeWin),
+const mapEmsiSkillToInputOption = (skill: EmsiSkill): InputMultiselectOption => ({
+    ...skill,
+    label: skill.name,
+    value: skill.skillId,
+    verified: isSkillVerified(skill),
 })
 
 interface Option {
@@ -28,6 +28,7 @@ const fetchSkills = (queryTerm: string): Promise<Option[]> => (
 )
 
 interface InputSkillSelectorProps {
+    readonly autoFocus?: boolean
     readonly limit?: number
     readonly label?: string
     readonly loading?: boolean
@@ -37,10 +38,12 @@ interface InputSkillSelectorProps {
     readonly theme?: InputMultiselectThemes
     readonly useWrapper?: boolean
     readonly dropdownIcon?: ReactNode
+    readonly onSubmit?: () => void
 }
 
 const InputSkillSelector: FC<InputSkillSelectorProps> = props => (
     <InputMultiselect
+        autoFocus={props.autoFocus}
         label={props.label ?? 'Select Skills'}
         limit={props.limit}
         placeholder={props.placeholder ?? 'Type to add a skill...'}
@@ -52,6 +55,7 @@ const InputSkillSelector: FC<InputSkillSelectorProps> = props => (
         theme={props.theme}
         useWrapper={props.useWrapper}
         dropdownIcon={props.dropdownIcon}
+        onSubmit={props.onSubmit}
     />
 )
 

@@ -14,6 +14,11 @@ export const rootRoute: string = (
     EnvironmentConfig.SUBDOMAIN === AppSubdomain.talentSearch ? '' : `/${AppSubdomain.talentSearch}`
 )
 
+export const TALENT_SEARCH_PATHS = {
+    results: `${rootRoute}/results`,
+    root: rootRoute,
+}
+
 export const toolTitle: string = ToolTitle.talentSearch
 
 export const talentSearchRoutes: ReadonlyArray<PlatformRoute> = [

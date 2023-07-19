@@ -12,8 +12,6 @@
     align-items: center;
     gap: $sp-1;
 
-    height: $sp-8;
-
     &:hover {
         background-color: rgba($tc-white, 0.1);
     }
@@ -25,6 +23,7 @@
     .text {
         display: block;
         line-height: 16px;
+        text-align: left;
     }
 }
 
@@ -34,8 +33,9 @@
         color: $black-100;
 
         svg {
+            flex: 0 0 auto;
             color: $turq-120;
-            @include icon-size(14);
+            @include icon-size(16);
         }
     }
 

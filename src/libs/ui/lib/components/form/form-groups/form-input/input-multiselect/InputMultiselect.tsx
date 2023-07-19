@@ -1,10 +1,12 @@
 import {
     ChangeEvent,
     FC,
+    KeyboardEvent,
     ReactNode,
+    useRef,
 } from 'react'
 import { noop } from 'lodash'
-import { components } from 'react-select'
+import { components, SelectInstance } from 'react-select'
 import AsyncSelect from 'react-select/async'
 import classNames from 'classnames'
 
@@ -22,6 +24,7 @@ export interface InputMultiselectOption {
 export type InputMultiselectThemes = 'tc-green' | 'clear'
 
 export interface InputMultiselectProps {
+    readonly autoFocus?: boolean
     readonly dirty?: boolean
     readonly disabled?: boolean
     readonly dropdownIcon?: ReactNode
@@ -40,6 +43,7 @@ export interface InputMultiselectProps {
     readonly theme?: InputMultiselectThemes
     readonly useWrapper?: boolean
     readonly value?: InputMultiselectOption[]
+    readonly onSubmit?: () => void
 }
 
 const MultiValueRemove: FC = (props: any) => (
@@ -62,11 +66,23 @@ const dropdownIndicator = (dropdownIcon: ReactNode): FC => (props: any) => (
 )
 
 const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProps) => {
+    const asynSelectRef = useRef<any>()
 
     function handleOnChange(options: readonly InputMultiselectOption[]): void {
         props.onChange({
             target: { value: options },
         } as unknown as ChangeEvent<HTMLInputElement>)
+    }
+
+    function handleKeyPress(ev: KeyboardEvent<HTMLDivElement>): void {
+        const state = (asynSelectRef.current?.state ?? {}) as SelectInstance['state']
+        const isSelectingOptionItem = state.focusedOption
+        const hasValue = state.selectValue?.length > 0
+        if (ev.key !== 'Enter' || isSelectingOptionItem || !hasValue) {
+            return
+        }
+
+        props.onSubmit?.()
     }
 
     function isOptionDisabled(): boolean {
@@ -82,11 +98,12 @@ const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProp
                     props.useWrapper === false && styles.multiSelectWrap,
                 )
             }
+            ref={asynSelectRef}
             classNamePrefix={styles.ms}
             unstyled
             isMulti
             cacheOptions
-            autoFocus
+            autoFocus={props.autoFocus}
             defaultOptions
             placeholder={props.placeholder}
             loadOptions={props.onFetchOptions}
@@ -100,6 +117,7 @@ const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProp
             components={{ DropdownIndicator: dropdownIndicator(props.dropdownIcon), MultiValueRemove }}
             value={props.value}
             openMenuOnClick={false}
+            onKeyDown={handleKeyPress}
         />
     )
 

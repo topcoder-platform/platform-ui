@@ -10,7 +10,7 @@ export interface SkillPillProps {
     children?: ReactNode
     onClick?: (skill: Skill) => void
     selected?: boolean
-    skill: Skill
+    skill: {name: string}
     theme?: 'dark' | 'verified' | 'light' | 'etc'
     verified?: boolean
 }
@@ -22,7 +22,7 @@ const SkillPill: FC<SkillPillProps> = props => {
         styles[`theme-${props.verified ? 'verified' : (props.theme ?? 'light')}`],
     )
 
-    const handleClick = useCallback(() => props.onClick?.call(undefined, props.skill), [
+    const handleClick = useCallback(() => props.onClick?.call(undefined, props.skill as Skill), [
         props.onClick, props.skill,
     ])
 

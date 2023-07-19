@@ -6,8 +6,10 @@ import { EmsiSkill, EmsiSkillSources, InputSkillSelector, Skill } from '~/libs/s
 import styles from './SearchInput.module.scss'
 
 interface SearchInputProps {
+    readonly autoFocus?: boolean
     onChange: (skills: Skill[]) => void
     skills: Skill[]
+    onSearch?: () => void
 }
 
 const SearchInput: FC<SearchInputProps> = props => {
@@ -27,12 +29,14 @@ const SearchInput: FC<SearchInputProps> = props => {
 
     return (
         <InputSkillSelector
+            autoFocus={props.autoFocus}
             placeholder='Enter skills you are searching for...'
             useWrapper={false}
             theme='clear'
             dropdownIcon={<IconOutline.SearchIcon className={styles.searchIcon} />}
             value={emsiSkills}
             onChange={onChange}
+            onSubmit={props.onSearch}
         />
     )
 }
