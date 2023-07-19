@@ -64,7 +64,7 @@ export const useMemberSkillEditor = ({
             return
         }
 
-        if (skill.skillSources.includes(EmsiSkillSources.challengeWin)) {
+        if (skill.skillSources && skill.skillSources.includes(EmsiSkillSources.challengeWin)) {
             return
         }
 
