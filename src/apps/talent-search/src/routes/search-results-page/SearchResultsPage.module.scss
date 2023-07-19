@@ -1,0 +1,14 @@
+@import "@libs/ui/styles/includes";
+
+
+.contentLayout {
+    background: $black-5;
+    padding: $sp-8;
+}
+
+.resultsWrap {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $sp-9;
+}
+

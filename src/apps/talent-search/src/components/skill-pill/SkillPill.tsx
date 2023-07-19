@@ -1,30 +1,42 @@
-import { FC, useCallback } from 'react'
+import { FC, ReactNode, useCallback } from 'react'
 import classNames from 'classnames'
 
+import { IconOutline } from '~/libs/ui'
 import { Skill } from '~/libs/shared'
 
 import styles from './SkillPill.module.scss'
 
 export interface SkillPillProps {
-    onClick: (skill: Skill) => void
-    selected: boolean
+    children?: ReactNode
+    onClick?: (skill: Skill) => void
+    selected?: boolean
     skill: Skill
+    theme?: 'dark' | 'verified' | 'light' | 'etc'
+    verified?: boolean
 }
 
 const SkillPill: FC<SkillPillProps> = props => {
-    const handleClick = useCallback(() => props.onClick.call(undefined, props.skill), [
+    const className = classNames(
+        styles.pill,
+        props.selected && styles.selected,
+        styles[`theme-${props.verified ? 'verified' : (props.theme ?? 'light')}`],
+    )
+
+    const handleClick = useCallback(() => props.onClick?.call(undefined, props.skill), [
         props.onClick, props.skill,
     ])
 
     return (
-        <span
-            className={classNames(styles.pill, props.selected && styles.selected)}
+        <div
+            className={className}
             onClick={handleClick}
         >
-            <span className='body-main'>
+            <span className={classNames('body-main', styles.text)}>
                 {props.skill.name}
+                {props.children}
             </span>
-        </span>
+            {props.verified && <IconOutline.CheckCircleIcon />}
+        </div>
     )
 }
 

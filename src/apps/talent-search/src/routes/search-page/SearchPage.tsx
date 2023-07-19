@@ -6,9 +6,9 @@ import { Skill } from '~/libs/shared'
 import { SearchInput } from '../../components/search-input'
 import { PopularSkills } from '../../components/popular-skills'
 
-import styles from './TalentSearch.module.scss'
+import styles from './SearchPage.module.scss'
 
-export const TalentSearch: FC = () => {
+export const SearchPage: FC = () => {
     const [skillsFilter, setSkillsFilter] = useState<Skill[]>([])
 
     return (
@@ -34,4 +34,4 @@ export const TalentSearch: FC = () => {
     )
 }
 
-export default TalentSearch
+export default SearchPage

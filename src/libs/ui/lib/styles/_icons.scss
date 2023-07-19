@@ -1,0 +1,41 @@
+
+@import './mixins/icons.mixins';
+
+.icon-sm {
+    @include icon-sm;
+}
+
+.icon-md {
+    @include icon-md;
+}
+
+.icon-lg {
+    @include icon-lg;
+}
+
+.icon-xl {
+    @include icon-xl;
+}
+
+.icon-xxl {
+    @include icon-xxl;
+}
+
+.icon-xxxl {
+    @include icon-xxxl;
+}
+.icon-xxxxl {
+    @include icon-xxxxl;
+}
+
+.icon-mx {
+    @include icon-mx;
+}
+
+.icon-mxx {
+    @include icon-mxx;
+}
+
+.icon-full {
+    @include icon-full;
+}

@@ -29,7 +29,7 @@
         "const ${1:ComponentName}: FC<${1:ComponentName}Props> = props => {",
         "",
         "  return (",
-        "    <div className={styles['wrap']}>",
+        "    <div className={styles.wrap}>",
         "    </div>",
         "  )",
         "}",

@@ -5,8 +5,14 @@
     border-radius: 40px;
     color: $tc-white;
     border: 1px solid $tc-white;
-    padding: 8px 14px 8px 14px;
+    padding: $sp-2 $sp-3;
     text-align: center;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: $sp-1;
+
+    height: $sp-8;
 
     &:hover {
         background-color: rgba($tc-white, 0.1);
@@ -15,5 +21,31 @@
     &.selected{
         background-color: rgba($tc-white, 0.3);
     }
+
+    .text {
+        display: block;
+        line-height: 16px;
+    }
 }
 
+.theme {
+    &-verified {
+        border: 2px solid $turq-120;
+        color: $black-100;
+
+        svg {
+            color: $turq-120;
+            @include icon-size(14);
+        }
+    }
+
+    &-dark {
+        border-color: $black-20;
+        color: $black-100;
+    }
+
+    &-etc {
+        border-color: $black-20;
+        color: $black-60;
+    }
+}
