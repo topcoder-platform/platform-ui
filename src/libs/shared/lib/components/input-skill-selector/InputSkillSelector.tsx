@@ -37,6 +37,7 @@ interface InputSkillSelectorProps {
     readonly theme?: InputMultiselectThemes
     readonly useWrapper?: boolean
     readonly dropdownIcon?: ReactNode
+    readonly additionalPlaceholder?: string
 }
 
 const InputSkillSelector: FC<InputSkillSelectorProps> = props => (
@@ -52,6 +53,7 @@ const InputSkillSelector: FC<InputSkillSelectorProps> = props => (
         theme={props.theme}
         useWrapper={props.useWrapper}
         dropdownIcon={props.dropdownIcon}
+        additionalPlaceholder={props.additionalPlaceholder}
     />
 )
 

@@ -24,6 +24,13 @@
     }
 }
 
+.additionalPlaceholder {
+    color: $black-60;
+    width: 0;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
 .multiselect .ms {
     display: block;
 
@@ -77,6 +84,7 @@
         grid-template-columns: 0 min-content;
         padding: 0;
         visibility: visible;
+        order: 999;
     }
 
     &:global(__multi-value) {
@@ -163,6 +171,9 @@
             background-color: $turq-160;
             color: $tc-white;
         }
+    }
+    &:global(__control--is-focused) .additionalPlaceholder {
+        display: none;
     }
 }
 
