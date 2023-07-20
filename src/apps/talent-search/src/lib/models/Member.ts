@@ -1,4 +1,4 @@
-import MemberAddress from './MemberAddress';
+import MemberAddress from './MemberAddress'
 import MemberEmsiSkill from './MemberEmsiSkill'
 import MemberMaxRating from './MemberMaxRating'
 import MemberStats from './MemberStats'
