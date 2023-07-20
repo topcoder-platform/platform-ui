@@ -94,7 +94,8 @@
 //                             }
 //                         })
 //                         // Move the values that were searched to the front of the skills list for display in the UI
-//                         value.emsiSkills.sort((a, b) => ((a.isSearched && b.isSearched) ? a.name.localeCompare(b.name)
+//                         value.emsiSkills.sort((a, b) => ((a.isSearched && b.isSearched) ?
+//                                    a.name.localeCompare(b.name)
 //                             : (a.isSearched ? -1 : 0)))
 //                     })
 //                 }

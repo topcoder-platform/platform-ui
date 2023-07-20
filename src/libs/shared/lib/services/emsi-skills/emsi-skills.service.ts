@@ -1,5 +1,5 @@
 import { EnvironmentConfig } from '~/config'
-import { xhrDeleteAsync, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
+import { xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
 
 import { EmsiSkill, Skill } from './skill.model'
 
