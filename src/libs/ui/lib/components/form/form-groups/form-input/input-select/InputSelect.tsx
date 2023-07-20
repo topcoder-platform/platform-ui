@@ -2,6 +2,7 @@ import {
     ChangeEvent,
     Dispatch,
     FC,
+    FocusEvent,
     MouseEvent,
     MutableRefObject,
     ReactNode,
@@ -83,6 +84,7 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
             className={styles['select-input-wrapper']}
             hideInlineErrors={props.hideInlineErrors}
             ref={triggerRef}
+            forceFocusStyle={menuIsVisible}
         >
             <button
                 tabIndex={props.tabIndex}
@@ -90,6 +92,11 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
                 onClick={toggleIfNotDisabled}
                 type='button'
                 disabled={!!props.disabled}
+                onFocus={function onFocus(event: FocusEvent<HTMLButtonElement> | undefined) {
+                    event?.stopPropagation()
+                    event?.preventDefault()
+                    setMenuIsVisible(true)
+                }}
             >
                 <span className='body-small'>{selectedOption ? label(selectedOption) : ''}</span>
                 <span className='body-small'>{!selectedOption && !!props.placeholder ? props.placeholder : ''}</span>
