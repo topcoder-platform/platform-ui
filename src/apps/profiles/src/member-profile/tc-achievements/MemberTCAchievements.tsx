@@ -50,6 +50,7 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
                     !!memberStats?.wins && memberStats.wins > 0 && (
                         <ChallengeWinsBanner
                             memberStats={memberStats}
+                            profile={props.profile}
                         />
                     )
                 }

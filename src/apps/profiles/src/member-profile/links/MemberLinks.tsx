@@ -83,7 +83,7 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
         }, 1000)
     }
 
-    return !loading && (canEdit || memberLinks?.links) ? (
+    return !loading && (canEdit || memberLinks?.links?.length) ? (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
                 <p className='body-main-bold'>Links</p>
