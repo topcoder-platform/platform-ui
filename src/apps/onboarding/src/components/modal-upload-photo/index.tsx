@@ -1,5 +1,5 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react'
-import { DropzoneState, useDropzone } from 'react-dropzone'
+import { DropzoneState, FileRejection, useDropzone } from 'react-dropzone'
 import _ from 'lodash'
 import classNames from 'classnames'
 
@@ -22,8 +22,23 @@ const ModalUploadPhoto: FC<ModalUploadPhotoProps> = (props: ModalUploadPhotoProp
     const [imgUrl, setImgUrl] = useState<string>('')
     const [isSaving, setIsSaving]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
+    const [errorUploadFile, setErrorUploadFile] = useState('')
 
-    const onDrop = useCallback((acceptedFiles: File[]) => {
+    const onDrop = useCallback((acceptedFiles: File[], fileRejections: FileRejection[]) => {
+        if (!acceptedFiles.length && fileRejections.length) {
+            const errorCode = _.get(fileRejections, '[0].errors[0].code')
+            let errorMessage = _.get(fileRejections, '[0].errors[0].message', '')
+            if (errorCode === 'file-invalid-type') {
+                errorMessage = 'Invalid file format'
+            } else if (errorCode === 'file-too-large') {
+                errorMessage = 'File is larger than 2MB'
+            }
+
+            setErrorUploadFile(errorMessage)
+        } else {
+            setErrorUploadFile('')
+        }
+
         setMyFiles([...acceptedFiles])
     }, [])
 
@@ -64,6 +79,51 @@ const ModalUploadPhoto: FC<ModalUploadPhotoProps> = (props: ModalUploadPhotoProp
         }
     }
 
+    function getDragAndDropUI(): JSX.Element {
+        if (isSaving) {
+            return (
+                <div className={styles.blockDropZone}>
+                    <span>Uploading...</span>
+                    <div className={styles.blockProgressContainer}>
+                        <div className={styles.blockProgress} />
+                    </div>
+                </div>
+            )
+        }
+
+        if (errorUploadFile) {
+            return (
+                <div {...getRootProps()} className={styles.blockPhoto}>
+                    <input {...getInputProps()} />
+                    <span className='color-red-120'>{errorUploadFile}</span>
+                </div>
+            )
+        }
+
+        if (imgUrl) {
+            return (
+                <div {...getRootProps()} className={styles.blockPhoto}>
+                    <input {...getInputProps()} />
+                    <img src={imgUrl} alt='' />
+                </div>
+            )
+        }
+
+        return (
+            <div {...getRootProps()} className={styles.blockDropZone}>
+                <input {...getInputProps()} />
+                <span className={styles.textDragAndDrop}>
+                    Drag and drop your file here
+                    <br />
+                    or
+                </span>
+                <span className={styles.textBrowse}>
+                    BROWSE
+                </span>
+            </div>
+        )
+    }
+
     return (
         <OnboardingBaseModal
             buttons={(
@@ -92,35 +152,7 @@ const ModalUploadPhoto: FC<ModalUploadPhotoProps> = (props: ModalUploadPhotoProp
                     'd-flex mobile-flex-column align-items-start mobile-gap-16',
                 )}
             >
-                {(!isSaving && !imgUrl) ? (
-                    <div {...getRootProps()} className={styles.blockDropZone}>
-                        <input {...getInputProps()} />
-                        <span className={styles.textDragAndDrop}>
-                            Drag and drop your file here
-                            <br />
-                            or
-                        </span>
-                        <span className={styles.textBrowse}>
-                            BROWSE
-                        </span>
-                    </div>
-                ) : undefined}
-
-                {(!isSaving && imgUrl) ? (
-                    <div {...getRootProps()} className={styles.blockPhoto}>
-                        <input {...getInputProps()} />
-                        <img src={imgUrl} alt='' />
-                    </div>
-                ) : undefined}
-
-                {isSaving ? (
-                    <div className={styles.blockDropZone}>
-                        <span>Uploading...</span>
-                        <div className={styles.blockProgressContainer}>
-                            <div className={styles.blockProgress} />
-                        </div>
-                    </div>
-                ) : undefined}
+                {getDragAndDropUI()}
 
                 <div className='d-flex flex-column align-items-start'>
                     <span>Add a photo that you would like to share to the customers and community members.</span>
