@@ -143,6 +143,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                     <HowSkillsWorkModal
                         onClose={handleHowSkillsWorkClose}
                         isTalentSearch={isTalentSearch}
+                        canEdit={canEdit}
                     />
                 )
             }
