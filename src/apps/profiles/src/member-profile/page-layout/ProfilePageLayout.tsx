@@ -96,8 +96,6 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                 </div>
             </div>
 
-            {/* <MemberTCActivityInfo profile={props.profile} /> */}
-
         </ContentLayout>
 
         <OnboardingCompleted authProfile={props.authProfile} />

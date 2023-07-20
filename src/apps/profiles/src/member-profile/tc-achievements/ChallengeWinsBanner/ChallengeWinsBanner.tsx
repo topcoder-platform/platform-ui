@@ -10,6 +10,7 @@ import {
     BugHuntDetailsModal,
     CodeDetailsModal,
     ContentCreationDetailsModal,
+    CopilotDetailsModal,
     DesignF2FDetailsModal,
     F2FDetailsModal,
     LogoDesignDetailsModal,
@@ -73,6 +74,8 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
         = useState<boolean>(false)
     const [isTestScenDetailsOpen, setIsTestScenDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
+    const [isCopilotDetailsOpen, setIsCopilotDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
 
     function handleShowDSModal(): void {
         setIsDSDetailsOpen(!isDSDetailsOpen)
@@ -119,6 +122,9 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                 break
             case 'CONTENT_CREATION':
                 setIsContentCreationDetailsOpen(!isContentCreationDetailsOpen)
+                break
+            case 'COPILOT':
+                setIsCopilotDetailsOpen(!isCopilotDetailsOpen)
                 break
             // case 'COPILOT_POSTING':
             //     return 'Copilot Posting'
@@ -168,6 +174,16 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                                 winCnt={ms.wins}
                             />
                         ) : undefined))
+                    }
+                    {
+                        !!props.memberStats.COPILOT && (
+                            <ChallengeWin
+                                typeName='% Fulfillment'
+                                onClick={bind(handleChallengeWinModalToggle, this, 'COPILOT')}
+                                winCnt={props.memberStats.COPILOT.fulfillment}
+                                winLabel='COPILOT'
+                            />
+                        )
                     }
                 </div>
             </div>
@@ -276,6 +292,14 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                     isBugHuntDetailsOpen={isBugHuntDetailsOpen}
                     onClose={bind(handleChallengeWinModalToggle, this, 'BUG_HUNT')}
                     bugHuntStats={bugHuntStats}
+                />
+            )}
+
+            {isCopilotDetailsOpen && (
+                <CopilotDetailsModal
+                    isCopilotDetailsOpen={isCopilotDetailsOpen}
+                    onClose={bind(handleChallengeWinModalToggle, this, 'COPILOT')}
+                    copilotDetails={props.memberStats?.COPILOT}
                 />
             )}
 
