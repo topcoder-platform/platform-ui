@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import { Skill } from '~/libs/shared'
@@ -24,10 +24,10 @@ export const useUrlQuerySearchParms = (paramName: string): [
 
     const [skills, setSkills] = useState<Skill[]>([])
 
-    function handleUpdateSearch(newSkills: Skill[]): void {
+    const handleUpdateSearch = useCallback((newSkills: Skill[]) => {
         const searchParams = encodeUrlQuerySearch(newSkills)
         updateParams(`${searchParams}`)
-    }
+    }, [updateParams])
 
     // update search input whenever the url data changes
     useEffect(() => {

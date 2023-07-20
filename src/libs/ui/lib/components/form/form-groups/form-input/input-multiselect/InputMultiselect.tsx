@@ -3,6 +3,7 @@ import {
     FC,
     KeyboardEvent,
     ReactNode,
+    useMemo,
     useRef,
 } from 'react'
 import { noop } from 'lodash'
@@ -103,6 +104,10 @@ const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProp
         return !!props.limit && (props.value?.length as number) >= props.limit
     }
 
+    const ValueContainer = useMemo(() => (
+        valueContainer(props.additionalPlaceholder ?? 'Add more...')
+    ), [props.additionalPlaceholder])
+
     const selectInputElement = (
         <AsyncSelect
             className={
@@ -132,7 +137,7 @@ const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProp
             components={{
                 DropdownIndicator: dropdownIndicator(props.dropdownIcon),
                 MultiValueRemove,
-                ValueContainer: valueContainer(props.additionalPlaceholder ?? 'Add more...'),
+                ValueContainer,
             }}
             value={props.value}
             openMenuOnClick={false}
