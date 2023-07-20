@@ -23,7 +23,7 @@
         margin-bottom: $sp-8;
         background-image: linear-gradient(90deg, #7B21A7, #1974AD);
         color: $tc-white;
-        padding: $sp-8;
+        padding: $sp-4;
 
         @include ltelg {
             padding: $sp-4;
@@ -36,21 +36,8 @@
         .wins {
             display: flex;
             flex-wrap: wrap;
-            justify-content: space-evenly;
+            justify-content: center;
             width: 100%;
-
-            .winWrapper {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-
-                .winCnt {
-                    font-size: 44px;
-                    font-weight: 500;
-                    line-height: 34px;
-                    margin-top: $sp-8;
-                }
-            }
         }
     }
 }

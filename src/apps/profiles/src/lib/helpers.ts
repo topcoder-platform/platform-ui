@@ -32,6 +32,18 @@ export function subTrackLabelToHumanName(label: string): string {
             return 'First2Finish'
         case 'CONCEPTUALIZATION':
             return 'Conceptualization'
+        case 'SPECIFICATION':
+            return 'Specification'
+        case 'BUG_HUNT':
+            return 'Bug Hunt'
+        case 'TEST_SUITES':
+            return 'Test Suites'
+        case 'TEST_SCENARIOS':
+            return 'Test Scenarios'
+        case 'CONTENT_CREATION':
+            return 'Content Creation'
+        case 'COPILOT_POSTING':
+            return 'Copilot Posting'
         default: return label
     }
 
