@@ -41,6 +41,9 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
     const [isTalentSearch, setIsTalentSearch]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
+    const [skillsToRender, setSkillsToRender]: [number, Dispatch<SetStateAction<number>>]
+        = useState<number>(10)
+
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.skills) {
             setIsEditMode(true)
@@ -75,6 +78,10 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         setHowSkillsWorkVisible(false)
     }
 
+    function handleExpandSkillsClick(): void {
+        setSkillsToRender(memberEMSISkills.length)
+    }
+
     return memberEMSISkills ? (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
@@ -98,18 +105,19 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
             <div className={styles.skillsWrap}>
                 {memberEMSISkills?.length > 0
-                    ? memberEMSISkills.map((memberEMSISkill: UserEMSISkill) => (
-                        <div
-                            className={classNames(
-                                styles.skillItem,
-                                isVerifiedSkill(memberEMSISkill.skillSources) ? styles.verifiedSkillItem : '',
-                            )}
-                            key={memberEMSISkill.id}
-                        >
-                            {memberEMSISkill.name}
-                            {isVerifiedSkill(memberEMSISkill.skillSources) && <IconOutline.CheckCircleIcon />}
-                        </div>
-                    ))
+                    ? memberEMSISkills.slice(0, skillsToRender)
+                        .map((memberEMSISkill: UserEMSISkill) => (
+                            <div
+                                className={classNames(
+                                    styles.skillItem,
+                                    isVerifiedSkill(memberEMSISkill.skillSources) ? styles.verifiedSkillItem : '',
+                                )}
+                                key={memberEMSISkill.id}
+                            >
+                                {memberEMSISkill.name}
+                                {isVerifiedSkill(memberEMSISkill.skillSources) && <IconOutline.CheckCircleIcon />}
+                            </div>
+                        ))
                     : (
                         <EmptySection
                             title='Topcoder verifies and tracks skills as our members complete projects and challenges.'
@@ -121,6 +129,15 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                             they complete project tasks.
                         </EmptySection>
                     )}
+                {
+                    memberEMSISkills?.length > skillsToRender && (
+                        <Button
+                            primary
+                            label={`+ ${memberEMSISkills.length - skillsToRender}`}
+                            onClick={handleExpandSkillsClick}
+                        />
+                    )
+                }
             </div>
             {canEdit && !memberEMSISkills?.length && (
                 <AddButton

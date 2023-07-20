@@ -108,15 +108,9 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
             case 'LOGO_DESIGN':
                 setIsLogoDesignDetailsOpen(!isLogoDesignDetailsOpen)
                 break
-            // case 'CONCEPTUALIZATION':
-            //     return 'Conceptualization'
-            // case 'SPECIFICATION':
-            //     return 'Specification'
             case 'BUG_HUNT':
                 setIsBugHuntDetailsOpen(!isBugHuntDetailsOpen)
                 break
-            // case 'TEST_SUITES':
-            //     return 'Test Suites'
             case 'TEST_SCENARIOS':
                 setIsTestScenDetailsOpen(!isTestScenDetailsOpen)
                 break
@@ -126,6 +120,14 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
             case 'COPILOT':
                 setIsCopilotDetailsOpen(!isCopilotDetailsOpen)
                 break
+            // TODO: modal views for the following subtracks
+            // are those all the subtracks?
+            // case 'CONCEPTUALIZATION':
+            //     return 'Conceptualization'
+            // case 'SPECIFICATION':
+            //     return 'Specification'
+            // case 'TEST_SUITES':
+            //     return 'Test Suites'
             // case 'COPILOT_POSTING':
             //     return 'Copilot Posting'
             default: break
