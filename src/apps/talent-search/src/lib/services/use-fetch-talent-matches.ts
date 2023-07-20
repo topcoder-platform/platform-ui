@@ -1,5 +1,5 @@
 import { uniqBy } from 'lodash'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
@@ -37,14 +37,14 @@ export function useFetchTalentMatches(
         revalidateOnFocus: false,
     })
 
-    const matches = data?.data
+    const matches = useMemo(() => data?.data ?? [], [data])
 
     return {
         error: !!error,
-        loading: !matches,
+        loading: !data?.data,
         matches: matches ?? [],
         page: data?.page ?? 0,
-        ready: !!matches,
+        ready: !!data?.data,
         total: data?.total ?? 0,
         totalPages: data?.totalPages ?? 0,
     }
@@ -67,10 +67,16 @@ export function useInfiniteTalentMatches(
     const [page, setPage] = useState(1)
     const matchResponse = useFetchTalentMatches(skills, page, pageSize)
 
-    function fetchNext(): void {
+    const fetchNext = useCallback(() => {
         setPage(p => p + 1)
-    }
+    }, [])
 
+    // clear matches when skills array is updated
+    useEffect(() => {
+        setMatches([])
+    }, [skills])
+
+    // when we have new matches, concatenate the response to the matches array
     useEffect(() => {
         setMatches(m => uniqBy([...m, ...matchResponse.matches], 'userId'))
     }, [matchResponse.matches])
