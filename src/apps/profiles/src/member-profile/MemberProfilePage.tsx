@@ -4,7 +4,7 @@ import { Params, useParams } from 'react-router-dom'
 import { profileContext, ProfileContextData, profileGetPublicAsync, UserProfile } from '~/libs/core'
 import { LoadingSpinner } from '~/libs/ui'
 
-import { notifyUniNavi } from '../lib'
+import { notifyUniNavi, triggerSprigSurvey } from '../lib'
 
 import { ProfilePageLayout } from './page-layout'
 
@@ -37,6 +37,7 @@ const MemberProfilePage: FC<{}> = () => {
                 setProfile(userProfile)
                 if (userProfile) {
                     notifyUniNavi(userProfile)
+                    triggerSprigSurvey(userProfile)
                 }
             })
     ), [])

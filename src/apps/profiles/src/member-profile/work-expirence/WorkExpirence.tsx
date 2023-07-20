@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { MemberTraitsAPI, useMemberTraits, UserProfile, UserTrait, UserTraitIds } from '~/libs/core'
 
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
-import { notifyUniNavi } from '../../lib'
+import { notifyUniNavi, triggerSprigSurvey } from '../../lib'
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 
 import { ModifyWorkExpirenceModal } from './ModifyWorkExpirenceModal'
@@ -51,6 +51,7 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
             setIsEditMode(false)
             mutateTraits()
             notifyUniNavi(props.profile)
+            triggerSprigSurvey(props.profile)
         }, 1000)
     }
 

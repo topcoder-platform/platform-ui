@@ -5,7 +5,7 @@ import { MemberTraitsAPI, useMemberTraits, UserProfile, UserTrait, UserTraitIds 
 
 import { AddButton, EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
-import { notifyUniNavi } from '../../lib'
+import { notifyUniNavi, triggerSprigSurvey } from '../../lib'
 
 import { ModifyLanguagesModal } from './ModifyLanguagesModal'
 import styles from './MemberLanguages.module.scss'
@@ -50,6 +50,7 @@ const MemberLanguages: FC<MemberLanguagesProps> = (props: MemberLanguagesProps) 
             setIsEditMode(false)
             mutateTraits()
             notifyUniNavi(props.profile)
+            triggerSprigSurvey(props.profile)
         }, 1000)
     }
 
