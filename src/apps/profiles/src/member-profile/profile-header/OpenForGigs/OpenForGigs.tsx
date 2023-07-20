@@ -1,6 +1,7 @@
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { KeyedMutator } from 'swr'
+import classNames from 'classnames'
 
 import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } from '~/libs/core'
 
@@ -60,7 +61,7 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
 
     return props.canEdit || openForWork ? (
         <div className={styles.container}>
-            <p className='body-main-bold'>
+            <p className={classNames('body-main-bold', !openForWork?.availableForGigs ? styles.notOopenToWork : '')}>
                 {openForWork?.availableForGigs ? 'open to work' : 'not open to work'}
             </p>
             {
