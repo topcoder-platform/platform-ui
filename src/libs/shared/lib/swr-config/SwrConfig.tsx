@@ -3,11 +3,11 @@ import { SWRConfig } from 'swr'
 
 import { xhrGetAsync } from '~/libs/core'
 
-interface ProfileSwrProps {
+interface SwrConfigProps {
     children: ReactNode
 }
 
-const ProfileSwr: FC<ProfileSwrProps> = (props: ProfileSwrProps) => (
+const SwrConfig: FC<SwrConfigProps> = (props: SwrConfigProps) => (
     <SWRConfig
         value={{
             fetcher: resource => xhrGetAsync(resource),
@@ -20,4 +20,4 @@ const ProfileSwr: FC<ProfileSwrProps> = (props: ProfileSwrProps) => (
     </SWRConfig>
 )
 
-export default ProfileSwr
+export default SwrConfig

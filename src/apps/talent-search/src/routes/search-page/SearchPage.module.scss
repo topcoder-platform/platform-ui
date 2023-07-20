@@ -1,7 +1,7 @@
 @import "@libs/ui/styles/includes";
 
 .contentLayout {
-    background-image: url("../../assets/background.png");
+    background-image: url("../../assets/background.webp");
     background-size: cover;
     background-repeat: no-repeat;
 }
@@ -9,35 +9,6 @@
 .contentLayout-inner {
     padding: 86px 48px 48px 48px;
     color: $tc-white;
-}
-
-.popularSkillsContainer{
-    margin-top: 16px;
-    margin-left: auto;
-    margin-right: auto;
-    text-align: center;
-
-    :global(.body-medium-bold) {
-        margin-bottom: $sp-4;
-    }
-}
-
-.pillRow{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: $sp-2;
-
-    + .pillRow {
-        margin-top: $sp-2;
-    }
-
-    &:nth-child(4) {
-        opacity: 60%;
-    }
-    &:nth-child(n+5) {
-        opacity: 40%;
-    }
 }
 
 .searchHeader{
@@ -79,12 +50,4 @@
     padding: 70px 32px 32px 32px;
     max-width: 931px;
     width: 100%;
-}
-
-.searchIcon{
-    width: 24px;
-    height: 24px;
-    color: $black-40;
-    stroke: $black-40;
-    margin-right: 10px;
 }
