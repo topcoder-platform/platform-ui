@@ -1,5 +1,6 @@
 import { CSSProperties, FC } from 'react'
 import { orderBy } from 'lodash'
+import { Link } from 'react-router-dom'
 import codes from 'country-calling-code'
 
 import { IconSolid } from '~/libs/ui'
@@ -8,6 +9,7 @@ import { EmsiSkill, isSkillVerified } from '~/libs/shared'
 import { MatchBar } from '../match-bar'
 import { SkillPill } from '../skill-pill'
 import { Member } from '../../lib/models'
+import { TALENT_SEARCH_PATHS } from '../../talent-search.routes'
 
 import styles from './TalentCard.module.scss'
 
@@ -27,13 +29,19 @@ interface TalentCardProps {
 }
 
 const TalentCard: FC<TalentCardProps> = props => {
-    const visibleSkills = orderBy(props.member.emsiSkills, [props.isMatchingSkill, isSkillVerified], ['desc', 'desc'])
+    const talentRoute = `${TALENT_SEARCH_PATHS.talent}/${props.member.handle}`
+
+    const visibleSkills = orderBy(
+        props.member.emsiSkills,
+        [props.isMatchingSkill, isSkillVerified],
+        ['desc', 'desc'],
+    )
         .slice(0, 6) as EmsiSkill[]
 
     const hiddenSkills = props.member.emsiSkills.length - visibleSkills.length
 
     return (
-        <div className={styles.wrap}>
+        <Link to={talentRoute} className={styles.wrap}>
             <div
                 className={styles.profilePic}
                 style={{ '--background-image-url': `url(${props.member.photoURL})` } as CSSProperties}
@@ -83,7 +91,7 @@ const TalentCard: FC<TalentCardProps> = props => {
                     )}
                 </div>
             </div>
-        </div>
+        </Link>
     )
 }
 

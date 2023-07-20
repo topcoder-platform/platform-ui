@@ -9,6 +9,10 @@ const SearchResultsPage: LazyLoadedComponent = lazyLoad(
     () => import('./routes/search-results-page'),
     'SearchResultsPage',
 )
+const TalentPage: LazyLoadedComponent = lazyLoad(
+    () => import('./routes/talent-page'),
+    'TalentPage',
+)
 
 export const rootRoute: string = (
     EnvironmentConfig.SUBDOMAIN === AppSubdomain.talentSearch ? '' : `/${AppSubdomain.talentSearch}`
@@ -17,6 +21,7 @@ export const rootRoute: string = (
 export const TALENT_SEARCH_PATHS = {
     results: `${rootRoute}/results`,
     root: rootRoute,
+    talent: `${rootRoute}/talent`,
 }
 
 export const toolTitle: string = ToolTitle.talentSearch
@@ -32,6 +37,10 @@ export const talentSearchRoutes: ReadonlyArray<PlatformRoute> = [
             {
                 element: <SearchResultsPage />,
                 route: '/results',
+            },
+            {
+                element: <TalentPage />,
+                route: '/talent/:memberHandle',
             },
         ],
         domain: AppSubdomain.talentSearch,
