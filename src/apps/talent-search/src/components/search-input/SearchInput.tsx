@@ -1,4 +1,5 @@
 import { FC, useMemo } from 'react'
+import classNames from 'classnames'
 
 import { IconOutline, InputMultiselectOption } from '~/libs/ui'
 import { EmsiSkill, EmsiSkillSources, InputSkillSelector, Skill } from '~/libs/shared'
@@ -28,6 +29,15 @@ const SearchInput: FC<SearchInputProps> = props => {
         })))
     }
 
+    const searchIcon = useMemo(() => (
+        <div
+            className={classNames(styles.searchIcon, !emsiSkills.length && styles.disabled)}
+            onClick={props.onSearch}
+        >
+            <IconOutline.SearchIcon />
+        </div>
+    ), [props.onSearch, emsiSkills])
+
     return (
         <InputSkillSelector
             className={props.className}
@@ -35,7 +45,7 @@ const SearchInput: FC<SearchInputProps> = props => {
             placeholder='Enter skills you are searching for...'
             useWrapper={false}
             theme='clear'
-            dropdownIcon={<IconOutline.SearchIcon className={styles.searchIcon} />}
+            dropdownIcon={searchIcon}
             value={emsiSkills}
             onChange={onChange}
             onSubmit={props.onSearch}
