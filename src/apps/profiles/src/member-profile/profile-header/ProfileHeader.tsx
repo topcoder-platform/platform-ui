@@ -53,11 +53,6 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     }
         = useMemberTraits(props.profile.handle, { traitIds: UserTraitIds.personalization })
 
-    const openForWork: UserTrait | undefined
-        = useMemo(() => memberPersonalizationTraits?.[0]?.traits?.data?.find(
-            (trait: UserTrait) => trait.availableForGigs,
-        ), [memberPersonalizationTraits])
-
     const namesAndHandleAppearanceData: UserTrait | undefined
         = useMemo(() => memberPersonalizationTraits?.[0]?.traits?.data?.find(
             (trait: UserTrait) => trait.namesAndHandleAppearance,
@@ -113,9 +108,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     function renderOpenForWork(): JSX.Element {
         return (
             <div className={styles.profileActions}>
-                <span>
-                    {canEdit ? 'I am' : `${props.profile.firstName} is`}
-                </span>
+                <span>My status:</span>
                 <OpenForGigs canEdit={canEdit} authProfile={props.authProfile} profile={props.profile} />
                 {/* Enable this with talent search app */}
                 {/* {
@@ -208,7 +201,9 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
             )}
 
             {
-                openForWork || canEdit ? renderOpenForWork() : undefined
+                // Showing only when they can edit until we have the talent search app
+                // and enough data to make this useful
+                canEdit ? renderOpenForWork() : undefined
             }
 
             {
