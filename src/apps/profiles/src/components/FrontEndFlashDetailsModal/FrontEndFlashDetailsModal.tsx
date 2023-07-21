@@ -8,55 +8,54 @@ import {
 
 import { numberToFixed } from '../../lib'
 
-import styles from './DesignF2FDetailsModal.module.scss'
+import styles from './FrontEndFlashDetailsModal.module.scss'
 
 type WebDesignViewTypes = 'CHALLENGES DETAILS'
 
-interface DesignF2FDetailsModalProps {
-    isDesignF2FDetailsOpen: boolean
+interface FrontEndFlashDetailsModalProps {
     onClose: () => void
-    designF2FStats: MemberStats | undefined
+    froneEndFlashStats: MemberStats | undefined
 }
 
-const DesignF2FDetailsModal: FC<DesignF2FDetailsModalProps> = (props: DesignF2FDetailsModalProps) => {
+const FrontEndFlashDetailsModal: FC<FrontEndFlashDetailsModalProps> = (props: FrontEndFlashDetailsModalProps) => {
     const [viewType]: [WebDesignViewTypes, Dispatch<SetStateAction<WebDesignViewTypes>>]
         = useState<WebDesignViewTypes>('CHALLENGES DETAILS')
 
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isDesignF2FDetailsOpen}
+            open
             size='body'
-            title='DESIGN FIRST2FINISH'
+            title='Front End Flash'
         >
 
             <div className={styles.container}>
                 <div className='member-stat-header'>
                     <div>
-                        <span className='member-stat-value'>{props.designF2FStats?.wins}</span>
+                        <span className='member-stat-value'>{props.froneEndFlashStats?.wins}</span>
                         Wins
                     </div>
                     <div>
-                        <span className='member-stat-value'>{props.designF2FStats?.challenges}</span>
+                        <span className='member-stat-value'>{props.froneEndFlashStats?.challenges}</span>
                         Challenges
                     </div>
                     <div>
                         <span className='member-stat-value'>
-                            {numberToFixed(props.designF2FStats?.rank?.overallPercentile || 0)}
+                            {numberToFixed(props.froneEndFlashStats?.rank?.overallPercentile || 0)}
                             %
                         </span>
                         Percentile
                     </div>
                     <div>
                         <span className='member-stat-value'>
-                            {numberToFixed(props.designF2FStats?.screeningSuccessRate || 0)}
+                            {numberToFixed(props.froneEndFlashStats?.screeningSuccessRate || 0)}
                             %
                         </span>
                         Screening Success Rate
                     </div>
                     <div>
                         <span className='member-stat-value'>
-                            {numberToFixed(props.designF2FStats?.avgPlacement || 0)}
+                            {numberToFixed(props.froneEndFlashStats?.avgPlacement || 0)}
                         </span>
                         Average Placement
                     </div>
@@ -81,4 +80,4 @@ const DesignF2FDetailsModal: FC<DesignF2FDetailsModalProps> = (props: DesignF2FD
     )
 }
 
-export default DesignF2FDetailsModal
+export default FrontEndFlashDetailsModal

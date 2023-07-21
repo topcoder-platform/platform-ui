@@ -7,18 +7,27 @@ import { MemberStats, UserProfile, UserStats } from '~/libs/core'
 import { subTrackLabelToHumanName } from '../../../lib/helpers'
 import {
     AssemblyDetailsModal,
+    BannersIconsDetailsModal,
     BugHuntDetailsModal,
     CodeDetailsModal,
     ContentCreationDetailsModal,
     CopilotDetailsModal,
     DesignF2FDetailsModal,
     F2FDetailsModal,
+    FEDesignDetailsModal,
+    FrontEndFlashDetailsModal,
     LogoDesignDetailsModal,
     MMDetailsModal,
+    PrintPresentationDetailsModal,
+    SpecificationDetailsModal,
     SRMDetailsModal,
+    StudioOtherDetailsModal,
     TestScenariosDetailsModal,
+    TestSuitesDetailsModal,
     UIPrototypeDetailsModal,
     WebDesignDetailsModal,
+    WidgetMobileScreenDetailsModal,
+    WireframesDetailsModal,
 } from '../../../components'
 
 import { ChallengeWin } from './ChallengeWin'
@@ -50,6 +59,24 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
         = props.memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'BUG_HUNT')
     const testScenStats: MemberStats | undefined
         = props.memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'TEST_SCENARIOS')
+    const wireframesStats: MemberStats | undefined
+        = props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'WIREFRAMES')
+    const frontEndFlashStats: MemberStats | undefined
+        = props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'FRONT_END_FLASH')
+    const printPresentationStats: MemberStats | undefined
+        = props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'PRINT_OR_PRESENTATION')
+    const studioOtherStats: MemberStats | undefined
+        = props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'STUDIO_OTHER')
+    const feDesignStats: MemberStats | undefined
+        = props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'APPLICATION_FRONT_END_DESIGN')
+    const bannersIconsStats: MemberStats | undefined
+        = props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'BANNERS_OR_ICONS')
+    const widgetMobileStats: MemberStats | undefined
+        = props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'WIDGET_OR_MOBILE_SCREEN_DESIGN')
+    const testSuitesStats: MemberStats | undefined
+        = props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'TEST_SUITES')
+    const specStats: MemberStats | undefined
+        = props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'SPECIFICATION')
 
     const [isDesignF2FsDetailsOpen, setIsDesignF2FsDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -75,6 +102,25 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
     const [isTestScenDetailsOpen, setIsTestScenDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
     const [isCopilotDetailsOpen, setIsCopilotDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [isWireframesDetailsOpen, setIsWireframesDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [isFrontEndFlashDetailsOpen, setIsFrontEndFlashDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [isPrintPresentationDetailsOpen, setIsPrintPresentationDetailsOpen]: [
+        boolean, Dispatch<SetStateAction<boolean>>
+    ] = useState<boolean>(false)
+    const [isStudioOtherDetailsOpen, setIsStudioOtherDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [isFEDesignDetailsOpen, setIsFEDesignDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [isBannersIconsDetailsOpen, setisBannersIconsDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [isWidgetMobileDetailsOpen, setIsWidgetMobileDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [isTestSuitesDetailsOpen, setIsTestSuitesDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [isSpecificationDetailsOpen, setIsSpecificationDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
     function handleShowDSModal(): void {
@@ -120,14 +166,37 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
             case 'COPILOT':
                 setIsCopilotDetailsOpen(!isCopilotDetailsOpen)
                 break
+            case 'WIREFRAMES':
+                setIsWireframesDetailsOpen(!isWireframesDetailsOpen)
+                break
+            case 'FRONT_END_FLASH':
+                setIsFrontEndFlashDetailsOpen(!isFrontEndFlashDetailsOpen)
+                break
+            case 'PRINT_OR_PRESENTATION':
+                setIsPrintPresentationDetailsOpen(!isPrintPresentationDetailsOpen)
+                break
+            case 'STUDIO_OTHER':
+                setIsStudioOtherDetailsOpen(!isStudioOtherDetailsOpen)
+                break
+            case 'APPLICATION_FRONT_END_DESIGN':
+                setIsFEDesignDetailsOpen(!isFEDesignDetailsOpen)
+                break
+            case 'BANNERS_OR_ICONS':
+                setisBannersIconsDetailsOpen(!isBannersIconsDetailsOpen)
+                break
+            case 'WIDGET_OR_MOBILE_SCREEN_DESIGN':
+                setIsWidgetMobileDetailsOpen(!isWidgetMobileDetailsOpen)
+                break
+            case 'TEST_SUITES':
+                setIsTestSuitesDetailsOpen(!isTestSuitesDetailsOpen)
+                break
+            case 'SPECIFICATION':
+                setIsSpecificationDetailsOpen(!isSpecificationDetailsOpen)
+                break
             // TODO: modal views for the following subtracks
             // are those all the subtracks?
             // case 'CONCEPTUALIZATION':
             //     return 'Conceptualization'
-            // case 'SPECIFICATION':
-            //     return 'Specification'
-            // case 'TEST_SUITES':
-            //     return 'Test Suites'
             // case 'COPILOT_POSTING':
             //     return 'Copilot Posting'
             default: break
@@ -304,6 +373,69 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                     isCopilotDetailsOpen={isCopilotDetailsOpen}
                     onClose={bind(handleChallengeWinModalToggle, this, 'COPILOT')}
                     copilotDetails={props.memberStats?.COPILOT}
+                />
+            )}
+
+            {isWireframesDetailsOpen && (
+                <WireframesDetailsModal
+                    onClose={bind(handleChallengeWinModalToggle, this, 'WIREFRAMES')}
+                    wireframesStats={wireframesStats}
+                />
+            )}
+
+            {isFrontEndFlashDetailsOpen && (
+                <FrontEndFlashDetailsModal
+                    onClose={bind(handleChallengeWinModalToggle, this, 'FRONT_END_FLASH')}
+                    froneEndFlashStats={frontEndFlashStats}
+                />
+            )}
+
+            {isPrintPresentationDetailsOpen && (
+                <PrintPresentationDetailsModal
+                    onClose={bind(handleChallengeWinModalToggle, this, 'PRINT_OR_PRESENTATION')}
+                    printPresentationStats={printPresentationStats}
+                />
+            )}
+
+            {isStudioOtherDetailsOpen && (
+                <StudioOtherDetailsModal
+                    onClose={bind(handleChallengeWinModalToggle, this, 'STUDIO_OTHER')}
+                    studioOtherStats={studioOtherStats}
+                />
+            )}
+
+            {isFEDesignDetailsOpen && (
+                <FEDesignDetailsModal
+                    onClose={bind(handleChallengeWinModalToggle, this, 'APPLICATION_FRONT_END_DESIGN')}
+                    feDesignStats={feDesignStats}
+                />
+            )}
+
+            {isBannersIconsDetailsOpen && (
+                <BannersIconsDetailsModal
+                    onClose={bind(handleChallengeWinModalToggle, this, 'BANNERS_OR_ICONS')}
+                    bannersIconsStats={bannersIconsStats}
+                />
+            )}
+
+            {isWidgetMobileDetailsOpen && (
+                <WidgetMobileScreenDetailsModal
+                    onClose={bind(handleChallengeWinModalToggle, this, 'WIDGET_OR_MOBILE_SCREEN_DESIGN')}
+                    widgetMobileStats={widgetMobileStats}
+                />
+            )}
+
+            {isTestSuitesDetailsOpen && (
+                <TestSuitesDetailsModal
+                    onClose={bind(handleChallengeWinModalToggle, this, 'TEST_SUITES')}
+                    testSuitesStats={testSuitesStats}
+                />
+            )}
+
+            {isSpecificationDetailsOpen && (
+                <SpecificationDetailsModal
+                    onClose={bind(handleChallengeWinModalToggle, this, 'SPECIFICATION')}
+                    specStats={specStats}
                 />
             )}
 

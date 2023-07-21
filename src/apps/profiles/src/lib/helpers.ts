@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import { UserProfile } from '~/libs/core'
 
 declare global {
@@ -44,6 +45,28 @@ export function subTrackLabelToHumanName(label: string): string {
             return 'Content Creation'
         case 'COPILOT_POSTING':
             return 'Copilot Posting'
+        case 'DESIGN':
+            return 'Design'
+        case 'WEB_DESIGNS':
+            return 'Web Design'
+        case 'WIREFRAMES':
+            return 'Wireframes'
+        case 'FRONT_END_FLASH':
+            return 'Front End Flash'
+        case 'PRINT_OR_PRESENTATION':
+            return 'Print or Presentation'
+        case 'STUDIO_OTHER':
+            return 'Studio Other'
+        case 'APPLICATION_FRONT_END_DESIGN':
+            return 'Application Front End Design'
+        case 'BANNERS_OR_ICONS':
+            return 'Banners or Icons'
+        case 'WIDGET_OR_MOBILE_SCREEN_DESIGN':
+            return 'Widget or Mobile Screen Design'
+        case 'LOGO_DESIGN':
+            return 'Logo Design'
+        case 'DESIGN_FIRST_2_FINISH':
+            return 'Design First2Finish'
         default: return label
     }
 
