@@ -39,5 +39,14 @@
     .rolesWrap {
         display: flex;
         align-items: center;
+        padding: $sp-4;
+        background-image: linear-gradient(to right, #652385, #8C384C);
+        color: $tc-white;
+        border-radius: 8px;
+        margin: $sp-4 0;
+
+        @include ltelg {
+            margin-bottom: 0;
+        }
     }
 }

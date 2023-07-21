@@ -37,7 +37,7 @@ const HowSkillsWorkModal: FC<HowSkillsWorkModalProps> = (props: HowSkillsWorkMod
                             by completing opportunities on the platform
                         </li>
                         <li>Topcoder tracks and labels these skills, displaying what skills have been proven</li>
-                        <li>The more opportunities our experts complete the higher they rate for associated skills</li>
+                        <li>The more opportunities you complete the higher you rate for associated skills</li>
                     </ul>
                     <p>
                         You can also self-proclaim skills that have not yet been proven.
