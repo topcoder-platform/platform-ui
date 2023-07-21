@@ -63,7 +63,7 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
             {
                 isCopilot && (
                     <div className={styles.rolesWrap}>
-                        <p className='body-main-bold'>Special Roles:&nbsp;</p>
+                        <p className='body-main-medium'>Topcoder Special Roles:&nbsp;</p>
                         <p>Copilot</p>
                     </div>
                 )
