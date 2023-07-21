@@ -55,7 +55,9 @@ const WebDesignDetailsModal: FC<WebDesignDetailsModalProps> = (props: WebDesignD
                         Screening Success Rate
                     </div>
                     <div>
-                        <span className='member-stat-value'>{props.webDesignStats?.avgPlacement}</span>
+                        <span className='member-stat-value'>
+                            {numberToFixed(props.webDesignStats?.avgPlacement || 0)}
+                        </span>
                         Average Placement
                     </div>
                 </div>
