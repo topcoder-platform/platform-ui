@@ -3,10 +3,11 @@ import {
     FC,
     KeyboardEvent,
     ReactNode,
+    Ref,
     useMemo,
     useRef,
 } from 'react'
-import { noop } from 'lodash'
+import { get, noop } from 'lodash'
 import { components, SelectInstance } from 'react-select'
 import AsyncSelect from 'react-select/async'
 import classNames from 'classnames'
@@ -47,6 +48,7 @@ export interface InputMultiselectProps {
     readonly useWrapper?: boolean
     readonly value?: InputMultiselectOption[]
     readonly onSubmit?: () => void
+    readonly inputRef?: Ref<any>
 }
 
 const MultiValueRemove: FC = (props: any) => (
@@ -80,7 +82,7 @@ const valueContainer = (additionalPlaceholder: string): FC => (props: any) => (
     </components.ValueContainer>
 )
 
-const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProps) => {
+const InputMultiselect: FC<InputMultiselectProps> = props => {
     const asynSelectRef = useRef<any>()
 
     function handleOnChange(options: readonly InputMultiselectOption[]): void {
@@ -90,7 +92,7 @@ const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProp
     }
 
     function handleKeyPress(ev: KeyboardEvent<HTMLDivElement>): void {
-        const state = (asynSelectRef.current?.state ?? {}) as SelectInstance['state']
+        const state = (get(props.inputRef ?? asynSelectRef, 'current.state') ?? {}) as SelectInstance['state']
         const isSelectingOptionItem = state.focusedOption
         const hasValue = state.selectValue?.length > 0
         if (ev.key !== 'Enter' || isSelectingOptionItem || !hasValue) {
@@ -118,7 +120,7 @@ const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProp
                     props.useWrapper === false && styles.multiSelectWrap,
                 )
             }
-            ref={asynSelectRef}
+            ref={props.inputRef ?? asynSelectRef}
             classNamePrefix={styles.ms}
             unstyled
             isMulti
