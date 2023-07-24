@@ -1,8 +1,9 @@
-import { FC, ReactNode, useCallback } from 'react'
+import { FC, ReactNode, useCallback, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { IconOutline } from '~/libs/ui'
-import { Skill } from '~/libs/shared'
+
+import { isSkillVerified, Skill } from '../../services'
 
 import styles from './SkillPill.module.scss'
 
@@ -10,16 +11,20 @@ export interface SkillPillProps {
     children?: ReactNode
     onClick?: (skill: Skill) => void
     selected?: boolean
-    skill: {name: string}
-    theme?: 'dark' | 'verified' | 'light' | 'etc'
-    verified?: boolean
+    skill: Pick<Skill, 'name'|'skillSources'>
+    theme?: 'dark' | 'verified' | 'presentation' | 'etc'
 }
 
 const SkillPill: FC<SkillPillProps> = props => {
+    const isVerified = useMemo(() => (
+        isSkillVerified({ skillSources: props.skill.skillSources ?? [] })
+    ), [props.skill])
+
     const className = classNames(
         styles.pill,
+        props.onClick && styles.interactive,
         props.selected && styles.selected,
-        styles[`theme-${props.verified ? 'verified' : (props.theme ?? 'light')}`],
+        styles[`theme-${isVerified ? 'verified' : (props.theme ?? 'presentation')}`],
     )
 
     const handleClick = useCallback(() => props.onClick?.call(undefined, props.skill as Skill), [
@@ -35,7 +40,7 @@ const SkillPill: FC<SkillPillProps> = props => {
                 {props.skill.name}
                 {props.children}
             </span>
-            {props.verified && <IconOutline.CheckCircleIcon />}
+            {isVerified && <IconOutline.CheckCircleIcon />}
         </div>
     )
 }

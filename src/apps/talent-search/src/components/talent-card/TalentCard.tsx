@@ -1,15 +1,15 @@
-import { CSSProperties, FC } from 'react'
+import { CSSProperties, FC, useMemo } from 'react'
 import { orderBy } from 'lodash'
 import { Link } from 'react-router-dom'
 import codes from 'country-calling-code'
 
 import { IconSolid } from '~/libs/ui'
-import { EmsiSkill, isSkillVerified } from '~/libs/shared'
+import { EmsiSkill, isSkillVerified, Skill, SkillPill } from '~/libs/shared'
 
 import { MatchBar } from '../match-bar'
-import { SkillPill } from '../skill-pill'
 import { Member } from '../../lib/models'
 import { TALENT_SEARCH_PATHS } from '../../talent-search.routes'
+import { useIsMatchingSkill } from '../../lib/utils'
 
 import styles from './TalentCard.module.scss'
 
@@ -23,7 +23,7 @@ const getAddrString = (city: string, country: string): string => (
 )
 
 interface TalentCardProps {
-    isMatchingSkill: (skill: EmsiSkill) => boolean
+    queriedSkills: Skill[]
     member: Member
     match?: number
 }
@@ -31,17 +31,24 @@ interface TalentCardProps {
 const TalentCard: FC<TalentCardProps> = props => {
     const talentRoute = `${TALENT_SEARCH_PATHS.talent}/${props.member.handle}`
 
+    const isMatchingSkill = useIsMatchingSkill(props.queriedSkills)
+
     const visibleSkills = orderBy(
         props.member.emsiSkills,
-        [props.isMatchingSkill, isSkillVerified],
+        [isMatchingSkill, isSkillVerified],
         ['desc', 'desc'],
     )
         .slice(0, 6) as EmsiSkill[]
 
     const hiddenSkills = props.member.emsiSkills.length - visibleSkills.length
 
+    const matchState = useMemo(() => ({
+        matchValue: props.match,
+        queriedSkills: props.queriedSkills,
+    }), [props.match, props.queriedSkills])
+
     return (
-        <Link to={talentRoute} className={styles.wrap}>
+        <Link to={talentRoute} className={styles.wrap} state={matchState}>
             <div
                 className={styles.profilePic}
                 style={{ '--background-image-url': `url(${props.member.photoURL})` } as CSSProperties}
@@ -81,9 +88,8 @@ const TalentCard: FC<TalentCardProps> = props => {
                     {visibleSkills.map(skill => (
                         <SkillPill
                             key={skill.skillId}
-                            theme={props.isMatchingSkill(skill) ? 'verified' : 'dark'}
+                            theme={isMatchingSkill(skill) ? 'verified' : 'dark'}
                             skill={skill}
-                            verified={isSkillVerified(skill)}
                         />
                     ))}
                     {hiddenSkills > 0 && (

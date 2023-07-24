@@ -1,0 +1,75 @@
+@import "@libs/ui/styles/includes";
+
+.wrap {
+    width: 100%;
+}
+
+.highlightWrap {
+
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+    padding: $sp-6;
+
+    border-radius: $sp-2;
+    border: 2px solid $turq-100;
+    background: $turq-15;
+
+    color: #073D2E;
+}
+
+.matchPerc {
+    width: 128px;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    background: $turq-75;
+    color: #073D2E;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+    strong {
+        font-weight: 900;
+        font-size: 32px;
+        line-height: 38px;
+    }
+
+    span {
+        font-weight: 900;
+        font-size: 20px;
+        line-height: 24px;
+    }
+}
+
+.infoWrap {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-1;
+}
+
+.skillsList {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+
+    flex-wrap: wrap;
+}
+
+.missingSkills {
+    margin-top: $sp-1;
+    > span:last-child {
+        color: $turq-180;
+        margin-left: $sp-1;
+    }
+}
+
+.additionalSkills {
+    margin-top: $sp-6;
+
+    .skillsList {
+        margin-top: $sp-6;
+    }
+}

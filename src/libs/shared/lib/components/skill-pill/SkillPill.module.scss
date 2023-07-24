@@ -1,7 +1,6 @@
 @import "@libs/ui/styles/includes";
 
 .pill {
-    cursor: pointer;
     border-radius: 40px;
     color: $tc-white;
     border: 1px solid $tc-white;
@@ -12,25 +11,34 @@
     align-items: center;
     gap: $sp-1;
 
-    &:hover {
-        background-color: rgba($tc-white, 0.1);
-    }
+    &.interactive {
+        cursor: pointer;
 
-    &.selected{
-        background-color: rgba($tc-white, 0.3);
+        &:hover {
+            background-color: rgba($tc-white, 0.1);
+        }
+
+        &.selected{
+            background-color: rgba($tc-white, 0.3);
+        }
     }
 
     .text {
         display: block;
-        line-height: 16px;
         text-align: left;
     }
 }
 
 .theme {
+    .pill:not(&-presentation) .text {
+        font-size: 14px;
+        line-height: 16px;
+    }
+
     &-verified {
         border: 2px solid $turq-120;
         color: $black-100;
+        background-color: $tc-white;
 
         svg {
             flex: 0 0 auto;
@@ -42,6 +50,7 @@
     &-dark {
         border-color: $black-20;
         color: $black-100;
+        background-color: $tc-white;
     }
 
     &-etc {

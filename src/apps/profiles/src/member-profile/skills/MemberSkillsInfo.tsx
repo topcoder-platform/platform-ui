@@ -1,12 +1,13 @@
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import classNames from 'classnames'
 
 import { isVerifiedSkill, UserEMSISkill, UserProfile } from '~/libs/core'
-import { Button, IconOutline } from '~/libs/ui'
+import { Skill, SkillPill } from '~/libs/shared'
+import { Button } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes, TALENT_SEARCH_MODE_QUERY_PARAM } from '../../config'
+import { MemberProfileContextValue, useMemberProfileContext } from '../MemberProfile.context'
 
 import { ModifySkillsModal } from './ModifySkillsModal'
 import { HowSkillsWorkModal } from './HowSkillsWorkModal'
@@ -24,6 +25,8 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
     const talentSearchQuery: string | null = queryParams.get(TALENT_SEARCH_MODE_QUERY_PARAM)
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
+
+    const { skillsRenderer }: MemberProfileContextValue = useMemberProfileContext()
 
     const memberEMSISkills: UserEMSISkill[] = useMemo(
         () => (props.profile.emsiSkills || [])
@@ -104,40 +107,35 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
             </div>
 
             <div className={styles.skillsWrap}>
-                {memberEMSISkills?.length > 0
-                    ? memberEMSISkills.slice(0, skillsToRender)
-                        .map((memberEMSISkill: UserEMSISkill) => (
-                            <div
-                                className={classNames(
-                                    styles.skillItem,
-                                    isVerifiedSkill(memberEMSISkill.skillSources) ? styles.verifiedSkillItem : '',
-                                )}
-                                key={memberEMSISkill.id}
-                            >
-                                {memberEMSISkill.name}
-                                {isVerifiedSkill(memberEMSISkill.skillSources) && <IconOutline.CheckCircleIcon />}
-                            </div>
-                        ))
-                    : (
-                        <EmptySection
-                            title='Topcoder verifies and tracks skills as our members complete projects and challenges.'
-                            wide
-                            selfMessage='Adding at least three skills will increase your visibility with customers.'
-                            isSelf={canEdit}
-                        >
-                            This member has not yet provided skills, but check back soon as their skills will grow as
-                            they complete project tasks.
-                        </EmptySection>
-                    )}
-                {
-                    memberEMSISkills?.length > skillsToRender && (
-                        <Button
-                            primary
-                            label={`+ ${memberEMSISkills.length - skillsToRender}`}
-                            onClick={handleExpandSkillsClick}
-                        />
-                    )
-                }
+                {memberEMSISkills?.length > 0 && (
+                    skillsRenderer
+                        ? skillsRenderer(props.profile.emsiSkills)
+                        : memberEMSISkills.slice(0, skillsToRender)
+                            .map((memberEMSISkill: UserEMSISkill) => (
+                                <SkillPill
+                                    skill={memberEMSISkill as unknown as Skill}
+                                    key={memberEMSISkill.id}
+                                />
+                            ))
+                )}
+                {!skillsRenderer && memberEMSISkills?.length > skillsToRender && (
+                    <Button
+                        primary
+                        label={`+ ${memberEMSISkills.length - skillsToRender}`}
+                        onClick={handleExpandSkillsClick}
+                    />
+                )}
+                {!memberEMSISkills?.length && (
+                    <EmptySection
+                        title='Topcoder verifies and tracks skills as our members complete projects and challenges.'
+                        wide
+                        selfMessage='Adding at least three skills will increase your visibility with customers.'
+                        isSelf={canEdit}
+                    >
+                        This member has not yet provided skills, but check back soon as their skills will grow as
+                        they complete project tasks.
+                    </EmptySection>
+                )}
             </div>
             {canEdit && !memberEMSISkills?.length && (
                 <AddButton
