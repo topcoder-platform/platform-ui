@@ -25,7 +25,7 @@
                 width: 24px;
                 height: 24px;
 
-                path {
+                path:not([stroke-linecap]) {
                     fill: #333333;
                 }
             }

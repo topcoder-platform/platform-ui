@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import { bind, trim } from 'lodash'
 import classNames from 'classnames'
@@ -23,6 +23,12 @@ interface MemberAddressProps {
 const MemberAddress: FC<MemberAddressProps> = (props: MemberAddressProps) => {
     const countryLookup: CountryLookup[] | undefined
         = useCountryLookup()
+
+    const contries = useMemo(() => (countryLookup || []).map((cl: CountryLookup) => ({
+        label: cl.country,
+        value: cl.countryCode,
+    }))
+        .sort((a, b) => a.label.localeCompare(b.label)), [countryLookup])
 
     const [formValues, setFormValues]: [any, Dispatch<any>] = useState({
         country: props.profile.homeCountryCode || props.profile.competitionCountryCode,
@@ -162,10 +168,7 @@ const MemberAddress: FC<MemberAddressProps> = (props: MemberAddressProps) => {
                         value={formValues.zip}
                     />
                     <InputSelect
-                        options={(countryLookup || []).map((cl: CountryLookup) => ({
-                            label: cl.country,
-                            value: cl.countryCode,
-                        }))}
+                        options={contries}
                         value={formValues.country}
                         onChange={bind(handleFormValueChange, this, 'country')}
                         name='country'

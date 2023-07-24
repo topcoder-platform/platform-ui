@@ -27,58 +27,88 @@
         align-items: center;
         justify-content: space-between;
 
-        & > div:nth-child(1) {
+        &>div:nth-child(1) {
             margin-right: $sp-2;
-            min-width: 100px;
+            min-width: 150px;
         }
 
-        & > div:nth-child(2) {
+        &>div:nth-child(2) {
             flex: 1;
         }
+    }
 
-        .formCTAs {
-            display: flex;
-            align-items: center;
-            margin-bottom: $sp-4;
-
-            svg {
-                width: 32px;
-                height: 32px;
-            }
-        }
+    .formCTAs {
+        margin-top: $sp-2;
     }
 }
 
 .links {
-    margin-bottom: $sp-15;
+    margin-bottom: $sp-4;
+    padding: $sp-4 0 $sp-2;
+    border-bottom: 1px solid $black-20;
+
+    @include ltelg {
+        display: flex;
+        flex-direction: column;
+    }
 
     &.noLinks {
         margin-bottom: 0;
+        padding: 0;
+        border: none;
     }
 
     .linkItemWrap {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
         margin-bottom: $sp-2;
-        border-radius: 8px;
-        padding: $sp-2;
-        border: 1px solid $black-10;
+
+        >svg {
+            width: 24px;
+            height: 24px;
+
+            path:not([stroke-linecap]) {
+                fill: $black-100;
+            }
+
+        }
 
         .linkItem {
+            border-radius: 4px;
+            padding: $sp-2 $sp-4;
+            border: 1px solid $black-40;
+            flex: 1;
             display: flex;
             align-items: center;
+            justify-content: space-between;
+            margin-left: $sp-4;
 
-            p {
-                @include ltelg {
+            .linkLabelWrap {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+
+                small {
+                    font-size: 11px;
+                    line-height: 11px;
+                    font-weight: $font-weight-medium;
+                    color: $turq-160;
+                    margin-bottom: $sp-1;
+                }
+
+                p {
                     word-break: break-all;
                 }
             }
 
-            svg {
-                width: 16px;
-                height: 16px;
-                margin-right: $sp-2;
+            button {
+                padding-right: 0;
+
+                svg {
+                    width: 24px;
+                    height: 24px;
+                }
             }
         }
     }
