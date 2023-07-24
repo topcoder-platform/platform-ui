@@ -5,7 +5,6 @@ import { AppSubdomain, ToolTitle } from '~/config/constants'
 import { lazyLoad, LazyLoadedComponent, PlatformRoute, UserRole } from '~/libs/core'
 
 const PageOnboarding: LazyLoadedComponent = lazyLoad(() => import('./pages/onboarding/index'), 'OnboardingWrapper')
-const PageStart: LazyLoadedComponent = lazyLoad(() => import('./pages/start/index'), 'PageStart')
 const PageSkills: LazyLoadedComponent = lazyLoad(() => import('./pages/skills/index'), 'PageSkills')
 const PageOpenToWork: LazyLoadedComponent = lazyLoad(() => import('./pages/open-to-work/index'), 'PageOpenToWork')
 const PageWorks: LazyLoadedComponent = lazyLoad(() => import('./pages/works/index'), 'PageWorks')
@@ -13,10 +12,6 @@ const PageEducations: LazyLoadedComponent = lazyLoad(() => import('./pages/educa
 const PagePersonalization: LazyLoadedComponent = lazyLoad(
     () => import('./pages/personalization/index'),
     'PagePersonalization',
-)
-const PageAccountDetails: LazyLoadedComponent = lazyLoad(
-    () => import('./pages/account-details/index'),
-    'PageAccountDetails',
 )
 const toolTitle: string = ToolTitle.onboarding
 
@@ -30,14 +25,6 @@ export const onboardingRoutes: ReadonlyArray<PlatformRoute> = [
     {
         authRequired: true,
         children: [
-            {
-                element: <Navigate to='./skills' />,
-                route: '/',
-            },
-            {
-                element: <PageStart />,
-                route: '/start',
-            },
             {
                 element: <PageSkills />,
                 route: '/skills',
@@ -59,8 +46,8 @@ export const onboardingRoutes: ReadonlyArray<PlatformRoute> = [
                 route: '/personalization',
             },
             {
-                element: <PageAccountDetails />,
-                route: '/account-details',
+                element: <Navigate to='./skills' />,
+                route: '/*',
             },
         ],
         domain: AppSubdomain.onboarding,
