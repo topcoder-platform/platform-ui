@@ -23,7 +23,9 @@
 .detailsContainer {
     flex: 1 1 auto;
 
-    padding: $sp-5 $sp-45 0 0;
+    padding: $sp-5 $sp-45 $sp-45 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .talentInfo {
@@ -31,6 +33,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: $sp-3;
+    margin-bottom: $sp-45;
 
     &Name {
         font-size: 30px;
@@ -54,7 +57,7 @@
 
 .matchBar {
     max-width: 330px;
-    margin-top: $sp-4;
+    margin-top: auto;
 }
 
 .skillsContainer {
