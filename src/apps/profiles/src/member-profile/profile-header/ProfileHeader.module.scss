@@ -11,7 +11,6 @@
         padding-bottom: 150px;
         flex-direction: column;
     }
-
     .photoWrap {
         position: relative;
         margin-right: 60px;
@@ -28,16 +27,6 @@
             height: 300px;
             border: 12px solid $tc-white;
             border-radius: 50%;
-            background: linear-gradient(90deg, #075F96, #038664);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-
-            > span {
-                font-size: 100px;
-                line-height: 100px;
-                font-family: $font-barlow;
-            }
 
             @include ltelg {
                 width: 250px;

@@ -1,10 +1,10 @@
-import { CSSProperties, FC } from 'react'
+import { FC } from 'react'
 import { orderBy } from 'lodash'
 import { Link } from 'react-router-dom'
 import codes from 'country-calling-code'
 
 import { IconSolid } from '~/libs/ui'
-import { EmsiSkill, isSkillVerified } from '~/libs/shared'
+import { EmsiSkill, isSkillVerified, ProfilePicture } from '~/libs/shared'
 
 import { MatchBar } from '../match-bar'
 import { SkillPill } from '../skill-pill'
@@ -44,16 +44,7 @@ const TalentCard: FC<TalentCardProps> = props => {
     return (
         <Link to={talentRoute} className={styles.wrap}>
             <div className={styles.topWrap}>
-                <div
-                    className={styles.profilePic}
-                    style={{ '--background-image-url': `url(${props.member.photoURL})` } as CSSProperties}
-                >
-                    <span className={styles.profileInitials}>
-                        {props.member.firstName.slice(0, 1)}
-                        {props.member.lastName.slice(0, 1)}
-                    </span>
-                    <img src={props.member.photoURL} alt='' />
-                </div>
+                <ProfilePicture member={props.member} className={styles.profilePic} />
                 <div className={styles.detailsContainer}>
                     <div className={styles.talentInfo}>
                         <div className={styles.talentInfoName}>
