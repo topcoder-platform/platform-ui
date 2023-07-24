@@ -8,7 +8,6 @@ import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { notifyUniNavi } from '../../lib'
 
 import { ModifyLanguagesModal } from './ModifyLanguagesModal'
-import { LanguageCard } from './LanguageCard'
 import styles from './MemberLanguages.module.scss'
 
 interface MemberLanguagesProps {
@@ -74,8 +73,11 @@ const MemberLanguages: FC<MemberLanguagesProps> = (props: MemberLanguagesProps) 
             )}
             <div className={styles.languages}>
                 {
-                    memberLanguages?.map((trait: UserTrait) => (
-                        <LanguageCard trait={trait} key={`member-lan-${trait.language}`} />
+                    memberLanguages?.map((trait: UserTrait, indx: number) => (
+                        <span key={`member-lan-${trait.language}`}>
+                            {trait.language}
+                            {indx < memberLanguages.length - 1 && ', '}
+                        </span>
                     ))
                 }
             </div>

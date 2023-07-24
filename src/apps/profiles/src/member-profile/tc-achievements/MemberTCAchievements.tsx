@@ -29,6 +29,10 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
         (badge: UserBadge) => /TCO.*Champion/.test(badge.org_badge.badge_name),
     ).length || 0, [memberBadges])
 
+    const tcoQualifications: number = useMemo(() => memberBadges?.rows.filter(
+        (badge: UserBadge) => /TCO.*Finalist/.test(badge.org_badge.badge_name),
+    ).length || 0, [memberBadges])
+
     const isCopilot: boolean
         = useMemo(() => !!memberStats?.COPILOT, [memberStats])
 
@@ -36,20 +40,21 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
     //     console.log('handleOpenTCAchievements')
     // }
 
-    return memberStats?.wins || tcoWins ? (
+    return memberStats?.wins || tcoWins || tcoQualifications ? (
         <div className={styles.container}>
-            <h3>Achievements @ Topcoder</h3>
+            <p className='body-large-medium'>Achievements @ Topcoder</p>
 
             <div className={styles.achievementsWrap}>
                 {
-                    tcoWins > 0 && (
-                        <TCOWinsBanner tcoWins={tcoWins} />
+                    (tcoWins > 0 || tcoQualifications > 0) && (
+                        <TCOWinsBanner tcoWins={tcoWins} tcoQualifications={tcoQualifications} />
                     )
                 }
                 {
                     !!memberStats?.wins && memberStats.wins > 0 && (
                         <ChallengeWinsBanner
                             memberStats={memberStats}
+                            profile={props.profile}
                         />
                     )
                 }
@@ -58,7 +63,7 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
             {
                 isCopilot && (
                     <div className={styles.rolesWrap}>
-                        <p className='body-main-bold'>Special Roles:&nbsp;</p>
+                        <p className='body-main-medium'>Topcoder Special Roles:&nbsp;</p>
                         <p>Copilot</p>
                     </div>
                 )

@@ -8,17 +8,45 @@
     padding: $sp-8 $sp-8 $sp-2;
     border-radius: 16px;
 
+    @include ltelg {
+        padding: $sp-4;
+    }
+
+    >p {
+        text-align: left;
+    }
+
     .achievementsWrap {
         display: flex;
         margin: $sp-4 0 $sp-2;
+        align-items: flex-start;
+
+        @include ltelg {
+            flex-direction: column;
+
+        }
 
         > div:not(:last-child) {
             margin-right: $sp-8;
+
+            @include ltelg {
+                margin-right: 0;
+                margin-bottom: $sp-8;
+            }
         }
     }
 
     .rolesWrap {
         display: flex;
         align-items: center;
+        padding: $sp-4;
+        background-image: linear-gradient(to right, #652385, #8C384C);
+        color: $tc-white;
+        border-radius: 8px;
+        margin: $sp-4 0;
+
+        @include ltelg {
+            margin-bottom: 0;
+        }
     }
 }

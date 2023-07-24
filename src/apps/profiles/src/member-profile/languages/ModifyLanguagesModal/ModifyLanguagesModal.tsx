@@ -1,4 +1,4 @@
-import { bind, sortBy } from 'lodash'
+import { bind, compact, sortBy, uniq, values } from 'lodash'
 import { Dispatch, FC, MutableRefObject, SetStateAction, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
@@ -39,43 +39,9 @@ const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLangua
     const [isFormChanged, setIsFormChanged]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
-
-    const [formErrors, setFormErrors]: [
-        { [key: string]: string },
-        Dispatch<SetStateAction<{ [key: string]: string }>>
-    ]
-        = useState<{ [key: string]: string }>({})
-
-    const [selectedLanguage, setSelectedLanguage]: [
-        string | undefined,
-        Dispatch<SetStateAction<string | undefined>>
-    ]
-        = useState<string | undefined>()
-
-    const [selectedSpokenLevel, setSelectedSpokenLevel]: [
-        string | undefined,
-        Dispatch<SetStateAction<string | undefined>>
-    ]
-        = useState<string | undefined>()
-
-    const [selectedWrittenLevel, setSelectedWrittenLevel]: [
-        string | undefined,
-        Dispatch<SetStateAction<string | undefined>>
-    ]
-        = useState<string | undefined>()
-
     const languages: any = useMemo(() => sortBy(
         dropDowns.language.map(lang => ({ label: lang.label, value: lang.label })),
         'label',
-    ), [])
-
-    const spokenLevel: any = useMemo(() => dropDowns.spokenLevel.map(
-        lang => ({ label: lang.label, value: lang.label }),
-    ), [])
-
-    const writtenLevel: any = useMemo(() => dropDowns.writtenLevel.map(
-        lang => ({ label: lang.label, value: lang.label }),
     ), [])
 
     const [currentMemberLanguages, setCurrentMemberLanguages]: [
@@ -84,19 +50,42 @@ const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLangua
     ]
         = useState<UserTrait[] | undefined>(props.memberLanguages)
 
-    function handleSelectedLanguageChange(event: React.ChangeEvent<HTMLInputElement>): void {
-        setSelectedLanguage(event.target.value)
-    }
+    const [formValues, setFormValues]: [
+        { [key: string]: string | boolean | Date | undefined },
+        Dispatch<SetStateAction<{ [key: string]: string | boolean | Date | undefined }>>
+    ]
+        = useState<{ [key: number]: string | boolean | Date | undefined }>({
+            1: undefined,
+        })
 
-    function handleSelectedSpokenLevelChange(event: React.ChangeEvent<HTMLInputElement>): void {
-        setSelectedSpokenLevel(event.target.value)
-    }
-
-    function handleSelectedWrittenLevelChange(event: React.ChangeEvent<HTMLInputElement>): void {
-        setSelectedWrittenLevel(event.target.value)
+    function handleSelectedLanguageChange(key: string, event: React.ChangeEvent<HTMLInputElement>): void {
+        setFormValues({
+            ...formValues,
+            [key]: event.target.value,
+        })
+        setIsFormChanged(true)
     }
 
     function handleLanguagesSave(): void {
+        const formLanguages = uniq(compact(values(formValues)))
+
+        if (formLanguages.length) {
+            const filteredLanguages = formLanguages
+                .filter((item: any) => !currentMemberLanguages?.find((trait: UserTrait) => trait.language === item))
+
+            if (filteredLanguages.length) {
+                setCurrentMemberLanguages([
+                    ...(currentMemberLanguages || []),
+                    ...filteredLanguages.map((item: any) => ({
+                        language: item,
+                    })),
+                ])
+            }
+
+            resetForm()
+            return
+        }
+
         setIsSaving(true)
 
         methodsMap[!!props.memberLanguages ? 'update' : 'create'](props.profile.handle, [{
@@ -116,51 +105,11 @@ const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLangua
             })
     }
 
-    function handleFormAction(): void {
-        if (!selectedLanguage) {
-            setFormErrors({ selectedLanguage: 'Please select a language' })
-            return
-        }
-
-        if (!selectedSpokenLevel) {
-            setFormErrors({ selectedSpokenLevel: 'Please select a spoken level' })
-            return
-        }
-
-        if (!selectedWrittenLevel) {
-            setFormErrors({ selectedWrittenLevel: 'Please select a written level' })
-            return
-        }
-
-        if (currentMemberLanguages?.find((item: UserTrait) => item.language === selectedLanguage)) {
-            toast.info('Language already exists', { position: toast.POSITION.BOTTOM_RIGHT })
-            resetForm()
-            return
-        }
-
-        setCurrentMemberLanguages([
-            ...(currentMemberLanguages || []),
-            {
-                language: selectedLanguage,
-                spokenLevel: selectedSpokenLevel,
-                writtenLevel: selectedWrittenLevel,
-            },
-        ])
-        setIsFormChanged(true)
-        resetForm()
-    }
-
-    function handleCancelEditMode(): void {
-        resetForm()
-    }
-
     function resetForm(): void {
         formElRef.current.reset()
-        setIsEditMode(false)
-        setSelectedLanguage(undefined)
-        setSelectedSpokenLevel(undefined)
-        setSelectedWrittenLevel(undefined)
-        setFormErrors({})
+        setFormValues({
+            1: undefined,
+        })
     }
 
     function handleRemoveLanguage(trait: UserTrait): void {
@@ -170,12 +119,27 @@ const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLangua
         setIsFormChanged(true)
     }
 
+    function handleAddAdditionalLanguage(): void {
+        const keys = Object.keys(formValues)
+
+        if (keys.length < 5) {
+            setFormValues({
+                ...formValues,
+                [keys.length + 1]: undefined,
+            })
+        }
+    }
+
     return (
         <BaseModal
+            bodyClassName={styles.langModalBody}
+            classNames={{
+                modal: styles.langModal,
+            }}
             onClose={props.onClose}
             open
             size='lg'
-            title='My Languages'
+            title='Languages'
             buttons={(
                 <div className={styles.modalButtons}>
                     <Button
@@ -193,7 +157,9 @@ const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLangua
             )}
         >
             <div className={styles.container}>
-                <div className={classNames(styles.languages, currentMemberLanguages?.length ? '' : styles.noLanguages)}>
+                <p>What languages do you speak?</p>
+
+                <div className={classNames(styles.languages)}>
                     {
                         currentMemberLanguages?.map((trait: UserTrait) => (
                             <div className={styles.languageItemWrap} key={`member-lan-${trait.language}`}>
@@ -201,67 +167,37 @@ const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLangua
                                 <Button
                                     icon={IconOutline.TrashIcon}
                                     onClick={bind(handleRemoveLanguage, this, trait)}
+                                    size='lg'
                                 />
                             </div>
                         ))
                     }
                 </div>
 
-                <p>Add Languages</p>
                 <form
                     ref={formElRef}
                     className={classNames(styles.formWrap)}
                 >
                     <div className={styles.form}>
-                        <InputSelect
-                            options={languages}
-                            value={selectedLanguage}
-                            onChange={handleSelectedLanguageChange}
-                            name='languages'
-                            label='Language *'
-                            error={formErrors.selectedLanguage}
-                            placeholder='Select a Language'
-                            dirty
+                        {
+                            Object.keys(formValues)
+                                .map((key: string) => (
+                                    <InputSelect
+                                        options={languages}
+                                        value={formValues[key] as string}
+                                        onChange={bind(handleSelectedLanguageChange, this, key)}
+                                        name='languages'
+                                        label='Language'
+                                        placeholder='Select a language from the list'
+                                        key={`language-${key}`}
+                                    />
+                                ))
+                        }
+                        <Button
+                            label='+ Additional Language'
+                            secondary
+                            onClick={handleAddAdditionalLanguage}
                         />
-
-                        <InputSelect
-                            options={spokenLevel}
-                            value={selectedSpokenLevel}
-                            onChange={handleSelectedSpokenLevelChange}
-                            name='spokenLevel'
-                            label='Spoken Level *'
-                            error={formErrors.selectedSpokenLevel}
-                            placeholder='Select a Spoken Level'
-                            dirty
-                        />
-
-                        <InputSelect
-                            options={writtenLevel}
-                            value={selectedWrittenLevel}
-                            onChange={handleSelectedWrittenLevelChange}
-                            name='writtenLevel'
-                            label='Written Level *'
-                            error={formErrors.selectedWrittenLevel}
-                            placeholder='Select a Written Level'
-                            dirty
-                        />
-
-                        <div className={styles.formCTAs}>
-                            {!isEditMode && <IconOutline.PlusCircleIcon />}
-                            <Button
-                                link
-                                label={`${isEditMode ? 'Edit' : 'Add'} Language to your List`}
-                                onClick={handleFormAction}
-                            />
-                            {isEditMode && (
-                                <Button
-                                    className={styles.ctaBtnCancel}
-                                    link
-                                    label='Cancel'
-                                    onClick={handleCancelEditMode}
-                                />
-                            )}
-                        </div>
                     </div>
                 </form>
             </div>

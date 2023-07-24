@@ -1,0 +1,119 @@
+@import "@libs/ui/styles/includes";
+
+.wrap {
+    display: flex;
+    gap: $sp-10;
+
+    padding: $sp-55 $sp-8;
+    border-radius: $sp-4;
+
+    background: $tc-white;
+
+    font-family: $font-barlow;
+    color: $black-100;
+}
+
+.profilePic {
+    align-self: flex-start;
+    flex: 0 0 36%;
+
+    width: 200px;
+    max-width: 200px;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(90deg, #075f96, #038664);
+
+    &::before {
+        content: "";
+        display: block;
+        position: absolute;
+        top: -10%;
+        left: -10%;
+        z-index: -1;
+        width: 120%;
+        height: 120%;
+        background-image: var(--background-image-url);
+        background-position: center;
+        background-size: cover;
+        filter: blur(9px);
+    }
+
+    .profileInitials {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+
+        font-family: $font-barlow;
+        font-size: 72px;
+        color: $tc-white;
+    }
+
+    img {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: cover;
+
+        aspect-ratio: 1 / 1;
+        border-radius: 50%;
+    }
+}
+
+.detailsContainer {
+    flex: 1 1 auto;
+
+    padding: $sp-5 $sp-45 $sp-3 0;
+}
+
+.talentInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $sp-3;
+
+    &Name {
+        font-size: 30px;
+        line-height: 32px;
+        color: $black-100;
+    }
+
+    &Handle {
+        color: $black-60;
+    }
+
+    &Location {
+        color: $black-100;
+
+        display: flex;
+        align-items: center;
+        gap: $sp-2;
+    }
+
+}
+
+.matchBar {
+    max-width: 330px;
+    margin-top: $sp-8;
+}
+
+.skillsWrap {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+    flex-wrap: wrap;
+    margin-top: $sp-5;
+}

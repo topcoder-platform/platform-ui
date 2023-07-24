@@ -55,7 +55,9 @@ const DesignF2FDetailsModal: FC<DesignF2FDetailsModalProps> = (props: DesignF2FD
                         Screening Success Rate
                     </div>
                     <div>
-                        <span className='member-stat-value'>{props.designF2FStats?.avgPlacement}</span>
+                        <span className='member-stat-value'>
+                            {numberToFixed(props.designF2FStats?.avgPlacement || 0)}
+                        </span>
                         Average Placement
                     </div>
                 </div>

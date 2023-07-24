@@ -4,7 +4,6 @@ import { KeyedMutator } from 'swr'
 import classNames from 'classnames'
 
 import { useMemberTraits, UserProfile, UserTraitIds, UserTraits } from '~/libs/core'
-import { Button } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
@@ -77,7 +76,7 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
             <MemberRatingCard profile={props.profile} />
 
             <div className={classNames(styles.wizzardWrap, hasEmptyDescription && styles.emptyDesc)}>
-                <p className='body-large'>{memberTitleTrait?.profileSelfTitle}</p>
+                <p className='body-main-medium'>{memberTitleTrait?.profileSelfTitle}</p>
                 {canEdit && !hasEmptyDescription && (
                     <EditMemberPropertyBtn
                         onClick={handleEditClick}
@@ -93,21 +92,7 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
                             and interests with the community and customers.
                         `}
                         isSelf={canEdit}
-                    >
-                        I&apos;m a proud Topcoder member, working hard to solve some of the worlds biggest problems.
-                        <br />
-                        <br />
-                        I&apos;m excited to hear about your technology challenges and look forward to being
-                        on your next project.
-                        <br />
-                        <Button
-                            link
-                            variant='linkblue'
-                            size='lg'
-                        >
-                            Let&apos;s connect!
-                        </Button>
-                    </EmptySection>
+                    />
                     {canEdit && (
                         <AddButton
                             label='Add your bio'

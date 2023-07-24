@@ -1,5 +1,36 @@
 @import '../../../../../styles/includes';
 
+.multiselect {
+    margin: 8px -10px 0;
+}
+
+.multiSelectWrap {
+    margin: 0;
+    background: $tc-white;
+    padding: $sp-4 $sp-3;
+
+    border-radius: $sp-1;
+    &.multiselect .ms {
+        &:global(__placeholder) {
+            line-height: $sp-6;
+            color: $black-100;
+        }
+        &:global(__control) {
+            min-height: $sp-8;
+        }
+        &:global(__indicators) {
+            display: flex;
+        }
+    }
+}
+
+.additionalPlaceholder {
+    color: $black-60;
+    width: 0;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
 .multiselect .ms {
     display: block;
 
@@ -53,6 +84,7 @@
         grid-template-columns: 0 min-content;
         padding: 0;
         visibility: visible;
+        order: 999;
     }
 
     &:global(__multi-value) {
@@ -99,6 +131,7 @@
 
     &:global(__menu) {
         top: 100%;
+        left: 0;
         position: absolute;
         width: 100%;
         z-index: 1;
@@ -139,8 +172,56 @@
             color: $tc-white;
         }
     }
+    &:global(__control--is-focused) .additionalPlaceholder {
+        display: none;
+    }
 }
 
-.multiselect {
-    margin: 8px -10px 0;
+.theme-clear.multiselect .ms {
+    &:global(__placeholder) {
+        color: $black-100;
+        font-size: 16px;
+    }
+
+    &:global(__input-container) {
+        color: $black-100;
+    }
+
+    &:global(__clear-indicator) {
+        display: none;
+    }
+
+    &:global(__multi-value) {
+        background: $tc-white;
+        color: $black-20;
+        border-radius: $sp-6;
+        border: 1px solid $black-20;
+
+
+        &:global(__remove) {
+            svg {
+                display: block;
+                width: 16px;
+                height: 16px;
+                color: $black-40;
+                transition: 0.25s ease;
+            }
+            &:hover svg {
+                color: $black-100;
+            }
+        }
+        &:global(__label) {
+            color: $black-80;
+            padding: 6px $sp-3;
+            padding-right: 2px;
+            font-weight: $font-weight-normal;
+        }
+    }
+
+    &:global(__option) {
+        &:global(--is-focused) {
+            background-color: $teal-50;
+            color: $black-100;
+        }
+    }
 }

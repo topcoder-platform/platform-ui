@@ -1,15 +1,15 @@
-import { ChangeEvent, FC } from 'react'
+import { ChangeEvent, FC, ReactNode } from 'react'
 import { noop } from 'lodash'
 
-import { InputMultiselect, InputMultiselectOption } from '~/libs/ui'
+import { InputMultiselect, InputMultiselectOption, InputMultiselectThemes } from '~/libs/ui'
 
-import { autoCompleteSkills, EmsiSkill, EmsiSkillSources } from '../../services/emsi-skills'
+import { autoCompleteSkills, EmsiSkill, isSkillVerified } from '../../services/emsi-skills'
 
-const mapEmsiSkillToInputOption = (s: EmsiSkill): InputMultiselectOption => ({
-    ...s,
-    label: s.name,
-    value: s.skillId,
-    verified: s.skillSources.includes(EmsiSkillSources.challengeWin),
+const mapEmsiSkillToInputOption = (skill: EmsiSkill): InputMultiselectOption => ({
+    ...skill,
+    label: skill.name,
+    value: skill.skillId,
+    verified: isSkillVerified(skill),
 })
 
 interface Option {
@@ -28,22 +28,38 @@ const fetchSkills = (queryTerm: string): Promise<Option[]> => (
 )
 
 interface InputSkillSelectorProps {
+    readonly className?: string
+    readonly autoFocus?: boolean
     readonly limit?: number
+    readonly label?: string
     readonly loading?: boolean
-    readonly value?: EmsiSkill[]
     readonly onChange?: (event: ChangeEvent<HTMLInputElement>) => void
+    readonly placeholder?: string
+    readonly value?: EmsiSkill[]
+    readonly theme?: InputMultiselectThemes
+    readonly useWrapper?: boolean
+    readonly dropdownIcon?: ReactNode
+    readonly onSubmit?: () => void
+    readonly additionalPlaceholder?: string
 }
 
 const InputSkillSelector: FC<InputSkillSelectorProps> = props => (
     <InputMultiselect
-        label='Select Skills'
+        className={props.className}
+        autoFocus={props.autoFocus}
+        label={props.label ?? 'Select Skills'}
         limit={props.limit}
-        placeholder='Type to add a skill...'
+        placeholder={props.placeholder ?? 'Type to add a skill...'}
         onFetchOptions={fetchSkills}
         name='skills'
         onChange={props.onChange ?? noop}
         value={props.value?.map(mapEmsiSkillToInputOption)}
         loading={props.loading}
+        theme={props.theme}
+        useWrapper={props.useWrapper}
+        dropdownIcon={props.dropdownIcon}
+        onSubmit={props.onSubmit}
+        additionalPlaceholder={props.additionalPlaceholder}
     />
 )
 

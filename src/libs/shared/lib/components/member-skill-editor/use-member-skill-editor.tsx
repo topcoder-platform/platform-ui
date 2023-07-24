@@ -8,6 +8,7 @@ import {
     EmsiSkill,
     EmsiSkillSources,
     fetchMemberSkills,
+    isSkillVerified,
     updateMemberEmsiSkills,
 } from '../../services/emsi-skills'
 import { InputSkillSelector } from '../input-skill-selector'
@@ -64,7 +65,7 @@ export const useMemberSkillEditor = ({
             return
         }
 
-        if (skill.skillSources.includes(EmsiSkillSources.challengeWin)) {
+        if (isSkillVerified(skill)) {
             return
         }
 

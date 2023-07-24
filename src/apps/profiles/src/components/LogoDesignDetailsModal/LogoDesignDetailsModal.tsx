@@ -55,7 +55,9 @@ const LogoDesignDetailsModal: FC<LogoDesignDetailsModalProps> = (props: LogoDesi
                         Screening Success Rate
                     </div>
                     <div>
-                        <span className='member-stat-value'>{props.logoDesignStats?.avgPlacement}</span>
+                        <span className='member-stat-value'>
+                            {numberToFixed(props.logoDesignStats?.avgPlacement || 0)}
+                        </span>
                         Average Placement
                     </div>
                 </div>
