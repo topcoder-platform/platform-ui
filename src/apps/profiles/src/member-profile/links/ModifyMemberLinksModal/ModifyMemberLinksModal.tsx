@@ -166,7 +166,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
             onClose={props.onClose}
             open
             size='lg'
-            title='My Links'
+            title='Social Links'
             buttons={(
                 <div className={styles.modalButtons}>
                     <Button
@@ -184,18 +184,24 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
             )}
         >
             <div className={styles.container}>
+                <p>Provide links to your social accounts.</p>
+
                 <div className={classNames(styles.links, currentMemberLinks?.length ? '' : styles.noLinks)}>
                     {
                         currentMemberLinks?.map((trait: UserTrait) => (
                             <div className={styles.linkItemWrap} key={`member-link-${trait.name}`}>
+                                {renderLinkIcon(trait.name)}
                                 <div className={styles.linkItem}>
-                                    {renderLinkIcon(trait.name)}
-                                    <p>{trait.url}</p>
+                                    <div className={styles.linkLabelWrap}>
+                                        <small>{trait.name}</small>
+                                        <p>{trait.url}</p>
+                                    </div>
+                                    <Button
+                                        size='lg'
+                                        icon={IconOutline.TrashIcon}
+                                        onClick={bind(handleRemoveLink, this, trait)}
+                                    />
                                 </div>
-                                <Button
-                                    icon={IconOutline.TrashIcon}
-                                    onClick={bind(handleRemoveLink, this, trait)}
-                                />
                             </div>
                         ))
                     }
@@ -211,7 +217,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                             value={selectedLinkType}
                             onChange={handleSelectedLinkTypeChange}
                             name='linkType'
-                            label='Type *'
+                            label='Type'
                             error={formErrors.selectedLinkType}
                             placeholder='Select a link type'
                             dirty
@@ -219,7 +225,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
 
                         <InputText
                             name='url'
-                            label='URL *'
+                            label='URL'
                             error={formErrors.url}
                             placeholder='Enter a URL'
                             dirty
@@ -228,14 +234,13 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                             onChange={handleURLChange}
                             value={selectedLinkURL}
                         />
-
-                        <div className={styles.formCTAs}>
-                            <Button
-                                icon={IconOutline.PlusCircleIcon}
-                                onClick={handleFormAction}
-                                size='xl'
-                            />
-                        </div>
+                    </div>
+                    <div className={styles.formCTAs}>
+                        <Button
+                            onClick={handleFormAction}
+                            secondary
+                            label='+ Additional Link'
+                        />
                     </div>
                 </form>
             </div>
