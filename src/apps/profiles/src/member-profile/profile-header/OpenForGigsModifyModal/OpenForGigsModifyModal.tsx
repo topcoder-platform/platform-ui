@@ -42,7 +42,10 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
         setIsSaving(true)
 
         const updatedPersonalizationTraits: UserTrait[]
-            = reject(props.memberPersonalizationTraitsFullData, (trait: UserTrait) => !!trait.availableForGigs)
+            = reject(
+                props.memberPersonalizationTraitsFullData,
+                (trait: UserTrait) => trait.availableForGigs !== undefined,
+            )
 
         methodsMap[!!props.memberPersonalizationTraitsFullData ? 'update' : 'create'](props.profile.handle, [{
             categoryName: UserTraitCategoryNames.personalization,
