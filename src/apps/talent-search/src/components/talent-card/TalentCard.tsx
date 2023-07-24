@@ -32,62 +32,70 @@ const TalentCard: FC<TalentCardProps> = props => {
     const talentRoute = `${TALENT_SEARCH_PATHS.talent}/${props.member.handle}`
 
     const visibleSkills = orderBy(
-        props.member.emsiSkills,
+        props.member.emsiSkills.filter(props.isMatchingSkill),
         [props.isMatchingSkill, isSkillVerified],
         ['desc', 'desc'],
     )
         .slice(0, 6) as EmsiSkill[]
 
     const hiddenSkills = props.member.emsiSkills.length - visibleSkills.length
+    const unmatchedLabel = `+${hiddenSkills} more unmatched skill${hiddenSkills > 1 ? 's' : ''}`
 
     return (
         <Link to={talentRoute} className={styles.wrap}>
-            <div
-                className={styles.profilePic}
-                style={{ '--background-image-url': `url(${props.member.photoURL})` } as CSSProperties}
-            >
-                <span className={styles.profileInitials}>
-                    {props.member.firstName.slice(0, 1)}
-                    {props.member.lastName.slice(0, 1)}
-                </span>
-                <img src={props.member.photoURL} alt='' />
-            </div>
-            <div className={styles.detailsContainer}>
-                <div className={styles.talentInfo}>
-                    <div className={styles.talentInfoName}>
-                        {props.member.firstName}
-                        {' '}
-                        {props.member.lastName}
-                    </div>
-                    <div className={styles.talentInfoHandle}>
-                        <span className='body-medium-normal'>
-                            {props.member.handle}
-                        </span>
-                    </div>
-                    {props.member.addresses?.map(addr => (
-                        <div
-                            className={styles.talentInfoLocation}
-                            key={`${addr.streetAddr1}${addr.zip}${addr.city}${addr.stateCode}`}
-                        >
-                            <IconSolid.LocationMarkerIcon className='icon-xxl' />
-                            <span className='body-main'>
-                                {getAddrString(addr.city, getCountry(props.member.homeCountryCode))}
+            <div className={styles.topWrap}>
+                <div
+                    className={styles.profilePic}
+                    style={{ '--background-image-url': `url(${props.member.photoURL})` } as CSSProperties}
+                >
+                    <span className={styles.profileInitials}>
+                        {props.member.firstName.slice(0, 1)}
+                        {props.member.lastName.slice(0, 1)}
+                    </span>
+                    <img src={props.member.photoURL} alt='' />
+                </div>
+                <div className={styles.detailsContainer}>
+                    <div className={styles.talentInfo}>
+                        <div className={styles.talentInfoName}>
+                            {props.member.firstName}
+                            {' '}
+                            {props.member.lastName}
+                        </div>
+                        <div className={styles.talentInfoHandle}>
+                            <span className='body-medium-normal'>
+                                {props.member.handle}
                             </span>
                         </div>
-                    ))}
+                        {props.member.addresses?.map(addr => (
+                            <div
+                                className={styles.talentInfoLocation}
+                                key={`${addr.streetAddr1}${addr.zip}${addr.city}${addr.stateCode}`}
+                            >
+                                <IconSolid.LocationMarkerIcon className='icon-xxl' />
+                                <span className='body-main'>
+                                    {getAddrString(addr.city, getCountry(props.member.homeCountryCode))}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                    <MatchBar className={styles.matchBar} percent={props.match} />
                 </div>
-                <MatchBar className={styles.matchBar} percent={props.match} />
+            </div>
+            <div className={styles.skillsContainer}>
+                <div className='overline'>Matched skills</div>
                 <div className={styles.skillsWrap}>
                     {visibleSkills.map(skill => (
                         <SkillPill
                             key={skill.skillId}
-                            theme={props.isMatchingSkill(skill) ? 'verified' : 'dark'}
+                            theme='dark'
                             skill={skill}
                             verified={isSkillVerified(skill)}
                         />
                     ))}
                     {hiddenSkills > 0 && (
-                        <SkillPill theme='etc' skill={{ name: `+${hiddenSkills}` }} />
+                        <div className={styles.unmatchedSkills}>
+                            {unmatchedLabel}
+                        </div>
                     )}
                 </div>
             </div>

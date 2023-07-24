@@ -1,9 +1,6 @@
 @import "@libs/ui/styles/includes";
 
 .wrap {
-    display: flex;
-    gap: $sp-10;
-
     padding: $sp-55 $sp-8;
     border-radius: $sp-4;
 
@@ -11,6 +8,11 @@
 
     font-family: $font-barlow;
     color: $black-100;
+}
+
+.topWrap {
+    display: flex;
+    gap: $sp-10;
 }
 
 .profilePic {
@@ -76,7 +78,7 @@
 .detailsContainer {
     flex: 1 1 auto;
 
-    padding: $sp-5 $sp-45 $sp-3 0;
+    padding: $sp-5 $sp-45 0 0;
 }
 
 .talentInfo {
@@ -107,7 +109,24 @@
 
 .matchBar {
     max-width: 330px;
-    margin-top: $sp-8;
+    margin-top: $sp-4;
+}
+
+.skillsContainer {
+    margin-top: $sp-5;
+    border-top: 1px solid $black-10;
+    padding-top: $sp-5;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+}
+
+.unmatchedSkills {
+    width: 100%;
+    display: flex;
+
+    color: $black-60;
+    padding: $sp-2 $sp-3;
 }
 
 .skillsWrap {
@@ -115,5 +134,4 @@
     align-items: center;
     gap: $sp-2;
     flex-wrap: wrap;
-    margin-top: $sp-5;
 }
