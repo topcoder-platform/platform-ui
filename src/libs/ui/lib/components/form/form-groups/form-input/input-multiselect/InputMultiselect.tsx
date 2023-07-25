@@ -4,6 +4,7 @@ import {
     KeyboardEvent,
     ReactNode,
     Ref,
+    useEffect,
     useMemo,
     useRef,
 } from 'react'
@@ -109,6 +110,16 @@ const InputMultiselect: FC<InputMultiselectProps> = props => {
     const ValueContainer = useMemo(() => (
         valueContainer(props.additionalPlaceholder ?? 'Add more...')
     ), [props.additionalPlaceholder])
+
+    // scroll to bottom when the value is loaded / updated
+    useEffect(() => {
+        if (!asynSelectRef.current) {
+            return
+        }
+
+        const controlRef: HTMLDivElement = asynSelectRef.current.controlRef
+        controlRef.scrollTop = controlRef.scrollHeight
+    }, [props.value])
 
     const selectInputElement = (
         <AsyncSelect

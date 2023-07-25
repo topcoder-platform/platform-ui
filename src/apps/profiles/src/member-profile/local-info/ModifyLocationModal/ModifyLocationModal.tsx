@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
 import { bind, trim } from 'lodash'
 import { toast } from 'react-toastify'
 
@@ -21,6 +21,12 @@ interface ModifyLocationModalProps {
 const ModifyLocationModal: FC<ModifyLocationModalProps> = (props: ModifyLocationModalProps) => {
     const countryLookup: CountryLookup[] | undefined
         = useCountryLookup()
+
+    const contries = useMemo(() => (countryLookup || []).map((cl: CountryLookup) => ({
+        label: cl.country,
+        value: cl.countryCode,
+    }))
+        .sort((a, b) => a.label.localeCompare(b.label)), [countryLookup])
 
     const [formValues, setFormValues]: [any, Dispatch<any>] = useState({
         country: props.profile.homeCountryCode || props.profile.competitionCountryCode,
@@ -112,10 +118,7 @@ const ModifyLocationModal: FC<ModifyLocationModalProps> = (props: ModifyLocation
                     placeholder='Select your city name'
                 />
                 <InputSelect
-                    options={(countryLookup || []).map((cl: CountryLookup) => ({
-                        label: cl.country,
-                        value: cl.countryCode,
-                    }))}
+                    options={contries}
                     value={formValues.country}
                     onChange={bind(handleFormValueChange, this, 'country')}
                     name='country'
