@@ -40,13 +40,15 @@
         flex: 1;
         flex-wrap: wrap;
         position: relative;
-        overflow: hidden;
         margin: 0 10px;
         padding: 0;
         gap: 8px;
+        max-height: 230px;
+        overflow: auto;
     }
 
-    &:global(__indicators) {
+    &:global(__indicators),
+    &:global(__indicator-separator) {
         display: none;
     }
 
@@ -64,7 +66,7 @@
         align-items: center;
         cursor: default;
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         justify-content: space-between;
         min-height: 0;
         outline: 0!important;
@@ -72,8 +74,6 @@
         transition: all 100ms;
         background: none;
         border-radius: 4px;
-        max-height: 230px;
-        overflow: auto;
     }
 
     &:global(__input-container) {
