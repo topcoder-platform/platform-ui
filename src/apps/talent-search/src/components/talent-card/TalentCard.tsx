@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import { Link } from 'react-router-dom'
+import { orderBy } from 'lodash'
 import classNames from 'classnames'
 import codes from 'country-calling-code'
 
@@ -12,7 +13,6 @@ import { Member } from '../../lib/models'
 import { TALENT_SEARCH_PATHS } from '../../talent-search.routes'
 
 import styles from './TalentCard.module.scss'
-import { orderBy } from 'lodash'
 
 const getCountry = (countryCode: string): string => (
     codes.find(c => c.isoCode3 === countryCode || c.isoCode2 === countryCode)?.country ?? countryCode ?? ''
