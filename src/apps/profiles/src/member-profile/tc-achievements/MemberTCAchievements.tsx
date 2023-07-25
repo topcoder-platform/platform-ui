@@ -75,7 +75,7 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
                             <p>Copilot</p>
                         </div>
                         <button type='button' className={styles.link} onClick={handleInfoModalOpen}>
-                            What is this?
+                            What are special roles?
                         </button>
 
                         {
