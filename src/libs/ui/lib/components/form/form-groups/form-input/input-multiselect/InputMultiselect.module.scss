@@ -72,6 +72,8 @@
         transition: all 100ms;
         background: none;
         border-radius: 4px;
+        max-height: 230px;
+        overflow: auto;
     }
 
     &:global(__input-container) {
