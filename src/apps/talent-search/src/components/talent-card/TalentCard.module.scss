@@ -67,19 +67,34 @@
     display: flex;
     flex-direction: column;
     gap: $sp-2;
+    position: relative;
+
+    &Title {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        background: $tc-white;
+        transform: translate(-50%, -50%);
+        padding: $sp-2 $sp-4;
+        color: $black-60;
+    }
+
+    &:global(.overline) {
+        text-transform: uppercase;
+    }
 }
 
 .unmatchedSkills {
-    width: 100%;
     display: flex;
 
-    color: $black-60;
-    padding: $sp-2 $sp-3;
+    color: $black-100;
+    padding: 0 $sp-2;
+    font-size: 14px;
 }
 
 .skillsWrap {
     display: flex;
     align-items: center;
-    gap: $sp-2;
+    gap: $sp-1;
     flex-wrap: wrap;
 }
