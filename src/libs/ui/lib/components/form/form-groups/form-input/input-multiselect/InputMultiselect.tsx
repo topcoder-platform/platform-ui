@@ -117,8 +117,10 @@ const InputMultiselect: FC<InputMultiselectProps> = props => {
             return
         }
 
-        const controlRef: HTMLDivElement = asynSelectRef.current.controlRef
-        controlRef.scrollTop = controlRef.scrollHeight
+        const valueContainerRef: HTMLDivElement = asynSelectRef.current.controlRef.firstChild
+        if (valueContainerRef) {
+            valueContainerRef.scrollTop = valueContainerRef.scrollHeight
+        }
     }, [props.value])
 
     const selectInputElement = (
