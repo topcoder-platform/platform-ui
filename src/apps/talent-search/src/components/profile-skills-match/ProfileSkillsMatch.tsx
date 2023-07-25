@@ -2,7 +2,7 @@ import { FC } from 'react'
 import classNames from 'classnames'
 
 import { UserEMSISkill } from '~/libs/core'
-import { EmsiSkill, isSkillVerified, Skill, SkillPill } from '~/libs/shared'
+import { EmsiSkill, ExpandableList, isSkillVerified, Skill, SkillPill } from '~/libs/shared'
 
 import { useIsMatchingSkill } from '../../lib/utils'
 
@@ -15,8 +15,6 @@ interface ProfileSkillsMatchProps {
 }
 
 const ProfileSkillsMatch: FC<ProfileSkillsMatchProps> = props => {
-    // console.log(props.matchValue, props.queriedSkills, props.profileSkills);
-
     const isMatchingSkill = useIsMatchingSkill(props.queriedSkills)
     const matchedSkills = (props.profileSkills as unknown as EmsiSkill[]).filter(isMatchingSkill)
     const unMatchedSkills = (props.profileSkills as unknown as EmsiSkill[]).filter(s => !isMatchingSkill(s))
@@ -82,9 +80,11 @@ const ProfileSkillsMatch: FC<ProfileSkillsMatchProps> = props => {
                     </div>
 
                     <div className={styles.skillsList}>
-                        {unMatchedSkills.map(skill => (
-                            <SkillPill skill={skill} theme='dark' />
-                        ))}
+                        <ExpandableList visible={10}>
+                            {unMatchedSkills.map(skill => (
+                                <SkillPill skill={skill} theme='dark' />
+                            ))}
+                        </ExpandableList>
                     </div>
                 </div>
             )}

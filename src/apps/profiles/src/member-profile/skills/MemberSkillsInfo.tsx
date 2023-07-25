@@ -1,8 +1,9 @@
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { orderBy } from 'lodash'
 
-import { isVerifiedSkill, UserEMSISkill, UserProfile } from '~/libs/core'
-import { Skill, SkillPill } from '~/libs/shared'
+import { UserEMSISkill, UserProfile } from '~/libs/core'
+import { ExpandableList, isSkillVerified, Skill, SkillPill } from '~/libs/shared'
 import { Button } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
@@ -28,12 +29,11 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
     const { skillsRenderer }: MemberProfileContextValue = useMemberProfileContext()
 
-    const memberEMSISkills: UserEMSISkill[] = useMemo(
-        () => (props.profile.emsiSkills || [])
-            .sort((a, b) => (+isVerifiedSkill(b.skillSources))
-                - (+isVerifiedSkill(a.skillSources)) || a.name.localeCompare(b.name)),
-        [props.profile.emsiSkills],
-    )
+    const memberEMSISkills: UserEMSISkill[] = useMemo(() => orderBy(
+        props.profile.emsiSkills ?? [],
+        [isSkillVerified, 'name'],
+        ['desc', 'asc'],
+    ) as UserEMSISkill[], [props.profile.emsiSkills])
 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -43,9 +43,6 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
     const [isTalentSearch, setIsTalentSearch]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
-
-    const [skillsToRender, setSkillsToRender]: [number, Dispatch<SetStateAction<number>>]
-        = useState<number>(10)
 
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.skills) {
@@ -81,17 +78,13 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         setHowSkillsWorkVisible(false)
     }
 
-    function handleExpandSkillsClick(): void {
-        setSkillsToRender(memberEMSISkills.length)
-    }
-
-    return memberEMSISkills ? (
+    return (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
                 <div className={styles.headerWrap}>
                     <h3>Skills</h3>
                     {
-                        canEdit && memberEMSISkills?.length > 0 && (
+                        canEdit && memberEMSISkills.length > 0 && (
                             <EditMemberPropertyBtn
                                 onClick={handleEditSkillsClick}
                             />
@@ -107,25 +100,22 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
             </div>
 
             <div className={styles.skillsWrap}>
-                {memberEMSISkills?.length > 0 && (
-                    skillsRenderer
-                        ? skillsRenderer(props.profile.emsiSkills)
-                        : memberEMSISkills.slice(0, skillsToRender)
-                            .map((memberEMSISkill: UserEMSISkill) => (
-                                <SkillPill
-                                    skill={memberEMSISkill as unknown as Skill}
-                                    key={memberEMSISkill.id}
-                                />
-                            ))
+                {skillsRenderer && memberEMSISkills.length > 0 && skillsRenderer(memberEMSISkills)}
+                {!skillsRenderer && memberEMSISkills.length > 0 && (
+                    <ExpandableList visible={10}>
+                        {
+                            memberEMSISkills
+                                .map(memberEMSISkill => (
+                                    <SkillPill
+                                        skill={memberEMSISkill as unknown as Skill}
+                                        key={memberEMSISkill.id}
+                                        theme='dark'
+                                    />
+                                ))
+                        }
+                    </ExpandableList>
                 )}
-                {!skillsRenderer && memberEMSISkills?.length > skillsToRender && (
-                    <Button
-                        primary
-                        label={`+ ${memberEMSISkills.length - skillsToRender}`}
-                        onClick={handleExpandSkillsClick}
-                    />
-                )}
-                {!memberEMSISkills?.length && (
+                {!memberEMSISkills.length && (
                     <EmptySection
                         title='Topcoder verifies and tracks skills as our members complete projects and challenges.'
                         wide
@@ -137,7 +127,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                     </EmptySection>
                 )}
             </div>
-            {canEdit && !memberEMSISkills?.length && (
+            {canEdit && !memberEMSISkills.length && (
                 <AddButton
                     label='Add skills'
                     onClick={handleEditSkillsClick}
@@ -163,7 +153,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                 )
             }
         </div>
-    ) : <></>
+    )
 }
 
 export default MemberSkillsInfo
