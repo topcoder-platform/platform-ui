@@ -17,6 +17,10 @@
     z-index: 1;
     background: linear-gradient(90deg, #075f96, #038664);
 
+    &.imgLoaded {
+        background: $tc-white;
+    }
+
     &::before {
         content: "";
         display: block;
