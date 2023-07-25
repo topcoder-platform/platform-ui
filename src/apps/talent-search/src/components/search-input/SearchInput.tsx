@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { FC, Ref, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { IconOutline, InputMultiselectOption } from '~/libs/ui'
@@ -12,6 +12,7 @@ interface SearchInputProps {
     onChange: (skills: Skill[]) => void
     skills: Skill[]
     onSearch?: () => void
+    inputRef?: Ref<any>
 }
 
 const SearchInput: FC<SearchInputProps> = props => {
@@ -49,6 +50,7 @@ const SearchInput: FC<SearchInputProps> = props => {
             value={emsiSkills}
             onChange={onChange}
             onSubmit={props.onSearch}
+            inputRef={props.inputRef}
         />
     )
 }
