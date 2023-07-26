@@ -71,3 +71,18 @@ export function subTrackLabelToHumanName(label: string): string {
     }
 
 }
+
+export function isValidURL(urlToValidate: string): boolean {
+    let url: URL
+    try {
+        url = new URL(urlToValidate)
+    } catch (e) {
+        return false
+    }
+
+    if (!url.protocol || !url.hostname) {
+        return false
+    }
+
+    return true
+}

@@ -56,13 +56,13 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
 
                     <MemberLanguages profile={props.profile} authProfile={props.authProfile} />
 
-                    <MemberLinks profile={props.profile} authProfile={props.authProfile} />
-
                     <MemberLocalInfo
                         profile={props.profile}
                         authProfile={props.authProfile}
                         refreshProfile={props.refreshProfile}
                     />
+
+                    <MemberLinks profile={props.profile} authProfile={props.authProfile} />
                 </div>
                 <div className={styles.profileInfoRight}>
                     <div className={styles.sectionWrap}>

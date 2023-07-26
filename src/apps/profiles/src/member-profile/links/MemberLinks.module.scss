@@ -2,15 +2,9 @@
 
 .container {
     display: flex;
-    flex-direction: column;
-    margin-bottom: $sp-8;
-
-    .titleWrap {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: $sp-2;
-    }
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: $sp-8;
 
     .links {
         display: flex;
@@ -19,6 +13,7 @@
 
         > a {
             margin-right: $sp-2;
+            margin-bottom: $sp-2;
             cursor: pointer;
 
             svg {
