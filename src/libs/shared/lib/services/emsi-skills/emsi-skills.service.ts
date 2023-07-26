@@ -6,6 +6,10 @@ import { EmsiSkill, Skill } from './skill.model'
 const baseUrl = `${EnvironmentConfig.API.V5}/emsi-skills/member-emsi-skills`
 
 export async function autoCompleteSkills(queryTerm: string): Promise<Skill[]> {
+    if (!queryTerm) {
+        return Promise.resolve([])
+    }
+
     return xhrGetAsync(`${EnvironmentConfig.API.V5}/emsi-skills/skills/auto-complete?term=${queryTerm}`)
 }
 
