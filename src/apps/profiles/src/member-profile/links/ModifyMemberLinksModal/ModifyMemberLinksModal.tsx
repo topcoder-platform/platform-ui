@@ -181,6 +181,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
             open
             size='lg'
             title='Social Links'
+            initialFocusRef={formElRef}
             buttons={(
                 <div className={styles.modalButtons}>
                     <Button
