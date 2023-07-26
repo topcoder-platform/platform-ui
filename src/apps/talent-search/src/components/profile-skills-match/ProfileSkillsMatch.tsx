@@ -41,7 +41,7 @@ const ProfileSkillsMatch: FC<ProfileSkillsMatchProps> = props => {
                             </div>
                             <div className={styles.skillsList}>
                                 {provenMatched.map(skill => (
-                                    <SkillPill skill={skill} theme='verified' />
+                                    <SkillPill skill={skill} theme='verified' key={skill.skillId} />
                                 ))}
                             </div>
                         </>
@@ -54,7 +54,7 @@ const ProfileSkillsMatch: FC<ProfileSkillsMatchProps> = props => {
                             </div>
                             <div className={styles.skillsList}>
                                 {selfSkillmatched.map(skill => (
-                                    <SkillPill skill={skill} theme='dark' />
+                                    <SkillPill skill={skill} theme='dark' key={skill.skillId} />
                                 ))}
                             </div>
                         </>
@@ -82,7 +82,7 @@ const ProfileSkillsMatch: FC<ProfileSkillsMatchProps> = props => {
                     <div className={styles.skillsList}>
                         <ExpandableList visible={10} itemLabel='skill'>
                             {unMatchedSkills.map(skill => (
-                                <SkillPill skill={skill} theme='dark' />
+                                <SkillPill skill={skill} theme='dark' key={skill.skillId} />
                             ))}
                         </ExpandableList>
                     </div>

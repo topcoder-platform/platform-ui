@@ -52,7 +52,8 @@ const OnboardingCompleted: FC<OnboardingCompletedProps> = (props: OnboardingComp
                 <div className={styles.container}>
                     <p>
                         Great work on starting your profile.
-                        The more information you add, the more visibility you have in our community and to customers.
+                        The more information you add the more visibility you will
+                        have in our community and to customers.
                     </p>
                 </div>
             </BaseModal>

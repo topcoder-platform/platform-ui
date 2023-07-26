@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { ContentLayout } from '~/libs/ui'
@@ -12,12 +12,18 @@ import { encodeUrlQuerySearch } from '../../lib/utils/search-query'
 import styles from './SearchPage.module.scss'
 
 export const SearchPage: FC = () => {
+    const searchInputRef = useRef<HTMLInputElement>()
     const navigate = useNavigate()
     const [skillsFilter, setSkillsFilter] = useState<Skill[]>([])
 
     function navigateToResults(): void {
         const searchParams = encodeUrlQuerySearch(skillsFilter)
         navigate(`${TALENT_SEARCH_PATHS.results}?${searchParams}`)
+    }
+
+    function handleSelectSkillFilter(filter: Skill[]): void {
+        setSkillsFilter(filter)
+        searchInputRef.current?.focus()
     }
 
     return (
@@ -41,9 +47,13 @@ export const SearchPage: FC = () => {
                     skills={skillsFilter}
                     onChange={setSkillsFilter}
                     onSearch={navigateToResults}
+                    inputRef={searchInputRef}
                 />
             </div>
-            <PopularSkills selectedSkills={skillsFilter} onChange={setSkillsFilter} />
+            <PopularSkills
+                selectedSkills={skillsFilter}
+                onChange={handleSelectSkillFilter}
+            />
         </ContentLayout>
     )
 }

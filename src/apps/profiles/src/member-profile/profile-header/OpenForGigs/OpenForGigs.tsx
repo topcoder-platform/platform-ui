@@ -40,7 +40,7 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
 
     const openForWork: UserTrait | undefined
         = useMemo(() => memberPersonalizationTraits?.[0]?.traits?.data?.find(
-            (trait: UserTrait) => trait.availableForGigs,
+            (trait: UserTrait) => trait.availableForGigs !== undefined,
         ), [memberPersonalizationTraits])
 
     function handleModifyOpenForWorkClick(): void {

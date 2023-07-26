@@ -1,4 +1,4 @@
-import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useRef, useState } from 'react'
 
 import { userUpdatePasswordAsync } from '../../auth'
 import { ChangePasswordRequest } from '../change-password-request.model'
@@ -18,13 +18,21 @@ export const ProfileProvider: FC<ProfileProviderProps> = (props: ProfileProvider
     const [profileContextData, setProfileContextData]:
         [ProfileContextData, Dispatch<SetStateAction<ProfileContextData>>]
         = useState<ProfileContextData>(defaultProfileContextData)
+    const isFetchingProfileRef = useRef<boolean>(false)
 
     function changePassword(userId: number, request: ChangePasswordRequest): Promise<void> {
         return userUpdatePasswordAsync(userId, request.password, request.newPassword)
     }
 
     async function getAndSetProfileAsync(): Promise<void> {
-        const profile: UserProfile | undefined = await profileGetLoggedInAsync()
+        isFetchingProfileRef.current = true
+        let profile: UserProfile | undefined
+        try {
+            profile = await profileGetLoggedInAsync()
+        } catch (error) {
+        }
+
+        isFetchingProfileRef.current = false
         const contextData: ProfileContextData = {
             changePassword,
             initialized: true,
@@ -67,7 +75,7 @@ export const ProfileProvider: FC<ProfileProviderProps> = (props: ProfileProvider
     useEffect(() => {
 
         // if our profile is already initialized, no need to continue
-        if (profileContextData.initialized) {
+        if (profileContextData.initialized || isFetchingProfileRef.current) {
             return
         }
 

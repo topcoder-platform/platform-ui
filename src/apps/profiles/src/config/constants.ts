@@ -20,3 +20,5 @@ export enum profileEditModes {
     skills = 'skills',
     onboardingCompleted = 'onboardingCompleted',
 }
+
+export const SPRIG_CES_SURVEY_ID = 'onProfileUpdate'

@@ -13,6 +13,7 @@ import { MemberLinks } from '../links'
 import { MemberTCAchievements } from '../tc-achievements'
 import { WorkExpirence } from '../work-expirence'
 import { EducationAndCertifications } from '../education-and-certifications'
+import { ProfileCompleteness } from '../profile-completeness'
 import OnboardingCompleted from '../onboarding-complete/OnboardingCompleted'
 
 import styles from './ProfilePageLayout.module.scss'
@@ -70,15 +71,18 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
 
                     <MemberLanguages profile={props.profile} authProfile={props.authProfile} />
 
-                    <MemberLinks profile={props.profile} authProfile={props.authProfile} />
-
                     <MemberLocalInfo
                         profile={props.profile}
                         authProfile={props.authProfile}
                         refreshProfile={props.refreshProfile}
                     />
+
+                    <MemberLinks profile={props.profile} authProfile={props.authProfile} />
                 </div>
                 <div className={styles.profileInfoRight}>
+                    {props.authProfile?.handle === props.profile.handle && (
+                        <ProfileCompleteness profile={props.profile} />
+                    )}
                     <div className={styles.sectionWrap}>
                         <div className={styles.skillsWrap}>
                             <MemberSkillsInfo

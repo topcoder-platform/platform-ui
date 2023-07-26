@@ -14,6 +14,7 @@ import {
 } from '~/libs/core'
 
 import { renderLinkIcon } from '../MemberLinks'
+import { isValidURL } from '../../../lib'
 
 import { linkTypes } from './link-types.config'
 import styles from './ModifyMemberLinksModal.module.scss'
@@ -71,6 +72,10 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
 
     function handleSelectedLinkTypeChange(event: React.ChangeEvent<HTMLInputElement>): void {
         setSelectedLinkType(event.target.value)
+        const validURL = isValidURL(selectedLinkURL as string)
+        if (validURL) {
+            setIsFormChanged(true)
+        }
     }
 
     function handleLinksSave(): void {
@@ -79,6 +84,17 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
         const updatedPersonalizationTraits: UserTrait[]
             = reject(props.memberPersonalizationTraitsFullData, (trait: UserTrait) => trait.links)
 
+        const updatedLinks: UserTrait[] = [
+            ...(currentMemberLinks || []),
+        ]
+
+        if (selectedLinkType && isValidURL(selectedLinkURL as string)) {
+            updatedLinks.push({
+                name: selectedLinkType,
+                url: trim(selectedLinkURL) || '',
+            })
+        }
+
         methodsMap[!!props.memberPersonalizationTraitsFullData ? 'update' : 'create'](props.profile.handle, [{
             categoryName: UserTraitCategoryNames.personalization,
             traitId: UserTraitIds.personalization,
@@ -86,7 +102,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                 data: [
                     ...(updatedPersonalizationTraits || []),
                     {
-                        links: currentMemberLinks,
+                        links: updatedLinks,
                     },
                 ],
             },
@@ -112,15 +128,8 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
             return
         }
 
-        let url: URL
-        try {
-            url = new URL(selectedLinkURL as string)
-        } catch (e) {
-            setFormErrors({ url: 'Invalid URL' })
-            return
-        }
-
-        if (!url.protocol || !url.hostname) {
+        const validURL = isValidURL(selectedLinkURL as string)
+        if (!validURL) {
             setFormErrors({ url: 'Invalid URL' })
             return
         }
@@ -159,6 +168,11 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
 
     function handleURLChange(event: React.ChangeEvent<HTMLInputElement>): void {
         setSelectedLinkURL(event.target.value)
+
+        const validURL = isValidURL(event.target.value)
+        if (validURL && selectedLinkType) {
+            setIsFormChanged(true)
+        }
     }
 
     return (
@@ -166,7 +180,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
             onClose={props.onClose}
             open
             size='lg'
-            title='My Links'
+            title='Social Links'
             buttons={(
                 <div className={styles.modalButtons}>
                     <Button
@@ -184,18 +198,24 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
             )}
         >
             <div className={styles.container}>
+                <p>Provide links to your social accounts.</p>
+
                 <div className={classNames(styles.links, currentMemberLinks?.length ? '' : styles.noLinks)}>
                     {
                         currentMemberLinks?.map((trait: UserTrait) => (
                             <div className={styles.linkItemWrap} key={`member-link-${trait.name}`}>
+                                {renderLinkIcon(trait.name)}
                                 <div className={styles.linkItem}>
-                                    {renderLinkIcon(trait.name)}
-                                    <p>{trait.url}</p>
+                                    <div className={styles.linkLabelWrap}>
+                                        <small>{trait.name}</small>
+                                        <p>{trait.url}</p>
+                                    </div>
+                                    <Button
+                                        size='lg'
+                                        icon={IconOutline.TrashIcon}
+                                        onClick={bind(handleRemoveLink, this, trait)}
+                                    />
                                 </div>
-                                <Button
-                                    icon={IconOutline.TrashIcon}
-                                    onClick={bind(handleRemoveLink, this, trait)}
-                                />
                             </div>
                         ))
                     }
@@ -211,7 +231,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                             value={selectedLinkType}
                             onChange={handleSelectedLinkTypeChange}
                             name='linkType'
-                            label='Type *'
+                            label='Type'
                             error={formErrors.selectedLinkType}
                             placeholder='Select a link type'
                             dirty
@@ -219,7 +239,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
 
                         <InputText
                             name='url'
-                            label='URL *'
+                            label='URL'
                             error={formErrors.url}
                             placeholder='Enter a URL'
                             dirty
@@ -228,14 +248,13 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                             onChange={handleURLChange}
                             value={selectedLinkURL}
                         />
-
-                        <div className={styles.formCTAs}>
-                            <Button
-                                icon={IconOutline.PlusCircleIcon}
-                                onClick={handleFormAction}
-                                size='xl'
-                            />
-                        </div>
+                    </div>
+                    <div className={styles.formCTAs}>
+                        <Button
+                            onClick={handleFormAction}
+                            secondary
+                            label='+ Additional Link'
+                        />
                     </div>
                 </form>
             </div>
