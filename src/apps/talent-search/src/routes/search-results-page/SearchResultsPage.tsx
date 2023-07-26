@@ -1,16 +1,24 @@
-import { FC } from 'react'
+import { FC, useContext, useEffect, useRef } from 'react'
 import classNames from 'classnames'
 
+import { profileContext, ProfileContextData } from '~/libs/core'
 import { Button, ContentLayout, LoadingCircles } from '~/libs/ui'
 
 import { TalentCard } from '../../components/talent-card'
 import { SearchInput } from '../../components/search-input'
 import { useUrlQuerySearchParms } from '../../lib/utils/search-query'
-import { InfiniteTalentMatchesResposne, useInfiniteTalentMatches } from '../../lib/services'
+import {
+    InfiniteTalentMatchesResposne,
+    triggerSprigSurvey,
+    useInfiniteTalentMatches,
+} from '../../lib/services'
 
 import styles from './SearchResultsPage.module.scss'
 
 const SearchResultsPage: FC = () => {
+    const sprigFlag = useRef(false)
+    const { profile }: ProfileContextData = useContext(profileContext)
+
     const [skills, setSkills] = useUrlQuerySearchParms('q')
     const {
         loading,
@@ -19,6 +27,13 @@ const SearchResultsPage: FC = () => {
         hasNext,
         total,
     }: InfiniteTalentMatchesResposne = useInfiniteTalentMatches(skills)
+
+    useEffect(() => {
+        if (profile?.userId && matches?.length && !sprigFlag.current) {
+            sprigFlag.current = true
+            triggerSprigSurvey(profile)
+        }
+    }, [profile, matches])
 
     return (
         <>
