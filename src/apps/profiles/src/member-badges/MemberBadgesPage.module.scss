@@ -46,9 +46,14 @@
                 cursor: pointer;
                 padding-top: $sp-8;
 
-                .badgeImage {
+                .badgeImageWrap {
                     width: 100px;
                     height: 100px;
+
+                    .badgeImage {
+                        height: 100px;
+                        margin: auto;
+                    }
                 }
 
                 .badgeTitle {
