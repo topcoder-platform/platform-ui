@@ -28,7 +28,9 @@ const ProfilePicture: FC<ProfilePictureProps> = props => {
                     {props.member.lastName.slice(0, 1)}
                 </span>
             )}
-            <img src={props.member.photoURL} alt='' onLoad={onLoad} />
+            {props.member.photoURL && (
+                <img src={props.member.photoURL} alt='' onLoad={onLoad} />
+            )}
         </div>
     )
 }
