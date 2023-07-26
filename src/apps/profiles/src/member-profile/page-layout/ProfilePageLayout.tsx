@@ -1,7 +1,7 @@
 import { FC } from 'react'
 
 import { UserProfile } from '~/libs/core'
-import { ContentLayout, PageTitle } from '~/libs/ui'
+import { Button, ContentLayout, IconSolid, PageTitle } from '~/libs/ui'
 
 // import { MemberTCActivityInfo } from '../tc-activity'
 import { MemberSkillsInfo } from '../skills'
@@ -19,12 +19,15 @@ import OnboardingCompleted from '../onboarding-complete/OnboardingCompleted'
 import styles from './ProfilePageLayout.module.scss'
 
 interface ProfilePageLayoutProps {
+    isTalentSearch?: boolean
     profile: UserProfile
     refreshProfile: (handle: string) => void
     authProfile: UserProfile | undefined
+    handleBackBtn: () => void
 }
 
 const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutProps) => (
+
     <div className={styles.container}>
 
         <PageTitle>{`${props.profile.handle} | Community Profile | Topcoder`}</PageTitle>
@@ -34,6 +37,17 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                 outerClass={styles.profileHeaderContentOuter}
                 contentClass={styles.profileHeaderContent}
             >
+                {props.isTalentSearch && (
+                    <div className={styles.backBtn}>
+                        <Button
+                            link
+                            label='Search Results'
+                            icon={IconSolid.ChevronLeftIcon}
+                            iconToLeft
+                            onClick={props.handleBackBtn}
+                        />
+                    </div>
+                )}
                 <ProfileHeader
                     profile={props.profile}
                     authProfile={props.authProfile}

@@ -1,8 +1,7 @@
-import { FC, useCallback } from 'react'
+import { FC } from 'react'
 import classNames from 'classnames'
 
 import { Button, ContentLayout, LoadingCircles } from '~/libs/ui'
-import { EmsiSkill } from '~/libs/shared'
 
 import { TalentCard } from '../../components/talent-card'
 import { SearchInput } from '../../components/search-input'
@@ -20,10 +19,6 @@ const SearchResultsPage: FC = () => {
         hasNext,
         total,
     }: InfiniteTalentMatchesResposne = useInfiniteTalentMatches(skills)
-
-    const isMatchingSkill = useCallback((skill: EmsiSkill) => (
-        !!skills.find(s => skill.skillId === s.emsiId)
-    ), [skills])
 
     return (
         <>
@@ -63,10 +58,10 @@ const SearchResultsPage: FC = () => {
                 <div className={styles.resultsWrap}>
                     {matches.map(member => (
                         <TalentCard
+                            queriedSkills={skills}
                             member={member}
                             match={member.skillScore}
                             key={member.userId}
-                            isMatchingSkill={isMatchingSkill}
                         />
                     ))}
                 </div>

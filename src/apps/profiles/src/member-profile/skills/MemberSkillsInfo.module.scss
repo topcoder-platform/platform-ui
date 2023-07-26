@@ -5,10 +5,6 @@
     flex-direction: column;
     margin-bottom: $sp-6;
 
-    @include ltelg {
-        padding-bottom: $sp-6;
-    }
-
     .headerWrap {
         display: flex;
         align-items: center;

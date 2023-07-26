@@ -1,16 +1,16 @@
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { orderBy } from 'lodash'
 import classNames from 'classnames'
 import codes from 'country-calling-code'
 
 import { IconSolid } from '~/libs/ui'
-import { EmsiSkill, isSkillVerified, ProfilePicture } from '~/libs/shared'
+import { isSkillVerified, ProfilePicture, Skill, SkillPill } from '~/libs/shared'
 
 import { MatchBar } from '../match-bar'
-import { SkillPill } from '../skill-pill'
 import { Member } from '../../lib/models'
 import { TALENT_SEARCH_PATHS } from '../../talent-search.routes'
+import { useIsMatchingSkill } from '../../lib/utils'
 
 import styles from './TalentCard.module.scss'
 
@@ -24,20 +24,21 @@ const getAddrString = (city: string, country: string): string => (
 )
 
 interface TalentCardProps {
-    isMatchingSkill: (skill: EmsiSkill) => boolean
+    queriedSkills: Skill[]
     member: Member
     match?: number
 }
 
 const TalentCard: FC<TalentCardProps> = props => {
     const talentRoute = `${TALENT_SEARCH_PATHS.talent}/${props.member.handle}`
+    const isMatchingSkill = useIsMatchingSkill(props.queriedSkills)
 
     const matchedSkills = orderBy(
         props.member.emsiSkills,
         isSkillVerified,
         'desc',
     )
-        .filter(props.isMatchingSkill)
+        .filter(isMatchingSkill)
 
     const limitMatchedSkills = matchedSkills.slice(0, 10)
 
@@ -51,8 +52,13 @@ const TalentCard: FC<TalentCardProps> = props => {
         </div>
     )
 
+    const matchState = useMemo(() => ({
+        matchValue: props.match,
+        queriedSkills: props.queriedSkills,
+    }), [props.match, props.queriedSkills])
+
     return (
-        <Link to={talentRoute} className={styles.wrap}>
+        <Link to={talentRoute} className={styles.wrap} state={matchState}>
             <div className={styles.topWrap}>
                 <ProfilePicture member={props.member} className={styles.profilePic} />
                 <div className={styles.detailsContainer}>
@@ -93,7 +99,6 @@ const TalentCard: FC<TalentCardProps> = props => {
                                     key={skill.skillId}
                                     theme='dark'
                                     skill={skill}
-                                    verified={isSkillVerified(skill)}
                                 />
                             ))}
                             {!selfSkills.length && restLabel}
@@ -109,7 +114,6 @@ const TalentCard: FC<TalentCardProps> = props => {
                                     key={skill.skillId}
                                     theme='dark'
                                     skill={skill}
-                                    verified={isSkillVerified(skill)}
                                 />
                             ))}
                             {restLabel}
