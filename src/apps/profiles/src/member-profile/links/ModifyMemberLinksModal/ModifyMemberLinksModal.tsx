@@ -14,6 +14,7 @@ import {
 } from '~/libs/core'
 
 import { renderLinkIcon } from '../MemberLinks'
+import { isValidURL } from '../../../lib'
 
 import { linkTypes } from './link-types.config'
 import styles from './ModifyMemberLinksModal.module.scss'
@@ -71,6 +72,10 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
 
     function handleSelectedLinkTypeChange(event: React.ChangeEvent<HTMLInputElement>): void {
         setSelectedLinkType(event.target.value)
+        const validURL = isValidURL(selectedLinkURL as string)
+        if (validURL) {
+            setIsFormChanged(true)
+        }
     }
 
     function handleLinksSave(): void {
@@ -79,6 +84,17 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
         const updatedPersonalizationTraits: UserTrait[]
             = reject(props.memberPersonalizationTraitsFullData, (trait: UserTrait) => trait.links)
 
+        const updatedLinks: UserTrait[] = [
+            ...(currentMemberLinks || []),
+        ]
+
+        if (selectedLinkType && isValidURL(selectedLinkURL as string)) {
+            updatedLinks.push({
+                name: selectedLinkType,
+                url: trim(selectedLinkURL) || '',
+            })
+        }
+
         methodsMap[!!props.memberPersonalizationTraitsFullData ? 'update' : 'create'](props.profile.handle, [{
             categoryName: UserTraitCategoryNames.personalization,
             traitId: UserTraitIds.personalization,
@@ -86,7 +102,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                 data: [
                     ...(updatedPersonalizationTraits || []),
                     {
-                        links: currentMemberLinks,
+                        links: updatedLinks,
                     },
                 ],
             },
@@ -112,15 +128,8 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
             return
         }
 
-        let url: URL
-        try {
-            url = new URL(selectedLinkURL as string)
-        } catch (e) {
-            setFormErrors({ url: 'Invalid URL' })
-            return
-        }
-
-        if (!url.protocol || !url.hostname) {
+        const validURL = isValidURL(selectedLinkURL as string)
+        if (!validURL) {
             setFormErrors({ url: 'Invalid URL' })
             return
         }
@@ -159,6 +168,11 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
 
     function handleURLChange(event: React.ChangeEvent<HTMLInputElement>): void {
         setSelectedLinkURL(event.target.value)
+
+        const validURL = isValidURL(event.target.value)
+        if (validURL && selectedLinkType) {
+            setIsFormChanged(true)
+        }
     }
 
     return (
