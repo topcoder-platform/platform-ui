@@ -21,7 +21,10 @@ const TalentPage: FC = () => {
     }
 
     return (
-        <MemberProfileContext skillsRenderer={state ? skillsRenderer : undefined}>
+        <MemberProfileContext
+            isTalentSearch={!!state}
+            skillsRenderer={state ? skillsRenderer : undefined}
+        >
             <MemberProfilePage />
         </MemberProfileContext>
     )

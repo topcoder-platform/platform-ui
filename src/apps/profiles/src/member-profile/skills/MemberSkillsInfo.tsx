@@ -7,7 +7,7 @@ import { ExpandableList, isSkillVerified, Skill, SkillPill } from '~/libs/shared
 import { Button } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
-import { EDIT_MODE_QUERY_PARAM, profileEditModes, TALENT_SEARCH_MODE_QUERY_PARAM } from '../../config'
+import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { MemberProfileContextValue, useMemberProfileContext } from '../MemberProfile.context'
 
 import { ModifySkillsModal } from './ModifySkillsModal'
@@ -23,11 +23,10 @@ interface MemberSkillsInfoProps {
 const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProps) => {
     const [queryParams]: [URLSearchParams, any] = useSearchParams()
     const editMode: string | null = queryParams.get(EDIT_MODE_QUERY_PARAM)
-    const talentSearchQuery: string | null = queryParams.get(TALENT_SEARCH_MODE_QUERY_PARAM)
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
 
-    const { skillsRenderer }: MemberProfileContextValue = useMemberProfileContext()
+    const { skillsRenderer, isTalentSearch }: MemberProfileContextValue = useMemberProfileContext()
 
     const memberEMSISkills: UserEMSISkill[] = useMemo(() => orderBy(
         props.profile.emsiSkills ?? [],
@@ -41,17 +40,11 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
     const [howSkillsWorkVisible, setHowSkillsWorkVisible]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const [isTalentSearch, setIsTalentSearch]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.skills) {
             setIsEditMode(true)
         }
 
-        if (talentSearchQuery === 'true') {
-            setIsTalentSearch(true)
-        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.authProfile])
 
@@ -102,7 +95,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
             <div className={styles.skillsWrap}>
                 {skillsRenderer && memberEMSISkills.length > 0 && skillsRenderer(memberEMSISkills)}
                 {!skillsRenderer && memberEMSISkills.length > 0 && (
-                    <ExpandableList visible={10}>
+                    <ExpandableList visible={10} itemLabel='skill'>
                         {
                             memberEMSISkills
                                 .map(memberEMSISkill => (

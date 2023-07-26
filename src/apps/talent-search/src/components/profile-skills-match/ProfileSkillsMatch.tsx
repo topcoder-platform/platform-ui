@@ -80,7 +80,7 @@ const ProfileSkillsMatch: FC<ProfileSkillsMatchProps> = props => {
                     </div>
 
                     <div className={styles.skillsList}>
-                        <ExpandableList visible={10}>
+                        <ExpandableList visible={10} itemLabel='skill'>
                             {unMatchedSkills.map(skill => (
                                 <SkillPill skill={skill} theme='dark' />
                             ))}

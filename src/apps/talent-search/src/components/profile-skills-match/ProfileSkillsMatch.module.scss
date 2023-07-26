@@ -16,6 +16,11 @@
     background: $turq-15;
 
     color: #073D2E;
+
+    @include ltemd {
+        flex-direction: column;
+        padding: $sp-4 $sp-2;
+    }
 }
 
 .matchPerc {
@@ -24,6 +29,7 @@
     border-radius: 50%;
     background: $turq-75;
     color: #073D2E;
+    flex: 0 0 auto;
 
     display: flex;
     flex-direction: column;
@@ -48,6 +54,9 @@
     display: flex;
     flex-direction: column;
     gap: $sp-1;
+    @include ltemd {
+        gap: $sp-2;
+    }
 }
 
 .skillsList {
@@ -56,6 +65,9 @@
     gap: $sp-2;
 
     flex-wrap: wrap;
+    @include ltemd {
+        gap: $sp-1;
+    }
 }
 
 .missingSkills {
@@ -71,5 +83,11 @@
 
     .skillsList {
         margin-top: $sp-6;
+    }
+
+    @include ltemd {
+        .skillsList {
+            margin-top: $sp-3;
+        }
     }
 }
