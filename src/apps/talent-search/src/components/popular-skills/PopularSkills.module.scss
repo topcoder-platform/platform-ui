@@ -1,0 +1,30 @@
+@import "@libs/ui/styles/includes";
+
+.wrap {
+    margin-top: $sp-4;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+
+    :global(.body-medium-bold) {
+        margin-bottom: $sp-4;
+    }
+}
+
+.pillRow{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $sp-2;
+
+    + .pillRow {
+        margin-top: $sp-2;
+    }
+
+    &:nth-child(4) {
+        opacity: 60%;
+    }
+    &:nth-child(n+5) {
+        opacity: 40%;
+    }
+}

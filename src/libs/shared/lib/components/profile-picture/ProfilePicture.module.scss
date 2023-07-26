@@ -1,0 +1,64 @@
+@import "@libs/ui/styles/includes";
+
+.profilePic {
+    align-self: flex-start;
+    flex: 0 0 36%;
+
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(90deg, #075f96, #038664);
+
+    &.imgLoaded {
+        background: $tc-white;
+    }
+
+    &::before {
+        content: "";
+        display: block;
+        position: absolute;
+        top: -10%;
+        left: -10%;
+        z-index: -1;
+        width: 120%;
+        height: 120%;
+        background-image: var(--background-image-url);
+        background-position: center;
+        background-size: cover;
+        filter: blur(9px);
+    }
+
+    .profileInitials {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+
+        font-family: $font-barlow;
+        font-size: 72px;
+        color: $tc-white;
+    }
+
+    img {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: cover;
+
+        aspect-ratio: 1 / 1;
+        border-radius: 50%;
+    }
+}

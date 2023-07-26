@@ -1,0 +1,100 @@
+@import "@libs/ui/styles/includes";
+
+.wrap {
+    padding: $sp-55 $sp-8;
+    border-radius: $sp-4;
+
+    background: $tc-white;
+
+    font-family: $font-barlow;
+    color: $black-100;
+}
+
+.topWrap {
+    display: flex;
+    gap: $sp-10;
+}
+
+.profilePic {
+    width: 200px;
+    max-width: 200px;
+}
+
+.detailsContainer {
+    flex: 1 1 auto;
+
+    padding: $sp-5 $sp-45 $sp-45 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.talentInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $sp-3;
+    margin-bottom: $sp-45;
+
+    &Name {
+        font-size: 30px;
+        line-height: 32px;
+        color: $black-100;
+    }
+
+    &Handle {
+        color: $black-60;
+    }
+
+    &Location {
+        color: $black-100;
+
+        display: flex;
+        align-items: center;
+        gap: $sp-2;
+    }
+
+}
+
+.matchBar {
+    max-width: 330px;
+    margin-top: auto;
+}
+
+.skillsContainer {
+    margin-top: $sp-5;
+    border-top: 1px solid $black-10;
+    padding-top: $sp-5;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+    position: relative;
+
+    &Title {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        background: $tc-white;
+        transform: translate(-50%, -50%);
+        padding: $sp-2 $sp-4;
+        color: $black-60;
+    }
+
+    &:global(.overline) {
+        text-transform: uppercase;
+    }
+}
+
+.unmatchedSkills {
+    display: flex;
+
+    color: $black-100;
+    padding: 0 $sp-2;
+    font-size: 14px;
+}
+
+.skillsWrap {
+    display: flex;
+    align-items: center;
+    gap: $sp-1;
+    flex-wrap: wrap;
+}

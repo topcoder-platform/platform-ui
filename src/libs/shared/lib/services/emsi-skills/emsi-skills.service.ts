@@ -1,29 +1,34 @@
 import { EnvironmentConfig } from '~/config'
-import { xhrDeleteAsync, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
+import { xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
 
 import { EmsiSkill, Skill } from './skill.model'
+
+const baseUrl = `${EnvironmentConfig.API.V5}/emsi-skills/member-emsi-skills`
 
 export async function autoCompleteSkills(queryTerm: string): Promise<Skill[]> {
     return xhrGetAsync(`${EnvironmentConfig.API.V5}/emsi-skills/skills/auto-complete?term=${queryTerm}`)
 }
 
-export async function fetchMemberSkills(userId?: string | number): Promise<EmsiSkill[]> {
-    return xhrGetAsync(`${EnvironmentConfig.API.V5}/emsi-skills/member-emsi-skills/${userId}`)
+export type FetchMemberSkillsConfig = {
+    skipPagination: boolean
+}
+export async function fetchMemberSkills(
+    userId: string | number | undefined,
+    config: FetchMemberSkillsConfig,
+): Promise<EmsiSkill[]> {
+    const url = `${baseUrl}/${userId}?pageFlag=${!config.skipPagination}`
+    return xhrGetAsync(url)
 }
 
 export async function createMemberEmsiSkills(userId: number, skills: Skill[]): Promise<void> {
-    return xhrPostAsync(`${EnvironmentConfig.API.V5}/emsi-skills/member-emsi-skills`, {
+    return xhrPostAsync(baseUrl, {
         emsiSkills: skills,
         userId,
     })
 }
 
 export async function updateMemberEmsiSkills(userId: string | number, skills: Skill[]): Promise<void> {
-    return xhrPutAsync(`${EnvironmentConfig.API.V5}/emsi-skills/member-emsi-skills/${userId}`, {
+    return xhrPutAsync(`${baseUrl}/${userId}`, {
         emsiSkills: skills,
     })
-}
-
-export async function deleteMemberEmsiSkills(userId: string | number): Promise<void> {
-    return xhrDeleteAsync(`${EnvironmentConfig.API.V5}/emsi-skills/member-emsi-skills/${userId}`)
 }

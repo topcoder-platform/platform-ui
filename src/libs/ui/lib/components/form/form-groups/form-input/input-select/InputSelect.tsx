@@ -2,6 +2,8 @@ import {
     ChangeEvent,
     Dispatch,
     FC,
+    FocusEvent,
+    KeyboardEvent,
     MouseEvent,
     MutableRefObject,
     ReactNode,
@@ -40,7 +42,9 @@ interface InputSelectProps {
 
 const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
     const triggerRef: MutableRefObject<any> = useRef(undefined)
+    const buttonRef: MutableRefObject<HTMLButtonElement | null> = useRef(null)
     const [menuIsVisible, setMenuIsVisible]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
+    const [isFocus, setIsFocus]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
 
     const selectedOption: InputSelectOption | undefined = props.options.find(option => option.value === props.value)
 
@@ -59,10 +63,17 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
         props.onChange({
             target: { value: option.value },
         } as unknown as ChangeEvent<HTMLInputElement>)
-        toggleMenu()
+        buttonRef.current?.focus() // this will close the dropdown menu
     }
 
-    function toggleIfNotDisabled(): void {
+    function toggleIfNotDisabled(event:
+        MouseEvent<HTMLButtonElement>
+        | FocusEvent<HTMLButtonElement>
+        | KeyboardEvent<HTMLButtonElement>
+        | undefined)
+    : void {
+        event?.stopPropagation()
+        event?.preventDefault()
         if (props.disabled) {
             return
         }
@@ -71,6 +82,12 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
     }
 
     useClickOutside(triggerRef.current, () => setMenuIsVisible(false))
+
+    function handleKeyDown(event: KeyboardEvent<HTMLButtonElement> | undefined): void {
+        if (event?.key === 'Enter') {
+            toggleIfNotDisabled(event)
+        }
+    }
 
     return (
         <InputWrapper
@@ -83,13 +100,23 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
             className={styles['select-input-wrapper']}
             hideInlineErrors={props.hideInlineErrors}
             ref={triggerRef}
+            forceFocusStyle={menuIsVisible || isFocus}
         >
             <button
                 tabIndex={props.tabIndex}
                 className={styles.selected}
-                onClick={toggleIfNotDisabled}
+                onMouseDown={toggleIfNotDisabled}
+                onKeyDown={handleKeyDown}
                 type='button'
                 disabled={!!props.disabled}
+                onFocus={function onFocus(event: FocusEvent<HTMLButtonElement> | undefined) {
+                    setIsFocus(true)
+                    toggleIfNotDisabled(event)
+                }}
+                onBlur={function onBlur() {
+                    setIsFocus(false)
+                }}
+                ref={buttonRef}
             >
                 <span className='body-small'>{selectedOption ? label(selectedOption) : ''}</span>
                 <span className='body-small'>{!selectedOption && !!props.placeholder ? props.placeholder : ''}</span>

@@ -1,10 +1,15 @@
 import {
     ChangeEvent,
     FC,
+    KeyboardEvent,
     ReactNode,
+    Ref,
+    useEffect,
+    useMemo,
+    useRef,
 } from 'react'
-import { noop } from 'lodash'
-import { components } from 'react-select'
+import { get, noop } from 'lodash'
+import { components, SelectInstance } from 'react-select'
 import AsyncSelect from 'react-select/async'
 import classNames from 'classnames'
 
@@ -22,6 +27,8 @@ export interface InputMultiselectOption {
 export type InputMultiselectThemes = 'tc-green' | 'clear'
 
 export interface InputMultiselectProps {
+    readonly autoFocus?: boolean
+    readonly className?: string
     readonly dirty?: boolean
     readonly disabled?: boolean
     readonly dropdownIcon?: ReactNode
@@ -41,6 +48,8 @@ export interface InputMultiselectProps {
     readonly theme?: InputMultiselectThemes
     readonly useWrapper?: boolean
     readonly value?: InputMultiselectOption[]
+    readonly onSubmit?: () => void
+    readonly inputRef?: Ref<any>
 }
 
 const MultiValueRemove: FC = (props: any) => (
@@ -74,7 +83,8 @@ const valueContainer = (additionalPlaceholder: string): FC => (props: any) => (
     </components.ValueContainer>
 )
 
-const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProps) => {
+const InputMultiselect: FC<InputMultiselectProps> = props => {
+    const asynSelectRef = useRef<any>()
 
     function handleOnChange(options: readonly InputMultiselectOption[]): void {
         props.onChange({
@@ -82,24 +92,53 @@ const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProp
         } as unknown as ChangeEvent<HTMLInputElement>)
     }
 
+    function handleKeyPress(ev: KeyboardEvent<HTMLDivElement>): void {
+        const state = (get(props.inputRef ?? asynSelectRef, 'current.state') ?? {}) as SelectInstance['state']
+        const isSelectingOptionItem = state.focusedOption
+        const hasValue = state.selectValue?.length > 0
+        if (ev.key !== 'Enter' || isSelectingOptionItem || !hasValue) {
+            return
+        }
+
+        props.onSubmit?.()
+    }
+
     function isOptionDisabled(): boolean {
         return !!props.limit && (props.value?.length as number) >= props.limit
     }
+
+    const ValueContainer = useMemo(() => (
+        valueContainer(props.additionalPlaceholder ?? 'Add more...')
+    ), [props.additionalPlaceholder])
+
+    // scroll to bottom when the value is loaded / updated
+    useEffect(() => {
+        if (!asynSelectRef.current) {
+            return
+        }
+
+        const valueContainerRef: HTMLDivElement = asynSelectRef.current.controlRef.firstChild
+        if (valueContainerRef) {
+            valueContainerRef.scrollTop = valueContainerRef.scrollHeight
+        }
+    }, [props.value])
 
     const selectInputElement = (
         <AsyncSelect
             className={
                 classNames(
+                    props.className,
                     styles.multiselect,
                     styles[`theme-${props.theme ? props.theme : 'tc-green'}`],
                     props.useWrapper === false && styles.multiSelectWrap,
                 )
             }
+            ref={props.inputRef ?? asynSelectRef}
             classNamePrefix={styles.ms}
             unstyled
             isMulti
             cacheOptions
-            autoFocus
+            autoFocus={props.autoFocus}
             defaultOptions
             placeholder={props.placeholder}
             loadOptions={props.onFetchOptions}
@@ -113,10 +152,11 @@ const InputMultiselect: FC<InputMultiselectProps> = (props: InputMultiselectProp
             components={{
                 DropdownIndicator: dropdownIndicator(props.dropdownIcon),
                 MultiValueRemove,
-                ValueContainer: valueContainer(props.additionalPlaceholder ?? 'Add more...'),
+                ValueContainer,
             }}
             value={props.value}
             openMenuOnClick={false}
+            onKeyDown={handleKeyPress}
         />
     )
 
