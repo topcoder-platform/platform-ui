@@ -13,6 +13,7 @@ import {
     ContentCreationDetailsModal,
     CopilotDetailsModal,
     DesignF2FDetailsModal,
+    DevelopmentDetailsModal,
     F2FDetailsModal,
     FEDesignDetailsModal,
     FrontEndFlashDetailsModal,
@@ -77,6 +78,8 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
         = props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'TEST_SUITES')
     const specStats: MemberStats | undefined
         = props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'SPECIFICATION')
+    const developmentStats: MemberStats | undefined
+        = props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'DEVELOPMENT')
 
     const [isDesignF2FsDetailsOpen, setIsDesignF2FsDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -121,6 +124,8 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
     const [isTestSuitesDetailsOpen, setIsTestSuitesDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
     const [isSpecificationDetailsOpen, setIsSpecificationDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const [isDevelopmentDetailsOpen, setIsDevelopmentDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
     function handleShowDSModal(): void {
@@ -192,6 +197,9 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                 break
             case 'SPECIFICATION':
                 setIsSpecificationDetailsOpen(!isSpecificationDetailsOpen)
+                break
+            case 'DEVELOPMENT':
+                setIsDevelopmentDetailsOpen(!isDevelopmentDetailsOpen)
                 break
             // TODO: modal views for the following subtracks
             // are those all the subtracks?
@@ -438,6 +446,13 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                 <SpecificationDetailsModal
                     onClose={bind(handleChallengeWinModalToggle, this, 'SPECIFICATION')}
                     specStats={specStats}
+                />
+            )}
+
+            {isDevelopmentDetailsOpen && (
+                <DevelopmentDetailsModal
+                    onClose={bind(handleChallengeWinModalToggle, this, 'DEVELOPMENT')}
+                    developmentStats={developmentStats}
                 />
             )}
 
