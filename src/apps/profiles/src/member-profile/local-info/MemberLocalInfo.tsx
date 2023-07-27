@@ -81,7 +81,8 @@ const MemberLocalInfo: FC<MemberLocalInfoProps> = (props: MemberLocalInfoProps) 
                         {' '}
                         {moment()
                             .tz(memberCityTimezone)
-                            .format('hh:mm')}
+                            .format('hh:mm a')
+                            .toUpperCase()}
                     </div>
                 )
             }
