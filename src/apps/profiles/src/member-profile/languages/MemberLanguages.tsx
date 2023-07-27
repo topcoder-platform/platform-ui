@@ -54,7 +54,7 @@ const MemberLanguages: FC<MemberLanguagesProps> = (props: MemberLanguagesProps) 
         }, 1000)
     }
 
-    return !loading && (canEdit || memberLanguages) ? (
+    return !loading && (canEdit || !!memberLanguages?.length) ? (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
                 <p className='body-main-bold'>Languages</p>
