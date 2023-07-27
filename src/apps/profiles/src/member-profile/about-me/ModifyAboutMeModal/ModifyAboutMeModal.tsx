@@ -130,6 +130,7 @@ const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeMod
             <form className={styles.editForm}>
                 <InputText
                     label='Title'
+                    placeholder='Ex: I’m a creative rockstar'
                     name='memberTitle'
                     onChange={handleMemberTitleChange}
                     value={memberTitle}
@@ -138,6 +139,7 @@ const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeMod
                 />
                 <InputTextarea
                     label='Description'
+                    placeholder='Share something that makes you, you.'
                     name='memberDescription'
                     onChange={handleMemberDescriptionChange}
                     onBlur={handleMemberDescriptionChange}
