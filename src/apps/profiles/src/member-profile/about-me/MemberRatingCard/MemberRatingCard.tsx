@@ -1,5 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
+import classNames from 'classnames'
 
 import { useMemberStats, UserProfile, UserStats } from '~/libs/core'
 
@@ -47,17 +48,21 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
     return memberStats?.maxRating?.rating ? (
         <div className={styles.container}>
             <div className={styles.innerWrap}>
-                <div className={styles.valueWrap}>
+                <div className={classNames(styles.valueWrap, !maxPercentile ? styles.noPercentile : '')}>
                     <p className={styles.value}>{memberStats?.maxRating?.rating}</p>
                     <p className={styles.name}>Rating</p>
                 </div>
-                <div className={styles.valueWrap}>
-                    <p className={styles.value}>
-                        {Number(maxPercentile)
-                            .toFixed(2)}
-                    </p>
-                    <p className={styles.name}>Percentile</p>
-                </div>
+                {
+                    maxPercentile ? (
+                        <div className={styles.valueWrap}>
+                            <p className={styles.value}>
+                                {Number(maxPercentile)
+                                    .toFixed(2)}
+                            </p>
+                            <p className={styles.name}>Percentile</p>
+                        </div>
+                    ) : undefined
+                }
                 <div className='body-small-medium'>
                     <button type='button' className={styles.link} onClick={handleInfoModalOpen}>What is this?</button>
                 </div>
