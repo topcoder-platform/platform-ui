@@ -19,6 +19,8 @@ interface FEDesignDetailsModalProps {
 
 const FEDesignDetailsModal: FC<FEDesignDetailsModalProps>
     = (props: FEDesignDetailsModalProps) => {
+        // TODO: Enable this when we have challenges details data
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const [viewType]: [WebDesignViewTypes, Dispatch<SetStateAction<WebDesignViewTypes>>]
             = useState<WebDesignViewTypes>('CHALLENGES DETAILS')
 
@@ -62,7 +64,8 @@ const FEDesignDetailsModal: FC<FEDesignDetailsModalProps>
                         </div>
                     </div>
 
-                    <div className={styles.content}>
+                    {/* TODO: Enable this when we have challenges details data */}
+                    {/* <div className={styles.content}>
                         <div className={styles.contentHeader}>
                             <h4>{viewType}</h4>
                         </div>
@@ -75,7 +78,7 @@ const FEDesignDetailsModal: FC<FEDesignDetailsModalProps>
 
                             }
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </BaseModal>
         )

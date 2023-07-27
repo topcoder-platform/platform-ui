@@ -19,6 +19,8 @@ interface BugHuntDetailsModalProps {
 }
 
 const BugHuntDetailsModal: FC<BugHuntDetailsModalProps> = (props: BugHuntDetailsModalProps) => {
+    // TODO: Add Bug Hunt Details with challenges history
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [viewType]: [BugHuntViewTypes, Dispatch<SetStateAction<BugHuntViewTypes>>]
         = useState<BugHuntViewTypes>('CHALLENGES DETAILS')
 
@@ -49,7 +51,8 @@ const BugHuntDetailsModal: FC<BugHuntDetailsModalProps> = (props: BugHuntDetails
                     </div>
                 </div>
 
-                <div className={styles.content}>
+                {/* TODO: Add Bug Hunt Details with challenges history */}
+                {/* <div className={styles.content}>
                     <div className={styles.contentHeader}>
                         <h4>{viewType}</h4>
                     </div>
@@ -62,7 +65,7 @@ const BugHuntDetailsModal: FC<BugHuntDetailsModalProps> = (props: BugHuntDetails
 
                         }
                     </div>
-                </div>
+                </div> */}
             </div>
         </BaseModal>
     )

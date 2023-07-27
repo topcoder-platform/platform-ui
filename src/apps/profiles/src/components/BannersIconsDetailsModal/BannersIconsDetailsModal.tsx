@@ -18,6 +18,8 @@ interface BannersIconsDetailsModalProps {
 }
 
 const BannersIconsDetailsModal: FC<BannersIconsDetailsModalProps> = (props: BannersIconsDetailsModalProps) => {
+    // TODO: enable this when we have the Challenges history data
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [viewType]: [WebDesignViewTypes, Dispatch<SetStateAction<WebDesignViewTypes>>]
         = useState<WebDesignViewTypes>('CHALLENGES DETAILS')
 
@@ -61,7 +63,8 @@ const BannersIconsDetailsModal: FC<BannersIconsDetailsModalProps> = (props: Bann
                     </div>
                 </div>
 
-                <div className={styles.content}>
+                {/* TODO: enable this when we have the Challenges history data */}
+                {/* <div className={styles.content}>
                     <div className={styles.contentHeader}>
                         <h4>{viewType}</h4>
                     </div>
@@ -74,7 +77,7 @@ const BannersIconsDetailsModal: FC<BannersIconsDetailsModalProps> = (props: Bann
 
                         }
                     </div>
-                </div>
+                </div> */}
             </div>
         </BaseModal>
     )
