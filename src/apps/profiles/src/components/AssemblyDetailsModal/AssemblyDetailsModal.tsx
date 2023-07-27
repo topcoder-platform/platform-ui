@@ -1,9 +1,9 @@
 /* eslint-disable complexity */import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
-import { bind, isEmpty, keys } from 'lodash'
+import { isEmpty, keys } from 'lodash'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 
-import { BaseModal, Button, LoadingSpinner } from '~/libs/ui'
+import { BaseModal, LoadingSpinner } from '~/libs/ui'
 import {
     MemberStats,
     ratingToCSScolor,
@@ -77,6 +77,8 @@ const AssemblyDetailsModal: FC<AssemblyDetailsModalProps> = (props: AssemblyDeta
         return options
     }, [memberStatsDist])
 
+    // TODO: enable this function when challenges history is available
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     function toggleViewType(newViewType: SRMViewTypes): void {
         setviewType(newViewType)
     }
@@ -124,7 +126,8 @@ const AssemblyDetailsModal: FC<AssemblyDetailsModalProps> = (props: AssemblyDeta
                     </div>
 
                     <div className={styles.content}>
-                        <div className={styles.contentHeader}>
+                        {/* TODO: Add Assembly Details with challenges history */}
+                        {/* <div className={styles.contentHeader}>
                             <h4>{viewType}</h4>
                             <div className={styles.contentHeaderActions}>
                                 <Button
@@ -140,7 +143,7 @@ const AssemblyDetailsModal: FC<AssemblyDetailsModalProps> = (props: AssemblyDeta
                                     {viewType !== 'CHALLENGES DETAILS' ? 'CHALLENGES DETAILS' : 'STATISTICS'}
                                 </Button>
                             </div>
-                        </div>
+                        </div> */}
 
                         <div className={styles.contentBody}>
                             {

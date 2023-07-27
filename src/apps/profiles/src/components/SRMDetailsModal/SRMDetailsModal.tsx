@@ -137,7 +137,8 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
                                     {' '}
                                     {viewType !== 'SRM DETAILS' ? 'SRM DETAILS' : 'STATISTICS'}
                                 </Button>
-                                <Button
+                                {/* TODO: Enable this when we have challenges details data */}
+                                {/* <Button
                                     primary
                                     onClick={bind(
                                         toggleViewType,
@@ -148,7 +149,7 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
                                     See
                                     {' '}
                                     {viewType !== 'PAST SRM' ? 'PAST SRM' : 'SRM DETAILS'}
-                                </Button>
+                                </Button> */}
                             </div>
                         </div>
 

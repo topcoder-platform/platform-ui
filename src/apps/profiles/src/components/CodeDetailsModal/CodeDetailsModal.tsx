@@ -1,10 +1,10 @@
 /* eslint-disable complexity */
 import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
-import { bind, isEmpty, keys } from 'lodash'
+import { isEmpty, keys } from 'lodash'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 
-import { BaseModal, Button, LoadingSpinner } from '~/libs/ui'
+import { BaseModal, LoadingSpinner } from '~/libs/ui'
 import {
     MemberStats,
     StatsHistory,
@@ -74,6 +74,8 @@ const CodeDetailsModal: FC<CodeDetailsModalProps> = (props: CodeDetailsModalProp
         return options
     }, [memberStatsDist])
 
+    // TODO: Enable this when we have challenges details data
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     function toggleViewType(newViewType: CodeViewTypes): void {
         setviewType(newViewType)
     }
@@ -110,7 +112,8 @@ const CodeDetailsModal: FC<CodeDetailsModalProps> = (props: CodeDetailsModalProp
                     <div className={styles.content}>
                         <div className={styles.contentHeader}>
                             <h4>{viewType}</h4>
-                            <div className={styles.contentHeaderActions}>
+                            {/* TODO: Add button when we have challenges details data */}
+                            {/* <div className={styles.contentHeaderActions}>
                                 <Button
                                     primary
                                     onClick={bind(
@@ -123,7 +126,7 @@ const CodeDetailsModal: FC<CodeDetailsModalProps> = (props: CodeDetailsModalProp
                                     {' '}
                                     {viewType !== 'CHALLENGES DETAILS' ? 'CHALLENGES DETAILS' : 'STATISTICS'}
                                 </Button>
-                            </div>
+                            </div> */}
                         </div>
 
                         <div className={styles.contentBody}>

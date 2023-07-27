@@ -19,7 +19,7 @@
     .achievementsWrap {
         display: flex;
         margin: $sp-4 0 $sp-2;
-        align-items: flex-start;
+        align-items: stretch;
 
         @include ltelg {
             flex-direction: column;

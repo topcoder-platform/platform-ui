@@ -19,6 +19,8 @@ interface F2FDetailsModalProps {
 }
 
 const F2FDetailsModal: FC<F2FDetailsModalProps> = (props: F2FDetailsModalProps) => {
+    // TODO: Add F2F details data
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [viewType]: [BugHuntViewTypes, Dispatch<SetStateAction<BugHuntViewTypes>>]
         = useState<BugHuntViewTypes>('CHALLENGES DETAILS')
 
@@ -49,7 +51,8 @@ const F2FDetailsModal: FC<F2FDetailsModalProps> = (props: F2FDetailsModalProps) 
                     </div>
                 </div>
 
-                <div className={styles.content}>
+                {/* TODO: Add F2F details data */}
+                {/* <div className={styles.content}>
                     <div className={styles.contentHeader}>
                         <h4>{viewType}</h4>
                     </div>
@@ -62,7 +65,7 @@ const F2FDetailsModal: FC<F2FDetailsModalProps> = (props: F2FDetailsModalProps) 
 
                         }
                     </div>
-                </div>
+                </div> */}
             </div>
         </BaseModal>
     )

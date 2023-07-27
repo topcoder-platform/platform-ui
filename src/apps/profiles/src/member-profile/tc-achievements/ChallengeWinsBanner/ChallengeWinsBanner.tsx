@@ -206,64 +206,66 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
     return (
         <div className={styles.containerWrap}>
             <div className={styles.container}>
-                <p className='body-large-bold'>Topcoder Challenge Winner</p>
-                <div className={styles.wins}>
-                    {
-                        !!props.memberStats.DATA_SCIENCE?.SRM?.wins && (
-                            <ChallengeWin
-                                typeName='SRM'
-                                onClick={handleShowSRMModal}
-                                winCnt={props.memberStats.DATA_SCIENCE.SRM.wins}
-                            />
-                        )
-                    }
-                    {
-                        !!props.memberStats.DATA_SCIENCE?.MARATHON_MATCH?.wins && (
-                            <ChallengeWin
-                                typeName='Marathon Match'
-                                onClick={handleShowDSModal}
-                                winCnt={props.memberStats.DATA_SCIENCE.MARATHON_MATCH.wins}
-                            />
-                        )
-                    }
-                    {
-                        !!props.memberStats.DEVELOP?.wins
-                        && props.memberStats.DEVELOP?.subTracks.map((ms: MemberStats) => (ms.wins ? (
-                            <ChallengeWin
-                                key={ms.name}
-                                typeName={subTrackLabelToHumanName(ms.name)}
-                                onClick={bind(handleChallengeWinModalToggle, this, ms.name)}
-                                winCnt={ms.wins}
-                            />
-                        ) : undefined))
-                    }
-                    {
-                        !!props.memberStats.DESIGN?.wins
-                        && props.memberStats.DESIGN?.subTracks.map((ms: MemberStats) => (ms.wins ? (
-                            <ChallengeWin
-                                key={ms.name}
-                                typeName={subTrackLabelToHumanName(ms.name)}
-                                onClick={bind(handleChallengeWinModalToggle, this, ms.name)}
-                                winCnt={ms.wins}
-                            />
-                        ) : undefined))
-                    }
-                    {
-                        !!props.memberStats.COPILOT && (
-                            <ChallengeWin
-                                typeName='% Fulfillment'
-                                onClick={bind(handleChallengeWinModalToggle, this, 'COPILOT')}
-                                winCnt={props.memberStats.COPILOT.fulfillment}
-                                winLabel='COPILOT'
-                            />
-                        )
-                    }
+                <div className={styles.innerWrapper}>
+                    <p className='body-large-bold'>Topcoder Challenge Winner</p>
+                    <div className={styles.wins}>
+                        {
+                            !!props.memberStats.DATA_SCIENCE?.SRM?.wins && (
+                                <ChallengeWin
+                                    typeName='SRM'
+                                    onClick={handleShowSRMModal}
+                                    winCnt={props.memberStats.DATA_SCIENCE.SRM.wins}
+                                />
+                            )
+                        }
+                        {
+                            !!props.memberStats.DATA_SCIENCE?.MARATHON_MATCH?.wins && (
+                                <ChallengeWin
+                                    typeName='Marathon Match'
+                                    onClick={handleShowDSModal}
+                                    winCnt={props.memberStats.DATA_SCIENCE.MARATHON_MATCH.wins}
+                                />
+                            )
+                        }
+                        {
+                            !!props.memberStats.DEVELOP?.wins
+                            && props.memberStats.DEVELOP?.subTracks.map((ms: MemberStats) => (ms.wins ? (
+                                <ChallengeWin
+                                    key={ms.name}
+                                    typeName={subTrackLabelToHumanName(ms.name)}
+                                    onClick={bind(handleChallengeWinModalToggle, this, ms.name)}
+                                    winCnt={ms.wins}
+                                />
+                            ) : undefined))
+                        }
+                        {
+                            !!props.memberStats.DESIGN?.wins
+                            && props.memberStats.DESIGN?.subTracks.map((ms: MemberStats) => (ms.wins ? (
+                                <ChallengeWin
+                                    key={ms.name}
+                                    typeName={subTrackLabelToHumanName(ms.name)}
+                                    onClick={bind(handleChallengeWinModalToggle, this, ms.name)}
+                                    winCnt={ms.wins}
+                                />
+                            ) : undefined))
+                        }
+                        {
+                            !!props.memberStats.COPILOT && (
+                                <ChallengeWin
+                                    typeName='% Fulfillment'
+                                    onClick={bind(handleChallengeWinModalToggle, this, 'COPILOT')}
+                                    winCnt={props.memberStats.COPILOT.fulfillment}
+                                    winLabel='COPILOT'
+                                />
+                            )
+                        }
+                    </div>
+                    <p>
+                        Topcoder challenges are open competitions where community
+                        members participate in small units of work to deliver projects.
+                    </p>
                 </div>
             </div>
-            <p>
-                Topcoder challenges are open competitions where community
-                members participate in small units of work to deliver projects.
-            </p>
 
             {isSRMDetailsOpen && (
                 <SRMDetailsModal

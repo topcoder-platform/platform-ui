@@ -19,6 +19,8 @@ interface LogoDesignDetailsModalProps {
 }
 
 const LogoDesignDetailsModal: FC<LogoDesignDetailsModalProps> = (props: LogoDesignDetailsModalProps) => {
+    // TODO: Enable this when we have challenges details data
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [viewType]: [WebDesignViewTypes, Dispatch<SetStateAction<WebDesignViewTypes>>]
         = useState<WebDesignViewTypes>('CHALLENGES DETAILS')
 
@@ -61,8 +63,8 @@ const LogoDesignDetailsModal: FC<LogoDesignDetailsModalProps> = (props: LogoDesi
                         Average Placement
                     </div>
                 </div>
-
-                <div className={styles.content}>
+                {/* TODO: Add Logo Design details data */}
+                {/* <div className={styles.content}>
                     <div className={styles.contentHeader}>
                         <h4>{viewType}</h4>
                     </div>
@@ -75,7 +77,7 @@ const LogoDesignDetailsModal: FC<LogoDesignDetailsModalProps> = (props: LogoDesi
 
                         }
                     </div>
-                </div>
+                </div> */}
             </div>
         </BaseModal>
     )

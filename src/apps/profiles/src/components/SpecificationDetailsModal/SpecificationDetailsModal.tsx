@@ -18,6 +18,8 @@ interface SpecificationDetailsModalProps {
 }
 
 const SpecificationDetailsModal: FC<SpecificationDetailsModalProps> = (props: SpecificationDetailsModalProps) => {
+    // TODO: Enable this when we have challenges details data
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [viewType]: [WebDesignViewTypes, Dispatch<SetStateAction<WebDesignViewTypes>>]
         = useState<WebDesignViewTypes>('CHALLENGES DETAILS')
 
@@ -61,7 +63,8 @@ const SpecificationDetailsModal: FC<SpecificationDetailsModalProps> = (props: Sp
                     </div>
                 </div>
 
-                <div className={styles.content}>
+                {/* TODO: Enable this when we have challenges details data */}
+                {/* <div className={styles.content}>
                     <div className={styles.contentHeader}>
                         <h4>{viewType}</h4>
                     </div>
@@ -74,7 +77,7 @@ const SpecificationDetailsModal: FC<SpecificationDetailsModalProps> = (props: Sp
 
                         }
                     </div>
-                </div>
+                </div> */}
             </div>
         </BaseModal>
     )
