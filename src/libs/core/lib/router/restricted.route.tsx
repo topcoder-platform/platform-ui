@@ -1,6 +1,7 @@
 import { FC, useContext } from 'react'
 
 import { RestrictedPage } from '~/libs/shared'
+import { LoadingSpinner } from '~/libs/ui'
 
 import { profileContext, ProfileContextData } from '../profile'
 
@@ -17,7 +18,7 @@ const RestrictedRoute: FC<RestrictedRouteProps> = props => {
 
     // if we're not initialized yet, just return the children
     if (!initialized) {
-        return props.children
+        return <LoadingSpinner />
     }
 
     // if we have a profile and `rolesRequired` is configured for the route
