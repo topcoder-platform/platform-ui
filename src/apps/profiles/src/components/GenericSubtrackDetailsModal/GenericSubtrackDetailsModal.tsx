@@ -8,62 +8,63 @@ import {
 
 import { numberToFixed } from '../../lib'
 
-import styles from './BannersIconsDetailsModal.module.scss'
+import styles from './GenericSubtrackDetailsModal.module.scss'
 
-type WebDesignViewTypes = 'CHALLENGES DETAILS'
+type GenericViewTypes = 'CHALLENGES DETAILS'
 
-interface BannersIconsDetailsModalProps {
+interface GenericSubtrackDetailsModalProps {
     onClose: () => void
-    bannersIconsStats: MemberStats | undefined
+    genericStats: MemberStats | undefined
+    title: string
 }
 
-const BannersIconsDetailsModal: FC<BannersIconsDetailsModalProps> = (props: BannersIconsDetailsModalProps) => {
-    // TODO: enable this when we have the Challenges history data
+const GenericSubtrackDetailsModal: FC<GenericSubtrackDetailsModalProps> = (props: GenericSubtrackDetailsModalProps) => {
+    // TODO: Enable this when we have challenges details data
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [viewType]: [WebDesignViewTypes, Dispatch<SetStateAction<WebDesignViewTypes>>]
-        = useState<WebDesignViewTypes>('CHALLENGES DETAILS')
+    const [viewType]: [GenericViewTypes, Dispatch<SetStateAction<GenericViewTypes>>]
+        = useState<GenericViewTypes>('CHALLENGES DETAILS')
 
     return (
         <BaseModal
             onClose={props.onClose}
             open
             size='body'
-            title='Banners Or Icons'
+            title={props.title}
         >
 
             <div className={styles.container}>
                 <div className='member-stat-header'>
                     <div>
-                        <span className='member-stat-value'>{props.bannersIconsStats?.wins}</span>
+                        <span className='member-stat-value'>{props.genericStats?.wins}</span>
                         Wins
                     </div>
                     <div>
-                        <span className='member-stat-value'>{props.bannersIconsStats?.challenges}</span>
+                        <span className='member-stat-value'>{props.genericStats?.challenges}</span>
                         Challenges
                     </div>
                     <div>
                         <span className='member-stat-value'>
-                            {numberToFixed(props.bannersIconsStats?.rank?.overallPercentile || 0)}
+                            {numberToFixed(props.genericStats?.rank?.overallPercentile || 0)}
                             %
                         </span>
                         Percentile
                     </div>
                     <div>
                         <span className='member-stat-value'>
-                            {numberToFixed(props.bannersIconsStats?.screeningSuccessRate || 0)}
+                            {numberToFixed(props.genericStats?.screeningSuccessRate || 0)}
                             %
                         </span>
                         Screening Success Rate
                     </div>
                     <div>
                         <span className='member-stat-value'>
-                            {numberToFixed(props.bannersIconsStats?.avgPlacement || 0)}
+                            {numberToFixed(props.genericStats?.avgPlacement || 0)}
                         </span>
                         Average Placement
                     </div>
                 </div>
 
-                {/* TODO: enable this when we have the Challenges history data */}
+                {/* TODO: Enable this when we have challenges details data */}
                 {/* <div className={styles.content}>
                     <div className={styles.contentHeader}>
                         <h4>{viewType}</h4>
@@ -83,4 +84,4 @@ const BannersIconsDetailsModal: FC<BannersIconsDetailsModalProps> = (props: Bann
     )
 }
 
-export default BannersIconsDetailsModal
+export default GenericSubtrackDetailsModal

@@ -13,7 +13,6 @@ import styles from './WebDesignDetailsModal.module.scss'
 type WebDesignViewTypes = 'CHALLENGES DETAILS'
 
 interface WebDesignDetailsModalProps {
-    isWebDesignDetailsOpen: boolean
     onClose: () => void
     webDesignStats: MemberStats | undefined
 }
@@ -27,7 +26,7 @@ const WebDesignDetailsModal: FC<WebDesignDetailsModalProps> = (props: WebDesignD
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isWebDesignDetailsOpen}
+            open
             size='body'
             title='WEB DESIGNS'
         >

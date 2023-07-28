@@ -24,7 +24,6 @@ import styles from './ContentCreationDetailsModal.module.scss'
 type TestScenViewTypes = 'STATISTICS' | 'CHALLENGES DETAILS'
 
 interface ContentCreationDetailsModalProps {
-    isContentCreationDetailsOpen: boolean
     onClose: () => void
     contentCreationStats: MemberStats | undefined
     profile: UserProfile | undefined
@@ -84,7 +83,7 @@ const ContentCreationDetailsModal: FC<ContentCreationDetailsModalProps> = (props
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isContentCreationDetailsOpen}
+            open
             size='body'
             title='CONTENT CREATION'
         >

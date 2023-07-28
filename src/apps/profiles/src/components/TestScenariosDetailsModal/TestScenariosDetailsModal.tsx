@@ -24,7 +24,6 @@ import styles from './TestScenariosDetailsModal.module.scss'
 type TestScenViewTypes = 'STATISTICS' | 'CHALLENGES DETAILS'
 
 interface TestScenariosDetailsModalProps {
-    isTestScenDetailsOpen: boolean
     onClose: () => void
     testScenStats: MemberStats | undefined
     profile: UserProfile | undefined
@@ -84,7 +83,7 @@ const TestScenariosDetailsModal: FC<TestScenariosDetailsModalProps> = (props: Te
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isTestScenDetailsOpen}
+            open
             size='body'
             title='TEST SCENARIOS'
         >

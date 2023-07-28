@@ -83,3 +83,13 @@
     justify-content: space-between;
     width: 100%;
 }
+
+.eduModal {
+    @include gtemd {
+        overflow: visible !important;
+    }
+}
+
+.eduModalBody {
+    overflow: visible !important;
+}

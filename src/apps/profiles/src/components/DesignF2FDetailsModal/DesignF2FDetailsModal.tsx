@@ -13,7 +13,6 @@ import styles from './DesignF2FDetailsModal.module.scss'
 type WebDesignViewTypes = 'CHALLENGES DETAILS'
 
 interface DesignF2FDetailsModalProps {
-    isDesignF2FDetailsOpen: boolean
     onClose: () => void
     designF2FStats: MemberStats | undefined
 }
@@ -27,7 +26,7 @@ const DesignF2FDetailsModal: FC<DesignF2FDetailsModalProps> = (props: DesignF2FD
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isDesignF2FDetailsOpen}
+            open
             size='body'
             title='DESIGN FIRST2FINISH'
         >

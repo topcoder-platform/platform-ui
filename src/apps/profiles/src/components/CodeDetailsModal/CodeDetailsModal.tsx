@@ -23,7 +23,6 @@ import styles from './CodeDetailsModal.module.scss'
 type CodeViewTypes = 'STATISTICS' | 'CHALLENGES DETAILS'
 
 interface CodeDetailsModalProps {
-    isCodeDetailsOpen: boolean
     onClose: () => void
     codeStats: MemberStats | undefined
     profile: UserProfile | undefined
@@ -83,7 +82,7 @@ const CodeDetailsModal: FC<CodeDetailsModalProps> = (props: CodeDetailsModalProp
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isCodeDetailsOpen}
+            open
             size='body'
             title='Code'
         >
