@@ -130,6 +130,8 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
                 maxTime={props.maxTime}
                 showYearPicker={props.showYearPicker}
                 dateFormat={props.dateFormat}
+                popperPlacement='bottom'
+                portalId='react-date-portal'
             />
         </InputWrapper>
     )

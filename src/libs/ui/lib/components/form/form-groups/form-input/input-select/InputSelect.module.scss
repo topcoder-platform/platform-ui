@@ -23,7 +23,7 @@
     left: 0;
     width: 100%;
     &:not(:empty) {
-        z-index: 9;
+        z-index: 1001;
     }
 }
 

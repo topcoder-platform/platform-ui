@@ -11,12 +11,15 @@ import {
     useRef,
     useState,
 } from 'react'
+import { usePopper } from 'react-popper'
 import classNames from 'classnames'
 
+import { beforeWrite } from '@popperjs/core/lib'
 import { useClickOutside } from '~/libs/shared/lib/hooks'
 
 import { IconOutline } from '../../../../svgs'
 import { InputWrapper } from '../input-wrapper'
+import { Portal } from '../../../../portal'
 
 import styles from './InputSelect.module.scss'
 
@@ -40,11 +43,32 @@ interface InputSelectProps {
     readonly value?: string
 }
 
+const sameWidthModifier = {
+    effect: ({ state }: any) => {
+        state.elements.popper.style.width = `${state.elements.reference.offsetWidth}px`
+    },
+    enabled: true,
+    fn: ({ state }: any) => {
+        state.styles.popper.width = `${state.rects.reference.width}px`
+        return state
+    },
+    name: 'sameWidth',
+    phase: beforeWrite,
+    requires: ['computeStyles'],
+}
+const modifiers = [sameWidthModifier]
+
 const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
     const triggerRef: MutableRefObject<any> = useRef(undefined)
+    const popperRef: MutableRefObject<any> = useRef(undefined)
     const buttonRef: MutableRefObject<HTMLButtonElement | null> = useRef(null)
     const [menuIsVisible, setMenuIsVisible]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
     const [isFocus, setIsFocus]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
+
+    const popper = usePopper(triggerRef.current?.firstChild, popperRef.current, {
+        modifiers,
+        strategy: 'absolute',
+    })
 
     const selectedOption: InputSelectOption | undefined = props.options.find(option => option.value === props.value)
 
@@ -125,27 +149,34 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
                 </span>
             </button>
 
-            <div className={styles['menu-wrap']}>
-                {menuIsVisible && (
-                    <div className={styles['select-menu']}>
-                        {props.options.map(option => (
-                            <div
-                                className={
-                                    classNames(
-                                        styles['select-option'],
-                                        'body-main',
-                                        selectedOption === option && 'selected',
-                                    )
-                                }
-                                onClick={select(option)}
-                                key={option.value}
-                            >
-                                {label(option)}
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+            <Portal>
+                <div
+                    className={styles['menu-wrap']}
+                    ref={popperRef}
+                    style={popper.styles.popper}
+                    {...popper.attributes.popper}
+                >
+                    {menuIsVisible && (
+                        <div className={styles['select-menu']}>
+                            {props.options.map(option => (
+                                <div
+                                    className={
+                                        classNames(
+                                            styles['select-option'],
+                                            'body-main',
+                                            selectedOption === option && 'selected',
+                                        )
+                                    }
+                                    onClick={select(option)}
+                                    key={option.value}
+                                >
+                                    {label(option)}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </Portal>
 
         </InputWrapper>
     )
