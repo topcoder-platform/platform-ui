@@ -1,5 +1,5 @@
 /* eslint-disable complexity */
-import { Dispatch, FC, SetStateAction, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
 import { bind } from 'lodash'
 
 import { MemberStats, UserProfile, UserStats } from '~/libs/core'
@@ -7,28 +7,19 @@ import { MemberStats, UserProfile, UserStats } from '~/libs/core'
 import { subTrackLabelToHumanName } from '../../../lib/helpers'
 import {
     AssemblyDetailsModal,
-    BannersIconsDetailsModal,
     BugHuntDetailsModal,
     CodeDetailsModal,
     ContentCreationDetailsModal,
     CopilotDetailsModal,
     DesignF2FDetailsModal,
-    DevelopmentDetailsModal,
     F2FDetailsModal,
-    FEDesignDetailsModal,
-    FrontEndFlashDetailsModal,
+    GenericSubtrackDetailsModal,
     LogoDesignDetailsModal,
     MMDetailsModal,
-    PrintPresentationDetailsModal,
-    SpecificationDetailsModal,
     SRMDetailsModal,
-    StudioOtherDetailsModal,
     TestScenariosDetailsModal,
-    TestSuitesDetailsModal,
     UIPrototypeDetailsModal,
     WebDesignDetailsModal,
-    WidgetMobileScreenDetailsModal,
-    WireframesDetailsModal,
 } from '../../../components'
 
 import { ChallengeWin } from './ChallengeWin'
@@ -41,174 +32,160 @@ interface ChallengeWinsBannerProps {
 
 const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsBannerProps) => {
     const f2fStats: MemberStats | undefined
-        = props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'FIRST_2_FINISH')
+        = useMemo(
+            () => props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'FIRST_2_FINISH'),
+            [props.memberStats],
+        )
     const codeStats: MemberStats | undefined
-        = props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'CODE')
+        = useMemo(
+            () => props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'CODE'),
+            [props.memberStats],
+        )
     const assemblyStats: MemberStats | undefined
-        = props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'ASSEMBLY_COMPETITION')
+        = useMemo(
+            () => props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'ASSEMBLY_COMPETITION'),
+            [props.memberStats],
+        )
     const contentCreationStats: MemberStats | undefined
-        = props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'CONTENT_CREATION')
+        = useMemo(
+            () => props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'CONTENT_CREATION'),
+            [props.memberStats],
+        )
     const uiPrototypeStats: MemberStats | undefined
-        = props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'UI_PROTOTYPE_COMPETITION')
+        = useMemo(
+            () => props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'UI_PROTOTYPE_COMPETITION'),
+            [props.memberStats],
+        )
     const designF2FStats: MemberStats | undefined
-        = props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'DESIGN_FIRST_2_FINISH')
+        = useMemo(
+            () => props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'DESIGN_FIRST_2_FINISH'),
+            [props.memberStats],
+        )
     const webDesignStats: MemberStats | undefined
-        = props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'WEB_DESIGNS')
+        = useMemo(
+            () => props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'WEB_DESIGNS'),
+            [props.memberStats],
+        )
     const logoDesignStats: MemberStats | undefined
-        = props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'LOGO_DESIGN')
+        = useMemo(
+            () => props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'LOGO_DESIGN'),
+            [props.memberStats],
+        )
     const bugHuntStats: MemberStats | undefined
-        = props.memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'BUG_HUNT')
+        = useMemo(
+            () => props.memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'BUG_HUNT'),
+            [props.memberStats],
+        )
     const testScenStats: MemberStats | undefined
-        = props.memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'TEST_SCENARIOS')
+        = useMemo(
+            () => props.memberStats?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'TEST_SCENARIOS'),
+            [props.memberStats],
+        )
     const wireframesStats: MemberStats | undefined
-        = props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'WIREFRAMES')
+        = useMemo(
+            () => props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'WIREFRAMES'),
+            [props.memberStats],
+        )
     const frontEndFlashStats: MemberStats | undefined
-        = props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'FRONT_END_FLASH')
+        = useMemo(
+            () => props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'FRONT_END_FLASH'),
+            [props.memberStats],
+        )
     const printPresentationStats: MemberStats | undefined
-        = props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'PRINT_OR_PRESENTATION')
+        = useMemo(
+            () => props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'PRINT_OR_PRESENTATION'),
+            [props.memberStats],
+        )
     const studioOtherStats: MemberStats | undefined
-        = props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'STUDIO_OTHER')
+        = useMemo(
+            () => props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'STUDIO_OTHER'),
+            [props.memberStats],
+        )
     const feDesignStats: MemberStats | undefined
-        = props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'APPLICATION_FRONT_END_DESIGN')
+        = useMemo(
+            () => props.memberStats?.DESIGN?.subTracks
+                .find(subTrack => subTrack.name === 'APPLICATION_FRONT_END_DESIGN'),
+            [props.memberStats],
+        )
     const bannersIconsStats: MemberStats | undefined
-        = props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'BANNERS_OR_ICONS')
+        = useMemo(
+            () => props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'BANNERS_OR_ICONS'),
+            [props.memberStats],
+        )
     const widgetMobileStats: MemberStats | undefined
-        = props.memberStats?.DESIGN?.subTracks.find(subTrack => subTrack.name === 'WIDGET_OR_MOBILE_SCREEN_DESIGN')
+        = useMemo(
+            () => props.memberStats?.DESIGN?.subTracks
+                .find(subTrack => subTrack.name === 'WIDGET_OR_MOBILE_SCREEN_DESIGN'),
+            [props.memberStats],
+        )
     const testSuitesStats: MemberStats | undefined
-        = props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'TEST_SUITES')
+        = useMemo(
+            () => props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'TEST_SUITES'),
+            [props.memberStats],
+        )
     const specStats: MemberStats | undefined
-        = props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'SPECIFICATION')
+        = useMemo(
+            () => props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'SPECIFICATION'),
+            [props.memberStats],
+        )
     const developmentStats: MemberStats | undefined
-        = props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'DEVELOPMENT')
+        = useMemo(
+            () => props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'DEVELOPMENT'),
+            [props.memberStats],
+        )
+    const architectureStats: MemberStats | undefined
+        = useMemo(
+            () => props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'ARCHITECTURE'),
+            [props.memberStats],
+        )
+    const copilotPostingStats: MemberStats | undefined
+        = useMemo(
+            () => props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'COPILOT_POSTING'),
+            [props.memberStats],
+        )
+    const designStats: MemberStats | undefined
+        = useMemo(
+            () => props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'DESIGN'),
+            [props.memberStats],
+        )
 
-    const [isDesignF2FsDetailsOpen, setIsDesignF2FsDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isWebDesignDetailsOpen, setIsWebDesignDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isLogoDesignDetailsOpen, setIsLogoDesignDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isF2FDetailsOpen, setIsF2FDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isCodeDetailsOpen, setIsCodeDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isAssemblyDetailsOpen, setIsAssemblyDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isContentCreationDetailsOpen, setIsContentCreationDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isUIPrototypeDetailsOpen, setIsUIPrototypeDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isDSDetailsOpen, setIsDSDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
-    const [isSRMDetailsOpen, setIsSRMDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isBugHuntDetailsOpen, setIsBugHuntDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isTestScenDetailsOpen, setIsTestScenDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isCopilotDetailsOpen, setIsCopilotDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isWireframesDetailsOpen, setIsWireframesDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isFrontEndFlashDetailsOpen, setIsFrontEndFlashDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isPrintPresentationDetailsOpen, setIsPrintPresentationDetailsOpen]: [
-        boolean, Dispatch<SetStateAction<boolean>>
-    ] = useState<boolean>(false)
-    const [isStudioOtherDetailsOpen, setIsStudioOtherDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isFEDesignDetailsOpen, setIsFEDesignDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isBannersIconsDetailsOpen, setisBannersIconsDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isWidgetMobileDetailsOpen, setIsWidgetMobileDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isTestSuitesDetailsOpen, setIsTestSuitesDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isSpecificationDetailsOpen, setIsSpecificationDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isDevelopmentDetailsOpen, setIsDevelopmentDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-
-    function handleShowDSModal(): void {
-        setIsDSDetailsOpen(!isDSDetailsOpen)
-    }
-
-    function handleShowSRMModal(): void {
-        setIsSRMDetailsOpen(!isSRMDetailsOpen)
-    }
+    const [modalVisibilityMap, setModalVisibilityMap]: [
+        { [key: string]: boolean },
+        Dispatch<SetStateAction<{ [key: string]: boolean }>>
+    ] = useState<{ [key: string]: boolean }>({
+        APPLICATION_FRONT_END_DESIGN: false,
+        ARCHITECTURE: false,
+        ASSEMBLY_COMPETITION: false,
+        BANNERS_OR_ICONS: false,
+        BUG_HUNT: false,
+        CODE: false,
+        CONTENT_CREATION: false,
+        COPILOT: false,
+        COPILOT_POSTING: false,
+        DESIGN: false,
+        DESIGN_FIRST_2_FINISH: false,
+        DEVELOPMENT: false,
+        DS: false,
+        FIRST_2_FINISH: false,
+        FRONT_END_FLASH: false,
+        LOGO_DESIGN: false,
+        PRINT_OR_PRESENTATION: false,
+        SPECIFICATION: false,
+        SRM: false,
+        STUDIO_OTHER: false,
+        TEST_SCENARIOS: false,
+        TEST_SUITES: false,
+        UI_PROTOTYPE_COMPETITION: false,
+        WEB_DESIGNS: false,
+        WIDGET_OR_MOBILE_SCREEN_DESIGN: false,
+        WIREFRAMES: false,
+    })
 
     function handleChallengeWinModalToggle(subTrack: string): void {
-        switch (subTrack) {
-            case 'ASSEMBLY_COMPETITION':
-                setIsAssemblyDetailsOpen(!isAssemblyDetailsOpen)
-                break
-            case 'CODE':
-                setIsCodeDetailsOpen(!isCodeDetailsOpen)
-                break
-            case 'FIRST_2_FINISH':
-                setIsF2FDetailsOpen(!isF2FDetailsOpen)
-                break
-            case 'UI_PROTOTYPE_COMPETITION':
-                setIsUIPrototypeDetailsOpen(!isUIPrototypeDetailsOpen)
-                break
-            case 'DESIGN_FIRST_2_FINISH':
-                setIsDesignF2FsDetailsOpen(!isDesignF2FsDetailsOpen)
-                break
-            case 'WEB_DESIGNS':
-                setIsWebDesignDetailsOpen(!isWebDesignDetailsOpen)
-                break
-            case 'LOGO_DESIGN':
-                setIsLogoDesignDetailsOpen(!isLogoDesignDetailsOpen)
-                break
-            case 'BUG_HUNT':
-                setIsBugHuntDetailsOpen(!isBugHuntDetailsOpen)
-                break
-            case 'TEST_SCENARIOS':
-                setIsTestScenDetailsOpen(!isTestScenDetailsOpen)
-                break
-            case 'CONTENT_CREATION':
-                setIsContentCreationDetailsOpen(!isContentCreationDetailsOpen)
-                break
-            case 'COPILOT':
-                setIsCopilotDetailsOpen(!isCopilotDetailsOpen)
-                break
-            case 'WIREFRAMES':
-                setIsWireframesDetailsOpen(!isWireframesDetailsOpen)
-                break
-            case 'FRONT_END_FLASH':
-                setIsFrontEndFlashDetailsOpen(!isFrontEndFlashDetailsOpen)
-                break
-            case 'PRINT_OR_PRESENTATION':
-                setIsPrintPresentationDetailsOpen(!isPrintPresentationDetailsOpen)
-                break
-            case 'STUDIO_OTHER':
-                setIsStudioOtherDetailsOpen(!isStudioOtherDetailsOpen)
-                break
-            case 'APPLICATION_FRONT_END_DESIGN':
-                setIsFEDesignDetailsOpen(!isFEDesignDetailsOpen)
-                break
-            case 'BANNERS_OR_ICONS':
-                setisBannersIconsDetailsOpen(!isBannersIconsDetailsOpen)
-                break
-            case 'WIDGET_OR_MOBILE_SCREEN_DESIGN':
-                setIsWidgetMobileDetailsOpen(!isWidgetMobileDetailsOpen)
-                break
-            case 'TEST_SUITES':
-                setIsTestSuitesDetailsOpen(!isTestSuitesDetailsOpen)
-                break
-            case 'SPECIFICATION':
-                setIsSpecificationDetailsOpen(!isSpecificationDetailsOpen)
-                break
-            case 'DEVELOPMENT':
-                setIsDevelopmentDetailsOpen(!isDevelopmentDetailsOpen)
-                break
-            // TODO: modal views for the following subtracks
-            // are those all the subtracks?
-            // case 'CONCEPTUALIZATION':
-            //     return 'Conceptualization'
-            // case 'COPILOT_POSTING':
-            //     return 'Copilot Posting'
-            default: break
-        }
+        setModalVisibilityMap({
+            ...modalVisibilityMap,
+            [subTrack]: !modalVisibilityMap[subTrack],
+        })
     }
 
     return (
@@ -221,7 +198,7 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                             !!props.memberStats.DATA_SCIENCE?.SRM?.wins && (
                                 <ChallengeWin
                                     typeName='SRM'
-                                    onClick={handleShowSRMModal}
+                                    onClick={bind(handleChallengeWinModalToggle, this, 'SRM')}
                                     winCnt={props.memberStats.DATA_SCIENCE.SRM.wins}
                                 />
                             )
@@ -230,7 +207,7 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                             !!props.memberStats.DATA_SCIENCE?.MARATHON_MATCH?.wins && (
                                 <ChallengeWin
                                     typeName='Marathon Match'
-                                    onClick={handleShowDSModal}
+                                    onClick={bind(handleChallengeWinModalToggle, this, 'DS')}
                                     winCnt={props.memberStats.DATA_SCIENCE.MARATHON_MATCH.wins}
                                 />
                             )
@@ -275,184 +252,205 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                 </div>
             </div>
 
-            {isSRMDetailsOpen && (
+            {modalVisibilityMap.SRM && (
                 <SRMDetailsModal
-                    isSRMDetailsOpen={isSRMDetailsOpen}
-                    onClose={handleShowSRMModal}
+                    onClose={bind(handleChallengeWinModalToggle, this, 'SRM')}
                     SRMStats={props.memberStats?.DATA_SCIENCE?.SRM}
                     profile={props.profile}
                 />
             )}
 
-            {isDSDetailsOpen && (
+            {modalVisibilityMap.DS && (
                 <MMDetailsModal
-                    isDSDetailsOpen={isDSDetailsOpen}
-                    onClose={handleShowDSModal}
+                    onClose={bind(handleChallengeWinModalToggle, this, 'DS')}
                     MMStats={props.memberStats?.DATA_SCIENCE?.MARATHON_MATCH}
                     profile={props.profile}
                 />
             )}
 
-            {isCodeDetailsOpen && (
+            {modalVisibilityMap.CODE && (
                 <CodeDetailsModal
-                    isCodeDetailsOpen={isCodeDetailsOpen}
                     onClose={bind(handleChallengeWinModalToggle, this, 'CODE')}
                     codeStats={codeStats}
                     profile={props.profile}
                 />
             )}
 
-            {isF2FDetailsOpen && (
+            {modalVisibilityMap.FIRST_2_FINISH && (
                 <F2FDetailsModal
-                    isF2FDetailsOpen={isF2FDetailsOpen}
                     onClose={bind(handleChallengeWinModalToggle, this, 'FIRST_2_FINISH')}
                     f2fStats={f2fStats}
                 />
             )}
 
-            {isAssemblyDetailsOpen && (
+            {modalVisibilityMap.ASSEMBLY_COMPETITION && (
                 <AssemblyDetailsModal
-                    isAssemblyDetailsOpen={isAssemblyDetailsOpen}
                     onClose={bind(handleChallengeWinModalToggle, this, 'ASSEMBLY_COMPETITION')}
                     assemblyStats={assemblyStats}
                     profile={props.profile}
                 />
             )}
 
-            {isContentCreationDetailsOpen && (
+            {modalVisibilityMap.CONTENT_CREATION && (
                 <ContentCreationDetailsModal
-                    isContentCreationDetailsOpen={isContentCreationDetailsOpen}
                     onClose={bind(handleChallengeWinModalToggle, this, 'CONTENT_CREATION')}
                     contentCreationStats={contentCreationStats}
                     profile={props.profile}
                 />
             )}
 
-            {isUIPrototypeDetailsOpen && (
+            {modalVisibilityMap.UI_PROTOTYPE_COMPETITION && (
                 <UIPrototypeDetailsModal
-                    isUIPrototypeDetailsOpen={isUIPrototypeDetailsOpen}
                     onClose={bind(handleChallengeWinModalToggle, this, 'UI_PROTOTYPE_COMPETITION')}
                     uiPrototypeStats={uiPrototypeStats}
                     profile={props.profile}
                 />
             )}
 
-            {isWebDesignDetailsOpen && (
+            {modalVisibilityMap.WEB_DESIGNS && (
                 <WebDesignDetailsModal
-                    isWebDesignDetailsOpen={isWebDesignDetailsOpen}
                     onClose={bind(handleChallengeWinModalToggle, this, 'WEB_DESIGNS')}
                     webDesignStats={webDesignStats}
                 />
             )}
 
-            {isLogoDesignDetailsOpen && (
+            {modalVisibilityMap.LOGO_DESIGN && (
                 <LogoDesignDetailsModal
-                    isLogoDesignDetailsOpen={isLogoDesignDetailsOpen}
                     onClose={bind(handleChallengeWinModalToggle, this, 'LOGO_DESIGN')}
                     logoDesignStats={logoDesignStats}
                 />
             )}
 
-            {isDesignF2FsDetailsOpen && (
+            {modalVisibilityMap.DESIGN_FIRST_2_FINISH && (
                 <DesignF2FDetailsModal
-                    isDesignF2FDetailsOpen={isDesignF2FsDetailsOpen}
                     onClose={bind(handleChallengeWinModalToggle, this, 'DESIGN_FIRST_2_FINISH')}
                     designF2FStats={designF2FStats}
                 />
             )}
 
-            {isTestScenDetailsOpen && (
+            {modalVisibilityMap.TEST_SCENARIOS && (
                 <TestScenariosDetailsModal
-                    isTestScenDetailsOpen={isTestScenDetailsOpen}
                     onClose={bind(handleChallengeWinModalToggle, this, 'TEST_SCENARIOS')}
                     testScenStats={testScenStats}
                     profile={props.profile}
                 />
             )}
 
-            {isBugHuntDetailsOpen && (
+            {modalVisibilityMap.BUG_HUNT && (
                 <BugHuntDetailsModal
-                    isBugHuntDetailsOpen={isBugHuntDetailsOpen}
                     onClose={bind(handleChallengeWinModalToggle, this, 'BUG_HUNT')}
                     bugHuntStats={bugHuntStats}
                 />
             )}
 
-            {isCopilotDetailsOpen && (
+            {modalVisibilityMap.COPILOT && (
                 <CopilotDetailsModal
-                    isCopilotDetailsOpen={isCopilotDetailsOpen}
                     onClose={bind(handleChallengeWinModalToggle, this, 'COPILOT')}
                     copilotDetails={props.memberStats?.COPILOT}
                 />
             )}
 
-            {isWireframesDetailsOpen && (
-                <WireframesDetailsModal
+            {modalVisibilityMap.WIREFRAMES && (
+                <GenericSubtrackDetailsModal
                     onClose={bind(handleChallengeWinModalToggle, this, 'WIREFRAMES')}
-                    wireframesStats={wireframesStats}
+                    genericStats={wireframesStats}
+                    title='Wireframes'
                 />
             )}
 
-            {isFrontEndFlashDetailsOpen && (
-                <FrontEndFlashDetailsModal
+            {modalVisibilityMap.FRONT_END_FLASH && (
+                <GenericSubtrackDetailsModal
                     onClose={bind(handleChallengeWinModalToggle, this, 'FRONT_END_FLASH')}
-                    froneEndFlashStats={frontEndFlashStats}
+                    genericStats={frontEndFlashStats}
+                    title='Front End Flash'
                 />
             )}
 
-            {isPrintPresentationDetailsOpen && (
-                <PrintPresentationDetailsModal
+            {modalVisibilityMap.PRINT_OR_PRESENTATION && (
+                <GenericSubtrackDetailsModal
                     onClose={bind(handleChallengeWinModalToggle, this, 'PRINT_OR_PRESENTATION')}
-                    printPresentationStats={printPresentationStats}
+                    genericStats={printPresentationStats}
+                    title='Print or Presentation'
                 />
             )}
 
-            {isStudioOtherDetailsOpen && (
-                <StudioOtherDetailsModal
+            {modalVisibilityMap.STUDIO_OTHER && (
+                <GenericSubtrackDetailsModal
                     onClose={bind(handleChallengeWinModalToggle, this, 'STUDIO_OTHER')}
-                    studioOtherStats={studioOtherStats}
+                    genericStats={studioOtherStats}
+                    title='Studio Other'
                 />
             )}
 
-            {isFEDesignDetailsOpen && (
-                <FEDesignDetailsModal
+            {modalVisibilityMap.APPLICATION_FRONT_END_DESIGN && (
+                <GenericSubtrackDetailsModal
                     onClose={bind(handleChallengeWinModalToggle, this, 'APPLICATION_FRONT_END_DESIGN')}
-                    feDesignStats={feDesignStats}
+                    genericStats={feDesignStats}
+                    title='Application Front End Design'
                 />
             )}
 
-            {isBannersIconsDetailsOpen && (
-                <BannersIconsDetailsModal
+            {modalVisibilityMap.BANNERS_OR_ICONS && (
+                <GenericSubtrackDetailsModal
                     onClose={bind(handleChallengeWinModalToggle, this, 'BANNERS_OR_ICONS')}
-                    bannersIconsStats={bannersIconsStats}
+                    genericStats={bannersIconsStats}
+                    title='Banners or Icons'
                 />
             )}
 
-            {isWidgetMobileDetailsOpen && (
-                <WidgetMobileScreenDetailsModal
+            {modalVisibilityMap.WIDGET_OR_MOBILE_SCREEN_DESIGN && (
+                <GenericSubtrackDetailsModal
                     onClose={bind(handleChallengeWinModalToggle, this, 'WIDGET_OR_MOBILE_SCREEN_DESIGN')}
-                    widgetMobileStats={widgetMobileStats}
+                    genericStats={widgetMobileStats}
+                    title='Widget or Mobile Screen Design'
                 />
             )}
 
-            {isTestSuitesDetailsOpen && (
-                <TestSuitesDetailsModal
+            {modalVisibilityMap.TEST_SUITES && (
+                <GenericSubtrackDetailsModal
                     onClose={bind(handleChallengeWinModalToggle, this, 'TEST_SUITES')}
-                    testSuitesStats={testSuitesStats}
+                    genericStats={testSuitesStats}
+                    title='Test Suites'
                 />
             )}
 
-            {isSpecificationDetailsOpen && (
-                <SpecificationDetailsModal
+            {modalVisibilityMap.SPECIFICATION && (
+                <GenericSubtrackDetailsModal
                     onClose={bind(handleChallengeWinModalToggle, this, 'SPECIFICATION')}
-                    specStats={specStats}
+                    genericStats={specStats}
+                    title='Specification'
                 />
             )}
 
-            {isDevelopmentDetailsOpen && (
-                <DevelopmentDetailsModal
+            {modalVisibilityMap.DEVELOPMENT && (
+                <GenericSubtrackDetailsModal
                     onClose={bind(handleChallengeWinModalToggle, this, 'DEVELOPMENT')}
-                    developmentStats={developmentStats}
+                    genericStats={developmentStats}
+                    title='Development'
+                />
+            )}
+
+            {modalVisibilityMap.ARCHITECTURE && (
+                <GenericSubtrackDetailsModal
+                    onClose={bind(handleChallengeWinModalToggle, this, 'ARCHITECTURE')}
+                    genericStats={architectureStats}
+                    title='Architecture'
+                />
+            )}
+
+            {modalVisibilityMap.COPILOT_POSTING && (
+                <GenericSubtrackDetailsModal
+                    onClose={bind(handleChallengeWinModalToggle, this, 'COPILOT_POSTING')}
+                    genericStats={copilotPostingStats}
+                    title='Copilot Posting'
+                />
+            )}
+
+            {modalVisibilityMap.DESIGN && (
+                <GenericSubtrackDetailsModal
+                    onClose={bind(handleChallengeWinModalToggle, this, 'DESIGN')}
+                    genericStats={designStats}
+                    title='Design'
                 />
             )}
 

@@ -22,7 +22,6 @@ import styles from './MMDetailsModal.module.scss'
 type SRMViewTypes = 'STATISTICS' | 'MATCH DETAILS'
 
 interface MMDetailsModalProps {
-    isDSDetailsOpen: boolean
     onClose: () => void
     MMStats: MemberStats | undefined
     profile: UserProfile | undefined
@@ -79,7 +78,7 @@ const MMDetailsModal: FC<MMDetailsModalProps> = (props: MMDetailsModalProps) => 
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isDSDetailsOpen}
+            open
             size='body'
             title='MARATHON MATCH'
         >

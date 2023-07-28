@@ -24,7 +24,6 @@ import styles from './UIPrototypeDetailsModal.module.scss'
 type UIPrototypeViewTypes = 'STATISTICS' | 'CHALLENGES DETAILS'
 
 interface UIPrototypeDetailsModalProps {
-    isUIPrototypeDetailsOpen: boolean
     onClose: () => void
     uiPrototypeStats: MemberStats | undefined
     profile: UserProfile | undefined
@@ -83,8 +82,8 @@ const UIPrototypeDetailsModal: FC<UIPrototypeDetailsModalProps> = (props: UIProt
 
     return (
         <BaseModal
+            open
             onClose={props.onClose}
-            open={props.isUIPrototypeDetailsOpen}
             size='body'
             title='UI PROTOTYPE COMPETITION'
         >

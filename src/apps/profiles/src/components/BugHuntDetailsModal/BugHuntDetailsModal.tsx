@@ -13,7 +13,6 @@ import styles from './BugHuntDetailsModal.module.scss'
 type BugHuntViewTypes = 'CHALLENGES DETAILS'
 
 interface BugHuntDetailsModalProps {
-    isBugHuntDetailsOpen: boolean
     onClose: () => void
     bugHuntStats: MemberStats | undefined
 }
@@ -27,7 +26,7 @@ const BugHuntDetailsModal: FC<BugHuntDetailsModalProps> = (props: BugHuntDetails
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isBugHuntDetailsOpen}
+            open
             size='body'
             title='BUG HUNT'
         >
