@@ -13,7 +13,6 @@ import styles from './LogoDesignDetailsModal.module.scss'
 type WebDesignViewTypes = 'CHALLENGES DETAILS'
 
 interface LogoDesignDetailsModalProps {
-    isLogoDesignDetailsOpen: boolean
     onClose: () => void
     logoDesignStats: MemberStats | undefined
 }
@@ -27,7 +26,7 @@ const LogoDesignDetailsModal: FC<LogoDesignDetailsModalProps> = (props: LogoDesi
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isLogoDesignDetailsOpen}
+            open
             size='body'
             title='LOGO DESIGN'
         >

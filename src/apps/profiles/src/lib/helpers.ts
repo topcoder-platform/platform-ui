@@ -67,6 +67,11 @@ export function subTrackLabelToHumanName(label: string): string {
             return 'Logo Design'
         case 'DESIGN_FIRST_2_FINISH':
             return 'Design First2Finish'
+        case 'DEVELOPMENT':
+            return 'Development'
+        case 'ARCHITECTURE':
+            return 'Architecture'
+
         default: return label
     }
 

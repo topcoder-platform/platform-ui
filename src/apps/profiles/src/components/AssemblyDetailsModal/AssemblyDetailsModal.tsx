@@ -23,7 +23,6 @@ import styles from './AssemblyDetailsModal.module.scss'
 type SRMViewTypes = 'STATISTICS' | 'CHALLENGES DETAILS'
 
 interface AssemblyDetailsModalProps {
-    isAssemblyDetailsOpen: boolean
     onClose: () => void
     assemblyStats: MemberStats | undefined
     profile: UserProfile | undefined
@@ -86,7 +85,7 @@ const AssemblyDetailsModal: FC<AssemblyDetailsModalProps> = (props: AssemblyDeta
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isAssemblyDetailsOpen}
+            open
             size='body'
             title='ASSEMBLY COMPETITION'
         >

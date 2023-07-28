@@ -13,7 +13,6 @@ import styles from './F2FDetailsModal.module.scss'
 type BugHuntViewTypes = 'CHALLENGES DETAILS'
 
 interface F2FDetailsModalProps {
-    isF2FDetailsOpen: boolean
     onClose: () => void
     f2fStats: MemberStats | undefined
 }
@@ -27,7 +26,7 @@ const F2FDetailsModal: FC<F2FDetailsModalProps> = (props: F2FDetailsModalProps) 
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isF2FDetailsOpen}
+            open
             size='body'
             title='FIRST2FINISH'
         >

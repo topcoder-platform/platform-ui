@@ -1,9 +1,10 @@
 import { Dispatch, FC, MutableRefObject, SetStateAction, useRef, useState } from 'react'
-import { bind, trim } from 'lodash'
+import { bind, range, trim } from 'lodash'
 import { toast } from 'react-toastify'
+import { getYear } from 'date-fns'
 import classNames from 'classnames'
 
-import { BaseModal, Button, IconOutline, InputDatePicker, InputText } from '~/libs/ui'
+import { BaseModal, Button, IconOutline, InputSelect, InputText } from '~/libs/ui'
 import {
     createMemberTraitsAsync,
     updateMemberTraitsAsync,
@@ -28,6 +29,13 @@ const methodsMap: { [key: string]: any } = {
     create: createMemberTraitsAsync,
     update: updateMemberTraitsAsync,
 }
+
+const years: number[] = range(1979, getYear(new Date()) + 10)
+const yearOptions: any = years
+    .map(v => ({
+        label: `${v}`,
+        value: `${v}`,
+    }))
 
 const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducationModalProps) => {
     const [isSaving, setIsSaving]: [boolean, Dispatch<SetStateAction<boolean>>]
@@ -92,7 +100,7 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
 
         switch (key) {
             case 'endDate':
-                value = event as unknown as Date
+                value = new Date(event.target.value)
                 break
             default:
                 value = event.target.value
@@ -188,6 +196,10 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
 
     return (
         <BaseModal
+            bodyClassName={styles.eduModalBody}
+            classNames={{
+                modal: styles.eduModal,
+            }}
             onClose={props.onClose}
             open
             size='lg'
@@ -270,7 +282,17 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
                             onChange={bind(handleFormValueChange, this, 'major')}
                             value={formValues.major as string}
                         />
-                        <InputDatePicker
+                        <InputSelect
+                            options={yearOptions}
+                            value={`${getYear(formValues.endDate as Date)}`}
+                            onChange={bind(handleFormValueChange, this, 'endDate')}
+                            dirty
+                            error={formErrors.endDate}
+                            name='endDate'
+                            label='End Year or Expected'
+                            placeholder='Select a year'
+                        />
+                        {/* <InputDatePicker
                             label='End date (or expected)'
                             date={formValues.endDate as Date}
                             onChange={bind(handleFormValueChange, this, 'endDate')}
@@ -280,7 +302,7 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
                             showMonthPicker={false}
                             showYearPicker
                             dateFormat='yyyy'
-                        />
+                        /> */}
                     </form>
                 ) : (
                     <Button
