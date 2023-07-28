@@ -1,6 +1,8 @@
 @import '@libs/ui/styles/includes';
 
-.container {
+:global(#react-date-portal) {
+    position: relative;
+    z-index: 10001;
     :global(.react-datepicker__header) {
         background-color: $tc-white;
         border-bottom: none;
@@ -30,34 +32,36 @@
         color: $tc-white;
         border-radius: 50%;
     }
+}
 
-    .headerWrap {
-        display: flex;
-        justify-content: space-between;
-        padding: $sp-2 0;
-        border-bottom: 2px solid $black-5;
+.headerWrap {
+    display: flex;
+    justify-content: space-between;
+    padding: $sp-2 0;
+    border-bottom: 2px solid $black-5;
 
-        button {
-            svg {
-                width: 27px;
-                height: 27px;
-            }
-        }
-
-        select {
-            border: none;
-            background-color: transparent;
-            margin: auto;
-            -webkit-appearance: menulist;
-            appearance: menulist;
-
-            option:hover {
-                background-color: $turq-160;
-                color: $tc-white;
-            }
+    button {
+        svg {
+            width: 27px;
+            height: 27px;
         }
     }
 
+    select {
+        border: none;
+        background-color: transparent;
+        margin: auto;
+        -webkit-appearance: menulist;
+        appearance: menulist;
+
+        option:hover {
+            background-color: $turq-160;
+            color: $tc-white;
+        }
+    }
+}
+
+.container {
     input {
         border: none;
         pointer-events: none;

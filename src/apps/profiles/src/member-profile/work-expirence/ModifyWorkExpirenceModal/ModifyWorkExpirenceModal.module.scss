@@ -28,6 +28,10 @@
                 align-items: center;
                 margin-left: $sp-15;
 
+                @include ltemd {
+                    margin-left: $sp-4;
+                }
+
                 :global(button) {
                     padding: $sp-2;
                     color: $turq-160;
