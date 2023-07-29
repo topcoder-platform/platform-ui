@@ -1,17 +1,24 @@
-import { FC, useCallback } from 'react'
+import { FC, useContext, useEffect, useRef } from 'react'
 import classNames from 'classnames'
 
+import { profileContext, ProfileContextData } from '~/libs/core'
 import { Button, ContentLayout, LoadingCircles } from '~/libs/ui'
-import { EmsiSkill } from '~/libs/shared'
 
 import { TalentCard } from '../../components/talent-card'
 import { SearchInput } from '../../components/search-input'
 import { useUrlQuerySearchParms } from '../../lib/utils/search-query'
-import { InfiniteTalentMatchesResposne, useInfiniteTalentMatches } from '../../lib/services'
+import {
+    InfiniteTalentMatchesResposne,
+    triggerSprigSurvey,
+    useInfiniteTalentMatches,
+} from '../../lib/services'
 
 import styles from './SearchResultsPage.module.scss'
 
 const SearchResultsPage: FC = () => {
+    const sprigFlag = useRef(false)
+    const { profile }: ProfileContextData = useContext(profileContext)
+
     const [skills, setSkills] = useUrlQuerySearchParms('q')
     const {
         loading,
@@ -21,9 +28,12 @@ const SearchResultsPage: FC = () => {
         total,
     }: InfiniteTalentMatchesResposne = useInfiniteTalentMatches(skills)
 
-    const isMatchingSkill = useCallback((skill: EmsiSkill) => (
-        !!skills.find(s => skill.skillId === s.emsiId)
-    ), [skills])
+    useEffect(() => {
+        if (profile?.userId && matches?.length && !sprigFlag.current) {
+            sprigFlag.current = true
+            triggerSprigSurvey(profile)
+        }
+    }, [profile, matches])
 
     return (
         <>
@@ -63,10 +73,10 @@ const SearchResultsPage: FC = () => {
                 <div className={styles.resultsWrap}>
                     {matches.map(member => (
                         <TalentCard
+                            queriedSkills={skills}
                             member={member}
                             match={member.skillScore}
                             key={member.userId}
-                            isMatchingSkill={isMatchingSkill}
                         />
                     ))}
                 </div>

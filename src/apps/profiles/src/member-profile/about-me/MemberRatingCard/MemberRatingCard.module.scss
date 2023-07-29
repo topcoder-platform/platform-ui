@@ -1,24 +1,30 @@
 @import '@libs/ui/styles/includes';
 
 .container {
-    background-color: $tc-white;
-    padding: $sp-3;
     margin: $sp-4 0;
-    border-radius: 16px;
     width: 100%;
 
     .innerWrap {
         background-image: linear-gradient(90deg, #05456D, #0A7AC0);
         color: $tc-white;
-        border-radius: 10px;
         display: flex;
         justify-content: space-between;
         padding: $sp-4;
+        border-radius: 16px;
 
         .valueWrap {
             display: flex;
             flex-direction: column;
             align-items: center;
+
+            &.noPercentile {
+                flex-direction: row;
+                align-items: flex-end;
+
+                .name {
+                    margin-left: $sp-2;
+                }
+            }
 
             .value {
                 font-size: 26px;
@@ -31,6 +37,13 @@
                 font-size: 12px;
                 line-height: 18px;
             }
+        }
+
+        .link {
+            font-size: 14px;
+            line-height: 14px;
+            font-weight: $font-weight-medium;
+            font-family: $font-roboto;
         }
     }
 }

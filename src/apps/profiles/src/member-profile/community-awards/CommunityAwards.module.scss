@@ -46,9 +46,13 @@
                 box-shadow: 0 0 16px rgba(22, 103, 154, 0.5);
             }
 
-            .badgeImage {
+            .badgeImageWrap {
                 width: 48px;
                 height: 48px;
+                .badgeImage {
+                    height: 48px;
+                    margin: auto;
+                }
             }
 
             .badgeTitle {

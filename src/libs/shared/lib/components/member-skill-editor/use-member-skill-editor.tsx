@@ -103,7 +103,7 @@ export const useMemberSkillEditor = ({
         }
 
         let mounted = true
-        fetchMemberSkills(profile.userId)
+        fetchMemberSkills(profile.userId, { skipPagination: true })
             .catch(e => {
                 setError(e?.message ?? e)
                 return []

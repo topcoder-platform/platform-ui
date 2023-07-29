@@ -139,6 +139,7 @@ const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLangua
             onClose={props.onClose}
             open
             size='lg'
+            initialFocusRef={formElRef}
             title='Languages'
             buttons={(
                 <div className={styles.modalButtons}>

@@ -19,14 +19,14 @@
     .achievementsWrap {
         display: flex;
         margin: $sp-4 0 $sp-2;
-        align-items: flex-start;
+        align-items: stretch;
 
         @include ltelg {
             flex-direction: column;
 
         }
 
-        > div:not(:last-child) {
+        >div:not(:last-child) {
             margin-right: $sp-8;
 
             @include ltelg {
@@ -36,17 +36,37 @@
         }
     }
 
-    .rolesWrap {
+    .rolesSection {
         display: flex;
+        justify-content: space-between;
         align-items: center;
+        width: 100%;
         padding: $sp-4;
         background-image: linear-gradient(to right, #652385, #8C384C);
         color: $tc-white;
         border-radius: 8px;
         margin: $sp-4 0;
 
-        @include ltelg {
+        @include ltesm {
             margin-bottom: 0;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .rolesWrap {
+            display: flex;
+            align-items: center;
+        }
+
+        .link {
+            font-size: 14px;
+            line-height: 14px;
+            font-weight: $font-weight-medium;
+            font-family: $font-roboto;
+
+            @include ltesm {
+                margin-top: $sp-2;
+            }
         }
     }
 }

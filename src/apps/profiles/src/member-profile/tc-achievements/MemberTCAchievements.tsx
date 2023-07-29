@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
 
 import {
     useMemberBadges,
@@ -13,6 +13,7 @@ import { CommunityAwards } from '../community-awards'
 
 import { TCOWinsBanner } from './TCOWinsBanner'
 import { ChallengeWinsBanner } from './ChallengeWinsBanner'
+import MemberRolesInfoModal from './MemberRolesInfoModal/MemberRolesInfoModal'
 import styles from './MemberTCAchievements.module.scss'
 
 interface MemberTCAchievementsProps {
@@ -36,9 +37,15 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
     const isCopilot: boolean
         = useMemo(() => !!memberStats?.COPILOT, [memberStats])
 
-    // function handleOpenTCAchievements(): void {
-    //     console.log('handleOpenTCAchievements')
-    // }
+    const [isInfoModalOpen, setIsInfoModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
+
+    function handleInfoModalClose(): void {
+        setIsInfoModalOpen(false)
+    }
+
+    function handleInfoModalOpen(): void {
+        setIsInfoModalOpen(true)
+    }
 
     return memberStats?.wins || tcoWins || tcoQualifications ? (
         <div className={styles.container}>
@@ -62,9 +69,22 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
 
             {
                 isCopilot && (
-                    <div className={styles.rolesWrap}>
-                        <p className='body-main-medium'>Topcoder Special Roles:&nbsp;</p>
-                        <p>Copilot</p>
+                    <div className={styles.rolesSection}>
+                        <div className={styles.rolesWrap}>
+                            <p className='body-main-medium'>Topcoder Special Roles:&nbsp;</p>
+                            <p>Copilot</p>
+                        </div>
+                        <button type='button' className={styles.link} onClick={handleInfoModalOpen}>
+                            What are special roles?
+                        </button>
+
+                        {
+                            isInfoModalOpen && (
+                                <MemberRolesInfoModal
+                                    onClose={handleInfoModalClose}
+                                />
+                            )
+                        }
                     </div>
                 )
             }

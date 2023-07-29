@@ -13,19 +13,20 @@ import styles from './DesignF2FDetailsModal.module.scss'
 type WebDesignViewTypes = 'CHALLENGES DETAILS'
 
 interface DesignF2FDetailsModalProps {
-    isDesignF2FDetailsOpen: boolean
     onClose: () => void
     designF2FStats: MemberStats | undefined
 }
 
 const DesignF2FDetailsModal: FC<DesignF2FDetailsModalProps> = (props: DesignF2FDetailsModalProps) => {
+    // TODO: Enable this when we have challenges details data
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [viewType]: [WebDesignViewTypes, Dispatch<SetStateAction<WebDesignViewTypes>>]
         = useState<WebDesignViewTypes>('CHALLENGES DETAILS')
 
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isDesignF2FDetailsOpen}
+            open
             size='body'
             title='DESIGN FIRST2FINISH'
         >
@@ -62,7 +63,8 @@ const DesignF2FDetailsModal: FC<DesignF2FDetailsModalProps> = (props: DesignF2FD
                     </div>
                 </div>
 
-                <div className={styles.content}>
+                {/* TODO: Enable this when we have challenges details data */}
+                {/* <div className={styles.content}>
                     <div className={styles.contentHeader}>
                         <h4>{viewType}</h4>
                     </div>
@@ -75,7 +77,7 @@ const DesignF2FDetailsModal: FC<DesignF2FDetailsModalProps> = (props: DesignF2FD
 
                         }
                     </div>
-                </div>
+                </div> */}
             </div>
         </BaseModal>
     )

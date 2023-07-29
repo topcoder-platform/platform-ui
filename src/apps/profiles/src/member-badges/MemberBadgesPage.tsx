@@ -85,11 +85,13 @@ const MemberBadgesPage: FC<{}> = () => {
                                         className={styles.badgeCard}
                                         onClick={bind(onBadgeClick, this, badge)}
                                     >
-                                        <img
-                                            src={badge.org_badge.badge_image_url}
-                                            alt={`Topcoder community badge - ${badge.org_badge.badge_name}`}
-                                            className={styles.badgeImage}
-                                        />
+                                        <div className={styles.badgeImageWrap}>
+                                            <img
+                                                src={badge.org_badge.badge_image_url}
+                                                alt={`Topcoder community badge - ${badge.org_badge.badge_name}`}
+                                                className={styles.badgeImage}
+                                            />
+                                        </div>
                                         <span className={styles.badgeTitle}>{badge.org_badge.badge_name}</span>
                                     </div>
                                 ))

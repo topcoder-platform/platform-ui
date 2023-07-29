@@ -11,7 +11,7 @@ import {
 
 import { AddButton, EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
-import { notifyUniNavi } from '../../lib'
+import { notifyUniNavi, triggerSprigSurvey } from '../../lib'
 
 import { ModifyMemberLinksModal } from './ModifyMemberLinksModal'
 import { ReactComponent as GitHubLinkIcon } from './assets/github-link-icon.svg'
@@ -80,34 +80,34 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
             setIsEditMode(false)
             mutateTraits()
             notifyUniNavi(props.profile)
+            triggerSprigSurvey(props.profile)
         }, 1000)
     }
 
     return !loading && (canEdit || memberLinks?.links?.length) ? (
         <div className={styles.container}>
-            <div className={styles.titleWrap}>
-                <p className='body-main-bold'>Links</p>
-                {canEdit && !!memberLinks?.links.length && (
-                    <EditMemberPropertyBtn
-                        onClick={handleEditClick}
-                    />
-                )}
-            </div>
+            {memberLinks?.links.length ? (
+                <div className={styles.links}>
+                    {
+                        memberLinks?.links.map((trait: UserTrait) => (
+                            <a
+                                href={trait.url}
+                                target='_blank'
+                                rel='noreferrer'
+                                key={`link-${trait.name}`}
+                            >
+                                {renderLinkIcon(trait.name)}
+                            </a>
+                        ))
+                    }
+                </div>
+            ) : undefined}
 
-            <div className={styles.links}>
-                {
-                    memberLinks?.links.map((trait: UserTrait) => (
-                        <a
-                            href={trait.url}
-                            target='_blank'
-                            rel='noreferrer'
-                            key={`link-${trait.name}`}
-                        >
-                            {renderLinkIcon(trait.name)}
-                        </a>
-                    ))
-                }
-            </div>
+            {canEdit && !!memberLinks?.links.length && (
+                <EditMemberPropertyBtn
+                    onClick={handleEditClick}
+                />
+            )}
 
             {canEdit && !memberLinks?.links.length && (
                 <AddButton

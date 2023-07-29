@@ -1,8 +1,6 @@
 import { FC, useCallback } from 'react'
 
-import { Skill } from '~/libs/shared'
-
-import { SkillPill } from '../skill-pill'
+import { Skill, SkillPill } from '~/libs/shared'
 
 import styles from './PopularSkills.module.scss'
 

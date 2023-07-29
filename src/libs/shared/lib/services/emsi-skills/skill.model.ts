@@ -6,7 +6,7 @@ export enum EmsiSkillSources {
 export interface Skill {
     name: string;
     emsiId: string;
-    sources?: EmsiSkillSources[];
+    skillSources?: EmsiSkillSources[];
 }
 
 export interface EmsiSkill {

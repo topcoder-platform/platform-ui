@@ -13,19 +13,20 @@ import styles from './F2FDetailsModal.module.scss'
 type BugHuntViewTypes = 'CHALLENGES DETAILS'
 
 interface F2FDetailsModalProps {
-    isF2FDetailsOpen: boolean
     onClose: () => void
     f2fStats: MemberStats | undefined
 }
 
 const F2FDetailsModal: FC<F2FDetailsModalProps> = (props: F2FDetailsModalProps) => {
+    // TODO: Add F2F details data
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [viewType]: [BugHuntViewTypes, Dispatch<SetStateAction<BugHuntViewTypes>>]
         = useState<BugHuntViewTypes>('CHALLENGES DETAILS')
 
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isF2FDetailsOpen}
+            open
             size='body'
             title='FIRST2FINISH'
         >
@@ -49,7 +50,8 @@ const F2FDetailsModal: FC<F2FDetailsModalProps> = (props: F2FDetailsModalProps) 
                     </div>
                 </div>
 
-                <div className={styles.content}>
+                {/* TODO: Add F2F details data */}
+                {/* <div className={styles.content}>
                     <div className={styles.contentHeader}>
                         <h4>{viewType}</h4>
                     </div>
@@ -62,7 +64,7 @@ const F2FDetailsModal: FC<F2FDetailsModalProps> = (props: F2FDetailsModalProps) 
 
                         }
                     </div>
-                </div>
+                </div> */}
             </div>
         </BaseModal>
     )

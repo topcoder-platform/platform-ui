@@ -1,0 +1,23 @@
+@import "@libs/ui/styles/includes";
+
+.moreBtn {
+    &:not(.collapsed) {
+        display: flex;
+        align-items: center;
+        margin-left: 4px;
+        > * {
+            text-transform: lowercase;
+            font-size: 14px;
+            line-height: 16px;
+            color: $black-100;
+            font-weight: normal;
+        }
+    }
+
+    &.collapsed {
+        width: 100%;
+        > * {
+            text-transform: capitalize;
+        }
+    }
+}

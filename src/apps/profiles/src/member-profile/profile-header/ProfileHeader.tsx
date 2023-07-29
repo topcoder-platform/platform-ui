@@ -11,7 +11,7 @@ import {
     UserTraitIds,
     UserTraits,
 } from '~/libs/core'
-import { useCheckIsMobile } from '~/libs/shared'
+import { ProfilePicture, useCheckIsMobile } from '~/libs/shared'
 
 import { AddButton, EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
@@ -32,7 +32,6 @@ export type NamesAndHandleAppearance = 'namesOnly' | 'handleOnly' | 'namesAndHan
 const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     const isMobile: boolean = useCheckIsMobile()
 
-    const photoURL: string | undefined = props.profile.photoURL
     const hasProfilePicture = !!props.profile.photoURL
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
@@ -127,18 +126,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     function renderMemberPhotoWrap(): JSX.Element {
         return (
             <div className={styles.photoWrap}>
-                {
-                    photoURL ? (
-                        <img src={photoURL} alt='Topcoder - Member Profile Avatar' className={styles.profilePhoto} />
-                    ) : (
-                        <div className={styles.profilePhoto}>
-                            <span className={styles.initials}>
-                                {props.profile.firstName[0]}
-                                {props.profile.lastName[0]}
-                            </span>
-                        </div>
-                    )
-                }
+                <ProfilePicture member={props.profile} className={styles.profilePhoto} />
                 {canEdit && hasProfilePicture && (
                     <EditMemberPropertyBtn
                         className={styles.button}

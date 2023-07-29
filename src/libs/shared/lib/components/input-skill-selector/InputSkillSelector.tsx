@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, ReactNode } from 'react'
+import { ChangeEvent, FC, ReactNode, Ref } from 'react'
 import { noop } from 'lodash'
 
 import { InputMultiselect, InputMultiselectOption, InputMultiselectThemes } from '~/libs/ui'
@@ -41,6 +41,7 @@ interface InputSkillSelectorProps {
     readonly dropdownIcon?: ReactNode
     readonly onSubmit?: () => void
     readonly additionalPlaceholder?: string
+    readonly inputRef?: Ref<any>
 }
 
 const InputSkillSelector: FC<InputSkillSelectorProps> = props => (
@@ -60,6 +61,7 @@ const InputSkillSelector: FC<InputSkillSelectorProps> = props => (
         dropdownIcon={props.dropdownIcon}
         onSubmit={props.onSubmit}
         additionalPlaceholder={props.additionalPlaceholder}
+        inputRef={props.inputRef}
     />
 )
 

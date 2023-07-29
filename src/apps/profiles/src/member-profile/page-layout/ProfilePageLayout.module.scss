@@ -82,7 +82,7 @@
                 z-index: 1;
 
                 @include ltelg {
-                    margin-top: $sp-8;
+                    margin-top: 0;
                 }
 
                 .shortBio {
@@ -111,6 +111,37 @@
                 gap: 0;
             }
         }
+    }
+}
+
+.backBtn {
+    position: absolute;
+    top: $sp-6;
+    left: 0;
+    background: $blue-100;
+    padding: 0 $sp-4 0 $sp-3;
+    border-radius: 0 $sp-5 $sp-5 0;
+    > * {
+        --btn-variant: #fff;
+        --btn-variant--hover: rgba(255, 255, 255, 0.7);
+        text-transform: capitalize;
+        font-weight: normal;
+        font-size: 16px;
+    }
+
+    @include lg {
+        left: auto;
+        right: 0;
+        border-radius: $sp-5 0 0 $sp-5;
+    }
+    @include ltemd {
+        position: relative;
+        top: 10px;
+        left: -24px;
+        width: 152px;
+    }
+    @include ltesm {
+        left: -16px;
     }
 }
 
