@@ -277,7 +277,7 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
                             error={formErrors.major}
                             placeholder='Enter Degree'
                             dirty
-                            tabIndex={-1}
+                            tabIndex={0}
                             type='text'
                             onChange={bind(handleFormValueChange, this, 'major')}
                             value={formValues.major as string}
@@ -291,18 +291,8 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
                             name='endDate'
                             label='End Year or Expected'
                             placeholder='Select a year'
+                            tabIndex={0}
                         />
-                        {/* <InputDatePicker
-                            label='End date (or expected)'
-                            date={formValues.endDate as Date}
-                            onChange={bind(handleFormValueChange, this, 'endDate')}
-                            disabled={false}
-                            error={formErrors.endDate}
-                            dirty
-                            showMonthPicker={false}
-                            showYearPicker
-                            dateFormat='yyyy'
-                        /> */}
                     </form>
                 ) : (
                     <Button
