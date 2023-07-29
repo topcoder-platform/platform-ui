@@ -302,7 +302,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                             error={formErrors.position}
                             placeholder='Enter a position'
                             dirty
-                            tabIndex={-1}
+                            tabIndex={0}
                             type='text'
                             onChange={bind(handleFormValueChange, this, 'position')}
                             value={formValues.position as string}
@@ -314,7 +314,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                                 error={formErrors.industry}
                                 placeholder='Enter an industry'
                                 dirty
-                                tabIndex={-1}
+                                tabIndex={0}
                                 type='text'
                                 onChange={bind(handleFormValueChange, this, 'industry')}
                                 value={formValues.industry as string}
@@ -325,7 +325,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                                 error={formErrors.city}
                                 placeholder='Enter a city'
                                 dirty
-                                tabIndex={-1}
+                                tabIndex={0}
                                 type='text'
                                 onChange={bind(handleFormValueChange, this, 'city')}
                                 value={formValues.city as string}
@@ -356,7 +356,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                             label='I am currently working in this role'
                             error={formErrors.currentlyWorking}
                             dirty
-                            tabIndex={-1}
+                            tabIndex={0}
                             type='checkbox'
                             onChange={bind(handleFormValueChange, this, 'currentlyWorking')}
                             checked={formValues.currentlyWorking as boolean}
