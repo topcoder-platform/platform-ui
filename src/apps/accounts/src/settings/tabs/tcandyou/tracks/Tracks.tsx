@@ -4,7 +4,13 @@ import { toast } from 'react-toastify'
 
 import { profileContext, ProfileContextData, TC_TRACKS, updateMemberProfileAsync, UserProfile } from '~/libs/core'
 import { Collapsible, FormToggleSwitch } from '~/libs/ui'
-import { DataScienceTrackIcon, DesignTrackIcon, DevelopmentTrackIcon, SettingSection } from '~/apps/accounts/src/lib'
+import {
+    DataScienceTrackIcon,
+    DesignTrackIcon,
+    DevelopmentTrackIcon,
+    SettingSection,
+    triggerSprigSurvey,
+} from '~/apps/accounts/src/lib'
 
 import styles from './Tracks.module.scss'
 
@@ -48,6 +54,7 @@ const Tracks: FC<TracksProps> = (props: TracksProps) => {
                     } as any,
                 })
                 toast.success('Your profile has been updated.')
+                triggerSprigSurvey(props.profile)
             })
             .catch(() => {
                 toast.error('Failed to update your profile.')

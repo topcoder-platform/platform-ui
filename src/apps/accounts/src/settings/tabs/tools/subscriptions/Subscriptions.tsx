@@ -5,7 +5,7 @@ import classNames from 'classnames'
 
 import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputText } from '~/libs/ui'
-import { SettingSection, SubscriptionsIcon } from '~/apps/accounts/src/lib'
+import { SettingSection, SubscriptionsIcon, triggerSprigSurvey } from '~/apps/accounts/src/lib'
 
 import styles from './Subscriptions.module.scss'
 
@@ -129,6 +129,7 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                             ...updatedSubscriptionsTypesData || [],
                             softwareTypeUpdate,
                         ])
+                        triggerSprigSurvey(props.profile)
                     })
                     .catch(() => {
                         toast.error('Error updating subscription')
@@ -157,6 +158,7 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                             ...subscriptionsTypesData || [],
                             softwareTypeUpdate,
                         ])
+                        triggerSprigSurvey(props.profile)
                     })
                     .catch(() => {
                         toast.error('Error adding new subscription')
@@ -196,6 +198,7 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
             .then(() => {
                 toast.success('Subscription deleted successfully')
                 setSubscriptionsTypesData(updatedSubscriptionsTypesData)
+                triggerSprigSurvey(props.profile)
             })
             .catch(() => {
                 toast.error('Error deleting subscription')
