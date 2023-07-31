@@ -1,10 +1,10 @@
 /* eslint-disable complexity */
 import { Dispatch, FC, MutableRefObject, SetStateAction, useRef, useState } from 'react'
-import { bind, trim } from 'lodash'
+import { bind, sortBy, trim } from 'lodash'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
-import { BaseModal, Button, IconOutline, InputDatePicker, InputText } from '~/libs/ui'
+import { BaseModal, Button, IconOutline, InputDatePicker, InputSelect, InputText } from '~/libs/ui'
 import {
     createMemberTraitsAsync,
     updateMemberTraitsAsync,
@@ -12,6 +12,7 @@ import {
     UserTraitCategoryNames,
     UserTraitIds,
 } from '~/libs/core'
+import { INDUSTRIES_OPTIONS } from '~/libs/shared'
 
 import { WorkExpirenceCard } from '../WorkExpirenceCard'
 
@@ -60,6 +61,12 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
         Dispatch<SetStateAction<UserTrait[] | undefined>>
     ]
         = useState<UserTrait[] | undefined>(props.workExpirence)
+
+    const industryOptions: any = sortBy(INDUSTRIES_OPTIONS)
+        .map(v => ({
+            label: v,
+            value: v,
+        }))
 
     function handleModifyWorkExpirenceSave(): void {
         if (addingNewItem || editedItemIndex !== undefined) {
@@ -307,30 +314,17 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                             onChange={bind(handleFormValueChange, this, 'position')}
                             value={formValues.position as string}
                         />
-                        <div className={styles.row}>
-                            <InputText
-                                name='industry'
-                                label='Industry'
-                                error={formErrors.industry}
-                                placeholder='Enter an industry'
-                                dirty
-                                tabIndex={0}
-                                type='text'
-                                onChange={bind(handleFormValueChange, this, 'industry')}
-                                value={formValues.industry as string}
-                            />
-                            <InputText
-                                name='city'
-                                label='City'
-                                error={formErrors.city}
-                                placeholder='Enter a city'
-                                dirty
-                                tabIndex={0}
-                                type='text'
-                                onChange={bind(handleFormValueChange, this, 'city')}
-                                value={formValues.city as string}
-                            />
-                        </div>
+                        <InputSelect
+                            tabIndex={0}
+                            options={industryOptions}
+                            value={formValues.industry as string}
+                            onChange={bind(handleFormValueChange, this, 'industry')}
+                            name='industry'
+                            label='Industry'
+                            placeholder='Select industry'
+                            dirty
+                            error={formErrors.industry}
+                        />
                         <div className={styles.row}>
                             <InputDatePicker
                                 label='Start Date'
