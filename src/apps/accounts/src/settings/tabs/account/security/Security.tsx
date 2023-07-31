@@ -4,7 +4,7 @@ import { KeyedMutator } from 'swr'
 import { noop } from 'lodash'
 
 import { Button, Collapsible, FormToggleSwitch, IconSolid, Tooltip } from '~/libs/ui'
-import { diceIdLogo, MFAImage, SettingSection } from '~/apps/accounts/src/lib'
+import { diceIdLogo, MFAImage, SettingSection, triggerSprigSurvey } from '~/apps/accounts/src/lib'
 import { MemberMFAStatus, updateMemberMFAStatusAsync, useMemberMFAStatus, UserProfile } from '~/libs/core'
 
 import { DiceSetupModal } from './dice-setup-modal'
@@ -39,6 +39,7 @@ const Security: FC<SecurityProps> = (props: SecurityProps) => {
             .then(() => {
                 setMFAEnabled(!mfaEnabled)
                 toast.success('Your Multi Factor Authentication (MFA) status was updated.')
+                triggerSprigSurvey(props.profile)
             })
             .catch(() => {
                 toast.error('Something went wrong. Please try again later.')
