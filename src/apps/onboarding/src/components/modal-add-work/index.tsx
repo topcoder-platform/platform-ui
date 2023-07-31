@@ -5,8 +5,8 @@ import moment from 'moment'
 
 import { Button, IconSolid, InputDatePicker, InputSelect, InputText, Tooltip } from '~/libs/ui'
 import { FormInputCheckbox } from '~/apps/self-service/src/components/form-elements'
+import { INDUSTRIES_OPTIONS } from '~/libs/shared'
 
-import { INDUSTRIES_OPTIONS } from '../../config'
 import OnboardingBaseModal from '../onboarding-base-modal'
 import WorkInfo, { emptyWorkInfo } from '../../models/WorkInfo'
 

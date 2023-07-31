@@ -25,16 +25,3 @@ export const ACTIONS: {
         UPDATE_MEMBER_PHOTO_URL: 'UPDATE_MEMBER_PHOTO_URL',
     },
 }
-
-export const INDUSTRIES_OPTIONS: string[] = [
-    'Banking',
-    'Consumer goods',
-    'Energy',
-    'Entertainment',
-    'Healthcare',
-    'Pharma',
-    'Tech & technology services',
-    'Telecoms',
-    'Public sector',
-    'Travel & hospitality',
-]
