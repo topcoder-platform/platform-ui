@@ -171,14 +171,17 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
 
                     <p className={styles.memberSince}>
                         {
-                            namesAndHandleAppearanceData?.namesAndHandleAppearance === 'namesAndHandle' ? (
-                                <>
-                                    <span>{props.profile.handle}</span>
-                                    {' '}
-                                    |
-                                    {' '}
-                                </>
-                            ) : undefined
+                            // If the user hasn't set a name and handle appareance, display both name and handle
+                            (namesAndHandleAppearanceData?.namesAndHandleAppearance === 'namesAndHandle'
+                            || !namesAndHandleAppearanceData) ? (
+                                    // eslint-disable-next-line react/jsx-indent
+                                    <>
+                                        <span>{props.profile.handle}</span>
+                                        {' '}
+                                        |
+                                        {' '}
+                                    </>
+                                ) : undefined
                         }
                         Member Since
                         {' '}
