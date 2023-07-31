@@ -5,6 +5,7 @@ import { UserProfile, UserTraits } from '~/libs/core'
 import { AccountRole } from './account-role'
 import { SecuritySection } from './security'
 import { UserAndPassword } from './user-and-pass'
+import { MemberAddress } from './address'
 import styles from './AccountTab.module.scss'
 
 interface AccountTabProps {
@@ -19,6 +20,8 @@ const AccountTab: FC<AccountTabProps> = (props: AccountTabProps) => (
         <AccountRole profile={props.profile} />
 
         <UserAndPassword profile={props.profile} memberTraits={props.memberTraits} />
+
+        <MemberAddress profile={props.profile} />
 
         <SecuritySection profile={props.profile} />
     </div>

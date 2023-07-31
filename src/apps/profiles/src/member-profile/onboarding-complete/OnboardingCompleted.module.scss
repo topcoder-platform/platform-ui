@@ -1,0 +1,15 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    text-align: center;
+}
+
+.modalTitle {
+    text-align: center;
+}
+
+.modalButtons {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}

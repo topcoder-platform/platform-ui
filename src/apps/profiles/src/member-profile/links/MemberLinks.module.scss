@@ -1,0 +1,29 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: $sp-8;
+
+    .links {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+
+        > a {
+            margin-right: $sp-2;
+            margin-bottom: $sp-2;
+            cursor: pointer;
+
+            svg {
+                width: 24px;
+                height: 24px;
+
+                path:not([stroke-linecap]) {
+                    fill: #333333;
+                }
+            }
+        }
+    }
+}

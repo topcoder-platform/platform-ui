@@ -1,0 +1,29 @@
+@import '@libs/ui/styles/includes';
+
+.shortBio {
+    margin-bottom: $sp-8;
+
+    :global(.body-large-medium),
+    :global(.body-large) {
+        text-align: center;
+    }
+
+    .wizzardWrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: $sp-4;
+        &.emptyDesc {
+            margin-bottom: 0;
+        }
+    }
+}
+
+.empty {
+    height: auto;
+    margin-top: $sp-4;
+
+    @include ltelg {
+        padding: $sp-4 $sp-4 $sp-4 0;
+    }
+}

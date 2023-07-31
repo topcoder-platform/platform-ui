@@ -1,0 +1,26 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    background: $orange-25;
+    padding: $sp-8;
+    border-radius: $sp-4;
+
+    font-family: $font-barlow;
+    font-weight: $font-weight-medium;
+    font-size: 30px;
+    line-height: 36px;
+
+    color: $black-100;
+
+    margin-bottom: $sp-10;
+
+    strong {
+        font-weight: 900;
+    }
+
+    @include ltemd {
+        font-size: 24px;
+        line-height: 28px;
+        margin-bottom: $sp-6;
+    }
+}

@@ -1,0 +1,16 @@
+@import "@libs/ui/styles/includes";
+
+.modalButtons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.modalBody {
+    display: flex;
+    flex-direction: column;
+
+    >p {
+        margin-bottom: $sp-4;
+    }
+}

@@ -25,7 +25,6 @@ import styles from './SRMDetailsModal.module.scss'
 type SRMViewTypes = 'STATISTICS' | 'SRM DETAILS' | 'PAST SRM'
 
 interface SRMDetailsModalProps {
-    isSRMDetailsOpen: boolean
     onClose: () => void
     SRMStats: SRMStats | undefined
     profile: UserProfile | undefined
@@ -80,7 +79,7 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isSRMDetailsOpen}
+            open
             size='body'
             title='SINGLE ROUND MATCH'
         >
@@ -137,7 +136,8 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
                                     {' '}
                                     {viewType !== 'SRM DETAILS' ? 'SRM DETAILS' : 'STATISTICS'}
                                 </Button>
-                                <Button
+                                {/* TODO: Enable this when we have challenges details data */}
+                                {/* <Button
                                     primary
                                     onClick={bind(
                                         toggleViewType,
@@ -148,7 +148,7 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
                                     See
                                     {' '}
                                     {viewType !== 'PAST SRM' ? 'PAST SRM' : 'SRM DETAILS'}
-                                </Button>
+                                </Button> */}
                             </div>
                         </div>
 

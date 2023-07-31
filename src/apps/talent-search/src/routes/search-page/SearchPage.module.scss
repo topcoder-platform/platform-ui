@@ -1,0 +1,53 @@
+@import "@libs/ui/styles/includes";
+
+.contentLayout {
+    background-image: url("../../assets/background.webp");
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.contentLayout-inner {
+    padding: 86px 48px 48px 48px;
+    color: $tc-white;
+}
+
+.searchHeader{
+    text-align: center;
+}
+
+.searchHeaderText{
+    font-family: $font-roboto;
+    font-weight: 500;
+    font-size: 30px;
+    line-height: 20px;
+    letter-spacing: 0.5px;
+}
+
+.subHeader{
+    margin-top: 49px;
+    text-align: center;
+}
+
+.subHeaderText{
+    font-family: $font-barlow;
+    font-weight: 400;
+    font-size: 25px;
+    line-height: 30px;
+    color: $tc-white;
+
+}
+.searchPrompt{
+    font-family: $font-roboto;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 48px;
+    color: $tc-white;
+}
+
+.searchOptions{
+    margin-left: auto;
+    margin-right: auto;
+    padding: 70px 32px 32px 32px;
+    max-width: 931px;
+    width: 100%;
+}

@@ -1,4 +1,4 @@
-import { FC, ReactNode, useEffect } from 'react'
+import { FC, ReactNode, useCallback, useEffect } from 'react'
 import Modal, { ModalProps } from 'react-responsive-modal'
 import classNames from 'classnames'
 
@@ -39,12 +39,20 @@ const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
         )
     }
 
+    const handleBodyScroll = useCallback((force?: boolean) => {
+        const isOpen = force ?? props.open
+        document.documentElement.style.overflow = isOpen ? 'hidden' : ''
+        document.body.style.overflow = isOpen ? 'hidden' : ''
+    }, [props.open])
+
     useEffect(() => {
-        if (props.blockScroll === false) {
-            document.documentElement.style.overflow = props.open ? 'hidden' : ''
-            document.body.style.overflow = props.open ? 'hidden' : ''
+        if (props.blockScroll) {
+            return undefined
         }
-    }, [props.blockScroll, props.open])
+
+        handleBodyScroll()
+        return () => handleBodyScroll(false)
+    }, [handleBodyScroll, props.blockScroll, props.open])
 
     return (
         <Modal
@@ -58,6 +66,8 @@ const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
                 ),
             }}
             closeIcon={<IconOutline.XIcon className={styles['close-icon']} width={24} height={24} />}
+            // send blockScroll as false unless we get a specific true from props
+            blockScroll={props.blockScroll === true}
         >
             {props.title && (
                 <>

@@ -1,10 +1,10 @@
 /* eslint-disable complexity */
 import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
-import { bind, isEmpty, keys } from 'lodash'
+import { isEmpty, keys } from 'lodash'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 
-import { BaseModal, Button, LoadingSpinner } from '~/libs/ui'
+import { BaseModal, LoadingSpinner } from '~/libs/ui'
 import {
     MemberStats,
     ratingToCSScolor,
@@ -24,7 +24,6 @@ import styles from './TestScenariosDetailsModal.module.scss'
 type TestScenViewTypes = 'STATISTICS' | 'CHALLENGES DETAILS'
 
 interface TestScenariosDetailsModalProps {
-    isTestScenDetailsOpen: boolean
     onClose: () => void
     testScenStats: MemberStats | undefined
     profile: UserProfile | undefined
@@ -75,6 +74,8 @@ const TestScenariosDetailsModal: FC<TestScenariosDetailsModalProps> = (props: Te
         return options
     }, [memberStatsDist])
 
+    // TODO: Enable this when we have challenges details data
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     function toggleViewType(newViewType: TestScenViewTypes): void {
         setviewType(newViewType)
     }
@@ -82,7 +83,7 @@ const TestScenariosDetailsModal: FC<TestScenariosDetailsModalProps> = (props: Te
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isTestScenDetailsOpen}
+            open
             size='body'
             title='TEST SCENARIOS'
         >
@@ -124,7 +125,8 @@ const TestScenariosDetailsModal: FC<TestScenariosDetailsModalProps> = (props: Te
                     <div className={styles.content}>
                         <div className={styles.contentHeader}>
                             <h4>{viewType}</h4>
-                            <div className={styles.contentHeaderActions}>
+                            {/* TODO: Enable this when we have challenges details data */}
+                            {/* <div className={styles.contentHeaderActions}>
                                 <Button
                                     primary
                                     onClick={bind(
@@ -137,7 +139,7 @@ const TestScenariosDetailsModal: FC<TestScenariosDetailsModalProps> = (props: Te
                                     {' '}
                                     {viewType !== 'CHALLENGES DETAILS' ? 'CHALLENGES DETAILS' : 'STATISTICS'}
                                 </Button>
-                            </div>
+                            </div> */}
                         </div>
 
                         <div className={styles.contentBody}>

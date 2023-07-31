@@ -1,9 +1,18 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
+import { identity } from 'lodash'
+import axios, { AxiosHeaders, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 
 import { tokenGetAsync, TokenModel } from '../../auth'
 
 // initialize the global instance when this singleton is loaded
 export const globalInstance: AxiosInstance = createInstance()
+
+export const getResonseXHeader = <T>(
+    headers: AxiosHeaders,
+    headerName: string,
+    // eslint-disable-next-line default-param-last
+    parser: any = identity,
+    defaultValue?: T | undefined,
+): T => (parser(headers.get(headerName)) ?? defaultValue) as T
 
 export function createInstance(): AxiosInstance {
 
@@ -29,6 +38,29 @@ export async function deleteAsync<T>(url: string, xhrInstance: AxiosInstance = g
 export async function getAsync<T>(url: string, xhrInstance: AxiosInstance = globalInstance): Promise<T> {
     const output: AxiosResponse<T> = await xhrInstance.get(url)
     return output.data
+}
+
+export interface PaginatedResponse<T> {
+    data: T;
+    total: number;
+    page: number;
+    perPage: number;
+    totalPages: number;
+}
+
+export async function getPaginatedAsync<T>(
+    url: string,
+    xhrInstance: AxiosInstance = globalInstance,
+): Promise<PaginatedResponse<T>> {
+    const output: AxiosResponse<T> = await xhrInstance.get(url)
+
+    return {
+        data: output.data,
+        page: getResonseXHeader(output.headers as AxiosHeaders, 'x-page', Number, 0),
+        perPage: getResonseXHeader(output.headers as AxiosHeaders, 'x-per-page', Number, 0),
+        total: getResonseXHeader(output.headers as AxiosHeaders, 'x-total', Number, 0),
+        totalPages: getResonseXHeader(output.headers as AxiosHeaders, 'x-total-pages', Number, 0),
+    }
 }
 
 export async function getBlobAsync<T>(url: string, xhrInstance: AxiosInstance = globalInstance): Promise<T> {

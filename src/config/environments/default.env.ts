@@ -13,6 +13,7 @@ export const TC_DOMAIN: string = get({
 
 export const TOPCODER_URL: string = `https://www.${TC_DOMAIN}`
 export const PLATFORMUI_URL: string = `https://platform-ui.${TC_DOMAIN}`
+export const USER_PROFILE_URL: string = `https://profiles.${TC_DOMAIN}`
 
 export const API = {
     V1: `https://api.${TC_DOMAIN}/v1`,
@@ -41,16 +42,14 @@ export const VANILLA_FORUM = {
 }
 
 export const STRIPE = {
-    ADMIN_TOKEN: getReactEnv<string | undefined>('STRIPE_ADMIN_TOKEN', undefined),
     API_KEY: getReactEnv<string>('STRIPE_API_KEY', ''),
     API_VERSION: getReactEnv<string | undefined>('STRIPE_API_VERSION', undefined),
-    CUSTOMER_TOKEN: getReactEnv<string | undefined>('STRIPE_CUSTOMER_TOKEN', undefined),
 }
 
 export const URLS = {
-    ACCOUNT_SETTINGS: `${TOPCODER_URL}/settings/account`,
+    ACCOUNT_SETTINGS: `https://account-settings.${TC_DOMAIN}/#account`,
     UNIVERSAL_NAV: `https://uni-nav.${TC_DOMAIN}/v1/tc-universal-nav.js`,
-    USER_PROFILE: `${TOPCODER_URL}/members`,
+    USER_PROFILE: `https://profiles.${TC_DOMAIN}`,
 }
 
 export const MEMBER_VERIFY_LOOKER = getReactEnv<number>('MEMBER_VERIFY_LOOKER', 3322)

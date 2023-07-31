@@ -1,0 +1,115 @@
+@import '@libs/ui/styles/includes';
+
+.modalButtons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.formError {
+    color: $red-100;
+}
+
+.formWrap {
+    display: flex;
+    flex-direction: column;
+    min-height: 300px;
+    margin-top: $sp-2;
+
+    @include ltelg {
+        :global(.input-wrapper) {
+            margin-bottom: $sp-2;
+        }
+    }
+
+    .form {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        &>div:nth-child(1) {
+            margin-right: $sp-2;
+            min-width: 150px;
+        }
+
+        &>div:nth-child(2) {
+            flex: 1;
+        }
+    }
+
+    .formCTAs {
+        margin-top: $sp-2;
+    }
+}
+
+.links {
+    margin-bottom: $sp-4;
+    padding: $sp-4 0 $sp-2;
+    border-bottom: 1px solid $black-20;
+
+    @include ltelg {
+        display: flex;
+        flex-direction: column;
+    }
+
+    &.noLinks {
+        margin-bottom: 0;
+        padding: 0;
+        border: none;
+    }
+
+    .linkItemWrap {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        margin-bottom: $sp-2;
+
+        >svg {
+            width: 24px;
+            height: 24px;
+
+            path:not([stroke-linecap]) {
+                fill: $black-100;
+            }
+
+        }
+
+        .linkItem {
+            border-radius: 4px;
+            padding: $sp-2 $sp-4;
+            border: 1px solid $black-40;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-left: $sp-4;
+
+            .linkLabelWrap {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+
+                small {
+                    font-size: 11px;
+                    line-height: 11px;
+                    font-weight: $font-weight-medium;
+                    color: $turq-160;
+                    margin-bottom: $sp-1;
+                }
+
+                p {
+                    word-break: break-all;
+                }
+            }
+
+            button {
+                padding-right: 0;
+
+                svg {
+                    width: 24px;
+                    height: 24px;
+                }
+            }
+        }
+    }
+}

@@ -13,19 +13,20 @@ import styles from './LogoDesignDetailsModal.module.scss'
 type WebDesignViewTypes = 'CHALLENGES DETAILS'
 
 interface LogoDesignDetailsModalProps {
-    isLogoDesignDetailsOpen: boolean
     onClose: () => void
     logoDesignStats: MemberStats | undefined
 }
 
 const LogoDesignDetailsModal: FC<LogoDesignDetailsModalProps> = (props: LogoDesignDetailsModalProps) => {
+    // TODO: Enable this when we have challenges details data
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [viewType]: [WebDesignViewTypes, Dispatch<SetStateAction<WebDesignViewTypes>>]
         = useState<WebDesignViewTypes>('CHALLENGES DETAILS')
 
     return (
         <BaseModal
             onClose={props.onClose}
-            open={props.isLogoDesignDetailsOpen}
+            open
             size='body'
             title='LOGO DESIGN'
         >
@@ -55,12 +56,14 @@ const LogoDesignDetailsModal: FC<LogoDesignDetailsModalProps> = (props: LogoDesi
                         Screening Success Rate
                     </div>
                     <div>
-                        <span className='member-stat-value'>{props.logoDesignStats?.avgPlacement}</span>
+                        <span className='member-stat-value'>
+                            {numberToFixed(props.logoDesignStats?.avgPlacement || 0)}
+                        </span>
                         Average Placement
                     </div>
                 </div>
-
-                <div className={styles.content}>
+                {/* TODO: Add Logo Design details data */}
+                {/* <div className={styles.content}>
                     <div className={styles.contentHeader}>
                         <h4>{viewType}</h4>
                     </div>
@@ -73,7 +76,7 @@ const LogoDesignDetailsModal: FC<LogoDesignDetailsModalProps> = (props: LogoDesi
 
                         }
                     </div>
-                </div>
+                </div> */}
             </div>
         </BaseModal>
     )

@@ -1,0 +1,18 @@
+@import "@libs/ui/styles/includes";
+
+.container {
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    padding: $sp-1 0;
+    color: $turq-160;
+
+    button {
+        color: $black-100;
+        padding-right: $sp-2;
+    }
+
+    .notOopenToWork {
+        color: $red-100;
+    }
+}

@@ -5,7 +5,7 @@ import classNames from 'classnames'
 
 import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputSelect, InputText } from '~/libs/ui'
-import { SettingSection, SoftwareIcon } from '~/apps/accounts/src/lib'
+import { SettingSection, SoftwareIcon, triggerSprigSurvey } from '~/apps/accounts/src/lib'
 
 import { softwareTypes } from './software-types.config'
 import styles from './Software.module.scss'
@@ -144,6 +144,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                             ...updatedSoftwareTypesData || [],
                             softwareTypeUpdate,
                         ])
+                        triggerSprigSurvey(props.profile)
                     })
                     .catch(() => {
                         toast.error('Error updating software')
@@ -172,6 +173,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                             ...softwareTypesData || [],
                             softwareTypeUpdate,
                         ])
+                        triggerSprigSurvey(props.profile)
                     })
                     .catch(() => {
                         toast.error('Error adding new software')
@@ -211,6 +213,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
             .then(() => {
                 toast.success('Software deleted successfully')
                 setSoftwareTypesData(updatedSoftwareTypesData)
+                triggerSprigSurvey(props.profile)
             })
             .catch(() => {
                 toast.error('Error deleting software')

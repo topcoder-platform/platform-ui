@@ -5,6 +5,7 @@ import { toast } from 'react-toastify'
 
 import { updateMemberTraitsAsync, useMemberTraits, UserProfile, UserTraits } from '~/libs/core'
 import { Button, Collapsible, FormToggleSwitch } from '~/libs/ui'
+import { triggerSprigSurvey } from '~/apps/accounts/src/lib'
 
 import { communitiesConfig } from './communities-config'
 import styles from './Communities.module.scss'
@@ -48,6 +49,7 @@ const Communities: FC<CommunitiesProps> = (props: CommunitiesProps) => {
                 setMemberCommunities(updatedCommunities)
                 mutateTraits()
                 toast.success('Communities updated successfully.')
+                triggerSprigSurvey(props.profile)
             })
             .catch(() => {
                 toast.error('Failed to update user Communities.')

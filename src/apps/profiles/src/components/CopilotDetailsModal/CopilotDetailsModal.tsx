@@ -6,7 +6,6 @@ import { UserStats } from '~/libs/core'
 import styles from './CopilotDetailsModal.module.scss'
 
 interface CopilotDetailsModalProps {
-    isCopilotDetailsOpen: boolean
     onClose: () => void
     copilotDetails: UserStats['COPILOT']
 }
@@ -14,7 +13,7 @@ interface CopilotDetailsModalProps {
 const CopilotDetailsModal: FC<CopilotDetailsModalProps> = (props: CopilotDetailsModalProps) => (
     <BaseModal
         onClose={props.onClose}
-        open={props.isCopilotDetailsOpen}
+        open
         size='lg'
         title='COPILOT'
     >

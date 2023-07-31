@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { bind } from 'lodash'
 
 import { useMemberBadges, UserBadge, UserBadgesResponse, UserProfile } from '~/libs/core'
+import { Button } from '~/libs/ui'
 
 import { MemberBadgeModal } from '../../components'
 
@@ -13,7 +14,7 @@ interface CommunityAwardsProps {
 }
 
 const CommunityAwards: FC<CommunityAwardsProps> = (props: CommunityAwardsProps) => {
-    const memberBadges: UserBadgesResponse | undefined = useMemberBadges(props.profile?.userId as number, { limit: 4 })
+    const memberBadges: UserBadgesResponse | undefined = useMemberBadges(props.profile?.userId as number, { limit: 6 })
 
     const [isBadgeDetailsOpen, setIsBadgeDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -29,8 +30,13 @@ const CommunityAwards: FC<CommunityAwardsProps> = (props: CommunityAwardsProps) 
     return memberBadges && memberBadges.count ? (
         <div className={styles.container}>
             <div className={styles.title}>
-                <h3>Community Awards & Honors</h3>
-                <Link to='badges' className={styles.viewAllLink}>View all badges</Link>
+                <Link to='badges'>
+                    <Button
+                        label='View all badges'
+                        link
+                        variant='linkblue'
+                    />
+                </Link>
             </div>
 
             <div className={styles.badges}>
@@ -41,11 +47,13 @@ const CommunityAwards: FC<CommunityAwardsProps> = (props: CommunityAwardsProps) 
                             className={styles.badgeCard}
                             onClick={bind(onBadgeClick, this, badge)}
                         >
-                            <img
-                                src={badge.org_badge.badge_image_url}
-                                alt={`Topcoder community badge - ${badge.org_badge.badge_name}`}
-                                className={styles.badgeImage}
-                            />
+                            <div className={styles.badgeImageWrap}>
+                                <img
+                                    src={badge.org_badge.badge_image_url}
+                                    alt={`Topcoder community badge - ${badge.org_badge.badge_name}`}
+                                    className={styles.badgeImage}
+                                />
+                            </div>
                             <span className={styles.badgeTitle}>{badge.org_badge.badge_name}</span>
                         </div>
                     ))

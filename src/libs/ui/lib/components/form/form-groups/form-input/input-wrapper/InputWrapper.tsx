@@ -25,6 +25,7 @@ interface InputWrapperProps {
     readonly label: string | JSX.Element
     readonly tabIndex?: number
     readonly type: 'checkbox' | 'password' | 'rating' | 'text' | 'textarea'
+    readonly forceFocusStyle?: boolean
 }
 
 const InputWrapper: ForwardRefExoticComponent<InputWrapperProps & { ref?: React.Ref<HTMLDivElement> }>
@@ -43,6 +44,9 @@ const InputWrapper: ForwardRefExoticComponent<InputWrapperProps & { ref?: React.
         focusStyle,
         showError ? styles['input-error'] : undefined,
         props.className,
+        {
+            [styles.focus]: props.forceFocusStyle,
+        },
     )
 
     const renderCheckboxLabel: () => JSX.Element | boolean = () => props.type === 'checkbox' && (
