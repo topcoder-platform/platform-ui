@@ -1,7 +1,7 @@
 @import "@libs/ui/styles/includes";
 
 .wrap {
-    padding: $sp-55 $sp-8;
+    padding: $sp-6;
     border-radius: $sp-4;
 
     background: $tc-white;
@@ -12,20 +12,20 @@
 
 .topWrap {
     display: flex;
-    gap: $sp-10;
+    gap: $sp-6;
 }
 
 .profilePic {
-    width: 200px;
-    max-width: 200px;
+    width: 188px;
+    max-width: 188px;
 }
 
 .detailsContainer {
     flex: 1 1 auto;
 
-    padding: $sp-5 $sp-45 $sp-45 0;
+    padding: $sp-5 0 $sp-45;
     display: flex;
-    flex-direction: column;
+    gap: $sp-4;
 }
 
 .talentInfo {
@@ -34,6 +34,7 @@
     align-items: flex-start;
     gap: $sp-3;
     margin-bottom: $sp-45;
+    flex: 1 1 auto;
 
     &Name {
         font-size: 30px;
@@ -55,9 +56,9 @@
 
 }
 
-.matchBar {
-    max-width: 330px;
-    margin-top: auto;
+.profileMatch {
+    width: 83px;
+    flex: 0 0 auto;
 }
 
 .skillsContainer {
