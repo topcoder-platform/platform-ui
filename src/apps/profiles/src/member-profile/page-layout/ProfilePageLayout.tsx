@@ -27,7 +27,6 @@ interface ProfilePageLayoutProps {
 }
 
 const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutProps) => (
-
     <div className={styles.container}>
 
         <PageTitle>{`${props.profile.handle} | Community Profile | Topcoder`}</PageTitle>
@@ -81,7 +80,7 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                 </div>
                 <div className={styles.profileInfoRight}>
                     {props.authProfile?.handle === props.profile.handle && (
-                        <ProfileCompleteness profile={props.authProfile} />
+                        <ProfileCompleteness profile={props.profile} authProfile={props.authProfile} />
                     )}
                     <div className={styles.sectionWrap}>
                         <div className={styles.skillsWrap}>
