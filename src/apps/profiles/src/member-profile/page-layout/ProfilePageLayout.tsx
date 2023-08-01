@@ -100,6 +100,7 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                                 <WorkExpirence
                                     profile={props.profile}
                                     authProfile={props.authProfile}
+                                    refreshProfile={props.refreshProfile}
                                 />
                             </div>
                         </div>
@@ -107,6 +108,7 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                             <EducationAndCertifications
                                 profile={props.profile}
                                 authProfile={props.authProfile}
+                                refreshProfile={props.refreshProfile}
                             />
                         </div>
                     </div>
