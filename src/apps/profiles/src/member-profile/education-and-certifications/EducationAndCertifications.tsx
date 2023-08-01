@@ -14,7 +14,7 @@ import {
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { MemberTCAInfo } from '../tca-info'
-import { notifyUniNavi, triggerSprigSurvey } from '../../lib'
+import { triggerSprigSurvey } from '../../lib'
 
 import { ModifyEducationModal } from './ModifyEducationModal'
 import { EducationCard } from './EducationCard'
@@ -23,6 +23,7 @@ import styles from './EducationAndCertifications.module.scss'
 interface EducationAndCertificationsProps {
     profile: UserProfile
     authProfile: UserProfile | undefined
+    refreshProfile: (handle: string) => void
 }
 
 const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: EducationAndCertificationsProps) => {
@@ -70,7 +71,7 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
         setTimeout(() => {
             setIsEditMode(false)
             mutateTraits()
-            notifyUniNavi(props.profile)
+            props.refreshProfile(props.profile.handle)
             triggerSprigSurvey(props.profile)
         }, 1000)
     }

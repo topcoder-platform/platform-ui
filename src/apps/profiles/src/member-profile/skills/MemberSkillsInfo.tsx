@@ -86,7 +86,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                 </div>
                 <Button
                     link
-                    label='How skills work?'
+                    label='How skills work'
                     onClick={handleHowSkillsWorkClick}
                     variant='linkblue'
                 />

@@ -31,7 +31,7 @@ const MemberProfilePage: FC<{}> = () => {
         if (routeParams.memberHandle) {
             profileGetPublicAsync(routeParams.memberHandle)
                 .then(userProfile => {
-                    setProfile(userProfile)
+                    setProfile({ ...userProfile } as UserProfile)
                     setProfileReady(true)
                 })
             // TODO: NOT FOUND PAGE redirect/dispaly
@@ -41,7 +41,7 @@ const MemberProfilePage: FC<{}> = () => {
     const refreshProfile = useCallback((handle: string) => (
         profileGetPublicAsync(handle)
             .then(userProfile => {
-                setProfile(userProfile)
+                setProfile({ ...userProfile } as UserProfile)
                 if (userProfile) {
                     notifyUniNavi(userProfile)
                     triggerSprigSurvey(userProfile)
