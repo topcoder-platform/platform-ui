@@ -30,6 +30,7 @@ export interface InputTextProps {
     readonly tooltip?: FormInputTooltipOptions
     readonly type: InputTextTypes
     readonly value?: InputValue
+    readonly autoFocus?: boolean
 }
 
 const InputText: FC<InputTextProps> = (props: InputTextProps) => {
@@ -53,6 +54,7 @@ const InputText: FC<InputTextProps> = (props: InputTextProps) => {
             spellCheck={!!props.spellCheck}
             tabIndex={props.tabIndex}
             type={props.type || 'text'}
+            autoFocus={props.autoFocus}
         />
     )
 
