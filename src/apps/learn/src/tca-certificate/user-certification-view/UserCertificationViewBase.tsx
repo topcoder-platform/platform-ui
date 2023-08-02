@@ -5,6 +5,7 @@ import {
     SetStateAction,
     useEffect,
     useLayoutEffect,
+    useMemo,
     useRef,
     useState,
 } from 'react'
@@ -44,6 +45,11 @@ const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: Us
     const isOwnProfile: boolean = !!props.profile?.email
 
     const isModalView: boolean = queryParams.get('view-style') === 'modal'
+    const userName = useMemo(() => (
+        !!(props.profile?.firstName || props.profile?.lastName)
+            ? `${props.profile.firstName} ${props.profile.lastName}`
+            : props.enrollment?.userName
+    ), [props.profile, props.enrollment])
 
     const [isMemberVerified, setIsMemberVerified]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -95,7 +101,7 @@ const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: Us
                         completionUuid={props.enrollment.completionUuid ?? undefined}
                         isMemberVerified={isMemberVerified}
                         userProfile={props.profile}
-                        userName={props.enrollment.userName}
+                        userName={userName}
                         isOwner={isOwnProfile}
                         validationUrl={validationUrl}
                         isPreview={props.isPreview}
