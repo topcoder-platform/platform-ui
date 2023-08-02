@@ -3,7 +3,7 @@ import { bind } from 'lodash'
 import { KeyedMutator } from 'swr'
 import { toast } from 'react-toastify'
 
-import { updateMemberTraitsAsync, useMemberTraits, UserProfile, UserTraits } from '~/libs/core'
+import { updateOrCreateMemberTraitsAsync, useMemberTraits, UserProfile, UserTraits } from '~/libs/core'
 import { Button, Collapsible, FormToggleSwitch } from '~/libs/ui'
 import { triggerSprigSurvey } from '~/apps/accounts/src/lib'
 
@@ -38,7 +38,7 @@ const Communities: FC<CommunitiesProps> = (props: CommunitiesProps) => {
             [communityId]: !memberCommunities?.[communityId],
         }
 
-        updateMemberTraitsAsync(props.profile.handle, [{
+        updateOrCreateMemberTraitsAsync(props.profile.handle, [{
             categoryName: 'Communities',
             traitId: 'communities',
             traits: {

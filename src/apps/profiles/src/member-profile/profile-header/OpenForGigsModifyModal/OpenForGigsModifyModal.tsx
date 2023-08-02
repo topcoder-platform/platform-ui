@@ -4,8 +4,7 @@ import { reject } from 'lodash'
 
 import { BaseModal, Button, InputText } from '~/libs/ui'
 import {
-    createMemberTraitsAsync,
-    updateMemberTraitsAsync,
+    updateOrCreateMemberTraitsAsync,
     UserProfile,
     UserTrait,
     UserTraitCategoryNames,
@@ -20,11 +19,6 @@ interface OpenForGigsModifyModalProps {
     openForWork: boolean
     memberPersonalizationTraitsFullData: UserTrait[] | undefined
     profile: UserProfile
-}
-
-const methodsMap: { [key: string]: any } = {
-    create: createMemberTraitsAsync,
-    update: updateMemberTraitsAsync,
 }
 
 const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForGigsModifyModalProps) => {
@@ -47,7 +41,7 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
                 (trait: UserTrait) => trait.availableForGigs !== undefined,
             )
 
-        methodsMap[!!props.memberPersonalizationTraitsFullData ? 'update' : 'create'](props.profile.handle, [{
+        updateOrCreateMemberTraitsAsync(props.profile.handle, [{
             categoryName: UserTraitCategoryNames.personalization,
             traitId: UserTraitIds.personalization,
             traits: {

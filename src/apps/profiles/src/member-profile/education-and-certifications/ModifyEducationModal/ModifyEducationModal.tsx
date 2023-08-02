@@ -6,8 +6,7 @@ import classNames from 'classnames'
 
 import { BaseModal, Button, IconOutline, InputSelect, InputText } from '~/libs/ui'
 import {
-    createMemberTraitsAsync,
-    updateMemberTraitsAsync,
+    updateOrCreateMemberTraitsAsync,
     UserProfile,
     UserTrait,
     UserTraitCategoryNames,
@@ -23,11 +22,6 @@ interface ModifyEducationModalProps {
     onSave: () => void
     profile: UserProfile
     education: UserTrait[] | undefined
-}
-
-const methodsMap: { [key: string]: any } = {
-    create: createMemberTraitsAsync,
-    update: updateMemberTraitsAsync,
 }
 
 const years: number[] = range(1979, getYear(new Date()) + 10)
@@ -78,7 +72,7 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
 
         setIsSaving(true)
 
-        methodsMap[!!props.education ? 'update' : 'create'](props.profile.handle, [{
+        updateOrCreateMemberTraitsAsync(props.profile.handle, [{
             categoryName: UserTraitCategoryNames.education,
             traitId: UserTraitIds.education,
             traits: {
