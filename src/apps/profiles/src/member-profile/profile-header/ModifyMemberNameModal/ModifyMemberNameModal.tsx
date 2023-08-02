@@ -3,9 +3,8 @@ import { reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
 
 import {
-    createMemberTraitsAsync,
     updateMemberProfileAsync,
-    updateMemberTraitsAsync,
+    updateOrCreateMemberTraitsAsync,
     UserProfile,
     UserTrait,
     UserTraitCategoryNames,
@@ -23,11 +22,6 @@ interface ModifyMemberNameModalProps {
     onSave: () => void
     memberPersonalizationTraitsData: UserTrait[] | undefined
     namesAndHandleAppearance: NamesAndHandleAppearance | undefined
-}
-
-const methodsMap: { [key: string]: any } = {
-    create: createMemberTraitsAsync,
-    update: updateMemberTraitsAsync,
 }
 
 const ModifyMemberNameModal: FC<ModifyMemberNameModalProps> = (props: ModifyMemberNameModalProps) => {
@@ -96,7 +90,7 @@ const ModifyMemberNameModal: FC<ModifyMemberNameModalProps> = (props: ModifyMemb
                 props.profile.handle,
                 { firstName: updatedFirstName, lastName: updatedLastName },
             ),
-            methodsMap[!!props.memberPersonalizationTraitsData ? 'update' : 'create'](props.profile.handle, [{
+            updateOrCreateMemberTraitsAsync(props.profile.handle, [{
                 categoryName: UserTraitCategoryNames.personalization,
                 traitId: UserTraitIds.personalization,
                 traits: {

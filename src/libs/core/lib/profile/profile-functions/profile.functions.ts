@@ -146,3 +146,16 @@ export async function updateMemberProfileAsync(handle: string, profile: UpdatePr
 export async function updateMemberPhotoAsync(handle: string, payload: FormData): Promise<UserPhotoUpdateResponse> {
     return updateMemberPhoto(handle, payload)
 }
+
+export async function updateOrCreateMemberTraitsAsync(
+    handle: string,
+    traits: UserTraits[],
+): Promise<UserTraits[]> {
+    try {
+        const updatedTraitsRsp = await updateMemberTraitsAsync(handle, traits)
+        return updatedTraitsRsp
+    } catch (error) {
+        const createdTraitsRsp = await createMemberTraitsAsync(handle, traits)
+        return createdTraitsRsp
+    }
+}

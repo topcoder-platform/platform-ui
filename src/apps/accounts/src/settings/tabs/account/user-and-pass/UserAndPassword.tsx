@@ -11,7 +11,7 @@ import {
 } from '~/libs/ui'
 import {
     updateMemberPasswordAsync,
-    updateMemberTraitsAsync,
+    updateOrCreateMemberTraitsAsync,
     useMemberTraits,
     UserProfile,
     UserTrait,
@@ -69,7 +69,7 @@ const UserAndPassword: FC<UserAndPasswordProps> = (props: UserAndPasswordProps) 
     }
 
     function handleUserConsentChange(): void {
-        updateMemberTraitsAsync(props.profile.handle, [{
+        updateOrCreateMemberTraitsAsync(props.profile.handle, [{
             categoryName: 'Personalization',
             traitId: 'personalization',
             traits: {

@@ -3,7 +3,7 @@ import { bind, isEmpty, reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
-import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
+import { updateMemberTraitsAsync, updateOrCreateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputSelect, InputText } from '~/libs/ui'
 import {
     FinancialInstitutionIcon,
@@ -21,11 +21,6 @@ import styles from './ServiceProvider.module.scss'
 interface ServiceProviderProps {
     serviceProviderTrait: UserTrait | undefined
     profile: UserProfile
-}
-
-const methodsMap: { [key: string]: any } = {
-    create: createMemberTraitsAsync,
-    update: updateMemberTraitsAsync,
 }
 
 const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) => {
@@ -166,7 +161,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                         setIsEditMode(false)
                     })
             } else {
-                methodsMap[!serviceProviderTypesData || !serviceProviderTypesData.length ? 'create' : 'update'](
+                updateOrCreateMemberTraitsAsync(
                     props.profile.handle,
                     [{
                         categoryName: 'Service Provider',

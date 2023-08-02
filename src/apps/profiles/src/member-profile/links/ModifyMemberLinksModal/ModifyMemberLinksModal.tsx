@@ -5,8 +5,7 @@ import classNames from 'classnames'
 
 import { BaseModal, Button, IconOutline, InputSelect, InputText } from '~/libs/ui'
 import {
-    createMemberTraitsAsync,
-    updateMemberTraitsAsync,
+    updateOrCreateMemberTraitsAsync,
     UserProfile,
     UserTrait,
     UserTraitCategoryNames,
@@ -25,11 +24,6 @@ interface ModifyMemberLinksModalProps {
     profile: UserProfile
     memberLinks: UserTrait[] | undefined
     memberPersonalizationTraitsFullData: UserTrait[] | undefined
-}
-
-const methodsMap: { [key: string]: any } = {
-    create: createMemberTraitsAsync,
-    update: updateMemberTraitsAsync,
 }
 
 const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMemberLinksModalProps) => {
@@ -95,7 +89,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
             })
         }
 
-        methodsMap[!!props.memberPersonalizationTraitsFullData ? 'update' : 'create'](props.profile.handle, [{
+        updateOrCreateMemberTraitsAsync(props.profile.handle, [{
             categoryName: UserTraitCategoryNames.personalization,
             traitId: UserTraitIds.personalization,
             traits: {
