@@ -114,7 +114,6 @@ const LinkForm: FC<LinkFormProps> = props => {
                     type='text'
                     onChange={handleURLChange}
                     value={selectedLinkURL}
-                    autoFocus
                 />
                 <Button
                     className={styles.button}

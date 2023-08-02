@@ -54,7 +54,6 @@ const InputText: FC<InputTextProps> = (props: InputTextProps) => {
             spellCheck={!!props.spellCheck}
             tabIndex={props.tabIndex}
             type={props.type || 'text'}
-            autoFocus={props.autoFocus}
         />
     )
 

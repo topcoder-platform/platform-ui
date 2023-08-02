@@ -34,7 +34,9 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
 
     const [isSaving, setIsSaving] = useState<boolean>(false)
     const [hasChanges, setHasChanges] = useState<boolean>(false)
-    const [currentMemberLinks, setCurrentMemberLinks] = useState<UserTrait[] | undefined>(props.memberLinks ?? [{}])
+    const [currentMemberLinks, setCurrentMemberLinks] = useState<UserTrait[]>(
+        props.memberLinks?.length ? props.memberLinks : [{}],
+    )
 
     const hasNewInput = useMemo(() => (
         !!currentMemberLinks?.find(d => (!d.name && !d.url))
