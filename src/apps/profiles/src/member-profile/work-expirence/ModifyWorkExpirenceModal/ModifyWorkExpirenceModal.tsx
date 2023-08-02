@@ -6,8 +6,7 @@ import classNames from 'classnames'
 
 import { BaseModal, Button, IconOutline, InputDatePicker, InputSelect, InputText } from '~/libs/ui'
 import {
-    createMemberTraitsAsync,
-    updateMemberTraitsAsync,
+    updateOrCreateMemberTraitsAsync,
     UserProfile, UserTrait,
     UserTraitCategoryNames,
     UserTraitIds,
@@ -23,11 +22,6 @@ interface ModifyWorkExpirenceModalProps {
     onSave: () => void
     profile: UserProfile
     workExpirence: UserTrait[] | undefined
-}
-
-const methodsMap: { [key: string]: any } = {
-    create: createMemberTraitsAsync,
-    update: updateMemberTraitsAsync,
 }
 
 const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: ModifyWorkExpirenceModalProps) => {
@@ -77,7 +71,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
 
         setIsSaving(true)
 
-        methodsMap[!!props.workExpirence ? 'update' : 'create'](props.profile.handle, [{
+        updateOrCreateMemberTraitsAsync(props.profile.handle, [{
             categoryName: UserTraitCategoryNames.work,
             traitId: UserTraitIds.work,
             traits: {
