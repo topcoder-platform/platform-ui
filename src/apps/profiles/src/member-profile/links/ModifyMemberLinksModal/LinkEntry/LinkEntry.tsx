@@ -43,7 +43,7 @@ const LinkEntry: FC<LinkEntryProps> = props => {
                     <small>{props.link.name}</small>
                     <p>{props.link.url}</p>
                 </div>
-                <div>
+                <div className={styles.btnsWrap}>
                     <Button
                         className={styles.button}
                         size='lg'

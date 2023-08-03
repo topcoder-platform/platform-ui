@@ -24,14 +24,21 @@
     &>div:nth-child(1) {
         margin-right: $sp-2;
         min-width: 150px;
+        @include ltemd {
+            min-width: 0;
+        }
     }
 
     &>div:nth-child(2) {
         flex: 1;
-        margin-right: $sp-2;
     }
     &>button {
         margin-bottom: $sp-45;
+
+        svg {
+            @include icon-xxl;
+        }
+
         &.button {
             margin-left: $sp-2;
             padding-left: $sp-2;
