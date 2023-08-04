@@ -15,6 +15,7 @@ export {
     modifyTracksAsync,
     updateMemberProfileAsync,
     updateMemberPhotoAsync,
+    updateOrCreateMemberTraitsAsync,
 } from './profile.functions'
 export * from './profile-store'
 export * from './rating.functions'

@@ -3,7 +3,7 @@ import { bind, isEmpty, reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
-import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
+import { updateMemberTraitsAsync, updateOrCreateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputText } from '~/libs/ui'
 import { SettingSection, SubscriptionsIcon, triggerSprigSurvey } from '~/apps/accounts/src/lib'
 
@@ -12,11 +12,6 @@ import styles from './Subscriptions.module.scss'
 interface SubscriptionsProps {
     subscriptionsTrait: UserTrait | undefined
     profile: UserProfile
-}
-
-const methodsMap: { [key: string]: any } = {
-    create: createMemberTraitsAsync,
-    update: updateMemberTraitsAsync,
 }
 
 const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
@@ -139,7 +134,7 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                         setIsEditMode(false)
                     })
             } else {
-                methodsMap[!subscriptionsTypesData || !subscriptionsTypesData.length ? 'create' : 'update'](
+                updateOrCreateMemberTraitsAsync(
                     props.profile.handle,
                     [{
                         categoryName: 'Subscription',

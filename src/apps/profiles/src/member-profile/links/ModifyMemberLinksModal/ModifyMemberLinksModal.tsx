@@ -1,22 +1,18 @@
-import { bind, reject, trim } from 'lodash'
-import { Dispatch, FC, MutableRefObject, SetStateAction, useMemo, useRef, useState } from 'react'
+import { reject } from 'lodash'
+import { FC, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
-import { BaseModal, Button, IconOutline, InputSelect, InputText } from '~/libs/ui'
+import { BaseModal, Button } from '~/libs/ui'
 import {
-    createMemberTraitsAsync,
-    updateMemberTraitsAsync,
+    updateOrCreateMemberTraitsAsync,
     UserProfile,
     UserTrait,
     UserTraitCategoryNames,
     UserTraitIds,
 } from '~/libs/core'
 
-import { renderLinkIcon } from '../MemberLinks'
-import { isValidURL } from '../../../lib'
-
-import { linkTypes } from './link-types.config'
+import { LinkEntry } from './LinkEntry'
 import styles from './ModifyMemberLinksModal.module.scss'
 
 interface ModifyMemberLinksModalProps {
@@ -27,55 +23,51 @@ interface ModifyMemberLinksModalProps {
     memberPersonalizationTraitsFullData: UserTrait[] | undefined
 }
 
-const methodsMap: { [key: string]: any } = {
-    create: createMemberTraitsAsync,
-    update: updateMemberTraitsAsync,
-}
-
 const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMemberLinksModalProps) => {
-    const formElRef: MutableRefObject<HTMLDivElement | any> = useRef()
+    const inputRef = useRef<HTMLInputElement | any>()
 
-    const [isSaving, setIsSaving]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
+    const [isSaving, setIsSaving] = useState<boolean>(false)
+    const [hasChanges, setHasChanges] = useState<boolean>(false)
+    const [currentMemberLinks, setCurrentMemberLinks] = useState<UserTrait[]>(
+        props.memberLinks?.length ? props.memberLinks : [{}],
+    )
 
-    const [isFormChanged, setIsFormChanged]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
+    const hasNewInput = useMemo(() => (
+        !!currentMemberLinks?.find(d => (!d.name && !d.url))
+    ), [currentMemberLinks])
 
-    const [formErrors, setFormErrors]: [
-        { [key: string]: string },
-        Dispatch<SetStateAction<{ [key: string]: string }>>
-    ]
-        = useState<{ [key: string]: string }>({})
-
-    const [selectedLinkType, setSelectedLinkType]: [
-        string | undefined,
-        Dispatch<SetStateAction<string | undefined>>
-    ]
-        = useState<string | undefined>()
-
-    const [currentMemberLinks, setCurrentMemberLinks]: [
-        UserTrait[] | undefined,
-        Dispatch<SetStateAction<UserTrait[] | undefined>>
-    ]
-        = useState<UserTrait[] | undefined>(props.memberLinks)
-
-    const linkTypesSelect: any = useMemo(() => linkTypes.map((link: any) => ({
-        label: link.name,
-        value: link.name,
-    })), [])
-
-    const [selectedLinkURL, setSelectedLinkURL]: [
-        string | undefined,
-        Dispatch<SetStateAction<string | undefined>>
-    ]
-        = useState<string | undefined>()
-
-    function handleSelectedLinkTypeChange(event: React.ChangeEvent<HTMLInputElement>): void {
-        setSelectedLinkType(event.target.value)
-        const validURL = isValidURL(selectedLinkURL as string)
-        if (validURL) {
-            setIsFormChanged(true)
+    function handleAddAdditional(): void {
+        if (hasNewInput) {
+            return
         }
+
+        setCurrentMemberLinks(links => (links ?? []).concat({ name: '', url: '' }))
+    }
+
+    function handleRemoveLink(trait: UserTrait): void {
+        setCurrentMemberLinks(
+            currentMemberLinks?.filter((item: UserTrait) => item.url !== trait.url),
+        )
+        setHasChanges(true)
+    }
+
+    async function handleSaveLink(link: UserTrait, index: number): Promise<UserTrait | undefined> {
+        const existingLinkItemIndex = currentMemberLinks?.findIndex((item: UserTrait) => (
+            item.url?.toLowerCase() === link?.url?.toLowerCase()
+        )) ?? -1
+        const isDuplicateLink = existingLinkItemIndex > -1 && existingLinkItemIndex !== index
+
+        if (isDuplicateLink) {
+            toast.info('Link already exists', { position: toast.POSITION.BOTTOM_RIGHT })
+            return undefined
+        }
+
+        setCurrentMemberLinks(links => (links ?? []).map((l, i) => (
+            i === index ? link : l
+        )))
+
+        setHasChanges(true)
+        return link
     }
 
     function handleLinksSave(): void {
@@ -86,16 +78,9 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
 
         const updatedLinks: UserTrait[] = [
             ...(currentMemberLinks || []),
-        ]
+        ].filter(l => l.name && l.url)
 
-        if (selectedLinkType && isValidURL(selectedLinkURL as string)) {
-            updatedLinks.push({
-                name: selectedLinkType,
-                url: trim(selectedLinkURL) || '',
-            })
-        }
-
-        methodsMap[!!props.memberPersonalizationTraitsFullData ? 'update' : 'create'](props.profile.handle, [{
+        updateOrCreateMemberTraitsAsync(props.profile.handle, [{
             categoryName: UserTraitCategoryNames.personalization,
             traitId: UserTraitIds.personalization,
             traits: {
@@ -117,71 +102,14 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
             })
     }
 
-    function handleFormAction(): void {
-        if (!selectedLinkType) {
-            setFormErrors({ selectedLinkType: 'Please select a link type' })
-            return
-        }
-
-        if (!trim(selectedLinkURL)) {
-            setFormErrors({ url: 'Please enter a URL' })
-            return
-        }
-
-        const validURL = isValidURL(selectedLinkURL as string)
-        if (!validURL) {
-            setFormErrors({ url: 'Invalid URL' })
-            return
-        }
-
-        if (currentMemberLinks?.find((item: UserTrait) => item.url.toLowerCase() === selectedLinkURL?.toLowerCase())) {
-            toast.info('Link already exists', { position: toast.POSITION.BOTTOM_RIGHT })
-            resetForm()
-            return
-        }
-
-        setCurrentMemberLinks([
-            ...(currentMemberLinks || []),
-            {
-                name: selectedLinkType,
-                url: trim(selectedLinkURL) || '',
-            },
-        ])
-
-        setIsFormChanged(true)
-        resetForm()
-    }
-
-    function resetForm(): void {
-        formElRef.current.reset()
-        setSelectedLinkType(undefined)
-        setSelectedLinkURL(undefined)
-        setFormErrors({})
-    }
-
-    function handleRemoveLink(trait: UserTrait): void {
-        setCurrentMemberLinks(
-            currentMemberLinks?.filter((item: UserTrait) => item.url !== trait.url),
-        )
-        setIsFormChanged(true)
-    }
-
-    function handleURLChange(event: React.ChangeEvent<HTMLInputElement>): void {
-        setSelectedLinkURL(event.target.value)
-
-        const validURL = isValidURL(event.target.value)
-        if (validURL && selectedLinkType) {
-            setIsFormChanged(true)
-        }
-    }
-
     return (
         <BaseModal
             onClose={props.onClose}
             open
             size='lg'
             title='Social Links'
-            initialFocusRef={formElRef}
+            bodyClassName={styles.memberLinksModalBody}
+            initialFocusRef={inputRef}
             buttons={(
                 <div className={styles.modalButtons}>
                     <Button
@@ -193,7 +121,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                         label='Save'
                         onClick={handleLinksSave}
                         primary
-                        disabled={isSaving || !isFormChanged}
+                        disabled={isSaving || !hasChanges}
                     />
                 </div>
             )}
@@ -203,61 +131,29 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
 
                 <div className={classNames(styles.links, currentMemberLinks?.length ? '' : styles.noLinks)}>
                     {
-                        currentMemberLinks?.map((trait: UserTrait) => (
-                            <div className={styles.linkItemWrap} key={`member-link-${trait.name}`}>
-                                {renderLinkIcon(trait.name)}
-                                <div className={styles.linkItem}>
-                                    <div className={styles.linkLabelWrap}>
-                                        <small>{trait.name}</small>
-                                        <p>{trait.url}</p>
-                                    </div>
-                                    <Button
-                                        size='lg'
-                                        icon={IconOutline.TrashIcon}
-                                        onClick={bind(handleRemoveLink, this, trait)}
-                                    />
-                                </div>
-                            </div>
+                        currentMemberLinks?.map((trait: UserTrait, i: number) => (
+                            <LinkEntry
+                                link={trait}
+                                onRemove={handleRemoveLink}
+                                onSave={handleSaveLink}
+                                index={i}
+                                // eslint-disable-next-line react/no-array-index-key
+                                key={`${trait.url}-${i}`}
+                            />
                         ))
                     }
                 </div>
 
-                <form
-                    ref={formElRef}
-                    className={classNames(styles.formWrap)}
-                >
-                    <div className={styles.form}>
-                        <InputSelect
-                            options={linkTypesSelect}
-                            value={selectedLinkType}
-                            onChange={handleSelectedLinkTypeChange}
-                            name='linkType'
-                            label='Type'
-                            error={formErrors.selectedLinkType}
-                            placeholder='Select a link type'
-                            dirty
-                        />
-
-                        <InputText
-                            name='url'
-                            label='URL'
-                            error={formErrors.url}
-                            placeholder='Enter a URL'
-                            dirty
-                            tabIndex={-1}
-                            type='text'
-                            onChange={handleURLChange}
-                            value={selectedLinkURL}
-                        />
-                    </div>
+                {!hasNewInput && (
                     <div className={styles.formCTAs}>
                         <Button
-                            onClick={handleFormAction}
+                            onClick={handleAddAdditional}
                             secondary
                             label='+ Additional Link'
                         />
                     </div>
-                </form>
+                )}
+
             </div>
         </BaseModal>
     )

@@ -4,9 +4,8 @@ import { toast } from 'react-toastify'
 
 import { BaseModal, Button, InputText, InputTextarea } from '~/libs/ui'
 import {
-    createMemberTraitsAsync,
     updateMemberProfileAsync,
-    updateMemberTraitsAsync,
+    updateOrCreateMemberTraitsAsync,
     UserProfile,
     UserTrait,
     UserTraitCategoryNames,
@@ -20,11 +19,6 @@ interface ModifyAboutMeModalProps {
     onSave: () => void
     profile: UserProfile
     memberPersonalizationTraitsData: UserTrait[] | undefined
-}
-
-const methodsMap: { [key: string]: any } = {
-    create: createMemberTraitsAsync,
-    update: updateMemberTraitsAsync,
 }
 
 const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeModalProps) => {
@@ -79,7 +73,7 @@ const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeMod
                 props.profile.handle,
                 { description: updatedDescription },
             ),
-            methodsMap[!!props.memberPersonalizationTraitsData ? 'update' : 'create'](props.profile.handle, [{
+            updateOrCreateMemberTraitsAsync(props.profile.handle, [{
                 categoryName: UserTraitCategoryNames.personalization,
                 traitId: UserTraitIds.personalization,
                 traits: {

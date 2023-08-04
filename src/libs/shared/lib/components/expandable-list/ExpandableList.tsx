@@ -54,7 +54,7 @@ const ExpandableList: FC<ExpandableListProps> = props => {
     return (
         <>
             {renderList()}
-            {listCount >= props.visible && renderToggleBtn()}
+            {listCount > props.visible && renderToggleBtn()}
         </>
     )
 }

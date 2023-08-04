@@ -34,6 +34,10 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
         (badge: UserBadge) => /TCO.*Finalist/.test(badge.org_badge.badge_name),
     ).length || 0, [memberBadges])
 
+    const tcoTrips: number = useMemo(() => memberBadges?.rows.filter(
+        (badge: UserBadge) => /TCO.*Trip Winner/.test(badge.org_badge.badge_name),
+    ).length || 0, [memberBadges])
+
     const isCopilot: boolean
         = useMemo(() => !!memberStats?.COPILOT, [memberStats])
 
@@ -53,8 +57,8 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
 
             <div className={styles.achievementsWrap}>
                 {
-                    (tcoWins > 0 || tcoQualifications > 0) && (
-                        <TCOWinsBanner tcoWins={tcoWins} tcoQualifications={tcoQualifications} />
+                    (tcoWins > 0 || tcoQualifications > 0 || tcoTrips > 0) && (
+                        <TCOWinsBanner tcoWins={tcoWins} tcoQualifications={tcoQualifications} tcoTrips={tcoTrips} />
                     )
                 }
                 {

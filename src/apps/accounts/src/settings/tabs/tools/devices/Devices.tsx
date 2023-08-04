@@ -5,8 +5,8 @@ import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
 import {
-    createMemberTraitsAsync,
     updateMemberTraitsAsync,
+    updateOrCreateMemberTraitsAsync,
     useMemberDevicesLookup,
     UserProfile,
     UserTrait,
@@ -29,11 +29,6 @@ import styles from './Devices.module.scss'
 interface DevicesProps {
     devicesTrait: UserTrait | undefined
     profile: UserProfile
-}
-
-const methodsMap: { [key: string]: any } = {
-    create: createMemberTraitsAsync,
-    update: updateMemberTraitsAsync,
 }
 
 const Devices: FC<DevicesProps> = (props: DevicesProps) => {
@@ -293,7 +288,7 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
                         setIsEditMode(false)
                     })
             } else {
-                methodsMap[!deviceTypesData || !deviceTypesData.length ? 'create' : 'update'](
+                updateOrCreateMemberTraitsAsync(
                     props.profile.handle,
                     [{
                         categoryName: 'Device',

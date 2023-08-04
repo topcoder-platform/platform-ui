@@ -8,6 +8,7 @@ import {
     MutableRefObject,
     ReactNode,
     SetStateAction,
+    useEffect,
     useRef,
     useState,
 } from 'react'
@@ -76,7 +77,11 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
         option ? option.label ?? option.value : ''
     )
 
-    const toggleMenu: () => void = () => setMenuIsVisible(wasVisible => !wasVisible)
+    const toggleMenu = (toggle?: boolean): void => {
+        setTimeout(setMenuIsVisible, 150, wasVisible => (
+            typeof toggle === 'boolean' ? toggle : !wasVisible
+        ))
+    }
 
     const select: (option: InputSelectOption) => (event: MouseEvent<HTMLDivElement>) => void
     = (option: InputSelectOption) => (
@@ -87,14 +92,14 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
         props.onChange({
             target: { value: option.value },
         } as unknown as ChangeEvent<HTMLInputElement>)
-        buttonRef.current?.focus() // this will close the dropdown menu
+        toggleMenu(false)
     }
 
     function toggleIfNotDisabled(event:
         MouseEvent<HTMLButtonElement>
         | FocusEvent<HTMLButtonElement>
         | KeyboardEvent<HTMLButtonElement>
-        | undefined)
+        | undefined, toggle?: boolean)
     : void {
         event?.stopPropagation()
         event?.preventDefault()
@@ -102,16 +107,22 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
             return
         }
 
-        toggleMenu()
+        toggleMenu(toggle)
     }
 
-    useClickOutside(triggerRef.current, () => setMenuIsVisible(false))
+    useClickOutside(triggerRef.current, () => setMenuIsVisible(false), menuIsVisible)
 
     function handleKeyDown(event: KeyboardEvent<HTMLButtonElement> | undefined): void {
         if (event?.key === 'Enter') {
             toggleIfNotDisabled(event)
         }
     }
+
+    useEffect(() => {
+        if (menuIsVisible) {
+            popper.update?.()
+        }
+    }, [menuIsVisible])
 
     return (
         <InputWrapper
@@ -135,7 +146,7 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
                 disabled={!!props.disabled}
                 onFocus={function onFocus(event: FocusEvent<HTMLButtonElement> | undefined) {
                     setIsFocus(true)
-                    toggleIfNotDisabled(event)
+                    toggleIfNotDisabled(event, true)
                 }}
                 onBlur={function onBlur() {
                     setIsFocus(false)

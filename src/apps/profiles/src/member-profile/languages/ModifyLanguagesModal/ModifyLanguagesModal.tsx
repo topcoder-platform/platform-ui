@@ -5,8 +5,7 @@ import classNames from 'classnames'
 
 import { BaseModal, Button, IconOutline, InputSelect } from '~/libs/ui'
 import {
-    createMemberTraitsAsync,
-    updateMemberTraitsAsync,
+    updateOrCreateMemberTraitsAsync,
     UserProfile,
     UserTrait,
     UserTraitCategoryNames,
@@ -23,11 +22,6 @@ interface ModifyLanguagesModalProps {
     onSave: () => void
     profile: UserProfile
     memberLanguages: UserTrait[] | undefined
-}
-
-const methodsMap: { [key: string]: any } = {
-    create: createMemberTraitsAsync,
-    update: updateMemberTraitsAsync,
 }
 
 const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLanguagesModalProps) => {
@@ -88,7 +82,7 @@ const ModifyLanguagesModal: FC<ModifyLanguagesModalProps> = (props: ModifyLangua
 
         setIsSaving(true)
 
-        methodsMap[!!props.memberLanguages ? 'update' : 'create'](props.profile.handle, [{
+        updateOrCreateMemberTraitsAsync(props.profile.handle, [{
             categoryName: UserTraitCategoryNames.languages,
             traitId: UserTraitIds.languages,
             traits: {
