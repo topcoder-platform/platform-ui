@@ -14,11 +14,18 @@ const TalentPage: LazyLoadedComponent = lazyLoad(
     'TalentPage',
 )
 
+const isOnAppSubdomain = EnvironmentConfig.SUBDOMAIN === AppSubdomain.talentSearch
 export const rootRoute: string = (
-    EnvironmentConfig.SUBDOMAIN === AppSubdomain.talentSearch ? '' : `/${AppSubdomain.talentSearch}`
+    isOnAppSubdomain ? '' : `/${AppSubdomain.talentSearch}`
 )
 
+const absoluteRootUrl = (() => {
+    const subdomain = isOnAppSubdomain ? AppSubdomain.talentSearch : EnvironmentConfig.SUBDOMAIN
+    return `//${subdomain}.${EnvironmentConfig.TC_DOMAIN}${rootRoute}`
+})()
+
 export const TALENT_SEARCH_PATHS = {
+    absoluteRootUrl,
     results: `${rootRoute}/results`,
     root: rootRoute,
     talent: `${rootRoute}/talent`,
