@@ -1,7 +1,9 @@
 import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useState } from 'react'
 import { Params, useNavigate, useParams } from 'react-router-dom'
+import { AxiosError } from 'axios'
 
 import { profileContext, ProfileContextData, profileGetPublicAsync, UserProfile } from '~/libs/core'
+import { TALENT_SEARCH_PATHS } from '~/apps/talent-search'
 import { LoadingSpinner } from '~/libs/ui'
 
 import { notifyUniNavi, triggerSprigSurvey } from '../lib'
@@ -34,7 +36,11 @@ const MemberProfilePage: FC<{}> = () => {
                     setProfile({ ...userProfile } as UserProfile)
                     setProfileReady(true)
                 })
-            // TODO: NOT FOUND PAGE redirect/dispaly
+                .catch((e: AxiosError) => {
+                    if (e.code === AxiosError.ERR_BAD_REQUEST && e.response?.status === 404) {
+                        window.location.href = `${TALENT_SEARCH_PATHS.absoluteRootUrl}?memberNotFound`
+                    }
+                })
         }
     }, [routeParams.memberHandle])
 
