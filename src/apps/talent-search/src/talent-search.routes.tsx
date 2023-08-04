@@ -20,7 +20,7 @@ export const rootRoute: string = (
 )
 
 export const TALENT_SEARCH_PATHS = {
-    absoluteRootUrl: `//${AppSubdomain.talentSearch}.${EnvironmentConfig.TC_DOMAIN}${rootRoute}`,
+    absoluteUrl: `//${AppSubdomain.talentSearch}.${EnvironmentConfig.TC_DOMAIN}`,
     results: `${rootRoute}/results`,
     root: rootRoute,
     talent: `${rootRoute}/talent`,

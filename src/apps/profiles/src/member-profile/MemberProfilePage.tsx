@@ -38,7 +38,7 @@ const MemberProfilePage: FC<{}> = () => {
                 })
                 .catch((e: AxiosError) => {
                     if (e.code === AxiosError.ERR_BAD_REQUEST && e.response?.status === 404) {
-                        window.location.href = `${TALENT_SEARCH_PATHS.absoluteRootUrl}?memberNotFound`
+                        window.location.href = `${TALENT_SEARCH_PATHS.absoluteUrl}?memberNotFound`
                     }
                 })
         }
