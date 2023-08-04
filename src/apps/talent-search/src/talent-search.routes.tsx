@@ -19,13 +19,8 @@ export const rootRoute: string = (
     isOnAppSubdomain ? '' : `/${AppSubdomain.talentSearch}`
 )
 
-const absoluteRootUrl = (() => {
-    const subdomain = isOnAppSubdomain ? AppSubdomain.talentSearch : EnvironmentConfig.SUBDOMAIN
-    return `//${subdomain}.${EnvironmentConfig.TC_DOMAIN}${rootRoute}`
-})()
-
 export const TALENT_SEARCH_PATHS = {
-    absoluteRootUrl,
+    absoluteRootUrl: `//${AppSubdomain.talentSearch}.${EnvironmentConfig.TC_DOMAIN}${rootRoute}`,
     results: `${rootRoute}/results`,
     root: rootRoute,
     talent: `${rootRoute}/talent`,
