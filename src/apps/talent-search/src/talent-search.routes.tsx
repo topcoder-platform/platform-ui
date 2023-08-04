@@ -26,9 +26,11 @@ export const TALENT_SEARCH_PATHS = {
 
 export const toolTitle: string = ToolTitle.talentSearch
 
+const isAdminRestricted = EnvironmentConfig.RESTRICT_TALENT_SEARCH
+
 export const talentSearchRoutes: ReadonlyArray<PlatformRoute> = [
     {
-        authRequired: true,
+        authRequired: isAdminRestricted,
         children: [
             {
                 element: <SearchPage />,
@@ -46,9 +48,9 @@ export const talentSearchRoutes: ReadonlyArray<PlatformRoute> = [
         domain: AppSubdomain.talentSearch,
         element: <TalentSearchAppRoot />,
         id: toolTitle,
-        rolesRequired: [
+        rolesRequired: isAdminRestricted ? [
             UserRole.administrator,
-        ],
+        ] : undefined,
         route: rootRoute,
     },
 ]
