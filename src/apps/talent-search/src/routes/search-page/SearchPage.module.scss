@@ -51,3 +51,18 @@
     max-width: 931px;
     width: 100%;
 }
+
+.headerErrorWrap {
+    display: flex;
+    justify-content: center;
+}
+
+.headerError {
+    display: flex;
+    align-items: center;
+    gap: $sp-3;
+
+    padding: $sp-4 $sp-8;
+    border-radius: 10px;
+    background: $purple-140;
+}

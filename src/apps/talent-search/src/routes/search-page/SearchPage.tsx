@@ -1,7 +1,7 @@
 import { FC, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
-import { ContentLayout } from '~/libs/ui'
+import { ContentLayout, IconOutline } from '~/libs/ui'
 import { Skill } from '~/libs/shared'
 
 import { SearchInput } from '../../components/search-input'
@@ -12,6 +12,9 @@ import { encodeUrlQuerySearch } from '../../lib/utils/search-query'
 import styles from './SearchPage.module.scss'
 
 export const SearchPage: FC = () => {
+    const [params] = useSearchParams()
+    const isMissingProfileRoute = params.get('memberNotFound') !== null
+
     const searchInputRef = useRef<HTMLInputElement>()
     const navigate = useNavigate()
     const [skillsFilter, setSkillsFilter] = useState<Skill[]>([])
@@ -26,20 +29,42 @@ export const SearchPage: FC = () => {
         searchInputRef.current?.focus()
     }
 
+    function renderHeader(): JSX.Element {
+        return isMissingProfileRoute ? (
+            <>
+                <div className={styles.headerErrorWrap}>
+                    <div className={styles.headerError}>
+                        <IconOutline.ExclamationCircleIcon className='icon-xxxxl' />
+                        <span>We were unable to locate that profile</span>
+                    </div>
+                </div>
+                <div className={styles.subHeader}>
+                    <div className={styles.subHeaderText}>
+                        You can also try finding members through our Talent Search:
+                    </div>
+                </div>
+            </>
+        ) : (
+            <>
+                <div className={styles.searchHeader}>
+                    <span className={styles.searchHeaderText}>Looking for a technology expert?</span>
+                </div>
+                <div className={styles.subHeader}>
+                    <div className={styles.subHeaderText}>
+                        Search thousands of skills to match with our global experts.
+                    </div>
+                </div>
+            </>
+        )
+    }
+
     return (
         <ContentLayout
             contentClass={styles.contentLayout}
             outerClass={styles['contentLayout-outer']}
             innerClass={styles['contentLayout-inner']}
         >
-            <div className={styles.searchHeader}>
-                <span className={styles.searchHeaderText}>Looking for a technology expert?</span>
-            </div>
-            <div className={styles.subHeader}>
-                <div className={styles.subHeaderText}>
-                    Search thousands of skills to match with our global experts.
-                </div>
-            </div>
+            {renderHeader()}
             <div className={styles.searchOptions}>
                 <span className={styles.searchPrompt}>Search by skills</span>
                 <SearchInput
