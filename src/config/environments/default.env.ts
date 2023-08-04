@@ -69,3 +69,5 @@ export const DICE_VERIFY_URL = get({
     prod: 'https://accounts-auth0.topcoder.com',
     qa: 'https://accounts-auth0.topcoder-qa.com',
 }, ENV, 'https://accounts-auth0.topcoder.com')
+
+export const RESTRICT_TALENT_SEARCH = getReactEnv<boolean>('RESTRICT_TALENT_SEARCH', false)

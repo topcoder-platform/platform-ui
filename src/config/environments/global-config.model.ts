@@ -40,4 +40,5 @@ export interface GlobalConfig {
     SUBDOMAIN: string,
     GAMIFICATION_ORG_ID: string
     DICE_VERIFY_URL: string
+    RESTRICT_TALENT_SEARCH: boolean
 }
