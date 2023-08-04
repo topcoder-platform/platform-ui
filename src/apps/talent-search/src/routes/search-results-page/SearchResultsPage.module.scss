@@ -21,8 +21,29 @@
     margin: $sp-4 0 $sp-5;
     text-align: center;
     color: $black-60;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     > span {
+        display: block;
+        margin: 0 auto;
+        flex: 1 1 auto;
+    }
+
+    :global(.highlighting) {
         color: $black-100;
+    }
+}
+
+.skillsPill {
+    flex: 0 0 auto;
+
+    &:first-child {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
     }
 }
 

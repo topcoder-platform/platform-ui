@@ -7,7 +7,7 @@ import codes from 'country-calling-code'
 import { IconSolid } from '~/libs/ui'
 import { isSkillVerified, ProfilePicture, Skill, SkillPill } from '~/libs/shared'
 
-import { MatchBar } from '../match-bar'
+import { ProfileMatch } from '../profile-match'
 import { Member } from '../../lib/models'
 import { TALENT_SEARCH_PATHS } from '../../talent-search.routes'
 import { useIsMatchingSkill } from '../../lib/utils'
@@ -35,12 +35,12 @@ const TalentCard: FC<TalentCardProps> = props => {
 
     const matchedSkills = orderBy(
         props.member.emsiSkills,
-        isSkillVerified,
-        'desc',
+        [isSkillVerified, a => a.name],
+        ['desc', 'asc'],
     )
         .filter(isMatchingSkill)
 
-    const limitMatchedSkills = matchedSkills.slice(0, 10)
+    const limitMatchedSkills = matchedSkills.slice(0, 7)
 
     const provenSkills = limitMatchedSkills.filter(isSkillVerified)
     const selfSkills = limitMatchedSkills.filter(s => !isSkillVerified(s))
@@ -48,7 +48,7 @@ const TalentCard: FC<TalentCardProps> = props => {
 
     const restLabel = restSkills > 0 && (
         <div className={styles.unmatchedSkills}>
-            {`+${restSkills} more skill${restSkills > 1 ? 's' : ''}`}
+            {`+${restSkills} more matched skill${restSkills > 1 ? 's' : ''}`}
         </div>
     )
 
@@ -85,41 +85,32 @@ const TalentCard: FC<TalentCardProps> = props => {
                             </div>
                         ))}
                     </div>
-                    <MatchBar className={styles.matchBar} percent={props.match} />
+                    <div className={styles.profileMatch}>
+                        <ProfileMatch percent={props.match} />
+                    </div>
                 </div>
             </div>
             <div className={styles.skillsContainer}>
-                <div className={classNames(styles.skillsContainerTitle, 'overline')}>Matched skills</div>
-                {provenSkills.length > 0 && (
-                    <>
-                        <div className='overline'>Proven skills</div>
-                        <div className={styles.skillsWrap}>
-                            {provenSkills.map(skill => (
-                                <SkillPill
-                                    key={skill.skillId}
-                                    theme='dark'
-                                    skill={skill}
-                                />
-                            ))}
-                            {!selfSkills.length && restLabel}
-                        </div>
-                    </>
-                )}
-                {selfSkills.length > 0 && (
-                    <>
-                        <div className='overline'>Self-selected skills</div>
-                        <div className={styles.skillsWrap}>
-                            {selfSkills.map(skill => (
-                                <SkillPill
-                                    key={skill.skillId}
-                                    theme='dark'
-                                    skill={skill}
-                                />
-                            ))}
-                            {restLabel}
-                        </div>
-                    </>
-                )}
+                <div className={classNames(styles.skillsContainerTitle, 'overline')}>
+                    {`${matchedSkills.length} Matched skills`}
+                </div>
+                <div className={styles.skillsWrap}>
+                    {provenSkills.length > 0 && provenSkills.map(skill => (
+                        <SkillPill
+                            key={skill.skillId}
+                            theme='dark'
+                            skill={skill}
+                        />
+                    ))}
+                    {selfSkills.length > 0 && selfSkills.map(skill => (
+                        <SkillPill
+                            key={skill.skillId}
+                            theme='dark'
+                            skill={skill}
+                        />
+                    ))}
+                    {restLabel}
+                </div>
             </div>
         </Link>
     )

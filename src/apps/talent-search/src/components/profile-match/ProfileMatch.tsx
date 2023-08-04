@@ -1,14 +1,14 @@
 import { FC } from 'react'
 import classNames from 'classnames'
 
-import styles from './MatchBar.module.scss'
+import styles from './ProfileMatch.module.scss'
 
-interface MatchBarProps {
+interface ProfileMatchProps {
     className?: string
     percent?: number
 }
 
-const MatchBar: FC<MatchBarProps> = props => {
+const ProfileMatch: FC<ProfileMatchProps> = props => {
     const value = Math.round((props.percent ?? 0) * 100)
 
     return (
@@ -25,4 +25,4 @@ const MatchBar: FC<MatchBarProps> = props => {
     )
 }
 
-export default MatchBar
+export default ProfileMatch
