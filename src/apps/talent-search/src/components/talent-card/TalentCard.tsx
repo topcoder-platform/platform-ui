@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { FC, useEffect, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { orderBy } from 'lodash'
 import classNames from 'classnames'
@@ -23,6 +23,12 @@ const getAddrString = (city: string, country: string): string => (
         .join(', ')
 )
 
+function isOverflow(el: HTMLElement): boolean {
+    const parentHeight = el.parentElement?.offsetHeight ?? 0
+    const bottom = el.offsetTop + el.offsetHeight
+    return bottom > parentHeight
+}
+
 interface TalentCardProps {
     queriedSkills: Skill[]
     member: Member
@@ -30,6 +36,7 @@ interface TalentCardProps {
 }
 
 const TalentCard: FC<TalentCardProps> = props => {
+    const skillsWrapRef = useRef<HTMLDivElement|null>(null)
     const talentRoute = `${TALENT_SEARCH_PATHS.talent}/${props.member.handle}`
     const isMatchingSkill = useIsMatchingSkill(props.queriedSkills)
 
@@ -40,22 +47,37 @@ const TalentCard: FC<TalentCardProps> = props => {
     )
         .filter(isMatchingSkill)
 
-    const limitMatchedSkills = matchedSkills.slice(0, 7)
+    const limitMatchedSkills = matchedSkills
 
-    const provenSkills = limitMatchedSkills.filter(isSkillVerified)
-    const selfSkills = limitMatchedSkills.filter(s => !isSkillVerified(s))
-    const restSkills = matchedSkills.length - limitMatchedSkills.length
-
-    const restLabel = restSkills > 0 && (
-        <div className={styles.unmatchedSkills}>
-            {`+${restSkills} more matched skill${restSkills > 1 ? 's' : ''}`}
-        </div>
-    )
+    const provenSkills = matchedSkills.filter(isSkillVerified)
+    const selfSkills = matchedSkills.filter(s => !isSkillVerified(s))
 
     const matchState = useMemo(() => ({
         matchValue: props.match,
         queriedSkills: props.queriedSkills,
     }), [props.match, props.queriedSkills])
+
+    // after initial render, check and limit to 3 rows of skills
+    useEffect(() => {
+        if (!skillsWrapRef.current) {
+            return
+        }
+
+        // check if there are more than 3 rows of skills displayed initially, and hide them
+        const isHidden: HTMLElement[] = [].filter.call(skillsWrapRef.current.childNodes, isOverflow)
+        isHidden.forEach(c => { c.style.display = 'none' })
+
+        // remove css height limit from the skillsWrap el
+        skillsWrapRef.current.classList.toggle('init', false)
+
+        // if there are hidden skill pills, show the "+N more matched skills" pill
+        if (isHidden.length) {
+            const restLabel = document.createElement('div')
+            restLabel.classList.add(styles.unmatchedSkills)
+            restLabel.innerText = `+${isHidden.length} more matched skill${isHidden.length > 1 ? 's' : ''}`
+            skillsWrapRef.current.appendChild(restLabel)
+        }
+    }, [limitMatchedSkills])
 
     return (
         <Link to={talentRoute} className={styles.wrap} state={matchState}>
@@ -94,7 +116,7 @@ const TalentCard: FC<TalentCardProps> = props => {
                 <div className={classNames(styles.skillsContainerTitle, 'overline')}>
                     {`${matchedSkills.length} Matched skills`}
                 </div>
-                <div className={styles.skillsWrap}>
+                <div className={classNames(styles.skillsWrap, 'init')} ref={skillsWrapRef}>
                     {provenSkills.length > 0 && provenSkills.map(skill => (
                         <SkillPill
                             key={skill.skillId}
@@ -109,7 +131,6 @@ const TalentCard: FC<TalentCardProps> = props => {
                             skill={skill}
                         />
                     ))}
-                    {restLabel}
                 </div>
             </div>
         </Link>

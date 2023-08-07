@@ -98,4 +98,10 @@
     align-items: center;
     gap: $sp-1;
     flex-wrap: wrap;
+    position: relative;
+
+    &:global(.init) {
+        max-height: 116px;
+        overflow: hidden;
+    }
 }
