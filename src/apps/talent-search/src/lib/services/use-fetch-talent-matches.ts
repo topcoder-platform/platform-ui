@@ -74,6 +74,7 @@ export function useInfiniteTalentMatches(
     // clear matches when skills array is updated
     useEffect(() => {
         setMatches([])
+        setPage(1)
     }, [skills])
 
     // when we have new matches, concatenate the response to the matches array
