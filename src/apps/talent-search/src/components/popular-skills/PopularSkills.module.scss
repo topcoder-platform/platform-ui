@@ -9,22 +9,25 @@
     :global(.body-medium-bold) {
         margin-bottom: $sp-4;
     }
+
+    @include ltemd {
+        margin-top: $sp-8;
+    }
 }
 
-.pillRow{
+.wrapTitle {
+    font-size: 20px;
+    line-height: 26px;
+    font-family: $font-roboto;
+    font-weight: $font-weight-bold;
+    margin-bottom: $sp-4;
+}
+
+.pills {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: center;
     gap: $sp-2;
-
-    + .pillRow {
-        margin-top: $sp-2;
-    }
-
-    &:nth-child(4) {
-        opacity: 60%;
-    }
-    &:nth-child(n+5) {
-        opacity: 40%;
-    }
+    max-width: 680px;
 }
