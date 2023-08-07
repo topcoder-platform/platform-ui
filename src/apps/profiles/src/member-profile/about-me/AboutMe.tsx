@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { KeyedMutator } from 'swr'
 import classNames from 'classnames'
 
-import { useMemberTraits, UserProfile, UserTraitIds, UserTraits } from '~/libs/core'
+import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } from '~/libs/core'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
@@ -38,6 +38,11 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
         props.profile && !props.profile.description
     ), [props.profile])
 
+    const namesAndHandleAppearanceData: UserTrait | undefined
+        = useMemo(() => memberPersonalizationTraits?.[0]?.traits?.data?.find(
+            (trait: UserTrait) => trait.namesAndHandleAppearance,
+        ), [memberPersonalizationTraits])
+
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.aboutMe) {
             setIsEditMode(true)
@@ -70,7 +75,11 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
                 {' '}
                 I&apos;m
                 {' '}
-                {props.profile?.firstName || props.profile?.handle}
+                {
+                    namesAndHandleAppearanceData?.namesAndHandleAppearance === 'handleOnly'
+                        ? props.profile?.handle
+                        : props.profile?.firstName
+                }
             </p>
 
             <MemberRatingCard profile={props.profile} />
