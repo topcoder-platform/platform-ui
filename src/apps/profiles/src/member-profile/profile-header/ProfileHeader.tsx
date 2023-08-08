@@ -68,8 +68,8 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     const { state }: Location = useLocation()
 
     const searchedSkills: string[] = useMemo(
-        () => (state.queriedSkills || []).map((s: any) => s.name),
-        [state.queriedSkills],
+        () => (state?.queriedSkills || []).map((s: any) => s.name),
+        [state?.queriedSkills],
     )
 
     useEffect(() => {

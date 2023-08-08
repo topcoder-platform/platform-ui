@@ -49,6 +49,22 @@ export function email(value: InputValue): string | undefined {
     return !emailRegex.test(value as string) ? 'Invalid email' : undefined
 }
 
+export function phone(value: InputValue): string | undefined {
+
+    checkForBooleanValueAndThrowError(value)
+
+    // if there is no value, do not set the error
+    // b/c this is an email validator, not a required
+    // validator
+    if (value === undefined) {
+        return undefined
+    }
+
+    const phoneNumberRegex = /^\(?(\d{3})\)?[- ]?(\d{3})[- ]?(\d{4})$/
+
+    return !phoneNumberRegex.test(value as string) ? 'Invalid phone numbr' : undefined
+}
+
 export function password(value: InputValue): string | undefined {
 
     checkForBooleanValueAndThrowError(value)
