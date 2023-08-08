@@ -72,6 +72,10 @@ const SearchResultsPage: FC = () => {
                         <>
                             Finding experts that match your search...
                         </>
+                    ) : !skills.length ? (
+                        <span>
+                            Search thousands of skills to match with our global experts.
+                        </span>
                     ) : (
                         <>
                             {skillsModalTriggerBtn}

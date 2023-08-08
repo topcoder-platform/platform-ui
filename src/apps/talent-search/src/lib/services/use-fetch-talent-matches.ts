@@ -85,7 +85,7 @@ export function useInfiniteTalentMatches(
     return {
         fetchNext,
         hasNext: matchResponse.page < matchResponse.totalPages,
-        loading: matchResponse.loading,
+        loading: matchResponse.loading && skills.length > 0,
         matches,
         page,
         total: matchResponse.total,
