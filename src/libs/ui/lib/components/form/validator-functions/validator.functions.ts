@@ -60,7 +60,7 @@ export function phone(value: InputValue): string | undefined {
         return undefined
     }
 
-    const phoneNumberRegex = /^\(?(\d{3})\)?[- ]?(\d{3})[- ]?(\d{4})$/
+    const phoneNumberRegex = /^\(?(\d{3})\)?[- ]?(\d{3})[- ]?(\d{4,})$/
 
     return !phoneNumberRegex.test(value as string) ? 'Invalid phone numbr' : undefined
 }

@@ -98,8 +98,8 @@ const HiringFormModal: FC<HiringFormModalProps> = (props: HiringFormModalProps) 
                 return
             }
 
-            setLoading(false)
             setSubmitted(true)
+            setLoading(false)
         }
 
         window.addEventListener('message', listenUnbounceSubmit, false)
@@ -129,7 +129,7 @@ const HiringFormModal: FC<HiringFormModalProps> = (props: HiringFormModalProps) 
         )
     }
 
-    return (
+    return submitted ? renderSuccessModal(props.onClose) : (
         <BaseModal
             onClose={props.onClose}
             open
@@ -150,14 +150,8 @@ const HiringFormModal: FC<HiringFormModalProps> = (props: HiringFormModalProps) 
             )}
         >
             <LoadingSpinner hide={!loading || submitted} overlay />
-
-            {submitted ? renderSuccessModal(props.onClose) : (
-                <>
-                    {!isEmpty(formValues) && renderIframe()}
-                    {renderIntakeForm()}
-                </>
-            )}
-
+            {!isEmpty(formValues) && renderIframe()}
+            {renderIntakeForm()}
         </BaseModal>
     )
 }
