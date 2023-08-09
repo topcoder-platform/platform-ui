@@ -18,7 +18,6 @@ export const profilesRoutes: ReadonlyArray<PlatformRoute> = [
     {
         children: [
             {
-                authRequired: true,
                 element: <ProfilesLandingPage />,
                 id: 'ProfilesLandingPage',
                 route: '',
