@@ -175,7 +175,7 @@
             color: $tc-white;
         }
     }
-    &:global(__control--is-focused) .additionalPlaceholder {
+    &:global(__input-container):focus-within + .additionalPlaceholder {
         display: none;
     }
 }

@@ -2,6 +2,8 @@ import { FC, useCallback } from 'react'
 
 import { Skill, SkillPill } from '~/libs/shared'
 
+import { SKILL_SEARCH_LIMIT } from '../../config'
+
 import styles from './PopularSkills.module.scss'
 
 // TODO: Make this configurable, or read from a service.  We need to discuss
@@ -45,6 +47,10 @@ const PopularSkills: FC<PopularSkillsProps> = props => {
                 newFilter.push(filterSkill)
             }
         })
+        if (deleted === false && props.selectedSkills.length >= SKILL_SEARCH_LIMIT) {
+            return
+        }
+
         if (deleted === false) {
             newFilter = props.selectedSkills.concat(skill)
         }
