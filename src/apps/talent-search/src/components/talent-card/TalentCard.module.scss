@@ -143,8 +143,14 @@
     display: flex;
 
     color: $black-100;
-    padding: 0 $sp-2;
+    padding: 7px $sp-3;
     font-size: 14px;
+    line-height: 16px;
+
+    border: 1px solid $black-20;
+    border-radius: $sp-6;
+
+    order: 999;
 }
 
 .skillsWrap {
@@ -157,5 +163,9 @@
     &:global(.init) {
         max-height: 116px;
         overflow: hidden;
+
+        .unmatchedSkills {
+            order: -1;
+        }
     }
 }

@@ -36,21 +36,19 @@ interface TalentCardProps {
 }
 
 const TalentCard: FC<TalentCardProps> = props => {
+    const restLabelRef = useRef<HTMLDivElement|null>(null)
     const skillsWrapRef = useRef<HTMLDivElement|null>(null)
     const talentRoute = `${TALENT_SEARCH_PATHS.talent}/${props.member.handle}`
     const isMatchingSkill = useIsMatchingSkill(props.queriedSkills)
 
-    const matchedSkills = orderBy(
-        props.member.emsiSkills,
-        [isSkillVerified, a => a.name],
-        ['desc', 'asc'],
-    )
-        .filter(isMatchingSkill)
-
-    const limitMatchedSkills = matchedSkills
-
-    const provenSkills = matchedSkills.filter(isSkillVerified)
-    const selfSkills = matchedSkills.filter(s => !isSkillVerified(s))
+    const matchedSkills = useMemo(() => (
+        orderBy(
+            props.member.emsiSkills,
+            [isSkillVerified, a => a.name],
+            ['desc', 'asc'],
+        )
+            .filter(isMatchingSkill)
+    ), [isMatchingSkill, props.member.emsiSkills])
 
     const matchState = useMemo(() => ({
         matchValue: props.match,
@@ -64,20 +62,29 @@ const TalentCard: FC<TalentCardProps> = props => {
         }
 
         // check if there are more than 3 rows of skills displayed initially, and hide them
-        const isHidden: HTMLElement[] = [].filter.call(skillsWrapRef.current.childNodes, isOverflow)
-        isHidden.forEach(c => { c.style.display = 'none' })
+        const skillPillEls = [].slice.call(skillsWrapRef.current.childNodes)
+        const hiddenEls: HTMLElement[] = skillPillEls.filter(isOverflow)
+
+        if (!hiddenEls.length && restLabelRef.current?.innerText.match(/^\+0/)) {
+            restLabelRef.current.style.display = 'none'
+            return
+        }
+
+        if (hiddenEls.length > 1) {
+            const firstHidden = skillPillEls[skillPillEls.findIndex(s => s === hiddenEls[0]) - 1]
+            hiddenEls.push(firstHidden)
+        }
+
+        hiddenEls.forEach(c => { c.style.display = 'none' })
 
         // remove css height limit from the skillsWrap el
         skillsWrapRef.current.classList.toggle('init', false)
 
         // if there are hidden skill pills, show the "+N more matched skills" pill
-        if (isHidden.length) {
-            const restLabel = document.createElement('div')
-            restLabel.classList.add(styles.unmatchedSkills)
-            restLabel.innerText = `+${isHidden.length} more matched skill${isHidden.length > 1 ? 's' : ''}`
-            skillsWrapRef.current.appendChild(restLabel)
+        if (hiddenEls.length && restLabelRef.current) {
+            restLabelRef.current.innerText = `+${hiddenEls.length} more matched skill${hiddenEls.length > 1 ? 's' : ''}`
         }
-    }, [limitMatchedSkills])
+    }, [matchedSkills])
 
     return (
         <Link to={talentRoute} className={styles.wrap} state={matchState}>
@@ -117,14 +124,8 @@ const TalentCard: FC<TalentCardProps> = props => {
                     {`${matchedSkills.length} Matched skills`}
                 </div>
                 <div className={classNames(styles.skillsWrap, 'init')} ref={skillsWrapRef}>
-                    {provenSkills.length > 0 && provenSkills.map(skill => (
-                        <SkillPill
-                            key={skill.skillId}
-                            theme='dark'
-                            skill={skill}
-                        />
-                    ))}
-                    {selfSkills.length > 0 && selfSkills.map(skill => (
+                    <div ref={restLabelRef} className={styles.unmatchedSkills}>+0 more matched skill</div>
+                    {matchedSkills.length > 0 && matchedSkills.map(skill => (
                         <SkillPill
                             key={skill.skillId}
                             theme='dark'
