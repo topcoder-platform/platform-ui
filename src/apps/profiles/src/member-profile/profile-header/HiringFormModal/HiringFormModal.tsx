@@ -54,7 +54,7 @@ function renderSuccessModal(onClose: HiringFormModalProps['onClose']): JSX.Eleme
                 </div>
                 <div className='body-main'>
                     We&apos;re excited to learn more about you and the work you want done.
-                    A Topcoder Solutions Expert will be reaching out to you via email or phone very shortly.
+                    A Topcoder Solutions Expert will reach out to you via email or phone very shortly.
                 </div>
 
             </div>

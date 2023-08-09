@@ -82,5 +82,5 @@ export const hiringFormDef: FormDefinition = {
             ],
         },
     ],
-    successMessage: 'Your request has been submitted.',
+    successMessage: false,
 }
