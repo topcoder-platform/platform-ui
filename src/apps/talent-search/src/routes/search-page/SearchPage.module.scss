@@ -4,6 +4,10 @@
     background-image: url("../../assets/background.webp");
     background-size: cover;
     background-repeat: no-repeat;
+
+    @include ltemd {
+        background-image: url("../../assets/background-m.webp");
+    }
 }
 
 .contentLayout-inner {
@@ -22,7 +26,7 @@
     font-family: $font-roboto;
     font-weight: 500;
     font-size: 30px;
-    line-height: 20px;
+    line-height: 32px;
     letter-spacing: 0.5px;
 }
 

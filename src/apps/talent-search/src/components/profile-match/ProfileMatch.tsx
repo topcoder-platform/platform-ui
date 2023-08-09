@@ -20,7 +20,7 @@ const ProfileMatch: FC<ProfileMatchProps> = props => {
                 {value}
                 %
             </strong>
-            <span className='body-medium-normal'>Match</span>
+            <span>Match</span>
         </div>
     )
 }

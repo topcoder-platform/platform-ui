@@ -1,7 +1,7 @@
 @import "@libs/ui/styles/includes";
 
 .headerWrap {
-    height: 156px;
+    min-height: 156px;
 }
 
 .headerContentLayout {
@@ -14,6 +14,12 @@
 
     &Inner {
         padding: 0 $sp-8;
+    }
+
+    @include ltemd {
+        &Inner {
+            padding: 0;
+        }
     }
 }
 
@@ -35,6 +41,11 @@
     :global(.highlighting) {
         color: $black-100;
     }
+
+    @include ltemd {
+        flex-direction: column;
+        gap: $sp-2;
+    }
 }
 
 .skillsPill {
@@ -45,10 +56,19 @@
         visibility: hidden;
         pointer-events: none;
     }
+
+    @include ltemd {
+        &:first-child {
+            display: none;
+        }
+    }
 }
 
 .searchInput {
     margin-top: $sp-10;
+    @include ltemd {
+        margin-top: $sp-4;
+    }
 }
 
 .contentLayout {
@@ -60,12 +80,24 @@
     .contentLayout-inner {
         padding-bottom: $sp-12;
     }
+
+    @include ltemd {
+        padding: $sp-2 0;
+    }
 }
 
 .resultsWrap {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: $sp-9;
+
+    @include ltelg {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    @include ltemd {
+        gap: $sp-5;
+    }
 }
 
 .moreBtn {
