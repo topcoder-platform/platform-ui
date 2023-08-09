@@ -1,4 +1,4 @@
-import { FC, Ref, useMemo } from 'react'
+import { FC, MouseEvent, Ref, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { IconOutline, InputMultiselectOption } from '~/libs/ui'
@@ -32,10 +32,18 @@ const SearchInput: FC<SearchInputProps> = props => {
         })))
     }
 
+    function handleSearchClick(ev: MouseEvent<HTMLDivElement>): void {
+        ev.preventDefault()
+        ev.stopPropagation()
+
+        props.onSearch?.()
+    }
+
     const searchIcon = useMemo(() => (
         <div
             className={classNames(styles.searchIcon, !emsiSkills.length && styles.disabled)}
-            onClick={props.onSearch}
+            onClick={handleSearchClick}
+            onTouchStart={handleSearchClick as any}
         >
             <IconOutline.SearchIcon />
         </div>

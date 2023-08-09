@@ -40,4 +40,13 @@
         line-height: 27px;
         font-weight: 900;
     }
+
+    @include ltemd {
+        font-size: 10px;
+        line-height: 14px;
+        strong {
+            font-size: 12px;
+            line-height: 14px;
+        }
+    }
 }

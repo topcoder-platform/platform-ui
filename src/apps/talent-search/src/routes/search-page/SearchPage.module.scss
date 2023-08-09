@@ -4,11 +4,18 @@
     background-image: url("../../assets/background.webp");
     background-size: cover;
     background-repeat: no-repeat;
+
+    @include ltemd {
+        background-image: url("../../assets/background-m.webp");
+    }
 }
 
 .contentLayout-inner {
-    padding: 86px 48px 48px 48px;
+    padding: 86px $sp-12 $sp-12;
     color: $tc-white;
+    @include ltemd {
+        padding: $sp-9 0 0;
+    }
 }
 
 .searchHeader{
@@ -19,7 +26,7 @@
     font-family: $font-roboto;
     font-weight: 500;
     font-size: 30px;
-    line-height: 20px;
+    line-height: 32px;
     letter-spacing: 0.5px;
 }
 
@@ -42,6 +49,12 @@
     font-size: 16px;
     line-height: 48px;
     color: $tc-white;
+    display: block;
+
+    @include ltemd {
+        line-height: 24px;
+        margin-bottom: $sp-2;
+    }
 }
 
 .searchOptions{
@@ -50,6 +63,10 @@
     padding: 70px 32px 32px 32px;
     max-width: 931px;
     width: 100%;
+
+    @include ltemd {
+        padding: 49px 0 0;
+    }
 }
 
 .headerErrorWrap {
@@ -65,4 +82,8 @@
     padding: $sp-4 $sp-8;
     border-radius: 10px;
     background: $purple-140;
+
+    @include ltemd {
+        padding: $sp-4;
+    }
 }

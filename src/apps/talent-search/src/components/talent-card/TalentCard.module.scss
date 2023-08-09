@@ -8,16 +8,37 @@
 
     font-family: $font-barlow;
     color: $black-100;
+
+    @include ltelg {
+        width: 100%;
+    }
+
+    @include ltemd {
+        padding: $sp-3;
+    }
 }
 
 .topWrap {
     display: flex;
     gap: $sp-6;
+    @include ltemd {
+        gap: $sp-3;
+    }
 }
 
 .profilePic {
     width: 188px;
     max-width: 188px;
+
+    @media (max-width: 1140px) {
+        width: 120px;
+        max-width: 120px;
+    }
+
+    @include ltemd {
+        width: 94px;
+        max-width: 94px;
+    }
 }
 
 .detailsContainer {
@@ -26,6 +47,11 @@
     padding: $sp-5 0 $sp-45;
     display: flex;
     gap: $sp-4;
+
+    @include ltemd {
+        padding: 0;
+        gap: $sp-3;
+    }
 }
 
 .talentInfo {
@@ -36,14 +62,28 @@
     margin-bottom: $sp-45;
     flex: 1 1 auto;
 
+    @include ltemd {
+        gap: $sp-1;
+        margin-bottom: $sp-2;
+    }
+
     &Name {
         font-size: 30px;
         line-height: 32px;
         color: $black-100;
+
+        @include ltemd {
+            font-size: 14px;
+            line-height: 20px;
+            font-weight: 500;
+        }
     }
 
     &Handle {
         color: $black-60;
+        > span {
+            display: block;
+        }
     }
 
     &Location {
@@ -52,6 +92,10 @@
         display: flex;
         align-items: center;
         gap: $sp-2;
+
+        @include ltemd {
+            margin-right: -58px;
+        }
     }
 
 }
@@ -59,6 +103,10 @@
 .profileMatch {
     width: 83px;
     flex: 0 0 auto;
+
+    @include ltemd {
+        width: 46px;
+    }
 }
 
 .skillsContainer {
@@ -78,10 +126,16 @@
         transform: translate(-50%, -50%);
         padding: $sp-2 $sp-4;
         color: $black-60;
+        white-space: nowrap;
     }
 
     &:global(.overline) {
         text-transform: uppercase;
+    }
+
+    @include ltemd {
+        padding-top: $sp-4;
+        margin-top: $sp-4;
     }
 }
 
