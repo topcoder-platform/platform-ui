@@ -4,6 +4,8 @@ import classNames from 'classnames'
 import { IconOutline, InputMultiselectOption } from '~/libs/ui'
 import { EmsiSkill, EmsiSkillSources, InputSkillSelector, Skill } from '~/libs/shared'
 
+import { SKILL_SEARCH_LIMIT } from '../../config'
+
 import styles from './SearchInput.module.scss'
 
 interface SearchInputProps {
@@ -51,6 +53,7 @@ const SearchInput: FC<SearchInputProps> = props => {
             onChange={onChange}
             onSubmit={props.onSearch}
             inputRef={props.inputRef}
+            limit={SKILL_SEARCH_LIMIT}
         />
     )
 }
