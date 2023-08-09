@@ -66,5 +66,9 @@
 
         aspect-ratio: 1 / 1;
         border-radius: 50%;
+
+        @include ltelg {
+            min-width: 70px;
+        }
     }
 }
