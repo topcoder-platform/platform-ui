@@ -10,7 +10,6 @@ import { AppHeader } from './components/app-header'
 import { Providers } from './providers'
 import { PlatformRouter } from './platform-router'
 
-console.log(`Initializing HEAP: ${EnvironmentConfig.HEAP_ANALYTICS_KEY}`)
 if (EnvironmentConfig.HEAP_ANALYTICS_KEY) {
     ReactHeap.initialize(EnvironmentConfig.HEAP_ANALYTICS_KEY)
 }
