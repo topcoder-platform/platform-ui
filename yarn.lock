@@ -15556,6 +15556,11 @@ reactcss@^1.2.0:
   dependencies:
     lodash "^4.0.1"
 
+reactjs-heap@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/reactjs-heap/-/reactjs-heap-1.0.3.tgz#8a493b758ee7deeecd6fbf88121fc0de8650cfa8"
+  integrity sha512-E7lqaxa4EoRROxXOUgYa9qw351b1o6GiRDMi6FjTgxKyDgAHH3m9p1XqIlCPOZEj1bS2OLdxpmhLNiYT1qvGuQ==
+
 read-cache@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/read-cache/-/read-cache-1.0.0.tgz#e664ef31161166c9751cdbe8dbcf86b5fb58f774"
