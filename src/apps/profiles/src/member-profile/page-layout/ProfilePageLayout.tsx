@@ -76,7 +76,9 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                         refreshProfile={props.refreshProfile}
                     />
 
-                    <MemberLinks profile={props.profile} authProfile={props.authProfile} />
+                    {props.profile.userId === props.authProfile?.userId && (
+                        <MemberLinks profile={props.profile} authProfile={props.authProfile} />
+                    )}
                 </div>
                 <div className={styles.profileInfoRight}>
                     {props.authProfile?.handle === props.profile.handle && (
