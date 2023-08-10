@@ -162,7 +162,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                                 {
                                     namesAndHandleAppearanceData?.namesAndHandleAppearance === 'handleOnly'
                                         ? props.profile.handle
-                                        : `${props.profile.firstName} ${props.profile.lastName}`
+                                        : `${props.profile.firstName} ${props.profile.lastName?.slice(0, 1) ?? ''}`
                                 }
                             </p>
                             {
