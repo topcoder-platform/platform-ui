@@ -95,7 +95,7 @@ const TalentCard: FC<TalentCardProps> = props => {
                         <div className={styles.talentInfoName}>
                             {props.member.firstName}
                             {' '}
-                            {props.member.lastName}
+                            {props.member.lastName?.slice(0, 1) || ''}
                         </div>
                         <div className={styles.talentInfoHandle}>
                             <span className='body-medium-normal'>
