@@ -76,6 +76,10 @@ const SearchResultsPage: FC = () => {
                         <span>
                             Search thousands of skills to match with our global experts.
                         </span>
+                    ) : !total ? (
+                        <span>
+                            Reach out to Topcoder to find the right member for you.
+                        </span>
                     ) : (
                         <>
                             {skillsModalTriggerBtn}
