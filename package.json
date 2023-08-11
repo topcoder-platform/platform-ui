@@ -91,6 +91,7 @@
     "react-responsive-modal": "^6.2.0",
     "react-router-dom": "^6.4.2",
     "react-scripts": "5.0.1",
+    "react-segment": "^0.1.9",
     "react-select": "^5.5.0",
     "react-spinners": "^0.13.6",
     "react-stickynode": "^1.4.1",

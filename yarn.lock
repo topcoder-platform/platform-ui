@@ -15475,6 +15475,11 @@ react-scripts@5.0.1:
   optionalDependencies:
     fsevents "^2.3.2"
 
+react-segment@^0.1.9:
+  version "0.1.9"
+  resolved "https://registry.yarnpkg.com/react-segment/-/react-segment-0.1.9.tgz#fa1f6a3a6e0dd269391265697a42e555f2712b19"
+  integrity sha512-ZBkm/is1ptNpXmlPmv5zqc1e17RStObKvbRfobaxw0tAoO/tSMxkrlFSY/2QREzy7fB17G0nUPcoNMyghgu2vQ==
+
 react-select@^5.5.0:
   version "5.7.0"
   resolved "https://registry.yarnpkg.com/react-select/-/react-select-5.7.0.tgz#82921b38f1fcf1471a0b62304da01f2896cd8ce6"
