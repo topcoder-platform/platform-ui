@@ -1,3 +1,4 @@
+import { MemberDisplayName } from './MemberDisplayName'
 import MemberAddress from './MemberAddress'
 import MemberEmsiSkill from './MemberEmsiSkill'
 import MemberMaxRating from './MemberMaxRating'
@@ -16,6 +17,7 @@ export default interface Member {
     handle: string;
     homeCountryCode: string;
     lastName: string;
+    namesAndHandleAppearance: MemberDisplayName
     maxRating: MemberMaxRating;
     numberOfChallengesPlaced: number;
     numberOfChallengesWon: number;
