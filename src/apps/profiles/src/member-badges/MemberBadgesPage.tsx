@@ -1,5 +1,5 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react'
-import { Link, Params, useNavigate, useParams } from 'react-router-dom'
+import { Params, useNavigate, useParams } from 'react-router-dom'
 import { bind } from 'lodash'
 
 import { profileGetPublicAsync, useMemberBadges, UserBadge, UserBadgesResponse, UserProfile } from '~/libs/core'
