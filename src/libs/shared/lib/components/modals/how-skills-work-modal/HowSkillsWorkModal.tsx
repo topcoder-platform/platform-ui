@@ -39,7 +39,7 @@ const HowSkillsWorkModal: FC<HowSkillsWorkModalProps> = (props: HowSkillsWorkMod
                     <li>The more opportunities you complete the higher you rate for associated skills</li>
                 </ul>
                 <p>
-                    You can also self-proclaim skills that have not yet been proven.
+                    You can also self-select skills that have not yet been proven.
                     These will display as skills without a checkmark.
                 </p>
             </div>
@@ -97,7 +97,7 @@ const HowSkillsWorkModal: FC<HowSkillsWorkModalProps> = (props: HowSkillsWorkMod
                     <li>The more opportunities our experts complete the higher they rate for associated skills</li>
                 </ul>
                 <p>
-                    Experts can also self-proclaim skills that have not yet been proven.
+                    Experts can also self-select skills that have not yet been proven.
                     These will display as skills without a checkmark.
                 </p>
             </div>
