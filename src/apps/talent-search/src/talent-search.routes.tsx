@@ -13,6 +13,10 @@ const TalentPage: LazyLoadedComponent = lazyLoad(
     () => import('./routes/talent-page'),
     'TalentPage',
 )
+const MemberBadgesPage: LazyLoadedComponent = lazyLoad(
+    () => import('@profiles/member-badges'),
+    'MemberBadgesPage',
+)
 
 const isOnAppSubdomain = EnvironmentConfig.SUBDOMAIN === AppSubdomain.talentSearch
 export const rootRoute: string = (
@@ -45,6 +49,11 @@ export const talentSearchRoutes: ReadonlyArray<PlatformRoute> = [
             {
                 element: <TalentPage />,
                 route: '/talent/:memberHandle',
+            },
+            {
+                element: <MemberBadgesPage />,
+                id: 'MemberBadgesPage',
+                route: '/talent/:memberHandle/badges',
             },
         ],
         domain: AppSubdomain.talentSearch,
