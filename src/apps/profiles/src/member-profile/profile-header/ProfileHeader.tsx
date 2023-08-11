@@ -118,7 +118,12 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         return (
             <div className={styles.profileActions}>
                 <span>My status:</span>
-                <OpenForGigs canEdit={canEdit} authProfile={props.authProfile} profile={props.profile} />
+                <OpenForGigs
+                    canEdit={canEdit}
+                    authProfile={props.authProfile}
+                    profile={props.profile}
+                    refreshProfile={props.refreshProfile}
+                />
             </div>
         )
     }

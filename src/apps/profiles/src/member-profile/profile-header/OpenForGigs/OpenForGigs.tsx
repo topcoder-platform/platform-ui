@@ -8,7 +8,7 @@ import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } fro
 import { EditMemberPropertyBtn } from '../../../components'
 import { OpenForGigsModifyModal } from '../OpenForGigsModifyModal'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../../config'
-import { notifyUniNavi } from '../../../lib'
+import { triggerSprigSurvey } from '../../../lib'
 
 import styles from './OpenForGigs.module.scss'
 
@@ -16,6 +16,7 @@ interface OpenForGigsProps {
     canEdit: boolean
     authProfile: UserProfile | undefined
     profile: UserProfile
+    refreshProfile: (handle: string) => void
 }
 
 const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
@@ -55,7 +56,8 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
         setTimeout(() => {
             setIsEditMode(false)
             mutateTraits()
-            notifyUniNavi(props.profile)
+            props.refreshProfile(props.profile.handle)
+            triggerSprigSurvey(props.profile)
         }, 1000)
     }
 
