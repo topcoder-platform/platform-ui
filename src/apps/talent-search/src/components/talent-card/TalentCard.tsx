@@ -40,6 +40,7 @@ const TalentCard: FC<TalentCardProps> = props => {
     const skillsWrapRef = useRef<HTMLDivElement|null>(null)
     const talentRoute = `${TALENT_SEARCH_PATHS.talent}/${props.member.handle}`
     const isMatchingSkill = useIsMatchingSkill(props.queriedSkills)
+    const address = props.member.addresses?.[0] ?? {}
 
     const matchedSkills = useMemo(() => (
         orderBy(
@@ -102,17 +103,14 @@ const TalentCard: FC<TalentCardProps> = props => {
                                 {props.member.handle}
                             </span>
                         </div>
-                        {props.member.addresses?.map(addr => (
-                            <div
-                                className={styles.talentInfoLocation}
-                                key={`${addr.streetAddr1}${addr.zip}${addr.city}${addr.stateCode}`}
-                            >
+                        {(!!props.member.addresses?.length || !!props.member.homeCountryCode) && (
+                            <div className={styles.talentInfoLocation}>
                                 <IconSolid.LocationMarkerIcon className='icon-xxl' />
                                 <span className='body-main'>
-                                    {getAddrString(addr.city, getCountry(props.member.homeCountryCode))}
+                                    {getAddrString(address.city, getCountry(props.member.homeCountryCode))}
                                 </span>
                             </div>
-                        ))}
+                        )}
                     </div>
                     <div className={styles.profileMatch}>
                         <ProfileMatch percent={props.match} />
