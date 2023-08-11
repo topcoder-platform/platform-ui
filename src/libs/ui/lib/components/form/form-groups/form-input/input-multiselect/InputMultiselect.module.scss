@@ -24,13 +24,6 @@
     }
 }
 
-.additionalPlaceholder {
-    color: $black-60;
-    width: 0;
-    pointer-events: none;
-    white-space: nowrap;
-}
-
 .multiselect .ms {
     display: block;
 
@@ -88,6 +81,9 @@
         padding: 0;
         visibility: visible;
         order: 999;
+        > input {
+            min-width: 72px!important;
+        }
     }
 
     &:global(__multi-value) {
@@ -174,9 +170,6 @@
             background-color: $turq-160;
             color: $tc-white;
         }
-    }
-    &:global(__input-container):focus-within + .additionalPlaceholder {
-        display: none;
     }
 }
 
