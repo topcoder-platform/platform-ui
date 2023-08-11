@@ -8,7 +8,7 @@ import { IconSolid } from '~/libs/ui'
 import { isSkillVerified, ProfilePicture, Skill, SkillPill } from '~/libs/shared'
 
 import { ProfileMatch } from '../profile-match'
-import { Member } from '../../lib/models'
+import { Member, MemberDisplayName } from '../../lib/models'
 import { TALENT_SEARCH_PATHS } from '../../talent-search.routes'
 import { useIsMatchingSkill } from '../../lib/utils'
 
@@ -93,16 +93,20 @@ const TalentCard: FC<TalentCardProps> = props => {
                 <ProfilePicture member={props.member} className={styles.profilePic} />
                 <div className={styles.detailsContainer}>
                     <div className={styles.talentInfo}>
-                        <div className={styles.talentInfoName}>
-                            {props.member.firstName}
-                            {' '}
-                            {props.member.lastName?.slice(0, 1) || ''}
-                        </div>
-                        <div className={styles.talentInfoHandle}>
-                            <span className='body-medium-normal'>
-                                {props.member.handle}
-                            </span>
-                        </div>
+                        {props.member.namesAndHandleAppearance !== MemberDisplayName.handleOnly && (
+                            <div className={styles.talentInfoName}>
+                                {props.member.firstName}
+                                {' '}
+                                {props.member.lastName?.slice(0, 1) || ''}
+                            </div>
+                        )}
+                        {props.member.namesAndHandleAppearance !== MemberDisplayName.nameOnly && (
+                            <div className={styles.talentInfoHandle}>
+                                <span className='body-medium-normal'>
+                                    {props.member.handle}
+                                </span>
+                            </div>
+                        )}
                         {(!!props.member.addresses?.length || !!props.member.homeCountryCode) && (
                             <div className={styles.talentInfoLocation}>
                                 <IconSolid.LocationMarkerIcon className='icon-xxl' />
