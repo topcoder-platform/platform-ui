@@ -64,23 +64,21 @@ const MultiValueRemove: FC = (props: any) => (
     </components.MultiValueRemove>
 )
 
+const Input: FC = (props: any) => {
+    const placeholder = props.hasValue && props.selectProps.isSearchable
+        ? props.selectProps.placeholder
+        : ''
+
+    return (
+        <components.Input {...props} placeholder={placeholder} />
+    )
+}
+
 // eslint-disable-next-line react/function-component-definition
 const dropdownIndicator = (dropdownIcon: ReactNode): FC => (props: any) => (
     <components.DropdownIndicator {...props}>
         {dropdownIcon}
     </components.DropdownIndicator>
-)
-
-// eslint-disable-next-line react/function-component-definition
-const ValueContainer = (props: any): JSX.Element => (
-    <components.ValueContainer {...props}>
-        {props.children}
-        {props.hasValue && props.selectProps.isSearchable && (
-            <span className={classNames('body-small', styles.additionalPlaceholder)}>
-                {props.selectProps.placeholder}
-            </span>
-        )}
-    </components.ValueContainer>
 )
 
 const InputMultiselect: FC<InputMultiselectProps> = props => {
@@ -149,8 +147,8 @@ const InputMultiselect: FC<InputMultiselectProps> = props => {
             isSearchable={isSearchable}
             components={{
                 DropdownIndicator: dropdownIndicator(props.dropdownIcon),
+                Input,
                 MultiValueRemove,
-                ValueContainer,
             }}
             value={props.value}
             openMenuOnClick={false}
