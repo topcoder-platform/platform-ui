@@ -71,3 +71,4 @@ export const DICE_VERIFY_URL = get({
 }, ENV, 'https://accounts-auth0.topcoder.com')
 
 export const RESTRICT_TALENT_SEARCH = getReactEnv<boolean>('RESTRICT_TALENT_SEARCH', false)
+export const SEGMENT_ANALYTICS_KEY = getReactEnv<string>('SEGMENT_ANALYTICS_KEY', undefined)

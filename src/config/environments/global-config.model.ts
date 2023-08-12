@@ -41,4 +41,5 @@ export interface GlobalConfig {
     GAMIFICATION_ORG_ID: string
     DICE_VERIFY_URL: string
     RESTRICT_TALENT_SEARCH: boolean
+    SEGMENT_ANALYTICS_KEY: string
 }
