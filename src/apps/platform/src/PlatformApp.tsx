@@ -11,7 +11,7 @@ import { Providers } from './providers'
 import { PlatformRouter } from './platform-router'
 
 if (EnvironmentConfig.SEGMENT_ANALYTICS_KEY) {
-    AnalyticsBrowser.load({ writeKey: EnvironmentConfig.SEGMENT_ANALYTICS_KEY })
+    window.tcSegment = AnalyticsBrowser.load({ writeKey: EnvironmentConfig.SEGMENT_ANALYTICS_KEY }) as any
 }
 
 const PlatformApp: FC<{}> = () => {
