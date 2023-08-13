@@ -1,5 +1,3 @@
-import type { AnalyticsSnippet } from '@segment/analytics-next'
-
 declare module 'tc-auth-lib'
 
 declare module '*.svg' {
@@ -17,9 +15,3 @@ declare module '*.scss' {
     const content: Record<string, string>
     export default content
 }
-
-declare global {
-    interface Window {
-        tcSegment: AnalyticsSnippet;
-    }
-  }
