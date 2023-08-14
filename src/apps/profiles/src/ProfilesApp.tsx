@@ -1,13 +1,18 @@
-import { FC, useContext } from 'react'
+import { FC, useContext, useEffect } from 'react'
 import { Outlet, Routes } from 'react-router-dom'
 
-import { routerContext, RouterContextData } from '~/libs/core'
-import { SharedSwrConfig } from '~/libs/shared'
+import { authUrlLogin, authUrlLogoutFn, routerContext, RouterContextData } from '~/libs/core'
+import { ConfigContextValue, SharedSwrConfig, useConfigContext } from '~/libs/shared'
 
-import { toolTitle } from './profiles.routes'
+import { absoluteRootRoute, toolTitle } from './profiles.routes'
 
 const ProfilesApp: FC<{}> = () => {
+    const { setLogoutUrl }: ConfigContextValue = useConfigContext()
     const { getChildRoutes }: RouterContextData = useContext(routerContext)
+
+    useEffect(() => {
+        setLogoutUrl(authUrlLogoutFn(authUrlLogin(absoluteRootRoute)))
+    }, [setLogoutUrl])
 
     return (
         <SharedSwrConfig>
