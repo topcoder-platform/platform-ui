@@ -25,6 +25,7 @@ export function useFetchTalentMatches(
     const searchParams = [
         ...skills.map(s => `skillId=${s.emsiId}`),
         'sortBy=skillScore',
+        'includeStats=false',
         `page=${page}`,
         `perPage=${pageSize}`,
     ].join('&')
