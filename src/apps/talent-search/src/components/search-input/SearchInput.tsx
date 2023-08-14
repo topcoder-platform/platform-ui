@@ -50,19 +50,26 @@ const SearchInput: FC<SearchInputProps> = props => {
     ), [props.onSearch, emsiSkills])
 
     return (
-        <InputSkillSelector
-            className={props.className}
-            autoFocus={props.autoFocus}
-            placeholder='Enter skills you are searching for...'
-            useWrapper={false}
-            theme='clear'
-            dropdownIcon={searchIcon}
-            value={emsiSkills}
-            onChange={onChange}
-            onSubmit={props.onSearch}
-            inputRef={props.inputRef}
-            limit={SKILL_SEARCH_LIMIT}
-        />
+        <div className={styles.wrap}>
+            <InputSkillSelector
+                className={props.className}
+                autoFocus={props.autoFocus}
+                placeholder='Enter skills you are searching for...'
+                useWrapper={false}
+                theme='clear'
+                dropdownIcon={searchIcon}
+                value={emsiSkills}
+                onChange={onChange}
+                onSubmit={props.onSearch}
+                inputRef={props.inputRef}
+                limit={SKILL_SEARCH_LIMIT}
+            />
+            {emsiSkills.length >= SKILL_SEARCH_LIMIT && (
+                <div className={styles.maxLimit}>
+                    You can only search up to 10 skills at one time
+                </div>
+            )}
+        </div>
     )
 }
 
