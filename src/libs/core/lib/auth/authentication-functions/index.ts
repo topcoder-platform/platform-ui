@@ -3,6 +3,7 @@ export {
     authentication as authUrl,
     login as authUrlLogin,
     logout as authUrlLogout,
+    logoutFn as authUrlLogoutFn,
     signup as authUrlSignup,
 } from './authentication-url.config'
 export {
