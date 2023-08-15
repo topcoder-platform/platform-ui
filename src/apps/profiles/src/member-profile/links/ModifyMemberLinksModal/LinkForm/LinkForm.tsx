@@ -52,10 +52,22 @@ const LinkForm: FC<LinkFormProps> = props => {
             return
         }
 
-        props.onSave({
-            name: selectedLinkType,
-            url: trim(selectedLinkURL) || '',
-        })
+        let absoluteURL = trim(selectedLinkURL) || ''
+
+        if (absoluteURL.indexOf('://') > 0 || absoluteURL.indexOf('//') === 0) {
+
+            props.onSave({
+                name: selectedLinkType,
+                url: absoluteURL,
+            })
+        } else {
+            absoluteURL = `https://${absoluteURL}`
+
+            props.onSave({
+                name: selectedLinkType,
+                url: absoluteURL,
+            })
+        }
     }
 
     function handleDiscardClick(): void {

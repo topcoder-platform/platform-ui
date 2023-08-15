@@ -11,10 +11,15 @@ interface ProfilePictureProps {
 }
 
 const ProfilePicture: FC<ProfilePictureProps> = props => {
+    const [error, setError] = useState(false)
     const [loaded, setLoaded] = useState(false)
 
-    function onLoad(): void {
+    function onImgLoad(): void {
         setLoaded(true)
+    }
+
+    function onImgError(): void {
+        setError(true)
     }
 
     return (
@@ -28,8 +33,8 @@ const ProfilePicture: FC<ProfilePictureProps> = props => {
                     {props.member.lastName.slice(0, 1)}
                 </span>
             )}
-            {props.member.photoURL && (
-                <img src={props.member.photoURL} alt='' onLoad={onLoad} />
+            {props.member.photoURL && !error && (
+                <img src={props.member.photoURL} alt='' onLoad={onImgLoad} onError={onImgError} />
             )}
         </div>
     )

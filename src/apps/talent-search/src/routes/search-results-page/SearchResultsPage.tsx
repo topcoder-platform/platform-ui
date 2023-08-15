@@ -1,8 +1,9 @@
-import { FC, useContext, useEffect, useRef } from 'react'
+import { FC, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import classNames from 'classnames'
 
 import { profileContext, ProfileContextData } from '~/libs/core'
 import { Button, ContentLayout, LoadingCircles } from '~/libs/ui'
+import { EmsiSkillSources, HowSkillsWorkModal, SkillPill } from '~/libs/shared'
 
 import { TalentCard } from '../../components/talent-card'
 import { SearchInput } from '../../components/search-input'
@@ -17,6 +18,7 @@ import styles from './SearchResultsPage.module.scss'
 
 const SearchResultsPage: FC = () => {
     const sprigFlag = useRef(false)
+    const [showSkillsModal, setShowSkillsModal] = useState(false)
     const { profile }: ProfileContextData = useContext(profileContext)
 
     const [skills, setSkills] = useUrlQuerySearchParms('q')
@@ -27,6 +29,17 @@ const SearchResultsPage: FC = () => {
         hasNext,
         total,
     }: InfiniteTalentMatchesResposne = useInfiniteTalentMatches(skills)
+
+    const toggleSkillsModal = useCallback(() => setShowSkillsModal(s => !s), [])
+
+    const skillsModalTriggerBtn = (
+        <div className={styles.skillsPill}>
+            <SkillPill
+                skill={{ name: 'Proven skills', skillSources: [EmsiSkillSources.challengeWin] }}
+                onClick={toggleSkillsModal}
+            />
+        </div>
+    )
 
     useEffect(() => {
         if (profile?.userId && matches?.length && !sprigFlag.current) {
@@ -59,14 +72,26 @@ const SearchResultsPage: FC = () => {
                         <>
                             Finding experts that match your search...
                         </>
+                    ) : !skills.length ? (
+                        <span>
+                            Search thousands of skills to match with our global experts.
+                        </span>
+                    ) : !total ? (
+                        <span>
+                            Reach out to Topcoder to find the right member for you.
+                        </span>
                     ) : (
                         <>
-                            We found&nbsp;
-                            <span className='body-medium-medium'>
-                                {total}
-                                &nbsp;Experts
+                            {skillsModalTriggerBtn}
+                            <span>
+                                We found&nbsp;
+                                <span className='body-medium-medium highlighting'>
+                                    {total}
+                                    &nbsp;Experts
+                                </span>
+                                &nbsp;that match your search
                             </span>
-                            &nbsp;that match your search
+                            {skillsModalTriggerBtn}
                         </>
                     )}
                 </div>
@@ -86,6 +111,9 @@ const SearchResultsPage: FC = () => {
                     <div className={styles.moreBtn}>
                         <Button secondary size='lg' onClick={fetchNext}>Load more</Button>
                     </div>
+                )}
+                {showSkillsModal && (
+                    <HowSkillsWorkModal onClose={toggleSkillsModal} isTalentSearch />
                 )}
             </ContentLayout>
         </>

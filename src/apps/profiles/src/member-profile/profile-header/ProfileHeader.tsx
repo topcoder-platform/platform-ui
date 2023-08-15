@@ -1,6 +1,6 @@
 /* eslint-disable complexity */
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Location, useLocation, useSearchParams } from 'react-router-dom'
 import { KeyedMutator } from 'swr'
 import moment from 'moment'
 
@@ -12,13 +12,16 @@ import {
     UserTraits,
 } from '~/libs/core'
 import { ProfilePicture, useCheckIsMobile } from '~/libs/shared'
+import { Button } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
+import { MemberProfileContextValue, useMemberProfileContext } from '../MemberProfile.context'
 
 import { OpenForGigs } from './OpenForGigs'
 import { ModifyMemberNameModal } from './ModifyMemberNameModal'
 import { ModifyMemberPhotoModal } from './ModifyMemberPhotoModal'
+import { HiringFormModal } from './HiringFormModal'
 import styles from './ProfileHeader.module.scss'
 
 interface ProfileHeaderProps {
@@ -57,6 +60,18 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
             (trait: UserTrait) => trait.namesAndHandleAppearance,
         ), [memberPersonalizationTraits])
 
+    const [isHiringFormOpen, setIsHiringFormOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
+    const { isTalentSearch }: MemberProfileContextValue = useMemberProfileContext()
+
+    const { state }: Location = useLocation()
+
+    const searchedSkills: string[] = useMemo(
+        () => (state?.queriedSkills || []).map((s: any) => s.name),
+        [state?.queriedSkills],
+    )
+
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.names) {
             setIsNameEditMode(true)
@@ -67,11 +82,6 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.authProfile])
-
-    // Enable this with talent search app
-    // function handleHireMeClick(): void {
-    //     console.log('Hire Me button clicked')
-    // }
 
     function handleModifyNameClick(): void {
         setIsNameEditMode(true)
@@ -108,17 +118,12 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         return (
             <div className={styles.profileActions}>
                 <span>My status:</span>
-                <OpenForGigs canEdit={canEdit} authProfile={props.authProfile} profile={props.profile} />
-                {/* Enable this with talent search app */}
-                {/* {
-                            !canEdit && (
-                                <Button
-                                    label={`Hire ${props.profile.firstName}`}
-                                    primary
-                                    onClick={handleHireMeClick}
-                                />
-                            )
-                        } */}
+                <OpenForGigs
+                    canEdit={canEdit}
+                    authProfile={props.authProfile}
+                    profile={props.profile}
+                    refreshProfile={props.refreshProfile}
+                />
             </div>
         )
     }
@@ -144,6 +149,10 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         )
     }
 
+    function handleStartHiringToggle(): void {
+        setIsHiringFormOpen(!isHiringFormOpen)
+    }
+
     return (
         <div className={styles.container}>
             {
@@ -151,43 +160,57 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
             }
 
             {!traitsLoading && (
-                <div className={styles.profileInfo}>
-                    <div className={styles.nameWrap}>
-                        <p>
+                <div className={styles.profileHeaderWrap}>
+                    <div className={styles.profileInfo}>
+                        <div className={styles.nameWrap}>
+                            <p>
+                                {
+                                    namesAndHandleAppearanceData?.namesAndHandleAppearance === 'handleOnly'
+                                        ? props.profile.handle
+                                        : `${props.profile.firstName} ${props.profile.lastName?.slice(0, 1) ?? ''}`
+                                }
+                            </p>
                             {
-                                namesAndHandleAppearanceData?.namesAndHandleAppearance === 'handleOnly'
-                                    ? props.profile.handle
-                                    : `${props.profile.firstName} ${props.profile.lastName}`
+                                canEdit && (
+                                    <EditMemberPropertyBtn
+                                        onClick={handleModifyNameClick}
+                                    />
+                                )
                             }
-                        </p>
-                        {
-                            canEdit && (
-                                <EditMemberPropertyBtn
-                                    onClick={handleModifyNameClick}
-                                />
-                            )
-                        }
-                    </div>
+                        </div>
 
-                    <p className={styles.memberSince}>
-                        {
-                            // If the user hasn't set a name and handle appareance, display both name and handle
-                            (namesAndHandleAppearanceData?.namesAndHandleAppearance === 'namesAndHandle'
-                            || !namesAndHandleAppearanceData) ? (
+                        <p className={styles.memberSince}>
+                            {
+                                // If the user hasn't set a name and handle appareance, display both name and handle
+                                (namesAndHandleAppearanceData?.namesAndHandleAppearance === 'namesAndHandle'
+                                    || !namesAndHandleAppearanceData) ? (
                                     // eslint-disable-next-line react/jsx-indent
-                                    <>
-                                        <span>{props.profile.handle}</span>
-                                        {' '}
-                                        |
-                                        {' '}
-                                    </>
-                                ) : undefined
-                        }
-                        Member Since
-                        {' '}
-                        {moment(props.profile.createdAt)
-                            .format('MMM YYYY')}
-                    </p>
+                                        <>
+                                            <span>{props.profile.handle}</span>
+                                            {' '}
+                                            |
+                                            {' '}
+                                        </>
+                                    ) : undefined
+                            }
+                            Member Since
+                            {' '}
+                            {moment(props.profile.createdAt)
+                                .format('MMM YYYY')}
+                        </p>
+                    </div>
+                    {
+                        !canEdit && isTalentSearch ? (
+                            <div className={styles.hiringClickWrap}>
+                                <Button
+                                    label='Start Hiring'
+                                    primary
+                                    size='lg'
+                                    onClick={handleStartHiringToggle}
+                                />
+                            </div>
+                        ) : undefined
+                    }
                 </div>
             )}
 
@@ -199,6 +222,17 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
 
             {
                 isMobile ? renderMemberPhotoWrap() : undefined
+            }
+
+            {
+                isHiringFormOpen && (
+                    <HiringFormModal
+                        onClose={handleStartHiringToggle}
+                        authProfile={props.authProfile}
+                        profile={props.profile}
+                        searchedSkills={searchedSkills}
+                    />
+                )
             }
 
             {

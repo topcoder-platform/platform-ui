@@ -1,9 +1,9 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react'
-import { Link, Params, useParams } from 'react-router-dom'
+import { Params, useNavigate, useParams } from 'react-router-dom'
 import { bind } from 'lodash'
 
 import { profileGetPublicAsync, useMemberBadges, UserBadge, UserBadgesResponse, UserProfile } from '~/libs/core'
-import { ContentLayout, LoadingSpinner } from '~/libs/ui'
+import { Button, ContentLayout, IconSolid, LoadingSpinner } from '~/libs/ui'
 
 import { MemberBadgeModal } from '../components'
 
@@ -11,6 +11,7 @@ import styles from './MemberBadgesPage.module.scss'
 
 const MemberBadgesPage: FC<{}> = () => {
     const routeParams: Params<string> = useParams()
+    const navigate = useNavigate()
 
     const [profile, setProfile]: [
         UserProfile | undefined,
@@ -31,6 +32,10 @@ const MemberBadgesPage: FC<{}> = () => {
         setIsBadgeDetailsOpen(true)
         setSelectedBadge(badge)
     }, [])
+
+    const handleBackBtn = useCallback(() => {
+        navigate(-1)
+    }, [navigate])
 
     useEffect(() => {
         if (routeParams.memberHandle) {
@@ -55,24 +60,17 @@ const MemberBadgesPage: FC<{}> = () => {
                 <ContentLayout
                     outerClass={styles.container}
                 >
-                    <Link to={`/${profile?.handle}`} className={styles.backLink}>
-                        <svg
-                            xmlns='http://www.w3.org/2000/svg'
-                            width='14'
-                            height='12'
-                            fill='none'
-                            viewBox='0 0 14 12'
+                    <div className={styles.backLink}>
+                        <Button
+                            link
+                            size='lg'
+                            iconToLeft
+                            icon={IconSolid.ArrowLeftIcon}
+                            onClick={handleBackBtn}
                         >
-                            <path
-                                fill='#137D60'
-                                fillRule='evenodd'
-                                // eslint-disable-next-line max-len
-                                d='M6.766 11.366a.8.8 0 01-1.132 0l-4.8-4.8a.8.8 0 010-1.132l4.8-4.8a.8.8 0 111.132 1.132L3.33 5.2h9.27a.8.8 0 010 1.6H3.33l3.435 3.434a.8.8 0 010 1.132z'
-                                clipRule='evenodd'
-                            />
-                        </svg>
-                        Return to Profile
-                    </Link>
+                            Return to profile
+                        </Button>
+                    </div>
 
                     <div className={styles.badgesWrapper}>
                         <h3>COMMUNITY AWARDS & HONORS</h3>

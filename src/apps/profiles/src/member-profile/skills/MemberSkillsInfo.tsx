@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { orderBy } from 'lodash'
 
 import { UserEMSISkill, UserProfile } from '~/libs/core'
-import { ExpandableList, isSkillVerified, Skill, SkillPill } from '~/libs/shared'
+import { ExpandableList, HowSkillsWorkModal, isSkillVerified, Skill, SkillPill } from '~/libs/shared'
 import { Button } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
@@ -11,7 +11,6 @@ import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { MemberProfileContextValue, useMemberProfileContext } from '../MemberProfile.context'
 
 import { ModifySkillsModal } from './ModifySkillsModal'
-import { HowSkillsWorkModal } from './HowSkillsWorkModal'
 import styles from './MemberSkillsInfo.module.scss'
 
 interface MemberSkillsInfoProps {
@@ -141,7 +140,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                     <HowSkillsWorkModal
                         onClose={handleHowSkillsWorkClose}
                         isTalentSearch={isTalentSearch}
-                        canEdit={canEdit}
+                        iseSelfView={canEdit}
                     />
                 )
             }

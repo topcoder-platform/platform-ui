@@ -64,6 +64,16 @@ const MultiValueRemove: FC = (props: any) => (
     </components.MultiValueRemove>
 )
 
+const Input: FC = (props: any) => {
+    const placeholder = props.hasValue && props.selectProps.isSearchable
+        ? props.selectProps.placeholder
+        : ''
+
+    return (
+        <components.Input {...props} placeholder={placeholder} />
+    )
+}
+
 // eslint-disable-next-line react/function-component-definition
 const dropdownIndicator = (dropdownIcon: ReactNode): FC => (props: any) => (
     <components.DropdownIndicator {...props}>
@@ -71,20 +81,11 @@ const dropdownIndicator = (dropdownIcon: ReactNode): FC => (props: any) => (
     </components.DropdownIndicator>
 )
 
-// eslint-disable-next-line react/function-component-definition
-const valueContainer = (additionalPlaceholder: string): FC => (props: any) => (
-    <components.ValueContainer {...props}>
-        {props.children}
-        {props.hasValue && additionalPlaceholder && (
-            <span className={classNames('body-small', styles.additionalPlaceholder)}>
-                {additionalPlaceholder}
-            </span>
-        )}
-    </components.ValueContainer>
-)
-
 const InputMultiselect: FC<InputMultiselectProps> = props => {
     const asynSelectRef = useRef<any>()
+    const placeholder = useMemo(() => (
+        (props.value?.length as number) > 0 ? props.additionalPlaceholder ?? 'Add more...' : props.placeholder
+    ), [props.additionalPlaceholder, props.placeholder, props.value?.length])
 
     function handleOnChange(options: readonly InputMultiselectOption[]): void {
         props.onChange({
@@ -103,13 +104,9 @@ const InputMultiselect: FC<InputMultiselectProps> = props => {
         props.onSubmit?.()
     }
 
-    function isOptionDisabled(): boolean {
-        return !!props.limit && (props.value?.length as number) >= props.limit
-    }
-
-    const ValueContainer = useMemo(() => (
-        valueContainer(props.additionalPlaceholder ?? 'Add more...')
-    ), [props.additionalPlaceholder])
+    const isSearchable = useMemo((): boolean => (
+        !props.limit || (props.value?.length as number) < props.limit
+    ), [props.limit, props.value?.length])
 
     // scroll to bottom when the value is loaded / updated
     useEffect(() => {
@@ -140,19 +137,18 @@ const InputMultiselect: FC<InputMultiselectProps> = props => {
             cacheOptions
             autoFocus={props.autoFocus}
             defaultOptions
-            placeholder={props.placeholder}
+            placeholder={placeholder}
             loadOptions={props.onFetchOptions}
             name={props.name}
             onChange={handleOnChange}
             onBlur={noop}
             blurInputOnSelect={false}
             isLoading={props.loading}
-            isOptionDisabled={isOptionDisabled}
-            isSearchable={!isOptionDisabled()}
+            isSearchable={isSearchable}
             components={{
                 DropdownIndicator: dropdownIndicator(props.dropdownIcon),
+                Input,
                 MultiValueRemove,
-                ValueContainer,
             }}
             value={props.value}
             openMenuOnClick={false}

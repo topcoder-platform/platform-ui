@@ -1,6 +1,7 @@
 export {
     doesNotMatchOther as validatorDoesNotMatchOther,
     email as validatorEmail,
+    phone as validatorPhone,
     matchOther as validatorMatchOther,
     password as validatorPassword,
     required as validatorRequired,

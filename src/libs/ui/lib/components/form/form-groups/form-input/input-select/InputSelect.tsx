@@ -60,6 +60,7 @@ const sameWidthModifier = {
 const modifiers = [sameWidthModifier]
 
 const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
+    const hasFocus = useRef<boolean>(false)
     const triggerRef: MutableRefObject<any> = useRef(undefined)
     const popperRef: MutableRefObject<any> = useRef(undefined)
     const buttonRef: MutableRefObject<HTMLButtonElement | null> = useRef(null)
@@ -68,7 +69,7 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
 
     const popper = usePopper(triggerRef.current?.firstChild, popperRef.current, {
         modifiers,
-        strategy: 'absolute',
+        strategy: 'fixed',
     })
 
     const selectedOption: InputSelectOption | undefined = props.options.find(option => option.value === props.value)
@@ -78,9 +79,15 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
     )
 
     const toggleMenu = (toggle?: boolean): void => {
-        setTimeout(setMenuIsVisible, 150, wasVisible => (
-            typeof toggle === 'boolean' ? toggle : !wasVisible
-        ))
+        setTimeout(setMenuIsVisible, 150, (wasVisible: boolean) => {
+            const isVisible = typeof toggle === 'boolean' ? toggle : !wasVisible
+            if (!isVisible) {
+                hasFocus.current = true
+                buttonRef.current?.focus()
+            }
+
+            return isVisible
+        })
     }
 
     const select: (option: InputSelectOption) => (event: MouseEvent<HTMLDivElement>) => void
@@ -145,10 +152,16 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
                 type='button'
                 disabled={!!props.disabled}
                 onFocus={function onFocus(event: FocusEvent<HTMLButtonElement> | undefined) {
+                    if (hasFocus.current) {
+                        return
+                    }
+
+                    hasFocus.current = true
                     setIsFocus(true)
                     toggleIfNotDisabled(event, true)
                 }}
                 onBlur={function onBlur() {
+                    hasFocus.current = false
                     setIsFocus(false)
                 }}
                 ref={buttonRef}
@@ -166,6 +179,7 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
                     ref={popperRef}
                     style={popper.styles.popper}
                     {...popper.attributes.popper}
+                    tabIndex={-1}
                 >
                     {menuIsVisible && (
                         <div className={styles['select-menu']}>

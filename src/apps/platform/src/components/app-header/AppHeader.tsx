@@ -17,13 +17,13 @@ import classNames from 'classnames'
 import { EnvironmentConfig, PageSubheaderPortalId } from '~/config'
 import {
     authUrlLogin,
-    authUrlLogout,
     authUrlSignup,
     profileContext,
     ProfileContextData,
     routerContext,
     RouterContextData,
 } from '~/libs/core'
+import { ConfigContextValue, useConfigContext } from '~/libs/shared'
 
 import UniNavSnippet from './universal-nav-snippet'
 
@@ -39,6 +39,7 @@ const AppHeader: FC<{}> = () => {
 
     const { activeToolName, activeToolRoute }: RouterContextData = useContext(routerContext)
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
+    const { logoutUrl }: ConfigContextValue = useConfigContext()
     const [ready, setReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
     const headerInit: MutableRefObject<boolean> = useRef(false)
     const navElementId: string = PageSubheaderPortalId
@@ -95,7 +96,7 @@ const AppHeader: FC<{}> = () => {
                 },
                 onReady() { setReady(true) },
                 signIn() { window.location.href = authUrlLogin() },
-                signOut() { window.location.href = authUrlLogout },
+                signOut() { window.location.href = logoutUrl },
                 signUp() { window.location.href = authUrlSignup() },
                 toolName: activeToolName,
                 toolRoot: activeToolRoute,
@@ -110,6 +111,7 @@ const AppHeader: FC<{}> = () => {
         navigationHandler,
         userInfo,
         profileReady,
+        logoutUrl,
     ])
 
     // update uni-nav's tool details
@@ -141,12 +143,14 @@ const AppHeader: FC<{}> = () => {
             navElementId,
             {
                 ...userInfo,
+                signOut() { window.location.href = logoutUrl },
             },
         )
     }, [
         profileReady,
         userInfo,
         navElementId,
+        logoutUrl,
     ])
 
     return (

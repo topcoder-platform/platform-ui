@@ -1,8 +1,10 @@
-import { FC, Ref, useMemo } from 'react'
+import { FC, MouseEvent, Ref, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { IconOutline, InputMultiselectOption } from '~/libs/ui'
 import { EmsiSkill, EmsiSkillSources, InputSkillSelector, Skill } from '~/libs/shared'
+
+import { SKILL_SEARCH_LIMIT } from '../../config'
 
 import styles from './SearchInput.module.scss'
 
@@ -30,28 +32,44 @@ const SearchInput: FC<SearchInputProps> = props => {
         })))
     }
 
+    function handleSearchClick(ev: MouseEvent<HTMLDivElement>): void {
+        ev.preventDefault()
+        ev.stopPropagation()
+
+        props.onSearch?.()
+    }
+
     const searchIcon = useMemo(() => (
         <div
             className={classNames(styles.searchIcon, !emsiSkills.length && styles.disabled)}
-            onClick={props.onSearch}
+            onClick={handleSearchClick}
+            onTouchStart={handleSearchClick as any}
         >
             <IconOutline.SearchIcon />
         </div>
     ), [props.onSearch, emsiSkills])
 
     return (
-        <InputSkillSelector
-            className={props.className}
-            autoFocus={props.autoFocus}
-            placeholder='Enter skills you are searching for...'
-            useWrapper={false}
-            theme='clear'
-            dropdownIcon={searchIcon}
-            value={emsiSkills}
-            onChange={onChange}
-            onSubmit={props.onSearch}
-            inputRef={props.inputRef}
-        />
+        <div className={styles.wrap}>
+            <InputSkillSelector
+                className={props.className}
+                autoFocus={props.autoFocus}
+                placeholder='Enter skills you are searching for...'
+                useWrapper={false}
+                theme='clear'
+                dropdownIcon={searchIcon}
+                value={emsiSkills}
+                onChange={onChange}
+                onSubmit={props.onSearch}
+                inputRef={props.inputRef}
+                limit={SKILL_SEARCH_LIMIT}
+            />
+            {emsiSkills.length >= SKILL_SEARCH_LIMIT && (
+                <div className={styles.maxLimit}>
+                    You can only search up to 10 skills at one time
+                </div>
+            )}
+        </div>
     )
 }
 

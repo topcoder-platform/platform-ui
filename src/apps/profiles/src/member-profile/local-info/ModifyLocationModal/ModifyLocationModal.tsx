@@ -1,5 +1,5 @@
 import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
-import { bind, trim } from 'lodash'
+import { bind, omit, trim } from 'lodash'
 import { toast } from 'react-toastify'
 
 import { BaseModal, Button, InputSelect, InputText } from '~/libs/ui'
@@ -17,6 +17,10 @@ interface ModifyLocationModalProps {
     onSave: () => void
     profile: UserProfile
 }
+
+const OMIT_ADDRESS_KEYS_ON_UPDATE = [
+    'createdAt', 'createdBy', 'updatedAt', 'updatedBy',
+]
 
 const ModifyLocationModal: FC<ModifyLocationModalProps> = (props: ModifyLocationModalProps) => {
     const countryLookup: CountryLookup[] | undefined
@@ -59,7 +63,7 @@ const ModifyLocationModal: FC<ModifyLocationModalProps> = (props: ModifyLocation
             props.profile.handle,
             {
                 addresses: [{
-                    ...props.profile.addresses ? props.profile.addresses[0] : {},
+                    ...props.profile.addresses ? omit(props.profile.addresses[0], OMIT_ADDRESS_KEYS_ON_UPDATE) : {},
                     city: trim(formValues.city),
                 }],
                 competitionCountryCode: formValues.country,

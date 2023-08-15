@@ -1,7 +1,7 @@
 @import "@libs/ui/styles/includes";
 
 .headerWrap {
-    height: 156px;
+    min-height: 156px;
 }
 
 .headerContentLayout {
@@ -15,19 +15,60 @@
     &Inner {
         padding: 0 $sp-8;
     }
+
+    @include ltemd {
+        &Inner {
+            padding: 0;
+        }
+    }
 }
 
 .summaryText {
     margin: $sp-4 0 $sp-5;
     text-align: center;
     color: $black-60;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     > span {
+        display: block;
+        margin: 0 auto;
+        flex: 1 1 auto;
+    }
+
+    :global(.highlighting) {
         color: $black-100;
+    }
+
+    @include ltemd {
+        flex-direction: column;
+        gap: $sp-2;
+    }
+}
+
+.skillsPill {
+    flex: 0 0 auto;
+
+    &:first-child {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    @include ltemd {
+        &:first-child {
+            display: none;
+        }
     }
 }
 
 .searchInput {
     margin-top: $sp-10;
+    @include ltemd {
+        margin-top: $sp-4;
+    }
 }
 
 .contentLayout {
@@ -39,12 +80,24 @@
     .contentLayout-inner {
         padding-bottom: $sp-12;
     }
+
+    @include ltemd {
+        padding: $sp-2 0;
+    }
 }
 
 .resultsWrap {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: $sp-9;
+
+    @include ltelg {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    @include ltemd {
+        gap: $sp-5;
+    }
 }
 
 .moreBtn {

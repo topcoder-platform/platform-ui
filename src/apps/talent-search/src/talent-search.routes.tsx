@@ -13,12 +13,18 @@ const TalentPage: LazyLoadedComponent = lazyLoad(
     () => import('./routes/talent-page'),
     'TalentPage',
 )
+const MemberBadgesPage: LazyLoadedComponent = lazyLoad(
+    () => import('@profiles/member-badges'),
+    'MemberBadgesPage',
+)
 
+const isOnAppSubdomain = EnvironmentConfig.SUBDOMAIN === AppSubdomain.talentSearch
 export const rootRoute: string = (
-    EnvironmentConfig.SUBDOMAIN === AppSubdomain.talentSearch ? '' : `/${AppSubdomain.talentSearch}`
+    isOnAppSubdomain ? '' : `/${AppSubdomain.talentSearch}`
 )
 
 export const TALENT_SEARCH_PATHS = {
+    absoluteUrl: `//${AppSubdomain.talentSearch}.${EnvironmentConfig.TC_DOMAIN}`,
     results: `${rootRoute}/results`,
     root: rootRoute,
     talent: `${rootRoute}/talent`,
@@ -26,9 +32,11 @@ export const TALENT_SEARCH_PATHS = {
 
 export const toolTitle: string = ToolTitle.talentSearch
 
+const isAdminRestricted = EnvironmentConfig.RESTRICT_TALENT_SEARCH
+
 export const talentSearchRoutes: ReadonlyArray<PlatformRoute> = [
     {
-        authRequired: true,
+        authRequired: isAdminRestricted,
         children: [
             {
                 element: <SearchPage />,
@@ -42,13 +50,18 @@ export const talentSearchRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <TalentPage />,
                 route: '/talent/:memberHandle',
             },
+            {
+                element: <MemberBadgesPage />,
+                id: 'MemberBadgesPage',
+                route: '/talent/:memberHandle/badges',
+            },
         ],
         domain: AppSubdomain.talentSearch,
         element: <TalentSearchAppRoot />,
         id: toolTitle,
-        rolesRequired: [
+        rolesRequired: isAdminRestricted ? [
             UserRole.administrator,
-        ],
+        ] : undefined,
         route: rootRoute,
     },
 ]

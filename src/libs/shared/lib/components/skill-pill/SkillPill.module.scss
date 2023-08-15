@@ -11,6 +11,10 @@
     align-items: center;
     gap: $sp-1;
 
+    @include ltemd {
+        padding: $sp-1 $sp-3;
+    }
+
     &.interactive {
         cursor: pointer;
 
