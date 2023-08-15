@@ -66,7 +66,7 @@ const SearchInput: FC<SearchInputProps> = props => {
             />
             {emsiSkills.length >= SKILL_SEARCH_LIMIT && (
                 <div className={styles.maxLimit}>
-                    You can only search up to 10 skills at one time
+                    {`You can only search up to ${SKILL_SEARCH_LIMIT} skills at one time`}
                 </div>
             )}
         </div>
