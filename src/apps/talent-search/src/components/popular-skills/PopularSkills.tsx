@@ -9,22 +9,22 @@ import styles from './PopularSkills.module.scss'
 // TODO: Make this configurable, or read from a service.  We need to discuss
 // how we want to handle this.
 const popularSkills: Skill[] = [
-    { emsiId: 'KS441LF7187KS0CV4B6Y', name: 'Typescript' },
-    { emsiId: 'KS1244K6176NLVWV02B6', name: 'Front-End Engineering' },
-    { emsiId: 'KS1214R5XG4X4PY7LGY6', name: 'Bootstrap (Front-End Framework)' },
+    { emsiId: 'KS120076FGP5WGWYMP0F', name: 'Java (Programming Language)' },
+    { emsiId: 'KS126QY605N7YVHFYCTW', name: 'MySQL' },
+    { emsiId: 'KS127296VDYS7ZFWVC46', name: 'Node.js' },
     { emsiId: 'KS121F45VPV8C9W3QFYH', name: 'Cascading Style Sheets (CSS)' },
     { emsiId: 'KS1200771D9CR9LB4MWW', name: 'JavaScript (Programming Language)' },
-    { emsiId: 'KS1200578T5QCYT0Z98G', name: 'HyperText Markup Language (HTML)' },
-    { emsiId: 'ES86A20379CD2AD061F3', name: 'IOS Development' },
-    { emsiId: 'KS127296VDYS7ZFWVC46', name: 'Node.js' },
-    { emsiId: 'ES50D03AC9CFC1A0BC93', name: '.NET Development' },
-    { emsiId: 'KS1219W70LY1GXZDSKW5', name: 'C++ (Programming Language)' },
-    { emsiId: 'KS127SZ60YZR8B5CQKV1', name: 'PHP Development' },
+    { emsiId: 'KS1261Z68KSKR1X31KS3', name: 'Machine Learning' },
+    { emsiId: 'KS120SX72T8B5VLXS1VN', name: 'Unit Testing' },
+    { emsiId: 'KS120H6772VQ0MQ5RLVD', name: 'Angular (Web Framework)' },
+    { emsiId: 'KS1200B62W5ZF38RJ7TD', name: '.NET Framework' },
+    { emsiId: 'KS125LS6N7WP4S6SFTCK', name: 'Python (Programming Language)' },
+    { emsiId: 'KS120GZ5YXC6YVM1NGPR', name: 'Android (Operating System)' },
+    { emsiId: 'ES5269FD2583B0B9875C', name: 'Figma (Design Software)' },
+    { emsiId: 'KS120V86MZWV9Z9LKQY3', name: 'Microsoft Azure' },
     { emsiId: 'KS1206V6K46N1SDVJGBD', name: 'Adobe Illustrator' },
-    { emsiId: 'ESD07FEE22E7EC094EB8', name: 'Ruby (Programming Language)' },
-    { emsiId: 'KS120076FGP5WGWYMP0F', name: 'Java (Programming Language)' },
-    { emsiId: 'KSPSGF5MXB6568UIQ4BK', name: 'React Native' },
-    { emsiId: 'KS441PL6JPXW200W0GRQ', name: 'User Experience (UX)' },
+    { emsiId: 'KSY4WFI1S164RQUBSPCC', name: 'Docker (Software)' },
+    { emsiId: 'KSDJCA4E89LB98JAZ7LZ', name: 'React.js' },
 ]
 
 interface PopularSkillsProps {
