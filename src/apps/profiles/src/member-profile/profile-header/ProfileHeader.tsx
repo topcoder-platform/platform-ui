@@ -203,7 +203,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                         !canEdit && isTalentSearch ? (
                             <div className={styles.hiringClickWrap}>
                                 <Button
-                                    label='Start Hiring'
+                                    label='Hire Topcoder Talent'
                                     primary
                                     size='lg'
                                     onClick={handleStartHiringToggle}
