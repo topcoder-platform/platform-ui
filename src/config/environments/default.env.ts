@@ -70,5 +70,7 @@ export const DICE_VERIFY_URL = get({
     qa: 'https://accounts-auth0.topcoder-qa.com',
 }, ENV, 'https://accounts-auth0.topcoder.com')
 
-export const RESTRICT_TALENT_SEARCH = getReactEnv<boolean>('RESTRICT_TALENT_SEARCH', false)
+// TODO: Revert this.  This was done because prod was restricting this and no one was available to fix the config
+// export const RESTRICT_TALENT_SEARCH = getReactEnv<boolean>('RESTRICT_TALENT_SEARCH', false)
+export const RESTRICT_TALENT_SEARCH = false
 export const SEGMENT_ANALYTICS_KEY = getReactEnv<string>('SEGMENT_ANALYTICS_KEY', undefined)
