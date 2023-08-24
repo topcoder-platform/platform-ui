@@ -105,3 +105,23 @@
     display: flex;
     justify-content: center;
 }
+
+.noResultsNormal {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 23px;
+    text-align: center;  
+}
+
+.noResultsBold {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 23px;
+    text-align: center;   
+    margin-top: 20px;
+    margin-bottom: 40px;
+}
