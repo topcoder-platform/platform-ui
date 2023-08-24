@@ -13,7 +13,7 @@ const MemberRolesInfoModal: FC<MemberRolesInfoModalProps> = (props: MemberRolesI
         title='What are special roles'
     >
         <p>
-            Topcoder copilots are skilled project managers and technical expert
+            Topcoder copilots are skilled project managers and technical experts
             who lead project on the platform. Topcoder reviewers evaluate solutions
             submitted on the platform to ensure quality and fairness.
         </p>
