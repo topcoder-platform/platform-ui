@@ -2,7 +2,7 @@ import { FC, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import classNames from 'classnames'
 
 import { profileContext, ProfileContextData } from '~/libs/core'
-import { Button, LinkButton, ContentLayout, LoadingCircles } from '~/libs/ui'
+import { Button, ContentLayout, LinkButton, LoadingCircles } from '~/libs/ui'
 import { EmsiSkillSources, HowSkillsWorkModal, SkillPill } from '~/libs/shared'
 
 import { TalentCard } from '../../components/talent-card'
