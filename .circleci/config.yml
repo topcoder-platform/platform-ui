@@ -260,6 +260,7 @@ workflows:
                           only:
                               - dev
                               - justin_fixes
+                              - talent_search_fixes
 
             - deployQa:
                   context: org-global
