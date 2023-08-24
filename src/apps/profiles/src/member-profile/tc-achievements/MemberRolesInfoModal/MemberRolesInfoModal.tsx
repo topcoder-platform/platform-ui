@@ -14,7 +14,7 @@ const MemberRolesInfoModal: FC<MemberRolesInfoModalProps> = (props: MemberRolesI
     >
         <p>
             Topcoder copilots are skilled project managers and technical experts
-            who lead project on the platform. Topcoder reviewers evaluate solutions
+            who lead projects on the platform. Topcoder reviewers evaluate solutions
             submitted on the platform to ensure quality and fairness.
         </p>
     </BaseModal>
