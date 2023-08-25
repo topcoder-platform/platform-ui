@@ -7,10 +7,19 @@ import { PaginatedResponse, xhrGetPaginatedAsync } from '~/libs/core'
 import { Skill } from '~/libs/shared'
 import Member from '@talentSearch/lib/models/Member'
 
+export interface TalentMatchData {
+    searchResults: Member[]
+    partialMatches: number,
+    perfectMatches: number,
+    veryGoodMatches: number
+}
 export interface TalentMatchesResponse {
     error: boolean,
     loading: boolean,
     matches: Member[],
+    partialMatches: number,
+    perfectMatches: number,
+    veryGoodMatches: number,
     page: number,
     ready: boolean,
     total: number,
@@ -32,22 +41,26 @@ export function useFetchTalentMatches(
 
     const url = `${EnvironmentConfig.API.V5}/members/searchBySkills?${searchParams}`
 
-    const { data, error }: SWRResponse<PaginatedResponse<Member[]>> = useSWR(url, xhrGetPaginatedAsync<Member[]>, {
-        isPaused: () => !skills?.length,
-        refreshInterval: 0,
-        revalidateOnFocus: false,
-    })
+    const { data, error }: SWRResponse<PaginatedResponse<TalentMatchData>>
+        = useSWR(url, xhrGetPaginatedAsync<TalentMatchData>, {
+            isPaused: () => !skills?.length,
+            refreshInterval: 0,
+            revalidateOnFocus: false,
+        })
 
-    const matches = useMemo(() => data?.data ?? [], [data])
+    const matches = useMemo(() => data?.data?.searchResults ?? [], [data?.data.searchResults])
 
     return {
         error: !!error,
         loading: !data?.data,
         matches: matches ?? [],
         page: data?.page ?? 0,
+        partialMatches: data?.data?.partialMatches ?? 0,
+        perfectMatches: data?.data?.perfectMatches ?? 0,
         ready: !!data?.data,
         total: data?.total ?? 0,
         totalPages: data?.totalPages ?? 0,
+        veryGoodMatches: data?.data?.veryGoodMatches ?? 0,
     }
 }
 
