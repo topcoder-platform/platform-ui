@@ -28,6 +28,9 @@ const SearchResultsPage: FC = () => {
         fetchNext,
         hasNext,
         total,
+        partialMatches,
+        perfectMatches,
+        veryGoodMatches,
     }: InfiniteTalentMatchesResposne = useInfiniteTalentMatches(skills)
 
     const toggleSkillsModal = useCallback(() => setShowSkillsModal(s => !s), [])
@@ -99,10 +102,39 @@ const SearchResultsPage: FC = () => {
                             <span>
                                 We found&nbsp;
                                 <span className='body-medium-medium highlighting'>
-                                    {total}
-                                    &nbsp;Experts
+                                    {perfectMatches > 1 ? (
+                                        <>
+                                            {perfectMatches}
+                                            &nbsp;perfect matches
+                                        </>
+                                    ) : perfectMatches === 1 ? (
+                                        <>
+                                            {perfectMatches}
+                                            &nbsp;perfect match
+                                        </>
+                                    ) : veryGoodMatches > 1 ? (
+                                        <>
+                                            {veryGoodMatches}
+                                            &nbsp;very good matches
+                                        </>
+                                    ) : veryGoodMatches === 1 ? (
+                                        <>
+                                            {veryGoodMatches}
+                                            &nbsp;very good match
+                                        </>
+                                    ) : partialMatches > 1 ? (
+                                        <>
+                                            {partialMatches}
+                                            &nbsp;partial matches
+                                        </>
+                                    ) : (
+                                        <>
+                                            {partialMatches}
+                                            &nbsp;partial match
+                                        </>
+                                    )}
                                 </span>
-                                &nbsp;that match your search
+                                &nbsp;for your search
                             </span>
                             {skillsModalTriggerBtn}
                         </>

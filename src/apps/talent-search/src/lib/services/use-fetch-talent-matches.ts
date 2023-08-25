@@ -71,6 +71,9 @@ export interface InfiniteTalentMatchesResposne {
     page: number
     loading: boolean
     total: number
+    perfectMatches: number
+    veryGoodMatches: number
+    partialMatches: number
 }
 
 export function useInfiniteTalentMatches(
@@ -102,6 +105,9 @@ export function useInfiniteTalentMatches(
         loading: matchResponse.loading && skills.length > 0,
         matches,
         page,
+        partialMatches: matchResponse.partialMatches,
+        perfectMatches: matchResponse.perfectMatches,
         total: matchResponse.total,
+        veryGoodMatches: matchResponse.veryGoodMatches,
     }
 }
