@@ -37,9 +37,11 @@ const SearchResultsPage: FC = () => {
 
     const skillsModalTriggerBtn = (
         <div className={styles.skillsPill}>
-            <SkillPill
-                skill={{ name: 'Proven skills', skillSources: [EmsiSkillSources.challengeWin] }}
+            <Button
+                link
+                label='Proven skills'
                 onClick={toggleSkillsModal}
+                variant='linkblue'
             />
         </div>
     )
