@@ -3,7 +3,7 @@ import classNames from 'classnames'
 
 import { profileContext, ProfileContextData } from '~/libs/core'
 import { Button, ContentLayout, LinkButton, LoadingCircles } from '~/libs/ui'
-import { EmsiSkillSources, HowSkillsWorkModal, SkillPill } from '~/libs/shared'
+import { HowSkillsWorkModal } from '~/libs/shared'
 
 import { TalentCard } from '../../components/talent-card'
 import { SearchInput } from '../../components/search-input'
