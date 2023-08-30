@@ -1,6 +1,7 @@
-import { FC, useRef, useState } from 'react'
+import { FC, useContext, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
+import { profileContext, ProfileContextData } from '~/libs/core'
 import { ContentLayout, IconOutline } from '~/libs/ui'
 import { Skill } from '~/libs/shared'
 
@@ -8,16 +9,21 @@ import { SearchInput } from '../../components/search-input'
 import { PopularSkills } from '../../components/popular-skills'
 import { TALENT_SEARCH_PATHS } from '../../talent-search.routes'
 import { encodeUrlQuerySearch } from '../../lib/utils/search-query'
+import { triggerSprigSurvey } from '../../lib/services'
 
 import styles from './SearchPage.module.scss'
 
 export const SearchPage: FC = () => {
+    const sprigFlag = useRef(false)
+
     const [params] = useSearchParams()
     const isMissingProfileRoute = params.get('memberNotFound') !== null
 
     const searchInputRef = useRef<HTMLInputElement>()
     const navigate = useNavigate()
     const [skillsFilter, setSkillsFilter] = useState<Skill[]>([])
+
+    const { profile }: ProfileContextData = useContext(profileContext)
 
     function navigateToResults(): void {
         const searchParams = encodeUrlQuerySearch(skillsFilter)
@@ -28,6 +34,18 @@ export const SearchPage: FC = () => {
         setSkillsFilter(filter)
         searchInputRef.current?.focus()
     }
+
+    useEffect(() => {
+        if (!sprigFlag.current) {
+            if (profile?.userId) {
+                triggerSprigSurvey(profile)
+            } else {
+                triggerSprigSurvey()
+            }
+
+            sprigFlag.current = true
+        }
+    }, [profile, skillsFilter])
 
     function renderHeader(): JSX.Element {
         return isMissingProfileRoute ? (
