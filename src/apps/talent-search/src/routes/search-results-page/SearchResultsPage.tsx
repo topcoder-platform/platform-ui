@@ -1,25 +1,21 @@
-import { FC, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { FC, useCallback, useState } from 'react'
 import classNames from 'classnames'
 
-import { profileContext, ProfileContextData } from '~/libs/core'
 import { Button, ContentLayout, LinkButton, LoadingCircles } from '~/libs/ui'
-import { EmsiSkillSources, HowSkillsWorkModal, SkillPill } from '~/libs/shared'
+import { HowSkillsWorkModal } from '~/libs/shared'
 
 import { TalentCard } from '../../components/talent-card'
 import { SearchInput } from '../../components/search-input'
 import { useUrlQuerySearchParms } from '../../lib/utils/search-query'
 import {
     InfiniteTalentMatchesResposne,
-    triggerSprigSurvey,
     useInfiniteTalentMatches,
 } from '../../lib/services'
 
 import styles from './SearchResultsPage.module.scss'
 
 const SearchResultsPage: FC = () => {
-    const sprigFlag = useRef(false)
     const [showSkillsModal, setShowSkillsModal] = useState(false)
-    const { profile }: ProfileContextData = useContext(profileContext)
 
     const [skills, setSkills] = useUrlQuerySearchParms('q')
     const {
@@ -34,19 +30,14 @@ const SearchResultsPage: FC = () => {
 
     const skillsModalTriggerBtn = (
         <div className={styles.skillsPill}>
-            <SkillPill
-                skill={{ name: 'Proven skills', skillSources: [EmsiSkillSources.challengeWin] }}
+            <Button
+                link
+                label='Proven skills'
                 onClick={toggleSkillsModal}
+                variant='linkblue'
             />
         </div>
     )
-
-    useEffect(() => {
-        if (profile?.userId && matches?.length && !sprigFlag.current) {
-            sprigFlag.current = true
-            triggerSprigSurvey(profile)
-        }
-    }, [profile, matches])
 
     return (
         <>
