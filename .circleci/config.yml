@@ -261,6 +261,7 @@ workflows:
                               - dev
                               - justin_fixes
                               - talent_search_fixes
+                              - TAL-79
 
             - deployQa:
                   context: org-global
