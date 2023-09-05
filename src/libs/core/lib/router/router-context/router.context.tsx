@@ -1,10 +1,12 @@
 import { Context, createContext, ReactElement } from 'react'
 
 import { PlatformRoute } from '../platform-route.model'
+import { RouteNavConfig } from '../route-nav-config.model'
 
 export interface RouterContextData {
     activeToolName?: string
     activeToolRoute?: string
+    routeNavConfigs?: RouteNavConfig
     allRoutes: Array<PlatformRoute>
     getChildren: (parent: string) => Array<PlatformRoute>
     getChildRoutes: (parent: string) => Array<ReactElement>

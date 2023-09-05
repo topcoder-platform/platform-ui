@@ -37,7 +37,7 @@ interface NavigationRequest {
 
 const AppHeader: FC<{}> = () => {
 
-    const { activeToolName, activeToolRoute }: RouterContextData = useContext(routerContext)
+    const { activeToolName, activeToolRoute, routeNavConfigs }: RouterContextData = useContext(routerContext)
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
     const { logoutUrl }: ConfigContextValue = useConfigContext()
     const [ready, setReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
@@ -95,6 +95,7 @@ const AppHeader: FC<{}> = () => {
                     sprig: 'disable',
                 },
                 onReady() { setReady(true) },
+                showSalesCta: routeNavConfigs?.showSalesCta,
                 signIn() { window.location.href = authUrlLogin() },
                 signOut() { window.location.href = logoutUrl },
                 signUp() { window.location.href = authUrlSignup() },
@@ -112,6 +113,7 @@ const AppHeader: FC<{}> = () => {
         userInfo,
         profileReady,
         logoutUrl,
+        routeNavConfigs,
     ])
 
     // update uni-nav's tool details
@@ -121,6 +123,7 @@ const AppHeader: FC<{}> = () => {
             'update',
             navElementId,
             {
+                showSalesCta: routeNavConfigs?.showSalesCta,
                 toolName: activeToolName,
                 toolRoot: activeToolRoute,
             },
@@ -129,6 +132,7 @@ const AppHeader: FC<{}> = () => {
         activeToolName,
         activeToolRoute,
         navElementId,
+        routeNavConfigs,
     ])
 
     // update uni-nav's user/auth details
