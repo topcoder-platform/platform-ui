@@ -9,8 +9,6 @@ const Sprig: SprigAPI | undefined = sprigEnvId ? sprig.configure({
 
 export function sprigTriggerForUser(surveyName: string, userId?: number): void {
 
-    // eslint-disable-next-line no-console
-    console.info(`Survey: ${surveyName} User ID: ${userId}`)
     if (!userId) {
         Sprig?.track(surveyName)
         return
