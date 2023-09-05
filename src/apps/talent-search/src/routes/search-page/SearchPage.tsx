@@ -37,12 +37,13 @@ export const SearchPage: FC = () => {
 
     useEffect(() => {
         if (!sprigFlag.current) {
-            sprigFlag.current = true
             if (profile?.userId) {
                 triggerSprigSurvey(profile)
             } else {
                 triggerSprigSurvey()
             }
+
+            sprigFlag.current = true
         }
     }, [profile, skillsFilter])
 
