@@ -19095,9 +19095,9 @@ unist-util-visit@^4.0.0:
     unist-util-is "^5.0.0"
     unist-util-visit-parents "^5.1.1"
 
-"universal-navigation@https://github.com/topcoder-platform/universal-navigation":
-  version "1.0.12"
-  resolved "https://github.com/topcoder-platform/universal-navigation#92b8a638a901dedc0b59edb121161d9dabc8333a"
+"universal-navigation@https://github.com/topcoder-platform/universal-navigation#9e62ddc61d":
+  version "1.0.17"
+  resolved "https://github.com/topcoder-platform/universal-navigation#9e62ddc61d44711e501b02e4c0890c348a3aa96d"
 
 universalify@^0.2.0:
   version "0.2.0"

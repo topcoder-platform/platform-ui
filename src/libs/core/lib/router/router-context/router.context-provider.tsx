@@ -77,6 +77,7 @@ export const RouterProvider: FC<RouterProviderProps> = (props: RouterProviderPro
             isRootRoute: isRootRoute(loggedInRoot, props.rootLoggedOut),
             rootLoggedInRoute: loggedInRoot,
             rootLoggedOutRoute: props.rootLoggedOut,
+            routeNavConfigs: activeRoute?.navConfig,
         }
         setRouteContextData(contextData)
     }

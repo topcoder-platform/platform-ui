@@ -1,3 +1,5 @@
+import { RouteNavConfig } from './route-nav-config.model'
+
 export interface PlatformRoute {
     domain?: string
     alternativePaths?: Array<string>
@@ -9,4 +11,5 @@ export interface PlatformRoute {
     rolesRequired?: Array<string>
     route: string
     title?: string
+    navConfig?: RouteNavConfig
 }

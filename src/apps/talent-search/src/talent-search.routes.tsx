@@ -59,6 +59,9 @@ export const talentSearchRoutes: ReadonlyArray<PlatformRoute> = [
         domain: AppSubdomain.talentSearch,
         element: <TalentSearchAppRoot />,
         id: toolTitle,
+        navConfig: {
+            showSalesCta: true,
+        },
         rolesRequired: isAdminRestricted ? [
             UserRole.administrator,
         ] : undefined,
