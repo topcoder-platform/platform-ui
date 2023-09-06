@@ -36,7 +36,7 @@ export const SearchPage: FC = () => {
     }
 
     useEffect(() => {
-        if (!sprigFlag.current) {
+        if (!sprigFlag.current && skillsFilter && skillsFilter.length > 0) {
             if (profile?.userId) {
                 triggerSprigSurvey(profile)
             } else {
