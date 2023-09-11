@@ -1,6 +1,7 @@
 /* eslint-disable complexity */
 import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
-import { bind, isEmpty, keys } from 'lodash'
+import { bind } from 'lodash'
+import AnnotationsModule from 'highcharts/modules/annotations'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 
@@ -18,8 +19,9 @@ import {
 
 import { ChallengesGrid } from '../ChallengesGrid'
 import { DivisionGrid } from '../DivisionGrid'
+import { useRatingDistroOptions } from '../../hooks'
 
-import { RATING_CHART_CONFIG, RATING_DISTRO_CHART_CONFIG } from './chart-configs'
+import { RATING_CHART_CONFIG } from './chart-configs'
 import styles from './SRMDetailsModal.module.scss'
 
 type SRMViewTypes = 'STATISTICS' | 'SRM DETAILS' | 'PAST SRM'
@@ -29,6 +31,8 @@ interface SRMDetailsModalProps {
     SRMStats: SRMStats | undefined
     profile: UserProfile | undefined
 }
+
+AnnotationsModule(Highcharts)
 
 const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) => {
     const [viewType, setviewType]: [SRMViewTypes, Dispatch<SetStateAction<SRMViewTypes>>]
@@ -56,21 +60,8 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
         filter: 'track=DATA_SCIENCE&subTrack=SRM',
     })
 
-    const ratingDistributionOptions: Highcharts.Options | undefined = useMemo(() => {
-        const ratingDistro: { [key: string]: number } = memberStatsDist?.distribution || {}
-        const options: Highcharts.Options = RATING_DISTRO_CHART_CONFIG
-
-        if (isEmpty(ratingDistro)) return undefined
-
-        options.series = keys(ratingDistro)
-            .map((key: string) => ({
-                data: [ratingDistro[key]],
-                name: key.split('ratingRange')[1],
-                type: 'column',
-            }))
-
-        return options
-    }, [memberStatsDist])
+    const ratingDistributionOptions: Highcharts.Options | undefined
+        = useRatingDistroOptions(memberStatsDist?.distribution || {}, props.SRMStats?.rank.rating)
 
     function toggleViewType(newViewType: SRMViewTypes): void {
         setviewType(newViewType)
