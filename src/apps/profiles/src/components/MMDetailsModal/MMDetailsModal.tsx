@@ -1,5 +1,5 @@
 /* eslint-disable complexity */
-import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useState } from 'react'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 
@@ -7,7 +7,6 @@ import { BaseModal, LoadingSpinner } from '~/libs/ui'
 import {
     MemberStats,
     ratingToCSScolor,
-    StatsHistory,
     UserProfile,
     UserStatsDistributionResponse,
     UserStatsHistory,
@@ -15,9 +14,8 @@ import {
     useStatsHistory,
 } from '~/libs/core'
 
-import { useRatingDistroOptions } from '../../hooks'
+import { useRatingDistroOptions, useRatingHistoryOptions } from '../../hooks'
 
-import { RATING_CHART_CONFIG } from './chart-configs'
 import styles from './MMDetailsModal.module.scss'
 
 type SRMViewTypes = 'STATISTICS' | 'MATCH DETAILS'
@@ -34,21 +32,13 @@ const MMDetailsModal: FC<MMDetailsModalProps> = (props: MMDetailsModalProps) => 
 
     const statsHistory: UserStatsHistory | undefined = useStatsHistory(props.profile?.handle)
 
-    const ratingHistoryOptions: Highcharts.Options | undefined = useMemo(() => {
-        const mmHistory: Array<StatsHistory> = statsHistory?.DATA_SCIENCE?.MARATHON_MATCH?.history || []
-        const options: Highcharts.Options = RATING_CHART_CONFIG
-
-        if (!mmHistory.length) return undefined
-
-        options.series = [{
-            data: mmHistory.sort((a, b) => b.date - a.date)
-                .map((srm: StatsHistory) => ({ name: srm.challengeName, x: srm.date, y: srm.rating })),
-            name: 'Marathon Match Rating',
-            type: 'spline',
-        }]
-
-        return options
-    }, [statsHistory])
+    const ratingHistoryOptions: Highcharts.Options | undefined
+        = useRatingHistoryOptions(
+            statsHistory?.DATA_SCIENCE?.MARATHON_MATCH?.history,
+            'Marathon Match Rating',
+            'date',
+            'rating',
+        )
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
         filter: 'track=DATA_SCIENCE&subTrack=MARATHON_MATCH',

@@ -73,6 +73,8 @@ export function subTrackLabelToHumanName(label: string): string {
             return 'Architecture'
         case 'UI_PROTOTYPE_COMPETITION':
             return 'UI Prototype Competition'
+        case 'IDEA_GENERATION':
+            return 'Idea Generation'
 
         default: return label
     }
