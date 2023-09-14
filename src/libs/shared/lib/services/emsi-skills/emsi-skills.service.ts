@@ -10,7 +10,8 @@ export async function autoCompleteSkills(queryTerm: string): Promise<Skill[]> {
         return Promise.resolve([])
     }
 
-    return xhrGetAsync(`${EnvironmentConfig.API.V5}/emsi-skills/skills/auto-complete?term=${queryTerm}`)
+    const encodedQuery = encodeURIComponent(queryTerm)
+    return xhrGetAsync(`${EnvironmentConfig.API.V5}/emsi-skills/skills/auto-complete?term=${encodedQuery}`)
 }
 
 export type FetchMemberSkillsConfig = {
