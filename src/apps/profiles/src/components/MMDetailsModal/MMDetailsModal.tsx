@@ -1,6 +1,5 @@
 /* eslint-disable complexity */
 import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
-import { isEmpty, keys } from 'lodash'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 
@@ -16,7 +15,9 @@ import {
     useStatsHistory,
 } from '~/libs/core'
 
-import { RATING_CHART_CONFIG, RATING_DISTRO_CHART_CONFIG } from './chart-configs'
+import { useRatingDistroOptions } from '../../hooks'
+
+import { RATING_CHART_CONFIG } from './chart-configs'
 import styles from './MMDetailsModal.module.scss'
 
 type SRMViewTypes = 'STATISTICS' | 'MATCH DETAILS'
@@ -53,21 +54,8 @@ const MMDetailsModal: FC<MMDetailsModalProps> = (props: MMDetailsModalProps) => 
         filter: 'track=DATA_SCIENCE&subTrack=MARATHON_MATCH',
     })
 
-    const ratingDistributionOptions: Highcharts.Options | undefined = useMemo(() => {
-        const ratingDistro: { [key: string]: number } = memberStatsDist?.distribution || {}
-        const options: Highcharts.Options = RATING_DISTRO_CHART_CONFIG
-
-        if (isEmpty(ratingDistro)) return undefined
-
-        options.series = keys(ratingDistro)
-            .map((key: string) => ({
-                data: [ratingDistro[key]],
-                name: key.split('ratingRange')[1],
-                type: 'column',
-            }))
-
-        return options
-    }, [memberStatsDist])
+    const ratingDistributionOptions: Highcharts.Options | undefined
+        = useRatingDistroOptions(memberStatsDist?.distribution || {}, props.MMStats?.rank.rating)
 
     // TODO: Enable this when we have challenges details data
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
