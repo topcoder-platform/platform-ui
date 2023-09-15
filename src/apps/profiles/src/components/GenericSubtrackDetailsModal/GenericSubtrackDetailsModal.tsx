@@ -1,28 +1,53 @@
 /* eslint-disable complexity */
 import { Dispatch, FC, SetStateAction, useState } from 'react'
+import { get } from 'lodash'
+import Highcharts from 'highcharts'
+import HighchartsReact from 'highcharts-react-official'
 
 import { BaseModal } from '~/libs/ui'
 import {
-    MemberStats,
+    MemberStats, UserProfile, UserStatsDistributionResponse, UserStatsHistory, useStatsDistribution, useStatsHistory,
 } from '~/libs/core'
 
 import { numberToFixed } from '../../lib'
+import { useRatingDistroOptions, useRatingHistoryOptions } from '../../hooks'
 
 import styles from './GenericSubtrackDetailsModal.module.scss'
 
-type GenericViewTypes = 'CHALLENGES DETAILS'
+type GenericViewTypes = 'CHALLENGES DETAILS' | 'STATISTICS'
 
 interface GenericSubtrackDetailsModalProps {
     onClose: () => void
     genericStats: MemberStats | undefined
+    chartTitle: string | undefined
+    profile: UserProfile | undefined
+    subTrack: string
     title: string
+    track: string
 }
 
 const GenericSubtrackDetailsModal: FC<GenericSubtrackDetailsModalProps> = (props: GenericSubtrackDetailsModalProps) => {
     // TODO: Enable this when we have challenges details data
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [viewType]: [GenericViewTypes, Dispatch<SetStateAction<GenericViewTypes>>]
-        = useState<GenericViewTypes>('CHALLENGES DETAILS')
+        = useState<GenericViewTypes>('STATISTICS')
+
+    const statsHistory: UserStatsHistory | undefined = useStatsHistory(props.profile?.handle)
+
+    const ratingHistoryOptions: Highcharts.Options | undefined
+        = useRatingHistoryOptions(
+            get(statsHistory, props.track)?.subTracks?.find(
+                (subTrack: any) => subTrack.name === props.subTrack,
+            )?.history,
+            props.chartTitle || '',
+        )
+
+    const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
+        filter: `track=${props.track}&subTrack=${props.subTrack}`,
+    })
+
+    const ratingDistributionOptions: Highcharts.Options | undefined
+        = useRatingDistroOptions(memberStatsDist?.distribution || {}, props.genericStats?.rank.rating)
 
     return (
         <BaseModal
@@ -63,9 +88,7 @@ const GenericSubtrackDetailsModal: FC<GenericSubtrackDetailsModalProps> = (props
                         Average Placement
                     </div>
                 </div>
-
-                {/* TODO: Enable this when we have challenges details data */}
-                {/* <div className={styles.content}>
+                <div className={styles.content}>
                     <div className={styles.contentHeader}>
                         <h4>{viewType}</h4>
                     </div>
@@ -77,8 +100,31 @@ const GenericSubtrackDetailsModal: FC<GenericSubtrackDetailsModalProps> = (props
                             )
 
                         }
+                        {
+                            viewType === 'STATISTICS' && (
+                                <div>
+                                    {
+                                        ratingHistoryOptions && (
+                                            <HighchartsReact
+                                                highcharts={Highcharts}
+                                                options={ratingHistoryOptions}
+                                            />
+                                        )
+                                    }
+                                    {
+                                        ratingDistributionOptions && (
+                                            <HighchartsReact
+                                                highcharts={Highcharts}
+                                                options={ratingDistributionOptions}
+                                            />
+                                        )
+                                    }
+                                </div>
+                            )
+
+                        }
                     </div>
-                </div> */}
+                </div>
             </div>
         </BaseModal>
     )
