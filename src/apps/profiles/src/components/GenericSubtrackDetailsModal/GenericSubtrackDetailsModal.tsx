@@ -6,7 +6,7 @@ import HighchartsReact from 'highcharts-react-official'
 
 import { BaseModal } from '~/libs/ui'
 import {
-    MemberStats, UserProfile, UserStatsDistributionResponse, UserStatsHistory, useStatsDistribution, useStatsHistory,
+    MemberStats, ratingToCSScolor, UserProfile, UserStatsDistributionResponse, UserStatsHistory, useStatsDistribution, useStatsHistory,
 } from '~/libs/core'
 
 import { numberToFixed } from '../../lib'
@@ -47,7 +47,7 @@ const GenericSubtrackDetailsModal: FC<GenericSubtrackDetailsModalProps> = (props
     })
 
     const ratingDistributionOptions: Highcharts.Options | undefined
-        = useRatingDistroOptions(memberStatsDist?.distribution || {}, props.genericStats?.rank.rating)
+        = useRatingDistroOptions(memberStatsDist?.distribution || {}, props.genericStats?.rank?.rating)
 
     return (
         <BaseModal
@@ -59,6 +59,15 @@ const GenericSubtrackDetailsModal: FC<GenericSubtrackDetailsModalProps> = (props
 
             <div className={styles.container}>
                 <div className='member-stat-header'>
+                    <div>
+                        <span
+                            className='member-stat-value'
+                            style={ratingToCSScolor(props.genericStats?.rank.rating || 0)}
+                        >
+                            {props.genericStats?.rank.rating}
+                        </span>
+                        Rating
+                    </div>
                     <div>
                         <span className='member-stat-value'>{props.genericStats?.wins}</span>
                         Wins
@@ -81,12 +90,12 @@ const GenericSubtrackDetailsModal: FC<GenericSubtrackDetailsModalProps> = (props
                         </span>
                         Screening Success Rate
                     </div>
-                    <div>
+                    {/* <div>
                         <span className='member-stat-value'>
                             {numberToFixed(props.genericStats?.avgPlacement || 0)}
                         </span>
                         Average Placement
-                    </div>
+                    </div> */}
                 </div>
                 <div className={styles.content}>
                     <div className={styles.contentHeader}>

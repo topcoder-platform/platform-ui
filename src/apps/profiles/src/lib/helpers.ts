@@ -75,6 +75,8 @@ export function subTrackLabelToHumanName(label: string): string {
             return 'UI Prototype Competition'
         case 'IDEA_GENERATION':
             return 'Idea Generation'
+        case 'RIA_BUILD_COMPETITION':
+            return 'RIA Build Competition'
 
         default: return label
     }

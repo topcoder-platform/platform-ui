@@ -113,6 +113,10 @@ const AssemblyDetailsModal: FC<AssemblyDetailsModalProps> = (props: AssemblyDeta
                             </div>
                         </div> */}
 
+                        <div className={styles.contentHeader}>
+                            <h4>{viewType}</h4>
+                        </div>
+
                         <div className={styles.contentBody}>
                             {
                                 viewType === 'STATISTICS' && (
