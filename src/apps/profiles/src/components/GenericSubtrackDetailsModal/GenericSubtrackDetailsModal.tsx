@@ -6,7 +6,13 @@ import HighchartsReact from 'highcharts-react-official'
 
 import { BaseModal } from '~/libs/ui'
 import {
-    MemberStats, ratingToCSScolor, UserProfile, UserStatsDistributionResponse, UserStatsHistory, useStatsDistribution, useStatsHistory,
+    MemberStats,
+    ratingToCSScolor,
+    UserProfile,
+    UserStatsDistributionResponse,
+    UserStatsHistory,
+    useStatsDistribution,
+    useStatsHistory,
 } from '~/libs/core'
 
 import { numberToFixed } from '../../lib'
