@@ -1,12 +1,11 @@
 /* eslint-disable complexity */
-import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useState } from 'react'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 
 import { BaseModal, LoadingSpinner } from '~/libs/ui'
 import {
     MemberStats,
-    StatsHistory,
     UserProfile,
     UserStatsDistributionResponse,
     UserStatsHistory,
@@ -15,9 +14,8 @@ import {
 } from '~/libs/core'
 
 import { numberToFixed } from '../../lib'
-import { useRatingDistroOptions } from '../../hooks'
+import { useRatingDistroOptions, useRatingHistoryOptions } from '../../hooks'
 
-import { RATING_CHART_CONFIG } from './chart-configs'
 import styles from './CodeDetailsModal.module.scss'
 
 type CodeViewTypes = 'STATISTICS' | 'CHALLENGES DETAILS'
@@ -34,24 +32,11 @@ const CodeDetailsModal: FC<CodeDetailsModalProps> = (props: CodeDetailsModalProp
 
     const statsHistory: UserStatsHistory | undefined = useStatsHistory(props.profile?.handle)
 
-    const ratingHistoryOptions: Highcharts.Options | undefined = useMemo(() => {
-        const codeHistory: Array<StatsHistory> | undefined
-            = statsHistory?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'CODE')?.history
-        const options: Highcharts.Options = RATING_CHART_CONFIG
-
-        if (!codeHistory?.length) return undefined
-
-        options.series = [{
-            data: codeHistory.sort((a, b) => b.date - a.date)
-                .map((testChallenge: StatsHistory) => ({
-                    name: testChallenge.challengeName, x: testChallenge.ratingDate, y: testChallenge.newRating,
-                })),
-            name: 'Code Rating',
-            type: 'spline',
-        }]
-
-        return options
-    }, [statsHistory])
+    const ratingHistoryOptions: Highcharts.Options | undefined
+        = useRatingHistoryOptions(
+            statsHistory?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'CODE')?.history,
+            'Code Rating',
+        )
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
         filter: 'track=DEVELOP&subTrack=CODE',

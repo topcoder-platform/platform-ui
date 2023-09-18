@@ -1,1 +1,2 @@
-export * from './UseRatingDistroOptions'
+export * from './useRatingDistroOptions'
+export * from './useRatingHistoryOptions'

@@ -1,5 +1,5 @@
 /* eslint-disable complexity */
-import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useState } from 'react'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 
@@ -7,7 +7,6 @@ import { BaseModal, LoadingSpinner } from '~/libs/ui'
 import {
     MemberStats,
     ratingToCSScolor,
-    StatsHistory,
     UserProfile,
     UserStatsDistributionResponse,
     UserStatsHistory,
@@ -16,9 +15,8 @@ import {
 } from '~/libs/core'
 
 import { numberToFixed } from '../../lib'
-import { useRatingDistroOptions } from '../../hooks'
+import { useRatingDistroOptions, useRatingHistoryOptions } from '../../hooks'
 
-import { RATING_CHART_CONFIG } from './chart-configs'
 import styles from './ContentCreationDetailsModal.module.scss'
 
 type TestScenViewTypes = 'STATISTICS' | 'CHALLENGES DETAILS'
@@ -35,24 +33,11 @@ const ContentCreationDetailsModal: FC<ContentCreationDetailsModalProps> = (props
 
     const statsHistory: UserStatsHistory | undefined = useStatsHistory(props.profile?.handle)
 
-    const ratingHistoryOptions: Highcharts.Options | undefined = useMemo(() => {
-        const contentCreationHistory: Array<StatsHistory> | undefined
-            = statsHistory?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'CONTENT_CREATION')?.history
-        const options: Highcharts.Options = RATING_CHART_CONFIG
-
-        if (!contentCreationHistory?.length) return undefined
-
-        options.series = [{
-            data: contentCreationHistory.sort((a, b) => b.date - a.date)
-                .map((testChallenge: StatsHistory) => ({
-                    name: testChallenge.challengeName, x: testChallenge.ratingDate, y: testChallenge.newRating,
-                })),
-            name: 'Content Creation Rating',
-            type: 'spline',
-        }]
-
-        return options
-    }, [statsHistory])
+    const ratingHistoryOptions: Highcharts.Options | undefined
+        = useRatingHistoryOptions(
+            statsHistory?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'CONTENT_CREATION')?.history,
+            'Content Creation Rating',
+        )
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
         filter: 'track=DEVELOP&subTrack=CONTENT_CREATION',
