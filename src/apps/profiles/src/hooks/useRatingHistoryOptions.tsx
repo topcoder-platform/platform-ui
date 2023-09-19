@@ -39,7 +39,7 @@ export function useRatingHistoryOptions(
         if (!trackHistory?.length) return undefined
 
         options.series = [{
-            data: trackHistory.sort((a, b) => b.date - a.date)
+            data: trackHistory.sort((a, b) => get(b, dateField) - get(a, dateField))
                 .map((hisChallenge: StatsHistory) => ({
                     name: hisChallenge.challengeName,
                     x: get(hisChallenge, dateField),
