@@ -1,6 +1,7 @@
+import { Skill } from '~/libs/shared'
+
 import { MemberDisplayName } from './MemberDisplayName'
 import MemberAddress from './MemberAddress'
-import MemberEmsiSkill from './MemberEmsiSkill'
 import MemberMaxRating from './MemberMaxRating'
 import MemberStats from './MemberStats'
 
@@ -12,7 +13,7 @@ export default interface Member {
     createdAt: number;
     description: string;
     email: string;
-    emsiSkills: Array <MemberEmsiSkill>;
+    emsiSkills: Array <Skill>;
     firstName: string;
     handle: string;
     homeCountryCode: string;
