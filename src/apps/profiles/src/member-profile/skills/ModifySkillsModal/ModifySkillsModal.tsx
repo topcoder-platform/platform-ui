@@ -15,12 +15,12 @@ const ModifySkillsModal: FC<ModifySkillsModalProps> = (props: ModifySkillsModalP
     const [isSaving, setIsSaving]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const { formInput: emsiFormInput, saveSkills: saveEmsiSkills }: MemberSkillEditor = useMemberSkillEditor()
+    const editor: MemberSkillEditor = useMemberSkillEditor()
 
     function handleModifySkillsSave(): void {
         setIsSaving(true)
 
-        saveEmsiSkills()
+        editor.saveSkills()
             .then(() => {
                 toast.success('Skills updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
                 props.onSave()
@@ -63,7 +63,7 @@ const ModifySkillsModal: FC<ModifySkillsModalProps> = (props: ModifySkillsModalP
                     Understanding your skills will allow us to connect you to the right opportunities.
                 </p>
                 <div className={styles.skillPicker}>
-                    {emsiFormInput}
+                    {editor.formInput}
                 </div>
             </div>
         </BaseModal>
