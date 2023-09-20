@@ -19,7 +19,7 @@ import {
     TCACertification,
     TCACertificationProgress,
     TCACertificationProviderBase,
-    TCAEMSISkillType,
+    TCASkillType,
 } from '../../../lib'
 
 import styles from './TCCertCard.module.scss'
@@ -39,11 +39,11 @@ const EXCERPT_TEXT_LEN: number = 165
 const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
     const desc: string = props.certification.description.slice(0, EXCERPT_TEXT_LEN)
 
-    const { skills, providers, dashedName, emsiSkills }: {
+    const { providers, dashedName, emsiSkills }: {
         skills: string[],
         providers: Array<TCACertificationProviderBase>,
         dashedName: string
-        emsiSkills: TCAEMSISkillType[]
+        emsiSkills: TCASkillType[]
     } = props.certification
 
     const isEnrolled: boolean = props.progress?.status === 'enrolled'
@@ -140,8 +140,7 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
             </p>
 
             <SkillTags
-                emsiSkills={emsiSkills}
-                skills={skills}
+                skills={emsiSkills}
                 courseKey={dashedName}
                 theme={isCompleted ? 'gray' : 'white'}
             />

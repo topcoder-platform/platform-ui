@@ -143,8 +143,7 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                 Skills Covered
             </div>
             <SkillTags
-                emsiSkills={props.certification.emsiSkills}
-                skills={props.certification.skills}
+                skills={props.certification.emsiSkills}
                 courseKey={props.certification.dashedName}
                 theme='gray'
                 expandCount={9}
