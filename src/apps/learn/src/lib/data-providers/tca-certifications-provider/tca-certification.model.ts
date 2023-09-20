@@ -5,7 +5,7 @@ import { TCACertificationCompletionTimeRange } from './tca-certification-complet
 import { TCACertificationProvider } from './tca-certification-provider.model'
 import { TCACertificationProviderBase } from './tca-certification-provider.model-base'
 import { TCACertificationResource } from './tca-certification-resource.model'
-import { TCAEMSISkillType } from './tca-emsi-skill-type'
+import { TCASkillType } from './tca-skill-type'
 
 export interface TCACertification {
     certificationCategory: TCACertificationCategory
@@ -16,7 +16,7 @@ export interface TCACertification {
     createdAt: Date
     dashedName: string
     description: string
-    emsiSkills: Array<TCAEMSISkillType>
+    emsiSkills: Array<TCASkillType>
     id: number
     introText: string
     learnerLevel: TCACertificationLearnLevel

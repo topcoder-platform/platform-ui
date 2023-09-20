@@ -97,10 +97,10 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                     <ExpandableList visible={10} itemLabel='skill'>
                         {
                             memberSkills
-                                .map(memberEMSISkill => (
+                                .map(memberSkill => (
                                     <SkillPill
-                                        skill={memberEMSISkill as unknown as Skill}
-                                        key={memberEMSISkill.id}
+                                        skill={memberSkill as unknown as Skill}
+                                        key={memberSkill.id}
                                         theme='dark'
                                     />
                                 ))

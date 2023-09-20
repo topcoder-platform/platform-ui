@@ -5,7 +5,7 @@ import { Tooltip } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
 
 import { SkillLabel } from '..'
-import { TCAEMSISkillType } from '../../data-providers'
+import { TCASkillType } from '../../data-providers'
 
 import styles from './SkillTags.module.scss'
 
@@ -15,7 +15,7 @@ interface SkillTagsProps {
     label?: string
     theme?: 'white' | 'gray' | undefined
     skills?: Array<string> | null | undefined
-    emsiSkills?: TCAEMSISkillType[]
+    emsiSkills?: TCASkillType[]
 }
 
 const SkillTags: FC<SkillTagsProps> = (props: SkillTagsProps) => {
@@ -24,7 +24,7 @@ const SkillTags: FC<SkillTagsProps> = (props: SkillTagsProps) => {
     const label: string = props.label ?? 'skills taught'
     const tcaEMSIEnabled: boolean = EnvironmentConfig.ENABLE_EMSI_SKILLS || false
 
-    const skills: string[] | TCAEMSISkillType[] = tcaEMSIEnabled ? (props.emsiSkills || []) : (props.skills || [])
+    const skills: string[] | TCASkillType[] = tcaEMSIEnabled ? (props.emsiSkills || []) : (props.skills || [])
 
     return (
         <div className={styles.skills}>
@@ -32,7 +32,7 @@ const SkillTags: FC<SkillTagsProps> = (props: SkillTagsProps) => {
                 <span className={classNames('body-small', styles.infoText)}>{label}</span>
             )}
             {skills?.slice(0, expandCount)
-                .map((skill: string | TCAEMSISkillType) => (
+                .map((skill: string | TCASkillType) => (
                     <SkillLabel
                         skill={skill}
                         theme={theme}
