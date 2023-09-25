@@ -1,5 +1,5 @@
 /* eslint-disable complexity */
-import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useState } from 'react'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 
@@ -7,7 +7,6 @@ import { BaseModal, LoadingSpinner } from '~/libs/ui'
 import {
     MemberStats,
     ratingToCSScolor,
-    StatsHistory,
     UserProfile,
     UserStatsDistributionResponse,
     UserStatsHistory,
@@ -16,9 +15,8 @@ import {
 } from '~/libs/core'
 
 import { numberToFixed } from '../../lib'
-import { useRatingDistroOptions } from '../../hooks'
+import { useRatingDistroOptions, useRatingHistoryOptions } from '../../hooks'
 
-import { RATING_CHART_CONFIG } from './chart-configs'
 import styles from './UIPrototypeDetailsModal.module.scss'
 
 type UIPrototypeViewTypes = 'STATISTICS' | 'CHALLENGES DETAILS'
@@ -35,24 +33,11 @@ const UIPrototypeDetailsModal: FC<UIPrototypeDetailsModalProps> = (props: UIProt
 
     const statsHistory: UserStatsHistory | undefined = useStatsHistory(props.profile?.handle)
 
-    const ratingHistoryOptions: Highcharts.Options | undefined = useMemo(() => {
-        const uiProtypeHistory: Array<StatsHistory> | undefined
-            = statsHistory?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'UI_PROTOTYPE_COMPETITION')?.history
-        const options: Highcharts.Options = RATING_CHART_CONFIG
-
-        if (!uiProtypeHistory?.length) return undefined
-
-        options.series = [{
-            data: uiProtypeHistory.sort((a, b) => b.date - a.date)
-                .map((testChallenge: StatsHistory) => ({
-                    name: testChallenge.challengeName, x: testChallenge.ratingDate, y: testChallenge.newRating,
-                })),
-            name: 'UI Prototype Rating',
-            type: 'spline',
-        }]
-
-        return options
-    }, [statsHistory])
+    const ratingHistoryOptions: Highcharts.Options | undefined
+        = useRatingHistoryOptions(
+            statsHistory?.DEVELOP?.subTracks?.find(subTrack => subTrack.name === 'UI_PROTOTYPE_COMPETITION')?.history,
+            'UI Prototype Rating',
+        )
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
         filter: 'track=DEVELOP&subTrack=UI_PROTOTYPE_COMPETITION',

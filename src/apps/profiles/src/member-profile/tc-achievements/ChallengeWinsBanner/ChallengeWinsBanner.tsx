@@ -355,6 +355,10 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                     onClose={bind(handleChallengeWinModalToggle, this, 'WIREFRAMES')}
                     genericStats={wireframesStats}
                     title='Wireframes'
+                    profile={props.profile}
+                    track='DESIGN'
+                    subTrack='WIREFRAMES'
+                    chartTitle='Wireframes Rating'
                 />
             )}
 
@@ -363,6 +367,10 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                     onClose={bind(handleChallengeWinModalToggle, this, 'FRONT_END_FLASH')}
                     genericStats={frontEndFlashStats}
                     title='Front End Flash'
+                    profile={props.profile}
+                    track='DESIGN'
+                    subTrack='FRONT_END_FLASH'
+                    chartTitle='Front End Flash Rating'
                 />
             )}
 
@@ -371,6 +379,10 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                     onClose={bind(handleChallengeWinModalToggle, this, 'PRINT_OR_PRESENTATION')}
                     genericStats={printPresentationStats}
                     title='Print or Presentation'
+                    profile={props.profile}
+                    track='DESIGN'
+                    subTrack='PRINT_OR_PRESENTATION'
+                    chartTitle='Print or Presentation Rating'
                 />
             )}
 
@@ -379,6 +391,10 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                     onClose={bind(handleChallengeWinModalToggle, this, 'STUDIO_OTHER')}
                     genericStats={studioOtherStats}
                     title='Studio Other'
+                    profile={props.profile}
+                    track='DESIGN'
+                    subTrack='STUDIO_OTHER'
+                    chartTitle='Studio Rating'
                 />
             )}
 
@@ -387,6 +403,10 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                     onClose={bind(handleChallengeWinModalToggle, this, 'APPLICATION_FRONT_END_DESIGN')}
                     genericStats={feDesignStats}
                     title='Application Front End Design'
+                    profile={props.profile}
+                    track='DESIGN'
+                    subTrack='APPLICATION_FRONT_END_DESIGN'
+                    chartTitle='Application Front End Design Rating'
                 />
             )}
 
@@ -395,6 +415,10 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                     onClose={bind(handleChallengeWinModalToggle, this, 'BANNERS_OR_ICONS')}
                     genericStats={bannersIconsStats}
                     title='Banners or Icons'
+                    profile={props.profile}
+                    track='DESIGN'
+                    subTrack='BANNERS_OR_ICONS'
+                    chartTitle='Banners or Icons Rating'
                 />
             )}
 
@@ -403,6 +427,10 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                     onClose={bind(handleChallengeWinModalToggle, this, 'WIDGET_OR_MOBILE_SCREEN_DESIGN')}
                     genericStats={widgetMobileStats}
                     title='Widget or Mobile Screen Design'
+                    profile={props.profile}
+                    track='DESIGN'
+                    subTrack='WIDGET_OR_MOBILE_SCREEN_DESIGN'
+                    chartTitle='Widget or Mobile Screen Design Rating'
                 />
             )}
 
@@ -411,6 +439,10 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                     onClose={bind(handleChallengeWinModalToggle, this, 'TEST_SUITES')}
                     genericStats={testSuitesStats}
                     title='Test Suites'
+                    profile={props.profile}
+                    track='DEVELOP'
+                    subTrack='TEST_SUITES'
+                    chartTitle='Test Suites Rating'
                 />
             )}
 
@@ -419,6 +451,10 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                     onClose={bind(handleChallengeWinModalToggle, this, 'SPECIFICATION')}
                     genericStats={specStats}
                     title='Specification'
+                    profile={props.profile}
+                    track='DEVELOP'
+                    subTrack='SPECIFICATION'
+                    chartTitle='Specification Rating'
                 />
             )}
 
@@ -427,6 +463,10 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                     onClose={bind(handleChallengeWinModalToggle, this, 'DEVELOPMENT')}
                     genericStats={developmentStats}
                     title='Development'
+                    profile={props.profile}
+                    track='DEVELOP'
+                    subTrack='DEVELOPMENT'
+                    chartTitle='Development Rating'
                 />
             )}
 
@@ -435,6 +475,10 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                     onClose={bind(handleChallengeWinModalToggle, this, 'ARCHITECTURE')}
                     genericStats={architectureStats}
                     title='Architecture'
+                    profile={props.profile}
+                    track='DEVELOP'
+                    subTrack='ARCHITECTURE'
+                    chartTitle='Architecture Rating'
                 />
             )}
 
@@ -443,6 +487,10 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                     onClose={bind(handleChallengeWinModalToggle, this, 'COPILOT_POSTING')}
                     genericStats={copilotPostingStats}
                     title='Copilot Posting'
+                    profile={props.profile}
+                    track='DEVELOP'
+                    subTrack='COPILOT_POSTING'
+                    chartTitle='Copilot Posting Rating'
                 />
             )}
 
@@ -451,6 +499,10 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                     onClose={bind(handleChallengeWinModalToggle, this, 'DESIGN')}
                     genericStats={designStats}
                     title='Design'
+                    profile={props.profile}
+                    track='DEVELOP'
+                    subTrack='DESIGN'
+                    chartTitle='Design Rating'
                 />
             )}
 

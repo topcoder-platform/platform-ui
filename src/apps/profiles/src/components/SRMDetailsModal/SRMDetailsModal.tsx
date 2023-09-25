@@ -1,5 +1,5 @@
 /* eslint-disable complexity */
-import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useState } from 'react'
 import { bind } from 'lodash'
 import AnnotationsModule from 'highcharts/modules/annotations'
 import Highcharts from 'highcharts'
@@ -9,7 +9,6 @@ import { BaseModal, Button, LoadingSpinner } from '~/libs/ui'
 import {
     ratingToCSScolor,
     SRMStats,
-    StatsHistory,
     UserProfile,
     UserStatsDistributionResponse,
     UserStatsHistory,
@@ -19,9 +18,8 @@ import {
 
 import { ChallengesGrid } from '../ChallengesGrid'
 import { DivisionGrid } from '../DivisionGrid'
-import { useRatingDistroOptions } from '../../hooks'
+import { useRatingDistroOptions, useRatingHistoryOptions } from '../../hooks'
 
-import { RATING_CHART_CONFIG } from './chart-configs'
 import styles from './SRMDetailsModal.module.scss'
 
 type SRMViewTypes = 'STATISTICS' | 'SRM DETAILS' | 'PAST SRM'
@@ -40,21 +38,13 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
 
     const statsHistory: UserStatsHistory | undefined = useStatsHistory(props.profile?.handle)
 
-    const ratingHistoryOptions: Highcharts.Options | undefined = useMemo(() => {
-        const srmHistory: Array<StatsHistory> = statsHistory?.DATA_SCIENCE?.SRM?.history || []
-        const options: Highcharts.Options = RATING_CHART_CONFIG
-
-        if (!srmHistory.length) return undefined
-
-        options.series = [{
-            data: srmHistory.sort((a, b) => b.date - a.date)
-                .map((srm: StatsHistory) => ({ name: srm.challengeName, x: srm.date, y: srm.rating })),
-            name: 'SRM Rating',
-            type: 'spline',
-        }]
-
-        return options
-    }, [statsHistory])
+    const ratingHistoryOptions: Highcharts.Options | undefined
+        = useRatingHistoryOptions(
+            statsHistory?.DATA_SCIENCE?.SRM?.history,
+            'SRM Rating',
+            'date',
+            'rating',
+        )
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
         filter: 'track=DATA_SCIENCE&subTrack=SRM',
