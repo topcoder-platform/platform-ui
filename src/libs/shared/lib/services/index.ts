@@ -1,1 +1,1 @@
-export * from './standard-skills'
+export * from './emsi-skills'

@@ -5,14 +5,14 @@ import { Skill } from '~/libs/shared'
 
 export const encodeUrlQuerySearch = (skills: Skill[]): string => (
     skills
-        .map(s => `q=${encodeURIComponent(`${s.name}::${s.id}`)}`)
+        .map(s => `q=${encodeURIComponent(`${s.name}::${s.emsiId}`)}`)
         .join('&')
 )
 
 export const parseUrlQuerySearch = (params: string[]): Skill[] => (
     params.map(p => {
-        const [name, id] = p.split('::')
-        return { id, name }
+        const [name, emsiId] = p.split('::')
+        return { emsiId, name }
     })
 )
 

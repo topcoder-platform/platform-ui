@@ -1,11 +1,11 @@
 import { FC } from 'react'
 
-import { TCASkillType } from '../../data-providers'
+import { TCAEMSISkillType } from '../../data-providers'
 
 import styles from './SkillLabel.module.scss'
 
 interface SkillLabelProps {
-    skill: string | TCASkillType
+    skill: string | TCAEMSISkillType
     theme: 'white' | 'gray' | undefined
 }
 

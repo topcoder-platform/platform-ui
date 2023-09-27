@@ -129,7 +129,7 @@ const TalentCard: FC<TalentCardProps> = props => {
                     <div ref={restLabelRef} className={styles.unmatchedSkills}>+0 more matched skill</div>
                     {matchedSkills.length > 0 && matchedSkills.map(skill => (
                         <SkillPill
-                            key={skill.id}
+                            key={skill.skillId}
                             theme='dark'
                             skill={skill}
                         />

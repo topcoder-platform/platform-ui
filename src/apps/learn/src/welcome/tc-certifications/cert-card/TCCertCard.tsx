@@ -19,7 +19,7 @@ import {
     TCACertification,
     TCACertificationProgress,
     TCACertificationProviderBase,
-    TCASkillType,
+    TCAEMSISkillType,
 } from '../../../lib'
 
 import styles from './TCCertCard.module.scss'
@@ -43,7 +43,7 @@ const TCCertCard: FC<TCCertCardProps> = (props: TCCertCardProps) => {
         skills: string[],
         providers: Array<TCACertificationProviderBase>,
         dashedName: string
-        emsiSkills: TCASkillType[]
+        emsiSkills: TCAEMSISkillType[]
     } = props.certification
 
     const isEnrolled: boolean = props.progress?.status === 'enrolled'

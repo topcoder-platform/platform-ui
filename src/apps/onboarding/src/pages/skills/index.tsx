@@ -16,12 +16,12 @@ export const PageSkillsContent: FC<{
 }> = props => {
     const navigate: any = useNavigate()
     const [loading, setLoading] = useState(false)
-    const editor: MemberSkillEditor = useMemberSkillEditor()
+    const { formInput: emsiFormInput, saveSkills: saveEmsiSkills }: MemberSkillEditor = useMemberSkillEditor()
 
     async function saveSkills(): Promise<void> {
         setLoading(true)
         try {
-            await editor.saveSkills()
+            await saveEmsiSkills()
         } catch (error) {
         }
 
@@ -46,7 +46,7 @@ export const PageSkillsContent: FC<{
                         Understanding your skills will allow us to connect you to the right opportunities.
                     </span>
                     <div className='mt-16 full-width color-black-80'>
-                        {editor.formInput}
+                        {emsiFormInput}
                     </div>
                 </div>
             </div>

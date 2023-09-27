@@ -23,7 +23,7 @@ export function useFetchTalentMatches(
     pageSize: number,
 ): TalentMatchesResponse {
     const searchParams = [
-        ...skills.map(s => `id=${s.id}`),
+        ...skills.map(s => `skillId=${s.emsiId}`),
         'sortBy=skillScore',
         'includeStats=false',
         `page=${page}`,
