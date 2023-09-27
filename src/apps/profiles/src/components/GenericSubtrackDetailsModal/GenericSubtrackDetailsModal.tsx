@@ -68,9 +68,9 @@ const GenericSubtrackDetailsModal: FC<GenericSubtrackDetailsModalProps> = (props
                     <div>
                         <span
                             className='member-stat-value'
-                            style={ratingToCSScolor(props.genericStats?.rank.rating || 0)}
+                            style={ratingToCSScolor(props.genericStats?.rank?.rating || 0)}
                         >
-                            {props.genericStats?.rank.rating}
+                            {props.genericStats?.rank?.rating || 0}
                         </span>
                         Rating
                     </div>

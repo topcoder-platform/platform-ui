@@ -148,6 +148,11 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
             () => props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'DESIGN'),
             [props.memberStats],
         )
+    const conceptStats: MemberStats | undefined
+        = useMemo(
+            () => props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'CONCEPTUALIZATION'),
+            [props.memberStats],
+        )
 
     const [modalVisibilityMap, setModalVisibilityMap]: [
         { [key: string]: boolean },
@@ -159,6 +164,7 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
         BANNERS_OR_ICONS: false,
         BUG_HUNT: false,
         CODE: false,
+        CONCEPTUALIZATION: false,
         CONTENT_CREATION: false,
         COPILOT: false,
         COPILOT_POSTING: false,
@@ -503,6 +509,18 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                     track='DEVELOP'
                     subTrack='DESIGN'
                     chartTitle='Design Rating'
+                />
+            )}
+
+            {modalVisibilityMap.CONCEPTUALIZATION && (
+                <GenericSubtrackDetailsModal
+                    onClose={bind(handleChallengeWinModalToggle, this, 'CONCEPTUALIZATION')}
+                    genericStats={conceptStats}
+                    title='Conceptualization'
+                    profile={props.profile}
+                    track='DEVELOP'
+                    subTrack='CONCEPTUALIZATION'
+                    chartTitle='Conceptualization Rating'
                 />
             )}
 
