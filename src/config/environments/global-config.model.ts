@@ -18,9 +18,6 @@ export interface GlobalConfig {
         SERVICE: string
     }
     REAUTH_OFFSET: number
-    SPRIG: {
-        ENVIRONMENT_ID: string | undefined
-    }
     STRIPE: {
         API_KEY: string
         API_VERSION: string | undefined
@@ -42,4 +39,9 @@ export interface GlobalConfig {
     DICE_VERIFY_URL: string
     RESTRICT_TALENT_SEARCH: boolean
     SEGMENT_ANALYTICS_KEY: string
+    USERFLOW_SURVEYS: {
+        ACCOUNT_SETTINGS: string
+        PROFILES: string
+        TALENTSEARCH: string
+    }
 }

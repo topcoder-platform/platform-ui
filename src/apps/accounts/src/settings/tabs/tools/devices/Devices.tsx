@@ -20,7 +20,7 @@ import {
     SettingSection,
     SmartphoneIcon,
     TabletIcon,
-    triggerSprigSurvey,
+    triggerSurvey,
     WearableIcon,
 } from '~/apps/accounts/src/lib'
 
@@ -172,7 +172,7 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
             .then(() => {
                 toast.success('Device deleted successfully')
                 setDeviceTypesData(updatedDeviceTypesData)
-                triggerSprigSurvey(props.profile)
+                triggerSurvey()
             })
             .catch(() => {
                 toast.error('Error deleting Device')
@@ -278,7 +278,7 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
                             ...updatedDeviceTypesData || [],
                             deviceUpdate,
                         ])
-                        triggerSprigSurvey(props.profile)
+                        triggerSurvey()
                     })
                     .catch(() => {
                         toast.error('Error updating Device')

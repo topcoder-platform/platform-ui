@@ -9,7 +9,7 @@ import {
     DesignTrackIcon,
     DevelopmentTrackIcon,
     SettingSection,
-    triggerSprigSurvey,
+    triggerSurvey,
 } from '~/apps/accounts/src/lib'
 
 import styles from './Tracks.module.scss'
@@ -54,7 +54,7 @@ const Tracks: FC<TracksProps> = (props: TracksProps) => {
                     } as any,
                 })
                 toast.success('Your profile has been updated.')
-                triggerSprigSurvey(props.profile)
+                triggerSurvey()
             })
             .catch(() => {
                 toast.error('Failed to update your profile.')

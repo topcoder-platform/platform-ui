@@ -261,6 +261,7 @@ workflows:
                               - dev
                               - justin_fixes
                               - talent_search_fixes
+                              - PROD-4398_integrate-userflow-remove-sprig
 
             - deployQa:
                   context: org-global

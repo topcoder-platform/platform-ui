@@ -12,7 +12,7 @@ import {
     OtherServiceProviderIcon,
     SettingSection,
     TelevisionServiceProviderIcon,
-    triggerSprigSurvey,
+    triggerSurvey,
 } from '~/apps/accounts/src/lib'
 
 import { serviceProviderTypes } from './service-provider-types.config'
@@ -151,7 +151,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                             ...updatedServiceProviderTypesData || [],
                             serviceProviderTypeUpdate,
                         ])
-                        triggerSprigSurvey(props.profile)
+                        triggerSurvey()
                     })
                     .catch(() => {
                         toast.error('Error updating Service Provider')
@@ -180,7 +180,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                             ...serviceProviderTypesData || [],
                             serviceProviderTypeUpdate,
                         ])
-                        triggerSprigSurvey(props.profile)
+                        triggerSurvey()
                     })
                     .catch(() => {
                         toast.error('Error adding new Service Provider')
@@ -220,7 +220,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
             .then(() => {
                 toast.success('Service Provider deleted successfully')
                 setServiceProviderTypesData(updatedServiceProviderTypesData)
-                triggerSprigSurvey(props.profile)
+                triggerSurvey()
             })
             .catch(() => {
                 toast.error('Error deleting Service Provider')
