@@ -91,9 +91,6 @@ const AppHeader: FC<{}> = () => {
             navElementId,
             {
                 handleNavigation: navigationHandler,
-                integrations: {
-                    sprig: 'disable',
-                },
                 onReady() { setReady(true) },
                 showSalesCta: routeNavConfigs?.showSalesCta,
                 signIn() { window.location.href = authUrlLogin() },

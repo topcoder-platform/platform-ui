@@ -1,2 +1,2 @@
 export * from './helpers'
-export * from './sprig-survey'
+export * from './userflow-survey'

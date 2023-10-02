@@ -13,7 +13,7 @@ import {
     useCountryLookup,
     UserProfile,
 } from '~/libs/core'
-import { triggerSprigSurvey } from '~/apps/accounts/src/lib'
+import { triggerSurvey } from '~/apps/accounts/src/lib'
 
 import styles from './MemberAddress.module.scss'
 
@@ -88,7 +88,7 @@ const MemberAddress: FC<MemberAddressProps> = (props: MemberAddressProps) => {
             .then(() => {
                 toast.success('Your account has been updated.', { position: toast.POSITION.BOTTOM_RIGHT })
                 setFormErrors({})
-                triggerSprigSurvey(props.profile)
+                triggerSurvey()
             })
             .catch(() => {
                 toast.error('Something went wrong. Please try again.', { position: toast.POSITION.BOTTOM_RIGHT })

@@ -18,9 +18,6 @@ export interface GlobalConfig {
         SERVICE: string
     }
     REAUTH_OFFSET: number
-    SPRIG: {
-        ENVIRONMENT_ID: string | undefined
-    }
     STRIPE: {
         API_KEY: string
         API_VERSION: string | undefined

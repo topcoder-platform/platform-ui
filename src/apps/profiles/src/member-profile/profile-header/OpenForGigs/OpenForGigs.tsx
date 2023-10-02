@@ -8,7 +8,7 @@ import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } fro
 import { EditMemberPropertyBtn } from '../../../components'
 import { OpenForGigsModifyModal } from '../OpenForGigsModifyModal'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../../config'
-import { triggerSprigSurvey } from '../../../lib'
+import { triggerSurvey } from '../../../lib'
 
 import styles from './OpenForGigs.module.scss'
 
@@ -57,7 +57,7 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
             setIsEditMode(false)
             mutateTraits()
             props.refreshProfile(props.profile.handle)
-            triggerSprigSurvey(props.profile)
+            triggerSurvey()
         }, 1000)
     }
 

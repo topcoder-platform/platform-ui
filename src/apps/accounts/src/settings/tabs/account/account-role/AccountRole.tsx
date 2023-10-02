@@ -2,7 +2,7 @@ import { Dispatch, FC, SetStateAction, useState } from 'react'
 
 import { BaseModal, Button, Collapsible } from '~/libs/ui'
 import { authUrlLogout, updatePrimaryMemberRoleAsync, UserProfile } from '~/libs/core'
-import { triggerSprigSurvey } from '~/apps/accounts/src/lib'
+import { triggerSurvey } from '~/apps/accounts/src/lib'
 
 import styles from './AccountRole.module.scss'
 
@@ -36,7 +36,7 @@ const AccountRole: FC<AccountRoleProps> = (props: AccountRoleProps) => {
                 .then(() => {
                     setMemberRole(newRole)
                     setIsRoleChangeConfirmed(true)
-                    triggerSprigSurvey(props.profile)
+                    triggerSurvey()
                 })
                 .finally(() => {
                     setIsUpdating(false)
