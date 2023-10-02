@@ -39,4 +39,9 @@ export interface GlobalConfig {
     DICE_VERIFY_URL: string
     RESTRICT_TALENT_SEARCH: boolean
     SEGMENT_ANALYTICS_KEY: string
+    USERFLOW_SURVEYS: {
+        ACCOUNT_SETTINGS: string
+        PROFILES: string
+        TALENTSEARCH: string
+    }
 }

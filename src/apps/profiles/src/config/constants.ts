@@ -1,3 +1,5 @@
+import { EnvironmentConfig } from '~/config'
+
 export enum TRACKS_PROFILE_MAP {
     DEVELOP = 'Developer',
     DESIGN = 'Designer',
@@ -21,4 +23,4 @@ export enum profileEditModes {
     onboardingCompleted = 'onboardingCompleted',
 }
 
-export const CES_SURVEY_ID = '5cfae36f-0700-41c4-8938-0add4037acb2'
+export const CES_SURVEY_ID = EnvironmentConfig.USERFLOW_SURVEYS.PROFILES

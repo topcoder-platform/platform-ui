@@ -72,3 +72,9 @@ export const DICE_VERIFY_URL = get({
 
 export const RESTRICT_TALENT_SEARCH = getReactEnv<boolean>('RESTRICT_TALENT_SEARCH', false)
 export const SEGMENT_ANALYTICS_KEY = getReactEnv<string>('SEGMENT_ANALYTICS_KEY', undefined)
+
+export const USERFLOW_SURVEYS = {
+    ACCOUNT_SETTINGS: getReactEnv<string>('USERFLOW_SURVEY_ACCOUNT_SETTINGS', '3e704fe0-dff4-4af4-abee-383ed162729e'),
+    PROFILES: getReactEnv<string>('USERFLOW_SURVEY_PROFILES', '5cfae36f-0700-41c4-8938-0add4037acb2'),
+    TALENTSEARCH: getReactEnv<string>('USERFLOW_SURVEY_TALENTSEARCH', 'd1030c93-dd36-4ae0-b5d0-95004b8e9d32'),
+}
