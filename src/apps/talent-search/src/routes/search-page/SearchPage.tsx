@@ -1,7 +1,6 @@
-import { FC, useContext, useEffect, useRef, useState } from 'react'
+import { FC, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
-import { profileContext, ProfileContextData } from '~/libs/core'
 import { ContentLayout, IconOutline } from '~/libs/ui'
 import { Skill } from '~/libs/shared'
 
@@ -9,12 +8,12 @@ import { SearchInput } from '../../components/search-input'
 import { PopularSkills } from '../../components/popular-skills'
 import { TALENT_SEARCH_PATHS } from '../../talent-search.routes'
 import { encodeUrlQuerySearch } from '../../lib/utils/search-query'
-import { triggerSprigSurvey } from '../../lib/services'
+import { triggerSurvey } from '../../lib/services'
 
 import styles from './SearchPage.module.scss'
 
 export const SearchPage: FC = () => {
-    const sprigFlag = useRef(false)
+    const surveyFlag = useRef(false)
 
     const [params] = useSearchParams()
     const isMissingProfileRoute = params.get('memberNotFound') !== null
@@ -22,8 +21,6 @@ export const SearchPage: FC = () => {
     const searchInputRef = useRef<HTMLInputElement>()
     const navigate = useNavigate()
     const [skillsFilter, setSkillsFilter] = useState<Skill[]>([])
-
-    const { profile }: ProfileContextData = useContext(profileContext)
 
     function navigateToResults(): void {
         const searchParams = encodeUrlQuerySearch(skillsFilter)
@@ -36,16 +33,12 @@ export const SearchPage: FC = () => {
     }
 
     useEffect(() => {
-        if (!sprigFlag.current && skillsFilter && skillsFilter.length > 0) {
-            if (profile?.userId) {
-                triggerSprigSurvey(profile)
-            } else {
-                triggerSprigSurvey()
-            }
+        if (!surveyFlag.current && skillsFilter && skillsFilter.length > 0) {
+            triggerSurvey()
 
-            sprigFlag.current = true
+            surveyFlag.current = true
         }
-    }, [profile, skillsFilter])
+    }, [skillsFilter])
 
     function renderHeader(): JSX.Element {
         return isMissingProfileRoute ? (

@@ -7,7 +7,7 @@ import { MemberEmailPreferenceAPI, updateMemberEmailPreferencesAsync, useMemberE
 import { Button, FormToggleSwitch, LoadingSpinner } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
 
-import { EmailIcon, ForumIcon, SettingSection, triggerSprigSurvey } from '../../../lib'
+import { EmailIcon, ForumIcon, SettingSection, triggerSurvey } from '../../../lib'
 
 import { newsletters, programs, subscribeLink, unsubscribeLink } from './preferences.config'
 import styles from './PreferencesTab.module.scss'
@@ -43,7 +43,7 @@ const PreferencesTab: FC<PreferencesTabProps> = (props: PreferencesTabProps) => 
             .then(() => {
                 toast.success('Your email preferences ware updated.')
                 mutateEmailPreferencesData()
-                triggerSprigSurvey(props.profile)
+                triggerSurvey()
             })
             .catch(() => {
                 toast.error('Something went wrong. Please try again later.')
