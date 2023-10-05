@@ -1,12 +1,12 @@
 import { useCallback } from 'react'
 
-import { EmsiSkill, Skill } from '~/libs/shared'
+import { Skill } from '~/libs/shared'
 
-export type IsMatchingSkillFn = (skill: EmsiSkill) => boolean
+export type IsMatchingSkillFn = (skill: Pick<Skill, 'id'>) => boolean
 
 export const useIsMatchingSkill = (skills: Skill[]): IsMatchingSkillFn => {
-    const isMatchingSkill = useCallback((skill: EmsiSkill) => (
-        !!skills.find(s => skill.skillId === s.emsiId)
+    const isMatchingSkill = useCallback((skill: Pick<Skill, 'id'>) => (
+        !!skills.find(s => skill.id === s.id)
     ), [skills])
 
     return isMatchingSkill

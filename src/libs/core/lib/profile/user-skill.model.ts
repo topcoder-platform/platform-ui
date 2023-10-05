@@ -1,25 +1,19 @@
-export type skillSources = 'USER_ENTERED' | 'CHALLENGE'
-
-export type UserSkill = {
-    id: number
-    hidden: boolean
-    score: number
-    sources: skillSources[]
-    tagName: string
+export enum SkillSources {
+    selfPicked = 'SelfPicked',
+    challengeWin = 'ChallengeWin',
+    tcaCertified = 'TCACertified',
 }
 
-export type EMSISkillSources = 'TCACertified' | 'SelfPicked' | 'ChallengeWin'
-
-export type UserEMSISkill = {
+export type UserSkill = {
     id: string
     name: string
-    skillCategory: {
+    skillCategory?: {
         name: string
         id: number
     }
-    skillId: string
-    skillSources: Array<EMSISkillSources>
-    skillSubcategory: {
+    skillId?: string
+    skillSources?: SkillSources[]
+    skillSubcategory?: {
         name: string
         id: number
     }
