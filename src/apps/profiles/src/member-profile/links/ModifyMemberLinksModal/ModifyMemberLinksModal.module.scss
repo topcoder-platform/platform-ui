@@ -1,5 +1,10 @@
 @import '@libs/ui/styles/includes';
 
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
 .memberLinksModalBody {
     min-height: 300px;
 }
@@ -11,21 +16,13 @@
 }
 
 .links {
-    margin-bottom: $sp-4;
-    padding: $sp-4 0 $sp-2;
-
-    @include ltelg {
-        display: flex;
-        flex-direction: column;
-    }
-
-    &.noLinks {
-        margin-bottom: 0;
-        padding: 0;
-        border: none;
-    }
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    margin-top: $sp-4;
 }
 
 .formCTAs {
-    margin-top: $sp-2;
+    margin-top: $sp-4;
+    margin-bottom: $sp-4;
 }

@@ -94,7 +94,7 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
                                 href={trait.url}
                                 target='_blank'
                                 rel='noreferrer'
-                                key={`link-${trait.name}`}
+                                key={`link-${trait.name}-${trait.url}`}
                             >
                                 {renderLinkIcon(trait.name)}
                             </a>
