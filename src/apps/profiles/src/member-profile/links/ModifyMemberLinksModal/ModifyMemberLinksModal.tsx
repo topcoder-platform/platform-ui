@@ -202,6 +202,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                         hideRemoveIcon={!defaultLinkedIn.url}
                         allowEmptyUrl
                         disabled={isSaving}
+                        labelUrlField='Linkedin'
                     />
                     <LinkForm
                         link={defaultGitHub as UserLink}
@@ -221,6 +222,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                         hideRemoveIcon={!defaultGitHub.url}
                         allowEmptyUrl
                         disabled={isSaving}
+                        labelUrlField='Git'
                     />
                     <LinkForm
                         link={defaultInstagram as UserLink}
@@ -240,6 +242,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                         hideRemoveIcon={!defaultInstagram.url}
                         allowEmptyUrl
                         disabled={isSaving}
+                        labelUrlField='Instagram'
                     />
                 </div>
 

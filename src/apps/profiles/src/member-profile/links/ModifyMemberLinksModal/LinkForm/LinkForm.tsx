@@ -25,6 +25,7 @@ interface LinkFormProps {
     removeIcon?: FC<SVGProps<SVGSVGElement>>
     hideRemoveIcon?: boolean
     allowEmptyUrl?: boolean
+    labelUrlField?: string
     disabled?: boolean
 }
 
@@ -139,7 +140,7 @@ const LinkForm: ForwardRefExoticComponent<
 
                 <InputText
                     name='url'
-                    label='URL'
+                    label={props.labelUrlField || 'URL'}
                     error={formErrors.url}
                     placeholder={props.placeholder ?? 'Enter a URL'}
                     dirty
