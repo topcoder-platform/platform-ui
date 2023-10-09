@@ -45,7 +45,11 @@ const InputText: FC<InputTextProps> = (props: InputTextProps) => {
             autoComplete={props.autocomplete}
             checked={defaultValue === 'on'}
             className={cn(styles['form-input-text'], styles[props.type])}
-            defaultValue={defaultValue}
+            defaultValue={
+                props.forceUpdateValue
+                    ? undefined
+                    : defaultValue
+            }
             value={
                 props.forceUpdateValue
                     ? (props.value as string | ReadonlyArray<string> | number | undefined)

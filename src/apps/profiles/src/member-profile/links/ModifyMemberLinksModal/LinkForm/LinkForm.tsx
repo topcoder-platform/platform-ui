@@ -147,7 +147,7 @@ const LinkForm: ForwardRefExoticComponent<
                     tabIndex={0}
                     type='text'
                     onChange={handleURLChange}
-                    value={selectedLinkURL}
+                    value={selectedLinkURL || ''}
                     forceUpdateValue
                     disabled={props.disabled}
                 />

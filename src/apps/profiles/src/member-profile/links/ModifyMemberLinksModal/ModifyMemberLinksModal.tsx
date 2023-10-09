@@ -1,4 +1,4 @@
-import { find, findIndex, reject, uniqBy } from 'lodash'
+import { find, findIndex, omit, reject, uniqBy } from 'lodash'
 import { FC, useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
@@ -76,7 +76,11 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
             setDefaultInstagram(memberLinks.splice(firstInstagramIndex, 1)[0])
         }
 
-        setCurrentMemberLinks(memberLinks)
+        setCurrentMemberLinks(memberLinks.map((item: UserTrait, index: number) => ({
+            ...item,
+            id: `id-${index}-${(new Date())
+                .getTime()}`,
+        })))
 
     }, [props.memberLinks])
 
@@ -89,7 +93,11 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                 ...currentMemberLinks,
             ].filter(l => l.name && l.url), e => `${e.name}-${e.url}`)
             if (!find(updatedLinks, newLink)) {
-                setCurrentMemberLinks(links => [...links, newLink])
+                setCurrentMemberLinks(links => [...links, {
+                    ...newLink,
+                    id: `id-${(new Date())
+                        .getTime()}`,
+                }])
             }
 
             addNewLinkRef.current?.resetForm()
@@ -127,12 +135,20 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
         const updatedPersonalizationTraits: UserTrait[]
             = reject(props.memberPersonalizationTraitsFullData, (trait: UserTrait) => trait.links)
 
-        const updatedLinks: UserTrait[] = uniqBy([
-            defaultLinkedIn,
-            defaultGitHub,
-            defaultInstagram,
-            ...currentMemberLinks,
-        ].filter(l => l.name && l.url), e => `${e.name}-${e.url}`)
+        const updatedLinks: UserTrait[] = uniqBy(
+            [
+                defaultLinkedIn,
+                defaultGitHub,
+                defaultInstagram,
+                ...currentMemberLinks,
+            ].filter(
+                l => l.name && l.url,
+            ),
+            e => `${e.name}-${e.url}`,
+        )
+            .map(
+                item => omit(item, ['id']),
+            )
 
         updateOrCreateMemberTraitsAsync(props.profile.handle, [{
             categoryName: UserTraitCategoryNames.personalization,
@@ -273,7 +289,10 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                                 <LinkForm
                                     link={trait as UserLink}
                                     onSave={function onSave(link: UserLink) {
-                                        handleSaveLink(link, i)
+                                        handleSaveLink({
+                                            ...trait,
+                                            ...link,
+                                        }, i)
                                     }}
                                     onRemove={function onRemove() {
                                         handleRemoveLink(i)
@@ -281,6 +300,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                                     allowEditType
                                     placeholder='http://'
                                     disabled={isSaving}
+                                    key={trait.id}
                                 />
                             ))
                         }
