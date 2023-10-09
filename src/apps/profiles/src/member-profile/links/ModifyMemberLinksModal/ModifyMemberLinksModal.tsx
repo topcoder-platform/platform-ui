@@ -1,9 +1,9 @@
-import { reject } from 'lodash'
-import { FC, useMemo, useRef, useState } from 'react'
+import { find, findIndex, reject, uniqBy } from 'lodash'
+import { FC, useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
-import { BaseModal, Button } from '~/libs/ui'
+import { BaseModal, Button, IconOutline } from '~/libs/ui'
 import {
     updateOrCreateMemberTraitsAsync,
     UserProfile,
@@ -12,7 +12,8 @@ import {
     UserTraitIds,
 } from '~/libs/core'
 
-import { LinkEntry } from './LinkEntry'
+import { LinkForm, UserLink } from './LinkForm'
+import { LinkFormHandle } from './LinkForm/LinkForm'
 import styles from './ModifyMemberLinksModal.module.scss'
 
 interface ModifyMemberLinksModalProps {
@@ -29,45 +30,95 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
     const [isSaving, setIsSaving] = useState<boolean>(false)
     const [hasChanges, setHasChanges] = useState<boolean>(false)
     const [currentMemberLinks, setCurrentMemberLinks] = useState<UserTrait[]>(
-        props.memberLinks?.length ? props.memberLinks : [{}],
+        [],
     )
+    const [defaultLinkedIn, setDefaultLinkedIn] = useState<UserTrait>({
+        name: 'LinkedIn',
+        url: '',
+    })
+    const [defaultGitHub, setDefaultGitHub] = useState<UserTrait>({
+        name: 'GitHub',
+        url: '',
+    })
+    const [defaultInstagram, setDefaultInstagram] = useState<UserTrait>({
+        name: 'Instagram',
+        url: '',
+    })
+    const [newLink, setNewLink] = useState<UserTrait>({
+        name: '',
+        url: '',
+    })
 
-    const hasNewInput = useMemo(() => (
-        !!currentMemberLinks?.find(d => (!d.name && !d.url))
-    ), [currentMemberLinks])
+    const addNewLinkRef = useRef<LinkFormHandle>(null)
 
-    function handleAddAdditional(): void {
-        if (hasNewInput) {
-            return
+    useEffect(() => {
+        const memberLinks = [
+            ...(props.memberLinks ?? []),
+        ]
+        const firstLinkedInIndex = findIndex(memberLinks, {
+            name: 'LinkedIn',
+        })
+        if (firstLinkedInIndex >= 0) {
+            setDefaultLinkedIn(memberLinks.splice(firstLinkedInIndex, 1)[0])
         }
 
-        setCurrentMemberLinks(links => (links ?? []).concat({ name: '', url: '' }))
+        const firstGitHubIndex = findIndex(memberLinks, {
+            name: 'GitHub',
+        })
+        if (firstGitHubIndex >= 0) {
+            setDefaultGitHub(memberLinks.splice(firstGitHubIndex, 1)[0])
+        }
+
+        const firstInstagramIndex = findIndex(memberLinks, {
+            name: 'Instagram',
+        })
+        if (firstInstagramIndex >= 0) {
+            setDefaultInstagram(memberLinks.splice(firstInstagramIndex, 1)[0])
+        }
+
+        setCurrentMemberLinks(memberLinks)
+
+    }, [props.memberLinks])
+
+    function handleAddAdditional(): void {
+        if (newLink.url && newLink.name) {
+            const updatedLinks: UserTrait[] = uniqBy([
+                defaultLinkedIn,
+                defaultGitHub,
+                defaultInstagram,
+                ...currentMemberLinks,
+            ].filter(l => l.name && l.url), e => `${e.name}-${e.url}`)
+            if (!find(updatedLinks, newLink)) {
+                setCurrentMemberLinks(links => [...links, newLink])
+            }
+
+            addNewLinkRef.current?.resetForm()
+            setNewLink({
+                name: '',
+                url: '',
+            })
+            setHasChanges(true)
+        } else {
+            addNewLinkRef.current?.validateForm()
+        }
     }
 
-    function handleRemoveLink(trait: UserTrait): void {
+    function handleRemoveLink(index: number): void {
+        currentMemberLinks.splice(index, 1)
         setCurrentMemberLinks(
-            currentMemberLinks?.filter((item: UserTrait) => item.url !== trait.url),
+            [
+                ...currentMemberLinks,
+            ],
         )
         setHasChanges(true)
     }
 
-    async function handleSaveLink(link: UserTrait, index: number): Promise<UserTrait | undefined> {
-        const existingLinkItemIndex = currentMemberLinks?.findIndex((item: UserTrait) => (
-            item.url?.toLowerCase() === link?.url?.toLowerCase()
-        )) ?? -1
-        const isDuplicateLink = existingLinkItemIndex > -1 && existingLinkItemIndex !== index
-
-        if (isDuplicateLink) {
-            toast.info('Link already exists', { position: toast.POSITION.BOTTOM_RIGHT })
-            return undefined
-        }
-
+    function handleSaveLink(link: UserTrait, index: number): void {
         setCurrentMemberLinks(links => (links ?? []).map((l, i) => (
             i === index ? link : l
         )))
 
         setHasChanges(true)
-        return link
     }
 
     function handleLinksSave(): void {
@@ -76,9 +127,12 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
         const updatedPersonalizationTraits: UserTrait[]
             = reject(props.memberPersonalizationTraitsFullData, (trait: UserTrait) => trait.links)
 
-        const updatedLinks: UserTrait[] = [
-            ...(currentMemberLinks || []),
-        ].filter(l => l.name && l.url)
+        const updatedLinks: UserTrait[] = uniqBy([
+            defaultLinkedIn,
+            defaultGitHub,
+            defaultInstagram,
+            ...currentMemberLinks,
+        ].filter(l => l.name && l.url), e => `${e.name}-${e.url}`)
 
         updateOrCreateMemberTraitsAsync(props.profile.handle, [{
             categoryName: UserTraitCategoryNames.personalization,
@@ -129,28 +183,104 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
             <div className={styles.container}>
                 <p>Provide links to your social accounts.</p>
 
-                <div className={classNames(styles.links, currentMemberLinks?.length ? '' : styles.noLinks)}>
-                    {
-                        currentMemberLinks?.map((trait: UserTrait, i: number) => (
-                            <LinkEntry
-                                link={trait}
-                                onRemove={handleRemoveLink}
-                                onSave={handleSaveLink}
-                                index={i}
-                                // eslint-disable-next-line react/no-array-index-key
-                                key={`${trait.url}-${i}`}
-                            />
-                        ))
-                    }
+                <div className={classNames(styles.links)}>
+                    <LinkForm
+                        link={defaultLinkedIn as UserLink}
+                        onSave={function onSave(link: UserLink) {
+                            setDefaultLinkedIn(link)
+                            setHasChanges(true)
+                        }}
+                        onRemove={function onRemove() {
+                            setDefaultLinkedIn({
+                                ...defaultLinkedIn,
+                                url: '',
+                            })
+                            setHasChanges(true)
+                        }}
+                        placeholder='Add URL'
+                        removeIcon={IconOutline.XCircleIcon}
+                        hideRemoveIcon={!defaultLinkedIn.url}
+                        allowEmptyUrl
+                        disabled={isSaving}
+                    />
+                    <LinkForm
+                        link={defaultGitHub as UserLink}
+                        onSave={function onSave(link: UserLink) {
+                            setDefaultGitHub(link)
+                            setHasChanges(true)
+                        }}
+                        onRemove={function onRemove() {
+                            setDefaultGitHub({
+                                ...defaultGitHub,
+                                url: '',
+                            })
+                            setHasChanges(true)
+                        }}
+                        placeholder='Add URL'
+                        removeIcon={IconOutline.XCircleIcon}
+                        hideRemoveIcon={!defaultGitHub.url}
+                        allowEmptyUrl
+                        disabled={isSaving}
+                    />
+                    <LinkForm
+                        link={defaultInstagram as UserLink}
+                        onSave={function onSave(link: UserLink) {
+                            setDefaultInstagram(link)
+                            setHasChanges(true)
+                        }}
+                        onRemove={function onRemove() {
+                            setDefaultInstagram({
+                                ...defaultInstagram,
+                                url: '',
+                            })
+                            setHasChanges(true)
+                        }}
+                        placeholder='Add URL'
+                        removeIcon={IconOutline.XCircleIcon}
+                        hideRemoveIcon={!defaultInstagram.url}
+                        allowEmptyUrl
+                        disabled={isSaving}
+                    />
                 </div>
 
-                {!hasNewInput && (
-                    <div className={styles.formCTAs}>
-                        <Button
-                            onClick={handleAddAdditional}
-                            secondary
-                            label='+ Additional Link'
-                        />
+                <hr className={styles.spacer} />
+
+                <LinkForm
+                    link={newLink as UserLink}
+                    onSave={setNewLink}
+                    allowEditType
+                    placeholder='http://'
+                    ref={addNewLinkRef}
+                    disabled={isSaving}
+                />
+
+                <div className={styles.formCTAs}>
+                    <Button
+                        onClick={handleAddAdditional}
+                        secondary
+                        label='+ Additional Link'
+                        disabled={isSaving}
+                    />
+                </div>
+
+                {(currentMemberLinks.length > 0) && (
+                    <div className={classNames(styles.links)}>
+                        {
+                            currentMemberLinks.map((trait: UserTrait, i: number) => (
+                                <LinkForm
+                                    link={trait as UserLink}
+                                    onSave={function onSave(link: UserLink) {
+                                        handleSaveLink(link, i)
+                                    }}
+                                    onRemove={function onRemove() {
+                                        handleRemoveLink(i)
+                                    }}
+                                    allowEditType
+                                    placeholder='http://'
+                                    disabled={isSaving}
+                                />
+                            ))
+                        }
                     </div>
                 )}
 
