@@ -17,7 +17,7 @@ export const linkTypes = [
     },
     {
         name: 'Twitter',
-        value: 'Twitter',
+        value: 'X / Twitter',
     },
     {
         name: 'Website',
