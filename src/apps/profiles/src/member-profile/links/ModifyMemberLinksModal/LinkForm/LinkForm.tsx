@@ -1,11 +1,12 @@
 import { trim } from 'lodash'
-import { FC, useEffect, useState } from 'react'
+import { FC, forwardRef, ForwardRefExoticComponent, SVGProps, useEffect, useImperativeHandle, useState } from 'react'
 import classNames from 'classnames'
 
 import { Button, IconOutline, InputSelect, InputText } from '~/libs/ui'
 
 import { linkTypes } from '../link-types.config'
 import { isValidURL } from '../../../../lib'
+import { renderLinkIcon } from '../../MemberLinks'
 
 import styles from './LinkForm.module.scss'
 
@@ -15,23 +16,56 @@ export interface UserLink {
 }
 
 interface LinkFormProps {
-    isNew: boolean
     link?: UserLink
+    allowEditType?: boolean
+    classNames?: string
+    placeholder?: string
     onSave: (link: UserLink) => void
-    onDiscard: () => void
+    onRemove?: () => void
+    removeIcon?: FC<SVGProps<SVGSVGElement>>
+    hideRemoveIcon?: boolean
+    allowEmptyUrl?: boolean
+    labelUrlField?: string
+    disabled?: boolean
 }
 
-const LinkForm: FC<LinkFormProps> = props => {
+export type LinkFormHandle = {
+    validateForm: () => void;
+    resetForm: () => void;
+};
+
+const LinkForm: ForwardRefExoticComponent<
+    LinkFormProps & React.RefAttributes<LinkFormHandle>
+> = forwardRef<LinkFormHandle, LinkFormProps>((props, ref) => {
     const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
     const [selectedLinkType, setSelectedLinkType] = useState<string | undefined>()
     const [selectedLinkURL, setSelectedLinkURL] = useState<string | undefined>()
+    const [shouldValidateForm, setShouldValidateForm] = useState<boolean>(false)
+
+    useEffect(() => {
+        if (shouldValidateForm) {
+            handleFormAction()
+        }
+    }, [selectedLinkType, selectedLinkURL, shouldValidateForm])
+
+    useImperativeHandle(ref, () => ({
+        resetForm() {
+            setShouldValidateForm(false)
+            setFormErrors({})
+        },
+        validateForm() {
+            handleFormAction()
+        },
+    }))
 
     function handleSelectedLinkTypeChange(event: React.ChangeEvent<HTMLInputElement>): void {
         setSelectedLinkType(event.target.value)
+        setShouldValidateForm(true)
     }
 
     function handleURLChange(event: React.ChangeEvent<HTMLInputElement>): void {
         setSelectedLinkURL(event.target.value)
+        setShouldValidateForm(true)
     }
 
     function handleFormAction(): void {
@@ -42,12 +76,12 @@ const LinkForm: FC<LinkFormProps> = props => {
             return
         }
 
-        if (!trim(selectedLinkURL)) {
+        if (!props.allowEmptyUrl && !trim(selectedLinkURL)) {
             setFormErrors({ url: 'Please enter a URL' })
             return
         }
 
-        if (!isValidURL(selectedLinkURL as string)) {
+        if (selectedLinkURL && !isValidURL(selectedLinkURL as string)) {
             setFormErrors({ url: 'Invalid URL' })
             return
         }
@@ -61,29 +95,12 @@ const LinkForm: FC<LinkFormProps> = props => {
                 url: absoluteURL,
             })
         } else {
-            absoluteURL = `https://${absoluteURL}`
+            absoluteURL = absoluteURL ? `https://${absoluteURL}` : ''
 
             props.onSave({
                 name: selectedLinkType,
                 url: absoluteURL,
             })
-        }
-    }
-
-    function handleDiscardClick(): void {
-        setFormErrors({})
-        props.onDiscard()
-
-        if (!props.link) {
-            return
-        }
-
-        if (selectedLinkType !== props.link.name) {
-            setSelectedLinkType(props.link.name)
-        }
-
-        if (selectedLinkURL !== props.link.url) {
-            setSelectedLinkURL(props.link.url)
         }
     }
 
@@ -103,47 +120,48 @@ const LinkForm: FC<LinkFormProps> = props => {
     }, [props.link?.name, props.link?.url])
 
     return (
-        <form className={classNames(styles.formWrap)}>
+        <form className={classNames(classNames(styles.formWrap, props.classNames))}>
             <div className={styles.form}>
-                <InputSelect
-                    options={linkTypes}
-                    value={selectedLinkType}
-                    onChange={handleSelectedLinkTypeChange}
-                    name='linkType'
-                    label='Type'
-                    error={formErrors.selectedLinkType}
-                    placeholder='Select a link type'
-                    dirty
-                />
+                {props.allowEditType ? (
+                    <InputSelect
+                        options={linkTypes}
+                        value={selectedLinkType}
+                        onChange={handleSelectedLinkTypeChange}
+                        name='linkType'
+                        label='Type'
+                        error={formErrors.selectedLinkType}
+                        placeholder='Select a link type'
+                        dirty
+                        disabled={props.disabled}
+                    />
+                ) : (
+                    renderLinkIcon(selectedLinkType || '')
+                )}
 
                 <InputText
                     name='url'
-                    label='URL'
+                    label={props.labelUrlField || 'URL'}
                     error={formErrors.url}
-                    placeholder='Enter a URL'
+                    placeholder={props.placeholder ?? 'Enter a URL'}
                     dirty
-                    tabIndex={-1}
+                    tabIndex={0}
                     type='text'
                     onChange={handleURLChange}
-                    value={selectedLinkURL}
+                    value={selectedLinkURL || ''}
+                    forceUpdateValue
+                    disabled={props.disabled}
                 />
-                <Button
-                    className={styles.button}
-                    size='lg'
-                    icon={IconOutline.CheckIcon}
-                    onClick={handleFormAction}
-                />
-                {!props.isNew && (
+                {props.onRemove && !props.hideRemoveIcon && (
                     <Button
                         className={styles.button}
                         size='lg'
-                        icon={IconOutline.XIcon}
-                        onClick={handleDiscardClick}
+                        icon={props.removeIcon ?? IconOutline.TrashIcon}
+                        onClick={props.onRemove}
                     />
                 )}
             </div>
         </form>
     )
-}
+})
 
 export default LinkForm
