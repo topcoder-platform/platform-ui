@@ -31,25 +31,16 @@
         column-gap: $sp-1;
         row-gap: $sp-2;
 
-        .skillItem {
-            border: 1px solid $black-20;
-            font-size: 14px;
-            line-height: 16px;
-            white-space: nowrap;
-            padding: $sp-2 $sp-3;
-            border-radius: 24px;
-            display: flex;
-            align-items: center;
+        .skillsCategories {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: $sp-4;
+            flex: 1;
 
-            &.verifiedSkillItem {
-                border: 2px solid $turq-120;
-
-                svg {
-                    margin-left: $sp-1;
-                    width: 16px;
-                    height: 16px;
-                    color: $turq-120;
-                }
+            @include ltemd {
+                grid-template-columns: 1fr;
+                gap: 0;
+                row-gap: $sp-4;
             }
         }
     }

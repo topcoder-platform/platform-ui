@@ -12,7 +12,7 @@ export interface SkillPillProps {
     onClick?: (skill: Skill) => void
     selected?: boolean
     skill: Pick<Skill, 'name'|'skillSources'>
-    theme?: 'dark' | 'verified' | 'presentation' | 'etc'
+    theme?: 'dark' | 'verified' | 'presentation' | 'etc' | 'catList'
 }
 
 const SkillPill: FC<SkillPillProps> = props => {
@@ -24,7 +24,8 @@ const SkillPill: FC<SkillPillProps> = props => {
         styles.pill,
         props.onClick && styles.interactive,
         props.selected && styles.selected,
-        styles[`theme-${isVerified ? 'verified' : (props.theme ?? 'presentation')}`],
+        styles[`theme-${isVerified ? 'verified' : ''}`],
+        styles[`theme-${props.theme ?? ''}`],
     )
 
     const handleClick = useCallback(() => props.onClick?.call(undefined, props.skill as Skill), [

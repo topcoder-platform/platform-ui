@@ -3,8 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import { orderBy } from 'lodash'
 
 import { UserEMSISkill, UserProfile } from '~/libs/core'
-import { ExpandableList, HowSkillsWorkModal, isSkillVerified, Skill, SkillPill } from '~/libs/shared'
-import { Button } from '~/libs/ui'
+import { HowSkillsWorkModal, isSkillVerified, Skill, SkillPill } from '~/libs/shared'
+import { Button, CollapsibleSkillsList } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
@@ -32,6 +32,20 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         [isSkillVerified, 'name'],
         ['desc', 'asc'],
     ) as UserEMSISkill[], [props.profile.emsiSkills])
+
+    const groupedSkillsByCategory: { [key: string]: UserEMSISkill[] } = useMemo(() => {
+        const grouped: { [key: string]: UserEMSISkill[] } = {}
+
+        memberEMSISkills.forEach((skill: UserEMSISkill) => {
+            if (grouped[skill.skillCategory.name]) {
+                grouped[skill.skillCategory.name].push(skill)
+            } else {
+                grouped[skill.skillCategory.name] = [skill]
+            }
+        })
+
+        return grouped
+    }, [memberEMSISkills])
 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -94,18 +108,28 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
             <div className={styles.skillsWrap}>
                 {skillsRenderer && memberEMSISkills.length > 0 && skillsRenderer(memberEMSISkills)}
                 {!skillsRenderer && memberEMSISkills.length > 0 && (
-                    <ExpandableList visible={10} itemLabel='skill'>
+                    <div className={styles.skillsCategories}>
                         {
-                            memberEMSISkills
-                                .map(memberEMSISkill => (
-                                    <SkillPill
-                                        skill={memberEMSISkill as unknown as Skill}
-                                        key={memberEMSISkill.id}
-                                        theme='dark'
-                                    />
+                            Object.keys(groupedSkillsByCategory)
+                                .map((categoryName: string) => (
+                                    <CollapsibleSkillsList
+                                        key={categoryName}
+                                        header={categoryName}
+                                    >
+                                        {
+                                            groupedSkillsByCategory[categoryName]
+                                                .map((skill: UserEMSISkill) => (
+                                                    <SkillPill
+                                                        skill={skill as unknown as Skill}
+                                                        key={skill.id}
+                                                        theme='catList'
+                                                    />
+                                                ))
+                                        }
+                                    </CollapsibleSkillsList>
                                 ))
                         }
-                    </ExpandableList>
+                    </div>
                 )}
                 {!memberEMSISkills.length && (
                     <EmptySection
