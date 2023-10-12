@@ -1,4 +1,4 @@
-import { Dispatch, FC, ReactNode, SetStateAction, useState } from 'react'
+import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react'
 import classNames from 'classnames'
 
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/outline'
@@ -13,10 +13,16 @@ interface CollapsibleSkillsListProps {
     containerClass?: string
     headerClass?: string
     contentClass?: string
+    isCollapsed: boolean
 }
 
 const CollapsibleSkillsList: FC<CollapsibleSkillsListProps> = (props: CollapsibleSkillsListProps) => {
-    const [isCollapsed, setIsCollapsed]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(true)
+    const [isCollapsed, setIsCollapsed]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(props.isCollapsed)
+
+    useEffect(() => {
+        setIsCollapsed(props.isCollapsed)
+    }, [props.isCollapsed])
 
     function toggleCollapse(): void {
         setIsCollapsed(!isCollapsed)

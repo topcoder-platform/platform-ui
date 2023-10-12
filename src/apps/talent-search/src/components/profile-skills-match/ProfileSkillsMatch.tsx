@@ -50,7 +50,7 @@ const ProfileSkillsMatch: FC<ProfileSkillsMatchProps> = props => {
                         <>
                             <div className='body-main'>
                                 {selfSkillmatched.length}
-                                {` matched self selected skill${selfSkillmatched.length > 1 ? 's' : ''}`}
+                                {` matched self proclaimed skill${selfSkillmatched.length > 1 ? 's' : ''}`}
                             </div>
                             <div className={styles.skillsList}>
                                 {selfSkillmatched.map(skill => (

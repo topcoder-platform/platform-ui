@@ -3,7 +3,6 @@
 .container {
     display: flex;
     flex-direction: column;
-    margin-bottom: $sp-6;
 
     .headerWrap {
         display: flex;
@@ -22,7 +21,25 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: $sp-4;
+        margin-bottom: $sp-6;
+
+        .skillActions {
+            display: flex;
+            align-items: center;
+
+            @include ltemd {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+
+            > button:nth-child(2) {
+                margin-left: $sp-4;
+
+                @include ltemd {
+                    margin-left: 0;
+                }
+            }
+        }
     }
 
     .skillsWrap {
@@ -30,18 +47,5 @@
         flex-wrap: wrap;
         column-gap: $sp-1;
         row-gap: $sp-2;
-
-        .skillsCategories {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: $sp-4;
-            flex: 1;
-
-            @include ltemd {
-                grid-template-columns: 1fr;
-                gap: 0;
-                row-gap: $sp-4;
-            }
-        }
     }
 }

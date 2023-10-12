@@ -3,8 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import { orderBy } from 'lodash'
 
 import { UserEMSISkill, UserProfile } from '~/libs/core'
-import { HowSkillsWorkModal, isSkillVerified, Skill, SkillPill } from '~/libs/shared'
-import { Button, CollapsibleSkillsList } from '~/libs/ui'
+import { HowSkillsWorkModal, isSkillVerified } from '~/libs/shared'
+import { Button, GroupedSkillsUI } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
@@ -47,6 +47,9 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         return grouped
     }, [memberEMSISkills])
 
+    const [skillsCatsCollapsed, setSkillsCatsCollapsed]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(true)
+
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
@@ -84,8 +87,19 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         setHowSkillsWorkVisible(false)
     }
 
+    function handleExpandAllClick(): void {
+        setSkillsCatsCollapsed(!skillsCatsCollapsed)
+    }
+
     return (
         <div className={styles.container}>
+            {
+                skillsRenderer && memberEMSISkills.length > 0 && (
+                    <div className={styles.skillsWrap}>
+                        {skillsRenderer(memberEMSISkills)}
+                    </div>
+                )
+            }
             <div className={styles.titleWrap}>
                 <div className={styles.headerWrap}>
                     <h3>Skills</h3>
@@ -97,39 +111,32 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                         )
                     }
                 </div>
-                <Button
-                    link
-                    label='How skills work'
-                    onClick={handleHowSkillsWorkClick}
-                    variant='linkblue'
-                />
+                <div className={styles.skillActions}>
+                    <Button
+                        link
+                        label='How skills work'
+                        onClick={handleHowSkillsWorkClick}
+                        variant='linkblue'
+                    />
+                    {
+                        memberEMSISkills.length > 0 && (
+                            <Button
+                                link
+                                label={skillsCatsCollapsed ? 'Expand all' : 'Collapse all'}
+                                onClick={handleExpandAllClick}
+                                variant='linkblue'
+                            />
+                        )
+                    }
+                </div>
             </div>
 
             <div className={styles.skillsWrap}>
-                {skillsRenderer && memberEMSISkills.length > 0 && skillsRenderer(memberEMSISkills)}
                 {!skillsRenderer && memberEMSISkills.length > 0 && (
-                    <div className={styles.skillsCategories}>
-                        {
-                            Object.keys(groupedSkillsByCategory)
-                                .map((categoryName: string) => (
-                                    <CollapsibleSkillsList
-                                        key={categoryName}
-                                        header={categoryName}
-                                    >
-                                        {
-                                            groupedSkillsByCategory[categoryName]
-                                                .map((skill: UserEMSISkill) => (
-                                                    <SkillPill
-                                                        skill={skill as unknown as Skill}
-                                                        key={skill.id}
-                                                        theme='catList'
-                                                    />
-                                                ))
-                                        }
-                                    </CollapsibleSkillsList>
-                                ))
-                        }
-                    </div>
+                    <GroupedSkillsUI
+                        groupedSkillsByCategory={groupedSkillsByCategory}
+                        skillsCatsCollapsed={skillsCatsCollapsed}
+                    />
                 )}
                 {!memberEMSISkills.length && (
                     <EmptySection
@@ -143,12 +150,14 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                     </EmptySection>
                 )}
             </div>
-            {canEdit && !memberEMSISkills.length && (
-                <AddButton
-                    label='Add skills'
-                    onClick={handleEditSkillsClick}
-                />
-            )}
+            {
+                canEdit && !memberEMSISkills.length && (
+                    <AddButton
+                        label='Add skills'
+                        onClick={handleEditSkillsClick}
+                    />
+                )
+            }
 
             {
                 isEditMode && (

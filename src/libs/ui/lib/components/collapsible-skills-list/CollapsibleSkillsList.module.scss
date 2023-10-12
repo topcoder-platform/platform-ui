@@ -5,6 +5,7 @@
     flex-direction: column;
     background-color: $tc-white;
     border-radius: 8px;
+    margin-bottom: $sp-4;
 
     &.collapsed {
         .title {
@@ -23,7 +24,7 @@
     .header {
         display: flex;
         justify-content: flex-start;
-        align-items: center;
+        align-items: flex-start;
         cursor: pointer;
 
         .title {
@@ -54,10 +55,14 @@
     }
 
     .content {
-        transition: all 0.3s ease-in-out;
+        transition: opacity 0.3s ease-in-out;
         max-height: auto;
         opacity: 1;
         padding-left: $sp-8;
         margin-top: $sp-1;
+
+        @include ltemd {
+            padding-left: $sp-4;
+        }
     }
 }
