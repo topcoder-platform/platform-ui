@@ -1,3 +1,3 @@
 export * from './skill.model'
-export * from './emsi-skills.service'
+export * from './standard-skills.service'
 export * from './skills.utils'
