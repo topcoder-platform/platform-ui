@@ -277,7 +277,7 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                     <Button
                         onClick={handleAddAdditional}
                         secondary
-                        label='+ Additional Link'
+                        label='+ Add link'
                         disabled={isSaving}
                     />
                 </div>
