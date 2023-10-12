@@ -100,6 +100,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                     </div>
                 )
             }
+
             <div className={styles.titleWrap}>
                 <div className={styles.headerWrap}>
                     <h3>Skills</h3>
@@ -132,7 +133,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
             </div>
 
             <div className={styles.skillsWrap}>
-                {!skillsRenderer && memberEMSISkills.length > 0 && (
+                {memberEMSISkills.length > 0 && (
                     <GroupedSkillsUI
                         groupedSkillsByCategory={groupedSkillsByCategory}
                         skillsCatsCollapsed={skillsCatsCollapsed}
