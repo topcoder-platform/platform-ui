@@ -1,6 +1,6 @@
 export const additionalLinkTypes = [
     {
-        name: 'Twitter',
+        name: 'X / Twitter',
         value: 'X / Twitter',
     },
     {

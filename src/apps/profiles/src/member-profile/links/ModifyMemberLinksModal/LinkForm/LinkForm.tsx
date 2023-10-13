@@ -33,7 +33,6 @@ interface LinkFormProps {
     onRemove?: () => void
     removeIcon?: FC<SVGProps<SVGSVGElement>>
     hideRemoveIcon?: boolean
-    allowEmptyUrl?: boolean
     labelUrlField?: string
     disabled?: boolean
 }
@@ -96,14 +95,7 @@ const LinkForm: ForwardRefExoticComponent<
             }
         }
 
-        if (!props.allowEmptyUrl && !trim(selectedLinkURL)) {
-            isError = true
-            if (canShowUrlError.current) {
-                setFormErrors({ url: 'Please enter a URL' })
-            }
-        }
-
-        if (selectedLinkURL && !isValidURL(selectedLinkURL as string)) {
+        if (selectedLinkURL && trim(selectedLinkURL) && !isValidURL(selectedLinkURL as string)) {
             isError = true
             if (canShowUrlError.current) {
                 setFormErrors({ url: 'Invalid URL' })
