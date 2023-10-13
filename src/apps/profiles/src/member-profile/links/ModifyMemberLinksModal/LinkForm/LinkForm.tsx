@@ -1,10 +1,19 @@
 import { trim } from 'lodash'
-import { FC, forwardRef, ForwardRefExoticComponent, SVGProps, useEffect, useImperativeHandle, useState } from 'react'
+import {
+    FC,
+    forwardRef,
+    ForwardRefExoticComponent,
+    SVGProps,
+    useEffect,
+    useImperativeHandle,
+    useRef,
+    useState,
+} from 'react'
 import classNames from 'classnames'
 
 import { Button, IconOutline, InputSelect, InputText } from '~/libs/ui'
 
-import { linkTypes } from '../link-types.config'
+import { additionalLinkTypes } from '../link-types.config'
 import { isValidURL } from '../../../../lib'
 import { renderLinkIcon } from '../../MemberLinks'
 
@@ -24,7 +33,6 @@ interface LinkFormProps {
     onRemove?: () => void
     removeIcon?: FC<SVGProps<SVGSVGElement>>
     hideRemoveIcon?: boolean
-    allowEmptyUrl?: boolean
     labelUrlField?: string
     disabled?: boolean
 }
@@ -41,6 +49,8 @@ const LinkForm: ForwardRefExoticComponent<
     const [selectedLinkType, setSelectedLinkType] = useState<string | undefined>()
     const [selectedLinkURL, setSelectedLinkURL] = useState<string | undefined>()
     const [shouldValidateForm, setShouldValidateForm] = useState<boolean>(false)
+    const canShowTypeError = useRef(false)
+    const canShowUrlError = useRef(false)
 
     useEffect(() => {
         if (shouldValidateForm) {
@@ -52,37 +62,51 @@ const LinkForm: ForwardRefExoticComponent<
         resetForm() {
             setShouldValidateForm(false)
             setFormErrors({})
+            canShowTypeError.current = false
+            canShowUrlError.current = false
         },
         validateForm() {
+            canShowTypeError.current = true
+            canShowUrlError.current = true
             handleFormAction()
         },
     }))
 
     function handleSelectedLinkTypeChange(event: React.ChangeEvent<HTMLInputElement>): void {
+        canShowTypeError.current = true
         setSelectedLinkType(event.target.value)
         setShouldValidateForm(true)
     }
 
     function handleURLChange(event: React.ChangeEvent<HTMLInputElement>): void {
+        canShowUrlError.current = true
         setSelectedLinkURL(event.target.value)
         setShouldValidateForm(true)
     }
 
-    function handleFormAction(): void {
+    function getFormError(): boolean {
         setFormErrors({})
 
+        let isError = false
         if (!selectedLinkType) {
-            setFormErrors({ selectedLinkType: 'Please select a link type' })
-            return
+            isError = true
+            if (canShowTypeError.current) {
+                setFormErrors({ selectedLinkType: 'Please select a link type' })
+            }
         }
 
-        if (!props.allowEmptyUrl && !trim(selectedLinkURL)) {
-            setFormErrors({ url: 'Please enter a URL' })
-            return
+        if (selectedLinkURL && trim(selectedLinkURL) && !isValidURL(selectedLinkURL as string)) {
+            isError = true
+            if (canShowUrlError.current) {
+                setFormErrors({ url: 'Invalid URL' })
+            }
         }
 
-        if (selectedLinkURL && !isValidURL(selectedLinkURL as string)) {
-            setFormErrors({ url: 'Invalid URL' })
+        return isError
+    }
+
+    function handleFormAction(): void {
+        if (getFormError()) {
             return
         }
 
@@ -91,14 +115,14 @@ const LinkForm: ForwardRefExoticComponent<
         if (absoluteURL.indexOf('://') > 0 || absoluteURL.indexOf('//') === 0) {
 
             props.onSave({
-                name: selectedLinkType,
+                name: selectedLinkType ?? '',
                 url: absoluteURL,
             })
         } else {
             absoluteURL = absoluteURL ? `https://${absoluteURL}` : ''
 
             props.onSave({
-                name: selectedLinkType,
+                name: selectedLinkType ?? '',
                 url: absoluteURL,
             })
         }
@@ -124,7 +148,7 @@ const LinkForm: ForwardRefExoticComponent<
             <div className={styles.form}>
                 {props.allowEditType ? (
                     <InputSelect
-                        options={linkTypes}
+                        options={additionalLinkTypes}
                         value={selectedLinkType}
                         onChange={handleSelectedLinkTypeChange}
                         name='linkType'
