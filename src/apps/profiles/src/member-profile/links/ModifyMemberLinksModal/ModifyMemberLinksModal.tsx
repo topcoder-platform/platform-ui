@@ -108,9 +108,13 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
         setCurrentMemberLinks(links => [...links, {
             id: `id-${(new Date())
                 .getTime()}`,
+            ...defaultLink,
+        }])
+        setDefaultLink({
             name: '',
             url: '',
-        }])
+        })
+        addNewLinkRef.current?.resetForm()
     }
 
     function handleRemoveLink(index: number): void {
