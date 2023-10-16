@@ -49,7 +49,7 @@ const SearchResultsPage: FC = () => {
                     <SearchInput
                         className={styles.searchInput}
                         skills={skills}
-                        onChange={setSkills}
+                        onChange={setSkills as any}
                     />
                 </ContentLayout>
             </div>

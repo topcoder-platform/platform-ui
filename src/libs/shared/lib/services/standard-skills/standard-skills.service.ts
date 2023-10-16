@@ -1,11 +1,9 @@
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
-
-import { EmsiSkill, Skill } from './skill.model'
+import { UserSkill, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/emsi-skills/member-emsi-skills`
 
-export async function autoCompleteSkills(queryTerm: string): Promise<Skill[]> {
+export async function autoCompleteSkills(queryTerm: string): Promise<UserSkill[]> {
     if (!queryTerm) {
         return Promise.resolve([])
     }
@@ -20,20 +18,20 @@ export type FetchMemberSkillsConfig = {
 export async function fetchMemberSkills(
     userId: string | number | undefined,
     config: FetchMemberSkillsConfig,
-): Promise<EmsiSkill[]> {
+): Promise<UserSkill[]> {
     const url = `${baseUrl}/${userId}?pageFlag=${!config.skipPagination}`
     return xhrGetAsync(url)
 }
 
-export async function createMemberEmsiSkills(userId: number, skills: Skill[]): Promise<void> {
+export async function createMemberSkills(userId: number, skills: UserSkill[]): Promise<void> {
     return xhrPostAsync(baseUrl, {
-        emsiSkills: skills,
+        skills,
         userId,
     })
 }
 
-export async function updateMemberEmsiSkills(userId: string | number, skills: Skill[]): Promise<void> {
+export async function updateMemberSkills(userId: string | number, skills: UserSkill[]): Promise<void> {
     return xhrPutAsync(`${baseUrl}/${userId}`, {
-        emsiSkills: skills,
+        skills,
     })
 }

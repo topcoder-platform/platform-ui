@@ -2,7 +2,7 @@ import { FC, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ContentLayout, IconOutline } from '~/libs/ui'
-import { Skill } from '~/libs/shared'
+import { UserSkill } from '~/libs/core'
 
 import { SearchInput } from '../../components/search-input'
 import { PopularSkills } from '../../components/popular-skills'
@@ -20,14 +20,14 @@ export const SearchPage: FC = () => {
 
     const searchInputRef = useRef<HTMLInputElement>()
     const navigate = useNavigate()
-    const [skillsFilter, setSkillsFilter] = useState<Skill[]>([])
+    const [skillsFilter, setSkillsFilter] = useState<UserSkill[]>([])
 
     function navigateToResults(): void {
         const searchParams = encodeUrlQuerySearch(skillsFilter)
         navigate(`${TALENT_SEARCH_PATHS.results}?${searchParams}`)
     }
 
-    function handleSelectSkillFilter(filter: Skill[]): void {
+    function handleSelectSkillFilter(filter: UserSkill[]): void {
         setSkillsFilter(filter)
         searchInputRef.current?.focus()
     }
@@ -81,7 +81,7 @@ export const SearchPage: FC = () => {
                 <SearchInput
                     autoFocus
                     skills={skillsFilter}
-                    onChange={setSkillsFilter}
+                    onChange={setSkillsFilter as any}
                     onSearch={navigateToResults}
                     inputRef={searchInputRef}
                 />

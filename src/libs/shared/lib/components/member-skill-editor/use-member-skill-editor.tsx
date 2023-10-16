@@ -1,16 +1,14 @@
 import { ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { differenceWith } from 'lodash'
 
-import { profileContext, ProfileContextData } from '~/libs/core'
+import { profileContext, ProfileContextData, UserSkill } from '~/libs/core'
 
 import {
-    createMemberEmsiSkills,
-    EmsiSkill,
-    EmsiSkillSources,
+    createMemberSkills,
     fetchMemberSkills,
     isSkillVerified,
-    updateMemberEmsiSkills,
-} from '../../services/emsi-skills'
+    updateMemberSkills,
+} from '../../services/standard-skills'
 import { InputSkillSelector } from '../input-skill-selector'
 
 export interface MemberSkillEditor {
@@ -22,11 +20,11 @@ export interface MemberSkillEditor {
  * Hook to provide functionality for using the member skill editor
  * Usage example:
  * ```
- *   const { formInput: emsiFormInput, saveSkills: saveEmsiSkills }: MemberSkillEditor = useMemberSkillEditor()
+ *   const editor: MemberSkillEditor = useMemberSkillEditor()
  *   ...
  *   <>
- *     {emsiFormInput}
- *     <Button primary onClick={saveEmsiSkills}>Save Skills</Button>
+ *     {editor.formInput}
+ *     <Button primary onClick={editor.saveSkills}>Save Skills</Button>
  *   </>
  * ```
  * @returns
@@ -36,31 +34,30 @@ export const useMemberSkillEditor = ({
     limit,
 }: {limit?: number} = {}): MemberSkillEditor => {
     const { profile }: ProfileContextData = useContext(profileContext)
-    const [isEmsiInitialized, setIsEmsiInitialized] = useState<boolean>(false)
-    const [skills, setSkills] = useState<EmsiSkill[]>([])
+    const [isInitialized, setIsInitialized] = useState<boolean>(false)
+    const [skills, setSkills] = useState<UserSkill[]>([])
     const [loading, setLoading] = useState<boolean>(true)
     const [, setError] = useState<string>()
 
-    // Function that saves the updated emsi skills, will be called from outside
+    // Function that saves the updated skills, will be called from outside
     const saveSkills = useCallback(async () => {
         if (!profile?.userId) {
             return
         }
 
-        const emsiSkills = skills.map(s => ({ emsiId: s.skillId, name: s.name, sources: s.skillSources }))
-        if (!isEmsiInitialized) {
-            await createMemberEmsiSkills(profile.userId, emsiSkills)
-            setIsEmsiInitialized(true)
+        if (!isInitialized) {
+            await createMemberSkills(profile.userId, skills)
+            setIsInitialized(true)
             return
         }
 
-        await updateMemberEmsiSkills(profile.userId, emsiSkills)
-    }, [isEmsiInitialized, profile?.userId, skills])
+        await updateMemberSkills(profile.userId, skills)
+    }, [isInitialized, profile?.userId, skills])
 
     // Handle user changes
 
     const handleRemoveSkill = useCallback((skillId: string): void => {
-        const skill = skills.find(s => s.skillId === skillId)
+        const skill = skills.find(s => s.id === skillId)
         if (!skill) {
             return
         }
@@ -69,25 +66,26 @@ export const useMemberSkillEditor = ({
             return
         }
 
-        setSkills(skills.filter(s => s.skillId !== skillId))
+        setSkills(skills.filter(s => s.id !== skillId))
     }, [skills])
 
     const handleAddSkill = useCallback((skillData: any): void => {
-        if (skills.find(s => s.skillId === skillData.value)) {
+        if (skills.find(s => s.id === skillData.value)) {
             return
         }
 
         setSkills([...skills, {
+            category: skillData.category,
+            id: skillData.value,
+            levels: [],
             name: skillData.label,
-            skillId: skillData.value,
-            skillSources: [EmsiSkillSources.selfPicked],
         }])
     }, [skills])
 
     const handleOnChange = useCallback(({ target: { value } }: any): void => {
-        const removed = differenceWith(skills, value, (s, v: any) => s.skillId === v.value)
+        const removed = differenceWith(skills, value, (s, v: any) => s.id === v.value)
         if (removed.length) {
-            removed.map(s => handleRemoveSkill(s.skillId))
+            removed.map(s => handleRemoveSkill(s.id))
         }
 
         const added = differenceWith(value, skills, (v: any, s: any) => v.value === s.skillId)
@@ -96,7 +94,7 @@ export const useMemberSkillEditor = ({
         }
     }, [handleAddSkill, handleRemoveSkill, skills])
 
-    // Load member's emsi skills, set loading state & isEmsiInitialized
+    // Load member's skills, set loading state & isInitialized
     useEffect(() => {
         if (!profile?.userId) {
             return undefined
@@ -108,13 +106,13 @@ export const useMemberSkillEditor = ({
                 setError(e?.message ?? e)
                 return []
             })
-            .then(emsiSkills => {
+            .then(savedSkills => {
                 if (!mounted) {
                     return
                 }
 
-                setIsEmsiInitialized(emsiSkills?.length > 0)
-                setSkills(emsiSkills)
+                setIsInitialized(savedSkills?.length > 0)
+                setSkills(savedSkills)
                 setLoading(false)
             })
 

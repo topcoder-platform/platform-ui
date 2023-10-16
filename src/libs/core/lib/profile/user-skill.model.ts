@@ -1,5 +1,5 @@
 export type UserSkillCategory = {
-    id: number
+    id: string
     name: string
 }
 
@@ -11,7 +11,7 @@ export enum UserSkillLevelTypes {
 }
 
 export type UserSkillLevel = {
-    id: number
+    id: string
     name: UserSkillLevelTypes
     description: string
 }

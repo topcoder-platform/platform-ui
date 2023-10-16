@@ -1,30 +1,30 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
-import { Skill } from '~/libs/shared'
+import { UserSkill } from '~/libs/core'
 
-export const encodeUrlQuerySearch = (skills: Skill[]): string => (
+export const encodeUrlQuerySearch = (skills: UserSkill[]): string => (
     skills
-        .map(s => `q=${encodeURIComponent(`${s.name}::${s.emsiId}`)}`)
+        .map(s => `q=${encodeURIComponent(`${s.name}::${s.id}`)}`)
         .join('&')
 )
 
-export const parseUrlQuerySearch = (params: string[]): Skill[] => (
+export const parseUrlQuerySearch = (params: string[]): UserSkill[] => (
     params.map(p => {
-        const [name, emsiId] = p.split('::')
-        return { emsiId, name }
+        const [name, id] = p.split('::')
+        return { category: { id: '', name: '' }, id, levels: [], name }
     })
 )
 
 export const useUrlQuerySearchParms = (paramName: string): [
-    Skill[],
-    (s: Skill[]) => void
+    UserSkill[],
+    (s: UserSkill[]) => void
 ] => {
     const [params, updateParams] = useSearchParams()
 
-    const [skills, setSkills] = useState<Skill[]>([])
+    const [skills, setSkills] = useState<UserSkill[]>([])
 
-    const handleUpdateSearch = useCallback((newSkills: Skill[]) => {
+    const handleUpdateSearch = useCallback((newSkills: UserSkill[]) => {
         const searchParams = encodeUrlQuerySearch(newSkills)
         updateParams(`${searchParams}`)
     }, [updateParams])

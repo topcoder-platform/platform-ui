@@ -2,7 +2,7 @@ import { FC } from 'react'
 import classNames from 'classnames'
 
 import { UserSkill } from '~/libs/core'
-import { EmsiSkill, isSkillVerified, Skill, SkillPill } from '~/libs/shared'
+import { isSkillVerified, SkillPill } from '~/libs/shared'
 
 import { useIsMatchingSkill } from '../../lib/utils'
 
@@ -11,15 +11,15 @@ import styles from './ProfileSkillsMatch.module.scss'
 interface ProfileSkillsMatchProps {
     matchValue: number
     profileSkills: Pick<UserSkill, 'name'|'id'|'levels'>[]
-    queriedSkills: Skill[]
+    queriedSkills: UserSkill[]
 }
 
 const ProfileSkillsMatch: FC<ProfileSkillsMatchProps> = props => {
     const isMatchingSkill = useIsMatchingSkill(props.queriedSkills)
-    const matchedSkills = (props.profileSkills as unknown as EmsiSkill[]).filter(isMatchingSkill)
+    const matchedSkills = props.profileSkills.filter(isMatchingSkill)
     const provenMatched = matchedSkills.filter(isSkillVerified)
     const selfSkillmatched = matchedSkills.filter(s => !isSkillVerified(s))
-    const missingSkills = props.queriedSkills.filter(qs => !matchedSkills.find(ms => ms.skillId === qs.emsiId))
+    const missingSkills = props.queriedSkills.filter(qs => !matchedSkills.find(ms => ms.id === qs.id))
 
     return (
         <div className={styles.wrap}>
@@ -40,7 +40,7 @@ const ProfileSkillsMatch: FC<ProfileSkillsMatchProps> = props => {
                             </div>
                             <div className={styles.skillsList}>
                                 {provenMatched.map(skill => (
-                                    <SkillPill skill={skill} theme='verified' key={skill.skillId} />
+                                    <SkillPill skill={skill} theme='verified' key={skill.id} />
                                 ))}
                             </div>
                         </>
@@ -53,7 +53,7 @@ const ProfileSkillsMatch: FC<ProfileSkillsMatchProps> = props => {
                             </div>
                             <div className={styles.skillsList}>
                                 {selfSkillmatched.map(skill => (
-                                    <SkillPill skill={skill} theme='dark' key={skill.skillId} />
+                                    <SkillPill skill={skill} theme='dark' key={skill.id} />
                                 ))}
                             </div>
                         </>

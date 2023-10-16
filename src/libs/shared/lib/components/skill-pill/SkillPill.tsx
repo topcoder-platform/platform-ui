@@ -2,22 +2,23 @@ import { FC, ReactNode, useCallback, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { IconOutline } from '~/libs/ui'
+import { UserSkill } from '~/libs/core'
 
-import { isSkillVerified, Skill } from '../../services'
+import { isSkillVerified } from '../../services'
 
 import styles from './SkillPill.module.scss'
 
 export interface SkillPillProps {
     children?: ReactNode
-    onClick?: (skill: Skill) => void
+    onClick?: (skill: UserSkill) => void
     selected?: boolean
-    skill: Pick<Skill, 'name'|'skillSources'>
+    skill: Pick<UserSkill, 'name'|'levels'>
     theme?: 'dark' | 'verified' | 'presentation' | 'etc' | 'catList'
 }
 
 const SkillPill: FC<SkillPillProps> = props => {
     const isVerified = useMemo(() => (
-        isSkillVerified({ skillSources: props.skill.skillSources ?? [] })
+        isSkillVerified({ levels: props.skill.levels ?? [] })
     ), [props.skill])
 
     const className = classNames(
@@ -28,7 +29,7 @@ const SkillPill: FC<SkillPillProps> = props => {
         styles[`theme-${props.theme ?? ''}`],
     )
 
-    const handleClick = useCallback(() => props.onClick?.call(undefined, props.skill as Skill), [
+    const handleClick = useCallback(() => props.onClick?.call(undefined, props.skill as UserSkill), [
         props.onClick, props.skill,
     ])
 
