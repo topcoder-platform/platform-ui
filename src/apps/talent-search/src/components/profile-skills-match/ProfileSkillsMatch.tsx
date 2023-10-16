@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import classNames from 'classnames'
 
-import { UserEMSISkill } from '~/libs/core'
+import { UserSkill } from '~/libs/core'
 import { EmsiSkill, isSkillVerified, Skill, SkillPill } from '~/libs/shared'
 
 import { useIsMatchingSkill } from '../../lib/utils'
@@ -10,7 +10,7 @@ import styles from './ProfileSkillsMatch.module.scss'
 
 interface ProfileSkillsMatchProps {
     matchValue: number
-    profileSkills: Pick<UserEMSISkill, 'name'|'skillId'|'skillSources'>[]
+    profileSkills: Pick<UserSkill, 'name'|'id'|'levels'>[]
     queriedSkills: Skill[]
 }
 

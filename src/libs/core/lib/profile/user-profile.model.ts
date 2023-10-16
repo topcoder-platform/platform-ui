@@ -1,4 +1,4 @@
-import { UserEMSISkill, UserSkill } from './user-skill.model'
+import { UserSkill } from './user-skill.model'
 
 export type TC_TRACKS = 'DEVELOP' | 'DESIGN' | 'DATA_SCIENCE'
 
@@ -15,8 +15,6 @@ export interface UserProfile {
     description: string
     diceEnabled: boolean
     email: string
-    // TODO: clean up the type when transition to TC skills is done
-    emsiSkills: Array<UserEMSISkill>
     firstName: string
     handle: string
     handleLower: string

@@ -2,7 +2,7 @@ import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'reac
 import { useSearchParams } from 'react-router-dom'
 import { orderBy } from 'lodash'
 
-import { UserEMSISkill, UserProfile } from '~/libs/core'
+import { UserProfile, UserSkill } from '~/libs/core'
 import { HowSkillsWorkModal, isSkillVerified } from '~/libs/shared'
 import { Button, GroupedSkillsUI } from '~/libs/ui'
 
@@ -27,25 +27,25 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
     const { skillsRenderer, isTalentSearch }: MemberProfileContextValue = useMemberProfileContext()
 
-    const memberEMSISkills: UserEMSISkill[] = useMemo(() => orderBy(
-        props.profile.emsiSkills ?? [],
+    const memberSkills: UserSkill[] = useMemo(() => orderBy(
+        props.profile.skills ?? [],
         [isSkillVerified, 'name'],
         ['desc', 'asc'],
-    ) as UserEMSISkill[], [props.profile.emsiSkills])
+    ) as UserSkill[], [props.profile.skills])
 
-    const groupedSkillsByCategory: { [key: string]: UserEMSISkill[] } = useMemo(() => {
-        const grouped: { [key: string]: UserEMSISkill[] } = {}
+    const groupedSkillsByCategory: { [key: string]: UserSkill[] } = useMemo(() => {
+        const grouped: { [key: string]: UserSkill[] } = {}
 
-        memberEMSISkills.forEach((skill: UserEMSISkill) => {
-            if (grouped[skill.skillCategory.name]) {
-                grouped[skill.skillCategory.name].push(skill)
+        memberSkills.forEach((skill: UserSkill) => {
+            if (grouped[skill.category.name]) {
+                grouped[skill.category.name].push(skill)
             } else {
-                grouped[skill.skillCategory.name] = [skill]
+                grouped[skill.category.name] = [skill]
             }
         })
 
         return grouped
-    }, [memberEMSISkills])
+    }, [memberSkills])
 
     const [skillsCatsCollapsed, setSkillsCatsCollapsed]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(true)
@@ -94,9 +94,9 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
     return (
         <div className={styles.container}>
             {
-                skillsRenderer && memberEMSISkills.length > 0 && (
+                skillsRenderer && memberSkills.length > 0 && (
                     <div className={styles.skillsWrap}>
-                        {skillsRenderer(memberEMSISkills)}
+                        {skillsRenderer(memberSkills)}
                     </div>
                 )
             }
@@ -105,7 +105,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                 <div className={styles.headerWrap}>
                     <h3>Skills</h3>
                     {
-                        canEdit && memberEMSISkills.length > 0 && (
+                        canEdit && memberSkills.length > 0 && (
                             <EditMemberPropertyBtn
                                 onClick={handleEditSkillsClick}
                             />
@@ -120,7 +120,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                         variant='linkblue'
                     />
                     {
-                        memberEMSISkills.length > 0 && (
+                        memberSkills.length > 0 && (
                             <Button
                                 link
                                 label={skillsCatsCollapsed ? 'Expand all' : 'Collapse all'}
@@ -133,13 +133,13 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
             </div>
 
             <div className={styles.skillsWrap}>
-                {memberEMSISkills.length > 0 && (
+                {memberSkills.length > 0 && (
                     <GroupedSkillsUI
                         groupedSkillsByCategory={groupedSkillsByCategory}
                         skillsCatsCollapsed={skillsCatsCollapsed}
                     />
                 )}
-                {!memberEMSISkills.length && (
+                {!memberSkills.length && (
                     <EmptySection
                         title='Topcoder verifies and tracks skills as our members complete projects and challenges.'
                         wide
@@ -152,7 +152,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                 )}
             </div>
             {
-                canEdit && !memberEMSISkills.length && (
+                canEdit && !memberSkills.length && (
                     <AddButton
                         label='Add skills'
                         onClick={handleEditSkillsClick}

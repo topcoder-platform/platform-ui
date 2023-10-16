@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import Masonry, { ResponsiveMasonry } from 'react-responsive-masonry'
 
-import { UserEMSISkill } from '~/libs/core'
+import { UserSkill } from '~/libs/core'
 import { Skill, SkillPill } from '~/libs/shared'
 
 import { CollapsibleSkillsList } from '../collapsible-skills-list'
@@ -9,7 +9,7 @@ import { CollapsibleSkillsList } from '../collapsible-skills-list'
 import styles from './GroupedSkillsUI.module.scss'
 
 interface GroupedSkillsUIProps {
-    groupedSkillsByCategory: { [key: string]: UserEMSISkill[] }
+    groupedSkillsByCategory: { [key: string]: UserSkill[] }
     skillsCatsCollapsed: boolean
 }
 const GroupedSkillsUI: FC<GroupedSkillsUIProps> = (props: GroupedSkillsUIProps) => (
@@ -29,7 +29,7 @@ const GroupedSkillsUI: FC<GroupedSkillsUIProps> = (props: GroupedSkillsUIProps) 
                         >
                             {
                                 props.groupedSkillsByCategory[categoryName]
-                                    .map((skill: UserEMSISkill) => (
+                                    .map((skill: UserSkill) => (
                                         <SkillPill
                                             skill={skill as unknown as Skill}
                                             key={skill.id}
