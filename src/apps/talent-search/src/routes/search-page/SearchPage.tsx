@@ -27,8 +27,8 @@ export const SearchPage: FC = () => {
         navigate(`${TALENT_SEARCH_PATHS.results}?${searchParams}`)
     }
 
-    function handleSelectSkillFilter(filter: UserSkill[]): void {
-        setSkillsFilter(filter)
+    function handleSelectSkillFilter(filter: Pick<UserSkill, 'id'|'name'>[]): void {
+        setSkillsFilter(filter as UserSkill[])
         searchInputRef.current?.focus()
     }
 
@@ -81,7 +81,7 @@ export const SearchPage: FC = () => {
                 <SearchInput
                     autoFocus
                     skills={skillsFilter}
-                    onChange={setSkillsFilter as any}
+                    onChange={handleSelectSkillFilter}
                     onSearch={navigateToResults}
                     inputRef={searchInputRef}
                 />

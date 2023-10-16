@@ -3,7 +3,9 @@ import { useSearchParams } from 'react-router-dom'
 
 import { UserSkill } from '~/libs/core'
 
-export const encodeUrlQuerySearch = (skills: UserSkill[]): string => (
+type PartialUserSkill = Pick<UserSkill, 'id'|'name'>
+
+export const encodeUrlQuerySearch = (skills: PartialUserSkill[]): string => (
     skills
         .map(s => `q=${encodeURIComponent(`${s.name}::${s.id}`)}`)
         .join('&')
@@ -18,13 +20,13 @@ export const parseUrlQuerySearch = (params: string[]): UserSkill[] => (
 
 export const useUrlQuerySearchParms = (paramName: string): [
     UserSkill[],
-    (s: UserSkill[]) => void
+    (s: PartialUserSkill[]) => void
 ] => {
     const [params, updateParams] = useSearchParams()
 
     const [skills, setSkills] = useState<UserSkill[]>([])
 
-    const handleUpdateSearch = useCallback((newSkills: UserSkill[]) => {
+    const handleUpdateSearch = useCallback((newSkills: PartialUserSkill[]) => {
         const searchParams = encodeUrlQuerySearch(newSkills)
         updateParams(`${searchParams}`)
     }, [updateParams])
