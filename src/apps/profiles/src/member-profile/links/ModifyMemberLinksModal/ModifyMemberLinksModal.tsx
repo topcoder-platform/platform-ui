@@ -1,5 +1,5 @@
-import { find, findIndex, omit, reject, uniqBy } from 'lodash'
-import { FC, useEffect, useRef, useState } from 'react'
+import { cloneDeep, findIndex, isEqual, omit, reject, uniqBy } from 'lodash'
+import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
@@ -28,7 +28,6 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
     const inputRef = useRef<HTMLInputElement | any>()
 
     const [isSaving, setIsSaving] = useState<boolean>(false)
-    const [hasChanges, setHasChanges] = useState<boolean>(false)
     const [currentMemberLinks, setCurrentMemberLinks] = useState<UserTrait[]>(
         [],
     )
@@ -44,16 +43,33 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
         name: 'Instagram',
         url: '',
     })
-    const [newLink, setNewLink] = useState<UserTrait>({
+    const [defaultLink, setDefaultLink] = useState<UserTrait>({
         name: '',
         url: '',
     })
+
+    const updatedLinks = useMemo(() => uniqBy(
+        [
+            defaultLinkedIn,
+            defaultGitHub,
+            defaultInstagram,
+            defaultLink,
+            ...currentMemberLinks,
+        ].filter(
+            l => l.name && l.url,
+        ),
+        e => `${e.name}-${e.url}`,
+    )
+        .map(
+            item => omit(item, ['id']),
+        ), [defaultLinkedIn, defaultGitHub, defaultInstagram, defaultLink, currentMemberLinks])
+    const hasChanges = useMemo(() => !isEqual(updatedLinks, props.memberLinks), [updatedLinks])
 
     const addNewLinkRef = useRef<LinkFormHandle>(null)
 
     useEffect(() => {
         const memberLinks = [
-            ...(props.memberLinks ?? []),
+            ...cloneDeep(props.memberLinks ?? []),
         ]
         const firstLinkedInIndex = findIndex(memberLinks, {
             name: 'LinkedIn',
@@ -76,6 +92,10 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
             setDefaultInstagram(memberLinks.splice(firstInstagramIndex, 1)[0])
         }
 
+        if (memberLinks.length > 0) {
+            setDefaultLink(memberLinks.splice(0, 1)[0])
+        }
+
         setCurrentMemberLinks(memberLinks.map((item: UserTrait, index: number) => ({
             ...item,
             id: `id-${index}-${(new Date())
@@ -85,30 +105,16 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
     }, [props.memberLinks])
 
     function handleAddAdditional(): void {
-        if (newLink.url && newLink.name) {
-            const updatedLinks: UserTrait[] = uniqBy([
-                defaultLinkedIn,
-                defaultGitHub,
-                defaultInstagram,
-                ...currentMemberLinks,
-            ].filter(l => l.name && l.url), e => `${e.name}-${e.url}`)
-            if (!find(updatedLinks, newLink)) {
-                setCurrentMemberLinks(links => [...links, {
-                    ...newLink,
-                    id: `id-${(new Date())
-                        .getTime()}`,
-                }])
-            }
-
-            addNewLinkRef.current?.resetForm()
-            setNewLink({
-                name: '',
-                url: '',
-            })
-            setHasChanges(true)
-        } else {
-            addNewLinkRef.current?.validateForm()
-        }
+        setCurrentMemberLinks(links => [...links, {
+            id: `id-${(new Date())
+                .getTime()}`,
+            ...defaultLink,
+        }])
+        setDefaultLink({
+            name: '',
+            url: '',
+        })
+        addNewLinkRef.current?.resetForm()
     }
 
     function handleRemoveLink(index: number): void {
@@ -118,15 +124,12 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                 ...currentMemberLinks,
             ],
         )
-        setHasChanges(true)
     }
 
     function handleSaveLink(link: UserTrait, index: number): void {
         setCurrentMemberLinks(links => (links ?? []).map((l, i) => (
             i === index ? link : l
         )))
-
-        setHasChanges(true)
     }
 
     function handleLinksSave(): void {
@@ -134,21 +137,6 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
 
         const updatedPersonalizationTraits: UserTrait[]
             = reject(props.memberPersonalizationTraitsFullData, (trait: UserTrait) => trait.links)
-
-        const updatedLinks: UserTrait[] = uniqBy(
-            [
-                defaultLinkedIn,
-                defaultGitHub,
-                defaultInstagram,
-                ...currentMemberLinks,
-            ].filter(
-                l => l.name && l.url,
-            ),
-            e => `${e.name}-${e.url}`,
-        )
-            .map(
-                item => omit(item, ['id']),
-            )
 
         updateOrCreateMemberTraitsAsync(props.profile.handle, [{
             categoryName: UserTraitCategoryNames.personalization,
@@ -204,19 +192,16 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                         link={defaultLinkedIn as UserLink}
                         onSave={function onSave(link: UserLink) {
                             setDefaultLinkedIn(link)
-                            setHasChanges(true)
                         }}
                         onRemove={function onRemove() {
                             setDefaultLinkedIn({
                                 ...defaultLinkedIn,
                                 url: '',
                             })
-                            setHasChanges(true)
                         }}
                         placeholder='Add URL'
                         removeIcon={IconOutline.XCircleIcon}
                         hideRemoveIcon={!defaultLinkedIn.url}
-                        allowEmptyUrl
                         disabled={isSaving}
                         labelUrlField='Linkedin'
                     />
@@ -224,19 +209,16 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                         link={defaultGitHub as UserLink}
                         onSave={function onSave(link: UserLink) {
                             setDefaultGitHub(link)
-                            setHasChanges(true)
                         }}
                         onRemove={function onRemove() {
                             setDefaultGitHub({
                                 ...defaultGitHub,
                                 url: '',
                             })
-                            setHasChanges(true)
                         }}
                         placeholder='Add URL'
                         removeIcon={IconOutline.XCircleIcon}
                         hideRemoveIcon={!defaultGitHub.url}
-                        allowEmptyUrl
                         disabled={isSaving}
                         labelUrlField='Git'
                     />
@@ -244,19 +226,16 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                         link={defaultInstagram as UserLink}
                         onSave={function onSave(link: UserLink) {
                             setDefaultInstagram(link)
-                            setHasChanges(true)
                         }}
                         onRemove={function onRemove() {
                             setDefaultInstagram({
                                 ...defaultInstagram,
                                 url: '',
                             })
-                            setHasChanges(true)
                         }}
                         placeholder='Add URL'
                         removeIcon={IconOutline.XCircleIcon}
                         hideRemoveIcon={!defaultInstagram.url}
-                        allowEmptyUrl
                         disabled={isSaving}
                         labelUrlField='Instagram'
                     />
@@ -265,8 +244,8 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
                 <hr className={styles.spacer} />
 
                 <LinkForm
-                    link={newLink as UserLink}
-                    onSave={setNewLink}
+                    link={defaultLink as UserLink}
+                    onSave={setDefaultLink}
                     allowEditType
                     placeholder='http://'
                     ref={addNewLinkRef}

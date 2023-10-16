@@ -32,6 +32,8 @@ export function renderLinkIcon(linkName: string): JSX.Element {
             return <GitHubLinkIcon />
         case 'Twitter':
             return <SocialIconTwitter />
+        case 'X / Twitter':
+            return <SocialIconTwitter />
         case 'LinkedIn':
             return <LinkedInLinkIcon />
         case 'Instagram':
