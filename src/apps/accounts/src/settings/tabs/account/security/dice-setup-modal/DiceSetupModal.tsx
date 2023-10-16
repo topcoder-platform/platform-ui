@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { get, isUndefined, lowerCase } from 'lodash'
 import { toast } from 'react-toastify'
@@ -12,9 +12,10 @@ import {
     googlePlay,
     UnSuccessfullDiceVerificationIcon,
 } from '~/apps/accounts/src/lib'
-import { DiceConnectionStatus, updateMemberMFAStatusAsync, useDiceIdConnection, UserProfile } from '~/libs/core'
+import { updateMemberMFAStatusAsync, UserProfile } from '~/libs/core'
 import { EnvironmentConfig } from '~/config'
 
+import { ConnectionHandler } from './ConnectionHandler'
 import { VerificationListener } from './VerificationListener'
 import styles from './DiceSetupModal.module.scss'
 
@@ -29,24 +30,8 @@ interface DiceSetupModalProps {
 const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => {
     const [step, setStep]: [number, Dispatch<SetStateAction<number>>] = useState(1)
 
-    const [diceConnectionId, setDiceConnectionId]: [
-        number | undefined,
-        Dispatch<SetStateAction<number | undefined>>
-    ] = useState()
-
-    const diceConnection: DiceConnectionStatus | undefined = useDiceIdConnection(props.profile.userId, diceConnectionId)
-
     const [isVerificationProcessing, setIsVerificationProcessing]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState(false)
-
-    useEffect(() => {
-        if (diceConnection && !diceConnectionId) {
-            setDiceConnectionId(diceConnection.id)
-        }
-    }, [
-        diceConnection,
-        diceConnectionId,
-    ])
 
     function handleSecondaryButtonClick(): void {
         switch (step) {
@@ -117,12 +102,11 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
                         onClick={handleSecondaryButtonClick}
                     />
                     {
-                        step !== 3 && (
+                        step !== 2 && step !== 3 && (
                             <Button
                                 primary
                                 label={(step === 4 || step === 5) ? 'Finish' : 'Next'}
                                 onClick={handlePrimaryButtonClick}
-                                disabled={step === 2 && !diceConnection?.accepted}
                             />
                         )
                     }
@@ -186,29 +170,10 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
             }
             {
                 step === 2 && (
-                    <>
-                        <p>Scan the following DICE ID QR Code in your DICE ID mobile application.</p>
-                        {
-                            diceConnection ? (
-                                <QRCodeSVG
-                                    value={diceConnection.connection as string}
-                                    size={300}
-                                    className={styles.qrCode}
-                                    includeMargin
-                                />
-                            ) : (
-                                <p>Loading...</p>
-                            )
-                        }
-                        <p>
-                            Once the connection is established, the service will offer you
-                            a Verifiable Credential.
-                            <br />
-                            Press the ACCEPT button in your DICE ID App.
-                            <br />
-                            If you DECLINE the invitation, please try again after 5 minutes.
-                        </p>
-                    </>
+                    <ConnectionHandler
+                        onComplete={handlePrimaryButtonClick}
+                        userId={props.profile.userId}
+                    />
                 )
             }
             {
