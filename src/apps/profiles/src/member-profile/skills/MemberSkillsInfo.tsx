@@ -3,8 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import { orderBy } from 'lodash'
 
 import { UserProfile, UserSkill } from '~/libs/core'
-import { HowSkillsWorkModal, isSkillVerified } from '~/libs/shared'
-import { Button, GroupedSkillsUI } from '~/libs/ui'
+import { GroupedSkillsUI, HowSkillsWorkModal, isSkillVerified } from '~/libs/shared'
+import { Button } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'

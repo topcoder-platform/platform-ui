@@ -2,8 +2,7 @@ import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 're
 import classNames from 'classnames'
 
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/outline'
-
-import { Button } from '../button'
+import { Button } from '~/libs/ui'
 
 import styles from './CollapsibleSkillsList.module.scss'
 
