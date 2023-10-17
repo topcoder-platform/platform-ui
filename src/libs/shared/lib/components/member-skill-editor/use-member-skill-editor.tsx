@@ -1,5 +1,5 @@
 import { ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { differenceWith } from 'lodash'
+import { differenceWith, pick } from 'lodash'
 
 import { profileContext, ProfileContextData, UserSkill } from '~/libs/core'
 
@@ -45,13 +45,15 @@ export const useMemberSkillEditor = ({
             return
         }
 
+        const skillIds = skills.map(skill => pick(skill, 'id'))
+
         if (!isInitialized) {
-            await createMemberSkills(profile.userId, skills)
+            await createMemberSkills(profile.userId, skillIds)
             setIsInitialized(true)
             return
         }
 
-        await updateMemberSkills(profile.userId, skills)
+        await updateMemberSkills(profile.userId, skillIds)
     }, [isInitialized, profile?.userId, skills])
 
     // Handle user changes
