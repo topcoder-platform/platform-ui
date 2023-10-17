@@ -36,7 +36,7 @@ const popularSkills: UserSkill[] = [
         },
         id: '32899253-5989-4c33-9948-cad29c9e0ab0',
         levels: [],
-        name: 'Node.js',
+        name: 'Node.js (Javascript Library)',
     },
     {
         category: {
@@ -153,7 +153,7 @@ const popularSkills: UserSkill[] = [
         },
         id: '4458454c-9a97-4332-a545-6546e240dab6',
         levels: [],
-        name: 'React.js',
+        name: 'React.js (Javascript Library)',
     },
 ]
 
