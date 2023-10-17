@@ -2,6 +2,11 @@
 
 .wrap {
     width: 100%;
+    margin-bottom: $sp-6;
+
+    @include ltemd {
+        margin-bottom: $sp-2;
+    }
 }
 
 .highlightWrap {

@@ -5,7 +5,8 @@ import classNames from 'classnames'
 import codes from 'country-calling-code'
 
 import { IconSolid } from '~/libs/ui'
-import { isSkillVerified, ProfilePicture, Skill, SkillPill } from '~/libs/shared'
+import { isSkillVerified, ProfilePicture, SkillPill } from '~/libs/shared'
+import { UserSkill } from '~/libs/core'
 
 import { ProfileMatch } from '../profile-match'
 import { Member, MemberDisplayName } from '../../lib/models'
@@ -30,7 +31,7 @@ function isOverflow(el: HTMLElement): boolean {
 }
 
 interface TalentCardProps {
-    queriedSkills: Skill[]
+    queriedSkills: UserSkill[]
     member: Member
     match?: number
 }
@@ -44,12 +45,12 @@ const TalentCard: FC<TalentCardProps> = props => {
 
     const matchedSkills = useMemo(() => (
         orderBy(
-            props.member.emsiSkills,
+            props.member.skills,
             [isSkillVerified, a => a.name],
             ['desc', 'asc'],
         )
             .filter(isMatchingSkill)
-    ), [isMatchingSkill, props.member.emsiSkills])
+    ), [isMatchingSkill, props.member.skills])
 
     const matchState = useMemo(() => ({
         matchValue: props.match,

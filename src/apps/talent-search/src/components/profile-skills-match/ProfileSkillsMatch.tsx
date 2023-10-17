@@ -1,7 +1,8 @@
 import { FC } from 'react'
 import classNames from 'classnames'
 
-import { ExpandableList, isSkillVerified, Skill, SkillPill } from '~/libs/shared'
+import { UserSkill } from '~/libs/core'
+import { isSkillVerified, SkillPill } from '~/libs/shared'
 
 import { useIsMatchingSkill } from '../../lib/utils'
 
@@ -9,14 +10,13 @@ import styles from './ProfileSkillsMatch.module.scss'
 
 interface ProfileSkillsMatchProps {
     matchValue: number
-    profileSkills: Pick<Skill, 'name'|'id'|'skillSources'>[]
-    queriedSkills: Skill[]
+    profileSkills: Pick<UserSkill, 'name'|'id'|'levels'>[]
+    queriedSkills: UserSkill[]
 }
 
 const ProfileSkillsMatch: FC<ProfileSkillsMatchProps> = props => {
     const isMatchingSkill = useIsMatchingSkill(props.queriedSkills)
     const matchedSkills = props.profileSkills.filter(isMatchingSkill)
-    const unMatchedSkills = props.profileSkills.filter(s => !isMatchingSkill(s))
     const provenMatched = matchedSkills.filter(isSkillVerified)
     const selfSkillmatched = matchedSkills.filter(s => !isSkillVerified(s))
     const missingSkills = props.queriedSkills.filter(qs => !matchedSkills.find(ms => ms.id === qs.id))
@@ -49,7 +49,7 @@ const ProfileSkillsMatch: FC<ProfileSkillsMatchProps> = props => {
                         <>
                             <div className='body-main'>
                                 {selfSkillmatched.length}
-                                {` matched self selected skill${selfSkillmatched.length > 1 ? 's' : ''}`}
+                                {` matched self proclaimed skill${selfSkillmatched.length > 1 ? 's' : ''}`}
                             </div>
                             <div className={styles.skillsList}>
                                 {selfSkillmatched.map(skill => (
@@ -72,21 +72,6 @@ const ProfileSkillsMatch: FC<ProfileSkillsMatchProps> = props => {
                     )}
                 </div>
             </div>
-            {unMatchedSkills.length > 0 && (
-                <div className={styles.additionalSkills}>
-                    <div className='body-main-bold'>
-                        Additional Skills
-                    </div>
-
-                    <div className={styles.skillsList}>
-                        <ExpandableList visible={10} itemLabel='skill'>
-                            {unMatchedSkills.map(skill => (
-                                <SkillPill skill={skill} theme='dark' key={skill.id} />
-                            ))}
-                        </ExpandableList>
-                    </div>
-                </div>
-            )}
         </div>
     )
 }

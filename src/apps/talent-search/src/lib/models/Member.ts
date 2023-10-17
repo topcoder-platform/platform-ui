@@ -1,4 +1,4 @@
-import { Skill } from '~/libs/shared'
+import { UserSkill } from '~/libs/core'
 
 import { MemberDisplayName } from './MemberDisplayName'
 import MemberAddress from './MemberAddress'
@@ -13,7 +13,7 @@ export default interface Member {
     createdAt: number;
     description: string;
     email: string;
-    emsiSkills: Array <Skill>;
+    skills: Array<UserSkill>;
     firstName: string;
     handle: string;
     homeCountryCode: string;
@@ -24,7 +24,7 @@ export default interface Member {
     numberOfChallengesWon: number;
     photoURL: string;
     skillScore: number;
-    stats: Array <MemberStats>;
+    stats: Array<MemberStats>;
     status: string;
     userId: number;
     verified: string;

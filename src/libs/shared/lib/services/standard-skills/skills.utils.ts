@@ -1,5 +1,7 @@
-import { Skill, SkillSources } from './skill.model'
+import { find } from 'lodash'
 
-export const isSkillVerified = (skill: Pick<Skill, 'skillSources'>): boolean => (
-    !!skill.skillSources?.includes(SkillSources.challengeWin)
+import { UserSkill, UserSkillLevelTypes } from '~/libs/core'
+
+export const isSkillVerified = (skill: Pick<UserSkill, 'levels'>): boolean => (
+    !!find(skill.levels, { name: UserSkillLevelTypes.verified })
 )

@@ -2,8 +2,8 @@ import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'reac
 import { useSearchParams } from 'react-router-dom'
 import { orderBy } from 'lodash'
 
-import { UserProfile } from '~/libs/core'
-import { ExpandableList, HowSkillsWorkModal, isSkillVerified, Skill, SkillPill } from '~/libs/shared'
+import { UserProfile, UserSkill } from '~/libs/core'
+import { GroupedSkillsUI, HowSkillsWorkModal, isSkillVerified } from '~/libs/shared'
 import { Button } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
@@ -27,11 +27,28 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
     const { skillsRenderer, isTalentSearch }: MemberProfileContextValue = useMemberProfileContext()
 
-    const memberSkills: Skill[] = useMemo(() => orderBy(
-        props.profile.emsiSkills ?? [],
+    const memberSkills: UserSkill[] = useMemo(() => orderBy(
+        props.profile.skills ?? [],
         [isSkillVerified, 'name'],
         ['desc', 'asc'],
-    ) as Skill[], [props.profile.emsiSkills])
+    ) as UserSkill[], [props.profile.skills])
+
+    const groupedSkillsByCategory: { [key: string]: UserSkill[] } = useMemo(() => {
+        const grouped: { [key: string]: UserSkill[] } = {}
+
+        memberSkills.forEach((skill: UserSkill) => {
+            if (grouped[skill.category.name]) {
+                grouped[skill.category.name].push(skill)
+            } else {
+                grouped[skill.category.name] = [skill]
+            }
+        })
+
+        return grouped
+    }, [memberSkills])
+
+    const [skillsCatsCollapsed, setSkillsCatsCollapsed]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(true)
 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -70,8 +87,20 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         setHowSkillsWorkVisible(false)
     }
 
+    function handleExpandAllClick(): void {
+        setSkillsCatsCollapsed(!skillsCatsCollapsed)
+    }
+
     return (
         <div className={styles.container}>
+            {
+                skillsRenderer && memberSkills.length > 0 && (
+                    <div className={styles.skillsWrap}>
+                        {skillsRenderer(memberSkills)}
+                    </div>
+                )
+            }
+
             <div className={styles.titleWrap}>
                 <div className={styles.headerWrap}>
                     <h3>Skills</h3>
@@ -83,29 +112,32 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                         )
                     }
                 </div>
-                <Button
-                    link
-                    label='How skills work'
-                    onClick={handleHowSkillsWorkClick}
-                    variant='linkblue'
-                />
+                <div className={styles.skillActions}>
+                    <Button
+                        link
+                        label='How skills work'
+                        onClick={handleHowSkillsWorkClick}
+                        variant='linkblue'
+                    />
+                    {
+                        memberSkills.length > 0 && (
+                            <Button
+                                link
+                                label={skillsCatsCollapsed ? 'Expand all' : 'Collapse all'}
+                                onClick={handleExpandAllClick}
+                                variant='linkblue'
+                            />
+                        )
+                    }
+                </div>
             </div>
 
             <div className={styles.skillsWrap}>
-                {skillsRenderer && memberSkills.length > 0 && skillsRenderer(memberSkills)}
-                {!skillsRenderer && memberSkills.length > 0 && (
-                    <ExpandableList visible={10} itemLabel='skill'>
-                        {
-                            memberSkills
-                                .map(memberSkill => (
-                                    <SkillPill
-                                        skill={memberSkill as unknown as Skill}
-                                        key={memberSkill.id}
-                                        theme='dark'
-                                    />
-                                ))
-                        }
-                    </ExpandableList>
+                {memberSkills.length > 0 && (
+                    <GroupedSkillsUI
+                        groupedSkillsByCategory={groupedSkillsByCategory}
+                        skillsCatsCollapsed={skillsCatsCollapsed}
+                    />
                 )}
                 {!memberSkills.length && (
                     <EmptySection
@@ -119,12 +151,14 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                     </EmptySection>
                 )}
             </div>
-            {canEdit && !memberSkills.length && (
-                <AddButton
-                    label='Add skills'
-                    onClick={handleEditSkillsClick}
-                />
-            )}
+            {
+                canEdit && !memberSkills.length && (
+                    <AddButton
+                        label='Add skills'
+                        onClick={handleEditSkillsClick}
+                    />
+                )
+            }
 
             {
                 isEditMode && (

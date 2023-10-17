@@ -2,10 +2,11 @@ import { ChangeEvent, FC, ReactNode, Ref } from 'react'
 import { noop } from 'lodash'
 
 import { InputMultiselect, InputMultiselectOption, InputMultiselectThemes } from '~/libs/ui'
+import { UserSkill } from '~/libs/core'
 
-import { autoCompleteSkills, isSkillVerified, Skill } from '../../services/standard-skills'
+import { autoCompleteSkills, isSkillVerified } from '../../services/standard-skills'
 
-const mapSkillToInputOption = (skill: Skill): InputMultiselectOption => ({
+const mapSkillToInputOption = (skill: UserSkill): InputMultiselectOption => ({
     ...skill,
     label: skill.name,
     value: skill.id,
@@ -35,7 +36,7 @@ interface InputSkillSelectorProps {
     readonly loading?: boolean
     readonly onChange?: (event: ChangeEvent<HTMLInputElement>) => void
     readonly placeholder?: string
-    readonly value?: Skill[]
+    readonly value?: UserSkill[]
     readonly theme?: InputMultiselectThemes
     readonly useWrapper?: boolean
     readonly dropdownIcon?: ReactNode

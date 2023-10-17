@@ -3,7 +3,6 @@
 .container {
     display: flex;
     flex-direction: column;
-    margin-bottom: $sp-6;
 
     .headerWrap {
         display: flex;
@@ -22,7 +21,25 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: $sp-4;
+        margin-bottom: $sp-6;
+
+        .skillActions {
+            display: flex;
+            align-items: center;
+
+            @include ltemd {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+
+            > button:nth-child(2) {
+                margin-left: $sp-4;
+
+                @include ltemd {
+                    margin-left: 0;
+                }
+            }
+        }
     }
 
     .skillsWrap {
@@ -30,27 +47,5 @@
         flex-wrap: wrap;
         column-gap: $sp-1;
         row-gap: $sp-2;
-
-        .skillItem {
-            border: 1px solid $black-20;
-            font-size: 14px;
-            line-height: 16px;
-            white-space: nowrap;
-            padding: $sp-2 $sp-3;
-            border-radius: 24px;
-            display: flex;
-            align-items: center;
-
-            &.verifiedSkillItem {
-                border: 2px solid $turq-120;
-
-                svg {
-                    margin-left: $sp-1;
-                    width: 16px;
-                    height: 16px;
-                    color: $turq-120;
-                }
-            }
-        }
     }
 }

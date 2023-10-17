@@ -1,6 +1,5 @@
 import { MemberMaxRating } from '~/apps/talent-search/src/lib/models'
-import { MemberStats } from '~/libs/core'
-import { Skill } from '~/libs/shared'
+import { MemberStats, UserSkill } from '~/libs/core'
 
 import MemberAddress from './MemberAddress'
 
@@ -14,7 +13,7 @@ export default interface MemberInfo {
     email: string
     accountAge: number
     maxRating: MemberMaxRating
-    emsiSkills: Array<Skill>
+    skills: Array<UserSkill>
     stats: Array<MemberStats>
     addresses?: MemberAddress[]
     country: string

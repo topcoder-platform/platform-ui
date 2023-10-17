@@ -1,22 +1,6 @@
-export const linkTypes = [
+export const additionalLinkTypes = [
     {
-        name: 'Facebook',
-        value: 'Facebook',
-    },
-    {
-        name: 'GitHub',
-        value: 'GitHub',
-    },
-    {
-        name: 'Instagram',
-        value: 'Instagram',
-    },
-    {
-        name: 'LinkedIn',
-        value: 'LinkedIn',
-    },
-    {
-        name: 'Twitter',
+        name: 'X / Twitter',
         value: 'X / Twitter',
     },
     {
@@ -27,4 +11,24 @@ export const linkTypes = [
         name: 'YouTube',
         value: 'YouTube',
     },
+    {
+        name: 'Facebook',
+        value: 'Facebook',
+    },
+]
+
+export const linkTypes = [
+    {
+        name: 'LinkedIn',
+        value: 'LinkedIn',
+    },
+    {
+        name: 'GitHub',
+        value: 'GitHub',
+    },
+    {
+        name: 'Instagram',
+        value: 'Instagram',
+    },
+    ...additionalLinkTypes,
 ]

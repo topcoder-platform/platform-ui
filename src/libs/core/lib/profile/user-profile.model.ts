@@ -15,7 +15,6 @@ export interface UserProfile {
     description: string
     diceEnabled: boolean
     email: string
-    emsiSkills: Array<UserSkill>
     firstName: string
     handle: string
     handleLower: string
@@ -29,6 +28,7 @@ export interface UserProfile {
     }
     photoURL?: string
     roles: Array<string>
+    skills: Array<UserSkill>
     status: string
     tracks?: Array<TC_TRACKS>
     updatedAt: number

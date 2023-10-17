@@ -1,11 +1,11 @@
 import { createContext, FC, ReactNode, useContext, useMemo } from 'react'
 
-import { Skill } from '~/libs/shared'
+import { UserSkill } from '~/libs/core'
 
 export interface MemberProfileContextValue {
     isTalentSearch?: boolean
     skillsRenderer?: (
-        skills: Pick<Skill, 'name'|'id'|'skillSources'>[]
+        skills: Pick<UserSkill, 'name'|'id'|'levels'>[]
     ) => ReactNode
 }
 

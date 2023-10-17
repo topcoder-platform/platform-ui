@@ -2,7 +2,8 @@ import { FC, MouseEvent, Ref, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { IconOutline, InputMultiselectOption } from '~/libs/ui'
-import { InputSkillSelector, Skill, SkillSources } from '~/libs/shared'
+import { InputSkillSelector } from '~/libs/shared'
+import { UserSkill } from '~/libs/core'
 
 import { SKILL_SEARCH_LIMIT } from '../../config'
 
@@ -11,17 +12,18 @@ import styles from './SearchInput.module.scss'
 interface SearchInputProps {
     className?: string
     readonly autoFocus?: boolean
-    onChange: (skills: Skill[]) => void
-    skills: Skill[]
+    onChange: (skills: Pick<UserSkill, 'id' | 'name'>[]) => void
+    skills: UserSkill[]
     onSearch?: () => void
     inputRef?: Ref<any>
 }
 
 const SearchInput: FC<SearchInputProps> = props => {
-    const skills: Skill[] = useMemo(() => props.skills.map(s => ({
+    const skills = useMemo(() => props.skills.map(s => ({
+        category: s.category,
         id: s.id,
+        levels: [],
         name: s.name,
-        skillSources: [SkillSources.selfPicked],
     })), [props.skills])
 
     function onChange(ev: any): void {

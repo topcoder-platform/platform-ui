@@ -1,14 +1,12 @@
 import { ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { differenceWith } from 'lodash'
 
-import { profileContext, ProfileContextData } from '~/libs/core'
+import { profileContext, ProfileContextData, UserSkill } from '~/libs/core'
 
 import {
     createMemberSkills,
     fetchMemberSkills,
     isSkillVerified,
-    Skill,
-    SkillSources,
     updateMemberSkills,
 } from '../../services/standard-skills'
 import { InputSkillSelector } from '../input-skill-selector'
@@ -37,7 +35,7 @@ export const useMemberSkillEditor = ({
 }: {limit?: number} = {}): MemberSkillEditor => {
     const { profile }: ProfileContextData = useContext(profileContext)
     const [isInitialized, setIsInitialized] = useState<boolean>(false)
-    const [skills, setSkills] = useState<Skill[]>([])
+    const [skills, setSkills] = useState<UserSkill[]>([])
     const [loading, setLoading] = useState<boolean>(true)
     const [, setError] = useState<string>()
 
@@ -47,14 +45,13 @@ export const useMemberSkillEditor = ({
             return
         }
 
-        const memberSkills = skills.map(s => ({ id: s.id, name: s.name, sources: s.skillSources }))
         if (!isInitialized) {
-            await createMemberSkills(profile.userId, memberSkills)
+            await createMemberSkills(profile.userId, skills)
             setIsInitialized(true)
             return
         }
 
-        await updateMemberSkills(profile.userId, memberSkills)
+        await updateMemberSkills(profile.userId, skills)
     }, [isInitialized, profile?.userId, skills])
 
     // Handle user changes
@@ -78,9 +75,10 @@ export const useMemberSkillEditor = ({
         }
 
         setSkills([...skills, {
+            category: skillData.category,
             id: skillData.value,
+            levels: [],
             name: skillData.label,
-            skillSources: [SkillSources.selfPicked],
         }])
     }, [skills])
 

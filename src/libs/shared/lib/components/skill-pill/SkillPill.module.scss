@@ -61,4 +61,11 @@
         border-color: $black-20;
         color: $black-60;
     }
+
+    &-catList {
+        border: none;
+        color: $black-100;
+        padding: $sp-2 0;
+        align-items: flex-start;
+    }
 }
