@@ -13,6 +13,7 @@ interface CollapsibleSkillsListProps {
     headerClass?: string
     contentClass?: string
     isCollapsed: boolean
+    onDisplayChnage?: (isCollapsed: boolean) => void
 }
 
 const CollapsibleSkillsList: FC<CollapsibleSkillsListProps> = (props: CollapsibleSkillsListProps) => {
@@ -24,7 +25,10 @@ const CollapsibleSkillsList: FC<CollapsibleSkillsListProps> = (props: Collapsibl
     }, [props.isCollapsed])
 
     function toggleCollapse(): void {
-        setIsCollapsed(!isCollapsed)
+        const newIsCollapsed: boolean = !isCollapsed
+
+        setIsCollapsed(newIsCollapsed)
+        if (props.onDisplayChnage) props.onDisplayChnage(newIsCollapsed)
     }
 
     return (

@@ -91,6 +91,16 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         setSkillsCatsCollapsed(!skillsCatsCollapsed)
     }
 
+    function toggleCollapseUIButton(collapsed: boolean): void {
+        if (collapsed === false && !!skillsCatsCollapsed) {
+            setSkillsCatsCollapsed(false)
+        }
+
+        if (collapsed === true && skillsCatsCollapsed === false) {
+            setSkillsCatsCollapsed(true)
+        }
+    }
+
     return (
         <div className={styles.container}>
             {
@@ -137,6 +147,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                     <GroupedSkillsUI
                         groupedSkillsByCategory={groupedSkillsByCategory}
                         skillsCatsCollapsed={skillsCatsCollapsed}
+                        onAllSkillsSameDisplayState={toggleCollapseUIButton}
                     />
                 )}
                 {!memberSkills.length && (
