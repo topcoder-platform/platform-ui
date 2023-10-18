@@ -15,7 +15,7 @@ interface GroupedSkillsUIProps {
 const GroupedSkillsUI: FC<GroupedSkillsUIProps> = (props: GroupedSkillsUIProps) => (
     <ResponsiveMasonry
         className={styles.skillsCategories}
-        columnsCountBreakPoints={{ 350: 1, 750: 2, 900: 3 }}
+        columnsCountBreakPoints={{ 350: 1, 750: 2, 1368: 3 }}
     >
         <Masonry>
             {

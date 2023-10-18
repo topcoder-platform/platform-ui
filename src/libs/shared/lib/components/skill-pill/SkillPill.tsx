@@ -4,7 +4,7 @@ import classNames from 'classnames'
 import { IconOutline } from '~/libs/ui'
 import { UserSkill } from '~/libs/core'
 
-import { isSkillVerified } from '../../services'
+import { isSkillVerified } from '../../services/standard-skills'
 
 import styles from './SkillPill.module.scss'
 
