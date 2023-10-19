@@ -25,23 +25,10 @@
         display: flex;
         justify-content: flex-start;
         align-items: flex-start;
-        cursor: pointer;
 
         .title {
             font-weight: 700;
             font-size: 14px;
-        }
-
-        .btn {
-            padding-left: 0;
-            padding-right: $sp-2;
-            color: $turq-120;
-
-            svg {
-                flex: 0 0 auto;
-                color: $turq-120;
-                @include icon-size(16);
-            }
         }
 
         .badgeCount {
