@@ -35,6 +35,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
     const groupedSkillsByCategory: { [key: string]: UserSkill[] } = useMemo(() => {
         const grouped: { [key: string]: UserSkill[] } = {}
+        const sortedGroupedSkillsByCategory: { [key: string]: UserSkill[] } = {}
 
         memberSkills.forEach((skill: UserSkill) => {
             if (grouped[skill.category.name]) {
@@ -44,11 +45,14 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
             }
         })
 
-        return grouped
-    }, [memberSkills])
+        Object.keys(grouped)
+            .sort()
+            .forEach(key => {
+                sortedGroupedSkillsByCategory[key] = grouped[key]
+            })
 
-    const [skillsCatsCollapsed, setSkillsCatsCollapsed]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(true)
+        return sortedGroupedSkillsByCategory
+    }, [memberSkills])
 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -87,10 +91,6 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         setHowSkillsWorkVisible(false)
     }
 
-    function handleExpandAllClick(): void {
-        setSkillsCatsCollapsed(!skillsCatsCollapsed)
-    }
-
     return (
         <div className={styles.container}>
             {
@@ -119,16 +119,6 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                         onClick={handleHowSkillsWorkClick}
                         variant='linkblue'
                     />
-                    {
-                        memberSkills.length > 0 && (
-                            <Button
-                                link
-                                label={skillsCatsCollapsed ? 'Expand all' : 'Collapse all'}
-                                onClick={handleExpandAllClick}
-                                variant='linkblue'
-                            />
-                        )
-                    }
                 </div>
             </div>
 
@@ -136,7 +126,6 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                 {memberSkills.length > 0 && (
                     <GroupedSkillsUI
                         groupedSkillsByCategory={groupedSkillsByCategory}
-                        skillsCatsCollapsed={skillsCatsCollapsed}
                     />
                 )}
                 {!memberSkills.length && (
