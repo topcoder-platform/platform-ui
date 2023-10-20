@@ -25,9 +25,10 @@
     }
 
     .skillsWrap {
-        display: flex;
-        flex-wrap: wrap;
-        column-gap: $sp-1;
-        row-gap: $sp-2;
+        padding-bottom: $sp-8;
+
+        @include ltemd {
+            padding-bottom: $sp-4;
+        }
     }
 }

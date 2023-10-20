@@ -1,9 +1,9 @@
 import { FC, ReactNode } from 'react'
 import classNames from 'classnames'
 
-import styles from './CollapsibleSkillsList.module.scss'
+import styles from './SkillsList.module.scss'
 
-interface CollapsibleSkillsListProps {
+interface SkillsListProps {
     children?: ReactNode[]
     header?: ReactNode
     containerClass?: string
@@ -11,7 +11,7 @@ interface CollapsibleSkillsListProps {
     contentClass?: string
 }
 
-const CollapsibleSkillsList: FC<CollapsibleSkillsListProps> = (props: CollapsibleSkillsListProps) => (
+const SkillsList: FC<SkillsListProps> = (props: SkillsListProps) => (
     <div className={classNames(styles.container, props.containerClass)}>
         <div className={classNames(styles.header, props.headerClass)}>
             <div className={styles.title}>{props.header}</div>
@@ -26,4 +26,4 @@ const CollapsibleSkillsList: FC<CollapsibleSkillsListProps> = (props: Collapsibl
     </div>
 )
 
-export default CollapsibleSkillsList
+export default SkillsList

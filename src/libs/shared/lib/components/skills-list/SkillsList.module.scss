@@ -45,11 +45,11 @@
         transition: opacity 0.3s ease-in-out;
         max-height: auto;
         opacity: 1;
-        padding-left: $sp-8;
+        padding-left: $sp-4;
         margin-top: $sp-1;
 
         @include ltemd {
-            padding-left: $sp-4;
+            padding-left: $sp-2;
         }
     }
 }
