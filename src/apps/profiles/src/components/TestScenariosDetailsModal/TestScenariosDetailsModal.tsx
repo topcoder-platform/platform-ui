@@ -40,7 +40,8 @@ const TestScenariosDetailsModal: FC<TestScenariosDetailsModalProps> = (props: Te
         )
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
-        filter: 'track=DEVELOP&subTrack=TEST_SCENARIOS',
+        subTrack: 'TEST_SCENARIOS',
+        track: 'DEVELOP',
     })
 
     const ratingDistributionOptions: Highcharts.Options | undefined

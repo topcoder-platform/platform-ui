@@ -39,7 +39,8 @@ const CodeDetailsModal: FC<CodeDetailsModalProps> = (props: CodeDetailsModalProp
         )
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
-        filter: 'track=DEVELOP&subTrack=CODE',
+        subTrack: 'CODE',
+        track: 'DEVELOP',
     })
 
     const ratingDistributionOptions: Highcharts.Options | undefined

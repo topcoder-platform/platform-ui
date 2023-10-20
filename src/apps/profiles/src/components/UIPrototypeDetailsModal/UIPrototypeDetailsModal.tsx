@@ -40,7 +40,8 @@ const UIPrototypeDetailsModal: FC<UIPrototypeDetailsModalProps> = (props: UIProt
         )
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
-        filter: 'track=DEVELOP&subTrack=UI_PROTOTYPE_COMPETITION',
+        subTrack: 'UI_PROTOTYPE_COMPETITION',
+        track: 'DEVELOP',
     })
 
     const ratingDistributionOptions: Highcharts.Options | undefined

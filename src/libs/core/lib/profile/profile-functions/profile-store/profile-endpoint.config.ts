@@ -26,7 +26,7 @@ export function learnBaseURL(): string {
 }
 
 export function memberStatsDistroURL(): string {
-    return `${EnvironmentConfig.API.V3}/members/stats/distribution`
+    return `${EnvironmentConfig.API.V5}/members/stats/distribution`
 }
 
 export function memberModifyURL(): string {

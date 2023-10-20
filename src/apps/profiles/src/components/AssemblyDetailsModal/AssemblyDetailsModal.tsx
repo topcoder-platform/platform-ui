@@ -39,7 +39,8 @@ const AssemblyDetailsModal: FC<AssemblyDetailsModalProps> = (props: AssemblyDeta
         )
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
-        filter: 'track=DEVELOP&subTrack=ASSEMBLY_COMPETITION',
+        subTrack: 'ASSEMBLY_COMPETITION',
+        track: 'DEVELOP',
     })
 
     const ratingDistributionOptions: Highcharts.Options | undefined

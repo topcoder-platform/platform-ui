@@ -51,7 +51,7 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
         setIsInfoModalOpen(true)
     }
 
-    return memberStats?.wins || tcoWins || tcoQualifications ? (
+    return memberStats?.wins || memberStats?.maxRating?.rating || tcoWins || tcoQualifications ? (
         <div className={styles.container}>
             <p className='body-large-medium'>Achievements @ Topcoder</p>
 
@@ -62,7 +62,7 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
                     )
                 }
                 {
-                    !!memberStats?.wins && memberStats.wins > 0 && (
+                    ((!!memberStats?.wins && memberStats.wins > 0) || !!memberStats?.maxRating?.rating) && (
                         <ChallengeWinsBanner
                             memberStats={memberStats}
                             profile={props.profile}

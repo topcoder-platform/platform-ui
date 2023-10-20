@@ -201,11 +201,14 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                     <p className='body-large-bold'>Topcoder Challenge Winner</p>
                     <div className={styles.wins}>
                         {
-                            !!props.memberStats.DATA_SCIENCE?.SRM?.wins && (
+                            !!(props.memberStats.DATA_SCIENCE?.SRM?.wins
+                                || props.memberStats.DATA_SCIENCE?.SRM?.rank?.rating) && (
                                 <ChallengeWin
                                     typeName='SRM'
                                     onClick={bind(handleChallengeWinModalToggle, this, 'SRM')}
-                                    winCnt={props.memberStats.DATA_SCIENCE.SRM.wins}
+                                    winCnt={Number(props.memberStats.DATA_SCIENCE?.SRM?.wins
+                                        || props.memberStats.DATA_SCIENCE?.SRM?.rank?.rating)}
+                                    winLabel={!props.memberStats.DATA_SCIENCE?.SRM?.wins ? 'RATING' : 'WINS'}
                                 />
                             )
                         }

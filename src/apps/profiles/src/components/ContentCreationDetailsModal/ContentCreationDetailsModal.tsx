@@ -40,7 +40,8 @@ const ContentCreationDetailsModal: FC<ContentCreationDetailsModalProps> = (props
         )
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
-        filter: 'track=DEVELOP&subTrack=CONTENT_CREATION',
+        subTrack: 'CONTENT_CREATION',
+        track: 'DEVELOP',
     })
 
     const ratingDistributionOptions: Highcharts.Options | undefined

@@ -41,7 +41,8 @@ const MMDetailsModal: FC<MMDetailsModalProps> = (props: MMDetailsModalProps) => 
         )
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
-        filter: 'track=DATA_SCIENCE&subTrack=MARATHON_MATCH',
+        subTrack: 'MARATHON_MATCH',
+        track: 'DATA_SCIENCE',
     })
 
     const ratingDistributionOptions: Highcharts.Options | undefined

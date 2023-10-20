@@ -49,7 +49,8 @@ const GenericSubtrackDetailsModal: FC<GenericSubtrackDetailsModalProps> = (props
         )
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
-        filter: `track=${props.track}&subTrack=${props.subTrack}`,
+        subTrack: props.track,
+        track: props.subTrack,
     })
 
     const ratingDistributionOptions: Highcharts.Options | undefined

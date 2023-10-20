@@ -47,7 +47,8 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
         )
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
-        filter: 'track=DATA_SCIENCE&subTrack=SRM',
+        subTrack: 'SRM',
+        track: 'DATA_SCIENC',
     })
 
     const ratingDistributionOptions: Highcharts.Options | undefined
