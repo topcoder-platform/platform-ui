@@ -213,35 +213,42 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
                             )
                         }
                         {
-                            !!props.memberStats.DATA_SCIENCE?.MARATHON_MATCH?.wins && (
+                            !!(props.memberStats.DATA_SCIENCE?.MARATHON_MATCH?.wins
+                                || props.memberStats.DATA_SCIENCE?.MARATHON_MATCH?.rank?.rating) && (
                                 <ChallengeWin
                                     typeName='Marathon Match'
                                     onClick={bind(handleChallengeWinModalToggle, this, 'DS')}
-                                    winCnt={props.memberStats.DATA_SCIENCE.MARATHON_MATCH.wins}
+                                    winCnt={props.memberStats.DATA_SCIENCE?.MARATHON_MATCH?.wins
+                                        || props.memberStats.DATA_SCIENCE?.MARATHON_MATCH?.rank?.rating}
+                                    winLabel={!props.memberStats.DATA_SCIENCE?.MARATHON_MATCH?.wins ? 'RATING' : 'WINS'}
                                 />
                             )
                         }
                         {
                             !!props.memberStats.DEVELOP?.wins
-                            && props.memberStats.DEVELOP?.subTracks.map((ms: MemberStats) => (ms.wins ? (
-                                <ChallengeWin
-                                    key={ms.name}
-                                    typeName={subTrackLabelToHumanName(ms.name)}
-                                    onClick={bind(handleChallengeWinModalToggle, this, ms.name)}
-                                    winCnt={ms.wins}
-                                />
-                            ) : undefined))
+                            && props.memberStats.DEVELOP?.subTracks.map((ms: MemberStats) => (
+                                (ms.wins || ms.rank?.rating) ? (
+                                    <ChallengeWin
+                                        key={ms.name}
+                                        typeName={subTrackLabelToHumanName(ms.name)}
+                                        onClick={bind(handleChallengeWinModalToggle, this, ms.name)}
+                                        winCnt={ms.wins || ms.rank?.rating}
+                                        winLabel={ms.wins ? 'WINS' : 'RATING'}
+                                    />
+                                ) : undefined))
                         }
                         {
                             !!props.memberStats.DESIGN?.wins
-                            && props.memberStats.DESIGN?.subTracks.map((ms: MemberStats) => (ms.wins ? (
-                                <ChallengeWin
-                                    key={ms.name}
-                                    typeName={subTrackLabelToHumanName(ms.name)}
-                                    onClick={bind(handleChallengeWinModalToggle, this, ms.name)}
-                                    winCnt={ms.wins}
-                                />
-                            ) : undefined))
+                            && props.memberStats.DESIGN?.subTracks.map((ms: MemberStats) => (
+                                (ms.wins || ms.rank?.rating) ? (
+                                    <ChallengeWin
+                                        key={ms.name}
+                                        typeName={subTrackLabelToHumanName(ms.name)}
+                                        onClick={bind(handleChallengeWinModalToggle, this, ms.name)}
+                                        winCnt={ms.wins || ms.rank?.rating}
+                                        winLabel={ms.wins ? 'WINS' : 'RATING'}
+                                    />
+                                ) : undefined))
                         }
                         {
                             !!props.memberStats.COPILOT && (
