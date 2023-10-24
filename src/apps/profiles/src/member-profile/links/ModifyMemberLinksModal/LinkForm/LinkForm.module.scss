@@ -1,0 +1,56 @@
+@import '@libs/ui/styles/includes';
+
+.formError {
+    color: $red-100;
+}
+
+.formWrap {
+    display: flex;
+    flex-direction: column;
+
+    :global(input) {
+        margin-top: $sp-1;
+    }
+
+    :global(.input-el) {
+        margin-bottom: 0;
+    }
+
+}
+
+.form {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    > svg {
+        height: 24px;
+        width: 24px;
+        margin-top: 14px;
+        margin-right: $sp-4;
+    }
+
+    &>div:nth-child(1) {
+        margin-right: $sp-2;
+        min-width: 150px;
+        @include ltemd {
+            min-width: 0;
+        }
+    }
+
+    &>div:nth-child(2) {
+        flex: 1;
+    }
+    &>button {
+        svg {
+            @include icon-xxl;
+        }
+
+        &.button {
+            margin-left: $sp-4;
+            padding-left: $sp-2;
+            padding-right: $sp-2;
+            padding-top: 11px;
+        }
+    }
+}

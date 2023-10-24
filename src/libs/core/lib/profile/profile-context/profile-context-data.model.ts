@@ -7,4 +7,5 @@ export interface ProfileContextData {
     isLoggedIn: boolean
     profile?: UserProfile
     updateProfile: (updatedProfileContext: ProfileContextData) => Promise<void>
+    updateProfileContext: (updatedProfileContext: ProfileContextData) => void
 }

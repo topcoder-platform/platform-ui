@@ -2,36 +2,36 @@ version: 2.1
 
 defaults: &defaults
     docker:
-      - image: node:16.14
+        - image: node:16.14
 
 deploy_defaults: &deploy_defaults
     docker:
-      - image: cimg/python:3.10.2
+        - image: cimg/python:3.10.2
 
 test_defaults: &test_defaults
     docker:
-      - image: cypress/browsers:node16.14.2-slim-chrome100-ff99-edge
+        - image: cypress/browsers:node16.14.2-slim-chrome100-ff99-edge
 
 install_build_dependency: &install_build_dependency
     name: Installation of build and deployment dependencies.
     command: |
-      apt update
-      apt install jq -y
-      apt install python3-pip -y
-      pip3 install awscli --upgrade
+        apt update
+        apt install jq -y
+        apt install python3-pip -y
+        pip3 install awscli --upgrade
 
 install_dependency: &install_dependency
     name: Installation of build and deployment dependencies.
     command: |
-      pip3 install awscli --upgrade
+        pip3 install awscli --upgrade
 
 install_deploysuite: &install_deploysuite
     name: Installation of install_deploysuite.
     command: |
-      git clone --branch v1.4.13 https://github.com/topcoder-platform/tc-deploy-scripts ../buildscript
-      cp ./../buildscript/master_deploy.sh .
-      cp ./../buildscript/buildenv.sh .
-      cp ./../buildscript/awsconfiguration.sh .
+        git clone --branch v1.4.13 https://github.com/topcoder-platform/tc-deploy-scripts ../buildscript
+        cp ./../buildscript/master_deploy.sh .
+        cp ./../buildscript/buildenv.sh .
+        cp ./../buildscript/awsconfiguration.sh .
 
 restore_cache_settings_for_build: &restore_cache_settings_for_build
     key: connect-node-modules-{{ checksum "yarn.lock" }}
@@ -39,39 +39,39 @@ restore_cache_settings_for_build: &restore_cache_settings_for_build
 save_cache_settings: &save_cache_settings
     key: connect-node-modules-{{ checksum "yarn.lock" }}
     paths:
-      - node_modules
+        - node_modules
 
 running_yarn_eslint: &running_yarn_eslint
     name: Running Yarn eslint
     command: |
-      yarn add eslint -g
-      yarn lint
+        yarn add eslint -g
+        yarn lint
 
 running_yarn_build: &running_yarn_build
     name: Running Yarn Build
     command: |
-      source buildenvvar
-      yarn install
-      yarn build
+        source buildenvvar
+        yarn install
+        yarn build
 
 running_yarn_sb_build: &running_yarn_sb_build
     name: Running Yarn Storybook Build
     command: |
-      source buildenvvar
-      yarn sb:build
+        source buildenvvar
+        yarn sb:build
 
 running_yarn_test: &running_yarn_test
     name: Running Yarn Test Build
     command: |
-      yarn install
-      yarn cypress install
-      yarn build
-      yarn cy:ci
+        yarn install
+        yarn cypress install
+        yarn build
+        yarn cy:ci
 
 workspace_persist: &workspace_persist
     root: .
     paths:
-      - build
+        - build
 
 workspace_attach: &workspace_attach
     at: ./workspace
@@ -79,18 +79,16 @@ workspace_attach: &workspace_attach
 build_configuration_fetch: &build_configuration_fetch
     name: "configuring environment"
     command: |
-      ./awsconfiguration.sh $DEPLOY_ENV
-      ./buildenv.sh -e $DEPLOY_ENV -b ${LOGICAL_ENV}-${APPNAME}-buildvar
-      aws s3 cp s3://tc-platform-${LOGICAL_ENV}/securitymanager/${LOGICAL_ENV}-platform-ui.env ./.env
+        ./awsconfiguration.sh $DEPLOY_ENV
+        ./buildenv.sh -e $DEPLOY_ENV -b ${LOGICAL_ENV}-${APPNAME}-buildvar
+        aws s3 cp s3://tc-platform-${LOGICAL_ENV}/securitymanager/${LOGICAL_ENV}-platform-ui.env ./.environments/.env.${LOGICAL_ENV}.local
 
-lint_steps: &lint_steps
-    # Initialization.
+lint_steps: &lint_steps # Initialization.
     - checkout
     - setup_remote_docker
     - run: *running_yarn_eslint
 
-build_steps: &build_steps
-    # Initialization.
+build_steps: &build_steps # Initialization.
     - checkout
     - setup_remote_docker
     - run: *install_build_dependency
@@ -100,26 +98,25 @@ build_steps: &build_steps
     - run: *running_yarn_sb_build
     - persist_to_workspace: *workspace_persist
 
-test_steps: &test_steps
-    # Initialization.
+test_steps: &test_steps # Initialization.
     - checkout
     - setup_remote_docker
     - restore_cache:
-        key: test-node-modules-{{ checksum "yarn.lock" }}
+          key: test-node-modules-{{ checksum "yarn.lock" }}
     - run: *running_yarn_test
     - save_cache:
-        key: test-node-modules-{{ checksum "yarn.lock" }}
-        paths:
-          - node_modules
-          - /root/.cache/Cypress
+          key: test-node-modules-{{ checksum "yarn.lock" }}
+          paths:
+              - node_modules
+              - /root/.cache/Cypress
     - store_test_results:
-        path: cypress/test-report
+          path: cypress/test-report
     - store_artifacts:
-        path: cypress/test-report
+          path: cypress/test-report
     - store_artifacts:
-        path: cypress/videos
+          path: cypress/videos
     - store_artifacts:
-        path: cypress/screenshots
+          path: cypress/screenshots
 
 deploy_steps: &deploy_steps
     - checkout
@@ -127,157 +124,163 @@ deploy_steps: &deploy_steps
     - run: *install_dependency
     - run: *install_deploysuite
     - deploy:
-        name: Running MasterScript
-        command: |
-          ./awsconfiguration.sh $DEPLOY_ENV
-          source awsenvconf
-          ./buildenv.sh -e $DEPLOY_ENV -b ${LOGICAL_ENV}-${APPNAME}-deployvar
-          source buildenvvar
-          ./master_deploy.sh -d CFRONT -e $DEPLOY_ENV -c $ENABLE_CACHE
+          name: Running MasterScript
+          command: |
+              ./awsconfiguration.sh $DEPLOY_ENV
+              source awsenvconf
+              ./buildenv.sh -e $DEPLOY_ENV -b ${LOGICAL_ENV}-${APPNAME}-deployvar
+              source buildenvvar
+              ./master_deploy.sh -d CFRONT -e $DEPLOY_ENV -c $ENABLE_CACHE
 
 jobs:
-  # lint-dev:
-  #   <<: *defaults
-  #   environment:
-  #     DEPLOY_ENV: "DEV"
-  #     LOGICAL_ENV: "dev"
-  #     APPNAME: "platform-ui-mvp"
-  #   steps: *lint_steps
+    lint-dev:
+        <<: *defaults
+        environment:
+            DEPLOY_ENV: "DEV"
+            LOGICAL_ENV: "dev"
+            APPNAME: "platform-ui-mvp"
+        steps: *lint_steps
 
-  # lint-prod:
-  #   <<: *defaults
-  #   environment:
-  #     DEPLOY_ENV: "PROD"
-  #     LOGICAL_ENV: "prod"
-  #     APPNAME: "platform-ui-mvp"
-  #   steps: *lint_steps
+    # lint-prod:
+    #   <<: *defaults
+    #   environment:
+    #     DEPLOY_ENV: "PROD"
+    #     LOGICAL_ENV: "prod"
+    #     APPNAME: "platform-ui-mvp"
+    #   steps: *lint_steps
 
-  build-dev:
-    <<: *defaults
-    environment:
-      DEPLOY_ENV: "DEV"
-      LOGICAL_ENV: "dev"
-      APPNAME: "platform-ui-mvp"
-    steps: *build_steps
+    build-dev:
+        <<: *defaults
+        environment:
+            DEPLOY_ENV: "DEV"
+            LOGICAL_ENV: "dev"
+            APPNAME: "platform-ui-mvp"
+        steps: *build_steps
 
-  build-qa:
-    <<: *defaults
-    environment:
-      DEPLOY_ENV: "QA"
-      LOGICAL_ENV: "qa"
-      APPNAME: "platform-ui-mvp"
-    steps: *build_steps
+    build-qa:
+        <<: *defaults
+        environment:
+            DEPLOY_ENV: "QA"
+            LOGICAL_ENV: "qa"
+            APPNAME: "platform-ui-mvp"
+        steps: *build_steps
 
-  build-prod:
-    <<: *defaults
-    environment:
-      DEPLOY_ENV: "PROD"
-      LOGICAL_ENV: "prod"
-      APPNAME: "platform-ui-mvp"
-    steps: *build_steps
+    build-prod:
+        <<: *defaults
+        environment:
+            DEPLOY_ENV: "PROD"
+            LOGICAL_ENV: "prod"
+            APPNAME: "platform-ui-mvp"
+        steps: *build_steps
 
-  test-dev:
-    <<: *test_defaults
-    environment:
-      DEPLOY_ENV: "DEV"
-      LOGICAL_ENV: "dev"
-      APPNAME: "platform-ui-mvp"
-    steps: *test_steps
+    test-dev:
+        <<: *test_defaults
+        environment:
+            DEPLOY_ENV: "DEV"
+            LOGICAL_ENV: "dev"
+            APPNAME: "platform-ui-mvp"
+        steps: *test_steps
 
-  # Just tests commited code.
-  deployDev:
-    <<: *deploy_defaults
-    environment:
-      DEPLOY_ENV: "DEV"
-      LOGICAL_ENV: "dev"
-      ENABLE_CACHE: true
-      APPNAME: "platform-ui-mvp"
-    steps: *deploy_steps
+    # Just tests commited code.
+    deployDev:
+        <<: *deploy_defaults
+        environment:
+            DEPLOY_ENV: "DEV"
+            LOGICAL_ENV: "dev"
+            ENABLE_CACHE: true
+            APPNAME: "platform-ui-mvp"
+        steps: *deploy_steps
 
-  deployQa:
-    <<: *deploy_defaults
-    environment:
-      DEPLOY_ENV: "QA"
-      LOGICAL_ENV: "qa"
-      ENABLE_CACHE: true
-      APPNAME: "platform-ui-mvp"
-    steps: *deploy_steps
+    deployQa:
+        <<: *deploy_defaults
+        environment:
+            DEPLOY_ENV: "QA"
+            LOGICAL_ENV: "qa"
+            ENABLE_CACHE: true
+            APPNAME: "platform-ui-mvp"
+        steps: *deploy_steps
 
-  deployProd:
-    <<: *deploy_defaults
-    environment:
-      DEPLOY_ENV: "PROD"
-      LOGICAL_ENV: "prod"
-      ENABLE_CACHE: true
-      APPNAME: "platform-ui-mvp"
-    steps: *deploy_steps
+    deployProd:
+        <<: *deploy_defaults
+        environment:
+            DEPLOY_ENV: "PROD"
+            LOGICAL_ENV: "prod"
+            ENABLE_CACHE: true
+            APPNAME: "platform-ui-mvp"
+        steps: *deploy_steps
 
 workflows:
-  version: 2
-  build:
-    jobs:
-      # - lint-dev:
-      #     context : org-global
-      #     filters:
-      #       branches:
-      #         ignore:
-      #           - master
+    version: 2
+    build:
+        jobs:
+            - lint-dev:
+                  context: org-global
+                  filters:
+                      branches:
+                          ignore:
+                              - master
 
-      # - lint-prod:
-      #     context : org-global
-      #     filters:
-      #       branches:
-      #         only:
-      #           - master
+            # - lint-prod:
+            #     context : org-global
+            #     filters:
+            #       branches:
+            #         only:
+            #           - master
 
-      - build-dev:
-          context : org-global
-          filters:
-            branches:
-              ignore:
-                - master
-                - qa
+            - build-dev:
+                  context: org-global
+                  filters:
+                      branches:
+                          ignore:
+                              - master
+                              - qa
+                              - profiles-app
 
-      - build-qa:
-          context : org-global
-          filters:
-            branches:
-              only:
-                - qa
+            - build-qa:
+                  context: org-global
+                  filters:
+                      branches:
+                          only:
+                              - qa
+                              - profiles-app
 
-      - build-prod:
-          context : org-global
-          filters:
-            branches:
-              only:
-                - master
+            - build-prod:
+                  context: org-global
+                  filters:
+                      branches:
+                          only:
+                              - master
 
-      - deployDev:
-          context : org-global
-          requires:
-            - build-dev
-          filters:
-            branches:
-              only:
-                - dev
+            - deployDev:
+                  context: org-global
+                  requires:
+                      - build-dev
+                  filters:
+                      branches:
+                          only:
+                              - dev
+                              - justin_fixes
+                              - talent_search_fixes
+                              - PROD-4398_integrate-userflow-remove-sprig
 
-      - deployQa:
-          context : org-global
-          requires:
-            - build-qa
-          filters:
-            branches:
-              only:
-                - qa
+            - deployQa:
+                  context: org-global
+                  requires:
+                      - build-qa
+                  filters:
+                      branches:
+                          only:
+                              - qa
+                              - profiles-app
 
-      - deployProd:
-          context : org-global
-          requires:
-            - build-prod
-          filters: &filters-prod
-            branches:
-              only:
-                - master
+            - deployProd:
+                  context: org-global
+                  requires:
+                      - build-prod
+                  filters: &filters-prod
+                      branches:
+                          only:
+                              - master
 
-      - test-dev:
-          context : org-global
+            - test-dev:
+                  context: org-global

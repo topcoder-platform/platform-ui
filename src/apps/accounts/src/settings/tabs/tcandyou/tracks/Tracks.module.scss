@@ -1,0 +1,15 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    margin: $sp-8 0;
+
+    .content {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 0;
+
+        svg {
+            margin-right: $sp-4;
+        }
+    }
+}

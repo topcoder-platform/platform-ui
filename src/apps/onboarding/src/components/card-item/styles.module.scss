@@ -1,0 +1,42 @@
+@import '../../../../../libs/ui/lib/styles/includes';
+
+.container {
+    border-radius: 8px;
+    border: 1px solid $black-20;
+    padding: 24px;
+}
+
+.textTitle {
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 24px;
+}
+
+.textSubTitle {
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 22px;
+}
+
+.textDescription {
+    color: $black-60;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 22px;
+}
+
+.blockBtns {
+    flex-shrink: 0;
+}
+
+.btn {
+    flex-shrink: 0;
+    color: $turq-160;
+
+    &:disabled {
+        opacity: 0.2;
+    }
+}

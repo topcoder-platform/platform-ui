@@ -1,0 +1,35 @@
+@import "@libs/ui/styles/includes";
+
+.challengesGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: $sp-4;
+    align-items: flex-end;
+    margin-bottom: $sp-13;
+
+    .gridHead {
+        text-transform: uppercase;
+        color: #767676;
+        font-weight: $font-weight-medium;
+        font-size: 11px;
+        line-height: 14px;
+    }
+
+    .gridLeftSidebar {
+        background-color: $blue-10;
+        padding: $sp-3 $sp-4;
+        border-radius: 4px;
+        font-weight: $font-weight-bold;
+    }
+
+    .gridCell {
+        background-color: $black-5;
+        padding: $sp-3 $sp-4;
+        border-radius: 4px;
+    }
+
+    .blue {
+        color: #0d61bf;
+        font-weight: $font-weight-bold;
+    }
+}

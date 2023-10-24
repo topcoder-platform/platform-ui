@@ -1,0 +1,52 @@
+@import "@libs/ui/styles/includes";
+
+.wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $tc-white;
+    font-family: $font-roboto;
+    flex-direction: column;
+
+    border-radius: 100px;
+    padding-bottom: 2px;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+
+    background: rgb(130,234,207);
+    background: linear-gradient(
+        180deg,
+        $turq-50 0%,
+        $turq-50 45%,
+        $turq-100 50%,
+        $turq-100 67%,
+        $turq-120 70%,
+        $turq-140 80%,
+        $turq-180 90%
+    );
+    background-size: 100% 3000px;
+    background-position: 0 0;
+
+    font-size: 16px;
+    line-height: 26px;
+    font-weight: $font-weight-bold;
+
+    &:global(.dark) {
+        color: $black-100;
+    }
+
+    strong {
+        font-size: 23px;
+        line-height: 27px;
+        font-weight: 900;
+    }
+
+    @include ltemd {
+        font-size: 10px;
+        line-height: 14px;
+        strong {
+            font-size: 12px;
+            line-height: 14px;
+        }
+    }
+}

@@ -1,3 +1,5 @@
+import { ReactNode } from 'react'
+
 import { FormInputAutocompleteOption } from './form-groups'
 import { InputEvent } from './form-input.event'
 import { ValidatorFn } from './validator-functions'
@@ -27,6 +29,18 @@ export interface FormCard {
 
 export type InputValue = string | boolean | FileList | undefined
 
+export type FormInputTooltipOptions = {
+    className?: string
+    content?: ReactNode
+    /** Set clickable=true to allows interactions with the tooltip */
+    clickable?: boolean
+    disableWrap?: boolean
+    place?: 'top' | 'right' | 'bottom' | 'left'
+    children?: ReactNode
+    triggerOn?: 'click' | 'hover'
+    strategy?: 'absolute' | 'fixed'
+}
+
 export interface FormInputModel {
     readonly autocomplete?: FormInputAutocompleteOption
     readonly cards?: ReadonlyArray<FormCard>
@@ -54,8 +68,10 @@ export interface FormInputModel {
     readonly readonly?: boolean
     readonly spellCheck?: boolean
     readonly title?: string
+    tooltip?: FormInputTooltipOptions
     touched?: boolean
-    readonly type: 'card-set' | 'checkbox' | 'password' | 'radio' | 'rating' | 'text' | 'textarea' | 'image-picker'
+    // eslint-disable-next-line max-len
+    readonly type: 'card-set'| 'checkbox' | 'password' | 'radio' | 'rating' | 'text' | 'textarea' | 'image-picker' | 'toggle'
     readonly validators?: ReadonlyArray<ValidatorFn>
     value?: InputValue
 }

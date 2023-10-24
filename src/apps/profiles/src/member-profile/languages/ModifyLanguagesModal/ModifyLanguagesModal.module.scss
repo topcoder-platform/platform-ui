@@ -1,0 +1,52 @@
+@import '@libs/ui/styles/includes';
+
+.modalButtons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+}
+
+.formError {
+    color: $red-100;
+}
+
+.formWrap {
+    display: flex;
+    flex-direction: column;
+    margin-top: $sp-2;
+
+    @include ltelg {
+        :global(.input-wrapper) {
+            margin-bottom: $sp-2;
+        }
+    }
+}
+
+.languages {
+    margin: $sp-4 0 $sp-6;
+    padding-bottom: $sp-4;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: $sp-4;
+    border-bottom: 1px solid $black-20;
+
+    .languageItemWrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: $sp-2;
+        border-radius: 8px;
+        padding: $sp-5 $sp-6;
+        border: 1px solid $black-10;
+
+        button {
+            padding-right: 0;
+
+            svg {
+                width: 24px;
+                height: 24px;
+            }
+        }
+    }
+}

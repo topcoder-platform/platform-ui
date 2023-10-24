@@ -1,0 +1,27 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    margin: $sp-8 0;
+
+    .content {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        margin-bottom: 0;
+
+        @include ltelg {
+            grid-template-columns: 1fr;
+        }
+
+        >p {
+            max-width: 380px;
+        }
+
+        .form {
+            .formCTAs {
+                margin-top: $sp-4;
+                padding-top: $sp-4;
+                border-top: 2px solid $black-10;
+            }
+        }
+    }
+}

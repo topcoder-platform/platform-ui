@@ -1,0 +1,62 @@
+@import "@libs/ui/styles/includes";
+
+.modalButtons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.modalBody {
+    display: grid;
+    grid-template-columns: 255px 1fr;
+    gap: 30px;
+
+    @include ltelg {
+        grid-template-columns: 1fr;
+    }
+
+    :global(.body-main-bold) {
+        margin-top: $sp-2;
+    }
+
+    ul {
+        list-style: disc;
+        margin-left: $sp-4;
+    }
+
+    .imageArea {
+        border: 1px dashed $turq-160;
+        border-radius: 4px;
+        background-color: rgba(224, 250, 243, 0.3);
+        width: 255px;
+        height: 255px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+
+        form {
+            input {
+                display: none;
+            }
+
+            .error {
+                color: $red-120;
+                text-align: center;
+                margin: 0 $sp-4;
+            }
+
+            :global(.body-small-bold) {
+                color: $turq-160;
+                text-transform: uppercase;
+            }
+        }
+
+        .preview {
+            img {
+                max-width: 255px;
+                max-height: 255px;
+            }
+        }
+    }
+}

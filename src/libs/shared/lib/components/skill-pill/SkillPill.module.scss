@@ -1,0 +1,64 @@
+@import "@libs/ui/styles/includes";
+
+.pill {
+    border-radius: 40px;
+    color: $tc-white;
+    border: 1px solid $tc-white;
+    padding: $sp-2 $sp-3;
+    text-align: center;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: $sp-1;
+
+    @include ltemd {
+        padding: $sp-1 $sp-3;
+    }
+
+    &.interactive {
+        cursor: pointer;
+
+        &:hover {
+            background-color: rgba($tc-white, 0.1);
+        }
+
+        &.selected{
+            background-color: rgba($tc-white, 0.3);
+        }
+    }
+
+    .text {
+        display: block;
+        text-align: left;
+    }
+}
+
+.theme {
+    .pill:not(&-presentation) .text {
+        font-size: 14px;
+        line-height: 16px;
+    }
+
+    &-verified {
+        border: 2px solid $turq-120;
+        color: $black-100;
+        background-color: $tc-white;
+
+        svg {
+            flex: 0 0 auto;
+            color: $turq-120;
+            @include icon-size(16);
+        }
+    }
+
+    &-dark {
+        border-color: $black-20;
+        color: $black-100;
+        background-color: $tc-white;
+    }
+
+    &-etc {
+        border-color: $black-20;
+        color: $black-60;
+    }
+}

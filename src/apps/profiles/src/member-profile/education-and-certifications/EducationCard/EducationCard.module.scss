@@ -1,0 +1,33 @@
+@import '@libs/ui/styles/includes';
+
+.educationCard {
+    flex: 1;
+    margin-bottom: $sp-8;
+    font-size: 14px;
+    line-height: 22px;
+    color: $black-60;
+
+    :global(.body-main-bold) {
+        color: $black-100;
+    }
+
+    &.educationCardModalView {
+        margin-bottom: 0;
+
+        .educationCardHeader {
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+
+            :global(.body-main-bold) {
+                margin-bottom: $sp-2;
+            }
+        }
+    }
+
+    .educationCardHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+}

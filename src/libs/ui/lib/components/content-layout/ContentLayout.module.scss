@@ -19,6 +19,10 @@
             display: flex;
             flex-direction: column;
 
+            @include ltesm {
+                max-width: 100%;
+            }
+
             .page-header {
                 display: flex;
                 align-items: center;

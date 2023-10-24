@@ -1,0 +1,158 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    background-color: $black-5;
+    height: 100%;
+
+    .profileHeaderWrap {
+        background: url('../../lib/assets/profile-header-bg.png') no-repeat right top / auto, linear-gradient(#0d83c5, #0e89d5);
+
+        @include ltelg {
+            background: url('../../lib/assets/profile-header-bg-mobile.png') no-repeat right top /100% 100%;
+        }
+
+        .profileHeaderContent {
+            padding: 0;
+            max-height: 260px;
+            overflow: visible;
+
+            @include ltelg {
+                max-height: 100%;
+            }
+        }
+
+        .profileHeaderContentOuter {
+            margin-top: 75px;
+
+            @include ltelg {
+                margin-top: 0;
+            }
+        }
+
+        .profileHeaderBottom {
+            height: 30px;
+            background-color: $tc-white;
+        }
+    }
+
+    .profileOuter {
+        margin-top: 185px;
+
+        @include ltelg {
+            margin-top: 155px;
+        }
+
+        .profileInner {
+            width: 100%;
+        }
+
+        .profileInfoWrap {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            grid-gap: $sp-15;
+            margin-bottom: $sp-13;
+
+            @include ltelg {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .profileInfoLeft {
+                display: flex;
+                flex-direction: column;
+                margin-top: -60px;
+
+                @include ltelg {
+                    margin-top: 0;
+                }
+
+                .skillsWrap {
+                    display: flex;
+                    flex-direction: column;
+                    flex: 1;
+                }
+            }
+
+            .profileInfoRight {
+                display: flex;
+                flex-direction: column;
+                margin-top: -275px;
+                z-index: 1;
+
+                @include ltelg {
+                    margin-top: 0;
+                }
+
+                .shortBio {
+                    margin-bottom: $sp-8;
+
+                    :global(.body-large-medium),
+                    :global(.body-large) {
+                        text-align: left;
+                        margin-bottom: $sp-2;
+                    }
+
+                    :global(.body-large) {
+                        font-style: italic;
+                    }
+                }
+            }
+        }
+
+        .expirenceWrap {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+
+            @include ltelg {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+        }
+    }
+}
+
+.backBtn {
+    position: absolute;
+    top: $sp-6;
+    left: 0;
+    background: $blue-100;
+    padding: 0 $sp-4 0 $sp-3;
+    border-radius: 0 $sp-5 $sp-5 0;
+    > * {
+        --btn-variant: #fff;
+        --btn-variant--hover: rgba(255, 255, 255, 0.7);
+        text-transform: capitalize;
+        font-weight: normal;
+        font-size: 16px;
+    }
+
+    @include lg {
+        left: auto;
+        right: 0;
+        border-radius: $sp-5 0 0 $sp-5;
+    }
+    @include ltemd {
+        position: relative;
+        top: 10px;
+        left: -24px;
+        width: 152px;
+    }
+    @include ltesm {
+        left: -16px;
+    }
+}
+
+.sectionWrap {
+    background-color: $tc-white;
+    padding: $sp-8 $sp-8 $sp-4;
+    margin-bottom: $sp-8;
+    border-radius: 16px;
+
+    @include ltelg {
+        padding: $sp-4;
+        padding-bottom: 0;
+    }
+}

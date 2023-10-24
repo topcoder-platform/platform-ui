@@ -1,0 +1,62 @@
+@import '@libs/ui/styles/includes';
+
+.diceModal {
+    :global(.modal-body) {
+        align-items: flex-start;
+    }
+
+    :global(.react-responsive-modal-closeButton) {
+        display: flex;
+    }
+
+    .titleWrap {
+        display: flex;
+        align-items: center;
+
+        img {
+            margin-right: $sp-4;
+        }
+    }
+
+    .appSoresWrap {
+        display: flex;
+        justify-content: space-evenly;
+        margin: $sp-4 0;
+        width: 100%;
+
+        .appStoreCard {
+            display: flex;
+            flex-direction: column;
+        }
+    }
+
+    .qrCode {
+        margin: auto;
+    }
+
+    .diceBigLogo {
+        margin: $sp-4 0;
+    }
+
+    .errorWrap {
+        display: flex;
+        align-items: center;
+
+        svg {
+            margin-right: $sp-2;
+            width: 28px;
+            height: 28px;
+        }
+    }
+
+    .ctaButtons {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        flex: 1;
+    }
+
+    .errorText {
+        color: #ef476f;
+    }
+}

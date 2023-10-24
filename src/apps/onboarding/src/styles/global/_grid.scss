@@ -1,0 +1,27 @@
+.d-grid {
+  display: grid;
+}
+
+.grid-2-column {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mobile-grid-1-column {
+  @include ltemd {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+.gap-column-16 {
+  column-gap: 16px;
+}
+
+.gap-row-8 {
+  row-gap: 8px;
+}
+
+.mobile-gap-row-16 {
+  @include ltemd {
+    row-gap: 16px;
+  }
+}

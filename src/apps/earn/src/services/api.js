@@ -30,7 +30,7 @@ async function doFetch(endpoint, options = {}, v3, baseUrl) {
 
 async function download(endpoint, baseUrl, cancellationSignal) {
   const options = {
-    headers: { ["Content-Type"]: "application/json" },
+    headers: { "Content-Type": "application/json" },
     signal: cancellationSignal,
   };
   const response = await doFetch(endpoint, options, undefined, baseUrl);
@@ -40,7 +40,7 @@ async function download(endpoint, baseUrl, cancellationSignal) {
 
 async function get(endpoint, baseUrl, cancellationSignal) {
   const options = {
-    headers: { ["Content-Type"]: "application/json" },
+    headers: { "Content-Type": "application/json" },
     signal: cancellationSignal,
   };
   const response = await doFetch(endpoint, options, undefined, baseUrl);

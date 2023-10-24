@@ -1,0 +1,90 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    .workExpirenceWrap {
+        margin: $sp-8 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $sp-4;
+        width: 100%;
+
+        &.noItems {
+            margin-bottom: 0;
+        }
+
+        .workExpirenceCardWrap {
+            display: flex;
+            align-items: flex-start;
+            border: 1px solid $black-20;
+            border-radius: 8px;
+            padding: $sp-4;
+
+            .actionElements {
+                display: flex;
+                align-items: center;
+                margin-left: $sp-15;
+
+                @include ltemd {
+                    margin-left: $sp-4;
+                }
+
+                :global(button) {
+                    padding: $sp-2;
+                    color: $turq-160;
+
+                    @include ltelg {
+                        padding: $sp-1;
+                    }
+                }
+
+                svg {
+                    width: 24px;
+                    height: 24px;
+                }
+            }
+        }
+    }
+
+    .row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+
+        :global(.input-wrapper) {
+            flex: 1;
+
+            @include ltelg {
+                min-width: 100%;
+            }
+
+            &:first-child {
+                margin-right: $sp-2;
+
+                @include ltelg {
+                    margin-right: 0;
+                }
+            }
+        }
+    }
+
+    .formWrap {
+        margin-top: $sp-4;
+        width: 100%;
+
+        @include ltelg {
+            :global(.input-wrapper) {
+                margin-bottom: $sp-2;
+            }
+        }
+    }
+}
+
+.modalButtons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}

@@ -45,9 +45,13 @@ $error-line-height: 14px;
             display: flex;
             flex-direction: row;
             align-items: center;
+
             .checkbox-label {
                 margin-left: $sp-2;
                 flex: 1;
+                font-size: 16px;
+                font-weight: $font-weight-normal;
+                line-height: 24px;
             }
         }
     }
@@ -83,7 +87,7 @@ $error-line-height: 14px;
 
     &.input-error {
         border-color: $red-100;
-        margin-bottom: 0;
+        margin-bottom: 0 !important;
         color: $red-100;
 
         .label {
@@ -145,10 +149,6 @@ $error-line-height: 14px;
                 text-overflow: ellipsis;
             }
         }
-    }
-
-    @include ltemd {
-        margin-bottom: 0;
     }
 }
 

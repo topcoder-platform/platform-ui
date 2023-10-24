@@ -1,0 +1,144 @@
+@import "@libs/ui/styles/includes";
+
+.container {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    color: $tc-white;
+    position: relative;
+
+    @include ltelg {
+        padding-bottom: 150px;
+        flex-direction: column;
+    }
+
+    .photoWrap {
+        position: relative;
+        margin-right: 60px;
+
+        @include ltelg {
+            margin: auto;
+            position: absolute;
+            bottom: -150px;
+            left: calc(50% - 125px);
+        }
+
+        .profilePhoto {
+            width: 300px;
+            height: 300px;
+            border: 12px solid $tc-white;
+            border-radius: 50%;
+
+            @include ltelg {
+                width: 250px;
+                height: 250px;
+            }
+        }
+
+        .addButton {
+            display: flex;
+            justify-content: center;
+        }
+
+        .button {
+            position: absolute;
+            bottom: -10px;
+            left: calc(50% - 20px);
+            padding: $sp-2 $sp-3 !important;
+            background-color: $tc-white;
+            border-radius: 50%;
+            z-index: 2;
+        }
+    }
+
+    .profileHeaderWrap {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-top: $sp-8;
+        flex: 1;
+        width: 100%;
+
+        @include ltelg {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .profileInfo {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+
+            .nameWrap {
+                display: flex;
+                align-items: center;
+                margin-bottom: $sp-2;
+
+                p {
+                    font-size: 40px;
+                    font-weight: $font-weight-bold;
+                    font-family: $font-barlow;
+
+                    @include ltelg {
+                        font-size: 32px;
+                        line-height: 33px;
+                    }
+                }
+
+                button {
+                    color: $tc-white;
+                }
+            }
+
+            .memberSince {
+                margin-top: $sp-2;
+                font-size: 20px;
+
+                @include ltelg {
+                    font-size: 16px;
+                    margin-top: 0;
+                }
+
+                span {
+                    font-weight: $font-weight-bold;
+                }
+            }
+        }
+
+        .hiringClickWrap {
+            background-color: $tc-white;
+            padding: $sp-1;
+            border-radius: 200px;
+
+            @include ltelg {
+                margin-top: $sp-4;
+            }
+        }
+    }
+
+    .profileActions {
+        display: flex;
+        align-items: center;
+        background-color: $tc-white;
+        padding: $sp-4;
+        border-radius: 200px;
+        color: $black-100;
+        margin-top: $sp-8;
+
+        @include ltelg {
+            margin-top: $sp-4;
+        }
+
+        >span {
+            margin-right: $sp-1;
+        }
+
+        >button {
+            margin-left: $sp-2;
+        }
+    }
+}
+
+:global(#start-hiring-form) {
+    min-height: 380px;
+}

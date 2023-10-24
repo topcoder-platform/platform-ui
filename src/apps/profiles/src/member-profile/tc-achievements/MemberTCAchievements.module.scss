@@ -1,0 +1,72 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: $sp-8;
+    background-color: $tc-white;
+    padding: $sp-8 $sp-8 $sp-2;
+    border-radius: 16px;
+
+    @include ltelg {
+        padding: $sp-4;
+    }
+
+    >p {
+        text-align: left;
+    }
+
+    .achievementsWrap {
+        display: flex;
+        margin: $sp-4 0 $sp-2;
+        align-items: stretch;
+
+        @include ltelg {
+            flex-direction: column;
+
+        }
+
+        >div:not(:last-child) {
+            margin-right: $sp-8;
+
+            @include ltelg {
+                margin-right: 0;
+                margin-bottom: $sp-8;
+            }
+        }
+    }
+
+    .rolesSection {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        padding: $sp-4;
+        background-image: linear-gradient(to right, #652385, #8C384C);
+        color: $tc-white;
+        border-radius: 8px;
+        margin: $sp-4 0;
+
+        @include ltesm {
+            margin-bottom: 0;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .rolesWrap {
+            display: flex;
+            align-items: center;
+        }
+
+        .link {
+            font-size: 14px;
+            line-height: 14px;
+            font-weight: $font-weight-medium;
+            font-family: $font-roboto;
+
+            @include ltesm {
+                margin-top: $sp-2;
+            }
+        }
+    }
+}

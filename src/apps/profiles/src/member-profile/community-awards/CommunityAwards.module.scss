@@ -1,0 +1,67 @@
+@import "@libs/ui/styles/includes";
+
+.container {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: $sp-4;
+
+    @include ltelg {
+        margin-top: $sp-4;
+    }
+
+    .title {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+    }
+
+    .badges {
+        display: flex;
+        column-gap: $sp-4;
+        row-gap: $sp-4;
+        flex-wrap: wrap;
+
+        @include ltelg {
+            flex-direction: column;
+        }
+
+        .badgeCard {
+            background-color: $tc-white;
+            padding: $sp-4;
+            display: flex;
+            cursor: pointer;
+            min-width: 280px;
+            border-radius: 8px;
+            align-items: center;
+            transition: 0.25s ease-in-out;
+            box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+
+            @include ltelg {
+                padding-bottom: 0;
+                padding-left: $sp-2;
+                min-width: 100%;
+            }
+
+            &:hover {
+                box-shadow: 0 0 16px rgba(22, 103, 154, 0.5);
+            }
+
+            .badgeImageWrap {
+                width: 48px;
+                height: 48px;
+                .badgeImage {
+                    height: 48px;
+                    margin: auto;
+                }
+            }
+
+            .badgeTitle {
+                font-size: 14px;
+                font-weight: $font-weight-bold;
+                line-height: 16px;
+                margin-left: $sp-2;
+                max-width: 130px;
+            }
+        }
+    }
+}

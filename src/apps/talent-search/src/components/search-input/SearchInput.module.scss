@@ -1,0 +1,44 @@
+@import "@libs/ui/styles/includes";
+
+.searchIcon{
+    margin-right: 10px;
+
+    position: relative;
+    z-index: 1;
+
+    cursor: pointer;
+    color: $black-40;
+    transition: 0.15s ease-in-out;
+
+    &:hover {
+        color: $black-100;
+    }
+
+    &.disabled {
+        pointer-events: none;
+        opacity: 0.4;
+    }
+
+    &:before {
+        content: "";
+        display: block;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: $sp-12;
+        height: $sp-12;
+    }
+
+    svg {
+        width: $sp-6;
+        height: $sp-6;
+        stroke: currentColor;
+        color: inherit;
+    }
+}
+
+.maxLimit {
+    font-size: 14px;
+    color: $tc-white;
+}

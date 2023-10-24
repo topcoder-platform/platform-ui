@@ -242,7 +242,7 @@ const UpdateGigProfile = ({
                     <div className={styles["resume-details"]}>
                         Please upload your resume/CV. Double-check that all of your tech
                         skills are listed in your resume/CV.&nbsp;&nbsp;&nbsp;
-                        <a href={profile.existingResume.file_link} target="_blank">
+                        <a href={profile.existingResume.file_link} target="_blank" rel="noreferrer">
                             {profile.existingResume.filename}
                         </a>
                     </div>

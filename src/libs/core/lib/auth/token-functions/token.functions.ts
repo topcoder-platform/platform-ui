@@ -1,5 +1,7 @@
 import { decodeToken } from 'tc-auth-lib'
 
+import { ID } from '@segment/analytics-next'
+
 import { authInitializeAsync } from '../authentication-functions'
 import { logError } from '../../logger'
 
@@ -27,9 +29,17 @@ export async function getAsync(): Promise<TokenModel> {
             return Promise.resolve({})
         }
 
+        // segment identify user
+        if (window && window.tcSegment) {
+            window.tcSegment.identify(userId as ID, {
+                handle,
+                roles,
+            })
+        }
+
         return Promise.resolve({ handle, roles, token, userId })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
         logError(error)
         return Promise.resolve({})

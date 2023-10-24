@@ -36,6 +36,9 @@
         :global(.btn-icon) {
             @include padY(1);
             @include icon-size(16);
+            > svg {
+                @include icon-size(16);
+            }
         }
     }
 
@@ -43,6 +46,9 @@
         :global(.btn-icon) {
             @include iconOnly {
                 @include icon-size(24);
+                > svg {
+                    @include icon-size(24);
+                }
             }
         }
     }
@@ -50,6 +56,9 @@
     &:global(.btn-size-xl) {
         :global(.btn-icon) {
             @include icon-size(22);
+            > svg {
+                @include icon-size(22);
+            }
         }
     }
 

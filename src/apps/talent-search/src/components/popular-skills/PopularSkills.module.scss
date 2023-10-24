@@ -1,0 +1,33 @@
+@import "@libs/ui/styles/includes";
+
+.wrap {
+    margin-top: $sp-4;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+
+    :global(.body-medium-bold) {
+        margin-bottom: $sp-4;
+    }
+
+    @include ltemd {
+        margin-top: $sp-8;
+    }
+}
+
+.wrapTitle {
+    font-size: 20px;
+    line-height: 26px;
+    font-family: $font-roboto;
+    font-weight: $font-weight-bold;
+    margin-bottom: $sp-4;
+}
+
+.pills {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: $sp-2;
+    max-width: 680px;
+}
