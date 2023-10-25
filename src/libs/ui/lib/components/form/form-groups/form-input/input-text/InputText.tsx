@@ -31,6 +31,7 @@ export interface InputTextProps {
     readonly type: InputTextTypes
     readonly value?: InputValue
     readonly autoFocus?: boolean
+    readonly forceUpdateValue?: boolean
 }
 
 const InputText: FC<InputTextProps> = (props: InputTextProps) => {
@@ -44,7 +45,16 @@ const InputText: FC<InputTextProps> = (props: InputTextProps) => {
             autoComplete={props.autocomplete}
             checked={defaultValue === 'on'}
             className={cn(styles['form-input-text'], styles[props.type])}
-            defaultValue={defaultValue}
+            defaultValue={
+                props.forceUpdateValue
+                    ? undefined
+                    : defaultValue
+            }
+            value={
+                props.forceUpdateValue
+                    ? (props.value as string | ReadonlyArray<string> | number | undefined)
+                    : undefined
+            }
             disabled={!!props.disabled}
             onBlur={props.onBlur}
             onChange={props.onChange}
