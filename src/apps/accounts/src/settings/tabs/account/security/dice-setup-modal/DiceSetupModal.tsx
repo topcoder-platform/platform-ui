@@ -7,6 +7,7 @@ import { KeyedMutator } from 'swr'
 import { BaseModal, Button } from '~/libs/ui'
 import {
     AppleStore,
+    credentialImage,
     diceIdLogoBig,
     diceIdLogoSmall,
     googlePlay,
@@ -188,16 +189,17 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
                             userId={props.profile.userId}
                         />
                         <p>
-                            You will receive the credential offer from Topcoder in the home page.
+                            You will receive the credential offer from Topcoder in the DICE ID wallet home page.
                             <br />
                             Your credentials should get automatically processed in few seconds.
                             <br />
                             If you have disabled the auto-accept feature,
                             please review the credential offer and manually accept it.
+                            <br />
+                            <br />
+                            Example credential offer:
                         </p>
-                        <div className='body-small'>
-                            Powered by DICE ID
-                        </div>
+                        <img src={credentialImage} className='credential-img' alt='Example Credential Offer' />
                     </>
                 )
             }
