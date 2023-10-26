@@ -1,6 +1,6 @@
+/* eslint-disable complexity */
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { get, isUndefined, lowerCase } from 'lodash'
 import { toast } from 'react-toastify'
 import { KeyedMutator } from 'swr'
 
@@ -10,13 +10,10 @@ import {
     diceIdLogoBig,
     diceIdLogoSmall,
     googlePlay,
-    UnSuccessfullDiceVerificationIcon,
 } from '~/apps/accounts/src/lib'
-import { updateMemberMFAStatusAsync, UserProfile } from '~/libs/core'
-import { EnvironmentConfig } from '~/config'
+import { DiceConnectionStatus, UserProfile } from '~/libs/core'
 
 import { ConnectionHandler } from './ConnectionHandler'
-import { VerificationListener } from './VerificationListener'
 import styles from './DiceSetupModal.module.scss'
 
 const GooglePlayLink: string = 'https://play.google.com/store/apps/details?id=com.diwallet1'
@@ -30,8 +27,7 @@ interface DiceSetupModalProps {
 const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => {
     const [step, setStep]: [number, Dispatch<SetStateAction<number>>] = useState(1)
 
-    const [isVerificationProcessing, setIsVerificationProcessing]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState(false)
+    const [diceConnectionUrl, setDiceConnectionUrl] = useState<string>()
 
     function handleSecondaryButtonClick(): void {
         switch (step) {
@@ -43,40 +39,23 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
     function handlePrimaryButtonClick(): void {
         switch (step) {
             case 1:
-            case 2:
                 return setStep(step + 1)
             default: return props.onClose()
         }
     }
 
-    function verificationCallback(data: any): void {
-        if (data.success) {
-            const userEmail: string = get(data, 'user.profile.Email')
-            if (!isUndefined(userEmail) && lowerCase(userEmail) === lowerCase(props.profile.email)) {
-                updateMemberMFAStatusAsync(props.profile.userId, {
-                    param: {
-                        diceEnabled: true,
-                    },
-                })
-                    .then(() => {
-                        props.mutateMFAData()
-                        setStep(4)
-                        // eslint-disable-next-line max-len
-                        toast.success('Your credentials have been verified and you are all set for MFA using your decentralized identity (DICE ID).')
-                    })
-                    .catch(() => {
-                        toast.error('Something went wrong. Please try again later.')
-                    })
-            } else {
-                setStep(5)
-            }
-        } else {
-            setStep(5)
+    function handleDiceConnectionStatusChange(newStatus: DiceConnectionStatus): void {
+        if (newStatus.diceEnabled) {
+            setStep(4)
+            toast.success('Your credentials have been verified and you are all set for'
+             + ' MFA using your decentralized identity (DICE ID).')
+            props.mutateMFAData()
+        } else if (newStatus.accepted) {
+            setStep(3)
+        } else if (newStatus.connection) {
+            setDiceConnectionUrl(newStatus.connection)
+            setStep(2)
         }
-    }
-
-    function onStartProcessing(): void {
-        setIsVerificationProcessing(true)
     }
 
     return (
@@ -102,10 +81,10 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
                         onClick={handleSecondaryButtonClick}
                     />
                     {
-                        step !== 2 && step !== 3 && (
+                        (step === 1 || step === 4) && (
                             <Button
                                 primary
-                                label={(step === 4 || step === 5) ? 'Finish' : 'Next'}
+                                label={step === 4 ? 'Finish' : 'Next'}
                                 onClick={handlePrimaryButtonClick}
                             />
                         )
@@ -170,38 +149,55 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
             }
             {
                 step === 2 && (
-                    <ConnectionHandler
-                        onComplete={handlePrimaryButtonClick}
-                        userId={props.profile.userId}
-                    />
+                    <>
+                        <ConnectionHandler
+                            onChange={handleDiceConnectionStatusChange}
+                            userId={props.profile.userId}
+                        />
+                        <p>
+                            Scan the following DICE ID QR Code in your DICE ID
+                            mobile application.
+                        </p>
+                        {diceConnectionUrl ? (
+                            <QRCodeSVG
+                                value={diceConnectionUrl}
+                                size={300}
+                                className={styles.qrCode}
+                                includeMargin
+                            />
+                        ) : (
+                            <p>Loading...</p>
+                        )}
+                        <p>
+                            Once the connection is established, the service will
+                            offer you a Verifiable Credential.
+                            <br />
+                            Press the ACCEPT button in your DICE ID App.
+                            <br />
+                            If you DECLINE the invitation, please try again after 5
+                            minutes.
+                        </p>
+                    </>
                 )
             }
             {
                 step === 3 && (
                     <>
+                        <ConnectionHandler
+                            onChange={handleDiceConnectionStatusChange}
+                            userId={props.profile.userId}
+                        />
                         <p>
-                            Scan the following DICE ID QR Code in your DICE ID
-                            mobile application to confirm your credential.
+                            You will receive the credential offer from Topcoder in the home page.
+                            <br />
+                            Your credentials should get automatically processed in few seconds.
+                            <br />
+                            If you have disabled the auto-accept feature,
+                            please review the credential offer and manually accept it.
                         </p>
-                        <iframe
-                            src={`${EnvironmentConfig.DICE_VERIFY_URL}/dice-verifier.html`}
-                            title='dice verifier'
-                            width='100%'
-                            height='350px'
-                        />
-                        {isVerificationProcessing && (
-                            <div className='body-small'>
-                                Powered by DICE ID
-                            </div>
-                        )}
-                        <VerificationListener
-                            event='message'
-                            callback={verificationCallback}
-                            origin={EnvironmentConfig.DICE_VERIFY_URL}
-                            type='DICE_VERIFICATION'
-                            onProcessing={onStartProcessing}
-                            startType='DICE_VERIFICATION_START'
-                        />
+                        <div className='body-small'>
+                            Powered by DICE ID
+                        </div>
                     </>
                 )
             }
@@ -230,33 +226,6 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
                             >
                                 https://www.diceid.com
                             </a>
-                        </p>
-                        <p>Please click Finish below.</p>
-                    </>
-                )
-            }
-            {
-                step === 5 && (
-                    <>
-                        <div className={styles.errorWrap}>
-                            <UnSuccessfullDiceVerificationIcon />
-                            <h3 className={styles.errorText}>Unsuccessful Verification!</h3>
-                        </div>
-                        <p>
-                            Hello
-                            {' '}
-                            {props.profile.handle}
-                            ,
-                            <br />
-                            <br />
-                            Your credentials could not be verified,
-                            you won&apos;t be able to connect to MFA using your decentralized identity (DICE ID).
-                        </p>
-                        <img src={diceIdLogoBig} className={styles.diceBigLogo} alt='DICE ID Logo' />
-                        <p>
-                            Please try again your process after few minutes.
-                            <br />
-                            <br />
                         </p>
                         <p>Please click Finish below.</p>
                     </>

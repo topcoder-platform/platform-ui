@@ -3,8 +3,9 @@ import useSWR, { SWRConfiguration, SWRResponse } from 'swr'
 import { diceIDURL } from '~/libs/core'
 
 export interface DiceConnectionStatus {
-    accepted: boolean | null
+    accepted: boolean
     connection: string | null
+    diceEnabled: boolean
 }
 
 export function useDiceIdConnection(userId: number): DiceConnectionStatus | undefined {

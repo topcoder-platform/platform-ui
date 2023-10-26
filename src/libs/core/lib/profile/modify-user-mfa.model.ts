@@ -8,7 +8,10 @@ export interface ModifyUserMFARequest {
 export interface ModifyUserMFAResponse {
     id: string
     result: {
-        content: string
+        content: {
+            mfaEnabled: boolean
+            diceEnabled: boolean
+        },
         success: boolean
     }
 }

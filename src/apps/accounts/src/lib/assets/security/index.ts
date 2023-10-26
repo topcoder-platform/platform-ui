@@ -1,6 +1,5 @@
 import { ReactComponent as MFAImage } from './mfa.svg'
 import { ReactComponent as AppleStore } from './apple-store.svg'
-import { ReactComponent as UnSuccessfullDiceVerificationIcon } from './unsuccessful.svg'
 import diceIdLogo from './dicelogo.png'
 import diceIdLogoBig from './dicelogobig.png'
 import diceIdLogoSmall from './dicelogosmall.png'
@@ -13,5 +12,4 @@ export {
     diceIdLogoSmall,
     googlePlay,
     MFAImage,
-    UnSuccessfullDiceVerificationIcon,
 }
