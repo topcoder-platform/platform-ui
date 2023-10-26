@@ -18,7 +18,7 @@ const popularSkills: UserSkill[] = [
         },
         id: '63bb7cfc-b0d4-4584-820a-18c503b4b0fe',
         levels: [],
-        name: 'Java (Programming Language)',
+        name: 'Java',
     },
     {
         category: {
@@ -36,7 +36,7 @@ const popularSkills: UserSkill[] = [
         },
         id: '32899253-5989-4c33-9948-cad29c9e0ab0',
         levels: [],
-        name: 'Node.js (Javascript Library)',
+        name: 'Node.js',
     },
     {
         category: {
@@ -54,7 +54,7 @@ const popularSkills: UserSkill[] = [
         },
         id: '16ee1403-8e73-497d-a766-623eefd3c806',
         levels: [],
-        name: 'JavaScript (Programming Language)',
+        name: 'JavaScript',
     },
     {
         category: {
@@ -81,7 +81,7 @@ const popularSkills: UserSkill[] = [
         },
         id: '7e8641e5-e5c1-4ab6-a8f4-1fd6a8686dbe',
         levels: [],
-        name: 'Angular (Web Framework)',
+        name: 'Angular',
     },
     {
         category: {
@@ -99,7 +99,7 @@ const popularSkills: UserSkill[] = [
         },
         id: 'fcbac194-35ab-4a31-aa7c-a2867fff9c4b',
         levels: [],
-        name: 'Python (Programming Language)',
+        name: 'Python',
     },
     {
         category: {
@@ -108,7 +108,7 @@ const popularSkills: UserSkill[] = [
         },
         id: 'adf9d7b9-d639-4a73-8772-673b3d4f41b0',
         levels: [],
-        name: 'Android (Operating System)',
+        name: 'Android',
     },
     {
         category: {
@@ -144,7 +144,7 @@ const popularSkills: UserSkill[] = [
         },
         id: 'be85b096-b841-45b4-a5cb-1d3ee7ce1126',
         levels: [],
-        name: 'Docker (Software)',
+        name: 'Docker',
     },
     {
         category: {
@@ -153,7 +153,7 @@ const popularSkills: UserSkill[] = [
         },
         id: '4458454c-9a97-4332-a545-6546e240dab6',
         levels: [],
-        name: 'React.js (Javascript Library)',
+        name: 'React.js',
     },
 ]
 
