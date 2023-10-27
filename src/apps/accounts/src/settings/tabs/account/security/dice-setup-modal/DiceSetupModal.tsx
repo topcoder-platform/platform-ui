@@ -199,7 +199,7 @@ const DiceSetupModal: FC<DiceSetupModalProps> = (props: DiceSetupModalProps) => 
                             <br />
                             Example credential offer:
                         </p>
-                        <img src={credentialImage} className='credentialImage' alt='Example Credential Offer' />
+                        <img src={credentialImage} className={styles.credentialImage} alt='Example Credential Offer' />
                     </>
                 )
             }
