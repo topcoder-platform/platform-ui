@@ -18,7 +18,7 @@ import { ConnectionHandler } from './ConnectionHandler'
 import styles from './DiceSetupModal.module.scss'
 
 const GooglePlayLink: string = 'https://play.google.com/store/apps/details?id=com.diwallet1'
-const AppleStoreLink: string = 'https://apps.apple.com/us/app/dice-id/id1548148979'
+const AppleStoreLink: string = 'https://apps.apple.com/us/app/dice-id/id1624858853'
 interface DiceSetupModalProps {
     mutateMFAData: KeyedMutator<any>
     onClose: () => void
