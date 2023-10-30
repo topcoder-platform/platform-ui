@@ -259,7 +259,9 @@ workflows:
                       branches:
                           only:
                               - dev
-                              - PROD-4406_new-dice
+                              - justin_fixes
+                              - talent_search_fixes
+                              - PROD-4398_integrate-userflow-remove-sprig
 
             - deployQa:
                   context: org-global
