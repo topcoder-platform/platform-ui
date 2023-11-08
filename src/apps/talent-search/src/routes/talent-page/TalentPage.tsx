@@ -2,14 +2,14 @@ import { FC, ReactNode } from 'react'
 import { Location, useLocation } from 'react-router-dom'
 
 import { MemberProfileContext, MemberProfilePage } from '@profiles/member-profile'
-import { UserEMSISkill } from '~/libs/core'
+import { UserSkill } from '~/libs/core'
 
 import { ProfileSkillsMatch } from '../../components/profile-skills-match'
 
 const TalentPage: FC = () => {
     const { state }: Location = useLocation()
 
-    function skillsRenderer(profileSkills: Pick<UserEMSISkill, 'name'|'skillId'|'skillSources'>[]): ReactNode {
+    function skillsRenderer(profileSkills: Pick<UserSkill, 'name'|'id'|'levels'>[]): ReactNode {
         return (
             <ProfileSkillsMatch
                 matchValue={state.matchValue}
