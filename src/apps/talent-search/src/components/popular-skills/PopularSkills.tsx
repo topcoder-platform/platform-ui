@@ -1,6 +1,7 @@
 import { FC, useCallback } from 'react'
 
-import { Skill, SkillPill } from '~/libs/shared'
+import { SkillPill } from '~/libs/shared'
+import { UserSkill } from '~/libs/core'
 
 import { SKILL_SEARCH_LIMIT } from '../../config'
 
@@ -8,40 +9,169 @@ import styles from './PopularSkills.module.scss'
 
 // TODO: Make this configurable, or read from a service.  We need to discuss
 // how we want to handle this.
-const popularSkills: Skill[] = [
-    { emsiId: 'KS120076FGP5WGWYMP0F', name: 'Java (Programming Language)' },
-    { emsiId: 'KS126QY605N7YVHFYCTW', name: 'MySQL' },
-    { emsiId: 'KS127296VDYS7ZFWVC46', name: 'Node.js' },
-    { emsiId: 'KS121F45VPV8C9W3QFYH', name: 'Cascading Style Sheets (CSS)' },
-    { emsiId: 'KS1200771D9CR9LB4MWW', name: 'JavaScript (Programming Language)' },
-    { emsiId: 'KS1261Z68KSKR1X31KS3', name: 'Machine Learning' },
-    { emsiId: 'KS120SX72T8B5VLXS1VN', name: 'Unit Testing' },
-    { emsiId: 'KS120H6772VQ0MQ5RLVD', name: 'Angular (Web Framework)' },
-    { emsiId: 'KS1200B62W5ZF38RJ7TD', name: '.NET Framework' },
-    { emsiId: 'KS125LS6N7WP4S6SFTCK', name: 'Python (Programming Language)' },
-    { emsiId: 'KS120GZ5YXC6YVM1NGPR', name: 'Android (Operating System)' },
-    { emsiId: 'ES5269FD2583B0B9875C', name: 'Figma (Design Software)' },
-    { emsiId: 'KS120V86MZWV9Z9LKQY3', name: 'Microsoft Azure' },
-    { emsiId: 'KS1206V6K46N1SDVJGBD', name: 'Adobe Illustrator' },
-    { emsiId: 'KSY4WFI1S164RQUBSPCC', name: 'Docker (Software)' },
-    { emsiId: 'KSDJCA4E89LB98JAZ7LZ', name: 'React.js' },
+// TODO: update this with the real list of popular skills
+const popularSkills: UserSkill[] = [
+    {
+        category: {
+            id: '481b5ebc-2fe6-45ed-a90c-736936d458d7',
+            name: 'Programming and Development',
+        },
+        id: '63bb7cfc-b0d4-4584-820a-18c503b4b0fe',
+        levels: [],
+        name: 'Java',
+    },
+    {
+        category: {
+            id: '481b5ebc-2fe6-45ed-a90c-736936d458d7',
+            name: 'Programming and Development',
+        },
+        id: '0d86f8cb-e509-4ca8-b9f8-e65d909cc6eb',
+        levels: [],
+        name: 'MySQL',
+    },
+    {
+        category: {
+            id: '481b5ebc-2fe6-45ed-a90c-736936d458d7',
+            name: 'Programming and Development',
+        },
+        id: '32899253-5989-4c33-9948-cad29c9e0ab0',
+        levels: [],
+        name: 'Node.js',
+    },
+    {
+        category: {
+            id: '481b5ebc-2fe6-45ed-a90c-736936d458d7',
+            name: 'Programming and Development',
+        },
+        id: '9c42c728-47ff-4b20-916c-560739bad1ee',
+        levels: [],
+        name: 'Cascading Style Sheets (CSS)',
+    },
+    {
+        category: {
+            id: '481b5ebc-2fe6-45ed-a90c-736936d458d7',
+            name: 'Programming and Development',
+        },
+        id: '16ee1403-8e73-497d-a766-623eefd3c806',
+        levels: [],
+        name: 'JavaScript',
+    },
+    {
+        category: {
+            id: '481b5ebc-2fe6-45ed-a90c-736936d458d7',
+            name: 'Programming and Development',
+        },
+        id: '99e5fc45-5fc0-4794-a578-f42dfabcbf74',
+        levels: [],
+        name: 'Machine Learning',
+    },
+    {
+        category: {
+            id: '481b5ebc-2fe6-45ed-a90c-736936d458d7',
+            name: 'Programming and Development',
+        },
+        id: 'a0da6acf-2cf8-48f0-ba4a-30d18bc75052',
+        levels: [],
+        name: 'Unit Testing',
+    },
+    {
+        category: {
+            id: '481b5ebc-2fe6-45ed-a90c-736936d458d7',
+            name: 'Programming and Development',
+        },
+        id: '7e8641e5-e5c1-4ab6-a8f4-1fd6a8686dbe',
+        levels: [],
+        name: 'Angular',
+    },
+    {
+        category: {
+            id: '481b5ebc-2fe6-45ed-a90c-736936d458d7',
+            name: 'Programming and Development',
+        },
+        id: 'f0597e53-9a6d-40d6-8639-4d5a9ead190f',
+        levels: [],
+        name: '.NET Framework',
+    },
+    {
+        category: {
+            id: '481b5ebc-2fe6-45ed-a90c-736936d458d7',
+            name: 'Programming and Development',
+        },
+        id: 'fcbac194-35ab-4a31-aa7c-a2867fff9c4b',
+        levels: [],
+        name: 'Python',
+    },
+    {
+        category: {
+            id: '481b5ebc-2fe6-45ed-a90c-736936d458d7',
+            name: 'Programming and Development',
+        },
+        id: 'adf9d7b9-d639-4a73-8772-673b3d4f41b0',
+        levels: [],
+        name: 'Android',
+    },
+    {
+        category: {
+            id: '481b5ebc-2fe6-45ed-a90c-736936d458d7',
+            name: 'Programming and Development',
+        },
+        id: '130323ce-7d88-4141-9e2b-904994f026a1',
+        levels: [],
+        name: 'Figma (Design Software)',
+    },
+    {
+        category: {
+            id: '481b5ebc-2fe6-45ed-a90c-736936d458d7',
+            name: 'Programming and Development',
+        },
+        id: '9eaf6049-402a-481c-ac82-87a0826128c7',
+        levels: [],
+        name: 'Microsoft Azure',
+    },
+    {
+        category: {
+            id: '481b5ebc-2fe6-45ed-a90c-736936d458d7',
+            name: 'Programming and Development',
+        },
+        id: 'ced0b36c-6057-48e1-a263-2588fb91296b',
+        levels: [],
+        name: 'Adobe Illustrator',
+    },
+    {
+        category: {
+            id: '481b5ebc-2fe6-45ed-a90c-736936d458d7',
+            name: 'Programming and Development',
+        },
+        id: 'be85b096-b841-45b4-a5cb-1d3ee7ce1126',
+        levels: [],
+        name: 'Docker',
+    },
+    {
+        category: {
+            id: '481b5ebc-2fe6-45ed-a90c-736936d458d7',
+            name: 'Programming and Development',
+        },
+        id: '4458454c-9a97-4332-a545-6546e240dab6',
+        levels: [],
+        name: 'React.js',
+    },
 ]
 
 interface PopularSkillsProps {
-    onChange: (skills: Skill[]) => void
-    selectedSkills: Skill[]
+    onChange: (skills: UserSkill[]) => void
+    selectedSkills: UserSkill[]
 }
 
 const PopularSkills: FC<PopularSkillsProps> = props => {
 
-    const toggleSkill = useCallback((skill: Skill) => {
-        let newFilter: Array<Skill> = []
+    const toggleSkill = useCallback((skill: UserSkill) => {
+        let newFilter: Array<UserSkill> = []
         let deleted: boolean = false
 
         // Either delete the value from the list, if we're toggling one that's already in the list
         // Or add the new item to the list
         props.selectedSkills.forEach(filterSkill => {
-            if (filterSkill.emsiId === skill.emsiId) {
+            if (filterSkill.id === skill.id) {
                 deleted = true
             } else {
                 newFilter.push(filterSkill)
@@ -58,8 +188,8 @@ const PopularSkills: FC<PopularSkillsProps> = props => {
         props.onChange.call(undefined, newFilter)
     }, [props.onChange, props.selectedSkills])
 
-    function isSelected(skill: Skill): boolean {
-        return !!props.selectedSkills.find(s => s.emsiId === skill.emsiId)
+    function isSelected(skill: UserSkill): boolean {
+        return !!props.selectedSkills.find(s => s.id === skill.id)
     }
 
     return (
@@ -69,7 +199,7 @@ const PopularSkills: FC<PopularSkillsProps> = props => {
             <div className={styles.pills}>
                 {popularSkills.map(skill => (
                     <SkillPill
-                        key={skill.emsiId}
+                        key={skill.id}
                         skill={skill}
                         selected={isSelected(skill)}
                         onClick={toggleSkill}

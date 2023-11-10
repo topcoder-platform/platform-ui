@@ -1,4 +1,4 @@
-export type TCAEMSISkillType = {
+export type TCASkillType = {
     assessed: boolean
     confidence: number
     emsiId: string

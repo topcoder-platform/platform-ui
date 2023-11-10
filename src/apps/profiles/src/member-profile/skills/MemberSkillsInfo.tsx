@@ -2,8 +2,8 @@ import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'reac
 import { useSearchParams } from 'react-router-dom'
 import { orderBy } from 'lodash'
 
-import { UserEMSISkill, UserProfile } from '~/libs/core'
-import { ExpandableList, HowSkillsWorkModal, isSkillVerified, Skill, SkillPill } from '~/libs/shared'
+import { UserProfile, UserSkill } from '~/libs/core'
+import { GroupedSkillsUI, HowSkillsWorkModal, isSkillVerified } from '~/libs/shared'
 import { Button } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
@@ -27,11 +27,32 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
     const { skillsRenderer, isTalentSearch }: MemberProfileContextValue = useMemberProfileContext()
 
-    const memberEMSISkills: UserEMSISkill[] = useMemo(() => orderBy(
-        props.profile.emsiSkills ?? [],
+    const memberSkills: UserSkill[] = useMemo(() => orderBy(
+        props.profile.skills ?? [],
         [isSkillVerified, 'name'],
         ['desc', 'asc'],
-    ) as UserEMSISkill[], [props.profile.emsiSkills])
+    ) as UserSkill[], [props.profile.skills])
+
+    const groupedSkillsByCategory: { [key: string]: UserSkill[] } = useMemo(() => {
+        const grouped: { [key: string]: UserSkill[] } = {}
+        const sortedGroupedSkillsByCategory: { [key: string]: UserSkill[] } = {}
+
+        memberSkills.forEach((skill: UserSkill) => {
+            if (grouped[skill.category.name]) {
+                grouped[skill.category.name].push(skill)
+            } else {
+                grouped[skill.category.name] = [skill]
+            }
+        })
+
+        Object.keys(grouped)
+            .sort()
+            .forEach(key => {
+                sortedGroupedSkillsByCategory[key] = grouped[key]
+            })
+
+        return sortedGroupedSkillsByCategory
+    }, [memberSkills])
 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -72,42 +93,42 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
     return (
         <div className={styles.container}>
+            {
+                skillsRenderer && memberSkills.length > 0 && (
+                    <div className={styles.skillsWrap}>
+                        {skillsRenderer(memberSkills)}
+                    </div>
+                )
+            }
+
             <div className={styles.titleWrap}>
                 <div className={styles.headerWrap}>
                     <h3>Skills</h3>
                     {
-                        canEdit && memberEMSISkills.length > 0 && (
+                        canEdit && memberSkills.length > 0 && (
                             <EditMemberPropertyBtn
                                 onClick={handleEditSkillsClick}
                             />
                         )
                     }
                 </div>
-                <Button
-                    link
-                    label='How skills work'
-                    onClick={handleHowSkillsWorkClick}
-                    variant='linkblue'
-                />
+                <div className={styles.skillActions}>
+                    <Button
+                        link
+                        label='How skills work'
+                        onClick={handleHowSkillsWorkClick}
+                        variant='linkblue'
+                    />
+                </div>
             </div>
 
             <div className={styles.skillsWrap}>
-                {skillsRenderer && memberEMSISkills.length > 0 && skillsRenderer(memberEMSISkills)}
-                {!skillsRenderer && memberEMSISkills.length > 0 && (
-                    <ExpandableList visible={10} itemLabel='skill'>
-                        {
-                            memberEMSISkills
-                                .map(memberEMSISkill => (
-                                    <SkillPill
-                                        skill={memberEMSISkill as unknown as Skill}
-                                        key={memberEMSISkill.id}
-                                        theme='dark'
-                                    />
-                                ))
-                        }
-                    </ExpandableList>
+                {memberSkills.length > 0 && (
+                    <GroupedSkillsUI
+                        groupedSkillsByCategory={groupedSkillsByCategory}
+                    />
                 )}
-                {!memberEMSISkills.length && (
+                {!memberSkills.length && (
                     <EmptySection
                         title='Topcoder verifies and tracks skills as our members complete projects and challenges.'
                         wide
@@ -119,12 +140,14 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                     </EmptySection>
                 )}
             </div>
-            {canEdit && !memberEMSISkills.length && (
-                <AddButton
-                    label='Add skills'
-                    onClick={handleEditSkillsClick}
-                />
-            )}
+            {
+                canEdit && !memberSkills.length && (
+                    <AddButton
+                        label='Add skills'
+                        onClick={handleEditSkillsClick}
+                    />
+                )
+            }
 
             {
                 isEditMode && (

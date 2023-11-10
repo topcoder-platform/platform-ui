@@ -3,8 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
-import { PaginatedResponse, xhrGetPaginatedAsync } from '~/libs/core'
-import { Skill } from '~/libs/shared'
+import { PaginatedResponse, UserSkill, xhrGetPaginatedAsync } from '~/libs/core'
 import Member from '@talentSearch/lib/models/Member'
 
 export interface TalentMatchesResponse {
@@ -18,12 +17,12 @@ export interface TalentMatchesResponse {
 }
 
 export function useFetchTalentMatches(
-    skills: ReadonlyArray<Skill>,
+    skills: ReadonlyArray<UserSkill>,
     page: number,
     pageSize: number,
 ): TalentMatchesResponse {
     const searchParams = [
-        ...skills.map(s => `skillId=${s.emsiId}`),
+        ...skills.map(s => `id=${s.id}`),
         'sortBy=skillScore',
         'includeStats=false',
         `page=${page}`,
@@ -61,7 +60,7 @@ export interface InfiniteTalentMatchesResposne {
 }
 
 export function useInfiniteTalentMatches(
-    skills: ReadonlyArray<Skill>,
+    skills: ReadonlyArray<UserSkill>,
     pageSize: number = 10,
 ): InfiniteTalentMatchesResposne {
     const [matches, setMatches] = useState([] as Member[])
