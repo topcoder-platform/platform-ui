@@ -1,9 +1,8 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { KeyedMutator } from 'swr'
-import { noop } from 'lodash'
 
-import { Button, Collapsible, FormToggleSwitch, IconSolid, Tooltip } from '~/libs/ui'
+import { Button, Collapsible, FormToggleSwitch } from '~/libs/ui'
 import { diceIdLogo, MFAImage, SettingSection, triggerSurvey } from '~/apps/accounts/src/lib'
 import { MemberMFAStatus, updateMemberMFAStatusAsync, useMemberMFAStatus, UserProfile } from '~/libs/core'
 
@@ -23,10 +22,12 @@ const Security: FC<SecurityProps> = (props: SecurityProps) => {
     } = useMemberMFAStatus(props.profile.userId)
 
     const [mfaEnabled, setMFAEnabled]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
+    const [diceEnabled, setDiceEnabled]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
 
     useEffect(() => {
         if (mfaStatusData) {
             setMFAEnabled(mfaStatusData.mfaEnabled)
+            setDiceEnabled(mfaStatusData.diceEnabled)
         }
     }, [mfaStatusData])
 
@@ -36,9 +37,31 @@ const Security: FC<SecurityProps> = (props: SecurityProps) => {
                 mfaEnabled: !mfaEnabled,
             },
         })
-            .then(() => {
-                setMFAEnabled(!mfaEnabled)
+            .then(response => {
+                setMFAEnabled(response.result.content.mfaEnabled)
+                setDiceEnabled(response.result.content.diceEnabled)
                 toast.success('Your Multi Factor Authentication (MFA) status was updated.')
+                triggerSurvey()
+            })
+            .catch(() => {
+                toast.error('Something went wrong. Please try again later.')
+            })
+    }
+
+    function handleUserDiceChange(): void {
+        if (!diceEnabled) {
+            return
+        }
+
+        updateMemberMFAStatusAsync(props.profile.userId, {
+            param: {
+                diceEnabled: !diceEnabled,
+            },
+        })
+            .then(response => {
+                setMFAEnabled(response.result.content.mfaEnabled)
+                setDiceEnabled(response.result.content.diceEnabled)
+                toast.success('Your DICE credential was disabled.')
                 triggerSurvey()
             })
             .catch(() => {
@@ -70,7 +93,6 @@ const Security: FC<SecurityProps> = (props: SecurityProps) => {
                         name='mfaStatus'
                         onChange={handleUserMFAChange}
                         value={mfaEnabled}
-                        disabled={mfaStatusData?.diceEnabled}
                     />
                 )}
             />
@@ -86,12 +108,11 @@ const Security: FC<SecurityProps> = (props: SecurityProps) => {
                 actionElement={(
                     <div className={styles.diceBtnWrap}>
                         {
-                            mfaStatusData?.diceEnabled ? (
+                            diceEnabled ? (
                                 <FormToggleSwitch
                                     name='diceEnabled'
-                                    onChange={noop}
+                                    onChange={handleUserDiceChange}
                                     value={mfaStatusData?.diceEnabled as boolean}
-                                    disabled={mfaStatusData?.diceEnabled}
                                 />
                             ) : (
                                 <Button
@@ -102,15 +123,6 @@ const Security: FC<SecurityProps> = (props: SecurityProps) => {
                                     onClick={handleDiceModalStatus}
                                     disabled={!mfaEnabled}
                                 />
-                            )
-                        }
-                        {
-                            mfaStatusData?.diceEnabled && (
-                                <Tooltip
-                                    content='Please reach out to support@topcoder.com for deactivating Dice ID.'
-                                >
-                                    <IconSolid.InformationCircleIcon />
-                                </Tooltip>
                             )
                         }
                     </div>
