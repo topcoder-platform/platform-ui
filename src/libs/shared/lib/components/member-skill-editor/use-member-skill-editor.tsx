@@ -1,7 +1,13 @@
 import { ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { differenceWith, pick } from 'lodash'
+import { differenceWith, filter } from 'lodash'
 
-import { profileContext, ProfileContextData, UserSkill } from '~/libs/core'
+import {
+    profileContext,
+    ProfileContextData,
+    UserSkill,
+    UserSkillDisplayModes,
+    useUserSkillsDisplayModes,
+} from '~/libs/core'
 
 import {
     createMemberSkills,
@@ -38,6 +44,15 @@ export const useMemberSkillEditor = ({
     const [skills, setSkills] = useState<UserSkill[]>([])
     const [loading, setLoading] = useState<boolean>(true)
     const [, setError] = useState<string>()
+    const displayModes = useUserSkillsDisplayModes()
+
+    const principalSkills = useMemo(() => (
+        filter(skills, s => s.displayMode?.name === UserSkillDisplayModes.principal)
+    ), [skills])
+
+    const additionalSkills = useMemo(() => (
+        filter(skills, s => s.displayMode?.name === UserSkillDisplayModes.additional)
+    ), [skills])
 
     // Function that saves the updated skills, will be called from outside
     const saveSkills = useCallback(async () => {
@@ -45,15 +60,18 @@ export const useMemberSkillEditor = ({
             return
         }
 
-        const skillIds = skills.map(skill => pick(skill, 'id'))
+        const skillsData = skills.map(skill => ({
+            displayModeId: skill.displayMode.id,
+            id: skill.id,
+        }))
 
         if (!isInitialized) {
-            await createMemberSkills(profile.userId, skillIds)
+            await createMemberSkills(profile.userId, skillsData)
             setIsInitialized(true)
             return
         }
 
-        await updateMemberSkills(profile.userId, skillIds)
+        await updateMemberSkills(profile.userId, skillsData)
     }, [isInitialized, profile?.userId, skills])
 
     // Handle user changes
@@ -71,30 +89,31 @@ export const useMemberSkillEditor = ({
         setSkills(skills.filter(s => s.id !== skillId))
     }, [skills])
 
-    const handleAddSkill = useCallback((skillData: any): void => {
-        if (skills.find(s => s.id === skillData.value)) {
-            return
-        }
+    const handleAddSkill = useCallback((type: UserSkillDisplayModes, skillData: any): void => {
+        const skill = skills.find(s => s.id === skillData.value)
 
-        setSkills([...skills, {
+        setSkills([...skills.filter(s => s.id !== skillData.value), {
             category: skillData.category,
             id: skillData.value,
             levels: [],
             name: skillData.label,
+            ...skill,
+            displayMode: displayModes[type],
         }])
-    }, [skills])
+    }, [skills, displayModes])
 
-    const handleOnChange = useCallback(({ target: { value } }: any): void => {
-        const removed = differenceWith(skills, value, (s, v: any) => s.id === v.value)
+    const handleOnChange = useCallback((type: UserSkillDisplayModes) => ({ target: { value } }: any): void => {
+        const currentSkillSet = type === UserSkillDisplayModes.principal ? principalSkills : additionalSkills
+        const removed = differenceWith(currentSkillSet, value, (s, v: any) => s.id === v.value)
         if (removed.length) {
             removed.map(s => handleRemoveSkill(s.id))
         }
 
-        const added = differenceWith(value, skills, (v: any, s: any) => v.value === s.skillId)
+        const added = differenceWith(value, currentSkillSet, (v: any, s: any) => v.value === s.id)
         if (added.length) {
-            added.forEach(handleAddSkill)
+            added.forEach(handleAddSkill.bind(this, type))
         }
-    }, [handleAddSkill, handleRemoveSkill, skills])
+    }, [additionalSkills, handleAddSkill, handleRemoveSkill, principalSkills])
 
     // Load member's skills, set loading state & isInitialized
     useEffect(() => {
@@ -123,13 +142,31 @@ export const useMemberSkillEditor = ({
 
     // build the form input
     const formInput = useMemo(() => (
-        <InputSkillSelector
-            value={skills}
-            onChange={handleOnChange}
-            loading={loading}
-            limit={limit}
-        />
-    ), [skills, handleOnChange, loading, limit])
+        <>
+            <p className='body-main-bold'>Principal Skills</p>
+            <p>
+                Add up to 10 of the skills that are central to your expertise.
+                These will be showcased at the top of your profile.
+            </p>
+            <InputSkillSelector
+                value={principalSkills}
+                onChange={handleOnChange(UserSkillDisplayModes.principal)}
+                loading={loading}
+                limit={10}
+            />
+
+            <p className='body-main-bold'>Additional skills</p>
+            <p>
+                All your other skills that make you a valuable asset on a project or a team.
+            </p>
+            <InputSkillSelector
+                value={additionalSkills}
+                onChange={handleOnChange(UserSkillDisplayModes.additional)}
+                loading={loading}
+                limit={limit ? limit - 10 : 0}
+            />
+        </>
+    ), [principalSkills, handleOnChange, loading, additionalSkills, limit])
 
     return {
         formInput,

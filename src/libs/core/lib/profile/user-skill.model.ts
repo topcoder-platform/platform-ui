@@ -10,10 +10,22 @@ export enum UserSkillLevelTypes {
     verified = 'verified',
 }
 
+// keep this in sync with the backend
+// https://github.com/topcoder-platform/standardized-skills-api/blob/develop/src/config/constants.ts#L28
+export enum UserSkillDisplayModes {
+    additional = 'additional',
+    principal = 'principal',
+}
+
 export type UserSkillLevel = {
     id: string
     name: UserSkillLevelTypes
     description: string
+}
+
+export type UserSkillDisplayMode = {
+    id: string
+    name: UserSkillDisplayModes
 }
 
 export type UserSkill = {
@@ -21,4 +33,7 @@ export type UserSkill = {
     name: string
     category: UserSkillCategory
     levels: Array<UserSkillLevel>
+    displayMode: UserSkillDisplayMode
 }
+
+export type SearchUserSkill = Pick<UserSkill, 'id'|'name'> & Partial<Pick<UserSkill, 'levels'>>

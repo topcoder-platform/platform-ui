@@ -1,9 +1,9 @@
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { orderBy } from 'lodash'
+import { filter, orderBy } from 'lodash'
 
-import { UserProfile, UserSkill } from '~/libs/core'
-import { GroupedSkillsUI, HowSkillsWorkModal, isSkillVerified } from '~/libs/shared'
+import { UserProfile, UserSkill, UserSkillDisplayModes } from '~/libs/core'
+import { GroupedSkillsUI, HowSkillsWorkModal, isSkillVerified, SkillPill } from '~/libs/shared'
 import { Button } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
@@ -33,11 +33,19 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         ['desc', 'asc'],
     ) as UserSkill[], [props.profile.skills])
 
+    const principalSkills = useMemo(() => (
+        filter(memberSkills, s => s.displayMode?.name === UserSkillDisplayModes.principal)
+    ), [memberSkills])
+
+    const additionalSkills = useMemo(() => (
+        filter(memberSkills, s => s.displayMode?.name !== UserSkillDisplayModes.principal)
+    ), [memberSkills])
+
     const groupedSkillsByCategory: { [key: string]: UserSkill[] } = useMemo(() => {
         const grouped: { [key: string]: UserSkill[] } = {}
         const sortedGroupedSkillsByCategory: { [key: string]: UserSkill[] } = {}
 
-        memberSkills.forEach((skill: UserSkill) => {
+        additionalSkills.forEach((skill: UserSkill) => {
             if (grouped[skill.category.name]) {
                 grouped[skill.category.name].push(skill)
             } else {
@@ -52,7 +60,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
             })
 
         return sortedGroupedSkillsByCategory
-    }, [memberSkills])
+    }, [additionalSkills])
 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -93,14 +101,6 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
     return (
         <div className={styles.container}>
-            {
-                skillsRenderer && memberSkills.length > 0 && (
-                    <div className={styles.skillsWrap}>
-                        {skillsRenderer(memberSkills)}
-                    </div>
-                )
-            }
-
             <div className={styles.titleWrap}>
                 <div className={styles.headerWrap}>
                     <h3>Skills</h3>
@@ -122,11 +122,42 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                 </div>
             </div>
 
+            {
+                skillsRenderer && memberSkills.length > 0 && (
+                    <div className={styles.skillsWrap}>
+                        {skillsRenderer(memberSkills)}
+                    </div>
+                )
+            }
+
             <div className={styles.skillsWrap}>
-                {memberSkills.length > 0 && (
-                    <GroupedSkillsUI
-                        groupedSkillsByCategory={groupedSkillsByCategory}
-                    />
+                {principalSkills.length > 0 && (
+                    <div className={styles.principalSkillsWrap}>
+                        <div className='large-subtitle'>
+                            Principal Skills
+                        </div>
+                        <div className={styles.principalSkills}>
+                            {principalSkills.map((skill: UserSkill) => (
+                                <SkillPill
+                                    skill={skill}
+                                    key={skill.id}
+                                    theme={isSkillVerified(skill) ? 'verified' : 'dark'}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
+                {additionalSkills.length > 0 && (
+                    <div className={styles.additionalSkillsWrap}>
+                        {principalSkills.length > 0 && (
+                            <div className='large-subtitle'>
+                                Additional Skills
+                            </div>
+                        )}
+                        <GroupedSkillsUI
+                            groupedSkillsByCategory={groupedSkillsByCategory}
+                        />
+                    </div>
                 )}
                 {!memberSkills.length && (
                     <EmptySection

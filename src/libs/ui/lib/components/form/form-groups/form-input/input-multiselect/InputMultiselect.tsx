@@ -50,6 +50,8 @@ export interface InputMultiselectProps {
     readonly value?: InputMultiselectOption[]
     readonly onSubmit?: () => void
     readonly inputRef?: Ref<any>
+    // Custom method to filter whether an option should be displayed in the menu
+    readonly filterOption?: SelectInstance['filterOption']
 }
 
 const MultiValueRemove: FC = (props: any) => (
@@ -153,6 +155,7 @@ const InputMultiselect: FC<InputMultiselectProps> = props => {
             value={props.value}
             openMenuOnClick={false}
             onKeyDown={handleKeyPress}
+            filterOption={props.filterOption}
         />
     )
 

@@ -46,3 +46,7 @@ export function memberModifyMfaURL(userId: number): string {
 export function diceIDURL(userId: number): string {
     return `${EnvironmentConfig.API.V3}/users/${userId}`
 }
+
+export function userSkillsUrl(userIdOrAction: string): string {
+    return `${EnvironmentConfig.API.V5}/standardized-skills/user-skills/${userIdOrAction}`
+}

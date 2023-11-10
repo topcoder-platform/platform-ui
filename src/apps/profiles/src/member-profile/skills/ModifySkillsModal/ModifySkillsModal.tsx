@@ -40,7 +40,14 @@ const ModifySkillsModal: FC<ModifySkillsModalProps> = (props: ModifySkillsModalP
             onClose={props.onClose}
             open
             size='lg'
-            title='My Skills'
+            title={(
+                <div className={styles.skillsModalHeader}>
+                    <h3>Your skills</h3>
+                    <p className='body-main-normal'>
+                        We use your skills to connect you to the right opportunities.
+                    </p>
+                </div>
+            )}
             buttons={(
                 <div className={styles.modalButtons}>
                     <Button
@@ -58,10 +65,6 @@ const ModifySkillsModal: FC<ModifySkillsModalProps> = (props: ModifySkillsModalP
             )}
         >
             <div className={styles.container}>
-                <p className='body-main-bold'>What are your skills?</p>
-                <p>
-                    Understanding your skills will allow us to connect you to the right opportunities.
-                </p>
                 <div className={styles.skillPicker}>
                     {editor.formInput}
                 </div>
