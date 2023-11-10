@@ -1,6 +1,7 @@
+import { UserSkill } from '~/libs/core'
+
 import { MemberDisplayName } from './MemberDisplayName'
 import MemberAddress from './MemberAddress'
-import MemberEmsiSkill from './MemberEmsiSkill'
 import MemberMaxRating from './MemberMaxRating'
 import MemberStats from './MemberStats'
 
@@ -12,7 +13,7 @@ export default interface Member {
     createdAt: number;
     description: string;
     email: string;
-    emsiSkills: Array <MemberEmsiSkill>;
+    skills: Array<UserSkill>;
     firstName: string;
     handle: string;
     homeCountryCode: string;
@@ -23,7 +24,7 @@ export default interface Member {
     numberOfChallengesWon: number;
     photoURL: string;
     skillScore: number;
-    stats: Array <MemberStats>;
+    stats: Array<MemberStats>;
     status: string;
     userId: number;
     verified: string;

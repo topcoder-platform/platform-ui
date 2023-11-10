@@ -64,7 +64,9 @@ export const SUBDOMAIN = window.location.hostname.split('.')[0]
 
 export const GAMIFICATION_ORG_ID = getReactEnv<string>('GAMIFICATION_ORG_ID', undefined)
 
-export const RESTRICT_TALENT_SEARCH = getReactEnv<boolean>('RESTRICT_TALENT_SEARCH', false)
+// TODO: Revert this.  This was done because prod was restricting this and no one was available to fix the config
+// export const RESTRICT_TALENT_SEARCH = getReactEnv<boolean>('RESTRICT_TALENT_SEARCH', false)
+export const RESTRICT_TALENT_SEARCH = false
 export const SEGMENT_ANALYTICS_KEY = getReactEnv<string>('SEGMENT_ANALYTICS_KEY', undefined)
 
 export const USERFLOW_SURVEYS = {

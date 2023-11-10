@@ -1,4 +1,4 @@
-import { UserEMSISkill } from './user-skill.model'
+import { UserSkill } from './user-skill.model'
 
 export type TC_TRACKS = 'DEVELOP' | 'DESIGN' | 'DATA_SCIENCE'
 
@@ -15,7 +15,6 @@ export interface UserProfile {
     description: string
     diceEnabled: boolean
     email: string
-    emsiSkills: Array<UserEMSISkill>
     firstName: string
     handle: string
     handleLower: string
@@ -29,6 +28,7 @@ export interface UserProfile {
     }
     photoURL?: string
     roles: Array<string>
+    skills: Array<UserSkill>
     status: string
     tracks?: Array<TC_TRACKS>
     updatedAt: number

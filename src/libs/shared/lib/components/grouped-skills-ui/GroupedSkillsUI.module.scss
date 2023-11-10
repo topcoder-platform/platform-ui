@@ -1,0 +1,14 @@
+@import '@libs/ui/styles/includes';
+
+.skillsCategories {
+    flex: 1;
+    columns: 3 auto;
+
+    @include xl {
+        columns: 2 auto;
+    }
+
+    @include ltelg {
+        columns: 1 auto;
+    }
+}

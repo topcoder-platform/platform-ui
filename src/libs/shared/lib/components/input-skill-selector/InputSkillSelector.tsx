@@ -2,13 +2,14 @@ import { ChangeEvent, FC, ReactNode, Ref } from 'react'
 import { noop } from 'lodash'
 
 import { InputMultiselect, InputMultiselectOption, InputMultiselectThemes } from '~/libs/ui'
+import { UserSkill } from '~/libs/core'
 
-import { autoCompleteSkills, EmsiSkill, isSkillVerified } from '../../services/emsi-skills'
+import { autoCompleteSkills, isSkillVerified } from '../../services/standard-skills'
 
-const mapEmsiSkillToInputOption = (skill: EmsiSkill): InputMultiselectOption => ({
+const mapSkillToInputOption = (skill: UserSkill): InputMultiselectOption => ({
     ...skill,
     label: skill.name,
-    value: skill.skillId,
+    value: skill.id,
     verified: isSkillVerified(skill),
 })
 
@@ -22,7 +23,7 @@ const fetchSkills = (queryTerm: string): Promise<Option[]> => (
         .then(skills => (
             skills.map(skill => ({
                 label: skill.name,
-                value: skill.emsiId,
+                value: skill.id,
             }))
         ))
 )
@@ -35,7 +36,7 @@ interface InputSkillSelectorProps {
     readonly loading?: boolean
     readonly onChange?: (event: ChangeEvent<HTMLInputElement>) => void
     readonly placeholder?: string
-    readonly value?: EmsiSkill[]
+    readonly value?: UserSkill[]
     readonly theme?: InputMultiselectThemes
     readonly useWrapper?: boolean
     readonly dropdownIcon?: ReactNode
@@ -54,7 +55,7 @@ const InputSkillSelector: FC<InputSkillSelectorProps> = props => (
         onFetchOptions={fetchSkills}
         name='skills'
         onChange={props.onChange ?? noop}
-        value={props.value?.map(mapEmsiSkillToInputOption)}
+        value={props.value?.map(mapSkillToInputOption)}
         loading={props.loading}
         theme={props.theme}
         useWrapper={props.useWrapper}
