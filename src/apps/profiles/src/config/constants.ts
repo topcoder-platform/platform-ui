@@ -24,3 +24,5 @@ export enum profileEditModes {
 }
 
 export const CES_SURVEY_ID = EnvironmentConfig.USERFLOW_SURVEYS.PROFILES
+
+export const MAX_PRINCIPAL_SKILLS_COUNT = 10

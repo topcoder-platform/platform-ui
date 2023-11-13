@@ -8,6 +8,7 @@ import {
     UserSkillDisplayModes,
     useUserSkillsDisplayModes,
 } from '~/libs/core'
+import { MAX_PRINCIPAL_SKILLS_COUNT } from '~/apps/profiles/src/config'
 
 import {
     createMemberSkills,
@@ -149,10 +150,11 @@ export const useMemberSkillEditor = ({
                 These will be showcased at the top of your profile.
             </p>
             <InputSkillSelector
+                label='Select Principal skills'
                 value={principalSkills}
                 onChange={handleOnChange(UserSkillDisplayModes.principal)}
                 loading={loading}
-                limit={10}
+                limit={MAX_PRINCIPAL_SKILLS_COUNT}
             />
 
             <p className='body-main-bold'>Additional skills</p>
@@ -160,10 +162,11 @@ export const useMemberSkillEditor = ({
                 All your other skills that make you a valuable asset on a project or a team.
             </p>
             <InputSkillSelector
+                label='Select Additional skills'
                 value={additionalSkills}
                 onChange={handleOnChange(UserSkillDisplayModes.additional)}
                 loading={loading}
-                limit={limit ? limit - 10 : 0}
+                limit={limit ? limit - MAX_PRINCIPAL_SKILLS_COUNT : 0}
             />
         </>
     ), [principalSkills, handleOnChange, loading, additionalSkills, limit])

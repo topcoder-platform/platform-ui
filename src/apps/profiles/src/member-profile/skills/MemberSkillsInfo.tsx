@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { filter, orderBy } from 'lodash'
 
 import { UserProfile, UserSkill, UserSkillDisplayModes } from '~/libs/core'
-import { GroupedSkillsUI, HowSkillsWorkModal, isSkillVerified, SkillPill } from '~/libs/shared'
+import { GroupedSkillsUI, HowSkillsWorkModal, isSkillVerified, SkillPill, useLocalStorage } from '~/libs/shared'
 import { Button } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
@@ -11,6 +11,7 @@ import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { MemberProfileContextValue, useMemberProfileContext } from '../MemberProfile.context'
 
 import { ModifySkillsModal } from './ModifySkillsModal'
+import { PrincipalSkillsModal } from './PrincipalSkillsModal'
 import styles from './MemberSkillsInfo.module.scss'
 
 interface MemberSkillsInfoProps {
@@ -24,6 +25,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
     const editMode: string | null = queryParams.get(EDIT_MODE_QUERY_PARAM)
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
+    const [hasSeenPrincipalIntro, setHasSeenPrincipalIntro] = useLocalStorage('seen-principal-intro', {} as any)
 
     const { skillsRenderer, isTalentSearch }: MemberProfileContextValue = useMemberProfileContext()
 
@@ -46,10 +48,11 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         const sortedGroupedSkillsByCategory: { [key: string]: UserSkill[] } = {}
 
         additionalSkills.forEach((skill: UserSkill) => {
-            if (grouped[skill.category.name]) {
-                grouped[skill.category.name].push(skill)
+            const categoryName = skill.category?.name ?? ''
+            if (grouped[categoryName]) {
+                grouped[categoryName].push(skill)
             } else {
-                grouped[skill.category.name] = [skill]
+                grouped[categoryName] = [skill]
             }
         })
 
@@ -68,6 +71,9 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
     const [howSkillsWorkVisible, setHowSkillsWorkVisible]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
+    const [principalIntroModalVisible, setPrincipalIntroModalVisible]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.skills) {
             setIsEditMode(true)
@@ -75,6 +81,19 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.authProfile])
+
+    useEffect(() => {
+        if (
+            !canEdit
+            || !props.authProfile
+            || hasSeenPrincipalIntro[props.authProfile.handle]
+            || isTalentSearch
+        ) {
+            return
+        }
+
+        setPrincipalIntroModalVisible(true)
+    }, [hasSeenPrincipalIntro, canEdit, isTalentSearch, props.authProfile, setHasSeenPrincipalIntro])
 
     function handleEditSkillsClick(): void {
         setIsEditMode(true)
@@ -97,6 +116,19 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
     function handleHowSkillsWorkClose(): void {
         setHowSkillsWorkVisible(false)
+    }
+
+    function handlePrincipalIntroShow(): void {
+        setPrincipalIntroModalVisible(true)
+    }
+
+    function handlePrincipalIntroClose(): void {
+        setHasSeenPrincipalIntro((prevValue: any) => ({
+            ...prevValue,
+            [props.authProfile?.handle ?? '']: true,
+        }))
+
+        setPrincipalIntroModalVisible(false)
     }
 
     return (
@@ -185,6 +217,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                     <ModifySkillsModal
                         onClose={handleModyfSkillsModalClose}
                         onSave={handleModyfSkillsSave}
+                        showPrincipalIntroModal={handlePrincipalIntroShow}
                     />
                 )
             }
@@ -195,6 +228,14 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                         onClose={handleHowSkillsWorkClose}
                         isTalentSearch={isTalentSearch}
                         iseSelfView={canEdit}
+                    />
+                )
+            }
+
+            {
+                principalIntroModalVisible && (
+                    <PrincipalSkillsModal
+                        onClose={handlePrincipalIntroClose}
                     />
                 )
             }

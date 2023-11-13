@@ -9,6 +9,7 @@ import styles from './ModifySkillsModal.module.scss'
 interface ModifySkillsModalProps {
     onClose: () => void
     onSave: () => void
+    showPrincipalIntroModal: () => void
 }
 
 const ModifySkillsModal: FC<ModifySkillsModalProps> = (props: ModifySkillsModalProps) => {
@@ -44,7 +45,7 @@ const ModifySkillsModal: FC<ModifySkillsModalProps> = (props: ModifySkillsModalP
                 <div className={styles.skillsModalHeader}>
                     <h3>Your skills</h3>
                     <p className='body-main-normal'>
-                        We use your skills to connect you to the right opportunities.
+                        We use your skills to connect you to the best opportunities.
                     </p>
                 </div>
             )}
@@ -67,6 +68,14 @@ const ModifySkillsModal: FC<ModifySkillsModalProps> = (props: ModifySkillsModalP
             <div className={styles.container}>
                 <div className={styles.skillPicker}>
                     {editor.formInput}
+                </div>
+                <div
+                    className={styles.principalIntroLink}
+                    onClick={props.showPrincipalIntroModal}
+                >
+                    <span className='body-main-link'>
+                        See what Principal skills are
+                    </span>
                 </div>
             </div>
         </BaseModal>
