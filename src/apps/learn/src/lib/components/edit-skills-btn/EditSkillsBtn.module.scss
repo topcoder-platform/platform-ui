@@ -1,0 +1,12 @@
+@import "@libs/ui/styles/includes";
+
+.editSkillsBtn {
+    padding: 0 !important;
+    padding-left: $sp-4 !important;
+    color: $black-100;
+
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}

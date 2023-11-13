@@ -276,7 +276,6 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
 
                             <SkillTags
                                 skills={props.certification?.skills ?? []}
-                                emsiSkills={props.certification?.emsiSkills ?? []}
                                 theme='gray'
                                 label=''
                                 expandCount={props.certification?.skills?.length ?? 0}

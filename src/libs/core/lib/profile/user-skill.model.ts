@@ -34,6 +34,7 @@ export type UserSkill = {
     category: UserSkillCategory
     levels: Array<UserSkillLevel>
     displayMode: UserSkillDisplayMode
+    description?: string | null | undefined
 }
 
 export type SearchUserSkill = Pick<UserSkill, 'id'|'name'> & Partial<Pick<UserSkill, 'levels'>>

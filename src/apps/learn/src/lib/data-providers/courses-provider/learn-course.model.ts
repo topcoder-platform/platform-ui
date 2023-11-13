@@ -7,7 +7,6 @@ import { TCASkillType } from '../tca-certifications-provider/tca-skill-type'
 export interface LearnCourse extends LearnModelBase {
     certificationId: string
     completionSuggestions: Array<string>
-    emsiSkills: Array<TCASkillType>
     estimatedCompletionTimeValue: number
     estimatedCompletionTimeUnits: string
     fccCourseUuid: string
@@ -21,6 +20,6 @@ export interface LearnCourse extends LearnModelBase {
     modules: Array<LearnModule>
     note: string
     resourceProvider: ResourceProvider
-    skills: Array<string>
+    skills: Array<TCASkillType>
     title: string
 }
