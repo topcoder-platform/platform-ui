@@ -150,7 +150,7 @@ export const useMemberSkillEditor = ({
                 These will be showcased at the top of your profile.
             </p>
             <InputSkillSelector
-                label='Select Principal skills'
+                label='Select Principal Skills'
                 value={principalSkills}
                 onChange={handleOnChange(UserSkillDisplayModes.principal)}
                 loading={loading}
@@ -162,7 +162,7 @@ export const useMemberSkillEditor = ({
                 All your other skills that make you a valuable asset on a project or a team.
             </p>
             <InputSkillSelector
-                label='Select Additional skills'
+                label='Select Additional Skills'
                 value={additionalSkills}
                 onChange={handleOnChange(UserSkillDisplayModes.additional)}
                 loading={loading}

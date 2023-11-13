@@ -16,14 +16,14 @@ const PrincipalSkillsModal: FC<PrincipalSkillsModalProps> = (props: PrincipalSki
     <BaseModal
         onClose={props.onClose}
         open
-        title='Highlight your Principal skills'
+        title='Highlight your Principal Skills'
         size='lg'
     >
         <div className={styles.container}>
             <p>
                 <div className={styles.mb1}>
                     Now you can highlight your most important skills using the&nbsp;
-                    <strong>Principal skills</strong>
+                    <strong>Principal Skills</strong>
                     &nbsp;section!
                 </div>
                 <img src={principalSectionImg} alt='' />
@@ -32,7 +32,7 @@ const PrincipalSkillsModal: FC<PrincipalSkillsModalProps> = (props: PrincipalSki
             <p>
                 <div className={styles.mb1}>
                     Just move the skills you want to highlight by typing them in the&nbsp;
-                    <strong>principal skills input</strong>
+                    <strong>Principal Skills input</strong>
                     &nbsp;when you edit your skills.
                 </div>
                 <img src={principalInputImg} alt='' />
@@ -44,16 +44,16 @@ const PrincipalSkillsModal: FC<PrincipalSkillsModalProps> = (props: PrincipalSki
                 {' '}
                 {MAX_PRINCIPAL_SKILLS_COUNT}
                 {' '}
-                skills to your principal section.
+                skills to your Principal Skills section.
             </p>
             <br />
             <p>
                 To move a skill back to the
                 {' '}
-                <strong>additional section</strong>
+                <strong>Additional Skills section</strong>
                 , just type it in the
                 {' '}
-                <strong>additional skills input</strong>
+                <strong>Additional Skills input</strong>
                 .
             </p>
         </div>
