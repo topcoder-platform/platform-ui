@@ -38,10 +38,11 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         const sortedGroupedSkillsByCategory: { [key: string]: UserSkill[] } = {}
 
         memberSkills.forEach((skill: UserSkill) => {
-            if (grouped[skill.category.name]) {
-                grouped[skill.category.name].push(skill)
+            const categoryName = skill.category?.name ?? ''
+            if (grouped[categoryName]) {
+                grouped[categoryName].push(skill)
             } else {
-                grouped[skill.category.name] = [skill]
+                grouped[categoryName] = [skill]
             }
         })
 
