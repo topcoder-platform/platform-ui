@@ -66,7 +66,7 @@ const ModifySkillsModal: FC<ModifySkillsModalProps> = (props: ModifySkillsModalP
         >
             <div className={styles.container}>
                 <p>
-                    TCA skills will be associated to members upon completion of courses & certifications.
+                    Members will earn verified skills upon completion of TCA courses & certifications.
                 </p>
                 <div className={styles.skillPicker}>
                     {editor.formInput}
