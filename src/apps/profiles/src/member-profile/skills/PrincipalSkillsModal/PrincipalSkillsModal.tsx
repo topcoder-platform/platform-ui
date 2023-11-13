@@ -1,11 +1,12 @@
 import { FC } from 'react'
 
-import { BaseModal, IconOutline } from '~/libs/ui'
+import { BaseModal } from '~/libs/ui'
 
-import styles from './PrincipalSkillsModal.module.scss'
 import { MAX_PRINCIPAL_SKILLS_COUNT } from '../../../config'
-import principalSectionImg from './principal-section.png'
+
 import principalInputImg from './principal-input.png'
+import principalSectionImg from './principal-section.png'
+import styles from './PrincipalSkillsModal.module.scss'
 
 interface PrincipalSkillsModalProps {
     onClose: () => void
@@ -25,7 +26,7 @@ const PrincipalSkillsModal: FC<PrincipalSkillsModalProps> = (props: PrincipalSki
                     <strong>Principal skills</strong>
                     &nbsp;section!
                 </div>
-                <img src={principalSectionImg} alt="" />
+                <img src={principalSectionImg} alt='' />
             </p>
             <br />
             <p>
@@ -34,16 +35,26 @@ const PrincipalSkillsModal: FC<PrincipalSkillsModalProps> = (props: PrincipalSki
                     <strong>principal skills input</strong>
                     &nbsp;when you edit your skills.
                 </div>
-                <img src={principalInputImg} alt="" />
+                <img src={principalInputImg} alt='' />
             </p>
             <br />
             <p>
                 <strong>NOTE:</strong>
-                &nbsp;You can add up to {MAX_PRINCIPAL_SKILLS_COUNT} skills to your principal section.
+                &nbsp;You can add up to
+                {' '}
+                {MAX_PRINCIPAL_SKILLS_COUNT}
+                {' '}
+                skills to your principal section.
             </p>
             <br />
             <p>
-                To move a skill back to the <strong>additional section</strong>, just type it in the <strong>additional skills input</strong>.
+                To move a skill back to the
+                {' '}
+                <strong>additional section</strong>
+                , just type it in the
+                {' '}
+                <strong>additional skills input</strong>
+                .
             </p>
         </div>
     </BaseModal>
