@@ -3,14 +3,15 @@ import { noop } from 'lodash'
 
 import { InputMultiselect, InputMultiselectOption, InputMultiselectThemes } from '~/libs/ui'
 import { UserSkill } from '~/libs/core'
+import { TCASkillType } from '~/apps/learn/src/lib'
 
 import { autoCompleteSkills, isSkillVerified } from '../../services/standard-skills'
 
-const mapSkillToInputOption = (skill: UserSkill): InputMultiselectOption => ({
+const mapSkillToInputOption = (skill: UserSkill | TCASkillType): InputMultiselectOption => ({
     ...skill,
     label: skill.name,
     value: skill.id,
-    verified: isSkillVerified(skill),
+    verified: (skill as UserSkill).levels ? isSkillVerified(skill as UserSkill) : undefined,
 })
 
 interface Option {
@@ -36,7 +37,7 @@ interface InputSkillSelectorProps {
     readonly loading?: boolean
     readonly onChange?: (event: ChangeEvent<HTMLInputElement>) => void
     readonly placeholder?: string
-    readonly value?: UserSkill[]
+    readonly value?: UserSkill[] | TCASkillType[]
     readonly theme?: InputMultiselectThemes
     readonly useWrapper?: boolean
     readonly dropdownIcon?: ReactNode

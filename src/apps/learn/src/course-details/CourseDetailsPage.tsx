@@ -1,6 +1,8 @@
+/* eslint-disable complexity */
 /* eslint-disable react/no-danger */
-import { FC, ReactNode, useContext, useMemo } from 'react'
+import { Dispatch, FC, ReactNode, SetStateAction, useContext, useMemo, useState } from 'react'
 import { Params, useParams } from 'react-router-dom'
+import classNames from 'classnames'
 
 import {
     Breadcrumb,
@@ -10,14 +12,17 @@ import {
     LoadingSpinner,
 } from '~/libs/ui'
 import { textFormatGetSafeString } from '~/libs/shared'
-import { profileContext, ProfileContextData } from '~/libs/core'
+import { profileContext, ProfileContextData, UserRole } from '~/libs/core'
 
 import {
     AllCertificationsProviderData,
     CoursesProviderData,
     CourseTitle,
+    EditSkillsBtn,
+    ModifySkillsModal,
     PageTitle,
     ResourceProviderData,
+    SkillTags,
     TCACertificationProgressBox,
     useGetCertification,
     useGetCourses,
@@ -44,6 +49,7 @@ const CourseDetailsPage: FC<{}> = () => {
     const {
         course,
         ready: courseReady,
+        mutate: reloadCourse,
     }: CoursesProviderData = useGetCourses(textFormatGetSafeString(routeParams.provider), routeParams.certification)
 
     const {
@@ -78,6 +84,11 @@ const CourseDetailsPage: FC<{}> = () => {
         routeParams.certification,
         routeParams.provider,
     ])
+
+    const canEdit: boolean = useMemo(() => !!profile?.roles?.includes(UserRole.tcaAdmin), [profile])
+
+    const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
 
     function getDescription(): ReactNode {
 
@@ -178,6 +189,21 @@ const CourseDetailsPage: FC<{}> = () => {
         )
     }
 
+    function handleEditSkillsClick(): void {
+        setIsEditMode(true)
+    }
+
+    function handleModyfSkillsModalClose(): void {
+        setIsEditMode(false)
+    }
+
+    function handleModyfSkillsSave(): void {
+        setTimeout(() => {
+            setIsEditMode(false)
+            reloadCourse()
+        }, 1500)
+    }
+
     return (
         <ContentLayout>
             <PageTitle>{course?.title ?? 'Course Details'}</PageTitle>
@@ -197,6 +223,24 @@ const CourseDetailsPage: FC<{}> = () => {
                                 title={course.title}
                                 provider={course.resourceProvider.name}
                                 trackType={certificate?.certificationCategory.track}
+                            />
+
+                            <div className={classNames('body-small-medium', styles['skills-section-header'])}>
+                                <span>Skills Covered</span>
+                                {
+                                    canEdit && (
+                                        <EditSkillsBtn
+                                            onClick={handleEditSkillsClick}
+                                            className={styles.editTCABtn}
+                                        />
+                                    )
+                                }
+                            </div>
+                            <SkillTags
+                                skills={course.skills || []}
+                                courseKey={course.id}
+                                theme='gray'
+                                expandCount={9}
                             />
 
                             <TCACertificationProgressBox
@@ -229,6 +273,16 @@ const CourseDetailsPage: FC<{}> = () => {
                             />
                         </div>
                     </div>
+
+                    {
+                        isEditMode && (
+                            <ModifySkillsModal
+                                onClose={handleModyfSkillsModalClose}
+                                onSave={handleModyfSkillsSave}
+                                course={course}
+                            />
+                        )
+                    }
                 </>
             )}
         </ContentLayout>

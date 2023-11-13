@@ -117,7 +117,6 @@ const CoursesCard: FC<CoursesCardProps> = (props: CoursesCardProps) => {
                 courseKey={props.certification.course.key}
                 expandCount={2}
                 skills={props.certification.course.skills}
-                emsiSkills={props.certification.course.emsiSkills}
                 theme={isCompleted ? 'gray' : 'white'}
             />
 
