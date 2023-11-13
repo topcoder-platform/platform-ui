@@ -21,4 +21,5 @@ export type UserSkill = {
     name: string
     category: UserSkillCategory
     levels: Array<UserSkillLevel>
+    description?: string | null | undefined
 }

@@ -43,6 +43,7 @@ const CertificationDetailsPage: FC<{}> = () => {
     const {
         certification,
         ready: certificationReady,
+        mutate: reloadCertification,
     }: TCACertificationProviderData = useGetTCACertification(dashedName as string)
 
     // Fetch Enrollment status & progress
@@ -130,6 +131,8 @@ const CertificationDetailsPage: FC<{}> = () => {
                 certification={certification}
                 enrolled={isEnrolled}
                 certProgress={progress}
+                profile={profile}
+                reloadCertification={reloadCertification}
             />
         )
     }

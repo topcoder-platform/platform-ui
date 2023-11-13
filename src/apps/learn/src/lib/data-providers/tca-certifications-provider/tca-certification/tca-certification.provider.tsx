@@ -21,7 +21,7 @@ export function useGetTCACertification(
     )
     const swrCacheConfig: SWRConfiguration = useSwrCache(url)
 
-    const { data, error }: SWRResponse = useSWR(url, {
+    const { data, error, mutate }: SWRResponse = useSWR(url, {
         ...swrCacheConfig,
         isPaused: () => options?.enabled === false,
     })
@@ -30,6 +30,7 @@ export function useGetTCACertification(
         certification: data,
         error: !!error,
         loading: !data,
+        mutate,
         ready: !!data,
     }
 }

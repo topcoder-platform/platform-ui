@@ -16,7 +16,6 @@ export interface TCACertification {
     createdAt: Date
     dashedName: string
     description: string
-    emsiSkills: Array<TCASkillType>
     id: number
     introText: string
     learnerLevel: TCACertificationLearnLevel
@@ -26,7 +25,7 @@ export interface TCACertification {
     providers: Array<TCACertificationProviderBase>
     resourceProviders: Array<TCACertificationProvider>
     sequentialCourses: boolean
-    skills: string[]
+    skills: Array<TCASkillType>
     status: TCACertificationStatus
     stripeProductId?: string
     title: string

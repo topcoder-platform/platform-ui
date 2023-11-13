@@ -1,12 +1,16 @@
-import { FC, ReactNode } from 'react'
+import { Dispatch, FC, ReactNode, SetStateAction, useMemo, useState } from 'react'
+import { KeyedMutator } from 'swr'
 import classNames from 'classnames'
 
 import { EnvironmentConfig } from '~/config'
 import { IconOutline, IconSolid, Tooltip } from '~/libs/ui'
+import { UserProfile, UserRole } from '~/libs/core'
 
 import {
     CompletionTimeRange,
+    EditSkillsBtn,
     LearnLevelIcon,
+    ModifySkillsModal,
     ProvidersLogoList,
     SkillTags,
     StickySidebar,
@@ -24,6 +28,8 @@ interface CertificationDetailsSidebarProps {
     certification: TCACertification
     enrolled: boolean
     certProgress?: TCACertificationProgress
+    profile: UserProfile | undefined
+    reloadCertification: KeyedMutator<any>
 }
 
 function renderTooltipContents(icon: ReactNode, text: Array<string>): ReactNode {
@@ -56,6 +62,26 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
             .toFixed(2)
 
     const suggestedRetailPrice: string = product?.metadata?.estimatedRetailPrice || '20'
+
+    const canEdit: boolean = useMemo(() => !!props.profile?.roles?.includes(UserRole.tcaAdmin), [props.profile])
+
+    const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
+    function handleModyfSkillsModalClose(): void {
+        setIsEditMode(false)
+    }
+
+    function handleModyfSkillsSave(): void {
+        setTimeout(() => {
+            setIsEditMode(false)
+            props.reloadCertification()
+        }, 1500)
+    }
+
+    function handleEditSkillsClick(): void {
+        setIsEditMode(true)
+    }
 
     return (
         <StickySidebar>
@@ -140,10 +166,17 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
             </ul>
 
             <div className={classNames('body-small-medium', styles['section-header'])}>
-                Skills Covered
+                <span>Skills Covered</span>
+                {
+                    canEdit && (
+                        <EditSkillsBtn
+                            onClick={handleEditSkillsClick}
+                            className={styles.editTCABtn}
+                        />
+                    )
+                }
             </div>
             <SkillTags
-                emsiSkills={props.certification.emsiSkills}
                 skills={props.certification.skills}
                 courseKey={props.certification.dashedName}
                 theme='gray'
@@ -173,6 +206,16 @@ const CertificationDetailsSidebar: FC<CertificationDetailsSidebarProps> = (props
                     <EnrollCtaBtn certification={props.certification.dashedName} />
                 )}
             </div>
+
+            {
+                isEditMode && (
+                    <ModifySkillsModal
+                        onClose={handleModyfSkillsModalClose}
+                        onSave={handleModyfSkillsSave}
+                        certification={props.certification}
+                    />
+                )
+            }
         </StickySidebar>
     )
 }

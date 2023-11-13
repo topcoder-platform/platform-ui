@@ -55,7 +55,6 @@ export const URLS = {
 export const MEMBER_VERIFY_LOOKER = getReactEnv<number>('MEMBER_VERIFY_LOOKER', 3322)
 
 export const ENABLE_TCA_CERT_MONETIZATION = false
-export const ENABLE_EMSI_SKILLS = getReactEnv<boolean>('ENABLE_EMSI_SKILLS', false)
 
 export const TERMS_URL = 'https://www.topcoder-dev.com/challenges/terms/detail/317cd8f9-d66c-4f2a-8774-63c612d99cd4'
 export const PRIVACY_POLICY_URL = `${TOPCODER_URL}/policy`
