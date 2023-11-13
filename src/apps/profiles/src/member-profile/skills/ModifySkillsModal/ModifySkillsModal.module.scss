@@ -1,16 +1,17 @@
 @import '@libs/ui/styles/includes';
 
+.skillsModalHeader {
+    :global(.body-main-normal) {
+        margin-top: $sp-2;
+    }
+}
+
 .container {
     display: flex;
     flex-direction: column;
 
-    :global(.body-main-bold) {
-        font-size: 20px;
-        margin-bottom: $sp-2;
-    }
-
-    .skillPicker {
-        margin-top: $sp-4;
+    :global(.input-wrapper) {
+        margin-top: $sp-2;
     }
 }
 
@@ -28,4 +29,16 @@
 
 .skillsModalBody {
     overflow: visible !important;
+}
+
+.principalIntroLink {
+    display: flex;
+    justify-content: flex-end;
+    > span {
+        color: $link-blue-dark;
+        cursor: pointer;
+        &:hover {
+            color: darken($link-blue-dark, 5);
+        }
+    }
 }
