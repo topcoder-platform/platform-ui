@@ -46,6 +46,9 @@ export type MemberStats = {
     screeningSuccessRate: number
     wins: number
     name: string
+    submissions: {
+        submissions: number
+    }
 }
 
 export type UserStats = {

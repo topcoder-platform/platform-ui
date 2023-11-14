@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
+import { FC, useMemo } from 'react'
 
 import {
     useMemberBadges,
@@ -12,8 +12,8 @@ import {
 import { CommunityAwards } from '../community-awards'
 
 import { TCOWinsBanner } from './TCOWinsBanner'
-import { ChallengeWinsBanner } from './ChallengeWinsBanner'
-import MemberRolesInfoModal from './MemberRolesInfoModal/MemberRolesInfoModal'
+import { TcSpecialRolesBanner } from './TcSpecialRolesBanner'
+import { MemberStats } from './MemberStats'
 import styles from './MemberTCAchievements.module.scss'
 
 interface MemberTCAchievementsProps {
@@ -38,19 +38,6 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
         (badge: UserBadge) => /TCO.*Trip Winner/.test(badge.org_badge.badge_name),
     ).length || 0, [memberBadges])
 
-    const isCopilot: boolean
-        = useMemo(() => !!memberStats?.COPILOT, [memberStats])
-
-    const [isInfoModalOpen, setIsInfoModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
-
-    function handleInfoModalClose(): void {
-        setIsInfoModalOpen(false)
-    }
-
-    function handleInfoModalOpen(): void {
-        setIsInfoModalOpen(true)
-    }
-
     return memberStats?.wins || tcoWins || tcoQualifications ? (
         <div className={styles.container}>
             <p className='body-large-medium'>Achievements @ Topcoder</p>
@@ -61,37 +48,10 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
                         <TCOWinsBanner tcoWins={tcoWins} tcoQualifications={tcoQualifications} tcoTrips={tcoTrips} />
                     )
                 }
-                {
-                    !!memberStats?.wins && memberStats.wins > 0 && (
-                        <ChallengeWinsBanner
-                            memberStats={memberStats}
-                            profile={props.profile}
-                        />
-                    )
-                }
+                <MemberStats profile={props.profile} />
             </div>
 
-            {
-                isCopilot && (
-                    <div className={styles.rolesSection}>
-                        <div className={styles.rolesWrap}>
-                            <p className='body-main-medium'>Topcoder Special Roles:&nbsp;</p>
-                            <p>Copilot</p>
-                        </div>
-                        <button type='button' className={styles.link} onClick={handleInfoModalOpen}>
-                            What are special roles?
-                        </button>
-
-                        {
-                            isInfoModalOpen && (
-                                <MemberRolesInfoModal
-                                    onClose={handleInfoModalClose}
-                                />
-                            )
-                        }
-                    </div>
-                )
-            }
+            <TcSpecialRolesBanner memberStats={memberStats} />
 
             <CommunityAwards profile={props.profile} />
         </div>
