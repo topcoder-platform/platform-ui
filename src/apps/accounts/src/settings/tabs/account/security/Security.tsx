@@ -100,7 +100,7 @@ const Security: FC<SecurityProps> = (props: SecurityProps) => {
                                     size='lg'
                                     className={styles.diceIdButton}
                                     onClick={handleDiceModalStatus}
-                                    disabled={!mfaEnabled}
+                                    disabled
                                 />
                             )
                         }
