@@ -28,7 +28,9 @@
 }
 
 .skillsModalBody {
-    overflow: visible !important;
+    :global(.ms--value-container) {
+        max-height: 90px;
+    }
 }
 
 .principalIntroLink {
