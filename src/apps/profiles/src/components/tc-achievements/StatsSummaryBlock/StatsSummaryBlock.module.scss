@@ -1,0 +1,36 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    background: $black-5;
+    padding: $sp-4;
+    border-radius: 6px;
+    width: 100%;
+}
+
+.title {
+    margin-bottom: $sp-3;
+}
+
+.summary {
+    display: flex;
+    align-items: center;
+    gap: $sp-12;
+}
+
+.summaryItem {
+    display: flex;
+    align-items: flex-end;
+    gap: $sp-2;
+
+    &Value {
+        font-family: $font-barlow-condensed;
+        font-weight: $font-weight-medium;
+        font-size: 32px;
+        line-height: 34px;
+        color: $turq-160;
+    }
+
+    &Label {
+        line-height: 23px;
+    }
+}

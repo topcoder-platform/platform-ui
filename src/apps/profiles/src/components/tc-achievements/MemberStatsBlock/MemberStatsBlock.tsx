@@ -1,19 +1,21 @@
 import { FC } from 'react'
+import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { UserProfile } from '~/libs/core'
 import { IconOutline } from '~/libs/ui'
 
 import { useFetchActiveTracks } from '../../../hooks'
+import { getUserProfileStatsRoute } from '../../../profiles.routes'
 
-import { ReactComponent as WinnerIcon } from './winner-icon.svg'
-import styles from './MemberStats.module.scss'
+import styles from './MemberStatsBlock.module.scss'
+import { WinnerIcon } from '../../../lib'
 
-interface MemberStatsProps {
+interface MemberStatsBlockProps {
     profile: UserProfile
 }
 
-const MemberStats: FC<MemberStatsProps> = props => {
+const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
     const activeTracks = useFetchActiveTracks(props.profile.handle)
 
     return activeTracks?.length === 0 ? <></> : (
@@ -27,7 +29,11 @@ const MemberStats: FC<MemberStatsProps> = props => {
                     </p>
                     <ul className={styles.statsList}>
                         {activeTracks.map((track: any) => (
-                            <li className={styles.trackListItem} key={track.name}>
+                            <Link
+                                to={getUserProfileStatsRoute(props.profile.handle, track.name)}
+                                className={styles.trackListItem}
+                                key={track.name}
+                            >
                                 <span className={styles.trackName}>{track.name}</span>
                                 <div className={styles.trackDetails}>
                                     {!track.ranking && ((track.submissions || track.wins) > 0) && (
@@ -43,6 +49,7 @@ const MemberStats: FC<MemberStatsProps> = props => {
                                             </span>
                                         </>
                                     )}
+                                    {/* competitive programming only */}
                                     {track.ranking !== undefined && (
                                         <span className={styles.trackStats}>
                                             <span className={styles.count}>
@@ -58,7 +65,7 @@ const MemberStats: FC<MemberStatsProps> = props => {
                                         className={classNames('icon-lg', styles.rightArrowIcon)}
                                     />
                                 </div>
-                            </li>
+                            </Link>
                         ))}
                     </ul>
                     <p className={styles.footerNote}>
@@ -73,4 +80,4 @@ const MemberStats: FC<MemberStatsProps> = props => {
     )
 }
 
-export default MemberStats
+export default MemberStatsBlock

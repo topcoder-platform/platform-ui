@@ -1,0 +1,39 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    border: 1px solid $black-20;
+    border-radius: $sp-3;
+    padding: $sp-4;
+}
+
+.title {
+    margin-bottom: $sp-2;
+}
+
+.stats {
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+}
+
+.statsItem {
+    display: flex;
+    align-items: center;
+    gap: $sp-1;
+
+    &Value {
+        color: $turq-160;
+        font-family: $font-barlow-condensed;
+        font-weight: $font-weight-medium;
+        font-size: 26px;
+        line-height: 34px;
+    }
+
+    &Label {
+        color: $black-80;
+    }
+
+    &Icon {
+        margin-left: auto;
+    }
+}

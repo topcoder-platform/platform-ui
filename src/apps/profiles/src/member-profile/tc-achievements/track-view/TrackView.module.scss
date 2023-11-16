@@ -1,0 +1,12 @@
+@import '@libs/ui/styles/includes';
+
+.cardsWrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-6;
+
+    > * {
+        display: block;
+        width: calc(33% - 14px);
+    }
+}

@@ -1,4 +1,5 @@
 import { FC, useMemo } from 'react'
+import { Outlet, Route, Routes } from 'react-router-dom'
 
 import {
     useMemberBadges,
@@ -9,11 +10,9 @@ import {
     UserStats,
 } from '~/libs/core'
 
-import { CommunityAwards } from '../community-awards'
-
-import { TCOWinsBanner } from './TCOWinsBanner'
-import { TcSpecialRolesBanner } from './TcSpecialRolesBanner'
-import { MemberStats } from './MemberStats'
+import { DefaultAchievementsView } from './default-achievements-view'
+import { TrackView } from './track-view'
+import { SubTrackView } from './sub-track-view'
 import styles from './MemberTCAchievements.module.scss'
 
 interface MemberTCAchievementsProps {
@@ -38,24 +37,41 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
         (badge: UserBadge) => /TCO.*Trip Winner/.test(badge.org_badge.badge_name),
     ).length || 0, [memberBadges])
 
-    return memberStats?.wins || tcoWins || tcoQualifications ? (
+    if (!memberStats?.wins && !tcoWins && !tcoQualifications) {
+        return <></>
+    }
+
+    return (
         <div className={styles.container}>
-            <p className='body-large-medium'>Achievements @ Topcoder</p>
-
-            <div className={styles.achievementsWrap}>
-                {
-                    (tcoWins > 0 || tcoQualifications > 0 || tcoTrips > 0) && (
-                        <TCOWinsBanner tcoWins={tcoWins} tcoQualifications={tcoQualifications} tcoTrips={tcoTrips} />
-                    )
-                }
-                <MemberStats profile={props.profile} />
-            </div>
-
-            <TcSpecialRolesBanner memberStats={memberStats} />
-
-            <CommunityAwards profile={props.profile} />
+            <Outlet />
+            <Routes>
+                <Route
+                    path=''
+                    element={(
+                        <DefaultAchievementsView
+                            profile={props.profile}
+                            tcoWins={tcoWins}
+                            tcoQualifications={tcoQualifications}
+                            tcoTrips={tcoTrips}
+                            memberStats={memberStats}
+                        />
+                    )}
+                />
+                <Route
+                    path=':trackType'
+                    element={(
+                        <TrackView profile={props.profile} />
+                    )}
+                />
+                <Route
+                    path=':trackType/:subTrack'
+                    element={(
+                        <SubTrackView profile={props.profile} />
+                    )}
+                />
+            </Routes>
         </div>
-    ) : <></>
+    )
 }
 
 export default MemberTCAchievements

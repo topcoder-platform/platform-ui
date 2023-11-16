@@ -1,0 +1,51 @@
+import { FC } from 'react'
+import { Link, useParams } from 'react-router-dom'
+
+import { MemberStats, UserProfile } from '~/libs/core'
+
+import { useFetchTrackData } from '../../../hooks'
+import { getUserProfileRoute, getUserProfileStatsRoute } from '../../../profiles.routes'
+import { StatsDetailsLayout } from '../../../components/tc-achievements/StatsDetailsLayout'
+import { SubTrackSummaryCard } from '../../../components/tc-achievements/SubTrackSummaryCard'
+
+import styles from './TrackView.module.scss'
+
+interface TrackViewProps {
+    profile: UserProfile
+}
+
+const TrackView: FC<TrackViewProps> = props => {
+    const params = useParams()
+    const trackData = useFetchTrackData(props.profile.handle, params.trackType)
+    console.log('here', trackData)
+
+    return (
+        <div className={styles.wrap}>
+            <StatsDetailsLayout
+                prevTitle='Member Stats'
+                title={trackData.name}
+                backAction={getUserProfileRoute(props.profile.handle)}
+                closeAction={getUserProfileRoute(props.profile.handle)}
+                trackData={trackData}
+            >
+                <div className={styles.cardsWrap}>
+                    {trackData.subTracks.map((subTrack: MemberStats) => (
+                        <Link
+                            to={getUserProfileStatsRoute(props.profile.handle, trackData.name, subTrack.name)}
+                            key={subTrack.name}
+                        >
+                            <SubTrackSummaryCard
+                                title={subTrack.name}
+                                wins={subTrack.wins}
+                                submissions={subTrack.submissions?.submissions ?? 0}
+                                key={subTrack.name}
+                            />
+                        </Link>
+                    ))}
+                </div>
+            </StatsDetailsLayout>
+        </div>
+    )
+}
+
+export default TrackView

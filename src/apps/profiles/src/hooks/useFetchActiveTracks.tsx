@@ -1,11 +1,50 @@
-import { filter, orderBy } from 'lodash'
 import { useMemo } from 'react'
+import { filter, find, orderBy } from 'lodash'
 
-import { MemberStats, useMemberStats, UserStats } from '~/libs/core'
+import { MemberStats, SRMStats, useMemberStats, UserStats } from '~/libs/core'
 
-export const useFetchActiveTracks = (userHandle: string): any => {
+export interface MemberStatsTrack {
+    challenges?: number,
+    isActive: boolean,
+    name: string,
+    submissions?: number,
+    subTracks: MemberStats[],
+    ranking?: number,
+    wins: number,
+}
+
+const buildTrackData = (trackName: string, subTracks: MemberStats[]): MemberStatsTrack => {
+    const totalWins = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.wins || 0)), 0)
+    const challengesCount = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.challenges || 0)), 0)
+    const submissionsCount = subTracks.reduce((sum, subTrack) => (
+        sum + (subTrack?.submissions?.submissions || 0)
+    ), 0)
+
+    return {
+        challenges: challengesCount,
+        isActive: challengesCount > 0,
+        name: trackName,
+        submissions: submissionsCount,
+        subTracks,
+        wins: totalWins,
+    }
+}
+
+export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => {
     const memberStats: UserStats | undefined = useMemberStats(userHandle)
 
+    const dataScienceSubTracks: {[key: string]: MemberStats | SRMStats} = useMemo(() => ({
+        MARATHON_MATCH: (memberStats?.DATA_SCIENCE?.MARATHON_MATCH && ({
+            ...memberStats.DATA_SCIENCE.MARATHON_MATCH,
+            name: 'MARATHON_MATCH',
+        })) as MemberStats,
+        SRM: (memberStats?.DATA_SCIENCE?.SRM && ({
+            ...memberStats.DATA_SCIENCE.SRM,
+            name: 'SRM',
+        })) as SRMStats & {name: string},
+    }), [memberStats])
+
+    // Create mappings for the subtracks, by the subtrack name, so we can easily access it later on
     const designSubTracks: {[key: string]: MemberStats} = useMemo(() => (
         memberStats?.DESIGN?.subTracks.reduce((all, subTrack) => {
             all[subTrack.name] = subTrack
@@ -21,115 +60,62 @@ export const useFetchActiveTracks = (userHandle: string): any => {
     ), [memberStats])
 
     // Design
-    const designTrackStats = useMemo(() => {
-        const designStats = developSubTracks.DESIGN
-        const designF2FStats = designSubTracks.DESIGN_FIRST_2_FINISH
-        const webDesignStats = designSubTracks.WEB_DESIGNS
-        const logoDesignStats = designSubTracks.LOGO_DESIGN
-        const wireframesStats = designSubTracks.WIREFRAMES
-        const frontEndFlashStats = designSubTracks.FRONT_END_FLASH
-        const printPresentationStats = designSubTracks.PRINT_OR_PRESENTATION
-        const studioOtherStats = designSubTracks.STUDIO_OTHER
-        const feDesignStats = designSubTracks.APPLICATION_FRONT_END_DESIGN
-        const bannersIconsStats = designSubTracks.BANNERS_OR_ICONS
-        const widgetMobileStats = designSubTracks.WIDGET_OR_MOBILE_SCREEN_DESIGN
-
-        const subTracks = [
-            designStats,
-            designF2FStats,
-            webDesignStats,
-            logoDesignStats,
-            wireframesStats,
-            frontEndFlashStats,
-            printPresentationStats,
-            studioOtherStats,
-            feDesignStats,
-            bannersIconsStats,
-            widgetMobileStats,
-        ]
-
-        const totalWins = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.wins || 0)), 0)
-        const challengesCount = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.challenges || 0)), 0)
-        const submissionsCount = subTracks.reduce((sum, subTrack) => (
-            sum + (subTrack?.submissions?.submissions || 0)
-        ), 0)
-
-        return {
-            isActive: challengesCount > 0,
-            name: 'Design',
-            submissions: submissionsCount,
-            wins: totalWins,
-        }
-    }, [developSubTracks, designSubTracks])
+    const designTrackStats: MemberStatsTrack = useMemo(() => (
+        buildTrackData('Design', [
+            developSubTracks.DESIGN,
+            designSubTracks.DESIGN_FIRST_2_FINISH,
+            designSubTracks.WEB_DESIGNS,
+            designSubTracks.LOGO_DESIGN,
+            designSubTracks.WIREFRAMES,
+            designSubTracks.FRONT_END_FLASH,
+            designSubTracks.PRINT_OR_PRESENTATION,
+            designSubTracks.STUDIO_OTHER,
+            designSubTracks.APPLICATION_FRONT_END_DESIGN,
+            designSubTracks.BANNERS_OR_ICONS,
+            designSubTracks.WIDGET_OR_MOBILE_SCREEN_DESIGN,
+        ].filter(Boolean))
+    ), [developSubTracks, designSubTracks])
 
     // Development
-    const developTrackStats = useMemo(() => {
-        const developmentStats = developSubTracks.DEVELOPMENT
-        const architectureStats = developSubTracks.ARCHITECTURE
-        const f2fStats = developSubTracks.FIRST_2_FINISH
-        const codeStats = developSubTracks.CODE
-        const assemblyStats = developSubTracks.ASSEMBLY_COMPETITION
-        const uiPrototypeStats = developSubTracks.UI_PROTOTYPE_COMPETITION
-
-        const subTracks = [
-            developmentStats,
-            architectureStats,
-            f2fStats,
-            codeStats,
-            assemblyStats,
-            uiPrototypeStats,
-        ]
-
-        const totalWins = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.wins || 0)), 0)
-        const challengesCount = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.challenges || 0)), 0)
-        const submissionsCount = subTracks.reduce((sum, subTrack) => (
-            sum + (subTrack?.submissions?.submissions || 0)
-        ), 0)
-
-        return {
-            isActive: challengesCount > 0,
-            name: 'Development',
-            submissions: submissionsCount,
-            wins: totalWins,
-        }
-    }, [developSubTracks])
+    const developTrackStats: MemberStatsTrack = useMemo(() => (
+        buildTrackData('Development', [
+            developSubTracks.DEVELOPMENT,
+            developSubTracks.ARCHITECTURE,
+            developSubTracks.FIRST_2_FINISH,
+            developSubTracks.CODE,
+            developSubTracks.ASSEMBLY_COMPETITION,
+            developSubTracks.UI_PROTOTYPE_COMPETITION,
+        ].filter(Boolean))
+    ), [developSubTracks])
 
     // Testing
-    const testingTrackStats = useMemo(() => {
-        const bugHuntStats = developSubTracks.BUG_HUNT
-        const testScenStats = developSubTracks.TEST_SCENARIOS
-        const testSuitesStats = developSubTracks.TEST_SUITES
-
-        const subTracks = [
-            bugHuntStats,
-            testScenStats,
-            testSuitesStats,
-        ]
-
-        const totalWins = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.wins || 0)), 0)
-        const challengesCount = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.challenges || 0)), 0)
-        const submissionsCount = subTracks.reduce((sum, subTrack) => (
-            sum + (subTrack?.submissions?.submissions || 0)
-        ), 0)
-
-        return {
-            isActive: challengesCount > 0,
-            name: 'Testing',
-            submissions: submissionsCount,
-            wins: totalWins,
-        }
-    }, [developSubTracks])
+    const testingTrackStats: MemberStatsTrack = useMemo(() => (
+        buildTrackData('Testing', [
+            developSubTracks.BUG_HUNT,
+            developSubTracks.TEST_SCENARIOS,
+            developSubTracks.TEST_SUITES,
+        ].filter(Boolean))
+    ), [developSubTracks])
 
     // Competitive Programming
-    const cpTrackStats = useMemo(() => ({
-        isActive: (memberStats?.DATA_SCIENCE?.challenges ?? 0) > 0,
-        name: 'Competitive Programming',
-        ranking: Math.max(
-            memberStats?.DATA_SCIENCE?.MARATHON_MATCH.rank.percentile ?? 0,
-            memberStats?.DATA_SCIENCE?.SRM.rank.percentile ?? 0,
-        ),
-        wins: memberStats?.DATA_SCIENCE?.wins ?? 0,
-    }), [memberStats])
+    const cpTrackStats: MemberStatsTrack = useMemo(() => {
+        const subTracks = [
+            dataScienceSubTracks.MARATHON_MATCH,
+            dataScienceSubTracks.SRM,
+        ].filter(Boolean) as MemberStats[]
+
+        return {
+            challenges: memberStats?.DATA_SCIENCE?.challenges ?? 0,
+            isActive: (memberStats?.DATA_SCIENCE?.challenges ?? 0) > 0,
+            name: 'Competitive Programming',
+            ranking: Math.max(
+                dataScienceSubTracks.MARATHON_MATCH?.rank.percentile ?? 0,
+                dataScienceSubTracks.SRM?.rank.percentile ?? 0,
+            ),
+            subTracks,
+            wins: memberStats?.DATA_SCIENCE?.wins ?? 0,
+        }
+    }, [dataScienceSubTracks, memberStats])
 
     // copilot
     // const copilotTrackStats = useMemo(() => ({
@@ -147,4 +133,23 @@ export const useFetchActiveTracks = (userHandle: string): any => {
         developTrackStats,
         testingTrackStats,
     ], { isActive: true }), ['wins', 'submissions'], 'desc')
+}
+
+export const useFetchTrackData = (userHandle: string, track: string | undefined): any => {
+    const activeTracks = useFetchActiveTracks(userHandle)
+    return find(activeTracks, { name: track })
+}
+
+export const useFetchSubTrackData = (
+    userHandle: string,
+    track: string | undefined,
+    subTrack: string | undefined,
+): any => {
+    const activeTracks = useFetchActiveTracks(userHandle)
+    const trackData = find(activeTracks, { name: track })
+    const subTrackData = find(trackData?.subTracks, { name: subTrack })
+
+    return {
+        ...subTrackData, trackData,
+    }
 }
