@@ -1,9 +1,8 @@
-import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { KeyedMutator } from 'swr'
 import classNames from 'classnames'
 
-import { useMemberTraits, UserProfile, UserTrait, UserTraitIds, UserTraits } from '~/libs/core'
+import { UserProfile } from '~/libs/core'
 
 import { EditMemberPropertyBtn } from '../../../components'
 import { OpenForGigsModifyModal } from '../OpenForGigsModifyModal'
@@ -26,23 +25,14 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
+    const openForWork = props.profile.availableForGigs
+
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.openForWork) {
             setIsEditMode(true)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.authProfile])
-
-    const { data: memberPersonalizationTraits, mutate: mutateTraits }: {
-        data: UserTraits[] | undefined,
-        mutate: KeyedMutator<any>,
-    }
-        = useMemberTraits(props.profile.handle, { traitIds: UserTraitIds.personalization })
-
-    const openForWork: UserTrait | undefined
-        = useMemo(() => memberPersonalizationTraits?.[0]?.traits?.data?.find(
-            (trait: UserTrait) => trait.availableForGigs !== undefined,
-        ), [memberPersonalizationTraits])
 
     function handleModifyOpenForWorkClick(): void {
         setIsEditMode(true)
@@ -55,7 +45,6 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
     function handleModifyOpenForWorkSave(): void {
         setTimeout(() => {
             setIsEditMode(false)
-            mutateTraits()
             props.refreshProfile(props.profile.handle)
             triggerSurvey()
         }, 1000)
@@ -63,8 +52,8 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
 
     return props.canEdit || openForWork ? (
         <div className={styles.container}>
-            <p className={classNames('body-main-bold', !openForWork?.availableForGigs ? styles.notOopenToWork : '')}>
-                {openForWork?.availableForGigs ? 'open to work' : 'not open to work'}
+            <p className={classNames('body-main-bold', !openForWork ? styles.notOopenToWork : '')}>
+                {openForWork ? 'open to work' : 'not open to work'}
             </p>
             {
                 props.canEdit && (
@@ -78,8 +67,7 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
                     <OpenForGigsModifyModal
                         onClose={handleModifyOpenForWorkClose}
                         onSave={handleModifyOpenForWorkSave}
-                        openForWork={openForWork?.availableForGigs || false}
-                        memberPersonalizationTraitsFullData={memberPersonalizationTraits?.[0]?.traits?.data}
+                        openForWork={openForWork ?? false}
                         profile={props.profile}
                     />
                 )

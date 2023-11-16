@@ -8,6 +8,7 @@ export interface UpdateProfileRequest {
         streetAddr2?: string
         zip?: string
     }>
+    availableForGigs?: boolean,
     competitionCountryCode?: string
     homeCountryCode?: string
     firstName?: string

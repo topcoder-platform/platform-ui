@@ -1,6 +1,6 @@
 import _ from 'lodash'
 
-import { TokenModel, UserTraitCategoryNames, UserTraitIds } from '~/libs/core'
+import { TokenModel, updateMemberProfileAsync, UserTraitCategoryNames, UserTraitIds } from '~/libs/core'
 import { getAsync as getAsyncToken } from '~/libs/core/lib/auth/token-functions/token.functions'
 import {
     createMemberTraits,
@@ -396,6 +396,11 @@ export const setMemberPhotoUrl: any = (photoUrl: string) => ({
     type: ACTIONS.MEMBER.UPDATE_MEMBER_PHOTO_URL,
 })
 
+export const setMemberOpenForWork: any = (isOpenForWork: boolean) => ({
+    payload: isOpenForWork,
+    type: ACTIONS.MEMBER.SET_OPEN_FOR_WORK,
+})
+
 export const updateMemberHomeAddresss: any = (addresses: MemberAddress[]) => async (dispatch: any) => {
     try {
         const tokenInfo: TokenModel = await getAsyncToken()
@@ -433,6 +438,19 @@ export const updateMemberPhotoUrl: any = (photoURL: string) => async (dispatch: 
             photoURL,
         })
         dispatch(setMemberPhotoUrl(photoURL))
+    } catch (error) {
+    }
+}
+
+export const updateMemberOpenForWork: any = (isOpenForWork: boolean) => async (dispatch: any) => {
+    try {
+        const tokenInfo: TokenModel = await getAsyncToken()
+
+        await updateMemberProfileAsync(
+            tokenInfo.handle || '',
+            { availableForGigs: isOpenForWork },
+        )
+        dispatch(setMemberOpenForWork(isOpenForWork))
     } catch (error) {
     }
 }

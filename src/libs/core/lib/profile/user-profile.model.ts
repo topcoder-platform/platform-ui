@@ -10,6 +10,7 @@ export interface UserProfile {
         streetAddr2?: string
         zip?: string
     }>
+    availableForGigs: boolean
     competitionCountryCode: string
     createdAt: number
     description: string
