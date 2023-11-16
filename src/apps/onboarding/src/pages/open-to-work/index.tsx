@@ -1,57 +1,31 @@
 import { useNavigate } from 'react-router-dom'
-import { FC, MutableRefObject, useEffect, useMemo, useRef } from 'react'
+import { FC, MutableRefObject, useEffect, useRef, useState } from 'react'
 import { connect } from 'react-redux'
+import { pick } from 'lodash'
 import classNames from 'classnames'
 
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
 import { FormInputCheckbox } from '~/apps/self-service/src/components/form-elements'
 
-import { createMemberPersonalizations, updateMemberPersonalizations } from '../../redux/actions/member'
 import { ProgressBar } from '../../components/progress-bar'
-import { useAutoSavePersonalization, useAutoSavePersonalizationType } from '../../hooks/useAutoSavePersonalization'
-import PersonalizationInfo, { emptyPersonalizationInfo } from '../../models/PersonalizationInfo'
+import { updateMemberOpenForWork } from '../../redux/actions/member'
 
 import styles from './styles.module.scss'
 
 const FormInputCheckboxMiddleware: any = FormInputCheckbox as any
 
-const blankPersonalizationInfo: PersonalizationInfo = emptyPersonalizationInfo()
-
-interface PageOpenToWorkContentReduxProps {
-    reduxPersonalizations: PersonalizationInfo[] | undefined
-    loadingMemberTraits: boolean
-}
-
-interface PageOpenToWorkContentProps extends PageOpenToWorkContentReduxProps {
-    updateMemberPersonalizations: (infos: PersonalizationInfo[]) => void
-    createMemberPersonalizations: (infos: PersonalizationInfo[]) => void
+interface PageOpenToWorkContentProps {
+    availableForGigs: boolean
+    updateMemberOpenForWork: (isOpenForWork: boolean) => void
 }
 
 export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
     const navigate: any = useNavigate()
 
+    const [loading, setLoading] = useState<boolean>(false)
+
     const shouldSavingData: MutableRefObject<boolean> = useRef<boolean>(false)
     const shouldNavigateTo: MutableRefObject<string> = useRef<string>('')
-
-    const {
-        loading,
-        personalizationInfo,
-        setPersonalizationInfo,
-    }: useAutoSavePersonalizationType = useAutoSavePersonalization(
-        props.reduxPersonalizations,
-        ['availableForGigs'],
-        props.updateMemberPersonalizations,
-        props.createMemberPersonalizations,
-        shouldSavingData,
-    )
-
-    const availableForGigsValue: boolean | undefined = useMemo(() => {
-        if (!personalizationInfo || personalizationInfo.availableForGigs === undefined) {
-            return blankPersonalizationInfo.availableForGigs
-        }
-
-        return personalizationInfo.availableForGigs
-    }, [personalizationInfo])
 
     useEffect(() => {
         if (!loading && !shouldSavingData.current && !!shouldNavigateTo.current) {
@@ -60,16 +34,18 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
         /* eslint-disable react-hooks/exhaustive-deps */
     }, [loading])
 
-    function checkToNavigateNextPage(pageUrl: string): void {
-        if (!personalizationInfo || personalizationInfo.availableForGigs === undefined) {
-            shouldNavigateTo.current = pageUrl
-            setPersonalizationInfo({
-                ...(personalizationInfo || {}),
-                availableForGigs: blankPersonalizationInfo.availableForGigs,
-            })
-        } else {
-            navigate(pageUrl)
-        }
+    function goToPreviousStep(): void {
+        navigate('../skills')
+    }
+
+    function goToNextStep(): void {
+        navigate('../works')
+    }
+
+    async function handleSaveAvailableForGigs(e: any): Promise<void> {
+        setLoading(true)
+        await props.updateMemberOpenForWork(e.target.checked)
+        setLoading(false)
     }
 
     return (
@@ -90,15 +66,10 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
                     <div className='mt-26'>
                         <FormInputCheckboxMiddleware
                             label='Yes, I’m open to work'
-                            checked={availableForGigsValue}
+                            checked={props.availableForGigs}
                             inline
-                            onChange={function onChange(e: any) {
-                                setPersonalizationInfo({
-                                    ...(personalizationInfo || {}),
-                                    availableForGigs: e.target.checked,
-                                })
-                            }}
-                            disabled={props.loadingMemberTraits || loading}
+                            onChange={handleSaveAvailableForGigs}
+                            disabled={loading}
                         />
                     </div>
                 </div>
@@ -117,18 +88,14 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
                     iconToLeft
                     disabled={loading}
                     icon={IconOutline.ChevronLeftIcon}
-                    onClick={function previousPage() {
-                        checkToNavigateNextPage('../skills')
-                    }}
+                    onClick={goToPreviousStep}
                 />
                 <Button
                     size='lg'
                     primary
                     iconToLeft
                     disabled={loading}
-                    onClick={function nextPage() {
-                        checkToNavigateNextPage('../works')
-                    }}
+                    onClick={goToNextStep}
                 >
                     next
                 </Button>
@@ -137,22 +104,10 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
     )
 }
 
-const mapStateToProps: (state: any) => PageOpenToWorkContentReduxProps
-    = (state: any): PageOpenToWorkContentReduxProps => {
-        const {
-            loadingMemberTraits,
-            personalizations,
-        }: any = state.member
-
-        return {
-            loadingMemberTraits,
-            reduxPersonalizations: personalizations,
-        }
-    }
+const mapStateToProps: any = (state: any) => pick(state.member, 'availableForGigs')
 
 const mapDispatchToProps: any = {
-    createMemberPersonalizations,
-    updateMemberPersonalizations,
+    updateMemberOpenForWork,
 }
 
 export const PageOpenToWork: any = connect(mapStateToProps, mapDispatchToProps)(PageOpenToWorkContent)
