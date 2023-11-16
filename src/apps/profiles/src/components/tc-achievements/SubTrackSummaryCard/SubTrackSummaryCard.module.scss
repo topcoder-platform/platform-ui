@@ -13,7 +13,14 @@
 .stats {
     display: flex;
     align-items: center;
-    gap: $sp-4;
+    gap: $sp-4 $sp-2;
+    flex-wrap: wrap;
+
+    &Wrap {
+        display: flex;
+        align-items: center;
+        gap: $sp-4;
+    }
 }
 
 .statsItem {
@@ -31,6 +38,7 @@
 
     &Label {
         color: $black-80;
+        text-transform: capitalize;
     }
 
     &Icon {

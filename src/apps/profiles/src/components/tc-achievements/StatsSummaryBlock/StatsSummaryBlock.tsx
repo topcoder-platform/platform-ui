@@ -1,5 +1,7 @@
 import { FC } from 'react'
 
+import { ratingToCSScolor } from '~/libs/core'
+
 import styles from './StatsSummaryBlock.module.scss'
 
 interface StatsSummaryBlockProps {
@@ -8,6 +10,8 @@ interface StatsSummaryBlockProps {
     wins?: number
     submissions?: number
     ranking?: number
+    rating?: number
+    volatility?: number
 }
 
 const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => (
@@ -61,6 +65,26 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => (
                         <span className='body-small'>
                             Percentile
                         </span>
+                    </span>
+                </div>
+            )}
+            {props.volatility !== undefined && (
+                <div className={styles.summaryItem}>
+                    <span className={styles.summaryItemValue}>
+                        {props.volatility}
+                    </span>
+                    <span className={styles.summaryItemLabel}>
+                        <span className='body-small'>volatility</span>
+                    </span>
+                </div>
+            )}
+            {props.rating !== undefined && (
+                <div className={styles.summaryItem}>
+                    <span className={styles.summaryItemValue} style={ratingToCSScolor(props.rating)}>
+                        {props.rating}
+                    </span>
+                    <span className={styles.summaryItemLabel}>
+                        <span className='body-small'>rating</span>
                     </span>
                 </div>
             )}

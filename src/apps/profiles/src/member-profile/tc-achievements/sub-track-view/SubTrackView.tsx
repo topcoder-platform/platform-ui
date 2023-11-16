@@ -7,6 +7,7 @@ import { useFetchSubTrackData } from '../../../hooks'
 import { StatsDetailsLayout } from '../../../components/tc-achievements/StatsDetailsLayout'
 import { getUserProfileRoute, getUserProfileStatsRoute } from '../../../profiles.routes'
 import { subTrackLabelToHumanName } from '../../../lib'
+import { SRMView } from '../../../components/tc-achievements/SRMView'
 
 import styles from './SubTrackView.module.scss'
 
@@ -29,7 +30,7 @@ const SubTrackView: FC<SubTrackViewProps> = props => {
                 trackData={subTrackData}
             >
                 {subTrackData.name === 'MARATHON_MATCH' || subTrackData.name === 'SRM' ? (
-                    'SRM TEst'
+                    <SRMView trackData={subTrackData} />
                 ) : subTrackData.name === 'WEB_DESIGNS' ? (
                     'WEB_DESIGNS test'
                 ) : (

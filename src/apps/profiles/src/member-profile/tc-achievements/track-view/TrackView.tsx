@@ -17,7 +17,6 @@ interface TrackViewProps {
 const TrackView: FC<TrackViewProps> = props => {
     const params = useParams()
     const trackData = useFetchTrackData(props.profile.handle, params.trackType)
-    console.log('here', trackData)
 
     return (
         <div className={styles.wrap}>
@@ -35,10 +34,11 @@ const TrackView: FC<TrackViewProps> = props => {
                             key={subTrack.name}
                         >
                             <SubTrackSummaryCard
+                                key={subTrack.name}
                                 title={subTrack.name}
                                 wins={subTrack.wins}
-                                submissions={subTrack.submissions?.submissions ?? 0}
-                                key={subTrack.name}
+                                submissions={subTrack.submissions?.submissions}
+                                challenges={subTrack.challenges}
                             />
                         </Link>
                     ))}
