@@ -219,6 +219,7 @@ workflows:
                       branches:
                           ignore:
                               - master
+                              - feature/disable-dice
 
             # - lint-prod:
             #     context : org-global
@@ -234,6 +235,7 @@ workflows:
                           ignore:
                               - master
                               - qa
+                              - feature/disable-dice
 
             - build-qa:
                   context: org-global
@@ -248,6 +250,7 @@ workflows:
                       branches:
                           only:
                               - master
+                              - feature/disable-dice
 
             - deployDev:
                   context: org-global
@@ -279,6 +282,7 @@ workflows:
                       branches:
                           only:
                               - master
+                              - feature/disable-dice
 
             - test-dev:
                   context: org-global
