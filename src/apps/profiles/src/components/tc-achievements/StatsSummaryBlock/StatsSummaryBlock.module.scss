@@ -14,7 +14,8 @@
 .summary {
     display: flex;
     align-items: center;
-    gap: $sp-12;
+    flex-wrap: wrap;
+    gap: $sp-4 $sp-12;
 }
 
 .summaryItem {

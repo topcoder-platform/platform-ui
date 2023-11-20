@@ -36,11 +36,6 @@ const ChallengeWinsBanner: FC<ChallengeWinsBannerProps> = (props: ChallengeWinsB
             () => props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'CONTENT_CREATION'),
             [props.memberStats],
         )
-    const specStats: MemberStats | undefined
-        = useMemo(
-            () => props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'SPECIFICATION'),
-            [props.memberStats],
-        )
     const copilotPostingStats: MemberStats | undefined
         = useMemo(
             () => props.memberStats?.DEVELOP?.subTracks.find(subTrack => subTrack.name === 'COPILOT_POSTING'),

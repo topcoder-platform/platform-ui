@@ -7,9 +7,9 @@ import { IconOutline } from '~/libs/ui'
 
 import { useFetchActiveTracks } from '../../../hooks'
 import { getUserProfileStatsRoute } from '../../../profiles.routes'
+import { WinnerIcon } from '../../../lib'
 
 import styles from './MemberStatsBlock.module.scss'
-import { WinnerIcon } from '../../../lib'
 
 interface MemberStatsBlockProps {
     profile: UserProfile

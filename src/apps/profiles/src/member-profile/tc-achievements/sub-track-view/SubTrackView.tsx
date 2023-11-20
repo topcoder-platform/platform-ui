@@ -5,6 +5,7 @@ import { UserProfile } from '~/libs/core'
 
 import { useFetchSubTrackData } from '../../../hooks'
 import { StatsDetailsLayout } from '../../../components/tc-achievements/StatsDetailsLayout'
+import { ChallengeHistoryView } from '../../../components/tc-achievements/ChallengeHistoryView'
 import { getUserProfileRoute, getUserProfileStatsRoute } from '../../../profiles.routes'
 import { subTrackLabelToHumanName } from '../../../lib'
 import { SRMView } from '../../../components/tc-achievements/SRMView'
@@ -20,7 +21,7 @@ const SubTrackView: FC<SubTrackViewProps> = props => {
     const { trackData, ...subTrackData }: any
         = useFetchSubTrackData(props.profile.handle, params.trackType, params.subTrack)
 
-    return (
+    return trackData && subTrackData && (
         <div className={styles.wrap}>
             <StatsDetailsLayout
                 prevTitle={trackData.name}
@@ -30,13 +31,12 @@ const SubTrackView: FC<SubTrackViewProps> = props => {
                 trackData={subTrackData}
             >
                 {subTrackData.name === 'MARATHON_MATCH' || subTrackData.name === 'SRM' ? (
-                    <SRMView trackData={subTrackData} />
+                    <SRMView trackData={subTrackData} profile={props.profile} />
                 ) : subTrackData.name === 'WEB_DESIGNS' ? (
                     'WEB_DESIGNS test'
                 ) : (
-                    'Other test'
+                    <ChallengeHistoryView profile={props.profile} trackData={subTrackData} />
                 )}
-                test
             </StatsDetailsLayout>
         </div>
     )

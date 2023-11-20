@@ -1,0 +1,13 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-6;
+    max-height: 85vh;
+    overflow: auto;
+
+    > * {
+        width: calc(33% - 14px);
+    }
+}

@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { ratingToCSScolor } from '~/libs/core'
+import { getRatingColor } from '~/libs/core'
 
 import styles from './StatsSummaryBlock.module.scss'
 
@@ -80,7 +80,10 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => (
             )}
             {props.rating !== undefined && (
                 <div className={styles.summaryItem}>
-                    <span className={styles.summaryItemValue} style={ratingToCSScolor(props.rating)}>
+                    <span
+                        className={styles.summaryItemValue}
+                        style={{ color: getRatingColor(props.rating) }}
+                    >
                         {props.rating}
                     </span>
                     <span className={styles.summaryItemLabel}>

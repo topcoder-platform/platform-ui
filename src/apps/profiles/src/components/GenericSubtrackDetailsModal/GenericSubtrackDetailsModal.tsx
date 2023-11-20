@@ -6,8 +6,8 @@ import HighchartsReact from 'highcharts-react-official'
 
 import { BaseModal } from '~/libs/ui'
 import {
+    getRatingColor,
     MemberStats,
-    ratingToCSScolor,
     UserProfile,
     UserStatsDistributionResponse,
     UserStatsHistory,
@@ -68,7 +68,7 @@ const GenericSubtrackDetailsModal: FC<GenericSubtrackDetailsModalProps> = (props
                     <div>
                         <span
                             className='member-stat-value'
-                            style={ratingToCSScolor(props.genericStats?.rank?.rating || 0)}
+                            style={{ color: getRatingColor(props.genericStats?.rank?.rating || 0) }}
                         >
                             {props.genericStats?.rank?.rating || 0}
                         </span>

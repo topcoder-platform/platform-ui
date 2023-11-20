@@ -37,24 +37,27 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
         MARATHON_MATCH: (memberStats?.DATA_SCIENCE?.MARATHON_MATCH && ({
             ...memberStats.DATA_SCIENCE.MARATHON_MATCH,
             name: 'MARATHON_MATCH',
+            parent: 'DATA_SCIENCE',
+
         })) as MemberStats,
         SRM: (memberStats?.DATA_SCIENCE?.SRM && ({
             ...memberStats.DATA_SCIENCE.SRM,
             name: 'SRM',
+            parent: 'DATA_SCIENCE',
         })) as SRMStats & {name: string},
     }), [memberStats])
 
     // Create mappings for the subtracks, by the subtrack name, so we can easily access it later on
     const designSubTracks: {[key: string]: MemberStats} = useMemo(() => (
         memberStats?.DESIGN?.subTracks.reduce((all, subTrack) => {
-            all[subTrack.name] = subTrack
+            all[subTrack.name] = { ...subTrack, parent: 'DESIGN.subTracks' }
             return all
         }, {} as {[key: string]: MemberStats}) ?? {}
     ), [memberStats])
 
     const developSubTracks: {[key: string]: MemberStats} = useMemo(() => (
         memberStats?.DEVELOP?.subTracks.reduce((all, subTrack) => {
-            all[subTrack.name] = subTrack
+            all[subTrack.name] = { ...subTrack, parent: 'DEVELOP.subTracks' }
             return all
         }, {} as {[key: string]: MemberStats}) ?? {}
     ), [memberStats])
@@ -85,6 +88,7 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
             developSubTracks.CODE,
             developSubTracks.ASSEMBLY_COMPETITION,
             developSubTracks.UI_PROTOTYPE_COMPETITION,
+            developSubTracks.SPECIFICATION,
         ].filter(Boolean))
     ), [developSubTracks])
 

@@ -5,8 +5,8 @@ import HighchartsReact from 'highcharts-react-official'
 
 import { BaseModal, LoadingSpinner } from '~/libs/ui'
 import {
+    getRatingColor,
     MemberStats,
-    ratingToCSScolor,
     UserProfile,
     UserStatsDistributionResponse,
     UserStatsHistory,
@@ -67,7 +67,7 @@ const UIPrototypeDetailsModal: FC<UIPrototypeDetailsModalProps> = (props: UIProt
                         <div>
                             <span
                                 className='member-stat-value'
-                                style={ratingToCSScolor(props.uiPrototypeStats?.rank.rating || 0)}
+                                style={{ color: getRatingColor(props.uiPrototypeStats?.rank.rating || 0) }}
                             >
                                 {props.uiPrototypeStats?.rank.rating}
                             </span>

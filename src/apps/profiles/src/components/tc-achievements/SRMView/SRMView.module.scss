@@ -1,0 +1,18 @@
+@import '@libs/ui/styles/includes';
+
+.chartTitle {
+    font-size: 18px;
+    line-height: 24px;
+    font-family: $font-roboto;
+    text-align: center;
+    text-transform: uppercase;
+    margin: $sp-9 0 $sp-6;
+}
+
+.btnsGroup {
+    display: flex;
+    margin-bottom: $sp-4;
+    .btn {
+        border-radius: 0;
+    }
+}

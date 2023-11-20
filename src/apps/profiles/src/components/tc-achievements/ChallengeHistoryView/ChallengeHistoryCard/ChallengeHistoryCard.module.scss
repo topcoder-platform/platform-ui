@@ -2,25 +2,41 @@
 
 .wrap {
     border: 1px solid $black-20;
-    border-radius: $sp-3;
-    padding: $sp-4;
+    border-radius: $sp-2;
+    padding: $sp-2;
+    padding-left: $sp-4;
+
+    gap: $sp-3;
+    display: grid;
+    grid-template-columns: 1fr 20px;
+}
+
+.contentWrap {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.icon {
+    display: flex;
+    align-items: center;
+    width: 20px;
 }
 
 .title {
     margin-bottom: $sp-2;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 100%;
 }
 
-.stats {
+
+.statsWrap {
     display: flex;
     align-items: center;
     gap: $sp-4 $sp-2;
     flex-wrap: wrap;
-
-    &Wrap {
-        display: flex;
-        align-items: center;
-        gap: $sp-4;
-    }
 }
 
 .statsItem {
@@ -43,6 +59,5 @@
 
     &Icon {
         margin-left: auto;
-        margin-right: -9px;
     }
 }
