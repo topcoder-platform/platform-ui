@@ -1,4 +1,5 @@
 export enum AppSubdomain {
+    admin = 'admin',
     accounts = 'account-settings',
     devCenter = 'devcenter',
     earn = 'earn',
@@ -11,6 +12,7 @@ export enum AppSubdomain {
 }
 
 export enum ToolTitle {
+    admin = 'Administration',
     accounts = 'Account Settings',
     devCenter = 'Dev Center',
     earn = 'Opportunity Feed',
