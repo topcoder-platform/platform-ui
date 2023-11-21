@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { FC, useCallback, useMemo } from 'react'
 import { Outlet, Route, Routes } from 'react-router-dom'
 
 import {
@@ -37,6 +37,16 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
         (badge: UserBadge) => /TCO.*Trip Winner/.test(badge.org_badge.badge_name),
     ).length || 0, [memberBadges])
 
+    const renderDefaultRoute = useCallback(() => (
+        <DefaultAchievementsView
+            profile={props.profile}
+            tcoWins={tcoWins}
+            tcoQualifications={tcoQualifications}
+            tcoTrips={tcoTrips}
+            memberStats={memberStats}
+        />
+    ), [memberStats, props.profile, tcoQualifications, tcoTrips, tcoWins])
+
     if (!memberStats?.wins && !tcoWins && !tcoQualifications) {
         return <></>
     }
@@ -47,26 +57,18 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
             <Routes>
                 <Route
                     path=''
-                    element={(
-                        <DefaultAchievementsView
-                            profile={props.profile}
-                            tcoWins={tcoWins}
-                            tcoQualifications={tcoQualifications}
-                            tcoTrips={tcoTrips}
-                            memberStats={memberStats}
-                        />
-                    )}
+                    element={renderDefaultRoute()}
                 />
                 <Route
                     path=':trackType'
                     element={(
-                        <TrackView profile={props.profile} />
+                        <TrackView profile={props.profile} renderDefault={renderDefaultRoute} />
                     )}
                 />
                 <Route
                     path=':trackType/:subTrack'
                     element={(
-                        <SubTrackView profile={props.profile} />
+                        <SubTrackView profile={props.profile} renderDefault={renderDefaultRoute} />
                     )}
                 />
             </Routes>
