@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import _ from 'lodash'
 
 import { notifyUniNavi } from '~/apps/profiles/src/lib'
@@ -19,6 +20,7 @@ const initialState: {
     connectInfo?: ConnectInfo
     loadingMemberTraits?: boolean
     loadingMemberInfo?: boolean
+    availableForGigs?: boolean
 } = {
 }
 
@@ -34,6 +36,11 @@ const memberReducer: any = (
             return {
                 ...state,
                 memberInfo: action.payload,
+            }
+        case ACTIONS.MEMBER.SET_OPEN_FOR_WORK:
+            return {
+                ...state,
+                availableForGigs: action.payload,
             }
         case ACTIONS.MEMBER.SET_WORKS:
             return {
