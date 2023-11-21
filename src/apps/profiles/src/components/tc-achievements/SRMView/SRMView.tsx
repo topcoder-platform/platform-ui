@@ -12,10 +12,10 @@ import {
 } from '~/libs/core'
 
 import { DetailedTrackView } from '../DetailedTrackView'
-import { DivisionGrid } from '../../DivisionGrid'
-import { ChallengesGrid } from '../../ChallengesGrid'
 import { ViewMode } from '../DetailedTrackView/DetailedTrackView'
 
+import { DivisionGrid } from './DivisionGrid'
+import { ChallengesGrid } from './ChallengesGrid'
 import styles from './SRMView.module.scss'
 
 interface SRMViewProps {

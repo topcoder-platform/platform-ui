@@ -3,6 +3,9 @@ import { filter, find, orderBy } from 'lodash'
 
 import { MemberStats, SRMStats, useMemberStats, UserStats } from '~/libs/core'
 
+/**
+ * The structure of a track for a member.
+ */
 export interface MemberStatsTrack {
     challenges?: number,
     isActive: boolean,
@@ -13,13 +16,22 @@ export interface MemberStatsTrack {
     wins: number,
 }
 
+/**
+ * Helper function to build aggregated data for a track.
+ *
+ * @param {string} trackName - The name of the track.
+ * @param {MemberStats[]} subTracks - List of subtracks within the main track.
+ * @returns {MemberStatsTrack} - Aggregated data for the track.
+ */
 const buildTrackData = (trackName: string, subTracks: MemberStats[]): MemberStatsTrack => {
+    // Calculate total wins, challenges, and submissions for the track
     const totalWins = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.wins || 0)), 0)
     const challengesCount = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.challenges || 0)), 0)
     const submissionsCount = subTracks.reduce((sum, subTrack) => (
         sum + (subTrack?.submissions?.submissions || 0)
     ), 0)
 
+    // Return aggregated track data
     return {
         challenges: challengesCount,
         isActive: challengesCount > 0,
@@ -30,10 +42,18 @@ const buildTrackData = (trackName: string, subTracks: MemberStats[]): MemberStat
     }
 }
 
+/**
+ * Custom hook to fetch active tracks for a user, sorted by wins & submissions.
+ *
+ * @param {string} userHandle - The user's handle.
+ * @returns {MemberStatsTrack[]} - List of active tracks for the user.
+ */
 export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => {
     const memberStats: UserStats | undefined = useMemberStats(userHandle)
 
+    // Create mappings for data science subtracks
     const dataScienceSubTracks: {[key: string]: MemberStats | SRMStats} = useMemo(() => ({
+        // Map MARATHON_MATCH subtrack
         MARATHON_MATCH: (memberStats?.DATA_SCIENCE?.MARATHON_MATCH && ({
             ...memberStats.DATA_SCIENCE.MARATHON_MATCH,
             name: 'MARATHON_MATCH',
@@ -41,6 +61,7 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
             path: 'DATA_SCIENCE',
 
         })) as MemberStats,
+        // Map SRM subtrack
         SRM: (memberStats?.DATA_SCIENCE?.SRM && ({
             ...memberStats.DATA_SCIENCE.SRM,
             name: 'SRM',
@@ -49,7 +70,7 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
         })) as SRMStats & {name: string},
     }), [memberStats])
 
-    // Create mappings for the subtracks, by the subtrack name, so we can easily access it later on
+    // Create mappings for design subtracks
     const designSubTracks: {[key: string]: MemberStats} = useMemo(() => (
         memberStats?.DESIGN?.subTracks.reduce((all, subTrack) => {
             all[subTrack.name] = {
@@ -61,6 +82,7 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
         }, {} as {[key: string]: MemberStats}) ?? {}
     ), [memberStats])
 
+    // Create mappings for develop subtracks
     const developSubTracks: {[key: string]: MemberStats} = useMemo(() => (
         memberStats?.DEVELOP?.subTracks.reduce((all, subTrack) => {
             all[subTrack.name] = {
@@ -71,6 +93,10 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
             return all
         }, {} as {[key: string]: MemberStats}) ?? {}
     ), [memberStats])
+
+    // Build aggregated stats for Design, Development, Testing, and Competitive Programming tracks
+    // Each track is constructed using the buildTrackData helper function
+    // The useMemo hook is used to memoize the results for performance optimization
 
     // Design
     const designTrackStats: MemberStatsTrack = useMemo(() => (
@@ -113,6 +139,7 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
 
     // Competitive Programming
     const cpTrackStats: MemberStatsTrack = useMemo(() => {
+        // Aggregate stats for Competitive Programming track
         const subTracks = [
             dataScienceSubTracks.MARATHON_MATCH,
             dataScienceSubTracks.SRM,
@@ -131,6 +158,7 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
         }
     }, [dataScienceSubTracks, memberStats])
 
+    // Order and filter active tracks based on wins and submissions
     return orderBy(filter([
         cpTrackStats,
         designTrackStats,
@@ -139,18 +167,46 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
     ], { isActive: true }), ['wins', 'submissions'], 'desc')
 }
 
-export const useFetchTrackData = (userHandle: string, track: string | undefined): any => {
+/**
+ * Custom hook to fetch data for a specific track.
+ *
+ * @param {string} userHandle - The user's handle.
+ * @param {string | undefined} track - The name of the track to fetch.
+ * @returns {MemberStatsTrack | undefined} - Data for the specified track or undefined if not found.
+ */
+export const useFetchTrackData = (userHandle: string, track: string | undefined): MemberStatsTrack | undefined => {
     const activeTracks = useFetchActiveTracks(userHandle)
+    // Find and return the specified track from the active tracks
     return find(activeTracks, { name: track })
 }
 
+/**
+ * Interface defining the shape of subtrack data.
+ */
+interface SubTrackData extends Partial<MemberStats> {
+    trackData: MemberStatsTrack,
+}
+
+/**
+ * Custom hook to fetch data for a specific subtrack within a track.
+ *
+ * @param {string} userHandle - The user's handle.
+ * @param {string | undefined} track - The name of the track containing the subtrack.
+ * @param {string | undefined} subTrack - The name of the subtrack to fetch.
+ * @returns {SubTrackData | undefined} - Data for the specified subtrack or undefined if not found.
+ */
 export const useFetchSubTrackData = (
     userHandle: string,
     track: string | undefined,
     subTrack: string | undefined,
-): any => {
+): SubTrackData | undefined => {
     const activeTracks = useFetchActiveTracks(userHandle)
     const trackData = find(activeTracks, { name: track })
+
+    if (!trackData) {
+        return undefined
+    }
+
     const subTrackData = find(trackData?.subTracks, { name: subTrack })
 
     return {
