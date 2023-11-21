@@ -3,9 +3,10 @@ import { useParams } from 'react-router-dom'
 
 import { UserProfile } from '~/libs/core'
 
+// import { ChallengeHistoryView } from '../../../components/tc-achievements/ChallengeHistoryView'
 import { useFetchSubTrackData } from '../../../hooks'
 import { StatsDetailsLayout } from '../../../components/tc-achievements/StatsDetailsLayout'
-import { ChallengeHistoryView } from '../../../components/tc-achievements/ChallengeHistoryView'
+import { DevelopTrackView } from '../../../components/tc-achievements/DevelopTrackView'
 import { getUserProfileRoute, getUserProfileStatsRoute } from '../../../profiles.routes'
 import { subTrackLabelToHumanName } from '../../../lib'
 import { SRMView } from '../../../components/tc-achievements/SRMView'
@@ -32,10 +33,8 @@ const SubTrackView: FC<SubTrackViewProps> = props => {
             >
                 {subTrackData.name === 'MARATHON_MATCH' || subTrackData.name === 'SRM' ? (
                     <SRMView trackData={subTrackData} profile={props.profile} />
-                ) : subTrackData.name === 'WEB_DESIGNS' ? (
-                    'WEB_DESIGNS test'
                 ) : (
-                    <ChallengeHistoryView profile={props.profile} trackData={subTrackData} />
+                    <DevelopTrackView trackData={subTrackData} profile={props.profile} />
                 )}
             </StatsDetailsLayout>
         </div>

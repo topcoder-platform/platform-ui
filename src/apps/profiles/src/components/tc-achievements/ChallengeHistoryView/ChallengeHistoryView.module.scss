@@ -6,6 +6,8 @@
     gap: $sp-6;
     max-height: 85vh;
     overflow: auto;
+    padding-right: $sp-4;
+    margin-right: -$sp-4;
 
     > * {
         width: calc(33% - 14px);

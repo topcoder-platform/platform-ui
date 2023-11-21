@@ -37,6 +37,8 @@ const StatsDetailsLayout: FC<StatsDetailsLayoutProps> = props => (
                 ranking={(props.trackData as MemberStatsTrack).ranking}
                 rating={(props.trackData as MemberStats).rank?.rating}
                 volatility={(props.trackData as MemberStats).rank?.volatility}
+                screeningSuccessRate={(props.trackData as MemberStats).screeningSuccessRate}
+                percentile={(props.trackData as MemberStats).rank?.overallPercentile}
             />
         </div>
         {props.children}

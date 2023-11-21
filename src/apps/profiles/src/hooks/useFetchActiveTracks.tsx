@@ -37,27 +37,37 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
         MARATHON_MATCH: (memberStats?.DATA_SCIENCE?.MARATHON_MATCH && ({
             ...memberStats.DATA_SCIENCE.MARATHON_MATCH,
             name: 'MARATHON_MATCH',
-            parent: 'DATA_SCIENCE',
+            parentTrack: 'DATA_SCIENCE',
+            path: 'DATA_SCIENCE',
 
         })) as MemberStats,
         SRM: (memberStats?.DATA_SCIENCE?.SRM && ({
             ...memberStats.DATA_SCIENCE.SRM,
             name: 'SRM',
-            parent: 'DATA_SCIENCE',
+            parentTrack: 'DATA_SCIENCE',
+            path: 'DATA_SCIENCE',
         })) as SRMStats & {name: string},
     }), [memberStats])
 
     // Create mappings for the subtracks, by the subtrack name, so we can easily access it later on
     const designSubTracks: {[key: string]: MemberStats} = useMemo(() => (
         memberStats?.DESIGN?.subTracks.reduce((all, subTrack) => {
-            all[subTrack.name] = { ...subTrack, parent: 'DESIGN.subTracks' }
+            all[subTrack.name] = {
+                ...subTrack,
+                parentTrack: 'DESIGN',
+                path: 'DESIGN.subTracks',
+            }
             return all
         }, {} as {[key: string]: MemberStats}) ?? {}
     ), [memberStats])
 
     const developSubTracks: {[key: string]: MemberStats} = useMemo(() => (
         memberStats?.DEVELOP?.subTracks.reduce((all, subTrack) => {
-            all[subTrack.name] = { ...subTrack, parent: 'DEVELOP.subTracks' }
+            all[subTrack.name] = {
+                ...subTrack,
+                parentTrack: 'DEVELOP',
+                path: 'DEVELOP.subTracks',
+            }
             return all
         }, {} as {[key: string]: MemberStats}) ?? {}
     ), [memberStats])
@@ -120,16 +130,6 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
             wins: memberStats?.DATA_SCIENCE?.wins ?? 0,
         }
     }, [dataScienceSubTracks, memberStats])
-
-    // copilot
-    // const copilotTrackStats = useMemo(() => ({
-    //     isActive: (memberStats?.DATA_SCIENCE?.challenges ?? 0) > 0,
-    //     ranking: Math.max(
-    //         memberStats?.DATA_SCIENCE?.MARATHON_MATCH.rank.percentile ?? 0,
-    //         memberStats?.DATA_SCIENCE?.SRM.rank.percentile ?? 0,
-    //     ),
-    //     wins: memberStats?.DATA_SCIENCE?.wins ?? 0,
-    // }), [memberStats])
 
     return orderBy(filter([
         cpTrackStats,

@@ -1,8 +1,5 @@
-import { FC, useState } from 'react'
+import { FC, useMemo } from 'react'
 import { get } from 'lodash'
-import AnnotationsModule from 'highcharts/modules/annotations'
-import Highcharts from 'highcharts'
-import HighchartsReact from 'highcharts-react-official'
 
 import {
     MemberStats,
@@ -13,9 +10,11 @@ import {
     useStatsDistribution,
     useStatsHistory,
 } from '~/libs/core'
-import { Button } from '~/libs/ui'
 
-import { useRatingDistroOptions, useRatingHistoryOptions } from '../../../hooks'
+import { DetailedTrackView } from '../DetailedTrackView'
+import { DivisionGrid } from '../../DivisionGrid'
+import { ChallengesGrid } from '../../ChallengesGrid'
+import { ViewMode } from '../DetailedTrackView/DetailedTrackView'
 
 import styles from './SRMView.module.scss'
 
@@ -24,69 +23,45 @@ interface SRMViewProps {
     trackData: SRMStats | MemberStats
 }
 
-AnnotationsModule(Highcharts)
-
-enum Graphs {
-    distribution = 'distribution',
-    history = 'history',
-}
-
 const SRMView: FC<SRMViewProps> = props => {
-    const [activeGraph, setActiveGraph] = useState<Graphs>(Graphs.distribution)
     const statsHistory: UserStatsHistory | undefined = useStatsHistory(props.profile?.handle)
 
     const trackName: string = (props.trackData as MemberStats).name ?? 'SRM'
-    const ratingHistoryOptions: Highcharts.Options | undefined
-        = useRatingHistoryOptions(
-            get(statsHistory, `DATA_SCIENCE.${trackName}.history`),
-            `${trackName} Rating`,
-            'date',
-            'rating',
-        )
+    const trackHistory = get(statsHistory, `${props.trackData.path}.${trackName}.history`)
 
-    const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({
-        filter: `track=DATA_SCIENCE&subTrack=${trackName}`,
+    const ratingDistribution: UserStatsDistributionResponse | undefined = useStatsDistribution({
+        filter: `track=${props.trackData.parentTrack}&subTrack=${trackName}`,
     })
 
-    const ratingDistributionOptions: Highcharts.Options | undefined
-        = useRatingDistroOptions(memberStatsDist?.distribution || {}, props.trackData.rank.rating)
+    const showDetailsViewBtn = useMemo(() => Boolean(
+        (props.trackData as SRMStats)?.division1
+        || (props.trackData as SRMStats)?.division2
+        || (props.trackData as SRMStats)?.challengeDetails,
+    ), [props.trackData])
 
     return (
-        <div className={styles.wrap}>
-            <div className={styles.btnsGroup}>
-                <Button
-                    className={styles.btn}
-                    label='Rating
-                    Distribution'
-                    primary={activeGraph === Graphs.distribution}
-                    secondary={activeGraph !== Graphs.distribution}
-                    variant='linkblue'
-                    onClick={function toggl() { setActiveGraph(Graphs.distribution) }}
-                />
-                <Button
-                    className={styles.btn}
-                    label='Rating
-                    History'
-                    primary={activeGraph === Graphs.history}
-                    secondary={activeGraph !== Graphs.history}
-                    variant='linkblue'
-                    onClick={function toggl() { setActiveGraph(Graphs.history) }}
-                />
-            </div>
-            {activeGraph === Graphs.history && ratingHistoryOptions && (
-                <HighchartsReact
-                    highcharts={Highcharts}
-                    options={ratingHistoryOptions}
-                />
+        <DetailedTrackView
+            trackData={props.trackData}
+            trackHistory={trackHistory}
+            ratingDistribution={ratingDistribution}
+            showDetailsViewBtn={showDetailsViewBtn}
+            defaultViewMode={ViewMode.statistics}
+            challengesDetailedView={(
+                <>
+                    <div className={styles.details}>
+                        {(props.trackData as SRMStats)?.division1 && (
+                            <DivisionGrid divisionData={(props.trackData as SRMStats).division1} number={1} />
+                        )}
+                        {(props.trackData as SRMStats)?.division2 && (
+                            <DivisionGrid divisionData={(props.trackData as SRMStats).division2} number={2} />
+                        )}
+                        {(props.trackData as SRMStats)?.challengeDetails && (
+                            <ChallengesGrid challengesData={(props.trackData as SRMStats).challengeDetails} />
+                        )}
+                    </div>
+                </>
             )}
-
-            {activeGraph === Graphs.distribution && ratingDistributionOptions && (
-                <HighchartsReact
-                    highcharts={Highcharts}
-                    options={ratingDistributionOptions}
-                />
-            )}
-        </div>
+        />
     )
 }
 

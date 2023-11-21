@@ -14,7 +14,7 @@ interface ChallengeHistoryViewProps {
 const ChallengeHistoryView: FC<ChallengeHistoryViewProps> = props => {
     const statsHistory: UserStatsHistory | undefined = useStatsHistory(props.profile?.handle)
     const trackHistory: StatsHistory[] = get(
-        find(get(statsHistory, `${props.trackData.parent}`, []), { name: props.trackData.name }),
+        find(get(statsHistory, `${props.trackData.path}`, []), { name: props.trackData.name }),
         'history',
         [],
     )

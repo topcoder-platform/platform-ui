@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { get } from 'lodash'
+import { cloneDeep, get } from 'lodash'
 import Highcharts from 'highcharts'
 
 import { StatsHistory } from '~/libs/core'
@@ -30,27 +30,28 @@ export const RATING_CHART_CONFIG: Highcharts.Options = {
 export function useRatingHistoryOptions(
     trackHistory: Array<StatsHistory> | undefined,
     seriesName: string,
-    dateField: string = 'ratingDate',
-    ratingField: string = 'newRating',
 ): Highcharts.Options | undefined {
     const ratingHistoryOptions: Highcharts.Options | undefined = useMemo(() => {
-        const options: Highcharts.Options = RATING_CHART_CONFIG
+        const options: Highcharts.Options = cloneDeep(RATING_CHART_CONFIG)
 
         if (!trackHistory?.length) return undefined
 
+        const dateField: string = get(trackHistory[0], 'date') ? 'date' : 'ratingDate'
+        const ratingField: string = get(trackHistory[0], 'rating') ? 'rating' : 'newRating'
+
         options.series = [{
             data: trackHistory.sort((a, b) => get(b, dateField) - get(a, dateField))
-                .map((hisChallenge: StatsHistory) => ({
-                    name: hisChallenge.challengeName,
-                    x: get(hisChallenge, dateField),
-                    y: get(hisChallenge, ratingField),
+                .map((challenge: StatsHistory) => ({
+                    name: challenge.challengeName,
+                    x: get(challenge, dateField),
+                    y: get(challenge, ratingField),
                 })),
             name: seriesName,
             type: 'spline',
         }]
 
         return options
-    }, [dateField, ratingField, seriesName, trackHistory])
+    }, [seriesName, trackHistory])
 
     return ratingHistoryOptions
 }

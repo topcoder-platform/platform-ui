@@ -42,8 +42,6 @@ const SRMDetailsModal: FC<SRMDetailsModalProps> = (props: SRMDetailsModalProps) 
         = useRatingHistoryOptions(
             statsHistory?.DATA_SCIENCE?.SRM?.history,
             'SRM Rating',
-            'date',
-            'rating',
         )
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({

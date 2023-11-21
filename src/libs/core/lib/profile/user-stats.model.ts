@@ -28,7 +28,8 @@ export type SRMStats = {
         volatility: number
     }
     wins: number
-    parent?: string
+    parentTrack?: string
+    path?: string
 }
 
 export type MemberStats = {
@@ -50,7 +51,8 @@ export type MemberStats = {
     submissions: {
         submissions: number
     }
-    parent?: string
+    parentTrack?: string
+    path?: string
 }
 
 export type UserStats = {

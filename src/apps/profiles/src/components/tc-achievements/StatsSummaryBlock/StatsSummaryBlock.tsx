@@ -2,6 +2,8 @@ import { FC } from 'react'
 
 import { getRatingColor } from '~/libs/core'
 
+import { numberToFixed } from '../../../lib'
+
 import styles from './StatsSummaryBlock.module.scss'
 
 interface StatsSummaryBlockProps {
@@ -11,6 +13,8 @@ interface StatsSummaryBlockProps {
     submissions?: number
     ranking?: number
     rating?: number
+    percentile?: number
+    screeningSuccessRate?: number
     volatility?: number
 }
 
@@ -58,7 +62,7 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => (
             {props.ranking !== undefined && (
                 <div className={styles.summaryItem}>
                     <span className={styles.summaryItemValue}>
-                        {props.ranking}
+                        {numberToFixed(props.ranking)}
                         %
                     </span>
                     <span className={styles.summaryItemLabel}>
@@ -88,6 +92,28 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => (
                     </span>
                     <span className={styles.summaryItemLabel}>
                         <span className='body-small'>rating</span>
+                    </span>
+                </div>
+            )}
+            {props.screeningSuccessRate !== undefined && (
+                <div className={styles.summaryItem}>
+                    <span className={styles.summaryItemValue}>
+                        {numberToFixed(props.screeningSuccessRate * 100)}
+                        %
+                    </span>
+                    <span className={styles.summaryItemLabel}>
+                        <span className='body-small'>Screening Success Rate</span>
+                    </span>
+                </div>
+            )}
+            {props.percentile !== undefined && (
+                <div className={styles.summaryItem}>
+                    <span className={styles.summaryItemValue}>
+                        {numberToFixed(props.percentile)}
+                        %
+                    </span>
+                    <span className={styles.summaryItemLabel}>
+                        <span className='body-small'>Percentile</span>
                     </span>
                 </div>
             )}

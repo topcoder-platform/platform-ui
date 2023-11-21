@@ -36,8 +36,6 @@ const MMDetailsModal: FC<MMDetailsModalProps> = (props: MMDetailsModalProps) => 
         = useRatingHistoryOptions(
             statsHistory?.DATA_SCIENCE?.MARATHON_MATCH?.history,
             'Marathon Match Rating',
-            'date',
-            'rating',
         )
 
     const memberStatsDist: UserStatsDistributionResponse | undefined = useStatsDistribution({

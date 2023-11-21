@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { isEmpty, toPairs } from 'lodash'
+import { cloneDeep, isEmpty, toPairs } from 'lodash'
 import AnnotationsModule from 'highcharts/modules/annotations'
 import Highcharts from 'highcharts'
 
@@ -95,7 +95,7 @@ export function useRatingDistroOptions(
     memberRating: number | undefined,
 ): Highcharts.Options | undefined {
     const ratingDistributionOptions: Highcharts.Options | undefined = useMemo(() => {
-        const options: Highcharts.Options = RATING_DISTRO_CHART_CONFIG
+        const options: Highcharts.Options = cloneDeep(RATING_DISTRO_CHART_CONFIG)
         const ranges = getNonZeroRanges(getRanges(ratingDistro))
 
         if (isEmpty(ratingDistro)) return undefined
