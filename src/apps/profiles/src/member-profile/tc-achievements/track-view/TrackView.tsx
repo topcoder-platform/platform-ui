@@ -29,20 +29,22 @@ const TrackView: FC<TrackViewProps> = props => {
                 trackData={trackData}
             >
                 <div className={styles.cardsWrap}>
-                    {trackData.subTracks.map((subTrack: MemberStats) => (
-                        <Link
-                            to={getUserProfileStatsRoute(props.profile.handle, trackData.name, subTrack.name)}
-                            key={subTrack.name}
-                        >
-                            <SubTrackSummaryCard
+                    <div className={styles.cardsInner}>
+                        {trackData.subTracks.map((subTrack: MemberStats) => (
+                            <Link
+                                to={getUserProfileStatsRoute(props.profile.handle, trackData.name, subTrack.name)}
                                 key={subTrack.name}
-                                title={subTrack.name}
-                                wins={subTrack.wins}
-                                submissions={subTrack.submissions?.submissions}
-                                challenges={subTrack.challenges}
-                            />
-                        </Link>
-                    ))}
+                            >
+                                <SubTrackSummaryCard
+                                    key={subTrack.name}
+                                    title={subTrack.name}
+                                    wins={subTrack.wins}
+                                    submissions={subTrack.submissions?.submissions}
+                                    challenges={subTrack.challenges}
+                                />
+                            </Link>
+                        ))}
+                    </div>
                 </div>
             </StatsDetailsLayout>
         </div>

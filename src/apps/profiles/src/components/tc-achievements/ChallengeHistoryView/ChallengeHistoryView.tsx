@@ -20,12 +20,14 @@ const ChallengeHistoryView: FC<ChallengeHistoryViewProps> = props => {
     )
     return (
         <div className={styles.wrap}>
-            {trackHistory.map(challenge => (
-                <ChallengeHistoryCard
-                    challenge={challenge}
-                    key={challenge.challengeId}
-                />
-            ))}
+            <div className={styles.inner}>
+                {trackHistory.map(challenge => (
+                    <ChallengeHistoryCard
+                        challenge={challenge}
+                        key={challenge.challengeId}
+                    />
+                ))}
+            </div>
         </div>
     )
 }

@@ -1,5 +1,9 @@
 @import '@libs/ui/styles/includes';
 
+.wrap {
+    container-type: inline-size;
+}
+
 .chartTitle {
     font-size: 18px;
     line-height: 24px;
@@ -13,6 +17,15 @@
     display: flex;
     .btnsGroup.toRight {
         margin-left: auto;
+    }
+
+    @container (max-width: 600px) {
+        flex-direction: column;
+        .btnsGroup {
+            &.toRight {
+                order: -1;
+            }
+        }
     }
 }
 

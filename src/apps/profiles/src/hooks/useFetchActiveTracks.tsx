@@ -143,7 +143,7 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
         const subTracks = [
             dataScienceSubTracks.MARATHON_MATCH,
             dataScienceSubTracks.SRM,
-        ].filter(Boolean) as MemberStats[]
+        ].filter(d => d?.challenges > 0) as MemberStats[]
 
         return {
             challenges: memberStats?.DATA_SCIENCE?.challenges ?? 0,

@@ -25,7 +25,8 @@ const DevelopTrackView: FC<DevelopTrackViewProps> = props => {
     const trackHistory = get(find(get(statsHistory, `${props.trackData.path}`), { name: trackName }), 'history')
 
     const ratingDistribution: UserStatsDistributionResponse | undefined = useStatsDistribution({
-        filter: `track=${props.trackData.parentTrack}&subTrack=${trackName}`,
+        subTrack: trackName,
+        track: props.trackData.parentTrack,
     })
 
     const showDetailsViewBtn = useMemo(() => (

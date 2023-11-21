@@ -1,12 +1,19 @@
 @import '@libs/ui/styles/includes';
 
 .cardsWrap {
-    display: flex;
-    flex-wrap: wrap;
+    container-type: inline-size;
+}
+
+.cardsInner {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: $sp-6;
 
-    > * {
-        display: block;
-        width: calc(33% - 14px);
+    @container (max-width: 720px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @container (max-width: 368px) {
+        grid-template-columns: 1fr;
     }
 }

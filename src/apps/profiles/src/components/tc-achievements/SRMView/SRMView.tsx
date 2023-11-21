@@ -30,7 +30,8 @@ const SRMView: FC<SRMViewProps> = props => {
     const trackHistory = get(statsHistory, `${props.trackData.path}.${trackName}.history`)
 
     const ratingDistribution: UserStatsDistributionResponse | undefined = useStatsDistribution({
-        filter: `track=${props.trackData.parentTrack}&subTrack=${trackName}`,
+        subTrack: trackName,
+        track: props.trackData.parentTrack,
     })
 
     const showDetailsViewBtn = useMemo(() => Boolean(
