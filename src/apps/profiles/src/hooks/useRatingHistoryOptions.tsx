@@ -2,10 +2,20 @@ import { useMemo } from 'react'
 import { cloneDeep, get } from 'lodash'
 import Highcharts from 'highcharts'
 
-import { StatsHistory } from '~/libs/core'
+import { getRatingColor, StatsHistory, TC_RATING_COLORS } from '~/libs/core'
 
 // Define the default configuration for the Highcharts rating history chart
 export const RATING_CHART_CONFIG: Highcharts.Options = {
+    chart: {
+        panKey: 'shift',
+        panning: {
+            enabled: true,
+        },
+        type: 'line',
+        zooming: {
+            type: 'x',
+        },
+    },
     // Disable credits (attribution) in the chart
     credits: { enabled: false },
     // Set chart title
@@ -59,15 +69,27 @@ export function useRatingHistoryOptions(
         const ratingField: string = get(trackHistory[0], 'rating') ? 'rating' : 'newRating'
 
         // Configure series for the chart
+        options.plotOptions = {
+            ...options.plotOptions,
+            line: {
+                zones: TC_RATING_COLORS.map(tcColor => ({
+                    color: tcColor.color,
+                    value: tcColor.limit,
+                })),
+            },
+        }
+
         options.series = [{
+            color: 'transparent',
             data: trackHistory.sort((a, b) => get(b, dateField) - get(a, dateField))
                 .map((challenge: StatsHistory) => ({
+                    color: getRatingColor(challenge.newRating ?? challenge.rating),
                     name: challenge.challengeName,
                     x: get(challenge, dateField),
                     y: get(challenge, ratingField),
                 })),
             name: seriesName,
-            type: 'spline',
+            type: 'line',
         }]
 
         return options

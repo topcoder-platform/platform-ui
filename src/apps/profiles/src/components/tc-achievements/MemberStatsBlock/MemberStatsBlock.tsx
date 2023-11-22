@@ -69,9 +69,10 @@ const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
                         ))}
                     </ul>
                     <p className={styles.footerNote}>
-                        <span className='body-main-medium'>
-                            Topcoder challenges are open competitions where community
-                            members participate in small units of work to deliver projects.
+                        <span className='body-main'>
+                            Topcoder challenges are competitive events where community members collaborate
+                            on smaller tasks to complete a project,
+                            striving to showcase their skills and outperform others.
                         </span>
                     </p>
                 </div>

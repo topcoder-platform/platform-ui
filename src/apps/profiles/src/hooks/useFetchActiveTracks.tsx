@@ -125,6 +125,7 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
             developSubTracks.ASSEMBLY_COMPETITION,
             developSubTracks.UI_PROTOTYPE_COMPETITION,
             developSubTracks.SPECIFICATION,
+            developSubTracks.CONCEPTUALIZATION,
         ].filter(Boolean))
     ), [developSubTracks])
 
@@ -150,8 +151,8 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
             isActive: (memberStats?.DATA_SCIENCE?.challenges ?? 0) > 0,
             name: 'Competitive Programming',
             ranking: Math.max(
-                dataScienceSubTracks.MARATHON_MATCH?.rank.percentile ?? 0,
-                dataScienceSubTracks.SRM?.rank.percentile ?? 0,
+                dataScienceSubTracks.MARATHON_MATCH?.rank?.percentile ?? 0,
+                dataScienceSubTracks.SRM?.rank?.percentile ?? 0,
             ),
             subTracks,
             wins: memberStats?.DATA_SCIENCE?.wins ?? 0,

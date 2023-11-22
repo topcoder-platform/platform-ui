@@ -2,6 +2,7 @@ import { FC } from 'react'
 
 import { IconSolid } from '~/libs/ui'
 import { getRatingColor, StatsHistory } from '~/libs/core'
+import { EnvironmentConfig } from '~/config'
 
 import styles from './ChallengeHistoryCard.module.scss'
 
@@ -10,7 +11,12 @@ interface ChallengeHistoryCardProps {
 }
 
 const ChallengeHistoryCard: FC<ChallengeHistoryCardProps> = props => (
-    <div className={styles.wrap}>
+    <a
+        className={styles.wrap}
+        href={`${EnvironmentConfig.URLS.CHALLENGES_PAGE}/${props.challenge.challengeId}`}
+        target='_blank'
+        rel='noreferrer'
+    >
         <div className={styles.contentWrap}>
             <div className={styles.title}>
                 <span className='body-small-bold'>
@@ -38,7 +44,7 @@ const ChallengeHistoryCard: FC<ChallengeHistoryCardProps> = props => (
         <div className={styles.icon}>
             <IconSolid.ChevronRightIcon className='icon-xl' />
         </div>
-    </div>
+    </a>
 )
 
 export default ChallengeHistoryCard
