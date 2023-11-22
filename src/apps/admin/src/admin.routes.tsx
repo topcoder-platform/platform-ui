@@ -1,5 +1,9 @@
+import { Navigate } from 'react-router-dom'
+
 import { lazyLoad, LazyLoadedComponent, PlatformRoute, UserRole } from '~/libs/core'
 import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
+
+import { skillsManagerRootRoute, skillsManagerRoutes } from './skills-manager'
 
 const AdminApp: LazyLoadedComponent = lazyLoad(() => import('./AdminApp'))
 
@@ -14,6 +18,12 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
     {
         authRequired: true,
         children: [
+            ...skillsManagerRoutes,
+            {
+                element: <Navigate to={`${rootRoute}${skillsManagerRootRoute}`} />,
+                id: 'Default Admin Route',
+                route: '',
+            },
         ],
         domain: AppSubdomain.admin,
         element: <AdminApp />,
