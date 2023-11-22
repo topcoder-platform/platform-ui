@@ -18,8 +18,12 @@ export const getUserProfileRoute = (userHandle?: string): string => (
     `${rootRoute}${!userHandle ? '' : `/${userHandle.toLowerCase()}`}`
 )
 
-export const getUserProfileStatsRoute = (userHandle: string, track: string, subTrack?: string): string => (
-    `${getUserProfileRoute(userHandle)}/stats/${track}${!subTrack ? '' : `/${subTrack}`}`
+export const getUserProfileStatsRoute = (
+    userHandle: string,
+    track?: string,
+    subTrack?: string,
+): string => (
+    `${getUserProfileRoute(userHandle)}${track ? `/stats/${track}` : ''}${!(track && subTrack) ? '' : `/${subTrack}`}`
 )
 
 export const profilesRoutes: ReadonlyArray<PlatformRoute> = [

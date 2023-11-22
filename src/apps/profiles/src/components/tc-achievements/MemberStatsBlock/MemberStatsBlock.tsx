@@ -6,8 +6,8 @@ import { UserProfile } from '~/libs/core'
 import { IconOutline } from '~/libs/ui'
 
 import { useFetchActiveTracks } from '../../../hooks'
-import { getUserProfileStatsRoute } from '../../../profiles.routes'
 import { WinnerIcon } from '../../../lib'
+import { MemberProfileContextValue, useMemberProfileContext } from '../../../member-profile/MemberProfile.context'
 
 import styles from './MemberStatsBlock.module.scss'
 
@@ -16,6 +16,8 @@ interface MemberStatsBlockProps {
 }
 
 const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
+    const { statsRoute }: MemberProfileContextValue = useMemberProfileContext()
+
     const activeTracks = useFetchActiveTracks(props.profile.handle)
 
     return activeTracks?.length === 0 ? <></> : (
@@ -30,7 +32,7 @@ const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
                     <ul className={styles.statsList}>
                         {activeTracks.map((track: any) => (
                             <Link
-                                to={getUserProfileStatsRoute(props.profile.handle, track.name)}
+                                to={statsRoute(props.profile.handle, track.name)}
                                 className={styles.trackListItem}
                                 key={track.name}
                             >

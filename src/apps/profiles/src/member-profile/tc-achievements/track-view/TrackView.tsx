@@ -4,9 +4,9 @@ import { Link, useParams } from 'react-router-dom'
 import { MemberStats, UserProfile } from '~/libs/core'
 
 import { useFetchTrackData } from '../../../hooks'
-import { getUserProfileRoute, getUserProfileStatsRoute } from '../../../profiles.routes'
 import { StatsDetailsLayout } from '../../../components/tc-achievements/StatsDetailsLayout'
 import { SubTrackSummaryCard } from '../../../components/tc-achievements/SubTrackSummaryCard'
+import { MemberProfileContextValue, useMemberProfileContext } from '../../MemberProfile.context'
 
 import styles from './TrackView.module.scss'
 
@@ -16,6 +16,7 @@ interface TrackViewProps {
 }
 
 const TrackView: FC<TrackViewProps> = props => {
+    const { statsRoute }: MemberProfileContextValue = useMemberProfileContext()
     const params = useParams()
     const trackData = useFetchTrackData(props.profile.handle, params.trackType)
 
@@ -24,15 +25,15 @@ const TrackView: FC<TrackViewProps> = props => {
             <StatsDetailsLayout
                 prevTitle='Member Stats'
                 title={trackData.name}
-                backAction={getUserProfileRoute(props.profile.handle)}
-                closeAction={getUserProfileRoute(props.profile.handle)}
+                backAction={statsRoute(props.profile.handle)}
+                closeAction={statsRoute(props.profile.handle)}
                 trackData={trackData}
             >
                 <div className={styles.cardsWrap}>
                     <div className={styles.cardsInner}>
                         {trackData.subTracks.map((subTrack: MemberStats) => (
                             <Link
-                                to={getUserProfileStatsRoute(props.profile.handle, trackData.name, subTrack.name)}
+                                to={statsRoute(props.profile.handle, trackData.name, subTrack.name)}
                                 key={subTrack.name}
                             >
                                 <SubTrackSummaryCard

@@ -8,8 +8,8 @@ import { useFetchSubTrackData } from '../../../hooks'
 import { StatsDetailsLayout } from '../../../components/tc-achievements/StatsDetailsLayout'
 import { DevelopTrackView } from '../../../components/tc-achievements/DevelopTrackView'
 import { SRMView } from '../../../components/tc-achievements/SRMView'
-import { getUserProfileRoute, getUserProfileStatsRoute } from '../../../profiles.routes'
 import { subTrackLabelToHumanName } from '../../../lib'
+import { MemberProfileContextValue, useMemberProfileContext } from '../../MemberProfile.context'
 
 import styles from './SubTrackView.module.scss'
 
@@ -19,7 +19,9 @@ interface SubTrackViewProps {
 }
 
 const SubTrackView: FC<SubTrackViewProps> = props => {
+    const { statsRoute }: MemberProfileContextValue = useMemberProfileContext()
     const params = useParams()
+
     const { trackData, ...subTrackData }: any
         = useFetchSubTrackData(props.profile.handle, params.trackType, params.subTrack)
 
@@ -28,8 +30,8 @@ const SubTrackView: FC<SubTrackViewProps> = props => {
             <StatsDetailsLayout
                 prevTitle={trackData.name}
                 title={subTrackLabelToHumanName(subTrackData.name)}
-                backAction={getUserProfileStatsRoute(props.profile.handle, trackData.name)}
-                closeAction={getUserProfileRoute(props.profile.handle)}
+                backAction={statsRoute(props.profile.handle, trackData.name)}
+                closeAction={statsRoute(props.profile.handle)}
                 trackData={subTrackData}
             >
                 {subTrackData.name === 'MARATHON_MATCH' || subTrackData.name === 'SRM' ? (
