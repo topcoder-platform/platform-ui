@@ -45,6 +45,7 @@ export type MemberStats = {
         overallRank: number
         overallPercentile: number
     }
+    submissionRate: number
     screeningSuccessRate: number
     wins: number
     name: string

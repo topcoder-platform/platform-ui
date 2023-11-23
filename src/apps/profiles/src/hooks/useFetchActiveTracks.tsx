@@ -3,6 +3,8 @@ import { filter, find, get, orderBy } from 'lodash'
 
 import { MemberStats, SRMStats, useMemberStats, UserStats } from '~/libs/core'
 
+import { calcProportionalAverage } from '../lib/math.utils'
+
 /**
  * The structure of a track for a member.
  */
@@ -12,7 +14,10 @@ export interface MemberStatsTrack {
     name: string,
     submissions?: number,
     subTracks: MemberStats[],
+    rating?: number,
     ranking?: number,
+    submissionRate?: number
+    screeningSuccessRate?: number
     wins: number,
     order?: number
 }
@@ -41,6 +46,30 @@ const buildTrackData = (trackName: string, subTracks: MemberStats[]): MemberStat
         submissions: submissionsCount,
         subTracks,
         wins: totalWins,
+    }
+}
+
+const enhanceDesignTrackData = (trackData: MemberStatsTrack): MemberStatsTrack => {
+    const { subTracks, submissions = 0, challenges = 0 }: MemberStatsTrack = trackData
+
+    const submissionRate = calcProportionalAverage(
+        subTracks,
+        ['challenges'],
+        ['submissions.submissionRate', 'submissionRate'],
+        challenges,
+    )
+
+    const screeningSuccessRate = calcProportionalAverage(
+        subTracks,
+        ['submissions.submissions', 'submissions'],
+        ['submissions.screeningSuccessRate', 'screeningSuccessRate'],
+        submissions,
+    )
+
+    return {
+        ...trackData,
+        screeningSuccessRate,
+        submissionRate,
     }
 }
 
@@ -102,19 +131,21 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
 
     // Design
     const designTrackStats: MemberStatsTrack = useMemo(() => (
-        buildTrackData('Design', [
-            developSubTracks.DESIGN,
-            designSubTracks.DESIGN_FIRST_2_FINISH,
-            designSubTracks.WEB_DESIGNS,
-            designSubTracks.LOGO_DESIGN,
-            designSubTracks.WIREFRAMES,
-            designSubTracks.FRONT_END_FLASH,
-            designSubTracks.PRINT_OR_PRESENTATION,
-            designSubTracks.STUDIO_OTHER,
-            designSubTracks.APPLICATION_FRONT_END_DESIGN,
-            designSubTracks.BANNERS_OR_ICONS,
-            designSubTracks.WIDGET_OR_MOBILE_SCREEN_DESIGN,
-        ].filter(Boolean))
+        enhanceDesignTrackData(
+            buildTrackData('Design', [
+                developSubTracks.DESIGN,
+                designSubTracks.DESIGN_FIRST_2_FINISH,
+                designSubTracks.WEB_DESIGNS,
+                designSubTracks.LOGO_DESIGN,
+                designSubTracks.WIREFRAMES,
+                designSubTracks.FRONT_END_FLASH,
+                designSubTracks.PRINT_OR_PRESENTATION,
+                designSubTracks.STUDIO_OTHER,
+                designSubTracks.APPLICATION_FRONT_END_DESIGN,
+                designSubTracks.BANNERS_OR_ICONS,
+                designSubTracks.WIDGET_OR_MOBILE_SCREEN_DESIGN,
+            ].filter(Boolean)),
+        )
     ), [developSubTracks, designSubTracks])
 
     // Development
@@ -156,6 +187,10 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
             ranking: Math.max(
                 dataScienceSubTracks.MARATHON_MATCH?.rank?.percentile ?? 0,
                 dataScienceSubTracks.SRM?.rank?.percentile ?? 0,
+            ),
+            rating: Math.max(
+                dataScienceSubTracks.MARATHON_MATCH?.rank?.rating ?? 0,
+                dataScienceSubTracks.SRM?.rank?.rating ?? 0,
             ),
             subTracks,
             wins: memberStats?.DATA_SCIENCE?.wins ?? 0,
