@@ -47,7 +47,7 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
         />
     ), [memberStats, props.profile, tcoQualifications, tcoTrips, tcoWins])
 
-    if (!memberStats?.wins && !tcoWins && !tcoQualifications) {
+    if (!memberStats?.challenges && !tcoWins && !tcoQualifications) {
         return <></>
     }
 
