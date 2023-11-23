@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { filter, find, orderBy } from 'lodash'
+import { filter, find, get, orderBy } from 'lodash'
 
 import { MemberStats, SRMStats, useMemberStats, UserStats } from '~/libs/core'
 
@@ -14,6 +14,7 @@ export interface MemberStatsTrack {
     subTracks: MemberStats[],
     ranking?: number,
     wins: number,
+    order?: number
 }
 
 /**
@@ -36,6 +37,7 @@ const buildTrackData = (trackName: string, subTracks: MemberStats[]): MemberStat
         challenges: challengesCount,
         isActive: challengesCount > 0,
         name: trackName,
+        order: 1,
         submissions: submissionsCount,
         subTracks,
         wins: totalWins,
@@ -150,6 +152,7 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
             challenges: memberStats?.DATA_SCIENCE?.challenges ?? 0,
             isActive: (memberStats?.DATA_SCIENCE?.challenges ?? 0) > 0,
             name: 'Competitive Programming',
+            order: -1,
             ranking: Math.max(
                 dataScienceSubTracks.MARATHON_MATCH?.rank?.percentile ?? 0,
                 dataScienceSubTracks.SRM?.rank?.percentile ?? 0,
@@ -165,7 +168,7 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
         designTrackStats,
         developTrackStats,
         testingTrackStats,
-    ], { isActive: true }), ['wins', 'submissions'], 'desc')
+    ], { isActive: true }), ['order', 'wins', 'submissions'], ['desc', 'desc', 'desc'])
 }
 
 /**
@@ -208,7 +211,7 @@ export const useFetchSubTrackData = (
         return undefined
     }
 
-    const subTrackData = find(trackData?.subTracks, { name: subTrack })
+    const subTrackData = find(get(trackData, 'subTracks'), { name: subTrack })
 
     return {
         ...subTrackData, trackData,
