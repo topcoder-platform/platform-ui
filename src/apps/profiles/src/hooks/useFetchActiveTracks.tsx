@@ -29,7 +29,7 @@ const buildTrackData = (trackName: string, subTracks: MemberStats[]): MemberStat
     const totalWins = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.wins || 0)), 0)
     const challengesCount = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.challenges || 0)), 0)
     const submissionsCount = subTracks.reduce((sum, subTrack) => (
-        sum + (subTrack?.submissions?.submissions || 0)
+        sum + (subTrack?.submissions?.submissions ?? subTrack?.submissions ?? 0)
     ), 0)
 
     // Return aggregated track data
