@@ -38,7 +38,7 @@ const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
                             >
                                 <span className={styles.trackName}>{track.name}</span>
                                 <div className={styles.trackDetails}>
-                                    {!track.ranking && ((track.submissions || track.wins) > 0) && (
+                                    {track.ranking === undefined && ((track.submissions || track.wins) > 0) && (
                                         <>
                                             <WinnerIcon className={classNames('icon-xxxl', styles.winnerIcon)} />
                                             <span className={styles.trackStats}>
