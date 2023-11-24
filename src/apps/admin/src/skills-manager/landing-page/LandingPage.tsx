@@ -1,16 +1,30 @@
 import { FC } from 'react'
 
-import styles from './LandingPage.module.scss'
+import { ContentLayout, PageTitle } from '~/libs/ui'
 
-interface LandingPageProps {
-}
+import { CategoriesAccordion, PageHeader, SearchInput } from '../components'
+import { SkillsManagerContextValue, useSkillsManagerContext } from '../skills-manager.context'
 
-const LandingPage: FC<LandingPageProps> = props => {
+const LandingPage: FC<{}> = () => {
+    const {
+        groupedSkills,
+        setSkillsFilter,
+        skillsFilter,
+    }: SkillsManagerContextValue = useSkillsManagerContext()
 
-  return (
-    <div className={styles.wrap}>
-    </div>
-  )
+    return (
+        <ContentLayout>
+            <PageTitle>Skills Manager | Admin</PageTitle>
+            <PageHeader title='Skills Manager' />
+
+            <SearchInput value={skillsFilter} onChange={setSkillsFilter} />
+
+            <CategoriesAccordion
+                categories={groupedSkills}
+                defaultOpen={!!skillsFilter}
+            />
+        </ContentLayout>
+    )
 }
 
 export default LandingPage

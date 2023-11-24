@@ -1,0 +1,18 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    column-count: 4;
+}
+
+.listWrap {
+    display: flex;
+    flex-direction: column;
+}
+
+.skillItem {
+    padding: $sp-1 $sp-2;
+
+    + .skillItem {
+        margin-top: $sp-2;
+    }
+}

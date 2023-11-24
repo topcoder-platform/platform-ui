@@ -1,0 +1,58 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    + .wrap {
+        margin-top: $sp-8;
+    }
+}
+
+.itemHeader {
+    display: flex;
+    align-items: center;
+
+    cursor: pointer;
+}
+
+.icon {
+    color: $turq-120;
+    transition: 0.2s ease-in-out;
+    margin-right: $sp-2;
+}
+
+.titleBar {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+}
+
+.textLabel {
+    font-family: $font-roboto;
+    font-size: 20px;
+    font-weight: $font-weight-medium;
+    line-height: $sp-5;
+    letter-spacing: 0.05px;
+}
+
+.badge {
+    display: block;
+    font-family: $font-roboto;
+    font-weight: $font-weight-bold;
+    font-size: 14px;
+    line-height: 22px;
+    padding: 0 $sp-2;
+
+    color: $black-100;
+
+    background: $black-10;
+    border-radius: $sp-4;
+}
+
+.content {
+    padding: $sp-4 $sp-6;
+}
+
+.open {
+    .icon {
+        transform: rotateZ(180deg);
+    }
+}
