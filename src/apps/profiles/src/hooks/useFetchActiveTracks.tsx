@@ -138,6 +138,7 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
                 designSubTracks.WEB_DESIGNS,
                 designSubTracks.LOGO_DESIGN,
                 designSubTracks.WIREFRAMES,
+                designSubTracks.IDEA_GENERATION,
                 designSubTracks.FRONT_END_FLASH,
                 designSubTracks.PRINT_OR_PRESENTATION,
                 designSubTracks.STUDIO_OTHER,
