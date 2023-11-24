@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { IconOutline } from '~/libs/ui'
@@ -13,31 +13,35 @@ export interface AccordionItemProps {
     children: JSX.Element[] | JSX.Element | (() => JSX.Element[] | JSX.Element)
 }
 
-const AccordionItem: FC<AccordionItemProps> = props => (
-    <div className={classNames(styles.wrap, props.open && styles.open)}>
-        <div className={styles.itemHeader}>
-            <span className={styles.icon} onClick={props.toggle}>
-                <IconOutline.ChevronDownIcon className='icon-lg' />
-            </span>
-            <div className={styles.titleBar}>
-                {props.label && (
-                    <div className={styles.textLabel} onClick={props.toggle}>
-                        {props.label}
-                    </div>
-                )}
-                {props.badgeCount !== undefined && (
-                    <div className={styles.badge}>
-                        {props.badgeCount}
-                    </div>
-                )}
-            </div>
+const AccordionItem: FC<AccordionItemProps> = props => {
+    const content = useMemo(() => (!props.open ? <></> : (
+        <div className={styles.content}>
+            {typeof props.children === 'function' ? props.children.call(undefined) : props.children}
         </div>
-        {props.open && (
-            <div className={styles.content}>
-                {typeof props.children === 'function' ? props.children() : props.children}
+    )), [props.children, props.open])
+
+    return (
+        <div className={classNames(styles.wrap, props.open && styles.open)}>
+            <div className={styles.itemHeader}>
+                <span className={styles.icon} onClick={props.toggle}>
+                    <IconOutline.ChevronDownIcon className='icon-lg' />
+                </span>
+                <div className={styles.titleBar}>
+                    {props.label && (
+                        <div className={styles.textLabel} onClick={props.toggle}>
+                            {props.label}
+                        </div>
+                    )}
+                    {props.badgeCount !== undefined && (
+                        <div className={styles.badge}>
+                            {props.badgeCount}
+                        </div>
+                    )}
+                </div>
             </div>
-        )}
-    </div>
-)
+            {content}
+        </div>
+    )
+}
 
 export default AccordionItem

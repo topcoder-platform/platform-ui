@@ -29,8 +29,6 @@ export const SkillsManagerContext: FC<SkillsManagerContextProps> = props => {
 
     const skills = useMemo(() => findSkillsMatches(allSkills ?? [], skillsFilter), [allSkills, skillsFilter])
 
-    // !!TODO: this operation might be expensive, look into caching it
-    // !!!TODO: CERTAIN MEMORY LEAK, INVESTIGATE
     const groupedSkills = useMemo(() => groupSkillsByCategories(skills), [skills])
 
     const contextValue = useMemo(() => ({

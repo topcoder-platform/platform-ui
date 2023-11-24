@@ -20,8 +20,8 @@ const LandingPage: FC<{}> = () => {
             <SearchInput value={skillsFilter} onChange={setSkillsFilter} />
 
             <CategoriesAccordion
-                categories={groupedSkills}
                 defaultOpen={!!skillsFilter}
+                categories={groupedSkills}
             />
         </ContentLayout>
     )
