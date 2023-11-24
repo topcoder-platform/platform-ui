@@ -114,7 +114,12 @@ export function matchOther(
 }
 
 export function required(value: InputValue): string | undefined {
-    return (value === undefined || value === '' || !(value as FileList).length) ? 'Required' : undefined
+    return (
+        value === undefined
+        || value === null
+        || value === ''
+        || !(value as FileList).length
+    ) ? 'Required' : undefined
 }
 
 export function requiredIfOther(

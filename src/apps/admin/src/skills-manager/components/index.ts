@@ -1,4 +1,5 @@
 export * from './accordion'
 export * from './categories-accordion'
+export * from './category-modal'
 export * from './page-header'
 export * from './search-input'

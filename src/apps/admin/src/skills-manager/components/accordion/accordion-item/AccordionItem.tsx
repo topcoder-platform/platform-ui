@@ -3,6 +3,8 @@ import classNames from 'classnames'
 
 import { IconOutline } from '~/libs/ui'
 
+import { AccordionMenu, AccordionMenuItem } from '../accordion-menu'
+
 import styles from './AccordionItem.module.scss'
 
 export interface AccordionItemProps {
@@ -11,6 +13,8 @@ export interface AccordionItemProps {
     open?: boolean
     toggle?: () => void
     children: JSX.Element[] | JSX.Element | (() => JSX.Element[] | JSX.Element)
+    menuActions: AccordionMenuItem[]
+    onMenuAction: (a: string) => void
 }
 
 const AccordionItem: FC<AccordionItemProps> = props => {
@@ -36,6 +40,12 @@ const AccordionItem: FC<AccordionItemProps> = props => {
                         <div className={styles.badge}>
                             {props.badgeCount}
                         </div>
+                    )}
+                    {props.menuActions?.length > 0 && (
+                        <AccordionMenu
+                            items={props.menuActions}
+                            onAction={props.onMenuAction}
+                        />
                     )}
                 </div>
             </div>

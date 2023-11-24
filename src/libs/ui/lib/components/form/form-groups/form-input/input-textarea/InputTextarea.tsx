@@ -14,11 +14,11 @@ interface InputTextareaProps {
     readonly hint?: string
     readonly label?: string
     readonly name: string
-    readonly onBlur: (event: FocusEvent<HTMLTextAreaElement>) => void
+    readonly onBlur?: (event: FocusEvent<HTMLTextAreaElement>) => void
     readonly onChange: (event: FocusEvent<HTMLTextAreaElement>) => void
     readonly placeholder?: string
     readonly spellCheck?: boolean
-    readonly tabIndex: number
+    readonly tabIndex?: number
     readonly value?: string | number
 }
 
@@ -41,7 +41,7 @@ const InputTextarea: FC<InputTextareaProps> = (props: InputTextareaProps) => (
             onChange={props.onChange}
             placeholder={props.placeholder}
             spellCheck={!!props.spellCheck}
-            tabIndex={props.tabIndex}
+            tabIndex={props.tabIndex ?? -1}
         />
     </InputWrapper>
 )

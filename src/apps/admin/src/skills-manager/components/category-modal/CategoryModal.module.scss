@@ -1,0 +1,7 @@
+@import '@libs/ui/styles/includes';
+
+.content {
+    > form > :global(.page-divider) {
+        display: none;
+    }
+}

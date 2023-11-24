@@ -2,7 +2,7 @@ import { FC } from 'react'
 
 import { ContentLayout, PageTitle } from '~/libs/ui'
 
-import { CategoriesAccordion, PageHeader, SearchInput } from '../components'
+import { CategoriesAccordion, CategoryModal, PageHeader, SearchInput } from '../components'
 import { SkillsManagerContextValue, useSkillsManagerContext } from '../skills-manager.context'
 
 const LandingPage: FC<{}> = () => {
@@ -10,6 +10,8 @@ const LandingPage: FC<{}> = () => {
         groupedSkills,
         setSkillsFilter,
         skillsFilter,
+        editCategory,
+        setEditCategory,
     }: SkillsManagerContextValue = useSkillsManagerContext()
 
     return (
@@ -23,6 +25,13 @@ const LandingPage: FC<{}> = () => {
                 defaultOpen={!!skillsFilter}
                 categories={groupedSkills}
             />
+
+            {!!editCategory && (
+                <CategoryModal
+                    category={editCategory}
+                    onClose={function close() { setEditCategory() }}
+                />
+            )}
         </ContentLayout>
     )
 }
