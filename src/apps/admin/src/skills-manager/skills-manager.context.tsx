@@ -1,24 +1,33 @@
 import { createContext, FC, ReactNode, useContext, useMemo, useState } from 'react'
 import { noop, orderBy } from 'lodash'
+import { SWRResponse } from 'swr'
 
 import { StandardizedSkill, StandardizedSkillCategory, useFetchCategories, useFetchSkills } from './services'
-import { CategoryGroup, findSkillsMatches, groupSkillsByCategories } from './lib'
+import { findSkillsMatches, GroupedSkills, groupSkillsByCategory } from './lib'
 
 export interface SkillsManagerContextValue {
-    allCategories: StandardizedSkillCategory[]
+    categories: StandardizedSkillCategory[]
     skillsFilter: string
     setSkillsFilter: (filter: string) => void
     skillsList: StandardizedSkill[]
-    groupedSkills: CategoryGroup[]
-    editCategory: CategoryGroup | undefined
-    setEditCategory: (group?: CategoryGroup) => void
+    groupedSkills: GroupedSkills
+    editCategory: StandardizedSkillCategory | undefined
+    setEditCategory: (group?: StandardizedSkillCategory) => void
+    editSkill: StandardizedSkill | undefined
+    setEditSkill: (skill?: StandardizedSkill) => void
+    refetchCategories: () => void
+    refetchSkills: () => void
 }
 
 const SkillsManagerRC = createContext<SkillsManagerContextValue>({
-    allCategories: [],
+    categories: [],
     editCategory: undefined,
-    groupedSkills: [],
+    editSkill: undefined,
+    groupedSkills: {},
+    refetchCategories: noop,
+    refetchSkills: noop,
     setEditCategory: noop,
+    setEditSkill: noop,
     setSkillsFilter: noop,
     skillsFilter: '',
     skillsList: [],
@@ -30,24 +39,43 @@ interface SkillsManagerContextProps {
 
 export const SkillsManagerContext: FC<SkillsManagerContextProps> = props => {
     const [skillsFilter, setSkillsFilter] = useState('')
-    const [editCategory, setEditCategory] = useState<CategoryGroup>()
+    const [editCategory, setEditCategory] = useState<StandardizedSkillCategory>()
+    const [editSkill, setEditSkill] = useState<StandardizedSkill>()
 
-    const allSkills = useFetchSkills()
-    const allCategories = useFetchCategories()
+    const {
+        data: allSkills,
+        mutate: refetchSkills,
+    }: SWRResponse<StandardizedSkill[]> = useFetchSkills()
+    const {
+        data: allCategories,
+        mutate: refetchCategories,
+    }: SWRResponse<StandardizedSkillCategory[]> = useFetchCategories()
 
     const skills = useMemo(() => findSkillsMatches(allSkills ?? [], skillsFilter), [allSkills, skillsFilter])
-
-    const groupedSkills = useMemo(() => groupSkillsByCategories(skills), [skills])
+    const groupedSkills = useMemo(() => groupSkillsByCategory(skills), [skills])
 
     const contextValue = useMemo(() => ({
-        allCategories: orderBy(allCategories ?? [], 'name', 'asc'),
+        categories: orderBy(allCategories ?? [], 'name', 'asc'),
         editCategory,
+        editSkill,
         groupedSkills,
+        refetchCategories,
+        refetchSkills,
         setEditCategory,
+        setEditSkill,
         setSkillsFilter,
         skillsFilter,
         skillsList: skills,
-    }), [allCategories, editCategory, groupedSkills, skills, skillsFilter])
+    }), [
+        allCategories,
+        editCategory,
+        editSkill,
+        groupedSkills,
+        refetchCategories,
+        refetchSkills,
+        skills,
+        skillsFilter,
+    ])
 
     return (
         <SkillsManagerRC.Provider

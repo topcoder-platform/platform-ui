@@ -1,33 +1,25 @@
-import { escapeRegExp, orderBy } from 'lodash'
+import { escapeRegExp, mapValues, orderBy } from 'lodash'
 
-import { StandardizedSkill, StandardizedSkillCategory } from '../services'
+import { StandardizedSkill } from '../services'
 
-export interface CategoryGroup extends StandardizedSkillCategory {
-    skills: StandardizedSkill[]
+export interface GroupedSkills {
+    [id: string]: StandardizedSkill[]
 }
 
-export const groupSkillsByCategories = (skills: StandardizedSkill[]): CategoryGroup[] => {
-    const allGroups = skills.reduce((grouped, skill) => {
+export const groupSkillsByCategory = (skills: StandardizedSkill[]): GroupedSkills => {
+    const groupedSkills = skills.reduce((grouped, skill) => {
         if (!grouped[skill.category.id]) {
-            grouped[skill.category.id] = {
-                ...skill.category,
-                skills: [],
-            }
+            grouped[skill.category.id] = []
         }
 
-        grouped[skill.category.id].skills.push(skill)
+        grouped[skill.category.id].push(skill)
 
         return grouped
-    }, {} as {[key: string]: CategoryGroup})
+    }, {} as GroupedSkills)
 
-    // sort groups, then sort skills, all by name ascending order
-    const sortedGroups = orderBy(Object.values(allGroups), 'name', 'asc')
-    const allSorted = sortedGroups.map(group => ({
-        ...group,
-        skills: orderBy(group.skills, 'name', 'asc'),
-    }))
+    const sortedGroupedSkills = mapValues(groupedSkills, s => orderBy(s, 'name', 'asc'))
 
-    return allSorted
+    return sortedGroupedSkills
 }
 
 export const findSkillsMatches = (skills: StandardizedSkill[], skillsFilter: string): StandardizedSkill[] => {

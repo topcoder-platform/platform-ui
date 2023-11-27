@@ -1,0 +1,19 @@
+@import '@libs/ui/styles/includes';
+
+.stickyContainer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    &::before {
+        content: '';
+        display: block;
+        height: calc(100% - 48px);
+    }
+}
+
+.floatingActionBtn {
+    position: sticky;
+    right: 0;
+    bottom: $sp-4;
+}

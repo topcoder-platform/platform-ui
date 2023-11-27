@@ -3,7 +3,7 @@ import classNames from 'classnames'
 
 import { IconOutline } from '~/libs/ui'
 
-import { AccordionMenu, AccordionMenuItem } from '../accordion-menu'
+import { ActionsMenu, ActionsMenuItem } from '../../actions-menu'
 
 import styles from './AccordionItem.module.scss'
 
@@ -13,7 +13,7 @@ export interface AccordionItemProps {
     open?: boolean
     toggle?: () => void
     children: JSX.Element[] | JSX.Element | (() => JSX.Element[] | JSX.Element)
-    menuActions: AccordionMenuItem[]
+    menuActions: ActionsMenuItem[]
     onMenuAction: (a: string) => void
 }
 
@@ -42,10 +42,13 @@ const AccordionItem: FC<AccordionItemProps> = props => {
                         </div>
                     )}
                     {props.menuActions?.length > 0 && (
-                        <AccordionMenu
+                        <ActionsMenu
                             items={props.menuActions}
                             onAction={props.onMenuAction}
-                        />
+                            className={styles.menu}
+                        >
+                            <IconOutline.DotsVerticalIcon className='icon-lg' />
+                        </ActionsMenu>
                     )}
                 </div>
             </div>

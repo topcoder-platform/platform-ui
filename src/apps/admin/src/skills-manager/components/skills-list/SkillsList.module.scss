@@ -10,9 +10,5 @@
 }
 
 .skillItem {
-    padding: $sp-1 $sp-2;
-
-    + .skillItem {
-        margin-top: $sp-2;
-    }
+    padding: $sp-2 $sp-2;
 }

@@ -15,6 +15,10 @@ const SearchInput: FC<SearchInputProps> = props => {
     const [value, setValue] = useState(props.value)
 
     const debouncedOnChange = useMemo(() => debounce((newValue): void => {
+        if (newValue && newValue.length === 1) {
+            return
+        }
+
         props.onChange.call(undefined, newValue ?? '')
     }, 300), [props.onChange])
 

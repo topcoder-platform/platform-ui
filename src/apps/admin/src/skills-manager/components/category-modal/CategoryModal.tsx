@@ -1,15 +1,15 @@
-import { ChangeEvent, FC, MutableRefObject, ReactNode, useCallback, useMemo, useRef, useState } from 'react'
+import { FC, useCallback, useMemo, useState } from 'react'
 
-import { BaseModal, Button, Form, FormInputModel, FormValue, InputText, InputTextarea, LoadingSpinner, formGetInputModel } from '~/libs/ui'
+import { BaseModal, Form, formGetInputModel, FormInputModel, FormValue, LoadingSpinner } from '~/libs/ui'
 
-import { StandardizedSkillCategory, saveStandardizedSkillCategory } from '../../services'
+import { saveStandardizedSkillCategory, StandardizedSkillCategory } from '../../services'
 
 import { categoryFormDef, CategoryFormField } from './category-form.config'
-import styles from './CategoryModal.module.scss'
 
 interface CategoryModalProps {
     category: StandardizedSkillCategory
     onClose: () => void
+    onSave: () => void
 }
 
 const CategoryModal: FC<CategoryModalProps> = props => {
@@ -27,12 +27,15 @@ const CategoryModal: FC<CategoryModalProps> = props => {
         setLoading(true)
 
         return saveStandardizedSkillCategory(request as unknown as StandardizedSkillCategory)
-            .then((createdBadge: StandardizedSkillCategory) => {
-                console.log('saved', createdBadge)
-
+            .then(() => {
+                props.onSave.call(undefined)
                 props.onClose.call(undefined)
             })
-    }, [props.onClose])
+            .catch((e: any) => {
+                setLoading(false)
+                return Promise.reject(e)
+            })
+    }, [props.onClose, props.onSave])
 
     const formDef = useMemo(() => ({
         ...categoryFormDef,
@@ -44,17 +47,6 @@ const CategoryModal: FC<CategoryModalProps> = props => {
         },
     }), [props.onClose])
 
-    function renderForm(): ReactNode {
-        return (
-            <Form
-                formDef={formDef}
-                formValues={props.category as unknown as FormValue}
-                requestGenerator={generateRequest}
-                save={saveAsync}
-            />
-        )
-    }
-
     return (
         <BaseModal
             onClose={props.onClose}
@@ -62,7 +54,14 @@ const CategoryModal: FC<CategoryModalProps> = props => {
             size='lg'
             title={`${action} Category`}
         >
-            {renderForm()}
+            <Form
+                key='edit-category'
+                formDef={formDef}
+                formValues={props.category as unknown as FormValue}
+                requestGenerator={generateRequest}
+                save={saveAsync}
+                resetFormOnUnmount
+            />
             <LoadingSpinner hide={!loading} overlay />
         </BaseModal>
     )

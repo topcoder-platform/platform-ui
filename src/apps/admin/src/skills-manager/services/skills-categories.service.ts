@@ -8,16 +8,15 @@ const baseUrl = `${EnvironmentConfig.API.V5}/standardized-skills/categories`
 
 export interface StandardizedSkillCategory extends UserSkillCategory {}
 
-export const useFetchCategories = (): StandardizedSkillCategory[] | undefined => {
+export const useFetchCategories = (): SWRResponse<StandardizedSkillCategory[]> => {
     const url = `${baseUrl}?perPage=9999`
 
-    const { data: allCategories }: SWRResponse<StandardizedSkillCategory[]>
-    = useSWR(url, xhrGetAsync<StandardizedSkillCategory[]>, {
+    const response = useSWR(url, xhrGetAsync<StandardizedSkillCategory[]>, {
         refreshInterval: 0,
         revalidateOnFocus: false,
     })
 
-    return allCategories ?? []
+    return response
 }
 
 export const saveStandardizedSkillCategory = (category: StandardizedSkillCategory)

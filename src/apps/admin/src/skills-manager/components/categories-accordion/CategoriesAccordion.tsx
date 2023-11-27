@@ -1,51 +1,54 @@
 import { FC } from 'react'
 
-import { CategoryGroup } from '../../lib'
 import { Accordion, AccordionItem } from '../accordion'
 import { SkillsList } from '../skills-list'
-import { AccordionMenuItem } from '../accordion/accordion-menu'
 import { SkillsManagerContextValue, useSkillsManagerContext } from '../../skills-manager.context'
+import { StandardizedSkillCategory } from '../../services'
+import { CATEGORY_ITEM_ACTIONS, MENU_ACTIONS } from '../../config'
 
 interface CategoriesAccordionProps {
-    categories: CategoryGroup[]
     defaultOpen?: boolean
 }
 
-const groupActions: AccordionMenuItem[] = [
-    { action: 'edit:category', label: 'Edit Category' },
-    { action: 'edit:skills:bulk', label: 'Bulk Edit Skills' },
-]
-
 const CategoriesAccordion: FC<CategoriesAccordionProps> = props => {
     const {
+        skillsFilter,
         setEditCategory,
+        categories,
+        groupedSkills,
     }: SkillsManagerContextValue = useSkillsManagerContext()
 
-    function handleMenuActions(action: string, category: CategoryGroup): void {
+    function handleMenuActions(action: string, category: StandardizedSkillCategory): void {
         switch (action) {
-            case 'edit:category':
+            case MENU_ACTIONS.editCategory.action:
                 setEditCategory(category)
                 break
             default: break
         }
     }
 
+    function renderCategoryAccordion(category: StandardizedSkillCategory): JSX.Element {
+        const categorySkills = groupedSkills[category.id] ?? []
+
+        return (!skillsFilter || categorySkills.length > 0) ? (
+            <AccordionItem
+                key={category.id}
+                label={category.name}
+                badgeCount={categorySkills.length}
+                open={props.defaultOpen}
+                menuActions={CATEGORY_ITEM_ACTIONS}
+                onMenuAction={function handle(action: string) { handleMenuActions(action, category) }}
+            >
+                {() => (
+                    <SkillsList skills={categorySkills} key={`cat-${category.id}-list`} />
+                )}
+            </AccordionItem>
+        ) : <></>
+    }
+
     return (
         <Accordion defaultOpen={props.defaultOpen}>
-            {props.categories.map(category => (
-                <AccordionItem
-                    key={category.id}
-                    label={category.name}
-                    badgeCount={category.skills.length}
-                    open={props.defaultOpen}
-                    menuActions={groupActions}
-                    onMenuAction={function handle(action: string) { handleMenuActions(action, category) }}
-                >
-                    {() => (
-                        <SkillsList skills={category.skills} key={`cat-${category.id}-list`} />
-                    )}
-                </AccordionItem>
-            ))}
+            {categories.map(renderCategoryAccordion)}
         </Accordion>
     )
 }

@@ -9,8 +9,6 @@
 .itemHeader {
     display: flex;
     align-items: center;
-
-    cursor: pointer;
 }
 
 .icon {
@@ -31,6 +29,10 @@
     font-weight: $font-weight-medium;
     line-height: $sp-5;
     letter-spacing: 0.05px;
+}
+
+.textLabel, .icon {
+    cursor: pointer;
 }
 
 .badge {

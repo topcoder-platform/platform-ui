@@ -28,7 +28,7 @@ export const categoryFormDef: FormDefinition = {
         {
             inputs: [
                 {
-                    label: 'Name',
+                    label: 'Category Name',
                     name: CategoryFormField.name,
                     placeholder: 'Enter category name',
                     type: 'text',
