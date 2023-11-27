@@ -6,6 +6,7 @@ import styles from './FormRadio.module.scss'
 
 interface FormRadioProps extends FormInputModel {
     readonly onChange: (event: FocusEvent<HTMLInputElement>) => void
+    options?: ReadonlyArray<FormRadioButtonOption>
 }
 
 const FormRadio: React.FC<FormRadioProps> = (props: FormRadioProps) => {

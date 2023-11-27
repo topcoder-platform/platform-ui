@@ -3,6 +3,7 @@ import { ReactNode } from 'react'
 import { FormInputAutocompleteOption } from './form-groups'
 import { InputEvent } from './form-input.event'
 import { ValidatorFn } from './validator-functions'
+import { InputSelectOption } from './form-groups/form-input'
 
 export interface FormRadioButtonOption {
     checked: boolean
@@ -63,7 +64,7 @@ export interface FormInputModel {
     readonly label?: string
     readonly name: string
     readonly notTabbable?: boolean
-    options?: ReadonlyArray<FormRadioButtonOption>
+    options?: ReadonlyArray<FormRadioButtonOption|InputSelectOption>
     readonly placeholder?: string
     readonly readonly?: boolean
     readonly spellCheck?: boolean
@@ -71,7 +72,7 @@ export interface FormInputModel {
     tooltip?: FormInputTooltipOptions
     touched?: boolean
     // eslint-disable-next-line max-len
-    readonly type: 'card-set'| 'checkbox' | 'password' | 'radio' | 'rating' | 'text' | 'textarea' | 'image-picker' | 'toggle'
+    readonly type: 'card-set'| 'checkbox' | 'password' | 'radio' | 'rating' | 'select' | 'text' | 'textarea' | 'image-picker' | 'toggle'
     readonly validators?: ReadonlyArray<ValidatorFn>
     value?: InputValue
 }
