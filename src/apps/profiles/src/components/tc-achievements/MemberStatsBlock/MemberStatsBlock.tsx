@@ -38,7 +38,7 @@ const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
                             >
                                 <span className={styles.trackName}>{track.name}</span>
                                 <div className={styles.trackDetails}>
-                                    {track.ranking === undefined && ((track.submissions || track.wins) > 0) && (
+                                    {!track.isDSTrack && ((track.submissions || track.wins) > 0) && (
                                         <>
                                             <WinnerIcon className={classNames('icon-xxxl', styles.winnerIcon)} />
                                             <span className={styles.trackStats}>
@@ -52,14 +52,14 @@ const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
                                         </>
                                     )}
                                     {/* competitive programming only */}
-                                    {track.ranking !== undefined && (
+                                    {track.isDSTrack && (
                                         <span className={styles.trackStats}>
                                             <span className={styles.count}>
-                                                {track.ranking}
+                                                {track.percentile}
                                                 %
                                             </span>
                                             <span className={styles.label}>
-                                                Ranking
+                                                Percentile
                                             </span>
                                         </span>
                                     )}

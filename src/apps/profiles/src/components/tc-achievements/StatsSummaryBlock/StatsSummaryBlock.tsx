@@ -72,12 +72,11 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                 {(!visibleFields || visibleFields.ranking) && props.ranking !== undefined && (
                     <div className={styles.summaryItem}>
                         <span className={styles.summaryItemValue}>
-                            {numberToFixed(props.ranking)}
-                            %
+                            {props.ranking}
                         </span>
                         <span className={styles.summaryItemLabel}>
                             <span className='body-small'>
-                                Percentile
+                                Rank
                             </span>
                         </span>
                     </div>

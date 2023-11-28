@@ -20,6 +20,7 @@ export interface MemberStatsTrack {
     screeningSuccessRate?: number
     wins: number,
     order?: number
+    isDSTrack?: boolean
 }
 
 /**
@@ -172,34 +173,49 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
         ].filter(Boolean))
     ), [developSubTracks])
 
+    // Data science
+    const dsTrackStats: MemberStatsTrack = useMemo(() => {
+        // Aggregate stats for DATA SCIENCE track
+        const subTracks = [
+            dataScienceSubTracks.MARATHON_MATCH,
+        ].filter(d => d?.challenges > 0) as MemberStats[]
+
+        return {
+            challenges: dataScienceSubTracks.MARATHON_MATCH?.challenges ?? 0,
+            isActive: (dataScienceSubTracks.MARATHON_MATCH?.challenges ?? 0) > 0,
+            isDSTrack: true,
+            name: 'Data Science',
+            order: -1,
+            percentile: dataScienceSubTracks.MARATHON_MATCH?.rank?.percentile ?? 0,
+            rating: dataScienceSubTracks.MARATHON_MATCH?.rank?.rating ?? 0,
+            subTracks,
+            wins: dataScienceSubTracks.MARATHON_MATCH?.wins ?? 0,
+        }
+    }, [dataScienceSubTracks])
+
     // Competitive Programming
     const cpTrackStats: MemberStatsTrack = useMemo(() => {
         // Aggregate stats for Competitive Programming track
         const subTracks = [
-            dataScienceSubTracks.MARATHON_MATCH,
             dataScienceSubTracks.SRM,
         ].filter(d => d?.challenges > 0) as MemberStats[]
 
         return {
-            challenges: memberStats?.DATA_SCIENCE?.challenges ?? 0,
-            isActive: (memberStats?.DATA_SCIENCE?.challenges ?? 0) > 0,
+            challenges: dataScienceSubTracks.SRM?.challenges ?? 0,
+            isActive: (dataScienceSubTracks.SRM?.challenges ?? 0) > 0,
+            isDSTrack: true,
             name: 'Competitive Programming',
-            order: -1,
-            ranking: Math.max(
-                dataScienceSubTracks.MARATHON_MATCH?.rank?.percentile ?? 0,
-                dataScienceSubTracks.SRM?.rank?.percentile ?? 0,
-            ),
-            rating: Math.max(
-                dataScienceSubTracks.MARATHON_MATCH?.rank?.rating ?? 0,
-                dataScienceSubTracks.SRM?.rank?.rating ?? 0,
-            ),
+            order: -2,
+            percentile: dataScienceSubTracks.SRM?.rank?.percentile ?? 0,
+            rating: dataScienceSubTracks.SRM?.rank?.rating ?? 0,
             subTracks,
-            wins: memberStats?.DATA_SCIENCE?.wins ?? 0,
+            wins: dataScienceSubTracks.SRM?.wins ?? 0,
         }
-    }, [dataScienceSubTracks, memberStats])
+    }, [dataScienceSubTracks])
 
     // Order and filter active tracks based on wins and submissions
     return orderBy(filter([
+        dsTrackStats,
         cpTrackStats,
         designTrackStats,
         developTrackStats,

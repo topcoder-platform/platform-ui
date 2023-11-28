@@ -34,12 +34,15 @@ const StatsDetailsLayout: FC<StatsDetailsLayoutProps> = props => (
                 challenges={props.trackData.challenges}
                 wins={props.trackData.wins}
                 submissions={(props.trackData as MemberStats).submissions?.submissions ?? props.trackData.submissions}
-                ranking={(props.trackData as MemberStats).rank?.rank ?? (props.trackData as MemberStatsTrack).ranking}
+                ranking={(props.trackData as MemberStats).rank?.rank}
                 rating={(props.trackData as MemberStats).rank?.rating ?? (props.trackData as MemberStatsTrack).rating}
                 volatility={(props.trackData as MemberStats).rank?.volatility}
                 screeningSuccessRate={(props.trackData as MemberStats).screeningSuccessRate}
                 submissionRate={(props.trackData as MemberStats).submissionRate}
-                percentile={(props.trackData as MemberStats).rank?.overallPercentile}
+                percentile={(
+                    (props.trackData as MemberStats).rank?.overallPercentile
+                    ?? (props.trackData as MemberStats).rank?.percentile
+                )}
             />
         </div>
         {props.children}
