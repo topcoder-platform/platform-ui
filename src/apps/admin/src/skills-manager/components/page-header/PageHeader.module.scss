@@ -7,4 +7,9 @@
 .inner {
     display: flex;
     align-items: center;
+    gap: $sp-8;
+
+    h1 {
+        line-height: $sp-10;
+    }
 }

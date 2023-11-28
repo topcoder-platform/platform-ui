@@ -5,7 +5,7 @@ import { Button, IconOutline } from '~/libs/ui'
 import { GLOBAL_ACTIONS, MENU_ACTIONS } from '../../config'
 import { ActionsMenu } from '../actions-menu'
 import { StandardizedSkill, StandardizedSkillCategory } from '../../services'
-import { SkillsManagerContextValue, useSkillsManagerContext } from '../../context'
+import { SkillsManagerContextValue, useSkillsManagerContext } from '../../context/skills-manager.context'
 
 import styles from './MoreActionsMenu.module.scss'
 

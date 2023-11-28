@@ -11,9 +11,7 @@ const PageHeader: FC<PageHeaderProps> = props => (
         <div className={styles.inner}>
             <h1>{props.title}</h1>
 
-            <div className={styles.content}>
-                {props.children}
-            </div>
+            {props.children}
         </div>
 
         <hr />

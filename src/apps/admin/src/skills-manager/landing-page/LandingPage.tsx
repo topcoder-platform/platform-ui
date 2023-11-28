@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { ContentLayout, PageTitle } from '~/libs/ui'
+import { ContentLayout, InputCheckbox, PageTitle } from '~/libs/ui'
 
 import { SkillsManagerContextValue, useSkillsManagerContext } from '../context'
 import {
@@ -11,11 +11,13 @@ import {
     SearchInput,
     SkillModal,
 } from '../components'
+import { BulkEditor } from '../components/bulk-editor'
 
 import styles from './LandingPage.module.scss'
 
 const LandingPage: FC<{}> = () => {
     const {
+        bulkEditorCtx,
         categories,
         setSkillsFilter,
         skillsFilter,
@@ -25,12 +27,26 @@ const LandingPage: FC<{}> = () => {
         setEditSkill,
         refetchCategories,
         refetchSkills,
+        toggleArchivedSkills,
+        showArchivedSkills,
     }: SkillsManagerContextValue = useSkillsManagerContext()
 
     return (
         <ContentLayout innerClass={styles.contentWrap}>
             <PageTitle>Skills Manager | Admin</PageTitle>
-            <PageHeader title='Skills Manager' />
+            <PageHeader title='Skills Manager'>
+                <InputCheckbox
+                    accent='blue'
+                    name='show archived'
+                    label='Show Archived'
+                    onChange={toggleArchivedSkills}
+                    checked={showArchivedSkills}
+                />
+
+                {!!bulkEditorCtx.isEditing && (
+                    <BulkEditor className={styles.toRight} />
+                )}
+            </PageHeader>
 
             <SearchInput value={skillsFilter} onChange={setSkillsFilter} />
 

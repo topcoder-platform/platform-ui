@@ -16,10 +16,7 @@ const CategoriesAccordion: FC<CategoriesAccordionProps> = props => {
         setEditCategory,
         categories,
         groupedSkills,
-        isBulkEditing,
-        toggleEditMode,
-        toggleEditSkill,
-        isSkillSelected,
+        bulkEditorCtx,
     }: SkillsManagerContextValue = useSkillsManagerContext()
 
     function handleMenuActions(action: string, category: StandardizedSkillCategory): void {
@@ -28,7 +25,7 @@ const CategoriesAccordion: FC<CategoriesAccordionProps> = props => {
                 setEditCategory(category)
                 break
             case MENU_ACTIONS.bulkEditSkills.action:
-                toggleEditMode(category)
+                bulkEditorCtx.toggle(category)
                 break
             default: break
         }
@@ -42,7 +39,7 @@ const CategoriesAccordion: FC<CategoriesAccordionProps> = props => {
                 key={category.id}
                 label={category.name}
                 badgeCount={categorySkills.length}
-                open={props.defaultOpen || !!isBulkEditing}
+                open={props.defaultOpen || !!bulkEditorCtx.isEditing}
                 menuActions={CATEGORY_ITEM_ACTIONS}
                 onMenuAction={function handle(action: string) { handleMenuActions(action, category) }}
             >
@@ -50,9 +47,9 @@ const CategoriesAccordion: FC<CategoriesAccordionProps> = props => {
                     <SkillsList
                         skills={categorySkills}
                         key={`cat-${category.id}-list`}
-                        onSelect={toggleEditSkill}
-                        isSelected={isSkillSelected}
-                        editMode={!!isBulkEditing}
+                        onSelect={bulkEditorCtx.toggleSkill}
+                        isSelected={bulkEditorCtx.isSkillSelected}
+                        editMode={!!bulkEditorCtx.isEditing}
                     />
                 )}
             </AccordionItem>
@@ -61,8 +58,8 @@ const CategoriesAccordion: FC<CategoriesAccordionProps> = props => {
 
     return (
         <Accordion defaultOpen={props.defaultOpen}>
-            {isBulkEditing ? (
-                renderCategoryAccordion(isBulkEditing)
+            {!!bulkEditorCtx.isEditing ? (
+                renderCategoryAccordion(bulkEditorCtx.isEditing)
             ) : (
                 categories.map(renderCategoryAccordion)
             )}

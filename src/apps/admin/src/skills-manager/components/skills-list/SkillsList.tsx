@@ -1,12 +1,14 @@
 import { FC } from 'react'
-import CheckBox from 'rc-checkbox'
 import classNames from 'classnames'
+
+import { InputCheckbox } from '~/libs/ui'
 
 import { StandardizedSkill } from '../../services'
 
 import styles from './SkillsList.module.scss'
 
 interface SkillsListProps {
+    className?: string
     skills: StandardizedSkill[]
     editMode?: boolean
     onSelect: (skill: StandardizedSkill) => void
@@ -23,13 +25,15 @@ const SkillsList: FC<SkillsListProps> = props => {
     }
 
     return (
-        <div className={classNames(styles.wrap, props.editMode && styles.isEditMode)}>
+        <div className={classNames(props.className, styles.wrap, props.editMode && styles.isEditMode)}>
             <ul className={styles.listWrap}>
                 {props.skills.map(skill => (
                     <li className={styles.skillItem} key={skill.id}>
                         {props.editMode && (
                             <div className={styles.checkbox}>
-                                <CheckBox
+                                <InputCheckbox
+                                    name='toggle-skill'
+                                    accent='blue'
                                     checked={props.isSelected(skill)}
                                     onChange={function toggl() { handleToggle(skill) }}
                                 />

@@ -16,7 +16,7 @@ export const EDIT_CATEGORY_ACTION: ActionsMenuItem = {
 }
 
 export const BULK_EDIT_SKILLS_ACTION: ActionsMenuItem = {
-    action: 'bulk-edit:skill',
+    action: 'bulk:edit:skill',
     label: 'Bulk Edit Skills',
 }
 
@@ -36,3 +36,9 @@ export const CATEGORY_ITEM_ACTIONS: ActionsMenuItem[] = [
     EDIT_CATEGORY_ACTION,
     BULK_EDIT_SKILLS_ACTION,
 ]
+
+export enum BULK_SKILL_ACTIONS {
+    move = 'bulk:move:skills',
+    replace = 'bulk:replace:skills',
+    archive = 'bulk:archive:skills',
+}

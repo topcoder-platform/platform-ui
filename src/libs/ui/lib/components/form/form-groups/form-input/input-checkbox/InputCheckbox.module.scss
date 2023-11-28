@@ -1,0 +1,88 @@
+@import '../../../../../styles/includes';
+
+.container {
+    display: flex;
+    align-items: center;
+
+    label {
+        color: $black-80;
+        margin-left: $sp-2;
+        cursor: pointer;
+    }
+}
+
+.checkbox {
+    white-space: nowrap;
+    cursor: pointer;
+    outline: none;
+    display: inline-block;
+    position: relative;
+    line-height: 1;
+    vertical-align: middle;
+
+    :global(.rc-checkbox-input) {
+        position: absolute;
+        left: 0;
+        z-index: 9999;
+        cursor: pointer;
+        opacity: 0;
+        top: 0;
+        bottom: 0;
+        right: 0;
+    }
+
+    :global(.rc-checkbox-inner) {
+        @include icon-xl();
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        position: relative;
+        top: 0;
+        left: 0;
+
+        border-width: 1px;
+        border-style: solid;
+        border-radius: 3px;
+        border-color: $black-20;
+        background-color: $tc-white;
+    }
+
+    &:global(.rc-checkbox-checked) {
+        :global(.rc-checkbox-inner) {
+            &:after {
+                transform: rotate(45deg);
+                display: table;
+                width: 6px;
+                height: 10px;
+                border: 2px solid $tc-white;
+                border-top: 0;
+                border-left: 0;
+                content: ' ';
+
+                position: relative;
+                top: -2px;
+            }
+        }
+    }
+
+
+    &.greenAccent {
+        &:global(.rc-checkbox-checked) {
+            :global(.rc-checkbox-inner) {
+                border-color: $turq-160;
+                background-color: $turq-160;
+            }
+        }
+    }
+
+    &.blueAccent {
+        &:global(.rc-checkbox-checked) {
+            :global(.rc-checkbox-inner) {
+                border-color: $link-blue-dark;
+                background-color: $link-blue-dark;
+            }
+        }
+    }
+}
