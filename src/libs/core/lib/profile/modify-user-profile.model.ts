@@ -1,4 +1,4 @@
-import { TC_TRACKS } from './user-profile.model'
+import { NamesAndHandleAppearance, TC_TRACKS } from './user-profile.model'
 
 export interface UpdateProfileRequest {
     addresses?: Array<{
@@ -15,6 +15,7 @@ export interface UpdateProfileRequest {
     lastName?: string
     tracks?: TC_TRACKS[],
     description?: string
+    namesAndHandleAppearance?: NamesAndHandleAppearance
 }
 
 export interface UserPhotoUpdateResponse {
