@@ -68,7 +68,7 @@ const SkillModal: FC<SkillModalProps> = props => {
 
     const formValue = useMemo(() => ({
         ...(props.skill as any),
-        categoryId: props.skill.category.id,
+        categoryId: props.skill.category?.id,
     } as FormValue), [props.skill])
 
     function renderForm(): ReactNode {

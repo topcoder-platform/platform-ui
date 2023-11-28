@@ -21,20 +21,21 @@ export const skillFormDef = (
     buttons: {
         primaryGroup: [
             {
-                buttonStyle: 'secondary',
+                buttonLight: true,
+                buttonStyle: 'primary',
                 isSubmit: false,
                 label: 'Cancel',
                 onClick: onCancelClick,
                 size: 'lg',
                 type: 'button',
             },
-            {
+            ...(action === 'add' ? [{
                 buttonStyle: 'secondary',
                 isSubmit: true,
                 label: 'Save and add another',
                 size: 'lg',
                 type: 'submit',
-            },
+            }] : []),
             {
                 buttonStyle: 'primary',
                 isSubmit: true,
@@ -80,6 +81,7 @@ export const skillFormDef = (
                     ],
                 },
                 {
+                    creatable: true,
                     label: 'Skill Category',
                     name: SkillFormField.category,
                     options: mapCategoryToSelectOption(categories ?? []),
