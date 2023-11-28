@@ -1,18 +1,13 @@
 import { Dispatch, FC, FocusEvent, SetStateAction, useState } from 'react'
-import { reject, trim } from 'lodash'
+import { trim } from 'lodash'
 import { toast } from 'react-toastify'
 
 import {
+    NamesAndHandleAppearance,
     updateMemberProfileAsync,
-    updateOrCreateMemberTraitsAsync,
     UserProfile,
-    UserTrait,
-    UserTraitCategoryNames,
-    UserTraitIds,
 } from '~/libs/core'
 import { BaseModal, Button, InputRadio, InputText } from '~/libs/ui'
-
-import { NamesAndHandleAppearance } from '../ProfileHeader'
 
 import styles from './ModifyMemberNameModal.module.scss'
 
@@ -20,8 +15,6 @@ interface ModifyMemberNameModalProps {
     profile: UserProfile
     onClose: () => void
     onSave: () => void
-    memberPersonalizationTraitsData: UserTrait[] | undefined
-    namesAndHandleAppearance: NamesAndHandleAppearance | undefined
 }
 
 const ModifyMemberNameModal: FC<ModifyMemberNameModalProps> = (props: ModifyMemberNameModalProps) => {
@@ -43,10 +36,8 @@ const ModifyMemberNameModal: FC<ModifyMemberNameModalProps> = (props: ModifyMemb
     const [currentLastName, setCurrentLastName]: [string, Dispatch<SetStateAction<string>>]
         = useState<string>(props.profile.lastName)
 
-    const [namesAndHandleAppearance, setNamesAndHandleAppearance]: [
-        NamesAndHandleAppearance | undefined, Dispatch<SetStateAction<NamesAndHandleAppearance | undefined>>
-    ]
-        = useState<NamesAndHandleAppearance | undefined>(props.namesAndHandleAppearance)
+    const [namesAndHandleAppearance, setNamesAndHandleAppearance]
+        = useState<NamesAndHandleAppearance | undefined>(props.profile.namesAndHandleAppearance)
 
     function handleFirstNameChange(e: React.ChangeEvent<HTMLInputElement>): void {
         setCurrentFirstName(e.target.value)
@@ -88,21 +79,12 @@ const ModifyMemberNameModal: FC<ModifyMemberNameModalProps> = (props: ModifyMemb
         Promise.all([
             updateMemberProfileAsync(
                 props.profile.handle,
-                { firstName: updatedFirstName, lastName: updatedLastName },
-            ),
-            updateOrCreateMemberTraitsAsync(props.profile.handle, [{
-                categoryName: UserTraitCategoryNames.personalization,
-                traitId: UserTraitIds.personalization,
-                traits: {
-                    data: [
-                        ...reject(
-                            props.memberPersonalizationTraitsData,
-                            (trait: any) => trait.namesAndHandleAppearance,
-                        ),
-                        { namesAndHandleAppearance },
-                    ],
+                {
+                    firstName: updatedFirstName,
+                    lastName: updatedLastName,
+                    namesAndHandleAppearance: namesAndHandleAppearance as NamesAndHandleAppearance,
                 },
-            }]),
+            ),
         ])
             .then(() => {
                 toast.success('Your profile has been updated.', { position: toast.POSITION.BOTTOM_RIGHT })
