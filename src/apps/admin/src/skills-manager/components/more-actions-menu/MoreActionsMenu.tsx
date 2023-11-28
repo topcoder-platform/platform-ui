@@ -5,7 +5,7 @@ import { Button, IconOutline } from '~/libs/ui'
 import { GLOBAL_ACTIONS, MENU_ACTIONS } from '../../config'
 import { ActionsMenu } from '../actions-menu'
 import { StandardizedSkill, StandardizedSkillCategory } from '../../services'
-import { SkillsManagerContextValue, useSkillsManagerContext } from '../../skills-manager.context'
+import { SkillsManagerContextValue, useSkillsManagerContext } from '../../context'
 
 import styles from './MoreActionsMenu.module.scss'
 
@@ -39,8 +39,9 @@ const MoreActionsMenu: FC<{}> = () => {
                 >
                     <Button
                         primary
-                        color='blue'
+                        variant='linkblue'
                         size='xl'
+                        className={styles.triggerBtn}
                     >
                         <IconOutline.PlusIcon className='icon-xxl' />
                     </Button>

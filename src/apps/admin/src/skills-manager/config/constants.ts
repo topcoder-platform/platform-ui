@@ -34,5 +34,5 @@ export const MENU_ACTIONS = {
 
 export const CATEGORY_ITEM_ACTIONS: ActionsMenuItem[] = [
     EDIT_CATEGORY_ACTION,
-    // BULK_EDIT_SKILLS_ACTION,
+    BULK_EDIT_SKILLS_ACTION,
 ]

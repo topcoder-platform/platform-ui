@@ -9,6 +9,10 @@
 
     padding: $sp-1;
     margin: -$sp-1;
+
+    + * {
+        z-index: 9;
+    }
 }
 
 .menu {

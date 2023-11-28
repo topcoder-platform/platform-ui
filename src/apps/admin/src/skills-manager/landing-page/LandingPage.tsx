@@ -2,7 +2,7 @@ import { FC } from 'react'
 
 import { ContentLayout, PageTitle } from '~/libs/ui'
 
-import { SkillsManagerContextValue, useSkillsManagerContext } from '../skills-manager.context'
+import { SkillsManagerContextValue, useSkillsManagerContext } from '../context'
 import {
     CategoriesAccordion,
     CategoryModal,

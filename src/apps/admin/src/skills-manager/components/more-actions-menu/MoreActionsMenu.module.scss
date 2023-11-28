@@ -5,6 +5,7 @@
     top: 0;
     right: 0;
     height: 100%;
+    width: 0;
     &::before {
         content: '';
         display: block;
@@ -16,4 +17,15 @@
     position: sticky;
     right: 0;
     bottom: $sp-4;
+}
+
+.triggerBtn.triggerBtn {
+    padding-left: $sp-4;
+    padding-right: $sp-4;
+}
+
+.menu {
+    position: absolute;
+    right: 0;
+    bottom: 0;
 }

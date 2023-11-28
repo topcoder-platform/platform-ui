@@ -1,11 +1,13 @@
 import { createContext, FC, ReactNode, useContext, useMemo, useState } from 'react'
-import { noop, orderBy } from 'lodash'
+import { orderBy } from 'lodash'
 import { SWRResponse } from 'swr'
 
-import { StandardizedSkill, StandardizedSkillCategory, useFetchCategories, useFetchSkills } from './services'
-import { findSkillsMatches, GroupedSkills, groupSkillsByCategory } from './lib'
+import { StandardizedSkill, StandardizedSkillCategory, useFetchCategories, useFetchSkills } from '../services'
+import { findSkillsMatches, GroupedSkills, groupSkillsByCategory } from '../lib'
 
-export interface SkillsManagerContextValue {
+import { SkillsBulkEditorValue, useSkillsBulkEditor } from './use-skills-bulk-editor'
+
+export interface SkillsManagerContextValue extends SkillsBulkEditorValue {
     categories: StandardizedSkillCategory[]
     skillsFilter: string
     setSkillsFilter: (filter: string) => void
@@ -20,18 +22,7 @@ export interface SkillsManagerContextValue {
 }
 
 const SkillsManagerRC = createContext<SkillsManagerContextValue>({
-    categories: [],
-    editCategory: undefined,
-    editSkill: undefined,
-    groupedSkills: {},
-    refetchCategories: noop,
-    refetchSkills: noop,
-    setEditCategory: noop,
-    setEditSkill: noop,
-    setSkillsFilter: noop,
-    skillsFilter: '',
-    skillsList: [],
-})
+} as SkillsManagerContextValue)
 
 interface SkillsManagerContextProps {
     children?: ReactNode
@@ -46,6 +37,7 @@ export const SkillsManagerContext: FC<SkillsManagerContextProps> = props => {
         data: allSkills,
         mutate: refetchSkills,
     }: SWRResponse<StandardizedSkill[]> = useFetchSkills()
+
     const {
         data: allCategories,
         mutate: refetchCategories,
@@ -54,7 +46,10 @@ export const SkillsManagerContext: FC<SkillsManagerContextProps> = props => {
     const skills = useMemo(() => findSkillsMatches(allSkills ?? [], skillsFilter), [allSkills, skillsFilter])
     const groupedSkills = useMemo(() => groupSkillsByCategory(skills), [skills])
 
+    const skillsBulkEditor = useSkillsBulkEditor(skills)
+
     const contextValue = useMemo(() => ({
+        ...skillsBulkEditor,
         categories: orderBy(allCategories ?? [], 'name', 'asc'),
         editCategory,
         editSkill,
@@ -67,6 +62,7 @@ export const SkillsManagerContext: FC<SkillsManagerContextProps> = props => {
         skillsFilter,
         skillsList: skills,
     }), [
+        skillsBulkEditor,
         allCategories,
         editCategory,
         editSkill,

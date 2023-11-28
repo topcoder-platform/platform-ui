@@ -4,7 +4,7 @@ import { Outlet, Routes } from 'react-router-dom'
 import { routerContext, RouterContextData } from '~/libs/core'
 
 import { skillsManagerRoutes } from './skills-manager.routes'
-import { SkillsManagerContext } from './skills-manager.context'
+import { SkillsManagerContext } from './context'
 
 const SkillsManager: FC<{}> = () => {
     const { getRouteElement }: RouterContextData = useContext(routerContext)
