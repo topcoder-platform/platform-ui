@@ -53,9 +53,9 @@ $btn-secondary-border-width: $border;
 
     // Define variants
     &:global(.btn-variant-danger) {
-        --btn-variant: #{$red-110};
-        --btn-variant--hover: #{lighten($red-110, 10%)};
-        --btn-variant--active: #{darken($red-110, 10%)};
+        --btn-variant: #{$red-120};
+        --btn-variant--hover: #{lighten($red-120, 10%)};
+        --btn-variant--active: #{darken($red-120, 10%)};
     }
     &:global(.btn-variant-warning) {
         --btn-variant: #{$orange-140};

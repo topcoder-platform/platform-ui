@@ -1,5 +1,4 @@
 import { createContext, FC, ReactNode, useCallback, useContext, useMemo, useState } from 'react'
-import { orderBy } from 'lodash'
 import { SWRResponse } from 'swr'
 
 import { StandardizedSkill, StandardizedSkillCategory, useFetchCategories, useFetchSkills } from '../services'
@@ -43,7 +42,7 @@ export const SkillsManagerContext: FC<SkillsManagerContextProps> = props => {
     }: SWRResponse<StandardizedSkill[]> = useFetchSkills()
 
     const {
-        data: allCategories,
+        data: allCategories = [],
         mutate: refetchCategories,
     }: SWRResponse<StandardizedSkillCategory[]> = useFetchCategories()
 
@@ -58,7 +57,7 @@ export const SkillsManagerContext: FC<SkillsManagerContextProps> = props => {
 
     const contextValue = useMemo(() => ({
         bulkEditorCtx,
-        categories: orderBy(allCategories ?? [], 'name', 'asc'),
+        categories: allCategories,
         editCategory,
         editSkill,
         groupedSkills,

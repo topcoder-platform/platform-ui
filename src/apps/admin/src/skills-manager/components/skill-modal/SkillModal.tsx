@@ -2,7 +2,12 @@ import { FC, ReactNode, useCallback, useMemo, useState } from 'react'
 
 import { BaseModal, Form, formGetInputModel, FormInputModel, FormValue, LoadingSpinner } from '~/libs/ui'
 
-import { saveStandardizedSkill, StandardizedSkill, StandardizedSkillCategory } from '../../services'
+import {
+    archiveStandardizedSkill,
+    saveStandardizedSkill,
+    StandardizedSkill,
+    StandardizedSkillCategory,
+} from '../../services'
 
 import { skillFormDef, SkillFormField } from './skill-form.config'
 
@@ -23,6 +28,7 @@ const SkillModal: FC<SkillModalProps> = props => {
         description: formGetInputModel(inputs, SkillFormField.description).value as string,
         id: props.skill.id as string,
         name: formGetInputModel(inputs, SkillFormField.name).value as string,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }), [])
 
     const saveAsync = useCallback(async (request: FormValue): Promise<void> => {
@@ -39,16 +45,37 @@ const SkillModal: FC<SkillModalProps> = props => {
             })
     }, [props.onClose, props.onSave])
 
+    const archiveSkill = useCallback(async (): Promise<void> => {
+        setLoading(true)
+
+        return archiveStandardizedSkill(props.skill)
+            .then(() => {
+                props.onSave.call(undefined)
+                props.onClose.call(undefined)
+            })
+            .catch((e: any) => {
+                setLoading(false)
+                return Promise.reject(e)
+            })
+    }, [props.onClose, props.skill, props.onSave])
+
     const formDef = useMemo(() => skillFormDef(
+        action,
+        archiveSkill,
         props.onClose,
         props.categories,
-    ), [props.categories, props.onClose])
+    ), [action, archiveSkill, props.categories, props.onClose])
+
+    const formValue = useMemo(() => ({
+        ...(props.skill as any),
+        categoryId: props.skill.category.id,
+    } as FormValue), [props.skill])
 
     function renderForm(): ReactNode {
         return (
             <Form
                 formDef={formDef}
-                formValues={props.skill as unknown as FormValue}
+                formValues={formValue}
                 requestGenerator={generateRequest}
                 save={saveAsync}
                 resetFormOnUnmount

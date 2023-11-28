@@ -13,11 +13,13 @@ interface SkillsListProps {
     editMode?: boolean
     onSelect: (skill: StandardizedSkill) => void
     isSelected: (skill: StandardizedSkill) => boolean
+    onEditSkill?: (skill: StandardizedSkill) => void
 }
 
 const SkillsList: FC<SkillsListProps> = props => {
     function handleToggle(skill: StandardizedSkill): void {
         if (!props.editMode) {
+            props.onEditSkill?.(skill)
             return
         }
 

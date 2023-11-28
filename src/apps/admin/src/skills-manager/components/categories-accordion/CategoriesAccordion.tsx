@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 
 import { Accordion, AccordionItem } from '../accordion'
 import { SkillsList } from '../skills-list'
@@ -12,6 +12,7 @@ interface CategoriesAccordionProps {
 
 const CategoriesAccordion: FC<CategoriesAccordionProps> = props => {
     const {
+        setEditSkill,
         skillsFilter,
         setEditCategory,
         categories,
@@ -50,19 +51,29 @@ const CategoriesAccordion: FC<CategoriesAccordionProps> = props => {
                         onSelect={bulkEditorCtx.toggleSkill}
                         isSelected={bulkEditorCtx.isSkillSelected}
                         editMode={!!bulkEditorCtx.isEditing}
+                        onEditSkill={setEditSkill}
                     />
                 )}
             </AccordionItem>
         ) : <></>
     }
 
+    // use a memo to persist the items rendering
+    // otheriwse, the order and mapping of the categories
+    // will trigger a new re-render of the accordion on each context change
+    const accordionItems = useMemo(() => (
+        !!bulkEditorCtx.isEditing ? (
+            renderCategoryAccordion(bulkEditorCtx.isEditing)
+        ) : (
+            categories
+                .map(renderCategoryAccordion)
+        )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ), [bulkEditorCtx.isEditing, categories, groupedSkills])
+
     return (
         <Accordion defaultOpen={props.defaultOpen}>
-            {!!bulkEditorCtx.isEditing ? (
-                renderCategoryAccordion(bulkEditorCtx.isEditing)
-            ) : (
-                categories.map(renderCategoryAccordion)
-            )}
+            {accordionItems}
         </Accordion>
     )
 }

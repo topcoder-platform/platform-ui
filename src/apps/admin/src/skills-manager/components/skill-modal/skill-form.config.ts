@@ -13,6 +13,8 @@ const mapCategoryToSelectOption = (categories: StandardizedSkillCategory[]): Inp
 )
 
 export const skillFormDef = (
+    action: string,
+    onArchiveClick: () => void,
     onCancelClick: () => void,
     categories?: StandardizedSkillCategory[],
 ): FormDefinition => ({
@@ -27,11 +29,29 @@ export const skillFormDef = (
                 type: 'button',
             },
             {
+                buttonStyle: 'secondary',
+                isSubmit: true,
+                label: 'Save and add another',
+                size: 'lg',
+                type: 'submit',
+            },
+            {
                 buttonStyle: 'primary',
                 isSubmit: true,
                 label: 'Save',
                 size: 'lg',
                 type: 'submit',
+            },
+        ],
+        secondaryGroup: action === 'edit' && [
+            {
+                buttonStyle: 'secondary',
+                isSubmit: false,
+                label: 'Archive skill',
+                onClick: onArchiveClick,
+                size: 'lg',
+                type: 'button',
+                variant: 'danger',
             },
         ],
     },

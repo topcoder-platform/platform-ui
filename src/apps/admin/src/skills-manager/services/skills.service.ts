@@ -2,7 +2,7 @@ import { omit } from 'lodash'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
-import { UserSkill, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
+import { UserSkill, xhrDeleteAsync, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/standardized-skills/skills`
 
@@ -19,10 +19,15 @@ export const useFetchSkills = (): SWRResponse<StandardizedSkill[]> => {
     return response
 }
 
-export const saveStandardizedSkill = (category: StandardizedSkill)
-: Promise<StandardizedSkill> => {
-    const xhrSaveAsyncFn = category.id ? xhrPutAsync : xhrPostAsync
-    const url = `${baseUrl}${category.id ? `/${category.id}` : ''}`
+export const saveStandardizedSkill = (skill: StandardizedSkill): Promise<StandardizedSkill> => {
+    const xhrSaveAsyncFn = skill.id ? xhrPutAsync : xhrPostAsync
+    const url = `${baseUrl}${skill.id ? `/${skill.id}` : ''}`
 
-    return xhrSaveAsyncFn(url, omit(category, 'id'))
+    return xhrSaveAsyncFn(url, omit(skill, 'id'))
+}
+
+export const archiveStandardizedSkill = (skill: StandardizedSkill): Promise<StandardizedSkill> => {
+    const url = `${baseUrl}/${skill.id}`
+
+    return xhrDeleteAsync(url)
 }
