@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { isEmpty } from 'lodash'
 
 import { GenericDataObject } from '~/libs/shared'
@@ -26,43 +26,44 @@ export const useSkillsBulkEditorContext = (skills: StandardizedSkill[]): SkillsB
         setIsEditing(d => (d?.id === category?.id ? undefined : category))
     }
 
-    function isSkillSelected(skill: StandardizedSkill): boolean {
-        return !!selectedSkillsMap[skill.id]
-    }
+    const isSkillSelected = useCallback((skill: StandardizedSkill): boolean => (
+        !!selectedSkillsMap[skill.id]
+    ), [selectedSkillsMap])
 
-    function selectSkills(skillsMap: SelectedSkillsKeyMap): void {
+    const selectSkills = useCallback((skillsMap: SelectedSkillsKeyMap): void => {
+        setSelectedSkillsMap(skillsMap)
         // eslint-disable-next-line newline-per-chained-call
         const selected = Object.values(skillsMap).filter(Boolean) as StandardizedSkill[]
         setSelectedSkills(selected)
-        setSelectedSkillsMap(skillsMap)
-    }
+    }, [])
 
-    function toggleSkill(skill: StandardizedSkill): void {
+    const toggleSkill = useCallback((skill: StandardizedSkill): void => {
         selectSkills({
             ...selectedSkillsMap,
             [skill.id]: selectedSkillsMap[skill.id] ? undefined : skill,
         })
-    }
+    }, [selectSkills, selectedSkillsMap])
 
-    function selectAll(): void {
+    const selectAll = useCallback((): void => {
         const skillsById = skills.reduce((all, skill) => {
             all[skill.id] = skill
             return all
         }, {} as SelectedSkillsKeyMap)
         selectSkills(skillsById)
-    }
+    }, [selectSkills, skills])
 
-    function toggleAll(): void {
+    const toggleAll = useCallback((): void => {
         if (isEmpty(selectedSkillsMap)) {
             selectAll()
             return
         }
 
         selectSkills({} as SelectedSkillsKeyMap)
-    }
+    }, [selectAll, selectSkills, selectedSkillsMap])
 
     useEffect(() => {
         selectSkills({} as SelectedSkillsKeyMap)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isEditing])
 
     return {

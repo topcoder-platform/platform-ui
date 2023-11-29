@@ -4,7 +4,7 @@ import useSWR, { SWRResponse } from 'swr'
 import { EnvironmentConfig } from '~/config'
 import { UserSkill, xhrDeleteAsync, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
 
-const baseUrl = `${EnvironmentConfig.API.V5}/standardized-skills/skills`
+const baseUrl = `${EnvironmentConfig.STANDARDIZED_SKILLS_API}/skills`
 
 export interface StandardizedSkill extends UserSkill {}
 

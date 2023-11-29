@@ -39,7 +39,6 @@ const MoreActionsMenu: FC<{}> = () => {
                 >
                     <Button
                         primary
-                        variant='linkblue'
                         size='xl'
                         className={styles.triggerBtn}
                     >

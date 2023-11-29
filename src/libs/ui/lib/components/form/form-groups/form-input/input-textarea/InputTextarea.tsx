@@ -6,6 +6,7 @@ import { InputWrapper } from '../input-wrapper'
 import styles from './InputTextarea.module.scss'
 
 interface InputTextareaProps {
+    readonly className?: string
     readonly autocomplete?: FormInputAutocompleteOption
     readonly dirty?: boolean
     readonly disabled?: boolean

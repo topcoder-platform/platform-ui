@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { FC, useCallback, useMemo } from 'react'
 
 import { Accordion, AccordionItem } from '../accordion'
 import { SkillsList } from '../skills-list'
@@ -20,7 +20,7 @@ const CategoriesAccordion: FC<CategoriesAccordionProps> = props => {
         bulkEditorCtx,
     }: SkillsManagerContextValue = useSkillsManagerContext()
 
-    function handleMenuActions(action: string, category: StandardizedSkillCategory): void {
+    const handleMenuActions = useCallback((action: string, category: StandardizedSkillCategory): void => {
         switch (action) {
             case MENU_ACTIONS.editCategory.action:
                 setEditCategory(category)
@@ -30,9 +30,9 @@ const CategoriesAccordion: FC<CategoriesAccordionProps> = props => {
                 break
             default: break
         }
-    }
+    }, [bulkEditorCtx, setEditCategory])
 
-    function renderCategoryAccordion(category: StandardizedSkillCategory): JSX.Element {
+    const renderCategoryAccordion = useCallback((category: StandardizedSkillCategory): JSX.Element => {
         const categorySkills = groupedSkills[category.id] ?? []
 
         return (!skillsFilter || categorySkills.length > 0) ? (
@@ -56,7 +56,16 @@ const CategoriesAccordion: FC<CategoriesAccordionProps> = props => {
                 )}
             </AccordionItem>
         ) : <></>
-    }
+    }, [
+        bulkEditorCtx.isEditing,
+        bulkEditorCtx.isSkillSelected,
+        bulkEditorCtx.toggleSkill,
+        groupedSkills,
+        handleMenuActions,
+        props.defaultOpen,
+        setEditSkill,
+        skillsFilter,
+    ])
 
     // use a memo to persist the items rendering
     // otheriwse, the order and mapping of the categories
@@ -68,8 +77,7 @@ const CategoriesAccordion: FC<CategoriesAccordionProps> = props => {
             categories
                 .map(renderCategoryAccordion)
         )
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    ), [bulkEditorCtx.isEditing, categories, groupedSkills])
+    ), [bulkEditorCtx.isEditing, categories, renderCategoryAccordion])
 
     return (
         <Accordion defaultOpen={props.defaultOpen}>

@@ -69,6 +69,7 @@ export interface FormInputModel {
     readonly readonly?: boolean
     readonly spellCheck?: boolean
     readonly title?: string
+    readonly creatable?: boolean
     tooltip?: FormInputTooltipOptions
     touched?: boolean
     // eslint-disable-next-line max-len

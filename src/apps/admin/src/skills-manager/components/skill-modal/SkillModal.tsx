@@ -1,15 +1,35 @@
-import { FC, ReactNode, useCallback, useMemo, useState } from 'react'
+import { find, pick } from 'lodash'
+import {
+    ChangeEvent,
+    FC,
+    MutableRefObject,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react'
 
-import { BaseModal, Form, formGetInputModel, FormInputModel, FormValue, LoadingSpinner } from '~/libs/ui'
+import {
+    BaseModal,
+    Button,
+    InputSelectOption,
+    InputSelectReact,
+    InputText,
+    InputTextarea,
+    LoadingSpinner,
+} from '~/libs/ui'
 
 import {
     archiveStandardizedSkill,
     saveStandardizedSkill,
+    saveStandardizedSkillCategory,
     StandardizedSkill,
     StandardizedSkillCategory,
 } from '../../services'
+import { SkillsManagerContextValue, useSkillsManagerContext } from '../../context'
 
-import { skillFormDef, SkillFormField } from './skill-form.config'
+import styles from './SkillModal.module.scss'
 
 interface SkillModalProps {
     skill: StandardizedSkill
@@ -18,35 +38,126 @@ interface SkillModalProps {
     onSave: () => void
 }
 
+const mapCategoryToSelectOption = (categories: StandardizedSkillCategory[]): InputSelectOption[] => (
+    categories.map(c => ({ label: c.name, value: c.id }))
+)
+
 const SkillModal: FC<SkillModalProps> = props => {
+    const formRef = useRef<HTMLFormElement>() as MutableRefObject<HTMLFormElement>
+    const { skillsList, refetchCategories }: SkillsManagerContextValue = useSkillsManagerContext()
+    const [isLoading, setIsLoading] = useState(false)
+    const [formValue, setFormValue] = useState({} as Pick<StandardizedSkill, 'name'|'description'|'categoryId'>)
+    const [formState, setFormState] = useState({
+        categoryId: { dirty: false, error: undefined as string | undefined },
+        description: { dirty: false, error: undefined as string | undefined },
+        name: { dirty: false, error: undefined as string | undefined },
+    })
+
     const action = props.skill?.id ? 'edit' : 'add'
 
-    const [loading, setLoading] = useState<boolean>(false)
+    const categoryOptions = useMemo(() => mapCategoryToSelectOption(props.categories ?? []), [props.categories])
 
-    const generateRequest = useCallback((inputs: ReadonlyArray<FormInputModel>): FormValue => ({
-        categoryId: formGetInputModel(inputs, SkillFormField.category).value as string,
-        description: formGetInputModel(inputs, SkillFormField.description).value as string,
-        id: props.skill.id as string,
-        name: formGetInputModel(inputs, SkillFormField.name).value as string,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }), [])
+    function handleFormChanges(ev: ChangeEvent<HTMLInputElement>): void {
+        setFormValue(prevValue => ({
+            ...prevValue,
+            [ev.target.name]: ev.target.value,
+        }))
 
-    const saveAsync = useCallback(async (request: FormValue): Promise<void> => {
-        setLoading(true)
+        setFormState(prev => ({
+            ...prev,
+            [ev.target.name]: { dirty: true, error: undefined },
+        }))
+    }
 
-        return saveStandardizedSkill(request as unknown as StandardizedSkill)
+    function validateName(): void {
+        const name = formValue.name?.trim() ?? ''
+        const isValid = name.length > 0
+        const isDuplicate = !!find(skillsList, { name })
+        const error = !isValid ? 'Skill name is required!' : (
+            isDuplicate ? 'A skill with the same name already exists!' : undefined
+        )
+
+        setFormState(prev => ({
+            ...prev,
+            name: { ...prev.name, error },
+        }))
+    }
+
+    function validateDescription(): void {
+        const description = formValue.description?.trim() ?? ''
+        const isValid = description.length > 0
+        const error = !isValid ? 'Skill description is required!' : undefined
+
+        setFormState(prev => ({
+            ...prev,
+            description: { ...prev.description, error },
+        }))
+    }
+
+    function validateCategory(): void {
+        const categoryId = formValue.categoryId?.trim() ?? ''
+        const isValid = categoryId.length > 0
+        const error = !isValid ? 'Skill category is required!' : undefined
+
+        setFormState(prev => ({
+            ...prev,
+            categoryId: { ...prev.categoryId, error },
+        }))
+    }
+
+    function validateForm(): void {
+        validateName()
+        validateDescription()
+        validateCategory()
+    }
+
+    const isFormValid = useMemo(() => (
+        !Object.entries(formState)
+            .find(([, value]) => !!value.error)
+    ), [formState])
+
+    async function handleNewCategory(categoryName: string): Promise<void> {
+        setIsLoading(true)
+
+        const newCategory = await saveStandardizedSkillCategory(
+            { description: ' ', name: categoryName } as StandardizedSkillCategory,
+        )
+
+        refetchCategories()
+
+        handleFormChanges({
+            target: {
+                form: formRef.current,
+                name: 'categoryId',
+                value: newCategory.id,
+            },
+        } as ChangeEvent<HTMLInputElement>)
+        setIsLoading(false)
+    }
+
+    const saveAsync = useCallback(async (ev: any): Promise<void> => {
+        ev?.preventDefault?.()
+
+        setIsLoading(true)
+
+        return saveStandardizedSkill({
+            categoryId: formValue.categoryId,
+            description: formValue.description,
+            id: props.skill.id as string,
+            name: formValue.name,
+        } as StandardizedSkill)
             .then(() => {
                 props.onSave.call(undefined)
                 props.onClose.call(undefined)
             })
             .catch((e: any) => {
-                setLoading(false)
+                setIsLoading(false)
                 return Promise.reject(e)
             })
-    }, [props.onClose, props.onSave])
+    }, [formValue.categoryId, formValue.description, formValue.name, props.onClose, props.onSave, props.skill.id])
 
     const archiveSkill = useCallback(async (): Promise<void> => {
-        setLoading(true)
+        setIsLoading(true)
 
         return archiveStandardizedSkill(props.skill)
             .then(() => {
@@ -54,34 +165,27 @@ const SkillModal: FC<SkillModalProps> = props => {
                 props.onClose.call(undefined)
             })
             .catch((e: any) => {
-                setLoading(false)
+                setIsLoading(false)
                 return Promise.reject(e)
             })
     }, [props.onClose, props.skill, props.onSave])
 
-    const formDef = useMemo(() => skillFormDef(
-        action,
-        archiveSkill,
-        props.onClose,
-        props.categories,
-    ), [action, archiveSkill, props.categories, props.onClose])
+    useEffect(() => {
+        // when skill object changes, persist the new props into formValue state
+        setFormValue({
+            categoryId: props.skill.category?.id,
+            ...pick(props.skill, ['name', 'description', 'categoryId']),
+        })
+        setFormState({
+            categoryId: { dirty: false, error: props.skill.category?.id ? undefined : 'required' },
+            description: { dirty: false, error: props.skill.description ? undefined : 'required' },
+            name: { dirty: false, error: props.skill.name ? undefined : 'required' },
+        })
+    }, [props.skill])
 
-    const formValue = useMemo(() => ({
-        ...(props.skill as any),
-        categoryId: props.skill.category?.id,
-    } as FormValue), [props.skill])
-
-    function renderForm(): ReactNode {
-        return (
-            <Form
-                formDef={formDef}
-                formValues={formValue}
-                requestGenerator={generateRequest}
-                save={saveAsync}
-                resetFormOnUnmount
-            />
-        )
-    }
+    useEffect(() => {
+        validateForm()
+    }, [formValue])
 
     return (
         <BaseModal
@@ -90,8 +194,86 @@ const SkillModal: FC<SkillModalProps> = props => {
             size='lg'
             title={`${action} Skill`}
         >
-            {renderForm()}
-            <LoadingSpinner hide={!loading} overlay />
+            <form className={styles.form} ref={formRef} onSubmit={saveAsync}>
+                <InputText
+                    dirty={formState.name.dirty}
+                    label='Skill Name'
+                    name='name'
+                    placeholder='Enter skill name'
+                    type='text'
+                    value={formValue.name}
+                    onChange={handleFormChanges}
+                    autoFocus
+                    onBlur={validateName}
+                    error={formState.name.error}
+                    tabIndex={0}
+                />
+                <InputTextarea
+                    dirty={formState.description.dirty}
+                    label='Skill Description'
+                    name='description'
+                    placeholder='Enter skill description'
+                    value={formValue.description as string}
+                    onChange={handleFormChanges as any}
+                    onBlur={validateDescription as any}
+                    error={formState.description.error}
+                    tabIndex={0}
+                />
+                <InputSelectReact
+                    dirty={formState.categoryId.dirty}
+                    creatable
+                    label='Skill Category'
+                    placeholder='Select category'
+                    options={categoryOptions}
+                    name='categoryId'
+                    onChange={handleFormChanges}
+                    createLabel={function label(v: string) { return `Create new category "${v}"` }}
+                    onCreateOption={handleNewCategory}
+                    value={formValue.categoryId}
+                    onBlur={validateCategory}
+                    error={formState.categoryId.error}
+                    tabIndex={0}
+                />
+
+                <div className={styles.buttonsWrap}>
+                    {action === 'edit' && (
+                        <Button
+                            label='Archive skill'
+                            size='lg'
+                            secondary
+                            variant='danger'
+                            onClick={archiveSkill}
+                        />
+                    )}
+                    <div className={styles.primaryGroup}>
+                        <Button
+                            label='Cancel'
+                            size='lg'
+                            primary
+                            light
+                            onClick={props.onClose}
+                        />
+                        {action === 'add' && (
+                            <Button
+                                label='Save and add another'
+                                size='lg'
+                                secondary
+                                onClick={props.onClose}
+                                disabled={!isFormValid}
+                            />
+                        )}
+                        <Button
+                            label='Save'
+                            size='lg'
+                            primary
+                            onClick={saveAsync}
+                            type='submit'
+                            disabled={!isFormValid}
+                        />
+                    </div>
+                </div>
+            </form>
+            <LoadingSpinner hide={!isLoading} overlay />
         </BaseModal>
     )
 }

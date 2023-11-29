@@ -1,12 +1,14 @@
 import {
     ChangeEvent,
     FC,
+    FocusEvent,
     MutableRefObject,
     ReactNode,
     useMemo,
     useRef,
 } from 'react'
 import { find } from 'lodash'
+import CreatableSelect from 'react-select/creatable'
 import ReactSelect, { GroupBase, OptionsOrGroups } from 'react-select'
 import classNames from 'classnames'
 
@@ -33,6 +35,10 @@ interface InputSelectReactProps {
     readonly placeholder?: string
     readonly tabIndex?: number
     readonly value?: string
+    readonly creatable?: boolean
+    readonly createLabel?: (inputValue: string) => string
+    readonly onCreateOption?: (inputValue: string) => void
+    readonly onBlur?: (event: FocusEvent<HTMLInputElement>) => void
 }
 
 /**
@@ -41,7 +47,7 @@ interface InputSelectReactProps {
  * @param {HTMLElement} el - The HTML element from which to start searching for the <form> ancestor.
  * @returns {HTMLElement | undefined} The nearest ancestor <form> element, or undefined if not found.
  */
-const findParentFrom = (el: HTMLElement): HTMLElement | undefined => {
+const findParentFrom = (el: HTMLElement): HTMLFormElement | undefined => {
     // If the current element has no parent, return undefined
     if (!el.parentElement) {
         return undefined
@@ -49,7 +55,7 @@ const findParentFrom = (el: HTMLElement): HTMLElement | undefined => {
 
     // If the parent element is a <form>, return it
     if (el.parentElement.nodeName === 'FORM') {
-        return el.parentElement
+        return el.parentElement as HTMLFormElement
     }
 
     // Recursively search for the <form> ancestor in the parent's hierarchy
@@ -68,7 +74,7 @@ const InputSelectReact: FC<InputSelectReactProps> = props => {
 
     // this is the selected option, memoize it once found
     const selected = useMemo(() => (
-        find(props.options, { value: props.value })
+        find(props.options, { value: props.value }) as InputSelectOption
     ), [props.options, props.value])
 
     // we need to create a portal to append our menus so they are always visible
@@ -94,6 +100,20 @@ const InputSelectReact: FC<InputSelectReactProps> = props => {
         } as ChangeEvent<HTMLInputElement>)
     }
 
+    function handleBlur(): void {
+        props.onBlur?.({
+            target: {
+                form: findParentFrom(wrapRef.current as HTMLDivElement) as HTMLFormElement,
+                name: props.name,
+                value: selected?.value,
+            },
+        } as FocusEvent<HTMLInputElement>)
+    }
+
+    const Input = useMemo(() => (
+        props.creatable ? CreatableSelect : ReactSelect
+    ), [props.creatable])
+
     return (
         <InputWrapper
             {...props}
@@ -106,7 +126,7 @@ const InputSelectReact: FC<InputSelectReactProps> = props => {
             hideInlineErrors={props.hideInlineErrors}
             ref={wrapRef as MutableRefObject<HTMLDivElement>}
         >
-            <ReactSelect
+            <Input
                 {...props}
                 className={
                     classNames(
@@ -119,6 +139,9 @@ const InputSelectReact: FC<InputSelectReactProps> = props => {
                 classNamePrefix={styles.sel}
                 tabIndex={props.tabIndex}
                 value={selected}
+                formatCreateLabel={props.createLabel}
+                onCreateOption={props.onCreateOption}
+                onBlur={handleBlur}
                 backspaceRemovesValue
             />
         </InputWrapper>

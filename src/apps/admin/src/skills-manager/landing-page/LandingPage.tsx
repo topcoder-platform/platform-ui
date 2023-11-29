@@ -36,7 +36,6 @@ const LandingPage: FC<{}> = () => {
             <PageTitle>Skills Manager | Admin</PageTitle>
             <PageHeader title='Skills Manager'>
                 <InputCheckbox
-                    accent='blue'
                     name='show archived'
                     label='Show Archived'
                     onChange={toggleArchivedSkills}
