@@ -28,6 +28,7 @@ enum Graphs {
 }
 
 interface DetailedTrackViewProps {
+    challengesLabel?: string
     trackData?: SRMStats | MemberStats
     trackHistory?: StatsHistory[]
     ratingDistribution?: UserStatsDistributionResponse
@@ -88,7 +89,7 @@ const DetailedTrackView: FC<DetailedTrackViewProps> = props => {
                         />
                         <Button
                             className={styles.btn}
-                            label='Challenge Details'
+                            label={`${props.challengesLabel ?? 'Challenges'} Details`}
                             primary={viewMode === ViewMode.details}
                             secondary={viewMode !== ViewMode.details}
                             variant='linkblue'

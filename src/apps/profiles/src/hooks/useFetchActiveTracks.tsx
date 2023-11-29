@@ -15,7 +15,7 @@ export interface MemberStatsTrack {
     submissions?: number,
     subTracks: MemberStats[],
     rating?: number,
-    ranking?: number,
+    percentile?: number,
     submissionRate?: number
     screeningSuccessRate?: number
     wins: number,
@@ -30,7 +30,10 @@ export interface MemberStatsTrack {
  * @param {MemberStats[]} subTracks - List of subtracks within the main track.
  * @returns {MemberStatsTrack} - Aggregated data for the track.
  */
-const buildTrackData = (trackName: string, subTracks: MemberStats[]): MemberStatsTrack => {
+const buildTrackData = (trackName: string, allSubTracks: MemberStats[]): MemberStatsTrack => {
+    const subTracks = allSubTracks.filter(s => (
+        (s.submissions?.submissions ?? (s.submissions as unknown as number)) > 0
+    ))
     // Calculate total wins, challenges, and submissions for the track
     const totalWins = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.wins || 0)), 0)
     const challengesCount = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.challenges || 0)), 0)
@@ -41,7 +44,7 @@ const buildTrackData = (trackName: string, subTracks: MemberStats[]): MemberStat
     // Return aggregated track data
     return {
         challenges: challengesCount,
-        isActive: challengesCount > 0,
+        isActive: submissionsCount > 0,
         name: trackName,
         order: 1,
         submissions: submissionsCount,
@@ -134,7 +137,6 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
     const designTrackStats: MemberStatsTrack = useMemo(() => (
         enhanceDesignTrackData(
             buildTrackData('Design', [
-                developSubTracks.DESIGN,
                 designSubTracks.DESIGN_FIRST_2_FINISH,
                 designSubTracks.WEB_DESIGNS,
                 designSubTracks.LOGO_DESIGN,
@@ -153,6 +155,7 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
     // Development
     const developTrackStats: MemberStatsTrack = useMemo(() => (
         buildTrackData('Development', [
+            developSubTracks.DESIGN,
             developSubTracks.DEVELOPMENT,
             developSubTracks.ARCHITECTURE,
             developSubTracks.FIRST_2_FINISH,

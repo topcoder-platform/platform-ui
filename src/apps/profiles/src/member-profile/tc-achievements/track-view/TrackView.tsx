@@ -47,8 +47,7 @@ const TrackView: FC<TrackViewProps> = props => {
                                     key={subTrack.name}
                                     title={subTrack.name}
                                     wins={subTrack.wins}
-                                    submissions={subTrack.submissions?.submissions}
-                                    challenges={subTrack.challenges}
+                                    submissions={subTrack.submissions?.submissions ?? subTrack.submissions ?? 0}
                                 />
                             </Link>
                         ))}

@@ -1,8 +1,8 @@
-import { FC } from 'react'
+import { FC, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { UserProfile } from '~/libs/core'
+import { getRatingColor, MemberStats, UserProfile } from '~/libs/core'
 import { IconOutline } from '~/libs/ui'
 
 import { useFetchActiveTracks } from '../../../hooks'
@@ -20,6 +20,11 @@ const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
 
     const activeTracks = useFetchActiveTracks(props.profile.handle)
 
+    const getTrackRoute = useCallback((trackName: string, subTracks?: MemberStats[]): string => {
+        const subTrackName = subTracks?.length === 1 ? subTracks[0].name : ''
+        return statsRoute(props.profile.handle, trackName, subTrackName)
+    }, [props.profile.handle, statsRoute])
+
     return activeTracks?.length === 0 ? <></> : (
         <div className={styles.containerWrap}>
             <div className={styles.container}>
@@ -30,9 +35,9 @@ const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
                         </span>
                     </p>
                     <ul className={styles.statsList}>
-                        {activeTracks.map((track: any) => (
+                        {activeTracks.map(track => (
                             <Link
-                                to={statsRoute(props.profile.handle, track.name)}
+                                to={getTrackRoute(track.name, track.subTracks)}
                                 className={styles.trackListItem}
                                 key={track.name}
                             >
@@ -40,7 +45,7 @@ const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
                                 <div className={styles.trackDetails}>
                                     {!track.isDSTrack && ((track.submissions || track.wins) > 0) && (
                                         <>
-                                            <WinnerIcon className={classNames('icon-xxxl', styles.winnerIcon)} />
+                                            <WinnerIcon className='icon-xxxl' />
                                             <span className={styles.trackStats}>
                                                 <span className={styles.count}>
                                                     {track.wins || track.submissions}
@@ -53,15 +58,32 @@ const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
                                     )}
                                     {/* competitive programming only */}
                                     {track.isDSTrack && (
-                                        <span className={styles.trackStats}>
-                                            <span className={styles.count}>
-                                                {track.percentile}
-                                                %
+                                        (track.percentile as number) >= 50 ? (
+                                            <span className={styles.trackStats}>
+                                                <span className={styles.count}>
+                                                    {track.percentile}
+                                                    %
+                                                </span>
+                                                <span className={styles.label}>
+                                                    Percentile
+                                                </span>
                                             </span>
-                                            <span className={styles.label}>
-                                                Percentile
-                                            </span>
-                                        </span>
+                                        ) : (
+                                            <>
+                                                <span
+                                                    className={styles.icon}
+                                                    style={{ color: getRatingColor(track.rating as number) }}
+                                                />
+                                                <span className={styles.trackStats}>
+                                                    <span className={styles.count}>
+                                                        {track.rating}
+                                                    </span>
+                                                    <span className={styles.label}>
+                                                        Rating
+                                                    </span>
+                                                </span>
+                                            </>
+                                        )
                                     )}
                                     <IconOutline.ChevronRightIcon
                                         className={classNames('icon-lg', styles.rightArrowIcon)}

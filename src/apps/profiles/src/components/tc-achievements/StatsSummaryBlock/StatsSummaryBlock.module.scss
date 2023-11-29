@@ -20,8 +20,8 @@
 
 .summaryItem {
     display: flex;
-    align-items: flex-end;
-    gap: $sp-2;
+    align-items: baseline;
+    gap: 6px;
 
     &Value {
         font-family: $font-barlow-condensed;
@@ -32,7 +32,7 @@
     }
 
     &Label {
-        line-height: 23px;
+        line-height: 22px;
         text-transform: capitalize;
     }
 }

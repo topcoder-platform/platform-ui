@@ -3,6 +3,7 @@
 
 .containerWrap {
     flex: 1;
+    container-type: inline-size;
 }
 
 .container {
@@ -40,6 +41,10 @@
 }
 
 .statsList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-1;
+
     margin: auto 0;
 }
 
@@ -55,8 +60,13 @@
     transition: 0.15s ease-in;
     cursor: pointer;
 
-    + .trackListItem {
-        margin-top: $sp-1;
+
+    @container (max-width: 582px) {
+        flex: 1 1 auto;
+        width: 100%;
+    }
+    @container (min-width: 583px) {
+        width: calc(50% - 2px);
     }
 
     &:hover {
@@ -94,4 +104,12 @@
         font-size: 11px;
         line-height: 12px;
     }
+}
+
+.icon {
+    display: block;
+    @include icon-xxl;
+
+    background: currentColor;
+    border-radius: 50%;
 }

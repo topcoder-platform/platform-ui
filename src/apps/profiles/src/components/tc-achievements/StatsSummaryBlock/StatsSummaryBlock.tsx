@@ -40,7 +40,7 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                         </span>
                         <span className={styles.summaryItemLabel}>
                             <span className='body-small'>
-                                Challenges
+                                {props.trackTitle === 'Single Round Match' ? 'Competitions' : 'Challenges'}
                             </span>
                         </span>
                     </div>

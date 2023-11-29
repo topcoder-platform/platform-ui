@@ -41,8 +41,8 @@
 
 .statsItem {
     display: flex;
-    align-items: center;
-    gap: $sp-1;
+    align-items: baseline;
+    gap: 2px;
 
     &Value {
         color: $turq-160;
@@ -55,9 +55,32 @@
     &Label {
         color: $black-80;
         text-transform: capitalize;
+        font-family: $font-barlow-condensed;
+        font-weight: $font-weight-semibold;
+        font-size: 14px;
+        line-height: 22px;
     }
 
     &Icon {
-        margin-left: auto;
+        display: none;
+        &.placement-1,
+        &.placement-2,
+        &.placement-3,
+        &.placement-4 {
+            display: block;
+        }
+
+        &.placement-1 path {
+            fill: $gold-1;
+        }
+        &.placement-2 path {
+            fill: $silver-1;
+        }
+        &.placement-3 path {
+            fill: $bronze-1;
+        }
+        &.placement-4 path {
+            fill: $turq-50;
+        }
     }
 }

@@ -16,8 +16,13 @@ const ChallengeHistoryView: FC<ChallengeHistoryViewProps> = props => {
     const trackHistory: StatsHistory[] = get(
         find(get(statsHistory, `${props.trackData.path}`, []), { name: props.trackData.name }),
         'history',
-        [],
+        get(
+            statsHistory,
+            `${props.trackData.path}.${props.trackData.name}.history`,
+            [],
+        ),
     )
+
     return (
         <div className={styles.wrap}>
             <div className={styles.inner}>

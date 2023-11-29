@@ -47,6 +47,7 @@ const SRMView: FC<SRMViewProps> = props => {
             ratingDistribution={ratingDistribution}
             showDetailsViewBtn={showDetailsViewBtn}
             defaultViewMode={ViewMode.statistics}
+            challengesLabel='Competitions'
             challengesDetailedView={(
                 <>
                     <div className={styles.details}>
