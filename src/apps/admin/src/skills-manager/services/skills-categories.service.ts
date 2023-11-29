@@ -2,7 +2,7 @@ import { omit } from 'lodash'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
-import { UserSkillCategory, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
+import { UserSkillCategory, xhrDeleteAsync, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
 
 const baseUrl = `${EnvironmentConfig.STANDARDIZED_SKILLS_API}/categories`
 
@@ -25,4 +25,11 @@ export const saveStandardizedSkillCategory = (category: StandardizedSkillCategor
     const url = `${baseUrl}${category.id ? `/${category.id}` : ''}`
 
     return xhrSaveAsyncFn(url, omit(category, 'id'))
+}
+
+export const archiveStandardizedSkillCategory = (category: StandardizedSkillCategory)
+: Promise<void> => {
+    const url = `${baseUrl}/${category.id}`
+
+    return xhrDeleteAsync(url)
 }

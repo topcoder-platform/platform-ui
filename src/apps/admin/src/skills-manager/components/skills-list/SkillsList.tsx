@@ -30,7 +30,7 @@ const SkillsList: FC<SkillsListProps> = props => {
         <div className={classNames(props.className, styles.wrap, props.editMode && styles.isEditMode)}>
             <ul className={styles.listWrap}>
                 {props.skills.map(skill => (
-                    <li className={styles.skillItem} key={skill.id}>
+                    <li className={styles.skillItem} key={skill.id} onClick={function toggl() { handleToggle(skill) }}>
                         {props.editMode && (
                             <div className={styles.checkbox}>
                                 <InputCheckbox
@@ -41,7 +41,7 @@ const SkillsList: FC<SkillsListProps> = props => {
                                 />
                             </div>
                         )}
-                        <div className='body-main' onClick={function toggl() { handleToggle(skill) }}>
+                        <div className='body-main'>
                             {skill.name}
                         </div>
                     </li>

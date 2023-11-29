@@ -1,4 +1,5 @@
 import { find, pick } from 'lodash'
+import { toast } from 'react-toastify'
 import {
     ChangeEvent,
     FC,
@@ -33,9 +34,6 @@ import styles from './SkillModal.module.scss'
 
 interface SkillModalProps {
     skill: StandardizedSkill
-    categories: StandardizedSkillCategory[]
-    onClose: () => void
-    onSave: () => void
 }
 
 const mapCategoryToSelectOption = (categories: StandardizedSkillCategory[]): InputSelectOption[] => (
@@ -43,8 +41,15 @@ const mapCategoryToSelectOption = (categories: StandardizedSkillCategory[]): Inp
 )
 
 const SkillModal: FC<SkillModalProps> = props => {
+    const {
+        categories,
+        refetchCategories,
+        refetchSkills,
+        setEditSkill,
+        skillsList,
+    }: SkillsManagerContextValue = useSkillsManagerContext()
+
     const formRef = useRef<HTMLFormElement>() as MutableRefObject<HTMLFormElement>
-    const { skillsList, refetchCategories }: SkillsManagerContextValue = useSkillsManagerContext()
     const [isLoading, setIsLoading] = useState(false)
     const [formValue, setFormValue] = useState({} as Pick<StandardizedSkill, 'name'|'description'|'categoryId'>)
     const [formState, setFormState] = useState({
@@ -55,7 +60,11 @@ const SkillModal: FC<SkillModalProps> = props => {
 
     const action = props.skill?.id ? 'edit' : 'add'
 
-    const categoryOptions = useMemo(() => mapCategoryToSelectOption(props.categories ?? []), [props.categories])
+    const categoryOptions = useMemo(() => mapCategoryToSelectOption(categories ?? []), [categories])
+
+    function close(): void {
+        setEditSkill()
+    }
 
     function handleFormChanges(ev: ChangeEvent<HTMLInputElement>): void {
         setFormValue(prevValue => ({
@@ -72,7 +81,8 @@ const SkillModal: FC<SkillModalProps> = props => {
     function validateName(): void {
         const name = formValue.name?.trim() ?? ''
         const isValid = name.length > 0
-        const isDuplicate = !!find(skillsList, { name })
+        const similarSkill = find(skillsList, { name })
+        const isDuplicate = similarSkill && similarSkill.id !== props.skill.id
         const error = !isValid ? 'Skill name is required!' : (
             isDuplicate ? 'A skill with the same name already exists!' : undefined
         )
@@ -132,10 +142,11 @@ const SkillModal: FC<SkillModalProps> = props => {
                 value: newCategory.id,
             },
         } as ChangeEvent<HTMLInputElement>)
+        toast.success(`Category with name '${categoryName}' created!`)
         setIsLoading(false)
     }
 
-    const saveAsync = useCallback(async (ev: any): Promise<void> => {
+    const saveAsync = useCallback(async (ev?: any): Promise<void> => {
         ev?.preventDefault?.()
 
         setIsLoading(true)
@@ -147,28 +158,40 @@ const SkillModal: FC<SkillModalProps> = props => {
             name: formValue.name,
         } as StandardizedSkill)
             .then(() => {
-                props.onSave.call(undefined)
-                props.onClose.call(undefined)
+                refetchSkills()
+                setEditSkill()
+                toast.success(`${action === 'edit' ? 'Changes' : 'Skill'} saved!`)
             })
-            .catch((e: any) => {
-                setIsLoading(false)
-                return Promise.reject(e)
-            })
-    }, [formValue.categoryId, formValue.description, formValue.name, props.onClose, props.onSave, props.skill.id])
+            .finally(() => setIsLoading(false))
+    }, [
+        action,
+        formValue.categoryId,
+        formValue.description,
+        formValue.name,
+        setEditSkill,
+        refetchSkills,
+        props.skill.id,
+    ])
+
+    const saveAndAddAnother = useCallback(async (): Promise<void> => {
+        await saveAsync()
+        setTimeout(setEditSkill, 100, {} as StandardizedSkill)
+    }, [saveAsync, setEditSkill])
 
     const archiveSkill = useCallback(async (): Promise<void> => {
         setIsLoading(true)
 
         return archiveStandardizedSkill(props.skill)
             .then(() => {
-                props.onSave.call(undefined)
-                props.onClose.call(undefined)
+                refetchSkills()
+                setEditSkill()
+                toast.success(`Skill ${props.skill.name} archived successfully!`)
             })
             .catch((e: any) => {
                 setIsLoading(false)
                 return Promise.reject(e)
             })
-    }, [props.onClose, props.skill, props.onSave])
+    }, [setEditSkill, props.skill, refetchSkills])
 
     useEffect(() => {
         // when skill object changes, persist the new props into formValue state
@@ -189,7 +212,7 @@ const SkillModal: FC<SkillModalProps> = props => {
 
     return (
         <BaseModal
-            onClose={props.onClose}
+            onClose={close}
             open
             size='lg'
             title={`${action} Skill`}
@@ -251,14 +274,14 @@ const SkillModal: FC<SkillModalProps> = props => {
                             size='lg'
                             primary
                             light
-                            onClick={props.onClose}
+                            onClick={close}
                         />
                         {action === 'add' && (
                             <Button
                                 label='Save and add another'
                                 size='lg'
                                 secondary
-                                onClick={props.onClose}
+                                onClick={saveAndAddAnother}
                                 disabled={!isFormValid}
                             />
                         )}

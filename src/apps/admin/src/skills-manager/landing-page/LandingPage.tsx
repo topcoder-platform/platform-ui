@@ -17,16 +17,14 @@ import styles from './LandingPage.module.scss'
 
 const LandingPage: FC<{}> = () => {
     const {
-        bulkEditorCtx,
         categories,
+        bulkEditorCtx,
         setSkillsFilter,
         skillsFilter,
         editCategory,
-        editSkill,
+        editSkill: showSkillModal,
         setEditCategory,
-        setEditSkill,
         refetchCategories,
-        refetchSkills,
         toggleArchivedSkills,
         showArchivedSkills,
     }: SkillsManagerContextValue = useSkillsManagerContext()
@@ -57,20 +55,14 @@ const LandingPage: FC<{}> = () => {
 
             {!!editCategory && (
                 <CategoryModal
+                    categories={categories}
                     category={editCategory}
                     onClose={function close() { setEditCategory() }}
                     onSave={function refresh() { refetchCategories() }}
                 />
             )}
 
-            {!!editSkill && (
-                <SkillModal
-                    skill={editSkill}
-                    categories={categories}
-                    onClose={function close() { setEditSkill() }}
-                    onSave={function refresh() { refetchSkills() }}
-                />
-            )}
+            {!!showSkillModal && <SkillModal skill={showSkillModal} />}
         </ContentLayout>
     )
 }

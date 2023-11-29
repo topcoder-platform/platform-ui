@@ -1,12 +1,20 @@
 import { FC, useCallback, useMemo, useState } from 'react'
+import { toast } from 'react-toastify'
+import classNames from 'classnames'
 
-import { BaseModal, Form, formGetInputModel, FormInputModel, FormValue, LoadingSpinner } from '~/libs/ui'
+import { BaseModal, Form, formGetInputModel, FormInputModel, FormValue, IconSolid, LoadingSpinner } from '~/libs/ui'
 
-import { saveStandardizedSkillCategory, StandardizedSkillCategory } from '../../services'
+import {
+    archiveStandardizedSkillCategory,
+    saveStandardizedSkillCategory,
+    StandardizedSkillCategory,
+} from '../../services'
 
-import { categoryFormDef, CategoryFormField } from './category-form.config'
+import { categoryFormDef, CategoryFormField, validateUniqueCategoryName } from './category-form.config'
+import styles from './CategoryModal.module.scss'
 
 interface CategoryModalProps {
+    categories: StandardizedSkillCategory[]
     category: StandardizedSkillCategory
     onClose: () => void
     onSave: () => void
@@ -15,6 +23,7 @@ interface CategoryModalProps {
 const CategoryModal: FC<CategoryModalProps> = props => {
     const action = props.category?.id ? 'edit' : 'add'
 
+    const [error, setError] = useState<string>()
     const [loading, setLoading] = useState<boolean>(false)
 
     const generateRequest = useCallback((inputs: ReadonlyArray<FormInputModel>): FormValue => ({
@@ -30,22 +39,35 @@ const CategoryModal: FC<CategoryModalProps> = props => {
             .then(() => {
                 props.onSave.call(undefined)
                 props.onClose.call(undefined)
+                toast.success(`${action === 'edit' ? 'Changes' : 'Category'} saved!`)
             })
             .catch((e: any) => {
                 setLoading(false)
                 return Promise.reject(e)
             })
-    }, [props.onClose, props.onSave])
+    }, [action, props.onClose, props.onSave])
 
-    const formDef = useMemo(() => ({
-        ...categoryFormDef,
-        buttons: {
-            primaryGroup: categoryFormDef.buttons.primaryGroup.map(btn => ({
-                ...btn,
-                ...(btn.isSubmit ? {} : { onClick: props.onClose }),
-            })),
-        },
-    }), [props.onClose])
+    const archiveCategory = useCallback(async (): Promise<void> => {
+        setLoading(true)
+
+        return archiveStandardizedSkillCategory(props.category)
+            .then(() => {
+                props.onSave?.call(undefined)
+                props.onClose?.call(undefined)
+                toast.success(`Category ${props.category.name} archived successfully!`)
+            })
+            .catch((e: any) => {
+                setError(e.message)
+                setLoading(false)
+                return Promise.reject(e)
+            })
+    }, [props.onClose, props.onSave, props.category])
+
+    const formDef = useMemo(() => categoryFormDef(
+        props.onClose,
+        validateUniqueCategoryName(props.categories, props.category),
+        action === 'edit' ? archiveCategory : undefined,
+    ), [action, archiveCategory, props.categories, props.category, props.onClose])
 
     return (
         <BaseModal
@@ -53,6 +75,7 @@ const CategoryModal: FC<CategoryModalProps> = props => {
             open
             size='lg'
             title={`${action} Category`}
+            bodyClassName={styles.modalBody}
         >
             <Form
                 key='edit-category'
@@ -61,7 +84,14 @@ const CategoryModal: FC<CategoryModalProps> = props => {
                 requestGenerator={generateRequest}
                 save={saveAsync}
                 resetFormOnUnmount
-            />
+            >
+                {error && (
+                    <div className={classNames(styles.error, 'input-error')}>
+                        <IconSolid.ExclamationIcon />
+                        {error}
+                    </div>
+                )}
+            </Form>
             <LoadingSpinner hide={!loading} overlay />
         </BaseModal>
     )

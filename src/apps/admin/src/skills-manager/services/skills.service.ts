@@ -26,7 +26,7 @@ export const saveStandardizedSkill = (skill: StandardizedSkill): Promise<Standar
     return xhrSaveAsyncFn(url, omit(skill, 'id'))
 }
 
-export const archiveStandardizedSkill = (skill: StandardizedSkill): Promise<StandardizedSkill> => {
+export const archiveStandardizedSkill = (skill: StandardizedSkill): Promise<void> => {
     const url = `${baseUrl}/${skill.id}`
 
     return xhrDeleteAsync(url)

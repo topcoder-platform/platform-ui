@@ -198,36 +198,23 @@ function validateField(
     // this is the error the field had before the event took place
     const previousError: string | undefined = formInputDef.error
 
-    formInputDef.validators
-        ?.forEach(validatorFunction => {
-
-            // if the next error is the same as the previous error, then no need to do anything
-            const nextError: string | undefined = validatorFunction.validator(
+    // run through all validators and determine the nextError message
+    const nextError = formInputDef.validators
+        ?.reduce<string | undefined>((hasError, validatorFunction) => (
+            hasError
+            || validatorFunction.validator(
                 formInputDef.value,
                 formElements,
                 validatorFunction.dependentField,
             )
+        ), undefined)
 
-            if (previousError === nextError) {
-                return
-            }
+    // if the next error is the same as the previous error, then no need to do anything
+    if (previousError === nextError) {
+        return
+    }
 
-            // we only remove errors on change
-            if (event === 'change') {
-                if (!nextError) {
-                    formInputDef.error = undefined
-                }
-
-                return
-            }
-
-            // this is an on blur or submit event,
-            // so if there is no current error for this field,
-            // set it to the next error
-            if (!formInputDef.error) {
-                formInputDef.error = nextError
-            }
-        })
+    formInputDef.error = nextError
 }
 
 export function validateForm(

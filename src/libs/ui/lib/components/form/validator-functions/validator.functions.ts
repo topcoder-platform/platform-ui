@@ -122,6 +122,10 @@ export function required(value: InputValue): string | undefined {
     ) ? 'Required' : undefined
 }
 
+export function customRequired(errorMessage: string): typeof required {
+    return (value: InputValue) => (required(value) ? errorMessage : undefined)
+}
+
 export function requiredIfOther(
     value: InputValue,
     formElements?: HTMLFormControlsCollection,

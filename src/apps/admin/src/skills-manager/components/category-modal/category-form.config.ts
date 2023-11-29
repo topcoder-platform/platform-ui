@@ -1,17 +1,39 @@
-import { FormDefinition, validatorRequired } from '~/libs/ui'
+import { find } from 'lodash'
+
+import { customValidatorRequired, FormDefinition, InputValue } from '~/libs/ui'
+
+import { StandardizedSkillCategory } from '../../services'
 
 export enum CategoryFormField {
     name = 'name',
     description = 'description',
 }
 
-export const categoryFormDef: FormDefinition = {
+type ValidatorType = (value: InputValue) => string | undefined
+
+export const validateUniqueCategoryName = (
+    categories: StandardizedSkillCategory[],
+    category: StandardizedSkillCategory,
+) => (
+    (value: InputValue): string | undefined => {
+        const match = find(categories, { name: value }) as StandardizedSkillCategory | undefined
+        return match && match.id !== category.id
+            ? 'A category with the same name already exists!' : undefined
+    }
+)
+
+export const categoryFormDef = (
+    onClose: () => void,
+    nameValidator: ValidatorType,
+    onArchive?: () => void,
+): FormDefinition => ({
     buttons: {
         primaryGroup: [
             {
                 buttonStyle: 'secondary',
                 isSubmit: false,
                 label: 'Cancel',
+                onClick: onClose,
                 size: 'lg',
                 type: 'button',
             },
@@ -23,6 +45,17 @@ export const categoryFormDef: FormDefinition = {
                 type: 'submit',
             },
         ],
+        secondaryGroup: onArchive ? [
+            {
+                buttonStyle: 'secondary',
+                isSubmit: false,
+                label: 'Archive',
+                onClick: onArchive,
+                size: 'lg',
+                type: 'button',
+                variant: 'danger',
+            },
+        ] : undefined,
     },
     groups: [
         {
@@ -34,7 +67,10 @@ export const categoryFormDef: FormDefinition = {
                     type: 'text',
                     validators: [
                         {
-                            validator: validatorRequired,
+                            validator: customValidatorRequired('Category name is required!'),
+                        },
+                        {
+                            validator: nameValidator,
                         },
                     ],
                 },
@@ -44,7 +80,7 @@ export const categoryFormDef: FormDefinition = {
                     type: 'textarea',
                     validators: [
                         {
-                            validator: validatorRequired,
+                            validator: customValidatorRequired('Category description is required!'),
                         },
                     ],
                 },
@@ -52,4 +88,4 @@ export const categoryFormDef: FormDefinition = {
         },
     ],
     successMessage: false,
-}
+})

@@ -42,7 +42,7 @@ const Accordion: FC<AccordionProps> = props => {
     }, [])
 
     // check if props have changed and update the openedSections synchronously
-    if (prevProps.current.children !== props.children || prevProps.current.defaultOpen !== props.defaultOpen) {
+    if (prevProps.current.defaultOpen !== props.defaultOpen) {
         prevProps.current = { ...props }
         Object.assign(openedSections, computeOpenSectionsState(props))
     }
@@ -51,7 +51,7 @@ const Accordion: FC<AccordionProps> = props => {
     useEffect(() => {
         setOpenedSections(computeOpenSectionsState(props))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [props.defaultOpen, props.children])
+    }, [props.defaultOpen])
 
     const renderAccordions = (children: JSX.Element[] | JSX.Element): ReactNode => (
         Children.map<ReactNode, ReactNode>(children, child => {
