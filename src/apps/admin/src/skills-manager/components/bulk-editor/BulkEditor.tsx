@@ -42,6 +42,7 @@ const BulkEditor: FC<BulkEditorProps> = props => {
     function closeMoveSkillsModal(moved?: boolean): void {
         if (moved) {
             refetchSkills()
+            context.toggleAll()
         }
 
         setShowMoveSkills(false)

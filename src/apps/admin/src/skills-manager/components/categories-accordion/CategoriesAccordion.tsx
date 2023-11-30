@@ -3,7 +3,7 @@ import { FC, useCallback, useMemo } from 'react'
 import { Accordion, AccordionItem } from '../accordion'
 import { SkillsList } from '../skills-list'
 import { SkillsManagerContextValue, useSkillsManagerContext } from '../../context'
-import { StandardizedSkillCategory } from '../../services'
+import { StandardizedSkill, StandardizedSkillCategory } from '../../services'
 import { CATEGORY_ITEM_ACTIONS, MENU_ACTIONS } from '../../config'
 
 interface CategoriesAccordionProps {
@@ -32,6 +32,10 @@ const CategoriesAccordion: FC<CategoriesAccordionProps> = props => {
         }
     }, [bulkEditorCtx, setEditCategory])
 
+    const handleBulkEditClick = useCallback((skill: StandardizedSkill) => {
+        bulkEditorCtx.toggle(skill.category)
+    }, [bulkEditorCtx])
+
     const renderCategoryAccordion = useCallback((category: StandardizedSkillCategory): JSX.Element => {
         const categorySkills = groupedSkills[category.id] ?? []
 
@@ -52,6 +56,7 @@ const CategoriesAccordion: FC<CategoriesAccordionProps> = props => {
                         isSelected={bulkEditorCtx.isSkillSelected}
                         editMode={!!bulkEditorCtx.isEditing}
                         onEditSkill={setEditSkill}
+                        onBulkEditSkill={handleBulkEditClick}
                     />
                 )}
             </AccordionItem>

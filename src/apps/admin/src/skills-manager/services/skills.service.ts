@@ -59,7 +59,7 @@ export const bulkUpdateStandardizedSkills = (
 
         return xhrPutAsync(
             url,
-            pick({ ...skill, ...updates }, 'name', 'description', 'categoryId', 'deleted_at'),
+            pick({ ...skill, ...updates }, 'name', 'description', 'categoryId'),
         ) as Promise<StandardizedSkill>
     })
 

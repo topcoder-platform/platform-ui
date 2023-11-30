@@ -19,6 +19,7 @@
     position: relative;
     line-height: 1;
     vertical-align: middle;
+    z-index: 1;
 
     :global(.rc-checkbox-input) {
         position: absolute;

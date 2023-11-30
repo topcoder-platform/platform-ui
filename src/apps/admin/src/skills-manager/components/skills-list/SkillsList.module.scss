@@ -27,3 +27,13 @@
         // pointer-events: none;
     }
 }
+
+.checkbox {
+    > * {
+        margin: -$sp-2;
+        > * {
+            display: block;
+            padding: $sp-2;
+        }
+    }
+}

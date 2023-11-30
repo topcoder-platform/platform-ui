@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, MouseEvent } from 'react'
 import classNames from 'classnames'
 
 import { InputCheckbox } from '~/libs/ui'
@@ -15,15 +15,34 @@ interface SkillsListProps {
     onSelect: (skill: StandardizedSkill) => void
     isSelected: (skill: StandardizedSkill) => boolean
     onEditSkill?: (skill: StandardizedSkill) => void
+    onBulkEditSkill?: (skill: StandardizedSkill) => void
 }
 
 const SkillsList: FC<SkillsListProps> = props => {
-    function handleToggle(skill: StandardizedSkill): void {
-        if (!props.editMode) {
-            props.onEditSkill?.(skill)
+    const handleSkillItemClick = (skill: StandardizedSkill) => (ev: MouseEvent) => {
+        // prevent when clicking the checkbox
+        const targetEl = ev.target as HTMLInputElement
+        if (targetEl.nodeName === 'INPUT' && targetEl.type?.toLowerCase() === 'checkbox') {
             return
         }
 
+        // trigger bulk edit when holding ctrl key and bulk editor is not active
+        if (ev.ctrlKey && !props.editMode && props.onBulkEditSkill) {
+            props.onBulkEditSkill(skill)
+            setTimeout(props.onSelect, 100, skill)
+            return
+        }
+
+        // toggle skill selection when holding ctrl key (rather than triggering skill edit)
+        if (ev.ctrlKey) {
+            props.onSelect(skill)
+            return
+        }
+
+        props.onEditSkill?.(skill)
+    }
+
+    const handleCheckboxToggle = (skill: StandardizedSkill) => () => {
         props.onSelect(skill)
     }
 
@@ -34,7 +53,7 @@ const SkillsList: FC<SkillsListProps> = props => {
                     <li
                         className={classNames(styles.skillItem, isSkillArchived(skill) && styles.archived)}
                         key={skill.id}
-                        onClick={function toggl() { handleToggle(skill) }}
+                        onClick={handleSkillItemClick(skill)}
                     >
                         {props.editMode && (
                             <div className={styles.checkbox}>
@@ -42,7 +61,7 @@ const SkillsList: FC<SkillsListProps> = props => {
                                     name='toggle-skill'
                                     accent='blue'
                                     checked={props.isSelected(skill)}
-                                    onChange={function toggl() { handleToggle(skill) }}
+                                    onChange={handleCheckboxToggle(skill)}
                                 />
                             </div>
                         )}
