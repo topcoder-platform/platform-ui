@@ -74,7 +74,7 @@ const ModifySkillsModal: FC<ModifySkillsModalProps> = (props: ModifySkillsModalP
                     onClick={props.showPrincipalIntroModal}
                 >
                     <span className='body-main-link'>
-                        See what Principal skills are
+                        See what Principal Skills are
                     </span>
                 </div>
             </div>
