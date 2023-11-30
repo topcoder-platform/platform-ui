@@ -4,6 +4,7 @@ import classNames from 'classnames'
 import { InputCheckbox } from '~/libs/ui'
 
 import { StandardizedSkill } from '../../services'
+import { isSkillArchived } from '../../lib'
 
 import styles from './SkillsList.module.scss'
 
@@ -30,7 +31,11 @@ const SkillsList: FC<SkillsListProps> = props => {
         <div className={classNames(props.className, styles.wrap, props.editMode && styles.isEditMode)}>
             <ul className={styles.listWrap}>
                 {props.skills.map(skill => (
-                    <li className={styles.skillItem} key={skill.id} onClick={function toggl() { handleToggle(skill) }}>
+                    <li
+                        className={classNames(styles.skillItem, isSkillArchived(skill) && styles.archived)}
+                        key={skill.id}
+                        onClick={function toggl() { handleToggle(skill) }}
+                    >
                         {props.editMode && (
                             <div className={styles.checkbox}>
                                 <InputCheckbox

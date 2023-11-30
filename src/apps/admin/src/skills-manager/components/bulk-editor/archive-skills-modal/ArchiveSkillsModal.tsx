@@ -1,20 +1,33 @@
-import { FC } from 'react'
+import { FC, useState } from 'react'
 
-import { BaseModal, Button } from '~/libs/ui'
+import { BaseModal, Button, LoadingSpinner } from '~/libs/ui'
 
-import { StandardizedSkill } from '../../../services'
 import { SkillsList } from '../../skills-list'
+import { bulkArchiveStandardizedSkills, StandardizedSkill } from '../../../services'
 import { SkillsManagerContextValue, useSkillsManagerContext } from '../../../context'
 
 import styles from './ArchiveSkillsModal.module.scss'
 
 interface ArchiveSkillsModalProps {
     skills: StandardizedSkill[]
-    onClose: () => void
+    onClose: (archived?: boolean) => void
 }
 
 const ArchiveSkillsModal: FC<ArchiveSkillsModalProps> = props => {
+    const [isLoading, setIsLoading] = useState(false)
+
     const { bulkEditorCtx: context }: SkillsManagerContextValue = useSkillsManagerContext()
+
+    async function archiveAll(): Promise<void> {
+        setIsLoading(true)
+        await bulkArchiveStandardizedSkills(props.skills)
+        props.onClose(true)
+        setIsLoading(false)
+    }
+
+    function close(): void {
+        props.onClose()
+    }
 
     return (
         <BaseModal
@@ -25,8 +38,8 @@ const ArchiveSkillsModal: FC<ArchiveSkillsModalProps> = props => {
             bodyClassName={styles.modalBody}
             buttons={(
                 <>
-                    <Button primary light label='Cancel' onClick={props.onClose} />
-                    <Button primary variant='danger' label='Archive' onClick={props.onClose} />
+                    <Button primary light label='Cancel' onClick={close} size='lg' />
+                    <Button primary variant='danger' label='Archive' onClick={archiveAll} size='lg' />
                 </>
             )}
         >
@@ -37,7 +50,7 @@ const ArchiveSkillsModal: FC<ArchiveSkillsModalProps> = props => {
                 isSelected={context.isSkillSelected}
                 editMode={!!context.isEditing}
             />
-            {/* <LoadingSpinner hide={!loading} overlay /> */}
+            <LoadingSpinner hide={!isLoading} overlay />
         </BaseModal>
     )
 }

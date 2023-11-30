@@ -21,4 +21,9 @@
     &:hover {
         background: rgba($tc-black, 0.075);
     }
+
+    &.archived {
+        color: $black-40;
+        // pointer-events: none;
+    }
 }

@@ -143,6 +143,7 @@ const InputSelectReact: FC<InputSelectReactProps> = props => {
                 onCreateOption={props.onCreateOption}
                 onBlur={handleBlur}
                 backspaceRemovesValue
+                isDisabled={props.disabled}
             />
         </InputWrapper>
     )

@@ -39,7 +39,7 @@ export const SkillsManagerContext: FC<SkillsManagerContextProps> = props => {
     const {
         data: allSkills,
         mutate: refetchSkills,
-    }: SWRResponse<StandardizedSkill[]> = useFetchSkills()
+    }: SWRResponse<StandardizedSkill[]> = useFetchSkills(showArchivedSkills)
 
     const {
         data: allCategories = [],

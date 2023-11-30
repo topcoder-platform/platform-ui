@@ -1,18 +1,25 @@
 import { escapeRegExp, mapValues, orderBy } from 'lodash'
 
-import { StandardizedSkill } from '../services'
+import { InputSelectOption } from '~/libs/ui'
+
+import { StandardizedSkill, StandardizedSkillCategory } from '../services'
 
 export interface GroupedSkills {
     [id: string]: StandardizedSkill[]
 }
 
+export const isSkillArchived = (skill: StandardizedSkill): boolean => (
+    !!skill.deleted_at
+)
+
 export const groupSkillsByCategory = (skills: StandardizedSkill[]): GroupedSkills => {
     const groupedSkills = skills.reduce((grouped, skill) => {
-        if (!grouped[skill.category.id]) {
-            grouped[skill.category.id] = []
+        const categoryId = skill.category?.id
+        if (!grouped[categoryId]) {
+            grouped[categoryId] = []
         }
 
-        grouped[skill.category.id].push(skill)
+        grouped[categoryId].push(skill)
 
         return grouped
     }, {} as GroupedSkills)
@@ -28,3 +35,9 @@ export const findSkillsMatches = (skills: StandardizedSkill[], skillsFilter: str
         filterRegex.test(skill.name) || filterRegex.test(skill.category.name)
     ))
 }
+
+export const mapCategoryToSelectOption = (
+    categories: StandardizedSkillCategory[],
+): InputSelectOption[] => (
+    categories.map(c => ({ label: c.name, value: c.id }))
+)

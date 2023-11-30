@@ -48,7 +48,7 @@ const LandingPage: FC<{}> = () => {
             <SearchInput value={skillsFilter} onChange={setSkillsFilter} />
 
             <div className={styles.contentAccordion}>
-                <CategoriesAccordion defaultOpen={!!skillsFilter} />
+                <CategoriesAccordion defaultOpen={!!skillsFilter || !!bulkEditorCtx.isEditing} />
             </div>
 
             <MoreActionsMenu />

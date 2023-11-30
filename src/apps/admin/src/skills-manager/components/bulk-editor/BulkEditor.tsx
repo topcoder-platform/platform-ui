@@ -6,6 +6,7 @@ import { Button } from '~/libs/ui'
 import { SkillsManagerContextValue, useSkillsManagerContext } from '../../context'
 
 import { ArchiveSkillsModal } from './archive-skills-modal'
+import { MoveSkillsModal } from './move-skills-modal'
 import styles from './BulkEditor.module.scss'
 
 interface BulkEditorProps {
@@ -13,11 +14,37 @@ interface BulkEditorProps {
 }
 
 const BulkEditor: FC<BulkEditorProps> = props => {
-    const { bulkEditorCtx: context }: SkillsManagerContextValue = useSkillsManagerContext()
-    const [showArchive, setShowArchive] = useState(false)
+    const {
+        bulkEditorCtx: context,
+        refetchSkills,
+    }: SkillsManagerContextValue = useSkillsManagerContext()
 
-    function toggleArchive(): void {
-        setShowArchive(d => !d)
+    const [showArchive, setShowArchive] = useState(false)
+    const [showMoveSkills, setShowMoveSkills] = useState(false)
+
+    function openArchiveModal(): void {
+        setShowArchive(true)
+    }
+
+    function openMoveSkillsModal(): void {
+        setShowMoveSkills(true)
+    }
+
+    function closeArchiveModal(archived?: boolean): void {
+        if (archived) {
+            refetchSkills()
+            context.toggleAll()
+        }
+
+        setShowArchive(false)
+    }
+
+    function closeMoveSkillsModal(moved?: boolean): void {
+        if (moved) {
+            refetchSkills()
+        }
+
+        setShowMoveSkills(false)
     }
 
     const hasSelection = context.selectedSkills.length > 0
@@ -37,7 +64,7 @@ const BulkEditor: FC<BulkEditorProps> = props => {
                 label='Archive selected'
                 size='lg'
                 disabled={!hasSelection}
-                onClick={toggleArchive}
+                onClick={openArchiveModal}
             />
             <Button
                 primary
@@ -52,10 +79,15 @@ const BulkEditor: FC<BulkEditorProps> = props => {
                 label='Move selected'
                 size='lg'
                 disabled={!hasSelection}
+                onClick={openMoveSkillsModal}
             />
 
             {showArchive && (
-                <ArchiveSkillsModal skills={context.selectedSkills} onClose={toggleArchive} />
+                <ArchiveSkillsModal skills={context.selectedSkills} onClose={closeArchiveModal} />
+            )}
+
+            {showMoveSkills && (
+                <MoveSkillsModal skills={context.selectedSkills} onClose={closeMoveSkillsModal} />
             )}
         </div>
     )

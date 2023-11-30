@@ -32,7 +32,6 @@ export type UserSkillDisplayMode = {
 export type UserSkill = {
     id: string
     name: string
-    categoryId?: string
     category: UserSkillCategory
     levels: Array<UserSkillLevel>
     displayMode: UserSkillDisplayMode

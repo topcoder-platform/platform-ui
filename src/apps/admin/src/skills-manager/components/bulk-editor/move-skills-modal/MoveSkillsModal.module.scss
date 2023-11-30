@@ -1,0 +1,14 @@
+@import '@libs/ui/styles/includes';
+
+.modalBody {
+    .skillsList {
+        column-count: 2;
+        margin: -$sp-2;
+    }
+}
+
+.formInput {
+    &Label {
+        margin-bottom: $sp-2;
+    }
+}
