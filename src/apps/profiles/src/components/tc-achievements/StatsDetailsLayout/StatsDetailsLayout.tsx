@@ -30,6 +30,7 @@ const StatsDetailsLayout: FC<StatsDetailsLayoutProps> = props => (
         <hr />
         <div className={styles.summaryBlock}>
             <StatsSummaryBlock
+                trackId={(props.trackData as MemberStats).id}
                 trackTitle={props.title}
                 challenges={props.trackData.challenges}
                 wins={props.trackData.wins}

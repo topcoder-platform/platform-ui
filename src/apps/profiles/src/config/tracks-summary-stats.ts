@@ -1,4 +1,4 @@
-interface TrackSummaryStats {
+export interface TrackSummaryStats {
     name: string
     fields: {[key: string]: boolean}
 }
@@ -15,6 +15,8 @@ export const designTrackSummaryStats: TrackSummaryStats = {
 export const developTrackSummaryStats: TrackSummaryStats = {
     fields: {
         challenges: true,
+        submissions: true,
+        wins: true,
     },
     name: 'Development',
 }
@@ -22,6 +24,8 @@ export const developTrackSummaryStats: TrackSummaryStats = {
 export const testingTrackSummaryStats: TrackSummaryStats = {
     fields: {
         challenges: true,
+        submissions: true,
+        wins: true,
     },
     name: 'Testing',
 }
@@ -35,9 +39,11 @@ export const cpTrackSummaryStats: TrackSummaryStats = {
     name: 'Competitive Programming',
 }
 
-export const TracksSummaryStats: {[key: string]: TrackSummaryStats} = {
+export const TracksSummaryStatsMap: {[key: string]: TrackSummaryStats} = {
     [designTrackSummaryStats.name]: designTrackSummaryStats,
     [developTrackSummaryStats.name]: developTrackSummaryStats,
     [testingTrackSummaryStats.name]: testingTrackSummaryStats,
     [cpTrackSummaryStats.name]: cpTrackSummaryStats,
 }
+
+export const TracksSummaryStats: TrackSummaryStats[] = Object.values(TracksSummaryStatsMap)

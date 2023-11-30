@@ -1,5 +1,6 @@
 /* eslint-disable complexity */
 import { FC } from 'react'
+import { find, get } from 'lodash'
 
 import { getRatingColor } from '~/libs/core'
 
@@ -9,6 +10,7 @@ import { TracksSummaryStats } from '../../../config'
 import styles from './StatsSummaryBlock.module.scss'
 
 interface StatsSummaryBlockProps {
+    trackId?: string | number
     trackTitle: string
     challenges?: number
     wins?: number
@@ -22,7 +24,14 @@ interface StatsSummaryBlockProps {
 }
 
 const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
-    const visibleFields = TracksSummaryStats[props.trackTitle]?.fields
+    const visibleFields = get(find(TracksSummaryStats, {
+        ...(props.trackId ? { id: props.trackId } : {}),
+        name: props.trackTitle,
+    }), 'fields')
+
+    const isFieldVisible = (field: string): boolean => (
+        !visibleFields || visibleFields[field]
+    )
 
     return (
         <div className={styles.wrap}>
@@ -33,7 +42,7 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                 </span>
             </div>
             <div className={styles.summary}>
-                {(!visibleFields || visibleFields.challenges) && (
+                {isFieldVisible('challenges') && (
                     <div className={styles.summaryItem}>
                         <span className={styles.summaryItemValue}>
                             {props.challenges}
@@ -45,7 +54,7 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                         </span>
                     </div>
                 )}
-                {(!visibleFields || visibleFields.wins) && (
+                {isFieldVisible('wins') && (
                     <div className={styles.summaryItem}>
                         <span className={styles.summaryItemValue}>
                             {props.wins}
@@ -57,7 +66,7 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                         </span>
                     </div>
                 )}
-                {(!visibleFields || visibleFields.submissions) && props.submissions !== undefined && (
+                {isFieldVisible('submissions') && props.submissions !== undefined && (
                     <div className={styles.summaryItem}>
                         <span className={styles.summaryItemValue}>
                             {props.submissions}
@@ -69,7 +78,7 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                         </span>
                     </div>
                 )}
-                {(!visibleFields || visibleFields.ranking) && props.ranking !== undefined && (
+                {isFieldVisible('ranking') && props.ranking !== undefined && (
                     <div className={styles.summaryItem}>
                         <span className={styles.summaryItemValue}>
                             {props.ranking}
@@ -81,7 +90,7 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                         </span>
                     </div>
                 )}
-                {(!visibleFields || visibleFields.rating) && props.rating !== undefined && (
+                {isFieldVisible('rating') && props.rating !== undefined && (
                     <div className={styles.summaryItem}>
                         <span
                             className={styles.summaryItemValue}
@@ -94,7 +103,7 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                         </span>
                     </div>
                 )}
-                {(!visibleFields || visibleFields.volatility) && props.volatility !== undefined && (
+                {isFieldVisible('volatility') && props.volatility !== undefined && (
                     <div className={styles.summaryItem}>
                         <span className={styles.summaryItemValue}>
                             {props.volatility}
@@ -104,7 +113,7 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                         </span>
                     </div>
                 )}
-                {(!visibleFields || visibleFields.screeningSuccessRate) && props.screeningSuccessRate !== undefined && (
+                {isFieldVisible('screeningSuccessRate') && props.screeningSuccessRate !== undefined && (
                     <div className={styles.summaryItem}>
                         <span className={styles.summaryItemValue}>
                             {numberToFixed(props.screeningSuccessRate * 100)}
@@ -115,7 +124,7 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                         </span>
                     </div>
                 )}
-                {(!visibleFields || visibleFields.submissionRate) && props.submissionRate !== undefined && (
+                {isFieldVisible('submissionRate') && props.submissionRate !== undefined && (
                     <div className={styles.summaryItem}>
                         <span className={styles.summaryItemValue}>
                             {numberToFixed(props.submissionRate * 100)}
@@ -126,7 +135,7 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                         </span>
                     </div>
                 )}
-                {(!visibleFields || visibleFields.percentile) && props.percentile !== undefined && (
+                {isFieldVisible('percentile') && props.percentile !== undefined && (
                     <div className={styles.summaryItem}>
                         <span className={styles.summaryItemValue}>
                             {numberToFixed(props.percentile)}

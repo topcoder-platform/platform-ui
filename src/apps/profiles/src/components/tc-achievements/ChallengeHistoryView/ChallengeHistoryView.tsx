@@ -1,7 +1,8 @@
 import { FC } from 'react'
-import { find, get } from 'lodash'
 
-import { MemberStats, StatsHistory, UserProfile, UserStatsHistory, useStatsHistory } from '~/libs/core'
+import { MemberStats, StatsHistory, UserProfile } from '~/libs/core'
+
+import { useTrackHistory } from '../../../hooks'
 
 import { ChallengeHistoryCard } from './ChallengeHistoryCard'
 import styles from './ChallengeHistoryView.module.scss'
@@ -12,16 +13,7 @@ interface ChallengeHistoryViewProps {
 }
 
 const ChallengeHistoryView: FC<ChallengeHistoryViewProps> = props => {
-    const statsHistory: UserStatsHistory | undefined = useStatsHistory(props.profile?.handle)
-    const trackHistory: StatsHistory[] = get(
-        find(get(statsHistory, `${props.trackData.path}`, []), { name: props.trackData.name }),
-        'history',
-        get(
-            statsHistory,
-            `${props.trackData.path}.${props.trackData.name}.history`,
-            [],
-        ),
-    )
+    const trackHistory: StatsHistory[] = useTrackHistory(props.profile?.handle, props.trackData)
 
     return (
         <div className={styles.wrap}>

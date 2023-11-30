@@ -1,17 +1,16 @@
 import { FC, useMemo } from 'react'
-import { find, get, isEmpty } from 'lodash'
+import { isEmpty } from 'lodash'
 
 import {
     MemberStats,
     UserProfile,
     UserStatsDistributionResponse,
-    UserStatsHistory,
     useStatsDistribution,
-    useStatsHistory,
 } from '~/libs/core'
 
 import { DetailedTrackView } from '../DetailedTrackView'
 import { ChallengeHistoryView } from '../ChallengeHistoryView'
+import { useTrackHistory } from '../../../hooks'
 
 interface DevelopTrackViewProps {
     profile: UserProfile
@@ -19,10 +18,8 @@ interface DevelopTrackViewProps {
 }
 
 const DevelopTrackView: FC<DevelopTrackViewProps> = props => {
-    const statsHistory: UserStatsHistory | undefined = useStatsHistory(props.profile?.handle)
-
     const trackName: string = (props.trackData as MemberStats).name ?? 'SRM'
-    const trackHistory = get(find(get(statsHistory, `${props.trackData.path}`), { name: trackName }), 'history')
+    const trackHistory = useTrackHistory(props.profile?.handle, props.trackData)
 
     const ratingDistribution: UserStatsDistributionResponse | undefined = useStatsDistribution({
         subTrack: trackName,

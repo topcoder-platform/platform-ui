@@ -33,6 +33,7 @@ export type SRMStats = {
 }
 
 export type MemberStats = {
+    id: number,
     avgPlacement: number
     challenges: number
     rank: {
