@@ -2,7 +2,7 @@ import { ChangeEvent, FC, ReactNode, useCallback, useEffect, useMemo, useState }
 import { find, pick } from 'lodash'
 import { toast } from 'react-toastify'
 
-import { Button, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
+import { Button, FormInputAutocompleteOption, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
 
 import { SkillsManagerContextValue, useSkillsManagerContext } from '../../../context'
 import { mapCategoryToSelectOption } from '../../../lib'
@@ -11,6 +11,7 @@ import {
     StandardizedSkill,
     StandardizedSkillCategory,
 } from '../../../services'
+import { SimilarSkillsDropdown } from '../similar-skills-dropdown'
 
 import styles from './SkillForm.module.scss'
 
@@ -158,21 +159,29 @@ const SkillForm: FC<SkillFormProps> = props => {
 
     return (
         <form className={styles.form} onSubmit={handleFormSubmit}>
-            <InputText
-                dirty={formState.name.dirty}
-                label='Skill Name'
-                name='name'
-                placeholder='Enter skill name'
-                type='text'
-                value={formValue.name}
-                onChange={handleFormChanges}
-                autoFocus
-                onBlur={validateName}
-                error={formState.name.error}
-                tabIndex={0}
-                disabled={props.isDisabled}
-                forceUpdateValue={forceUpdate}
-            />
+            <SimilarSkillsDropdown
+                categories={categories}
+                skillName={formValue.name}
+                skills={skillsList}
+                isInputDirty={formState.name.dirty}
+            >
+                <InputText
+                    dirty={formState.name.dirty}
+                    label='Skill Name'
+                    name='name'
+                    placeholder='Enter skill name'
+                    type='text'
+                    value={formValue.name}
+                    onChange={handleFormChanges}
+                    autoFocus
+                    onBlur={validateName}
+                    error={formState.name.error}
+                    tabIndex={0}
+                    disabled={props.isDisabled}
+                    forceUpdateValue={forceUpdate}
+                    autocomplete={FormInputAutocompleteOption.off}
+                />
+            </SimilarSkillsDropdown>
             <InputTextarea
                 dirty={formState.description.dirty}
                 label='Skill Description'

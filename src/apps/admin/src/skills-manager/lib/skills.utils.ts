@@ -32,7 +32,7 @@ export const groupSkillsByCategory = (skills: StandardizedSkill[]): GroupedSkill
 export const findSkillsMatches = (skills: StandardizedSkill[], skillsFilter: string): StandardizedSkill[] => {
     const filterRegex = new RegExp(escapeRegExp(skillsFilter), 'i')
     return skills.filter(skill => (
-        filterRegex.test(skill.name) || filterRegex.test(skill.category.name)
+        filterRegex.test(skill.name) || filterRegex.test(skill.category?.name ?? '')
     ))
 }
 

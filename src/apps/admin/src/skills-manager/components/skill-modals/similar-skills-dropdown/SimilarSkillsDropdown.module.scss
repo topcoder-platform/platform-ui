@@ -1,0 +1,44 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    position: relative;
+
+    &.isDirty> :global(.input-wrapper):focus-within + .dropdown {
+        display: block;
+    }
+}
+
+.dropdown {
+    position: absolute;
+    top: $sp-12;
+    left: 0;
+    right: 0;
+
+    background: $tc-white;
+
+    border: 1px solid $black-20;
+    border-radius: $sp-1;
+    padding: $sp-2;
+
+    z-index: 9;
+
+    max-height: 160px;
+    overflow: auto;
+
+    display: none;
+}
+
+.categoryList {
+    > li + li {
+        margin-top: $sp-4;
+    }
+}
+
+.skillList {
+    margin-top: $sp-2;
+    margin-left: $sp-4;
+
+    > li + li {
+        margin-top: $sp-2;
+    }
+}
