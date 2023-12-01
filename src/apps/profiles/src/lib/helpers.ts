@@ -51,6 +51,10 @@ export function subTrackLabelToHumanName(label: string): string {
             return 'Web Design'
         case 'WIREFRAMES':
             return 'Wireframes'
+        case 'MARATHON_MATCH':
+            return 'Marathon Match'
+        case 'SRM':
+            return 'Single Round Match'
         case 'FRONT_END_FLASH':
             return 'Front End Flash'
         case 'PRINT_OR_PRESENTATION':

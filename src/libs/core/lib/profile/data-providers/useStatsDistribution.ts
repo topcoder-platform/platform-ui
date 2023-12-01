@@ -16,12 +16,13 @@ export interface UserStatsDistributionResponse {
 }
 
 interface UserStatsDistributionQuery {
-    filter?: string
+    subTrack?: string
+    track?: string
 }
 
 export function useStatsDistribution(query?: UserStatsDistributionQuery): UserStatsDistributionResponse | undefined {
     const { data }: SWRResponse
         = useSWR(`${memberStatsDistroURL()}?${qs.stringify(query)}`)
 
-    return data ? data.result.content : undefined
+    return data
 }

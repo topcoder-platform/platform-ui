@@ -1,4 +1,5 @@
-import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
+import { FC, useCallback, useMemo } from 'react'
+import { Outlet, Route, Routes } from 'react-router-dom'
 
 import {
     useMemberBadges,
@@ -9,11 +10,9 @@ import {
     UserStats,
 } from '~/libs/core'
 
-import { CommunityAwards } from '../community-awards'
-
-import { TCOWinsBanner } from './TCOWinsBanner'
-import { ChallengeWinsBanner } from './ChallengeWinsBanner'
-import MemberRolesInfoModal from './MemberRolesInfoModal/MemberRolesInfoModal'
+import { DefaultAchievementsView } from './default-achievements-view'
+import { TrackView } from './track-view'
+import { SubTrackView } from './sub-track-view'
 import styles from './MemberTCAchievements.module.scss'
 
 interface MemberTCAchievementsProps {
@@ -38,64 +37,43 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
         (badge: UserBadge) => /TCO.*Trip Winner/.test(badge.org_badge.badge_name),
     ).length || 0, [memberBadges])
 
-    const isCopilot: boolean
-        = useMemo(() => !!memberStats?.COPILOT, [memberStats])
+    const renderDefaultRoute = useCallback(() => (
+        <DefaultAchievementsView
+            profile={props.profile}
+            tcoWins={tcoWins}
+            tcoQualifications={tcoQualifications}
+            tcoTrips={tcoTrips}
+            memberStats={memberStats}
+        />
+    ), [memberStats, props.profile, tcoQualifications, tcoTrips, tcoWins])
 
-    const [isInfoModalOpen, setIsInfoModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
-
-    function handleInfoModalClose(): void {
-        setIsInfoModalOpen(false)
+    if (!memberStats?.challenges && !tcoWins && !tcoQualifications) {
+        return <></>
     }
 
-    function handleInfoModalOpen(): void {
-        setIsInfoModalOpen(true)
-    }
-
-    return memberStats?.wins || tcoWins || tcoQualifications ? (
+    return (
         <div className={styles.container}>
-            <p className='body-large-medium'>Achievements @ Topcoder</p>
-
-            <div className={styles.achievementsWrap}>
-                {
-                    (tcoWins > 0 || tcoQualifications > 0 || tcoTrips > 0) && (
-                        <TCOWinsBanner tcoWins={tcoWins} tcoQualifications={tcoQualifications} tcoTrips={tcoTrips} />
-                    )
-                }
-                {
-                    !!memberStats?.wins && memberStats.wins > 0 && (
-                        <ChallengeWinsBanner
-                            memberStats={memberStats}
-                            profile={props.profile}
-                        />
-                    )
-                }
-            </div>
-
-            {
-                isCopilot && (
-                    <div className={styles.rolesSection}>
-                        <div className={styles.rolesWrap}>
-                            <p className='body-main-medium'>Topcoder Special Roles:&nbsp;</p>
-                            <p>Copilot</p>
-                        </div>
-                        <button type='button' className={styles.link} onClick={handleInfoModalOpen}>
-                            What are special roles?
-                        </button>
-
-                        {
-                            isInfoModalOpen && (
-                                <MemberRolesInfoModal
-                                    onClose={handleInfoModalClose}
-                                />
-                            )
-                        }
-                    </div>
-                )
-            }
-
-            <CommunityAwards profile={props.profile} />
+            <Outlet />
+            <Routes>
+                <Route
+                    path=''
+                    element={renderDefaultRoute()}
+                />
+                <Route
+                    path=':trackType'
+                    element={(
+                        <TrackView profile={props.profile} renderDefault={renderDefaultRoute} />
+                    )}
+                />
+                <Route
+                    path=':trackType/:subTrack'
+                    element={(
+                        <SubTrackView profile={props.profile} renderDefault={renderDefaultRoute} />
+                    )}
+                />
+            </Routes>
         </div>
-    ) : <></>
+    )
 }
 
 export default MemberTCAchievements

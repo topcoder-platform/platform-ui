@@ -26,6 +26,7 @@ export interface GlobalConfig {
         USER_PROFILE: string
         ACCOUNT_SETTINGS: string
         UNIVERSAL_NAV: string
+        CHALLENGES_PAGE: string
     }
     MEMBER_VERIFY_LOOKER: number
     ENABLE_TCA_CERT_MONETIZATION: boolean
