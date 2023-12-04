@@ -257,9 +257,7 @@ workflows:
                       branches:
                           only:
                               - dev
-                              - justin_fixes
-                              - talent_search_fixes
-                              - feature/standardized-skills
+                              - MP-356_member-stats-and-history
 
             - deployQa:
                   context: org-global

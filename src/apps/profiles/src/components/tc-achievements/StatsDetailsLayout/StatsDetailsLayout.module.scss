@@ -1,0 +1,23 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    margin-top: -1*$sp-2;
+    padding-bottom: $sp-6;
+
+    > hr {
+        margin: $sp-6 0;
+    }
+}
+
+.headline {
+    font-family: $font-roboto;
+    font-size: 20px;
+    line-height: 24px;
+    color: $black-80;
+
+    margin-top: $sp-4;
+}
+
+.summaryBlock {
+    margin-bottom: $sp-6;
+}

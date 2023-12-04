@@ -14,6 +14,18 @@ export const rootRoute: string = (
 export const toolTitle: string = ToolTitle.profiles
 export const absoluteRootRoute: string = `${window.location.origin}${rootRoute}`
 
+export const getUserProfileRoute = (userHandle?: string): string => (
+    `${rootRoute}${!userHandle ? '' : `/${userHandle.toLowerCase()}`}`
+)
+
+export const getUserProfileStatsRoute = (
+    userHandle: string,
+    track?: string,
+    subTrack?: string,
+): string => (
+    `${getUserProfileRoute(userHandle)}${track ? `/stats/${track}` : ''}${!(track && subTrack) ? '' : `/${subTrack}`}`
+)
+
 export const profilesRoutes: ReadonlyArray<PlatformRoute> = [
     {
         children: [
@@ -26,6 +38,11 @@ export const profilesRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <MemberProfilePage />,
                 id: 'MemberProfilePage',
                 route: ':memberHandle',
+            },
+            {
+                element: <MemberProfilePage />,
+                id: 'MemberProfilePageSub',
+                route: ':memberHandle/stats/*',
             },
             {
                 element: <MemberBadgesPage />,

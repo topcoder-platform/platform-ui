@@ -34,6 +34,18 @@ export const toolTitle: string = ToolTitle.talentSearch
 
 const isAdminRestricted = EnvironmentConfig.RESTRICT_TALENT_SEARCH
 
+export const getTalentRoute = (userHandle: string): string => (
+    `${rootRoute}/talent/${userHandle.toLowerCase()}`
+)
+
+export const getTalentStatsRoute = (
+    userHandle: string,
+    track?: string,
+    subTrack?: string,
+): string => (
+    `${getTalentRoute(userHandle)}${track ? `/stats/${track}` : ''}${!(track && subTrack) ? '' : `/${subTrack}`}`
+)
+
 export const talentSearchRoutes: ReadonlyArray<PlatformRoute> = [
     {
         authRequired: isAdminRestricted,
@@ -49,6 +61,11 @@ export const talentSearchRoutes: ReadonlyArray<PlatformRoute> = [
             {
                 element: <TalentPage />,
                 route: '/talent/:memberHandle',
+            },
+            {
+                element: <TalentPage />,
+                id: 'MemberProfilePageSub',
+                route: '/talent/:memberHandle/stats/*',
             },
             {
                 element: <MemberBadgesPage />,
