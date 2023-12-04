@@ -1,4 +1,4 @@
-import { xhrGetAsync, xhrPatchAsync, xhrPostAsync, xhrPutAsync } from '../../../xhr'
+import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync, xhrPutAsync } from '../../../xhr'
 import { CountryLookup } from '../../country-lookup.model'
 import { EditNameRequest } from '../../edit-name-request.model'
 import { ModifyTracksRequest } from '../../modify-tracks.request'
@@ -93,6 +93,14 @@ export async function createMemberTraits(
     traits: UserTraits[],
 ): Promise<UserTraits[]> {
     return xhrPostAsync<UserTraits[], UserTraits[]>(`${profileUrl(handle)}/traits`, traits)
+}
+
+export async function deleteMemberTrait(
+    handle: string,
+    traitIds: string,
+): Promise<UserTraits[]> {
+    await xhrDeleteAsync<UserTraits[]>(`${profileUrl(handle)}/traits?traitIds=${traitIds}`)
+    return []
 }
 
 export async function modifyTracks(handle: string, request: ModifyTracksRequest): Promise<UserProfile> {
