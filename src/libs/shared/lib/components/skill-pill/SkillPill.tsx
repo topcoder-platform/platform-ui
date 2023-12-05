@@ -12,7 +12,7 @@ export interface SkillPillProps {
     children?: ReactNode
     onClick?: (skill: UserSkill) => void
     selected?: boolean
-    skill: Pick<UserSkill, 'name'|'levels'>
+    skill: Partial<Pick<UserSkill, 'name'|'levels'>>
     theme?: 'dark' | 'verified' | 'presentation' | 'etc' | 'catList'
 }
 

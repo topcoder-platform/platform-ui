@@ -14,4 +14,5 @@ export {
     memberEmailPreferencesURL,
     memberModifyMfaURL,
     diceIDURL,
+    userSkillsUrl,
 } from './profile-endpoint.config'

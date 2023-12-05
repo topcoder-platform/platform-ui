@@ -1,16 +1,18 @@
 import { ChangeEvent, FC, ReactNode, Ref } from 'react'
+import { SelectInstance } from 'react-select'
 import { noop } from 'lodash'
 
 import { InputMultiselect, InputMultiselectOption, InputMultiselectThemes } from '~/libs/ui'
-import { UserSkill } from '~/libs/core'
+import { SearchUserSkill, UserSkill } from '~/libs/core'
+import { TCASkillType } from '~/apps/learn/src/lib'
 
 import { autoCompleteSkills, isSkillVerified } from '../../services/standard-skills'
 
-const mapSkillToInputOption = (skill: UserSkill): InputMultiselectOption => ({
+const mapSkillToInputOption = (skill: SearchUserSkill | TCASkillType): InputMultiselectOption => ({
     ...skill,
     label: skill.name,
     value: skill.id,
-    verified: isSkillVerified(skill),
+    verified: isSkillVerified(skill as UserSkill),
 })
 
 interface Option {
@@ -36,13 +38,15 @@ interface InputSkillSelectorProps {
     readonly loading?: boolean
     readonly onChange?: (event: ChangeEvent<HTMLInputElement>) => void
     readonly placeholder?: string
-    readonly value?: UserSkill[]
+    readonly value?: SearchUserSkill[] | TCASkillType[]
     readonly theme?: InputMultiselectThemes
     readonly useWrapper?: boolean
     readonly dropdownIcon?: ReactNode
     readonly onSubmit?: () => void
     readonly additionalPlaceholder?: string
     readonly inputRef?: Ref<any>
+    // Custom method to filter whether an option should be displayed in the menu
+    readonly filterOption?: SelectInstance['filterOption']
 }
 
 const InputSkillSelector: FC<InputSkillSelectorProps> = props => (
@@ -63,6 +67,7 @@ const InputSkillSelector: FC<InputSkillSelectorProps> = props => (
         onSubmit={props.onSubmit}
         additionalPlaceholder={props.additionalPlaceholder}
         inputRef={props.inputRef}
+        filterOption={props.filterOption}
     />
 )
 

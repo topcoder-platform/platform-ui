@@ -2,7 +2,6 @@ import { FC } from 'react'
 import classNames from 'classnames'
 
 import { Tooltip } from '~/libs/ui'
-import { EnvironmentConfig } from '~/config'
 
 import { SkillLabel } from '..'
 import { TCASkillType } from '../../data-providers'
@@ -14,17 +13,15 @@ interface SkillTagsProps {
     expandCount?: number
     label?: string
     theme?: 'white' | 'gray' | undefined
-    skills?: Array<string> | null | undefined
-    emsiSkills?: TCASkillType[]
+    skills?: Array<TCASkillType> | null | undefined
 }
 
 const SkillTags: FC<SkillTagsProps> = (props: SkillTagsProps) => {
     const expandCount: number = props.expandCount || 3
     const theme: 'white' | 'gray' = props.theme || 'white'
     const label: string = props.label ?? 'skills taught'
-    const tcaEMSIEnabled: boolean = EnvironmentConfig.ENABLE_EMSI_SKILLS || false
 
-    const skills: string[] | TCASkillType[] = tcaEMSIEnabled ? (props.emsiSkills || []) : (props.skills || [])
+    const skills: string[] | TCASkillType[] = props.skills || []
 
     return (
         <div className={styles.skills}>

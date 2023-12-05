@@ -1,9 +1,9 @@
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { orderBy } from 'lodash'
+import { filter, orderBy } from 'lodash'
 
-import { UserProfile, UserSkill } from '~/libs/core'
-import { GroupedSkillsUI, HowSkillsWorkModal, isSkillVerified } from '~/libs/shared'
+import { UserProfile, UserSkill, UserSkillDisplayModes } from '~/libs/core'
+import { GroupedSkillsUI, HowSkillsWorkModal, isSkillVerified, SkillPill, useLocalStorage } from '~/libs/shared'
 import { Button } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
@@ -11,6 +11,7 @@ import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { MemberProfileContextValue, useMemberProfileContext } from '../MemberProfile.context'
 
 import { ModifySkillsModal } from './ModifySkillsModal'
+import { PrincipalSkillsModal } from './PrincipalSkillsModal'
 import styles from './MemberSkillsInfo.module.scss'
 
 interface MemberSkillsInfoProps {
@@ -24,6 +25,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
     const editMode: string | null = queryParams.get(EDIT_MODE_QUERY_PARAM)
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
+    const [hasSeenPrincipalIntro, setHasSeenPrincipalIntro] = useLocalStorage('seen-principal-intro', {} as any)
 
     const { skillsRenderer, isTalentSearch }: MemberProfileContextValue = useMemberProfileContext()
 
@@ -33,15 +35,24 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         ['desc', 'asc'],
     ) as UserSkill[], [props.profile.skills])
 
+    const principalSkills = useMemo(() => (
+        filter(memberSkills, s => s.displayMode?.name === UserSkillDisplayModes.principal)
+    ), [memberSkills])
+
+    const additionalSkills = useMemo(() => (
+        filter(memberSkills, s => s.displayMode?.name !== UserSkillDisplayModes.principal)
+    ), [memberSkills])
+
     const groupedSkillsByCategory: { [key: string]: UserSkill[] } = useMemo(() => {
         const grouped: { [key: string]: UserSkill[] } = {}
         const sortedGroupedSkillsByCategory: { [key: string]: UserSkill[] } = {}
 
-        memberSkills.forEach((skill: UserSkill) => {
-            if (grouped[skill.category.name]) {
-                grouped[skill.category.name].push(skill)
+        additionalSkills.forEach((skill: UserSkill) => {
+            const categoryName = skill.category?.name ?? ''
+            if (grouped[categoryName]) {
+                grouped[categoryName].push(skill)
             } else {
-                grouped[skill.category.name] = [skill]
+                grouped[categoryName] = [skill]
             }
         })
 
@@ -52,12 +63,15 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
             })
 
         return sortedGroupedSkillsByCategory
-    }, [memberSkills])
+    }, [additionalSkills])
 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
     const [howSkillsWorkVisible, setHowSkillsWorkVisible]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
+    const [principalIntroModalVisible, setPrincipalIntroModalVisible]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
     useEffect(() => {
@@ -67,6 +81,19 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.authProfile])
+
+    useEffect(() => {
+        if (
+            !canEdit
+            || !props.authProfile
+            || hasSeenPrincipalIntro[props.authProfile.handle]
+            || isTalentSearch
+        ) {
+            return
+        }
+
+        setPrincipalIntroModalVisible(true)
+    }, [hasSeenPrincipalIntro, canEdit, isTalentSearch, props.authProfile, setHasSeenPrincipalIntro])
 
     function handleEditSkillsClick(): void {
         setIsEditMode(true)
@@ -91,16 +118,21 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         setHowSkillsWorkVisible(false)
     }
 
+    function handlePrincipalIntroShow(): void {
+        setPrincipalIntroModalVisible(true)
+    }
+
+    function handlePrincipalIntroClose(): void {
+        setHasSeenPrincipalIntro((prevValue: any) => ({
+            ...prevValue,
+            [props.authProfile?.handle ?? '']: true,
+        }))
+
+        setPrincipalIntroModalVisible(false)
+    }
+
     return (
         <div className={styles.container}>
-            {
-                skillsRenderer && memberSkills.length > 0 && (
-                    <div className={styles.skillsWrap}>
-                        {skillsRenderer(memberSkills)}
-                    </div>
-                )
-            }
-
             <div className={styles.titleWrap}>
                 <div className={styles.headerWrap}>
                     <h3>Skills</h3>
@@ -122,11 +154,42 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                 </div>
             </div>
 
+            {
+                skillsRenderer && memberSkills.length > 0 && (
+                    <div className={styles.skillsWrap}>
+                        {skillsRenderer(memberSkills)}
+                    </div>
+                )
+            }
+
             <div className={styles.skillsWrap}>
-                {memberSkills.length > 0 && (
-                    <GroupedSkillsUI
-                        groupedSkillsByCategory={groupedSkillsByCategory}
-                    />
+                {principalSkills.length > 0 && (
+                    <div className={styles.principalSkillsWrap}>
+                        <div className='large-subtitle'>
+                            Principal Skills
+                        </div>
+                        <div className={styles.principalSkills}>
+                            {principalSkills.map((skill: UserSkill) => (
+                                <SkillPill
+                                    skill={skill}
+                                    key={skill.id}
+                                    theme={isSkillVerified(skill) ? 'verified' : 'dark'}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
+                {additionalSkills.length > 0 && (
+                    <div className={styles.additionalSkillsWrap}>
+                        {principalSkills.length > 0 && (
+                            <div className='large-subtitle'>
+                                Additional Skills
+                            </div>
+                        )}
+                        <GroupedSkillsUI
+                            groupedSkillsByCategory={groupedSkillsByCategory}
+                        />
+                    </div>
                 )}
                 {!memberSkills.length && (
                     <EmptySection
@@ -154,6 +217,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                     <ModifySkillsModal
                         onClose={handleModyfSkillsModalClose}
                         onSave={handleModyfSkillsSave}
+                        showPrincipalIntroModal={handlePrincipalIntroShow}
                     />
                 )
             }
@@ -164,6 +228,14 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                         onClose={handleHowSkillsWorkClose}
                         isTalentSearch={isTalentSearch}
                         iseSelfView={canEdit}
+                    />
+                )
+            }
+
+            {
+                principalIntroModalVisible && (
+                    <PrincipalSkillsModal
+                        onClose={handlePrincipalIntroClose}
                     />
                 )
             }

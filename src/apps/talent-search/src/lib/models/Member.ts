@@ -1,6 +1,5 @@
-import { UserSkill } from '~/libs/core'
+import { NamesAndHandleAppearance, UserSkill } from '~/libs/core'
 
-import { MemberDisplayName } from './MemberDisplayName'
 import MemberAddress from './MemberAddress'
 import MemberMaxRating from './MemberMaxRating'
 import MemberStats from './MemberStats'
@@ -18,7 +17,7 @@ export default interface Member {
     handle: string;
     homeCountryCode: string;
     lastName: string;
-    namesAndHandleAppearance: MemberDisplayName
+    namesAndHandleAppearance: NamesAndHandleAppearance
     maxRating: MemberMaxRating;
     numberOfChallengesPlaced: number;
     numberOfChallengesWon: number;

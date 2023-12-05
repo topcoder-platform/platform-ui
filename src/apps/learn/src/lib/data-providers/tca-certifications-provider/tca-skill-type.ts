@@ -1,7 +1,3 @@
-export type TCASkillType = {
-    assessed: boolean
-    confidence: number
-    emsiId: string
-    learned: boolean
-    name: string
-}
+import { UserSkill } from '~/libs/core'
+
+export type TCASkillType = Pick<UserSkill, 'id' | 'name' | 'description' | 'category'>

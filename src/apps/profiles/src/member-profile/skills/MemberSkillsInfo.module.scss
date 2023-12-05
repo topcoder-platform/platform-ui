@@ -27,8 +27,28 @@
     .skillsWrap {
         padding-bottom: $sp-8;
 
+
+        :global(.large-subtitle) {
+            margin-bottom: $sp-4;
+        }
+
         @include ltemd {
             padding-bottom: $sp-4;
         }
     }
+}
+
+.principalSkillsWrap {
+    background: $black-5;
+    border-radius: $sp-2;
+    padding: $sp-6;
+    + .additionalSkillsWrap {
+        margin-top: $sp-6;
+    }
+}
+
+.principalSkills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-2;
 }

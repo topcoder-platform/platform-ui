@@ -22,7 +22,7 @@ export function useGetCourses(
     const url: string = learnUrlGet('courses', `?${params}`)
     const swrCacheConfig: SWRConfiguration = useSwrCache(url)
 
-    const { data, error }: SWRResponse<ReadonlyArray<LearnCourse>> = useSWR(url, swrCacheConfig)
+    const { data, error, mutate }: SWRResponse<ReadonlyArray<LearnCourse>> = useSWR(url, swrCacheConfig)
 
     const course: LearnCourse | undefined = get(data, [0])
 
@@ -32,6 +32,7 @@ export function useGetCourses(
     return {
         course,
         loading: !data && !error,
+        mutate,
         ready: !!data || !!error,
     }
 }

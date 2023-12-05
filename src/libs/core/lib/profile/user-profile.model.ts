@@ -2,6 +2,12 @@ import { UserSkill } from './user-skill.model'
 
 export type TC_TRACKS = 'DEVELOP' | 'DESIGN' | 'DATA_SCIENCE'
 
+export enum NamesAndHandleAppearance {
+    both = 'namesAndHandle',
+    handleOnly = 'handleOnly',
+    nameOnly = 'namesOnly',
+}
+
 export interface UserProfile {
     addresses?: Array<{
         city?: string
@@ -10,6 +16,7 @@ export interface UserProfile {
         streetAddr2?: string
         zip?: string
     }>
+    availableForGigs: boolean
     competitionCountryCode: string
     createdAt: number
     description: string
@@ -33,4 +40,5 @@ export interface UserProfile {
     tracks?: Array<TC_TRACKS>
     updatedAt: number
     userId: number
+    namesAndHandleAppearance: NamesAndHandleAppearance
 }

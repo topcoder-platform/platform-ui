@@ -6,6 +6,7 @@ const baseUrl = `${EnvironmentConfig.API.V5}/standardized-skills`
 export interface UpdateUserSkillDTO {
     id: string
     levelId?: string
+    displatModeId?: string
 }
 
 export async function autoCompleteSkills(queryTerm: string): Promise<UserSkill[]> {

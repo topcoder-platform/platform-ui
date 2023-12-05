@@ -1,5 +1,3 @@
-import { CSSProperties } from 'react'
-
 export const TC_RATING_COLORS: Array<{ color: string, limit: number }> = [{
     color: '#555555' /* Grey */,
     limit: 900,
@@ -20,13 +18,9 @@ export const TC_RATING_COLORS: Array<{ color: string, limit: number }> = [{
 /**
  * Inline CSS for rating color
  */
-export function ratingToCSScolor(rating: number): CSSProperties {
+export function getRatingColor(rating: number): string {
     let i: number = 0
     while (TC_RATING_COLORS[i].limit <= rating) i += 1
 
-    const color: string = TC_RATING_COLORS[i].color || '#2a2a2a'
-
-    return {
-        color,
-    }
+    return TC_RATING_COLORS[i].color || '#2a2a2a'
 }

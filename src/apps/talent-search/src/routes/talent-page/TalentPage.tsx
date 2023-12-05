@@ -5,6 +5,7 @@ import { MemberProfileContext, MemberProfilePage } from '@profiles/member-profil
 import { UserSkill } from '~/libs/core'
 
 import { ProfileSkillsMatch } from '../../components/profile-skills-match'
+import { getTalentStatsRoute } from '../../talent-search.routes'
 
 const TalentPage: FC = () => {
     const { state }: Location = useLocation()
@@ -22,6 +23,7 @@ const TalentPage: FC = () => {
 
     return (
         <MemberProfileContext
+            statsRoute={getTalentStatsRoute}
             isTalentSearch={!!state}
             skillsRenderer={state ? skillsRenderer : undefined}
         >

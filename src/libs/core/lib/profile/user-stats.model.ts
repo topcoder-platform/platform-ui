@@ -28,9 +28,12 @@ export type SRMStats = {
         volatility: number
     }
     wins: number
+    parentTrack?: string
+    path?: string
 }
 
 export type MemberStats = {
+    id: number,
     avgPlacement: number
     challenges: number
     rank: {
@@ -43,9 +46,15 @@ export type MemberStats = {
         overallRank: number
         overallPercentile: number
     }
+    submissionRate: number
     screeningSuccessRate: number
     wins: number
     name: string
+    submissions: {
+        submissions: number
+    }
+    parentTrack?: string
+    path?: string
 }
 
 export type UserStats = {
@@ -98,10 +107,10 @@ export type UserStats = {
 export type StatsHistory = {
     challengeId: number
     challengeName: string
-    date: number
-    percentile: number
-    placement: number
-    rating: number
+    date?: number
+    percentile?: number
+    placement?: number
+    rating?: number
     newRating: number
     ratingDate: number
 }

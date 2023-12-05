@@ -50,6 +50,8 @@ export interface InputMultiselectProps {
     readonly value?: InputMultiselectOption[]
     readonly onSubmit?: () => void
     readonly inputRef?: Ref<any>
+    // Custom method to filter whether an option should be displayed in the menu
+    readonly filterOption?: SelectInstance['filterOption']
 }
 
 const MultiValueRemove: FC = (props: any) => (
@@ -82,6 +84,18 @@ const dropdownIndicator = (dropdownIcon: ReactNode): FC => (props: any) => (
 )
 
 const InputMultiselect: FC<InputMultiselectProps> = props => {
+    // we need to create a portal to append our menus so they are always visible
+    const menuPortalTarget = useMemo(() => {
+        const el = document.getElementById('input-ms-menu-target-portal') ?? document.createElement('div')
+        el.id = 'input-ms-menu-target-portal'
+
+        if (!document.body.contains(el)) {
+            document.body.append(el)
+        }
+
+        return el
+    }, [])
+
     const asynSelectRef = useRef<any>()
     const placeholder = useMemo(() => (
         (props.value?.length as number) > 0 ? props.additionalPlaceholder ?? 'Add more...' : props.placeholder
@@ -130,6 +144,7 @@ const InputMultiselect: FC<InputMultiselectProps> = props => {
                     props.useWrapper === false && styles.multiSelectWrap,
                 )
             }
+            classNames={{ valueContainer: () => 'ms--value-container' }}
             ref={props.inputRef ?? asynSelectRef}
             classNamePrefix={styles.ms}
             unstyled
@@ -153,6 +168,8 @@ const InputMultiselect: FC<InputMultiselectProps> = props => {
             value={props.value}
             openMenuOnClick={false}
             onKeyDown={handleKeyPress}
+            filterOption={props.filterOption}
+            menuPortalTarget={menuPortalTarget}
         />
     )
 
