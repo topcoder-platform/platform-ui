@@ -4,7 +4,7 @@ import { find, get } from 'lodash'
 
 import { getRatingColor } from '~/libs/core'
 
-import { numberToFixed } from '../../../lib'
+import { formatPlural, numberToFixed } from '../../../lib'
 import { TracksSummaryStats } from '../../../config'
 
 import styles from './StatsSummaryBlock.module.scss'
@@ -49,7 +49,10 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                         </span>
                         <span className={styles.summaryItemLabel}>
                             <span className='body-small'>
-                                {props.trackTitle === 'Single Round Match' ? 'Competitions' : 'Challenges'}
+                                {formatPlural(
+                                    props.challenges || 0,
+                                    props.trackTitle === 'Single Round Match' ? 'Competition' : 'Challenge',
+                                )}
                             </span>
                         </span>
                     </div>
@@ -61,7 +64,7 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                         </span>
                         <span className={styles.summaryItemLabel}>
                             <span className='body-small'>
-                                Wins
+                                {formatPlural(props.wins || 0, 'Win')}
                             </span>
                         </span>
                     </div>
@@ -73,7 +76,7 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                         </span>
                         <span className={styles.summaryItemLabel}>
                             <span className='body-small'>
-                                Submissions
+                                {formatPlural(props.submissions || 0, 'Submission')}
                             </span>
                         </span>
                     </div>

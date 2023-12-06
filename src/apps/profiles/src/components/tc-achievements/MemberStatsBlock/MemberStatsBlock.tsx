@@ -6,7 +6,7 @@ import { getRatingColor, MemberStats, UserProfile } from '~/libs/core'
 import { IconOutline } from '~/libs/ui'
 
 import { useFetchActiveTracks } from '../../../hooks'
-import { WinnerIcon } from '../../../lib'
+import { formatPlural, WinnerIcon } from '../../../lib'
 import { MemberProfileContextValue, useMemberProfileContext } from '../../../member-profile/MemberProfile.context'
 
 import styles from './MemberStatsBlock.module.scss'
@@ -45,13 +45,18 @@ const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
                                 <div className={styles.trackDetails}>
                                     {!track.isDSTrack && ((track.submissions || track.wins) > 0) && (
                                         <>
-                                            <WinnerIcon className='icon-xxxl' />
+                                            {track.wins > 0 && (
+                                                <WinnerIcon className='icon-xxxl' />
+                                            )}
                                             <span className={styles.trackStats}>
                                                 <span className={styles.count}>
                                                     {track.wins || track.submissions}
                                                 </span>
                                                 <span className={styles.label}>
-                                                    {track.wins > 0 ? 'Wins' : 'Submissions'}
+                                                    {formatPlural(
+                                                        track.wins || track.submissions || 0,
+                                                        track.wins > 0 ? 'Win' : 'Submission',
+                                                    )}
                                                 </span>
                                             </span>
                                         </>
