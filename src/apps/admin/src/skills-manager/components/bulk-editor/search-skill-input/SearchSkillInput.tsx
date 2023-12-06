@@ -1,8 +1,7 @@
 import { ChangeEvent, FC, useMemo } from 'react'
 import { escapeRegExp } from 'lodash'
-import { FilterOptionOption } from 'react-select/dist/declarations/src/filters'
 
-import { InputSelectReact } from '~/libs/ui'
+import { InputSelectOption, InputSelectReact } from '~/libs/ui'
 
 import { mapSkillToSelectOption } from '../../../lib'
 import { StandardizedSkill } from '../../../services'
@@ -21,9 +20,9 @@ const SearchSkillInput: FC<SearchSkillInputProps> = props => {
         mapSkillToSelectOption(props.skills)
     ), [props.skills])
 
-    function filterOptions(o: FilterOptionOption<any>, v: string): boolean {
+    function filterOptions(o: InputSelectOption, v: string): boolean {
         const normValue = normalize(v)
-        const normLabel = normalize(o.label)
+        const normLabel = normalize(o.label as string)
 
         if (v.length < 3 && normValue !== normLabel) {
             return false

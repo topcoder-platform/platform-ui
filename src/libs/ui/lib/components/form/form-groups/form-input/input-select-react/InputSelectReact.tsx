@@ -8,7 +8,6 @@ import {
     useRef,
 } from 'react'
 import { find } from 'lodash'
-import { FilterOptionOption } from 'react-select/dist/declarations/src/filters'
 import CreatableSelect from 'react-select/creatable'
 import ReactSelect, { GroupBase, OptionsOrGroups } from 'react-select'
 import classNames from 'classnames'
@@ -42,7 +41,7 @@ interface InputSelectReactProps {
     readonly onBlur?: (event: FocusEvent<HTMLInputElement>) => void
     readonly openMenuOnClick?: boolean
     readonly openMenuOnFocus?: boolean
-    readonly filterOption?: <T>(option: FilterOptionOption<T>, value: string) => boolean
+    readonly filterOption?: (option: InputSelectOption, value: string) => boolean
 }
 
 /**
