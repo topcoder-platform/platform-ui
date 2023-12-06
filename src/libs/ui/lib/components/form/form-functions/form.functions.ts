@@ -192,6 +192,7 @@ function handleFieldEvent<T extends FormValue>(
 function validateField(
     formInputDef: FormInputModel,
     formElements: HTMLFormControlsCollection,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     event: 'blur' | 'change' | 'submit' | 'initial',
 ): void {
 

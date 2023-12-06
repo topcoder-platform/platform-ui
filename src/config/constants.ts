@@ -1,5 +1,5 @@
 export enum AppSubdomain {
-    admin = 'admin',
+    admin = 'manage',
     accounts = 'account-settings',
     devCenter = 'devcenter',
     earn = 'earn',

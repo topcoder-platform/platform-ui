@@ -6,6 +6,7 @@ import { UserSkillCategory, xhrDeleteAsync, xhrGetAsync, xhrPostAsync, xhrPutAsy
 
 const baseUrl = `${EnvironmentConfig.STANDARDIZED_SKILLS_API}/categories`
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface StandardizedSkillCategory extends UserSkillCategory {}
 
 export const useFetchCategories = (): SWRResponse<StandardizedSkillCategory[]> => {

@@ -1,6 +1,6 @@
 import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
 
-export const rootRoute: string = '/skills-manager'
+export const rootRoute: string = '/skills'
 
 const SkillsManager: LazyLoadedComponent = lazyLoad(() => import('./SkillsManager'))
 const LandingPage: LazyLoadedComponent = lazyLoad(() => import('./landing-page'), 'LandingPage')
