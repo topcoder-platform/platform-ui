@@ -41,3 +41,9 @@ export const mapCategoryToSelectOption = (
 ): InputSelectOption[] => (
     categories.map(c => ({ label: c.name, value: c.id }))
 )
+
+export const mapSkillToSelectOption = (
+    skills: StandardizedSkill[],
+): InputSelectOption[] => (
+    skills.map(c => ({ label: c.name, value: c.id }))
+)

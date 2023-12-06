@@ -14,24 +14,26 @@ const ConfirmModal: FC<ConfirmModalProps> = (props: ConfirmModalProps) => (
     <BaseModal
         {...props}
         styles={{ modal: { maxWidth: '450px' } }}
+        buttons={(
+            <>
+                <Button
+                    secondary
+                    label='Cancel'
+                    onClick={props.onClose}
+                    size='lg'
+                    tabIndex={1}
+                />
+                <Button
+                    primary
+                    label={props.action || 'Confirm'}
+                    onClick={props.onConfirm}
+                    size='lg'
+                    tabIndex={2}
+                />
+            </>
+        )}
     >
         {props.children}
-        <div className='button-container'>
-            <Button
-                secondary
-                label='Cancel'
-                onClick={props.onClose}
-                size='xl'
-                tabIndex={1}
-            />
-            <Button
-                primary
-                label={props.action || 'Confirm'}
-                onClick={props.onConfirm}
-                size='xl'
-                tabIndex={2}
-            />
-        </div>
     </BaseModal>
 )
 

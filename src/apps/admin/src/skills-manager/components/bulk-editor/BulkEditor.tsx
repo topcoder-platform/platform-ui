@@ -7,6 +7,7 @@ import { SkillsManagerContextValue, useSkillsManagerContext } from '../../contex
 
 import { ArchiveSkillsModal } from './archive-skills-modal'
 import { MoveSkillsModal } from './move-skills-modal'
+import { ReplaceSkillsModal } from './replace-skills-modal'
 import styles from './BulkEditor.module.scss'
 
 interface BulkEditorProps {
@@ -17,9 +18,11 @@ const BulkEditor: FC<BulkEditorProps> = props => {
     const {
         bulkEditorCtx: context,
         refetchSkills,
+        skillsList,
     }: SkillsManagerContextValue = useSkillsManagerContext()
 
     const [showArchive, setShowArchive] = useState(false)
+    const [showReplaceSkills, setShowReplaceSkills] = useState(false)
     const [showMoveSkills, setShowMoveSkills] = useState(false)
 
     function openArchiveModal(): void {
@@ -30,8 +33,12 @@ const BulkEditor: FC<BulkEditorProps> = props => {
         setShowMoveSkills(true)
     }
 
+    function openReplaceSkillsModal(): void {
+        setShowReplaceSkills(true)
+    }
+
     function closeArchiveModal(archived?: boolean): void {
-        if (archived) {
+        if (archived === true) {
             refetchSkills()
             context.toggleAll()
         }
@@ -40,12 +47,21 @@ const BulkEditor: FC<BulkEditorProps> = props => {
     }
 
     function closeMoveSkillsModal(moved?: boolean): void {
-        if (moved) {
+        if (moved === true) {
             refetchSkills()
             context.toggleAll()
         }
 
         setShowMoveSkills(false)
+    }
+
+    function closeReplaceSkillsModal(replaced?: boolean): void {
+        if (replaced === true) {
+            refetchSkills()
+            context.toggleAll()
+        }
+
+        setShowReplaceSkills(false)
     }
 
     const hasSelection = context.selectedSkills.length > 0
@@ -69,14 +85,13 @@ const BulkEditor: FC<BulkEditorProps> = props => {
             />
             <Button
                 primary
-                variant='linkblue'
                 label='Replace selected'
                 size='lg'
                 disabled={!hasSelection}
+                onClick={openReplaceSkillsModal}
             />
             <Button
                 primary
-                variant='linkblue'
                 label='Move selected'
                 size='lg'
                 disabled={!hasSelection}
@@ -85,6 +100,14 @@ const BulkEditor: FC<BulkEditorProps> = props => {
 
             {showArchive && (
                 <ArchiveSkillsModal skills={context.selectedSkills} onClose={closeArchiveModal} />
+            )}
+
+            {showReplaceSkills && (
+                <ReplaceSkillsModal
+                    allSkills={skillsList}
+                    skills={context.selectedSkills}
+                    onClose={closeReplaceSkillsModal}
+                />
             )}
 
             {showMoveSkills && (

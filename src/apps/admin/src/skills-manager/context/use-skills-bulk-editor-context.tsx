@@ -4,6 +4,7 @@ import { isEmpty } from 'lodash'
 import { GenericDataObject } from '~/libs/shared'
 
 import { StandardizedSkill, StandardizedSkillCategory } from '../services'
+import { isSkillArchived } from '../lib'
 
 type SelectedSkillsKeyMap = GenericDataObject<StandardizedSkill | undefined>
 
@@ -38,6 +39,10 @@ export const useSkillsBulkEditorContext = (skills: StandardizedSkill[]): SkillsB
     }, [])
 
     const toggleSkill = useCallback((skill: StandardizedSkill): void => {
+        if (isSkillArchived(skill)) {
+            return
+        }
+
         selectSkills({
             ...selectedSkillsMap,
             [skill.id]: selectedSkillsMap[skill.id] ? undefined : skill,

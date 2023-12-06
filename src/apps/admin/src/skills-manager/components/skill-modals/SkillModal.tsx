@@ -10,6 +10,7 @@ import {
     BaseModal,
     Button,
     LoadingSpinner,
+    useConfirmationModal,
 } from '~/libs/ui'
 
 import {
@@ -32,6 +33,8 @@ const SkillModal: FC<SkillModalProps> = props => {
         refetchSkills,
         setEditSkill,
     }: SkillsManagerContextValue = useSkillsManagerContext()
+
+    const confirmModal = useConfirmationModal()
 
     const [isLoading, setIsLoading] = useState(false)
     const isArchived = useMemo(() => isSkillArchived(props.skill), [props.skill])
@@ -62,8 +65,16 @@ const SkillModal: FC<SkillModalProps> = props => {
     }, [setEditSkill])
 
     const archiveSkill = useCallback(async (): Promise<void> => {
-        setIsLoading(true)
+        const confirmed = await confirmModal.confirm({
+            content: 'Are you sure you want to archive this skill?',
+            title: 'Confirm Archive',
+        })
 
+        if (!confirmed) {
+            return undefined
+        }
+
+        setIsLoading(true)
         return archiveStandardizedSkill(props.skill)
             .then(() => {
                 refetchSkills()
@@ -74,7 +85,7 @@ const SkillModal: FC<SkillModalProps> = props => {
                 setIsLoading(false)
                 return Promise.reject(e)
             })
-    }, [setEditSkill, props.skill, refetchSkills])
+    }, [confirmModal, props.skill, refetchSkills, setEditSkill])
 
     const restoreSkill = useCallback(async (): Promise<void> => {
         setIsLoading(true)
@@ -137,6 +148,7 @@ const SkillModal: FC<SkillModalProps> = props => {
                 primaryButtons={renderSaveAndAddBtn}
             />
             <LoadingSpinner hide={!isLoading} overlay />
+            {confirmModal.modal}
         </BaseModal>
     )
 }

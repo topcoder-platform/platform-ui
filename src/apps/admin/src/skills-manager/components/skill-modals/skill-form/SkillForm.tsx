@@ -17,13 +17,18 @@ import styles from './SkillForm.module.scss'
 
 interface SkillFormProps {
     isDisabled?: boolean
-    skill: StandardizedSkill
-    onSave: (skillData: Partial<StandardizedSkill>) => void
-    onCancel: () => void
+    skill?: StandardizedSkill
+    onSave?: (skillData: Partial<StandardizedSkill>) => void
+    onChange?: (skillData: Partial<StandardizedSkill>, isValid: boolean) => void
+    onCancel?: () => void
     onLoading: (loading?: boolean) => void
 
     secondaryButtons?: ReactNode
     primaryButtons?: (isFormValid: boolean) => ReactNode
+
+    hideCancelBtn?: boolean
+    hideSaveBtn?: boolean
+    saveBtnLabel?: string
 }
 
 const SkillForm: FC<SkillFormProps> = props => {
@@ -63,7 +68,7 @@ const SkillForm: FC<SkillFormProps> = props => {
         const name = formValue.name?.trim() ?? ''
         const isValid = name.length > 0
         const similarSkill = find(skillsList, { name })
-        const isDuplicate = similarSkill && similarSkill.id !== props.skill.id
+        const isDuplicate = similarSkill && similarSkill.id !== props.skill?.id
         const error = !isValid ? 'Skill name is required!' : (
             isDuplicate ? 'A skill with the same name already exists!' : undefined
         )
@@ -104,7 +109,7 @@ const SkillForm: FC<SkillFormProps> = props => {
 
     function handleFormSubmit(ev?: any): void {
         ev?.preventDefault?.()
-        props.onSave(formValue)
+        props.onSave?.(formValue)
     }
 
     const isFormValid = useMemo(() => (
@@ -132,6 +137,10 @@ const SkillForm: FC<SkillFormProps> = props => {
     }
 
     useEffect(() => {
+        if (!props.skill) {
+            return
+        }
+
         // when skill object changes, persist the new props into formValue state
         setFormValue({
             categoryId: props.skill.category?.id,
@@ -150,6 +159,10 @@ const SkillForm: FC<SkillFormProps> = props => {
     useEffect(() => {
         validateForm()
     }, [formValue])
+
+    useEffect(() => {
+        props.onChange?.call(undefined, formValue, isFormValid)
+    }, [props.onChange, formValue, formState, isFormValid])
 
     useEffect(() => {
         if (forceUpdate) {
@@ -214,21 +227,25 @@ const SkillForm: FC<SkillFormProps> = props => {
             <div className={styles.buttonsWrap}>
                 {props.secondaryButtons}
                 <div className={styles.primaryGroup}>
-                    <Button
-                        label='Cancel'
-                        size='lg'
-                        primary
-                        light
-                        onClick={props.onCancel}
-                    />
+                    {!props.hideCancelBtn && (
+                        <Button
+                            label='Cancel'
+                            size='lg'
+                            primary
+                            light
+                            onClick={props.onCancel}
+                        />
+                    )}
                     {props.primaryButtons?.(isFormValid)}
-                    <Button
-                        label='Save'
-                        size='lg'
-                        primary
-                        type='submit'
-                        disabled={!isFormValid || props.isDisabled}
-                    />
+                    {!props.hideSaveBtn && (
+                        <Button
+                            label={props.saveBtnLabel ?? 'Save'}
+                            size='lg'
+                            primary
+                            type='submit'
+                            disabled={!isFormValid || props.isDisabled}
+                        />
+                    )}
                 </div>
             </div>
         </form>

@@ -8,6 +8,7 @@ import {
     useRef,
 } from 'react'
 import { find } from 'lodash'
+import { FilterOptionOption } from 'react-select/dist/declarations/src/filters'
 import CreatableSelect from 'react-select/creatable'
 import ReactSelect, { GroupBase, OptionsOrGroups } from 'react-select'
 import classNames from 'classnames'
@@ -39,6 +40,9 @@ interface InputSelectReactProps {
     readonly createLabel?: (inputValue: string) => string
     readonly onCreateOption?: (inputValue: string) => void
     readonly onBlur?: (event: FocusEvent<HTMLInputElement>) => void
+    readonly openMenuOnClick?: boolean
+    readonly openMenuOnFocus?: boolean
+    readonly filterOption?: <T>(option: FilterOptionOption<T>, value: string) => boolean
 }
 
 /**
@@ -144,6 +148,7 @@ const InputSelectReact: FC<InputSelectReactProps> = props => {
                 onBlur={handleBlur}
                 backspaceRemovesValue
                 isDisabled={props.disabled}
+                filterOption={props.filterOption}
             />
         </InputWrapper>
     )
