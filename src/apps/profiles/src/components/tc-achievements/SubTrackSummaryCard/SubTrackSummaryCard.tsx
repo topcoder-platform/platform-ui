@@ -3,7 +3,7 @@ import classNames from 'classnames'
 
 import { IconSolid } from '~/libs/ui'
 
-import { subTrackLabelToHumanName, WinnerIcon } from '../../../lib'
+import { formatPlural, subTrackLabelToHumanName, WinnerIcon } from '../../../lib'
 
 import styles from './SubTrackSummaryCard.module.scss'
 
@@ -29,7 +29,9 @@ const SubTrackSummaryCard: FC<SubTrackSummaryCardProps> = props => (
                             {props.wins}
                         </span>
                         <span className={styles.statsItemLabel}>
-                            <span className='label'>wins</span>
+                            <span className='label'>
+                                {formatPlural(props.wins || 0, 'Win')}
+                            </span>
                         </span>
                     </div>
                 )}
@@ -38,7 +40,9 @@ const SubTrackSummaryCard: FC<SubTrackSummaryCardProps> = props => (
                         {props.submissions}
                     </span>
                     <span className={styles.statsItemLabel}>
-                        <span className='label'>submissions</span>
+                        <span className='label'>
+                            {formatPlural(props.submissions || 0, 'Submission')}
+                        </span>
                     </span>
                 </div>
             </div>
