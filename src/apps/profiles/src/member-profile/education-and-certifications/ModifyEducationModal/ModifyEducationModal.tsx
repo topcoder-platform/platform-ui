@@ -6,7 +6,7 @@ import classNames from 'classnames'
 
 import { BaseModal, Button, IconOutline, InputSelect, InputText } from '~/libs/ui'
 import {
-    updateOrCreateMemberTraitsAsync,
+    updateDeleteOrCreateMemberTraitAsync,
     UserProfile,
     UserTrait,
     UserTraitCategoryNames,
@@ -72,13 +72,13 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
 
         setIsSaving(true)
 
-        updateOrCreateMemberTraitsAsync(props.profile.handle, [{
+        updateDeleteOrCreateMemberTraitAsync(props.profile.handle, {
             categoryName: UserTraitCategoryNames.education,
             traitId: UserTraitIds.education,
             traits: {
                 data: memberEducation || [],
             },
-        }])
+        }, props.education)
             .then(() => {
                 toast.success('Education updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
                 props.onSave()
