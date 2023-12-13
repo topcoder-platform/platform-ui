@@ -58,17 +58,7 @@ const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
                                     )}
                                     {/* competitive programming only */}
                                     {track.isDSTrack && (
-                                        (track.percentile as number) >= 50 ? (
-                                            <span className={styles.trackStats}>
-                                                <span className={styles.count}>
-                                                    {track.percentile}
-                                                    %
-                                                </span>
-                                                <span className={styles.label}>
-                                                    Percentile
-                                                </span>
-                                            </span>
-                                        ) : (
+                                        (track.isCPTrack || (track.percentile as number) < 50) ? (
                                             <>
                                                 <span
                                                     className={styles.icon}
@@ -83,6 +73,16 @@ const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
                                                     </span>
                                                 </span>
                                             </>
+                                        ) : (
+                                            <span className={styles.trackStats}>
+                                                <span className={styles.count}>
+                                                    {track.percentile}
+                                                    %
+                                                </span>
+                                                <span className={styles.label}>
+                                                    Percentile
+                                                </span>
+                                            </span>
                                         )
                                     )}
                                     <IconOutline.ChevronRightIcon
