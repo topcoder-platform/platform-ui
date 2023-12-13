@@ -257,7 +257,7 @@ workflows:
                       branches:
                           only:
                               - dev
-                              - MP-356_member-stats-and-history
+                              - TSJR-314_skill-manager_landing-page
 
             - deployQa:
                   context: org-global
