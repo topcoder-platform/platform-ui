@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 
 import { BaseModal, Button, LoadingSpinner } from '~/libs/ui'
 
@@ -28,6 +28,12 @@ const ArchiveSkillsModal: FC<ArchiveSkillsModalProps> = props => {
     function close(): void {
         props.onClose()
     }
+
+    useEffect(() => {
+        if (!props.skills.length) {
+            props.onClose.call(undefined)
+        }
+    }, [props.onClose, props.skills])
 
     return (
         <BaseModal

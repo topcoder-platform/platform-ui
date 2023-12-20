@@ -61,7 +61,7 @@ const SkillModal: FC<SkillModalProps> = props => {
     }, [props.skill.id, refetchSkills, setEditSkill, action])
 
     const addAnother = useCallback(async (): Promise<void> => {
-        setTimeout(setEditSkill, 100, {} as StandardizedSkill)
+        setTimeout(setEditSkill, 750, {} as StandardizedSkill)
     }, [setEditSkill])
 
     const archiveSkill = useCallback(async (): Promise<void> => {
@@ -95,7 +95,7 @@ const SkillModal: FC<SkillModalProps> = props => {
             .then(() => {
                 refetchSkills()
                 setEditSkill()
-                toast.success(`Skill ${props.skill.name} archived successfully!`)
+                toast.success(`Skill ${props.skill.name} restored successfully!`)
             })
             .catch((e: any) => {
                 setIsLoading(false)

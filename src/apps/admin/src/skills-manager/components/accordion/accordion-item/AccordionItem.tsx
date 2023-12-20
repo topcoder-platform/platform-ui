@@ -47,7 +47,7 @@ const AccordionItem: FC<AccordionItemProps> = props => {
                             onAction={props.onMenuAction}
                             className={styles.menu}
                         >
-                            <IconOutline.DotsVerticalIcon className='icon-lg' />
+                            <IconOutline.DotsVerticalIcon className={classNames('icon-lg', styles.menuIcon)} />
                         </ActionsMenu>
                     )}
                 </div>

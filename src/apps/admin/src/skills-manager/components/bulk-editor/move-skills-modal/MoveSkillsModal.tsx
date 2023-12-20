@@ -1,10 +1,16 @@
-import { ChangeEvent, FC, useMemo, useState } from 'react'
+import { ChangeEvent, FC, useEffect, useMemo, useState } from 'react'
 import { noop } from 'lodash'
+import { toast } from 'react-toastify'
 
 import { BaseModal, Button, InputSelectReact, LoadingSpinner } from '~/libs/ui'
 
 import { SkillsManagerContextValue, useSkillsManagerContext } from '../../../context'
-import { bulkUpdateStandardizedSkills, StandardizedSkill } from '../../../services'
+import {
+    bulkUpdateStandardizedSkills,
+    saveStandardizedSkillCategory,
+    StandardizedSkill,
+    StandardizedSkillCategory,
+} from '../../../services'
 import { mapCategoryToSelectOption } from '../../../lib'
 import { SkillsList } from '../../skills-list'
 
@@ -21,6 +27,7 @@ const MoveSkillsModal: FC<MoveSkillsModalProps> = props => {
 
     const {
         bulkEditorCtx: context,
+        refetchCategories,
         categories,
     }: SkillsManagerContextValue = useSkillsManagerContext()
 
@@ -44,6 +51,26 @@ const MoveSkillsModal: FC<MoveSkillsModalProps> = props => {
     function close(): void {
         props.onClose()
     }
+
+    async function handleNewCategory(categoryName: string): Promise<void> {
+        setIsLoading(true)
+
+        const newCategory = await saveStandardizedSkillCategory(
+            { description: ' ', name: categoryName } as StandardizedSkillCategory,
+        )
+
+        refetchCategories()
+
+        setCategoryId(newCategory.id)
+        toast.success(`Category with name '${categoryName}' created!`)
+        setIsLoading(false)
+    }
+
+    useEffect(() => {
+        if (!props.skills.length) {
+            props.onClose.call(undefined)
+        }
+    }, [props.onClose, props.skills])
 
     return (
         <BaseModal
@@ -91,12 +118,16 @@ const MoveSkillsModal: FC<MoveSkillsModalProps> = props => {
                     <h2>To:</h2>
                 </div>
                 <InputSelectReact
+                    creatable
                     label='Skill Category'
                     placeholder='Select category'
                     options={categoryOptions}
-                    value={categoryId}
-                    name='to'
+                    name='categoryTo'
                     onChange={handleCategoryChange}
+                    createLabel={function label(v: string) { return `Create new category "${v}"` }}
+                    onCreateOption={handleNewCategory}
+                    value={categoryId}
+                    tabIndex={0}
                 />
             </div>
 

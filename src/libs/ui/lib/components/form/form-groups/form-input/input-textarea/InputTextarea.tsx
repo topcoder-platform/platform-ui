@@ -35,7 +35,7 @@ const InputTextarea: FC<InputTextareaProps> = (props: InputTextareaProps) => (
         <textarea
             autoComplete={props.autocomplete}
             className={styles['form-input-textarea']}
-            defaultValue={props.value}
+            value={props.value ?? ''}
             disabled={!!props.disabled}
             name={props.name}
             onBlur={props.onBlur}

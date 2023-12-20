@@ -1,4 +1,4 @@
-import { find } from 'lodash'
+import { escapeRegExp } from 'lodash'
 
 import { customValidatorRequired, FormDefinition, InputValue } from '~/libs/ui'
 
@@ -16,7 +16,8 @@ export const validateUniqueCategoryName = (
     category: StandardizedSkillCategory,
 ) => (
     (value: InputValue): string | undefined => {
-        const match = find(categories, { name: value }) as StandardizedSkillCategory | undefined
+        const filterRegex = new RegExp(`^${escapeRegExp((value as string || '').trim())}$`, 'i')
+        const match = categories.find(cat => filterRegex.test(cat.name))
         return match && match.id !== category.id
             ? 'A category with the same name already exists!' : undefined
     }

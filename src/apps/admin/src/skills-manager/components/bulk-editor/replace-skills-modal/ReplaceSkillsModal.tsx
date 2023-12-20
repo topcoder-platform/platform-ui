@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useState } from 'react'
+import { ChangeEvent, FC, useEffect, useState } from 'react'
 import { find } from 'lodash'
 
 import { BaseModal, Button, InputRadio, LoadingSpinner } from '~/libs/ui'
@@ -49,6 +49,12 @@ const ReplaceSkillsModal: FC<ReplaceSkillsModalProps> = props => {
         setReplacingSkill(undefined)
         setType(t)
     }
+
+    useEffect(() => {
+        if (!props.skills.length) {
+            props.onClose.call(undefined)
+        }
+    }, [props.onClose, props.skills])
 
     return (
         <BaseModal

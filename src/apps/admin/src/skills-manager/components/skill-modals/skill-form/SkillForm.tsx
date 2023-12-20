@@ -1,5 +1,5 @@
 import { ChangeEvent, FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
-import { find, pick } from 'lodash'
+import { escapeRegExp, pick } from 'lodash'
 import { toast } from 'react-toastify'
 
 import { Button, FormInputAutocompleteOption, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
@@ -67,8 +67,10 @@ const SkillForm: FC<SkillFormProps> = props => {
     function validateName(): void {
         const name = formValue.name?.trim() ?? ''
         const isValid = name.length > 0
-        const similarSkill = find(skillsList, { name })
-        const isDuplicate = similarSkill && similarSkill.id !== props.skill?.id
+        const filterRegex = new RegExp(`^${escapeRegExp(name)}$`, 'i')
+        const similarSkill = skillsList.find(skill => filterRegex.test(skill.name))
+        const isDuplicate = !!similarSkill && similarSkill.id !== props.skill?.id
+
         const error = !isValid ? 'Skill name is required!' : (
             isDuplicate ? 'A skill with the same name already exists!' : undefined
         )

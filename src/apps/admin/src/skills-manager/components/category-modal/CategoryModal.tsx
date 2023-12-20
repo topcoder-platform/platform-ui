@@ -57,7 +57,7 @@ const CategoryModal: FC<CategoryModalProps> = props => {
                 toast.success(`Category ${props.category.name} archived successfully!`)
             })
             .catch((e: any) => {
-                setError(e.message)
+                setError((e.message ?? '').replace(/with id [a-z0-9-]+/i, ''))
                 setLoading(false)
                 return Promise.reject(e)
             })
