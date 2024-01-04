@@ -260,6 +260,7 @@ workflows:
                               - justin_fixes
                               - talent_search_fixes
                               - feature/standardized-skills
+                              - CORE-96
 
             - deployQa:
                   context: org-global
