@@ -85,6 +85,7 @@
     "react-helmet": "^6.1.0",
     "react-html-parser": "^2.0.2",
     "react-markdown": "8.0.6",
+    "react-otp-input": "^3.1.1",
     "react-popper": "^2.3.0",
     "react-redux": "^8.0.4",
     "react-redux-toastr": "^7.6.10",

@@ -1,0 +1,57 @@
+@import '@libs/ui/styles/includes';
+
+.card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    background-color: white;
+    padding: 16px;
+    border-radius: 8px;
+    gap: $sp-4;
+    border: 1px solid #eaeaea;
+    margin: 16px 0;
+
+    .iconContainer {
+        width: 64px;
+        height: 64px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        background: linear-gradient(264.69deg, #198807 2.17%, #017c6d 97.49%);
+        border-radius: 4px;
+
+        .icon {
+            width: 26.67px;
+            height: 26.67px;
+            top: 2.67px;
+            left: 2.67px;
+            fill: white;
+        }
+    }
+
+    .content {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
+    .actionItems {
+        display: flex;
+        align-items: center;
+        width: 64px;
+        justify-content: space-between;
+
+        .actionButton {
+            width: 32px;
+            height: 32px;
+            background-color: transparent; // Change as necessary
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    }
+}

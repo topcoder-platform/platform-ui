@@ -1,0 +1,108 @@
+.otp-modal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+
+    .error {
+        color: red;
+    }
+
+    .otpInput {
+        width: 48px !important;
+        height: 48px;
+        margin: 5px;
+        text-align: center;
+        font-size: 1rem;
+        border: 2px solid #ccc;
+        border-radius: 4px;
+
+        &::-webkit-inner-spin-button,
+        &::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        &::-moz-focus-inner {
+            border: 0;
+        }
+
+        &[type='number'] {
+            -moz-appearance: textfield;
+        }
+
+        &::-ms-clear,
+        &::-ms-reveal {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+
+        &[type='number']::placeholder {
+            color: transparent;
+        }
+
+        &:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+    }
+
+    h3 {
+        font-size: 1.5rem;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .otpInputStyle {
+        width: 40px;
+        height: 50px;
+        margin: 0 5px;
+        text-align: center;
+        font-size: 2rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+
+        &:focus {
+            outline: none;
+            border-color: blue;
+        }
+    }
+
+    .otpInputFocusStyle {
+        border-color: #007bff;
+    }
+
+    p {
+        font-size: 0.9rem;
+        color: #666;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .resend-btn,
+    .submit-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-bottom: 10px;
+        transition: background-color 0.3s;
+
+        &:hover {
+            opacity: 0.8;
+        }
+    }
+
+    .resend-btn {
+        background-color: transparent;
+        color: #007bff;
+    }
+
+    .submit-btn {
+        background-color: #007bff;
+        color: white;
+    }
+}
