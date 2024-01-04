@@ -66,7 +66,7 @@ const PaymentsTab: FC<PaymentsTabProps> = (props: PaymentsTabProps) => {
     const [userPaymentProvider, setUserPaymentProvider] = useState<PaymentProvider | undefined>(undefined)
     const [setupRequired, setSetupRequired] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState<string | undefined>(undefined)
+    const [, setError] = useState<string | undefined>(undefined)
     const [selectedPaymentProvider, setSelectedPaymentProvider] = useState<string | undefined>(undefined)
     const [providerToSet, setProviderToSet] = useState<string | undefined>(undefined)
     const [transactionId, setTransactionId] = useState<string | undefined>(undefined)
@@ -263,7 +263,6 @@ const PaymentsTab: FC<PaymentsTabProps> = (props: PaymentsTabProps) => {
                     onClose={() => {
                         setProviderToSet(undefined)
                     }}
-                    onResendClick={() => {}}
                     onOtpVerified={() => {
                         window.open(registrationLink, '_blank')
 

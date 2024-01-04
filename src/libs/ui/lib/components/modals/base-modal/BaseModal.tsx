@@ -25,7 +25,7 @@ export interface BaseModalProps extends ModalProps {
 const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
     const { content }: ModalContentResponse = useFetchModalContent(
         props.contentUrl,
-        props.open
+        props.open,
     )
 
     const renterContent: () => ReactNode = () => {
@@ -51,7 +51,7 @@ const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
             document.documentElement.style.overflow = isOpen ? 'hidden' : ''
             document.body.style.overflow = isOpen ? 'hidden' : ''
         },
-        [props.open]
+        [props.open],
     )
 
     useEffect(() => {
@@ -71,16 +71,16 @@ const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
                 modal: classNames(
                     props.classNames?.modal,
                     `modal-${props.size || 'md'}`,
-                    props.theme && styles[`theme-${props.theme}`]
+                    props.theme && styles[`theme-${props.theme}`],
                 ),
             }}
-            closeIcon={
+            closeIcon={(
                 <IconOutline.XIcon
                     className={styles['close-icon']}
                     width={24}
                     height={24}
                 />
-            }
+            )}
             // send blockScroll as false unless we get a specific true from props
             blockScroll={props.blockScroll === true}
         >
@@ -102,7 +102,7 @@ const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
                 className={classNames(
                     props.bodyClassName,
                     styles['modal-body'],
-                    'modal-body'
+                    'modal-body',
                 )}
             >
                 {renterContent()}

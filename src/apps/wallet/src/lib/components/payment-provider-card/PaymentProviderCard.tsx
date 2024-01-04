@@ -58,7 +58,8 @@ const PaymentProviderCard: React.FC<PaymentProviderProps> = (props: PaymentProvi
 
             <div
                 className={`${styles.detailContainer} ${isVerified ? styles.singleRow : styles.stackedRows}`}
-                style={detailContainerStyle}>
+                style={detailContainerStyle}
+            >
                 {props.details.map((detail: Detail) => (
                     <div key={detail.label} className={styles.detail}>
                         <div className={styles.iconLabelContainer}>

@@ -4,7 +4,7 @@ import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
 const WalletApp: LazyLoadedComponent = lazyLoad(() => import('./WalletApp'))
 const WalletHomePage: LazyLoadedComponent = lazyLoad(
     () => import('./home'),
-    'WalletHomePage'
+    'WalletHomePage',
 )
 
 // prettier-ignore

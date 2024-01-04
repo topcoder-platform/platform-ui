@@ -1,11 +1,13 @@
-import React, { FC, useEffect, useMemo } from 'react'
+/* eslint-disable react/jsx-no-bind */
+import React, { FC, useEffect } from 'react'
 
-import { LoadingCircles, Table, TableColumn } from '~/libs/ui'
+import { LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
+
 import { getPayments, processPayments } from '../../../lib/services/wallet'
 import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
-
 import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
+
 import styles from './Winnings.module.scss'
 
 interface ListViewProps {
@@ -36,6 +38,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
 
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     const fetchWinnings = async () => {
         setIsLoading(true)
         try {
@@ -54,7 +57,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         const tempWinnings: Winning[] = []
 
         payments.forEach((payment: WinningDetail) => {
-            payment.details.forEach((detail) => {
+            payment.details.forEach(detail => {
                 const winning: Winning = {
                     createDate: formatIOSDateString(payment.createdAt),
                     datePaid: '',
@@ -83,7 +86,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                 {!isLoading && (
                     <PaymentsTable
                         payments={winnings}
-                        onPayMeClick={async (paymentIds) => {
+                        onPayMeClick={async paymentIds => {
                             const ids = Object.keys(paymentIds)
                             await processPayments(ids)
 

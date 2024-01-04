@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-no-bind */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import React, { useState } from 'react'
 
 import { Button } from '~/libs/ui'
@@ -14,34 +16,33 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
     const [selectedPayments, setSelectedPayments] = useState<{ [paymentId: string]: boolean }>({})
 
     const togglePaymentSelection = (paymentId: string) => {
-        setSelectedPayments((prevSelected) => ({
+        setSelectedPayments(prevSelected => ({
             ...prevSelected,
             [paymentId]: !prevSelected[paymentId],
         }))
     }
 
-    const isAllSelected = props.payments.length > 0 && props.payments.every((payment) => selectedPayments[payment.id])
+    const isAllSelected = props.payments.length > 0 && props.payments.every(payment => selectedPayments[payment.id])
 
     const toggleAllPayments = () => {
         if (isAllSelected) {
             setSelectedPayments({})
         } else {
             const newSelections: { [paymentId: string]: boolean } = {}
-            props.payments.forEach((payment) => {
+            props.payments.forEach(payment => {
                 newSelections[payment.id] = true
             })
             setSelectedPayments(newSelections)
         }
     }
 
-    const calculateTotal = () =>
-        props.payments.reduce((acc: number, payment: Winning) => {
-            if (selectedPayments[payment.id]) {
-                return acc + parseFloat(payment.netPayment.replace(/[^0-9.-]+/g, ''))
-            }
+    const calculateTotal = () => props.payments.reduce((acc: number, payment: Winning) => {
+        if (selectedPayments[payment.id]) {
+            return acc + parseFloat(payment.netPayment.replace(/[^0-9.-]+/g, ''))
+        }
 
-            return acc
-        }, 0)
+        return acc
+    }, 0)
 
     const total = calculateTotal()
 
@@ -70,7 +71,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                         </tr>
                     </thead>
                     <tbody>
-                        {props.payments.map((payment) => (
+                        {props.payments.map(payment => (
                             <tr key={payment.id} className={selectedPayments[payment.id] ? 'selected' : ''}>
                                 <td className='body-main'>{payment.description}</td>
                                 <td className='body-main-bold'>{payment.type}</td>
@@ -95,12 +96,16 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                 </table>
             </div>
             <div className={styles.paymentFooter}>
-                <div className={styles.total}>Total: ${total.toFixed(2)}</div>
+                <div className={styles.total}>
+                    Total: $
+                    {total.toFixed(2)}
+                </div>
                 <Button
                     primary
                     onClick={() => {
                         props.onPayMeClick(selectedPayments)
-                    }}>
+                    }}
+                >
                     PAY ME
                 </Button>
             </div>

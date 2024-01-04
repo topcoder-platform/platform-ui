@@ -23,9 +23,9 @@ function renderPayoneer(): JSX.Element {
                 transfer option (where available) and a wire transfer option. Certain fees may apply.
             </p>
             <p>
-                You will be directed to Payoneer's website in a new tab to complete your the connection. Please make
-                sure your account is fully verified to ensure withdrawal success.{' '}
-                <strong>You can return here after finishing up on Payoneer's site.</strong>
+                You will be directed to Payoneer&apos;s website in a new tab to complete your the connection. Please
+                make sure your account is fully verified to ensure withdrawal success.
+                <strong>You can return here after finishing up on Payoneer&apos;s site.</strong>
             </p>
         </>
     )
@@ -37,9 +37,9 @@ function renderPaypal(): JSX.Element {
             <PayPalLogo />
             <p>You can elect to receive payments deposited directly to your PayPal account. Certain fees may apply.</p>
             <p>
-                You will be directed to PayPal's website in a new tab to complete your the connection. Please make sure
-                your account is fully verified to ensure withdrawal success. You can return here after finishing up on
-                PayPal's site.
+                You will be directed to PayPal&apos;s website in a new tab to complete your the connection. Please make
+                sure your account is fully verified to ensure withdrawal success. You can return here after finishing up
+                on PayPal&apos;s site.
             </p>
         </>
     )
@@ -62,7 +62,8 @@ const PaymentInfoModal: FC<PaymentInfoModalProps> = (props: PaymentInfoModalProp
         open
         size='body'
         title='CONNECT PAYMENT PROVIDER ACCOUNT'
-        classNames={{ modal: styles.infoModal }}>
+        classNames={{ modal: styles.infoModal }}
+    >
         <div className={styles.modalContent}>
             {props.selectedPaymentProvider === 'Payoneer' ? renderPayoneer() : renderPaypal()}
         </div>

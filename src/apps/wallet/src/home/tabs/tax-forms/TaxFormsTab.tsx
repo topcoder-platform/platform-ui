@@ -68,7 +68,7 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
     const [setupRequired, setSetupRequired] = useState<boolean | undefined>(undefined)
     const [taxForm, setTaxForm] = useState<TaxForm | undefined>(undefined)
     const [isLoading, setIsLoading] = useState(false)
-    const [taxFormToSetup, setTaxFormToSetup] = useState<string | undefined>(undefined)
+    const [, setTaxFormToSetup] = useState<string | undefined>(undefined)
     const [taxFormSetupData, setTaxFormSetupData] = useState<SetupTaxFormResponse | undefined>(undefined)
 
     const fetchUserTaxForms = async () => {
@@ -97,21 +97,21 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
     function renderAllTaxForms(): JSX.Element {
         return (
             <div className={styles.stacked}>
-                {TAX_FORM_DETAILS.map((taxForm) => (
+                {TAX_FORM_DETAILS.map(form => (
                     <TaxFormCard
-                        key={taxForm.id}
-                        formTitle={taxForm.formTitle}
-                        formDescription={taxForm.formDescription}
-                        reasonTitle={taxForm.reasonTitle}
-                        reasonDescription={taxForm.reasonDescription}
-                        completionLabel={taxForm.completionLabel}
-                        instructionsLabel={taxForm.instructionsLabel}
-                        instructionsLink={taxForm.instructionsLink}
-                        additionalInfo={taxForm.additionalInfo}
-                        icon={taxForm.icon}
+                        key={form.id}
+                        formTitle={form.formTitle}
+                        formDescription={form.formDescription}
+                        reasonTitle={form.reasonTitle}
+                        reasonDescription={form.reasonDescription}
+                        completionLabel={form.completionLabel}
+                        instructionsLabel={form.instructionsLabel}
+                        instructionsLink={form.instructionsLink}
+                        additionalInfo={form.additionalInfo}
+                        icon={form.icon}
                         onSetupClick={async () => {
                             try {
-                                const setupTaxFormResponse = await setupTaxForm(`${props.profile.userId}`, taxForm.id)
+                                const setupTaxFormResponse = await setupTaxForm(`${props.profile.userId}`, form.id)
                                 setTaxFormSetupData(setupTaxFormResponse)
 
                                 fetchUserTaxForms()

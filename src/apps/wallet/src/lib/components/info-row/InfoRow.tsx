@@ -8,16 +8,14 @@ interface InfoRowProps {
     action?: React.ReactNode
 }
 
-const InfoRow: React.FC<InfoRowProps> = ({ title, value, action }) => {
-    return (
-        <div className={styles['info-row']}>
-            <div className={styles.title}>{title}</div>
-            <div className={styles['value-action-container']}>
-                <div className={styles.value}>{value}</div>
-                {action && <div className={styles.action}>{action}</div>}
-            </div>
+const InfoRow: React.FC<InfoRowProps> = (props: InfoRowProps) => (
+    <div className={styles['info-row']}>
+        <div className={styles.title}>{props.title}</div>
+        <div className={styles['value-action-container']}>
+            <div className={styles.value}>{props.value}</div>
+            {props.action && <div className={styles.action}>{props.action}</div>}
         </div>
-    )
-}
+    </div>
+)
 
 export default InfoRow

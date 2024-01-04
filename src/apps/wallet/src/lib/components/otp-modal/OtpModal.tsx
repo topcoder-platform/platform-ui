@@ -23,7 +23,7 @@ const OtpModal = ({
     key: string
     transactionId: string
     onClose: () => void
-    onResendClick: () => void
+    onResendClick?: () => void
     onOtpVerified: (key: string) => void
 }) => {
     const [otp, setOtp] = React.useState('')
@@ -60,7 +60,11 @@ const OtpModal = ({
             <div className={styles['otp-modal']}>
                 {error && <p className={styles.error}>{error}</p>}
                 <p>
-                    For added security we’ve sent a 6-digit code to your <strong>***@gmail.com</strong> email. The code
+                    For added security we’ve sent a 6-digit code to your
+                    {' '}
+                    <strong>***@gmail.com</strong>
+                    {' '}
+                    email. The code
                     expires shortly, so please enter it soon.
                 </p>
                 <OTPInput

@@ -70,6 +70,7 @@ const TaxFormCard: React.FC<TaxFormCardProps> = (props: TaxFormCardProps) => (
             <Button
                 secondary
                 label={props.instructionsLabel}
+                // eslint-disable-next-line react/jsx-no-bind
                 onClick={() => {
                     window.location.href = props.instructionsLink
                 }}

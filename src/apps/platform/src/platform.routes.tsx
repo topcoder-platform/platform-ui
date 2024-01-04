@@ -13,7 +13,7 @@ import { walletRoutes } from '~/apps/wallet'
 
 const Home: LazyLoadedComponent = lazyLoad(
     () => import('./routes/home'),
-    'HomePage'
+    'HomePage',
 )
 
 const homeRoutes: ReadonlyArray<PlatformRoute> = [
