@@ -35,7 +35,7 @@ const SkillForm: FC<SkillFormProps> = props => {
     const {
         categories,
         refetchCategories,
-        skillsList,
+        allSkills: skillsList,
     }: SkillsManagerContextValue = useSkillsManagerContext()
 
     const [forceUpdate, setForceUpdate] = useState(false)

@@ -7,6 +7,7 @@ import { findSkillsMatches, GroupedSkills, groupSkillsByCategory } from '../lib'
 import { SkillsBulkEditorContext, useSkillsBulkEditorContext } from './use-skills-bulk-editor-context'
 
 export interface SkillsManagerContextValue {
+    allSkills: StandardizedSkill[],
     categories: StandardizedSkillCategory[]
     skillsFilter: string
     setSkillsFilter: (filter: string) => void
@@ -37,16 +38,20 @@ export const SkillsManagerContext: FC<SkillsManagerContextProps> = props => {
     const [editSkill, setEditSkill] = useState<StandardizedSkill>()
 
     const {
-        data: allSkills,
+        data: allSkills = [],
         mutate: refetchSkills,
-    }: SWRResponse<StandardizedSkill[]> = useFetchSkills(showArchivedSkills)
+    }: SWRResponse<StandardizedSkill[]> = useFetchSkills(true)
 
     const {
         data: allCategories = [],
         mutate: refetchCategories,
     }: SWRResponse<StandardizedSkillCategory[]> = useFetchCategories()
 
-    const skills = useMemo(() => findSkillsMatches(allSkills ?? [], skillsFilter), [allSkills, skillsFilter])
+    const filteredSkills = useMemo(() => (
+        showArchivedSkills ? allSkills : allSkills.filter(s => !s.deleted_at)
+    ), [allSkills, showArchivedSkills])
+
+    const skills = useMemo(() => findSkillsMatches(filteredSkills, skillsFilter), [filteredSkills, skillsFilter])
     const groupedSkills = useMemo(() => groupSkillsByCategory(skills), [skills])
 
     const bulkEditorCtx = useSkillsBulkEditorContext(skills)
@@ -56,6 +61,7 @@ export const SkillsManagerContext: FC<SkillsManagerContextProps> = props => {
     }, [])
 
     const contextValue = useMemo(() => ({
+        allSkills,
         bulkEditorCtx,
         categories: allCategories,
         editCategory,
@@ -71,6 +77,7 @@ export const SkillsManagerContext: FC<SkillsManagerContextProps> = props => {
         skillsList: skills,
         toggleArchivedSkills,
     }), [
+        allSkills,
         bulkEditorCtx,
         allCategories,
         editCategory,
