@@ -54,4 +54,14 @@
             align-items: center;
         }
     }
+
+    .actionItemsStacked {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+
+        .warningLabel {
+            color: var(--btn-variant);
+        }
+    }
 }

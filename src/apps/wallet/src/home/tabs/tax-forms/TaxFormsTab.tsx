@@ -170,6 +170,9 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
                 // eslint-disable-next-line max-len
                 description={`You have submitted a ${key} Tax Form via DocuSign. Resubmission of forms required on ${formattedDate}`}
                 status={taxForm.status}
+                onResendOtpClick={function resendOtp() {
+                    // TODO: Use transactionID to resend OTP
+                }}
             />
         )
     }
