@@ -43,7 +43,7 @@ export function getHashFromTabId(tabId: string): string {
 
 export function getTabIdFromHash(hash: string): string {
     switch (hash) {
-        case '#dashboard':
+        case '#winnings':
             return WalletTabViews.winnings
         case '#tax-forms':
             return WalletTabViews.taxforms
