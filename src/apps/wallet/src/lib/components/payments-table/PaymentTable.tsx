@@ -105,6 +105,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                     onClick={() => {
                         props.onPayMeClick(selectedPayments)
                     }}
+                    disabled={total === 0}
                 >
                     PAY ME
                 </Button>
