@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 
 import { UserProfile } from '~/libs/core'
@@ -21,6 +21,10 @@ const WalletTabs: FC<WalletHomeProps> = (props: WalletHomeProps) => {
     const activeTabHash: string = useMemo<string>(() => getTabIdFromHash(hash), [hash])
 
     const [activeTab, setActiveTab]: [string, Dispatch<SetStateAction<string>>] = useState<string>(activeTabHash)
+
+    useEffect(() => {
+        setActiveTab(activeTabHash)
+    }, [activeTabHash])
 
     function handleTabChange(tabId: string): void {
         setActiveTab(tabId)
