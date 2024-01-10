@@ -57,7 +57,33 @@ const TAX_FORM_DETAILS = [
             'Under current IRS guidance, foreign persons performing services outside of the U.S. are not subject to income tax withholding. However, Topcoder requires all such members to provide a properly filled out W-8BEN prior to issuing payment. In addition, prize money paid to foreign persons who are not performing services (such as winning an SRM competition) is subject to withholding taxes.',
         reasonTitle: 'Why do I need to complete Form W-8BEN?',
     },
-    // Add more tax forms if needed
+    {
+        additionalInfo: {
+            // eslint-disable-next-line max-len
+            note: 'Topcoder’s policy is not to issue payments to foreign businesses until a properly completed Form W-8BEN-E is received from the member.',
+            purpose: {
+                points: [
+                    'Establish that you are not a U.S. business',
+                    'Claim that you are the beneficial owner of the income for which Form W-8BEN-E is being provided',
+                ],
+                title: 'The W-8BEN-E is required to',
+            },
+        },
+        completionLabel: 'Complete Form W-8BEN-E',
+        completionLink: 'https://www.irs.gov/pub/irs-pdf/fw8ben.pdf',
+        formDescription:
+            // eslint-disable-next-line max-len
+            'For businesses who are NOT a US business or other US person (such as a foreign business, non-resident alien or foreign national).',
+        formTitle: 'TAX FORM W-8BEN-E',
+        icon: <IconWorld />,
+        id: 'W-8BEN-E',
+        instructionsLabel: 'Instructions',
+        instructionsLink: 'https://www.irs.gov/pub/irs-pdf/iw8ben.pdf',
+        reasonDescription:
+            // eslint-disable-next-line max-len
+            'Under current IRS guidance, foreign persons performing services outside of the U.S. are not subject to income tax withholding. However, Topcoder requires all such members to provide a properly filled out W-8BEN prior to issuing payment. In addition, prize money paid to foreign persons who are not performing services (such as winning an SRM competition) is subject to withholding taxes.',
+        reasonTitle: 'Why do I need to complete Form W-8BEN-E?',
+    },
 ]
 
 interface TaxFormsTabProps {

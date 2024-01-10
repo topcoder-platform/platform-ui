@@ -2,6 +2,7 @@ import React from 'react'
 
 import { DownloadIcon, ExclamationCircleIcon, TrashIcon } from '@heroicons/react/solid'
 
+import { Button, IconOutline, LinkButton } from '~/libs/ui'
 import { IconCheckCircle } from '../../assets/tax-forms'
 
 import styles from './TaxFormDetail.module.scss'
@@ -10,8 +11,8 @@ interface TaxFormDetailProps {
     title: string
     description: string
     status: string
-    // onDownloadClick: () => void
-    // onDeleteClick: () => void
+    onDownloadClick?: () => void
+    onDeleteClick?: () => void
 }
 
 const TaxFormDetail: React.FC<TaxFormDetailProps> = (props: TaxFormDetailProps) => (
@@ -26,10 +27,25 @@ const TaxFormDetail: React.FC<TaxFormDetailProps> = (props: TaxFormDetailProps) 
             <div className='body-main'>{props.description}</div>
         </div>
 
-        <div className={styles.actionItems}>
-            <DownloadIcon className={styles.actionButton} />
-            <TrashIcon className={styles.actionButton} />
-        </div>
+        {props.status === 'OTP_PENDING' && (
+            <div className={styles.actionItems}>
+                <LinkButton
+                    className={styles.actionButton}
+                    label='RESEND OTP'
+                    iconToRight
+                    icon={IconOutline.MailIcon}
+                    size='md'
+                    link
+                />
+            </div>
+        )}
+
+        {props.status === 'ACTIVE' && (
+            <div className={styles.actionItems}>
+                <DownloadIcon className={styles.actionButton} onClick={props.onDownloadClick} />
+                <TrashIcon className={styles.actionButton} onClick={props.onDeleteClick} />
+            </div>
+        )}
     </div>
 )
 
