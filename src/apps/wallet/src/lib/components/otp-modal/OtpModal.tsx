@@ -1,50 +1,43 @@
-/* eslint-disable react/prop-types */
-/* eslint-disable react/jsx-no-bind */
-/* eslint-disable react/no-unstable-nested-components */
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
-/* eslint-disable react/destructuring-assignment */
 import OTPInput, { InputProps } from 'react-otp-input'
-import React from 'react'
+import React, { FC } from 'react'
 
 import { BaseModal, LoadingCircles } from '~/libs/ui'
 import { verifyOtp } from '~/apps/wallet/src/lib/services/wallet'
 
+import { OtpVerificationResponse } from '../../models/OtpVerificationResponse'
+
 import styles from './OtpModal.module.scss'
 
-const OtpModal = ({
-    isOpen,
-    key,
-    transactionId,
-    onClose,
-    onResendClick,
-    onOtpVerified,
-}: {
+interface OtpModalProps {
     isOpen: boolean
     key: string
     transactionId: string
+    userEmail?: string
     onClose: () => void
     onResendClick?: () => void
-    onOtpVerified: (key: string) => void
-}) => {
+    onOtpVerified: (data: unknown) => void
+}
+
+const OtpModal: FC<OtpModalProps> = (props: OtpModalProps) => {
     const [otp, setOtp] = React.useState('')
     const [loading, setLoading] = React.useState(false)
     const [error, setError] = React.useState('')
 
     React.useEffect(() => {
-        if (!isOpen) {
+        if (!props.isOpen) {
             setOtp('')
             setError('')
         }
-    }, [isOpen])
+    }, [props.isOpen])
 
-    const handleChange = (code: string) => {
+    function handleChange(code: string): void {
         setOtp(code)
         if (code.length === 6) {
             setLoading(true)
-            verifyOtp(transactionId, code)
-                .then(() => {
+            verifyOtp(props.transactionId, code)
+                .then((response: OtpVerificationResponse) => {
+                    props.onOtpVerified(response)
                     setLoading(false)
-                    onOtpVerified(key)
                 })
                 .catch((err: Error) => {
                     setLoading(false)
@@ -56,13 +49,20 @@ const OtpModal = ({
     }
 
     return (
-        <BaseModal spacer={false} title='CHECK YOUR EMAIL FOR A CODE' open blockScroll onClose={onClose} size='md'>
+        <BaseModal
+            spacer={false}
+            title='CHECK YOUR EMAIL FOR A CODE'
+            open
+            blockScroll
+            onClose={props.onClose}
+            size='md'
+        >
             <div className={styles['otp-modal']}>
                 {error && <p className={styles.error}>{error}</p>}
                 <p>
                     For added security we’ve sent a 6-digit code to your
                     {' '}
-                    <strong>***@gmail.com</strong>
+                    <strong>{props.userEmail ?? '***@gmail.com'}</strong>
                     {' '}
                     email. The code
                     expires shortly, so please enter it soon.
@@ -70,6 +70,7 @@ const OtpModal = ({
                 <OTPInput
                     value={otp}
                     numInputs={6}
+                    // eslint-disable-next-line react/jsx-no-bind
                     renderInput={(inputProps: InputProps) => <input {...inputProps} className={styles.otpInput} />}
                     onChange={handleChange}
                     inputType='number'
@@ -80,7 +81,7 @@ const OtpModal = ({
                 <p>Can&apos;t find the code? Check your spam folder.</p>
                 {loading && <LoadingCircles />}
                 {!loading && (
-                    <button type='button' className={styles['resend-btn']} onClick={onResendClick}>
+                    <button type='button' className={styles['resend-btn']} onClick={props.onResendClick}>
                         Resend code
                     </button>
                 )}

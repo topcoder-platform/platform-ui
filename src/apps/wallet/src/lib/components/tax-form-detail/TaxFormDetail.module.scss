@@ -61,7 +61,21 @@
         align-items: flex-end;
 
         .warningLabel {
-            color: var(--btn-variant);
+            color: $legacy-120;
         }
+    }
+
+    .actionButton,
+    .loadingWrapper {
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .hidden {
+        opacity: 0;
+        display: none;
+        transform: scale(0.95);
+        pointer-events: none;
     }
 }

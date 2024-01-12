@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
-/* eslint-disable react/jsx-no-bind */
 import { FC, useEffect, useState } from 'react'
 
 import { Collapsible, LoadingCircles } from '~/libs/ui'
@@ -9,9 +7,10 @@ import { Chip } from '../../../lib'
 import { OtpModal } from '../../../lib/components/otp-modal'
 import { TaxFormCard } from '../../../lib/components/tax-form-card'
 import { IconUS, IconWorld } from '../../../lib/assets/tax-forms'
-import { getUserTaxFormDetails, setupTaxForm } from '../../../lib/services/wallet'
-import { SetupTaxFormResponse, TaxForm } from '../../../lib/models/TaxForm'
+import { getUserTaxFormDetails, removeTaxForm, resendOtp, setupTaxForm } from '../../../lib/services/wallet'
+import { TaxForm } from '../../../lib/models/TaxForm'
 import { TaxFormDetail } from '../../../lib/components/tax-form-detail'
+import { TransactionResponse } from '../../../lib/models/TransactionId'
 
 import styles from './TaxFormsTab.module.scss'
 
@@ -94,10 +93,9 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
     const [setupRequired, setSetupRequired] = useState<boolean | undefined>(undefined)
     const [taxForm, setTaxForm] = useState<TaxForm | undefined>(undefined)
     const [isLoading, setIsLoading] = useState(false)
-    const [, setTaxFormToSetup] = useState<string | undefined>(undefined)
-    const [taxFormSetupData, setTaxFormSetupData] = useState<SetupTaxFormResponse | undefined>(undefined)
+    const [otpFlow, setOtpFlow] = useState<TransactionResponse | undefined>(undefined)
 
-    const fetchUserTaxForms = async () => {
+    async function fetchUserTaxForms(): Promise<void> {
         setIsLoading(true)
 
         try {
@@ -135,15 +133,19 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
                         instructionsLink={form.instructionsLink}
                         additionalInfo={form.additionalInfo}
                         icon={form.icon}
-                        onSetupClick={async () => {
+                        onSetupClick={async function onSetupTaxFormClick() {
                             try {
-                                const setupTaxFormResponse = await setupTaxForm(`${props.profile.userId}`, form.id)
-                                setTaxFormSetupData(setupTaxFormResponse)
+                                const transaction = await setupTaxForm(`${props.profile.userId}`, form.id)
 
+                                setOtpFlow({
+                                    ...transaction,
+                                    type: 'SETUP_TAX_FORM',
+                                })
                                 fetchUserTaxForms()
                             } catch (err) {
                                 console.log('Error setting up tax form', err)
                             }
+
                         }}
                     />
                 ))}
@@ -170,8 +172,21 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
                 // eslint-disable-next-line max-len
                 description={`You have submitted a ${key} Tax Form via DocuSign. Resubmission of forms required on ${formattedDate}`}
                 status={taxForm.status}
-                onResendOtpClick={function resendOtp() {
-                    // TODO: Use transactionID to resend OTP
+                onDeleteClick={async function onDeleteClick() {
+                    removeTaxForm(taxForm.id)
+                        .then((transaction: TransactionResponse) => {
+                            setOtpFlow({ ...transaction, type: 'REMOVE_TAX_FORM' })
+                        })
+                }}
+                onResendOtpClick={async function onResendOtpClick() {
+                    const response: TransactionResponse = await resendOtp(taxForm.transactionId)
+                    setTaxForm({
+                        ...taxForm,
+                        status: 'OTP_VERIFICATION_IN_PROGRESS',
+                    })
+                    setOtpFlow({
+                        ...response,
+                    })
                 }}
             />
         )
@@ -187,8 +202,8 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
             <div className={styles.content}>
                 <Collapsible header={<h3>TAX FORM REQUIREMENTS</h3>}>
                     <p className={`${styles.contentTitle} body-main`}>
-                        All members must have a tax form on file before they can be paid. There are two options: a W-9
-                        or a W-8BEN. We will walk you through completing your tax form.
+                        All members must have a tax form on file before they can be paid. The options are:
+                        a W-9, W-8BEN or a W-8BEN-E.
                     </p>
 
                     {isLoading && <LoadingCircles />}
@@ -198,21 +213,31 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
                 </Collapsible>
             </div>
 
-            {taxFormSetupData !== undefined && (
+            {otpFlow !== undefined && (
                 <OtpModal
-                    transactionId={taxFormSetupData.transactionId}
-                    isOpen={setupRequired !== undefined}
-                    key={taxFormSetupData.eSignLink}
-                    onClose={() => {
-                        setTaxFormToSetup(undefined)
+                    transactionId={otpFlow.transactionId}
+                    key={otpFlow.transactionId}
+                    userEmail={otpFlow.email}
+                    isOpen={otpFlow !== undefined}
+                    onClose={function onOtpModalClose() {
+                        setOtpFlow(undefined)
                     }}
-                    onResendClick={() => {
-                        // TODO: Call resend OTP API
+                    onResendClick={function onResendClick() {
+                        resendOtp(otpFlow.transactionId)
                     }}
-                    onOtpVerified={(eSignLink: string) => {
-                        console.log('eSignLink', eSignLink)
-                        window.open(taxFormSetupData.eSignLink, '_blank')
-                        setTaxFormSetupData(undefined)
+                    onOtpVerified={function onOtpVerified(data: unknown) {
+                        switch (otpFlow.type) {
+                            case 'REMOVE_TAX_FORM':
+                                fetchUserTaxForms()
+                                break
+                            case 'SETUP_TAX_FORM':
+                                window.open((data as { eSignLink: string })?.eSignLink, '_blank')
+                                break
+                            default:
+                                break
+                        }
+
+                        setOtpFlow(undefined)
                     }}
                 />
             )}

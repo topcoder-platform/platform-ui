@@ -1,11 +1,12 @@
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync, xhrPostAsync } from '~/libs/core'
+import { xhrDeleteAsync, xhrGetAsync, xhrPostAsync } from '~/libs/core'
 
 import { WalletDetails } from '../models/WalletDetails'
 import { PaymentProvider, SetPaymentProviderResponse } from '../models/PaymentProvider'
-import { ApiError } from '../models/ApiError'
 import { WinningDetail } from '../models/WinningDetail'
-import { SetupTaxFormResponse, TaxForm } from '../models/TaxForm'
+import { TaxForm } from '../models/TaxForm'
+import { OtpVerificationResponse } from '../models/OtpVerificationResponse'
+import { TransactionResponse } from '../models/TransactionId'
 import ApiResponse from '../models/ApiResponse'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/payments`
@@ -92,17 +93,28 @@ export async function confirmPaymentProvider(provider: string, code: string, tra
     return response.data
 }
 
-export async function setupTaxForm(userId: string, taxForm: string): Promise<SetupTaxFormResponse> {
+export async function setupTaxForm(userId: string, taxForm: string): Promise<TransactionResponse> {
     const body = JSON.stringify({
         taxForm,
         userId,
     })
 
     const url = `${baseUrl}/user/tax-form`
-    const response = await xhrPostAsync<string, ApiResponse<SetupTaxFormResponse>>(url, body)
+    const response = await xhrPostAsync<string, ApiResponse<TransactionResponse>>(url, body)
 
     if (response.status === 'error') {
         throw new Error('Error setting tax form')
+    }
+
+    return response.data
+}
+
+export async function removeTaxForm(taxFormId: string): Promise<TransactionResponse> {
+    const url = `${baseUrl}/user/tax-forms/${taxFormId}`
+    const response = await xhrDeleteAsync<ApiResponse<TransactionResponse>>(url)
+
+    if (response.status === 'error') {
+        throw new Error('Error removing tax form')
     }
 
     return response.data
@@ -122,7 +134,7 @@ export async function processPayments(paymentIds: string[]): Promise<{ processed
     return response.data
 }
 
-export async function verifyOtp(transactionId: string, code: string): Promise<void> {
+export async function verifyOtp(transactionId: string, code: string): Promise<OtpVerificationResponse> {
     const body = JSON.stringify({
         otpCode: code,
         transactionId,
@@ -130,12 +142,33 @@ export async function verifyOtp(transactionId: string, code: string): Promise<vo
 
     const url = `${baseUrl}/otp/verify`
     try {
-        const response = await xhrPostAsync<string, ApiResponse<ApiError>>(url, body)
+        const response = await xhrPostAsync<string, ApiResponse<OtpVerificationResponse>>(url, body)
 
         if (response.status === 'error') {
             throw new Error('OTP verification failed or OTP has expired')
         }
+
+        return response.data
     } catch (err) {
         throw new Error('OTP verification failed or OTP has expired')
+    }
+}
+
+export async function resendOtp(transactionId: string): Promise<TransactionResponse> {
+    const body = JSON.stringify({
+        transactionId,
+    })
+
+    const url = `${baseUrl}/otp/resend`
+    try {
+        const response = await xhrPostAsync<string, ApiResponse<TransactionResponse>>(url, body)
+
+        if (response.status === 'error') {
+            throw new Error('Failed to resend OTP.')
+        }
+
+        return response.data
+    } catch (err) {
+        throw new Error('Failed to resend OTP.')
     }
 }

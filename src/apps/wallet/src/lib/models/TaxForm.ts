@@ -10,9 +10,9 @@ export interface TaxForm {
         description: string
     }
     status: string
+    transactionId: string
 }
 
 export interface SetupTaxFormResponse {
     transactionId: string
-    eSignLink: string
 }
