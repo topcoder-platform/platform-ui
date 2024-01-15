@@ -23,7 +23,6 @@ const ActionBarItem: React.FC<ActionBarItemProps> = (props: ActionBarItemProps) 
         props.onConfirm?.()
     }, [props])
 
-
     return (
         <>
             <div className={props.containerClassName}>
