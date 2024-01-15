@@ -80,7 +80,12 @@
         .providersStacked {
             display: grid;
             gap: $sp-4;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(1, 1fr);
+
+            @media (min-width: '768px') {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: auto auto;
+            }
         }
 
         .providerSubmitted {
