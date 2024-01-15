@@ -1,5 +1,7 @@
+import { AxiosError } from 'axios'
+
 import { EnvironmentConfig } from '~/config'
-import { xhrDeleteAsync, xhrGetAsync, xhrPostAsync } from '~/libs/core'
+import { xhrDeleteAsync, xhrGetAsync, xhrPostAsync, xhrPostAsyncWithBlobHandling } from '~/libs/core'
 
 import { WalletDetails } from '../models/WalletDetails'
 import { PaymentProvider, SetPaymentProviderResponse } from '../models/PaymentProvider'
@@ -120,6 +122,17 @@ export async function removeTaxForm(taxFormId: string): Promise<TransactionRespo
     return response.data
 }
 
+export async function getRecipientViewURL(): Promise<TransactionResponse> {
+    const url = `${baseUrl}/user/tax-form/esign-url`
+    const response = await xhrGetAsync<ApiResponse<TransactionResponse>>(url)
+
+    if (response.status === 'error') {
+        throw new Error('Error removing tax form')
+    }
+
+    return response.data
+}
+
 export async function processPayments(paymentIds: string[]): Promise<{ processed: boolean }> {
     const body = JSON.stringify({
         paymentIds,
@@ -134,7 +147,8 @@ export async function processPayments(paymentIds: string[]): Promise<{ processed
     return response.data
 }
 
-export async function verifyOtp(transactionId: string, code: string): Promise<OtpVerificationResponse> {
+// eslint-disable-next-line max-len
+export async function verifyOtp(transactionId: string, code: string, blob: boolean = false): Promise<OtpVerificationResponse | Blob> {
     const body = JSON.stringify({
         otpCode: code,
         transactionId,
@@ -142,7 +156,14 @@ export async function verifyOtp(transactionId: string, code: string): Promise<Ot
 
     const url = `${baseUrl}/otp/verify`
     try {
-        const response = await xhrPostAsync<string, ApiResponse<OtpVerificationResponse>>(url, body)
+        // eslint-disable-next-line max-len
+        const response = await xhrPostAsyncWithBlobHandling<string, ApiResponse<OtpVerificationResponse> | Blob>(url, body, {
+            responseType: blob ? 'blob' : 'json',
+        })
+
+        if (response instanceof Blob) {
+            return response as Blob
+        }
 
         if (response.status === 'error') {
             throw new Error('OTP verification failed or OTP has expired')
@@ -169,6 +190,10 @@ export async function resendOtp(transactionId: string): Promise<TransactionRespo
 
         return response.data
     } catch (err) {
+        if (err instanceof AxiosError && err.response?.data?.error !== undefined) {
+            throw new Error(err.response.data.error?.message)
+        }
+
         throw new Error('Failed to resend OTP.')
     }
 }

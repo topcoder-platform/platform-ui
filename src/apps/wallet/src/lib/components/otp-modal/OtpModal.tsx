@@ -13,6 +13,7 @@ interface OtpModalProps {
     key: string
     transactionId: string
     userEmail?: string
+    isBlob?: boolean
     onClose: () => void
     onResendClick?: () => void
     onOtpVerified: (data: unknown) => void
@@ -34,10 +35,10 @@ const OtpModal: FC<OtpModalProps> = (props: OtpModalProps) => {
         setOtp(code)
         if (code.length === 6) {
             setLoading(true)
-            verifyOtp(props.transactionId, code)
-                .then((response: OtpVerificationResponse) => {
-                    props.onOtpVerified(response)
+            verifyOtp(props.transactionId, code, props.isBlob)
+                .then((response: OtpVerificationResponse | Blob) => {
                     setLoading(false)
+                    props.onOtpVerified(response)
                 })
                 .catch((err: Error) => {
                     setLoading(false)

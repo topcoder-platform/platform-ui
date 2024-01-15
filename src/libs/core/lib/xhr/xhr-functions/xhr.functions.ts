@@ -122,6 +122,16 @@ export async function postAsync<T, R>(
     return output.data
 }
 
+export async function postAsyncWithBlobHandling<T, R>(
+    url: string,
+    data: T,
+    config?: AxiosRequestConfig<T>,
+    xhrInstance: AxiosInstance = globalInstance,
+): Promise<R | Blob> {
+    const response: AxiosResponse<R | Blob> = await xhrInstance.post(url, data, config)
+    return response.data
+}
+
 export async function putAsync<T, R>(
     url: string,
     data: T,

@@ -6,6 +6,7 @@ export {
     getPaginatedAsync as xhrGetPaginatedAsync,
     patchAsync as xhrPatchAsync,
     postAsync as xhrPostAsync,
+    postAsyncWithBlobHandling as xhrPostAsyncWithBlobHandling,
     putAsync as xhrPutAsync,
     type PaginatedResponse,
 } from './xhr.functions'

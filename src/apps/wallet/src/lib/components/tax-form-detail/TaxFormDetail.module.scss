@@ -46,12 +46,23 @@
         .actionButton {
             width: 32px;
             height: 32px;
-            background-color: transparent;
             border: none;
             cursor: pointer;
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+
+        .downloadIcon {
+            width: 24px;
+            height: 24px;
+            fill: $turq-160;
+        }
+
+        .deleteIcon {
+            width: 24px;
+            height: 24px;
+            fill: $red-140;
         }
     }
 

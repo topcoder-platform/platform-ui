@@ -1,13 +1,17 @@
 import { FC, useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
 
 import { Collapsible, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
+import { downloadBlob } from '~/libs/shared'
 
 import { Chip } from '../../../lib'
 import { OtpModal } from '../../../lib/components/otp-modal'
 import { TaxFormCard } from '../../../lib/components/tax-form-card'
 import { IconUS, IconWorld } from '../../../lib/assets/tax-forms'
-import { getUserTaxFormDetails, removeTaxForm, resendOtp, setupTaxForm } from '../../../lib/services/wallet'
+import {
+    getRecipientViewURL, getUserTaxFormDetails, removeTaxForm, resendOtp, setupTaxForm,
+} from '../../../lib/services/wallet'
 import { TaxForm } from '../../../lib/models/TaxForm'
 import { TaxFormDetail } from '../../../lib/components/tax-form-detail'
 import { TransactionResponse } from '../../../lib/models/TransactionId'
@@ -95,8 +99,8 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
     const [isLoading, setIsLoading] = useState(false)
     const [otpFlow, setOtpFlow] = useState<TransactionResponse | undefined>(undefined)
 
-    async function fetchUserTaxForms(): Promise<void> {
-        setIsLoading(true)
+    async function fetchUserTaxForms(refresh: boolean = true): Promise<void> {
+        setIsLoading(refresh)
 
         try {
             const taxForms = await getUserTaxFormDetails()
@@ -141,9 +145,12 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
                                     ...transaction,
                                     type: 'SETUP_TAX_FORM',
                                 })
-                                fetchUserTaxForms()
+                                fetchUserTaxForms(false)
                             } catch (err) {
-                                console.log('Error setting up tax form', err)
+                                toast.error(
+                                    (err as Error).message ?? 'Something went wrong. Please try again.',
+                                    { position: toast.POSITION.BOTTOM_RIGHT },
+                                )
                             }
 
                         }}
@@ -177,16 +184,54 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
                         .then((transaction: TransactionResponse) => {
                             setOtpFlow({ ...transaction, type: 'REMOVE_TAX_FORM' })
                         })
+                        .catch((err: unknown) => {
+                            toast.error(
+                                (err as Error).message ?? 'Something went wrong. Please try again.',
+                                { position: toast.POSITION.BOTTOM_RIGHT },
+                            )
+                        })
                 }}
                 onResendOtpClick={async function onResendOtpClick() {
-                    const response: TransactionResponse = await resendOtp(taxForm.transactionId)
-                    setTaxForm({
-                        ...taxForm,
-                        status: 'OTP_VERIFICATION_IN_PROGRESS',
-                    })
-                    setOtpFlow({
-                        ...response,
-                    })
+                    try {
+                        const response: TransactionResponse = await resendOtp(taxForm.transactionId)
+                        setOtpFlow({
+                            ...response,
+                            type: 'SETUP_TAX_FORM',
+                        })
+                    } catch (err: unknown) {
+                        toast.error(
+                            (err as Error).message ?? 'Something went wrong. Please try again.',
+                            { position: toast.POSITION.BOTTOM_RIGHT },
+                        )
+                    }
+                }}
+                onGetRecipientURL={async function onGetRecipientURL() {
+                    try {
+                        const response: TransactionResponse = await getRecipientViewURL()
+                        setOtpFlow({
+                            ...response,
+                            type: 'VIEW_TAX_FORM',
+                        })
+                    } catch (err: unknown) {
+                        toast.error(
+                            (err as Error).message ?? 'Something went wrong. Please try again.',
+                            { position: toast.POSITION.BOTTOM_RIGHT },
+                        )
+                    }
+                }}
+                onDownloadClick={async function onDownloadSignedDocumentClick() {
+                    try {
+                        const response: TransactionResponse = await getRecipientViewURL()
+                        setOtpFlow({
+                            ...response,
+                            type: 'DOWNLOAD_TAX_FORM',
+                        })
+                    } catch (err: unknown) {
+                        toast.error(
+                            (err as Error).message ?? 'Something went wrong. Please try again.',
+                            { position: toast.POSITION.BOTTOM_RIGHT },
+                        )
+                    }
                 }}
             />
         )
@@ -219,6 +264,7 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
                     key={otpFlow.transactionId}
                     userEmail={otpFlow.email}
                     isOpen={otpFlow !== undefined}
+                    isBlob={otpFlow.type === 'DOWNLOAD_TAX_FORM'}
                     onClose={function onOtpModalClose() {
                         setOtpFlow(undefined)
                     }}
@@ -228,10 +274,16 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
                     onOtpVerified={function onOtpVerified(data: unknown) {
                         switch (otpFlow.type) {
                             case 'REMOVE_TAX_FORM':
-                                fetchUserTaxForms()
+                                fetchUserTaxForms(false)
                                 break
                             case 'SETUP_TAX_FORM':
+                            case 'VIEW_TAX_FORM':
+                                fetchUserTaxForms(false)
                                 window.open((data as { eSignLink: string })?.eSignLink, '_blank')
+                                break
+                            case 'DOWNLOAD_TAX_FORM':
+                                downloadBlob(data as Blob, `tax-form-${props.profile.userId}-${new Date()
+                                    .getTime()}.pdf`)
                                 break
                             default:
                                 break

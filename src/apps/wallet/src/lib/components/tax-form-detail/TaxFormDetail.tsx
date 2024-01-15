@@ -19,6 +19,7 @@ interface TaxFormDetailProps {
     title: string
     description: string
     status: string
+    onGetRecipientURL?: () => void
     onResendOtpClick?: () => void
     onDownloadClick?: () => void
     onDeleteClick?: () => void
@@ -76,10 +77,10 @@ const TaxFormDetail: React.FC<TaxFormDetailProps> = (props: TaxFormDetailProps) 
                 icon: IconSolid.MailIcon,
                 text: 'Go to DocuSign page',
             }}
-            onConfirm={function onResendDocsuignClick() {
+            onConfirm={function onGetRecipientURL() {
                 setConfirmFlow({
                     action: 'Yes',
-                    callback: props.onResendOtpClick,
+                    callback: props.onGetRecipientURL,
                     content: 'You will be redirected to DocuSign.',
                     title: 'Are you sure?',
                 })
@@ -89,9 +90,10 @@ const TaxFormDetail: React.FC<TaxFormDetailProps> = (props: TaxFormDetailProps) 
 
     const renderActive = (): JSX.Element => (
         <div className={styles.actionItems}>
-            <DownloadIcon className={styles.actionButton} onClick={props.onDownloadClick} />
+            <DownloadIcon className={`${styles.actionButton} ${styles.downloadIcon}`} onClick={props.onDownloadClick} />
             <TrashIcon
-                className={styles.actionButton}
+                color='#8C384C'
+                className={`${styles.actionButton} ${styles.deleteIcon}`}
                 onClick={function confirm() {
                     setConfirmFlow({
                         action: 'Yes',
