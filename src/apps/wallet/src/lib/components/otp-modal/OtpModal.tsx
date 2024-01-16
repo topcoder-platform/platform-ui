@@ -9,6 +9,8 @@ import { OtpVerificationResponse } from '../../models/OtpVerificationResponse'
 
 import styles from './OtpModal.module.scss'
 
+const RESEND_OTP_TIMEOUT = 60000
+
 interface OtpModalProps {
     isOpen: boolean
     key: string
@@ -32,7 +34,7 @@ const OtpModal: FC<OtpModalProps> = (props: OtpModalProps) => {
             setShowResendButton(false)
             timer = setTimeout(() => {
                 setShowResendButton(true)
-            }, 60000)
+            }, RESEND_OTP_TIMEOUT)
         }
 
         return () => {
@@ -114,6 +116,9 @@ const OtpModal: FC<OtpModalProps> = (props: OtpModalProps) => {
                             try {
                                 await resendOtp(props.transactionId)
                                 setShowResendButton(false)
+                                setTimeout(() => {
+                                    setShowResendButton(true)
+                                }, RESEND_OTP_TIMEOUT)
                                 toast.success(
                                     'OTP sent successfully.',
                                     { position: toast.POSITION.BOTTOM_RIGHT },
