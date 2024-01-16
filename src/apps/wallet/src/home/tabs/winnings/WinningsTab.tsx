@@ -59,13 +59,14 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         payments.forEach((payment: WinningDetail) => {
             payment.details.forEach(detail => {
                 const winning: Winning = {
+                    canBeReleased: new Date(payment.releaseDate) <= new Date(),
                     createDate: formatIOSDateString(payment.createdAt),
                     datePaid: '',
                     description: payment.description,
                     id: payment.id,
                     installment: detail.installmentNumber,
                     netPayment: `${detail.netAmount}`,
-                    releaseDate: '',
+                    releaseDate: formatIOSDateString(payment.releaseDate),
                     status: detail.status,
                     type: payment.type,
                 }

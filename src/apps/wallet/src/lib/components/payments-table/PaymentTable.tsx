@@ -64,6 +64,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 <input
                                     type='checkbox'
                                     onChange={toggleAllPayments}
+                                    disabled={props.payments.find(payment => payment.status !== 'OWED') === undefined}
                                     checked={isAllSelected}
                                     aria-label='Select all payments'
                                 />
@@ -72,7 +73,10 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                     </thead>
                     <tbody>
                         {props.payments.map(payment => (
-                            <tr key={payment.id} className={selectedPayments[payment.id] ? 'selected' : ''}>
+                            <tr
+                                key={`${payment.id}${payment.installment}`}
+                                className={selectedPayments[payment.id] ? 'selected' : ''}
+                            >
                                 <td className='body-main'>{payment.description}</td>
                                 <td className='body-main-bold'>{payment.type}</td>
                                 <td>{payment.installment}</td>
@@ -84,7 +88,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 <td>
                                     <input
                                         type='checkbox'
-                                        disabled={payment.status !== 'OWED'}
+                                        disabled={payment.status !== 'OWED' || !payment.canBeReleased}
                                         checked={!!selectedPayments[payment.id]}
                                         onChange={() => togglePaymentSelection(payment.id)}
                                         aria-label={`Select payment ${payment.id}`}

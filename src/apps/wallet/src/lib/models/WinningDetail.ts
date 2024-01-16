@@ -8,6 +8,7 @@ export interface Winning {
     releaseDate: string
     datePaid: string
     installment: number
+    canBeReleased: boolean
 }
 
 export interface WinningDetail {
@@ -32,4 +33,5 @@ export interface WinningDetail {
         currency: string
     }[]
     createdAt: string
+    releaseDate: string
 }
