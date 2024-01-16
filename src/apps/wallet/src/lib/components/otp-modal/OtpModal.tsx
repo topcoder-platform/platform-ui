@@ -1,8 +1,9 @@
+import { toast } from 'react-toastify'
 import OTPInput, { InputProps } from 'react-otp-input'
 import React, { FC } from 'react'
 
-import { BaseModal, LoadingCircles } from '~/libs/ui'
-import { verifyOtp } from '~/apps/wallet/src/lib/services/wallet'
+import { BaseModal, LinkButton, LoadingCircles } from '~/libs/ui'
+import { resendOtp, verifyOtp } from '~/apps/wallet/src/lib/services/wallet'
 
 import { OtpVerificationResponse } from '../../models/OtpVerificationResponse'
 
@@ -23,6 +24,24 @@ const OtpModal: FC<OtpModalProps> = (props: OtpModalProps) => {
     const [otp, setOtp] = React.useState('')
     const [loading, setLoading] = React.useState(false)
     const [error, setError] = React.useState('')
+    const [showResendButton, setShowResendButton] = React.useState(false)
+
+    // eslint-disable-next-line consistent-return
+    React.useEffect(() => {
+        let timer: NodeJS.Timeout | undefined
+        if (props.isOpen) {
+            setShowResendButton(false)
+            timer = setTimeout(() => {
+                setShowResendButton(true)
+            }, 60000)
+        }
+
+        return () => {
+            if (timer) {
+                clearTimeout(timer)
+            }
+        }
+    }, [props.isOpen])
 
     React.useEffect(() => {
         if (!props.isOpen) {
@@ -81,10 +100,33 @@ const OtpModal: FC<OtpModalProps> = (props: OtpModalProps) => {
 
                 <p>Can&apos;t find the code? Check your spam folder.</p>
                 {loading && <LoadingCircles />}
-                {!loading && (
-                    <button type='button' className={styles['resend-btn']} onClick={props.onResendClick}>
-                        Resend code
-                    </button>
+                {!loading && showResendButton && (
+                    <LinkButton
+                        light={false}
+                        label='Resend code'
+                        variant='linkblue'
+                        size='lg'
+                        link
+                        onClick={async function onResendOtpClick() {
+                            toast.info(
+                                'Sending OTP...',
+                                { position: toast.POSITION.BOTTOM_RIGHT },
+                            )
+                            try {
+                                await resendOtp(props.transactionId)
+                                setShowResendButton(false)
+                                toast.success(
+                                    'OTP sent successfully.',
+                                    { position: toast.POSITION.BOTTOM_RIGHT },
+                                )
+                            } catch (err: unknown) {
+                                toast.error(
+                                    (err as Error).message ?? 'Something went wrong. Please try again.',
+                                    { position: toast.POSITION.BOTTOM_RIGHT },
+                                )
+                            }
+                        }}
+                    />
                 )}
             </div>
         </BaseModal>

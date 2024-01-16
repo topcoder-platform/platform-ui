@@ -1,9 +1,12 @@
+@import '@libs/ui/styles/includes';
+
 .otp-modal {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 20px;
+    padding-bottom: 0;
 
     .error {
         color: red;
@@ -78,31 +81,7 @@
         font-size: 0.9rem;
         color: #666;
         text-align: center;
-        margin-bottom: 20px;
-    }
-
-    .resend-btn,
-    .submit-btn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 4px;
-        font-size: 1rem;
-        cursor: pointer;
-        margin-bottom: 10px;
-        transition: background-color 0.3s;
-
-        &:hover {
-            opacity: 0.8;
-        }
-    }
-
-    .resend-btn {
-        background-color: transparent;
-        color: #007bff;
-    }
-
-    .submit-btn {
-        background-color: #007bff;
-        color: white;
+        margin-top: $sp-1;
+        margin-bottom: $sp-4;
     }
 }

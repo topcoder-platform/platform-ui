@@ -320,7 +320,6 @@ const PaymentsTab: FC = () => {
                     userEmail={otpFlow.email}
                     isOpen={otpFlow !== undefined}
                     onClose={function onOtpModalClose() { setOtpFlow(undefined) }}
-                    onResendClick={function onResendClick() { resendOtp(otpFlow.transactionId) }}
                     onOtpVerified={function onOtpVerified(data: unknown) {
                         setOtpFlow(undefined)
 
