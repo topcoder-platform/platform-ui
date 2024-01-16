@@ -144,7 +144,7 @@ const PaymentProviderCard: React.FC<PaymentProviderProps> = (props: PaymentProvi
                 </div>
                 <div className={styles.actionItems}>
                     {props.provider.status === 'CONNECTED'
-                    && <Button label='Connected' iconToRight icon={CheckCircleIcon} />}
+                    && <Button label='Connected' disabled iconToRight icon={CheckCircleIcon} />}
                     {props.provider.status === 'OTP_PENDING' && renderOtpPending()}
                     {props.provider.status === 'OTP_VERIFIED' && renderOtpVerified()}
                 </div>
