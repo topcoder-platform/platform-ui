@@ -25,13 +25,11 @@
 
         .detailContainer {
             display: grid;
-            gap: $sp-8;
             width: 100%;
-            margin-bottom: 16px;
-            margin-top: 32px;
 
             &.singleRow {
                 grid-template-columns: repeat(3, 1fr);
+                margin-top: 24px;
             }
 
             &.stackedRows {

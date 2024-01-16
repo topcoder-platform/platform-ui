@@ -12,7 +12,8 @@ import { PaymentProviderCard } from '../../../lib/components/payment-provider-ca
 import { OtpModal } from '../../../lib/components/otp-modal'
 import { TransactionResponse } from '../../../lib/models/TransactionId'
 import {
-    getUserPaymentProviders, resendOtp, setPaymentProvider,
+    getPaymentProviderRegistrationLink,
+    getUserPaymentProviders, removePaymentProvider, resendOtp, setPaymentProvider,
 } from '../../../lib/services/wallet'
 
 import { PaymentInfoModal } from './payment-info-modal'
@@ -147,8 +148,28 @@ const PaymentsTab: FC = () => {
                         provider={selectedPaymentProvider}
                         logo={PAYMENT_PROVIDER_DETAILS[selectedPaymentProvider.type].logo}
                         details={PAYMENT_PROVIDER_DETAILS[selectedPaymentProvider.type].details}
-                        onGoToRegistrationClick={function onGoToRegistrationClick() {
-                            // TODO: intentionally left empty
+                        onGoToRegistrationClick={async function onGoToRegistrationClick() {
+                            const type = selectedPaymentProvider.type
+                            if (type === undefined) {
+                                toast.error(
+                                    'Something went wrong. Please try again.',
+                                    { position: toast.POSITION.BOTTOM_RIGHT },
+                                )
+                                return
+                            }
+
+                            try {
+                                const response: TransactionResponse = await getPaymentProviderRegistrationLink(type)
+                                setOtpFlow({
+                                    ...response,
+                                    type: 'SETUP_PAYMENT_PROVIDER',
+                                })
+                            } catch (err: unknown) {
+                                toast.error(
+                                    (err as Error).message ?? 'Something went wrong. Please try again.',
+                                    { position: toast.POSITION.BOTTOM_RIGHT },
+                                )
+                            }
                         }}
                         onResendOtpClick={async function onResendOtpClick() {
                             const transactionId = selectedPaymentProvider.transactionId
@@ -166,6 +187,31 @@ const PaymentsTab: FC = () => {
                                     ...response,
                                     type: 'SETUP_PAYMENT_PROVIDER',
                                 })
+                            } catch (err: unknown) {
+                                toast.error(
+                                    (err as Error).message ?? 'Something went wrong. Please try again.',
+                                    { position: toast.POSITION.BOTTOM_RIGHT },
+                                )
+                            }
+                        }}
+                        onRemoveProvider={async function onRemoveProvider() {
+                            const transactionId = selectedPaymentProvider.transactionId
+                            if (transactionId === undefined) {
+                                toast.error(
+                                    'Something went wrong. Please try again.',
+                                    { position: toast.POSITION.BOTTOM_RIGHT },
+                                )
+                                return
+                            }
+
+                            try {
+                                // eslint-disable-next-line max-len
+                                const response: TransactionResponse = await removePaymentProvider(selectedPaymentProvider.type)
+                                setOtpFlow({
+                                    ...response,
+                                    type: 'REMOVE_PAYMENT_PROVIDER',
+                                })
+                                fetchPaymentProviders(false)
                             } catch (err: unknown) {
                                 toast.error(
                                     (err as Error).message ?? 'Something went wrong. Please try again.',
@@ -273,11 +319,21 @@ const PaymentsTab: FC = () => {
                     onClose={function onOtpModalClose() { setOtpFlow(undefined) }}
                     onResendClick={function onResendClick() { resendOtp(otpFlow.transactionId) }}
                     onOtpVerified={function onOtpVerified(data: unknown) {
-                        const registrationLink = (data as any).registrationLink
-
-                        window.open(registrationLink, '_blank')
-
                         setOtpFlow(undefined)
+
+                        if (otpFlow.type === 'SETUP_PAYMENT_PROVIDER') {
+                            const registrationLink = (data as any).registrationLink
+                            window.open(registrationLink, '_blank')
+                        }
+
+                        if (otpFlow.type === 'REMOVE_PAYMENT_PROVIDER') {
+                            setSelectedPaymentProvider(undefined)
+                            toast.success(
+                                'Payment provider removed successfully.',
+                                { position: toast.POSITION.BOTTOM_RIGHT },
+                            )
+                        }
+
                         fetchPaymentProviders()
                     }}
                 />

@@ -93,6 +93,28 @@ export async function confirmPaymentProvider(provider: string, code: string, tra
     return response.data
 }
 
+export async function getPaymentProviderRegistrationLink(type: string): Promise<TransactionResponse> {
+    const url = `${baseUrl}/user/payment-method/${type}/registration-link`
+    const response = await xhrGetAsync<ApiResponse<TransactionResponse>>(url)
+
+    if (response.status === 'error') {
+        throw new Error('Error getting payment provider registration link')
+    }
+
+    return response.data
+}
+
+export async function removePaymentProvider(type: string): Promise<TransactionResponse> {
+    const url = `${baseUrl}/user/payment-method/${type}`
+    const response = await xhrDeleteAsync<ApiResponse<TransactionResponse>>(url)
+
+    if (response.status === 'error') {
+        throw new Error('Error getting payment provider registration link')
+    }
+
+    return response.data
+}
+
 export async function setupTaxForm(userId: string, taxForm: string): Promise<TransactionResponse> {
     const body = JSON.stringify({
         taxForm,

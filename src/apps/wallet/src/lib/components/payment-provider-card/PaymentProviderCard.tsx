@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 
 import { CheckCircleIcon } from '@heroicons/react/solid'
-import { Button, ConfirmModal, IconSolid, PageDivider } from '~/libs/ui'
+import { Button, ConfirmModal, IconOutline, IconSolid, PageDivider } from '~/libs/ui'
 
 import { ActionBarItem } from '../action-bar-item'
 import { PaymentProvider } from '../../models/PaymentProvider'
@@ -22,6 +22,7 @@ interface PaymentProviderProps {
     onConnectClick?: () => void
     onResendOtpClick?: () => void
     onGoToRegistrationClick?: () => void
+    onRemoveProvider?: () => void
 }
 
 const PaymentProviderCard: React.FC<PaymentProviderProps> = (props: PaymentProviderProps) => {
@@ -40,6 +41,7 @@ const PaymentProviderCard: React.FC<PaymentProviderProps> = (props: PaymentProvi
     }, [confirmFlow])
 
     const canConnect = props.provider.status === 'NOT_CONNECTED'
+    const canCancel = ['OTP_PENDING', 'OTP_VERIFIED', 'VERIFIED'].includes(props.provider.status)
 
     const renderOtpPending = (): JSX.Element => (
         <ActionBarItem
@@ -100,8 +102,8 @@ const PaymentProviderCard: React.FC<PaymentProviderProps> = (props: PaymentProvi
                     {canConnect && <PageDivider />}
 
                     <div className={`
-                ${styles.detailContainer}
-                ${canConnect ? styles.stackedRows : styles.singleRow}`}
+                        ${styles.detailContainer}
+                        ${canConnect ? styles.stackedRows : styles.singleRow}`}
                     >
                         {props.details.map((detail: Detail) => (
                             <div key={detail.label} className={styles.detail}>
@@ -117,6 +119,26 @@ const PaymentProviderCard: React.FC<PaymentProviderProps> = (props: PaymentProvi
                     {canConnect && (
                         <div className={styles.footer}>
                             <Button secondary size='lg' label='Connect' onClick={props.onConnectClick} />
+                        </div>
+                    )}
+                    {canCancel && (
+                        <div className={styles.footer}>
+                            <Button
+                                secondary
+                                variant='danger'
+                                size='lg'
+                                label='Cancel Connection'
+                                iconToRight
+                                icon={IconOutline.TrashIcon}
+                                onClick={function onCancelConnectonClick() {
+                                    setConfirmFlow({
+                                        action: 'Yes',
+                                        callback: props.onRemoveProvider,
+                                        content: 'Your payment provider will be disconnected.',
+                                        title: 'Are you sure?',
+                                    })
+                                }}
+                            />
                         </div>
                     )}
                 </div>

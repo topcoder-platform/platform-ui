@@ -247,8 +247,8 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
             <div className={styles.content}>
                 <Collapsible header={<h3>TAX FORM REQUIREMENTS</h3>}>
                     <p className={`${styles.contentTitle} body-main`}>
-                        All members must have a tax form on file before they can be paid. The options are:
-                        a W-9, W-8BEN or a W-8BEN-E.
+                        All members must have a tax form on file before they can be paid.
+                        There are three options: a W-9, W-8BEN, or W-8BENE
                     </p>
 
                     {isLoading && <LoadingCircles />}
