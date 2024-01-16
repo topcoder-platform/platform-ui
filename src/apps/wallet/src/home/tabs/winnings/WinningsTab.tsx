@@ -61,7 +61,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                 const winning: Winning = {
                     canBeReleased: new Date(payment.releaseDate) <= new Date(),
                     createDate: formatIOSDateString(payment.createdAt),
-                    datePaid: '',
+                    datePaid: payment.datePaid !== undefined ? formatIOSDateString(payment.datePaid) : '',
                     description: payment.description,
                     id: payment.id,
                     installment: detail.installmentNumber,

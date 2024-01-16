@@ -34,4 +34,5 @@ export interface WinningDetail {
     }[]
     createdAt: string
     releaseDate: string
+    datePaid: string
 }
