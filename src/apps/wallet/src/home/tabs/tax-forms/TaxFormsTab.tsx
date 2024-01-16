@@ -279,7 +279,17 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
                             case 'SETUP_TAX_FORM':
                             case 'VIEW_TAX_FORM':
                                 fetchUserTaxForms(false)
-                                window.open((data as { eSignLink: string })?.eSignLink, '_blank')
+                                if ((data instanceof Blob)
+                                    || (data as { eSignLink: string })?.eSignLink === undefined
+                                    || (data as { eSignLink: string })?.eSignLink?.length === 0) {
+                                    toast.success(
+                                        'You have already signed this document.',
+                                        { position: toast.POSITION.BOTTOM_RIGHT },
+                                    )
+                                } else {
+                                    window.open((data as { eSignLink: string })?.eSignLink, '_blank')
+                                }
+
                                 break
                             case 'DOWNLOAD_TAX_FORM':
                                 downloadBlob(data as Blob, `tax-form-${props.profile.userId}-${new Date()
