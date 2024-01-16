@@ -41,7 +41,7 @@ const WalletTabs: FC<WalletHomeProps> = (props: WalletHomeProps) => {
                 )}
             </PageTitle>
 
-            {activeTab === WalletTabViews.withdrawalmethods && <PaymentsTab profile={props.profile} />}
+            {activeTab === WalletTabViews.withdrawalmethods && <PaymentsTab />}
 
             {activeTab === WalletTabViews.winnings && <WinningsTab profile={props.profile} />}
 
