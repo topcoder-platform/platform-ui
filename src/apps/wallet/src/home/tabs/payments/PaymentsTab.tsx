@@ -12,6 +12,7 @@ import { PaymentProviderCard } from '../../../lib/components/payment-provider-ca
 import { OtpModal } from '../../../lib/components/otp-modal'
 import { TransactionResponse } from '../../../lib/models/TransactionId'
 import {
+    confirmPaymentProvider,
     getPaymentProviderRegistrationLink,
     getUserPaymentProviders, removePaymentProvider, resendOtp, setPaymentProvider,
 } from '../../../lib/services/wallet'
@@ -94,29 +95,31 @@ const PaymentsTab: FC = () => {
         fetchPaymentProviders()
     }, [])
 
-    // useEffect(() => {
-    //     if (providerStatus === 'OTP_VERIFIED') {
-    //         const queryParams = new URLSearchParams(window.location.search)
-    //         const code = queryParams.get('code')
+    useEffect(() => {
+        if (selectedPaymentProvider?.status === 'OTP_VERIFIED') {
+            const queryParams = new URLSearchParams(window.location.search)
+            const code = queryParams.get('code')
 
-    //         if (code) {
-    //             const storedTransactionId = localStorage.getItem('transactionId')
-    //             if (storedTransactionId) {
-    //                 confirmPaymentProvider('Paypal', code, storedTransactionId)
-    //                     .then((response: any) => {
-    //                         console.log(response)
-    //                         fetchPaymentProviders()
-    //                     })
-    //                     .catch((err: any) => {
-    //                         console.log(err)
-    //                     })
-    //                     .finally(() => {
-    //                         localStorage.removeItem('transactionId')
-    //                     })
-    //             }
-    //         }
-    //     }
-    // }, [providerStatus])
+            if (code) {
+                if (selectedPaymentProvider.type === 'Paypal' && selectedPaymentProvider.transactionId) {
+                    confirmPaymentProvider('Paypal', code, selectedPaymentProvider.transactionId)
+                        .then((response: any) => {
+                            fetchPaymentProviders()
+                            toast.success(
+                                response.message ?? 'Payment provider added successfully.',
+                                { position: toast.POSITION.BOTTOM_RIGHT },
+                            )
+                        })
+                        .catch((err: any) => {
+                            toast.error(
+                                err.message ?? 'Something went wrong. Please try again.',
+                                { position: toast.POSITION.BOTTOM_RIGHT },
+                            )
+                        })
+                }
+            }
+        }
+    }, [selectedPaymentProvider?.status, selectedPaymentProvider?.type, selectedPaymentProvider?.transactionId])
 
     function renderProviders(): JSX.Element {
         return (
