@@ -30,6 +30,7 @@
             &.singleRow {
                 grid-template-columns: repeat(3, 1fr);
                 margin-top: 24px;
+                gap: $sp-6;
             }
 
             &.stackedRows {

@@ -41,7 +41,7 @@ const PaymentProviderCard: React.FC<PaymentProviderProps> = (props: PaymentProvi
     }, [confirmFlow])
 
     const canConnect = props.provider.status === 'NOT_CONNECTED'
-    const canCancel = ['OTP_PENDING', 'OTP_VERIFIED', 'VERIFIED'].includes(props.provider.status)
+    const canCancel = ['OTP_PENDING', 'OTP_VERIFIED', 'VERIFIED', 'CONNECTED'].includes(props.provider.status)
 
     const renderOtpPending = (): JSX.Element => (
         <ActionBarItem
@@ -73,7 +73,7 @@ const PaymentProviderCard: React.FC<PaymentProviderProps> = (props: PaymentProvi
             info={{
                 className: styles.warningLabel,
                 icon: IconSolid.ExclamationCircleIcon,
-                text: 'PENDING REGISTRATION',
+                text: 'PENDING VERIFICATION',
             }}
             action={{
                 className: styles.actionButton,
@@ -143,7 +143,7 @@ const PaymentProviderCard: React.FC<PaymentProviderProps> = (props: PaymentProvi
                     )}
                 </div>
                 <div className={styles.actionItems}>
-                    {props.provider.status === 'VERIFIED'
+                    {props.provider.status === 'CONNECTED'
                     && <Button label='Connected' iconToRight icon={CheckCircleIcon} />}
                     {props.provider.status === 'OTP_PENDING' && renderOtpPending()}
                     {props.provider.status === 'OTP_VERIFIED' && renderOtpVerified()}
