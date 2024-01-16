@@ -268,24 +268,6 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
                     onClose={function onOtpModalClose() {
                         setOtpFlow(undefined)
                     }}
-                    onResendClick={async function onResendClick() {
-                        toast.info(
-                            'Sending OTP...',
-                            { position: toast.POSITION.BOTTOM_RIGHT },
-                        )
-                        try {
-                            await resendOtp(otpFlow.transactionId)
-                            toast.success(
-                                'OTP sent successfully.',
-                                { position: toast.POSITION.BOTTOM_RIGHT },
-                            )
-                        } catch (err: unknown) {
-                            toast.error(
-                                (err as Error).message ?? 'Something went wrong. Please try again.',
-                                { position: toast.POSITION.BOTTOM_RIGHT },
-                            )
-                        }
-                    }}
                     onOtpVerified={function onOtpVerified(data: unknown) {
                         switch (otpFlow.type) {
                             case 'REMOVE_TAX_FORM':

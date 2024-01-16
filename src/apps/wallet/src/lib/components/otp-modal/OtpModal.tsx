@@ -16,7 +16,6 @@ interface OtpModalProps {
     userEmail?: string
     isBlob?: boolean
     onClose: () => void
-    onResendClick?: () => void
     onOtpVerified: (data: unknown) => void
 }
 
