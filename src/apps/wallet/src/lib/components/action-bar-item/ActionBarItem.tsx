@@ -24,33 +24,31 @@ const ActionBarItem: React.FC<ActionBarItemProps> = (props: ActionBarItemProps) 
     }, [props])
 
     return (
-        <>
-            <div className={props.containerClassName}>
-                <LinkButton
-                    className={props.info.className}
-                    label={props.info.text}
-                    iconToRight
-                    icon={props.info.icon}
-                    size='md'
-                    variant='danger'
-                    light={false}
-                    link
-                    disabled
-                />
-                <LinkButton
-                    className={props.action.className}
-                    label={props.action.text}
-                    icon={props.action.icon}
-                    iconToRight
-                    size='md'
-                    variant='linkblue'
-                    light={false}
-                    disabled={props.action.isButtonDisabled}
-                    onClick={handleActionClick}
-                    link
-                />
-            </div>
-        </>
+        <div className={props.containerClassName}>
+            <LinkButton
+                className={props.info.className}
+                label={props.info.text}
+                iconToRight
+                icon={props.info.icon}
+                size='md'
+                variant='danger'
+                light={false}
+                link
+                disabled
+            />
+            <LinkButton
+                className={props.action.className}
+                label={props.action.text}
+                icon={props.action.icon}
+                iconToRight
+                size='md'
+                variant='linkblue'
+                light={false}
+                disabled={props.action.isButtonDisabled}
+                onClick={handleActionClick}
+                link
+            />
+        </div>
     )
 
 }

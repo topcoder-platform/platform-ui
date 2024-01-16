@@ -1,16 +1,19 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable react/jsx-no-bind */
 import { FC, useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
 
 import { Button, Collapsible, LoadingCircles } from '~/libs/ui'
-import { UserProfile } from '~/libs/core'
 import { ArrowDownIcon, ArrowUpIcon } from '@heroicons/react/solid'
 
 import { Chip, IconDollar, IconSpeed, IconWorld, PayoneerLogo, PayPalLogo } from '../../../lib'
-import { confirmPaymentProvider, getUserPaymentProviders, setPaymentProvider } from '../../../lib/services/wallet'
-import { PaymentProvider, SetPaymentProviderResponse } from '../../../lib/models/PaymentProvider'
+import { PaymentProvider } from '../../../lib/models/PaymentProvider'
 import { PaymentProviderCard } from '../../../lib/components/payment-provider-card'
 import { OtpModal } from '../../../lib/components/otp-modal'
+import { TransactionResponse } from '../../../lib/models/TransactionId'
+import {
+    getUserPaymentProviders, resendOtp, setPaymentProvider,
+} from '../../../lib/services/wallet'
 
 import { PaymentInfoModal } from './payment-info-modal'
 import styles from './PaymentsTab.module.scss'
@@ -58,37 +61,29 @@ const PAYMENT_PROVIDER_DETAILS = {
     },
 }
 
-interface PaymentsTabProps {
-    profile: UserProfile
-}
-
-const PaymentsTab: FC<PaymentsTabProps> = (props: PaymentsTabProps) => {
-    const [userPaymentProvider, setUserPaymentProvider] = useState<PaymentProvider | undefined>(undefined)
+const PaymentsTab: FC = () => {
+    const [selectedPaymentProvider, setSelectedPaymentProvider] = useState<PaymentProvider | undefined>(undefined)
     const [setupRequired, setSetupRequired] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
-    const [, setError] = useState<string | undefined>(undefined)
-    const [selectedPaymentProvider, setSelectedPaymentProvider] = useState<string | undefined>(undefined)
-    const [providerToSet, setProviderToSet] = useState<string | undefined>(undefined)
-    const [transactionId, setTransactionId] = useState<string | undefined>(undefined)
-    const [registrationLink, setRegistrationLink] = useState<string | undefined>(undefined)
-    const [providerStatus, setProviderStatus] = useState<string | undefined>(undefined)
     const [showAlternateProvider, setShowAlternateProvider] = useState(false)
 
-    const fetchPaymentProviders = async () => {
-        setIsLoading(true)
-        setError(undefined)
+    const [paymentInfoModalFlow, setPaymentInfoModalFlow] = useState<string | undefined>(undefined)
+    const [otpFlow, setOtpFlow] = useState<TransactionResponse | undefined>(undefined)
+
+    const fetchPaymentProviders = async (refresh: boolean = true) => {
+        setIsLoading(refresh)
 
         try {
             const providers = await getUserPaymentProviders()
+            if (providers.length === 0) {
+                setSetupRequired(true)
+            } else {
+                setSetupRequired(false)
+                setSelectedPaymentProvider(providers[0])
+            }
 
-            const status = providers && providers.length > 0 ? providers[0].status : undefined
-
-            setSetupRequired(providers.length === 0)
-            setUserPaymentProvider(status !== undefined ? providers[0] : undefined)
-            setProviderStatus(status)
         } catch (apiError) {
-            setError('Error fetching payment providers')
-            setUserPaymentProvider(undefined)
+            setSelectedPaymentProvider(undefined)
         }
 
         setIsLoading(false)
@@ -98,33 +93,29 @@ const PaymentsTab: FC<PaymentsTabProps> = (props: PaymentsTabProps) => {
         fetchPaymentProviders()
     }, [])
 
-    useEffect(() => {
-        if (providerStatus === 'OTP_VERIFIED') {
-            const queryParams = new URLSearchParams(window.location.search)
-            const code = queryParams.get('code')
+    // useEffect(() => {
+    //     if (providerStatus === 'OTP_VERIFIED') {
+    //         const queryParams = new URLSearchParams(window.location.search)
+    //         const code = queryParams.get('code')
 
-            if (code) {
-                const storedTransactionId = localStorage.getItem('transactionId')
-                if (storedTransactionId) {
-                    confirmPaymentProvider('Paypal', code, storedTransactionId)
-                        .then((response: any) => {
-                            console.log(response)
-                            fetchPaymentProviders()
-                        })
-                        .catch((err: any) => {
-                            console.log(err)
-                        })
-                        .finally(() => {
-                            localStorage.removeItem('transactionId')
-                        })
-                }
-            }
-        }
-    }, [providerStatus])
-
-    function onProviderSelected(provider: string): void {
-        setSelectedPaymentProvider(provider)
-    }
+    //         if (code) {
+    //             const storedTransactionId = localStorage.getItem('transactionId')
+    //             if (storedTransactionId) {
+    //                 confirmPaymentProvider('Paypal', code, storedTransactionId)
+    //                     .then((response: any) => {
+    //                         console.log(response)
+    //                         fetchPaymentProviders()
+    //                     })
+    //                     .catch((err: any) => {
+    //                         console.log(err)
+    //                     })
+    //                     .finally(() => {
+    //                         localStorage.removeItem('transactionId')
+    //                     })
+    //             }
+    //         }
+    //     }
+    // }, [providerStatus])
 
     function renderProviders(): JSX.Element {
         return (
@@ -133,71 +124,93 @@ const PaymentsTab: FC<PaymentsTabProps> = (props: PaymentsTabProps) => {
                     provider={{ description: 'Payoneer', name: 'Payoneer', status: 'NOT_CONNECTED', type: 'Payoneer' }}
                     logo={PAYMENT_PROVIDER_DETAILS.Payoneer.logo}
                     details={PAYMENT_PROVIDER_DETAILS.Payoneer.details}
-                    onConnectClick={() => onProviderSelected('Payoneer')}
+                    onConnectClick={function onConnectClick() { setPaymentInfoModalFlow('Payoneer') }}
                 />
                 <PaymentProviderCard
                     provider={{ description: 'PayPal', name: 'Paypal', status: 'NOT_CONNECTED', type: 'Paypal' }}
                     logo={PAYMENT_PROVIDER_DETAILS.Paypal.logo}
                     details={PAYMENT_PROVIDER_DETAILS.Paypal.details}
-                    onConnectClick={() => onProviderSelected('Paypal')}
+                    onConnectClick={function onConnectClick() { setPaymentInfoModalFlow('Paypal') }}
                 />
             </div>
         )
     }
 
     function renderConnectedProvider(): JSX.Element | undefined {
-        if (userPaymentProvider) {
-            return (
-                <div className={styles.providerContainer}>
-                    <h4>Chosen Payment Provider</h4>
-                    <div className={styles.providersSingleRow}>
-                        <PaymentProviderCard
-                            provider={userPaymentProvider}
-                            logo={PAYMENT_PROVIDER_DETAILS[userPaymentProvider.type].logo}
-                            details={PAYMENT_PROVIDER_DETAILS[userPaymentProvider.type].details}
-                        />
-                    </div>
-                    <Button
-                        className={styles.alternateProviderButton}
-                        label={showAlternateProvider ? 'Hide Alternate Provider' : 'Show Alternate Provider'}
-                        iconToRight
-                        icon={showAlternateProvider ? ArrowUpIcon : ArrowDownIcon}
-                        onClick={() => setShowAlternateProvider(!showAlternateProvider)}
-                    />
-                    {showAlternateProvider && (
-                        <div className={styles.providersSingleRow}>
-                            {userPaymentProvider.type === 'Payoneer' ? (
-                                <PaymentProviderCard
-                                    provider={{
-                                        description: 'PayPal',
-                                        name: 'Paypal',
-                                        status: 'NOT_CONNECTED',
-                                        type: 'Paypal',
-                                    }}
-                                    logo={PAYMENT_PROVIDER_DETAILS.Paypal.logo}
-                                    details={PAYMENT_PROVIDER_DETAILS.Paypal.details}
-                                    onConnectClick={() => onProviderSelected('Paypal')}
-                                />
-                            ) : (
-                                <PaymentProviderCard
-                                    provider={{
-                                        description: 'Payoneer',
-                                        name: 'Payoneer',
-                                        status: 'NOT_CONNECTED',
-                                        type: 'Payoneer',
-                                    }}
-                                    logo={PAYMENT_PROVIDER_DETAILS.Payoneer.logo}
-                                    details={PAYMENT_PROVIDER_DETAILS.Payoneer.details}
-                                    onConnectClick={() => onProviderSelected('Payoneer')}
-                                />
-                            )}
-                        </div>
-                    )}
-                </div>
-            )
-        }
+        if (selectedPaymentProvider === undefined) return undefined
 
-        return undefined
+        return (
+            <div className={styles.providerContainer}>
+                <h4>Chosen Payment Provider</h4>
+                <div className={styles.providersSingleRow}>
+                    <PaymentProviderCard
+                        provider={selectedPaymentProvider}
+                        logo={PAYMENT_PROVIDER_DETAILS[selectedPaymentProvider.type].logo}
+                        details={PAYMENT_PROVIDER_DETAILS[selectedPaymentProvider.type].details}
+                        onGoToRegistrationClick={function onGoToRegistrationClick() {
+                            // TODO: intentionally left empty
+                        }}
+                        onResendOtpClick={async function onResendOtpClick() {
+                            const transactionId = selectedPaymentProvider.transactionId
+                            if (transactionId === undefined) {
+                                toast.error(
+                                    'Something went wrong. Please try again.',
+                                    { position: toast.POSITION.BOTTOM_RIGHT },
+                                )
+                                return
+                            }
+
+                            try {
+                                const response: TransactionResponse = await resendOtp(transactionId)
+                                setOtpFlow({
+                                    ...response,
+                                    type: 'SETUP_PAYMENT_PROVIDER',
+                                })
+                            } catch (err: unknown) {
+                                toast.error(
+                                    (err as Error).message ?? 'Something went wrong. Please try again.',
+                                    { position: toast.POSITION.BOTTOM_RIGHT },
+                                )
+                            }
+                        }}
+                    />
+                </div>
+                <Button
+                    className={styles.alternateProviderButton}
+                    label={showAlternateProvider ? 'Hide Alternate Provider' : 'Show Alternate Provider'}
+                    iconToRight
+                    icon={showAlternateProvider ? ArrowUpIcon : ArrowDownIcon}
+                    onClick={() => setShowAlternateProvider(!showAlternateProvider)}
+                />
+                {showAlternateProvider && (
+                    <div className={styles.providersSingleRow}>
+                        {selectedPaymentProvider.type === 'Payoneer' ? (
+                            <PaymentProviderCard
+                                provider={{
+                                    description: 'PayPal',
+                                    name: 'Paypal',
+                                    status: 'ALTERNATE',
+                                    type: 'Paypal',
+                                }}
+                                logo={PAYMENT_PROVIDER_DETAILS.Paypal.logo}
+                                details={PAYMENT_PROVIDER_DETAILS.Paypal.details}
+                            />
+                        ) : (
+                            <PaymentProviderCard
+                                provider={{
+                                    description: 'Payoneer',
+                                    name: 'Payoneer',
+                                    status: 'ALTERNATE',
+                                    type: 'Payoneer',
+                                }}
+                                logo={PAYMENT_PROVIDER_DETAILS.Payoneer.logo}
+                                details={PAYMENT_PROVIDER_DETAILS.Payoneer.details}
+                            />
+                        )}
+                    </div>
+                )}
+            </div>
+        )
     }
 
     return (
@@ -218,8 +231,8 @@ const PaymentsTab: FC<PaymentsTabProps> = (props: PaymentsTabProps) => {
 
                     {isLoading && <LoadingCircles />}
 
-                    {!isLoading && setupRequired && renderProviders()}
-                    {!isLoading && !setupRequired && renderConnectedProvider()}
+                    {!isLoading && selectedPaymentProvider === undefined && renderProviders()}
+                    {!isLoading && selectedPaymentProvider !== undefined && renderConnectedProvider()}
 
                     <p className='body-small'>
                         Provider details are based on the latest information from their official sites; we advise
@@ -228,47 +241,43 @@ const PaymentsTab: FC<PaymentsTabProps> = (props: PaymentsTabProps) => {
                 </Collapsible>
             </div>
 
-            {selectedPaymentProvider && (
+            {paymentInfoModalFlow && (
                 <PaymentInfoModal
-                    selectedPaymentProvider={selectedPaymentProvider}
-                    handleModalClose={() => {
-                        setSelectedPaymentProvider(undefined)
-                    }}
-                    handlePaymentSelection={(provider: string) => {
-                        setSelectedPaymentProvider(undefined)
-                        const details: any = {}
-
-                        if (provider === 'Payoneer') {
-                            details.payeeId = `${props.profile.userId}`
-                        }
-
-                        setPaymentProvider(details, provider, true)
-                            .then((response: SetPaymentProviderResponse) => {
-                                localStorage.setItem('transactionId', response.transactionId)
-                                setTransactionId(response.transactionId)
-                                setRegistrationLink(response.registrationLink)
-                                setProviderToSet(provider)
+                    selectedPaymentProvider={paymentInfoModalFlow}
+                    handleModalClose={function closePaymentInfoModal() { setPaymentInfoModalFlow(undefined) }}
+                    handlePaymentSelection={async function confirmPaymentProviderSelection(provider: string) {
+                        setPaymentInfoModalFlow(undefined)
+                        setPaymentProvider(provider)
+                            .then((response: TransactionResponse) => {
+                                setOtpFlow({
+                                    ...response,
+                                    type: 'SETUP_PAYMENT_PROVIDER',
+                                })
+                                fetchPaymentProviders(false)
                             })
-                            .catch((err: any) => {
-                                console.log(err)
+                            .catch((err: Error) => {
+                                toast.error(
+                                    err.message ?? 'Something went wrong. Please try again.',
+                                    { position: toast.POSITION.BOTTOM_RIGHT },
+                                )
                             })
                     }}
                 />
             )}
-            {providerToSet && transactionId && (
+            {otpFlow && (
                 <OtpModal
-                    transactionId={transactionId}
-                    isOpen={providerToSet !== undefined}
-                    key={providerToSet}
-                    onClose={() => {
-                        setProviderToSet(undefined)
-                    }}
-                    onOtpVerified={() => {
+                    transactionId={otpFlow.transactionId}
+                    key={otpFlow.transactionId}
+                    userEmail={otpFlow.email}
+                    isOpen={otpFlow !== undefined}
+                    onClose={function onOtpModalClose() { setOtpFlow(undefined) }}
+                    onResendClick={function onResendClick() { resendOtp(otpFlow.transactionId) }}
+                    onOtpVerified={function onOtpVerified(data: unknown) {
+                        const registrationLink = (data as any).registrationLink
+
                         window.open(registrationLink, '_blank')
 
-                        setProviderToSet(undefined)
-                        setRegistrationLink(undefined)
-
+                        setOtpFlow(undefined)
                         fetchPaymentProviders()
                     }}
                 />

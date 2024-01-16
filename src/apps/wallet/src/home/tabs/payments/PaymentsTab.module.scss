@@ -66,12 +66,14 @@
             margin-bottom: $sp-4;
 
             .alternateProviderButton {
+                margin-top: $sp-4;
                 padding-left: 0px !important;
                 padding-right: 0px !important;
             }
         }
 
         .providersSingleRow {
+            margin-top: $sp-4;
             display: grid;
             grid-template-columns: repeat(1, 1fr);
             width: 100%;

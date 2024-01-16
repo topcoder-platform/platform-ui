@@ -2,78 +2,90 @@
 
 .card {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: flex-start;
-    background-color: white;
-    padding: 16px;
+    justify-content: space-between;
     border-radius: 8px;
-    border: 1px solid #eaeaea;
-    margin: 16px 0;
+    background-color: white;
+    border: 1px solid #D4D4D4;
 
-    .header {
-        width: 100%;
+    .content {
         display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 16px;
 
-        .status {
-            .verifying {
+        .header {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .detailContainer {
+            display: grid;
+            gap: $sp-8;
+            width: 100%;
+            margin-bottom: 16px;
+            margin-top: 32px;
+
+            &.singleRow {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            &.stackedRows {
+                grid-template-columns: 1fr;
+                .detail:not(:last-child) {
+                    margin-bottom: 8px;
+                }
+            }
+
+            .detail {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+
+                .iconLabelContainer {
+                    display: flex;
+                }
+
+                .label {
+                    margin-left: 8px;
+                    color: $teal-140;
+                    font-family: $font-roboto-mono;
+                    font-size: 12px;
+                    font-weight: 700;
+                    line-height: 16px;
+                    letter-spacing: 1px;
+                    text-align: left;
+                }
+
+                .value {
+                    color: #2a2a2a;
+                    font-size: 14px;
+                }
+            }
+        }
+
+        .footer {
+            margin-top: 24px;
+        }
+    }
+
+    .actionItems {
+        padding-top: 16px;
+        margin-right: 24px;
+
+        .actionItemsContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+
+            .warningLabel {
                 color: $legacy-120;
             }
         }
-    }
-
-    .detailContainer {
-        display: grid;
-        gap: 4px;
-        width: 100%;
-        margin-bottom: 16px;
-
-        &.singleRow {
-            grid-template-columns: repeat(3, 1fr);
-        }
-
-        &.stackedRows {
-            grid-template-columns: 1fr;
-            .detail:not(:last-child) {
-                margin-bottom: 8px;
-            }
-        }
-
-        .detail {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 4px;
-
-            .iconLabelContainer {
-                display: flex;
-            }
-
-            .label {
-                margin-left: 8px;
-                color: $teal-140;
-                font-family: Roboto;
-                font-size: 12px;
-                font-weight: 700;
-                line-height: 16px;
-                letter-spacing: 1px;
-                text-align: left;
-            }
-
-            .value {
-                font-family: Roboto;
-                font-size: 16px;
-                font-weight: 400;
-                line-height: 24px;
-                letter-spacing: 0px;
-                text-align: left;
-            }
-        }
-    }
-
-    .footer {
-        margin-top: 24px;
     }
 }

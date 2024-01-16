@@ -1,11 +1,9 @@
 export interface PaymentProvider {
+    id?: number
+    upmId?: string
     type: 'Payoneer' | 'Paypal'
     name: 'Payoneer' | 'Paypal'
     description: string
     status: string
-}
-
-export interface SetPaymentProviderResponse {
-    transactionId: string
-    registrationLink: string
+    transactionId?: string
 }

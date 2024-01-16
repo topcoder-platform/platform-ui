@@ -4,7 +4,7 @@ import { EnvironmentConfig } from '~/config'
 import { xhrDeleteAsync, xhrGetAsync, xhrPostAsync, xhrPostAsyncWithBlobHandling } from '~/libs/core'
 
 import { WalletDetails } from '../models/WalletDetails'
-import { PaymentProvider, SetPaymentProviderResponse } from '../models/PaymentProvider'
+import { PaymentProvider } from '../models/PaymentProvider'
 import { WinningDetail } from '../models/WinningDetail'
 import { TaxForm } from '../models/TaxForm'
 import { OtpVerificationResponse } from '../models/OtpVerificationResponse'
@@ -58,18 +58,16 @@ export async function getPayments(userId: string): Promise<WinningDetail[]> {
 }
 
 export async function setPaymentProvider(
-    details: any,
     type: string,
-    setDefault: boolean,
-): Promise<SetPaymentProviderResponse> {
+): Promise<TransactionResponse> {
     const body = JSON.stringify({
-        details,
-        setDefault,
+        details: {},
+        setDefault: true,
         type,
     })
 
     const url = `${baseUrl}/user/payment-method`
-    const response = await xhrPostAsync<string, ApiResponse<SetPaymentProviderResponse>>(url, body)
+    const response = await xhrPostAsync<string, ApiResponse<TransactionResponse>>(url, body)
 
     if (response.status === 'error') {
         throw new Error('Error setting payment provider')
@@ -123,7 +121,7 @@ export async function removeTaxForm(taxFormId: string): Promise<TransactionRespo
 }
 
 export async function getRecipientViewURL(): Promise<TransactionResponse> {
-    const url = `${baseUrl}/user/tax-form/esign-url`
+    const url = `${baseUrl}/user/tax-form/view`
     const response = await xhrGetAsync<ApiResponse<TransactionResponse>>(url)
 
     if (response.status === 'error') {

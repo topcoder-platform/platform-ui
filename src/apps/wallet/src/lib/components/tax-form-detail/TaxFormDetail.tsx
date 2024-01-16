@@ -5,15 +5,9 @@ import { ConfirmModal, IconSolid } from '~/libs/ui'
 
 import { IconCheckCircle } from '../../assets/tax-forms'
 import { ActionBarItem } from '../action-bar-item'
+import { ConfirmFlowData } from '../../models/ConfirmFlowData'
 
 import styles from './TaxFormDetail.module.scss'
-
-interface ConfirmFlowData {
-    title: string;
-    action: string;
-    content: React.ReactNode | (() => React.ReactNode)
-    callback?: () => void;
-}
 
 interface TaxFormDetailProps {
     title: string
