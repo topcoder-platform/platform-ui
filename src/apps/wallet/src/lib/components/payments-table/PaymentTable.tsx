@@ -8,19 +8,6 @@ import { Winning } from '../../models/WinningDetail'
 
 import styles from './PaymentTable.module.scss'
 
-const mapCurrency = (currency: string): string => {
-    switch (currency) {
-        case 'USD':
-            return '$'
-        case 'GBP':
-            return '£'
-        case 'EUR':
-            return '€'
-        default:
-            return currency
-    }
-}
-
 interface PaymentTableProps {
     payments: ReadonlyArray<Winning>
     onPayMeClick: (paymentIds: { [paymentId: string]: boolean }) => void
@@ -92,7 +79,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 <td className='body-main'>{payment.description}</td>
                                 <td className='body-main-bold'>{payment.type}</td>
                                 <td className='body-main-bold'>{payment.createDate}</td>
-                                <td className='body-main-bold'>{`${payment.netPayment} ${mapCurrency(payment.currency)}`}</td>
+                                <td className='body-main-bold'>{payment.netPayment}</td>
                                 <td className='body-main-normal'>{payment.status}</td>
                                 <td>{payment.releaseDate}</td>
                                 <td>{payment.datePaid}</td>

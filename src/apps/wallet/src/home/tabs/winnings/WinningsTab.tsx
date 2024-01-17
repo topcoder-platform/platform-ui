@@ -61,11 +61,20 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                 canBeReleased: new Date(payment.releaseDate) <= new Date(),
                 createDate: formatIOSDateString(payment.createdAt),
                 currency: payment.details[0].currency,
-                datePaid: payment.datePaid !== undefined ? formatIOSDateString(payment.datePaid) : '',
+                // eslint-disable-next-line max-len
+                datePaid: payment.datePaid !== undefined && payment.datePaid.length ? formatIOSDateString(payment.datePaid) : '-',
                 description: payment.description,
                 details: payment.details,
                 id: payment.id,
-                netPayment: `${payment.details[0].totalAmount}`,
+                netPayment: `${new Intl.NumberFormat('en-US', {
+                    currency: payment.details[0].currency,
+                    maximumFractionDigits: 2,
+                    minimumFractionDigits: 2,
+                    style: 'currency',
+                })
+                    .format(
+                        Number(payment.details[0].totalAmount),
+                    )}`,
                 releaseDate: formatIOSDateString(payment.releaseDate),
                 status: payment.details[0].status,
                 type: payment.category.replaceAll('_', ' '),
