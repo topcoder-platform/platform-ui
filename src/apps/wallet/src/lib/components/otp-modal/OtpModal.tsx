@@ -83,7 +83,7 @@ const OtpModal: FC<OtpModalProps> = (props: OtpModalProps) => {
                 <p>
                     For added security we’ve sent a 6-digit code to your
                     {' '}
-                    <strong>{props.userEmail ?? '***@gmail.com'}</strong>
+                    <strong className='body-main-bold'>{props.userEmail ?? '***@gmail.com'}</strong>
                     {' '}
                     email. The code
                     expires shortly, so please enter it soon.
