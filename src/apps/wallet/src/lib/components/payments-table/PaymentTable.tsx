@@ -8,6 +8,19 @@ import { Winning } from '../../models/WinningDetail'
 
 import styles from './PaymentTable.module.scss'
 
+const mapCurrency = (currency: string): string => {
+    switch (currency) {
+        case 'USD':
+            return '$'
+        case 'GBP':
+            return '£'
+        case 'EUR':
+            return '€'
+        default:
+            return currency
+    }
+}
+
 interface PaymentTableProps {
     payments: ReadonlyArray<Winning>
     onPayMeClick: (paymentIds: { [paymentId: string]: boolean }) => void
@@ -54,7 +67,6 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                         <tr>
                             <th>Description</th>
                             <th>Type</th>
-                            <th>Installment</th>
                             <th>Create Date</th>
                             <th>Net Payment</th>
                             <th>Status</th>
@@ -74,14 +86,13 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                     <tbody>
                         {props.payments.map(payment => (
                             <tr
-                                key={`${payment.id}${payment.installment}`}
+                                key={`${payment.id}`}
                                 className={selectedPayments[payment.id] ? 'selected' : ''}
                             >
                                 <td className='body-main'>{payment.description}</td>
                                 <td className='body-main-bold'>{payment.type}</td>
-                                <td>{payment.installment}</td>
                                 <td className='body-main-bold'>{payment.createDate}</td>
-                                <td className='body-main-bold'>{payment.netPayment}</td>
+                                <td className='body-main-bold'>{`${payment.netPayment} ${mapCurrency(payment.currency)}`}</td>
                                 <td className='body-main-normal'>{payment.status}</td>
                                 <td>{payment.releaseDate}</td>
                                 <td>{payment.datePaid}</td>

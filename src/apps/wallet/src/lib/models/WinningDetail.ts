@@ -1,3 +1,13 @@
+export interface PaymentDetail {
+    id: string
+    netAmount: string
+    grossAmount: string
+    totalAmount: string
+    installmentNumber: number
+    status: string
+    currency: string
+}
+
 export interface Winning {
     id: string
     description: string
@@ -7,8 +17,9 @@ export interface Winning {
     status: string
     releaseDate: string
     datePaid: string
-    installment: number
     canBeReleased: boolean
+    currency: string
+    details: PaymentDetail[]
 }
 
 export interface WinningDetail {
@@ -23,15 +34,7 @@ export interface WinningDetail {
     attributes: {
         url: string
     }
-    details: {
-        id: string
-        netAmount: string
-        grossAmount: string
-        totalAmount: string
-        installmentNumber: number
-        status: string
-        currency: string
-    }[]
+    details: PaymentDetail[]
     createdAt: string
     releaseDate: string
     datePaid: string

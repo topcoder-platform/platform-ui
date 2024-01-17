@@ -57,21 +57,20 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         const tempWinnings: Winning[] = []
 
         payments.forEach((payment: WinningDetail) => {
-            payment.details.forEach(detail => {
-                const winning: Winning = {
-                    canBeReleased: new Date(payment.releaseDate) <= new Date(),
-                    createDate: formatIOSDateString(payment.createdAt),
-                    datePaid: payment.datePaid !== undefined ? formatIOSDateString(payment.datePaid) : '',
-                    description: payment.description,
-                    id: payment.id,
-                    installment: detail.installmentNumber,
-                    netPayment: `${detail.netAmount}`,
-                    releaseDate: formatIOSDateString(payment.releaseDate),
-                    status: detail.status,
-                    type: payment.type,
-                }
-                tempWinnings.push(winning)
-            })
+            const winning: Winning = {
+                canBeReleased: new Date(payment.releaseDate) <= new Date(),
+                createDate: formatIOSDateString(payment.createdAt),
+                currency: payment.details[0].currency,
+                datePaid: payment.datePaid !== undefined ? formatIOSDateString(payment.datePaid) : '',
+                description: payment.description,
+                details: payment.details,
+                id: payment.id,
+                netPayment: `${payment.details[0].totalAmount}`,
+                releaseDate: formatIOSDateString(payment.releaseDate),
+                status: payment.details[0].status,
+                type: payment.category.replaceAll('_', ' '),
+            }
+            tempWinnings.push(winning)
         })
 
         return tempWinnings
