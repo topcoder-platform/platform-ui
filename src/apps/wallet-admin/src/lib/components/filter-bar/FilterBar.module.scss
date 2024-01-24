@@ -1,0 +1,21 @@
+.FilterBar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+
+    .filterContainer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+
+      > .input {
+        margin-bottom: 0px;
+      }
+    }
+
+    .resetButton {
+      flex-shrink: 0;
+      margin-left: 10px;
+    }
+  }

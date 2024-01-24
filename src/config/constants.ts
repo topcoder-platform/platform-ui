@@ -9,6 +9,7 @@ export enum AppSubdomain {
     work = 'work',
     talentSearch = 'talent-search',
     wallet = 'wallet',
+    walletAdmin = 'wallet-admin',
 }
 
 export enum ToolTitle {
@@ -22,6 +23,7 @@ export enum ToolTitle {
     onboarding = ' ',
     talentSearch = 'Expert Talent',
     wallet = 'Wallet',
+    walletAdmin = 'Wallet Admin',
 }
 
 export const PageSubheaderPortalId: string = 'page-subheader-portal-el'

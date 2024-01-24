@@ -6,6 +6,7 @@ import { UserProfile } from '~/libs/core'
 
 import { getPayments, processPayments } from '../../../lib/services/wallet'
 import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
+import { FilterBar } from '../../../lib'
 import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
 import styles from './Winnings.module.scss'
@@ -51,7 +52,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
 
     useEffect(() => {
         fetchWinnings()
-    }, [props.profile.userId])
+    }, [])
 
     function convertToWinnings(payments: WinningDetail[]): Winning[] {
         const tempWinnings: Winning[] = []
@@ -90,6 +91,14 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             <div className={styles.header}>
                 <h3>Winnings</h3>
             </div>
+            {/* <FilterBar filters={
+                [[
+                    { label: 'All', value: 'all' },
+                    { label: 'Pending', value: 'pending' },
+                    { label: 'Paid', value: 'paid' },
+                ]]
+            }
+            /> */}
             <div className={styles.container}>
                 {isLoading && <LoadingCircles />}
                 {!isLoading && (
