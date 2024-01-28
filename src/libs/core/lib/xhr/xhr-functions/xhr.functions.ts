@@ -50,6 +50,16 @@ export async function getAsync<T>(
     return output.data
 }
 
+export async function getAsyncWithBlobHandling<T>(
+    url: string,
+    xhrInstance: AxiosInstance = globalInstance,
+): Promise<T | Blob> {
+    const response: AxiosResponse<T | Blob> = await xhrInstance.get(url, {
+        responseType: 'blob',
+    })
+    return response.data
+}
+
 export interface PaginatedResponse<T> {
     data: T
     total: number

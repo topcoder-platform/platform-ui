@@ -1,7 +1,7 @@
 import { AxiosError } from 'axios'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrDeleteAsync, xhrGetAsync, xhrPostAsync, xhrPostAsyncWithBlobHandling } from '~/libs/core'
+import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync, xhrPostAsyncWithBlobHandling } from '~/libs/core'
 
 import { WalletDetails } from '../models/WalletDetails'
 import { PaymentProvider } from '../models/PaymentProvider'
@@ -10,6 +10,7 @@ import { TaxForm } from '../models/TaxForm'
 import { OtpVerificationResponse } from '../models/OtpVerificationResponse'
 import { TransactionResponse } from '../models/TransactionId'
 import ApiResponse from '../models/ApiResponse'
+import { getAsyncWithBlobHandling } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/payments`
 
@@ -255,5 +256,104 @@ export async function fetchPaymentProviders(pageNumber: number, pageSize: number
         return response.data
     } catch (err) {
         throw new Error('Error fetching tax forms')
+    }
+}
+
+export async function fetchPaymentProviderDetail(userId: string, paymentProviderId: string): Promise<any> {
+    const url = `${baseUrl}/admin/payment-methods/${userId}/${paymentProviderId}`
+    try {
+        const response = await xhrGetAsync<ApiResponse<any>>(url)
+
+        if (response.status === 'error') {
+            throw new Error('Error fetching tax forms')
+        }
+
+        return response.data
+    } catch (err) {
+        throw new Error('Error fetching tax forms')
+    }
+}
+
+
+export async function deletePaymentProvider(userId: string, paymentProviderId: string): Promise<any> {
+    const url = `${baseUrl}/admin/payment-methods/${userId}/${paymentProviderId}`
+    try {
+        const response = await xhrDeleteAsync<ApiResponse<any>>(url)
+
+        if (response.status === 'error') {
+            throw new Error('Error fetching tax forms')
+        }
+
+        return response.data
+    } catch (err) {
+        throw new Error('Error fetching tax forms')
+    }
+}
+
+export async function fetchTaxFormDetail(userId: string, taxFormId: string): Promise<any> {
+    const url = `${baseUrl}/admin/tax-forms/${userId}/${taxFormId}/download`
+    try {
+        const response = await getAsyncWithBlobHandling<ApiResponse<any>>(url)
+
+
+        console.log('Response', response)
+
+        return response
+    } catch (err) {
+        throw new Error('Error fetching tax forms')
+    }
+}
+
+export async function deleteTaxForm(userId: string, taxFormId: string): Promise<any> {
+    const url = `${baseUrl}/admin/tax-forms/${userId}/${taxFormId}`
+    try {
+        const response = await xhrDeleteAsync<ApiResponse<any>>(url)
+
+        if (response.status === 'error') {
+            throw new Error('Error fetching tax forms')
+        }
+
+        return response.data
+    } catch (err) {
+        throw new Error('Error fetching tax forms')
+    }
+}
+
+export async function searchWinnings(pageNumber: number, pageSize: number, filters: any): Promise<unknown> {
+    const body = JSON.stringify({
+        externalIds: filters.externalIds,
+        winnerId: filters.winnerId,
+    })
+
+    try {
+        const response = await xhrPostAsync<string, ApiResponse<any>>(`${baseUrl}/admin/winnings/search`, body)
+
+        if (response.status === 'error') {
+            throw new Error('Error fetching tax forms')
+        }
+
+        return response.data
+    } catch (err) {
+        throw new Error('Error fetching tax forms')
+    }
+}
+
+export async function editWinningRecord(winningId: string, paymentId: string, status: string): Promise<unknown> {
+    const body = JSON.stringify({
+        paymentId,
+        paymentStatus: status,
+        winningsId: winningId,
+    })
+
+    try {
+        const response = await xhrPatchAsync<string, ApiResponse<any>>(`${baseUrl}/admin/winnings`, body)
+
+        if (response.status === 'error') {
+            throw new Error('Error updating payment record')
+        }
+
+        return response.data
+    } catch (err) {
+        throw new Error('Error updating payment record')
     }
 }

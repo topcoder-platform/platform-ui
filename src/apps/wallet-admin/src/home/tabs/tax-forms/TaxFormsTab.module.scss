@@ -24,5 +24,9 @@
     .content {
         border-radius: 4px;
         margin-top: $sp-4;
+
+        .actionButtons {
+            display: flex;
+        }
     }
 }

@@ -2,6 +2,7 @@
 import React, { ChangeEvent } from 'react'
 
 import { Button, InputSelect, InputText } from '~/libs/ui'
+import { InputHandleAutocomplete, MembersAutocompeteResult } from '~/apps/gamification-admin/src/game-lib'
 
 import styles from './FilterBar.module.scss'
 
@@ -13,7 +14,7 @@ type FilterOptions = {
 type Filter = {
     key: string
     label: string
-    type: 'input' | 'dropdown'
+    type: 'input' | 'dropdown' | 'member_autocomplete'
     options?: FilterOptions[]
 }
 
@@ -24,12 +25,12 @@ interface FilterBarProps {
 }
 
 const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
-    const [selectedValue, setSelectedValue] = React.useState<Map<string, string>>(new Map())
+    const [selectedValue, setSelectedValue] = React.useState<Map<string, string | any[]>>(new Map())
 
     const renderDropdown = (index: number, filter: Filter): JSX.Element => (
         <InputSelect
             tabIndex={index}
-            value={selectedValue.get(filter.key) ?? ''}
+            value={selectedValue.get(filter.key) as string ?? ''}
             options={filter.options!}
             onChange={function onChange(event: ChangeEvent<HTMLInputElement>) {
                 setSelectedValue(new Map(selectedValue.set(filter.key, event.target.value)))
@@ -39,6 +40,19 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
             label={filter.label}
             dirty
             placeholder={filter.label}
+        />
+    )
+
+    const renderMemberAutoComplete = (index: number, filter: Filter): JSX.Element => (
+        <InputHandleAutocomplete
+            label={filter.label}
+            name={filter.key}
+            placeholder={filter.label}
+            onChange={function onChange(event: Array<MembersAutocompeteResult>) {
+                setSelectedValue(new Map(selectedValue.set(filter.key, event)))
+                props.onFilterChange(filter.key, event.map(member => member.userId))
+            }}
+            tabIndex={index}
         />
     )
 
@@ -55,10 +69,16 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
                                 type='text'
                                 tabIndex={index}
                                 onChange={function onChange(event: ChangeEvent<HTMLInputElement>) {
-                                    props.onFilterChange(options.key, [event.target.value])
+                                    if (event.target.value === '') {
+                                        setSelectedValue(new Map(selectedValue.set(options.key, '')))
+                                        props.onFilterChange(options.key, [])
+                                    } else {
+                                        props.onFilterChange(options.key, [event.target.value])
+                                    }
                                 }}
                             />
                         )}
+                        {options.type === 'member_autocomplete' && renderMemberAutoComplete(index, options)}
                     </div>
                 ))}
             </div>
@@ -66,6 +86,7 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
                 primary
                 className={styles.resetButton}
                 label='Reset'
+                size='lg'
                 onClick={function onResetClick() {
                     setSelectedValue(new Map())
                     props.onResetFilters?.()

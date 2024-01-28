@@ -3,3 +3,81 @@
 .contentLayoutOuter {
     margin: $sp-8 auto !important;
 }
+
+
+.tableContainer {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+
+    th,
+    td {
+        text-align: left;
+        padding: 8px;
+        border-bottom: 1px solid #eaeaea;
+
+        &:last-child {
+            width: 50px;
+        }
+    }
+
+    th {
+        background-color: #f5f5f5;
+        position: sticky;
+        font-weight: 600;
+        top: 0;
+    }
+
+    tbody {
+        tr {
+            &:nth-child(odd) {
+                background-color: #f9f9f9;
+            }
+            &:nth-child(even) {
+                background-color: #ffffff;
+            }
+        }
+    }
+}
+
+.selected {
+    background-color: #e7f4ff;
+}
+
+.paymentFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    margin-top: 16px;
+    border-radius: 8px;
+    background-color: white;
+    border: 1px solid #eaeaea;
+
+    .total {
+        font-size: 18px;
+        font-weight: bold;
+
+        color: #333;
+    }
+}
+
+@media (max-width: 768px) {
+    .paymentFooter {
+        flex-direction: column;
+        align-items: stretch;
+
+        .total {
+            margin-bottom: 10px;
+        }
+
+        .payMeButton {
+            width: 100%;
+        }
+    }
+}
