@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-no-bind */
-import React, { FC, useEffect } from 'react'
+import React, { FC, useCallback, useEffect } from 'react'
 
-import { Collapsible, LoadingCircles, PageDivider } from '~/libs/ui'
+import { Collapsible, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
 
 import { getPayments, processPayments } from '../../../lib/services/wallet'
@@ -10,6 +10,7 @@ import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
 import styles from './Winnings.module.scss'
 import { FilterBar } from '../../../lib'
 import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
+import { parse } from 'path'
 
 interface ListViewProps {
     profile: UserProfile
@@ -46,57 +47,61 @@ function formatStatus(status: string): string {
     }
 }
 
+const formatCurrency = (amountStr: string, currency: string) => {
+    let amount: number;
+    try {
+        amount = parseFloat(amountStr);
+    } catch (error) {
+
+        return amountStr;
+    }
+
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency,
+        maximumFractionDigits: 2,
+        minimumFractionDigits: 2
+    }).format(amount);
+};
 
 const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
 
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    const fetchWinnings = async () => {
-        setIsLoading(true)
-        try {
-            const payments = await getPayments(`${props.profile.userId}`)
-            setWinnings(convertToWinnings(payments))
-        } catch (apiError) {}
-
-        setIsLoading(false)
-    }
-
-    useEffect(() => {
-        fetchWinnings()
-    }, [])
-
-    function convertToWinnings(payments: WinningDetail[]): Winning[] {
-        const tempWinnings: Winning[] = []
-
-        payments.forEach((payment: WinningDetail) => {
-            const winning: Winning = {
+    const convertToWinnings = useCallback((payments: WinningDetail[]) => {
+        return payments.map(payment => {
+            return {
                 canBeReleased: new Date(payment.releaseDate) <= new Date(),
                 createDate: formatIOSDateString(payment.createdAt),
                 currency: payment.details[0].currency,
-                // eslint-disable-next-line max-len
-                datePaid:
-                    payment.datePaid !== undefined && payment.datePaid.length
-                        ? formatIOSDateString(payment.datePaid)
-                        : '-',
+                datePaid: payment.datePaid ? formatIOSDateString(payment.datePaid) : '-',
                 description: payment.description,
                 details: payment.details,
                 id: payment.id,
-                netPayment: `${new Intl.NumberFormat('en-US', {
-                    currency: payment.details[0].currency,
-                    maximumFractionDigits: 2,
-                    minimumFractionDigits: 2,
-                    style: 'currency',
-                }).format(Number(payment.details[0].totalAmount))}`,
+                netPayment: formatCurrency(payment.details[0].totalAmount, payment.details[0].currency),
                 releaseDate: formatIOSDateString(payment.releaseDate),
                 status: formatStatus(payment.details[0].status),
                 type: payment.category.replaceAll('_', ' ').toLowerCase(),
-            }
-            tempWinnings.push(winning)
-        })
+            };
+        });
+    }, []);
 
-        return tempWinnings
-    }
+    const fetchWinnings = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const payments = await getPayments(props.profile.userId.toString());
+            const winningsData = convertToWinnings(payments);
+            setWinnings(winningsData);
+        } catch (apiError) {
+            console.error('Failed to fetch winnings:', apiError);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [props.profile.userId, convertToWinnings]);
+
+    useEffect(() => {
+        fetchWinnings();
+    }, [fetchWinnings]);
 
     return (
         <div className={styles.container}>

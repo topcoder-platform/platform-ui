@@ -2,8 +2,8 @@
 /* eslint-disable react/jsx-no-bind */
 import { FC } from 'react'
 
-import { BaseModal, Button } from '~/libs/ui'
-import { PayoneerLogo, PayPalLogo } from '~/apps/accounts/src/lib'
+import { BaseModal, Button, IconOutline, LinkButton } from '~/libs/ui'
+import { PayoneerLogo, PayPalLogo } from '../../../../lib'
 
 import styles from './PaymentInfoModal.module.scss'
 
@@ -23,8 +23,8 @@ function renderPayoneer(): JSX.Element {
                 transfer option (where available) and a wire transfer option. Certain fees may apply.
             </p>
             <p>
-                You will be directed to Payoneer&apos;s website in a new tab to complete your the connection. Please
-                make sure your account is fully verified to ensure withdrawal success.
+                You will be directed to Payoneer&apos;s website in a new tab to complete your connection. Please make
+                sure your account is fully verified to ensure withdrawal success.
                 <strong>You can return here after finishing up on Payoneer&apos;s site.</strong>
             </p>
         </>
@@ -48,22 +48,26 @@ function renderPaypal(): JSX.Element {
 const PaymentInfoModal: FC<PaymentInfoModalProps> = (props: PaymentInfoModalProps) => (
     <BaseModal
         buttons={
-            <Button
-                primary
-                size='lg'
-                label='Confirm'
-                disabled={false}
-                onClick={() => {
-                    props.handlePaymentSelection(props.selectedPaymentProvider)
-                }}
-            />
+            <div>
+                <LinkButton size='lg' label='Cancel' onClick={props.handleModalClose} />
+                <Button
+                    primary
+                    size='lg'
+                    label='Confirm'
+                    icon={IconOutline.ExternalLinkIcon}
+                    iconToRight
+                    disabled={false}
+                    onClick={() => {
+                        props.handlePaymentSelection(props.selectedPaymentProvider)
+                    }}
+                />
+            </div>
         }
         onClose={props.handleModalClose}
         open
         size='body'
         title='CONNECT PAYMENT PROVIDER ACCOUNT'
-        classNames={{ modal: styles.infoModal }}
-    >
+        classNames={{ modal: styles.infoModal }}>
         <div className={styles.modalContent}>
             {props.selectedPaymentProvider === 'Payoneer' ? renderPayoneer() : renderPaypal()}
         </div>
