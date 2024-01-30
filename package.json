@@ -30,6 +30,7 @@
     "@storybook/react": "^7.0.5",
     "@stripe/react-stripe-js": "1.13.0",
     "@stripe/stripe-js": "1.41.0",
+    "@tanstack/react-table": "^8.11.7",
     "@types/testing-library__jest-dom": "^5.14.5",
     "apexcharts": "^3.36.0",
     "axios": "^1.1.2",

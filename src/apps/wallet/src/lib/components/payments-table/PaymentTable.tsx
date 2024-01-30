@@ -52,14 +52,14 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                 <table>
                     <thead>
                         <tr>
-                            <th>Description</th>
-                            <th>Type</th>
-                            <th>Create Date</th>
-                            <th>Net Payment</th>
-                            <th>Status</th>
-                            <th>Release Date</th>
-                            <th>Date Paid</th>
-                            <th>
+                            <th className='body-ultra-small-bold'>DESCRIPTION</th>
+                            <th className='body-ultra-small-bold'>TYPE</th>
+                            <th className='body-ultra-small-bold'>CREATE DATE</th>
+                            <th className='body-ultra-small-bold'>NET PAYMENT</th>
+                            <th className='body-ultra-small-bold'>STATUS</th>
+                            <th className='body-ultra-small-bold'>RELEASE DATE</th>
+                            <th className='body-ultra-small-bold'>DATE PAID</th>
+                            <th className='body-ultra-small-bold'>
                                 <input
                                     type='checkbox'
                                     onChange={toggleAllPayments}
@@ -76,11 +76,11 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 key={`${payment.id}`}
                                 className={selectedPayments[payment.id] ? 'selected' : ''}
                             >
-                                <td className='body-main'>{payment.description}</td>
-                                <td className='body-main-bold'>{payment.type}</td>
-                                <td className='body-main-bold'>{payment.createDate}</td>
-                                <td className='body-main-bold'>{payment.netPayment}</td>
-                                <td className='body-main-normal'>{payment.status}</td>
+                                <td className='body-small'>{payment.description}</td>
+                                <td className={`body-small-bold ${styles.capitalize}`}>{payment.type}</td>
+                                <td className='body-small-bold'>{payment.createDate}</td>
+                                <td className='body-small-bold'>{payment.netPayment}</td>
+                                <td className={`body-small-bold ${styles.capitalize}`}>{payment.status}</td>
                                 <td>{payment.releaseDate}</td>
                                 <td>{payment.datePaid}</td>
                                 <td>

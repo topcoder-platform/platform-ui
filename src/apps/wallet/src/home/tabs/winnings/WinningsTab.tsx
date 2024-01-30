@@ -1,15 +1,15 @@
 /* eslint-disable react/jsx-no-bind */
 import React, { FC, useEffect } from 'react'
 
-import { LoadingCircles } from '~/libs/ui'
+import { Collapsible, LoadingCircles, PageDivider } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
 
 import { getPayments, processPayments } from '../../../lib/services/wallet'
 import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
-import { FilterBar } from '../../../lib'
-import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
 import styles from './Winnings.module.scss'
+import { FilterBar } from '../../../lib'
+import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
 interface ListViewProps {
     profile: UserProfile
@@ -23,17 +23,29 @@ function formatIOSDateString(iosDateString: string): string {
     }
 
     const options: Intl.DateTimeFormatOptions = {
-        day: 'numeric',
-        hour: '2-digit',
-        hour12: true,
-        minute: '2-digit',
-        month: 'long',
-        second: '2-digit',
+        day: '2-digit',
+        month: '2-digit',
         year: 'numeric',
     }
 
-    return date.toLocaleDateString(undefined, options)
+    return date.toLocaleDateString('en-GB', options);
 }
+
+function formatStatus(status: string): string {
+    switch (status) {
+        case 'ON_HOLD':
+            return "On Hold";
+        case 'OWED':
+            return 'Available'
+        case 'PAID':
+            return 'Paid'
+        case 'CANCELLED':
+            return 'Cancelled'
+        default:
+            return status.replaceAll('_', ' ')
+    }
+}
+
 
 const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
@@ -63,7 +75,10 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                 createDate: formatIOSDateString(payment.createdAt),
                 currency: payment.details[0].currency,
                 // eslint-disable-next-line max-len
-                datePaid: payment.datePaid !== undefined && payment.datePaid.length ? formatIOSDateString(payment.datePaid) : '-',
+                datePaid:
+                    payment.datePaid !== undefined && payment.datePaid.length
+                        ? formatIOSDateString(payment.datePaid)
+                        : '-',
                 description: payment.description,
                 details: payment.details,
                 id: payment.id,
@@ -72,13 +87,10 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                     maximumFractionDigits: 2,
                     minimumFractionDigits: 2,
                     style: 'currency',
-                })
-                    .format(
-                        Number(payment.details[0].totalAmount),
-                    )}`,
+                }).format(Number(payment.details[0].totalAmount))}`,
                 releaseDate: formatIOSDateString(payment.releaseDate),
-                status: payment.details[0].status,
-                type: payment.category.replaceAll('_', ' '),
+                status: formatStatus(payment.details[0].status),
+                type: payment.category.replaceAll('_', ' ').toLowerCase(),
             }
             tempWinnings.push(winning)
         })
@@ -91,27 +103,86 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             <div className={styles.header}>
                 <h3>Winnings</h3>
             </div>
-            {/* <FilterBar filters={
-                [[
-                    { label: 'All', value: 'all' },
-                    { label: 'Pending', value: 'pending' },
-                    { label: 'Paid', value: 'paid' },
-                ]]
-            }
-            /> */}
-            <div className={styles.container}>
-                {isLoading && <LoadingCircles />}
-                {!isLoading && (
-                    <PaymentsTable
-                        payments={winnings}
-                        onPayMeClick={async paymentIds => {
-                            const ids = Object.keys(paymentIds)
-                            await processPayments(ids)
-
-                            fetchWinnings()
+            <div className={styles.content}>
+                <Collapsible header={<h3>Payments</h3>}>
+                    <FilterBar
+                        filters={[
+                            {
+                                key: 'date',
+                                label: 'Date',
+                                type: 'dropdown',
+                                options: [
+                                    {
+                                        label: 'Last 7 days',
+                                        value: 'last7days',
+                                    },
+                                    {
+                                        label: 'Last 30 days',
+                                        value: 'last30days',
+                                    },
+                                    {
+                                        label: 'All',
+                                        value: 'all',
+                                    },
+                                ],
+                            },
+                            {
+                                key: 'type',
+                                label: 'Type',
+                                type: 'dropdown',
+                                options: [
+                                    {
+                                        label: 'Contest Payment',
+                                        value: 'CONTEST_PAYMENT',
+                                    },
+                                    {
+                                        label: 'Review Board Payment',
+                                        value: 'REVIEW_BOARD_PAYMENT',
+                                    },
+                                ],
+                            },
+                            {
+                                key: 'status',
+                                label: 'Status',
+                                type: 'dropdown',
+                                options: [
+                                    {
+                                        label: 'Available',
+                                        value: 'OWED',
+                                    },
+                                    {
+                                        label: 'On Hold',
+                                        value: 'ON_HOLD',
+                                    },
+                                    {
+                                        label: 'Paid',
+                                        value: 'PAID',
+                                    },
+                                    {
+                                        label: 'Cancelled',
+                                        value: 'CANCELLED',
+                                    },
+                                ],
+                            },
+                        ]}
+                        onFilterChange={(key: string, value: string[]) => {
+                            console.log(key, value)
+                        }}
+                        onResetFilters={() => {
+                            console.log('reset')
                         }}
                     />
-                )}
+                    {/* <PageDivider /> */}
+                    {isLoading && <LoadingCircles />}
+                    {!isLoading && (
+                        <PaymentsTable
+                            payments={winnings}
+                            onPayMeClick={function onPayMeClicked() {
+                                console.log('On Pay Me Clicked')
+                            }}
+                        />
+                    )}
+                </Collapsible>
             </div>
         </div>
     )
