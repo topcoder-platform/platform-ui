@@ -16,10 +16,11 @@ const PaymentsTab: FC = () => {
     const [confirmFlow, setConfirmFlow] = React.useState<ConfirmFlowData | undefined>(undefined)
 
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
-    const [currentPage, setCurrentPage] = useState<number>(1)
-    const [pageSize, setPageSize] = useState<number>(50)
     const [userIdsFilter, setUserIdsFilter] = useState<string[]>([])
     const [paymentMethods, setPaymentMethods] = useState([])
+
+    const currentPage = 1
+    const pageSize = 50
 
     const renderConfirmModalContent = useMemo(() => {
         if (confirmFlow?.content === undefined) {
@@ -61,6 +62,7 @@ const PaymentsTab: FC = () => {
             <div className={styles.actionButtons}>
                 <Button
                     onClick={async () => {
+                        // eslint-disable-next-line @typescript-eslint/typedef
                         const { userId, id } = row as { userId: string, id: string }
 
                         const details = await fetchPaymentProviderDetail(userId, id)
@@ -74,6 +76,7 @@ const PaymentsTab: FC = () => {
                 />
                 <Button
                     onClick={async () => {
+                        // eslint-disable-next-line @typescript-eslint/typedef
                         const { userId, id } = row as { userId: string, id: string }
 
                         setConfirmFlow({
@@ -112,6 +115,7 @@ const PaymentsTab: FC = () => {
         },
         {
             accessor: 'actions',
+            // eslint-disable-next-line @typescript-eslint/typedef
             Cell: ({ row }) => (renderActions(row)),
             Header: 'Actions',
         },

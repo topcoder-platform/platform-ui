@@ -3,6 +3,7 @@
 import { FC } from 'react'
 
 import { BaseModal, Button, IconOutline, LinkButton } from '~/libs/ui'
+
 import { PayoneerLogo, PayPalLogo } from '../../../../lib'
 
 import styles from './PaymentInfoModal.module.scss'
@@ -67,7 +68,8 @@ const PaymentInfoModal: FC<PaymentInfoModalProps> = (props: PaymentInfoModalProp
         open
         size='body'
         title='CONNECT PAYMENT PROVIDER ACCOUNT'
-        classNames={{ modal: styles.infoModal }}>
+        classNames={{ modal: styles.infoModal }}
+    >
         <div className={styles.modalContent}>
             {props.selectedPaymentProvider === 'Payoneer' ? renderPayoneer() : renderPaypal()}
         </div>

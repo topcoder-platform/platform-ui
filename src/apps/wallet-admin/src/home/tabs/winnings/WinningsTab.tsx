@@ -1,6 +1,9 @@
+/* eslint-disable react/no-unused-prop-types */
 /* eslint-disable max-len */
 /* eslint-disable sort-keys */
 /* eslint-disable react/jsx-no-bind */
+/* eslint-disable @typescript-eslint/typedef */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { toast } from 'react-toastify'
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -232,7 +235,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                         key: 'userId',
                         label: 'Member Handle',
                         type: 'member_autocomplete',
-                    },{
+                    }, {
                         key: 'status',
                         label: 'Select Payment Status',
                         options: [

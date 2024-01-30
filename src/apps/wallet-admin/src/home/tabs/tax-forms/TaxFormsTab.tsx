@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/typedef */
+/* eslint-disable react/no-unused-prop-types */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
 import { toast } from 'react-toastify'
@@ -19,7 +22,7 @@ function formatIOSDateString(iosDateString: string): string {
     const date = new Date(iosDateString)
 
     if (Number.isNaN(date.getTime())) {
-        return 'N/A';
+        return 'N/A'
     }
 
     const options: Intl.DateTimeFormatOptions = {

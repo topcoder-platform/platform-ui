@@ -4,13 +4,12 @@ import React, { FC, useCallback, useEffect } from 'react'
 import { Collapsible, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
 
-import { getPayments, processPayments } from '../../../lib/services/wallet'
+import { getPayments } from '../../../lib/services/wallet'
 import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
-
-import styles from './Winnings.module.scss'
 import { FilterBar } from '../../../lib'
 import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
-import { parse } from 'path'
+
+import styles from './Winnings.module.scss'
 
 interface ListViewProps {
     profile: UserProfile
@@ -29,13 +28,13 @@ function formatIOSDateString(iosDateString: string): string {
         year: 'numeric',
     }
 
-    return date.toLocaleDateString('en-GB', options);
+    return date.toLocaleDateString('en-GB', options)
 }
 
 function formatStatus(status: string): string {
     switch (status) {
         case 'ON_HOLD':
-            return "On Hold";
+            return 'On Hold'
         case 'OWED':
             return 'Available'
         case 'PAID':
@@ -47,61 +46,59 @@ function formatStatus(status: string): string {
     }
 }
 
-const formatCurrency = (amountStr: string, currency: string) => {
-    let amount: number;
+const formatCurrency = (amountStr: string, currency: string): string => {
+    let amount: number
     try {
-        amount = parseFloat(amountStr);
+        amount = parseFloat(amountStr)
     } catch (error) {
 
-        return amountStr;
+        return amountStr
     }
 
     return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: currency,
+        currency,
         maximumFractionDigits: 2,
-        minimumFractionDigits: 2
-    }).format(amount);
-};
+        minimumFractionDigits: 2,
+        style: 'currency',
+    })
+        .format(amount)
+}
 
 const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
 
-    const convertToWinnings = useCallback((payments: WinningDetail[]) => {
-        return payments.map(payment => {
-            return {
-                canBeReleased: new Date(payment.releaseDate) <= new Date(),
-                createDate: formatIOSDateString(payment.createdAt),
-                currency: payment.details[0].currency,
-                datePaid: payment.datePaid ? formatIOSDateString(payment.datePaid) : '-',
-                description: payment.description,
-                details: payment.details,
-                id: payment.id,
-                netPayment: formatCurrency(payment.details[0].totalAmount, payment.details[0].currency),
-                releaseDate: formatIOSDateString(payment.releaseDate),
-                status: formatStatus(payment.details[0].status),
-                type: payment.category.replaceAll('_', ' ').toLowerCase(),
-            };
-        });
-    }, []);
+    const convertToWinnings = useCallback((payments: WinningDetail[]) => payments.map(payment => ({
+        canBeReleased: new Date(payment.releaseDate) <= new Date(),
+        createDate: formatIOSDateString(payment.createdAt),
+        currency: payment.details[0].currency,
+        datePaid: payment.datePaid ? formatIOSDateString(payment.datePaid) : '-',
+        description: payment.description,
+        details: payment.details,
+        id: payment.id,
+        netPayment: formatCurrency(payment.details[0].totalAmount, payment.details[0].currency),
+        releaseDate: formatIOSDateString(payment.releaseDate),
+        status: formatStatus(payment.details[0].status),
+        type: payment.category.replaceAll('_', ' ')
+            .toLowerCase(),
+    })), [])
 
     const fetchWinnings = useCallback(async () => {
-        setIsLoading(true);
+        setIsLoading(true)
         try {
-            const payments = await getPayments(props.profile.userId.toString());
-            const winningsData = convertToWinnings(payments);
-            setWinnings(winningsData);
+            const payments = await getPayments(props.profile.userId.toString())
+            const winningsData = convertToWinnings(payments)
+            setWinnings(winningsData)
         } catch (apiError) {
-            console.error('Failed to fetch winnings:', apiError);
+            console.error('Failed to fetch winnings:', apiError)
         } finally {
-            setIsLoading(false);
+            setIsLoading(false)
         }
-    }, [props.profile.userId, convertToWinnings]);
+    }, [props.profile.userId, convertToWinnings])
 
     useEffect(() => {
-        fetchWinnings();
-    }, [fetchWinnings]);
+        fetchWinnings()
+    }, [fetchWinnings])
 
     return (
         <div className={styles.container}>
@@ -115,7 +112,6 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                             {
                                 key: 'date',
                                 label: 'Date',
-                                type: 'dropdown',
                                 options: [
                                     {
                                         label: 'Last 7 days',
@@ -130,11 +126,11 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                         value: 'all',
                                     },
                                 ],
+                                type: 'dropdown',
                             },
                             {
                                 key: 'type',
                                 label: 'Type',
-                                type: 'dropdown',
                                 options: [
                                     {
                                         label: 'Contest Payment',
@@ -145,11 +141,11 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                         value: 'REVIEW_BOARD_PAYMENT',
                                     },
                                 ],
+                                type: 'dropdown',
                             },
                             {
                                 key: 'status',
                                 label: 'Status',
-                                type: 'dropdown',
                                 options: [
                                     {
                                         label: 'Available',
@@ -168,6 +164,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                         value: 'CANCELLED',
                                     },
                                 ],
+                                type: 'dropdown',
                             },
                         ]}
                         onFilterChange={(key: string, value: string[]) => {

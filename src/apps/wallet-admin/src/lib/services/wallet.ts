@@ -1,8 +1,11 @@
+/* eslint-disable ordered-imports/ordered-imports */
+
 import { AxiosError } from 'axios'
 
 import { EnvironmentConfig } from '~/config'
 import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync, xhrPostAsyncWithBlobHandling } from '~/libs/core'
 
+import { getAsyncWithBlobHandling } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
 import { WalletDetails } from '../models/WalletDetails'
 import { PaymentProvider } from '../models/PaymentProvider'
 import { WinningDetail } from '../models/WinningDetail'
@@ -10,7 +13,6 @@ import { TaxForm } from '../models/TaxForm'
 import { OtpVerificationResponse } from '../models/OtpVerificationResponse'
 import { TransactionResponse } from '../models/TransactionId'
 import ApiResponse from '../models/ApiResponse'
-import { getAsyncWithBlobHandling } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/payments`
 
@@ -274,7 +276,6 @@ export async function fetchPaymentProviderDetail(userId: string, paymentProvider
     }
 }
 
-
 export async function deletePaymentProvider(userId: string, paymentProviderId: string): Promise<any> {
     const url = `${baseUrl}/admin/payment-methods/${userId}/${paymentProviderId}`
     try {
@@ -294,7 +295,6 @@ export async function fetchTaxFormDetail(userId: string, taxFormId: string): Pro
     const url = `${baseUrl}/admin/tax-forms/${userId}/${taxFormId}/download`
     try {
         const response = await getAsyncWithBlobHandling<ApiResponse<any>>(url)
-
 
         console.log('Response', response)
 

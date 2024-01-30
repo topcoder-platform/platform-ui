@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { FC, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 
@@ -10,7 +11,11 @@ import { OtpModal } from '../../../lib/components/otp-modal'
 import { TaxFormCard } from '../../../lib/components/tax-form-card'
 import { IconUS, IconWorld } from '../../../lib/assets/tax-forms'
 import {
-    getRecipientViewURL, getUserTaxFormDetails, removeTaxForm, resendOtp, setupTaxForm,
+    getRecipientViewURL,
+    getUserTaxFormDetails,
+    removeTaxForm,
+    resendOtp,
+    setupTaxForm,
 } from '../../../lib/services/wallet'
 import { TaxForm } from '../../../lib/models/TaxForm'
 import { TaxFormDetail } from '../../../lib/components/tax-form-detail'
@@ -147,12 +152,10 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
                                 })
                                 fetchUserTaxForms(false)
                             } catch (err) {
-                                toast.error(
-                                    (err as Error).message ?? 'Something went wrong. Please try again.',
-                                    { position: toast.POSITION.BOTTOM_RIGHT },
-                                )
+                                toast.error((err as Error).message ?? 'Something went wrong. Please try again.', {
+                                    position: toast.POSITION.BOTTOM_RIGHT,
+                                })
                             }
-
                         }}
                     />
                 ))}
@@ -177,7 +180,11 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
             <TaxFormDetail
                 title={taxForm.status === 'ACTIVE' ? 'Tax Form Submitted' : 'Tax Form Submitted - Pending Signature'}
                 // eslint-disable-next-line max-len
-                description={`You have submitted a ${key} Tax Form via DocuSign. Resubmission of forms required on ${formattedDate}`}
+                description={
+                    taxForm.status === 'ACTIVE'
+                        ? `You have submitted a ${key} Tax Form via DocuSign. Resubmission of forms required on ${formattedDate}`
+                        : `Your ${key} Tax Form is ready for signature. Please complete the signing process via DocuSign by to finalize your submission.`
+                }
                 status={taxForm.status}
                 onDeleteClick={async function onDeleteClick() {
                     removeTaxForm(taxForm.id)
@@ -185,10 +192,9 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
                             setOtpFlow({ ...transaction, type: 'REMOVE_TAX_FORM' })
                         })
                         .catch((err: unknown) => {
-                            toast.error(
-                                (err as Error).message ?? 'Something went wrong. Please try again.',
-                                { position: toast.POSITION.BOTTOM_RIGHT },
-                            )
+                            toast.error((err as Error).message ?? 'Something went wrong. Please try again.', {
+                                position: toast.POSITION.BOTTOM_RIGHT,
+                            })
                         })
                 }}
                 onResendOtpClick={async function onResendOtpClick() {
@@ -199,10 +205,9 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
                             type: 'SETUP_TAX_FORM',
                         })
                     } catch (err: unknown) {
-                        toast.error(
-                            (err as Error).message ?? 'Something went wrong. Please try again.',
-                            { position: toast.POSITION.BOTTOM_RIGHT },
-                        )
+                        toast.error((err as Error).message ?? 'Something went wrong. Please try again.', {
+                            position: toast.POSITION.BOTTOM_RIGHT,
+                        })
                     }
                 }}
                 onGetRecipientURL={async function onGetRecipientURL() {
@@ -213,10 +218,9 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
                             type: 'VIEW_TAX_FORM',
                         })
                     } catch (err: unknown) {
-                        toast.error(
-                            (err as Error).message ?? 'Something went wrong. Please try again.',
-                            { position: toast.POSITION.BOTTOM_RIGHT },
-                        )
+                        toast.error((err as Error).message ?? 'Something went wrong. Please try again.', {
+                            position: toast.POSITION.BOTTOM_RIGHT,
+                        })
                     }
                 }}
                 onDownloadClick={async function onDownloadSignedDocumentClick() {
@@ -227,10 +231,9 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
                             type: 'DOWNLOAD_TAX_FORM',
                         })
                     } catch (err: unknown) {
-                        toast.error(
-                            (err as Error).message ?? 'Something went wrong. Please try again.',
-                            { position: toast.POSITION.BOTTOM_RIGHT },
-                        )
+                        toast.error((err as Error).message ?? 'Something went wrong. Please try again.', {
+                            position: toast.POSITION.BOTTOM_RIGHT,
+                        })
                     }
                 }}
             />
@@ -247,8 +250,8 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
             <div className={styles.content}>
                 <Collapsible header={<h3>TAX FORM REQUIREMENTS</h3>}>
                     <p className={`${styles.contentTitle} body-main`}>
-                        All members must have a tax form on file before they can be paid.
-                        There are three options: a W-9, W-8BEN, or W-8BENE
+                        All members must have a tax form on file before they can be paid. There are three options: a
+                        W-9, W-8BEN, or W-8BENE
                     </p>
 
                     {isLoading && <LoadingCircles />}
@@ -276,21 +279,25 @@ const PaymentsTab: FC<TaxFormsTabProps> = (props: TaxFormsTabProps) => {
                             case 'SETUP_TAX_FORM':
                             case 'VIEW_TAX_FORM':
                                 fetchUserTaxForms(false)
-                                if ((data instanceof Blob)
+                                if (
+                                    data instanceof Blob
                                     || (data as { eSignLink: string })?.eSignLink === undefined
-                                    || (data as { eSignLink: string })?.eSignLink?.length === 0) {
-                                    toast.success(
-                                        'You have already signed this document.',
-                                        { position: toast.POSITION.BOTTOM_RIGHT },
-                                    )
+                                    || (data as { eSignLink: string })?.eSignLink?.length === 0
+                                ) {
+                                    toast.success('You have already signed this document.', {
+                                        position: toast.POSITION.BOTTOM_RIGHT,
+                                    })
                                 } else {
                                     window.open((data as { eSignLink: string })?.eSignLink, '_blank')
                                 }
 
                                 break
                             case 'DOWNLOAD_TAX_FORM':
-                                downloadBlob(data as Blob, `tax-form-${props.profile.userId}-${new Date()
-                                    .getTime()}.pdf`)
+                                downloadBlob(
+                                    data as Blob,
+                                    `tax-form-${props.profile.userId}-${new Date()
+                                        .getTime()}.pdf`,
+                                )
                                 break
                             default:
                                 break
