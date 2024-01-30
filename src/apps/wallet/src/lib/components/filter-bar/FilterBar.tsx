@@ -89,6 +89,7 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
                 className={styles.resetButton}
                 label='Reset'
                 size='lg'
+                disabled={selectedValue.size === 0}
                 onClick={function onResetClick() {
                     setSelectedValue(new Map())
                     props.onResetFilters?.()

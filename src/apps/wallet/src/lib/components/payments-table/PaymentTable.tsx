@@ -14,6 +14,7 @@ interface PaymentTableProps {
 }
 const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) => {
     const [selectedPayments, setSelectedPayments] = useState<{ [paymentId: string]: boolean }>({})
+    const [toggleClicked, setToggleClicked] = useState(false)
 
     const togglePaymentSelection = (paymentId: string) => {
         setSelectedPayments(prevSelected => ({
@@ -22,15 +23,20 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
         }))
     }
 
-    const isAllSelected = props.payments.length > 0 && props.payments.every(payment => selectedPayments[payment.id])
+    const isSomeSelected = Object.values(selectedPayments)
+        .some(selected => selected)
 
     const toggleAllPayments = () => {
-        if (isAllSelected) {
+        setToggleClicked(!toggleClicked)
+
+        if (isSomeSelected) {
             setSelectedPayments({})
         } else {
             const newSelections: { [paymentId: string]: boolean } = {}
             props.payments.forEach(payment => {
-                newSelections[payment.id] = true
+                if (payment.canBeReleased) {
+                    newSelections[payment.id] = true
+                }
             })
             setSelectedPayments(newSelections)
         }
@@ -63,8 +69,8 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 <input
                                     type='checkbox'
                                     onChange={toggleAllPayments}
-                                    disabled={props.payments.find(payment => payment.status !== 'OWED') === undefined}
-                                    checked={isAllSelected}
+                                    disabled={props.payments.find(payment => payment.canBeReleased) === undefined}
+                                    checked={toggleClicked}
                                     aria-label='Select all payments'
                                 />
                             </th>
