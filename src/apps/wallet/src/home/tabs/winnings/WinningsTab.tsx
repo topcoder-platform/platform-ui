@@ -1,10 +1,12 @@
 /* eslint-disable react/jsx-no-bind */
+import { toast } from 'react-toastify'
+import { AxiosError } from 'axios'
 import React, { FC, useCallback, useEffect } from 'react'
 
 import { Collapsible, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
 
-import { getPayments } from '../../../lib/services/wallet'
+import { getPayments, processPayments } from '../../../lib/services/wallet'
 import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
 import { FilterBar } from '../../../lib'
 import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
@@ -51,7 +53,6 @@ const formatCurrency = (amountStr: string, currency: string): string => {
     try {
         amount = parseFloat(amountStr)
     } catch (error) {
-
         return amountStr
     }
 
@@ -68,20 +69,23 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
 
-    const convertToWinnings = useCallback((payments: WinningDetail[]) => payments.map(payment => ({
-        canBeReleased: new Date(payment.releaseDate) <= new Date(),
-        createDate: formatIOSDateString(payment.createdAt),
-        currency: payment.details[0].currency,
-        datePaid: payment.datePaid ? formatIOSDateString(payment.datePaid) : '-',
-        description: payment.description,
-        details: payment.details,
-        id: payment.id,
-        netPayment: formatCurrency(payment.details[0].totalAmount, payment.details[0].currency),
-        releaseDate: formatIOSDateString(payment.releaseDate),
-        status: formatStatus(payment.details[0].status),
-        type: payment.category.replaceAll('_', ' ')
-            .toLowerCase(),
-    })), [])
+    const convertToWinnings = useCallback(
+        (payments: WinningDetail[]) => payments.map(payment => ({
+            canBeReleased: new Date(payment.releaseDate) <= new Date() && payment.details[0].status === 'OWED',
+            createDate: formatIOSDateString(payment.createdAt),
+            currency: payment.details[0].currency,
+            datePaid: payment.details[0].datePaid ? formatIOSDateString(payment.details[0].datePaid) : '-',
+            description: payment.description,
+            details: payment.details,
+            id: payment.id,
+            netPayment: formatCurrency(payment.details[0].totalAmount, payment.details[0].currency),
+            releaseDate: formatIOSDateString(payment.releaseDate),
+            status: formatStatus(payment.details[0].status),
+            type: payment.category.replaceAll('_', ' ')
+                .toLowerCase(),
+        })),
+        [],
+    )
 
     const fetchWinnings = useCallback(async () => {
         setIsLoading(true)
@@ -179,8 +183,39 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                     {!isLoading && (
                         <PaymentsTable
                             payments={winnings}
-                            onPayMeClick={function onPayMeClicked() {
-                                console.log('On Pay Me Clicked')
+                            onPayMeClick={async function onPayMeClicked(paymentIds: { [paymentId: string]: boolean }) {
+                                const winningIds: string[] = []
+                                Object.keys(paymentIds)
+                                    .forEach((key: string) => {
+                                        if (paymentIds[key]) {
+                                            winningIds.push(key)
+                                        }
+                                    })
+
+                                toast.info('Processing payments...', {
+                                    position: toast.POSITION.BOTTOM_RIGHT,
+                                })
+                                try {
+                                    await processPayments(winningIds)
+                                    toast.success('Payments processed successfully!', {
+                                        position: toast.POSITION.BOTTOM_RIGHT,
+                                    })
+                                } catch (error) {
+                                    let message = 'Failed to process payments. Please try again later.'
+
+                                    if (error instanceof AxiosError) {
+                                        message = error.response?.data?.error?.message
+
+                                        message = message.charAt(0)
+                                            .toUpperCase() + message.slice(1)
+                                    }
+
+                                    toast.error(message, {
+                                        position: toast.POSITION.BOTTOM_RIGHT,
+                                    })
+                                }
+
+                                fetchWinnings()
                             }}
                         />
                     )}

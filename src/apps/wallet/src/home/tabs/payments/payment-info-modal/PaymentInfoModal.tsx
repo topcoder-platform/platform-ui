@@ -38,9 +38,13 @@ function renderPaypal(): JSX.Element {
             <PayPalLogo />
             <p>You can elect to receive payments deposited directly to your PayPal account. Certain fees may apply.</p>
             <p>
-                You will be directed to PayPal&apos;s website in a new tab to complete your the connection. Please make
-                sure your account is fully verified to ensure withdrawal success. You can return here after finishing up
-                on PayPal&apos;s site.
+                You will be directed to PayPal&apos;s website in a new tab to complete your connection. Please make
+                sure your account is fully verified to ensure withdrawal success.
+                {' '}
+                <strong>
+                    You can return here after finishing up
+                    on PayPal&apos;s site.
+                </strong>
             </p>
         </>
     )

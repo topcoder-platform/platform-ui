@@ -6,6 +6,7 @@ export interface PaymentDetail {
     installmentNumber: number
     status: string
     currency: string
+    datePaid: string
 }
 
 export interface Winning {

@@ -52,6 +52,8 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
 
     const total = calculateTotal()
 
+    console.log('All payments', props.payments)
+
     return (
         <>
             <div className={styles.tableContainer}>
@@ -92,7 +94,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 <td>
                                     <input
                                         type='checkbox'
-                                        disabled={payment.status !== 'OWED' || !payment.canBeReleased}
+                                        disabled={payment.status !== 'Available' || !payment.canBeReleased}
                                         checked={!!selectedPayments[payment.id]}
                                         onChange={() => togglePaymentSelection(payment.id)}
                                         aria-label={`Select payment ${payment.id}`}
