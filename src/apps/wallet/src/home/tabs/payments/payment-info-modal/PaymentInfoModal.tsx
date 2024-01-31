@@ -26,7 +26,9 @@ function renderPayoneer(): JSX.Element {
             <p>
                 You will be directed to Payoneer&apos;s website in a new tab to complete your connection. Please make
                 sure your account is fully verified to ensure withdrawal success.
-                <strong>You can return here after finishing up on Payoneer&apos;s site.</strong>
+                <strong className='body-main-bold'>
+                    You can return here after finishing up on Payoneer&apos;s site.
+                </strong>
             </p>
         </>
     )
@@ -41,7 +43,7 @@ function renderPaypal(): JSX.Element {
                 You will be directed to PayPal&apos;s website in a new tab to complete your connection. Please make
                 sure your account is fully verified to ensure withdrawal success.
                 {' '}
-                <strong>
+                <strong className='body-main-bold'>
                     You can return here after finishing up
                     on PayPal&apos;s site.
                 </strong>

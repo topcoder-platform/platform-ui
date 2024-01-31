@@ -10,7 +10,7 @@ import styles from './PaymentTable.module.scss'
 
 interface PaymentTableProps {
     payments: ReadonlyArray<Winning>
-    onPayMeClick: (paymentIds: { [paymentId: string]: boolean }) => void
+    onPayMeClick: (paymentIds: { [paymentId: string]: boolean }, totalAmount: string) => void
 }
 const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) => {
     const [selectedPayments, setSelectedPayments] = useState<{ [paymentId: string]: boolean }>({})
@@ -113,7 +113,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                 <Button
                     primary
                     onClick={() => {
-                        props.onPayMeClick(selectedPayments)
+                        props.onPayMeClick(selectedPayments, total.toFixed(2))
                     }}
                     disabled={total === 0}
                 >

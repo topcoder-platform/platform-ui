@@ -127,7 +127,8 @@ const PaymentProviderCard: React.FC<PaymentProviderProps> = (props: PaymentProvi
                                 secondary
                                 variant='danger'
                                 size='lg'
-                                label='Cancel Connection'
+                                label={`${props.provider.status === 'CONNECTED'
+                                    ? 'Delete Connection' : 'Cancel Connection'}`}
                                 iconToRight
                                 icon={IconOutline.TrashIcon}
                                 onClick={function onCancelConnectonClick() {
