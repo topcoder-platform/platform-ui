@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
 import { toast } from 'react-toastify'
 import { AxiosError } from 'axios'
@@ -72,6 +73,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const [confirmFlow, setConfirmFlow] = React.useState<ConfirmFlowData | undefined>(undefined)
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
+    const [filters, setFilters] = React.useState<Record<string, string[]>>({})
 
     const convertToWinnings = useCallback(
         (payments: WinningDetail[]) => payments.map(payment => ({
@@ -94,7 +96,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const fetchWinnings = useCallback(async () => {
         setIsLoading(true)
         try {
-            const payments = await getPayments(props.profile.userId.toString())
+            const payments = await getPayments(props.profile.userId.toString(), filters)
             const winningsData = convertToWinnings(payments)
             setWinnings(winningsData)
         } catch (apiError) {
@@ -102,7 +104,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         } finally {
             setIsLoading(false)
         }
-    }, [props.profile.userId, convertToWinnings])
+    }, [props.profile.userId, convertToWinnings, filters])
 
     const renderConfirmModalContent = React.useMemo(() => {
         if (confirmFlow?.content === undefined) {
@@ -193,6 +195,10 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                             value: 'CONTEST_PAYMENT',
                                         },
                                         {
+                                            label: 'Copilot Payment',
+                                            value: 'COPILOT_PAYMENT',
+                                        },
+                                        {
                                             label: 'Review Board Payment',
                                             value: 'REVIEW_BOARD_PAYMENT',
                                         },
@@ -224,15 +230,18 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                 },
                             ]}
                             onFilterChange={(key: string, value: string[]) => {
-                                console.log(key, value)
+                                setFilters({
+                                    ...filters,
+                                    [key]: value,
+                                })
                             }}
                             onResetFilters={() => {
-                                console.log('reset')
+                                setFilters({})
                             }}
                         />
                         {/* <PageDivider /> */}
-                        {isLoading && <LoadingCircles />}
-                        {!isLoading && (
+                        {isLoading && <LoadingCircles className={styles.centered} />}
+                        {!isLoading && winnings.length > 0 && (
                             <PaymentsTable
                                 payments={winnings}
                                 onPayMeClick={async function onPayMeClicked(
@@ -247,6 +256,15 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                     })
                                 }}
                             />
+                        )}
+                        {!isLoading && winnings.length === 0 && (
+                            <div className={styles.centered}>
+                                <p className='body-main'>
+                                    {Object.keys(filters).length === 0
+                                        ? 'Your future earnings will appear here — explore Topcoder\'s opportunities to start making an impact!'
+                                        : 'No payments match your filters.'}
+                                </p>
+                            </div>
                         )}
                     </Collapsible>
                 </div>

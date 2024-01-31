@@ -42,10 +42,21 @@ export async function getUserTaxFormDetails(): Promise<TaxForm[]> {
     return response.data
 }
 
-export async function getPayments(userId: string): Promise<WinningDetail[]> {
+export async function getPayments(userId: string, filters: Record<string, string[]>): Promise<WinningDetail[]> {
+    const filteredFilters: Record<string, string> = {}
+
+    for (const key in filters) {
+        if (filters[key].length > 0) {
+            filteredFilters[key] = filters[key][0]
+        }
+    }
+
     const body = JSON.stringify({
         winnerId: userId,
+        ...filteredFilters,
     })
+
+    console.log('Ignoring filters for now', filteredFilters)
 
     const url = `${baseUrl}/user/winnings`
     const response = await xhrPostAsync<string, ApiResponse<WinningDetail[]>>(url, body)
