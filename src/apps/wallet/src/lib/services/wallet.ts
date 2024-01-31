@@ -9,6 +9,7 @@ import { WinningDetail } from '../models/WinningDetail'
 import { TaxForm } from '../models/TaxForm'
 import { OtpVerificationResponse } from '../models/OtpVerificationResponse'
 import { TransactionResponse } from '../models/TransactionId'
+import { PaginationInfo } from '../models/PaginationInfo'
 import ApiResponse from '../models/ApiResponse'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/payments`
@@ -42,7 +43,11 @@ export async function getUserTaxFormDetails(): Promise<TaxForm[]> {
     return response.data
 }
 
-export async function getPayments(userId: string, filters: Record<string, string[]>): Promise<WinningDetail[]> {
+// eslint-disable-next-line max-len
+export async function getPayments(userId: string, limit: number, offset: number, filters: Record<string, string[]>): Promise<{
+    winnings: WinningDetail[],
+    pagination: PaginationInfo
+}> {
     const filteredFilters: Record<string, string> = {}
 
     for (const key in filters) {
@@ -52,14 +57,17 @@ export async function getPayments(userId: string, filters: Record<string, string
     }
 
     const body = JSON.stringify({
+        limit,
+        offset,
         winnerId: userId,
         ...filteredFilters,
     })
 
-    console.log('Ignoring filters for now', filteredFilters)
-
     const url = `${baseUrl}/user/winnings`
-    const response = await xhrPostAsync<string, ApiResponse<WinningDetail[]>>(url, body)
+    const response = await xhrPostAsync<string, ApiResponse<{
+        winnings: WinningDetail[],
+        pagination: PaginationInfo
+    }>>(url, body)
 
     if (response.status === 'error') {
         throw new Error('Error fetching payments')

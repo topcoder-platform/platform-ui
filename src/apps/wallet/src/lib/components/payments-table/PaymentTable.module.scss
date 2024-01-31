@@ -59,6 +59,22 @@ table {
     background-color: #e7f4ff;
 }
 
+.pageButtons {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 16px;
+    gap: $sp-4;
+
+    .pageNumbers {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: $sp-1;
+    }
+
+}
+
 .paymentFooter {
     display: flex;
     justify-content: space-between;

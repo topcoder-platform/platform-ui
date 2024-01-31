@@ -11,6 +11,7 @@ import { getPayments, processPayments } from '../../../lib/services/wallet'
 import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
 import { FilterBar } from '../../../lib'
 import { ConfirmFlowData } from '../../../lib/models/ConfirmFlowData'
+import { PaginationInfo } from '../../../lib/models/PaginationInfo'
 import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
 import styles from './Winnings.module.scss'
@@ -74,6 +75,12 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
+    const [pagination, setPagination] = React.useState<PaginationInfo>({
+        currentPage: 1,
+        pageSize: 10,
+        totalItems: 0,
+        totalPages: 0,
+    })
 
     const convertToWinnings = useCallback(
         (payments: WinningDetail[]) => payments.map(payment => ({
@@ -96,15 +103,16 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const fetchWinnings = useCallback(async () => {
         setIsLoading(true)
         try {
-            const payments = await getPayments(props.profile.userId.toString(), filters)
-            const winningsData = convertToWinnings(payments)
+            const payments = await getPayments(props.profile.userId.toString(), pagination.pageSize, (pagination.currentPage - 1) * pagination.pageSize, filters)
+            const winningsData = convertToWinnings(payments.winnings)
             setWinnings(winningsData)
+            setPagination(payments.pagination)
         } catch (apiError) {
             console.error('Failed to fetch winnings:', apiError)
         } finally {
             setIsLoading(false)
         }
-    }, [props.profile.userId, convertToWinnings, filters])
+    }, [props.profile.userId, convertToWinnings, filters, pagination.currentPage, pagination.pageSize])
 
     const renderConfirmModalContent = React.useMemo(() => {
         if (confirmFlow?.content === undefined) {
@@ -243,7 +251,35 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                         {isLoading && <LoadingCircles className={styles.centered} />}
                         {!isLoading && winnings.length > 0 && (
                             <PaymentsTable
+                                currentPage={pagination.currentPage}
+                                numPages={pagination.totalPages}
                                 payments={winnings}
+                                onNextPageClick={async function onNextPageClicked() {
+                                    if (pagination.currentPage === pagination.totalPages) {
+                                        return
+                                    }
+
+                                    setPagination({
+                                        ...pagination,
+                                        currentPage: pagination.currentPage + 1,
+                                    })
+                                }}
+                                onPreviousPageClick={async function onPrevPageClicked() {
+                                    if (pagination.currentPage === 1) {
+                                        return
+                                    }
+
+                                    setPagination({
+                                        ...pagination,
+                                        currentPage: pagination.currentPage - 1,
+                                    })
+                                }}
+                                onPageClick={async function onPageClicked(pageNumber: number) {
+                                    setPagination({
+                                        ...pagination,
+                                        currentPage: pageNumber,
+                                    })
+                                }}
                                 onPayMeClick={async function onPayMeClicked(
                                     paymentIds: PaymentId,
                                     totalAmount: string,
