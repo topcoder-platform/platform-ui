@@ -51,7 +51,7 @@ export async function getPayments(userId: string, limit: number, offset: number,
     const filteredFilters: Record<string, string> = {}
 
     for (const key in filters) {
-        if (filters[key].length > 0) {
+        if (filters[key].length > 0 && key !== 'pageSize') {
             filteredFilters[key] = filters[key][0]
         }
     }

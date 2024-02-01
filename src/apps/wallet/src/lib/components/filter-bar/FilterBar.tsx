@@ -30,7 +30,7 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
     const renderDropdown = (index: number, filter: Filter): JSX.Element => (
         <InputSelect
             tabIndex={index}
-            value={selectedValue.get(filter.key) as string ?? ''}
+            value={selectedValue.get(filter.key) as string ?? (filter.key === 'pageSize' ? '10' : '')}
             options={filter.options!}
             onChange={function onChange(event: ChangeEvent<HTMLInputElement>) {
                 setSelectedValue(new Map(selectedValue.set(filter.key, event.target.value)))

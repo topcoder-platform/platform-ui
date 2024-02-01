@@ -229,12 +229,36 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                     ],
                                     type: 'dropdown',
                                 },
+                                {
+                                    key: 'pageSize',
+                                    label: 'Payments per page',
+                                    options: [
+                                        {
+                                            label: '10',
+                                            value: '10',
+                                        },
+                                        {
+                                            label: '50',
+                                            value: '50',
+                                        },
+                                        {
+                                            label: '100',
+                                            value: '100',
+                                        },
+                                    ],
+                                    type: 'dropdown',
+                                },
                             ]}
                             onFilterChange={(key: string, value: string[]) => {
-                                setPagination({
+                                const newPagination = {
                                     ...pagination,
                                     currentPage: 1,
-                                })
+                                }
+                                if (key === 'pageSize') {
+                                    newPagination.pageSize = parseInt(value[0], 10)
+                                }
+
+                                setPagination(newPagination)
                                 setFilters({
                                     ...filters,
                                     [key]: value,
