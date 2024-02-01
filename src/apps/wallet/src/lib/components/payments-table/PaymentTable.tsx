@@ -30,7 +30,20 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
         }
     }, [props.selectedPayments])
 
-    const isSomeSelected = Object.keys(selectedPayments).length > 0
+    useEffect(() => {
+        setToggleClicked(false)
+    }, [props.currentPage])
+
+    useEffect(() => {
+        const selectablePayments = props.payments.filter(payment => payment.canBeReleased)
+
+        if (selectablePayments.length === 0) {
+            setToggleClicked(false)
+        } else {
+            const areAllSelectablePaymentsSelected = selectablePayments.every(payment => selectedPayments[payment.id])
+            setToggleClicked(areAllSelectablePaymentsSelected)
+        }
+    }, [props.payments, selectedPayments])
 
     const togglePaymentSelection = (paymentId: string) => {
         const newSelections = { ...selectedPayments }
@@ -48,18 +61,23 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
     }
 
     const toggleAllPayments = () => {
-        const newSelections: { [paymentId: string]: Winning } = {}
-        if (!toggleClicked && !isSomeSelected) {
-            props.payments.forEach(payment => {
-                if (payment.canBeReleased) {
-                    newSelections[payment.id] = payment
-                }
+        const newSelections = { ...selectedPayments }
+        const selectablePayments = props.payments.filter(payment => payment.canBeReleased)
+        const areAllSelectablePaymentsSelected = selectablePayments.every(payment => selectedPayments[payment.id])
+
+        if (areAllSelectablePaymentsSelected) {
+            selectablePayments.forEach(payment => {
+                delete newSelections[payment.id]
+            })
+        } else {
+            selectablePayments.forEach(payment => {
+                newSelections[payment.id] = payment
             })
         }
 
-        setToggleClicked(!toggleClicked)
         setSelectedPayments(newSelections)
         props.onSelectedPaymentsChange?.(newSelections)
+        setToggleClicked(!areAllSelectablePaymentsSelected)
     }
 
     const calculateTotal = () => Object.values(selectedPayments)

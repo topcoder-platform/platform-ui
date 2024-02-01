@@ -269,6 +269,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                 setPagination({
                                     ...pagination,
                                     currentPage: 1,
+                                    pageSize: 10,
                                 })
                                 setFilters({})
                                 setSelectedPayments({})
