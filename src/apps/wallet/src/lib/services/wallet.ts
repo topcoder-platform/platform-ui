@@ -73,6 +73,10 @@ export async function getPayments(userId: string, limit: number, offset: number,
         throw new Error('Error fetching payments')
     }
 
+    if (response.data.winnings === null || response.data.winnings === undefined) {
+        response.data.winnings = []
+    }
+
     return response.data
 }
 
