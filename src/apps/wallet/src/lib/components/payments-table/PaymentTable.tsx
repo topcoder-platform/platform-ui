@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-no-bind */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
 
@@ -9,51 +9,61 @@ import { Winning } from '../../models/WinningDetail'
 import styles from './PaymentTable.module.scss'
 
 interface PaymentTableProps {
-    payments: ReadonlyArray<Winning>
-    onPayMeClick: (paymentIds: { [paymentId: string]: boolean }, totalAmount: string) => void
-    currentPage: number
-    numPages: number
-    onNextPageClick: () => void
-    onPreviousPageClick: () => void
-    onPageClick: (pageNumber: number) => void
+    payments: ReadonlyArray<Winning>;
+    selectedPayments?: { [paymentId: string]: Winning };
+    currentPage: number;
+    numPages: number;
+    onPayMeClick: (paymentIds: { [paymentId: string]: Winning }, totalAmount: string) => void;
+    onSelectedPaymentsChange?: (paymentIds: { [paymentId: string]: Winning }) => void;
+    onNextPageClick: () => void;
+    onPreviousPageClick: () => void;
+    onPageClick: (pageNumber: number) => void;
 }
+
 const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) => {
-    const [selectedPayments, setSelectedPayments] = useState<{ [paymentId: string]: boolean }>({})
+    const [selectedPayments, setSelectedPayments] = useState<{ [paymentId: string]: Winning }>({})
     const [toggleClicked, setToggleClicked] = useState(false)
 
-    const togglePaymentSelection = (paymentId: string) => {
-        setSelectedPayments(prevSelected => ({
-            ...prevSelected,
-            [paymentId]: !prevSelected[paymentId],
-        }))
-    }
+    useEffect(() => {
+        if (props.selectedPayments) {
+            setSelectedPayments(props.selectedPayments)
+        }
+    }, [props.selectedPayments])
 
-    const isSomeSelected = Object.values(selectedPayments)
-        .some(selected => selected)
+    const isSomeSelected = Object.keys(selectedPayments).length > 0
+
+    const togglePaymentSelection = (paymentId: string) => {
+        const newSelections = { ...selectedPayments }
+        if (newSelections[paymentId]) {
+            delete newSelections[paymentId]
+        } else {
+            const payment = props.payments.find(p => p.id === paymentId)
+            if (payment) {
+                newSelections[paymentId] = payment
+            }
+        }
+
+        setSelectedPayments(newSelections)
+        props.onSelectedPaymentsChange?.(newSelections)
+    }
 
     const toggleAllPayments = () => {
-        setToggleClicked(!toggleClicked)
-
-        if (isSomeSelected) {
-            setSelectedPayments({})
-        } else {
-            const newSelections: { [paymentId: string]: boolean } = {}
+        const newSelections: { [paymentId: string]: Winning } = {}
+        if (!toggleClicked && !isSomeSelected) {
             props.payments.forEach(payment => {
                 if (payment.canBeReleased) {
-                    newSelections[payment.id] = true
+                    newSelections[payment.id] = payment
                 }
             })
-            setSelectedPayments(newSelections)
         }
+
+        setToggleClicked(!toggleClicked)
+        setSelectedPayments(newSelections)
+        props.onSelectedPaymentsChange?.(newSelections)
     }
 
-    const calculateTotal = () => props.payments.reduce((acc: number, payment: Winning) => {
-        if (selectedPayments[payment.id]) {
-            return acc + parseFloat(payment.netPayment.replace(/[^0-9.-]+/g, ''))
-        }
-
-        return acc
-    }, 0)
+    const calculateTotal = () => Object.values(selectedPayments)
+        .reduce((acc, payment) => acc + parseFloat(payment.netPayment.replace(/[^0-9.-]+/g, '')), 0)
 
     const total = calculateTotal()
 

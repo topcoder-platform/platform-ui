@@ -16,8 +16,6 @@ import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
 import styles from './Winnings.module.scss'
 
-type PaymentId = { [paymentId: string]: boolean }
-
 interface ListViewProps {
     profile: UserProfile
 }
@@ -73,6 +71,7 @@ const formatCurrency = (amountStr: string, currency: string): string => {
 const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const [confirmFlow, setConfirmFlow] = React.useState<ConfirmFlowData | undefined>(undefined)
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
+    const [selectedPayments, setSelectedPayments] = React.useState<{ [paymentId: string]: Winning }>({})
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
     const [pagination, setPagination] = React.useState<PaginationInfo>({
@@ -130,14 +129,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         fetchWinnings()
     }, [fetchWinnings])
 
-    const processPayouts = async (paymentIds: PaymentId): Promise<void> => {
-        const winningIds: string[] = []
-        Object.keys(paymentIds)
-            .forEach((key: string) => {
-                if (paymentIds[key]) {
-                    winningIds.push(key)
-                }
-            })
+    const processPayouts = async (winningIds: string[]): Promise<void> => {
+        setSelectedPayments({})
 
         toast.info('Processing payments...', {
             position: toast.POSITION.BOTTOM_RIGHT,
@@ -246,6 +239,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                     ...filters,
                                     [key]: value,
                                 })
+                                setSelectedPayments({})
                             }}
                             onResetFilters={() => {
                                 setPagination({
@@ -253,6 +247,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                     currentPage: 1,
                                 })
                                 setFilters({})
+                                setSelectedPayments({})
                             }}
                         />
                         {/* <PageDivider /> */}
@@ -262,6 +257,10 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                 currentPage={pagination.currentPage}
                                 numPages={pagination.totalPages}
                                 payments={winnings}
+                                selectedPayments={selectedPayments}
+                                onSelectedPaymentsChange={function onSelectedPaymentsChanged(selectedWinnings: { [paymentId: string]: Winning }) {
+                                    setSelectedPayments(selectedWinnings)
+                                }}
                                 onNextPageClick={async function onNextPageClicked() {
                                     if (pagination.currentPage === pagination.totalPages) {
                                         return
@@ -289,12 +288,12 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                     })
                                 }}
                                 onPayMeClick={async function onPayMeClicked(
-                                    paymentIds: PaymentId,
+                                    paymentIds: { [paymentId: string]: Winning },
                                     totalAmount: string,
                                 ) {
                                     setConfirmFlow({
                                         action: 'Yes',
-                                        callback: () => processPayouts(paymentIds),
+                                        callback: () => processPayouts(Object.keys(paymentIds)),
                                         content: `You are about to process payments for a total of USD ${totalAmount}`,
                                         title: 'Are you sure?',
                                     })
