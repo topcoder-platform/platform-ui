@@ -238,12 +238,20 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                 },
                             ]}
                             onFilterChange={(key: string, value: string[]) => {
+                                setPagination({
+                                    ...pagination,
+                                    currentPage: 1,
+                                })
                                 setFilters({
                                     ...filters,
                                     [key]: value,
                                 })
                             }}
                             onResetFilters={() => {
+                                setPagination({
+                                    ...pagination,
+                                    currentPage: 1,
+                                })
                                 setFilters({})
                             }}
                         />
