@@ -72,7 +72,7 @@ const TaxFormCard: React.FC<TaxFormCardProps> = (props: TaxFormCardProps) => (
                 label={props.instructionsLabel}
                 // eslint-disable-next-line react/jsx-no-bind
                 onClick={() => {
-                    window.location.href = props.instructionsLink
+                    window.open(props.instructionsLink, '_blank')
                 }}
             />
             <Button primary label={props.completionLabel} onClick={props.onSetupClick} />

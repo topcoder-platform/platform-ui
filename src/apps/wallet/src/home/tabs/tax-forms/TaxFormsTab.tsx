@@ -89,7 +89,7 @@ const TAX_FORM_DETAILS = [
         instructionsLink: 'https://www.irs.gov/pub/irs-pdf/iw8ben.pdf',
         reasonDescription:
             // eslint-disable-next-line max-len
-            'Under current IRS guidance, foreign persons performing services outside of the U.S. are not subject to income tax withholding. However, Topcoder requires all such members to provide a properly filled out W-8BEN prior to issuing payment. In addition, prize money paid to foreign persons who are not performing services (such as winning an SRM competition) is subject to withholding taxes.',
+            'Under current IRS guidance, foreign persons performing services outside of the U.S. are not subject to income tax withholding. However, Topcoder requires all such members to provide a properly filled out W-8BEN-E prior to issuing payment. In addition, prize money paid to foreign persons who are not performing services (such as winning an SRM competition) is subject to withholding taxes.',
         reasonTitle: 'Why do I need to complete Form W-8BEN-E?',
     },
 ]
