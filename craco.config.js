@@ -43,6 +43,7 @@ module.exports = {
             '@gamificationAdmin': resolve('src/apps/gamification-admin/src'),
             '@talentSearch': resolve('src/apps/talent-search/src'),
             '@profiles': resolve('src/apps/profiles/src'),
+            '@wallet': resolve('src/apps/wallet/src'),
 
             '@platform': resolve('src/apps/platform/src'),
             // aliases used in SCSS files

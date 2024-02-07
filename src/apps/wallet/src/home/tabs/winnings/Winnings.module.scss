@@ -1,0 +1,35 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background-color: $black-5;
+    padding: $sp-6;
+    margin: $sp-8 0;
+    border-radius: 6px;
+
+    @include ltelg {
+        padding: $sp-4;
+    }
+
+    .header {
+        display: flex;
+        justify-content: flex-start;
+        gap: 5px;
+        align-items: center;
+
+        @include ltelg {
+            flex-direction: column;
+        }
+    }
+
+    .content {
+        background-color: $tc-white;
+        border-radius: 4px;
+        margin-top: $sp-4;
+        .centered {
+            height: 200px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+    }
+}

@@ -21,6 +21,7 @@ export interface MemberStatsTrack {
     wins: number,
     order?: number
     isDSTrack?: boolean
+    isCPTrack?: boolean
 }
 
 /**
@@ -206,6 +207,7 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
         return {
             challenges: dataScienceSubTracks.SRM?.challenges ?? 0,
             isActive: (dataScienceSubTracks.SRM?.challenges ?? 0) > 0,
+            isCPTrack: true,
             isDSTrack: true,
             name: 'Competitive Programming',
             order: -2,

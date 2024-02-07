@@ -257,7 +257,6 @@ workflows:
                       branches:
                           only:
                               - dev
-                              - MP-356_member-stats-and-history
 
             - deployQa:
                   context: org-global
