@@ -9,7 +9,6 @@ export enum AppSubdomain {
     work = 'work',
     talentSearch = 'talent-search',
     wallet = 'wallet',
-    walletAdmin = 'wallet-admin',
 }
 
 export enum ToolTitle {

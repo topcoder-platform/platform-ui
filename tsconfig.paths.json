@@ -30,9 +30,6 @@
             "@wallet/*": [
                 "./src/apps/wallet/src/*"
             ],
-            "@walletAdmin/*": [
-                "./src/apps/wallet-admin/src/*"
-            ],
             "@libs/ui/styles/*": [
                 "./src/libs/ui/lib/styles/*"
             ]

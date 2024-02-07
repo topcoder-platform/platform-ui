@@ -44,7 +44,6 @@ module.exports = {
             '@talentSearch': resolve('src/apps/talent-search/src'),
             '@profiles': resolve('src/apps/profiles/src'),
             '@wallet': resolve('src/apps/wallet/src'),
-            '@walletAdmin': resolve('src/apps/wallet-admin/src'),
 
             '@platform': resolve('src/apps/platform/src'),
             // aliases used in SCSS files
