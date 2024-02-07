@@ -7,7 +7,8 @@ export enum AppSubdomain {
     tcAcademy = 'academy',
     onboarding = 'onboarding',
     work = 'work',
-    talentSearch = 'talent-search'
+    talentSearch = 'talent-search',
+    wallet = 'wallet',
 }
 
 export enum ToolTitle {
@@ -19,7 +20,9 @@ export enum ToolTitle {
     tcAcademy = 'Topcoder Academy',
     selfService = 'Self Service Challenges',
     onboarding = ' ',
-    talentSearch = 'Expert Talent'
+    talentSearch = 'Expert Talent',
+    wallet = 'Wallet',
+    walletAdmin = 'Wallet Admin',
 }
 
 export const PageSubheaderPortalId: string = 'page-subheader-portal-el'
