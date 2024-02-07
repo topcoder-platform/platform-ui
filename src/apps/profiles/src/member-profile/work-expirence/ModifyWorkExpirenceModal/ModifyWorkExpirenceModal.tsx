@@ -6,7 +6,7 @@ import classNames from 'classnames'
 
 import { BaseModal, Button, IconOutline, InputDatePicker, InputSelect, InputText } from '~/libs/ui'
 import {
-    updateOrCreateMemberTraitsAsync,
+    updateDeleteOrCreateMemberTraitAsync,
     UserProfile, UserTrait,
     UserTraitCategoryNames,
     UserTraitIds,
@@ -71,13 +71,13 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
 
         setIsSaving(true)
 
-        updateOrCreateMemberTraitsAsync(props.profile.handle, [{
+        updateDeleteOrCreateMemberTraitAsync(props.profile.handle, {
             categoryName: UserTraitCategoryNames.work,
             traitId: UserTraitIds.work,
             traits: {
                 data: workExpirence || [],
             },
-        }])
+        }, props.workExpirence)
             .then(() => {
                 toast.success('Work Experience updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
                 props.onSave()

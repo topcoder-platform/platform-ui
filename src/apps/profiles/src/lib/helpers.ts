@@ -51,6 +51,10 @@ export function subTrackLabelToHumanName(label: string): string {
             return 'Web Design'
         case 'WIREFRAMES':
             return 'Wireframes'
+        case 'MARATHON_MATCH':
+            return 'Marathon Match'
+        case 'SRM':
+            return 'Single Round Match'
         case 'FRONT_END_FLASH':
             return 'Front End Flash'
         case 'PRINT_OR_PRESENTATION':
@@ -108,4 +112,16 @@ export function isValidURL(urlToValidate: string): boolean {
     }
 
     return true
+}
+
+/**
+ * Creates the string with the number of items and the word describing the item
+ * possibly in plural form.
+ *
+ * @param {number} count - The number of entities
+ * @param {string} baseWord - The base word that describes the entity
+ * @returns {string}
+ */
+export function formatPlural(count: number, baseWord: string): string {
+    return `${baseWord}${count === 1 ? '' : 's'}`
 }

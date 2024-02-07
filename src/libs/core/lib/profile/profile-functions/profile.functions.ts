@@ -9,13 +9,14 @@ import { ModifyUserPropertyResponse } from '../modify-user-role.model'
 import { UserEmailPreferences } from '../user-email-preference.model'
 import { UserProfile } from '../user-profile.model'
 import { UserStats } from '../user-stats.model'
-import { UserTraits } from '../user-traits.model'
+import { UserTrait, UserTraits } from '../user-traits.model'
 import { UserVerify } from '../user-verify.model'
 
 import { profileFactoryCreate } from './profile-factory'
 import { getMemberStats, getVerification, profileStoreGet, profileStorePatchName } from './profile-store'
 import {
     createMemberTraits,
+    deleteMemberTrait,
     getCountryLookup,
     modifyTracks,
     updateMemberEmailPreferences,
@@ -135,6 +136,13 @@ export async function createMemberTraitsAsync(
     return createMemberTraits(handle, traits)
 }
 
+export async function deleteMemberTraitAsync(
+    handle: string,
+    traitIds: string,
+): Promise<UserTraits[]> {
+    return deleteMemberTrait(handle, traitIds)
+}
+
 export async function modifyTracksAsync(handle: string, tracks: ModifyTracksRequest): Promise<UserProfile> {
     return modifyTracks(handle, tracks)
 }
@@ -156,6 +164,42 @@ export async function updateOrCreateMemberTraitsAsync(
         return updatedTraitsRsp
     } catch (error) {
         const createdTraitsRsp = await createMemberTraitsAsync(handle, traits)
+        return createdTraitsRsp
+    }
+}
+
+export async function updateDeleteOrCreateMemberTraitAsync(
+    handle: string,
+    trait: UserTraits,
+    previousTraitsData: Array<UserTrait> | undefined,
+): Promise<UserTraits[]> {
+    if (!trait.traits.data.length) {
+        if (!previousTraitsData) {
+            return [] // no need to delete trait if trait data is null
+        }
+
+        try {
+            await deleteMemberTraitAsync(handle, trait.traitId)
+            return []
+        } catch (error) {
+        }
+    }
+
+    if (!previousTraitsData) {
+        try {
+            // call request to create trait data if trait data is null
+            const createdTraitsRsp = await createMemberTraitsAsync(handle, [trait])
+            return createdTraitsRsp
+        } catch (error) {
+        }
+    }
+
+    try {
+        // call request to update trait data if trait data is not null
+        const updatedTraitsRsp = await updateMemberTraitsAsync(handle, [trait])
+        return updatedTraitsRsp
+    } catch (error) {
+        const createdTraitsRsp = await createMemberTraitsAsync(handle, [trait])
         return createdTraitsRsp
     }
 }

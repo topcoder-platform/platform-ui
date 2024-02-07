@@ -5,6 +5,7 @@ import classNames from 'classnames'
 
 import { routerContext, RouterContextData } from '~/libs/core'
 import { Member } from '~/apps/talent-search/src/lib/models'
+import { SharedSwrConfig } from '~/libs/shared'
 import { EnvironmentConfig } from '~/config'
 
 import { onboardRouteId } from '../../onboarding.routes'
@@ -52,11 +53,13 @@ const OnboardingContent: FC<{
 }
 
 export const OnboardingWrapper: FC<{}> = () => (
-    <div className={classNames(styles.blockWrapper, 'd-flex flex-column align-items-center')}>
-        <Provider store={store}>
-            <OnboardingContent />
-        </Provider>
-    </div>
+    <SharedSwrConfig>
+        <div className={classNames(styles.blockWrapper, 'd-flex flex-column align-items-center')}>
+            <Provider store={store}>
+                <OnboardingContent />
+            </Provider>
+        </div>
+    </SharedSwrConfig>
 )
 
 export default OnboardingWrapper

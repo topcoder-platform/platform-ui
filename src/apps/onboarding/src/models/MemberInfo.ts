@@ -15,6 +15,7 @@ export default interface MemberInfo {
     maxRating: MemberMaxRating
     skills: Array<UserSkill>
     stats: Array<MemberStats>
+    availableForGigs: boolean
     addresses?: MemberAddress[]
     country: string
     photoURL: string

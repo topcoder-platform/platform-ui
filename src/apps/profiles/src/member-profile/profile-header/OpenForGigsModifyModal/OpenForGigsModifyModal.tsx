@@ -1,15 +1,8 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
-import { reject } from 'lodash'
 
 import { BaseModal, Button, InputText } from '~/libs/ui'
-import {
-    updateOrCreateMemberTraitsAsync,
-    UserProfile,
-    UserTrait,
-    UserTraitCategoryNames,
-    UserTraitIds,
-} from '~/libs/core'
+import { updateMemberProfileAsync, UserProfile } from '~/libs/core'
 
 import styles from './OpenForGigsModifyModal.module.scss'
 
@@ -17,7 +10,6 @@ interface OpenForGigsModifyModalProps {
     onClose: () => void
     onSave: () => void
     openForWork: boolean
-    memberPersonalizationTraitsFullData: UserTrait[] | undefined
     profile: UserProfile
 }
 
@@ -35,24 +27,10 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
     function handleOpenForWorkSave(): void {
         setIsSaving(true)
 
-        const updatedPersonalizationTraits: UserTrait[]
-            = reject(
-                props.memberPersonalizationTraitsFullData,
-                (trait: UserTrait) => trait.availableForGigs !== undefined,
-            )
-
-        updateOrCreateMemberTraitsAsync(props.profile.handle, [{
-            categoryName: UserTraitCategoryNames.personalization,
-            traitId: UserTraitIds.personalization,
-            traits: {
-                data: [
-                    ...(updatedPersonalizationTraits || []),
-                    {
-                        availableForGigs: openForWork,
-                    },
-                ],
-            },
-        }])
+        updateMemberProfileAsync(
+            props.profile.handle,
+            { availableForGigs: openForWork },
+        )
             .then(() => {
                 toast.success('Work availability updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
                 props.onSave()

@@ -6,10 +6,10 @@ import codes from 'country-calling-code'
 
 import { IconSolid } from '~/libs/ui'
 import { isSkillVerified, ProfilePicture, SkillPill } from '~/libs/shared'
-import { UserSkill } from '~/libs/core'
+import { NamesAndHandleAppearance, UserSkill } from '~/libs/core'
 
 import { ProfileMatch } from '../profile-match'
-import { Member, MemberDisplayName } from '../../lib/models'
+import { Member } from '../../lib/models'
 import { TALENT_SEARCH_PATHS } from '../../talent-search.routes'
 import { useIsMatchingSkill } from '../../lib/utils'
 
@@ -94,14 +94,14 @@ const TalentCard: FC<TalentCardProps> = props => {
                 <ProfilePicture member={props.member} className={styles.profilePic} />
                 <div className={styles.detailsContainer}>
                     <div className={styles.talentInfo}>
-                        {props.member.namesAndHandleAppearance !== MemberDisplayName.handleOnly && (
+                        {props.member.namesAndHandleAppearance !== NamesAndHandleAppearance.handleOnly && (
                             <div className={styles.talentInfoName}>
                                 {props.member.firstName}
                                 {' '}
                                 {props.member.lastName?.slice(0, 1) || ''}
                             </div>
                         )}
-                        {props.member.namesAndHandleAppearance !== MemberDisplayName.nameOnly && (
+                        {props.member.namesAndHandleAppearance !== NamesAndHandleAppearance.nameOnly && (
                             <div className={styles.talentInfoHandle}>
                                 <span className='body-medium-normal'>
                                     {props.member.handle}
