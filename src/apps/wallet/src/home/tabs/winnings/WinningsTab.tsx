@@ -192,6 +192,10 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                     label: 'Type',
                                     options: [
                                         {
+                                            label: 'Task Payment',
+                                            value: 'TASK_PAYMENT',
+                                        },
+                                        {
                                             label: 'Contest Payment',
                                             value: 'CONTEST_PAYMENT',
                                         },
