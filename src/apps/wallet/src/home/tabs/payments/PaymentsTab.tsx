@@ -198,15 +198,6 @@ const PaymentsTab: FC = () => {
                             }
                         }}
                         onRemoveProvider={async function onRemoveProvider() {
-                            const transactionId = selectedPaymentProvider.transactionId
-                            if (transactionId === undefined) {
-                                toast.error(
-                                    'Something went wrong. Please try again.',
-                                    { position: toast.POSITION.BOTTOM_RIGHT },
-                                )
-                                return
-                            }
-
                             try {
                                 // eslint-disable-next-line max-len
                                 const response: TransactionResponse = await removePaymentProvider(selectedPaymentProvider.type)
