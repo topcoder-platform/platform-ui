@@ -27,6 +27,9 @@
             "@profiles/*": [
                 "./src/apps/profiles/src/*"
             ],
+            "@wallet/*": [
+                "./src/apps/wallet/src/*"
+            ],
             "@libs/ui/styles/*": [
                 "./src/libs/ui/lib/styles/*"
             ]
