@@ -6,7 +6,7 @@
     right: 0;
     height: 100%;
     width: 0;
-    &::before {
+    &::after {
         content: '';
         display: block;
         height: 100%;
@@ -16,7 +16,7 @@
 .floatingActionBtn {
     position: sticky;
     right: 0;
-    bottom: $sp-4;
+    top: 0;
 }
 
 .triggerBtn.triggerBtn {
@@ -27,5 +27,5 @@
 .menu {
     position: absolute;
     right: 0;
-    bottom: 0;
+    top: $sp-4;
 }
