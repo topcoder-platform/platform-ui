@@ -6,6 +6,7 @@ import { InputWrapper } from '../input-wrapper'
 import styles from './InputTextarea.module.scss'
 
 interface InputTextareaProps {
+    readonly className?: string
     readonly autocomplete?: FormInputAutocompleteOption
     readonly dirty?: boolean
     readonly disabled?: boolean
@@ -14,11 +15,11 @@ interface InputTextareaProps {
     readonly hint?: string
     readonly label?: string
     readonly name: string
-    readonly onBlur: (event: FocusEvent<HTMLTextAreaElement>) => void
+    readonly onBlur?: (event: FocusEvent<HTMLTextAreaElement>) => void
     readonly onChange: (event: FocusEvent<HTMLTextAreaElement>) => void
     readonly placeholder?: string
     readonly spellCheck?: boolean
-    readonly tabIndex: number
+    readonly tabIndex?: number
     readonly value?: string | number
 }
 
@@ -34,14 +35,14 @@ const InputTextarea: FC<InputTextareaProps> = (props: InputTextareaProps) => (
         <textarea
             autoComplete={props.autocomplete}
             className={styles['form-input-textarea']}
-            defaultValue={props.value}
+            value={props.value ?? ''}
             disabled={!!props.disabled}
             name={props.name}
             onBlur={props.onBlur}
             onChange={props.onChange}
             placeholder={props.placeholder}
             spellCheck={!!props.spellCheck}
-            tabIndex={props.tabIndex}
+            tabIndex={props.tabIndex ?? -1}
         />
     </InputWrapper>
 )

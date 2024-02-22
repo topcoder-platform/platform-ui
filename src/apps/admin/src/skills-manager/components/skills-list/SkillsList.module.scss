@@ -1,0 +1,39 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    column-count: 4;
+}
+
+.listWrap {
+    display: flex;
+    flex-direction: column;
+}
+
+.skillItem {
+    padding: $sp-2 $sp-2;
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+
+    cursor: pointer;
+    transition: 0.15s ease-in-out;
+
+    &:hover {
+        background: rgba($tc-black, 0.075);
+    }
+
+    &.archived {
+        color: $black-40;
+        // pointer-events: none;
+    }
+}
+
+.checkbox {
+    > * {
+        margin: -$sp-2;
+        > * {
+            display: block;
+            padding: $sp-2;
+        }
+    }
+}

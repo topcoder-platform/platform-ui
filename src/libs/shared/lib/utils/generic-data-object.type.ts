@@ -1,1 +1,1 @@
-export type GenericDataObject = { [key: string]: string | GenericDataObject }
+export type GenericDataObject<T = string> = { [key: string]: GenericDataObject | T }

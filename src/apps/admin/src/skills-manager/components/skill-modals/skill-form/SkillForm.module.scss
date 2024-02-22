@@ -1,0 +1,23 @@
+@import '@libs/ui/styles/includes';
+
+.form {
+    :global(.input-wrapper) {
+        > :global(.input-error) {
+            margin-bottom: 8px;
+        }
+    }
+}
+
+
+.buttonsWrap {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+}
+
+.primaryGroup {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    gap: $sp-2;
+}

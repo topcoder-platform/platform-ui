@@ -1,0 +1,34 @@
+@import '@libs/ui/styles/includes';
+
+.modalBody {
+    form {
+        :global(.page-divider) {
+            display: none;
+        }
+
+        :global(.input-wrapper) {
+            > :global(.input-error) {
+                margin-bottom: 8px;
+            }
+        }
+    }
+}
+
+.error {
+    display: flex;
+    align-items: flex-start;
+    color: $red-100;
+
+    font-family: $font-roboto;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: $font-weight-normal;
+    margin-bottom: $sp-4;
+
+    svg {
+        @include icon-lg;
+        fill: $red-100;
+        margin-right: $sp-1;
+        margin-top: 2px;
+    }
+}

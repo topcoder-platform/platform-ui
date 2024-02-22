@@ -257,6 +257,7 @@ workflows:
                       branches:
                           only:
                               - dev
+                              - TSJR-314_skill-manager_landing-page
 
             - deployQa:
                   context: org-global
