@@ -1,6 +1,7 @@
 export type UserSkillCategory = {
     id: string
     name: string
+    description?: string
 }
 
 // keep this in sync with the backend

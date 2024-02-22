@@ -1,0 +1,15 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    padding: $sp-8 0 0;
+}
+
+.inner {
+    display: flex;
+    align-items: center;
+    gap: $sp-8;
+
+    h1 {
+        line-height: $sp-10;
+    }
+}

@@ -1,0 +1,31 @@
+@import '@libs/ui/styles/includes';
+
+.stickyContainer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 0;
+    &::after {
+        content: '';
+        display: block;
+        height: 100%;
+    }
+}
+
+.floatingActionBtn {
+    position: sticky;
+    right: 0;
+    top: 0;
+}
+
+.triggerBtn.triggerBtn {
+    padding-left: $sp-4;
+    padding-right: $sp-4;
+}
+
+.menu {
+    position: absolute;
+    right: 0;
+    top: $sp-4;
+}

@@ -15,7 +15,7 @@
     //   ],
     //   "description": "Log output to console"
     // }
-    "[MFE] React component": {
+    "[PLAT] React component": {
       "scope": "typescript,typescriptreact",
       "prefix": "rfc",
       "body": [
@@ -28,10 +28,10 @@
         "",
         "const ${1:ComponentName}: FC<${1:ComponentName}Props> = props => {",
         "",
-        "  return (",
-        "    <div className={styles.wrap}>",
-        "    </div>",
-        "  )",
+        "    return (",
+        "        <div className={styles.wrap}>",
+        "        </div>",
+        "    )",
         "}",
         "",
         "export default ${1:ComponentName}",
@@ -39,7 +39,28 @@
       ],
       "description": "Create a react functional component"
     },
-    "[MFE] export comp": {
+    "[PLAT] Simple React component": {
+      "scope": "typescript,typescriptreact",
+      "prefix": "rfc",
+      "body": [
+        "import { FC } from 'react'",
+        "",
+        "import styles from './${1:ComponentName}.module.scss'",
+        "",
+        "interface ${1:ComponentName}Props {",
+        "}",
+        "",
+        "const ${1:ComponentName}: FC<${1:ComponentName}Props> = props => (",
+        "    <div className={styles.wrap}>",
+        "    </div>",
+        ")",
+        "",
+        "export default ${1:ComponentName}",
+        ""
+      ],
+      "description": "Create a react functional component"
+    },
+    "[PLAT] export comp": {
       "scope": "typescript,typescriptreact",
       "prefix": "exp",
       "body": [
@@ -48,14 +69,21 @@
       ],
       "description": "Export module"
     },
-    "[MFE] use state": {
+    "[PLAT] use state": {
         "scope": "typescript,typescriptreact",
         "prefix": "usest",
         "body": [
             "const [$1, set$2]: [$3, Dispatch<SetStateAction<$3>>] = useState($4)$0",
         ]
     },
-    "[MFE] Storybook Template": {
+    "[PLAT] includes": {
+        "scope": "css,scss",
+        "prefix": "includes",
+        "body": [
+            "@import '@libs/ui/styles/includes';",
+        ]
+    },
+    "[PLAT] Storybook Template": {
         "scope": "typescript,typescriptreact",
         "prefix": "sb",
         "body": [

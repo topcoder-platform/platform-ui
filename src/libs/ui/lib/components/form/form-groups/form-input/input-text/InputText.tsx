@@ -26,7 +26,7 @@ export interface InputTextProps {
     readonly placeholder?: string
     readonly readonly?: boolean
     readonly spellCheck?: boolean
-    readonly tabIndex: number
+    readonly tabIndex?: number
     readonly tooltip?: FormInputTooltipOptions
     readonly type: InputTextTypes
     readonly value?: InputValue
@@ -62,7 +62,7 @@ const InputText: FC<InputTextProps> = (props: InputTextProps) => {
             placeholder={props.placeholder}
             readOnly={props.readonly}
             spellCheck={!!props.spellCheck}
-            tabIndex={props.tabIndex}
+            tabIndex={props.tabIndex ?? -1}
             type={props.type || 'text'}
         />
     )

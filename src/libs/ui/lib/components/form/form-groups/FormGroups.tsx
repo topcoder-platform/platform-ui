@@ -3,10 +3,17 @@ import { ChangeEvent, FocusEvent } from 'react'
 import { PageDivider } from '../../page-divider'
 import { FormDefinition } from '../form-definition.model'
 import { FormGroup } from '../form-group.model'
-import { FormInputModel } from '../form-input.model'
+import { FormInputModel, FormRadioButtonOption } from '../form-input.model'
 
 import { FormCardSet } from './form-card-set'
-import { InputImagePicker, InputRating, InputText, InputTextarea } from './form-input'
+import {
+    InputImagePicker,
+    InputRating,
+    InputSelectOption,
+    InputSelectReact,
+    InputText,
+    InputTextarea,
+} from './form-input'
 import { FormInputRow } from './form-input-row'
 import { InputTextTypes } from './form-input/input-text/InputText'
 import FormGroupItem from './form-group-item/FormGroupItem'
@@ -75,6 +82,7 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                         {...input}
                         onChange={props.onChange}
                         value={input.value}
+                        options={input.options as FormRadioButtonOption[]}
                     />
                 )
                 break
@@ -102,6 +110,17 @@ const FormGroups: (props: FormGroupsProps) => JSX.Element = (props: FormGroupsPr
                         {...input}
                         onChange={props.onChange}
                         value={!!input.value}
+                    />
+                )
+                break
+            case 'select':
+                inputElement = (
+                    <InputSelectReact
+                        {...input}
+                        tabIndex={tabIndex}
+                        onChange={props.onChange}
+                        value={input.value as string}
+                        options={input.options as InputSelectOption[]}
                     />
                 )
                 break

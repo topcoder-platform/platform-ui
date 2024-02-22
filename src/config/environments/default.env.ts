@@ -23,6 +23,8 @@ export const API = {
     V5: `https://api.${TC_DOMAIN}/v5`,
 }
 
+export const STANDARDIZED_SKILLS_API = `${API.V5}/standardized-skills`
+
 export const AUTH = {
     ACCOUNTS_APP_CONNECTOR: `https://accounts-auth0.${TC_DOMAIN}`,
 }

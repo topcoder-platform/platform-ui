@@ -177,6 +177,8 @@ const Form: <
                 <LinkButton
                     {...button}
                     {...{ [button.buttonStyle ?? 'primary']: true }}
+                    variant={button.variant}
+                    light={button.buttonLight}
                     to={button.route ?? button.url}
                     type={button.type ?? (button.isReset ? 'reset' : button.isSubmit ? 'submit' : 'button')}
                     size='lg'

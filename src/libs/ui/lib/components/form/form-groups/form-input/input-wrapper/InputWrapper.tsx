@@ -101,7 +101,7 @@ const InputWrapper: ForwardRefExoticComponent<InputWrapperProps & { ref?: React.
             </div>
 
             {showError && (
-                <div className={styles.error}>
+                <div className={classNames(styles.error, 'input-error')}>
                     <IconSolid.ExclamationIcon />
                     {props.error}
                 </div>
