@@ -82,20 +82,37 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     })
 
     const convertToWinnings = useCallback(
-        (payments: WinningDetail[]) => payments.map(payment => ({
-            canBeReleased: new Date(payment.releaseDate) <= new Date() && payment.details[0].status === 'OWED',
-            createDate: formatIOSDateString(payment.createdAt),
-            currency: payment.details[0].currency,
-            datePaid: payment.details[0].datePaid ? formatIOSDateString(payment.details[0].datePaid) : '-',
-            description: payment.description,
-            details: payment.details,
-            id: payment.id,
-            netPayment: formatCurrency(payment.details[0].totalAmount, payment.details[0].currency),
-            releaseDate: formatIOSDateString(payment.releaseDate),
-            status: formatStatus(payment.details[0].status),
-            type: payment.category.replaceAll('_', ' ')
-                .toLowerCase(),
-        })),
+        (payments: WinningDetail[]) => payments.map(payment => {
+            const now = new Date()
+            const releaseDate = new Date(payment.releaseDate)
+            const diffMs = releaseDate.getTime() - now.getTime()
+            const diffHours = diffMs / (1000 * 60 * 60)
+
+            let formattedReleaseDate
+            if (diffHours > 0 && diffHours <= 24) {
+                const diffMinutes = diffMs / (1000 * 60)
+                const hours = Math.floor(diffHours)
+                const minutes = Math.round(diffMinutes - hours * 60)
+                formattedReleaseDate = `In ${hours} hours ${minutes} minutes`
+            } else {
+                formattedReleaseDate = formatIOSDateString(payment.releaseDate)
+            }
+
+            return {
+                canBeReleased: new Date(payment.releaseDate) <= new Date() && payment.details[0].status === 'OWED',
+                createDate: formatIOSDateString(payment.createdAt),
+                currency: payment.details[0].currency,
+                datePaid: payment.details[0].datePaid ? formatIOSDateString(payment.details[0].datePaid) : '-',
+                description: payment.description,
+                details: payment.details,
+                id: payment.id,
+                netPayment: formatCurrency(payment.details[0].totalAmount, payment.details[0].currency),
+                releaseDate: formattedReleaseDate,
+                status: formatStatus(payment.details[0].status),
+                type: payment.category.replaceAll('_', ' ')
+                    .toLowerCase(),
+            }
+        }),
         [],
     )
 
