@@ -93,7 +93,12 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                 const diffMinutes = diffMs / (1000 * 60)
                 const hours = Math.floor(diffHours)
                 const minutes = Math.round(diffMinutes - hours * 60)
-                formattedReleaseDate = `In ${hours} hours ${minutes} minutes`
+                formattedReleaseDate = `${minutes} minute${minutes !== 1 ? 's' : ''}`
+                if (hours > 0) {
+                    formattedReleaseDate = `In ${hours} hour${hours !== 1 ? 's' : ''} ${formattedReleaseDate}`
+                } else if (minutes > 0) {
+                    formattedReleaseDate = `In ${minutes} minute${minutes !== 1 ? 's' : ''}`
+                }
             } else {
                 formattedReleaseDate = formatIOSDateString(payment.releaseDate)
             }
