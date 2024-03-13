@@ -1,0 +1,13 @@
+@import '@libs/ui/styles/includes';
+
+.infoModal {
+    :global(.react-responsive-modal-closeButton) {
+        display: flex;
+    }
+
+    .modalContent {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+}
