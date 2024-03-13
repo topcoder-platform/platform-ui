@@ -4,8 +4,8 @@
 
 export ESLINT_NO_DEV_ERRORS=true
 export HTTPS=true
-export SSL_CRT_FILE=ssl/server.crt
-export SSL_KEY_FILE=ssl/server.key
+export SSL_CRT_FILE=ssl-local/local.topcoder-dev.com+2.pem
+export SSL_KEY_FILE=ssl-local/local.topcoder-dev.com+2-key.pem
 export HOST=local.topcoder-dev.com
 export REACT_APP_HOST_ENV=dev
 export PORT=443

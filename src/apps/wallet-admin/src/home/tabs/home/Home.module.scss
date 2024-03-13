@@ -1,0 +1,39 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background-color: $black-5;
+    padding: 100px 32px;
+    margin: $sp-8 0;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    box-sizing: border-box;
+}
+
+.banner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    & > * {
+        flex: 1 1 auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .banner {
+        flex-direction: column;
+    }
+}
+
+.info-row-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-left: 50px;
+    padding-right: 50px;
+}

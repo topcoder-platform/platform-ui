@@ -257,7 +257,7 @@ workflows:
                       branches:
                           only:
                               - dev
-                              - TSJR-314_skill-manager_landing-page
+                              - feat/wallet-admin
 
             - deployQa:
                   context: org-global

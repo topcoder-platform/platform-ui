@@ -1,0 +1,40 @@
+.FilterBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+
+    .firstFilter {
+        display: flex;
+        align-items: center;
+    }
+
+    .flexStretch {
+        flex-grow: 1;
+    }
+
+    .remainingFilters {
+        display: flex;;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .filterContainer {
+        display: none;
+    }
+
+    .filter {
+        width: 150px;
+        height: 47px;
+    }
+
+    .firstFilterElement{
+        width: 200px;
+    }
+
+    .resetButton {
+        flex-shrink: 0;
+        margin-left: 30px;
+    }
+}
