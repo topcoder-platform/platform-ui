@@ -1,0 +1,102 @@
+@import '@libs/ui/styles/includes';
+
+.tableContainer {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: $sp-2;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 16px 0;
+
+    th,
+    td {
+        text-align: left;
+        padding: 8px;
+
+        &:last-child {
+            width: 50px;
+        }
+    }
+
+    tbody {
+        tr {
+            &:nth-child(odd) {
+                background-color: #f4f4f4;
+            }
+            &:nth-child(even) {
+                background-color: #ffffff;
+            }
+
+            .capitalize {
+                text-transform: capitalize;
+            }
+        }
+    }
+
+    th {
+        top: 0;
+        background-color: white !important;
+        text-transform: uppercase;
+    }
+
+    tbody tr td:first-child {
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+    }
+
+    tbody tr td:last-child {
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+    }
+
+}
+
+.selected {
+    background-color: #e7f4ff;
+}
+
+.pageButtons {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 16px;
+    gap: $sp-4;
+
+    .pageNumbers {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: $sp-1;
+    }
+
+}
+
+.paymentFooter {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    padding-bottom: 16px;
+    border-radius: 8px;
+    background-color: white;
+    border: 1px solid #eaeaea;
+
+    .total {
+        font-size: 18px;
+        font-weight: bold;
+
+        color: #333;
+    }
+}
+
+@media (max-width: 768px) {
+    .paymentFooter {
+        flex-direction: column;
+        align-items: center;
+    }
+}
