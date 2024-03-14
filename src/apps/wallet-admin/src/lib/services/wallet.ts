@@ -57,10 +57,16 @@ export async function getPayments(limit: number, offset: number, filters: Record
         }
     }
 
-    const payload = {
+    const payload: {
+        limit: number, offset: number, winnerIds?: string[], [key: string]: string | number | string[] | undefined
+    } = {
         limit,
         offset,
         ...filteredFilters,
+    }
+
+    if (filters.winnerIds && filters.winnerIds.length > 0) {
+        payload.winnerIds = filters.winnerIds
     }
 
     const body = JSON.stringify(payload)

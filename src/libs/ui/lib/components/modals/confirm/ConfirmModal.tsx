@@ -8,6 +8,7 @@ export interface ConfirmModalProps extends ModalProps {
     action?: string
     onConfirm: () => void
     title: string
+    canSave?: boolean
 }
 
 const ConfirmModal: FC<ConfirmModalProps> = (props: ConfirmModalProps) => (
@@ -24,6 +25,7 @@ const ConfirmModal: FC<ConfirmModalProps> = (props: ConfirmModalProps) => (
                     tabIndex={1}
                 />
                 <Button
+                    disabled={props.canSave === false}
                     primary
                     label={props.action || 'Confirm'}
                     onClick={props.onConfirm}
