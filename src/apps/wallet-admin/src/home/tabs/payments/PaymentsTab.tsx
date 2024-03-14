@@ -10,6 +10,7 @@ import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
 import { FilterBar } from '../../../lib'
 import { ConfirmFlowData } from '../../../lib/models/ConfirmFlowData'
 import { PaginationInfo } from '../../../lib/models/PaginationInfo'
+import PaymentEditForm from '../../../lib/components/payment-edit/PaymentEdit'
 import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
 import styles from './Payments.module.scss'
@@ -72,6 +73,7 @@ const formatCurrency = (amountStr: string, currency: string): string => {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const [confirmFlow, setConfirmFlow] = React.useState<ConfirmFlowData | undefined>(undefined)
+    const [isConfirmFormValid, setIsConfirmFormValid] = React.useState<boolean>(false)
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
     const [selectedPayments, setSelectedPayments] = React.useState<{ [paymentId: string]: Winning }>({})
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
@@ -106,7 +108,6 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             }
 
             return {
-                canBeReleased: new Date(payment.releaseDate) <= new Date() && payment.details[0].status === 'OWED',
                 createDate: formatIOSDateString(payment.createdAt),
                 currency: payment.details[0].currency,
                 datePaid: payment.details[0].datePaid ? formatIOSDateString(payment.details[0].datePaid) : '-',
@@ -319,17 +320,21 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                         currentPage: pageNumber,
                                     })
                                 }}
-                                // onPayMeClick={async function onPayMeClicked(
-                                //     paymentIds: { [paymentId: string]: Winning },
-                                //     totalAmount: string,
-                                // ) {
-                                //     setConfirmFlow({
-                                //         action: 'Yes',
-                                //         callback: () => processPayouts(Object.keys(paymentIds)),
-                                //         content: `You are about to process payments for a total of USD ${totalAmount}`,
-                                //         title: 'Are you sure?',
-                                //     })
-                                // }}
+                                onPaymentEditClick={function onPaymentEditClicked(payment: Winning) {
+                                    setConfirmFlow({
+                                        action: 'Save',
+                                        callback: () => console.log('Edit payment:', payment),
+                                        content: (
+                                            <PaymentEditForm
+                                                payment={payment}
+                                                onErrorStateChanged={function onErrorStateChanged(error: boolean) {
+                                                    setIsConfirmFormValid(!error)
+                                                }}
+                                            />
+                                        ),
+                                        title: 'Edit Payment',
+                                    })
+                                }}
                             />
                         )}
                         {!isLoading && winnings.length === 0 && (
@@ -355,6 +360,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                         confirmFlow.callback?.()
                         setConfirmFlow(undefined)
                     }}
+                    canSave={isConfirmFormValid}
                     open={confirmFlow !== undefined}
                 >
                     <div>{renderConfirmModalContent}</div>

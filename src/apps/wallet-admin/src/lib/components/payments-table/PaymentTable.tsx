@@ -13,6 +13,7 @@ interface PaymentTableProps {
     selectedPayments?: { [paymentId: string]: Winning };
     currentPage: number;
     numPages: number;
+    onPaymentEditClick: (payment: Winning) => void;
     onNextPageClick: () => void;
     onPreviousPageClick: () => void;
     onPageClick: (pageNumber: number) => void;
@@ -58,8 +59,10 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 <td>
                                     {payment.status.toUpperCase() !== 'PAID' && (
                                         <Button
+                                            disabled
                                             icon={IconOutline.PencilIcon}
                                             size='sm'
+                                            onClick={() => props.onPaymentEditClick(payment)}
                                         />
                                     )}
                                 </td>

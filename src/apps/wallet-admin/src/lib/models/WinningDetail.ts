@@ -19,7 +19,6 @@ export interface Winning {
     status: string
     releaseDate: string
     datePaid: string
-    canBeReleased: boolean
     currency: string
     details: PaymentDetail[]
 }
