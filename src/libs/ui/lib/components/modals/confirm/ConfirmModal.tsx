@@ -9,6 +9,7 @@ export interface ConfirmModalProps extends ModalProps {
     onConfirm: () => void
     title: string
     canSave?: boolean
+    showButtons?: boolean
 }
 
 const ConfirmModal: FC<ConfirmModalProps> = (props: ConfirmModalProps) => (
@@ -16,23 +17,25 @@ const ConfirmModal: FC<ConfirmModalProps> = (props: ConfirmModalProps) => (
         {...props}
         styles={{ modal: { maxWidth: '450px' } }}
         buttons={(
-            <>
-                <Button
-                    secondary
-                    label='Cancel'
-                    onClick={props.onClose}
-                    size='lg'
-                    tabIndex={1}
-                />
-                <Button
-                    disabled={props.canSave === false}
-                    primary
-                    label={props.action || 'Confirm'}
-                    onClick={props.onConfirm}
-                    size='lg'
-                    tabIndex={2}
-                />
-            </>
+            props.showButtons !== false && (
+                <>
+                    <Button
+                        secondary
+                        label='Cancel'
+                        onClick={props.onClose}
+                        size='lg'
+                        tabIndex={1}
+                    />
+                    <Button
+                        disabled={props.canSave === false}
+                        primary
+                        label={props.action || 'Confirm'}
+                        onClick={props.onConfirm}
+                        size='lg'
+                        tabIndex={2}
+                    />
+                </>
+            )
         )}
     >
         {props.children}

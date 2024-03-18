@@ -16,8 +16,10 @@ export interface Winning {
     handle: string;
     createDate: string
     netPayment: string
+    netPaymentNumber: number
     status: string
     releaseDate: string
+    releaseDateObj: Date
     datePaid: string
     currency: string
     details: PaymentDetail[]

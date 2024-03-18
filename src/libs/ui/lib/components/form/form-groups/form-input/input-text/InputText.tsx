@@ -8,7 +8,7 @@ import { Tooltip } from '../../../../tooltip'
 
 import styles from './InputText.module.scss'
 
-export type InputTextTypes = 'checkbox' | 'password' | 'text'
+export type InputTextTypes = 'checkbox' | 'password' | 'text' | 'number'
 
 export interface InputTextProps {
     readonly autocomplete?: FormInputAutocompleteOption

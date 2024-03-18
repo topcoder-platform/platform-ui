@@ -1,7 +1,7 @@
 import { AxiosError } from 'axios'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrDeleteAsync, xhrGetAsync, xhrPostAsync, xhrPostAsyncWithBlobHandling } from '~/libs/core'
+import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync, xhrPostAsyncWithBlobHandling } from '~/libs/core'
 
 import { WalletDetails } from '../models/WalletDetails'
 import { PaymentProvider } from '../models/PaymentProvider'
@@ -10,6 +10,7 @@ import { TaxForm } from '../models/TaxForm'
 import { OtpVerificationResponse } from '../models/OtpVerificationResponse'
 import { TransactionResponse } from '../models/TransactionId'
 import { PaginationInfo } from '../models/PaginationInfo'
+import { WinningsAudit } from '../models/WinningsAudit'
 import ApiResponse from '../models/ApiResponse'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/payments`
@@ -39,6 +40,35 @@ export async function getUserTaxFormDetails(): Promise<TaxForm[]> {
     const response = await xhrGetAsync<ApiResponse<TaxForm[]>>(`${baseUrl}/user/tax-forms`)
     if (response.status === 'error') {
         throw new Error('Error fetching user tax form details')
+    }
+
+    return response.data
+}
+
+export async function fetchAuditLogs(paymentId: string): Promise<WinningsAudit[]> {
+    const response = await xhrGetAsync<ApiResponse<WinningsAudit[]>>(`${baseUrl}/admin/winnings/${paymentId}/audit`)
+
+    if (response.status === 'error') {
+        throw new Error('Error fetching audit logs')
+    }
+
+    return response.data
+
+}
+
+export async function editPayment(updates: {
+    winningsId: string,
+    paymentStatus?: 'ON_HOLD_ADMIN' | 'OWED',
+    paymentAmount?: number,
+    releaseDate?: string,
+}): Promise<string> {
+    const body = JSON.stringify(updates)
+    const url = `${baseUrl}/admin/winnings`
+
+    const response = await xhrPatchAsync<string, ApiResponse<string>>(url, body)
+
+    if (response.status === 'error') {
+        throw new Error('Error editing payment')
     }
 
     return response.data
