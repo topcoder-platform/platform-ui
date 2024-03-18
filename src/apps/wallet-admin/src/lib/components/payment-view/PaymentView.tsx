@@ -107,6 +107,14 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                             <p className={styles.value}>{props.payment.releaseDateObj.toLocaleDateString()}</p>
                         </div>
 
+                        {props.payment.datePaid !== '-' && (
+                            (
+                                <div className={styles.infoItem}>
+                                    <span className={styles.label}>Date Paid</span>
+                                    <p className={styles.value}>{props.payment.datePaid}</p>
+                                </div>
+                            ))}
+
                         <div className={styles.infoItem}>
                             <Button
                                 onClick={handleToggleView}
@@ -121,6 +129,7 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                         <div className={styles.auditSection}>
                             {auditLines && auditLines.length > 0 && auditLines.map(line => (
                                 <Collapsible
+                                    key={line.id}
                                     header={(
                                         <h3>
                                             {

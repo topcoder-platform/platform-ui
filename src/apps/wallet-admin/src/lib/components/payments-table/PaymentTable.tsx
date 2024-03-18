@@ -18,6 +18,7 @@ interface PaymentTableProps {
     onNextPageClick: () => void;
     onPreviousPageClick: () => void;
     onPageClick: (pageNumber: number) => void;
+    canEdit: boolean;
 }
 
 const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) => {
@@ -58,7 +59,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 <td>{payment.releaseDate}</td>
                                 <td>{payment.datePaid}</td>
                                 <td className={styles.actionButtons}>
-                                    {payment.status.toUpperCase() !== 'PAID' && (
+                                    {props.canEdit && payment.status.toUpperCase() !== 'PAID' && (
                                         <Button
                                             icon={IconOutline.PencilIcon}
                                             size='sm'

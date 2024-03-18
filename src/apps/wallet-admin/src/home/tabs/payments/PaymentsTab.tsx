@@ -249,6 +249,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [handleValueUpdated, editState])
 
+    const isEditingAllowed = (): boolean => props.profile.roles.includes('Payment Admin') || props.profile.roles.includes('Payment Editor')
+
     return (
         <>
             <div className={styles.container}>
@@ -378,6 +380,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                         {isLoading && <LoadingCircles className={styles.centered} />}
                         {!isLoading && winnings.length > 0 && (
                             <PaymentsTable
+                                canEdit={isEditingAllowed()}
                                 currentPage={pagination.currentPage}
                                 numPages={pagination.totalPages}
                                 payments={winnings}
