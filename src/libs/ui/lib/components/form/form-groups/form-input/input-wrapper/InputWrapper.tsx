@@ -24,7 +24,7 @@ interface InputWrapperProps {
     readonly hint?: string
     readonly label: string | JSX.Element
     readonly tabIndex?: number
-    readonly type: 'checkbox' | 'password' | 'rating' | 'text' | 'textarea'
+    readonly type: 'checkbox' | 'password' | 'rating' | 'text' | 'textarea' | 'number'
     readonly forceFocusStyle?: boolean
 }
 

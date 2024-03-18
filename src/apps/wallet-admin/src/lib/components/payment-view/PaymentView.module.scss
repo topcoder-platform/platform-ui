@@ -1,37 +1,38 @@
 .formContainer {
     display: flex;
     flex-direction: column;
-  }
+}
 
-  .infoGroup {
+.infoGroup {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
     margin-bottom: 20px;
-  }
+}
 
-  .infoItem {
+.infoItem {
     display: flex;
     flex-direction: column;
-  }
+}
 
-  .label {
+.label {
     font-weight: bold;
     margin-bottom: 5px;
-  }
+}
 
-  .value {
-    // Style for your value text
-  }
-
-  .inputGroup {
+.inputGroup {
     display: flex;
     flex-direction: column;
     gap: 20px;
-  }
+}
 
-//   @media (max-width: 768px) {
-//     .infoGroup {
-//       grid-template-columns: 1fr;
-//     }
-//   }
+
+.container {
+    margin: 8px 0;
+
+    .content {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 0;
+    }
+}

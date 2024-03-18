@@ -1,64 +1,226 @@
+/* eslint-disable unicorn/no-null */
+/* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
-import React, { useEffect, useState } from 'react'
+import { min } from 'date-fns'
+import React, { useEffect, useMemo, useState } from 'react'
+
+import { InputDatePicker, InputSelect, InputText } from '~/libs/ui'
 
 import { Winning } from '../../models/WinningDetail'
 
+import styles from './PaymentEdit.module.scss'
+
 interface PaymentEditFormProps {
-    payment: Winning;
-    onErrorStateChanged: (error: boolean) => void;
+    payment: Winning
+    canSave?: (canSave: boolean) => void
+    onValueUpdated?: ({
+        releaseDate, netAmount, paymentStatus, auditNote,
+    }: {
+        releaseDate?: Date
+        netAmount?: number
+        paymentStatus?: string
+        auditNote?: string
+    }) => void
 }
 
-const PaymentEditForm: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps) => {
-    const [formData, setFormData] = useState({
-        description: props.payment.description || '',
-    })
-    const [errors, setErrors] = useState<any>({})
+const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps) => {
+    const [paymentStatus, setPaymentStatus] = useState('')
+    const [releaseDate, setReleaseDate] = useState(new Date())
+    const [netAmount, setNetAmount] = useState(0)
+    const [netAmountErrorString, setNetAmountErrorString] = useState('')
+    const [auditNote, setAuditNote] = useState('')
+    const [dirty, setDirty] = useState(false)
 
-    useEffect(() => {
-        const validateForm = (): boolean => {
-            let formIsValid = true
-            const validationErrors: { [key: string]: string } = {}
+    const initialValues = useMemo(() => ({
+        auditNote: '',
+        netPayment: props.payment.netPaymentNumber,
+        paymentStatus: props.payment.status,
+        releaseDate: props.payment.releaseDateObj,
+    }), [props.payment])
 
-            if (!formData.description) {
-                formIsValid = false
-                validationErrors.description = 'Description is required.'
-            }
-
-            setErrors(validationErrors)
-            props.onErrorStateChanged(!formIsValid)
-
-            return formIsValid
+    const validateNetAmount = (value: number): boolean => {
+        if (Number.isNaN(value)) {
+            setNetAmountErrorString('A valid number is required')
+            return false
         }
 
-        setFormData({
-            description: props.payment.description || '',
-        })
+        if (value < 0) {
+            setNetAmountErrorString('Net Payment must be greater than 0')
+            return false
+        }
 
-        validateForm()
-    }, [props.payment, formData, props.onErrorStateChanged, props])
+        if (!/^\d+(\.\d{0,2})?$/.test(value.toString())) {
+            setNetAmountErrorString('Amount can only have 2 decimal places at most')
+            return false
+        }
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-        const { name, value } : {
-            name: string;
-            value: string;
-        } = e.target
-
-        setFormData(prevState => ({
-            ...prevState,
-            [name]: value,
-        }))
+        return true
     }
 
-    return (
-        <form>
-            <div>
-                <label>Description</label>
-                <input name='description' value={formData.description} onChange={handleChange} />
-                {errors.description && <p>{errors.description}</p>}
-            </div>
-        </form>
-    )
+    const handleInputChange = (name: string, value: string | number | Date): void => {
+        let isValid = true
 
+        switch (name) {
+            case 'netPayment':
+                isValid = validateNetAmount(value as number)
+                if (isValid) {
+                    setNetAmount(value as number)
+                    if (props.onValueUpdated) {
+                        props.onValueUpdated({
+                            netAmount: value as number,
+                        })
+                    }
+
+                    setNetAmountErrorString('')
+                }
+
+                break
+            case 'paymentStatus':
+                setPaymentStatus(value as string)
+                if (props.onValueUpdated) {
+                    props.onValueUpdated({
+                        paymentStatus: value as string,
+                    })
+                }
+
+                break
+            case 'releaseDate':
+                setReleaseDate(value as Date)
+                if (props.onValueUpdated) {
+                    props.onValueUpdated({
+                        releaseDate: value as Date,
+                    })
+                }
+
+                break
+            case 'auditNote':
+                setAuditNote(value as string)
+                if (props.onValueUpdated) {
+                    props.onValueUpdated({
+                        auditNote: value as string,
+                    })
+                }
+
+                break
+            default:
+                break
+        }
+    }
+
+    useEffect(() => {
+        setPaymentStatus(props.payment.status)
+        setReleaseDate(props.payment.releaseDateObj)
+        setNetAmount(props.payment.netPaymentNumber)
+    }, [props.payment])
+
+    useEffect(() => {
+        const valuesToCheck = [{
+            key: 'netPayment',
+            value: netAmount,
+        }, {
+            key: 'paymentStatus',
+            value: paymentStatus,
+        }, {
+            key: 'releaseDate',
+            value: releaseDate,
+        }, {
+            key: 'auditNote',
+            value: auditNote,
+        }]
+
+        const isDirty = valuesToCheck.some(x => x.value !== initialValues[x.key as keyof typeof initialValues])
+        setDirty(isDirty)
+    }, [netAmount, paymentStatus, releaseDate, auditNote, initialValues])
+
+    useEffect(() => {
+        if (props.canSave) {
+            if (!dirty) {
+                props.canSave(false)
+            } else {
+                const valuesToCheck = [{
+                    key: 'netPayment',
+                    value: netAmount,
+                }, {
+                    key: 'paymentStatus',
+                    value: paymentStatus,
+                }, {
+                    key: 'releaseDate',
+                    value: releaseDate,
+                }]
+
+                const haveChange = valuesToCheck.some(x => x.value !== initialValues[x.key as keyof typeof initialValues]) // check if any value has changed that's not the audit note
+                props.canSave(haveChange && netAmountErrorString.length === 0 && auditNote.length > 0)
+            }
+        }
+    }, [dirty, auditNote, props, netAmountErrorString.length, netAmount, paymentStatus, releaseDate, initialValues])
+
+    return (
+        <div className={styles.formContainer}>
+            <div className={styles.inputGroup}>
+                <div className={styles.infoItem}>
+                    <span className={styles.label}>Handle</span>
+                    <p className={styles.value}>{props.payment.handle}</p>
+                </div>
+
+                <div className={styles.infoItem}>
+                    <span className={styles.label}>Type</span>
+                    <p className={styles.value}>{props.payment.type}</p>
+                </div>
+
+                <div className={styles.infoItem}>
+                    <span className={styles.label}>Description</span>
+                    <p className={styles.value}>{props.payment.description}</p>
+                </div>
+
+                <InputText
+                    name='netPayment'
+                    label='Net Payment'
+                    type='number'
+                    placeholder='Modify Net Payment'
+                    dirty
+                    tabIndex={0}
+                    error={netAmountErrorString}
+                    value={props.payment.netPaymentNumber.toString()}
+                    onChange={e => handleInputChange('netPayment', parseFloat(e.target.value))}
+
+                />
+                <InputSelect
+                    tabIndex={-1}
+                    dirty
+                    name='paymentStatus'
+                    label='Payment Status'
+                    options={[
+                        { label: 'Owed', value: 'Owed' },
+                        { label: 'On Hold', value: 'On Hold' },
+                    ]}
+                    value={paymentStatus}
+                    onChange={e => handleInputChange('paymentStatus', e.target.value)}
+                />
+                <InputDatePicker
+                    tabIndex={-2}
+                    disabled={false}
+                    error='Something wrong'
+                    label='Release Date'
+                    minDate={min([new Date(), new Date(props.payment.releaseDateObj)])}
+                    date={releaseDate}
+                    maxDate={new Date(new Date()
+                        .getTime() + 15 * 24 * 60 * 60 * 1000)}
+                    onChange={date => { if (date != null) handleInputChange('releaseDate', date) }}
+                />
+                <InputText
+                    tabIndex={-3}
+                    type='text'
+                    label='Audit Note'
+                    dirty
+                    name='auditNote'
+                    placeholder='Note'
+                    error={dirty && auditNote.trim().length === 0 ? 'Note is required' : ''}
+                    value={auditNote}
+                    onChange={e => handleInputChange('auditNote', e.target.value)}
+                />
+            </div>
+        </div>
+    )
 }
 
-export default PaymentEditForm
+export default PaymentEdit
