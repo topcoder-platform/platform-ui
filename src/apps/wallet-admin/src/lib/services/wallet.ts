@@ -10,6 +10,7 @@ import { TaxForm } from '../models/TaxForm'
 import { OtpVerificationResponse } from '../models/OtpVerificationResponse'
 import { TransactionResponse } from '../models/TransactionId'
 import { PaginationInfo } from '../models/PaginationInfo'
+import { WinningsAudit } from '../models/WinningsAudit'
 import ApiResponse from '../models/ApiResponse'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/payments`
@@ -42,6 +43,17 @@ export async function getUserTaxFormDetails(): Promise<TaxForm[]> {
     }
 
     return response.data
+}
+
+export async function fetchAuditLogs(paymentId: string): Promise<WinningsAudit[]> {
+    const response = await xhrGetAsync<ApiResponse<WinningsAudit[]>>(`${baseUrl}/admin/winnings/${paymentId}/audit`)
+
+    if (response.status === 'error') {
+        throw new Error('Error fetching audit logs')
+    }
+
+    return response.data
+
 }
 
 export async function editPayment(updates: {

@@ -5,24 +5,71 @@ import React from 'react'
 
 import { Button, Collapsible } from '~/libs/ui'
 
+import { WinningsAudit } from '../../models/WinningsAudit'
 import { Winning } from '../../models/WinningDetail'
+import { fetchAuditLogs, getMemberHandle } from '../../services/wallet'
 
 import styles from './PaymentView.module.scss'
 
 interface PaymentViewProps {
     payment: Winning
-    auditLines?: {
-        date: string
-        userName: string
-        action: string
-    }[]
 }
 
 const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
     const [view, setView] = React.useState<'details' | 'audit'>('details')
+    const [auditLines, setAuditLines] = React.useState<WinningsAudit[]>([])
 
     const handleToggleView = (): void => {
         setView(view === 'details' ? 'audit' : 'details')
+    }
+
+    React.useEffect(() => {
+        if (view === 'audit') {
+            fetchAuditLogs(props.payment.id)
+                .then(auditLogs => {
+                    const userIds = auditLogs.map(log => log.userId)
+                    getMemberHandle(userIds)
+                        .then((handles: Map<number, string>) => {
+                            auditLogs.forEach((log: WinningsAudit) => {
+                                log.userId = handles.get(parseInt(log.userId, 10)) ?? log.userId
+                            })
+                        })
+                        .catch(() => {
+                            console.error('Error fetching member handles')
+                        })
+                        .finally(() => {
+                            setAuditLines(auditLogs)
+                        })
+                })
+                .catch(() => {
+                    setAuditLines([])
+                })
+        }
+    }, [props.payment.id, view])
+
+    const formatAction = (action: string): React.ReactNode => {
+        const fromIndex = action.indexOf('from')
+        const toIndex = action.indexOf('to')
+
+        if (fromIndex !== -1 && toIndex !== -1) {
+            const beforeFrom = action.substring(0, fromIndex)
+            const fromValue = action.substring(fromIndex + 5, toIndex)
+            const toValue = action.substring(toIndex + 3)
+            return (
+                <>
+                    {beforeFrom}
+                    from
+                    {' '}
+                    <strong>{fromValue}</strong>
+                    {' '}
+                    to
+                    {' '}
+                    <strong>{toValue}</strong>
+                </>
+            )
+        }
+
+        return action
     }
 
     return (
@@ -72,12 +119,12 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                 {view === 'audit' && (
                     <>
                         <div className={styles.auditSection}>
-                            {props.auditLines && props.auditLines.map(line => (
+                            {auditLines && auditLines.length > 0 && auditLines.map(line => (
                                 <Collapsible
                                     header={(
                                         <h3>
                                             {
-                                                new Date(line.date)
+                                                new Date(line.createdAt)
                                                     .toLocaleString()
                                             }
                                         </h3>
@@ -90,18 +137,23 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                                             <p>
                                                 <strong>User:</strong>
                                                 {' '}
-                                                {line.userName}
+                                                {line.userId}
                                             </p>
                                             <p>
                                                 <strong>Action:</strong>
                                                 {' '}
-                                                {line.action}
+                                                {formatAction(line.action)}
+                                            </p>
+                                            <p>
+                                                <strong>Note:</strong>
+                                                {' '}
+                                                {line.note}
                                             </p>
                                         </div>
                                     </div>
                                 </Collapsible>
                             ))}
-                            {(props.auditLines === undefined || props.auditLines.length === 0)
+                            {(auditLines === undefined || auditLines.length === 0)
                                 && (
                                     <div className={styles.auditItem}>
                                         <p>No audit data available</p>
