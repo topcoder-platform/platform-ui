@@ -94,6 +94,13 @@ table {
     }
 }
 
+.actionButtons {
+    padding-left: 8px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
 @media (max-width: 768px) {
     .paymentFooter {
         flex-direction: column;

@@ -1,13 +1,14 @@
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
+import { toast } from 'react-toastify'
 import React, { FC, useCallback, useEffect } from 'react'
 
 import { Collapsible, ConfirmModal, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
 
-import { getMemberHandle, getPayments } from '../../../lib/services/wallet'
+import { editPayment, getMemberHandle, getPayments } from '../../../lib/services/wallet'
 import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
-import { FilterBar } from '../../../lib'
+import { FilterBar, PaymentView } from '../../../lib'
 import { ConfirmFlowData } from '../../../lib/models/ConfirmFlowData'
 import { PaginationInfo } from '../../../lib/models/PaginationInfo'
 import PaymentEditForm from '../../../lib/components/payment-edit/PaymentEdit'
@@ -84,6 +85,30 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         totalItems: 0,
         totalPages: 0,
     })
+    const [editState, setEditState] = React.useState<{
+        netAmount?: number;
+        releaseDate?: Date;
+        paymentStatus?: string;
+        auditNote?: string;
+    }>({})
+
+    const editStateRef = React.useRef(editState)
+
+    useEffect(() => {
+        editStateRef.current = editState
+    }, [editState])
+
+    const handleValueUpdated = useCallback((updates: {
+        auditNote?: string,
+        netAmount?: number,
+        paymentStatus?: string,
+        releaseDate?: Date,
+    }) => {
+        setEditState(prev => ({
+            ...prev,
+            ...updates,
+        }))
+    }, [])
 
     const convertToWinnings = useCallback(
         (payments: WinningDetail[], handleMap: Map<number, string>) => payments.map(payment => {
@@ -116,7 +141,9 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                 handle: handleMap.get(parseInt(payment.winnerId, 10)) ?? payment.winnerId,
                 id: payment.id,
                 netPayment: formatCurrency(payment.details[0].totalAmount, payment.details[0].currency),
+                netPaymentNumber: parseFloat(payment.details[0].totalAmount),
                 releaseDate: formattedReleaseDate,
+                releaseDateObj: releaseDate,
                 status: formatStatus(payment.details[0].status),
                 type: payment.category.replaceAll('_', ' ')
                     .toLowerCase(),
@@ -143,6 +170,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         } finally {
             setIsLoading(false)
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [convertToWinnings, filters, pagination.currentPage, pagination.pageSize])
 
     const renderConfirmModalContent = React.useMemo(() => {
@@ -157,9 +185,69 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         return confirmFlow?.content
     }, [confirmFlow])
 
+    const updatePayment = async (paymentId: string): Promise<void> => {
+        const currentEditState = editStateRef.current
+        // Send to server only the fields that have changed
+        const updateObj = {
+            auditNote: currentEditState.auditNote !== undefined ? currentEditState.auditNote : undefined,
+            netAmount: currentEditState.netAmount !== undefined ? currentEditState.netAmount : undefined,
+            paymentStatus: currentEditState.paymentStatus !== undefined ? currentEditState.paymentStatus : undefined,
+            releaseDate: currentEditState.releaseDate !== undefined ? currentEditState.releaseDate : undefined,
+        }
+
+        let paymentStatus : 'ON_HOLD_ADMIN' | 'OWED' | undefined
+        if (updateObj.paymentStatus !== undefined) paymentStatus = updateObj.paymentStatus.indexOf('Owed') > -1 ? 'OWED' : 'ON_HOLD_ADMIN'
+
+        const updates: {
+            auditNote?: string
+            paymentStatus?: 'ON_HOLD_ADMIN' | 'OWED'
+            releaseDate?: string
+            paymentAmount?: number
+            winningsId: string
+        } = {
+            auditNote: updateObj.auditNote,
+            winningsId: paymentId,
+        }
+
+        if (paymentStatus) updates.paymentStatus = paymentStatus
+        if (updateObj.releaseDate !== undefined) updates.releaseDate = updateObj.releaseDate.toISOString()
+        if (updateObj.netAmount !== undefined) updates.paymentAmount = updateObj.netAmount
+
+        toast.success('Updating payment', { position: toast.POSITION.BOTTOM_RIGHT })
+        try {
+            const udpateMessage = await editPayment(updates)
+            toast.success(udpateMessage, { position: toast.POSITION.BOTTOM_RIGHT })
+        } catch (err) {
+            toast.error('Failed to update payment', { position: toast.POSITION.BOTTOM_RIGHT })
+            return
+        }
+
+        setEditState({})
+
+        await fetchWinnings()
+    }
+
     useEffect(() => {
         fetchWinnings()
     }, [fetchWinnings])
+
+    const onPaymentEditCallback = useCallback((payment: Winning) => {
+        setConfirmFlow({
+            action: 'Save',
+            callback: async () => {
+                updatePayment(payment.id)
+            },
+            content: (
+                <PaymentEditForm
+                    payment={payment}
+                    canSave={setIsConfirmFormValid}
+                    onValueUpdated={handleValueUpdated}
+                />
+            ),
+            title: 'Edit Payment',
+        })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [handleValueUpdated, editState])
 
     return (
         <>
@@ -320,19 +408,23 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                         currentPage: pageNumber,
                                     })
                                 }}
-                                onPaymentEditClick={function onPaymentEditClicked(payment: Winning) {
+                                onPaymentEditClick={(payment: Winning) => {
+                                    setEditState({})
+                                    onPaymentEditCallback(payment)
+                                }}
+                                onPaymentViewClick={function onPaymentViewClicked(payment: Winning) {
                                     setConfirmFlow({
                                         action: 'Save',
-                                        callback: () => console.log('Edit payment:', payment),
+                                        callback: async () => {
+                                            updatePayment(payment.id)
+                                        },
                                         content: (
-                                            <PaymentEditForm
+                                            <PaymentView
                                                 payment={payment}
-                                                onErrorStateChanged={function onErrorStateChanged(error: boolean) {
-                                                    setIsConfirmFormValid(!error)
-                                                }}
                                             />
                                         ),
-                                        title: 'Edit Payment',
+                                        showButtons: false,
+                                        title: 'Payment Details',
                                     })
                                 }}
                             />
@@ -351,9 +443,11 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             </div>
             {confirmFlow && (
                 <ConfirmModal
+                    showButtons={confirmFlow.showButtons}
                     title={confirmFlow.title}
                     action={confirmFlow.action}
                     onClose={function onClose() {
+                        setEditState({})
                         setConfirmFlow(undefined)
                     }}
                     onConfirm={function onConfirm() {

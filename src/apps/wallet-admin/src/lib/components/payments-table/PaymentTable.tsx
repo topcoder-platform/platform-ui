@@ -14,6 +14,7 @@ interface PaymentTableProps {
     currentPage: number;
     numPages: number;
     onPaymentEditClick: (payment: Winning) => void;
+    onPaymentViewClick: (payment: Winning) => void;
     onNextPageClick: () => void;
     onPreviousPageClick: () => void;
     onPageClick: (pageNumber: number) => void;
@@ -56,15 +57,19 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 <td className={`body-small-bold ${styles.capitalize}`}>{payment.status}</td>
                                 <td>{payment.releaseDate}</td>
                                 <td>{payment.datePaid}</td>
-                                <td>
+                                <td className={styles.actionButtons}>
                                     {payment.status.toUpperCase() !== 'PAID' && (
                                         <Button
-                                            disabled
                                             icon={IconOutline.PencilIcon}
                                             size='sm'
                                             onClick={() => props.onPaymentEditClick(payment)}
                                         />
                                     )}
+                                    <Button
+                                        icon={IconOutline.BookOpenIcon}
+                                        size='sm'
+                                        onClick={() => props.onPaymentViewClick(payment)}
+                                    />
                                 </td>
                             </tr>
                         ))}
