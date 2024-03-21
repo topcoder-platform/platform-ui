@@ -4,6 +4,7 @@
 import React from 'react'
 
 import { Button, Collapsible } from '~/libs/ui'
+import { TOPCODER_URL } from '~/config/environments/default.env'
 
 import { WinningsAudit } from '../../models/WinningsAudit'
 import { Winning } from '../../models/WinningDetail'
@@ -72,11 +73,23 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
         return action
     }
 
+    const getLink = (externalId: string): string => `${TOPCODER_URL}/challenges/${externalId}`
+
     return (
         <div className={styles.formContainer}>
             <div className={styles.inputGroup}>
                 {view === 'details' && (
                     <>
+                        <div className={styles.infoItem}>
+                            <span className={styles.label}>Description</span>
+                            <a href={getLink(props.payment.externalId)} target='_blank' rel='noreferrer'>
+                                {props.payment.description}
+                            </a>
+                        </div>
+                        <div className={styles.infoItem}>
+                            <span className={styles.label}>Payment ID</span>
+                            <p className={styles.value}>{props.payment.id}</p>
+                        </div>
                         <div className={styles.infoItem}>
                             <span className={styles.label}>Handle</span>
                             <p className={styles.value}>{props.payment.handle}</p>
@@ -85,11 +98,6 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                         <div className={styles.infoItem}>
                             <span className={styles.label}>Type</span>
                             <p className={styles.value}>{props.payment.type}</p>
-                        </div>
-
-                        <div className={styles.infoItem}>
-                            <span className={styles.label}>Description</span>
-                            <p className={styles.value}>{props.payment.description}</p>
                         </div>
 
                         <div className={styles.infoItem}>

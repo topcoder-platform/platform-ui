@@ -138,6 +138,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                 datePaid: payment.details[0].datePaid ? formatIOSDateString(payment.details[0].datePaid) : '-',
                 description: payment.description,
                 details: payment.details,
+                externalId: payment.externalId,
                 handle: handleMap.get(parseInt(payment.winnerId, 10)) ?? payment.winnerId,
                 id: payment.id,
                 netPayment: formatCurrency(payment.details[0].totalAmount, payment.details[0].currency),

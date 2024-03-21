@@ -4,6 +4,7 @@
 import { min } from 'date-fns'
 import React, { useEffect, useMemo, useState } from 'react'
 
+import { TOPCODER_URL } from '~/config/environments/default.env'
 import { InputDatePicker, InputSelect, InputText } from '~/libs/ui'
 
 import { Winning } from '../../models/WinningDetail'
@@ -154,9 +155,21 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
         }
     }, [dirty, auditNote, props, netAmountErrorString.length, netAmount, paymentStatus, releaseDate, initialValues])
 
+    const getLink = (externalId: string): string => `${TOPCODER_URL}/challenges/${externalId}`
+
     return (
         <div className={styles.formContainer}>
             <div className={styles.inputGroup}>
+                <div className={styles.infoItem}>
+                    <span className={styles.label}>Description</span>
+                    <a href={getLink(props.payment.externalId)} target='_blank' rel='noreferrer'>
+                        {props.payment.description}
+                    </a>
+                </div>
+                <div className={styles.infoItem}>
+                    <span className={styles.label}>Payment ID</span>
+                    <p className={styles.value}>{props.payment.id}</p>
+                </div>
                 <div className={styles.infoItem}>
                     <span className={styles.label}>Handle</span>
                     <p className={styles.value}>{props.payment.handle}</p>
@@ -165,11 +178,6 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
                 <div className={styles.infoItem}>
                     <span className={styles.label}>Type</span>
                     <p className={styles.value}>{props.payment.type}</p>
-                </div>
-
-                <div className={styles.infoItem}>
-                    <span className={styles.label}>Description</span>
-                    <p className={styles.value}>{props.payment.description}</p>
                 </div>
 
                 <InputText
