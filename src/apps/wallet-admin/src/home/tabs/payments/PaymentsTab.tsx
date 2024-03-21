@@ -263,7 +263,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                             filters={[
                                 {
                                     key: 'winnerIds',
-                                    label: 'User ID',
+                                    label: 'Username/Handle',
                                     type: 'member_autocomplete',
                                 },
                                 // {
