@@ -32,7 +32,7 @@ function formatStatus(status: string): string {
         case 'PAID':
             return 'Paid'
         case 'CANCELLED':
-            return 'Cancelled'
+            return 'Cancel'
         default:
             return status.replaceAll('_', ' ')
     }
@@ -116,6 +116,11 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                 formattedReleaseDate = formatIOSDateString(payment.releaseDate)
             }
 
+            let status = formatStatus(payment.details[0].status)
+            if (status === 'Cancel') {
+                status = 'Cancelled'
+            }
+
             return {
                 createDate: formatIOSDateString(payment.createdAt),
                 currency: payment.details[0].currency,
@@ -129,7 +134,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                 netPaymentNumber: parseFloat(payment.details[0].totalAmount),
                 releaseDate: formattedReleaseDate,
                 releaseDateObj: releaseDate,
-                status: formatStatus(payment.details[0].status),
+                status,
                 type: payment.category.replaceAll('_', ' ')
                     .toLowerCase(),
             }
