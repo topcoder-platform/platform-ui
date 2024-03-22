@@ -8,7 +8,7 @@ import { UserProfile } from '~/libs/core'
 
 import { editPayment, getMemberHandle, getPayments } from '../../../lib/services/wallet'
 import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
-import { FilterBar, PaymentView } from '../../../lib'
+import { FilterBar, formatIOSDateString, PaymentView } from '../../../lib'
 import { ConfirmFlowData } from '../../../lib/models/ConfirmFlowData'
 import { PaginationInfo } from '../../../lib/models/PaginationInfo'
 import PaymentEditForm from '../../../lib/components/payment-edit/PaymentEdit'
@@ -19,22 +19,6 @@ import styles from './Payments.module.scss'
 interface ListViewProps {
     // eslint-disable-next-line react/no-unused-prop-types
     profile: UserProfile
-}
-
-function formatIOSDateString(iosDateString: string): string {
-    const date = new Date(iosDateString)
-
-    if (Number.isNaN(date.getTime())) {
-        throw new Error('Invalid date string')
-    }
-
-    const options: Intl.DateTimeFormatOptions = {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-    }
-
-    return date.toLocaleDateString('en-GB', options)
 }
 
 function formatStatus(status: string): string {

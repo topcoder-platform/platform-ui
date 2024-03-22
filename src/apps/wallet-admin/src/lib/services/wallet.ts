@@ -1,13 +1,11 @@
-import { AxiosError } from 'axios'
-
 import { EnvironmentConfig } from '~/config'
-import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync, xhrPostAsyncWithBlobHandling } from '~/libs/core'
+import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
+import { getAsyncWithBlobHandling } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
 
 import { WalletDetails } from '../models/WalletDetails'
 import { PaymentProvider } from '../models/PaymentProvider'
 import { WinningDetail } from '../models/WinningDetail'
 import { TaxForm } from '../models/TaxForm'
-import { OtpVerificationResponse } from '../models/OtpVerificationResponse'
 import { TransactionResponse } from '../models/TransactionId'
 import { PaginationInfo } from '../models/PaginationInfo'
 import { WinningsAudit } from '../models/WinningsAudit'
@@ -72,6 +70,47 @@ export async function editPayment(updates: {
     }
 
     return response.data
+}
+
+export async function getTaxForms(limit: number, offset: number, userIds: string[]): Promise<{
+    forms: TaxForm[],
+    pagination: PaginationInfo
+}> {
+    const body = JSON.stringify({
+        limit,
+        offset,
+        userIds,
+    })
+
+    const url = `${baseUrl}/admin/tax-forms`
+    const response = await xhrPostAsync<string, ApiResponse<{
+        forms: TaxForm[],
+        pagination: PaginationInfo
+    }>>(url, body)
+
+    if (response.status === 'error') {
+        throw new Error('Error fetching tax forms')
+    }
+
+    return response.data
+}
+
+export async function downloadTaxForm(userId: string, taxFormId: string): Promise<Blob> {
+    const url = `${baseUrl}/admin/tax-forms/${userId}/${taxFormId}/download`
+    try {
+        return await getAsyncWithBlobHandling<Blob>(url)
+    } catch (err) {
+        throw new Error('Failed to download users tax-form.')
+    }
+}
+
+export async function deleteTaxForm(userId: string, taxFormId: string): Promise<void> {
+    const url = `${baseUrl}/admin/tax-forms/${userId}/${taxFormId}`
+    try {
+        return await xhrDeleteAsync(url)
+    } catch (err) {
+        throw new Error('Failed to delete users tax-form')
+    }
 }
 
 // eslint-disable-next-line max-len
@@ -212,57 +251,6 @@ export async function getRecipientViewURL(): Promise<TransactionResponse> {
     }
 
     return response.data
-}
-
-// eslint-disable-next-line max-len
-export async function verifyOtp(transactionId: string, code: string, blob: boolean = false): Promise<OtpVerificationResponse | Blob> {
-    const body = JSON.stringify({
-        otpCode: code,
-        transactionId,
-    })
-
-    const url = `${baseUrl}/otp/verify`
-    try {
-        // eslint-disable-next-line max-len
-        const response = await xhrPostAsyncWithBlobHandling<string, ApiResponse<OtpVerificationResponse> | Blob>(url, body, {
-            responseType: blob ? 'blob' : 'json',
-        })
-
-        if (response instanceof Blob) {
-            return response as Blob
-        }
-
-        if (response.status === 'error') {
-            throw new Error('OTP verification failed or OTP has expired')
-        }
-
-        return response.data
-    } catch (err) {
-        throw new Error('OTP verification failed or OTP has expired')
-    }
-}
-
-export async function resendOtp(transactionId: string): Promise<TransactionResponse> {
-    const body = JSON.stringify({
-        transactionId,
-    })
-
-    const url = `${baseUrl}/otp/resend`
-    try {
-        const response = await xhrPostAsync<string, ApiResponse<TransactionResponse>>(url, body)
-
-        if (response.status === 'error') {
-            throw new Error('Failed to resend OTP.')
-        }
-
-        return response.data
-    } catch (err) {
-        if (err instanceof AxiosError && err.response?.data?.error !== undefined) {
-            throw new Error(err.response.data.error?.message)
-        }
-
-        throw new Error('Failed to resend OTP.')
-    }
 }
 
 export async function getMemberHandle(userIds: string[]): Promise<Map<number, string>> {

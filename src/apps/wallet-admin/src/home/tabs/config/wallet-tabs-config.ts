@@ -3,7 +3,7 @@ import { TabsNavItem } from '~/libs/ui'
 export enum WalletAdminTabViews {
     home = '0',
     payments = '1',
-    // taxforms = '2',
+    taxforms = '2',
     // withdrawalmethods = '3',
 }
 
@@ -20,10 +20,10 @@ export const WalletAdminTabsConfig: TabsNavItem[] = [
     //     id: WalletAdminTabViews.withdrawalmethods,
     //     title: 'Withdrawal Methods',
     // },
-    // {
-    //     id: WalletAdminTabViews.taxforms,
-    //     title: 'Tax Forms',
-    // },
+    {
+        id: WalletAdminTabViews.taxforms,
+        title: 'Tax Forms',
+    },
 ]
 
 export function getHashFromTabId(tabId: string): string {
@@ -32,8 +32,8 @@ export function getHashFromTabId(tabId: string): string {
             return '#home'
         case WalletAdminTabViews.payments:
             return '#payments'
-        // case WalletAdminTabViews.taxforms:
-        //     return '#tax-forms'
+        case WalletAdminTabViews.taxforms:
+            return '#tax-forms'
         // case WalletAdminTabViews.withdrawalmethods:
         //     return '#withdrawal-methods'
         default:
@@ -43,10 +43,10 @@ export function getHashFromTabId(tabId: string): string {
 
 export function getTabIdFromHash(hash: string): string {
     switch (hash) {
-        case '#winnings':
+        case '#payments':
             return WalletAdminTabViews.payments
-        // case '#tax-forms':
-        //     return WalletAdminTabViews.taxforms
+        case '#tax-forms':
+            return WalletAdminTabViews.taxforms
         // case '#withdrawal-methods':
         //     return WalletAdminTabViews.withdrawalmethods
         default:

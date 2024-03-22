@@ -1,18 +1,12 @@
 export interface TaxForm {
-    id: string
-    userId: string
-    dateFiled: string
-    withholdingAmount: string
-    withholdingPercentage: string
+    id: string;
+    taxFormId: string;
+    dateFiled: string;
+    userId: string;
+    handle?: string;
     taxForm: {
-        name: string
-        text: string
-        description: string
+        taxFormId: string;
+        name: string;
     }
-    status: string
-    transactionId: string
-}
-
-export interface SetupTaxFormResponse {
-    transactionId: string
+    status: string;
 }
