@@ -208,8 +208,10 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         }
 
         if (paymentStatus) updates.paymentStatus = paymentStatus
-        if (updateObj.releaseDate !== undefined) updates.releaseDate = updateObj.releaseDate.toISOString()
-        if (updateObj.netAmount !== undefined) updates.paymentAmount = updateObj.netAmount
+        if (paymentStatus !== 'CANCELLED') {
+            if (updateObj.releaseDate !== undefined) updates.releaseDate = updateObj.releaseDate.toISOString()
+            if (updateObj.netAmount !== undefined) updates.paymentAmount = updateObj.netAmount
+        }
 
         toast.success('Updating payment', { position: toast.POSITION.BOTTOM_RIGHT })
         try {

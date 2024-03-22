@@ -31,6 +31,7 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
     const [netAmountErrorString, setNetAmountErrorString] = useState('')
     const [auditNote, setAuditNote] = useState('')
     const [dirty, setDirty] = useState(false)
+    const [disableEdits, setDisableEdits] = useState(false)
 
     const initialValues = useMemo(() => ({
         auditNote: '',
@@ -184,6 +185,7 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
                     name='netPayment'
                     label='Net Payment'
                     type='number'
+                    disabled={disableEdits}
                     placeholder='Modify Net Payment'
                     dirty
                     tabIndex={0}
@@ -203,11 +205,14 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
                         { label: 'Cancel', value: 'Cancel' },
                     ]}
                     value={paymentStatus}
-                    onChange={e => handleInputChange('paymentStatus', e.target.value)}
+                    onChange={e => {
+                        setDisableEdits(e.target.value === 'Cancel')
+                        handleInputChange('paymentStatus', e.target.value)
+                    }}
                 />
                 <InputDatePicker
                     tabIndex={-2}
-                    disabled={false}
+                    disabled={disableEdits}
                     error='Something wrong'
                     label='Release Date'
                     minDate={min([new Date(), new Date(props.payment.releaseDateObj)])}
