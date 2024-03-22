@@ -200,6 +200,7 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
                     options={[
                         { label: 'Owed', value: 'Owed' },
                         { label: 'On Hold', value: 'On Hold' },
+                        { label: 'Cancel', value: 'Cancel' },
                     ]}
                     value={paymentStatus}
                     onChange={e => handleInputChange('paymentStatus', e.target.value)}

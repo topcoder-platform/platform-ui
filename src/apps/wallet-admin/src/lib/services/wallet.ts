@@ -56,7 +56,7 @@ export async function fetchAuditLogs(paymentId: string): Promise<WinningsAudit[]
 
 export async function editPayment(updates: {
     winningsId: string,
-    paymentStatus?: 'ON_HOLD_ADMIN' | 'OWED',
+    paymentStatus?: 'ON_HOLD_ADMIN' | 'OWED' | 'CANCELLED',
     paymentAmount?: number,
     releaseDate?: string,
 }): Promise<string> {

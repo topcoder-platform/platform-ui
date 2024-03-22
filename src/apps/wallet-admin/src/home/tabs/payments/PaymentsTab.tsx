@@ -180,12 +180,20 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             releaseDate: currentEditState.releaseDate !== undefined ? currentEditState.releaseDate : undefined,
         }
 
-        let paymentStatus : 'ON_HOLD_ADMIN' | 'OWED' | undefined
-        if (updateObj.paymentStatus !== undefined) paymentStatus = updateObj.paymentStatus.indexOf('Owed') > -1 ? 'OWED' : 'ON_HOLD_ADMIN'
+        let paymentStatus : 'ON_HOLD_ADMIN' | 'OWED' | 'CANCELLED' | undefined
+        if (updateObj.paymentStatus !== undefined) {
+            if (updateObj.paymentStatus === 'Owed') {
+                paymentStatus = 'OWED'
+            } else if (updateObj.paymentStatus === 'On Hold') {
+                paymentStatus = 'ON_HOLD_ADMIN'
+            } else if (updateObj.paymentStatus === 'Cancel') {
+                paymentStatus = 'CANCELLED'
+            }
+        }
 
         const updates: {
             auditNote?: string
-            paymentStatus?: 'ON_HOLD_ADMIN' | 'OWED'
+            paymentStatus?: 'ON_HOLD_ADMIN' | 'OWED' | 'CANCELLED'
             releaseDate?: string
             paymentAmount?: number
             winningsId: string
