@@ -171,8 +171,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                             <div className={styles.centered}>
                                 <p className='body-main'>
                                     {Object.keys(filters).length === 0
-                                        ? 'Member earnings will appear here.'
-                                        : 'No payments match your filters.'}
+                                        ? 'Member tax-forms will appear here.'
+                                        : 'No tax-forms match your filters.'}
                                 </p>
                             </div>
                         )}
