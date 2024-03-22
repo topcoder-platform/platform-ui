@@ -309,29 +309,29 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                 //     ],
                                 //     type: 'dropdown',
                                 // },
-                                // {
-                                //     key: 'status',
-                                //     label: 'Status',
-                                //     options: [
-                                //         {
-                                //             label: 'Available',
-                                //             value: 'OWED',
-                                //         },
-                                //         {
-                                //             label: 'On Hold',
-                                //             value: 'ON_HOLD',
-                                //         },
-                                //         {
-                                //             label: 'Paid',
-                                //             value: 'PAID',
-                                //         },
-                                //         {
-                                //             label: 'Cancelled',
-                                //             value: 'CANCELLED',
-                                //         },
-                                //     ],
-                                //     type: 'dropdown',
-                                // },
+                                {
+                                    key: 'status',
+                                    label: 'Status',
+                                    options: [
+                                        {
+                                            label: 'Owed',
+                                            value: 'OWED',
+                                        },
+                                        {
+                                            label: 'On Hold',
+                                            value: 'ON_HOLD_ADMIN',
+                                        },
+                                        {
+                                            label: 'Paid',
+                                            value: 'PAID',
+                                        },
+                                        {
+                                            label: 'Cancelled',
+                                            value: 'CANCELLED',
+                                        },
+                                    ],
+                                    type: 'dropdown',
+                                },
                                 {
                                     key: 'pageSize',
                                     label: 'Payments per page',
