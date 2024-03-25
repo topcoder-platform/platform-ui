@@ -5,60 +5,49 @@ import React from 'react'
 
 import { Button, IconOutline, Tooltip } from '~/libs/ui'
 
-import { TaxForm } from '../../models/TaxForm'
+import { PaymentProvider } from '../../models/PaymentProvider'
 
-import styles from './TaxFormTable.module.scss'
+import styles from './PaymentMethodTable.module.scss'
 
-interface TaxFormTableProps {
-    taxForms: ReadonlyArray<TaxForm>;
+interface PaymentMethodTableProps {
+    paymentMethods: ReadonlyArray<PaymentProvider>;
     currentPage: number;
     numPages: number;
     onNextPageClick: () => void;
     onPreviousPageClick: () => void;
     onPageClick: (pageNumber: number) => void;
-    onDownloadClick?: (form: TaxForm) => void;
-    onDeleteClick?: (form: TaxForm) => void;
+    onDeleteClick?: (form: PaymentProvider) => void;
 }
 
-const TaxFormTable: React.FC<TaxFormTableProps> = (props: TaxFormTableProps) => (
+const PaymentProviderTable: React.FC<PaymentMethodTableProps> = (props: PaymentMethodTableProps) => (
     <>
         <div className={styles.tableContainer}>
             <table>
                 <thead>
                     <tr>
                         <th className='body-ultra-small-bold'>HANDLE</th>
-                        <th className='body-ultra-small-bold'>FORM</th>
-                        <th className='body-ultra-small-bold'>DATE FILED</th>
+                        <th className='body-ultra-small-bold'>CONNECTED PROVIDER</th>
+                        <th className='body-ultra-small-bold'>PROVIDER ID</th>
                         <th className='body-ultra-small-bold'>STATUS</th>
                         <th className='body-ultra-small'> </th>
                     </tr>
                 </thead>
                 <tbody>
-                    {props.taxForms.map(form => (
-                        <tr key={form.id}>
-                            <td className='body-small-bold'>{form.handle}</td>
-                            <td className={`body-small-bold ${styles.capitalize}`}>{form.taxForm.name}</td>
-                            <td className='body-small-bold'>{form.dateFiled}</td>
-                            <td>{form.status}</td>
+                    {props.paymentMethods.map(provider => (
+                        <tr key={provider.upmId}>
+                            <td className='body-small-bold'>{provider.handle}</td>
+                            <td className={`body-small-bold ${styles.capitalize}`}>{provider.type}</td>
+                            <td className='body-small-bold'>{provider.providerId === 'Legacy' ? provider.userId : provider.providerId}</td>
+                            <td>{provider.status}</td>
                             <td className={styles.actionButtons}>
                                 <Tooltip
-                                    content='Download Form'
-                                    place='top'
-                                >
-                                    <Button
-                                        icon={IconOutline.DocumentDownloadIcon}
-                                        size='sm'
-                                        onClick={() => props.onDownloadClick !== undefined && props.onDownloadClick(form)}
-                                    />
-                                </Tooltip>
-                                <Tooltip
-                                    content='Remove Submission'
+                                    content='Remove Provider'
                                     place='top'
                                 >
                                     <Button
                                         icon={IconOutline.TrashIcon}
                                         size='sm'
-                                        onClick={() => props.onDeleteClick !== undefined && props.onDeleteClick(form)}
+                                        onClick={() => props.onDeleteClick !== undefined && props.onDeleteClick(provider)}
                                     />
                                 </Tooltip>
                             </td>
@@ -120,4 +109,4 @@ const TaxFormTable: React.FC<TaxFormTableProps> = (props: TaxFormTableProps) => 
     </>
 )
 
-export default TaxFormTable
+export default PaymentProviderTable

@@ -1,19 +1,17 @@
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
 import { toast } from 'react-toastify'
-import { AxiosError } from 'axios'
 import React, { FC, useCallback, useEffect } from 'react'
 
 import { Collapsible, ConfirmModal, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
-import { downloadBlob } from '~/libs/shared'
 
-import { deleteTaxForm, downloadTaxForm, getMemberHandle, getTaxForms } from '../../../lib/services/wallet'
-import { TaxForm } from '../../../lib/models/TaxForm'
-import { FilterBar, formatIOSDateString, TaxFormTable } from '../../../lib'
+import { PaymentProvider } from '../../../lib/models/PaymentProvider'
+import { deletePaymentProvider, getMemberHandle, getPaymentMethods } from '../../../lib/services/wallet'
+import { FilterBar, PaymentMethodTable } from '../../../lib'
 import { PaginationInfo } from '../../../lib/models/PaginationInfo'
 
-import styles from './TaxFormsTab.module.scss'
+import styles from './PaymentMethodsTab.module.scss'
 
 interface ListViewProps {
     // eslint-disable-next-line react/no-unused-prop-types
@@ -23,11 +21,11 @@ interface ListViewProps {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const [confirmFlow, setConfirmFlow] = React.useState<{
-        form: TaxForm
+        provider: PaymentProvider
     } | undefined>(undefined)
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
-    const [forms, setForms] = React.useState<TaxForm[]>([])
+    const [paymentMethods, setPaymentMethods] = React.useState<PaymentProvider[]>([])
     const [userIds, setUserIds] = React.useState<string[]>([])
     const [pagination, setPagination] = React.useState<PaginationInfo>({
         currentPage: 1,
@@ -35,9 +33,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         totalItems: 0,
         totalPages: 0,
     })
-    const [apiErrorMsg, setApiErrorMsg] = React.useState<string>('Member earnings will appear here.')
 
-    const fetchTaxForms = useCallback(async () => {
+    const fetchPaymentProviders = useCallback(async () => {
         if (isLoading) {
             return
         }
@@ -45,20 +42,16 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         setIsLoading(true)
         try {
 
-            const taxFormsResponse = await getTaxForms(pagination.pageSize, (pagination.currentPage - 1) * pagination.pageSize, userIds)
-            const tmpUserIds = taxFormsResponse.forms.map(form => form.userId)
+            const paymentMethodsResponse = await getPaymentMethods(pagination.pageSize, (pagination.currentPage - 1) * pagination.pageSize, userIds)
+            const tmpUserIds = paymentMethodsResponse.paymentMethods.map(provider => provider.userId)
             const handleMap = await getMemberHandle(tmpUserIds)
 
-            const taxForms = taxFormsResponse.forms.map((form: TaxForm) => ({ ...form, dateFiled: form.dateFiled ? formatIOSDateString(form.dateFiled) : '-', handle: handleMap.get(parseInt(form.userId, 10)) ?? form.userId }))
+            const userPaymentMethods = paymentMethodsResponse.paymentMethods.map((provider: PaymentProvider) => ({ ...provider, handle: handleMap.get(parseInt(provider.userId, 10)) ?? provider.userId }))
 
-            setForms(taxForms)
-            setPagination(taxFormsResponse.pagination)
+            setPaymentMethods(userPaymentMethods)
+            setPagination(paymentMethodsResponse.pagination)
         } catch (apiError) {
-            if (apiError instanceof AxiosError && apiError?.response?.status === 403) {
-                setApiErrorMsg(apiError.response.data.message)
-            } else {
-                setApiErrorMsg('Failed to fetch winnings. Please try again later.')
-            }
+            console.error('Failed to fetch winnings:', apiError)
         } finally {
             setIsLoading(false)
         }
@@ -66,17 +59,17 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     }, [pagination.pageSize, pagination.currentPage, userIds])
 
     useEffect(() => {
-        fetchTaxForms()
-    }, [fetchTaxForms])
+        fetchPaymentProviders()
+    }, [fetchPaymentProviders])
 
     return (
         <>
             <div className={styles.container}>
                 <div className={styles.header}>
-                    <h3>Member Tax Forms</h3>
+                    <h3>Member Payment Providers</h3>
                 </div>
                 <div className={styles.content}>
-                    <Collapsible header={<h3>Tax Forms Listing</h3>}>
+                    <Collapsible header={<h3>Member Payment Providers Listing</h3>}>
                         <FilterBar
                             filters={[
                                 {
@@ -133,9 +126,9 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                             }}
                         />
                         {isLoading && <LoadingCircles className={styles.centered} />}
-                        {!isLoading && forms.length > 0 && (
-                            <TaxFormTable
-                                taxForms={forms}
+                        {!isLoading && paymentMethods.length > 0 && (
+                            <PaymentMethodTable
+                                paymentMethods={paymentMethods}
                                 numPages={pagination.totalPages}
                                 currentPage={pagination.currentPage}
                                 onPreviousPageClick={() => {
@@ -156,29 +149,17 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                         currentPage: pageNumber,
                                     })
                                 }}
-                                onDownloadClick={async (form: TaxForm) => {
-                                    toast.success('Downloading tax form. Please wait...', { position: 'bottom-right' })
-                                    try {
-                                        downloadBlob(
-                                            await downloadTaxForm(form.userId, form.id),
-                                            `tax-form-${form.userId}-${new Date()
-                                                .getTime()}.pdf`,
-                                        )
-                                    } catch (err) {
-                                        toast.error('Failed to download tax form. Please try again later', { position: 'bottom-right' })
-                                    }
-                                }}
-                                onDeleteClick={async (form: TaxForm) => {
-                                    setConfirmFlow({ form })
+                                onDeleteClick={async (provider: PaymentProvider) => {
+                                    setConfirmFlow({ provider })
                                 }}
                             />
                         )}
-                        {!isLoading && forms.length === 0 && (
+                        {!isLoading && paymentMethods.length === 0 && (
                             <div className={styles.centered}>
                                 <p className='body-main'>
                                     {Object.keys(filters).length === 0
-                                        ? apiErrorMsg
-                                        : 'No tax-forms found for the selected member(s).'}
+                                        ? 'Member payment-providers will appear here.'
+                                        : 'No payment-provider found for the selected member(s).'}
                                 </p>
                             </div>
                         )}
@@ -193,27 +174,27 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                         setConfirmFlow(undefined)
                     }}
                     onConfirm={async () => {
-                        const userId = confirmFlow.form.userId
-                        const formId = confirmFlow.form.id
+                        const userId = confirmFlow.provider.userId
+                        const providerId = confirmFlow.provider.id!
                         setConfirmFlow(undefined)
 
-                        toast.success('Deleting tax form. Please wait...', { position: 'bottom-right' })
+                        toast.success('Deleting payment provider. Please wait...', { position: 'bottom-right' })
                         try {
-                            await deleteTaxForm(userId, formId)
-                            toast.success('Successfully deleted tax-form.', { position: 'bottom-right' })
+                            await deletePaymentProvider(userId, providerId)
+                            toast.success('Successfully deleted payment provider.', { position: 'bottom-right' })
                         } catch (err) {
-                            toast.error('Failed to delete users tax-form. Please try again later', { position: 'bottom-right' })
+                            toast.error('Failed to delete users payment provider. Please try again later', { position: 'bottom-right' })
                         }
 
-                        fetchTaxForms()
+                        fetchPaymentProviders()
                     }}
                     open={confirmFlow !== undefined}
                 >
                     <div>
                         <p>
-                            Are you sure you want to reset the tax-form of the member
+                            Are you sure you want to reset the payment provider of the member
                             {' '}
-                            {confirmFlow.form.handle}
+                            {confirmFlow.provider.handle}
                             ?
                         </p>
                         <br />

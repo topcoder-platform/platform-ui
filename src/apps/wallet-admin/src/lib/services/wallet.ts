@@ -92,7 +92,39 @@ export async function getTaxForms(limit: number, offset: number, userIds: string
         throw new Error('Error fetching tax forms')
     }
 
+    if (response.data.forms === null || response.data.forms === undefined) {
+        response.data.forms = []
+    }
+
     return response.data
+}
+
+export async function getPaymentMethods(limit: number, offset: number, userIds: string[]): Promise<{
+    paymentMethods: PaymentProvider[],
+    pagination: PaginationInfo
+}> {
+    const body = JSON.stringify({
+        limit,
+        offset,
+        userIds,
+    })
+
+    const url = `${baseUrl}/admin/payment-methods`
+    const response = await xhrPostAsync<string, ApiResponse<{
+        paymentMethods: PaymentProvider[],
+        pagination: PaginationInfo
+    }>>(url, body)
+
+    if (response.status === 'error') {
+        throw new Error('Error fetching payment methods')
+    }
+
+    if (response.data.paymentMethods === null || response.data.paymentMethods === undefined) {
+        response.data.paymentMethods = []
+    }
+
+    return response.data
+
 }
 
 export async function downloadTaxForm(userId: string, taxFormId: string): Promise<Blob> {
@@ -110,6 +142,15 @@ export async function deleteTaxForm(userId: string, taxFormId: string): Promise<
         return await xhrDeleteAsync(url)
     } catch (err) {
         throw new Error('Failed to delete users tax-form')
+    }
+}
+
+export async function deletePaymentProvider(userId: string, providerId: number): Promise<void> {
+    const url = `${baseUrl}/admin/payment-methods/${userId}/${providerId}`
+    try {
+        return await xhrDeleteAsync(url)
+    } catch (err) {
+        throw new Error('Failed to delete users payment provider')
     }
 }
 

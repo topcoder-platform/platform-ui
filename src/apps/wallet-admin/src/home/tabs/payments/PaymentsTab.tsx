@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
 import { toast } from 'react-toastify'
+import { AxiosError } from 'axios'
 import React, { FC, useCallback, useEffect } from 'react'
 
 import { Collapsible, ConfirmModal, LoadingCircles } from '~/libs/ui'
@@ -75,6 +76,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         paymentStatus?: string;
         auditNote?: string;
     }>({})
+    const [apiErrorMsg, setApiErrorMsg] = React.useState<string>('Member earnings will appear here.')
 
     const editStateRef = React.useRef(editState)
 
@@ -156,7 +158,11 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             setWinnings(winningsData)
             setPagination(payments.pagination)
         } catch (apiError) {
-            console.error('Failed to fetch winnings:', apiError)
+            if (apiError instanceof AxiosError && apiError?.response?.status === 403) {
+                setApiErrorMsg(apiError.response.data.message)
+            } else {
+                setApiErrorMsg('Failed to fetch winnings. Please try again later.')
+            }
         } finally {
             setIsLoading(false)
         }
@@ -436,7 +442,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                             <div className={styles.centered}>
                                 <p className='body-main'>
                                     {Object.keys(filters).length === 0
-                                        ? 'Member earnings will appear here.'
+                                        ? apiErrorMsg
                                         : 'No payments match your filters.'}
                                 </p>
                             </div>
