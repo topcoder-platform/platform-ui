@@ -7,11 +7,12 @@ import React, { FC, useCallback, useEffect } from 'react'
 import { Collapsible, ConfirmModal, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
 
-import { editPayment, getMemberHandle, getPayments } from '../../../lib/services/wallet'
+import { editPayment, getMemberHandle, getPaymentMethods, getPayments, getTaxForms } from '../../../lib/services/wallet'
 import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
 import { FilterBar, formatIOSDateString, PaymentView } from '../../../lib'
 import { ConfirmFlowData } from '../../../lib/models/ConfirmFlowData'
 import { PaginationInfo } from '../../../lib/models/PaginationInfo'
+import { TaxForm } from '../../../lib/models/TaxForm'
 import PaymentEditForm from '../../../lib/components/payment-edit/PaymentEdit'
 import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
@@ -25,9 +26,9 @@ interface ListViewProps {
 function formatStatus(status: string): string {
     switch (status) {
         case 'ON_HOLD':
-            return 'Owed'
+            return 'ON_HOLD'
         case 'ON_HOLD_ADMIN':
-            return 'On Hold'
+            return 'On Hold (Admin)'
         case 'OWED':
             return 'Owed'
         case 'PAID':
@@ -97,7 +98,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     }, [])
 
     const convertToWinnings = useCallback(
-        (payments: WinningDetail[], handleMap: Map<number, string>) => payments.map(payment => {
+        (payments: WinningDetail[], handleMap: Map<number, string>, userHasTaxFormSetup: Map<string, boolean>, userHasPaymentProvider: Map<string, boolean>): ReadonlyArray<Winning> => payments.map(payment => {
             const now = new Date()
             const releaseDate = new Date(payment.releaseDate)
             const diffMs = releaseDate.getTime() - now.getTime()
@@ -121,6 +122,16 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             let status = formatStatus(payment.details[0].status)
             if (status === 'Cancel') {
                 status = 'Cancelled'
+            }
+
+            if (status === 'ON_HOLD') {
+                if (!userHasTaxFormSetup.get(payment.winnerId)) {
+                    status = 'On Hold (Tax Form)'
+                } else if (!userHasPaymentProvider.get(payment.winnerId)) {
+                    status = 'On Hold (Payment Provider)'
+                } else {
+                    status = 'On Hold (Member)'
+                }
             }
 
             return {
@@ -153,8 +164,31 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         try {
             const payments = await getPayments(pagination.pageSize, (pagination.currentPage - 1) * pagination.pageSize, filters)
             const winnerIds = payments.winnings.map(winning => winning.winnerId)
+
+            const onHoldUserIds = payments.winnings
+                .filter(winning => winning.details[0].status === 'ON_HOLD')
+                .map(winning => winning.winnerId)
+
+            const userHasTaxFormSetup: Map<string, boolean> = new Map()
+            const userHasPaymentProvider: Map<string, boolean> = new Map()
+
+            try {
+                const missingTaxForms = await getTaxForms(100, 0, onHoldUserIds)
+                const missingPaymentProviders = await getPaymentMethods(100, 0, onHoldUserIds)
+
+                missingTaxForms.forms.forEach((form: TaxForm) => {
+                    userHasTaxFormSetup.set(form.userId, true)
+                })
+
+                missingPaymentProviders.paymentMethods.forEach((method: { userId: string }) => {
+                    userHasPaymentProvider.set(method.userId, true)
+                })
+            } catch (err) {
+                // Ignore errors
+            }
+
             const handleMap = await getMemberHandle(winnerIds)
-            const winningsData = convertToWinnings(payments.winnings, handleMap)
+            const winningsData = convertToWinnings(payments.winnings, handleMap, userHasTaxFormSetup, userHasPaymentProvider)
             setWinnings(winningsData)
             setPagination(payments.pagination)
         } catch (apiError) {
@@ -245,7 +279,10 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             },
             content: (
                 <PaymentEditForm
-                    payment={payment}
+                    payment={{
+                        ...payment,
+                        status: ['On Hold (Member)', 'On Hold (Tax Form)', 'On Hold (Payment Provider)'].indexOf(payment.status) !== -1 ? 'Owed' : payment.status,
+                    }}
                     canSave={setIsConfirmFormValid}
                     onValueUpdated={handleValueUpdated}
                 />
@@ -272,48 +309,6 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                     label: 'Username/Handle',
                                     type: 'member_autocomplete',
                                 },
-                                // {
-                                //     key: 'date',
-                                //     label: 'Date',
-                                //     options: [
-                                //         {
-                                //             label: 'Last 7 days',
-                                //             value: 'last7days',
-                                //         },
-                                //         {
-                                //             label: 'Last 30 days',
-                                //             value: 'last30days',
-                                //         },
-                                //         {
-                                //             label: 'All',
-                                //             value: 'all',
-                                //         },
-                                //     ],
-                                //     type: 'dropdown',
-                                // },
-                                // {
-                                //     key: 'type',
-                                //     label: 'Type',
-                                //     options: [
-                                //         {
-                                //             label: 'Task Payment',
-                                //             value: 'TASK_PAYMENT',
-                                //         },
-                                //         {
-                                //             label: 'Contest Payment',
-                                //             value: 'CONTEST_PAYMENT',
-                                //         },
-                                //         {
-                                //             label: 'Copilot Payment',
-                                //             value: 'COPILOT_PAYMENT',
-                                //         },
-                                //         {
-                                //             label: 'Review Board Payment',
-                                //             value: 'REVIEW_BOARD_PAYMENT',
-                                //         },
-                                //     ],
-                                //     type: 'dropdown',
-                                // },
                                 {
                                     key: 'status',
                                     label: 'Status',
