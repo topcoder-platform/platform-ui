@@ -13,6 +13,7 @@ import { FilterBar, formatIOSDateString, PaymentView } from '../../../lib'
 import { ConfirmFlowData } from '../../../lib/models/ConfirmFlowData'
 import { PaginationInfo } from '../../../lib/models/PaginationInfo'
 import { TaxForm } from '../../../lib/models/TaxForm'
+import { PaymentProvider } from '../../../lib/models/PaymentProvider'
 import PaymentEditForm from '../../../lib/components/payment-edit/PaymentEdit'
 import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
@@ -177,11 +178,11 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                 const missingPaymentProviders = await getPaymentMethods(100, 0, onHoldUserIds)
 
                 missingTaxForms.forms.forEach((form: TaxForm) => {
-                    userHasTaxFormSetup.set(form.userId, true)
+                    userHasTaxFormSetup.set(form.userId, form.status === 'ACTIVE')
                 })
 
-                missingPaymentProviders.paymentMethods.forEach((method: { userId: string }) => {
-                    userHasPaymentProvider.set(method.userId, true)
+                missingPaymentProviders.paymentMethods.forEach((method: PaymentProvider) => {
+                    userHasPaymentProvider.set(method.userId, method.status === 'CONNECTED')
                 })
             } catch (err) {
                 // Ignore errors
@@ -272,6 +273,13 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     }, [fetchWinnings])
 
     const onPaymentEditCallback = useCallback((payment: Winning) => {
+        let status = payment.status
+        if (status === 'On Hold (Admin)') {
+            status = 'On Hold'
+        } else if (['On Hold (Member)', 'On Hold (Tax Form)', 'On Hold (Payment Provider)'].indexOf(status) !== -1) {
+            status = 'Owed'
+        }
+
         setConfirmFlow({
             action: 'Save',
             callback: async () => {
@@ -281,7 +289,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                 <PaymentEditForm
                     payment={{
                         ...payment,
-                        status: ['On Hold (Member)', 'On Hold (Tax Form)', 'On Hold (Payment Provider)'].indexOf(payment.status) !== -1 ? 'Owed' : payment.status,
+                        status,
                     }}
                     canSave={setIsConfirmFormValid}
                     onValueUpdated={handleValueUpdated}
@@ -318,8 +326,12 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                             value: 'OWED',
                                         },
                                         {
-                                            label: 'On Hold',
+                                            label: 'On Hold (Admin)',
                                             value: 'ON_HOLD_ADMIN',
+                                        },
+                                        {
+                                            label: 'On Hold (Member)',
+                                            value: 'ON_HOLD',
                                         },
                                         {
                                             label: 'Paid',

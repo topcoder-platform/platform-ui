@@ -40,6 +40,8 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
         releaseDate: props.payment.releaseDateObj,
     }), [props.payment])
 
+    console.log('Payment status', paymentStatus)
+
     const validateNetAmount = (value: number): boolean => {
         if (Number.isNaN(value)) {
             setNetAmountErrorString('A valid number is required')
