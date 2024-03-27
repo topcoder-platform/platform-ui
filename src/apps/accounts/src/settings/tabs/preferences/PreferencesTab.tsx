@@ -53,75 +53,8 @@ const PreferencesTab: FC<PreferencesTabProps> = (props: PreferencesTabProps) => 
     return (
         <div className={styles.container}>
             <h3>PLATFORM PREFERENCES</h3>
-
+            
             <div className={styles.content}>
-                {
-                    !!emailPreferences ? (
-                        <>
-                            <SettingSection
-                                leftElement={(
-                                    <div className={styles.imageWrap}>
-                                        <EmailIcon />
-                                    </div>
-                                )}
-                                title={
-                                    emailPreferences.status === 'subscribed'
-                                        ? 'You Are Currently Subscribed To Receive Topcoder Emails'
-                                        : 'You Are Not Subscribed To Receive Topcoder Emails'
-                                }
-                                // eslint-disable-next-line max-len
-                                infoText={
-                                    emailPreferences.status === 'subscribed'
-                                        ? 'If this was a mistake or if you would like to unsubscribe, please click the “Unsubscribe” button.'
-                                        : 'If you would like to subscribe to receive Topcoder emails, please click the “Subscribe” button.'
-                                }
-                                actionElement={(
-                                    <div className={styles.subAction}>
-                                        <form action={mailChimpFormAction} method='post' id='mc-embedded-subscribe-form' name='mc-embedded-subscribe-form' noValidate>
-                                            <input type='email' value={props.profile.email} readOnly name='EMAIL' id='mce-EMAIL' />
-                                            <input type='checkbox' id='gdpr_11101' name='gdpr[11101]' value='Y' readOnly />
-                                            <input type='text' name='b_65bd5a1857b73643aad556093_28bfd3c062' value='' readOnly />
-                                            <Button
-                                                label={emailPreferences.status === 'subscribed' ? 'Unsubscribe' : 'Subscribe'}
-                                                secondary
-                                                size='lg'
-                                                onClick={handleSubscribtionStatusChange}
-                                                type='submit'
-                                            />
-                                        </form>
-                                    </div>
-                                )}
-                            />
-
-                            {
-                                emailPreferences.status === 'subscribed' && (
-                                    <>
-                                        {
-                                            newsletters.concat(programs)
-                                                .map(preference => (
-                                                    <SettingSection
-                                                        key={preference.id}
-                                                        title={preference.name}
-                                                        infoText={preference.desc}
-                                                        actionElement={(
-                                                            <FormToggleSwitch
-                                                                name={preference.id}
-                                                                onChange={bind(handleUserEmailPreferencesChange, this, preference.id)}
-                                                                value={emailPreferences.interests[preference.id]}
-                                                            />
-                                                        )}
-                                                    />
-                                                ))
-                                        }
-                                    </>
-                                )
-                            }
-                        </>
-                    ) : (
-                        <LoadingSpinner hide={!!emailPreferences} overlay />
-                    )
-                }
-
                 <SettingSection
                     leftElement={(
                         <div className={styles.imageWrap}>
