@@ -295,14 +295,21 @@ export async function getRecipientViewURL(): Promise<TransactionResponse> {
 }
 
 export async function getMemberHandle(userIds: string[]): Promise<Map<number, string>> {
-    const url = `${memberApiBaseUrl}?userIds=[${userIds.join(',')}]&fields=handle,userId`
-    const response = await xhrGetAsync<{ handle: string, userId: number }[]>(url)
+    const BATCH_SIZE = 50
 
     const handleMap = new Map<number, string>()
 
-    response.forEach(member => {
-        handleMap.set(member.userId, member.handle)
-    })
+    for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+        const batch = userIds.slice(i, i + BATCH_SIZE)
+
+        const url = `${memberApiBaseUrl}?userIds=[${batch.join(',')}]&fields=handle,userId`
+        // eslint-disable-next-line no-await-in-loop
+        const response = await xhrGetAsync<{ handle: string, userId: number }[]>(url)
+
+        response.forEach(member => {
+            handleMap.set(member.userId, member.handle)
+        })
+    }
 
     return handleMap
 }
