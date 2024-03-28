@@ -60,7 +60,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 <td>{payment.releaseDate}</td>
                                 <td>{payment.datePaid}</td>
                                 <td className={styles.actionButtons}>
-                                    {props.canEdit && payment.status.toUpperCase() !== 'PAID' && payment.status.toUpperCase() !== 'CANCELLED' && (
+                                    {props.canEdit && payment.status.toUpperCase() !== 'CANCELLED' && (
                                         <Button
                                             icon={IconOutline.PencilIcon}
                                             size='sm'
