@@ -9,6 +9,7 @@ import { TaxForm } from '../models/TaxForm'
 import { TransactionResponse } from '../models/TransactionId'
 import { PaginationInfo } from '../models/PaginationInfo'
 import { WinningsAudit } from '../models/WinningsAudit'
+import { PayoutAudit } from '../models/PayoutAudit'
 import ApiResponse from '../models/ApiResponse'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/payments`
@@ -48,6 +49,22 @@ export async function fetchAuditLogs(paymentId: string): Promise<WinningsAudit[]
 
     if (response.status === 'error') {
         throw new Error('Error fetching audit logs')
+    }
+
+    return response.data
+
+}
+
+export async function fetchPayoutAuditLogs(paymentId: string): Promise<PayoutAudit[]> {
+    // eslint-disable-next-line max-len
+    const response = await xhrGetAsync<ApiResponse<PayoutAudit[]>>(`${baseUrl}/admin/winnings/${paymentId}/audit-payout`)
+
+    if (response.status === 'error') {
+        throw new Error('Error fetching audit logs')
+    }
+
+    if (response.data.length === 0) {
+        throw new Error('No payout audit logs found')
     }
 
     return response.data

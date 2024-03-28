@@ -489,6 +489,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             </div>
             {confirmFlow && (
                 <ConfirmModal
+                    maxWidth='800px'
+                    size='lg'
                     showButtons={confirmFlow.showButtons}
                     title={confirmFlow.title}
                     action={confirmFlow.action}
