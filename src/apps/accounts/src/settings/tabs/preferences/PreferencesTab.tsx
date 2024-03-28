@@ -1,26 +1,21 @@
 /* eslint-disable max-len */
 import { FC } from 'react'
-import { toast } from 'react-toastify'
 
-import { MemberEmailPreferenceAPI, updateMemberEmailPreferencesAsync, useMemberEmailPreferences, UserProfile } from '~/libs/core'
 import { Button } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
 
-import { ForumIcon, SettingSection, triggerSurvey } from '../../../lib'
+import { ForumIcon, SettingSection } from '../../../lib'
 
-import { subscribeLink, unsubscribeLink } from './preferences.config'
 import styles from './PreferencesTab.module.scss'
 
-interface PreferencesTabProps {
-    profile: UserProfile
-}
-
-const PreferencesTab: FC<PreferencesTabProps> = (props: PreferencesTabProps) => {
-    const { data: emailPreferences, mutate: mutateEmailPreferencesData }: MemberEmailPreferenceAPI
-        = useMemberEmailPreferences(props.profile.email)
-
+const PreferencesTab: FC<any> = () => {
     function handleGoToForumPreferences(): void {
-        window.open(`https://${EnvironmentConfig.ENV === 'prod' ? 'discussions' : 'vanilla'}.${EnvironmentConfig.TC_DOMAIN}/profile/preferences`, '_blank')
+        window.open(
+            `https://${
+                EnvironmentConfig.ENV === 'prod' ? 'discussions' : 'vanilla'
+            }.${EnvironmentConfig.TC_DOMAIN}/profile/preferences`,
+            '_blank',
+        )
     }
 
     return (
@@ -46,7 +41,6 @@ const PreferencesTab: FC<PreferencesTabProps> = (props: PreferencesTabProps) => 
                         />
                     )}
                 />
-
             </div>
         </div>
     )
