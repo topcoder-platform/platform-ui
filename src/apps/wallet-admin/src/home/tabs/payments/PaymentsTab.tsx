@@ -6,8 +6,9 @@ import React, { FC, useCallback, useEffect } from 'react'
 
 import { Collapsible, ConfirmModal, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
+import { downloadBlob } from '~/libs/shared'
 
-import { editPayment, getMemberHandle, getPaymentMethods, getPayments, getTaxForms } from '../../../lib/services/wallet'
+import { editPayment, exportSearchResults, getMemberHandle, getPaymentMethods, getPayments, getTaxForms } from '../../../lib/services/wallet'
 import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
 import { FilterBar, formatIOSDateString, PaymentView } from '../../../lib'
 import { ConfirmFlowData } from '../../../lib/models/ConfirmFlowData'
@@ -311,6 +312,16 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                 <div className={styles.content}>
                     <Collapsible header={<h3>Payment Listing</h3>}>
                         <FilterBar
+                            showExportButton
+                            onExport={async () => {
+                                toast.success('Downloading payments report. This may take a few moments.', { position: toast.POSITION.BOTTOM_RIGHT })
+                                downloadBlob(
+                                    await exportSearchResults(filters),
+                                    `payments-${new Date()
+                                        .getTime()}.csv`,
+                                )
+                                toast.success('Download complete', { position: toast.POSITION.BOTTOM_RIGHT })
+                            }}
                             filters={[
                                 {
                                     key: 'winnerIds',
@@ -340,6 +351,25 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                         {
                                             label: 'Cancelled',
                                             value: 'CANCELLED',
+                                        },
+                                    ],
+                                    type: 'dropdown',
+                                },
+                                {
+                                    key: 'date',
+                                    label: 'Date',
+                                    options: [
+                                        {
+                                            label: 'Last 7 days',
+                                            value: 'last7days',
+                                        },
+                                        {
+                                            label: 'Last 30 days',
+                                            value: 'last30days',
+                                        },
+                                        {
+                                            label: 'All',
+                                            value: 'all',
                                         },
                                     ],
                                     type: 'dropdown',

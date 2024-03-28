@@ -1,6 +1,6 @@
 import { EnvironmentConfig } from '~/config'
 import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
-import { getAsyncWithBlobHandling } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
+import { getAsyncWithBlobHandling, postAsyncWithBlobHandling } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
 
 import { WalletDetails } from '../models/WalletDetails'
 import { PaymentProvider } from '../models/PaymentProvider'
@@ -125,6 +125,38 @@ export async function getPaymentMethods(limit: number, offset: number, userIds: 
 
     return response.data
 
+}
+
+export async function exportSearchResults(filters: Record<string, string[]>): Promise<Blob> {
+    const url = `${baseUrl}/admin/winnings/export`
+
+    const filteredFilters: Record<string, string> = {}
+
+    for (const key in filters) {
+        if (filters[key].length > 0 && key !== 'pageSize') {
+            filteredFilters[key] = filters[key][0]
+        }
+    }
+
+    const payload: {
+        winnerIds?: string[], [key: string]: string | number | string[] | undefined
+    } = {
+        ...filteredFilters,
+    }
+
+    if (filters.winnerIds && filters.winnerIds.length > 0) {
+        payload.winnerIds = filters.winnerIds
+    }
+
+    const body = JSON.stringify(payload)
+
+    try {
+        return await postAsyncWithBlobHandling<string, Blob>(url, body, {
+            responseType: 'blob',
+        })
+    } catch (err) {
+        throw new Error('Failed to export search results')
+    }
 }
 
 export async function downloadTaxForm(userId: string, taxFormId: string): Promise<Blob> {
