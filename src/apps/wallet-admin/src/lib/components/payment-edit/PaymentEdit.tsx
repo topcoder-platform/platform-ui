@@ -2,8 +2,9 @@
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
 import { min } from 'date-fns'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { TOPCODER_URL } from '~/config/environments/default.env'
 import { InputDatePicker, InputSelect, InputText } from '~/libs/ui'
 
 import { Winning } from '../../models/WinningDetail'
@@ -30,6 +31,7 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
     const [netAmountErrorString, setNetAmountErrorString] = useState('')
     const [auditNote, setAuditNote] = useState('')
     const [dirty, setDirty] = useState(false)
+    const [disableEdits, setDisableEdits] = useState(false)
 
     const initialValues = useMemo(() => ({
         auditNote: '',
@@ -154,9 +156,37 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
         }
     }, [dirty, auditNote, props, netAmountErrorString.length, netAmount, paymentStatus, releaseDate, initialValues])
 
+    const getLink = (externalId: string): string => `${TOPCODER_URL}/challenges/${externalId}`
+
+    const options = useCallback(() => {
+        if (props.payment.status.toUpperCase() !== 'PAID') {
+            return [
+                { label: 'Owed', value: 'Owed' },
+                { label: 'On Hold', value: 'On Hold' },
+                { label: 'Cancel', value: 'Cancel' },
+            ]
+        }
+
+        return [
+            { label: 'Paid', value: 'Paid' },
+            { label: 'Owed', value: 'Owed' },
+        ]
+
+    }, [props.payment.status])
+
     return (
         <div className={styles.formContainer}>
             <div className={styles.inputGroup}>
+                <div className={styles.infoItem}>
+                    <span className={styles.label}>Description</span>
+                    <a href={getLink(props.payment.externalId)} target='_blank' rel='noreferrer'>
+                        {props.payment.description}
+                    </a>
+                </div>
+                <div className={styles.infoItem}>
+                    <span className={styles.label}>Payment ID</span>
+                    <p className={styles.value}>{props.payment.id}</p>
+                </div>
                 <div className={styles.infoItem}>
                     <span className={styles.label}>Handle</span>
                     <p className={styles.value}>{props.payment.handle}</p>
@@ -167,15 +197,11 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
                     <p className={styles.value}>{props.payment.type}</p>
                 </div>
 
-                <div className={styles.infoItem}>
-                    <span className={styles.label}>Description</span>
-                    <p className={styles.value}>{props.payment.description}</p>
-                </div>
-
                 <InputText
                     name='netPayment'
                     label='Net Payment'
                     type='number'
+                    disabled={disableEdits}
                     placeholder='Modify Net Payment'
                     dirty
                     tabIndex={0}
@@ -189,24 +215,26 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
                     dirty
                     name='paymentStatus'
                     label='Payment Status'
-                    options={[
-                        { label: 'Owed', value: 'Owed' },
-                        { label: 'On Hold', value: 'On Hold' },
-                    ]}
+                    options={options()}
                     value={paymentStatus}
-                    onChange={e => handleInputChange('paymentStatus', e.target.value)}
+                    onChange={e => {
+                        setDisableEdits(e.target.value === 'Cancel')
+                        handleInputChange('paymentStatus', e.target.value)
+                    }}
                 />
-                <InputDatePicker
-                    tabIndex={-2}
-                    disabled={false}
-                    error='Something wrong'
-                    label='Release Date'
-                    minDate={min([new Date(), new Date(props.payment.releaseDateObj)])}
-                    date={releaseDate}
-                    maxDate={new Date(new Date()
-                        .getTime() + 15 * 24 * 60 * 60 * 1000)}
-                    onChange={date => { if (date != null) handleInputChange('releaseDate', date) }}
-                />
+                {props.payment.status.toUpperCase() !== 'PAID' && (
+                    <InputDatePicker
+                        tabIndex={-2}
+                        disabled={disableEdits}
+                        error='Something wrong'
+                        label='Release Date'
+                        minDate={min([new Date(), new Date(props.payment.releaseDateObj)])}
+                        date={releaseDate}
+                        maxDate={new Date(new Date()
+                            .getTime() + 15 * 24 * 60 * 60 * 1000)}
+                        onChange={date => { if (date != null) handleInputChange('releaseDate', date) }}
+                    />
+                )}
                 <InputText
                     tabIndex={-3}
                     type='text'

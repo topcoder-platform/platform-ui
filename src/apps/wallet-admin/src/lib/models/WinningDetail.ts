@@ -12,6 +12,7 @@ export interface PaymentDetail {
 export interface Winning {
     id: string
     description: string
+    externalId: string
     type: string
     handle: string;
     createDate: string

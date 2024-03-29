@@ -10,12 +10,14 @@ export interface ConfirmModalProps extends ModalProps {
     title: string
     canSave?: boolean
     showButtons?: boolean
+    maxWidth?: string
+    size?: 'sm' | 'md' | 'lg'
 }
 
 const ConfirmModal: FC<ConfirmModalProps> = (props: ConfirmModalProps) => (
     <BaseModal
         {...props}
-        styles={{ modal: { maxWidth: '450px' } }}
+        styles={{ modal: { maxWidth: props.maxWidth ?? '450px' } }}
         buttons={(
             props.showButtons !== false && (
                 <>

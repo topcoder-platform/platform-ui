@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import React, { useEffect, useState } from 'react'
@@ -59,7 +60,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 <td>{payment.releaseDate}</td>
                                 <td>{payment.datePaid}</td>
                                 <td className={styles.actionButtons}>
-                                    {props.canEdit && payment.status.toUpperCase() !== 'PAID' && (
+                                    {props.canEdit && payment.status.toUpperCase() !== 'CANCELLED' && (
                                         <Button
                                             icon={IconOutline.PencilIcon}
                                             size='sm'
