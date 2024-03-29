@@ -257,7 +257,7 @@ workflows:
                       branches:
                           only:
                               - dev
-                              - feat/wallet-admin
+                              - LVT-256
 
             - deployQa:
                   context: org-global

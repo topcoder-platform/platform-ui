@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-no-bind */
 import React, { ChangeEvent } from 'react'
 
-import { Button, InputSelect, InputText } from '~/libs/ui'
+import { Button, IconOutline, InputSelect, InputText } from '~/libs/ui'
 import { InputHandleAutocomplete, MembersAutocompeteResult } from '~/apps/gamification-admin/src/game-lib'
 
 import styles from './FilterBar.module.scss'
@@ -20,8 +20,10 @@ type Filter = {
 
 interface FilterBarProps {
     filters: Filter[];
+    showExportButton?: boolean;
     onFilterChange: (key: string, value: string[]) => void;
     onResetFilters?: () => void;
+    onExport?: () => void;
 }
 
 const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
@@ -104,6 +106,14 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
                         </div>
                     ))}
             </div>
+            {props.showExportButton && (
+                <Button
+                    className={styles.exportButton}
+                    icon={IconOutline.DownloadIcon}
+                    onClick={props.onExport}
+                    size='lg'
+                />
+            )}
             <Button
                 primary
                 className={styles.resetButton}

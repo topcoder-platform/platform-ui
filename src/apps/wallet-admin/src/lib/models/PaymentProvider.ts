@@ -1,9 +1,10 @@
 export interface PaymentProvider {
     id?: number
     upmId?: string
+    userId: string
     type: 'Payoneer' | 'Paypal'
     name: 'Payoneer' | 'Paypal'
-    description: string
     status: string
-    transactionId?: string
+    handle?: string
+    providerId: string
 }

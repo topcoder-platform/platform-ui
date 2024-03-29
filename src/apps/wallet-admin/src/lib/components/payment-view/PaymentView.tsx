@@ -1,13 +1,16 @@
+/* eslint-disable react/no-array-index-key */
 /* eslint-disable unicorn/no-null */
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
 import React from 'react'
 
 import { Button, Collapsible } from '~/libs/ui'
+import { TOPCODER_URL } from '~/config/environments/default.env'
 
 import { WinningsAudit } from '../../models/WinningsAudit'
 import { Winning } from '../../models/WinningDetail'
-import { fetchAuditLogs, getMemberHandle } from '../../services/wallet'
+import { PayoutAudit } from '../../models/PayoutAudit'
+import { fetchAuditLogs, fetchPayoutAuditLogs, getMemberHandle } from '../../services/wallet'
 
 import styles from './PaymentView.module.scss'
 
@@ -16,11 +19,12 @@ interface PaymentViewProps {
 }
 
 const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
-    const [view, setView] = React.useState<'details' | 'audit'>('details')
+    const [view, setView] = React.useState<'details' | 'audit' | 'external_transaction'>('details')
     const [auditLines, setAuditLines] = React.useState<WinningsAudit[]>([])
+    const [externalTransactionAudit, setExternalTransactionAudit] = React.useState<PayoutAudit[]>([])
 
-    const handleToggleView = (): void => {
-        setView(view === 'details' ? 'audit' : 'details')
+    const handleToggleView = (newView: 'audit' | 'details' | 'external_transaction'): void => {
+        setView(newView)
     }
 
     React.useEffect(() => {
@@ -43,6 +47,11 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                 })
                 .catch(() => {
                     setAuditLines([])
+                })
+        } else if (view === 'external_transaction') {
+            fetchPayoutAuditLogs(props.payment.id)
+                .then(payoutAudit => {
+                    setExternalTransactionAudit(payoutAudit)
                 })
         }
     }, [props.payment.id, view])
@@ -72,11 +81,23 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
         return action
     }
 
+    const getLink = (externalId: string): string => `${TOPCODER_URL}/challenges/${externalId}`
+
     return (
         <div className={styles.formContainer}>
             <div className={styles.inputGroup}>
                 {view === 'details' && (
                     <>
+                        <div className={styles.infoItem}>
+                            <span className={styles.label}>Description</span>
+                            <a href={getLink(props.payment.externalId)} target='_blank' rel='noreferrer'>
+                                {props.payment.description}
+                            </a>
+                        </div>
+                        <div className={styles.infoItem}>
+                            <span className={styles.label}>Payment ID</span>
+                            <p className={styles.value}>{props.payment.id}</p>
+                        </div>
                         <div className={styles.infoItem}>
                             <span className={styles.label}>Handle</span>
                             <p className={styles.value}>{props.payment.handle}</p>
@@ -85,11 +106,6 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                         <div className={styles.infoItem}>
                             <span className={styles.label}>Type</span>
                             <p className={styles.value}>{props.payment.type}</p>
-                        </div>
-
-                        <div className={styles.infoItem}>
-                            <span className={styles.label}>Description</span>
-                            <p className={styles.value}>{props.payment.description}</p>
                         </div>
 
                         <div className={styles.infoItem}>
@@ -117,9 +133,15 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
 
                         <div className={styles.infoItem}>
                             <Button
-                                onClick={handleToggleView}
+                                onClick={() => handleToggleView('audit')}
                                 label='View Audit'
                             />
+                            {props.payment.status.toUpperCase() === 'PAID' && (
+                                <Button
+                                    onClick={() => handleToggleView('external_transaction')}
+                                    label='External Transaction Details'
+                                />
+                            )}
                         </div>
                     </>
                 )}
@@ -171,12 +193,83 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                         </div>
                         <div className={styles.infoItem}>
                             <Button
-                                onClick={handleToggleView}
+                                onClick={() => handleToggleView('details')}
                                 label='Back to Details'
                             />
                         </div>
                     </>
                 )}
+
+                {view === 'external_transaction' && (
+                    <>
+                        <div className={styles.auditSection}>
+                            {externalTransactionAudit && externalTransactionAudit.length > 0 && externalTransactionAudit.map((externalTransaction: PayoutAudit, index: number) => (
+                                <>
+                                    <Collapsible
+                                        key={`internal-record${index}`}
+                                        header={(
+                                            <h3>Internal Record</h3>
+                                        )}
+                                        containerClass={styles.container}
+                                        contentClass={styles.content}
+                                    >
+                                        <div className={styles.auditItem}>
+                                            <div>
+                                                <p>
+                                                    <strong>Provider Used:</strong>
+                                                    {' '}
+                                                    {externalTransaction.paymentMethodUsed}
+                                                </p>
+                                                <p>
+                                                    <strong>Status:</strong>
+                                                    {' '}
+                                                    {externalTransaction.status}
+                                                </p>
+                                                <p>
+                                                    <strong>Processed At:</strong>
+                                                    {' '}
+                                                    {externalTransaction.createdAt}
+                                                </p>
+                                                <p>
+                                                    <strong>Totl Amount Processed:</strong>
+                                                    {' '}
+                                                    {externalTransaction.totalNetAmount}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </Collapsible>
+                                    <Collapsible
+                                        key={`external-record${index}`}
+                                        header={(
+                                            <h3>External Record</h3>
+                                        )}
+                                        containerClass={styles.container}
+                                        contentClass={styles.content}
+                                    >
+                                        <div className={styles.auditItem}>
+                                            <div>
+                                                <pre>{JSON.stringify(externalTransaction.externalTransactionDetails, undefined, 2)}</pre>
+                                            </div>
+                                        </div>
+                                    </Collapsible>
+                                </>
+                            ))}
+                            {(externalTransactionAudit === undefined)
+                                && (
+                                    <div className={styles.auditItem}>
+                                        <p>No external transaction data is available</p>
+                                    </div>
+                                )}
+                        </div>
+                        <div className={styles.infoItem}>
+                            <Button
+                                onClick={() => handleToggleView('details')}
+                                label='Back to Details'
+                            />
+                        </div>
+                    </>
+                )}
+
             </div>
         </div>
     )
