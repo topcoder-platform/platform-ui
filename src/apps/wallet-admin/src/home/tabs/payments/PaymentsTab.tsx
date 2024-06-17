@@ -352,6 +352,10 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                             label: 'Cancelled',
                                             value: 'CANCELLED',
                                         },
+                                        {
+                                            label: 'Processing',
+                                            value: 'Processing',
+                                        },
                                     ],
                                     type: 'dropdown',
                                 },
