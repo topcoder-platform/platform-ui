@@ -79,12 +79,11 @@ export async function editPayment(updates: {
 }): Promise<string> {
     const body = JSON.stringify(updates)
     const url = `${baseUrl}/admin/winnings`
-    
+
     const response = await xhrPatchAsync<string, ApiResponse<string>>(url, body)
 
     if (response.status === 'error') {
         if (response.error && response.error.message) {
-            console.log(response.error.message)
             throw new Error(response.error.message)
         }
         throw new Error('Error editing payment')
