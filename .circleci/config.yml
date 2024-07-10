@@ -44,7 +44,7 @@ save_cache_settings: &save_cache_settings
 running_yarn_eslint: &running_yarn_eslint
     name: Running Yarn eslint
     command: |
-        yarn add eslint -g
+        yarn add eslint@8.57.0 -g
         yarn lint
 
 running_yarn_build: &running_yarn_build
@@ -258,6 +258,7 @@ workflows:
                           only:
                               - dev
                               - LVT-256
+                              - CORE-635
 
             - deployQa:
                   context: org-global
