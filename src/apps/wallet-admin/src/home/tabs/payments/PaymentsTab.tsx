@@ -219,6 +219,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         return confirmFlow?.content
     }, [confirmFlow])
 
+    // eslint-disable-next-line complexity
     const updatePayment = async (paymentId: string): Promise<void> => {
         const currentEditState = editStateRef.current
         // Send to server only the fields that have changed
@@ -262,12 +263,12 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             const updateMessage = await editPayment(updates)
             toast.success(updateMessage, { position: toast.POSITION.BOTTOM_RIGHT })
         } catch (err:any) {
-            if(err?.message){
+            if (err?.message) {
                 toast.error(err?.message, { position: toast.POSITION.BOTTOM_RIGHT })
             } else {
                 toast.error('Failed to update payment', { position: toast.POSITION.BOTTOM_RIGHT })
             }
-            
+
             return
         }
 

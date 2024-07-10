@@ -1,4 +1,4 @@
-import { ApiError } from "./ApiError"
+import { ApiError } from './ApiError'
 
 export default interface ApiResponse<T> {
     status: 'success' | 'error'
