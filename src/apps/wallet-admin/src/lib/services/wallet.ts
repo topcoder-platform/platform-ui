@@ -83,6 +83,10 @@ export async function editPayment(updates: {
     const response = await xhrPatchAsync<string, ApiResponse<string>>(url, body)
 
     if (response.status === 'error') {
+        if (response.error && response.error.message) {
+            throw new Error(response.error.message)
+        }
+
         throw new Error('Error editing payment')
     }
 

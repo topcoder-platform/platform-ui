@@ -258,6 +258,7 @@ workflows:
                           only:
                               - dev
                               - LVT-256
+                              - CORE-635
 
             - deployQa:
                   context: org-global
