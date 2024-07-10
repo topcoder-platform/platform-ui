@@ -37,6 +37,8 @@ function formatStatus(status: string): string {
             return 'Paid'
         case 'CANCELLED':
             return 'Cancel'
+        case 'PROCESSING':
+            return 'Processing'
         default:
             return status.replaceAll('_', ' ')
     }
@@ -354,7 +356,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                         },
                                         {
                                             label: 'Processing',
-                                            value: 'Processing',
+                                            value: 'PROCESSING',
                                         },
                                     ],
                                     type: 'dropdown',
