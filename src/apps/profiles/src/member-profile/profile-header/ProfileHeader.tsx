@@ -179,18 +179,6 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                             .format('MMM YYYY')}
                     </p>
                 </div>
-                {
-                    !canEdit && isTalentSearch ? (
-                        <div className={styles.hiringClickWrap}>
-                            <Button
-                                label='Hire Topcoder Talent'
-                                primary
-                                size='lg'
-                                onClick={handleStartHiringToggle}
-                            />
-                        </div>
-                    ) : undefined
-                }
             </div>
 
             {
