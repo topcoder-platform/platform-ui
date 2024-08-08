@@ -8,11 +8,9 @@ import {
     UserProfile,
 } from '~/libs/core'
 import { ProfilePicture, useCheckIsMobile } from '~/libs/shared'
-import { Button } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
-import { MemberProfileContextValue, useMemberProfileContext } from '../MemberProfile.context'
 
 import { OpenForGigs } from './OpenForGigs'
 import { ModifyMemberNameModal } from './ModifyMemberNameModal'
@@ -44,8 +42,6 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
 
     const [isHiringFormOpen, setIsHiringFormOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
-
-    const { isTalentSearch }: MemberProfileContextValue = useMemberProfileContext()
 
     const { state }: Location = useLocation()
 
@@ -179,18 +175,6 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                             .format('MMM YYYY')}
                     </p>
                 </div>
-                {
-                    !canEdit && isTalentSearch ? (
-                        <div className={styles.hiringClickWrap}>
-                            <Button
-                                label='Hire Topcoder Talent'
-                                primary
-                                size='lg'
-                                onClick={handleStartHiringToggle}
-                            />
-                        </div>
-                    ) : undefined
-                }
             </div>
 
             {

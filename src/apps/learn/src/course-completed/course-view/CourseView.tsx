@@ -54,7 +54,7 @@ const CourseView: FC<CourseViewProps> = (props: CourseViewProps) => (
                 size='md'
                 primary
                 label='Start a new course'
-                to={rootRoute}
+                to={rootRoute || '/'}
             />
         </div>
         <p className='body-main'>
