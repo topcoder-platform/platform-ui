@@ -2,13 +2,13 @@ import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { KeyedMutator } from 'swr'
 
+import { EnvironmentConfig } from '~/config'
 import { useMemberTraits, UserProfile, UserTraits } from '~/libs/core'
 import { PageTitle, TabsNavbar, TabsNavItem } from '~/libs/ui'
 
 import { AccountSettingsTabsConfig, AccountSettingsTabViews, getHashFromTabId, getTabIdFromHash } from './config'
 import { AccountTab } from './account'
 import { PreferencesTab } from './preferences'
-import { PaymentsTab } from './payments'
 import { ToolsTab } from './tools'
 import { TCandYouTab } from './tcandyou'
 import styles from './AccountSettingsTabs.module.scss'
@@ -31,9 +31,13 @@ const AccountSettingsTabs: FC<AccountSettingsTabsProps> = (props: AccountSetting
     } = useMemberTraits(props.profile.handle)
 
     function handleTabChange(tabId: string): void {
-        setActiveTab(tabId)
-        window.location.hash = getHashFromTabId(tabId)
-        mutateTraits() // mutate member traits to refresh the data
+        if (tabId === AccountSettingsTabViews.payment) {
+            window.location.href = `https://wallet.${EnvironmentConfig.TC_DOMAIN}`
+        } else {
+            setActiveTab(tabId)
+            window.location.hash = getHashFromTabId(tabId)
+            mutateTraits() // mutate member traits to refresh the data
+        }
     }
 
     return (
@@ -65,10 +69,6 @@ const AccountSettingsTabs: FC<AccountSettingsTabsProps> = (props: AccountSetting
 
             {activeTab === AccountSettingsTabViews.preferences && (
                 <PreferencesTab profile={props.profile} />
-            )}
-
-            {activeTab === AccountSettingsTabViews.payment && (
-                <PaymentsTab profile={props.profile} />
             )}
         </div>
     )
