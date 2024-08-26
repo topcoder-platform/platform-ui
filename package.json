@@ -118,7 +118,7 @@
     "shortid": "^2.2.16",
     "styled-components": "^5.3.6",
     "swr": "^1.3.0",
-    "tc-auth-lib": "topcoder-platform/tc-auth-lib#1.0.26",
+    "tc-auth-lib": "topcoder-platform/tc-auth-lib#1.0.27",
     "turndown": "^4.0.2",
     "typescript": "^4.8.4",
     "universal-navigation": "https://github.com/topcoder-platform/universal-navigation#9fc50d938be7182",

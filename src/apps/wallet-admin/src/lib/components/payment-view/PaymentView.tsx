@@ -150,24 +150,37 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                 {view === 'audit' && (
                     <>
                         <div className={styles.auditSection}>
-                            {auditLines &&
-                                auditLines.length > 0 &&
-                                auditLines.map((line) => (
+                            {auditLines
+                                && auditLines.length > 0
+                                && auditLines.map(line => (
                                     <Collapsible
                                         key={line.id}
-                                        header={<h3>{new Date(line.createdAt).toLocaleString()}</h3>}
+                                        header={
+                                            (
+                                                <h3>
+                                                    {
+                                                        new Date(line.createdAt)
+                                                            .toLocaleString()
+                                                    }
+                                                </h3>
+                                            )
+                                        }
                                         containerClass={styles.container}
-                                        contentClass={styles.content}>
+                                        contentClass={styles.content}
+                                    >
                                         <div className={styles.auditItem}>
                                             <div>
                                                 <p>
-                                                    <strong>User:</strong> {line.userId}
+                                                    <strong>User:</strong>
+                                                    {line.userId}
                                                 </p>
                                                 <p>
-                                                    <strong>Action:</strong> {formatAction(line.action)}
+                                                    <strong>Action:</strong>
+                                                    {formatAction(line.action)}
                                                 </p>
                                                 <p>
-                                                    <strong>Note:</strong> {line.note}
+                                                    <strong>Note:</strong>
+                                                    {line.note}
                                                 </p>
                                             </div>
                                         </div>
@@ -188,29 +201,34 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                 {view === 'external_transaction' && (
                     <>
                         <div className={styles.auditSection}>
-                            {externalTransactionAudit &&
-                                externalTransactionAudit.length > 0 &&
-                                externalTransactionAudit.map((externalTransaction: PayoutAudit, index: number) => (
+                            {externalTransactionAudit
+                                && externalTransactionAudit.length > 0
+                                && externalTransactionAudit.map((externalTransaction: PayoutAudit, index: number) => (
                                     <>
                                         <Collapsible
                                             key={`internal-record${index}`}
                                             header={<h3>Internal Record</h3>}
                                             containerClass={styles.container}
-                                            contentClass={styles.content}>
+                                            contentClass={styles.content}
+                                        >
                                             <div className={styles.auditItem}>
                                                 <div>
                                                     <p>
-                                                        <strong>Provider Used:</strong>{' '}
+                                                        <strong>Provider Used:</strong>
+                                                        {' '}
                                                         {externalTransaction.paymentMethodUsed}
                                                     </p>
                                                     <p>
-                                                        <strong>Status:</strong> {externalTransaction.status}
+                                                        <strong>Status:</strong>
+                                                        {externalTransaction.status}
                                                     </p>
                                                     <p>
-                                                        <strong>Processed At:</strong> {externalTransaction.createdAt}
+                                                        <strong>Processed At:</strong>
+                                                        {externalTransaction.createdAt}
                                                     </p>
                                                     <p>
-                                                        <strong>Totl Amount Processed:</strong>{' '}
+                                                        <strong>Total Amount Processed:</strong>
+                                                        {' '}
                                                         {externalTransaction.totalNetAmount}
                                                     </p>
                                                 </div>
@@ -220,7 +238,8 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                                             key={`external-record${index}`}
                                             header={<h3>External Record</h3>}
                                             containerClass={styles.container}
-                                            contentClass={styles.content}>
+                                            contentClass={styles.content}
+                                        >
                                             <div className={styles.auditItem}>
                                                 <div>
                                                     <pre>

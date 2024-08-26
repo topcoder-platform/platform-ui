@@ -18449,9 +18449,9 @@ tar@^6.1.13:
     mkdirp "^1.0.3"
     yallist "^4.0.0"
 
-tc-auth-lib@topcoder-platform/tc-auth-lib#1.0.26:
+tc-auth-lib@topcoder-platform/tc-auth-lib#1.0.27:
   version "1.0.2"
-  resolved "https://codeload.github.com/topcoder-platform/tc-auth-lib/tar.gz/3e1b78473b421327c492a814df3f6c72f17e860f"
+  resolved "https://codeload.github.com/topcoder-platform/tc-auth-lib/tar.gz/dc5b3a29ac3b8e2a0f386fce411c6533c2f33f05"
   dependencies:
     lodash "^4.17.19"
 
