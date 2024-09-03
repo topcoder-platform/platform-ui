@@ -110,7 +110,12 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
 
                         <div className={styles.infoItem}>
                             <span className={styles.label}>Net Payment</span>
-                            <p className={styles.value}>{props.payment.netPaymentNumber.toLocaleString(undefined, { currency: 'USD', style: 'currency' })}</p>
+                            <p className={styles.value}>
+                                {props.payment.netPaymentNumber.toLocaleString(undefined, {
+                                    currency: 'USD',
+                                    style: 'currency',
+                                })}
+                            </p>
                         </div>
 
                         <div className={styles.infoItem}>
@@ -124,18 +129,14 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                         </div>
 
                         {props.payment.datePaid !== '-' && (
-                            (
-                                <div className={styles.infoItem}>
-                                    <span className={styles.label}>Date Paid</span>
-                                    <p className={styles.value}>{props.payment.datePaid}</p>
-                                </div>
-                            ))}
+                            <div className={styles.infoItem}>
+                                <span className={styles.label}>Date Paid</span>
+                                <p className={styles.value}>{props.payment.datePaid}</p>
+                            </div>
+                        )}
 
                         <div className={styles.infoItem}>
-                            <Button
-                                onClick={() => handleToggleView('audit')}
-                                label='View Audit'
-                            />
+                            <Button onClick={() => handleToggleView('audit')} label='View Audit' />
                             {props.payment.status.toUpperCase() === 'PAID' && (
                                 <Button
                                     onClick={() => handleToggleView('external_transaction')}
@@ -149,53 +150,50 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                 {view === 'audit' && (
                     <>
                         <div className={styles.auditSection}>
-                            {auditLines && auditLines.length > 0 && auditLines.map(line => (
-                                <Collapsible
-                                    key={line.id}
-                                    header={(
-                                        <h3>
-                                            {
-                                                new Date(line.createdAt)
-                                                    .toLocaleString()
-                                            }
-                                        </h3>
-                                    )}
-                                    containerClass={styles.container}
-                                    contentClass={styles.content}
-                                >
-                                    <div className={styles.auditItem}>
-                                        <div>
-                                            <p>
-                                                <strong>User:</strong>
-                                                {' '}
-                                                {line.userId}
-                                            </p>
-                                            <p>
-                                                <strong>Action:</strong>
-                                                {' '}
-                                                {formatAction(line.action)}
-                                            </p>
-                                            <p>
-                                                <strong>Note:</strong>
-                                                {' '}
-                                                {line.note}
-                                            </p>
+                            {auditLines
+                                && auditLines.length > 0
+                                && auditLines.map(line => (
+                                    <Collapsible
+                                        key={line.id}
+                                        header={
+                                            (
+                                                <h3>
+                                                    {
+                                                        new Date(line.createdAt)
+                                                            .toLocaleString()
+                                                    }
+                                                </h3>
+                                            )
+                                        }
+                                        containerClass={styles.container}
+                                        contentClass={styles.content}
+                                    >
+                                        <div className={styles.auditItem}>
+                                            <div>
+                                                <p>
+                                                    <strong>User:</strong>
+                                                    {line.userId}
+                                                </p>
+                                                <p>
+                                                    <strong>Action:</strong>
+                                                    {formatAction(line.action)}
+                                                </p>
+                                                <p>
+                                                    <strong>Note:</strong>
+                                                    {line.note}
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
-                                </Collapsible>
-                            ))}
-                            {(auditLines === undefined || auditLines.length === 0)
-                                && (
-                                    <div className={styles.auditItem}>
-                                        <p>No audit data available</p>
-                                    </div>
-                                )}
+                                    </Collapsible>
+                                ))}
+                            {(auditLines === undefined || auditLines.length === 0) && (
+                                <div className={styles.auditItem}>
+                                    <p>No audit data available</p>
+                                </div>
+                            )}
                         </div>
                         <div className={styles.infoItem}>
-                            <Button
-                                onClick={() => handleToggleView('details')}
-                                label='Back to Details'
-                            />
+                            <Button onClick={() => handleToggleView('details')} label='Back to Details' />
                         </div>
                     </>
                 )}
@@ -203,73 +201,70 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                 {view === 'external_transaction' && (
                     <>
                         <div className={styles.auditSection}>
-                            {externalTransactionAudit && externalTransactionAudit.length > 0 && externalTransactionAudit.map((externalTransaction: PayoutAudit, index: number) => (
-                                <>
-                                    <Collapsible
-                                        key={`internal-record${index}`}
-                                        header={(
-                                            <h3>Internal Record</h3>
-                                        )}
-                                        containerClass={styles.container}
-                                        contentClass={styles.content}
-                                    >
-                                        <div className={styles.auditItem}>
-                                            <div>
-                                                <p>
-                                                    <strong>Provider Used:</strong>
-                                                    {' '}
-                                                    {externalTransaction.paymentMethodUsed}
-                                                </p>
-                                                <p>
-                                                    <strong>Status:</strong>
-                                                    {' '}
-                                                    {externalTransaction.status}
-                                                </p>
-                                                <p>
-                                                    <strong>Processed At:</strong>
-                                                    {' '}
-                                                    {externalTransaction.createdAt}
-                                                </p>
-                                                <p>
-                                                    <strong>Totl Amount Processed:</strong>
-                                                    {' '}
-                                                    {externalTransaction.totalNetAmount}
-                                                </p>
+                            {externalTransactionAudit
+                                && externalTransactionAudit.length > 0
+                                && externalTransactionAudit.map((externalTransaction: PayoutAudit, index: number) => (
+                                    <>
+                                        <Collapsible
+                                            key={`internal-record${index}`}
+                                            header={<h3>Internal Record</h3>}
+                                            containerClass={styles.container}
+                                            contentClass={styles.content}
+                                        >
+                                            <div className={styles.auditItem}>
+                                                <div>
+                                                    <p>
+                                                        <strong>Provider Used:</strong>
+                                                        {' '}
+                                                        {externalTransaction.paymentMethodUsed}
+                                                    </p>
+                                                    <p>
+                                                        <strong>Status:</strong>
+                                                        {externalTransaction.status}
+                                                    </p>
+                                                    <p>
+                                                        <strong>Processed At:</strong>
+                                                        {externalTransaction.createdAt}
+                                                    </p>
+                                                    <p>
+                                                        <strong>Total Amount Processed:</strong>
+                                                        {' '}
+                                                        {externalTransaction.totalNetAmount}
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </Collapsible>
-                                    <Collapsible
-                                        key={`external-record${index}`}
-                                        header={(
-                                            <h3>External Record</h3>
-                                        )}
-                                        containerClass={styles.container}
-                                        contentClass={styles.content}
-                                    >
-                                        <div className={styles.auditItem}>
-                                            <div>
-                                                <pre>{JSON.stringify(externalTransaction.externalTransactionDetails, undefined, 2)}</pre>
+                                        </Collapsible>
+                                        <Collapsible
+                                            key={`external-record${index}`}
+                                            header={<h3>External Record</h3>}
+                                            containerClass={styles.container}
+                                            contentClass={styles.content}
+                                        >
+                                            <div className={styles.auditItem}>
+                                                <div>
+                                                    <pre>
+                                                        {JSON.stringify(
+                                                            externalTransaction.externalTransactionDetails,
+                                                            undefined,
+                                                            2,
+                                                        )}
+                                                    </pre>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </Collapsible>
-                                </>
-                            ))}
-                            {(externalTransactionAudit === undefined)
-                                && (
-                                    <div className={styles.auditItem}>
-                                        <p>No external transaction data is available</p>
-                                    </div>
-                                )}
+                                        </Collapsible>
+                                    </>
+                                ))}
+                            {externalTransactionAudit === undefined && (
+                                <div className={styles.auditItem}>
+                                    <p>No external transaction data is available</p>
+                                </div>
+                            )}
                         </div>
                         <div className={styles.infoItem}>
-                            <Button
-                                onClick={() => handleToggleView('details')}
-                                label='Back to Details'
-                            />
+                            <Button onClick={() => handleToggleView('details')} label='Back to Details' />
                         </div>
                     </>
                 )}
-
             </div>
         </div>
     )
