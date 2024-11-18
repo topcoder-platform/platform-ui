@@ -32,7 +32,6 @@ export interface GlobalConfig {
     MEMBER_VERIFY_LOOKER: number
     ENABLE_TCA_CERT_MONETIZATION: boolean
     VANILLA_FORUM: {
-        ACCESS_TOKEN: string
         V2_URL: string
     },
     SUBDOMAIN: string,
