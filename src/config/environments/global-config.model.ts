@@ -37,7 +37,6 @@ export interface GlobalConfig {
     SUBDOMAIN: string,
     GAMIFICATION_ORG_ID: string
     RESTRICT_TALENT_SEARCH: boolean
-    SEGMENT_ANALYTICS_KEY: string
     USERFLOW_SURVEYS: {
         ACCOUNT_SETTINGS: string
         PROFILES: string

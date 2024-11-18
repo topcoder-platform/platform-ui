@@ -68,7 +68,6 @@ export const GAMIFICATION_ORG_ID = getReactEnv<string>('GAMIFICATION_ORG_ID', un
 // TODO: Revert this.  This was done because prod was restricting this and no one was available to fix the config
 // export const RESTRICT_TALENT_SEARCH = getReactEnv<boolean>('RESTRICT_TALENT_SEARCH', false)
 export const RESTRICT_TALENT_SEARCH = false
-export const SEGMENT_ANALYTICS_KEY = getReactEnv<string>('SEGMENT_ANALYTICS_KEY', undefined)
 
 export const USERFLOW_SURVEYS = {
     ACCOUNT_SETTINGS: getReactEnv<string>('USERFLOW_SURVEY_ACCOUNT_SETTINGS', '3e704fe0-dff4-4af4-abee-383ed162729e'),

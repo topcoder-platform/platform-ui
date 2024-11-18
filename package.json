@@ -24,7 +24,6 @@
     "@datadog/browser-logs": "^4.21.2",
     "@heroicons/react": "^1.0.6",
     "@popperjs/core": "^2.11.8",
-    "@segment/analytics-next": "^1.53.3",
     "@sprig-technologies/sprig-browser": "^2.20.1",
     "@storybook/addon-actions": "^7.0.5",
     "@storybook/react": "^7.0.5",
