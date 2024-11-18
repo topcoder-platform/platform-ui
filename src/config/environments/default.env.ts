@@ -39,7 +39,6 @@ export const REAUTH_OFFSET = 55
 export const SPRIG = { ENVIRONMENT_ID: getReactEnv<string | undefined>('SPRIG_ENV_ID', undefined) }
 
 export const VANILLA_FORUM = {
-    ACCESS_TOKEN: getReactEnv<string>('VANILLA_ACCESS_TOKEN', ''),
     V2_URL: 'https://vanilla.topcoder-dev.com/api/v2',
 }
 
