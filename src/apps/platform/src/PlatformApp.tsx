@@ -2,7 +2,6 @@ import { FC } from 'react'
 import { toast, ToastContainer } from 'react-toastify'
 
 import { useViewportUnitsFix } from '~/libs/shared'
-import { EnvironmentConfig } from '~/config'
 
 import { AppFooter } from './components/app-footer'
 import { AppHeader } from './components/app-header'

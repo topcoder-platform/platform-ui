@@ -1,8 +1,6 @@
-import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync } from '~/libs/core'
-
 import { GetUnreadMessageCountResponse } from './get-unread-message-count-response.model'
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 export async function getUnreadCountAsync(workId: string, handle: string): Promise<GetUnreadMessageCountResponse> {
 
     // Removing this because it's no longer needed and showed up in a pen test failure (PM-324)
