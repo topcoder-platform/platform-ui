@@ -33,6 +33,10 @@ _.functions(console).forEach((func) => {
 let leLogger;
 
 const log = (type, ...rest) => {
+  if (!config.SERVER_API_KEY) {
+    return;
+  }
+
   fetch("/community-app-assets/api/logger", {
     body: JSON.stringify({
       data: rest,

@@ -2,6 +2,7 @@ import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 
 import { EnvironmentConfig } from '~/config'
 import { BaseModal, Button } from '~/libs/ui'
+import { preventDefault } from '~/apps/earn/src/utils/misc'
 
 import styles from './DiceModal.module.scss'
 
@@ -49,7 +50,7 @@ const DiceModal: FC<DiceModalProps> = (props: DiceModalProps) => {
                     click below to refresh your settings.
                 </p>
                 <p className={styles.buttonContainer}>
-                    <a href={window.location.href}>
+                    <a href='#refresh-settings' onClick={preventDefault}>
                         <Button
                             secondary
                             label='Refresh Settings'

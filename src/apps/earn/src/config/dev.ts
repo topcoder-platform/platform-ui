@@ -9,7 +9,7 @@ const DevEarnConfig: EarnConfig = {
     /* Max number of recommended challenges */
     CHALLENGE_DETAILS_MAX_NUMBER_RECOMMENDED_CHALLENGES: 3,
 
-    SERVER_API_KEY: '79b2d5eb-c1fd-42c4-9391-6b2c9780d591',
+    SERVER_API_KEY: process.env.REACT_APP_LOG_SERVER_API_KEY as string,
 
     API: {
         V2: 'https://api.topcoder-dev.com/v2',

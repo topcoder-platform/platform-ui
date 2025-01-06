@@ -11,7 +11,7 @@ const ProdEarnConfig: EarnConfig = {
     /**
    * URL of Topcoder Connect Website
    */
-    SERVER_API_KEY: 'aa9ccf36-3936-450c-9983-097ddba51bef',
+    SERVER_API_KEY: process.env.REACT_APP_LOG_SERVER_API_KEY as string,
     API: {
         V2: 'https://api.topcoder-dev.com/v2',
         V3: 'https://api.topcoder-dev.com/v3',
