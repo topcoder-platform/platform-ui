@@ -2,9 +2,12 @@ import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 
 import { EnvironmentConfig } from '~/config'
 import { BaseModal, Button } from '~/libs/ui'
-import { preventDefault } from '~/apps/earn/src/utils/misc'
 
 import styles from './DiceModal.module.scss'
+
+const preventDefault = (ev: any): void => {
+    ev?.preventDefault?.()
+}
 
 interface DiceModalProps {
     isOpen: boolean
