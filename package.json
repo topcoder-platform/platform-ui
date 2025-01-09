@@ -203,7 +203,7 @@
     "react-docgen-typescript": "^2.2.2",
     "react-hot-loader": "^4.3.3",
     "resolve-url-loader": "^5.0.0",
-    "sass-loader": "^13.1.0",
+    "sass-loader": "^13.3.3",
     "serve": "^14.0.1",
     "start-server-and-test": "^1.14.0",
     "storybook": "7.6.10",
