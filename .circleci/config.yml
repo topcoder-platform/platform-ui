@@ -2,7 +2,7 @@ version: 2.1
 
 defaults: &defaults
     docker:
-        - image: node:16.14
+        - image: node:22.13
 
 deploy_defaults: &deploy_defaults
     docker:
