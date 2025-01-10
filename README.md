@@ -84,7 +84,7 @@ e.g.: `PROD-001 #comment adding readme notes #time 45m`
 - Typescript
 - React Scripts
 
-This app uses React 18, Typescript 4, and Node 16.
+This app uses React 18, Typescript 4, and Node 22.
 
 ### IDE
 
@@ -103,13 +103,13 @@ Once nvm is installed, run:
 At the root of the project directory you'll notice a file called `.nvmrc` which specifies the node version used by the project. The command `nvm use` will use the version specified in the file if no version is supplied on the command line.
 See [the nvm Github README](https://github.com/nvm-sh/nvm/blob/master/README.md#nvmrc) for more information on setting this up.
 
->**NOTE:** The current node version mentioned in the `.nvmrc` is `16.15.0`
+>**NOTE:** The current node version mentioned in the `.nvmrc` is `22.13.0`
 
 You can verify the versions of `nvm`, `node`, and `npm` using the commands below.
 | Command           | Supported Version  |
 | ----------------- | -------- |
 | `% npm -v`        | 8.5.5    |
-| `% node -v`       | v16.15.0 |
+| `% node -v`       | v22.13.0 |
 | `% nvm --version` | 0.39.1   |
 | `% nvm current`   | v15.15.0 |
 
