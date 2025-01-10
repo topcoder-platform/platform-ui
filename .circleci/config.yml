@@ -19,7 +19,7 @@ install_build_dependency: &install_build_dependency
         apt install jq -y
         curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
         unzip awscli-bundle.zip
-        sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+        ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
 
 install_dependency: &install_dependency
     name: Installation of build and deployment dependencies.
