@@ -7,6 +7,7 @@ import { DevCenterCard } from '../../dev-center-card'
 import { rootRoute } from '../../../../../dev-center.routes'
 
 import styles from './GetStartedCardsContainer.module.scss'
+import { BookOpenIcon } from '@heroicons/react/outline'
 
 const GetStartedCardsContainer: FC = () => (
     <div className={styles.container}>
@@ -29,14 +30,30 @@ const GetStartedCardsContainer: FC = () => (
         <DevCenterCard
             cornerIcon={<ApiCornerIcon />}
             icon={<ApiIcon />}
-            title='Platform UI Storybook'
+            title='Platform UI'
             titleClass={styles.apiTitle}
-            description='Explore the Platform UI Storybook for UI development.'
+            description='Check out instructions on how to get started with the Platform UI.'
             button={(
                 <LinkButton
                     primary
                     size='lg'
                     label='get started'
+                    className={styles.button}
+                    to={`${rootRoute}/platform-ui`}
+                />
+            )}
+        />
+        <DevCenterCard
+            cornerIcon={<ApiCornerIcon />}
+            icon={<BookOpenIcon className='icon-mx' />}
+            title='Platform UI Storybook'
+            titleClass=''
+            description='Explore the Platform UI Storybook for UI development.'
+            button={(
+                <LinkButton
+                    primary
+                    size='lg'
+                    label='explore'
                     className={styles.button}
                     to={`${rootRoute}/storybook`}
                 />
