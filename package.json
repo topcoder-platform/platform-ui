@@ -16,7 +16,9 @@
     "report:coverage": "nyc report --reporter=html",
     "report:coverage:text": "nyc report --reporter=text",
     "sb": "storybook dev -p 6006",
-    "sb:build": "storybook build -o build/storybook"
+    "sb:build": "storybook build -o build/storybook",
+    "cy:run": "cypress run --reporter junit",
+    "cy:ci": "start-server-and-test 'serve -s build -n -p 3000' http://localhost:3000 'cy:run'"
   },
   "dependencies": {
     "@datadog/browser-logs": "^4.21.2",
