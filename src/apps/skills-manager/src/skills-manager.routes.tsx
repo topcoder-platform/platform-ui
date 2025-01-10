@@ -3,30 +3,30 @@ import { Navigate } from 'react-router-dom'
 import { lazyLoad, LazyLoadedComponent, PlatformRoute, UserRole } from '~/libs/core'
 import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
 
-import { skillsManagerRootRoute, skillsManagerRoutes } from './skills-manager'
+import { skillsManagerRootRoute, skillsManagerRoutes as skillsManagerChildRoutes } from './skills-manager'
 
-const AdminApp: LazyLoadedComponent = lazyLoad(() => import('./AdminApp'))
+const SkillsManagerApp: LazyLoadedComponent = lazyLoad(() => import('./SkillsManagerApp'))
 
 export const rootRoute: string = (
-    EnvironmentConfig.SUBDOMAIN === AppSubdomain.admin ? '' : `/${AppSubdomain.admin}`
+    EnvironmentConfig.SUBDOMAIN === AppSubdomain.skillsManager ? '' : `/${AppSubdomain.skillsManager}`
 )
 
-export const toolTitle: string = ToolTitle.admin
+export const toolTitle: string = ToolTitle.skillsManager
 export const absoluteRootRoute: string = `${window.location.origin}${rootRoute}`
 
-export const adminRoutes: ReadonlyArray<PlatformRoute> = [
+export const skillsManagerRoutes: ReadonlyArray<PlatformRoute> = [
     {
         authRequired: true,
         children: [
-            ...skillsManagerRoutes,
+            ...skillsManagerChildRoutes,
             {
                 element: <Navigate to={`${rootRoute}${skillsManagerRootRoute}`} />,
-                id: 'Default Admin Route',
+                id: 'Default SkillsManager Route',
                 route: '',
             },
         ],
-        domain: AppSubdomain.admin,
-        element: <AdminApp />,
+        domain: AppSubdomain.skillsManager,
+        element: <SkillsManagerApp />,
         id: toolTitle,
         rolesRequired: [UserRole.administrator],
         route: rootRoute,
