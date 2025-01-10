@@ -16,9 +16,7 @@
     "report:coverage": "nyc report --reporter=html",
     "report:coverage:text": "nyc report --reporter=text",
     "sb": "storybook dev -p 6006",
-    "sb:build": "storybook build -o build/storybook",
-    "cy:run": "cypress run --reporter junit",
-    "cy:ci": "start-server-and-test 'serve -s build -n -p 3000' http://localhost:3000 'cy:run'"
+    "sb:build": "storybook build -o build/storybook"
   },
   "dependencies": {
     "@datadog/browser-logs": "^4.21.2",
@@ -181,7 +179,6 @@
     "craco-resolve-url-loader": "^1.0.0",
     "cross-env": "^7.0.3",
     "css-loader": "3.5.3",
-    "@cypress/code-coverage": "^3.10.0",
     "eslint": "^8.25.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-react-app": "^7.0.1",
