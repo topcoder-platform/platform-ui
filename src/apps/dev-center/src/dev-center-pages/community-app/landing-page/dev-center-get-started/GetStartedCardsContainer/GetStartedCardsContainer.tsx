@@ -1,5 +1,6 @@
 import { FC } from 'react'
 
+import { BookOpenIcon } from '@heroicons/react/outline'
 import { LinkButton } from '~/libs/ui'
 
 import { ApiCornerIcon, ApiIcon, CommunityAppCornerIcon, CommunityAppIcon } from '../../../../../assets/i'
@@ -7,7 +8,6 @@ import { DevCenterCard } from '../../dev-center-card'
 import { rootRoute } from '../../../../../dev-center.routes'
 
 import styles from './GetStartedCardsContainer.module.scss'
-import { BookOpenIcon } from '@heroicons/react/outline'
 
 const GetStartedCardsContainer: FC = () => (
     <div className={styles.container}>
