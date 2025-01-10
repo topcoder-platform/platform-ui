@@ -10,7 +10,7 @@ deploy_defaults: &deploy_defaults
 
 test_defaults: &test_defaults
     docker:
-        - image: cypress/browsers:node-22.13.0-chrome-131.0.6778.264-1-ff-134.0-edge-131.0.2903.112-1
+        - image: cypress/included:cypress-13.17.0-node-22.13.0-chrome-131.0.6778.264-1-ff-134.0-edge-131.0.2903.112-1
 
 install_build_dependency: &install_build_dependency
     name: Installation of build and deployment dependencies.
