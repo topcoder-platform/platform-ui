@@ -17,7 +17,7 @@ install_build_dependency: &install_build_dependency
     command: |
         apt update
         apt install jq -y
-        apt install python3-pip -y
+        apt install python -y
         curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
         unzip awscli-bundle.zip
         ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
