@@ -4,6 +4,9 @@ import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
 const Storybook: LazyLoadedComponent
     = lazyLoad(() => import('./dev-center-pages/platform-ui-app/storybook/Storybook'))
 
+const PlatformUIGettingStarted: LazyLoadedComponent
+    = lazyLoad(() => import('./dev-center-pages/platform-ui-app/getting-started/GettingStartedGuide'))
+
 const GettingStartedGuide: LazyLoadedComponent
     = lazyLoad(() => import('./dev-center-pages/community-app/getting-started/GettingStartedGuide'))
 
@@ -23,6 +26,10 @@ export const devCenterRoutes: ReadonlyArray<PlatformRoute> = [
             {
                 element: <Storybook />,
                 route: '/storybook',
+            },
+            {
+                element: <PlatformUIGettingStarted />,
+                route: '/platform-ui',
             },
             {
                 element: <GettingStartedGuide />,

@@ -4,9 +4,9 @@ import { Outlet, Routes } from 'react-router-dom'
 import { routerContext, RouterContextData } from '~/libs/core'
 import { SharedSwrConfig } from '~/libs/shared'
 
-import { toolTitle } from './admin.routes'
+import { toolTitle } from './skills-manager.routes'
 
-const AdminApp: FC<{}> = () => {
+const SkillsManagerApp: FC<{}> = () => {
     const { getChildRoutes }: RouterContextData = useContext(routerContext)
 
     return (
@@ -19,4 +19,4 @@ const AdminApp: FC<{}> = () => {
     )
 }
 
-export default AdminApp
+export default SkillsManagerApp
