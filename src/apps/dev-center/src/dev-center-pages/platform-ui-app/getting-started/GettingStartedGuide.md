@@ -179,3 +179,8 @@ This app allows members to manage details regarding their payments.
 
 Located `src/apps/wallet`.
 
+#### Wallet Admin App
+This app allows admins to manage settings regarding payments, payment methods and tax forms.
+
+Located `src/apps/wallet-admin`.
+
