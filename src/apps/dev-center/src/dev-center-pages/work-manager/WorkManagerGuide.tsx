@@ -6,8 +6,8 @@ import { rootRoute, toolTitle } from '../../dev-center.routes'
 import { LayoutDocHeader, MarkdownDoc } from '../../dev-center-lib/MarkdownDoc'
 import useMarkdown from '../../dev-center-lib/hooks/useMarkdown'
 
-import workManagerMarkdown from './WorkManager.md'
 import styles from './WorkManagerGuide.module.scss'
+import workManagerMarkdown from './WorkManager.md'
 
 export const WorkManagerGuide: React.FC = () => {
     const { doc, toc, title }: ReturnType<typeof useMarkdown> = useMarkdown({ uri: workManagerMarkdown })

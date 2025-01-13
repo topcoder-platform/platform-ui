@@ -8,4 +8,4 @@ export { ApiCornerIcon }
 export { ApiIcon }
 export { CommunityAppCornerIcon }
 export { CommunityAppIcon }
-export { WorkManagerIcon}
+export { WorkManagerIcon }
