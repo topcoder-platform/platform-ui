@@ -2,7 +2,7 @@ import { FC } from 'react'
 
 import { LinkButton } from '~/libs/ui'
 
-import { ApiCornerIcon, ApiIcon, CommunityAppCornerIcon, CommunityAppIcon } from '../../../../../assets/i'
+import { ApiCornerIcon, ApiIcon, CommunityAppCornerIcon, CommunityAppIcon, WorkManagerIcon } from '../../../../../assets/i'
 import { DevCenterCard } from '../../dev-center-card'
 import { rootRoute } from '../../../../../dev-center.routes'
 
@@ -39,6 +39,22 @@ const GetStartedCardsContainer: FC = () => (
                     label='get started'
                     className={styles.button}
                     to={`${rootRoute}/storybook`}
+                />
+            )}
+        />
+         <DevCenterCard
+            cornerIcon={<ApiCornerIcon />}
+            icon={<WorkManagerIcon className='icon-mx' />}
+            title='Work Manager'
+            titleClass={styles.communityTitle}
+            description='Get familiar with the Work Manager and execute the starter code.'
+            button={(
+                <LinkButton
+                    primary
+                    size='lg'
+                    label='get started'
+                    className={styles.button}
+                    to={`${rootRoute}/work-manager-guide`}
                 />
             )}
         />

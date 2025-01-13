@@ -7,6 +7,9 @@ const Storybook: LazyLoadedComponent
 const GettingStartedGuide: LazyLoadedComponent
     = lazyLoad(() => import('./dev-center-pages/community-app/getting-started/GettingStartedGuide'))
 
+const WorkManagerGuide: LazyLoadedComponent
+    = lazyLoad(() => import('./dev-center-pages/work-manager/WorkManagerGuide'))
+
 const DevCenterLandingPage: LazyLoadedComponent
     = lazyLoad(() => import('./dev-center-pages/community-app/landing-page/DevCenterLandingPage'))
 
@@ -27,6 +30,10 @@ export const devCenterRoutes: ReadonlyArray<PlatformRoute> = [
             {
                 element: <GettingStartedGuide />,
                 route: '/getting-started',
+            },
+            {
+                element: <WorkManagerGuide />,
+                route: '/work-manager-guide',
             },
             {
                 element: <DevCenterLandingPage />,
