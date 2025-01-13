@@ -10,7 +10,8 @@ import { rootRoute } from '../../../../../dev-center.routes'
 import styles from './GetStartedCardsContainer.module.scss'
 
 const GetStartedCardsContainer: FC = () => (
-    <div className={styles.container}>
+    <div>
+        <div className={styles.container}>
         <DevCenterCard
             cornerIcon={<CommunityAppCornerIcon />}
             icon={<CommunityAppIcon />}
@@ -43,11 +44,14 @@ const GetStartedCardsContainer: FC = () => (
                 />
             )}
         />
+        </div>
+        <div className={styles.container}>
+
         <DevCenterCard
             cornerIcon={<ApiCornerIcon />}
             icon={<BookOpenIcon className='icon-mx' />}
             title='Platform UI Storybook'
-            titleClass=''
+            titleClass={styles.apiTitle}
             description='Explore the Platform UI Storybook for UI development.'
             button={(
                 <LinkButton
@@ -76,6 +80,8 @@ const GetStartedCardsContainer: FC = () => (
             )}
         />
     </div>
+    </div>
+   
 )
 
 export default GetStartedCardsContainer
