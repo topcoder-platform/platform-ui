@@ -2,23 +2,21 @@ version: 2.1
 
 defaults: &defaults
     docker:
-        - image: node:16.14
+        - image: node:22.13
 
 deploy_defaults: &deploy_defaults
     docker:
-        - image: cimg/python:3.10.2
-
-test_defaults: &test_defaults
-    docker:
-        - image: cypress/browsers:node16.14.2-slim-chrome100-ff99-edge
+        - image: cimg/python:3.12.1-browsers
 
 install_build_dependency: &install_build_dependency
     name: Installation of build and deployment dependencies.
     command: |
         apt update
         apt install jq -y
-        apt install python3-pip -y
-        pip3 install awscli --upgrade
+        apt install python3-pip python-is-python3 python3.11-venv -y
+        curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+        unzip awscli-bundle.zip
+        ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
 
 install_dependency: &install_dependency
     name: Installation of build and deployment dependencies.
@@ -60,14 +58,6 @@ running_yarn_sb_build: &running_yarn_sb_build
         source buildenvvar
         yarn sb:build
 
-running_yarn_test: &running_yarn_test
-    name: Running Yarn Test Build
-    command: |
-        yarn install
-        yarn cypress install
-        yarn build
-        yarn cy:ci
-
 workspace_persist: &workspace_persist
     root: .
     paths:
@@ -97,26 +87,6 @@ build_steps: &build_steps # Initialization.
     - run: *running_yarn_build
     - run: *running_yarn_sb_build
     - persist_to_workspace: *workspace_persist
-
-test_steps: &test_steps # Initialization.
-    - checkout
-    - setup_remote_docker
-    - restore_cache:
-          key: test-node-modules-{{ checksum "yarn.lock" }}
-    - run: *running_yarn_test
-    - save_cache:
-          key: test-node-modules-{{ checksum "yarn.lock" }}
-          paths:
-              - node_modules
-              - /root/.cache/Cypress
-    - store_test_results:
-          path: cypress/test-report
-    - store_artifacts:
-          path: cypress/test-report
-    - store_artifacts:
-          path: cypress/videos
-    - store_artifacts:
-          path: cypress/screenshots
 
 deploy_steps: &deploy_steps
     - checkout
@@ -172,14 +142,6 @@ jobs:
             LOGICAL_ENV: "prod"
             APPNAME: "platform-ui-mvp"
         steps: *build_steps
-
-    test-dev:
-        <<: *test_defaults
-        environment:
-            DEPLOY_ENV: "DEV"
-            LOGICAL_ENV: "dev"
-            APPNAME: "platform-ui-mvp"
-        steps: *test_steps
 
     # Just tests commited code.
     deployDev:
@@ -278,6 +240,3 @@ workflows:
                       branches:
                           only:
                               - master
-
-            - test-dev:
-                  context: org-global

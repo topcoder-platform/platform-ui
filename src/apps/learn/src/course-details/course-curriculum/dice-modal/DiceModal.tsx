@@ -5,6 +5,10 @@ import { BaseModal, Button } from '~/libs/ui'
 
 import styles from './DiceModal.module.scss'
 
+const preventDefault = (ev: any): void => {
+    ev?.preventDefault?.()
+}
+
 interface DiceModalProps {
     isOpen: boolean
     onClose: () => void
@@ -49,7 +53,7 @@ const DiceModal: FC<DiceModalProps> = (props: DiceModalProps) => {
                     click below to refresh your settings.
                 </p>
                 <p className={styles.buttonContainer}>
-                    <a href={window.location.href}>
+                    <a href='#refresh-settings' onClick={preventDefault}>
                         <Button
                             secondary
                             label='Refresh Settings'

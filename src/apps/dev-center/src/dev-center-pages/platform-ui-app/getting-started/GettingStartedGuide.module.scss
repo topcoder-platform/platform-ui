@@ -1,0 +1,40 @@
+@import "@libs/ui/styles/includes";
+@import '../../../styles/variables';
+
+.contentLayout {
+  width: 100%;
+  padding-bottom: 0;
+
+  .contentLayout-outer {
+    width: 100%;
+
+    .contentLayout-inner {
+      width: 100%;
+      overflow: visible;
+
+      padding-top: $sp-4;
+
+      h4 {
+        margin-top: $sp-4;
+      }
+
+      table {
+        th {
+            font-weight: bold;
+        }
+        td {
+            border: 1px solid;
+            padding: $sp-1 $sp-4;
+        }
+      }
+    }
+  }
+}
+
+@include ltelg {
+  .contentLayout {
+    .contentLayout-outer {
+      padding: 0 $sp-4;
+    }
+  }
+}

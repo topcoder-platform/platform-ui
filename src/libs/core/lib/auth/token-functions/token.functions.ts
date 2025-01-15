@@ -1,7 +1,5 @@
 import { decodeToken } from 'tc-auth-lib'
 
-import { ID } from '@segment/analytics-next'
-
 import { authInitializeAsync } from '../authentication-functions'
 import { logError } from '../../logger'
 
@@ -27,14 +25,6 @@ export async function getAsync(): Promise<TokenModel> {
         if (!handle) {
             logError(`token did not have a handle: ${token}`)
             return Promise.resolve({})
-        }
-
-        // segment identify user
-        if (window && window.tcSegment) {
-            window.tcSegment.identify(userId as ID, {
-                handle,
-                roles,
-            })
         }
 
         return Promise.resolve({ handle, roles, token, userId })

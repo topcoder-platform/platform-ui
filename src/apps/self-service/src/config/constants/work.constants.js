@@ -42,7 +42,6 @@ export const VANILLA_EMBED_JS = EnvironmentConfig.ENV === 'prod'
     : 'https://vanilla.topcoder-dev.com/js/embed.js';
 export const VANILLA_EMBED_TYPE = 'mfe';
 export const VANILLA_FORUM_API = EnvironmentConfig.VANILLA_FORUM.V2_URL;
-export const VANILLA_ACCESS_TOKEN = EnvironmentConfig.VANILLA_FORUM.ACCESS_TOKEN;
 
 /**
  * Expire time period of auto saved intake form: 24 hours

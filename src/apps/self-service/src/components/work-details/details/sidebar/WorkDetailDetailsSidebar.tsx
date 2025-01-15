@@ -40,7 +40,7 @@ const WorkDetailDetailsSidebar: FC<{}> = () => {
                 <h4>supporting information</h4>
                 <a
                     className={styles.link}
-                    href={window.location.href}
+                    href='#1'
                     onClick={getClickHandler(setIsOrderContractModalOpen)}
                     rel='noopener noreferrer'
                     role='button'
@@ -50,7 +50,7 @@ const WorkDetailDetailsSidebar: FC<{}> = () => {
                 </a>
                 <a
                     className={styles.link}
-                    href={window.location.href}
+                    href='#2'
                     onClick={getClickHandler(setIsPrivacyPolicyModalOpen)}
                     rel='noopener noreferrer'
                     role='button'
@@ -60,7 +60,7 @@ const WorkDetailDetailsSidebar: FC<{}> = () => {
                 </a>
                 <a
                     className={styles.link}
-                    href={window.location.href}
+                    href='#3'
                     onClick={getClickHandler(setIsTermsModalOpen)}
                     rel='noopener noreferrer'
                     role='button'

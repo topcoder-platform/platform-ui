@@ -32,13 +32,11 @@ export interface GlobalConfig {
     MEMBER_VERIFY_LOOKER: number
     ENABLE_TCA_CERT_MONETIZATION: boolean
     VANILLA_FORUM: {
-        ACCESS_TOKEN: string
         V2_URL: string
     },
     SUBDOMAIN: string,
     GAMIFICATION_ORG_ID: string
     RESTRICT_TALENT_SEARCH: boolean
-    SEGMENT_ANALYTICS_KEY: string
     USERFLOW_SURVEYS: {
         ACCOUNT_SETTINGS: string
         PROFILES: string

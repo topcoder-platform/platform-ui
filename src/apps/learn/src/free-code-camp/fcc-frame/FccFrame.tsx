@@ -38,7 +38,7 @@ const FccFrame: FC<FccFrameProps> = (props: FccFrameProps) => {
             frameRef.current.contentWindow.postMessage(JSON.stringify({
                 data: { path: `/${lessonUrl}` },
                 event: 'fcc:url:update',
-            }), '*')
+            }), LearnConfig.CLIENT)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
