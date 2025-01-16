@@ -17,8 +17,8 @@ Preferably, use the VS Code IDE for development.
 Install git on your local machine. This is trivial for working in the community.
 You can follow these guides for installing GIT:
 
-- [Windows](https://local.topcoder-dev.com/devcenter/getting-started#23-install-git)
-- [Linux](https://local.topcoder-dev.com/devcenter/getting-started#197-install-git)
+- [Windows](https://devcenter.topcoder.com/getting-started#23-install-git)
+- [Linux](https://devcenter.topcoder.com/getting-started#197-install-git)
 
 ### nvm
 
