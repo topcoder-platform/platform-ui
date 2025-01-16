@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { FC, MutableRefObject, useEffect, useRef, useState } from 'react'
 import { connect } from 'react-redux'
-import { pick } from 'lodash'
 import classNames from 'classnames'
 
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
@@ -104,7 +103,9 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
     )
 }
 
-const mapStateToProps: any = (state: any) => pick(state.member, 'availableForGigs')
+const mapStateToProps: any = (state: any) => ({
+    availableForGigs: state.member.memberInfo?.availableForGigs,
+})
 
 const mapDispatchToProps: any = {
     updateMemberOpenForWork,

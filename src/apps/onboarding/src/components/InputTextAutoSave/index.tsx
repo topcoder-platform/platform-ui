@@ -28,7 +28,7 @@ export interface InputTextProps {
 }
 
 const InputTextAutoSave: FC<InputTextProps> = (props: InputTextProps) => {
-    const [value, setValue] = useState<InputValue>('')
+    const [value, setValue] = useState<InputValue>(props.value || '')
     useEffect(() => {
         setValue(props.value)
     }, [props.value])
