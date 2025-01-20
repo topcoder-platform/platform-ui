@@ -42,7 +42,7 @@ const memberReducer: any = (
                 memberInfo: {
                     ...state.memberInfo,
                     availableForGigs: action.payload,
-                }
+                },
             }
         case ACTIONS.MEMBER.SET_WORKS:
             return {
