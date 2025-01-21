@@ -37,6 +37,7 @@ const InputTextAutoSave: FC<InputTextProps> = (props: InputTextProps) => {
         <InputText
             {...props}
             value={value}
+            forceUpdateValue
             onChange={function onChange(event: FocusEvent<HTMLInputElement>) {
                 setValue(event.target.value)
             }}

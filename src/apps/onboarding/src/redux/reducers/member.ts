@@ -20,7 +20,6 @@ const initialState: {
     connectInfo?: ConnectInfo
     loadingMemberTraits?: boolean
     loadingMemberInfo?: boolean
-    availableForGigs?: boolean
 } = {
 }
 
@@ -40,7 +39,10 @@ const memberReducer: any = (
         case ACTIONS.MEMBER.SET_OPEN_FOR_WORK:
             return {
                 ...state,
-                availableForGigs: action.payload,
+                memberInfo: {
+                    ...state.memberInfo,
+                    availableForGigs: action.payload,
+                },
             }
         case ACTIONS.MEMBER.SET_WORKS:
             return {
