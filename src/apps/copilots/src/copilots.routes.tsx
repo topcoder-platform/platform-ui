@@ -27,7 +27,7 @@ export const copilotsRoutes: ReadonlyArray<PlatformRoute> = [
         id: toolTitle,
         rolesRequired: [
             UserRole.administrator,
-            UserRole.connectManager,
+            UserRole.projectManager,
         ],
         route: rootRoute,
     },

@@ -267,13 +267,15 @@ const CopilotRequestForm: FC<{}> = () => {
                         tabIndex={0}
                     />
                     <p className={styles.formRow}>Any specific skills or technology requirements that come to mind?</p>
-                    <InputSkillSelector
-                        placeholder='Enter skills you are searching for...'
-                        useWrapper={false}
-                        theme='tc-green'
-                        value={formValues.skills}
-                        onChange={handleSkillsChange}
-                    />
+                    <div className={styles.skillsWrapper}>
+                        <InputSkillSelector
+                            placeholder='Enter skills you are searching for...'
+                            useWrapper={false}
+                            theme='tc-green'
+                            value={formValues.skills}
+                            onChange={handleSkillsChange}
+                        />
+                    </div>
                     <p className={styles.formRow}>What&apos;s the planned start date for the copilot?</p>
                     <InputDatePicker
                         label='Copilot Start Date'
