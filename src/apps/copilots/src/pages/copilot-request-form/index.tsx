@@ -1,14 +1,15 @@
 import { FC, useContext, useState } from 'react'
 import { SWRResponse } from 'swr'
 import { bind, isEmpty } from 'lodash'
+import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
 import { profileContext, ProfileContextData } from '~/libs/core'
-import { Button, InputDatePicker, InputMultiselectOption,
+import { Button, IconSolid, InputDatePicker, InputMultiselectOption,
     InputRadio, InputSelect, InputText, InputTextarea } from '~/libs/ui'
 import { InputSkillSelector } from '~/libs/shared'
 
-import { useFetchProjects } from '../../services/projects'
+import { saveCopilotRequest, useFetchProjects } from '../../services/projects'
 import { ProjectTypes } from '../../constants'
 import { Project } from '../../models/Project'
 
@@ -47,6 +48,11 @@ const CopilotRequestForm: FC<{}> = () => {
             ...prevFormValues,
             paymentType: t,
         }))
+        setFormErrors((prevFormErrors: any) => {
+            const updatedErrors = { ...prevFormErrors }
+            delete updatedErrors.paymentType
+            return updatedErrors
+        })
         setPaymentType(t)
     }
 
@@ -72,6 +78,24 @@ const CopilotRequestForm: FC<{}> = () => {
             ...oldFormValues,
             [key]: value,
         })
+
+        // Clear specific field error
+        setFormErrors((prevFormErrors: any) => {
+            const updatedErrors = { ...prevFormErrors }
+            let errorKey: string
+            switch (key) {
+                case 'copilotUsername':
+                    errorKey = 'existingCopilot'
+                    break
+                default:
+                    errorKey = key
+                    break
+            }
+
+            // Remove the error from the updatedErrors object
+            delete updatedErrors[errorKey]
+            return updatedErrors
+        })
         setIsFormChanged(true)
     }
 
@@ -85,6 +109,12 @@ const CopilotRequestForm: FC<{}> = () => {
             ...prevFormValues,
             skills: updatedSkills,
         }))
+
+        setFormErrors((prevFormErrors: any) => {
+            const updatedErrors = { ...prevFormErrors }
+            delete updatedErrors.skills
+            return updatedErrors
+        })
         setIsFormChanged(true)
     }
 
@@ -92,15 +122,31 @@ const CopilotRequestForm: FC<{}> = () => {
         const updatedFormErrors: { [key: string]: string } = {}
 
         if (!formValues.projectId) {
-            updatedFormErrors.project = 'Project is required'
+            updatedFormErrors.projectId = 'Project is required'
+        }
+
+        if (!existingCopilot) {
+            updatedFormErrors.existingCopilot = 'Selection is required'
+        }
+
+        if (!formValues.complexity) {
+            updatedFormErrors.complexity = 'Selection is required'
+        }
+
+        if (!formValues.requiresCommunicatn) {
+            updatedFormErrors.requiresCommunicatn = 'Selection is required'
+        }
+
+        if (!formValues.paymentType) {
+            updatedFormErrors.paymentType = 'Selection is required'
         }
 
         if (!formValues.projectType) {
             updatedFormErrors.projectType = 'Selecting project type is required'
         }
 
-        if (!formValues.projectOverview) {
-            updatedFormErrors.projectOverview = 'Providing a project overview is required'
+        if (!formValues.overview) {
+            updatedFormErrors.overview = 'Providing a project overview is required'
         }
 
         if (!formValues.skills) {
@@ -124,7 +170,19 @@ const CopilotRequestForm: FC<{}> = () => {
         }
 
         if (isEmpty(updatedFormErrors)) {
-            // call the API to update the trait based on action type
+            saveCopilotRequest(formValues)
+                .then(() => {
+                    toast.success('Subscription updated successfully')
+                    // Reset form after successful submission
+                    setFormValues({})
+                    setIsFormChanged(false)
+                    setFormErrors({})
+                    setExistingCopilot('')
+                    setPaymentType('')
+                })
+                .catch(() => {
+                    toast.error('Error updating subscription')
+                })
         }
 
         setFormErrors(updatedFormErrors)
@@ -152,7 +210,7 @@ const CopilotRequestForm: FC<{}> = () => {
                         label='Project'
                         placeholder='Select the project you wish to request a copilot for'
                         dirty
-                        error={formErrors.project}
+                        error={formErrors.projectId}
                     />
                     <p className={styles.formRow}>
                         Are you already working with a copilot that you&apos;d love to work with on this project
@@ -198,6 +256,12 @@ const CopilotRequestForm: FC<{}> = () => {
                             </div>
                         )
                     }
+                    {formErrors.existingCopilot && (
+                        <p className={styles.error}>
+                            <IconSolid.ExclamationIcon />
+                            {formErrors.existingCopilot}
+                        </p>
+                    )}
 
                     <p className={styles.formRow}>What type of project are you working on?</p>
                     <InputSelect
@@ -252,6 +316,12 @@ const CopilotRequestForm: FC<{}> = () => {
                             noCaps
                             leftAlignText
                         />
+                        {formErrors.complexity && (
+                            <p className={styles.error}>
+                                <IconSolid.ExclamationIcon />
+                                {formErrors.complexity}
+                            </p>
+                        )}
                     </div>
                     <p className={styles.formRow}>
                         Please provide an overview of the project the copilot will undertake
@@ -263,11 +333,11 @@ const CopilotRequestForm: FC<{}> = () => {
                          type of work and project which is to be undertaken.'
                         value={formValues.overview}
                         onChange={bind(handleFormValueChange, this, 'overview')}
-                        error={formErrors.projectOverview}
-                        tabIndex={0}
+                        error={formErrors.overview}
+                        dirty
                     />
                     <p className={styles.formRow}>Any specific skills or technology requirements that come to mind?</p>
-                    <div className={styles.skillsWrapper}>
+                    <div className={formErrors.skills ? styles.skillsError : styles.skillsWrapper}>
                         <InputSkillSelector
                             placeholder='Enter skills you are searching for...'
                             useWrapper={false}
@@ -276,6 +346,12 @@ const CopilotRequestForm: FC<{}> = () => {
                             onChange={handleSkillsChange}
                         />
                     </div>
+                    {formErrors.skills && (
+                        <p className={styles.error}>
+                            <IconSolid.ExclamationIcon />
+                            {formErrors.skills}
+                        </p>
+                    )}
                     <p className={styles.formRow}>What&apos;s the planned start date for the copilot?</p>
                     <InputDatePicker
                         label='Copilot Start Date'
@@ -344,6 +420,12 @@ const CopilotRequestForm: FC<{}> = () => {
                             onChange={bind(handleFormValueChange, this, 'requiresCommunicatn')}
                         />
                     </div>
+                    {formErrors.requiresCommunicatn && (
+                        <p className={styles.error}>
+                            <IconSolid.ExclamationIcon />
+                            {formErrors.requiresCommunicatn}
+                        </p>
+                    )}
                     <p className={styles.formRow}>Will this role be standard payments or something else?</p>
                     <div className={styles.formRadioBtn}>
                         <InputRadio
@@ -377,6 +459,12 @@ const CopilotRequestForm: FC<{}> = () => {
                                 />
                             )}
                     </div>
+                    {formErrors.paymentType && (
+                        <p className={styles.error}>
+                            <IconSolid.ExclamationIcon />
+                            {formErrors.paymentType}
+                        </p>
+                    )}
                     <Button
                         primary
                         size='lg'
