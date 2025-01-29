@@ -172,7 +172,7 @@ const CopilotRequestForm: FC<{}> = () => {
         if (isEmpty(updatedFormErrors)) {
             saveCopilotRequest(formValues)
                 .then(() => {
-                    toast.success('Subscription updated successfully')
+                    toast.success('Copilot request sent successfully')
                     // Reset form after successful submission
                     setFormValues({})
                     setIsFormChanged(false)
@@ -181,7 +181,7 @@ const CopilotRequestForm: FC<{}> = () => {
                     setPaymentType('')
                 })
                 .catch(() => {
-                    toast.error('Error updating subscription')
+                    toast.error('Error sending copilot request')
                 })
         }
 
