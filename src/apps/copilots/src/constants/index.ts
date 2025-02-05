@@ -4,7 +4,8 @@ export enum ProjectType {
     marathonCopilot = 'Data Science (Marathon Copilot)',
     sprintCopilot = 'Data Science (Sprint Copilot)',
     marathonTester = 'Data Science (Marathon Tester)',
-    qa = 'QA',
+    qa = 'QA (Quality Assurance)',
+    ai='AI (Artificial Intelligence)',
 }
 
 export const ProjectTypes = [
@@ -14,4 +15,5 @@ export const ProjectTypes = [
     ProjectType.marathonTester,
     ProjectType.sprintCopilot,
     ProjectType.qa,
+    ProjectType.ai,
 ]

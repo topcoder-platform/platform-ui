@@ -133,8 +133,8 @@ const CopilotRequestForm: FC<{}> = () => {
             updatedFormErrors.complexity = 'Selection is required'
         }
 
-        if (!formValues.requiresCommunicatn) {
-            updatedFormErrors.requiresCommunicatn = 'Selection is required'
+        if (!formValues.requiresCommunication) {
+            updatedFormErrors.requiresCommunication = 'Selection is required'
         }
 
         if (!formValues.paymentType) {
@@ -174,7 +174,21 @@ const CopilotRequestForm: FC<{}> = () => {
                 .then(() => {
                     toast.success('Copilot request sent successfully')
                     // Reset form after successful submission
-                    setFormValues({})
+                    setFormValues({
+                        complexity: '',
+                        copilotUsername: '',
+                        numHoursPerWeek: '',
+                        numWeeks: '',
+                        otherPaymentType: '',
+                        overview: '',
+                        paymentType: '',
+                        projectId: '',
+                        projectType: '',
+                        requiresCommunication: '',
+                        skills: [],
+                        startDate: undefined,
+                        tzRestrictions: '',
+                    })
                     setIsFormChanged(false)
                     setFormErrors({})
                     setExistingCopilot('')
@@ -251,7 +265,7 @@ const CopilotRequestForm: FC<{}> = () => {
                                     tabIndex={0}
                                     type='text'
                                     onChange={bind(handleFormValueChange, this, 'copilotUsername')}
-                                    value={formValues.copilotUserName}
+                                    value={formValues.copilotUsername}
                                 />
                             </div>
                         )
@@ -369,34 +383,37 @@ const CopilotRequestForm: FC<{}> = () => {
                         label='Weeks'
                         name='weeks'
                         placeholder='Type the number of weeks'
-                        value={formValues.numWeeks as string}
+                        value={formValues.numWeeks?.toString()}
                         onChange={bind(handleFormValueChange, this, 'numWeeks')}
                         error={formErrors.numWeeks}
                         tabIndex={0}
+                        forceUpdateValue
                     />
                     <p className={styles.formRow}>Are there any timezone requirements or restrictions?</p>
                     <InputText
                         dirty
                         type='text'
                         label='Timezone Requirements'
-                        name='weeks'
+                        name='tzRequirements'
                         placeholder='Type your response here'
                         value={formValues.tzRestrictions as string}
                         onChange={bind(handleFormValueChange, this, 'tzRestrictions')}
                         error={formErrors.tzRestrictions}
                         tabIndex={0}
+                        forceUpdateValue
                     />
                     <p className={styles.formRow}>What do you expect the commitment to be per week in hours?</p>
                     <InputText
                         dirty
                         type='number'
                         label='Hours'
-                        name='weeks'
+                        name='hours'
                         placeholder='Type the number of hours required per week'
-                        value={formValues.numHoursPerWeek as string}
+                        value={formValues.numHoursPerWeek?.toString()}
                         onChange={bind(handleFormValueChange, this, 'numHoursPerWeek')}
                         error={formErrors.numHoursPerWeek}
                         tabIndex={0}
+                        forceUpdateValue
                     />
                     <p className={styles.formRow}>
                         Will this project require direct spoken communication with the customer
@@ -408,19 +425,19 @@ const CopilotRequestForm: FC<{}> = () => {
                             name='yes'
                             id='yes'
                             value='yes'
-                            checked={formValues.requiresCommunicatn === 'yes'}
-                            onChange={bind(handleFormValueChange, this, 'requiresCommunicatn')}
+                            checked={formValues.requiresCommunication === 'yes'}
+                            onChange={bind(handleFormValueChange, this, 'requiresCommunication')}
                         />
                         <InputRadio
                             label='No'
                             name='no'
                             id='no'
                             value='no'
-                            checked={formValues.requiresCommunicatn === 'no'}
-                            onChange={bind(handleFormValueChange, this, 'requiresCommunicatn')}
+                            checked={formValues.requiresCommunication === 'no'}
+                            onChange={bind(handleFormValueChange, this, 'requiresCommunication')}
                         />
                     </div>
-                    {formErrors.requiresCommunicatn && (
+                    {formErrors.requiresCommunication && (
                         <p className={styles.error}>
                             <IconSolid.ExclamationIcon />
                             {formErrors.requiresCommunicatn}
