@@ -60,6 +60,12 @@ $btn-secondary-border-width: $border;
         justify-content: left;
     }
 
+    &:global(.btn-text-wrap) {
+        white-space: normal;
+        word-wrap: break-word;
+        text-align: left;
+    }
+
     // Define variants
     &:global(.btn-variant-danger) {
         --btn-variant: #{$red-120};

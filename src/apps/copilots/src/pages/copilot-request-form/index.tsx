@@ -303,6 +303,7 @@ const CopilotRequestForm: FC<{}> = () => {
                             customRadius
                             noCaps
                             leftAlignText
+                            textWrap
                         />
                         <Button
                             secondary
@@ -316,6 +317,7 @@ const CopilotRequestForm: FC<{}> = () => {
                             customRadius
                             noCaps
                             leftAlignText
+                            textWrap
                         />
                         <Button
                             secondary
@@ -329,6 +331,7 @@ const CopilotRequestForm: FC<{}> = () => {
                             customRadius
                             noCaps
                             leftAlignText
+                            textWrap
                         />
                         {formErrors.complexity && (
                             <p className={styles.error}>
