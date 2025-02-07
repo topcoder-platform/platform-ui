@@ -27,6 +27,7 @@ export interface BaseButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
     customRadius?: boolean
     noCaps?: boolean
     leftAlignText?: boolean
+    textWrap?: boolean
 }
 
 const BaseButton: FC<BaseButtonProps> = props => {
@@ -47,6 +48,7 @@ const BaseButton: FC<BaseButtonProps> = props => {
         'btn-style-primary': props.primary,
         'btn-style-secondary': props.secondary,
         [`btn-variant-${props.variant}`]: !!props.variant,
+        'btn-text-wrap': props.textWrap,
     })
 
     return (
