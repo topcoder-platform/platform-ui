@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useContext, useReducer, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useRef, useEffect, useReducer, useState } from 'react'
 import { Button, LinkButton, LoadingSpinner, PageDivider, PageTitle } from '~/libs/ui'
 import { PlusIcon } from '@heroicons/react/solid'
 import { useLocation, useParams } from 'react-router-dom'
@@ -11,7 +11,6 @@ import {
     PageHeader,
 } from '../../lib/components'
 import { ChallengeFilterCriteria, ChallengeResource, ChallengeResourceFilterCriteria } from '../../lib/models'
-import { useOnComponentDidMount } from '../../lib/hooks'
 import {
     addChallengeResource,
     deleteChallengeResource,
@@ -42,34 +41,32 @@ export const ManageUserPage: FC = () => {
     const pageTitle = 'Manage Users'
     const { challengeId = '' } = useParams()
     const [filterCriteria, setFilterCriteria]: [
-    ChallengeResourceFilterCriteria,
-    Dispatch<SetStateAction<ChallengeResourceFilterCriteria>>,
-  ] = useState<ChallengeResourceFilterCriteria>({
-      page: 1,
-      perPage: 25,
-      roleId: '',
-  })
+        ChallengeResourceFilterCriteria,
+        Dispatch<SetStateAction<ChallengeResourceFilterCriteria>>,
+    ] = useState<ChallengeResourceFilterCriteria>({
+        page: 1,
+        perPage: 25,
+        roleId: '',
+    })
     const [users, setUsers] = useState<Array<ChallengeResource>>([])
-    const { filter: doFilter, filtering, filtered } = useFilter({ filterCriteria, challengeId })
+    const { filter: doFilter, filtering, filtered, totalUsers } = useFilter({ filterCriteria, challengeId })
     const { remove: doRemove, removing, removed } = useRemove({ challengeId })
     const [openAddUserDialog, setOpenAddUserDialog] = useState(false)
 
     const filter = () => {
-        doFilter()
-            .then(data => {
+            doFilter().then((data) => {
                 setUsers(data)
+                window.scrollTo({ top: 0, left: 0 })
             })
     }
 
     const remove = (usersToRemove: Array<ChallengeResource>) => {
-        const removeUser = (user: ChallengeResource) => setUsers(oldUsers => oldUsers.filter(i => i.id !== user.id))
+        const removeUser = (user: ChallengeResource) => setUsers((oldUsers) => oldUsers.filter((i) => i.id !== user.id))
 
         if (usersToRemove.length === 1) {
-            doRemove(usersToRemove[0])
-                .then(() => removeUser(usersToRemove[0]))
+            doRemove(usersToRemove[0]).then(() => removeUser(usersToRemove[0]))
         } else {
-            Promise.all(usersToRemove.map(usr => doRemove(usr)
-                .then(() => removeUser(usr))))
+            Promise.all(usersToRemove.map((usr) => doRemove(usr).then(() => removeUser(usr))))
         }
     }
 
@@ -89,13 +86,39 @@ export const ManageUserPage: FC = () => {
         if (successCount) {
             const msg = successCount > 1 ? `${successCount} users have been added.` : 'User has been added.'
             toast.success(msg)
-            filter()
+            if (!filterCriteria.roleId || filterCriteria.roleId === roleId) {
+                filter()
+            }
         }
     }
 
-    useOnComponentDidMount(() => {
+    // Init
+    const [filtersInited, setFiltersInited] = useState(false)
+    useEffect(() => {
+        if (filtersInited) {
         filter()
-    })
+        }
+    }, [filtersInited])
+
+    // Page change
+    const [pageChangeEvent, setPageChangeEvent] = useState(false)
+    const previousPageChangeEvent = useRef(false)
+    useEffect(() => {
+        if (pageChangeEvent) {
+        filter()
+        setPageChangeEvent(false)
+        previousPageChangeEvent.current = true
+        }
+    }, [pageChangeEvent])
+
+    // Reset
+    const [resetEvent, setResetEvent] = useState(false)
+    useEffect(() => {
+        if (resetEvent) {
+        filter()
+        setResetEvent(false)
+        }
+    }, [resetEvent])
 
     return (
         <>
@@ -116,7 +139,15 @@ export const ManageUserPage: FC = () => {
                     filterCriteria={filterCriteria}
                     onFilterCriteriaChange={setFilterCriteria}
                     onFilter={filter}
-                    isFilteringOrRemoving={filtering || removing}
+                    onFiltersInitialize={() => {
+                        setFiltersInited(true)
+                    }}
+                    disabled={filtering || removing || !filtersInited}
+                    showResetButton={previousPageChangeEvent.current && filtered && users.length === 0}
+                    onReset={() => {
+                        previousPageChangeEvent.current = false
+                        setResetEvent(true)
+                    }}
                 />
                 <PageDivider />
                 {filtering && (
@@ -125,9 +156,24 @@ export const ManageUserPage: FC = () => {
                     </div>
                 )}
                 {filtered && users.length === 0 && <p className={styles.noRecordFound}> No users. </p>}
-                {filtered && users.length !== 0 && <ChallengeUserList users={users} onUsersRemove={remove} />}
+                {filtered && users.length !== 0 && (
+                    <ChallengeUserList
+                        users={users}
+                        onUsersRemove={remove}
+                        paging={{
+                        page: filterCriteria.page,
+                        totalPages: Math.ceil(totalUsers / filterCriteria.perPage),
+                        }}
+                        onPageChange={(page) => {
+                        setFilterCriteria({ ...filterCriteria, page })
+                        setPageChangeEvent(true)
+                        }}
+                    />
+                )}
             </PageContent>
-            <ChallengeAddUserDialog open={openAddUserDialog} setOpen={setOpenAddUserDialog} onAdd={add} />
+            {openAddUserDialog && (
+                <ChallengeAddUserDialog open={openAddUserDialog} setOpen={setOpenAddUserDialog} onAdd={add} />
+            )}
         </>
     )
 }
@@ -233,6 +279,7 @@ function useFilter({
         filtering: state.isLoading,
         filtered: state.filtered,
         filter,
+    totalUsers: state.totalUsers,
     }
 }
 

@@ -1,0 +1,81 @@
+@import '@libs/ui/styles/includes';
+@import '@libs/ui/styles/typography';
+
+.mobileListView {
+  > *:nth-child(odd) {
+    background: $black-5;
+  }
+}
+
+.mobileListViewItemContainer {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  padding: $sp-4;
+  border-radius: $sp-2;
+
+  .rows {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .row1,
+    .row2,
+    .row3 {
+      display: grid;
+      gap: 16px 32px;
+      align-items: center;
+    }
+
+    .row1 {
+      grid-template-columns: 1fr auto;
+      margin-top: 4px;
+    }
+
+    .row2 {
+      grid-template-columns: 40% 1fr auto;
+    }
+
+    .row3 {
+      grid-template-columns: 1fr auto;
+    }
+  }
+
+  @media (max-width: 567px) {
+    grid-template-columns: 1fr;
+    gap: 8px;
+
+    .rows {
+      .row2 {
+        gap: 0 24px;
+
+        > :nth-child(1) {
+          grid-column: 1 / span 2;
+        }
+
+        > :nth-child(2) {
+          justify-self: flex-end;
+        }
+
+        > :nth-child(3) {
+          grid-row: 2;
+          grid-column: 3;
+          justify-self: flex-end;
+        }
+      }
+
+      .row3 {
+        grid-template-columns: 1fr;
+
+        > :nth-child(2) {
+          justify-self: flex-end;
+        }
+      }
+    }
+  }
+}
+
+.propertyElement {
+  @extend .medium-subtitle;
+  word-break: break-word;
+  width: fit-content;
+}

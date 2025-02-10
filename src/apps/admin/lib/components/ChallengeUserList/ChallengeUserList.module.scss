@@ -1,3 +1,5 @@
+@import '../../styles/includes';
+
 .challengeUserList {
   padding: 0 15px;
 }
@@ -17,6 +19,10 @@
 
 .removeSelectionButtonContainer {
   padding: 20px 0 30px;
+
+  @media (max-width: #{$mobile-max}) {
+    text-align: center;
+  }
 }
 
 .removingLoadingSpinner {
@@ -36,4 +42,9 @@
 
 .registeredCell {
   text-align: left;
+  word-break: break-all;
+
+  @media (max-width: 984px) {
+    text-align: right;
+  }
 }

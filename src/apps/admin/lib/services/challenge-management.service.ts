@@ -103,3 +103,11 @@ export const deleteChallengeResource = async ({
 })
 
 export const addChallengeResource = async (data: { challengeId: string; memberHandle: string; roleId: string }) => xhrPostAsync(`${EnvironmentConfig.API.V5}/resources`, data)
+
+/**
+ * Gets the challenge details by id.
+ * @param {string} id the challenge id.
+ */
+export const getChallengeById = async (id: Challenge['id']) => {
+  return xhrGetAsync<Challenge>(`${challengeBaseUrl}/challenges/${id}`)
+}

@@ -12,19 +12,28 @@ import {
 } from 'react'
 import { Button, InputCheckbox, LoadingSpinner, Table, type TableColumn } from '~/libs/ui'
 import _ from 'lodash'
-import { ChallengeResource, ResourceEmail } from '../../models'
+import { Challenge, ChallengeResource, ChallengeStatus, ResourceEmail } from '../../models'
 
 import { ChallengeManagementContext } from '../../contexts'
-import { getResourceEmails } from '../../services'
+import { getChallengeById, getResourceEmails } from '../../services'
 import { RemoveUsersConfirmDialog } from '../RemoveUsersConfirmDialog'
 import styles from './ChallengeUserList.module.scss'
+import { useOnComponentDidMount } from '../../hooks'
+import { useParams } from 'react-router-dom'
+import { useWindowSize } from '~/libs/shared'
+import { MobileListView } from './MobileListView'
+import { Paging } from '../../models/challenge-management/Pagination'
+import { Pagination } from '../common/Pagination'
 
 export interface ChallengeUserListProps {
   users: ChallengeResource[]
+  paging: Paging
   onUsersRemove: (users: Array<ChallengeResource>) => void
+  onPageChange: (page: number) => void
 }
 
 const ChallengeUserListContext = createContext<{
+  challenge?: Challenge
   users: ChallengeResource[]
   userEmails: ResourceEmail[]
   selectedUsers: Set<ChallengeResource['id']>
@@ -43,13 +52,13 @@ const ChallengeUserListContext = createContext<{
 const HeaderCheckbox: FC = () => {
     const { users } = useContext(ChallengeUserListContext)
     const { removingUsers, selectedUsers, setSelectedUsers } = useContext(ChallengeUserListContext)
-    const selectedAll = users.every(usr => selectedUsers.has(usr.id))
+  const selectedAll = users.every((usr) => selectedUsers.has(usr.id))
     const toggleUsersSelection = () => {
         if (selectedAll) setSelectedUsers(() => new Set<ChallengeResource['id']>())
         else {
             setSelectedUsers(() => {
                 const newSet = new Set<ChallengeResource['id']>()
-                users.forEach(usr => newSet.add(usr.id))
+        users.forEach((usr) => newSet.add(usr.id))
                 return newSet
             })
         }
@@ -74,7 +83,7 @@ const RowCheckbox: FC<{ user: ChallengeResource }> = ({ user }) => {
     const { removingUsers, selectedUsers, setSelectedUsers } = useContext(ChallengeUserListContext)
 
     const onToggle = () => {
-        setSelectedUsers(previous => {
+    setSelectedUsers((previous) => {
             const newSet = new Set(previous)
             if (newSet.has(user.id)) {
                 newSet.delete(user.id)
@@ -134,7 +143,7 @@ const RemoveButton: FC<{ user: ChallengeResource; onUsersRemove: ChallengeUserLi
     user,
     onUsersRemove,
 }) => {
-    const { removingUsers, setRemovingUsers } = useContext(ChallengeUserListContext)
+  const { removingUsers, setRemovingUsers, challenge } = useContext(ChallengeUserListContext)
     const [openRemoveUsersConfirmDialog, setOpenRemoveUsersConfirmDialog] = useState<boolean>(false)
 
     const handleRemove = () => {
@@ -150,28 +159,33 @@ const RemoveButton: FC<{ user: ChallengeResource; onUsersRemove: ChallengeUserLi
 
     return (
         <>
-            {isRemoving ? (
-                <LoadingSpinner inline className={styles.removingLoadingSpinner} />
+        {isRemoving ?
+            (   <LoadingSpinner inline className={styles.removingLoadingSpinner} />
             ) : (
-                <Button primary variant='danger' onClick={() => setOpenRemoveUsersConfirmDialog(true)} disabled={isRemoving}>
+                <Button
+                primary
+                variant='danger'
+                onClick={() => setOpenRemoveUsersConfirmDialog(true)}
+                disabled={isRemoving || !challenge || challenge.status === ChallengeStatus.Completed}
+                >
                     Remove
                 </Button>
-            )}
+        )}
 
-            {openRemoveUsersConfirmDialog && (
-                <RemoveUsersConfirmDialog
-                    open={openRemoveUsersConfirmDialog}
-                    setOpen={setOpenRemoveUsersConfirmDialog}
-                    users={[user]}
-                    remove={handleRemove}
-                />
-            )}
+        {openRemoveUsersConfirmDialog && (
+            <RemoveUsersConfirmDialog
+                open={openRemoveUsersConfirmDialog}
+                setOpen={setOpenRemoveUsersConfirmDialog}
+                users={[user]}
+                remove={handleRemove}
+            />
+        )}
         </>
     )
 }
 
 const RemoveSelectionButton: FC<{ onUsersRemove: ChallengeUserListProps['onUsersRemove'] }> = ({ onUsersRemove }) => {
-    const { users, selectedUsers, removingUsers, setRemovingUsers } = useContext(ChallengeUserListContext)
+  const { users, selectedUsers, removingUsers, setRemovingUsers, challenge } = useContext(ChallengeUserListContext)
     const [openRemoveUsersConfirmDialog, setOpenRemoveUsersConfirmDialog] = useState<boolean>(false)
 
     const selection = users.filter(usr => selectedUsers.has(usr.id))
@@ -193,7 +207,7 @@ const RemoveSelectionButton: FC<{ onUsersRemove: ChallengeUserListProps['onUsers
                 primary
                 variant='danger'
                 onClick={() => setOpenRemoveUsersConfirmDialog(true)}
-                disabled={!selectedUsers.size || isRemoving}
+                disabled={!selectedUsers.size || isRemoving || challenge?.status === ChallengeStatus.Completed}
                 size='lg'
             >
                 Remove Selected
@@ -210,7 +224,7 @@ const RemoveSelectionButton: FC<{ onUsersRemove: ChallengeUserListProps['onUsers
     )
 }
 
-const ChallengeUserList: FC<ChallengeUserListProps> = ({ users, onUsersRemove }) => {
+const ChallengeUserList: FC<ChallengeUserListProps> = ({ users, paging, onUsersRemove, onPageChange }) => {
     const columns = useMemo<TableColumn<ChallengeResource>[]>(
         () => [
             {
@@ -246,22 +260,39 @@ const ChallengeUserList: FC<ChallengeUserListProps> = ({ users, onUsersRemove })
         [],
     )
 
+  const { width: screenWidth } = useWindowSize()
     return (
         <ChallengeUserListContextProvider users={users}>
             <div className={styles.challengeUserList}>
-                <Table columns={columns} data={users} disableSorting />
+                {screenWidth > 984 && <Table columns={columns} data={users} disableSorting />}
+                {screenWidth <= 984 && (
+                <MobileListView properties={columns} data={users} selectAllCheckbox={<HeaderCheckbox />} />
+                )}
                 <div className={styles.removeSelectionButtonContainer}>
                     <RemoveSelectionButton onUsersRemove={onUsersRemove} />
                 </div>
+                <Pagination page={paging.page} totalPages={paging.totalPages} onPageChange={onPageChange} />
             </div>
         </ChallengeUserListContextProvider>
     )
 }
 
 const ChallengeUserListContextProvider = ({ users, children }: PropsWithChildren<{ users: ChallengeResource[] }>) => {
+    const { challengeId = '' } = useParams()
     const { userEmails } = useUserEmails(users)
     const [selectedUsers, setSelectedUsers] = useState<Set<ChallengeResource['id']>>(new Set())
     const [removingUsers, setRemovingUsers] = useState<Set<ChallengeResource['id']>>(new Set())
+    const [challenge, setChallenge] = useState<Challenge>()
+
+    const loadChallenge = () => {
+        getChallengeById(challengeId).then((data: Challenge) => {
+        setChallenge(data)
+        })
+    }
+
+    useOnComponentDidMount(() => {
+        loadChallenge()
+    })
 
     useEffect(() => {
         setSelectedUsers(oldSelectedUsers => {
@@ -283,7 +314,7 @@ const ChallengeUserListContextProvider = ({ users, children }: PropsWithChildren
 
     return (
         <ChallengeUserListContext.Provider
-            value={{ users, userEmails, selectedUsers, removingUsers, setSelectedUsers, setRemovingUsers }}
+      value={{ users, userEmails, selectedUsers, removingUsers, setSelectedUsers, setRemovingUsers, challenge }}
         >
             {children}
         </ChallengeUserListContext.Provider>

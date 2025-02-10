@@ -11,7 +11,7 @@ interface RemoveUsersConfirmDialogProps {
 }
 
 const RemoveUsersConfirmDialog: FC<RemoveUsersConfirmDialogProps> = ({ users, open, setOpen, remove }) => (
-    <BaseModal title='Add User' onClose={() => setOpen(false)} open={open}>
+  <BaseModal title='Remove User' onClose={() => setOpen(false)} open={open}>
         <div className={styles.removeUsersConfirmDialog}>
             <p>
                 {users.length > 1 ? (

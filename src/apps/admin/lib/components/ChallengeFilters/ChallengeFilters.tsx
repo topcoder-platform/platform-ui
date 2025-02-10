@@ -7,19 +7,23 @@ import styles from './ChallengeFilters.module.scss'
 
 interface ChallengeFiltersProps {
   filterCriteria: ChallengeFilterCriteria
-  isSearchingOrInitializing: boolean
+  disabled: boolean
+  showResetButton: boolean
   onFilterCriteriaChange: (newFilterCriteria: ChallengeFilterCriteria) => void
   onSearch: () => void
+  onReset: () => void
 }
 
 const ChallengeFilters: FC<ChallengeFiltersProps> = ({
     filterCriteria,
-    isSearchingOrInitializing,
+    disabled,
+    showResetButton,
     onFilterCriteriaChange,
     onSearch,
+    onReset,
 }) => {
-    const { challengeTypes, challengeTracks, challengeStatuses, loadChallengeTypes, loadChallengeTracks }
-    = useContext(ChallengeManagementContext)
+  const { challengeTypes, challengeTracks, challengeStatuses, loadChallengeTypes, loadChallengeTracks } =
+    useContext(ChallengeManagementContext)
     const { challengeTypeOptions, challengeTrackOptions, challengeStatusOptions } = useMemo(() => {
         const type2Option = (item: ChallengeType): InputSelectOption => ({ label: item.name, value: item.abbreviation })
         const track2Option = (item: ChallengeTrack): InputSelectOption => ({
@@ -59,9 +63,19 @@ const ChallengeFilters: FC<ChallengeFiltersProps> = ({
         const newFilterCriteria: ChallengeFilterCriteria = {
             ...filterCriteria,
             ...change,
+            page: 1,
         }
 
         onFilterCriteriaChange(newFilterCriteria)
+  }
+
+    const handleReset = () => {
+        const newFilterCriteria = {
+            ...filterCriteria,
+            page: 1,
+        }
+        onFilterCriteriaChange(newFilterCriteria)
+        onReset()
     }
 
     return (
@@ -74,8 +88,8 @@ const ChallengeFilters: FC<ChallengeFiltersProps> = ({
                     placeholder='Enter'
                     tabIndex={0}
                     value={filterCriteria.name}
-                    onChange={event => handleFilterChange(event, 'name')}
-                    disabled={isSearchingOrInitializing}
+                    onChange={(event) => handleFilterChange(event, 'name')}
+                    disabled={disabled}
                     forceUpdateValue
                 />
                 <InputText
@@ -85,8 +99,8 @@ const ChallengeFilters: FC<ChallengeFiltersProps> = ({
                     placeholder='Enter'
                     tabIndex={0}
                     value={filterCriteria.challengeId}
-                    onChange={event => handleFilterChange(event, 'challengeId')}
-                    disabled={isSearchingOrInitializing}
+                    onChange={(event) => handleFilterChange(event, 'challengeId')}
+                    disabled={disabled}
                     forceUpdateValue
                 />
                 <InputText
@@ -96,8 +110,8 @@ const ChallengeFilters: FC<ChallengeFiltersProps> = ({
                     placeholder='Enter'
                     tabIndex={0}
                     value={filterCriteria.legacyId ? `${filterCriteria.legacyId}` : ''}
-                    onChange={event => handleFilterChange(event, 'legacyId')}
-                    disabled={isSearchingOrInitializing}
+                    onChange={(event) => handleFilterChange(event, 'legacyId')}
+                    disabled={disabled}
                     forceUpdateValue
                 />
                 <InputSelect
@@ -106,8 +120,8 @@ const ChallengeFilters: FC<ChallengeFiltersProps> = ({
                     placeholder='Select'
                     options={challengeTypeOptions}
                     value={filterCriteria.type}
-                    onChange={event => handleFilterChange(event, 'type')}
-                    disabled={isSearchingOrInitializing}
+                    onChange={(event) => handleFilterChange(event, 'type')}
+                    disabled={disabled}
                 />
                 <InputSelect
                     name='track'
@@ -115,8 +129,8 @@ const ChallengeFilters: FC<ChallengeFiltersProps> = ({
                     placeholder='Select'
                     options={challengeTrackOptions}
                     value={filterCriteria.track}
-                    onChange={event => handleFilterChange(event, 'track')}
-                    disabled={isSearchingOrInitializing}
+                    onChange={(event) => handleFilterChange(event, 'track')}
+                    disabled={disabled}
                 />
                 <InputSelect
                     name='status'
@@ -124,13 +138,20 @@ const ChallengeFilters: FC<ChallengeFiltersProps> = ({
                     placeholder='Select'
                     options={challengeStatusOptions}
                     value={filterCriteria.status}
-                    onChange={event => handleFilterChange(event, 'status')}
-                    disabled={isSearchingOrInitializing}
+                    onChange={(event) => handleFilterChange(event, 'status')}
+                    disabled={disabled}
                 />
             </div>
-            <Button primary className={styles.searchButton} onClick={onSearch} disabled={isSearchingOrInitializing} size='lg'>
-                Search
-            </Button>
+            {!showResetButton && (
+                <Button primary className={styles.searchButton} onClick={onSearch} disabled={disabled} size='lg'>
+                        Search
+                </Button>
+            )}
+            {showResetButton && (
+                <Button secondary className={styles.searchButton} onClick={handleReset} disabled={disabled} size='lg'>
+                    Reset
+                </Button>
+            )}
         </div>
     )
 }

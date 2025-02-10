@@ -1,4 +1,7 @@
 import { FC, useContext, useMemo, useRef, useState } from 'react'
+import _ from 'lodash'
+import cn from 'classnames'
+import moment from 'moment'
 import { EnvironmentConfig } from '~/config'
 import { Button, LinkButton, Table, type TableColumn } from '~/libs/ui'
 import { ChevronDownIcon } from '@heroicons/react/solid'
@@ -11,24 +14,23 @@ import { ChallengeManagementContext } from '../../contexts'
 import { DropdownMenu } from '../common/DropdownMenu'
 import { Pagination } from '../common/Pagination'
 import { Paging } from '../../models/challenge-management/Pagination'
-import _ from 'lodash'
-import cn from 'classnames'
-import moment from 'moment'
+import { MobileListView } from './MobileListView'
 import styles from './ChallengeList.module.scss'
+import { useWindowSize } from '~/libs/shared'
 
 export interface ChallengeListProps {
   challenges: Challenge[]
   paging: Paging
-  currentFilter: ChallengeFilterCriteria
+  currentFilters: ChallengeFilterCriteria
+  onPageChange: (page: number) => void
 }
 
 const ChallengeCurrentPhase: FC<{ challenge: Challenge }> = ({ challenge }) => {
     let statusPhase = null
     if (challenge.phases) {
         statusPhase = challenge.phases
-            .filter(p => p.name !== 'Registration' && p.isOpen)
-            .sort((a, b) => moment(a.scheduledEndDate)
-                .diff(b.scheduledEndDate))[0]
+      .filter((p) => p.name !== 'Registration' && p.isOpen)
+      .sort((a, b) => moment(a.scheduledEndDate).diff(b.scheduledEndDate))[0]
     }
 
     if (!statusPhase && challenge.type === 'First2Finish' && challenge.phases.length) {
@@ -100,13 +102,13 @@ const TrackIcon: FC<{ challenge: Challenge }> = ({ challenge }) => {
     )
 }
 
-const Actions: FC<{ challenge: Challenge; currentFilter: ChallengeFilterCriteria }> = ({
+const Actions: FC<{ challenge: Challenge; currentFilters: ChallengeFilterCriteria }> = ({
     challenge,
-    currentFilter,
+  currentFilters,
 }) => {
     const navigate = useNavigate()
     const goToManageUser = () => {
-        navigate(`${challenge.id}/manage-user`, { state: { previousChallengeListFilter: currentFilter } })
+        navigate(`${challenge.id}/manage-user`, { state: { previousChallengeListFilter: currentFilters } })
     }
 
     return (
@@ -197,7 +199,7 @@ const Actions: FC<{ challenge: Challenge; currentFilter: ChallengeFilterCriteria
     )
 }
 
-const ChallengeList: FC<ChallengeListProps> = ({ challenges, paging, currentFilter }) => {
+const ChallengeList: FC<ChallengeListProps> = ({ challenges, paging, currentFilters, onPageChange }) => {
     const columns = useMemo<TableColumn<Challenge>[]>(
         () => [
             { label: '', type: 'element', renderer: (challenge: Challenge) => <TrackIcon challenge={challenge} /> },
@@ -239,22 +241,18 @@ const ChallengeList: FC<ChallengeListProps> = ({ challenges, paging, currentFilt
             {
                 label: '',
                 type: 'action',
-                renderer: (challenge: Challenge) => <Actions challenge={challenge} currentFilter={currentFilter} />,
+                renderer: (challenge: Challenge) => <Actions challenge={challenge} currentFilters={currentFilters} />,
             },
         ],
         [],
     )
 
+    const { width: screenWidth } = useWindowSize()
     return (
         <div className={styles.challengeList}>
-            <Table columns={columns} data={challenges} disableSorting />
-            <Pagination
-                currentPage={paging.page}
-                numPages={paging.totalPages}
-                onNextPageClick={() => {}}
-                onPreviousPageClick={() => {}}
-                onPageClick={() => {}}
-            />
+            {screenWidth > 1279 && <Table columns={columns} data={challenges} disableSorting />}
+            {screenWidth <= 1279 && <MobileListView properties={columns} data={challenges} />}
+            <Pagination page={paging.page} totalPages={paging.totalPages} onPageChange={onPageChange} />
         </div>
     )
 }

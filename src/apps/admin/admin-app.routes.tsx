@@ -20,7 +20,7 @@ export const rootRoute: string = EnvironmentConfig.SUBDOMAIN === AppSubdomain.ad
 export const adminRoutes: ReadonlyArray<PlatformRoute> = [
     // Admin App Root
     {
-        authRequired: false,/*TODO: enable */
+        authRequired: true,
         children: [
             {
                 element: <Rewrite to='challenge-management' />,

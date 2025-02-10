@@ -29,9 +29,9 @@ export const ChallengeManagementPage: FC = () => {
     const { search: doSearch, searching, searched, totalChallenges } = useSearch({ filterCriteria })
 
     const search = () => {
-        doSearch()
-            .then(data => {
+    doSearch().then((data) => {
                 setChallenges(data)
+      window.scrollTo({ top: 0, left: 0 })
             })
         updateBrowserUrl()
     }
@@ -59,6 +59,7 @@ export const ChallengeManagementPage: FC = () => {
         replaceBrowserUrlQuery(s)
     }
 
+  // Init
     const [filtersInited, setFiltersInited] = useState(false)
     useEffect(() => {
         initFilters()
@@ -69,6 +70,26 @@ export const ChallengeManagementPage: FC = () => {
             search()
         }
     }, [filtersInited])
+
+  // Page change
+  const [pageChangeEvent, setPageChangeEvent] = useState(false)
+  const previousPageChangeEvent = useRef(false)
+  useEffect(() => {
+    if (pageChangeEvent) {
+      search()
+      setPageChangeEvent(false)
+      previousPageChangeEvent.current = true
+    }
+  }, [pageChangeEvent])
+
+  // Reset
+  const [resetEvent, setResetEvent] = useState(false)
+  useEffect(() => {
+    if (resetEvent) {
+      search()
+      setResetEvent(false)
+    }
+  }, [resetEvent])
 
     return (
         <>
@@ -81,7 +102,12 @@ export const ChallengeManagementPage: FC = () => {
                     filterCriteria={filterCriteria}
                     onFilterCriteriaChange={setFilterCriteria}
                     onSearch={search}
-                    isSearchingOrInitializing={searching || !filtersInited}
+                    disabled={searching || !filtersInited}
+                    showResetButton={previousPageChangeEvent.current && searched && challenges.length === 0}
+                    onReset={() => {
+                        previousPageChangeEvent.current = false
+                        setResetEvent(true)
+                    }}
                 />
                 <PageDivider />
                 {searching && (
@@ -95,10 +121,13 @@ export const ChallengeManagementPage: FC = () => {
                         challenges={challenges}
                         paging={{
                             page: filterCriteria.page,
-                            perPage: filterCriteria.perPage,
                             totalPages: Math.ceil(totalChallenges / filterCriteria.perPage),
                         }}
-                        currentFilter={filterCriteria}
+                        currentFilters={filterCriteria}
+                        onPageChange={(page) => {
+                            setFilterCriteria({ ...filterCriteria, page })
+                            setPageChangeEvent(true)
+                        }}
                     />
                 )}
             </PageContent>
@@ -182,7 +211,7 @@ function useSearch({ filterCriteria }: { filterCriteria: ChallengeFilterCriteria
             const { data, total } = await searchChallenges(filterCriteria)
             dispatch({
                 type: SearchActionType.SEARCH_DONE,
-                payload: { totalChallenges: isNaN(total) ? (data.length ? 1 : 0) : total },
+        payload: { totalChallenges: total },
             })
             return data
         } catch (error) {
