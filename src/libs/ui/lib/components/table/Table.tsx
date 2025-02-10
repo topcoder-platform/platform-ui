@@ -21,6 +21,7 @@ interface TableProps<T> {
     readonly columns: ReadonlyArray<TableColumn<T>>
     readonly data: ReadonlyArray<T>
     readonly moreToLoad?: boolean
+    readonly disableSorting?: boolean
     readonly onLoadMoreClick?: () => void
     readonly onRowClick?: (data: T) => void
     readonly onToggleSort?: (sort: Sort) => void
@@ -112,7 +113,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                                 classNames(styles['header-container'], styles[col.type], colorClass, sortableClass)
                             }
                         >
-                            {col.label}
+                            {typeof col.label === 'function' ? col.label() : col.label}
                             {!!col.tooltip && (
                                 <div className={styles.tooltip}>
                                     <Tooltip content={col.tooltip} triggerOn='click'>
@@ -120,6 +121,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                                     </Tooltip>
                                 </div>
                             )}
+                            {!props.disableSorting && (
                             <TableSort
                                 iconClass={colorClass}
                                 isCurrentlySorted={isCurrentlySorted}
@@ -127,6 +129,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                                 sort={sort}
                                 toggleSort={toggleSort}
                             />
+                            )}
                         </div>
                     </th>
                 )

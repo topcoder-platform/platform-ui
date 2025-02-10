@@ -1,0 +1,30 @@
+@import '@libs/ui/styles/includes';
+@import '../../styles/includes';
+
+.challengeFilters {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 15px 7px;
+
+  .filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px 30px;
+  }
+
+  .searchButton {
+    margin-left: auto;
+  }
+
+  @media (max-width: #{$lg-max}) {
+    .filters {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: #{$mobile-max}) {
+    .filters {
+      grid-template-columns: 1fr;
+    }
+  }
+}

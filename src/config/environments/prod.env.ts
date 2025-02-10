@@ -5,3 +5,10 @@ export const TERMS_URL = 'https://www.topcoder.com/challenges/terms/detail/564a9
 export const VANILLA_FORUM = {
     V2_URL: 'https://vanilla.topcoder.com/api/v2',
 }
+
+export const ADMIN = {
+    CONNECT_URL : 'https://connect.topcoder.com',
+    DIRECT_URL :'https://www.topcoder.com/direct',
+    WORK_MANAGER_URL : 'https://challenges.topcoder.com',
+    ONLINE_REVIEW_URL : 'https://software.topcoder.com/review',
+}

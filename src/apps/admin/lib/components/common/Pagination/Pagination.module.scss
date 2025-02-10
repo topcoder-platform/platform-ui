@@ -1,0 +1,16 @@
+@import '@libs/ui/styles/includes';
+
+.pageButtons {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 16px 0;
+  gap: $sp-4;
+
+  .pageNumbers {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: $sp-1;
+  }
+}

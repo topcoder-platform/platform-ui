@@ -1,0 +1,60 @@
+@import '@libs/ui/styles/includes';
+
+.challengeList {
+  padding: 0 15px;
+}
+
+.challengeTitle {
+  &:hover {
+    color: $blue-110;
+  }
+}
+
+.challengeUserStats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  cursor: default;
+
+  > span {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25em;
+  }
+}
+
+.trackIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  height: 32px;
+  min-width: 40px;
+  padding: 5px;
+  border-radius: 4px;
+  box-sizing: border-box;
+  cursor: default;
+
+  font-weight: 700;
+  color: $tc-white;
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  > * {
+    flex: none;
+  }
+
+  .disabled {
+    pointer-events: none;
+  }
+
+  ul {
+    li {
+    }
+  }
+}

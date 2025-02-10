@@ -54,4 +54,8 @@
     &:global(.selected) {
         font-weight: bold;
     }
+
+    &:empty {
+        height: 24px;
+    }
 }

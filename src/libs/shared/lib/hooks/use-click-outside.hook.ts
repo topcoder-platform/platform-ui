@@ -10,26 +10,30 @@ export function useClickOutside(
     el: HTMLElement | null,
     cb: (ev: MouseEvent) => void,
     enabled: boolean = true,
+    options?: { capture: boolean }
 ): void {
     const handleClick: (ev: MouseEvent) => void = useCallback((ev: MouseEvent) => {
-        if (el && !el.contains(ev.target as unknown as Node)) {
+        if (el && (!el.contains(ev.target as unknown as Node))) {
             cb(ev)
         }
     }, [cb, el])
 
     useEffect(() => {
+        // Some component stops the event propagation in the bubble phase
+        const eventListenerOptions = options?.capture ? { capture: true } : undefined
+
         if (!enabled) {
             return undefined
         }
 
         if (!el) {
-            document.removeEventListener('click', handleClick)
+            document.removeEventListener('click', handleClick, eventListenerOptions)
             return undefined
         }
 
-        document.addEventListener('click', handleClick)
+        document.addEventListener('click', handleClick, eventListenerOptions)
         return () => {
-            document.removeEventListener('click', handleClick)
+            document.removeEventListener('click', handleClick, eventListenerOptions)
         }
     }, [el, handleClick, enabled])
 }
