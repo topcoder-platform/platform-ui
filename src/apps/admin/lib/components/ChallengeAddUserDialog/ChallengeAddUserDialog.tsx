@@ -1,55 +1,121 @@
-import { createContext, FC, KeyboardEventHandler, useContext, useMemo, useRef, useState } from 'react'
-import { BaseModal, Button, IconOutline, InputSelect, InputSelectOption } from '~/libs/ui'
+import {
+    ChangeEvent,
+    createContext,
+    Dispatch,
+    FC,
+    KeyboardEventHandler,
+    SetStateAction,
+    useCallback,
+    useContext,
+    useMemo,
+    useRef,
+    useState,
+} from 'react'
 import { MultiValue, MultiValueProps } from 'react-select'
-import { ResourceRole } from '../../models'
-import { getMembersByHandle, getMemberSuggestionsByHandle } from '../../services'
 import _ from 'lodash'
 import CreatableSelect from 'react-select/creatable'
 import cn from 'classnames'
-import { ChallengeManagementContext } from '../../contexts'
+
+import {
+    BaseModal,
+    Button,
+    IconOutline,
+    InputSelect,
+    InputSelectOption,
+} from '~/libs/ui'
+
+import {
+    getMembersByHandle,
+    getMemberSuggestionsByHandle,
+} from '../../services'
+import { ResourceRole } from '../../models'
+import {
+    ChallengeManagementContext,
+    ChallengeManagementContextType,
+} from '../../contexts'
+import { useEventCallback } from '../../hooks'
+
 import styles from './ChallengeAddUserDialog.module.scss'
 
 interface Option {
-  readonly label: string
-  readonly value: string
+    readonly label: string
+    readonly value: string
 }
 
 export interface ChallengeAddUserDialogProps {
-  open: boolean
-  setOpen: (isOpen: boolean) => void
-  onAdd: (payload: { handles: string[]; roleId: string }) => void
+    open: boolean
+    setOpen: (isOpen: boolean) => void
+    onAdd: (payload: { handles: string[]; roleId: string }) => void
 }
 
-const CustomMultiValue = (props: MultiValueProps<Option, true>): JSX.Element => {
-    const { data, removeProps } = props
-    const { invalidHandles } = useContext(SelectUserHandlesContext)
+type SelectUserHandlesContextType = { invalidHandles: Set<string> }
+const SelectUserHandlesContext = createContext<SelectUserHandlesContextType>({
+    invalidHandles: new Set(),
+})
+
+const CustomMultiValue = (
+    props: MultiValueProps<Option, true>,
+): JSX.Element => {
+    const { invalidHandles }: SelectUserHandlesContextType = useContext(
+        SelectUserHandlesContext,
+    )
 
     return (
-        <div className={cn(styles.selectUserHandlesCustomMultiValue, { [styles.invalid]: invalidHandles.has(data.value) })}>
-            <span className={styles.label}>{data.label}</span>
-            <span {...removeProps} className={styles.removeIcon}>
+        <div
+            className={cn(styles.selectUserHandlesCustomMultiValue, {
+                [styles.invalid]: invalidHandles.has(props.data.value),
+            })}
+        >
+            <span className={styles.label}>{props.data.label}</span>
+            <span {...props.removeProps} className={styles.removeIcon}>
                 <IconOutline.XIcon className='icon icon-fill' />
             </span>
         </div>
     )
 }
 
-const SelectUserHandlesContext = createContext<{ invalidHandles: Set<string> }>({ invalidHandles: new Set() })
-
-const SelectUserHandles: FC<{ onUsersSelect: (handles: string[]) => void }> = ({ onUsersSelect }) => {
+const SelectUserHandles: FC<{ onUsersSelect: (handles: string[]) => void }> = props => {
     const separatorRegEx = /[ ,\n\t;]+/
 
-    const components = {
-        DropdownIndicator: null,
-        MultiValue: CustomMultiValue,
+    const components = useMemo(
+        () => ({
+            DropdownIndicator: undefined,
+            MultiValue: CustomMultiValue,
+        }),
+        [],
+    )
+
+    const [inputValue, setInputValue]: [
+        string,
+        Dispatch<SetStateAction<string>>,
+    ] = useState('')
+    const [value, setValue]: [
+        readonly Option[],
+        Dispatch<SetStateAction<readonly Option[]>>,
+    ] = useState<readonly Option[]>([])
+    const [options, setOptions]: [
+        Option[],
+        Dispatch<SetStateAction<Option[]>>,
+    ] = useState<Option[]>([])
+    const invalidHandles = useRef<Set<string>>(new Set<string>())
+
+    const checkHandles = async (values: MultiValue<Option>): Promise<void> => {
+        const handles = values.map(i => i.value)
+        if (handles.length > 1) {
+            const users = await getMembersByHandle(handles)
+            handles.forEach(h => {
+                if (
+                    !users.find(
+                        i => i.handle.toLowerCase() === h.toLowerCase(),
+                    )
+                ) {
+                    invalidHandles.current.add(h)
+                }
+            })
+        }
     }
 
-    const [inputValue, setInputValue] = useState('')
-    const [value, setValue] = useState<readonly Option[]>([])
-    const [options, setOptions] = useState<Option[]>([])
-    const invalidHandles = useRef(new Set<string>())
-
-    const handleKeyDown: KeyboardEventHandler = event => {
+    const handleKeyDown: KeyboardEventHandler = useEventCallback(event => {
         if (!inputValue) return
 
         switch (event.key) {
@@ -57,68 +123,80 @@ const SelectUserHandles: FC<{ onUsersSelect: (handles: string[]) => void }> = ({
                 const words = inputValue
                     .trim()
                     .split(separatorRegEx)
-                // remove ''
+                    // remove ''
                     .filter(Boolean)
-                // remove duplicate
+                    // remove duplicate
                     .filter((word, index, arr) => arr.indexOf(word) === index)
 
                 const newValue = [...value.map(i => i.value), ...words]
-                // remove duplicate
+                    // remove duplicate
                     .filter((val, index, arr) => arr.indexOf(val) === index)
                     .map(i => ({ label: i, value: i }))
 
                 setValue(newValue)
                 setInputValue('')
                 event.preventDefault()
-                onUsersSelect(newValue.map(i => i.value))
+                props.onUsersSelect(newValue.map(i => i.value))
                 checkHandles(newValue)
                 break
             }
 
-            case 'Tab':
+            case 'Tab': {
                 setInputValue('')
                 event.preventDefault()
+                break
+            }
+
+            default: {
+                break
+            }
         }
-    }
+    })
 
-    const getSuggestions = _.debounce(async (inputValue: string) => {
-        if (!inputValue || !inputValue.trim() || inputValue.trim().length < 2) {
-            return
-        }
+    const getSuggestions = _.debounce(
+        async (currentInputValue: string): Promise<void> => {
+            if (
+                !inputValue
+                || !inputValue.trim()
+                || inputValue.trim().length < 2
+            ) {
+                return
+            }
 
-        inputValue = inputValue.trim()
-        if (inputValue.split(separatorRegEx).length == 1) {
-            const members = await getMemberSuggestionsByHandle(inputValue)
-            const newOptions: Option[] = members.map(i => ({ label: i.handle, value: i.handle }))
-            setOptions(newOptions)
-        }
-    }, 750)
+            const trimedInputValue = currentInputValue.trim()
+            if (trimedInputValue.split(separatorRegEx).length === 1) {
+                const members
+                    = await getMemberSuggestionsByHandle(trimedInputValue)
+                const newOptions: Option[] = members.map(i => ({
+                    label: i.handle,
+                    value: i.handle,
+                }))
+                setOptions(newOptions)
+            }
+        },
+        750,
+    )
 
-    const checkHandles = async (value: MultiValue<Option>) => {
-        const handles = value.map(i => i.value)
-        if (handles.length > 1) {
-            const users = await getMembersByHandle(handles)
-            handles.forEach(h => {
-                if (!users.find(i => i.handle.toLowerCase() === h.toLowerCase())) {
-                    invalidHandles.current.add(h)
-                }
-            })
-        }
-    }
+    const handleValueChange = useEventCallback(
+        (newValue: MultiValue<Option>) => {
+            setValue(newValue)
+            checkHandles(newValue)
+            props.onUsersSelect(newValue.map(i => i.value))
+        },
+    )
 
-    const handleValueChange = (newValue: MultiValue<Option>) => {
-        setValue(newValue)
-        checkHandles(newValue)
-        onUsersSelect(newValue.map(i => i.value))
-    }
-
-    const handleInputChange = (newInputValue: string) => {
+    const handleInputChange = useEventCallback((newInputValue: string) => {
         setInputValue(newInputValue)
         getSuggestions(newInputValue)
-    }
+    })
 
+    const noop = useCallback(() => undefined, [])
+    const context = useMemo(
+        () => ({ invalidHandles: invalidHandles.current }),
+        [invalidHandles.current], // eslint-disable-line react-hooks/exhaustive-deps, max-len -- unneccessary dependency: invalidHandles.current
+    )
     return (
-        <SelectUserHandlesContext.Provider value={{ invalidHandles: invalidHandles.current }}>
+        <SelectUserHandlesContext.Provider value={context}>
             <div className={styles.selectUserHandles}>
                 <div className={styles.selectUserHandlesTitle}>Handle</div>
                 <CreatableSelect
@@ -132,60 +210,91 @@ const SelectUserHandles: FC<{ onUsersSelect: (handles: string[]) => void }> = ({
                     onKeyDown={handleKeyDown}
                     placeholder='Enter'
                     options={options}
-                    noOptionsMessage={() => null}
-                    formatCreateLabel={() => null}
+                    noOptionsMessage={noop}
+                    formatCreateLabel={noop}
                     menuPortalTarget={document.body}
                     classNames={{
+                        container: () => styles.select,
                         menuPortal: () => styles.selectUserHandlesDropdownContainer,
                     }}
+                    classNamePrefix={styles.sel}
                 />
             </div>
         </SelectUserHandlesContext.Provider>
     )
 }
 
-const AddUserForm: FC<{ onClose: () => void; onAdd: ChallengeAddUserDialogProps['onAdd'] }> = ({ onClose, onAdd }) => {
-    const [formValue, setFormValue] = useState<{ handles: string[]; roleId: string }>({ handles: [], roleId: '' })
-    const { resourceRoles } = useContext(ChallengeManagementContext)
-    const { resourceRoleOptions } = useMemo(() => {
-        const role2Option = (item: ResourceRole): InputSelectOption => ({ label: item.name, value: item.id })
+const AddUserForm: FC<{
+    onClose: () => void
+    onAdd: ChallengeAddUserDialogProps['onAdd']
+}> = props => {
+    type FormValue = {
+        handles: string[]
+        roleId: string
+    }
+    const [formValue, setFormValue]: [
+        FormValue,
+        Dispatch<SetStateAction<FormValue>>,
+    ] = useState<FormValue>({ handles: [], roleId: '' })
+    const { resourceRoles }: ChallengeManagementContextType = useContext(
+        ChallengeManagementContext,
+    )
+    const {
+        resourceRoleOptions,
+    }: { resourceRoleOptions: InputSelectOption[] } = useMemo(() => {
+        const role2Option = (item: ResourceRole): InputSelectOption => ({
+            label: item.name,
+            value: item.id,
+        })
         const emptyOption: InputSelectOption = { label: '', value: '' }
 
         return {
-            resourceRoleOptions: [emptyOption, ...resourceRoles.map(role2Option)],
+            resourceRoleOptions: [
+                emptyOption,
+                ...resourceRoles.map(role2Option),
+            ],
         }
     }, [resourceRoles])
 
-    const updateForm = (name: string, value: unknown) => {
+    const updateForm = (name: string, value: unknown): void => {
         setFormValue({
             ...formValue,
             [name]: value,
         })
     }
 
+    const handleUsersSelect = useEventCallback((handles: string[]): void => updateForm('handles', handles))
+    const handleRoleChange = useEventCallback(
+        (event: ChangeEvent<HTMLInputElement>): void => updateForm('roleId', event.target.value),
+    )
+    const handleAdd = useEventCallback(() => props.onAdd({
+        handles: formValue.handles,
+        roleId: formValue.roleId,
+    }))
+
     return (
         <div className={styles.addUserForm}>
             <div>
-                <SelectUserHandles onUsersSelect={handles => updateForm('handles', handles)} />
+                <SelectUserHandles onUsersSelect={handleUsersSelect} />
                 <InputSelect
                     name='roleId'
                     label='Role'
                     placeholder='Select'
                     options={resourceRoleOptions}
                     value={formValue.roleId}
-                    onChange={event => updateForm('roleId', event.target.value)}
+                    onChange={handleRoleChange}
                     disabled={false}
                 />
             </div>
             <div className={styles.actionButtons}>
-                <Button secondary size='lg' onClick={onClose}>
+                <Button secondary size='lg' onClick={props.onClose}>
                     Close
                 </Button>
                 <Button
                     primary
                     size='lg'
                     disabled={!formValue.handles.length || !formValue.roleId}
-                    onClick={() => onAdd({ handles: formValue.handles, roleId: formValue.roleId })}
+                    onClick={handleAdd}
                 >
                     Add User
                 </Button>
@@ -194,16 +303,19 @@ const AddUserForm: FC<{ onClose: () => void; onAdd: ChallengeAddUserDialogProps[
     )
 }
 
-const ChallengeAddUserDialog: FC<ChallengeAddUserDialogProps> = ({ open, setOpen, onAdd }) => (
-    <BaseModal title='Add Users' onClose={() => setOpen(false)} open={open}>
-        <AddUserForm
-            onClose={() => setOpen(false)}
-            onAdd={event => {
-                setOpen(false)
-                onAdd(event)
-            }}
-        />
-    </BaseModal>
-)
+const ChallengeAddUserDialog: FC<ChallengeAddUserDialogProps> = props => {
+    const handleClose = useEventCallback(() => props.setOpen(false))
+    const handleAdd = useEventCallback(
+        (event: Parameters<ChallengeAddUserDialogProps['onAdd']>[0]) => {
+            props.setOpen(false)
+            props.onAdd(event)
+        },
+    )
+    return (
+        <BaseModal title='Add Users' onClose={handleClose} open={props.open}>
+            <AddUserForm onClose={handleClose} onAdd={handleAdd} />
+        </BaseModal>
+    )
+}
 
 export default ChallengeAddUserDialog

@@ -1,116 +1,139 @@
 import { FC, useCallback, useEffect, useState } from 'react'
 
 import { Button, IconOutline } from '~/libs/ui'
+
+import { useEventCallback } from '../../../hooks'
+
 import styles from './Pagination.module.scss'
-import { useWindowSize } from '~/libs/shared'
 
 interface PaginationProps {
-  page: number
-  totalPages: number
-  onPageChange: (page: number) => void
+    page: number
+    totalPages: number
+    onPageChange: (page: number) => void
 }
 
-const Pagination: FC<PaginationProps> = ({ page, totalPages, onPageChange }) => {
-  const MAX_PAGE_DISPLAY = 3
-  const [displayPages, setDisplayPages] = useState<number[]>([])
+const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
+    const MAX_PAGE_DISPLAY = 3
+    const [displayPages, setDisplayPages] = useState<number[]>([])
 
-  const createDisplayPages = useCallback(() => {
-    setDisplayPages((displayPages) => {
-      if (displayPages.includes(page)) {
-        return [...displayPages]
-      }
+    const createDisplayPages = useCallback(() => {
+        setDisplayPages(oldDisplayPages => {
+            if (oldDisplayPages.includes(props.page)) {
+                return [...oldDisplayPages]
+            }
 
-      // Initial
-      if (displayPages.length === 0) {
-        const pages = []
-        for (let i = page - MAX_PAGE_DISPLAY + 1; i <= page; i++) {
-          if (i >= 1) {
-            pages.push(i)
-          }
+            // Initial
+            if (oldDisplayPages.length === 0) {
+                const pages = []
+                for (
+                    let i = props.page - MAX_PAGE_DISPLAY + 1;
+                    i <= props.page;
+                    i++
+                ) {
+                    if (i >= 1) {
+                        pages.push(i)
+                    }
+                }
+
+                return pages
+            }
+
+            // Go next
+            if (props.page > oldDisplayPages[oldDisplayPages.length - 1]) {
+                const pages = []
+                for (
+                    let i = props.page - MAX_PAGE_DISPLAY + 1;
+                    i <= props.page;
+                    i++
+                ) {
+                    if (i >= 1) {
+                        pages.push(i)
+                    }
+                }
+
+                return pages
+            }
+
+            // Go previous
+            if (props.page < oldDisplayPages[0] && props.page >= 1) {
+                const pages = []
+                for (
+                    let i = props.page;
+                    i < props.page + MAX_PAGE_DISPLAY;
+                    i++
+                ) {
+                    pages.push(i)
+                }
+
+                return pages
+            }
+
+            return [...oldDisplayPages]
+        })
+    }, [props.page])
+
+    useEffect(() => {
+        createDisplayPages()
+    }, [createDisplayPages])
+
+    const createHandlePageClick = (p: number) => () => {
+        if (p === 0 || p > props.totalPages || p === props.page) {
+            return
         }
-        return pages
-      }
 
-      // Go next
-      if (page > displayPages[displayPages.length - 1]) {
-        const pages = []
-        for (let i = page - MAX_PAGE_DISPLAY + 1; i <= page; i++) {
-          if (i >= 1) {
-            pages.push(i)
-          }
-        }
-        return pages
-      }
-
-      // Go previous
-      if (page < displayPages[0] && page >= 1) {
-        const pages = []
-        for (let i = page; i < page + MAX_PAGE_DISPLAY; i++) {
-          pages.push(i)
-        }
-        return pages
-      }
-      return [...displayPages]
-    })
-  }, [page])
-
-  useEffect(() => {
-    createDisplayPages()
-  }, [createDisplayPages])
-
-  const handlePageClick = (p: number) => {
-    if (p === 0 || p > totalPages || p === page) {
-      return false
+        props.onPageChange(p)
     }
-    onPageChange(p)
-  }
 
-  return (
-    <div className={styles.pageButtons}>
-      <Button
-        onClick={() => onPageChange(1)}
-        secondary
-        size='md'
-        icon={IconOutline.ChevronDoubleLeftIcon}
-        iconToLeft
-        label='FIRST'
-        disabled={page === 1}
-        className={styles.first}
-      />
-      <Button
-        onClick={() => onPageChange(page - 1)}
-        secondary
-        size='md'
-        icon={IconOutline.ChevronLeftIcon}
-        iconToLeft
-        label='PREVIOUS'
-        disabled={page === 1}
-        className={styles.previous}
-      />
-      <div className={styles.pageNumbers}>
-        {displayPages.map((i) => (
-          <Button
-            key={`page-${i}`}
-            secondary
-            variant='round'
-            label={`${i}`}
-            onClick={() => handlePageClick(i)}
-            className={i === page ? styles.active : ''}
-          />
-        ))}
-      </div>
-      <Button
-        onClick={() => onPageChange(page + 1)}
-        secondary
-        size='md'
-        icon={IconOutline.ChevronRightIcon}
-        iconToRight
-        label='NEXT'
-        disabled={page === totalPages}
-        className={styles.next}
-      />
-    </div>
-  )
+    const handleFirstClick = useEventCallback(() => props.onPageChange(1))
+    const handlePreviousClick = useEventCallback(() => props.onPageChange(props.page - 1))
+    const handleNextClick = useEventCallback(() => props.onPageChange(props.page + 1))
+
+    return (
+        <div className={styles.pageButtons}>
+            <Button
+                onClick={handleFirstClick}
+                secondary
+                size='md'
+                icon={IconOutline.ChevronDoubleLeftIcon}
+                iconToLeft
+                label='FIRST'
+                disabled={props.page === 1}
+                className={styles.first}
+            />
+            <Button
+                onClick={handlePreviousClick}
+                secondary
+                size='md'
+                icon={IconOutline.ChevronLeftIcon}
+                iconToLeft
+                label='PREVIOUS'
+                disabled={props.page === 1}
+                className={styles.previous}
+            />
+            <div className={styles.pageNumbers}>
+                {displayPages.map(i => (
+                    <Button
+                        key={`page-${i}`}
+                        secondary
+                        variant='round'
+                        label={`${i}`}
+                        onClick={createHandlePageClick(i)}
+                        className={i === props.page ? styles.active : ''}
+                    />
+                ))}
+            </div>
+            <Button
+                onClick={handleNextClick}
+                secondary
+                size='md'
+                icon={IconOutline.ChevronRightIcon}
+                iconToRight
+                label='NEXT'
+                disabled={props.page === props.totalPages}
+                className={styles.next}
+            />
+        </div>
+    )
 }
 
 export default Pagination

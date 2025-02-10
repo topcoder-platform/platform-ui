@@ -1,13 +1,12 @@
 import { EnvironmentConfig } from '~/config'
 import {
     PaginatedResponse,
-    xhrDeleteAsync,
     xhrGetAsync,
     xhrGetPaginatedAsync,
     xhrPostAsync,
-    xhrPutAsync,
     xhrRequestAsync,
 } from '~/libs/core'
+
 import {
     Challenge,
     ChallengeFilterCriteria,
@@ -36,23 +35,31 @@ export const searchChallenges = async (
 /**
  * Gets the challenge types.
  */
-export const getChallengeTypes = async () => xhrGetAsync<ChallengeType[]>(`${challengeBaseUrl}/challenge-types?isActive=true`)
+export const getChallengeTypes = async (): Promise<ChallengeType[]> => xhrGetAsync<ChallengeType[]>(
+    `${challengeBaseUrl}/challenge-types?isActive=true`,
+)
 
 /**
  * Gets the challenge tracks.
  */
-export const getChallengeTracks = async () => xhrGetAsync<ChallengeTrack[]>(`${challengeBaseUrl}/challenge-tracks`)
+// eslint-disable-next-line max-len
+export const getChallengeTracks = async (): Promise<ChallengeTrack[]> => xhrGetAsync<ChallengeTrack[]>(`${challengeBaseUrl}/challenge-tracks`)
 
 /**
  * Gets the resource roles.
  */
-export const getResourceRoles = async () => xhrGetAsync<ResourceRole[]>(`${resourceBaseUrl}/resource-roles`)
+// eslint-disable-next-line max-len
+export const getResourceRoles = async (): Promise<ResourceRole[]> => xhrGetAsync<ResourceRole[]>(`${resourceBaseUrl}/resource-roles`)
 
 /**
  * Gets the challenge details by legacyId.
  */
-export const getChallengeByLegacyId = async (id: number) => {
-    const data = await xhrGetAsync<{ id: string }[]>(`${challengeBaseUrl}/challenges?legacyId=${id}`)
+export const getChallengeByLegacyId = async (
+    id: number,
+): Promise<{ id: string }> => {
+    const data = await xhrGetAsync<{ id: string }[]>(
+        `${challengeBaseUrl}/challenges?legacyId=${id}`,
+    )
     if (data.length) {
         return data[0]
     }
@@ -63,17 +70,24 @@ export const getChallengeByLegacyId = async (id: number) => {
 /**
  * Get the challenge resources.
  */
-export const getChallengeResources = async (challengeId: string, filterCriteria: ChallengeResourceFilterCriteria) => {
+export const getChallengeResources = async (
+    challengeId: string,
+    filterCriteria: ChallengeResourceFilterCriteria,
+): Promise<PaginatedResponse<ChallengeResource[]>> => {
     let filter = `&page=${filterCriteria.page}&perPage=${filterCriteria.perPage}`
-    if (filterCriteria.roleId != '') filter += `&roleId=${filterCriteria.roleId}`
-    return xhrGetPaginatedAsync<ChallengeResource[]>(`${resourceBaseUrl}/resources?challengeId=${challengeId}${filter}`)
+    if (filterCriteria.roleId !== '') filter += `&roleId=${filterCriteria.roleId}`
+    return xhrGetPaginatedAsync<ChallengeResource[]>(
+        `${resourceBaseUrl}/resources?challengeId=${challengeId}${filter}`,
+    )
 }
 
 /**
  * Gets a list of e-mails based on a list of users.
  * @returns {Promise} the promise with a list of userIds and e-mails.
  */
-export const getResourceEmails = async (users: ChallengeResource[]) => {
+export const getResourceEmails = async (
+    users: ChallengeResource[],
+): Promise<ResourceEmail[]> => {
     let qs: string
     if (users.length > 1) {
         qs = users.map(usr => `userIds=${usr.memberId}`)
@@ -82,7 +96,9 @@ export const getResourceEmails = async (users: ChallengeResource[]) => {
         qs = users.length ? `userId=${users[0].memberId}` : ''
     }
 
-    return xhrGetAsync<ResourceEmail[]>(`${memberBaseUrl}/members?${qs}&fields=userId,email&perPage=${users.length}`)
+    return xhrGetAsync<ResourceEmail[]>(
+        `${memberBaseUrl}/members?${qs}&fields=userId,email&perPage=${users.length}`,
+    )
 }
 
 /**
@@ -93,21 +109,25 @@ export const deleteChallengeResource = async ({
     memberHandle,
     roleId,
 }: {
-  challengeId: Challenge['id']
-  memberHandle: ChallengeResource['memberHandle']
-  roleId: ChallengeResource['roleId']
-}) => xhrRequestAsync({
+    challengeId: Challenge['id']
+    memberHandle: ChallengeResource['memberHandle']
+    roleId: ChallengeResource['roleId']
+}): Promise<unknown> => xhrRequestAsync({
+    data: { challengeId, memberHandle, roleId },
     method: 'delete',
     url: `${resourceBaseUrl}/resources`,
-    data: { challengeId, memberHandle, roleId },
 })
 
-export const addChallengeResource = async (data: { challengeId: string; memberHandle: string; roleId: string }) => xhrPostAsync(`${EnvironmentConfig.API.V5}/resources`, data)
+export const addChallengeResource = async (data: {
+    challengeId: string
+    memberHandle: string
+    roleId: string
+}): Promise<unknown> => xhrPostAsync(`${EnvironmentConfig.API.V5}/resources`, data)
 
 /**
  * Gets the challenge details by id.
  * @param {string} id the challenge id.
  */
-export const getChallengeById = async (id: Challenge['id']) => {
-  return xhrGetAsync<Challenge>(`${challengeBaseUrl}/challenges/${id}`)
-}
+export const getChallengeById = async (
+    id: Challenge['id'],
+): Promise<Challenge> => xhrGetAsync<Challenge>(`${challengeBaseUrl}/challenges/${id}`)

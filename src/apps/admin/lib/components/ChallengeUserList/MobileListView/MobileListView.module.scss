@@ -2,65 +2,65 @@
 @import '@libs/ui/styles/typography';
 
 .mobileListView {
-  > *:nth-child(odd) {
-    background: $black-5;
-  }
+    > *:nth-child(odd) {
+        background: $black-5;
+    }
 }
 
 .mobileListViewItemContainer {
-  display: grid;
-  grid-template-columns: 36px 1fr;
-  padding: $sp-4;
-  border-radius: $sp-2;
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    padding: $sp-4;
+    border-radius: $sp-2;
 
-  .rows {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+    .rows {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
 
-    .row1,
-    .row2,
-    .row3 {
-      display: grid;
-      align-items: center;
-      gap: 32px;
+        .row1,
+        .row2,
+        .row3 {
+            display: grid;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .row1 {
+            grid-template-columns: 1fr auto;
+            margin-top: 4px;
+        }
+
+        .row2 {
+            grid-template-columns: 1fr 30%;
+            align-items: flex-start;
+        }
+
+        .row3 {
+            grid-template-columns: 1fr;
+            justify-items: flex-end;
+        }
     }
-
-    .row1 {
-      grid-template-columns: 1fr auto;
-      margin-top: 4px;
-    }
-
-    .row2 {
-      grid-template-columns: 1fr 30%;
-      align-items: flex-start;
-    }
-
-    .row3 {
-      grid-template-columns: 1fr;
-      justify-items: flex-end;
-    }
-  }
 }
 
 .propertyElement {
-  @extend .medium-subtitle;
-  word-break: break-word;
-  width: fit-content;
+    @extend .medium-subtitle;
+    word-break: break-word;
+    width: fit-content;
 }
 
 .selectAll {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 8px;
-  cursor: default;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 8px;
+    cursor: default;
 
-  strong {
-    font-size: 14px;
-    font-weight: 500;
-  }
-  > div > div {
-    position: static;
-  }
+    strong {
+        font-size: 14px;
+        font-weight: 500;
+    }
+    > div > div {
+        position: static;
+    }
 }

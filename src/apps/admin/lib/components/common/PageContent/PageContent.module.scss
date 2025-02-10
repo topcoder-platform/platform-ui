@@ -2,16 +2,16 @@
 @import '../../../styles/includes';
 
 .pageContent {
-  margin: 20px 30px 40px;
+    margin: 20px 30px 40px;
 
-  .inner {
-    max-width: $xl-max;
-    margin: 0 auto;
-    background-color: $tc-white;
-    border-top: 3px solid $border-color;
-  }
+    .inner {
+        max-width: $xl-max;
+        margin: 0 auto;
+        background-color: $tc-white;
+        border-top: 3px solid $border-color;
+    }
 
-  @media (max-width: #{$mobile-max}) {
-    margin: 20px 16px 40px;
-  }
+    @media (max-width: #{$mobile-max}) {
+        margin: 20px 16px 40px;
+    }
 }

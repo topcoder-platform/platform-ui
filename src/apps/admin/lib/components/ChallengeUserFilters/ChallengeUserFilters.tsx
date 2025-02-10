@@ -1,42 +1,56 @@
-import { ChangeEvent, FC, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { Button, InputSelect, InputSelectOption } from '~/libs/ui'
-import { ChallengeManagementContext } from '../../contexts'
-import { useOnComponentDidMount } from '../../hooks'
-import { ChallengeResourceFilterCriteria, ResourceRole } from '../../models'
+import { ChangeEvent, FC, useContext, useEffect, useMemo, useRef } from 'react'
 import _ from 'lodash'
+
+import { Button, InputSelect, InputSelectOption } from '~/libs/ui'
+
+import {
+    ChallengeManagementContext,
+    ChallengeManagementContextType,
+} from '../../contexts'
+import { useEventCallback, useOnComponentDidMount } from '../../hooks'
+import { ChallengeResourceFilterCriteria, ResourceRole } from '../../models'
+
 import styles from './ChallengeUserFilters.module.scss'
 
 interface ChallengeUserFiltersProps {
-  filterCriteria: ChallengeResourceFilterCriteria
-  disabled: boolean
-  showResetButton: boolean
-  onFilterCriteriaChange: (newFilterCriteria: ChallengeResourceFilterCriteria) => void
-  onFilter: () => void
-  onFiltersInitialize: () => void
-  onReset: () => void
+    filterCriteria: ChallengeResourceFilterCriteria
+    disabled: boolean
+    showResetButton: boolean
+    onFilterCriteriaChange: (
+        newFilterCriteria: ChallengeResourceFilterCriteria,
+    ) => void
+    onFilter: () => void
+    onFiltersInitialize: () => void
+    onReset: () => void
 }
 
-const ChallengeUserFilters: FC<ChallengeUserFiltersProps> = ({
-    filterCriteria,
-    disabled,
-    showResetButton,
-    onFilterCriteriaChange,
-    onFilter,
-    onFiltersInitialize,
-    onReset,
-}) => {
+const ChallengeUserFilters: FC<ChallengeUserFiltersProps> = props => {
     const DEFAULT_ROLE_FILTER_NAME = 'Submitter'
-    const { resourceRoles, loadResourceRoles } = useContext(ChallengeManagementContext)
-    const { resourceRoleOptions, defaultResourceRoleOption } = useMemo(() => {
-        const role2Option = (item: ResourceRole): InputSelectOption => ({ label: item.name, value: item.id })
+    const { resourceRoles, loadResourceRoles }: ChallengeManagementContextType
+        = useContext(ChallengeManagementContext)
+    const {
+        resourceRoleOptions,
+        defaultResourceRoleOption,
+    }: {
+        resourceRoleOptions: InputSelectOption[]
+        defaultResourceRoleOption?: InputSelectOption
+    } = useMemo(() => {
+        const role2Option = (item: ResourceRole): InputSelectOption => ({
+            label: item.name,
+            value: item.id,
+        })
         const emptyOption: InputSelectOption = { label: '', value: '' }
-        const defaultResourceRoleOption: InputSelectOption | undefined = _.filter(resourceRoles, {
+        const o: InputSelectOption | undefined = _.filter(resourceRoles, {
             name: DEFAULT_ROLE_FILTER_NAME,
-    }).map(role2Option)[0]
+        })
+            .map(role2Option)[0]
 
         return {
-            resourceRoleOptions: [emptyOption, ...resourceRoles.map(role2Option)],
-            defaultResourceRoleOption,
+            defaultResourceRoleOption: o,
+            resourceRoleOptions: [
+                emptyOption,
+                ...resourceRoles.map(role2Option),
+            ],
         }
     }, [resourceRoles])
 
@@ -44,10 +58,10 @@ const ChallengeUserFilters: FC<ChallengeUserFiltersProps> = ({
         loadResourceRoles()
     })
 
-    const setSelectedDefaultResourceRole = () => {
+    const setSelectedDefaultResourceRole = (): void => {
         if (defaultResourceRoleOption) {
-            onFilterCriteriaChange({
-                ...filterCriteria,
+            props.onFilterCriteriaChange({
+                ...props.filterCriteria,
                 roleId: defaultResourceRoleOption.value,
             })
         }
@@ -62,27 +76,33 @@ const ChallengeUserFilters: FC<ChallengeUserFiltersProps> = ({
         if (resourceRoles.length) {
             defaultRoleSet.current = true
             setSelectedDefaultResourceRole()
-            onFiltersInitialize()
+            props.onFiltersInitialize()
         }
-    }, [resourceRoles.length])
+    }, [resourceRoles.length]) // eslint-disable-line react-hooks/exhaustive-deps -- missing dependency: props
 
-    const handleFilterChange = (event: ChangeEvent<HTMLInputElement>, field: string) => {
-        const change = { [field]: event.target.value }
-        const newFilterCriteria: ChallengeResourceFilterCriteria = {
-            ...filterCriteria,
-            ...change,
-        }
-        onFilterCriteriaChange(newFilterCriteria)
-  }
+    const handleFilterChange = useEventCallback(
+        (event: ChangeEvent<HTMLInputElement>, field: string): void => {
+            const change = { [field]: event.target.value }
+            const newFilterCriteria: ChallengeResourceFilterCriteria = {
+                ...props.filterCriteria,
+                ...change,
+            }
+            props.onFilterCriteriaChange(newFilterCriteria)
+        },
+    )
 
-    const handleReset = () => {
+    const handleReset = useEventCallback((): void => {
         const newFilterCriteria = {
-            ...filterCriteria,
+            ...props.filterCriteria,
             page: 1,
         }
-        onFilterCriteriaChange(newFilterCriteria)
-        onReset()
-    }
+        props.onFilterCriteriaChange(newFilterCriteria)
+        props.onReset()
+    })
+
+    const handleRoleChange = useEventCallback(
+        (event: ChangeEvent<HTMLInputElement>) => handleFilterChange(event, 'roleId'),
+    )
 
     return (
         <div className={styles.challengeUserFilters}>
@@ -92,19 +112,31 @@ const ChallengeUserFilters: FC<ChallengeUserFiltersProps> = ({
                     label='Role'
                     placeholder='Select'
                     options={resourceRoleOptions}
-                    value={filterCriteria.roleId}
-                    onChange={(event) => handleFilterChange(event, 'roleId')}
-                    disabled={disabled}
+                    value={props.filterCriteria.roleId}
+                    onChange={handleRoleChange}
+                    disabled={props.disabled}
                 />
             </div>
-            {!showResetButton && (
-                <Button primary className={styles.filterButton} onClick={onFilter} disabled={disabled} size='lg'>
-                        Filter
+            {!props.showResetButton && (
+                <Button
+                    primary
+                    className={styles.filterButton}
+                    onClick={props.onFilter}
+                    disabled={props.disabled}
+                    size='lg'
+                >
+                    Filter
                 </Button>
             )}
-            {showResetButton && (
-                <Button secondary className={styles.filterButton} onClick={handleReset} disabled={disabled} size='lg'>
-                Reset
+            {props.showResetButton && (
+                <Button
+                    secondary
+                    className={styles.filterButton}
+                    onClick={handleReset}
+                    disabled={props.disabled}
+                    size='lg'
+                >
+                    Reset
                 </Button>
             )}
         </div>

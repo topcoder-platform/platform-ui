@@ -1,50 +1,50 @@
 @import '../../styles/includes';
 
 .challengeUserList {
-  padding: 0 15px;
+    padding: 0 15px;
 }
 
 .headerCheckboxWrapper {
-  position: relative;
-  padding-left: 16px;
-  vertical-align: middle;
+    position: relative;
+    padding-left: 16px;
+    vertical-align: middle;
 
-  > div {
-    // prevent jumping issue
-    position: absolute;
-    left: 16px;
-    top: -10px;
-  }
+    > div {
+        // prevent jumping issue
+        position: absolute;
+        left: 16px;
+        top: -10px;
+    }
 }
 
 .removeSelectionButtonContainer {
-  padding: 20px 0 30px;
+    padding: 20px 0 30px;
 
-  @media (max-width: #{$mobile-max}) {
-    text-align: center;
-  }
+    @media (max-width: #{$mobile-max}) {
+        text-align: center;
+    }
 }
 
 .removingLoadingSpinner {
-  display: inline-block;
-  width: 32px;
-  height: 32px;
-  margin: 0 auto;
-  background: none;
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    margin: 0 auto;
+    background: none;
 
-  :global {
-    svg {
-      width: inherit;
-      height: inherit;
+    :global {
+        svg {
+            width: inherit;
+            height: inherit;
+        }
     }
-  }
 }
 
 .registeredCell {
-  text-align: left;
-  word-break: break-all;
+    text-align: left;
+    word-break: break-all;
 
-  @media (max-width: 984px) {
-    text-align: right;
-  }
+    @media (max-width: 984px) {
+        text-align: right;
+    }
 }

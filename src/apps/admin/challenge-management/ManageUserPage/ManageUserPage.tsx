@@ -1,8 +1,25 @@
-import { Dispatch, FC, SetStateAction, useRef, useEffect, useReducer, useState } from 'react'
-import { Button, LinkButton, LoadingSpinner, PageDivider, PageTitle } from '~/libs/ui'
-import { PlusIcon } from '@heroicons/react/solid'
+import {
+    Dispatch,
+    FC,
+    SetStateAction,
+    useEffect,
+    useReducer,
+    useRef,
+    useState,
+} from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
+
+import { PlusIcon } from '@heroicons/react/solid'
+import { PaginatedResponse } from '~/libs/core'
+import {
+    Button,
+    LinkButton,
+    LoadingSpinner,
+    PageDivider,
+    PageTitle,
+} from '~/libs/ui'
+
 import {
     ChallengeAddUserDialog,
     ChallengeUserFilters,
@@ -10,7 +27,11 @@ import {
     PageContent,
     PageHeader,
 } from '../../lib/components'
-import { ChallengeFilterCriteria, ChallengeResource, ChallengeResourceFilterCriteria } from '../../lib/models'
+import {
+    ChallengeFilterCriteria,
+    ChallengeResource,
+    ChallengeResourceFilterCriteria,
+} from '../../lib/models'
 import {
     addChallengeResource,
     deleteChallengeResource,
@@ -19,16 +40,24 @@ import {
 } from '../../lib/services'
 import { rootRoute } from '../../admin-app.routes'
 import { createChallengeQueryString, handleError } from '../../lib/utils'
+import { useEventCallback } from '../../lib/hooks'
+
 import styles from './ManageUserPage.module.scss'
 
 const BackToChallengeListButton: FC = () => {
     const location = useLocation()
-    const routeState: { previousChallengeListFilter: ChallengeFilterCriteria } = location.state || {}
+    const routeState: { previousChallengeListFilter: ChallengeFilterCriteria }
+        = location.state || {}
     const qs = routeState.previousChallengeListFilter
         ? `?${createChallengeQueryString(routeState.previousChallengeListFilter)}`
         : ''
     return (
-        <LinkButton primary light to={`${rootRoute}/challenge-management${qs}`} size='lg'>
+        <LinkButton
+            primary
+            light
+            to={`${rootRoute}/challenge-management${qs}`}
+            size='lg'
+        >
             Back
         </LinkButton>
     )
@@ -39,7 +68,9 @@ const BackToChallengeListButton: FC = () => {
  */
 export const ManageUserPage: FC = () => {
     const pageTitle = 'Manage Users'
-    const { challengeId = '' } = useParams()
+    const { challengeId = '' }: { challengeId?: string } = useParams<{
+        challengeId: string
+    }>()
     const [filterCriteria, setFilterCriteria]: [
         ChallengeResourceFilterCriteria,
         Dispatch<SetStateAction<ChallengeResourceFilterCriteria>>,
@@ -48,77 +79,115 @@ export const ManageUserPage: FC = () => {
         perPage: 25,
         roleId: '',
     })
-    const [users, setUsers] = useState<Array<ChallengeResource>>([])
-    const { filter: doFilter, filtering, filtered, totalUsers } = useFilter({ filterCriteria, challengeId })
-    const { remove: doRemove, removing, removed } = useRemove({ challengeId })
+    const [users, setUsers]: [
+        Array<ChallengeResource>,
+        Dispatch<SetStateAction<Array<ChallengeResource>>>,
+    ] = useState<Array<ChallengeResource>>([])
+    const {
+        filter: doFilter,
+        filtering,
+        filtered,
+        totalUsers,
+    }: ReturnType<typeof useFilter> = useFilter({ challengeId, filterCriteria })
+    const { remove: doRemove, removing }: ReturnType<typeof useRemove>
+        = useRemove({ challengeId })
     const [openAddUserDialog, setOpenAddUserDialog] = useState(false)
 
-    const filter = () => {
-            doFilter().then((data) => {
+    const filter = useEventCallback((): void => {
+        doFilter()
+            .then(data => {
                 setUsers(data)
-                window.scrollTo({ top: 0, left: 0 })
+                window.scrollTo({ left: 0, top: 0 })
             })
-    }
+    })
 
-    const remove = (usersToRemove: Array<ChallengeResource>) => {
-        const removeUser = (user: ChallengeResource) => setUsers((oldUsers) => oldUsers.filter((i) => i.id !== user.id))
+    const remove = useEventCallback(
+        (usersToRemove: Array<ChallengeResource>): void => {
+            // eslint-disable-next-line max-len
+            const removeUser = (user: ChallengeResource): void => setUsers(oldUsers => oldUsers.filter(i => i.id !== user.id))
 
-        if (usersToRemove.length === 1) {
-            doRemove(usersToRemove[0]).then(() => removeUser(usersToRemove[0]))
-        } else {
-            Promise.all(usersToRemove.map((usr) => doRemove(usr).then(() => removeUser(usr))))
-        }
-    }
-
-    const add = async ({ handles, roleId }: { handles: string[]; roleId: string }) => {
-        let successCount = 0
-        await Promise.all(
-            handles.map(handle => addChallengeResource({
-                challengeId,
-                memberHandle: handle,
-                roleId,
-            })
-                .then(() => {
-                    successCount++
-                })
-                .catch(handleError)),
-        )
-        if (successCount) {
-            const msg = successCount > 1 ? `${successCount} users have been added.` : 'User has been added.'
-            toast.success(msg)
-            if (!filterCriteria.roleId || filterCriteria.roleId === roleId) {
-                filter()
+            if (usersToRemove.length === 1) {
+                doRemove(usersToRemove[0])
+                    .then(() => removeUser(usersToRemove[0]))
+            } else {
+                Promise.all(
+                    usersToRemove.map(usr => doRemove(usr)
+                        .then(() => removeUser(usr))),
+                )
             }
-        }
-    }
+        },
+    )
+
+    const add = useEventCallback(
+        async ({ handles, roleId }: { handles: string[]; roleId: string }) => {
+            let successCount = 0
+            await Promise.all(
+                handles.map(handle => addChallengeResource({
+                    challengeId,
+                    memberHandle: handle,
+                    roleId,
+                })
+                    .then(() => {
+                        successCount += 1
+                    })
+                    .catch(handleError)),
+            )
+            if (successCount) {
+                const msg
+                    = successCount > 1
+                        ? `${successCount} users have been added.`
+                        : 'User has been added.'
+                toast.success(msg)
+                if (
+                    !filterCriteria.roleId
+                    || filterCriteria.roleId === roleId
+                ) {
+                    filter()
+                }
+            }
+        },
+    )
 
     // Init
     const [filtersInited, setFiltersInited] = useState(false)
     useEffect(() => {
         if (filtersInited) {
-        filter()
+            filter()
         }
-    }, [filtersInited])
+    }, [filtersInited]) // eslint-disable-line react-hooks/exhaustive-deps -- missing dependency: filter
 
     // Page change
     const [pageChangeEvent, setPageChangeEvent] = useState(false)
     const previousPageChangeEvent = useRef(false)
     useEffect(() => {
         if (pageChangeEvent) {
-        filter()
-        setPageChangeEvent(false)
-        previousPageChangeEvent.current = true
+            filter()
+            setPageChangeEvent(false)
+            previousPageChangeEvent.current = true
         }
-    }, [pageChangeEvent])
+    }, [pageChangeEvent]) // eslint-disable-line react-hooks/exhaustive-deps -- missing dependency: filter
 
     // Reset
     const [resetEvent, setResetEvent] = useState(false)
     useEffect(() => {
         if (resetEvent) {
-        filter()
-        setResetEvent(false)
+            filter()
+            setResetEvent(false)
         }
-    }, [resetEvent])
+    }, [resetEvent]) // eslint-disable-line react-hooks/exhaustive-deps -- missing dependency: filter
+
+    const handleOpenAddUserDialog = useEventCallback(() => setOpenAddUserDialog(true))
+    const handleReset = useEventCallback(() => {
+        previousPageChangeEvent.current = false
+        setResetEvent(true)
+    })
+    const handlePageChange = useEventCallback((page: number) => {
+        setFilterCriteria({ ...filterCriteria, page })
+        setPageChangeEvent(true)
+    })
+    const handleFilterIntialize = useEventCallback(() => {
+        setFiltersInited(true)
+    })
 
     return (
         <>
@@ -126,7 +195,7 @@ export const ManageUserPage: FC = () => {
             <PageHeader noBackground>
                 <h2>{pageTitle}</h2>
                 <div className={styles.headerActions}>
-                    <Button primary onClick={() => setOpenAddUserDialog(true)} size='lg'>
+                    <Button primary onClick={handleOpenAddUserDialog} size='lg'>
                         <PlusIcon className='icon icon-fill' />
                         {' '}
                         Add User
@@ -139,15 +208,14 @@ export const ManageUserPage: FC = () => {
                     filterCriteria={filterCriteria}
                     onFilterCriteriaChange={setFilterCriteria}
                     onFilter={filter}
-                    onFiltersInitialize={() => {
-                        setFiltersInited(true)
-                    }}
+                    onFiltersInitialize={handleFilterIntialize}
                     disabled={filtering || removing || !filtersInited}
-                    showResetButton={previousPageChangeEvent.current && filtered && users.length === 0}
-                    onReset={() => {
-                        previousPageChangeEvent.current = false
-                        setResetEvent(true)
-                    }}
+                    showResetButton={
+                        previousPageChangeEvent.current
+                        && filtered
+                        && users.length === 0
+                    }
+                    onReset={handleReset}
                 />
                 <PageDivider />
                 {filtering && (
@@ -155,24 +223,29 @@ export const ManageUserPage: FC = () => {
                         <LoadingSpinner className={styles.spinner} />
                     </div>
                 )}
-                {filtered && users.length === 0 && <p className={styles.noRecordFound}> No users. </p>}
+                {filtered && users.length === 0 && (
+                    <p className={styles.noRecordFound}> No users. </p>
+                )}
                 {filtered && users.length !== 0 && (
                     <ChallengeUserList
                         users={users}
                         onUsersRemove={remove}
                         paging={{
-                        page: filterCriteria.page,
-                        totalPages: Math.ceil(totalUsers / filterCriteria.perPage),
+                            page: filterCriteria.page,
+                            totalPages: Math.ceil(
+                                totalUsers / filterCriteria.perPage,
+                            ),
                         }}
-                        onPageChange={(page) => {
-                        setFilterCriteria({ ...filterCriteria, page })
-                        setPageChangeEvent(true)
-                        }}
+                        onPageChange={handlePageChange}
                     />
                 )}
             </PageContent>
             {openAddUserDialog && (
-                <ChallengeAddUserDialog open={openAddUserDialog} setOpen={setOpenAddUserDialog} onAdd={add} />
+                <ChallengeAddUserDialog
+                    open={openAddUserDialog}
+                    setOpen={setOpenAddUserDialog}
+                    onAdd={add}
+                />
             )}
         </>
     )
@@ -183,37 +256,40 @@ export const ManageUserPage: FC = () => {
 /// /////////////////
 
 const FilterActionType = {
-    FILTER_INIT: 'FILTER_INIT' as const,
     FILTER_DONE: 'FILTER_DONE' as const,
     FILTER_FAILED: 'FILTER_FAILED' as const,
+    FILTER_INIT: 'FILTER_INIT' as const,
 }
 
 type FilterState = {
-  isLoading: boolean
-  filtered: boolean
-  totalUsers: number
+    isLoading: boolean
+    filtered: boolean
+    totalUsers: number
 }
 
 type FilterReducerAction =
-  | {
-      type: typeof FilterActionType.FILTER_INIT | typeof FilterActionType.FILTER_FAILED
-    }
-  | {
-      type: typeof FilterActionType.FILTER_DONE
-      payload: {
-        totalUsers: number
+    | {
+          type:
+              | typeof FilterActionType.FILTER_INIT
+              | typeof FilterActionType.FILTER_FAILED
       }
-    }
+    | {
+          type: typeof FilterActionType.FILTER_DONE
+          payload: {
+              totalUsers: number
+          }
+      }
 
-const filterReducer = (previousState: FilterState, action: FilterReducerAction): FilterState => {
-    const { type } = action
-
-    switch (type) {
+const filterReducer = (
+    previousState: FilterState,
+    action: FilterReducerAction,
+): FilterState => {
+    switch (action.type) {
         case FilterActionType.FILTER_INIT: {
             return {
                 ...previousState,
-                isLoading: true,
                 filtered: false,
+                isLoading: true,
                 totalUsers: 0,
             }
         }
@@ -221,8 +297,8 @@ const filterReducer = (previousState: FilterState, action: FilterReducerAction):
         case FilterActionType.FILTER_DONE: {
             return {
                 ...previousState,
-                isLoading: false,
                 filtered: true,
+                isLoading: false,
                 totalUsers: action.payload.totalUsers,
             }
         }
@@ -244,16 +320,21 @@ function useFilter({
     filterCriteria,
     challengeId,
 }: {
-  filterCriteria: ChallengeResourceFilterCriteria
-  challengeId: string
-}) {
+    filterCriteria: ChallengeResourceFilterCriteria
+    challengeId: string
+}): {
+    filter: () => Promise<ChallengeResource[]>
+    filtered: boolean
+    filtering: boolean
+    totalUsers: number
+} {
     const [state, dispatch] = useReducer(filterReducer, {
-        isLoading: false,
         filtered: false,
+        isLoading: false,
         totalUsers: 0,
     })
 
-    const filter = async () => {
+    const filter = useEventCallback(async (): Promise<ChallengeResource[]> => {
         const checkIfLegacyId = async (id: string): Promise<string> => {
             if (/^[0-9]+$/.test(`${id}`)) {
                 return (await getChallengeByLegacyId(+id)).id
@@ -265,21 +346,25 @@ function useFilter({
         dispatch({ type: FilterActionType.FILTER_INIT })
         try {
             const id = await checkIfLegacyId(challengeId)
-            const { data, total } = await getChallengeResources(id, filterCriteria)
-            dispatch({ type: FilterActionType.FILTER_DONE, payload: { totalUsers: total } })
+            const { data, total }: PaginatedResponse<ChallengeResource[]>
+                = await getChallengeResources(id, filterCriteria)
+            dispatch({
+                payload: { totalUsers: total },
+                type: FilterActionType.FILTER_DONE,
+            })
             return data
         } catch (error) {
             dispatch({ type: FilterActionType.FILTER_FAILED })
             handleError(error)
             return []
         }
-    }
+    })
 
     return {
-        filtering: state.isLoading,
-        filtered: state.filtered,
         filter,
-    totalUsers: state.totalUsers,
+        filtered: state.filtered,
+        filtering: state.isLoading,
+        totalUsers: state.totalUsers,
     }
 }
 
@@ -288,27 +373,28 @@ function useFilter({
 /// /////////////////
 
 const RemoveActionType = {
-    REMOVE_INIT: 'REMOVE_INIT' as const,
     REMOVE_DONE: 'REMOVE_DONE' as const,
     REMOVE_FAILED: 'REMOVE_FAILED' as const,
+    REMOVE_INIT: 'REMOVE_INIT' as const,
 }
 
 type RemoveActionType = {
-  type:
-    | typeof RemoveActionType.REMOVE_INIT
-    | typeof RemoveActionType.REMOVE_FAILED
-    | typeof RemoveActionType.REMOVE_DONE
+    type:
+        | typeof RemoveActionType.REMOVE_INIT
+        | typeof RemoveActionType.REMOVE_FAILED
+        | typeof RemoveActionType.REMOVE_DONE
 }
 
 type RemoveState = {
-  isRemoving: number
-  removed: boolean
+    isRemoving: number
+    removed: boolean
 }
 
-const removeReducer = (previousState: RemoveState, action: RemoveActionType): RemoveState => {
-    const { type } = action
-
-    switch (type) {
+const removeReducer = (
+    previousState: RemoveState,
+    action: RemoveActionType,
+): RemoveState => {
+    switch (action.type) {
         case RemoveActionType.REMOVE_INIT: {
             return {
                 ...previousState,
@@ -338,30 +424,40 @@ const removeReducer = (previousState: RemoveState, action: RemoveActionType): Re
     }
 }
 
-function useRemove({ challengeId }: { challengeId: string }) {
+function useRemove({ challengeId }: { challengeId: string }): {
+    remove: (user: ChallengeResource) => Promise<boolean>
+    removed: boolean
+    removing: boolean
+} {
     const [state, dispatch] = useReducer(removeReducer, {
         isRemoving: 0,
         removed: false,
     })
 
-    const remove = async (user: ChallengeResource) => {
-        dispatch({ type: RemoveActionType.REMOVE_INIT })
+    const remove = useEventCallback(
+        async (user: ChallengeResource): Promise<boolean> => {
+            dispatch({ type: RemoveActionType.REMOVE_INIT })
 
-        try {
-            await deleteChallengeResource({ challengeId, memberHandle: user.memberHandle, roleId: user.roleId })
-            dispatch({ type: RemoveActionType.REMOVE_DONE })
-            return true
-        } catch (error) {
-            dispatch({ type: RemoveActionType.REMOVE_FAILED })
-            handleError(error)
-            return false
-        }
-    }
+            try {
+                await deleteChallengeResource({
+                    challengeId,
+                    memberHandle: user.memberHandle,
+                    roleId: user.roleId,
+                })
+                dispatch({ type: RemoveActionType.REMOVE_DONE })
+                return true
+            } catch (error) {
+                dispatch({ type: RemoveActionType.REMOVE_FAILED })
+                handleError(error)
+                return false
+            }
+        },
+    )
 
     return {
         remove,
-        removing: state.isRemoving !== 0,
         removed: state.removed,
+        removing: state.isRemoving !== 0,
     }
 }
 

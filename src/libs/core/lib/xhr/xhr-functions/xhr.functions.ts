@@ -35,8 +35,15 @@ export function createInstance(): AxiosInstance {
     return created
 }
 
-export async function requestAsync<T, R>({method, url, data}: { method: Method, url: string, data: T }, xhrInstance: AxiosInstance = globalInstance) {
-    const output: AxiosResponse<R> = await xhrInstance.request({ method, url, data })
+export async function requestAsync<T, R>(
+    { data, method, url }: { data: T; method: Method; url: string },
+    xhrInstance: AxiosInstance = globalInstance,
+): Promise<R> {
+    const output: AxiosResponse<R> = await xhrInstance.request({
+        data,
+        method,
+        url,
+    })
     return output.data
 }
 

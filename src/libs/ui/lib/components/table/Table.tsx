@@ -122,13 +122,13 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                                 </div>
                             )}
                             {!props.disableSorting && (
-                            <TableSort
-                                iconClass={colorClass}
-                                isCurrentlySorted={isCurrentlySorted}
-                                propertyName={col.propertyName}
-                                sort={sort}
-                                toggleSort={toggleSort}
-                            />
+                                <TableSort
+                                    iconClass={colorClass}
+                                    isCurrentlySorted={isCurrentlySorted}
+                                    propertyName={col.propertyName}
+                                    sort={sort}
+                                    toggleSort={toggleSort}
+                                />
                             )}
                         </div>
                     </th>

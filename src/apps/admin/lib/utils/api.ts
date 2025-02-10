@@ -1,58 +1,61 @@
 import { toast } from 'react-toastify'
+
 import { ChallengeFilterCriteria } from '../models'
 
 /**
  * Handles api v5 errors.
  */
-export const handleError = (error: any) => {
-  let err
-  if (error && error.data) {
-    err = {
-      status: error.status,
-      error: error.data.message,
+export const handleError = (error: any): void => {
+    let err
+    if (error && error.data) {
+        err = {
+            error: error.data.message,
+            status: error.status,
+        }
     }
-  }
 
-  if (!err) {
-    err = {
-      status: error.status,
-      error: error.message,
+    if (!err) {
+        err = {
+            error: error.message,
+            status: error.status,
+        }
     }
-  }
 
-  toast.error(`${error.message} (${error.status})`)
+    toast.error(`${error.message} (${error.status})`)
 }
 
-export const createChallengeQueryString = (filterCriteria: ChallengeFilterCriteria): string => {
-  let filter = ''
-  filter = `page=${filterCriteria.page}&perPage=${filterCriteria.perPage}`
+export const createChallengeQueryString = (
+    filterCriteria: ChallengeFilterCriteria,
+): string => {
+    let filter = ''
+    filter = `page=${filterCriteria.page}&perPage=${filterCriteria.perPage}`
 
-  if (filterCriteria.legacyId) {
-    filter += `&legacyId=${filterCriteria.legacyId}`
-  }
+    if (filterCriteria.legacyId) {
+        filter += `&legacyId=${filterCriteria.legacyId}`
+    }
 
-  if (filterCriteria.type) {
-    filter += `&types[]=${filterCriteria.type}`
-  }
+    if (filterCriteria.type) {
+        filter += `&types[]=${filterCriteria.type}`
+    }
 
-  if (filterCriteria.track) {
-    filter += `&tracks[]=${filterCriteria.track}`
-  }
+    if (filterCriteria.track) {
+        filter += `&tracks[]=${filterCriteria.track}`
+    }
 
-  if (filterCriteria.challengeId) {
-    filter += `&id=${filterCriteria.challengeId}`
-  }
+    if (filterCriteria.challengeId) {
+        filter += `&id=${filterCriteria.challengeId}`
+    }
 
-  if (filterCriteria.name) {
-    filter += `&name=${filterCriteria.name}`
-  }
+    if (filterCriteria.name) {
+        filter += `&name=${filterCriteria.name}`
+    }
 
-  if (filterCriteria.status) filter += `&status=${filterCriteria.status}`
+    if (filterCriteria.status) filter += `&status=${filterCriteria.status}`
 
-  return filter
+    return filter
 }
 
-export const replaceBrowserUrlQuery = (qs: string) => {
-  const newUrl = `${window.location.pathname}?${qs}`
-  window.history.replaceState({}, '', newUrl)
+export const replaceBrowserUrlQuery = (qs: string): void => {
+    const newUrl = `${window.location.pathname}?${qs}`
+    window.history.replaceState({}, '', newUrl)
 }

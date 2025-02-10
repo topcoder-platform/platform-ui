@@ -7,8 +7,8 @@ export const VANILLA_FORUM = {
 }
 
 export const ADMIN = {
-    CONNECT_URL : 'https://connect.topcoder.com',
-    DIRECT_URL :'https://www.topcoder.com/direct',
-    WORK_MANAGER_URL : 'https://challenges.topcoder.com',
-    ONLINE_REVIEW_URL : 'https://software.topcoder.com/review',
+    CONNECT_URL: 'https://connect.topcoder.com',
+    DIRECT_URL: 'https://www.topcoder.com/direct',
+    ONLINE_REVIEW_URL: 'https://software.topcoder.com/review',
+    WORK_MANAGER_URL: 'https://challenges.topcoder.com',
 }

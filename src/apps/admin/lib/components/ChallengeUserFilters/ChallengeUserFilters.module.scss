@@ -2,36 +2,36 @@
 @import '../../styles/includes';
 
 .challengeUserFilters {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 32px 15px 7px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 32px 15px 7px;
 
-  .filters {
-    flex: 0 0 auto;
-    width: 33.33%;
-    margin-bottom: -18px;
-  }
-
-  .filterButton {
-  }
-
-  @media (max-width: #{$xl-max}) {
     .filters {
-      width: 40%;
+        flex: 0 0 auto;
+        width: 33.33%;
+        margin-bottom: -18px;
     }
-  }
 
-  @media (max-width: #{$lg-max}) {
-    .filters {
-      width: 60%;
+    .filterButton {
     }
-  }
 
-  @media (max-width: #{$mobile-max}) {
-    .filters {
-      flex: 1 1 auto;
-      width: auto;
+    @media (max-width: #{$xl-max}) {
+        .filters {
+            width: 40%;
+        }
     }
-  }
+
+    @media (max-width: #{$lg-max}) {
+        .filters {
+            width: 60%;
+        }
+    }
+
+    @media (max-width: #{$mobile-max}) {
+        .filters {
+            flex: 1 1 auto;
+            width: auto;
+        }
+    }
 }

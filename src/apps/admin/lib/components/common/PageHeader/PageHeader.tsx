@@ -1,14 +1,17 @@
 import { FC, PropsWithChildren } from 'react'
 import cn from 'classnames'
+
 import styles from './PageHeader.module.scss'
 
 interface PageHeaderProps {
-  noBackground?: boolean
+    noBackground?: boolean
 }
 
-const PageHeader: FC<PropsWithChildren<PageHeaderProps>> = ({ children, noBackground = false }) => (
-    <div className={cn(styles.pageHeader, { [styles.noBg]: noBackground })}>
-        <div className={styles.inner}>{children}</div>
+const PageHeader: FC<PropsWithChildren<PageHeaderProps>> = props => (
+    <div
+        className={cn(styles.pageHeader, { [styles.noBg]: props.noBackground })}
+    >
+        <div className={styles.inner}>{props.children}</div>
     </div>
 )
 

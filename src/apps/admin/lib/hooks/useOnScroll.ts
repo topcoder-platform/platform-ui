@@ -12,10 +12,10 @@ export const useOnScroll = ({
     onScroll,
     throttleTime = 25,
 }: {
-  target?: HTMLElement | null
-  onScroll: () => void
-  throttleTime?: number
-}) => {
+    target?: HTMLElement | null
+    onScroll: () => void
+    throttleTime?: number
+}): void => {
     useEffect(() => {
         const targets: EventTarget[] = [window]
 
@@ -38,5 +38,6 @@ export const useOnScroll = ({
         return () => {
             targets.forEach(t => t.removeEventListener('scroll', handleScroll))
         }
-    }, [])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [target])
 }

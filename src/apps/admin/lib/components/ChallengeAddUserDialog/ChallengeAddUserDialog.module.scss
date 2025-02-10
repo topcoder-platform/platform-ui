@@ -1,42 +1,44 @@
 @import '@libs/ui/styles/includes';
 
 .addUserForm {
-  .actionButtons {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 6px;
-    margin-top: 20px;
-  }
+    .actionButtons {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        margin-top: 20px;
+    }
 }
 
 .selectUserHandles {
-  margin-bottom: 16px;
+    margin-bottom: 16px;
 
-  .selectUserHandlesTitle {
-    font-weight: 700;
-    font-size: 14px;
-    padding-bottom: 2px;
-  }
+    .selectUserHandlesTitle {
+        font-weight: 700;
+        font-size: 14px;
+        padding-bottom: 2px;
+    }
 }
 
+
+
 .selectUserHandlesCustomMultiValue {
-  font-size: 13px;
-  padding: 0 8px;
-  margin-right: 6px;
-  color: $black-60;
-  background-color: $black-10;
-  border-radius: 4px;
+    font-size: 13px;
+    padding: 0 8px;
+    margin-right: 6px;
+    color: $black-60;
+    background-color: $black-10;
+    border-radius: 4px;
 
-  &.invalid {
-    color: $red-100;
-  }
+    &.invalid {
+        color: $red-100;
+    }
 
-  .label {
-    font-weight: 700;
-  }
+    .label {
+        font-weight: 700;
+    }
 }
 
 .selectUserHandlesDropdownContainer {
-  z-index: 9999 !important;
+    z-index: 9999 !important;
 }

@@ -1,6 +1,8 @@
 import { FC, PropsWithChildren, useContext, useMemo } from 'react'
 import { Outlet, Routes } from 'react-router-dom'
+
 import { routerContext, RouterContextData } from '~/libs/core'
+
 import { Layout } from '../lib/components'
 import { ChallengeManagementContextProvider } from '../lib/contexts'
 import { adminRoutes } from '../admin-app.routes'
@@ -8,8 +10,10 @@ import { adminRoutes } from '../admin-app.routes'
 /**
  * The router outlet with layout.
  */
-export const ChallengeManagement: FC & { Layout: FC<PropsWithChildren> } = () => {
-    const childRoutes = getChildRoutes()
+export const ChallengeManagement: FC & {
+    Layout: FC<PropsWithChildren>
+} = () => {
+    const childRoutes = useChildRoutes()
 
     return (
         <ChallengeManagementContextProvider>
@@ -19,11 +23,13 @@ export const ChallengeManagement: FC & { Layout: FC<PropsWithChildren> } = () =>
     )
 }
 
-function getChildRoutes() {
+function useChildRoutes(): Array<JSX.Element> | undefined {
     const { getRouteElement }: RouterContextData = useContext(routerContext)
     const childRoutes = useMemo(
-        () => adminRoutes[0].children!.find(r => r.id === 'challenge-management')?.children!.map(getRouteElement),
-        [],
+        () => adminRoutes[0].children
+            ?.find(r => r.id === 'challenge-management')
+            ?.children?.map(getRouteElement),
+        [], // eslint-disable-line react-hooks/exhaustive-deps -- missing dependency: getRouteElement
     )
     return childRoutes
 }
@@ -31,8 +37,10 @@ function getChildRoutes() {
 /**
  * The outlet layout.
  */
-ChallengeManagement.Layout = function ({ children }) {
-    return <Layout>{children}</Layout>
+ChallengeManagement.Layout = function ChallengeManagementLayout(
+    props: PropsWithChildren,
+) {
+    return <Layout>{props.children}</Layout>
 }
 
 export default ChallengeManagement

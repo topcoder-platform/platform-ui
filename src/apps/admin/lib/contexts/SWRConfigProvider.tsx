@@ -1,8 +1,9 @@
 import { FC, PropsWithChildren } from 'react'
 import { SWRConfig } from 'swr'
+
 import { xhrGetAsync } from '~/libs/core'
 
-export const SWRConfigProvider: FC<PropsWithChildren> = ({ children }) => (
+export const SWRConfigProvider: FC<PropsWithChildren> = props => (
     <SWRConfig
         value={{
             fetcher: resource => xhrGetAsync(resource),
@@ -11,7 +12,7 @@ export const SWRConfigProvider: FC<PropsWithChildren> = ({ children }) => (
             revalidateOnMount: true,
         }}
     >
-        {children}
+        {props.children}
     </SWRConfig>
 )
 

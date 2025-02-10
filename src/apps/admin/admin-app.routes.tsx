@@ -1,10 +1,17 @@
-import { title } from 'process'
 import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
-import { authUrlLogin, lazyLoad, LazyLoadedComponent, PlatformRoute, Rewrite, UserRole } from '~/libs/core'
+import {
+    lazyLoad,
+    LazyLoadedComponent,
+    PlatformRoute,
+    Rewrite,
+    UserRole,
+} from '~/libs/core'
 
 const AdminApp: LazyLoadedComponent = lazyLoad(() => import('./AdminApp'))
 
-const ChallengeManagement: LazyLoadedComponent = lazyLoad(() => import('./challenge-management/ChallengeManagement'))
+const ChallengeManagement: LazyLoadedComponent = lazyLoad(
+    () => import('./challenge-management/ChallengeManagement'),
+)
 const ChallengeManagementPage: LazyLoadedComponent = lazyLoad(
     () => import('./challenge-management/ChallengeManagementPage'),
     'ChallengeManagementPage',
@@ -15,7 +22,10 @@ const ManageUserPage: LazyLoadedComponent = lazyLoad(
 )
 
 export const toolTitle: string = ToolTitle.admin
-export const rootRoute: string = EnvironmentConfig.SUBDOMAIN === AppSubdomain.admin ? '/' : `/${AppSubdomain.admin}`
+export const rootRoute: string
+    = EnvironmentConfig.SUBDOMAIN === AppSubdomain.admin
+        ? '/'
+        : `/${AppSubdomain.admin}`
 
 export const adminRoutes: ReadonlyArray<PlatformRoute> = [
     // Admin App Root

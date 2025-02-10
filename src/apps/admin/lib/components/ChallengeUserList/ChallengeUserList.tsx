@@ -3,75 +3,100 @@ import {
     Dispatch,
     FC,
     PropsWithChildren,
-    ReactElement,
     SetStateAction,
+    useCallback,
     useContext,
     useEffect,
     useMemo,
     useState,
 } from 'react'
-import { Button, InputCheckbox, LoadingSpinner, Table, type TableColumn } from '~/libs/ui'
+import { useParams } from 'react-router-dom'
 import _ from 'lodash'
-import { Challenge, ChallengeResource, ChallengeStatus, ResourceEmail } from '../../models'
 
-import { ChallengeManagementContext } from '../../contexts'
+import { useWindowSize, WindowSize } from '~/libs/shared'
+import {
+    Button,
+    InputCheckbox,
+    LoadingSpinner,
+    Table,
+    type TableColumn,
+} from '~/libs/ui'
+
+import {
+    Challenge,
+    ChallengeResource,
+    ChallengeStatus,
+    ResourceEmail,
+} from '../../models'
+import {
+    ChallengeManagementContext,
+    ChallengeManagementContextType,
+} from '../../contexts'
 import { getChallengeById, getResourceEmails } from '../../services'
 import { RemoveUsersConfirmDialog } from '../RemoveUsersConfirmDialog'
-import styles from './ChallengeUserList.module.scss'
-import { useOnComponentDidMount } from '../../hooks'
-import { useParams } from 'react-router-dom'
-import { useWindowSize } from '~/libs/shared'
-import { MobileListView } from './MobileListView'
+import { useEventCallback, useOnComponentDidMount } from '../../hooks'
 import { Paging } from '../../models/challenge-management/Pagination'
 import { Pagination } from '../common/Pagination'
 
+import { MobileListView } from './MobileListView'
+import styles from './ChallengeUserList.module.scss'
+
 export interface ChallengeUserListProps {
-  users: ChallengeResource[]
-  paging: Paging
-  onUsersRemove: (users: Array<ChallengeResource>) => void
-  onPageChange: (page: number) => void
+    users: ChallengeResource[]
+    paging: Paging
+    onUsersRemove: (users: Array<ChallengeResource>) => void
+    onPageChange: (page: number) => void
 }
 
-const ChallengeUserListContext = createContext<{
-  challenge?: Challenge
-  users: ChallengeResource[]
-  userEmails: ResourceEmail[]
-  selectedUsers: Set<ChallengeResource['id']>
-  removingUsers: Set<ChallengeResource['id']>
-  setSelectedUsers: Dispatch<SetStateAction<Set<ChallengeResource['id']>>>
-  setRemovingUsers: Dispatch<SetStateAction<Set<ChallengeResource['id']>>>
-}>({
-    users: [],
-    userEmails: [],
-    selectedUsers: new Set(),
+export interface ChallengeUserListContextType {
+    challenge?: Challenge
+    users: ChallengeResource[]
+    userEmails: ResourceEmail[]
+    selectedUsers: Set<ChallengeResource['id']>
+    removingUsers: Set<ChallengeResource['id']>
+    setSelectedUsers: Dispatch<SetStateAction<Set<ChallengeResource['id']>>>
+    setRemovingUsers: Dispatch<SetStateAction<Set<ChallengeResource['id']>>>
+}
+
+const ChallengeUserListContext = createContext<ChallengeUserListContextType>({
     removingUsers: new Set(),
-    setSelectedUsers: () => {},
-    setRemovingUsers: () => {},
+    selectedUsers: new Set(),
+    setRemovingUsers: () => undefined,
+    setSelectedUsers: () => undefined,
+    userEmails: [],
+    users: [],
 })
 
 const HeaderCheckbox: FC = () => {
-    const { users } = useContext(ChallengeUserListContext)
-    const { removingUsers, selectedUsers, setSelectedUsers } = useContext(ChallengeUserListContext)
-  const selectedAll = users.every((usr) => selectedUsers.has(usr.id))
-    const toggleUsersSelection = () => {
+    const { users }: { users: ChallengeResource[] } = useContext(
+        ChallengeUserListContext,
+    )
+    const {
+        removingUsers,
+        selectedUsers,
+        setSelectedUsers,
+    }: ChallengeUserListContextType = useContext(ChallengeUserListContext)
+    const selectedAll = users.every(usr => selectedUsers.has(usr.id))
+    const toggleUsersSelection = useEventCallback((): void => {
         if (selectedAll) setSelectedUsers(() => new Set<ChallengeResource['id']>())
         else {
             setSelectedUsers(() => {
                 const newSet = new Set<ChallengeResource['id']>()
-        users.forEach((usr) => newSet.add(usr.id))
+                users.forEach(usr => newSet.add(usr.id))
                 return newSet
             })
         }
-    }
+    })
 
     const isRemoving = removingUsers.size !== 0
+    const noop = useCallback(() => undefined, [])
 
     return (
         <div className={styles.headerCheckboxWrapper}>
             <InputCheckbox
                 checked={selectedAll}
                 name='select-users'
-                onChange={() => {}}
+                onChange={noop}
                 onClick={toggleUsersSelection}
                 disabled={isRemoving}
             />
@@ -79,135 +104,178 @@ const HeaderCheckbox: FC = () => {
     )
 }
 
-const RowCheckbox: FC<{ user: ChallengeResource }> = ({ user }) => {
-    const { removingUsers, selectedUsers, setSelectedUsers } = useContext(ChallengeUserListContext)
+const RowCheckbox: FC<{ user: ChallengeResource }> = props => {
+    const {
+        removingUsers,
+        selectedUsers,
+        setSelectedUsers,
+    }: ChallengeUserListContextType = useContext(ChallengeUserListContext)
 
-    const onToggle = () => {
-    setSelectedUsers((previous) => {
+    const onToggle = useEventCallback(() => {
+        setSelectedUsers(previous => {
             const newSet = new Set(previous)
-            if (newSet.has(user.id)) {
-                newSet.delete(user.id)
+            if (newSet.has(props.user.id)) {
+                newSet.delete(props.user.id)
             } else {
-                newSet.add(user.id)
+                newSet.add(props.user.id)
             }
 
             return newSet
         })
-    }
+    })
 
-    const isRemoving = removingUsers.has(user.id)
+    const isRemoving = removingUsers.has(props.user.id)
+    const noop = useCallback(() => undefined, [])
 
     return (
         <InputCheckbox
-            checked={selectedUsers.has(user.id)}
-            name={`select-user-${user.id}`}
-            onChange={() => {}}
+            checked={selectedUsers.has(props.user.id)}
+            name={`select-user-${props.user.id}`}
+            onChange={noop}
             onClick={onToggle}
             disabled={isRemoving}
         />
     )
 }
 
-const UserRole: FC<{ user: ChallengeResource }> = ({ user }) => {
-    const { resourceRoles: roles } = useContext(ChallengeManagementContext)
+const UserRole: FC<{ user: ChallengeResource }> = props => {
+    const {
+        resourceRoles: roles,
+    }: { resourceRoles: ChallengeManagementContextType['resourceRoles'] }
+        = useContext(ChallengeManagementContext)
 
     const s = useMemo(() => {
         if (roles.length === 0) {
             return 'Loading...'
         }
 
-        const role = _.find(roles, { id: user.roleId })
+        const role = _.find(roles, { id: props.user.roleId })
 
         return role?.name || 'NOT FOUND'
-    }, [roles, user.roleId])
+    }, [roles, props.user.roleId])
 
     return <>{s}</>
 }
 
-const UserEmail: FC<{ user: ChallengeResource }> = ({ user }) => {
-    const { userEmails } = useContext(ChallengeUserListContext)
+const UserEmail: FC<{ user: ChallengeResource }> = props => {
+    const { userEmails }: { userEmails: ResourceEmail[] } = useContext(
+        ChallengeUserListContext,
+    )
     const s = useMemo(() => {
         if (userEmails.length === 0) {
             return 'Loading...'
         }
 
-        const usr = _.find(userEmails, { userId: parseInt(user.memberId) })
+        const usr = _.find(userEmails, {
+            userId: parseInt(props.user.memberId, 10),
+        })
 
         return usr?.email || 'NOT FOUND'
-    }, [userEmails, user.memberId])
+    }, [userEmails, props.user.memberId])
 
     return <>{s}</>
 }
 
-const RemoveButton: FC<{ user: ChallengeResource; onUsersRemove: ChallengeUserListProps['onUsersRemove'] }> = ({
-    user,
-    onUsersRemove,
-}) => {
-  const { removingUsers, setRemovingUsers, challenge } = useContext(ChallengeUserListContext)
-    const [openRemoveUsersConfirmDialog, setOpenRemoveUsersConfirmDialog] = useState<boolean>(false)
+const RemoveButton: FC<{
+    user: ChallengeResource
+    onUsersRemove: ChallengeUserListProps['onUsersRemove']
+}> = props => {
+    const {
+        removingUsers,
+        setRemovingUsers,
+        challenge,
+    }: ChallengeUserListContextType = useContext(ChallengeUserListContext)
+    const [openRemoveUsersConfirmDialog, setOpenRemoveUsersConfirmDialog]: [
+        boolean,
+        Dispatch<SetStateAction<boolean>>,
+    ] = useState<boolean>(false)
 
-    const handleRemove = () => {
+    const handleRemove = useEventCallback((): void => {
         setRemovingUsers(previous => {
             const newSet = new Set(previous)
-            newSet.add(user.id)
+            newSet.add(props.user.id)
             return newSet
         })
-        onUsersRemove([user])
-    }
+        props.onUsersRemove([props.user])
+    })
+    const handleOpenRemoveUsersConfirmDialog = useEventCallback(() => setOpenRemoveUsersConfirmDialog(true))
 
-    const isRemoving = removingUsers.has(user.id)
+    const isRemoving = removingUsers.has(props.user.id)
 
     return (
         <>
-        {isRemoving ?
-            (   <LoadingSpinner inline className={styles.removingLoadingSpinner} />
+            {isRemoving ? (
+                <LoadingSpinner
+                    inline
+                    className={styles.removingLoadingSpinner}
+                />
             ) : (
                 <Button
-                primary
-                variant='danger'
-                onClick={() => setOpenRemoveUsersConfirmDialog(true)}
-                disabled={isRemoving || !challenge || challenge.status === ChallengeStatus.Completed}
+                    primary
+                    variant='danger'
+                    onClick={handleOpenRemoveUsersConfirmDialog}
+                    disabled={
+                        isRemoving
+                        || !challenge
+                        || challenge.status === ChallengeStatus.Completed
+                    }
                 >
                     Remove
                 </Button>
-        )}
+            )}
 
-        {openRemoveUsersConfirmDialog && (
-            <RemoveUsersConfirmDialog
-                open={openRemoveUsersConfirmDialog}
-                setOpen={setOpenRemoveUsersConfirmDialog}
-                users={[user]}
-                remove={handleRemove}
-            />
-        )}
+            {openRemoveUsersConfirmDialog && (
+                <RemoveUsersConfirmDialog
+                    open={openRemoveUsersConfirmDialog}
+                    setOpen={setOpenRemoveUsersConfirmDialog}
+                    users={[props.user]}
+                    remove={handleRemove}
+                />
+            )}
         </>
     )
 }
 
-const RemoveSelectionButton: FC<{ onUsersRemove: ChallengeUserListProps['onUsersRemove'] }> = ({ onUsersRemove }) => {
-  const { users, selectedUsers, removingUsers, setRemovingUsers, challenge } = useContext(ChallengeUserListContext)
-    const [openRemoveUsersConfirmDialog, setOpenRemoveUsersConfirmDialog] = useState<boolean>(false)
+const RemoveSelectionButton: FC<{
+    onUsersRemove: ChallengeUserListProps['onUsersRemove']
+}> = props => {
+    const {
+        users,
+        selectedUsers,
+        removingUsers,
+        setRemovingUsers,
+        challenge,
+    }: ChallengeUserListContextType = useContext(ChallengeUserListContext)
+    const [openRemoveUsersConfirmDialog, setOpenRemoveUsersConfirmDialog]: [
+        boolean,
+        Dispatch<SetStateAction<boolean>>,
+    ] = useState<boolean>(false)
 
     const selection = users.filter(usr => selectedUsers.has(usr.id))
-    const handleRemove = () => {
+    const handleRemove = useEventCallback(() => {
         setRemovingUsers(previous => {
             const newSet = new Set(previous)
             selectedUsers.forEach(usr => newSet.add(usr))
             return newSet
         })
 
-        onUsersRemove(selection)
-    }
+        props.onUsersRemove(selection)
+    })
 
     const isRemoving = removingUsers.size !== 0
+    const handleOpenRemoveUsersConfirmDialog = useEventCallback(() => setOpenRemoveUsersConfirmDialog(true))
 
     return (
         <>
             <Button
                 primary
                 variant='danger'
-                onClick={() => setOpenRemoveUsersConfirmDialog(true)}
-                disabled={!selectedUsers.size || isRemoving || challenge?.status === ChallengeStatus.Completed}
+                onClick={handleOpenRemoveUsersConfirmDialog}
+                disabled={
+                    !selectedUsers.size
+                    || isRemoving
+                    || challenge?.status === ChallengeStatus.Completed
+                }
                 size='lg'
             >
                 Remove Selected
@@ -224,70 +292,28 @@ const RemoveSelectionButton: FC<{ onUsersRemove: ChallengeUserListProps['onUsers
     )
 }
 
-const ChallengeUserList: FC<ChallengeUserListProps> = ({ users, paging, onUsersRemove, onPageChange }) => {
-    const columns = useMemo<TableColumn<ChallengeResource>[]>(
-        () => [
-            {
-                label: () => <HeaderCheckbox />,
-                type: 'element',
-                renderer: (user: ChallengeResource) => <RowCheckbox user={user} />,
-            },
-            { label: 'Handle', type: 'text', propertyName: 'memberHandle' },
-            {
-                label: 'Role',
-                type: 'element',
-                propertyName: 'roleId',
-                renderer: (user: ChallengeResource) => <UserRole user={user} />,
-            },
-            {
-                label: 'E-Mail',
-                type: 'element',
-                propertyName: 'memberId',
-                renderer: (user: ChallengeResource) => <UserEmail user={user} />,
-            },
-            {
-                label: 'Registered',
-                type: 'element',
-                propertyName: 'created',
-                renderer: (user: ChallengeResource) => <div className={styles.registeredCell}>{user.created}</div>,
-            },
-            {
-                label: '',
-                type: 'action',
-                renderer: (user: ChallengeResource) => <RemoveButton user={user} onUsersRemove={onUsersRemove} />,
-            },
-        ],
-        [],
+const ChallengeUserListContextProvider: FC<
+    PropsWithChildren<{ users: ChallengeResource[] }>
+> = props => {
+    const { challengeId = '' }: { challengeId?: string } = useParams<{
+        challengeId: string
+    }>()
+    const { userEmails }: { userEmails: ResourceEmail[] } = useUserEmails(
+        props.users,
     )
-
-  const { width: screenWidth } = useWindowSize()
-    return (
-        <ChallengeUserListContextProvider users={users}>
-            <div className={styles.challengeUserList}>
-                {screenWidth > 984 && <Table columns={columns} data={users} disableSorting />}
-                {screenWidth <= 984 && (
-                <MobileListView properties={columns} data={users} selectAllCheckbox={<HeaderCheckbox />} />
-                )}
-                <div className={styles.removeSelectionButtonContainer}>
-                    <RemoveSelectionButton onUsersRemove={onUsersRemove} />
-                </div>
-                <Pagination page={paging.page} totalPages={paging.totalPages} onPageChange={onPageChange} />
-            </div>
-        </ChallengeUserListContextProvider>
-    )
-}
-
-const ChallengeUserListContextProvider = ({ users, children }: PropsWithChildren<{ users: ChallengeResource[] }>) => {
-    const { challengeId = '' } = useParams()
-    const { userEmails } = useUserEmails(users)
-    const [selectedUsers, setSelectedUsers] = useState<Set<ChallengeResource['id']>>(new Set())
-    const [removingUsers, setRemovingUsers] = useState<Set<ChallengeResource['id']>>(new Set())
+    const [selectedUsers, setSelectedUsers] = useState<
+        Set<ChallengeResource['id']>
+    >(new Set())
+    const [removingUsers, setRemovingUsers] = useState<
+        Set<ChallengeResource['id']>
+    >(new Set())
     const [challenge, setChallenge] = useState<Challenge>()
 
-    const loadChallenge = () => {
-        getChallengeById(challengeId).then((data: Challenge) => {
-        setChallenge(data)
-        })
+    const loadChallenge = (): void => {
+        getChallengeById(challengeId)
+            .then((data: Challenge) => {
+                setChallenge(data)
+            })
     }
 
     useOnComponentDidMount(() => {
@@ -298,7 +324,7 @@ const ChallengeUserListContextProvider = ({ users, children }: PropsWithChildren
         setSelectedUsers(oldSelectedUsers => {
             const newSet = new Set(oldSelectedUsers)
             newSet.forEach(usr => {
-                if (!users.find(i => i.id === usr)) newSet.delete(usr)
+                if (!props.users.find(i => i.id === usr)) newSet.delete(usr)
             })
             return newSet
         })
@@ -306,22 +332,122 @@ const ChallengeUserListContextProvider = ({ users, children }: PropsWithChildren
         setRemovingUsers(oldRemovingUsers => {
             const newSet = new Set(oldRemovingUsers)
             newSet.forEach(usr => {
-                if (!users.find(i => i.id === usr)) newSet.delete(usr)
+                if (!props.users.find(i => i.id === usr)) newSet.delete(usr)
             })
             return newSet
         })
-    }, [users])
+    }, [props.users])
 
+    const context = useMemo(
+        () => ({
+            challenge,
+            removingUsers,
+            selectedUsers,
+            setRemovingUsers,
+            setSelectedUsers,
+            userEmails,
+            users: props.users,
+        }),
+        [
+            challenge,
+            removingUsers,
+            selectedUsers,
+            setRemovingUsers,
+            setSelectedUsers,
+            userEmails,
+            props.users,
+        ],
+    )
     return (
-        <ChallengeUserListContext.Provider
-      value={{ users, userEmails, selectedUsers, removingUsers, setSelectedUsers, setRemovingUsers, challenge }}
-        >
-            {children}
+        <ChallengeUserListContext.Provider value={context}>
+            {props.children}
         </ChallengeUserListContext.Provider>
     )
 }
 
-function useUserEmails(users: ChallengeResource[]) {
+const ChallengeUserList: FC<ChallengeUserListProps> = props => {
+    const columns = useMemo<TableColumn<ChallengeResource>[]>(
+        () => [
+            {
+                label: () => <HeaderCheckbox />, // eslint-disable-line react/no-unstable-nested-components
+                renderer: (user: ChallengeResource) => (
+                    <RowCheckbox user={user} />
+                ),
+                type: 'element',
+            },
+            { label: 'Handle', propertyName: 'memberHandle', type: 'text' },
+            {
+                label: 'Role',
+                propertyName: 'roleId',
+                renderer: (user: ChallengeResource) => <UserRole user={user} />,
+                type: 'element',
+            },
+            {
+                label: 'E-Mail',
+                propertyName: 'memberId',
+                renderer: (user: ChallengeResource) => (
+                    <UserEmail user={user} />
+                ),
+                type: 'element',
+            },
+            {
+                label: 'Registered',
+                propertyName: 'created',
+                renderer: (user: ChallengeResource) => (
+                    <div className={styles.registeredCell}>{user.created}</div>
+                ),
+                type: 'element',
+            },
+            {
+                label: '',
+                renderer: (user: ChallengeResource) => (
+                    <RemoveButton
+                        user={user}
+                        onUsersRemove={props.onUsersRemove}
+                    />
+                ),
+                type: 'action',
+            },
+        ],
+        [], // eslint-disable-line react-hooks/exhaustive-deps -- missing dependency: props.onUsersRemove
+    )
+
+    const { width: screenWidth }: WindowSize = useWindowSize()
+    return (
+        <ChallengeUserListContextProvider users={props.users}>
+            <div className={styles.challengeUserList}>
+                {screenWidth > 984 && (
+                    <Table
+                        columns={columns}
+                        data={props.users}
+                        disableSorting
+                    />
+                )}
+                {screenWidth <= 984 && (
+                    <MobileListView
+                        properties={columns}
+                        data={props.users}
+                        selectAllCheckbox={<HeaderCheckbox />}
+                    />
+                )}
+                <div className={styles.removeSelectionButtonContainer}>
+                    <RemoveSelectionButton
+                        onUsersRemove={props.onUsersRemove}
+                    />
+                </div>
+                <Pagination
+                    page={props.paging.page}
+                    totalPages={props.paging.totalPages}
+                    onPageChange={props.onPageChange}
+                />
+            </div>
+        </ChallengeUserListContextProvider>
+    )
+}
+
+function useUserEmails(users: ChallengeResource[]): {
+    userEmails: ResourceEmail[]
+} {
     const [userEmails, setUserEmails] = useState<ResourceEmail[]>([])
 
     useEffect(() => {

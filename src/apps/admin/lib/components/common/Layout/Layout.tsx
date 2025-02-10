@@ -1,15 +1,28 @@
-import { FC, PropsWithChildren, useEffect, useRef, useState } from 'react'
+import {
+    FC,
+    MouseEventHandler,
+    PropsWithChildren,
+    useEffect,
+    useState,
+} from 'react'
+
 import { IconOutline, Portal } from '~/libs/ui'
-import { useClickOutside } from '~/libs/shared'
+
 import { ReactComponent as BarsMenuIcon } from '../../../assets/i/bars-menu-icon.svg'
+import { useEventCallback } from '../../../hooks'
 import { SideNav } from '../SideNav'
+
 import styles from './Layout.module.scss'
 
-export const NullLayout: FC<PropsWithChildren> = ({ children }) => <>{children}</>
+export const NullLayout: FC<PropsWithChildren> = props => (
+    <>{props.children}</>
+)
 
-const Side: FC<PropsWithChildren> = ({ children }) => <div className={styles.side}>{children}</div>
+const Side: FC<PropsWithChildren> = props => (
+    <div className={styles.side}>{props.children}</div>
+)
 
-const Main: FC<PropsWithChildren> = ({ children }) => {
+const Main: FC<PropsWithChildren> = props => {
     const [openMobileMenu, setOpenMobileMenu] = useState(false)
 
     useEffect(() => {
@@ -19,22 +32,38 @@ const Main: FC<PropsWithChildren> = ({ children }) => {
                 document.body.style.overflow = ''
             }
         }
+
+        return () => undefined
     }, [openMobileMenu])
+
+    const handleCloseMobileMenu = useEventCallback(() => setOpenMobileMenu(false))
+    const handleToggleMobileMenu: MouseEventHandler<HTMLButtonElement>
+        = useEventCallback(event => {
+            event.stopPropagation()
+            setOpenMobileMenu(!openMobileMenu)
+        })
 
     return (
         <div className={styles.main}>
-            <div className={styles.mobileMenuButtonContainer} onClick={() => setOpenMobileMenu(false)}>
+            <div
+                className={styles.mobileMenuButtonContainer}
+                onClick={handleCloseMobileMenu}
+            >
                 <button
                     className={styles.mobileMenuButton}
-                    onClick={event => {
-                        event.stopPropagation()
-                        setOpenMobileMenu(!openMobileMenu)
-                    }}
+                    onClick={handleToggleMobileMenu}
+                    type='button'
                 >
                     {openMobileMenu ? (
-                        <IconOutline.XIcon className='icon icon-fill' style={{ fontSize: '24px' }} />
+                        <IconOutline.XIcon
+                            className='icon icon-fill'
+                            style={{ fontSize: '24px' }}
+                        />
                     ) : (
-                        <BarsMenuIcon className='icon icon-fill' style={{ fontSize: '24px' }} />
+                        <BarsMenuIcon
+                            className='icon icon-fill'
+                            style={{ fontSize: '24px' }}
+                        />
                     )}
                 </button>
                 {openMobileMenu && (
@@ -44,17 +73,17 @@ const Main: FC<PropsWithChildren> = ({ children }) => {
                 )}
             </div>
 
-            {children}
+            {props.children}
         </div>
     )
 }
 
-export const Layout: FC<PropsWithChildren> = ({ children }) => (
+export const Layout: FC<PropsWithChildren> = props => (
     <div className={styles.layout}>
         <Side>
             <SideNav />
         </Side>
-        <Main>{children}</Main>
+        <Main>{props.children}</Main>
     </div>
 )
 

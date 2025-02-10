@@ -10,7 +10,7 @@ export function useClickOutside(
     el: HTMLElement | null,
     cb: (ev: MouseEvent) => void,
     enabled: boolean = true,
-    options?: { capture: boolean }
+    options: { capture?: boolean } = {},
 ): void {
     const handleClick: (ev: MouseEvent) => void = useCallback((ev: MouseEvent) => {
         if (el && (!el.contains(ev.target as unknown as Node))) {

@@ -1,5 +1,5 @@
 export interface ChallengeResourceFilterCriteria {
-  page: number
-  perPage: number
-  roleId: string
+    page: number
+    perPage: number
+    roleId: string
 }
