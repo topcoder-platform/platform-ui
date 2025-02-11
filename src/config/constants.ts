@@ -28,7 +28,7 @@ export enum ToolTitle {
     talentSearch = 'Expert Talent',
     wallet = 'Wallet',
     walletAdmin = 'Wallet Admin',
-    copilots = 'Copilots'
+    copilots = 'Copilots',
     admin = 'Admin'
 }
 
