@@ -1,12 +1,11 @@
-import { FC, useContext, useState } from 'react'
-import { SWRResponse } from 'swr'
+import { FC, useContext, useEffect, useState } from 'react'
 import { bind, isEmpty } from 'lodash'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
 import { profileContext, ProfileContextData } from '~/libs/core'
 import { Button, IconSolid, InputDatePicker, InputMultiselectOption,
-    InputRadio, InputSelect, InputText, InputTextarea } from '~/libs/ui'
+    InputRadio, InputSelect, InputSelectOption, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
 import { InputSkillSelector } from '~/libs/shared'
 
 import { saveCopilotRequest, useFetchProjects } from '../../services/projects'
@@ -21,16 +20,22 @@ const CopilotRequestForm: FC<{}> = () => {
     const [formValues, setFormValues] = useState<any>({})
     const [isFormChanged, setIsFormChanged] = useState(false)
     const [formErrors, setFormErrors] = useState<any>({})
-    const { data: projectsData }: SWRResponse<Project[], any> = useFetchProjects()
+    const [searchTerm, setSearchTerm] = useState<string>('')
+    const [projects, setProjects] = useState<InputSelectOption[]>([])
+    const { data: projectsData }: { data?: Project[] } = useFetchProjects(searchTerm)
     const [existingCopilot, setExistingCopilot] = useState<string>('')
     const [paymentType, setPaymentType] = useState<string>('')
 
-    const projects = projectsData
-        ? projectsData.map(project => ({
-            label: project.name,
-            value: project.id,
-        }))
-        : []
+    useEffect(() => {
+        if (projectsData) {
+            setProjects(
+                projectsData.map(project => ({
+                    label: project.name,
+                    value: project.id,
+                })),
+            )
+        }
+    }, [projectsData])
 
     const projectTypes = ProjectTypes ? ProjectTypes.map(project => ({
         label: project,
@@ -54,6 +59,27 @@ const CopilotRequestForm: FC<{}> = () => {
             return updatedErrors
         })
         setPaymentType(t)
+    }
+
+    function filterProjects(option: InputSelectOption, value: string): boolean {
+        setSearchTerm(value)
+        return (
+            option.label
+                ?.toString()
+                .toLowerCase()
+                .includes(value.toLowerCase()) ?? false
+        )
+    }
+
+    function handleProjectSearch(inputValue: string): void {
+        setSearchTerm(inputValue)
+    }
+
+    function handleProjectSelect(option: React.ChangeEvent<HTMLInputElement>): void {
+        setFormValues((prevValues: any) => ({
+            ...prevValues,
+            projectId: option.target.value,
+        }))
     }
 
     function handleFormValueChange(
@@ -121,59 +147,61 @@ const CopilotRequestForm: FC<{}> = () => {
     function handleFormAction(): void {
         const updatedFormErrors: { [key: string]: string } = {}
 
-        if (!formValues.projectId) {
-            updatedFormErrors.projectId = 'Project is required'
-        }
+        const fieldValidations: { condition: boolean; key: string; message: string }[] = [
+            { condition: !formValues.projectId, key: 'projectId', message: 'Project is required' },
+            { condition: !existingCopilot, key: 'existingCopilot', message: 'Selection is required' },
+            { condition: !formValues.complexity, key: 'complexity', message: 'Selection is required' },
+            {
+                condition: !formValues.requiresCommunication,
+                key: 'requiresCommunication',
+                message: 'Selection is required',
+            },
+            { condition: !formValues.paymentType, key: 'paymentType', message: 'Selection is required' },
+            { condition: !formValues.projectType, key: 'projectType', message: 'Selecting project type is required' },
+            {
+                condition: !formValues.overview || formValues.overview.length < 10,
+                key: 'overview',
+                message: 'Project overview must be at least 10 characters',
+            },
+            {
+                condition: !formValues.skills || formValues.skills.length === 0,
+                key: 'skills',
+                message: 'Providing skills is required',
+            },
+            {
+                condition: !formValues.startDate,
+                key: 'startDate',
+                message: 'Providing a start date for copilot is required',
+            },
+            {
+                condition: !formValues.numWeeks,
+                key: 'numWeeks',
+                message: 'Providing number of weeks is required',
+            },
+            {
+                condition: !formValues.tzRestrictions,
+                key: 'tzRestrictions',
+                message: 'Providing timezone restrictions is required. Type No if no restrictions',
+            },
+            {
+                condition: !formValues.numHoursPerWeek,
+                key: 'numHoursPerWeek',
+                message: 'Providing commitment per week is required',
+            },
+        ]
 
-        if (!existingCopilot) {
-            updatedFormErrors.existingCopilot = 'Selection is required'
-        }
-
-        if (!formValues.complexity) {
-            updatedFormErrors.complexity = 'Selection is required'
-        }
-
-        if (!formValues.requiresCommunication) {
-            updatedFormErrors.requiresCommunication = 'Selection is required'
-        }
-
-        if (!formValues.paymentType) {
-            updatedFormErrors.paymentType = 'Selection is required'
-        }
-
-        if (!formValues.projectType) {
-            updatedFormErrors.projectType = 'Selecting project type is required'
-        }
-
-        if (!formValues.overview) {
-            updatedFormErrors.overview = 'Providing a project overview is required'
-        }
-
-        if (!formValues.skills) {
-            updatedFormErrors.skills = 'Providing skills is required'
-        }
-
-        if (!formValues.startDate) {
-            updatedFormErrors.startDate = 'Providing a start date for copilot is required'
-        }
-
-        if (!formValues.numWeeks) {
-            updatedFormErrors.numWeeks = 'Providing number of weeks is required'
-        }
-
-        if (!formValues.tzRestrictions) {
-            updatedFormErrors.tzRestrictions = 'Providing timezone restrictions is required. Type No if no restrictions'
-        }
-
-        if (!formValues.numHoursPerWeek) {
-            updatedFormErrors.numHoursPerWeek = 'Providing commitment per week is required'
-        }
+        fieldValidations.forEach(
+            ({ condition, key, message }: { condition: boolean; key: string; message: string }) => {
+                if (condition) {
+                    updatedFormErrors[key] = message
+                }
+            },
+        )
 
         if (isEmpty(updatedFormErrors)) {
             saveCopilotRequest(formValues)
                 .then(() => {
                     toast.success('Copilot request sent successfully')
-                    // Reset form after successful submission
                     setFormValues({
                         complexity: '',
                         copilotUsername: '',
@@ -208,22 +236,24 @@ const CopilotRequestForm: FC<{}> = () => {
                 <form>
                     <h1 className={styles.heading}> Copilot Request </h1>
                     <p className={styles.subheading}>
-                        {' '}
                         Hi,
                         {profile?.firstName}
+                        {' '}
                         !
                         This form is to request a copilot for your project. Please fill in the details below.
                     </p>
                     <p className={styles.formRow}>Select the project you want the copilot for</p>
-                    <InputSelect
+                    <InputSelectReact
                         tabIndex={0}
                         options={projects}
                         value={formValues.projectId}
-                        onChange={bind(handleFormValueChange, this, 'projectId')}
+                        onChange={handleProjectSelect}
+                        onInputChange={handleProjectSearch}
                         name='project'
                         label='Project'
-                        placeholder='Select the project you wish to request a copilot for'
+                        placeholder='Start typing the name of the project'
                         dirty
+                        filterOption={filterProjects}
                         error={formErrors.projectId}
                     />
                     <p className={styles.formRow}>
@@ -331,7 +361,6 @@ const CopilotRequestForm: FC<{}> = () => {
                             customRadius
                             noCaps
                             leftAlignText
-                            textWrap
                         />
                         {formErrors.complexity && (
                             <p className={styles.error}>
@@ -443,7 +472,7 @@ const CopilotRequestForm: FC<{}> = () => {
                     {formErrors.requiresCommunication && (
                         <p className={styles.error}>
                             <IconSolid.ExclamationIcon />
-                            {formErrors.requiresCommunicatn}
+                            {formErrors.requiresCommunication}
                         </p>
                     )}
                     <p className={styles.formRow}>Will this role be standard payments or something else?</p>
