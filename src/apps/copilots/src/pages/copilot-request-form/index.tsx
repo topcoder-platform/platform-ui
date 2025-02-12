@@ -1,4 +1,4 @@
-import { FC, useContext, useEffect, useState } from 'react'
+import { FC, useContext, useMemo, useState } from 'react'
 import { bind, isEmpty } from 'lodash'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
@@ -21,21 +21,18 @@ const CopilotRequestForm: FC<{}> = () => {
     const [isFormChanged, setIsFormChanged] = useState(false)
     const [formErrors, setFormErrors] = useState<any>({})
     const [searchTerm, setSearchTerm] = useState<string>('')
-    const [projects, setProjects] = useState<InputSelectOption[]>([])
     const { data: projectsData }: { data?: Project[] } = useFetchProjects(searchTerm)
     const [existingCopilot, setExistingCopilot] = useState<string>('')
     const [paymentType, setPaymentType] = useState<string>('')
 
-    useEffect(() => {
-        if (projectsData) {
-            setProjects(
-                projectsData.map(project => ({
-                    label: project.name,
-                    value: project.id,
-                })),
-            )
-        }
-    }, [projectsData])
+    const projects = useMemo(
+        () => (
+            projectsData
+                ? projectsData.map(project => ({ label: project.name, value: project.id }))
+                : []
+        ),
+        [projectsData],
+    )
 
     const projectTypes = ProjectTypes ? ProjectTypes.map(project => ({
         label: project,
