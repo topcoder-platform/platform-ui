@@ -31,6 +31,7 @@ interface InputSelectReactProps {
     readonly label?: string
     readonly name: string
     readonly onChange: (event: ChangeEvent<HTMLInputElement>) => void
+    readonly onInputChange?: (newValue: string) => void
     readonly options: OptionsOrGroups<unknown, GroupBase<unknown>>
     readonly placeholder?: string
     readonly tabIndex?: number
@@ -138,6 +139,7 @@ const InputSelectReact: FC<InputSelectReactProps> = props => {
                     )
                 }
                 onChange={handleSelect}
+                onInputChange={props.onInputChange}
                 menuPortalTarget={menuPortalTarget}
                 classNamePrefix={styles.sel}
                 tabIndex={props.tabIndex}

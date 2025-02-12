@@ -8,12 +8,12 @@ import { CopilotRequest } from '../models/CopilotRequest'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/projects`
 
-export const useFetchProjects = (): SWRResponse<Project[]> => {
-    const response = useSWR(baseUrl, xhrGetAsync<Project[]>, {
+export const useFetchProjects = (search: string): SWRResponse<Project[], any> => {
+    const url = `${baseUrl}?name=${search}`
+    return useSWR(url, xhrGetAsync<Project[]>, {
         refreshInterval: 0,
         revalidateOnFocus: false,
     })
-    return response
 }
 
 export const saveCopilotRequest = (request: CopilotRequest)
