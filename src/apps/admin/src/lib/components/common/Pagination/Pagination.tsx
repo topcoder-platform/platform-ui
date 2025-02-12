@@ -1,5 +1,6 @@
-import { FC, useCallback, useEffect, useState } from 'react'
+import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 
+import { useWindowSize, WindowSize } from '~/libs/shared'
 import { Button, IconOutline } from '~/libs/ui'
 
 import { useEventCallback } from '../../../hooks'
@@ -13,8 +14,31 @@ interface PaginationProps {
 }
 
 const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
-    const MAX_PAGE_DISPLAY = 3
+    const MAX_PAGE_DISPLAY = 5
+    const MAX_PAGE_MOBILE_DISPLAY = 3
+    const { width: screenWidth }: WindowSize = useWindowSize()
+
     const [displayPages, setDisplayPages] = useState<number[]>([])
+    const mobiledisplayPages = useMemo(() => {
+        if (displayPages.length <= MAX_PAGE_MOBILE_DISPLAY) {
+            return displayPages
+        }
+
+        const LEFT = MAX_PAGE_MOBILE_DISPLAY % 2 === 0 ? MAX_PAGE_MOBILE_DISPLAY / 2 : (MAX_PAGE_MOBILE_DISPLAY + 1) / 2
+        const RIGHT = MAX_PAGE_MOBILE_DISPLAY - LEFT
+        const index = displayPages.indexOf(props.page)
+        let start = Math.max(0, index - LEFT)
+        let end = Math.min(index + RIGHT, displayPages.length)
+        if (end - start < MAX_PAGE_MOBILE_DISPLAY) {
+            start = Math.min(Math.max(0, end - MAX_PAGE_MOBILE_DISPLAY), start)
+        }
+
+        if (end - start < MAX_PAGE_MOBILE_DISPLAY) {
+            end = Math.min(Math.max(start + MAX_PAGE_MOBILE_DISPLAY, end), displayPages.length)
+        }
+
+        return displayPages.slice(start, end)
+    }, [displayPages, props.page, screenWidth]) // eslint-disable-line react-hooks/exhaustive-deps, max-len -- unneccessary dependency: screenWidth
 
     const createDisplayPages = useCallback(() => {
         setDisplayPages(oldDisplayPages => {
@@ -87,6 +111,7 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
     const handleFirstClick = useEventCallback(() => props.onPageChange(1))
     const handlePreviousClick = useEventCallback(() => props.onPageChange(props.page - 1))
     const handleNextClick = useEventCallback(() => props.onPageChange(props.page + 1))
+    const handleLastClick = useEventCallback(() => props.onPageChange(props.totalPages))
 
     return (
         <div className={styles.pageButtons}>
@@ -111,7 +136,7 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
                 className={styles.previous}
             />
             <div className={styles.pageNumbers}>
-                {displayPages.map(i => (
+                {(screenWidth < 767 ? mobiledisplayPages : displayPages).map(i => (
                     <Button
                         key={`page-${i}`}
                         secondary
@@ -132,6 +157,18 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
                 disabled={props.page === props.totalPages}
                 className={styles.next}
             />
+            {!Number.isNaN(props.totalPages) && (
+                <Button
+                    onClick={handleLastClick}
+                    secondary
+                    size='md'
+                    icon={IconOutline.ChevronDoubleRightIcon}
+                    iconToRight
+                    label='LAST'
+                    disabled={props.page === props.totalPages}
+                    className={styles.last}
+                />
+            )}
         </div>
     )
 }

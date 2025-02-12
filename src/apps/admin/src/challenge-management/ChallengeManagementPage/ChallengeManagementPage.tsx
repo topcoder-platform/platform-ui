@@ -17,6 +17,7 @@ import { PaginatedResponse } from '~/libs/core'
 import {
     ChallengeFilters,
     ChallengeList,
+    Display,
     PageContent,
     PageHeader,
 } from '../../lib/components'
@@ -164,7 +165,7 @@ export const ChallengeManagementPage: FC = () => {
                 {searched && challenges.length === 0 && (
                     <p className={styles.noRecordFound}> No record found. </p>
                 )}
-                {searched && challenges.length !== 0 && (
+                <Display visible={searched && challenges.length !== 0}>
                     <ChallengeList
                         challenges={challenges}
                         paging={{
@@ -176,7 +177,7 @@ export const ChallengeManagementPage: FC = () => {
                         currentFilters={filterCriteria}
                         onPageChange={handlePageChange}
                     />
-                )}
+                </Display>
             </PageContent>
         </>
     )

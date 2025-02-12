@@ -24,6 +24,7 @@ import {
     ChallengeAddUserDialog,
     ChallengeUserFilters,
     ChallengeUserList,
+    Display,
     PageContent,
     PageHeader,
 } from '../../lib/components'
@@ -76,7 +77,7 @@ export const ManageUserPage: FC = () => {
         Dispatch<SetStateAction<ChallengeResourceFilterCriteria>>,
     ] = useState<ChallengeResourceFilterCriteria>({
         page: 1,
-        perPage: 25,
+        perPage: 5,
         roleId: '',
     })
     const [users, setUsers]: [
@@ -226,7 +227,7 @@ export const ManageUserPage: FC = () => {
                 {filtered && users.length === 0 && (
                     <p className={styles.noRecordFound}> No users. </p>
                 )}
-                {filtered && users.length !== 0 && (
+                <Display visible={filtered && users.length !== 0}>
                     <ChallengeUserList
                         users={users}
                         onUsersRemove={remove}
@@ -238,7 +239,7 @@ export const ManageUserPage: FC = () => {
                         }}
                         onPageChange={handlePageChange}
                     />
-                )}
+                </Display>
             </PageContent>
             {openAddUserDialog && (
                 <ChallengeAddUserDialog
