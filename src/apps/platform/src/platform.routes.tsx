@@ -12,6 +12,7 @@ import { skillsManagerRoutes } from '~/apps/skills-manager'
 import { walletRoutes } from '~/apps/wallet'
 import { walletAdminRoutes } from '~/apps/wallet-admin'
 import { copilotsRoutes } from '~/apps/copilots'
+import { adminRoutes } from '~/apps/admin'
 
 const Home: LazyLoadedComponent = lazyLoad(
     () => import('./routes/home'),
@@ -43,4 +44,5 @@ export const platformRoutes: Array<PlatformRoute> = [
     ...accountsRoutes,
     ...skillsManagerRoutes,
     ...homeRoutes,
+    ...adminRoutes,
 ]

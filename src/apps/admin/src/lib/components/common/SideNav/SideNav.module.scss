@@ -1,0 +1,43 @@
+@import '@libs/ui/styles/includes';
+
+$side-nav-bg: #2f4050;
+$side-nav-item-color: #a7b1c2;
+$side-nav-item-active-bg: #293846;
+
+.sideNav {
+    height: 100%;
+    padding: 30px 0;
+    background-color: $side-nav-bg;
+
+    nav {
+        .navItem {
+            position: relative;
+            display: flex;
+            align-items: baseline;
+            gap: 13px;
+            padding: 14px 20px 14px 25px;
+
+            font-weight: 600;
+            font-size: 13px;
+            line-height: 19px;
+            color: $side-nav-item-color;
+
+            &.active,
+            &:hover {
+                color: $tc-white;
+                background-color: $side-nav-item-active-bg;
+            }
+
+            &.active {
+                &::before {
+                    content: '';
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    bottom: 0;
+                    border-right: 4px solid $turq-140;
+                }
+            }
+        }
+    }
+}

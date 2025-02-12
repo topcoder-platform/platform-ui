@@ -1,0 +1,59 @@
+@import '@libs/ui/styles/includes';
+@import '../../../styles/includes';
+
+.layout {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - #{$header-height});
+
+    .side {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 220px;
+    }
+
+    .main {
+        margin-left: 220px;
+    }
+
+    @media (max-width: #{$mobile-max}) {
+        .side {
+            display: none;
+        }
+
+        .main {
+            margin-left: 0;
+        }
+    }
+}
+
+.mobileMenuButtonContainer {
+    display: none;
+    padding: 8px 30px;
+    border-top: 1px solid $border-color;
+    background-color: $tc-white;
+    height: 48px;
+
+    .mobileMenuButton {
+        padding: 4px;
+        margin-left: auto;
+    }
+
+    @at-root {
+        :global(.mobileSideNav) {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: calc(100vh - 48px - 48px);
+            z-index: 9999;
+        }
+    }
+
+    @media (max-width: #{$mobile-max}) {
+        display: flex;
+    }
+}

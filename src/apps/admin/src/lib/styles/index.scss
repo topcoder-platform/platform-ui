@@ -1,0 +1,22 @@
+@import './includes';
+
+body.admin-app {
+    color: $body-color;
+    background-color: $bg-color;
+
+    svg.icon {
+        display: inline;
+        width: 1em;
+        height: auto;
+        max-width: 1em;
+        max-height: 1em;
+        stroke: currentColor;
+        vertical-align: middle;
+
+        &.icon-fill {
+            path {
+                fill: currentColor;
+            }
+        }
+    }
+}

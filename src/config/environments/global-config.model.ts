@@ -41,5 +41,11 @@ export interface GlobalConfig {
         ACCOUNT_SETTINGS: string
         PROFILES: string
         TALENTSEARCH: string
+    },
+    ADMIN: {
+        CONNECT_URL: string
+        DIRECT_URL: string
+        WORK_MANAGER_URL: string
+        ONLINE_REVIEW_URL: string
     }
 }
