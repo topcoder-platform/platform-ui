@@ -5,7 +5,7 @@ import { routerContext, RouterContextData } from '~/libs/core'
 
 import { Layout } from '../lib/components'
 import { ChallengeManagementContextProvider } from '../lib/contexts'
-import { adminRoutes } from '../admin-app.routes'
+import { adminRoutes, manageChallengeRouteId } from '../admin-app.routes'
 
 /**
  * The router outlet with layout.
@@ -27,7 +27,7 @@ function useChildRoutes(): Array<JSX.Element> | undefined {
     const { getRouteElement }: RouterContextData = useContext(routerContext)
     const childRoutes = useMemo(
         () => adminRoutes[0].children
-            ?.find(r => r.id === 'challenge-management')
+            ?.find(r => r.id === manageChallengeRouteId)
             ?.children?.map(getRouteElement),
         [], // eslint-disable-line react-hooks/exhaustive-deps -- missing dependency: getRouteElement
     )

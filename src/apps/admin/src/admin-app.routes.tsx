@@ -24,8 +24,10 @@ const ManageUserPage: LazyLoadedComponent = lazyLoad(
 export const toolTitle: string = ToolTitle.admin
 export const rootRoute: string
     = EnvironmentConfig.SUBDOMAIN === AppSubdomain.admin
-        ? '/'
+        ? ''
         : `/${AppSubdomain.admin}`
+
+export const manageChallengeRouteId = 'challenge-management'
 
 export const adminRoutes: ReadonlyArray<PlatformRoute> = [
     // Admin App Root
@@ -33,7 +35,7 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
         authRequired: true,
         children: [
             {
-                element: <Rewrite to='challenge-management' />,
+                element: <Rewrite to={manageChallengeRouteId} />,
                 route: '',
             },
             // Challenge Management Module
@@ -51,8 +53,8 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                     },
                 ],
                 element: <ChallengeManagement />,
-                id: 'challenge-management',
-                route: 'challenge-management',
+                id: manageChallengeRouteId,
+                route: manageChallengeRouteId,
             },
         ],
         domain: AppSubdomain.admin,
