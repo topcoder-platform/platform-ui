@@ -1,18 +1,10 @@
-import {
-    FC,
-    JSXElementConstructor,
-    PropsWithChildren,
-    useContext,
-    useEffect,
-    useMemo,
-} from 'react'
-import { Outlet, Routes, useLocation } from 'react-router-dom'
+import { FC, useContext, useEffect, useMemo } from 'react'
+import { Outlet, Routes } from 'react-router-dom'
 
 import { routerContext, RouterContextData } from '~/libs/core'
 
-import { NullLayout, SWRConfigProvider } from './lib'
-import { adminRoutes, toolTitle } from './admin-app.routes'
-import ChallengeManagement from './challenge-management/ChallengeManagement'
+import { Layout, SWRConfigProvider } from './lib'
+import { toolTitle } from './admin-app.routes'
 import './lib/styles/index.scss'
 
 /**
@@ -22,7 +14,6 @@ const AdminApp: FC = () => {
     const { getChildRoutes }: RouterContextData = useContext(routerContext)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- missing dependency: getChildRoutes
     const childRoutes = useMemo(() => getChildRoutes(toolTitle), [])
-    const AppLayout = useAppLayout()
 
     useEffect(() => {
         document.body.classList.add('admin-app')
@@ -34,29 +25,13 @@ const AdminApp: FC = () => {
     return (
         <div>
             <SWRConfigProvider>
-                <AppLayout>
+                <Layout>
                     <Outlet />
                     <Routes>{childRoutes}</Routes>
-                </AppLayout>
+                </Layout>
             </SWRConfigProvider>
         </div>
     )
-}
-
-function useAppLayout(): JSXElementConstructor<PropsWithChildren> {
-    const challengeManagementPath = adminRoutes[0].children?.find(
-        r => r.id === 'challenge-management',
-    )?.route
-    const locationPath = useLocation().pathname
-
-    if (
-        challengeManagementPath
-        && locationPath.includes(challengeManagementPath)
-    ) {
-        return ChallengeManagement.Layout
-    }
-
-    return NullLayout
 }
 
 export default AdminApp

@@ -3,14 +3,8 @@ import cn from 'classnames'
 
 import styles from './PageHeader.module.scss'
 
-interface PageHeaderProps {
-    noBackground?: boolean
-}
-
-const PageHeader: FC<PropsWithChildren<PageHeaderProps>> = props => (
-    <div
-        className={cn(styles.pageHeader, { [styles.noBg]: props.noBackground })}
-    >
+const PageHeader: FC<PropsWithChildren> = props => (
+    <div className={cn(styles.pageHeader)}>
         <div className={styles.inner}>{props.children}</div>
     </div>
 )
