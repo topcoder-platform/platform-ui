@@ -141,7 +141,7 @@ export const ChallengeManagementPage: FC = () => {
         <>
             <PageTitle>{pageTitle}</PageTitle>
             <PageHeader>
-                <h2>{pageTitle}</h2>
+                <h3>{pageTitle}</h3>
             </PageHeader>
             <PageContent>
                 <ChallengeFilters

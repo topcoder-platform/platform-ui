@@ -182,32 +182,6 @@ const Actions: FC<{
                     <li className={cn({ disabled: !hasProjectId })}>
                         {hasProjectId && (
                             <a
-                                href={`${EnvironmentConfig.ADMIN.CONNECT_URL}/projects/${props.challenge.projectId}`}
-                                target='_blank'
-                                rel='noreferrer'
-                            >
-                                Connect Project
-                            </a>
-                        )}
-                        {!hasProjectId && <span>Connect Project</span>}
-                    </li>
-                    <li className={cn({ disabled: !hasLegacyId })}>
-                        {hasLegacyId && (
-                            <a
-                                href={
-                                    `${EnvironmentConfig.ADMIN.DIRECT_URL}/contest/detail?projectId=${props.challenge.legacyId}` /* eslint-disable-line max-len */
-                                }
-                                target='_blank'
-                                rel='noreferrer'
-                            >
-                                Direct Project
-                            </a>
-                        )}
-                        {!hasLegacyId && <span>Direct Project</span>}
-                    </li>
-                    <li className={cn({ disabled: !hasProjectId })}>
-                        {hasProjectId && (
-                            <a
                                 href={
                                     `${EnvironmentConfig.ADMIN.WORK_MANAGER_URL}/projects/${props.challenge.projectId}/challenges/${props.challenge.id}/view` /* eslint-disable-line max-len */
                                 }

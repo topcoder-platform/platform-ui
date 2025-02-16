@@ -4,7 +4,11 @@
 .challengeFilters {
     display: flex;
     flex-direction: column;
-    padding: 14px 15px 7px;
+    padding: $sp-8 $sp-8 0;
+
+    @include ltelg {
+        padding: $sp-4 $sp-4 0;
+    }
 
     .filters {
         display: grid;

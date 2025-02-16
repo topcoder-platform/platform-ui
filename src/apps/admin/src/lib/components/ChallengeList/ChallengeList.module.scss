@@ -1,7 +1,11 @@
 @import '@libs/ui/styles/includes';
 
 .challengeList {
-    padding: 0 15px;
+    padding: 0 $sp-8;
+
+    @include ltelg {
+        padding: 0 $sp-4;
+    }
 }
 
 .challengeTitle {

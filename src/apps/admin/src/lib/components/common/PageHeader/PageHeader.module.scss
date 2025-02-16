@@ -2,10 +2,7 @@
 @import '../../../../lib/styles/includes';
 
 .pageHeader {
-    padding: 20px 30px;
-    background-color: $tc-white;
-    border-top: 1px solid $border-color;
-    border-bottom: 1px solid $border-color;
+    color: $black-100;
 
     .inner {
         display: flex;
@@ -13,23 +10,5 @@
         margin: 0 auto;
         box-sizing: border-box;
         max-width: $xl-max;
-    }
-
-    &.noBg {
-        background: none;
-        border-bottom-color: transparent;
-    }
-
-    h1,
-    h2,
-    h3 {
-        font-weight: 400;
-        font-size: 24px;
-        margin-bottom: 10px;
-        text-transform: none;
-    }
-
-    @media (max-width: #{$mobile-max}) {
-        padding: 20px 16px;
     }
 }

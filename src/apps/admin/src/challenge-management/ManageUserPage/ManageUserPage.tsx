@@ -193,8 +193,8 @@ export const ManageUserPage: FC = () => {
     return (
         <>
             <PageTitle>{pageTitle}</PageTitle>
-            <PageHeader noBackground>
-                <h2>{pageTitle}</h2>
+            <PageHeader>
+                <h3>{pageTitle}</h3>
                 <div className={styles.headerActions}>
                     <Button primary onClick={handleOpenAddUserDialog} size='lg'>
                         <PlusIcon className='icon icon-fill' />

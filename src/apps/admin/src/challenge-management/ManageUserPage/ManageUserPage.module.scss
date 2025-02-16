@@ -1,7 +1,10 @@
+@import '@libs/ui/styles/includes';
+
 .headerActions {
     display: flex;
     gap: 30px;
     margin-left: auto;
+    margin-top: $sp-2;
 }
 
 .loadingSpinnerContainer {
