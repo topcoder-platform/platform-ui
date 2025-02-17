@@ -8,9 +8,9 @@ import { Button, IconSolid, InputDatePicker, InputMultiselectOption,
     InputRadio, InputSelect, InputSelectOption, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
 import { InputSkillSelector } from '~/libs/shared'
 
-import { saveCopilotRequest, useFetchProjects } from '../../services/projects'
-import { ProjectTypes } from '../../constants'
-import { Project } from '../../models/Project'
+import { ProjectsResponse, useProjects } from '../../services/projects'
+import { ProjectTypes, ProjectTypeValues } from '../../constants'
+import { saveCopilotRequest } from '../../services/copilot-requests'
 
 import styles from './styles.module.scss'
 
@@ -21,7 +21,7 @@ const CopilotRequestForm: FC<{}> = () => {
     const [isFormChanged, setIsFormChanged] = useState(false)
     const [formErrors, setFormErrors] = useState<any>({})
     const [searchTerm, setSearchTerm] = useState<string>('')
-    const { data: projectsData }: { data?: Project[] } = useFetchProjects(searchTerm)
+    const { data: projectsData }: ProjectsResponse = useProjects(searchTerm)
     const [existingCopilot, setExistingCopilot] = useState<string>('')
     const [paymentType, setPaymentType] = useState<string>('')
 
@@ -36,7 +36,7 @@ const CopilotRequestForm: FC<{}> = () => {
 
     const projectTypes = ProjectTypes ? ProjectTypes.map(project => ({
         label: project,
-        value: project,
+        value: ProjectTypeValues[project],
     }))
         : []
 

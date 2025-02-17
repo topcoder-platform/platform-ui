@@ -1,0 +1,18 @@
+@import '@libs/ui/styles/includes';
+
+.actionButtons {
+    display: flex;
+    gap: $sp-1;
+    align-items: center;
+    padding: $sp-2 0;
+}
+
+.viewRequestIcon {
+    color: $turq-180;
+    padding: 0 $sp-1;
+    cursor: pointer;
+
+    &:hover {
+        color: $turq-140;
+    }
+}

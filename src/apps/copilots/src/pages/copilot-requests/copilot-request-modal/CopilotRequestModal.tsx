@@ -1,0 +1,116 @@
+import { FC, useCallback, useMemo } from 'react'
+
+import { BaseModal, Button, useConfirmationModal } from '~/libs/ui'
+import { textFormatDateLocaleShortString } from '~/libs/shared'
+
+import { CopilotRequest } from '../../../models/CopilotRequest'
+import { Project } from '../../../models/Project'
+import { approveCopilotRequest } from '../../../services/copilot-requests'
+
+import styles from './CopilotRequestModal.module.scss'
+
+interface CopilotRequestModalProps {
+    onClose: () => void
+    project: Project
+    request: CopilotRequest
+}
+
+const CopilotRequestModal: FC<CopilotRequestModalProps> = props => {
+    const confirmModal = useConfirmationModal()
+
+    const confirm = useCallback(async ({ title, content, action }: any) => {
+        const confirmed = await confirmModal.confirm({ content, title })
+        if (!confirmed) {
+            return
+        }
+
+        action()
+    }, [confirmModal])
+
+    const confirmApprove = useMemo(() => confirm.bind(0, {
+        action: () => approveCopilotRequest(props.request),
+        content: 'Are you sure you want to approve this request?',
+        title: 'Approve request',
+    }), [confirm, props.request])
+
+    const confirmReject = useMemo(() => confirm.bind(0, {
+        // TODO: implement reject request
+        action: () => approveCopilotRequest(props.request),
+        content: 'Are you sure you want to reject this request?',
+        title: 'Reject request',
+    }), [confirm, props.request])
+
+    return (
+        <BaseModal
+            onClose={props.onClose}
+            open
+            size='lg'
+            title='Copilot Opportunity'
+            buttons={props.request.status === 'new' && (
+                <>
+                    <Button primary onClick={confirmApprove} label='Approve Request' />
+                    <Button primary variant='danger' onClick={confirmReject} label='Reject Request' />
+                </>
+            )}
+        >
+            <div className={styles.wrap}>
+                <div className={styles.detailsLine}>
+                    <div>Project</div>
+                    <div>{props.project.name}</div>
+                </div>
+                <div className={styles.detailsLine}>
+                    <div>Request Status</div>
+                    <div>{props.request.status}</div>
+                </div>
+                <div className={styles.detailsLine}>
+                    <div>Project Type</div>
+                    <div>{props.request.projectType}</div>
+                </div>
+                <div className={styles.detailsLine}>
+                    <div>Complexity</div>
+                    <div>{props.request.complexity}</div>
+                </div>
+                <div className={styles.detailsLine}>
+                    <div>Overview</div>
+                    <div>{props.request.overview}</div>
+                </div>
+                <div className={styles.detailsLine}>
+                    <div>Skills</div>
+                    <div>
+                        {
+                            props.request.skills
+                                .map(s => s.name)
+                                .join(', ')
+                        }
+                    </div>
+                </div>
+                <div className={styles.detailsLine}>
+                    <div>Start Date</div>
+                    <div>{textFormatDateLocaleShortString(new Date(props.request.startDate ?? ''))}</div>
+                </div>
+                <div className={styles.detailsLine}>
+                    <div>Duration (weeks)</div>
+                    <div>{props.request.numWeeks}</div>
+                </div>
+                <div className={styles.detailsLine}>
+                    <div>Timezone requirements or restrictions</div>
+                    <div>{props.request.tzRestrictions}</div>
+                </div>
+                <div className={styles.detailsLine}>
+                    <div>Commitment per week (hours)</div>
+                    <div>{props.request.numHoursPerWeek}</div>
+                </div>
+                <div className={styles.detailsLine}>
+                    <div>Require direct spoken communication with the customer (i.e. phone calls, WebEx, etc.)</div>
+                    <div>{props.request.requiresCommunication}</div>
+                </div>
+                <div className={styles.detailsLine}>
+                    <div>Payment type (standard/something else)</div>
+                    <div>{props.request.paymentType}</div>
+                </div>
+            </div>
+        </BaseModal>
+    )
+}
+
+export default CopilotRequestModal
