@@ -13,7 +13,7 @@ import { ProjectTypes } from '../../constants'
 import { Project } from '../../models/Project'
 
 import styles from './styles.module.scss'
-
+// eslint-disable-next-line
 const CopilotRequestForm: FC<{}> = () => {
     const { profile }: ProfileContextData = useContext(profileContext)
 
