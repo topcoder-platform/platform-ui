@@ -77,9 +77,14 @@ const InputSelectReact: FC<InputSelectReactProps> = props => {
     const wrapRef = useRef<HTMLDivElement>()
 
     // this is the selected option, memoize it once found
-    const selected = useMemo(() => (
-        find(props.options, { value: props.value }) as InputSelectOption
-    ), [props.options, props.value])
+    const selected = useMemo(() => {
+        if (props.value) {
+            return find(props.options, { value: props.value }) as InputSelectOption
+        }
+
+        // eslint-disable-next-line unicorn/no-null
+        return null // return null when no valid value is provided
+    }, [props.options, props.value])
 
     // we need to create a portal to append our menus so they are always visible
     const menuPortalTarget = useMemo(() => {

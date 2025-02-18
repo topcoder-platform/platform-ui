@@ -13,7 +13,7 @@ import { ProjectTypes } from '../../constants'
 import { Project } from '../../models/Project'
 
 import styles from './styles.module.scss'
-
+// eslint-disable-next-line
 const CopilotRequestForm: FC<{}> = () => {
     const { profile }: ProfileContextData = useContext(profileContext)
 
@@ -77,6 +77,13 @@ const CopilotRequestForm: FC<{}> = () => {
             ...prevValues,
             projectId: option.target.value,
         }))
+
+        setFormErrors((prevErrors: any) => {
+            const updatedErrors = { ...prevErrors }
+            delete updatedErrors.projectId
+
+            return updatedErrors
+        })
     }
 
     function handleFormValueChange(
@@ -207,7 +214,6 @@ const CopilotRequestForm: FC<{}> = () => {
                         otherPaymentType: '',
                         overview: '',
                         paymentType: '',
-                        projectId: '',
                         projectType: '',
                         requiresCommunication: '',
                         skills: [],
@@ -222,6 +228,8 @@ const CopilotRequestForm: FC<{}> = () => {
                 .catch(() => {
                     toast.error('Error sending copilot request')
                 })
+        } else {
+            window.scrollTo({ behavior: 'smooth', top: 0 })
         }
 
         setFormErrors(updatedFormErrors)
@@ -239,11 +247,18 @@ const CopilotRequestForm: FC<{}> = () => {
                         !
                         This form is to request a copilot for your project. Please fill in the details below.
                     </p>
+                    { !isEmpty(formErrors)
+                        && (
+                            <p className={styles.error}>
+                                <IconSolid.ExclamationIcon />
+                                Resolve the errors on the form before submitting
+                            </p>
+                        )}
                     <p className={styles.formRow}>Select the project you want the copilot for</p>
                     <InputSelectReact
                         tabIndex={0}
                         options={projects}
-                        value={formValues.projectId}
+                        value={formValues.projectId || ''}
                         onChange={handleProjectSelect}
                         onInputChange={handleProjectSearch}
                         name='project'
