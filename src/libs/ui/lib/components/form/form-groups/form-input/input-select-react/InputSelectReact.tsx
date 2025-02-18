@@ -81,7 +81,9 @@ const InputSelectReact: FC<InputSelectReactProps> = props => {
         if (props.value) {
             return find(props.options, { value: props.value }) as InputSelectOption
         }
-        return null; // return null when no valid value is provided
+
+        // eslint-disable-next-line unicorn/no-null
+        return null // return null when no valid value is provided
     }, [props.options, props.value])
 
     // we need to create a portal to append our menus so they are always visible
