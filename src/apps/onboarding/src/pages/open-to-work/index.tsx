@@ -4,10 +4,10 @@ import { connect } from 'react-redux'
 import classNames from 'classnames'
 
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
-import { FormInputCheckbox } from '~/apps/self-service/src/components/form-elements'
 
 import { ProgressBar } from '../../components/progress-bar'
 import { updateMemberOpenForWork } from '../../redux/actions/member'
+import FormInputCheckbox from '../../components/form-input-checkbox'
 
 import styles from './styles.module.scss'
 
