@@ -8,12 +8,12 @@ import { Button, IconSolid, InputDatePicker, InputMultiselectOption,
     InputRadio, InputSelect, InputSelectOption, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
 import { InputSkillSelector } from '~/libs/shared'
 
-import { saveCopilotRequest, useFetchProjects } from '../../services/projects'
-import { ProjectTypes } from '../../constants'
-import { Project } from '../../models/Project'
+import { ProjectsResponse, useProjects } from '../../services/projects'
+import { ProjectTypes, ProjectTypeValues } from '../../constants'
+import { saveCopilotRequest } from '../../services/copilot-requests'
 
 import styles from './styles.module.scss'
-
+// eslint-disable-next-line
 const CopilotRequestForm: FC<{}> = () => {
     const { profile }: ProfileContextData = useContext(profileContext)
 
@@ -21,7 +21,7 @@ const CopilotRequestForm: FC<{}> = () => {
     const [isFormChanged, setIsFormChanged] = useState(false)
     const [formErrors, setFormErrors] = useState<any>({})
     const [searchTerm, setSearchTerm] = useState<string>('')
-    const { data: projectsData }: { data?: Project[] } = useFetchProjects(searchTerm)
+    const { data: projectsData }: ProjectsResponse = useProjects(searchTerm)
     const [existingCopilot, setExistingCopilot] = useState<string>('')
     const [paymentType, setPaymentType] = useState<string>('')
 
@@ -36,7 +36,7 @@ const CopilotRequestForm: FC<{}> = () => {
 
     const projectTypes = ProjectTypes ? ProjectTypes.map(project => ({
         label: project,
-        value: project,
+        value: ProjectTypeValues[project],
     }))
         : []
 
@@ -77,6 +77,13 @@ const CopilotRequestForm: FC<{}> = () => {
             ...prevValues,
             projectId: option.target.value,
         }))
+
+        setFormErrors((prevErrors: any) => {
+            const updatedErrors = { ...prevErrors }
+            delete updatedErrors.projectId
+
+            return updatedErrors
+        })
     }
 
     function handleFormValueChange(
@@ -207,7 +214,6 @@ const CopilotRequestForm: FC<{}> = () => {
                         otherPaymentType: '',
                         overview: '',
                         paymentType: '',
-                        projectId: '',
                         projectType: '',
                         requiresCommunication: '',
                         skills: [],
@@ -222,6 +228,8 @@ const CopilotRequestForm: FC<{}> = () => {
                 .catch(() => {
                     toast.error('Error sending copilot request')
                 })
+        } else {
+            window.scrollTo({ behavior: 'smooth', top: 0 })
         }
 
         setFormErrors(updatedFormErrors)
@@ -239,11 +247,18 @@ const CopilotRequestForm: FC<{}> = () => {
                         !
                         This form is to request a copilot for your project. Please fill in the details below.
                     </p>
+                    { !isEmpty(formErrors)
+                        && (
+                            <p className={styles.error}>
+                                <IconSolid.ExclamationIcon />
+                                Resolve the errors on the form before submitting
+                            </p>
+                        )}
                     <p className={styles.formRow}>Select the project you want the copilot for</p>
                     <InputSelectReact
                         tabIndex={0}
                         options={projects}
-                        value={formValues.projectId}
+                        value={formValues.projectId || ''}
                         onChange={handleProjectSelect}
                         onInputChange={handleProjectSearch}
                         name='project'

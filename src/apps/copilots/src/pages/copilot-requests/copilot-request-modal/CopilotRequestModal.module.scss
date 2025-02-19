@@ -1,0 +1,15 @@
+@import '@libs/ui/styles/includes';
+
+.detailsLine {
+    display: flex;
+    align-items: flex-start;
+    padding: $sp-2 $sp-3;
+    border-radius: $sp-1;
+    gap: $sp-3;
+    > * {
+        flex: 1 1 50%;
+    }
+    &:nth-child(2n+1) {
+        background: $black-10;
+    }
+}
