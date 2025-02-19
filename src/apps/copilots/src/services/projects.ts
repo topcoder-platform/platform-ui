@@ -1,3 +1,4 @@
+import { chunk } from 'lodash'
 import useSWR, { SWRResponse } from 'swr'
 
 import { xhrGetAsync } from '~/libs/core'
@@ -20,9 +21,20 @@ export type ProjectsResponse = SWRResponse<Project[], Project[]>
  * @returns {ProjectsResponse} - The response containing the projects data.
  */
 export const useProjects = (search?: string, config?: {isPaused?: () => boolean, filter: any}): ProjectsResponse => {
-    const url = buildUrl(baseUrl, { name: search, ...config?.filter })
+    const params = { name: search, ...config?.filter }
+    const url = buildUrl(baseUrl, params)
 
-    const fetcher = (urlp: string): Promise<Project[]> => xhrGetAsync<Project[]>(urlp)
+    const fetcher = (): Promise<Project[]> => {
+        if (config?.filter?.id && Array.isArray(config.filter.id)) {
+            const chunks = chunk(config.filter.id, 20)
+            return Promise.all(
+                chunks.map(page => xhrGetAsync<Project[]>(buildUrl(baseUrl, { ...params, id: page }))),
+            )
+                .then(responses => responses.flat())
+        }
+
+        return xhrGetAsync<Project[]>(url)
+    }
 
     return useSWR(url, fetcher, {
         isPaused: config?.isPaused ?? (() => false),
