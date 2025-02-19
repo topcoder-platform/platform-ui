@@ -56,7 +56,7 @@ const CopilotRequestModal: FC<CopilotRequestModalProps> = props => {
             <div className={styles.wrap}>
                 <div className={styles.detailsLine}>
                     <div>Project</div>
-                    <div>{props.project.name}</div>
+                    <div>{props.project?.name}</div>
                 </div>
                 <div className={styles.detailsLine}>
                     <div>Request Status</div>
