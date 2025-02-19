@@ -13,7 +13,7 @@
 
     span {
       text-decoration: underline;
-      color: #2e55b9;
+      color: $link-blue;
       cursor: pointer;
     }
   }
@@ -29,7 +29,7 @@
       height: 20px !important;
 
       &:hover {
-        border-color: #137d60;
+        border-color: $green-1;
       }
     }
 
@@ -45,8 +45,8 @@
 
   .rc-checkbox.form-input-rc-checkbox.rc-checkbox-checked {
     .rc-checkbox-inner {
-      background-color: #137d60;
-      border-color: #137d60;
+      background-color: $green-1;
+      border-color: $green-1;
     }
   }
 }
@@ -55,7 +55,7 @@
   display: inline-block;
 
   .span {
-    color: #2e55b9;
+    color: $link-blue;
     text-decoration: underline;
   }
 }
