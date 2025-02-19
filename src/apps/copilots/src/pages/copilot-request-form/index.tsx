@@ -42,6 +42,11 @@ const CopilotRequestForm: FC<{}> = () => {
 
     function exisitingCopilotToggle(t: 'yes'|'no'): void {
         setExistingCopilot(t)
+        setFormErrors((prevFormErrors: any) => {
+            const updatedErrors = { ...prevFormErrors }
+            delete updatedErrors.existingCopilot
+            return updatedErrors
+        })
         setIsFormChanged(true)
     }
 
@@ -115,7 +120,7 @@ const CopilotRequestForm: FC<{}> = () => {
             let errorKey: string
             switch (key) {
                 case 'copilotUsername':
-                    errorKey = 'existingCopilot'
+                    errorKey = 'copilotUsername'
                     break
                 default:
                     errorKey = key
@@ -154,6 +159,11 @@ const CopilotRequestForm: FC<{}> = () => {
         const fieldValidations: { condition: boolean; key: string; message: string }[] = [
             { condition: !formValues.projectId, key: 'projectId', message: 'Project is required' },
             { condition: !existingCopilot, key: 'existingCopilot', message: 'Selection is required' },
+            {
+                condition: existingCopilot === 'yes' && !formValues.copilotUsername,
+                key: 'copilotUsername',
+                message: 'Username is required',
+            },
             { condition: !formValues.complexity, key: 'complexity', message: 'Selection is required' },
             {
                 condition: !formValues.requiresCommunication,
@@ -166,6 +176,11 @@ const CopilotRequestForm: FC<{}> = () => {
                 condition: !formValues.overview || formValues.overview.length < 10,
                 key: 'overview',
                 message: 'Project overview must be at least 10 characters',
+            },
+            {
+                condition: formValues.paymentType === 'other' && !formValues.otherPaymentType,
+                key: 'otherPaymentType',
+                message: 'Cannot leave the field empty',
             },
             {
                 condition: !formValues.skills || formValues.skills.length === 0,
@@ -203,7 +218,11 @@ const CopilotRequestForm: FC<{}> = () => {
         )
 
         if (isEmpty(updatedFormErrors)) {
-            saveCopilotRequest(formValues)
+            const cleanedFormValues: any = Object.fromEntries(
+                Object.entries(formValues)
+                    .filter(([, value]) => value !== ''), // Excludes null and undefined
+            )
+            saveCopilotRequest(cleanedFormValues)
                 .then(() => {
                     toast.success('Copilot request sent successfully')
                     setFormValues({
@@ -308,11 +327,18 @@ const CopilotRequestForm: FC<{}> = () => {
                                     type='text'
                                     onChange={bind(handleFormValueChange, this, 'copilotUsername')}
                                     value={formValues.copilotUsername}
+                                    error={formErrors.copilotUsername}
                                 />
                             </div>
                         )
                     }
                     {formErrors.existingCopilot && (
+                        <p className={styles.error}>
+                            <IconSolid.ExclamationIcon />
+                            {formErrors.existingCopilot}
+                        </p>
+                    )}
+                    {formValues.existingCopilot === 'yes' && !formValues.copilotUsername && (
                         <p className={styles.error}>
                             <IconSolid.ExclamationIcon />
                             {formErrors.existingCopilot}
