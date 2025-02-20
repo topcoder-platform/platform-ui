@@ -12,6 +12,7 @@ export interface CopilotRequest {
     numWeeks: number,
     overview: string,
     paymentType: string,
+    otherPaymentType: string,
     requiresCommunication: 'yes' | 'no',
     skills: UserSkill[],
     startDate: Date,

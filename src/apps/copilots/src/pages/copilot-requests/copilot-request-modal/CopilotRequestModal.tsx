@@ -66,6 +66,12 @@ const CopilotRequestModal: FC<CopilotRequestModalProps> = props => {
                     <div>Project Type</div>
                     <div>{props.request.projectType}</div>
                 </div>
+                {props.request.copilotUsername && (
+                    <div className={styles.detailsLine}>
+                        <div>Requested Copilot</div>
+                        <div>{props.request.copilotUsername}</div>
+                    </div>
+                )}
                 <div className={styles.detailsLine}>
                     <div>Complexity</div>
                     <div>{props.request.complexity}</div>
@@ -106,7 +112,10 @@ const CopilotRequestModal: FC<CopilotRequestModalProps> = props => {
                 </div>
                 <div className={styles.detailsLine}>
                     <div>Payment type (standard/something else)</div>
-                    <div>{props.request.paymentType}</div>
+                    <div>
+                        {props.request.paymentType === 'other' && props.request.otherPaymentType
+                            ? props.request.otherPaymentType : props.request.paymentType}
+                    </div>
                 </div>
             </div>
         </BaseModal>
