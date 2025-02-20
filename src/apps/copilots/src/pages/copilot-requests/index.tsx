@@ -149,7 +149,7 @@ const CopilotRequestsPage: FC = () => {
     const tableData = useMemo(() => requests.map(request => ({
         ...request,
         projectName: projectsMap[request.projectId]?.name,
-        type: ProjectTypeLabels[request.projectType],
+        type: ProjectTypeLabels[request.projectType] ?? '',
     })), [projectsMap, requests])
 
     // header button config
