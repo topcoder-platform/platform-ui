@@ -295,7 +295,7 @@ const CopilotRequestForm: FC<{}> = () => {
                     <div className={styles.formRadioBtn}>
                         <InputRadio
                             label='Yes'
-                            name='yes'
+                            name='existingCopilot'
                             id='yes'
                             value='Yes'
                             checked={existingCopilot === 'yes'}
@@ -303,7 +303,7 @@ const CopilotRequestForm: FC<{}> = () => {
                         />
                         <InputRadio
                             label='No'
-                            name='no'
+                            name='existingCopilot'
                             id='no'
                             value='No'
                             checked={existingCopilot === 'no'}
@@ -492,7 +492,7 @@ const CopilotRequestForm: FC<{}> = () => {
                     <div className={styles.formRadioBtn}>
                         <InputRadio
                             label='Yes'
-                            name='yes'
+                            name='requiresCommunication'
                             id='yes'
                             value='yes'
                             checked={formValues.requiresCommunication === 'yes'}
@@ -500,7 +500,7 @@ const CopilotRequestForm: FC<{}> = () => {
                         />
                         <InputRadio
                             label='No'
-                            name='no'
+                            name='requiresCommunication'
                             id='no'
                             value='no'
                             checked={formValues.requiresCommunication === 'no'}
