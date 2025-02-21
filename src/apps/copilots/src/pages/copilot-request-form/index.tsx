@@ -244,9 +244,7 @@ const CopilotRequestForm: FC<{}> = () => {
                     setExistingCopilot('')
                     setPaymentType('')
                 })
-                .catch(() => {
-                    toast.error('Error sending copilot request')
-                })
+                .catch(e => toast.error(e.response.data.details))
         } else {
             window.scrollTo({ behavior: 'smooth', top: 0 })
         }
