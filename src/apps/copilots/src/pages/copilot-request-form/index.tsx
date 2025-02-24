@@ -256,7 +256,10 @@ const CopilotRequestForm: FC<{}> = () => {
                 })
                 .catch(e => {
                     toast.error(e.message)
-                    toast.error(e.response.data.details)
+                    const details = e.response?.data?.details
+                    if (details) {
+                        toast.error(details)
+                    }
                 })
         } else {
             window.scrollTo({ behavior: 'smooth', top: 0 })
