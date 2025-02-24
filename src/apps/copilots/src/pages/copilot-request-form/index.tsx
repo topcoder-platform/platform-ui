@@ -198,6 +198,11 @@ const CopilotRequestForm: FC<{}> = () => {
                 message: 'Providing number of weeks is required',
             },
             {
+                condition: formValues.numWeeks <= 0,
+                key: 'numWeeks',
+                message: 'Number of weeks should be a positive number',
+            },
+            {
                 condition: !formValues.tzRestrictions,
                 key: 'tzRestrictions',
                 message: 'Providing timezone restrictions is required. Type No if no restrictions',
@@ -206,6 +211,11 @@ const CopilotRequestForm: FC<{}> = () => {
                 condition: !formValues.numHoursPerWeek,
                 key: 'numHoursPerWeek',
                 message: 'Providing commitment per week is required',
+            },
+            {
+                condition: formValues.numHoursPerWeek <= 0,
+                key: 'numHoursPerWeek',
+                message: 'Number of hours per week should be a positive number',
             },
         ]
 
@@ -244,7 +254,10 @@ const CopilotRequestForm: FC<{}> = () => {
                     setExistingCopilot('')
                     setPaymentType('')
                 })
-                .catch(e => toast.error(e.response.data.details))
+                .catch(e => {
+                    toast.error(e.message)
+                    toast.error(e.response.data.details)
+                })
         } else {
             window.scrollTo({ behavior: 'smooth', top: 0 })
         }
