@@ -1,4 +1,5 @@
 import { FC, FocusEvent } from 'react'
+import { UseFormRegisterReturn } from 'react-hook-form'
 import cn from 'classnames'
 
 import { FormInputTooltipOptions, InputValue } from '../../../form-input.model'
@@ -14,6 +15,7 @@ export interface InputTextProps {
     readonly autocomplete?: FormInputAutocompleteOption
     readonly checked?: boolean
     readonly className?: string
+    readonly classNameWrapper?: string
     readonly dirty?: boolean
     readonly disabled?: boolean
     readonly error?: string
@@ -32,6 +34,7 @@ export interface InputTextProps {
     readonly value?: InputValue
     readonly autoFocus?: boolean
     readonly forceUpdateValue?: boolean
+    readonly inputControl?: UseFormRegisterReturn
 }
 
 const InputText: FC<InputTextProps> = (props: InputTextProps) => {
@@ -56,14 +59,15 @@ const InputText: FC<InputTextProps> = (props: InputTextProps) => {
                     : undefined
             }
             disabled={!!props.disabled}
-            onBlur={props.onBlur}
-            onChange={props.onChange}
-            name={props.name}
             placeholder={props.placeholder}
             readOnly={props.readonly}
             spellCheck={!!props.spellCheck}
             tabIndex={props.tabIndex ?? -1}
             type={props.type || 'text'}
+            {...(props.inputControl ?? {})}
+            onBlur={props.inputControl ? props.inputControl.onBlur : props.onBlur}
+            onChange={props.inputControl ? props.inputControl.onChange : props.onChange}
+            name={props.inputControl ? props.inputControl.name : props.name}
         />
     )
 

@@ -1,4 +1,4 @@
-import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
+import { AppSubdomain, ToolTitle } from '~/config'
 import {
     lazyLoad,
     LazyLoadedComponent,
@@ -6,6 +6,12 @@ import {
     Rewrite,
     UserRole,
 } from '~/libs/core'
+
+import {
+    manageChallengeRouteId,
+    rootRoute,
+    userManagementRouteId,
+} from './config/routes.config'
 
 const AdminApp: LazyLoadedComponent = lazyLoad(() => import('./AdminApp'))
 
@@ -21,13 +27,12 @@ const ManageUserPage: LazyLoadedComponent = lazyLoad(
     'ManageUserPage',
 )
 
-export const toolTitle: string = ToolTitle.admin
-export const rootRoute: string
-    = EnvironmentConfig.SUBDOMAIN === AppSubdomain.admin
-        ? ''
-        : `/${AppSubdomain.admin}`
+const UserManagementPage: LazyLoadedComponent = lazyLoad(
+    () => import('./user-management/UserManagementPage'),
+    'UserManagementPage',
+)
 
-export const manageChallengeRouteId = 'challenge-management'
+export const toolTitle: string = ToolTitle.admin
 
 export const adminRoutes: ReadonlyArray<PlatformRoute> = [
     // Admin App Root
@@ -55,6 +60,12 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <ChallengeManagement />,
                 id: manageChallengeRouteId,
                 route: manageChallengeRouteId,
+            },
+            // User Management Module
+            {
+                element: <UserManagementPage />,
+                id: userManagementRouteId,
+                route: userManagementRouteId,
             },
         ],
         domain: AppSubdomain.admin,

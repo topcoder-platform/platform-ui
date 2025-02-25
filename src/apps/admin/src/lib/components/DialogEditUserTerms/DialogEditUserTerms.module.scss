@@ -1,0 +1,80 @@
+.modal {
+    width: 800px !important;
+}
+
+.textTitle {
+    font-size: 22px;
+    line-height: 26px;
+    margin-bottom: 20px;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+
+    th:first-child {
+        padding-left: 16px !important;
+    }
+}
+
+.blockContent {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.blockContentSection {
+    display: flex;
+    flex-direction: column;
+}
+
+.blockFilter {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.inputField {
+    flex: 1;
+}
+
+.actionButtons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.blockAction {
+    width: 130px;
+}
+
+.tableCell {
+    white-space: break-spaces !important;
+    text-align: left !important;
+}
+
+.loadingSpinnerContainer {
+    position: relative;
+    height: 100px;
+
+    .spinner {
+        background: none;
+    }
+}
+
+.dialogLoadingSpinnerContainer {
+    position: absolute;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    bottom: 0;
+    height: 64px;
+    left: 0;
+
+    .spinner {
+        background: none;
+    }
+}

@@ -8,6 +8,7 @@ export interface GlobalConfig {
         V3: string
         V4: string
         V5: string
+        URL: string
     },
     STANDARDIZED_SKILLS_API: string,
     AUTH: {

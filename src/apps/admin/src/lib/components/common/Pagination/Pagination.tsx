@@ -11,6 +11,7 @@ interface PaginationProps {
     page: number
     totalPages: number
     onPageChange: (page: number) => void
+    disabled?: boolean
 }
 
 const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
@@ -122,7 +123,7 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
                 icon={IconOutline.ChevronDoubleLeftIcon}
                 iconToLeft
                 label='FIRST'
-                disabled={props.page === 1}
+                disabled={props.page === 1 || props.disabled}
                 className={styles.first}
             />
             <Button
@@ -132,7 +133,7 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
                 icon={IconOutline.ChevronLeftIcon}
                 iconToLeft
                 label='PREVIOUS'
-                disabled={props.page === 1}
+                disabled={props.page === 1 || props.disabled}
                 className={styles.previous}
             />
             <div className={styles.pageNumbers}>
@@ -144,6 +145,7 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
                         label={`${i}`}
                         onClick={createHandlePageClick(i)}
                         className={i === props.page ? styles.active : ''}
+                        disabled={props.disabled}
                     />
                 ))}
             </div>
@@ -154,7 +156,7 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
                 icon={IconOutline.ChevronRightIcon}
                 iconToRight
                 label='NEXT'
-                disabled={props.page === props.totalPages}
+                disabled={props.page === props.totalPages || props.disabled}
                 className={styles.next}
             />
             {!Number.isNaN(props.totalPages) && (
@@ -165,7 +167,7 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
                     icon={IconOutline.ChevronDoubleRightIcon}
                     iconToRight
                     label='LAST'
-                    disabled={props.page === props.totalPages}
+                    disabled={props.page === props.totalPages || props.disabled}
                     className={styles.last}
                 />
             )}

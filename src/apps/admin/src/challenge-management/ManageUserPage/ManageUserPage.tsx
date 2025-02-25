@@ -39,9 +39,9 @@ import {
     getChallengeByLegacyId,
     getChallengeResources,
 } from '../../lib/services'
-import { rootRoute } from '../../admin-app.routes'
 import { createChallengeQueryString, handleError } from '../../lib/utils'
 import { useEventCallback } from '../../lib/hooks'
+import { rootRoute } from '../../config/routes.config'
 
 import styles from './ManageUserPage.module.scss'
 

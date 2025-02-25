@@ -1,4 +1,5 @@
-import { Dispatch, MouseEvent, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react'
+import _ from 'lodash'
 import classNames from 'classnames'
 
 import { Button } from '../button'
@@ -7,10 +8,10 @@ import { IconOutline } from '../svgs'
 import { Tooltip } from '../tooltip'
 import '../../styles/_includes.scss'
 
-import { TableCell } from './table-cell'
 import { TableColumn } from './table-column.model'
 import { tableGetDefaultSort, tableGetSorted } from './table-functions'
 import { TableSort } from './table-sort'
+import { TableRow } from './table-row'
 import styles from './Table.module.scss'
 
 function getKey(key: string | number): string {
@@ -22,9 +23,11 @@ interface TableProps<T> {
     readonly data: ReadonlyArray<T>
     readonly moreToLoad?: boolean
     readonly disableSorting?: boolean
+    readonly showExpand?: boolean
     readonly onLoadMoreClick?: () => void
     readonly onRowClick?: (data: T) => void
     readonly onToggleSort?: (sort: Sort) => void
+    readonly removeDefaultSort?: boolean
 }
 
 interface DefaultSortDirectionMap {
@@ -35,7 +38,18 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
     = <T extends { [propertyName: string]: any }>(props: TableProps<T>) => {
 
         const [sort, setSort]: [Sort | undefined, Dispatch<SetStateAction<Sort | undefined>>]
-            = useState<Sort | undefined>(tableGetDefaultSort(props.columns))
+            = useState<Sort | undefined>(
+                props.removeDefaultSort
+                    ? undefined
+                    : tableGetDefaultSort(props.columns),
+            )
+        const displayColumns = useMemo(() => {
+            if (!props.showExpand) {
+                return props.columns
+            }
+
+            return _.filter(props.columns, item => !item.isExpand)
+        }, [props.columns, props.showExpand])
         const [defaultSortDirectionMap, setDefaultSortDirectionMap]: [
             DefaultSortDirectionMap | undefined,
             Dispatch<SetStateAction<DefaultSortDirectionMap | undefined>>
@@ -76,16 +90,19 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
         function toggleSort(fieldName: string): void {
 
             // if we don't have anything to sort by, we shouldn't be here
-            if (!sort) {
+            if (!sort && !props.removeDefaultSort) {
                 return
             }
 
             // get the sort direction
-            const direction: 'asc' | 'desc' = fieldName === sort.fieldName
-                // this is the current sort, so just toggle it
-                ? sort.direction === 'asc' ? 'desc' : 'asc'
-                // get the default sort for the field... this will never be undefined
-                : (defaultSortDirectionMap as DefaultSortDirectionMap)[fieldName]
+            let direction: 'asc' | 'desc' = 'asc'
+            if (sort) {
+                direction = fieldName === sort.fieldName
+                    // this is the current sort, so just toggle it
+                    ? sort.direction === 'asc' ? 'desc' : 'asc'
+                    // get the default sort for the field... this will never be undefined
+                    : (defaultSortDirectionMap as DefaultSortDirectionMap)[fieldName]
+            }
 
             const newSort: Sort = {
                 direction,
@@ -97,7 +114,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
             props.onToggleSort?.(newSort)
         }
 
-        const headerRow: Array<JSX.Element> = props.columns
+        const headerRow: Array<JSX.Element> = displayColumns
             .map((col, index) => {
                 const isSortable: boolean = !!col.propertyName
                 const isCurrentlySorted: boolean = isSortable && col.propertyName === sort?.fieldName
@@ -128,6 +145,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                                     propertyName={col.propertyName}
                                     sort={sort}
                                     toggleSort={toggleSort}
+                                    removeDefaultSort={props.removeDefaultSort}
                                 />
                             )}
                         </div>
@@ -136,35 +154,16 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
             })
 
         const rowCells: Array<JSX.Element> = sortedData
-            .map((sorted, index) => {
-
-                function onRowClick(event: MouseEvent<HTMLTableRowElement>): void {
-                    event.preventDefault()
-                    props.onRowClick?.(sorted)
-                }
-
-                // get the cells in the row
-                const cells: Array<JSX.Element> = props.columns
-                    .map((col, colIndex) => (
-                        <TableCell
-                            {...col}
-                            data={sorted}
-                            index={index}
-                            key={getKey(`${index}${colIndex}`)}
-                        />
-                    ))
-
-                // return the entire row
-                return (
-                    <tr
-                        className={classNames(styles.tr, props.onRowClick ? styles.clickable : undefined)}
-                        onClick={onRowClick}
-                        key={getKey(index)}
-                    >
-                        {cells}
-                    </tr>
-                )
-            })
+            .map((sorted, index) => (
+                <TableRow
+                    key={getKey(index)}
+                    data={sorted}
+                    onRowClick={props.onRowClick}
+                    columns={props.columns}
+                    index={index}
+                    showExpand={props.showExpand}
+                />
+            ))
 
         return (
             /* TODO: sticky header */

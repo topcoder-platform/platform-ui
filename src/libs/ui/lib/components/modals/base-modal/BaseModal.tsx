@@ -20,6 +20,7 @@ export interface BaseModalProps extends ModalProps {
     title?: string | ReactNode
     spacer?: boolean
     buttons?: ReactNode
+    allowBodyScroll?: boolean
 }
 
 const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
@@ -47,11 +48,13 @@ const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
 
     const handleBodyScroll = useCallback(
         (force?: boolean) => {
-            const isOpen = force ?? props.open
-            document.documentElement.style.overflow = isOpen ? 'hidden' : ''
-            document.body.style.overflow = isOpen ? 'hidden' : ''
+            if (!props.allowBodyScroll) {
+                const isOpen = force ?? props.open
+                document.documentElement.style.overflow = isOpen ? 'hidden' : ''
+                document.body.style.overflow = isOpen ? 'hidden' : ''
+            }
         },
-        [props.open],
+        [props.open, props.allowBodyScroll],
     )
 
     useEffect(() => {

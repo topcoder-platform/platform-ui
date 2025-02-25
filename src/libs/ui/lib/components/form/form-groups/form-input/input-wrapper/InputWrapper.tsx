@@ -17,6 +17,7 @@ export const optional: string = '(optional)'
 interface InputWrapperProps {
     readonly children: ReactNode
     readonly className?: string
+    readonly classNameWrapper?: string
     readonly dirty?: boolean
     readonly disabled: boolean
     readonly error?: string
@@ -65,7 +66,7 @@ const InputWrapper: ForwardRefExoticComponent<InputWrapperProps & { ref?: React.
 
     return (
         <div
-            className={classNames(styles['input-wrapper'], 'input-wrapper', styles[props.type])}
+            className={classNames(styles['input-wrapper'], 'input-wrapper', styles[props.type], props.classNameWrapper)}
             tabIndex={props.type === 'rating' ? (props.tabIndex ?? -1) : -1}
             ref={ref}
         >
