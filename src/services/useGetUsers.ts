@@ -18,6 +18,7 @@ export const useGetUsers = () => {
     async function fetchData() {
       try {
         const response = await axiosInstance.get<GetUsersResponse>('/users');
+        console.log("useGetUsers response:", response)
         setData(response.data);
       } catch (err) {
         setError(err);

@@ -40,27 +40,57 @@
 }
 
 /* Filter bar */
+/* UserManagementPage.module.scss */
+
 .filters {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
+  flex-wrap: wrap; /* Wrap if there are many filters */
+  gap: 1rem;       /* Space between each filter control */
   margin-bottom: 1rem;
 
   label {
     display: flex;
     flex-direction: column;
-    font-size: 0.875rem;
-    color: #555;
-    input,
-    select {
-      margin-top: 0.25rem;
-      padding: 0.4rem 0.6rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 0.875rem;
+    font-weight: 600;
+    color: #444;
+    font-size: 0.9rem; /* Slightly smaller label text */
+
+    /* Add spacing below the label text */
+    &:not(:empty) {
+      margin-bottom: 0.25rem;
+    }
+  }
+
+  /* Style inputs and select fields uniformly */
+  input,
+  select {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background-color: #fff; /* Ensure a white background */
+
+    /* Placeholder styling */
+    &::placeholder {
+      color: #999; /* Gray placeholder color */
+    }
+
+    /* Focus state with custom color */
+    &:focus {
+      border-color: #2BA9E0;
+      box-shadow: 0 0 0 3px rgba(43, 169, 224, 0.2); 
+      /* This gives a subtle “glow” effect in the same color */
+    }
+
+    /* Optional hover effect */
+    &:hover:not(:focus):not(:disabled) {
+      border-color: #aaa;
     }
   }
 }
+
 
 /* Wrapper around the table to give a card-like appearance */
 .tableWrapper {
@@ -69,6 +99,45 @@
   padding: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+/* src/apps/admin/src/user-management/UserManagementPage.module.scss */
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem 0;
+
+  button {
+    background-color: #0077cc;
+    color: #fff;
+    border: none;
+    padding: 0.3rem 1rem;
+    margin: 0 0.3rem;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+
+    &:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    &:hover:not(:disabled) {
+      background-color: #005fa3;
+      transform: translateY(-2px);
+    }
+  }
+
+  span {
+    font-size: 1rem;
+    color: #333;
+    margin: 0 1rem;
+  }
+}
+
 
 /* Main user table */
 .userTable {

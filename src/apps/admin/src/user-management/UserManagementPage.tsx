@@ -58,7 +58,6 @@ const UserManagementPage: React.FC = () => {
 
   // Main UI states
   const [users, setUsers] = useState<AdminUser[]>([]);
-  // Use a Set<string> because our user ids are strings.
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<FilterState>({
     handle: '',
@@ -69,6 +68,10 @@ const UserManagementPage: React.FC = () => {
   const [sortField, setSortField] = useState<SortField>('id');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [error, setError] = useState<string>('');
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 10;
 
   // Fetch real data from GET /v3/users using the custom hook
   const { data, error: fetchError } = useGetUsers();
@@ -82,37 +85,39 @@ const UserManagementPage: React.FC = () => {
     if (data && data.result && Array.isArray(data.result.content)) {
       const adminUsers = data.result.content.map((su: any) => mapServiceUserToAdminUser(su));
       setUsers(adminUsers);
+      // Reset to first page when new data comes in
+      setCurrentPage(1);
     }
   }, [data, fetchError]);
 
   // Dialog open/close handlers
-  function openEditEmailDialog(user: AdminUser) {
+  const openEditEmailDialog = (user: AdminUser) => {
     setSelectedUserForEmail(user);
     setEditEmailOpen(true);
-  }
-  function closeEditEmailDialog() {
+  };
+  const closeEditEmailDialog = () => {
     setEditEmailOpen(false);
     setSelectedUserForEmail(null);
-  }
-  function openEditRolesDialog(user: AdminUser) {
+  };
+  const openEditRolesDialog = (user: AdminUser) => {
     setSelectedUserForRoles(user);
     setEditRolesOpen(true);
-  }
-  function closeEditRolesDialog() {
+  };
+  const closeEditRolesDialog = () => {
     setEditRolesOpen(false);
     setSelectedUserForRoles(null);
-  }
-  function openEditStatusDialog(user: AdminUser) {
+  };
+  const openEditStatusDialog = (user: AdminUser) => {
     setSelectedUserForStatus(user);
     setEditStatusOpen(true);
-  }
-  function closeEditStatusDialog() {
+  };
+  const closeEditStatusDialog = () => {
     setEditStatusOpen(false);
     setSelectedUserForStatus(null);
-  }
+  };
 
   // Save handlers (placeholders)
-  async function handleSaveEmail(newEmail: string) {
+  const handleSaveEmail = async (newEmail: string) => {
     if (!selectedUserForEmail) return;
     const userId = selectedUserForEmail.id;
     // PATCH /v3/users/{userId}/email call here.
@@ -120,20 +125,18 @@ const UserManagementPage: React.FC = () => {
       prev.map((u) => (u.id === userId ? { ...u, email: newEmail } : u))
     );
     closeEditEmailDialog();
-  }
+  };
 
-  function handleSaveRoles(updatedRoles: Role[]): void {
+  const handleSaveRoles = (updatedRoles: Role[]): void => {
     if (!selectedUserForRoles) return;
     const userId = selectedUserForRoles.id;
     setUsers((prev) =>
       prev.map((u) => (u.id === userId ? { ...u, roles: updatedRoles } : u))
     );
     closeEditRolesDialog();
-  }
-  
-  
+  };
 
-  async function handleSaveStatus(newStatus: string, comment: string) {
+  const handleSaveStatus = async (newStatus: string, comment: string) => {
     if (!selectedUserForStatus) return;
     const userId = selectedUserForStatus.id;
     // PATCH /v3/users/{userId}/status call here.
@@ -141,7 +144,7 @@ const UserManagementPage: React.FC = () => {
       prev.map((u) => (u.id === userId ? { ...u, status: newStatus } : u))
     );
     closeEditStatusDialog();
-  }
+  };
 
   /** Filtering logic */
   const onFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -154,7 +157,6 @@ const UserManagementPage: React.FC = () => {
       return false;
     if (filter.email && !u.email.toLowerCase().includes(filter.email.toLowerCase()))
       return false;
-    // Compare as strings
     if (filter.userId && u.id !== filter.userId)
       return false;
     if (filter.status) {
@@ -205,6 +207,13 @@ const UserManagementPage: React.FC = () => {
     if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
     return 0;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(sortedUsers.length / itemsPerPage);
+  const paginatedUsers = sortedUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   /** Toggle expandable rows */
   const toggleExpandRow = (id: string) => {
@@ -311,7 +320,7 @@ const UserManagementPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {sortedUsers.map((user) => {
+            {paginatedUsers.map((user) => {
               const expanded = expandedRows.has(user.id);
               return (
                 <React.Fragment key={user.id}>
@@ -320,12 +329,19 @@ const UserManagementPage: React.FC = () => {
                     <td>{user.handle}</td>
                     <td>{user.email || 'N/A'}</td>
                     <td>
-                      <span className={`${styles.statusBadge} ${user.active ? styles.active : styles.inactive}`}>
+                      <span
+                        className={`${styles.statusBadge} ${
+                          user.active ? styles.active : styles.inactive
+                        }`}
+                      >
                         {user.active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
                     <td className={styles.actionsCell}>
-                      <button className={styles.actionsCellButtons} onClick={() => toggleExpandRow(user.id)}>
+                      <button
+                        className={styles.actionsCellButtons}
+                        onClick={() => toggleExpandRow(user.id)}
+                      >
                         {expanded ? 'Hide Details' : 'Show Details'}
                       </button>
                       <EditDropdown
@@ -333,14 +349,19 @@ const UserManagementPage: React.FC = () => {
                         onEditEmail={openEditEmailDialog}
                         onEditRoles={openEditRolesDialog}
                         onEditStatus={openEditStatusDialog}
-                        // Provide dummy callbacks for groups/terms if not used:
                         onEditGroups={() => {}}
                         onEditTerms={() => {}}
                       />
-                      <button className={styles.actionsCellButtons} onClick={() => openEditStatusDialog(user)}>
+                      <button
+                        className={styles.actionsCellButtons}
+                        onClick={() => openEditStatusDialog(user)}
+                      >
                         Edit Status
                       </button>
-                      <button className={styles.actionsCellButtons} onClick={() => onToggleActive(user)}>
+                      <button
+                        className={styles.actionsCellButtons}
+                        onClick={() => onToggleActive(user)}
+                      >
                         {user.active ? 'Deactivate' : 'Activate'}
                       </button>
                     </td>
@@ -356,7 +377,8 @@ const UserManagementPage: React.FC = () => {
                             <strong>Status:</strong> {user.status}
                           </p>
                           <p>
-                            <strong>Email Active:</strong> {user.emailActive ? 'Active' : 'Inactive'}
+                            <strong>Email Active:</strong>{' '}
+                            {user.emailActive ? 'Active' : 'Inactive'}
                           </p>
                           <p>
                             <strong>Created At:</strong> {user.createdAt}
@@ -384,6 +406,26 @@ const UserManagementPage: React.FC = () => {
         </table>
       </div>
 
+      {/* Pagination Controls */}
+      <div className={styles.pagination}>
+      <button
+        disabled={currentPage === 1}
+        onClick={() => setCurrentPage((prev) => prev - 1)}
+      >
+        Previous
+      </button>
+      <span>
+        Page {currentPage} of {totalPages}
+      </span>
+      <button
+        disabled={currentPage === totalPages}
+        onClick={() => setCurrentPage((prev) => prev + 1)}
+      >
+        Next
+      </button>
+    </div>
+
+
       {/* Render dialogs */}
       {editEmailOpen && selectedUserForEmail && (
         <EditEmailDialog
@@ -394,13 +436,12 @@ const UserManagementPage: React.FC = () => {
         />
       )}
       {editRolesOpen && selectedUserForRoles && (
-       <EditRolesDialog
-       userId={selectedUserForRoles.id}
-       userRoles={selectedUserForRoles.roles}
-       onClose={closeEditRolesDialog}
-       onSave={handleSaveRoles}
-     />
-     
+        <EditRolesDialog
+          userId={selectedUserForRoles.id}
+          userRoles={selectedUserForRoles.roles}
+          onClose={closeEditRolesDialog}
+          onSave={handleSaveRoles}
+        />
       )}
       {editStatusOpen && selectedUserForStatus && (
         <EditUserStatusDialog
