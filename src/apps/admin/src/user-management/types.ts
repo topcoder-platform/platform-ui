@@ -1,9 +1,10 @@
 // src/apps/admin/src/user-management/types.ts
 
 export interface Role {
-    id: number;
-    name: string;
-  }
+  id: string;
+  roleName: string;
+}
+
 export interface Credential {
   activationCode: string | null;
   resetToken: string | null;

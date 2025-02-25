@@ -1,7 +1,10 @@
 // src/apps/admin/src/user-management/UserManagementPage.tsx
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { toast } from 'react-toastify';
 import styles from './UserManagementPage.module.scss';
+import { updateUserEmail } from '~/services/updateUserEmail';
+
 
 import EditEmailDialog from './dialogs/EditEmailDialog';
 import EditRolesDialog from './dialogs/EditRolesDialog';
@@ -14,11 +17,17 @@ import { User as AdminUser, Role } from './types';
 // Map the service user to our AdminUser shape.
 function mapServiceUserToAdminUser(serviceUser: any): AdminUser {
   return {
-    id: String(serviceUser.id), // Convert id to string
+    id: String(serviceUser.id),
     handle: serviceUser.handle || '',
     email: serviceUser.email || '',
     active: serviceUser.active ?? false,
-    roles: Array.isArray(serviceUser.roles) ? serviceUser.roles : [],
+    // Map the roles to have id as a number and name from roleName
+    roles: Array.isArray(serviceUser.roles)
+      ? serviceUser.roles.map((r: any) => ({
+          id: Number(r.id),
+          name: r.roleName,
+        }))
+      : [],
     modifiedBy: serviceUser.modifiedBy || null,
     modifiedAt: serviceUser.modifiedAt || '',
     createdBy: serviceUser.createdBy || null,
@@ -37,6 +46,8 @@ function mapServiceUserToAdminUser(serviceUser: any): AdminUser {
     },
   };
 }
+
+
 
 type SortField = 'id' | 'handle' | 'email' | 'active';
 
@@ -120,11 +131,19 @@ const UserManagementPage: React.FC = () => {
   const handleSaveEmail = async (newEmail: string) => {
     if (!selectedUserForEmail) return;
     const userId = selectedUserForEmail.id;
-    // PATCH /v3/users/{userId}/email call here.
-    setUsers((prev) =>
-      prev.map((u) => (u.id === userId ? { ...u, email: newEmail } : u))
-    );
-    closeEditEmailDialog();
+    try {
+      await updateUserEmail(userId, newEmail);
+      // Update local state with new email
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, email: newEmail } : u))
+      );
+      toast.success('Email updated successfully.');
+    } catch (error: any) {
+      console.error('Failed to update email:', error);
+      toast.error(`Error updating email: ${error.message}`);
+    } finally {
+      closeEditEmailDialog();
+    }
   };
 
   const handleSaveRoles = (updatedRoles: Role[]): void => {
@@ -353,17 +372,14 @@ const UserManagementPage: React.FC = () => {
                         onEditTerms={() => {}}
                       />
                       <button
-                        className={styles.actionsCellButtons}
-                        onClick={() => openEditStatusDialog(user)}
-                      >
-                        Edit Status
-                      </button>
-                      <button
-                        className={styles.actionsCellButtons}
+                        className={`${styles.actionsCellButtons} ${
+                          user.active ? styles.deactivate : styles.activate
+                        }`}
                         onClick={() => onToggleActive(user)}
                       >
                         {user.active ? 'Deactivate' : 'Activate'}
                       </button>
+
                     </td>
                   </tr>
                   {expanded && (

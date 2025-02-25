@@ -9,8 +9,8 @@ export const dummyUsers: User[] = [
     email: 'jdoe@example.com',
     active: true,
     roles: [
-      { id: 1, name: 'admin' },
-      { id: 2, name: 'user' },
+      { id: "1", roleName: 'admin' },
+      { id: "2", roleName: 'user' },
     ], // roles is an array, not null
     modifiedBy: 'admin',
     modifiedAt: '2025-02-01T12:00:00Z',

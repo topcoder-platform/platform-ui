@@ -193,16 +193,35 @@
           font-size: 0.8rem;
           cursor: pointer;
           transition: background-color 0.2s ease;
-
+        
           &:hover {
             background-color: #3b83b6;
           }
-
+        
           &:focus {
             outline: none;
             box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.3);
           }
         }
+        
+        .activate {
+          background-color: #8CC442;
+          width: 78px;
+        
+          &:hover {
+            background-color: #7e9d56;
+          }
+        }
+        
+        .deactivate {
+          background-color: darkred;
+        
+          &:hover {
+            background-color: rgb(137, 63, 63);
+          }
+        }
+        
+        
       }
     }
   }

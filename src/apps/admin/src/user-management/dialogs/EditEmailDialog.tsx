@@ -3,11 +3,13 @@ import React, { useState } from 'react'
 import styles from './Dialog.module.scss'
 
 interface EditEmailDialogProps {
-  userId: string
-  currentEmail: string
-  onClose: () => void
-  onSave: (newEmail: string) => void
+  userId: string;
+  currentEmail: string;
+  onClose: () => void;
+  onSave: (newEmail: string) => void;
 }
+
+
 
 const EditEmailDialog: React.FC<EditEmailDialogProps> = ({
   userId,
@@ -47,8 +49,8 @@ const EditEmailDialog: React.FC<EditEmailDialogProps> = ({
 
         {/* Footer */}
         <div className={styles.dialogFooter}>
-          <button className="cancelBtn" onClick={onClose}>Close</button>
-          <button className="saveBtn" onClick={handleSubmit}>Save</button>
+          <button className={styles.cancelBtn} onClick={onClose}>Close</button>
+          <button className={styles.saveBtn} onClick={handleSubmit}>Save</button>
         </div>
       </div>
     </div>
