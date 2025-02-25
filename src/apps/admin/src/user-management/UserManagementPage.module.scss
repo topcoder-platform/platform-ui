@@ -1,0 +1,177 @@
+/* UserManagementPage.module.scss */
+
+/* Container for the entire page */
+.pageContainer {
+  padding: 2rem;
+  background-color: #f8f9fa; /* light gray background */
+  min-height: 100vh; /* ensures full-page height */
+  font-family: 'Open Sans', sans-serif; /* or your project's default font */
+}
+
+/* Page header with title and optional action buttons */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+
+  h2 {
+    font-size: 1.5rem;
+    margin: 0;
+  }
+
+  .actions {
+    button {
+      background-color: #0052cc;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      &:hover {
+        background-color: #0065ff;
+      }
+      &:not(:last-child) {
+        margin-right: 0.5rem;
+      }
+    }
+  }
+}
+
+/* Filter bar */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.875rem;
+    color: #555;
+    input,
+    select {
+      margin-top: 0.25rem;
+      padding: 0.4rem 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+  }
+}
+
+/* Wrapper around the table to give a card-like appearance */
+.tableWrapper {
+  background-color: #fff;
+  border-radius: 6px;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Main user table */
+.userTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  thead {
+    tr {
+      th {
+        text-align: left;
+        padding: 0.75rem;
+        color: #666;
+        font-weight: 600;
+        border-bottom: 1px solid #eaeaea;
+        cursor: pointer;
+        &:hover {
+          color: #000;
+        }
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      &:nth-child(odd) {
+        background-color: #ffffff; /* white for odd rows */
+      }
+      &:nth-child(even) {
+        background-color: #f8f9fa; /* light gray for even rows */
+      }
+      border-bottom: 1px solid #f1f1f1;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      td {
+        padding: 0.75rem;
+        vertical-align: middle;
+      }
+
+      .actionsCell {
+        display: flex;
+        gap: 0.5rem;
+
+        .actionsCellButtons {
+          background-color: #0f73ba;
+          color: #fff;
+          border: none;
+          border-radius: 5px;
+          padding: 0.3rem 0.55rem;
+          font-size: 0.8rem;
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+
+          &:hover {
+            background-color: #3b83b6;
+          }
+
+          &:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.3);
+          }
+        }
+      }
+    }
+  }
+}
+
+.expandedRow {
+  background-color: #fafafa;
+
+  td {
+    padding: 1rem !important;
+  }
+
+  .details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    p {
+      margin: 0.25rem 0;
+      strong {
+        display: inline-block;
+        width: 120px;
+        color: #333;
+      }
+    }
+  }
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.02rem 1rem;
+  border-radius: 40px;
+  font-size: 0.75rem;
+  &.active {
+    background-color: #dff2e4;
+    color: #77a639;
+  }
+  &.inactive {
+    background-color: #fff4e6;
+    color: #a15d00;
+  }
+}

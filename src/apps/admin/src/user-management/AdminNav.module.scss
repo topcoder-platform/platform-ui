@@ -1,0 +1,60 @@
+/* src/apps/admin/src/components/AdminNav.module.scss */
+.navBar {
+    background-color: #e6f4fa; /* light blue background */
+    padding: 1rem 2rem;
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+  }
+  
+  .navItem {
+    color: #0052cc;
+    text-decoration: none;
+    font-weight: bold;
+    position: relative;
+    padding: 0.5rem 1rem;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+  
+  .navItemDropdown {
+    position: relative;
+    color: #0052cc;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    span {
+      user-select: none;
+    }
+  }
+  
+  .dropdownContent {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    min-width: 150px;
+    z-index: 1000;
+  }
+  
+  .navItemDropdown:hover .dropdownContent {
+    display: block;
+  }
+  
+  .dropdownItem {
+    display: block;
+    padding: 0.5rem 1rem;
+    color: #0052cc;
+    text-decoration: none;
+    &:hover {
+      background-color: #f8f9fa;
+    }
+  }
+  
+  /* Active link styling */
+  .active {
+    border-bottom: 2px solid #0052cc;
+  }  

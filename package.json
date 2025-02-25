@@ -19,6 +19,7 @@
     "sb:build": "storybook build -o build/storybook"
   },
   "dependencies": {
+    "@auth0/auth0-react": "^2.3.0",
     "@datadog/browser-logs": "^4.21.2",
     "@heroicons/react": "^1.0.6",
     "@popperjs/core": "^2.11.8",

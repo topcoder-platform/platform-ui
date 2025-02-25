@@ -7,6 +7,7 @@ import {
     UserRole,
 } from '~/libs/core'
 
+
 const AdminApp: LazyLoadedComponent = lazyLoad(() => import('./AdminApp'))
 
 const ChallengeManagement: LazyLoadedComponent = lazyLoad(
@@ -21,13 +22,26 @@ const ManageUserPage: LazyLoadedComponent = lazyLoad(
     'ManageUserPage',
 )
 
+// NEW: Lazy-loaded components for User Management - RichardNk24
+const UserManagement: LazyLoadedComponent = lazyLoad(
+    () => import('./user-management/UserManagement'),
+    )
+const UserManagementPage: LazyLoadedComponent = lazyLoad(
+    () => import('./user-management/UserManagementPage'),
+    'UserManagementPage',
+)
+
 export const toolTitle: string = ToolTitle.admin
 export const rootRoute: string
     = EnvironmentConfig.SUBDOMAIN === AppSubdomain.admin
         ? ''
         : `/${AppSubdomain.admin}`
+    console.log('rootRoute:', rootRoute)
 
 export const manageChallengeRouteId = 'challenge-management'
+
+export const manageUserRouteId = 'user-management'
+
 
 export const adminRoutes: ReadonlyArray<PlatformRoute> = [
     // Admin App Root
@@ -55,6 +69,18 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <ChallengeManagement />,
                 id: manageChallengeRouteId,
                 route: manageChallengeRouteId,
+            },
+            {
+                children: [
+                    {
+                        element: <UserManagementPage />,
+                        id: 'user-management-page',
+                        route: '',
+                    },
+                ],
+                element: <UserManagement />,
+                id: manageUserRouteId,
+                route: manageUserRouteId,
             },
         ],
         domain: AppSubdomain.admin,

@@ -1,0 +1,106 @@
+/* Dialog.module.scss */
+
+.modalBackdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999; /* Ensure it's on top of everything */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden; /* Prevent scrolling behind the dialog */
+  }
+  
+  .modalContent {
+    background-color: #fff;
+    width: 450px; /* Adjust to your preference */
+    max-width: 90vw; /* Make sure it’s responsive on smaller screens */
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    padding: 1.5rem;
+    position: relative; /* So we can position close button if needed */
+    animation: fadeIn 0.3s ease-out; /* Optional fade-in animation */
+  }
+  
+  .dialogHeader {
+    margin-bottom: 1rem;
+    h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      color: #333;
+    }
+  }
+  
+  .dialogBody {
+    margin-bottom: 1rem;
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.4rem 0.6rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+      th, td {
+        padding: 0.5rem;
+        border-bottom: 1px solid #eee;
+      }
+      th {
+        text-align: left;
+        font-weight: 600;
+        background-color: #f9f9f9;
+      }
+    }
+    .addButton {
+        background-color: #8cc442;
+        color: #fff;
+        width: 50px;
+        border-radius: 20px;
+        &:hover {
+            background-color: #96b76a;
+        }
+    }
+  }
+  
+  .dialogFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      &.cancelBtn {
+        background-color: #eee;
+        color: #333;
+        &:hover {
+          background-color: #ddd;
+        }
+      }
+      &.saveBtn {
+        background-color: #0F73BA;
+        color: #fff;
+        &:hover {
+          background-color: #3783b8;
+        }
+      }
+    }
+  }
+  
+  /* Optional fade-in keyframes */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }  
