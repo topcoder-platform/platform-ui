@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import styles from './UserManagementPage.module.scss';
-import { updateUserEmail } from '~/services/updateUserEmail';
+import { updateUserEmail } from '../../../../services/updateUserEmail';
 
 
 import EditEmailDialog from './dialogs/EditEmailDialog';

@@ -1,0 +1,140 @@
+diff --git a/src/apps/admin/src/user-management/UserManagementPage.tsx b/src/apps/admin/src/user-management/UserManagementPage.tsx
+index 1234567..89abcde 100644
+--- a/src/apps/admin/src/user-management/UserManagementPage.tsx
++++ b/src/apps/admin/src/user-management/UserManagementPage.tsx
+@@ // Updated mapping to include groups in the user model
+ function mapServiceUserToAdminUser(serviceUser: any): AdminUser {
+   return {
+-    id: String(serviceUser.id),
+-    handle: serviceUser.handle || '',
+-    email: serviceUser.email || '',
+-    active: serviceUser.active ?? false,
+-    roles: Array.isArray(serviceUser.roles)
+-      ? serviceUser.roles.map((r: any) => ({
+-          id: String(r.id),
+-          roleName: r.roleName,
+-        }))
+-      : [],
+-    modifiedBy: serviceUser.modifiedBy || null,
+-    modifiedAt: serviceUser.modifiedAt || '',
+-    createdBy: serviceUser.createdBy || null,
+-    createdAt: serviceUser.createdAt || '',
+-    firstName: serviceUser.firstName || '',
+-    lastName: serviceUser.lastName || '',
+-    emailActive: serviceUser.emailActive ?? false,
+-    status: serviceUser.status || '',
+-    credential: { … },
+-  };
++    id: String(serviceUser.id),
++    handle: serviceUser.handle || '',
++    email: serviceUser.email || '',
++    active: serviceUser.active ?? false,
++    roles: Array.isArray(serviceUser.roles)
++      ? serviceUser.roles.map((r: any) => ({
++          id: String(r.id),
++          roleName: r.roleName,
++        }))
++      : [],
++    groups: Array.isArray(serviceUser.groups)
++      ? serviceUser.groups.map((g: any) => ({
++          id: String(g.id),
++          name: g.name,
++          description: g.description,
++          ssoId: g.ssoId,
++          updatedBy: g.updatedBy,
++          updatedAt: g.updatedAt,
++          createdAt: g.createdAt,
++          createdBy: g.createdBy,
++          privateGroup: g.privateGroup,
++          oldId: g.oldId,
++          organizationId: g.organizationId,
++          selfRegister: g.selfRegister,
++          domain: g.domain,
++          status: g.status,
++        }))
++      : [],
++    modifiedBy: serviceUser.modifiedBy || null,
++    modifiedAt: serviceUser.modifiedAt || '',
++    createdBy: serviceUser.createdBy || null,
++    createdAt: serviceUser.createdAt || '',
++    firstName: serviceUser.firstName || '',
++    lastName: serviceUser.lastName || '',
++    emailActive: serviceUser.emailActive ?? false,
++    status: serviceUser.status || '',
++    credential: {
++      activationCode: serviceUser.credential?.activationCode || null,
++      resetToken: serviceUser.credential?.resetToken || null,
++      resendToken: serviceUser.credential?.resendToken || null,
++      activationBlocked: serviceUser.credential?.activationBlocked ?? false,
++      canResend: serviceUser.credential?.canResend ?? false,
++      hasPassword: serviceUser.credential?.hasPassword ?? false,
++    },
++  };
+ }
+diff --git a/src/apps/admin/src/user-management/dialogs/EditGroupsDialog.tsx b/src/apps/admin/src/user-management/dialogs/EditGroupsDialog.tsx
+index fedcba9..0123456 100644
+--- a/src/apps/admin/src/user-management/dialogs/EditGroupsDialog.tsx
++++ b/src/apps/admin/src/user-management/dialogs/EditGroupsDialog.tsx
+@@
+-    // Dummy data for groups
+-    setAllGroups([
+-      {
+-        id: "72a0b8a0-aa45-44f7-86c2-bf9de6321e5b",
+-        name: "Wipro - All",
+-        description: "Overall Wipro Group - Topgear - Wipro All",
+-        // ...other properties if needed
+-      },
+-      // Add more groups as needed…
+-    ]);
++    // Fetch groups from API GET /v5/groups (fallback to dummy if needed)
++    axiosV5.get('/groups')
++      .then((response) => {
++        console.log(response.data);
++        if (Array.isArray(response.data)) {
++          setAllGroups(response.data);
++        } else if (response.data && response.data.result && Array.isArray(response.data.result.content)) {
++          setAllGroups(response.data.result.content);
++        }
++      })
++      .catch((error) => {
++        console.error('Error fetching groups', error);
++        // Fallback dummy data in case of API error
++        setAllGroups([
++          {
++            id: "72a0b8a0-aa45-44f7-86c2-bf9de6321e5b",
++            name: "Wipro - All",
++            description: "Overall Wipro Group - Topgear - Wipro All",
++            ssoId: "",
++            updatedBy: "",
++            updatedAt: "",
++            createdAt: "",
++            createdBy: "",
++            privateGroup: true,
++            oldId: "",
++            organizationId: "",
++            selfRegister: false,
++            domain: "",
++            status: "active",
++          },
++        ]);
++      });
+diff --git a/src/apps/admin/src/user-management/components/EditDropdown.tsx b/src/apps/admin/src/user-management/components/EditDropdown.tsx
+index 1111111..2222222 100644
+--- a/src/apps/admin/src/user-management/components/EditDropdown.tsx
++++ b/src/apps/admin/src/user-management/components/EditDropdown.tsx
+@@
+-      <button className={styles.editButton} onClick={toggleDropdown}>
+-        Edit <span className={styles.caret}>▼</span>
+-      </button>
++      <button className={styles.editButton} onClick={toggleDropdown}>
++        Edit <span className={styles.caret}>▾</span>
++      </button>
+diff --git a/src/libs/useAxiosInstance.ts b/src/libs/useAxiosInstance.ts
+index 3333333..4444444 100644
+--- a/src/libs/useAxiosInstance.ts
++++ b/src/libs/useAxiosInstance.ts
+@@
+-const BaseUrl = `${EnvironmentConfig.API.V3}`;
++const BaseUrl = `${EnvironmentConfig.API.V3}`; // Default for v3 endpoints. Use axiosV5 for v5.
+ 
+ // ...rest of file unchanged
