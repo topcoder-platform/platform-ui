@@ -22,6 +22,7 @@ interface TableProps<T> {
     readonly data: ReadonlyArray<T>
     readonly moreToLoad?: boolean
     readonly disableSorting?: boolean
+    readonly initSort?: Sort
     readonly onLoadMoreClick?: () => void
     readonly onRowClick?: (data: T) => void
     readonly onToggleSort?: (sort: Sort) => void
@@ -35,7 +36,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
     = <T extends { [propertyName: string]: any }>(props: TableProps<T>) => {
 
         const [sort, setSort]: [Sort | undefined, Dispatch<SetStateAction<Sort | undefined>>]
-            = useState<Sort | undefined>(tableGetDefaultSort(props.columns))
+            = useState<Sort | undefined>(tableGetDefaultSort(props.columns, props.initSort))
         const [defaultSortDirectionMap, setDefaultSortDirectionMap]: [
             DefaultSortDirectionMap | undefined,
             Dispatch<SetStateAction<DefaultSortDirectionMap | undefined>>
